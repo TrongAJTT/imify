@@ -191,21 +191,29 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
 
       setItemState(item.id, {
         status: "processing",
-        percent: 80
+        percent: 72
       })
-      await notifyProgress(item, "processing", 80)
+      await notifyProgress(item, "processing", 72, "Converting image...")
+
+      setItemState(item.id, {
+        status: "processing",
+        percent: 92
+      })
+      await notifyProgress(item, "processing", 92, "Preparing data for download...")
+
+      setItemState(item.id, {
+        status: "success",
+        percent: 100
+      })
+      await notifyProgress(item, "success", 100, "Opening download dialog...")
+
+      await sleep(220)
 
       await downloadBlob(
         converted.blob,
         toOutputFilename(item.file.name, config.format),
         config.format
       )
-
-      setItemState(item.id, {
-        status: "success",
-        percent: 100
-      })
-      await notifyProgress(item, "success", 100)
       return "success"
     } catch (error) {
       const message = toUserFacingConversionError(error, "Unknown batch conversion error")

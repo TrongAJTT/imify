@@ -16,6 +16,9 @@ import {
 } from "./context-menu-builder"
 import { publishConvertProgress } from "./message-hub"
 
+const pendingDownloadFilenameQueue: string[] = []
+const pendingDownloadFilenameById = new Map<number, string>()
+
 function getAllConfigs(state: ExtensionStorageState): FormatConfig[] {
   return [...Object.values(state.global_formats), ...state.custom_formats]
 }
@@ -25,19 +28,47 @@ function findConfigById(state: ExtensionStorageState, id: string): FormatConfig 
 }
 
 function sanitizeFileName(value: string): string {
-  return value.replace(/[<>:"/\\|?*\u0000-\u001F]/g, "_").trim() || "image"
+  const sanitized = value
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, "_")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[. ]+$/g, "")
+
+  return sanitized.slice(0, 120) || "image"
 }
 
-function buildOutputFilename(srcUrl: string, config: FormatConfig): string {
+function extractFilenameFromContentDisposition(headerValue: string | null): string | null {
+  if (!headerValue) {
+    return null
+  }
+
+  const utf8Match = headerValue.match(/filename\*=UTF-8''([^;]+)/i)
+  if (utf8Match?.[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1])
+    } catch {
+      return utf8Match[1]
+    }
+  }
+
+  const asciiMatch = headerValue.match(/filename="?([^";]+)"?/i)
+  return asciiMatch?.[1] ?? null
+}
+
+function buildOutputFilename(srcUrl: string, config: FormatConfig, serverFileName?: string | null): string {
   let base = "image"
 
-  try {
-    const url = new URL(srcUrl)
-    const pathname = decodeURIComponent(url.pathname)
-    const name = pathname.split("/").pop() || "image"
-    base = name.includes(".") ? name.slice(0, name.lastIndexOf(".")) : name
-  } catch {
-    base = "image"
+  if (serverFileName && serverFileName.trim()) {
+    base = serverFileName
+  } else {
+    try {
+      const url = new URL(srcUrl)
+      const pathname = decodeURIComponent(url.pathname)
+      const name = pathname.split("/").pop() || "image"
+      base = name.includes(".") ? name.slice(0, name.lastIndexOf(".")) : name
+    } catch {
+      base = "image"
+    }
   }
 
   return toOutputFilename(sanitizeFileName(base), config.format)
@@ -50,10 +81,24 @@ async function downloadBlob(
 ): Promise<void> {
   const dataUrl = await blobToDownloadDataUrl(blob, format)
 
-  await chrome.downloads.download({
+  // For data URL downloads Chrome can fall back to "download.ext" on some setups.
+  // Queue the intended filename so onDeterminingFilename can enforce it.
+  pendingDownloadFilenameQueue.push(filename)
+
+  const downloadId = await chrome.downloads.download({
     url: dataUrl,
     filename,
     saveAs: false
+  })
+
+  if (typeof downloadId === "number") {
+    pendingDownloadFilenameById.set(downloadId, filename)
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
   })
 }
 
@@ -75,7 +120,7 @@ async function handleImageMenuClick(
   }
 
   const progressId = `${Date.now()}_${config.id}`
-  const fileName = buildOutputFilename(info.srcUrl, config)
+  let fileName = buildOutputFilename(info.srcUrl, config)
 
   await publishConvertProgress({
     id: progressId,
@@ -91,6 +136,12 @@ async function handleImageMenuClick(
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.status}`)
     }
+
+    const headerFileName = extractFilenameFromContentDisposition(
+      response.headers.get("content-disposition")
+    )
+
+    fileName = buildOutputFilename(info.srcUrl, config, headerFileName)
 
     const sourceBlob = await response.blob()
 
@@ -112,18 +163,31 @@ async function handleImageMenuClick(
       fileName,
       targetFormat: config.format,
       status: "processing",
-      percent: 85
+      percent: 72,
+      message: "Converting image..."
     })
 
-    await downloadBlob(converted.blob, fileName, config.format)
+    await publishConvertProgress({
+      id: progressId,
+      fileName,
+      targetFormat: config.format,
+      status: "processing",
+      percent: 92,
+      message: "Preparing data for download..."
+    })
 
     await publishConvertProgress({
       id: progressId,
       fileName,
       targetFormat: config.format,
       status: "success",
-      percent: 100
+      percent: 100,
+      message: "Opening download dialog..."
     })
+
+    await sleep(220)
+
+    await downloadBlob(converted.blob, fileName, config.format)
   } catch (error) {
     const message = toUserFacingConversionError(error, "Unexpected conversion error")
 
@@ -173,6 +237,23 @@ chrome.runtime.onStartup.addListener(() => {
 })
 
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+  let resolvedFilename = pendingDownloadFilenameById.get(item.id)
+
+  if (!resolvedFilename && item.byExtensionId === chrome.runtime.id && pendingDownloadFilenameQueue.length > 0) {
+    resolvedFilename = pendingDownloadFilenameQueue.shift()
+  }
+
+  if (resolvedFilename) {
+    pendingDownloadFilenameById.delete(item.id)
+
+    suggest({
+      filename: resolvedFilename,
+      conflictAction: "uniquify"
+    })
+
+    return true
+  }
+
   // If the browser attempts to save a JPEG as .jfif (due to Windows registry),
   // we force it back to .jpg here.
   if (item.filename.toLowerCase().endsWith(".jfif")) {
@@ -181,9 +262,19 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
     })
     return true
   }
+})
 
-  suggest()
-  return true
+chrome.downloads.onChanged.addListener((delta) => {
+  if (typeof delta.id !== "number") {
+    return
+  }
+
+  const isFinished = delta.state?.current === "complete" || delta.state?.current === "interrupted"
+  if (!isFinished) {
+    return
+  }
+
+  pendingDownloadFilenameById.delete(delta.id)
 })
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {

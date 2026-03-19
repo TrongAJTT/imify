@@ -39,9 +39,14 @@ export default function ProgressToast() {
           clearTimeout(hideTimer)
         }
 
+        const quickHide =
+          message.payload.status === "success" &&
+          typeof message.payload.message === "string" &&
+          message.payload.message.toLowerCase().includes("opening download")
+
         hideTimer = setTimeout(() => {
           setPayload(null)
-        }, 3000)
+        }, quickHide ? 180 : 3000)
       }
     }
 
@@ -73,53 +78,121 @@ export default function ProgressToast() {
     <div
       style={{
         position: "fixed",
-        right: "16px",
-        bottom: "16px",
-        width: "320px",
-        borderRadius: "14px",
+        right: "20px",
+        bottom: "20px",
+        width: "300px",
+        borderRadius: "16px",
         background: "#0f172a",
-        color: "#e2e8f0",
-        boxShadow: "0 20px 40px rgba(15, 23, 42, 0.35)",
-        border: `1px solid ${accent}`,
+        color: "#f8fafc",
+        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
         zIndex: 2147483647,
-        padding: "12px 14px",
-        fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
+        padding: "16px",
+        fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif",
+        overflow: "hidden",
+        backdropFilter: "blur(8px)"
       }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
-        <strong style={{ fontSize: "13px", lineHeight: 1.4, color: "#f8fafc" }}>
-          {payload.fileName}
-        </strong>
-        <span style={{ fontSize: "12px", color: accent, textTransform: "uppercase" }}>
-          {payload.targetFormat}
-        </span>
-      </div>
-
-      <p style={{ margin: "6px 0 10px", fontSize: "12px", color: "#cbd5e1" }}>
-        {payload.message ??
-          (payload.status === "processing"
-            ? "Converting image..."
-            : payload.status === "success"
-              ? "Done. File downloaded."
-              : "Conversion failed.")}
-      </p>
-
+      {/* Target Format Badge */}
       <div
         style={{
-          height: "8px",
-          width: "100%",
-          borderRadius: "999px",
-          background: "rgba(148, 163, 184, 0.3)",
-          overflow: "hidden"
+          position: "absolute",
+          top: "12px",
+          right: "12px",
+          fontSize: "10px",
+          fontWeight: "800",
+          padding: "2px 6px",
+          borderRadius: "6px",
+          background: accent,
+          color: "white",
+          textTransform: "uppercase",
+          letterSpacing: "0.05em"
         }}>
-        <div
-          style={{
-            width: `${progress}%`,
-            height: "100%",
-            background: accent,
-            transition: "width 180ms ease"
-          }}
-        />
+        {payload.targetFormat}
       </div>
+
+      <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+        {/* Status Icon */}
+        <div 
+          style={{ 
+            marginTop: "2px",
+            color: accent,
+            flexShrink: 0 
+          }}>
+          {payload.status === "processing" ? (
+            <svg style={{ animation: "imify-spin 1s linear infinite", width: "16px", height: "16px" }} fill="none" viewBox="0 0 24 24">
+              <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <style>{`@keyframes imify-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+            </svg>
+          ) : payload.status === "success" ? (
+            <svg style={{ width: "18px", height: "18px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} />
+            </svg>
+          ) : (
+            <svg style={{ width: "18px", height: "18px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+            </svg>
+          )}
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div 
+            style={{ 
+              fontSize: "13px", 
+              fontWeight: "600", 
+              color: "#f8fafc", 
+              whiteSpace: "nowrap", 
+              overflow: "hidden", 
+              textOverflow: "ellipsis",
+              paddingRight: "40px",
+              marginBottom: "4px"
+            }}
+            title={payload.fileName}>
+            {payload.fileName}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+            <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8" }}>
+              {payload.message ??
+                (payload.status === "processing"
+                  ? "Processing..."
+                  : payload.status === "success"
+                    ? "Saved successfully"
+                    : "Failed to convert")}
+            </p>
+
+            {payload.status === "processing" ? (
+              <span style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", flexShrink: 0 }}>
+                {Math.round(progress)}%
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      {payload.status === "processing" && (
+        <div style={{ marginTop: "14px" }}>
+          <div
+            style={{
+              height: "6px",
+              width: "100%",
+              borderRadius: "10px",
+              background: "rgba(255, 255, 255, 0.1)",
+              overflow: "hidden"
+            }}>
+            <div
+              style={{
+                width: `${progress}%`,
+                height: "100%",
+                background: accent,
+                borderRadius: "10px",
+                transition: "width 300ms cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: `0 0 10px ${accent}44`
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
