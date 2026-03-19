@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
+import { toUserFacingConversionError } from "../../core/error-utils"
 import type {
   ConversionProgressPayload,
   FormatConfig,
@@ -29,6 +30,10 @@ interface BatchSummary {
 
 const MAX_FILE_SIZE_BYTES = 30 * 1024 * 1024
 const MAX_TOTAL_QUEUE_BYTES = 150 * 1024 * 1024
+
+function toMb(sizeInBytes: number): number {
+  return Math.round(sizeInBytes / 1024 / 1024)
+}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -202,7 +207,7 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
       await notifyProgress(item, "success", 100)
       return "success"
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown batch conversion error"
+      const message = toUserFacingConversionError(error, "Unknown batch conversion error")
 
       setItemState(item.id, {
         status: "error",
@@ -226,6 +231,23 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
 
     if (!itemsToProcess.length) {
       return
+    }
+
+    const selectedBytes = itemsToProcess.reduce((sum, item) => sum + item.file.size, 0)
+    const selectedTooLarge = selectedBytes > MAX_TOTAL_QUEUE_BYTES
+
+    if (selectedTooLarge) {
+      const shouldContinue = window.confirm(
+        [
+          `Selected batch is ${toMb(selectedBytes)} MB.`,
+          `Recommended limit is ${toMb(MAX_TOTAL_QUEUE_BYTES)} MB to reduce OOM risk.`,
+          "Continue anyway?"
+        ].join("\n")
+      )
+
+      if (!shouldContinue) {
+        return
+      }
     }
 
     cancelRef.current = false
@@ -415,7 +437,7 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
 
       {queueTooLarge ? (
         <p className="mt-3 text-sm text-amber-700">
-          Warning: queue size is {Math.round(totalQueueBytes / 1024 / 1024)} MB. You may hit memory pressure on AVIF/PDF.
+          Warning: queue size is {toMb(totalQueueBytes)} MB. You may hit memory pressure on AVIF/PDF.
         </p>
       ) : null}
 

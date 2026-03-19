@@ -1,3 +1,4 @@
+import { toUserFacingConversionError } from "../core/error-utils"
 import type { ExtensionStorageState, FormatConfig } from "../core/types"
 import { convertImage } from "../features/converter"
 import {
@@ -137,7 +138,7 @@ async function handleImageMenuClick(
       percent: 100
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unexpected conversion error"
+    const message = toUserFacingConversionError(error, "Unexpected conversion error")
 
     await publishConvertProgress({
       id: progressId,
