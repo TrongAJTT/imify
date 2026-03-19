@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
+import {
+  blobToDownloadDataUrl,
+  toOutputFilename
+} from "../../core/download-utils"
 import { toUserFacingConversionError } from "../../core/error-utils"
 import type {
   ConversionProgressPayload,
@@ -56,13 +60,6 @@ async function publishProgressToActiveTab(payload: ConversionProgressPayload): P
   } catch {
     // Content script may not be available on current page.
   }
-}
-
-function toOutputFilename(originalName: string, targetFormat: ImageFormat): string {
-  const trimmed = originalName.trim() || "image"
-  const lastDot = trimmed.lastIndexOf(".")
-  const baseName = lastDot > 0 ? trimmed.slice(0, lastDot) : trimmed
-  return `${baseName}.${targetFormat}`
 }
 
 export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
@@ -161,18 +158,18 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
     setQueue((current) => [...current, ...nextItems])
   }
 
-  const downloadBlob = async (blob: Blob, fileName: string): Promise<void> => {
-    const url = URL.createObjectURL(blob)
+  const downloadBlob = async (
+    blob: Blob,
+    fileName: string,
+    format: ImageFormat
+  ): Promise<void> => {
+    const dataUrl = await blobToDownloadDataUrl(blob, format)
 
-    try {
-      await chrome.downloads.download({
-        url,
-        filename: fileName,
-        saveAs: false
-      })
-    } finally {
-      setTimeout(() => URL.revokeObjectURL(url), 1500)
-    }
+    await chrome.downloads.download({
+      url: dataUrl,
+      filename: fileName,
+      saveAs: false
+    })
   }
 
   const processItem = async (
@@ -198,7 +195,11 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
       })
       await notifyProgress(item, "processing", 80)
 
-      await downloadBlob(converted.blob, toOutputFilename(item.file.name, config.format))
+      await downloadBlob(
+        converted.blob,
+        toOutputFilename(item.file.name, config.format),
+        config.format
+      )
 
       setItemState(item.id, {
         status: "success",

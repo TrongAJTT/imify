@@ -71,10 +71,26 @@ async function convertToRasterBlob(
     return canvas.convertToBlob({ type: mimeType })
   }
 
-  return canvas.convertToBlob({
+  const outputBlob = await canvas.convertToBlob({
     type: mimeType,
     quality: clampQuality(quality) / 100
   })
+
+  const normalizedType = outputBlob.type.toLowerCase()
+
+  if (targetFormat === "avif" && normalizedType !== "image/avif") {
+    throw new Error(
+      "AVIF encoding is not supported in this browser environment. Please choose JPG/WebP/PNG."
+    )
+  }
+
+  if (targetFormat === "webp" && normalizedType !== "image/webp") {
+    throw new Error(
+      "WebP encoding is not supported in this browser environment. Please choose JPG/PNG."
+    )
+  }
+
+  return outputBlob
 }
 
 export async function convertRasterImage(

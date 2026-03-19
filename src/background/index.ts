@@ -1,5 +1,9 @@
+import {
+  blobToDownloadDataUrl,
+  toOutputFilename
+} from "../core/download-utils"
 import { toUserFacingConversionError } from "../core/error-utils"
-import type { ExtensionStorageState, FormatConfig } from "../core/types"
+import type { ExtensionStorageState, FormatConfig, ImageFormat } from "../core/types"
 import { convertImage } from "../features/converter"
 import {
   ensureStorageState,
@@ -36,32 +40,15 @@ function buildOutputFilename(srcUrl: string, config: FormatConfig): string {
     base = "image"
   }
 
-  return `${sanitizeFileName(base)}.${config.format}`
+  return toOutputFilename(sanitizeFileName(base), config.format)
 }
 
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-
-    reader.onerror = () => {
-      reject(new Error("Unable to convert Blob to data URL"))
-    }
-
-    reader.onloadend = () => {
-      if (typeof reader.result !== "string") {
-        reject(new Error("Invalid FileReader output"))
-        return
-      }
-
-      resolve(reader.result)
-    }
-
-    reader.readAsDataURL(blob)
-  })
-}
-
-async function downloadBlob(blob: Blob, filename: string): Promise<void> {
-  const dataUrl = await blobToDataUrl(blob)
+async function downloadBlob(
+  blob: Blob,
+  filename: string,
+  format: ImageFormat
+): Promise<void> {
+  const dataUrl = await blobToDownloadDataUrl(blob, format)
 
   await chrome.downloads.download({
     url: dataUrl,
@@ -128,7 +115,7 @@ async function handleImageMenuClick(
       percent: 85
     })
 
-    await downloadBlob(converted.blob, fileName)
+    await downloadBlob(converted.blob, fileName, config.format)
 
     await publishConvertProgress({
       id: progressId,
@@ -167,6 +154,20 @@ onStorageStateChanged((state) => {
   void rebuildContextMenu(state).catch((error) => {
     console.error("[imify] Failed to rebuild context menu", error)
   })
+})
+
+chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+  // If the browser attempts to save a JPEG as .jfif (due to Windows registry),
+  // we force it back to .jpg here.
+  if (item.filename.toLowerCase().endsWith(".jfif")) {
+    suggest({
+      filename: item.filename.replace(/\.jfif$/i, ".jpg")
+    })
+    return true
+  }
+
+  suggest()
+  return true
 })
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
