@@ -30,7 +30,7 @@ export function CustomFormatForm({
     value.resize.mode === "scale"
 
   return (
-    <div className="space-y-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+    <div className="space-y-4">
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm text-slate-700 dark:text-slate-200">
           Name
@@ -185,22 +185,24 @@ export function CustomFormatForm({
 
       {errorMessage ? <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p> : null}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          className="rounded bg-slate-900 dark:bg-slate-100 px-3 py-2 text-sm font-medium text-white dark:text-slate-900"
-          onClick={onSubmit}
-          type="button">
-          {submitLabel}
-        </button>
-
+      <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
         {onCancel ? (
           <button
-            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200"
+            className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             onClick={onCancel}
             type="button">
             Cancel
           </button>
         ) : null}
+        <button
+          className="inline-flex items-center gap-2 rounded-lg bg-sky-500 hover:bg-sky-600 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-sky-500/20 transition-all active:scale-95"
+          onClick={onSubmit}
+          type="button">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} />
+          </svg>
+          {submitLabel}
+        </button>
       </div>
     </div>
   )

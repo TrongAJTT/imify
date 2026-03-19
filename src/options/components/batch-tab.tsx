@@ -332,12 +332,12 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
 
   return (
     <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Batch Converter</h2>
+      {/* <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Batch Converter</h2>
       <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
         Convert many images at once with one selected preset. Processing runs locally in this page.
-      </p>
+      </p> */}
 
-      <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
+      <div className="grid gap-3 md:grid-cols-[1fr_auto]">
         <label className="text-sm text-slate-700 dark:text-slate-200">
           Target preset
           <select

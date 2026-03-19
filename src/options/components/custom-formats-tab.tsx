@@ -1,13 +1,20 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
-import type { ExtensionStorageState } from "../../core/types"
+import type { ExtensionStorageState, FormatConfig } from "../../core/types"
 import type { CustomFormatInput } from "../../features/custom-formats"
 import { CustomFormatForm } from "./custom-format-form"
+
+interface PendingDelete {
+  item: FormatConfig
+  index: number
+  expiresAt: number
+}
 
 export function CustomFormatsTab({
   state,
   onCreate,
   onDelete,
+  onRestore,
   onReorder,
   onToggle,
   onUpdate
@@ -15,6 +22,7 @@ export function CustomFormatsTab({
   state: ExtensionStorageState
   onCreate: (input: CustomFormatInput) => Promise<string | null>
   onDelete: (id: string) => Promise<void>
+  onRestore: (item: FormatConfig, index: number) => Promise<void>
   onReorder: (draggedId: string, targetId: string) => Promise<void>
   onToggle: (id: string, enabled: boolean) => Promise<void>
   onUpdate: (id: string, input: CustomFormatInput) => Promise<string | null>
@@ -32,8 +40,56 @@ export function CustomFormatsTab({
     null
   )
   const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
+  const [timeLeftMs, setTimeLeftMs] = useState(0)
+  const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearDeleteTimer = () => {
+    if (!deleteTimerRef.current) {
+      return
+    }
+
+    clearTimeout(deleteTimerRef.current)
+    deleteTimerRef.current = null
+  }
+
+  const triggerDeleteWithUndo = (item: FormatConfig, index: number) => {
+    clearDeleteTimer()
+
+    const expiresAt = Date.now() + 10_000
+    setPendingDelete({
+      item,
+      index,
+      expiresAt
+    })
+    setTimeLeftMs(10_000)
+
+    void onDelete(item.id)
+
+    deleteTimerRef.current = setTimeout(() => {
+      setPendingDelete(null)
+      setTimeLeftMs(0)
+      deleteTimerRef.current = null
+    }, 10_000)
+  }
+
+  const handleUndoDelete = async () => {
+    if (!pendingDelete) {
+      return
+    }
+
+    const restoreTarget = pendingDelete
+    clearDeleteTimer()
+    setPendingDelete(null)
+    setTimeLeftMs(0)
+
+    await onRestore(restoreTarget.item, restoreTarget.index)
+  }
 
   const submitCreate = async () => {
+    // Optimistically close the dialog immediately on Save
+    setIsCreateDialogOpen(false)
+
     const error = await onCreate(createForm)
     setCreateError(error)
 
@@ -46,7 +102,9 @@ export function CustomFormatsTab({
         resize: { mode: "none" }
       })
       setCreateError(null)
-      setIsCreateDialogOpen(false)
+    } else {
+      // Re-open dialog and show error when creation failed
+      setIsCreateDialogOpen(true)
     }
   }
 
@@ -54,6 +112,54 @@ export function CustomFormatsTab({
     setCreateError(null)
     setIsCreateDialogOpen(false)
   }
+
+  useEffect(() => {
+    const hasOpenDialog = isCreateDialogOpen || Boolean(editing)
+
+    if (!hasOpenDialog) {
+      return
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return
+      }
+
+      if (editing) {
+        setEditing(null)
+        return
+      }
+
+      closeCreateDialog()
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown)
+    }
+  }, [isCreateDialogOpen, editing])
+
+  useEffect(() => {
+    if (!pendingDelete) {
+      return
+    }
+
+    const interval = setInterval(() => {
+      const next = Math.max(0, pendingDelete.expiresAt - Date.now())
+      setTimeLeftMs(next)
+    }, 100)
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [pendingDelete])
+
+  useEffect(() => {
+    return () => {
+      clearDeleteTimer()
+    }
+  }, [])
 
   const getResizeLabel = (mode: string, value: unknown) => {
     switch (mode) {
@@ -92,19 +198,23 @@ export function CustomFormatsTab({
 
       {isCreateDialogOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="w-full max-w-2xl rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
+          <div className="w-full max-w-xl rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">Create Custom Format</h3>
               <button
-                className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-700 dark:text-slate-200"
+                aria-label="Close dialog"
+                className="rounded border border-slate-300 dark:border-slate-600 p-1.5 text-slate-700 dark:text-slate-200"
                 onClick={closeCreateDialog}
                 type="button">
-                Close
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                </svg>
               </button>
             </div>
 
             <CustomFormatForm
               errorMessage={createError}
+              onCancel={closeCreateDialog}
               onChange={setCreateForm}
               onSubmit={submitCreate}
               submitLabel="Add custom format"
@@ -114,12 +224,12 @@ export function CustomFormatsTab({
         </div>
       ) : null}
 
-      <div className="mt-5 space-y-3">
-        {state.custom_formats.map((item) => {
+      <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {state.custom_formats.map((item, index) => {
           return (
             <div
               key={item.id}
-              className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-4 transition-all hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-md h-full flex flex-col"
               draggable
               onDragStart={() => setDraggedId(item.id)}
               onDragOver={(event) => event.preventDefault()}
@@ -129,10 +239,9 @@ export function CustomFormatsTab({
                 }
                 setDraggedId(null)
               }}>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-base font-semibold text-slate-900 dark:text-white">{item.name}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Drag to reorder</p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.name}</p>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -143,67 +252,66 @@ export function CustomFormatsTab({
                     onClick={() => {
                       void onToggle(item.id, !item.enabled)
                     }}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                       item.enabled ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
                     }`}>
-                    <span className="sr-only">Toggle custom format</span>
                     <span
                       aria-hidden="true"
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
                         item.enabled ? "translate-x-4" : "translate-x-0"
                       }`}
                     />
                   </button>
-                  <span className="w-8 text-right text-xs font-medium text-slate-600 dark:text-slate-400">
-                    {item.enabled ? "On" : "Off"}
-                  </span>
                 </div>
               </div>
 
-              <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
-                <div className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 px-3 py-2">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Format</p>
-                  <p className="font-medium text-slate-800 dark:text-slate-200">.{item.format}</p>
+              <div className="mt-4 grid gap-2 text-[11px] grid-cols-4 flex-1">
+                <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
+                  <p className="text-slate-500 font-medium uppercase tracking-tighter">Ext</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200">.{item.format}</p>
                 </div>
-                <div className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 px-3 py-2">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Resize</p>
-                  <p className="font-medium text-slate-800 dark:text-slate-200">
+                <div className="col-span-2 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2 min-w-0">
+                  <p className="text-slate-500 font-medium uppercase tracking-tighter">Size</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 truncate">
                     {getResizeLabel(item.resize.mode, item.resize.value)}
                   </p>
                 </div>
-                <div className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 px-3 py-2">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Quality</p>
-                  <p className="font-medium text-slate-800 dark:text-slate-200">
-                    {typeof item.quality === "number" ? `${item.quality}%` : "N/A"}
+                <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
+                  <p className="text-slate-500 font-medium uppercase tracking-tighter">Qual</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-center">
+                    {typeof item.quality === "number" ? `${item.quality}%` : "—"}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-3 flex items-center gap-2">
-                <button
-                  className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-700 dark:text-slate-200"
-                  onClick={() =>
-                    setEditing({
-                      id: item.id,
-                      form: {
-                        name: item.name,
-                        format: item.format,
-                        enabled: item.enabled,
-                        quality: item.quality,
-                        resize: item.resize
-                      },
-                      error: null
-                    })
-                  }
-                  type="button">
-                  Edit
-                </button>
-                <button
-                  className="rounded border border-red-200 bg-red-50 dark:bg-red-900/30 px-2 py-1 text-xs text-red-700 dark:text-red-400"
-                  onClick={() => void onDelete(item.id)}
-                  type="button">
-                  Delete
-                </button>
+              <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-200/50 dark:border-slate-700/50 pt-3">
+                <p className="text-[10px] text-slate-400 font-medium">Drag to reorder</p>
+                <div className="flex gap-1.5">
+                  <button
+                    aria-label="Edit"
+                    className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    onClick={() =>
+                      setEditing({
+                        id: item.id,
+                        form: {...item},
+                        error: null
+                      })
+                    }
+                    type="button">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                    </svg>
+                  </button>
+                  <button
+                    aria-label="Delete"
+                    className="rounded-lg border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                    onClick={() => triggerDeleteWithUndo(item, index)}
+                    type="button">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           )
@@ -218,14 +326,17 @@ export function CustomFormatsTab({
 
       {editing ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="w-full max-w-2xl rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
+          <div className="w-full max-w-xl rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">Edit Custom Format</h3>
               <button
-                className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-700 dark:text-slate-200"
+                aria-label="Close dialog"
+                className="rounded border border-slate-300 dark:border-slate-600 p-1.5 text-slate-700 dark:text-slate-200"
                 onClick={() => setEditing(null)}
                 type="button">
-                Close
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                </svg>
               </button>
             </div>
 
@@ -234,16 +345,52 @@ export function CustomFormatsTab({
               onCancel={() => setEditing(null)}
               onChange={(next) => setEditing({ ...editing, form: next, error: null })}
               onSubmit={async () => {
-                const error = await onUpdate(editing.id, editing.form)
+                const current = editing
+                if (!current) return
 
-                if (!error) {
-                  setEditing(null)
-                } else {
-                  setEditing({ ...editing, error })
+                // Optimistically close the dialog
+                setEditing(null)
+
+                const error = await onUpdate(current.id, current.form)
+
+                if (error) {
+                  // Re-open with error message
+                  setEditing({ id: current.id, form: current.form, error })
                 }
               }}
               submitLabel="Save changes"
               value={editing.form}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {pendingDelete ? (
+        <div className="fixed bottom-6 right-6 z-[70] w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl overflow-hidden">
+          <div className="px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Custom format deleted</p>
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                  {pendingDelete.item.name} will be removed permanently in {Math.max(1, Math.ceil(timeLeftMs / 1000))}s.
+                </p>
+              </div>
+
+              <button
+                className="rounded-md bg-sky-500 hover:bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+                onClick={() => {
+                  void handleUndoDelete()
+                }}
+                type="button">
+                Undo
+              </button>
+            </div>
+          </div>
+
+          <div className="h-1 w-full bg-slate-200 dark:bg-slate-700">
+            <div
+              className="h-full bg-sky-500 transition-[width] duration-100 ease-linear"
+              style={{ width: `${Math.max(0, (timeLeftMs / 10_000) * 100)}%` }}
             />
           </div>
         </div>

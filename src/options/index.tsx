@@ -36,6 +36,7 @@ const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
 
 export default function OptionsPage() {
   const [activeTab, setActiveTab] = useState<OptionsTab>("batch")
+  const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [persistedState, setPersistedState, { isLoading }] = useStorage<PersistedStorageState>(
     { key: STORAGE_KEY, instance: syncStorage },
     DEFAULT_PERSISTED_STATE
@@ -49,6 +50,24 @@ export default function OptionsPage() {
       document.documentElement.classList.remove("dark")
     }
   }, [isDark])
+
+  useEffect(() => {
+    if (!isDonateDialogOpen) {
+      return
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsDonateDialogOpen(false)
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown)
+    }
+  }, [isDonateDialogOpen])
 
   const state = persistedState?.state ?? DEFAULT_STORAGE_STATE
 
@@ -84,30 +103,23 @@ export default function OptionsPage() {
     }
   }
 
-  const handleToggleGlobal = async (format: ImageFormat, enabled: boolean) => {
+  const handleSaveGlobalFormats = async (configs: Record<ImageFormat, FormatConfig>) => {
     await updateState((current) => ({
       ...current,
-      global_formats: {
-        ...current.global_formats,
-        [format]: {
-          ...current.global_formats[format],
-          enabled
-        }
-      }
+      global_formats: configs
     }))
   }
 
-  const handleGlobalQuality = async (format: ImageFormat, quality: number) => {
-    await updateState((current) => ({
-      ...current,
-      global_formats: {
-        ...current.global_formats,
-        [format]: {
-          ...current.global_formats[format],
-          quality: Math.max(1, Math.min(100, Math.round(quality)))
-        }
+  const isDuplicateCustomName = (name: string, excludeId?: string): boolean => {
+    const normalizedName = name.trim().toLowerCase()
+
+    return state.custom_formats.some((entry) => {
+      if (excludeId && entry.id === excludeId) {
+        return false
       }
-    }))
+
+      return entry.name.trim().toLowerCase() === normalizedName
+    })
   }
 
   const handleCreateCustom = async (input: CustomFormatInput): Promise<string | null> => {
@@ -116,6 +128,10 @@ export default function OptionsPage() {
 
     if (error) {
       return error
+    }
+
+    if (isDuplicateCustomName(normalized.name)) {
+      return "Name already exists"
     }
 
     const nextFormat: FormatConfig = {
@@ -143,6 +159,10 @@ export default function OptionsPage() {
       return error
     }
 
+    if (isDuplicateCustomName(normalized.name, id)) {
+      return "Name already exists"
+    }
+
     await updateState((current) => ({
       ...current,
       custom_formats: current.custom_formats.map((entry) =>
@@ -167,6 +187,25 @@ export default function OptionsPage() {
       ...current,
       custom_formats: current.custom_formats.filter((entry) => entry.id !== id)
     }))
+  }
+
+  const handleRestoreCustom = async (entry: FormatConfig, index: number): Promise<void> => {
+    await updateState((current) => {
+      const alreadyExists = current.custom_formats.some((item) => item.id === entry.id)
+
+      if (alreadyExists) {
+        return current
+      }
+
+      const next = [...current.custom_formats]
+      const safeIndex = Math.max(0, Math.min(index, next.length))
+      next.splice(safeIndex, 0, entry)
+
+      return {
+        ...current,
+        custom_formats: next
+      }
+    })
   }
 
   const handleToggleCustom = async (id: string, enabled: boolean): Promise<void> => {
@@ -212,11 +251,8 @@ export default function OptionsPage() {
       case "global":
         return (
           <GlobalFormatsTab
-            onQualityChange={(format, quality) => {
-              void handleGlobalQuality(format, quality)
-            }}
-            onToggle={(format, enabled) => {
-              void handleToggleGlobal(format, enabled)
+            onCommit={async (configs) => {
+              await handleSaveGlobalFormats(configs)
             }}
             state={state}
           />
@@ -227,6 +263,7 @@ export default function OptionsPage() {
             onCreate={handleCreateCustom}
             onDelete={handleDeleteCustom}
             onReorder={handleReorderCustom}
+            onRestore={handleRestoreCustom}
             onToggle={handleToggleCustom}
             onUpdate={handleUpdateCustom}
             state={state}
@@ -279,17 +316,76 @@ export default function OptionsPage() {
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" /></svg>
             </a>
-            <a
-              href="https://ko-fi.com"
-              target="_blank"
-              rel="noreferrer"
+            <button
+              aria-label="Open donate dialog"
               className="p-2.5 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-600 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 dark:text-rose-400 transition-colors"
+              onClick={() => setIsDonateDialogOpen(true)}
               title="Donate"
-            >
+              type="button">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-            </a>
+            </button>
           </div>
         </header>
+
+        {isDonateDialogOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 shadow-2xl relative overflow-hidden">
+              {/* Decorative background element */}
+              <div className="absolute -top-12 -right-12 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
+              <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
+
+              <button
+                aria-label="Close donate dialog"
+                className="absolute top-4 right-4 rounded-full border border-slate-200 dark:border-slate-800 p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                onClick={() => setIsDonateDialogOpen(false)}
+                type="button">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                </svg>
+              </button>
+
+              <div className="text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 mb-6 group transition-transform hover:scale-110 duration-300">
+                  <svg className="h-8 w-8 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Support the Developer</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed max-w-md mx-auto">
+                  Thank you for using Imify! If you find it helpful, consider supporting the developer to help keep the project alive and free for everyone.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* <a
+                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all hover:shadow-md"
+                    href="https://github.com/TrongAJTT/imify"
+                    rel="noreferrer"
+                    target="_blank">
+                    <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" /></svg>
+                    <span className="truncate">GitHub Star</span>
+                  </a> */}
+                  <a
+                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all hover:shadow-md"
+                    href="https://github.com/sponsors/TrongAJTT"
+                    rel="noreferrer"
+                    target="_blank">
+                    <svg className="w-5 h-5 text-pink-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    <span className="truncate">Sponsor me on Github</span>
+                  </a>
+                  <a
+                    className="flex items-center justify-center gap-2 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-900/30 px-3 py-3 text-sm font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all hover:shadow-md h-full"
+                    href="https://www.buymeacoffee.com/TrongAJTT"
+                    rel="noreferrer"
+                    target="_blank">
+                    <svg className="w-5 h-5 text-rose-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M20.2 7c-.4-1.1-1.3-1.8-2.2-2.3C17.1 4.2 16 4 15 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h11c1 0 2.1-.2 3-.7s1.8-1.2 2.2-2.3c.4-1.1.4-2.4 0-3.5 0-.1 0-.1-.1-.2.4-1.1.4-2.4 0-3.5 0-.1-.1-.1-.1-.2-.1.1 0 0 0 0zm-2 7.7c-.1.3-.3.6-.5.8-.2.2-.5.3-.8.4H15v-2h1.9c.3.1.6.2.8.4.2.2.4.5.5.8.1.5.1 1.1 0 1.6zm0-5.4c-.1.3-.3.6-.5.8-.2.2-.5.3-.8.4H15V8.4h1.9c.3.1.6.2.8.4.2.2.4.5.5.8.1.6.1 1.2 0 1.7z"/></svg>
+                    <span className="truncate">Buy Me A Coffee</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-8 flex flex-col md:flex-row gap-8">
           <nav className="flex flex-col gap-2 w-full md:w-64 shrink-0">
@@ -298,6 +394,7 @@ export default function OptionsPage() {
                 key={tab.id}
                 active={tab.id === activeTab}
                 label={tab.label}
+                icon={tab.icon}
                 onClick={() => setActiveTab(tab.id)}
               />
             ))}

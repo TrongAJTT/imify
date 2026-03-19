@@ -16,10 +16,10 @@ export interface PersistedStorageState {
   state: ExtensionStorageState
 }
 
-export const TAB_ITEMS: Array<{ id: OptionsTab; label: string }> = [
-  { id: "batch", label: "Batch Converter" },
-  { id: "global", label: "Global Formats" },
-  { id: "custom", label: "Custom Formats" }
+export const TAB_ITEMS: Array<{ id: OptionsTab; label: string; icon: string }> = [
+  { id: "batch", label: "Batch Converter", icon: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" },
+  { id: "global", label: "Global Formats", icon: "M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" },
+  { id: "custom", label: "Custom Formats", icon: "M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" }
 ]
 
 export const RESIZE_MODE_OPTIONS: Array<{ value: ResizeMode; label: string }> = [
