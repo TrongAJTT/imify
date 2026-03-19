@@ -183,15 +183,6 @@ export function CustomFormatForm({
         ) : null}
       </div>
 
-      <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-        <input
-          checked={value.enabled}
-          onChange={(event) => onChange({ ...value, enabled: event.target.checked })}
-          type="checkbox"
-        />
-        Enabled in context menu
-      </label>
-
       {errorMessage ? <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p> : null}
 
       <div className="flex flex-wrap items-center gap-2">

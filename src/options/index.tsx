@@ -55,14 +55,33 @@ export default function OptionsPage() {
   const updateState = async (
     updater: (current: ExtensionStorageState) => ExtensionStorageState
   ): Promise<void> => {
+    let nextState: ExtensionStorageState | null = null
+
     await setPersistedState((current) => {
-      const source = current ?? DEFAULT_PERSISTED_STATE
+      const sourceState = current?.state && typeof current.state === "object"
+        ? current.state
+        : DEFAULT_STORAGE_STATE
+
+      nextState = updater(sourceState)
 
       return {
         version: STORAGE_VERSION,
-        state: updater(source.state)
+        state: nextState
       }
     })
+
+    if (!nextState) {
+      return
+    }
+
+    try {
+      await chrome.runtime.sendMessage({
+        type: "IMIFY_STATE_UPDATED",
+        payload: nextState
+      })
+    } catch {
+      // Background might be spinning up. Storage listener/lifecycle handlers still provide fallback.
+    }
   }
 
   const handleToggleGlobal = async (format: ImageFormat, enabled: boolean) => {
@@ -150,6 +169,44 @@ export default function OptionsPage() {
     }))
   }
 
+  const handleToggleCustom = async (id: string, enabled: boolean): Promise<void> => {
+    await updateState((current) => ({
+      ...current,
+      custom_formats: current.custom_formats.map((entry) =>
+        entry.id === id
+          ? {
+              ...entry,
+              enabled
+            }
+          : entry
+      )
+    }))
+  }
+
+  const handleReorderCustom = async (draggedId: string, targetId: string): Promise<void> => {
+    if (draggedId === targetId) {
+      return
+    }
+
+    await updateState((current) => {
+      const sourceIndex = current.custom_formats.findIndex((entry) => entry.id === draggedId)
+      const targetIndex = current.custom_formats.findIndex((entry) => entry.id === targetId)
+
+      if (sourceIndex < 0 || targetIndex < 0) {
+        return current
+      }
+
+      const next = [...current.custom_formats]
+      const [moved] = next.splice(sourceIndex, 1)
+      next.splice(targetIndex, 0, moved)
+
+      return {
+        ...current,
+        custom_formats: next
+      }
+    })
+  }
+
   const tabContent = useMemo(() => {
     switch (activeTab) {
       case "global":
@@ -169,6 +226,8 @@ export default function OptionsPage() {
           <CustomFormatsTab
             onCreate={handleCreateCustom}
             onDelete={handleDeleteCustom}
+            onReorder={handleReorderCustom}
+            onToggle={handleToggleCustom}
             onUpdate={handleUpdateCustom}
             state={state}
           />

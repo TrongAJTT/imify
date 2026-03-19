@@ -18,6 +18,7 @@
     "react-dom": "18.2.0"
   },
   "devDependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@ianvs/prettier-plugin-sort-imports": "4.1.1",
     "@jsquash/avif": "^2.1.1",
     "@types/chrome": "0.0.258",

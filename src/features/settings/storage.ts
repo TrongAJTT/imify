@@ -13,6 +13,16 @@ interface PersistedStorageState {
   state: ExtensionStorageState
 }
 
+function isStorageStateShape(value: unknown): value is ExtensionStorageState {
+  if (!value || typeof value !== "object") {
+    return false
+  }
+
+  const candidate = value as Partial<ExtensionStorageState>
+
+  return "global_formats" in candidate || "custom_formats" in candidate
+}
+
 function isImageFormat(value: unknown): value is ImageFormat {
   return (
     value === "jpg" ||
@@ -89,10 +99,33 @@ function sanitizeState(state: unknown): ExtensionStorageState {
 }
 
 function parsePersistedState(value: unknown): PersistedStorageState {
+  if (typeof value === "string") {
+    try {
+      return parsePersistedState(JSON.parse(value))
+    } catch {
+      return {
+        version: STORAGE_VERSION,
+        state: DEFAULT_STORAGE_STATE
+      }
+    }
+  }
+
+  if (value && typeof value === "object" && "value" in (value as Record<string, unknown>)) {
+    return parsePersistedState((value as { value: unknown }).value)
+  }
+
   if (!value || typeof value !== "object") {
     return {
       version: STORAGE_VERSION,
       state: DEFAULT_STORAGE_STATE
+    }
+  }
+
+  // Backward compatibility: older builds may have stored ExtensionStorageState directly.
+  if (isStorageStateShape(value)) {
+    return {
+      version: STORAGE_VERSION,
+      state: sanitizeState(value)
     }
   }
 

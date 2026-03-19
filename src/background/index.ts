@@ -156,6 +156,22 @@ onStorageStateChanged((state) => {
   })
 })
 
+chrome.runtime.onInstalled.addListener(() => {
+  void getStorageState()
+    .then((state) => rebuildContextMenu(state))
+    .catch((error) => {
+      console.error("[imify] Failed to rebuild context menu on install", error)
+    })
+})
+
+chrome.runtime.onStartup.addListener(() => {
+  void getStorageState()
+    .then((state) => rebuildContextMenu(state))
+    .catch((error) => {
+      console.error("[imify] Failed to rebuild context menu on startup", error)
+    })
+})
+
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
   // If the browser attempts to save a JPEG as .jfif (due to Windows registry),
   // we force it back to .jpg here.
@@ -176,4 +192,14 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 chrome.action.onClicked.addListener(() => {
   void chrome.runtime.openOptionsPage()
+})
+
+chrome.runtime.onMessage.addListener((message) => {
+  if (message?.type !== "IMIFY_STATE_UPDATED" || !message.payload) {
+    return
+  }
+
+  void rebuildContextMenu(message.payload as ExtensionStorageState).catch((error) => {
+    console.error("[imify] Failed to rebuild context menu from message", error)
+  })
 })
