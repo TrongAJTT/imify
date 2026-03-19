@@ -1,5 +1,6 @@
 import { calculateContainPlacement, calculateDimensions, clampQuality } from "../../core/image-utils"
 import type { ImageFormat, ResizeConfig } from "../../core/types"
+import { encodeAvif } from "./avif-encoder"
 import { encodeImageDataToBmp } from "./bmp-encoder"
 
 const MIME_BY_FORMAT: Record<Exclude<ImageFormat, "bmp" | "pdf">, string> = {
@@ -78,11 +79,7 @@ async function convertToRasterBlob(
 
   const normalizedType = outputBlob.type.toLowerCase()
 
-  if (targetFormat === "avif" && normalizedType !== "image/avif") {
-    throw new Error(
-      "AVIF encoding is not supported in this browser environment. Please choose JPG/WebP/PNG."
-    )
-  }
+  // AVIF is handled in a dedicated path; this guard remains for WebP fallback.
 
   if (targetFormat === "webp" && normalizedType !== "image/webp") {
     throw new Error(
@@ -124,6 +121,18 @@ export async function convertRasterImage(
         width: targetWidth,
         height: targetHeight,
         mimeType: "image/bmp"
+      }
+    }
+
+    if (targetFormat === "avif") {
+      const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
+      const outputBlob = await encodeAvif(imageData, { quality: clampQuality(quality) })
+
+      return {
+        outputBlob,
+        width: targetWidth,
+        height: targetHeight,
+        mimeType: "image/avif"
       }
     }
 

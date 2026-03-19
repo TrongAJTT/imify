@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
-    "package": "plasmo package"
+    "package": "plasmo package",
+    "sync:avif-wasm": "node scripts/sync-avif-wasm.mjs"
   },
   "dependencies": {
     "@plasmohq/storage": "^1.15.0",
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@jsquash/avif": "^2.1.1",
     "@types/chrome": "0.0.258",
     "@types/node": "20.11.5",
     "@types/react": "18.2.48",
@@ -34,6 +36,19 @@
     ],
     "host_permissions": [
       "https://*/*"
-    ]
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "assets/wasm/*"
+        ],
+        "matches": [
+          "<all_urls>"
+        ]
+      }
+    ],
+    "content_security_policy": {
+      "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+    }
   }
 }
