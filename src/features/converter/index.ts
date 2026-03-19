@@ -18,7 +18,10 @@ export async function convertImage(
   const { sourceBlob, config } = params
 
   if (config.format === "pdf") {
-    const blob = await convertImageToPdf()
+    const blob = await convertImageToPdf({
+      sourceBlob,
+      resize: config.resize
+    })
 
     return {
       blob,
