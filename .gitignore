@@ -33,3 +33,5 @@ dist/
 .tsbuildinfo
 
 SPECIFICATIONS.md
+.docs/
+.github/copilot-instructions.md
