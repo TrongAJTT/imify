@@ -30,21 +30,21 @@ export function CustomFormatForm({
     value.resize.mode === "scale"
 
   return (
-    <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+    <div className="space-y-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="text-sm text-slate-700">
+        <label className="text-sm text-slate-700 dark:text-slate-200">
           Name
           <input
-            className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm"
             onChange={(event) => onChange({ ...value, name: event.target.value })}
             value={value.name}
           />
         </label>
 
-        <label className="text-sm text-slate-700">
+        <label className="text-sm text-slate-700 dark:text-slate-200">
           Format
           <select
-            className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm"
             onChange={(event) =>
               onChange({
                 ...value,
@@ -70,7 +70,7 @@ export function CustomFormatForm({
       </div>
 
       {canSetQuality ? (
-        <label className="block text-sm text-slate-700">
+        <label className="block text-sm text-slate-700 dark:text-slate-200">
           Quality ({value.quality ?? 90}%)
           <input
             className="mt-1 w-full"
@@ -84,10 +84,10 @@ export function CustomFormatForm({
       ) : null}
 
       <div className="grid gap-3 md:grid-cols-3">
-        <label className="text-sm text-slate-700">
+        <label className="text-sm text-slate-700 dark:text-slate-200">
           Resize mode
           <select
-            className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm"
             onChange={(event) =>
               onChange({
                 ...value,
@@ -113,10 +113,10 @@ export function CustomFormatForm({
         </label>
 
         {needsNumericResize ? (
-          <label className="text-sm text-slate-700">
+          <label className="text-sm text-slate-700 dark:text-slate-200">
             Value ({value.resize.mode === "scale" ? "%" : "px"})
             <input
-              className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
+              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm"
               min={1}
               onChange={(event) =>
                 onChange({
@@ -134,10 +134,10 @@ export function CustomFormatForm({
         ) : null}
 
         {isPageSize ? (
-          <label className="text-sm text-slate-700">
+          <label className="text-sm text-slate-700 dark:text-slate-200">
             Paper
             <select
-              className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
+              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm"
               onChange={(event) =>
                 onChange({
                   ...value,
@@ -158,10 +158,10 @@ export function CustomFormatForm({
         ) : null}
 
         {isPageSize ? (
-          <label className="text-sm text-slate-700">
+          <label className="text-sm text-slate-700 dark:text-slate-200">
             DPI
             <select
-              className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-sm disabled:bg-slate-200"
+              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm disabled:bg-slate-200 dark:bg-slate-700"
               disabled={value.format === "pdf"}
               onChange={(event) =>
                 onChange({
@@ -183,7 +183,7 @@ export function CustomFormatForm({
         ) : null}
       </div>
 
-      <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+      <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
         <input
           checked={value.enabled}
           onChange={(event) => onChange({ ...value, enabled: event.target.checked })}
@@ -192,11 +192,11 @@ export function CustomFormatForm({
         Enabled in context menu
       </label>
 
-      {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
+      {errorMessage ? <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p> : null}
 
       <div className="flex flex-wrap items-center gap-2">
         <button
-          className="rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white"
+          className="rounded bg-slate-900 dark:bg-slate-100 px-3 py-2 text-sm font-medium text-white dark:text-slate-900"
           onClick={onSubmit}
           type="button">
           {submitLabel}
@@ -204,7 +204,7 @@ export function CustomFormatForm({
 
         {onCancel ? (
           <button
-            className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200"
             onClick={onCancel}
             type="button">
             Cancel

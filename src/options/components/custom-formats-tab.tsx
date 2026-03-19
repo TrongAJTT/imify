@@ -41,9 +41,9 @@ export function CustomFormatsTab({
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-slate-900">Custom Formats</h2>
-      <p className="mt-2 text-sm text-slate-600">
+    <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+      <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Custom Formats</h2>
+      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
         Add your own format presets for resize mode, quality, and paper settings.
       </p>
 
@@ -60,7 +60,7 @@ export function CustomFormatsTab({
       <div className="mt-4 overflow-x-auto">
         <table className="min-w-full border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-slate-500">
+            <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
               <th className="py-2 pr-4 font-medium">Name</th>
               <th className="py-2 pr-4 font-medium">Format</th>
               <th className="py-2 pr-4 font-medium">Resize</th>
@@ -96,14 +96,14 @@ export function CustomFormatsTab({
 
               return (
                 <tr key={item.id} className="border-b border-slate-100">
-                  <td className="py-2 pr-4 text-slate-800">{item.name}</td>
-                  <td className="py-2 pr-4 text-slate-600">.{item.format}</td>
-                  <td className="py-2 pr-4 text-slate-600">{item.resize.mode}</td>
-                  <td className="py-2 pr-4 text-slate-600">{item.enabled ? "Yes" : "No"}</td>
+                  <td className="py-2 pr-4 text-slate-800 dark:text-slate-200">{item.name}</td>
+                  <td className="py-2 pr-4 text-slate-600 dark:text-slate-300">.{item.format}</td>
+                  <td className="py-2 pr-4 text-slate-600 dark:text-slate-300">{item.resize.mode}</td>
+                  <td className="py-2 pr-4 text-slate-600 dark:text-slate-300">{item.enabled ? "Yes" : "No"}</td>
                   <td className="py-2 pr-4">
                     <div className="flex gap-2">
                       <button
-                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                        className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-700 dark:text-slate-200"
                         onClick={() =>
                           setEditing({
                             id: item.id,
@@ -120,7 +120,7 @@ export function CustomFormatsTab({
                         Edit
                       </button>
                       <button
-                        className="rounded border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700"
+                        className="rounded border border-red-200 bg-red-50 dark:bg-red-900/30 px-2 py-1 text-xs text-red-700 dark:text-red-400"
                         onClick={() => void onDelete(item.id)}
                         type="button">
                         Delete
@@ -133,7 +133,7 @@ export function CustomFormatsTab({
 
             {state.custom_formats.length === 0 ? (
               <tr>
-                <td className="py-4 text-sm text-slate-500" colSpan={5}>
+                <td className="py-4 text-sm text-slate-500 dark:text-slate-400" colSpan={5}>
                   No custom formats yet.
                 </td>
               </tr>

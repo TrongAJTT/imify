@@ -331,17 +331,17 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
   const queueTooLarge = totalQueueBytes > MAX_TOTAL_QUEUE_BYTES
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-slate-900">Batch Converter</h2>
-      <p className="mt-2 text-sm text-slate-600">
+    <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+      <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Batch Converter</h2>
+      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
         Convert many images at once with one selected preset. Processing runs locally in this page.
       </p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
-        <label className="text-sm text-slate-700">
+        <label className="text-sm text-slate-700 dark:text-slate-200">
           Target preset
           <select
-            className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-2 text-sm"
+            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-sm"
             disabled={!configs.length || isRunning}
             onChange={(event) => setSelectedConfigId(event.target.value)}
             value={selectedConfigId}>
@@ -353,10 +353,10 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
           </select>
         </label>
 
-        <label className="text-sm text-slate-700">
+        <label className="text-sm text-slate-700 dark:text-slate-200">
           Concurrency
           <select
-            className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-2 text-sm"
+            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-sm"
             disabled={isRunning}
             onChange={(event) => setConcurrency(Number(event.target.value))}
             value={concurrency}>
@@ -368,7 +368,7 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
 
         <div className="flex items-end gap-2">
           <button
-            className="rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded bg-slate-900 dark:bg-slate-100 px-3 py-2 text-sm font-medium text-white dark:text-slate-900 disabled:opacity-50"
             disabled={!selectedConfig || isRunning || queue.length === 0}
             onClick={() => {
               void runBatch("all")
@@ -377,7 +377,7 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
             {isRunning ? "Running..." : "Start Batch"}
           </button>
           <button
-            className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 disabled:opacity-50"
+            className="rounded border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 text-sm font-medium text-amber-700 dark:text-amber-400 disabled:opacity-50"
             disabled={isRunning || !queue.some((item) => item.status === "error")}
             onClick={() => {
               void runBatch("failed")
@@ -386,21 +386,21 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
             Retry Failed
           </button>
           <button
-            className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 disabled:opacity-50"
+            className="rounded border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-400 disabled:opacity-50"
             disabled={!isRunning}
             onClick={requestCancel}
             type="button">
             {cancelRequested ? "Canceling..." : "Cancel"}
           </button>
           <button
-            className="rounded border border-indigo-300 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 disabled:opacity-50"
+            className="rounded border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-400 disabled:opacity-50"
             disabled={!isRunning}
             onClick={togglePause}
             type="button">
             {paused ? "Resume" : "Pause"}
           </button>
           <button
-            className="rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
+            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 disabled:opacity-50"
             disabled={isRunning || queue.length === 0}
             onClick={() => setQueue([])}
             type="button">
@@ -410,7 +410,7 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
       </div>
 
       <label
-        className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center hover:border-slate-400"
+        className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 px-4 py-8 text-center hover:border-slate-400 dark:border-slate-500"
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => {
           event.preventDefault()
@@ -422,22 +422,22 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
           onChange={(event) => appendFiles(event.target.files)}
           type="file"
         />
-        <p className="text-sm font-medium text-slate-700">Drop image files here or click to browse</p>
-        <p className="mt-1 text-xs text-slate-500">Only image files are accepted.</p>
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Drop image files here or click to browse</p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Only image files are accepted.</p>
       </label>
 
       {cancelRequested ? (
-        <p className="mt-3 text-sm text-amber-700">
+        <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">
           Cancel requested. Current in-flight items will finish before stopping.
         </p>
       ) : null}
 
       {paused ? (
-        <p className="mt-3 text-sm text-indigo-700">Batch is paused. Click Resume to continue.</p>
+        <p className="mt-3 text-sm text-indigo-700 dark:text-indigo-400">Batch is paused. Click Resume to continue.</p>
       ) : null}
 
       {queueTooLarge ? (
-        <p className="mt-3 text-sm text-amber-700">
+        <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">
           Warning: queue size is {toMb(totalQueueBytes)} MB. You may hit memory pressure on AVIF/PDF.
         </p>
       ) : null}
@@ -452,32 +452,32 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
                 : "bg-blue-500"
 
           return (
-            <div key={item.id} className="rounded border border-slate-200 bg-slate-50 px-3 py-2">
+            <div key={item.id} className="rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
               <div className="flex items-center justify-between gap-2 text-sm">
-                <span className="truncate text-slate-800">{item.file.name}</span>
-                <span className="shrink-0 text-xs uppercase text-slate-500">{item.status}</span>
+                <span className="truncate text-slate-800 dark:text-slate-200">{item.file.name}</span>
+                <span className="shrink-0 text-xs uppercase text-slate-500 dark:text-slate-400">{item.status}</span>
               </div>
 
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200">
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                 <div
                   className={`h-full ${color} transition-all`}
                   style={{ width: `${item.percent}%` }}
                 />
               </div>
 
-              {item.message ? <p className="mt-1 text-xs text-red-600">{item.message}</p> : null}
+              {item.message ? <p className="mt-1 text-xs text-red-600 dark:text-red-400">{item.message}</p> : null}
             </div>
           )
         })}
 
         {queue.length === 0 ? (
-          <p className="text-sm text-slate-500">No files in queue.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">No files in queue.</p>
         ) : null}
       </div>
 
       {summary ? (
-        <div className="mt-4 rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-          <p className="font-semibold text-slate-900">Last run summary</p>
+        <div className="mt-4 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3 text-sm text-slate-700 dark:text-slate-200">
+          <p className="font-semibold text-slate-900 dark:text-white">Last run summary</p>
           <p>
             Mode: {summary.mode === "all" ? "All queued" : "Retry failed"} | Total: {summary.total}
           </p>

@@ -17,9 +17,9 @@ export interface PersistedStorageState {
 }
 
 export const TAB_ITEMS: Array<{ id: OptionsTab; label: string }> = [
+  { id: "batch", label: "Batch Converter" },
   { id: "global", label: "Global Formats" },
-  { id: "custom", label: "Custom Formats" },
-  { id: "batch", label: "Batch Converter" }
+  { id: "custom", label: "Custom Formats" }
 ]
 
 export const RESIZE_MODE_OPTIONS: Array<{ value: ResizeMode; label: string }> = [

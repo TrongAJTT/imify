@@ -173,3 +173,7 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   void handleImageMenuClick(info, tab)
 })
+
+chrome.action.onClicked.addListener(() => {
+  void chrome.runtime.openOptionsPage()
+})
