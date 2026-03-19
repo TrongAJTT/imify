@@ -1,72 +1,41 @@
+import JSZip from "jszip"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import {
-  blobToDownloadDataUrl,
-  toOutputFilename
-} from "../../core/download-utils"
+import { toOutputFilename } from "../../core/download-utils"
 import { toUserFacingConversionError } from "../../core/error-utils"
-import type {
-  ConversionProgressPayload,
-  FormatConfig,
-  ImageFormat
-} from "../../core/types"
+import type { FormatConfig } from "../../core/types"
 import { convertImage } from "../../features/converter"
+import { BatchActionBar } from "./batch/action-bar"
+import { QueueItemCard } from "./batch/queue-item-card"
+import type {
+  BatchQueueItem,
+  BatchRunMode,
+  BatchSetupHandlers,
+  BatchSetupState,
+  BatchSummary
+} from "./batch/types"
+import {
+  MAX_FILE_SIZE_BYTES,
+  MAX_TOTAL_QUEUE_BYTES,
+  downloadWithFilename,
+  formatBytes,
+  notifyProgress,
+  sleep,
+  toMb,
+  withBatchResize
+} from "./batch/utils"
 
-type BatchItemStatus = "queued" | "processing" | "success" | "error"
-type BatchRunMode = "all" | "failed"
-
-interface BatchQueueItem {
-  id: string
-  file: File
-  status: BatchItemStatus
-  percent: number
-  message?: string
+interface BatchConverterTabProps {
+  configs: FormatConfig[]
+  setup: BatchSetupState
+  setupHandlers: BatchSetupHandlers
+  onRunningStateChange?: (running: boolean) => void
 }
 
-interface BatchSummary {
-  mode: BatchRunMode
-  total: number
-  success: number
-  failed: number
-  canceled: boolean
-  durationMs: number
-}
-
-const MAX_FILE_SIZE_BYTES = 30 * 1024 * 1024
-const MAX_TOTAL_QUEUE_BYTES = 150 * 1024 * 1024
-
-function toMb(sizeInBytes: number): number {
-  return Math.round(sizeInBytes / 1024 / 1024)
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
-}
-
-async function publishProgressToActiveTab(payload: ConversionProgressPayload): Promise<void> {
-  try {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
-    const activeTabId = tabs[0]?.id
-    if (!activeTabId) {
-      return
-    }
-
-    await chrome.tabs.sendMessage(activeTabId, {
-      type: "CONVERT_PROGRESS",
-      payload
-    })
-  } catch {
-    // Content script may not be available on current page.
-  }
-}
-
-export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
-  const [selectedConfigId, setSelectedConfigId] = useState<string>(configs[0]?.id ?? "")
+export function BatchConverterTab({ configs, setup, setupHandlers, onRunningStateChange }: BatchConverterTabProps) {
   const [queue, setQueue] = useState<BatchQueueItem[]>([])
   const [isRunning, setIsRunning] = useState(false)
-  const [concurrency, setConcurrency] = useState(2)
+  const [isExporting, setIsExporting] = useState(false)
   const [cancelRequested, setCancelRequested] = useState(false)
   const [paused, setPaused] = useState(false)
   const [summary, setSummary] = useState<BatchSummary | null>(null)
@@ -77,26 +46,46 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
     pauseRef.current = paused
   }, [paused])
 
-  const selectedConfig = useMemo(
-    () => configs.find((entry) => entry.id === selectedConfigId) ?? null,
-    [configs, selectedConfigId]
-  )
+  useEffect(() => {
+    onRunningStateChange?.(isRunning)
+  }, [isRunning, onRunningStateChange])
 
   useEffect(() => {
     if (!configs.length) {
-      setSelectedConfigId("")
+      if (setup.selectedConfigId) {
+        setupHandlers.onSelectedConfigIdChange("")
+      }
       return
     }
 
-    const exists = configs.some((entry) => entry.id === selectedConfigId)
+    const exists = configs.some((entry) => entry.id === setup.selectedConfigId)
     if (!exists) {
-      setSelectedConfigId(configs[0].id)
+      setupHandlers.onSelectedConfigIdChange(configs[0].id)
     }
-  }, [configs, selectedConfigId])
+  }, [configs, setup.selectedConfigId, setupHandlers])
+
+  const selectedConfig = useMemo(
+    () => configs.find((entry) => entry.id === setup.selectedConfigId) ?? null,
+    [configs, setup.selectedConfigId]
+  )
+
+  const effectiveConfig = useMemo(() => {
+    if (!selectedConfig) {
+      return null
+    }
+
+    return withBatchResize(
+      selectedConfig,
+      setup.resizeMode,
+      setup.resizeValue,
+      setup.paperSize,
+      setup.dpi
+    )
+  }, [selectedConfig, setup.resizeMode, setup.resizeValue, setup.paperSize, setup.dpi])
 
   const setItemState = (
     id: string,
-    partial: Partial<Pick<BatchQueueItem, "status" | "percent" | "message">>
+    partial: Partial<Pick<BatchQueueItem, "status" | "percent" | "message" | "outputBlob" | "outputFileName">>
   ) => {
     setQueue((current) =>
       current.map((item) =>
@@ -110,24 +99,8 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
     )
   }
 
-  const notifyProgress = async (
-    item: BatchQueueItem,
-    status: ConversionProgressPayload["status"],
-    percent: number,
-    message?: string
-  ) => {
-    if (!selectedConfig) {
-      return
-    }
-
-    await publishProgressToActiveTab({
-      id: item.id,
-      fileName: item.file.name,
-      targetFormat: selectedConfig.format,
-      status,
-      percent,
-      message
-    })
+  const removeItem = (id: string) => {
+    setQueue((current) => current.filter((item) => item.id !== id))
   }
 
   const appendFiles = (files: FileList | null) => {
@@ -158,30 +131,15 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
     setQueue((current) => [...current, ...nextItems])
   }
 
-  const downloadBlob = async (
-    blob: Blob,
-    fileName: string,
-    format: ImageFormat
-  ): Promise<void> => {
-    const dataUrl = await blobToDownloadDataUrl(blob, format)
-
-    await chrome.downloads.download({
-      url: dataUrl,
-      filename: fileName,
-      saveAs: false
-    })
-  }
-
-  const processItem = async (
-    item: BatchQueueItem,
-    config: FormatConfig
-  ): Promise<"success" | "error"> => {
+  const processItem = async (item: BatchQueueItem, config: FormatConfig): Promise<"success" | "error"> => {
     setItemState(item.id, {
       status: "processing",
       percent: 10,
-      message: undefined
+      message: undefined,
+      outputBlob: undefined,
+      outputFileName: undefined
     })
-    await notifyProgress(item, "processing", 10)
+    await notifyProgress(item.id, item.file.name, config, "processing", 10)
 
     try {
       const converted = await convertImage({
@@ -193,27 +151,21 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
         status: "processing",
         percent: 72
       })
-      await notifyProgress(item, "processing", 72, "Converting image...")
+      await notifyProgress(item.id, item.file.name, config, "processing", 72, "Converting image...")
 
       setItemState(item.id, {
         status: "processing",
         percent: 92
       })
-      await notifyProgress(item, "processing", 92, "Preparing data for download...")
+      await notifyProgress(item.id, item.file.name, config, "processing", 92, "Preparing output preview...")
 
       setItemState(item.id, {
         status: "success",
-        percent: 100
+        percent: 100,
+        outputBlob: converted.blob,
+        outputFileName: toOutputFilename(item.file.name, config.format)
       })
-      await notifyProgress(item, "success", 100, "Opening download dialog...")
-
-      await sleep(220)
-
-      await downloadBlob(
-        converted.blob,
-        toOutputFilename(item.file.name, config.format),
-        config.format
-      )
+      await notifyProgress(item.id, item.file.name, config, "success", 100, "Ready for download")
       return "success"
     } catch (error) {
       const message = toUserFacingConversionError(error, "Unknown batch conversion error")
@@ -221,15 +173,17 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
       setItemState(item.id, {
         status: "error",
         percent: 100,
-        message
+        message,
+        outputBlob: undefined,
+        outputFileName: undefined
       })
-      await notifyProgress(item, "error", 100, message)
+      await notifyProgress(item.id, item.file.name, config, "error", 100, message)
       return "error"
     }
   }
 
   const runBatch = async (mode: BatchRunMode = "all") => {
-    if (!selectedConfig || isRunning) {
+    if (!effectiveConfig || isRunning) {
       return
     }
 
@@ -270,7 +224,7 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
     let failedCount = 0
 
     try {
-      for (let start = 0; start < itemsToProcess.length; start += concurrency) {
+      for (let start = 0; start < itemsToProcess.length; start += setup.concurrency) {
         if (cancelRef.current) {
           break
         }
@@ -283,8 +237,8 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
           break
         }
 
-        const batchSlice = itemsToProcess.slice(start, start + concurrency)
-        const results = await Promise.all(batchSlice.map((item) => processItem(item, selectedConfig)))
+        const batchSlice = itemsToProcess.slice(start, start + setup.concurrency)
+        const results = await Promise.all(batchSlice.map((item) => processItem(item, effectiveConfig)))
 
         for (const status of results) {
           if (status === "success") {
@@ -301,8 +255,7 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
       const canceled = cancelRef.current
 
       if (successCount + failedCount < total) {
-        const missing = total - (successCount + failedCount)
-        failedCount += missing
+        failedCount += total - (successCount + failedCount)
       }
 
       setSummary({
@@ -322,6 +275,47 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
     }
   }
 
+  const downloadIndividually = async () => {
+    const successful = queue.filter((item) => item.status === "success" && item.outputBlob && item.outputFileName)
+
+    if (!successful.length || isExporting) {
+      return
+    }
+
+    setIsExporting(true)
+
+    try {
+      for (const item of successful) {
+        await downloadWithFilename(item.outputBlob as Blob, item.outputFileName as string)
+        await sleep(120)
+      }
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const downloadAsZip = async () => {
+    const successful = queue.filter((item) => item.status === "success" && item.outputBlob && item.outputFileName)
+
+    if (!successful.length || isExporting) {
+      return
+    }
+
+    setIsExporting(true)
+
+    try {
+      const zip = new JSZip()
+      for (const item of successful) {
+        zip.file(item.outputFileName as string, item.outputBlob as Blob)
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } })
+      await downloadWithFilename(zipBlob, `imify_batch_${Date.now()}.zip`)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const requestCancel = () => {
     cancelRef.current = true
     setCancelRequested(true)
@@ -331,108 +325,69 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
     setPaused((current) => !current)
   }
 
-  const totalQueueBytes = useMemo(
-    () => queue.reduce((sum, item) => sum + item.file.size, 0),
+  const totalQueueBytes = useMemo(() => queue.reduce((sum, item) => sum + item.file.size, 0), [queue])
+  const queueTooLarge = totalQueueBytes > MAX_TOTAL_QUEUE_BYTES
+
+  const queueStats = useMemo(
+    () => ({
+      queued: queue.filter((item) => item.status === "queued").length,
+      processing: queue.filter((item) => item.status === "processing").length,
+      success: queue.filter((item) => item.status === "success").length,
+      error: queue.filter((item) => item.status === "error").length
+    }),
     [queue]
   )
 
-  const queueTooLarge = totalQueueBytes > MAX_TOTAL_QUEUE_BYTES
+  const successfulOutputs = useMemo(
+    () => queue.filter((item) => item.status === "success" && item.outputBlob && item.outputFileName),
+    [queue]
+  )
+
+  const sourceTotalAfterRun = useMemo(
+    () => successfulOutputs.reduce((sum, item) => sum + item.file.size, 0),
+    [successfulOutputs]
+  )
+
+  const outputTotalAfterRun = useMemo(
+    () => successfulOutputs.reduce((sum, item) => sum + (item.outputBlob as Blob).size, 0),
+    [successfulOutputs]
+  )
+
+  const reductionPercent = useMemo(() => {
+    if (!sourceTotalAfterRun) {
+      return 0
+    }
+
+    const ratio = ((sourceTotalAfterRun - outputTotalAfterRun) / sourceTotalAfterRun) * 100
+    return Number.isFinite(ratio) ? ratio : 0
+  }, [sourceTotalAfterRun, outputTotalAfterRun])
+
+  const canRetryFailed = queueStats.error > 0 && !isRunning
+  const canStartBatch = Boolean(effectiveConfig) && !isRunning && queue.length > 0
 
   return (
     <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
-      {/* <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Batch Converter</h2>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        Convert many images at once with one selected preset. Processing runs locally in this page.
-      </p> */}
-
-      <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-        <label className="text-sm text-slate-700 dark:text-slate-200">
-          Target preset
-          <select
-            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-sm"
-            disabled={!configs.length || isRunning}
-            onChange={(event) => setSelectedConfigId(event.target.value)}
-            value={selectedConfigId}>
-            {configs.map((config) => (
-              <option key={config.id} value={config.id}>
-                {config.name} (.{config.format})
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="text-sm text-slate-700 dark:text-slate-200">
-          Concurrency
-          <select
-            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-sm"
-            disabled={isRunning}
-            onChange={(event) => setConcurrency(Number(event.target.value))}
-            value={concurrency}>
-            <option value={1}>1 (safe)</option>
-            <option value={2}>2 (balanced)</option>
-            <option value={3}>3 (faster)</option>
-          </select>
-        </label>
-
-        <div className="flex items-end gap-2">
-          <button
-            className="rounded bg-slate-900 dark:bg-slate-100 px-3 py-2 text-sm font-medium text-white dark:text-slate-900 disabled:opacity-50"
-            disabled={!selectedConfig || isRunning || queue.length === 0}
-            onClick={() => {
-              void runBatch("all")
-            }}
-            type="button">
-            {isRunning ? "Running..." : "Start Batch"}
-          </button>
-          <button
-            className="rounded border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 text-sm font-medium text-amber-700 dark:text-amber-400 disabled:opacity-50"
-            disabled={isRunning || !queue.some((item) => item.status === "error")}
-            onClick={() => {
-              void runBatch("failed")
-            }}
-            type="button">
-            Retry Failed
-          </button>
-          <button
-            className="rounded border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-400 disabled:opacity-50"
-            disabled={!isRunning}
-            onClick={requestCancel}
-            type="button">
-            {cancelRequested ? "Canceling..." : "Cancel"}
-          </button>
-          <button
-            className="rounded border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-400 disabled:opacity-50"
-            disabled={!isRunning}
-            onClick={togglePause}
-            type="button">
-            {paused ? "Resume" : "Pause"}
-          </button>
-          <button
-            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 disabled:opacity-50"
-            disabled={isRunning || queue.length === 0}
-            onClick={() => setQueue([])}
-            type="button">
-            Clear
-          </button>
-        </div>
-      </div>
-
-      <label
-        className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 px-4 py-8 text-center hover:border-slate-400 dark:border-slate-500"
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={(event) => {
-          event.preventDefault()
-          appendFiles(event.dataTransfer.files)
-        }}>
-        <input
-          className="hidden"
-          multiple
-          onChange={(event) => appendFiles(event.target.files)}
-          type="file"
-        />
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Drop image files here or click to browse</p>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Only image files are accepted.</p>
-      </label>
+      <BatchActionBar
+        canRetryFailed={canRetryFailed}
+        canStartBatch={canStartBatch}
+        cancelRequested={cancelRequested}
+        isRunning={isRunning}
+        onCancel={requestCancel}
+        onClear={() => {
+          setQueue([])
+          setSummary(null)
+        }}
+        onRunAll={() => {
+          void runBatch("all")
+        }}
+        onRunFailed={() => {
+          void runBatch("failed")
+        }}
+        onTogglePause={togglePause}
+        paused={paused}
+        queueHasItems={queue.length > 0}
+        queueStats={queueStats}
+      />
 
       {cancelRequested ? (
         <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">
@@ -450,51 +405,93 @@ export function BatchConverterTab({ configs }: { configs: FormatConfig[] }) {
         </p>
       ) : null}
 
-      <div className="mt-4 space-y-2">
-        {queue.map((item) => {
-          const color =
-            item.status === "success"
-              ? "bg-emerald-500"
-              : item.status === "error"
-                ? "bg-red-500"
-                : "bg-blue-500"
-
-          return (
-            <div key={item.id} className="rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
-              <div className="flex items-center justify-between gap-2 text-sm">
-                <span className="truncate text-slate-800 dark:text-slate-200">{item.file.name}</span>
-                <span className="shrink-0 text-xs uppercase text-slate-500 dark:text-slate-400">{item.status}</span>
-              </div>
-
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                <div
-                  className={`h-full ${color} transition-all`}
-                  style={{ width: `${item.percent}%` }}
-                />
-              </div>
-
-              {item.message ? <p className="mt-1 text-xs text-red-600 dark:text-red-400">{item.message}</p> : null}
+      {summary && !isRunning && queue.length > 0 ? (
+        <div className="mt-4 rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/10 p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-emerald-500 text-white rounded-full shadow-sm">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
             </div>
-          )
-        })}
+            <div>
+              <p className="font-semibold text-lg text-slate-900 dark:text-white leading-tight">Batch Completed</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Successfully processed {summary.success} files in {(summary.durationMs / 1000).toFixed(1)}s.</p>
+            </div>
+          </div>
+
+          {successfulOutputs.length > 0 ? (
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Size reduction</p>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-xl font-bold text-slate-800 dark:text-slate-100">{formatBytes(sourceTotalAfterRun)}</span>
+                    <span className="text-slate-400 text-lg">→</span>
+                    <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatBytes(outputTotalAfterRun)}</span>
+                  </div>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-500 font-medium mt-1 bg-emerald-100 dark:bg-emerald-900/30 inline-block px-2 py-0.5 rounded">
+                    Saved {reductionPercent >= 0 ? "-" : "+"}{Math.abs(reductionPercent).toFixed(1)}% space
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    className="rounded-lg bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-600 transition-all flex items-center gap-2"
+                    onClick={() => {
+                      void downloadAsZip()
+                    }}
+                    type="button">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    {isExporting ? "Preparing ZIP..." : `Download ZIP (${successfulOutputs.length})`}
+                  </button>
+
+                  {!isExporting ? (
+                    <button
+                      className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                      onClick={() => {
+                        void downloadIndividually()
+                      }}
+                      type="button">
+                      One by one
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : (!isRunning ? (
+        <label
+          className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 px-4 py-10 text-center transition-colors group"
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={(event) => {
+            event.preventDefault()
+            appendFiles(event.dataTransfer.files)
+          }}>
+          <input
+            className="hidden"
+            multiple
+            onChange={(event) => appendFiles(event.target.files)}
+            type="file"
+          />
+          <div className="bg-white dark:bg-slate-800 rounded-full shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-slate-100 dark:border-slate-700/50">
+            <svg className="w-8 h-8 text-indigo-500/80 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          </div>
+          <p className="text-base font-semibold text-slate-800 dark:text-slate-200">Drop images here or click to browse</p>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Supports JPG, PNG, WebP, AVIF, BMP</p>
+        </label>
+      ) : null)}
+
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 grid-flow-row">
+        {queue.map((item) => (
+          <QueueItemCard key={item.id} item={item} isRunning={isRunning} onRemove={removeItem} />
+        ))}
 
         {queue.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">No files in queue.</p>
+          <div className="col-span-full py-12 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/10 text-slate-500 dark:text-slate-400">
+            <svg className="w-12 h-12 mb-3 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <p className="font-medium text-sm">No files in queue</p>
+          </div>
         ) : null}
       </div>
-
-      {summary ? (
-        <div className="mt-4 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3 text-sm text-slate-700 dark:text-slate-200">
-          <p className="font-semibold text-slate-900 dark:text-white">Last run summary</p>
-          <p>
-            Mode: {summary.mode === "all" ? "All queued" : "Retry failed"} | Total: {summary.total}
-          </p>
-          <p>
-            Success: {summary.success} | Failed: {summary.failed} | Duration: {Math.round(summary.durationMs / 1000)}s
-          </p>
-          <p>{summary.canceled ? "Run ended by cancel request." : "Run completed."}</p>
-        </div>
-      ) : null}
     </section>
   )
 }

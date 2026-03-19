@@ -7,6 +7,8 @@ import {
   type ExtensionStorageState,
   type FormatConfig,
   type ImageFormat,
+  type PaperSize,
+  type SupportedDPI,
   STORAGE_KEY,
   STORAGE_VERSION
 } from "../core/types"
@@ -16,6 +18,8 @@ import {
 } from "../features/custom-formats"
 import { DEFAULT_STORAGE_STATE } from "../features/settings"
 import { BatchConverterTab } from "./components/batch-tab"
+import { BatchSetupSidebarPanel } from "./components/batch/setup-sidebar-panel"
+import type { BatchResizeMode } from "./components/batch/types"
 import { CustomFormatsTab } from "./components/custom-formats-tab"
 import { GlobalFormatsTab } from "./components/global-formats-tab"
 import { TabButton } from "./components/tab-button"
@@ -37,6 +41,13 @@ const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
 export default function OptionsPage() {
   const [activeTab, setActiveTab] = useState<OptionsTab>("batch")
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
+  const [batchSelectedConfigId, setBatchSelectedConfigId] = useState("")
+  const [batchConcurrency, setBatchConcurrency] = useState(2)
+  const [batchResizeMode, setBatchResizeMode] = useState<BatchResizeMode>("inherit")
+  const [batchResizeValue, setBatchResizeValue] = useState(1280)
+  const [batchPaperSize, setBatchPaperSize] = useState<PaperSize>("A4")
+  const [batchDpi, setBatchDpi] = useState<SupportedDPI>(300)
+  const [batchIsRunning, setBatchIsRunning] = useState(false)
   const [persistedState, setPersistedState, { isLoading }] = useStorage<PersistedStorageState>(
     { key: STORAGE_KEY, instance: syncStorage },
     DEFAULT_PERSISTED_STATE
@@ -246,6 +257,22 @@ export default function OptionsPage() {
     })
   }
 
+  const batchConfigs = useMemo(() => getAllTargetConfigs(state), [state])
+
+  useEffect(() => {
+    if (!batchConfigs.length) {
+      if (batchSelectedConfigId) {
+        setBatchSelectedConfigId("")
+      }
+      return
+    }
+
+    if (!batchConfigs.some((entry) => entry.id === batchSelectedConfigId)) {
+      setBatchSelectedConfigId(batchConfigs[0].id)
+    }
+  }, [batchConfigs, batchSelectedConfigId])
+
+
   const tabContent = useMemo(() => {
     switch (activeTab) {
       case "global":
@@ -270,11 +297,42 @@ export default function OptionsPage() {
           />
         )
       case "batch":
-        return <BatchConverterTab configs={getAllTargetConfigs(state)} />
+        return (
+          <BatchConverterTab
+            configs={batchConfigs}
+            onRunningStateChange={setBatchIsRunning}
+            setup={{
+              selectedConfigId: batchSelectedConfigId,
+              concurrency: batchConcurrency,
+              resizeMode: batchResizeMode,
+              resizeValue: batchResizeValue,
+              paperSize: batchPaperSize,
+              dpi: batchDpi
+            }}
+            setupHandlers={{
+              onSelectedConfigIdChange: setBatchSelectedConfigId,
+              onConcurrencyChange: setBatchConcurrency,
+              onResizeModeChange: setBatchResizeMode,
+              onResizeValueChange: setBatchResizeValue,
+              onPaperSizeChange: setBatchPaperSize,
+              onDpiChange: setBatchDpi
+            }}
+          />
+        )
       default:
         return null
     }
-  }, [activeTab, state])
+  }, [
+    activeTab,
+    state,
+    batchConfigs,
+    batchSelectedConfigId,
+    batchConcurrency,
+    batchResizeMode,
+    batchResizeValue,
+    batchPaperSize,
+    batchDpi
+  ])
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
@@ -390,13 +448,33 @@ export default function OptionsPage() {
         <div className="mt-8 flex flex-col md:flex-row gap-8">
           <nav className="flex flex-col gap-2 w-full md:w-64 shrink-0">
             {TAB_ITEMS.map((tab) => (
-              <TabButton
-                key={tab.id}
-                active={tab.id === activeTab}
-                label={tab.label}
-                icon={tab.icon}
-                onClick={() => setActiveTab(tab.id)}
-              />
+              <div key={tab.id} className="space-y-2">
+                <TabButton
+                  active={tab.id === activeTab}
+                  label={tab.label}
+                  icon={tab.icon}
+                  onClick={() => setActiveTab(tab.id)}
+                />
+
+                {tab.id === "batch" && activeTab === "batch" ? (
+                  <BatchSetupSidebarPanel
+                    configs={batchConfigs}
+                    concurrency={batchConcurrency}
+                    dpi={batchDpi}
+                    isRunning={batchIsRunning}
+                    onConcurrencyChange={setBatchConcurrency}
+                    onDpiChange={setBatchDpi}
+                    onPaperSizeChange={setBatchPaperSize}
+                    onResizeModeChange={setBatchResizeMode}
+                    onResizeValueChange={setBatchResizeValue}
+                    onSelectedConfigIdChange={setBatchSelectedConfigId}
+                    paperSize={batchPaperSize}
+                    resizeMode={batchResizeMode}
+                    resizeValue={batchResizeValue}
+                    selectedConfigId={batchSelectedConfigId}
+                  />
+                ) : null}
+              </div>
             ))}
           </nav>
 
