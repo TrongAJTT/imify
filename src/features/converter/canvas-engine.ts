@@ -2,7 +2,6 @@ import { calculateContainPlacement, calculateDimensions, clampQuality } from "@/
 import type { ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
-import { encodePngBlobToIco } from "@/features/converter/ico-encoder"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
 
 const MIME_BY_FORMAT: Record<Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff">, string> = {
@@ -14,7 +13,7 @@ const MIME_BY_FORMAT: Record<Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff"
 
 export interface RasterConvertParams {
   sourceBlob: Blob
-  targetFormat: Exclude<ImageFormat, "pdf">
+  targetFormat: Exclude<ImageFormat, "pdf" | "ico">
   resize: ResizeConfig
   quality?: number
 }
@@ -32,7 +31,7 @@ function drawSourceImage(
   targetWidth: number,
   targetHeight: number,
   resize: ResizeConfig,
-  targetFormat: Exclude<ImageFormat, "pdf">
+  targetFormat: Exclude<ImageFormat, "pdf" | "ico">
 ): void {
   const requiresWhiteBackground = targetFormat === "jpg" || resize.mode === "page_size"
 
@@ -135,18 +134,6 @@ export async function convertRasterImage(
         width: targetWidth,
         height: targetHeight,
         mimeType: "image/avif"
-      }
-    }
-
-    if (targetFormat === "ico") {
-      const pngBlob = await canvas.convertToBlob({ type: "image/png" })
-      const outputBlob = await encodePngBlobToIco(pngBlob, targetWidth, targetHeight)
-
-      return {
-        outputBlob,
-        width: targetWidth,
-        height: targetHeight,
-        mimeType: "image/x-icon"
       }
     }
 

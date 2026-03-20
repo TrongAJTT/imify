@@ -34,6 +34,8 @@ export interface BatchSetupState {
   targetFormat: BatchTargetFormat
   concurrency: number
   quality: number
+  icoSizes: number[]
+  icoGenerateWebIconKit: boolean
   resizeMode: BatchResizeMode
   resizeValue: number
   paperSize: PaperSize
@@ -44,6 +46,8 @@ export interface BatchSetupHandlers {
   onTargetFormatChange: (value: BatchTargetFormat) => void
   onConcurrencyChange: (value: number) => void
   onQualityChange: (value: number) => void
+  onIcoSizesChange: (value: number[]) => void
+  onIcoGenerateWebIconKitChange: (value: boolean) => void
   onResizeModeChange: (value: BatchResizeMode) => void
   onResizeValueChange: (value: number) => void
   onPaperSizeChange: (value: PaperSize) => void

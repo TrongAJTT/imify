@@ -1,6 +1,7 @@
 import type {
   ExtensionStorageState,
   FormatConfig,
+  IcoOptions,
   PaperSize,
   ResizeConfig,
   ResizeMode,
@@ -14,7 +15,19 @@ export interface CustomFormatInput {
   format: FormatConfig["format"]
   enabled: boolean
   quality?: number
+  icoOptions?: IcoOptions
   resize: ResizeConfig
+}
+
+function normalizeIcoOptions(options: IcoOptions | undefined): IcoOptions {
+  const sizes = Array.isArray(options?.sizes)
+    ? Array.from(new Set(options.sizes.filter((size) => Number.isInteger(size) && size > 0))).sort((a, b) => a - b)
+    : [16, 32, 48]
+
+  return {
+    sizes: sizes.length ? sizes : [16],
+    generateWebIconKit: Boolean(options?.generateWebIconKit)
+  }
 }
 
 const PAPER_SIZE_VALUES: PaperSize[] = ["A3", "A4", "A5", "B5", "Letter", "Legal"]
@@ -79,6 +92,7 @@ function normalizeCustomFormat(input: CustomFormatInput, id: string): FormatConf
     format: input.format,
     enabled: input.enabled,
     quality: clampQuality(input.quality),
+    icoOptions: input.format === "ico" ? normalizeIcoOptions(input.icoOptions) : undefined,
     resize: normalizeResizeConfig(input.resize, input.format)
   }
 }
@@ -90,6 +104,13 @@ export function validateCustomFormatInput(input: CustomFormatInput): string | nu
 
   if (!CUSTOM_FORMATS.includes(input.format)) {
     return "Unsupported custom format"
+  }
+
+  if (input.format === "ico") {
+    const sizes = input.icoOptions?.sizes ?? []
+    if (!sizes.length) {
+      return "Select at least one ICO size"
+    }
   }
 
   if (QUALITY_FORMATS.includes(input.format) && typeof input.quality !== "number") {

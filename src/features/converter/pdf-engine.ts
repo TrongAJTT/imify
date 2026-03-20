@@ -12,6 +12,18 @@ interface PreparedImage {
   height?: number
 }
 
+function toPdfBlob(bytes: Uint8Array): Blob {
+  // const normalized = new Uint8Array(bytes.byteLength)
+  // normalized.set(bytes)
+
+  // return new Blob([normalized], {
+  //   type: "application/pdf"
+  // })
+  return new Blob([bytes as Uint8Array<ArrayBuffer>], {
+    type: "application/pdf"
+  })
+}
+
 export interface PdfConvertParams {
   sourceBlob: Blob
   resize: ResizeConfig
@@ -97,9 +109,7 @@ export async function convertImageToPdf(params: PdfConvertParams): Promise<Blob>
 
   const pdfBytes = await pdfDoc.save()
 
-  return new Blob([pdfBytes as Uint8Array<ArrayBuffer>], {
-    type: "application/pdf"
-  })
+  return toPdfBlob(pdfBytes)
 }
 
 export async function mergeImagesToPdf(sourceBlobs: Blob[]): Promise<Blob> {
@@ -130,7 +140,5 @@ export async function mergeImagesToPdf(sourceBlobs: Blob[]): Promise<Blob> {
 
   const pdfBytes = await pdfDoc.save()
 
-  return new Blob([pdfBytes as Uint8Array<ArrayBuffer>], {
-    type: "application/pdf"
-  })
+  return toPdfBlob(pdfBytes)
 }

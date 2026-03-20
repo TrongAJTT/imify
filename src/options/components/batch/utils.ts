@@ -100,6 +100,8 @@ export function withBatchResize(
   config: FormatConfig,
   mode: BatchResizeMode,
   quality: number,
+  icoSizes: number[],
+  icoGenerateWebIconKit: boolean,
   value: number,
   paperSize: string,
   dpi: SupportedDPI
@@ -112,6 +114,13 @@ export function withBatchResize(
     return {
       ...config,
       quality: supportsQuality ? normalizedQuality : undefined,
+      icoOptions:
+        config.format === "ico"
+          ? {
+              sizes: icoSizes,
+              generateWebIconKit: icoGenerateWebIconKit
+            }
+          : undefined,
       resize: cloneResize(config.resize)
     }
   }
@@ -119,6 +128,13 @@ export function withBatchResize(
   return {
     ...config,
     quality: supportsQuality ? normalizedQuality : undefined,
+    icoOptions:
+      config.format === "ico"
+        ? {
+            sizes: icoSizes,
+            generateWebIconKit: icoGenerateWebIconKit
+          }
+        : undefined,
     resize: override
   }
 }

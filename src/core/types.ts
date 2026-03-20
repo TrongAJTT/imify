@@ -25,6 +25,11 @@ export interface ResizeConfig {
   dpi?: SupportedDPI
 }
 
+export interface IcoOptions {
+  sizes: number[]
+  generateWebIconKit?: boolean
+}
+
 export interface FormatConfig {
   id: string
   name: string
@@ -32,6 +37,7 @@ export interface FormatConfig {
   enabled: boolean
   quality?: number
   resize: ResizeConfig
+  icoOptions?: IcoOptions
 }
 
 export type GlobalFormatsMap = Record<ImageFormat, FormatConfig>

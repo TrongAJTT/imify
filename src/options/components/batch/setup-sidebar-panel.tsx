@@ -1,9 +1,11 @@
 import { useEffect } from "react"
-import { DPI_OPTIONS, PAPER_OPTIONS, QUALITY_FORMATS } from "@/options/shared"
+import { QUALITY_FORMATS } from "@/options/shared"
+import { IcoSizeSelector } from "@/options/components/ico-size-selector"
+import { QualityInput } from "@/options/components/quality-input"
+import { ResizeConfigPanel } from "@/options/components/resize-config-panel"
 import { HIGH_CONCURRENCY_FORMATS } from "@/options/components/batch/types"
 import { TARGET_FORMAT_OPTIONS } from "@/options/components/batch/types"
 import type { BatchTargetFormat } from "@/options/components/batch/types"
-import type { BatchResizeMode } from "@/options/components/batch/types"
 import type { BatchSetupPanelProps } from "@/options/components/batch/types"
 
 const BASE_CONCURRENCY_OPTIONS = [
@@ -21,6 +23,8 @@ export function BatchSetupSidebarPanel({
   targetFormat,
   concurrency,
   quality,
+  icoSizes,
+  icoGenerateWebIconKit,
   resizeMode,
   resizeValue,
   paperSize,
@@ -28,6 +32,8 @@ export function BatchSetupSidebarPanel({
   onTargetFormatChange,
   onConcurrencyChange,
   onQualityChange,
+  onIcoSizesChange,
+  onIcoGenerateWebIconKitChange,
   onResizeModeChange,
   onResizeValueChange,
   onPaperSizeChange,
@@ -35,6 +41,7 @@ export function BatchSetupSidebarPanel({
 }: BatchSetupPanelProps) {
   const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
   const supportsExtendedConcurrency = HIGH_CONCURRENCY_FORMATS.includes(targetFormat)
+  const isIcoTarget = targetFormat === "ico"
   const concurrencyOptions = supportsExtendedConcurrency
     ? [
         ...BASE_CONCURRENCY_OPTIONS,
@@ -85,85 +92,51 @@ export function BatchSetupSidebarPanel({
           </label>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-xs text-slate-700 dark:text-slate-200">
-            Quality
-            <input
-              className={`mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs transition-opacity ${
-                supportsQuality ? "" : "opacity-70 cursor-not-allowed bg-slate-100 dark:bg-slate-900/40 text-slate-400"
-              }`}
-              disabled={isRunning || !supportsQuality}
-              max={100}
-              min={1}
-              onChange={(event) => onQualityChange(Math.max(1, Math.min(100, Number(event.target.value) || 1)))}
-              type="number"
-              value={quality}
-            />
-          </label>
+        {!isIcoTarget ? (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <QualityInput
+                disabled={isRunning || !supportsQuality}
+                label="Quality"
+                onChange={onQualityChange}
+                value={quality}
+              />
 
-          <label className="block text-xs text-slate-700 dark:text-slate-200">
-            Resize
-            <select
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
-              disabled={isRunning}
-              onChange={(event) => onResizeModeChange(event.target.value as BatchResizeMode)}
-              value={resizeMode}>
-              <option value="inherit">No resize</option>
-              <option value="change_width">Force width</option>
-              <option value="change_height">Force height</option>
-              <option value="scale">Scale percent</option>
-              <option value="page_size">Paper size</option>
-            </select>
-          </label>
-        </div>
-
-        {resizeMode === "change_width" || resizeMode === "change_height" || resizeMode === "scale" ? (
-          <label className="block text-xs text-slate-700 dark:text-slate-200">
-            {resizeMode === "scale" ? "Resize value (%)" : "Resize value (px)"}
-            <input
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
-              disabled={isRunning}
-              min={1}
-              onChange={(event) => onResizeValueChange(Number(event.target.value) || 1)}
-              type="number"
-              value={resizeValue}
-            />
-          </label>
-        ) : null}
-
-        {resizeMode === "page_size" ? (
-          <div className="grid grid-cols-2 gap-2">
-            <label className="block text-xs text-slate-700 dark:text-slate-200">
-              Paper
-              <select
-                className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
+              <ResizeConfigPanel
                 disabled={isRunning}
-                onChange={(event) => onPaperSizeChange(event.target.value as BatchSetupPanelProps["paperSize"])}
-                value={paperSize}>
-                {PAPER_OPTIONS.map((paper) => (
-                  <option key={paper} value={paper}>
-                    {paper}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="block text-xs text-slate-700 dark:text-slate-200">
-              DPI
-              <select
-                className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
-                disabled={isRunning}
-                onChange={(event) => onDpiChange(Number(event.target.value) as BatchSetupPanelProps["dpi"])}
-                value={dpi}>
-                {DPI_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt} DPI
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        ) : null}
+                dpi={dpi}
+                mode={resizeMode}
+                modeOptions={[
+                  { value: "inherit", label: "No resize" },
+                  { value: "change_width", label: "Force width" },
+                  { value: "change_height", label: "Force height" },
+                  { value: "scale", label: "Scale percent" },
+                  { value: "page_size", label: "Paper size" }
+                ]}
+                onDpiChange={onDpiChange}
+                onModeChange={(mode) => onResizeModeChange(mode as BatchSetupPanelProps["resizeMode"])}
+                onPaperSizeChange={onPaperSizeChange}
+                onValueChange={onResizeValueChange}
+                paperSize={paperSize}
+                value={resizeValue}
+              />
+            </div>
+          </>
+        ) : (
+          <IcoSizeSelector
+            disabled={isRunning}
+            generateWebIconKit={icoGenerateWebIconKit}
+            onToggleSize={(size) => {
+              const exists = icoSizes.includes(size)
+              const next = exists
+                ? icoSizes.filter((entry) => entry !== size)
+                : [...icoSizes, size].sort((a, b) => a - b)
+              onIcoSizesChange(next.length ? next : [16])
+            }}
+            onToggleWebKit={onIcoGenerateWebIconKitChange}
+            sizes={icoSizes}
+          />
+        )}
       </div>
     </div>
   )

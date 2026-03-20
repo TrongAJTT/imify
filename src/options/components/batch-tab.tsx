@@ -25,6 +25,16 @@ import {
   withBatchResize
 } from "@/options/components/batch/utils"
 
+function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
+  const base = nameOrBase.replace(/\.[^.]+$/, "") || "image"
+  return `${base}.${extension}`
+}
+
+function toWebKitZipFilename(nameOrBase: string): string {
+  void nameOrBase
+  return "favicon_kit.zip"
+}
+
 interface BatchConverterTabProps {
   setup: BatchSetupState
   onRunningStateChange?: (running: boolean) => void
@@ -87,11 +97,22 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
       baseConfig,
       setup.resizeMode,
       setup.quality,
+      setup.icoSizes,
+      setup.icoGenerateWebIconKit,
       setup.resizeValue,
       setup.paperSize,
       setup.dpi
     )
-  }, [setup.targetFormat, setup.resizeMode, setup.quality, setup.resizeValue, setup.paperSize, setup.dpi])
+  }, [
+    setup.targetFormat,
+    setup.resizeMode,
+    setup.quality,
+    setup.icoSizes,
+    setup.icoGenerateWebIconKit,
+    setup.resizeValue,
+    setup.paperSize,
+    setup.dpi
+  ])
 
   const setItemState = (
     id: string,
@@ -173,7 +194,11 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
         status: "success",
         percent: 100,
         outputBlob: converted.blob,
-        outputFileName: toOutputFilename(item.file.name, config.format)
+        outputFileName: converted.outputExtension
+          ? converted.outputExtension === "zip"
+            ? toWebKitZipFilename(item.file.name)
+            : toOutputFilenameWithExtension(item.file.name, converted.outputExtension)
+          : toOutputFilename(item.file.name, config.format)
       })
       await notifyProgress(item.id, item.file.name, config, "success", 100, "Ready for download")
       return "success"

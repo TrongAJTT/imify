@@ -13,6 +13,7 @@ import {
   STORAGE_VERSION
 } from "@/core/types"
 import { CUSTOM_FORMATS } from "@/core/format-config"
+import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import {
   type CustomFormatInput,
   validateCustomFormatInput
@@ -61,8 +62,10 @@ export default function OptionsPage() {
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [batchTargetFormat, setBatchTargetFormat] = useState<BatchTargetFormat>("jpg")
-  const [batchConcurrency, setBatchConcurrency] = useState(2)
+  const [batchConcurrency, setBatchConcurrency] = useState(3)
   const [batchQuality, setBatchQuality] = useState(90)
+  const [batchIcoSizes, setBatchIcoSizes] = useState<number[]>([...DEFAULT_ICO_SIZES])
+  const [batchIcoGenerateWebIconKit, setBatchIcoGenerateWebIconKit] = useState(false)
   const [batchResizeMode, setBatchResizeMode] = useState<BatchResizeMode>("inherit")
   const [batchResizeValue, setBatchResizeValue] = useState(1280)
   const [batchPaperSize, setBatchPaperSize] = useState<PaperSize>("A4")
@@ -172,6 +175,7 @@ export default function OptionsPage() {
       format: normalized.format,
       enabled: normalized.enabled,
       quality: normalized.quality,
+      icoOptions: normalized.icoOptions,
       resize: normalized.resize
     }
 
@@ -205,6 +209,7 @@ export default function OptionsPage() {
               format: normalized.format,
               enabled: normalized.enabled,
               quality: normalized.quality,
+              icoOptions: normalized.icoOptions,
               resize: normalized.resize
             }
           : entry
@@ -309,6 +314,8 @@ export default function OptionsPage() {
               targetFormat: batchTargetFormat,
               concurrency: batchConcurrency,
               quality: batchQuality,
+              icoSizes: batchIcoSizes,
+              icoGenerateWebIconKit: batchIcoGenerateWebIconKit,
               resizeMode: batchResizeMode,
               resizeValue: batchResizeValue,
               paperSize: batchPaperSize,
@@ -325,6 +332,8 @@ export default function OptionsPage() {
     batchTargetFormat,
     batchConcurrency,
     batchQuality,
+    batchIcoSizes,
+    batchIcoGenerateWebIconKit,
     batchResizeMode,
     batchResizeValue,
     batchPaperSize,
@@ -523,9 +532,13 @@ export default function OptionsPage() {
                   <BatchSetupSidebarPanel
                     concurrency={batchConcurrency}
                     dpi={batchDpi}
+                    icoGenerateWebIconKit={batchIcoGenerateWebIconKit}
+                    icoSizes={batchIcoSizes}
                     isRunning={batchIsRunning}
                     onConcurrencyChange={setBatchConcurrency}
                     onDpiChange={setBatchDpi}
+                    onIcoGenerateWebIconKitChange={setBatchIcoGenerateWebIconKit}
+                    onIcoSizesChange={setBatchIcoSizes}
                     onPaperSizeChange={setBatchPaperSize}
                     onQualityChange={setBatchQuality}
                     onResizeModeChange={setBatchResizeMode}

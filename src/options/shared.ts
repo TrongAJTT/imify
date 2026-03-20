@@ -1,6 +1,7 @@
 import type {
   ExtensionStorageState,
   FormatConfig,
+  IcoOptions,
   ImageFormat,
   PaperSize,
   ResizeConfig,
@@ -51,6 +52,12 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
     dpi: input.resize.dpi
   }
 
+  if (input.format === "ico") {
+    baseResize.mode = "none"
+    baseResize.value = undefined
+    baseResize.dpi = undefined
+  }
+
   if (baseResize.mode === "none") {
     baseResize.value = undefined
     baseResize.dpi = undefined
@@ -63,11 +70,19 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
       : 72
   }
 
+  const normalizedIcoOptions: IcoOptions | undefined = input.format === "ico"
+    ? {
+        sizes: Array.from(new Set((input.icoOptions?.sizes ?? [16, 32, 48]).filter((size) => Number.isInteger(size) && size > 0))).sort((a, b) => a - b),
+        generateWebIconKit: Boolean(input.icoOptions?.generateWebIconKit)
+      }
+    : undefined
+
   return {
     ...input,
     quality: QUALITY_FORMATS.includes(input.format)
       ? Math.max(1, Math.min(100, Math.round(input.quality ?? 90)))
       : undefined,
+    icoOptions: normalizedIcoOptions,
     resize: baseResize
   }
 }

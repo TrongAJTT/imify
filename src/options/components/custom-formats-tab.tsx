@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 
+import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig } from "@/core/types"
 import type { CustomFormatInput } from "@/features/custom-formats"
 import { CustomFormatForm } from "@/options/components/custom-format-form"
@@ -33,6 +34,10 @@ export function CustomFormatsTab({
     format: "jpg",
     enabled: true,
     quality: 90,
+    icoOptions: {
+      sizes: [...DEFAULT_ICO_SIZES],
+      generateWebIconKit: false
+    },
     resize: { mode: "none" }
   })
   const [createError, setCreateError] = useState<string | null>(null)
@@ -99,6 +104,10 @@ export function CustomFormatsTab({
         format: "jpg",
         enabled: true,
         quality: 90,
+        icoOptions: {
+          sizes: [...DEFAULT_ICO_SIZES],
+          generateWebIconKit: false
+        },
         resize: { mode: "none" }
       })
       setCreateError(null)
@@ -293,7 +302,13 @@ export function CustomFormatsTab({
                     onClick={() =>
                       setEditing({
                         id: item.id,
-                        form: {...item},
+                        form: {
+                          ...item,
+                          icoOptions: item.icoOptions ?? {
+                            sizes: [...DEFAULT_ICO_SIZES],
+                            generateWebIconKit: false
+                          }
+                        },
                         error: null
                       })
                     }

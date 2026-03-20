@@ -1,4 +1,5 @@
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
+import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import { GLOBAL_FORMATS } from "@/core/format-config"
 
 const DEFAULT_QUALITY_BY_FORMAT: Partial<Record<ImageFormat, number>> = {
@@ -16,6 +17,13 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
     format,
     enabled: true,
     quality,
+    icoOptions:
+      format === "ico"
+        ? {
+            sizes: [...DEFAULT_ICO_SIZES],
+            generateWebIconKit: false
+          }
+        : undefined,
     resize: {
       mode: "none"
     }

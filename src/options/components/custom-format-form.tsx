@@ -1,11 +1,12 @@
 import type { CustomFormatInput } from "@/features/custom-formats"
 import type { ImageFormat, PaperSize, ResizeMode } from "@/core/types"
-import { CUSTOM_FORMATS, FORMAT_LABELS, QUALITY_FORMATS } from "@/core/format-config"
+import { CUSTOM_FORMATS, DEFAULT_ICO_SIZES, FORMAT_LABELS, QUALITY_FORMATS } from "@/core/format-config"
 import {
-  DPI_OPTIONS,
-  PAPER_OPTIONS,
   RESIZE_MODE_OPTIONS
 } from "@/options/shared"
+import { IcoSizeSelector } from "@/options/components/ico-size-selector"
+import { QualityInput } from "@/options/components/quality-input"
+import { ResizeConfigPanel } from "@/options/components/resize-config-panel"
 
 export function CustomFormatForm({
   value,
@@ -23,11 +24,7 @@ export function CustomFormatForm({
   errorMessage: string | null
 }) {
   const canSetQuality = QUALITY_FORMATS.includes(value.format)
-  const isPageSize = value.resize.mode === "page_size"
-  const needsNumericResize =
-    value.resize.mode === "change_width" ||
-    value.resize.mode === "change_height" ||
-    value.resize.mode === "scale"
+  const isIcoFormat = value.format === "ico"
 
   return (
     <div className="space-y-4">
@@ -52,6 +49,13 @@ export function CustomFormatForm({
                 quality: QUALITY_FORMATS.includes(event.target.value as ImageFormat)
                   ? value.quality ?? 90
                   : undefined,
+                icoOptions:
+                  event.target.value === "ico"
+                    ? value.icoOptions ?? {
+                        sizes: [...DEFAULT_ICO_SIZES],
+                        generateWebIconKit: false
+                      }
+                    : undefined,
                 resize:
                   value.resize.mode === "page_size"
                     ? { ...value.resize, dpi: value.resize.dpi ?? 72 }
@@ -68,118 +72,91 @@ export function CustomFormatForm({
         </label>
       </div>
 
-      {canSetQuality ? (
-        <label className="block text-sm text-slate-700 dark:text-slate-200">
-          Quality ({value.quality ?? 90}%)
-          <input
-            className="mt-1 w-full"
-            max={100}
-            min={1}
-            onChange={(event) => onChange({ ...value, quality: Number(event.target.value) })}
-            type="range"
-            value={value.quality ?? 90}
-          />
-        </label>
-      ) : null}
+      {isIcoFormat ? (
+        <IcoSizeSelector
+          generateWebIconKit={Boolean(value.icoOptions?.generateWebIconKit)}
+          onToggleSize={(size) => {
+            const current = value.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]
+            const exists = current.includes(size)
+            const next = exists
+              ? current.filter((entry) => entry !== size)
+              : [...current, size].sort((a, b) => a - b)
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <label className="text-sm text-slate-700 dark:text-slate-200">
-          Resize mode
-          <select
-            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm"
-            onChange={(event) =>
+            onChange({
+              ...value,
+              icoOptions: {
+                sizes: next.length ? next : [16],
+                generateWebIconKit: Boolean(value.icoOptions?.generateWebIconKit)
+              }
+            })
+          }}
+          onToggleWebKit={(next) => {
+            onChange({
+              ...value,
+              icoOptions: {
+                sizes: value.icoOptions?.sizes?.length ? value.icoOptions.sizes : [...DEFAULT_ICO_SIZES],
+                generateWebIconKit: next
+              }
+            })
+          }}
+          sizes={value.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]}
+        />
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {canSetQuality ? (
+            <QualityInput
+              label="Quality"
+              onChange={(next) => onChange({ ...value, quality: next })}
+              value={value.quality ?? 90}
+            />
+          ) : null}
+
+          <ResizeConfigPanel
+            dpi={(value.resize.dpi ?? 72) as 72 | 150 | 300}
+            mode={value.resize.mode}
+            modeOptions={RESIZE_MODE_OPTIONS.map((entry) => ({ value: entry.value, label: entry.label }))}
+            onDpiChange={(next) =>
               onChange({
                 ...value,
                 resize: {
-                  mode: event.target.value as ResizeMode,
-                  value:
-                    event.target.value === "page_size"
-                      ? "A4"
-                      : event.target.value === "none"
-                        ? undefined
-                        : 100,
-                  dpi: event.target.value === "page_size" ? 72 : undefined
+                  ...value.resize,
+                  dpi: next
                 }
               })
             }
-            value={value.resize.mode}>
-            {RESIZE_MODE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {needsNumericResize ? (
-          <label className="text-sm text-slate-700 dark:text-slate-200">
-            Value ({value.resize.mode === "scale" ? "%" : "px"})
-            <input
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm"
-              min={1}
-              onChange={(event) =>
-                onChange({
-                  ...value,
-                  resize: {
-                    ...value.resize,
-                    value: Number(event.target.value)
-                  }
-                })
-              }
-              type="number"
-              value={typeof value.resize.value === "number" ? value.resize.value : 100}
-            />
-          </label>
-        ) : null}
-
-        {isPageSize ? (
-          <label className="text-sm text-slate-700 dark:text-slate-200">
-            Paper
-            <select
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm"
-              onChange={(event) =>
-                onChange({
-                  ...value,
-                  resize: {
-                    ...value.resize,
-                    value: event.target.value as PaperSize
-                  }
-                })
-              }
-              value={typeof value.resize.value === "string" ? value.resize.value : "A4"}>
-              {PAPER_OPTIONS.map((paper) => (
-                <option key={paper} value={paper}>
-                  {paper}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-
-        {isPageSize ? (
-          <label className="text-sm text-slate-700 dark:text-slate-200">
-            DPI
-            <select
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm"
-              onChange={(event) =>
-                onChange({
-                  ...value,
-                  resize: {
-                    ...value.resize,
-                    dpi: Number(event.target.value) as 72 | 150 | 300
-                  }
-                })
-              }
-              value={value.resize.dpi ?? 72}>
-              {DPI_OPTIONS.map((dpi) => (
-                <option key={dpi} value={dpi}>
-                  {dpi}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-      </div>
+            onModeChange={(next) =>
+              onChange({
+                ...value,
+                resize: {
+                  mode: next as ResizeMode,
+                  value: next === "page_size" ? "A4" : next === "none" ? undefined : 100,
+                  dpi: next === "page_size" ? 72 : undefined
+                }
+              })
+            }
+            onPaperSizeChange={(next) =>
+              onChange({
+                ...value,
+                resize: {
+                  ...value.resize,
+                  value: next as PaperSize
+                }
+              })
+            }
+            onValueChange={(next) =>
+              onChange({
+                ...value,
+                resize: {
+                  ...value.resize,
+                  value: next
+                }
+              })
+            }
+            paperSize={(typeof value.resize.value === "string" ? value.resize.value : "A4") as PaperSize}
+            value={typeof value.resize.value === "number" ? value.resize.value : 100}
+          />
+        </div>
+      )}
 
       {errorMessage ? <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p> : null}
 
