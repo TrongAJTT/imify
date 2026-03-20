@@ -143,6 +143,11 @@ export async function downloadWithFilename(blob: Blob, fileName: string): Promis
   const objectUrl = URL.createObjectURL(blob)
 
   try {
+    void chrome.runtime.sendMessage({
+      type: "IMIFY_QUEUE_DOWNLOAD_FILENAME",
+      filename: fileName
+    })
+
     await chrome.downloads.download({
       url: objectUrl,
       filename: fileName,

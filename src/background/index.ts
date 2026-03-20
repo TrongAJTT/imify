@@ -18,6 +18,17 @@ import { publishConvertProgress } from "@/background/message-hub"
 
 const pendingDownloadFilenameQueue: string[] = []
 const pendingDownloadFilenameById = new Map<number, string>()
+const DOWNLOAD_FILENAME_MESSAGE = "IMIFY_QUEUE_DOWNLOAD_FILENAME"
+const UUID_ZIP_FILE_NAME_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.zip$/i
+
+function removeFirstPendingFilename(target: string): void {
+  const index = pendingDownloadFilenameQueue.indexOf(target)
+
+  if (index >= 0) {
+    pendingDownloadFilenameQueue.splice(index, 1)
+  }
+}
 
 function getAllConfigs(state: ExtensionStorageState): FormatConfig[] {
   return [...Object.values(state.global_formats), ...state.custom_formats]
@@ -72,6 +83,11 @@ function buildOutputFilename(srcUrl: string, config: FormatConfig, serverFileNam
   }
 
   return toOutputFilename(sanitizeFileName(base), config.format)
+}
+
+function replaceFilenameExtension(fileName: string, extension: string): string {
+  const base = fileName.replace(/\.[^.]+$/, "") || "image"
+  return `${base}.${extension}`
 }
 
 async function downloadBlob(
@@ -187,7 +203,11 @@ async function handleImageMenuClick(
 
     await sleep(220)
 
-    await downloadBlob(converted.blob, fileName, config.format)
+    const outputFilename = converted.outputExtension
+      ? replaceFilenameExtension(fileName, converted.outputExtension)
+      : fileName
+
+    await downloadBlob(converted.blob, outputFilename, config.format)
   } catch (error) {
     const message = toUserFacingConversionError(error, "Unexpected conversion error")
 
@@ -239,7 +259,15 @@ chrome.runtime.onStartup.addListener(() => {
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
   let resolvedFilename = pendingDownloadFilenameById.get(item.id)
 
-  if (!resolvedFilename && item.byExtensionId === chrome.runtime.id && pendingDownloadFilenameQueue.length > 0) {
+  if (resolvedFilename) {
+    removeFirstPendingFilename(resolvedFilename)
+  }
+
+  const isExtensionGeneratedUrlDownload =
+    item.byExtensionId === chrome.runtime.id &&
+    (item.url.startsWith("data:") || item.url.startsWith("blob:"))
+
+  if (!resolvedFilename && isExtensionGeneratedUrlDownload && pendingDownloadFilenameQueue.length > 0) {
     resolvedFilename = pendingDownloadFilenameQueue.shift()
   }
 
@@ -248,6 +276,19 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
 
     suggest({
       filename: resolvedFilename,
+      conflictAction: "uniquify"
+    })
+
+    return true
+  }
+
+  const basename = item.filename.split(/[\\/]/).pop() ?? item.filename
+  if (
+    isExtensionGeneratedUrlDownload &&
+    UUID_ZIP_FILE_NAME_REGEX.test(basename)
+  ) {
+    suggest({
+      filename: `${Math.floor(Date.now() / 1000)}.zip`,
       conflictAction: "uniquify"
     })
 
@@ -286,6 +327,16 @@ chrome.action.onClicked.addListener(() => {
 })
 
 chrome.runtime.onMessage.addListener((message) => {
+  if (message?.type === DOWNLOAD_FILENAME_MESSAGE) {
+    const filename = typeof message.filename === "string" ? message.filename.trim() : ""
+
+    if (filename) {
+      pendingDownloadFilenameQueue.push(filename)
+    }
+
+    return
+  }
+
   if (message?.type !== "IMIFY_STATE_UPDATED" || !message.payload) {
     return
   }

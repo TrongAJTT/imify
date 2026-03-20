@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import { toOutputFilename } from "@/core/download-utils"
 import { toUserFacingConversionError } from "@/core/error-utils"
-import type { FormatConfig } from "@/core/types"
+import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
+import type { ConversionProgressPayload, FormatConfig } from "@/core/types"
 import { convertImage } from "@/features/converter"
 import { convertImageToPdf, mergeImagesToPdf } from "@/features/converter/pdf-engine"
 import { BatchActionBar } from "@/options/components/batch/action-bar"
@@ -36,6 +37,10 @@ function toWebKitZipFilename(nameOrBase: string): string {
   return "favicon_kit.zip"
 }
 
+function getBatchZipTimestamp(): number {
+  return Math.floor(Date.now() / 1000)
+}
+
 interface BatchConverterTabProps {
   setup: BatchSetupState
   onRunningStateChange?: (running: boolean) => void
@@ -49,14 +54,43 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
   const [paused, setPaused] = useState(false)
   const [summary, setSummary] = useState<BatchSummary | null>(null)
   const [activeExportAction, setActiveExportAction] = useState<"zip" | "one_by_one" | "merge_pdf" | "individual_pdf" | null>(null)
+  const [exportToastPayload, setExportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false)
   const cancelRef = useRef(false)
   const pauseRef = useRef(false)
   const pdfSplitRef = useRef<HTMLDivElement | null>(null)
+  const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearExportToastHideTimer = () => {
+    if (!exportToastHideTimerRef.current) {
+      return
+    }
+
+    clearTimeout(exportToastHideTimerRef.current)
+    exportToastHideTimerRef.current = null
+  }
+
+  const pushExportToast = (payload: ConversionProgressPayload) => {
+    clearExportToastHideTimer()
+    setExportToastPayload(payload)
+
+    if (payload.status === "success" || payload.status === "error") {
+      exportToastHideTimerRef.current = setTimeout(() => {
+        setExportToastPayload(null)
+        exportToastHideTimerRef.current = null
+      }, 3000)
+    }
+  }
 
   useEffect(() => {
     pauseRef.current = paused
   }, [paused])
+
+  useEffect(() => {
+    return () => {
+      clearExportToastHideTimer()
+    }
+  }, [])
 
   useEffect(() => {
     onRunningStateChange?.(isRunning)
@@ -341,15 +375,73 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
 
     setIsExporting(true)
     setActiveExportAction("zip")
+    const toastId = `batch_export_zip_${Date.now()}`
+    const exportFileName = `imify_batch_${getBatchZipTimestamp()}.zip`
 
     try {
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: effectiveConfig.format,
+        status: "processing",
+        percent: 8,
+        message: "Collecting converted files..."
+      })
+
       const zip = new JSZip()
-      for (const item of successful) {
+      for (let index = 0; index < successful.length; index += 1) {
+        const item = successful[index]
         zip.file(item.outputFileName as string, item.outputBlob as Blob)
+
+        const percent = Math.min(70, 10 + Math.round(((index + 1) / successful.length) * 60))
+        pushExportToast({
+          id: toastId,
+          fileName: exportFileName,
+          targetFormat: effectiveConfig.format,
+          status: "processing",
+          percent,
+          message: `Added ${index + 1}/${successful.length} files to ZIP...`
+        })
       }
 
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: effectiveConfig.format,
+        status: "processing",
+        percent: 82,
+        message: "Compressing ZIP archive..."
+      })
+
       const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } })
-      await downloadWithFilename(zipBlob, `imify_batch_${Date.now()}.zip`)
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: effectiveConfig.format,
+        status: "processing",
+        percent: 96,
+        message: "Opening download dialog..."
+      })
+
+      await downloadWithFilename(zipBlob, exportFileName)
+
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: effectiveConfig.format,
+        status: "success",
+        percent: 100,
+        message: "ZIP download started"
+      })
+    } catch (error) {
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: effectiveConfig.format,
+        status: "error",
+        percent: 100,
+        message: toUserFacingConversionError(error, "Unable to export ZIP")
+      })
     } finally {
       setIsExporting(false)
       setActiveExportAction(null)
@@ -366,10 +458,48 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
     setIsExporting(true)
     setActiveExportAction("merge_pdf")
     setIsPdfSplitOpen(false)
+    const toastId = `batch_export_merge_pdf_${Date.now()}`
+    const exportFileName = `imify_batch_${getBatchZipTimestamp()}.pdf`
 
     try {
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: "pdf",
+        status: "processing",
+        percent: 12,
+        message: "Preparing pages for merged PDF..."
+      })
+
       const mergedPdfBlob = await mergeImagesToPdf(successful.map((item) => item.outputBlob as Blob))
-      await downloadWithFilename(mergedPdfBlob, `imify_batch_${Date.now()}.pdf`)
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: "pdf",
+        status: "processing",
+        percent: 92,
+        message: "Opening download dialog..."
+      })
+
+      await downloadWithFilename(mergedPdfBlob, exportFileName)
+
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: "pdf",
+        status: "success",
+        percent: 100,
+        message: "PDF download started"
+      })
+    } catch (error) {
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: "pdf",
+        status: "error",
+        percent: 100,
+        message: toUserFacingConversionError(error, "Unable to merge PDF")
+      })
     } finally {
       setIsExporting(false)
       setActiveExportAction(null)
@@ -386,21 +516,79 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
     setIsExporting(true)
     setActiveExportAction("individual_pdf")
     setIsPdfSplitOpen(false)
+    const toastId = `batch_export_individual_pdf_${Date.now()}`
+    const exportFileName = `imify_batch_pdf_${getBatchZipTimestamp()}.zip`
 
     try {
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: "pdf",
+        status: "processing",
+        percent: 8,
+        message: "Preparing individual PDFs..."
+      })
+
       const zip = new JSZip()
 
-      for (const item of successful) {
+      for (let index = 0; index < successful.length; index += 1) {
+        const item = successful[index]
         const pdfBlob = await convertImageToPdf({
           sourceBlob: item.outputBlob as Blob,
           resize: { mode: "none" }
         })
         const baseName = (item.outputFileName as string).replace(/\.[^.]+$/, "")
         zip.file(`${baseName}.pdf`, pdfBlob)
+
+        const percent = Math.min(76, 10 + Math.round(((index + 1) / successful.length) * 66))
+        pushExportToast({
+          id: toastId,
+          fileName: exportFileName,
+          targetFormat: "pdf",
+          status: "processing",
+          percent,
+          message: `Created ${index + 1}/${successful.length} PDF files...`
+        })
       }
 
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: "pdf",
+        status: "processing",
+        percent: 88,
+        message: "Compressing PDF ZIP archive..."
+      })
+
       const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } })
-      await downloadWithFilename(zipBlob, `imify_batch_pdf_${Date.now()}.zip`)
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: "pdf",
+        status: "processing",
+        percent: 96,
+        message: "Opening download dialog..."
+      })
+
+      await downloadWithFilename(zipBlob, exportFileName)
+
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: "pdf",
+        status: "success",
+        percent: 100,
+        message: "PDF ZIP download started"
+      })
+    } catch (error) {
+      pushExportToast({
+        id: toastId,
+        fileName: exportFileName,
+        targetFormat: "pdf",
+        status: "error",
+        percent: 100,
+        message: toUserFacingConversionError(error, "Unable to export individual PDFs")
+      })
     } finally {
       setIsExporting(false)
       setActiveExportAction(null)
@@ -635,6 +823,8 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
           </div>
         ) : null}
       </div>
+
+      <ConversionProgressToastCard payload={exportToastPayload} />
     </section>
   )
 }
