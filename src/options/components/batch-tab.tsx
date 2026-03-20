@@ -488,15 +488,23 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
 
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Size reduction</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Result</p>
+                    <p className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${
+                      reductionPercent >= 0 
+                        ? "text-emerald-600 dark:text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30" 
+                        : "text-orange-600 dark:text-orange-500 bg-orange-100 dark:bg-orange-900/30"
+                    }`}>
+                      {reductionPercent >= 0 ? "Saved" : "Increased"} {Math.abs(reductionPercent).toFixed(1)}%
+                    </p>
+                  </div>
                   <div className="flex items-baseline gap-2 mt-1">
                     <span className="text-xl font-bold text-slate-800 dark:text-slate-100">{formatBytes(sourceTotalAfterRun)}</span>
                     <span className="text-slate-400 text-lg">→</span>
-                    <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatBytes(outputTotalAfterRun)}</span>
+                    <span className={`text-xl font-bold ${reductionPercent >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-orange-600 dark:text-orange-400"}`}>
+                      {formatBytes(outputTotalAfterRun)}
+                    </span>
                   </div>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-500 font-medium mt-1 bg-emerald-100 dark:bg-emerald-900/30 inline-block px-2 py-0.5 rounded">
-                    Saved {reductionPercent >= 0 ? "-" : "+"}{Math.abs(reductionPercent).toFixed(1)}% space
-                  </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
@@ -512,25 +520,27 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
                   </button>
 
                   <button
-                    className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
                     disabled={isExporting}
                     onClick={() => {
                       void downloadIndividually()
                     }}
                     type="button">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     {activeExportAction === "one_by_one" ? "Exporting files..." : "One by one"}
                   </button>
 
                   <div className="relative" ref={pdfSplitRef}>
                     <div className="inline-flex rounded-lg shadow-sm">
                       <button
-                        className="rounded-l-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="rounded-l-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
                         disabled={isExporting}
                         onClick={() => {
                           void mergeIntoPdf()
                         }}
                         type="button">
-                        {activeExportAction === "merge_pdf" ? "Merging PDF..." : "Merge into PDF"}
+                        <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        {activeExportAction === "merge_pdf" ? "Merging PDF..." : "Merge into single PDF"}
                       </button>
                       <button
                         aria-label="Open PDF export options"
