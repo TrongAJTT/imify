@@ -43,7 +43,8 @@ export function ConversionProgressToastCard({ payload }: ConversionProgressToast
         padding: "16px",
         fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif",
         overflow: "hidden",
-        backdropFilter: "blur(8px)"
+        backdropFilter: "blur(8px)",
+        paddingBottom: (payload.status === "processing" || payload.status === "queued") ? "24px" : "16px"
       }}>
       <div
         style={{
@@ -114,26 +115,24 @@ export function ConversionProgressToastCard({ payload }: ConversionProgressToast
       </div>
 
       {(payload.status === "processing" || payload.status === "queued") && (
-        <div style={{ marginTop: "14px" }}>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "6px",
+            background: "rgba(255, 255, 255, 0.05)",
+            overflow: "hidden"
+          }}>
           <div
             style={{
-              height: "6px",
-              width: "100%",
-              borderRadius: "10px",
-              background: "rgba(255, 255, 255, 0.1)",
-              overflow: "hidden"
-            }}>
-            <div
-              style={{
-                width: `${progress}%`,
-                height: "100%",
-                background: accent,
-                borderRadius: "10px",
-                transition: "width 300ms cubic-bezier(0.4, 0, 0.2, 1)",
-                boxShadow: `0 0 10px ${accent}44`
-              }}
-            />
-          </div>
+              height: "100%",
+              width: `${progress}%`,
+              background: accent,
+              transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+            }}
+          />
         </div>
       )}
     </div>
