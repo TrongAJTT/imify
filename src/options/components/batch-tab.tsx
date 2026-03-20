@@ -24,6 +24,7 @@ import {
   toMb,
   withBatchResize
 } from "@/options/components/batch/utils"
+import { Check, Download, Save, FileText, ChevronDown, Upload, Inbox } from "lucide-react"
 
 function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
   const base = nameOrBase.replace(/\.[^.]+$/, "") || "image"
@@ -499,7 +500,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
         <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/10 p-5 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-emerald-500 text-white rounded-full shadow-sm">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+              <Check size={20} />
             </div>
             <div>
               <p className="font-semibold text-lg text-slate-900 dark:text-white leading-tight">Batch Completed</p>
@@ -540,7 +541,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
                       void downloadAsZip()
                     }}
                     type="button">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <Download size={16} />
                     {activeExportAction === "zip" ? "Preparing ZIP..." : `Download ZIP (${successfulOutputs.length})`}
                   </button>
 
@@ -551,7 +552,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
                       void downloadIndividually()
                     }}
                     type="button">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <Save size={16} />
                     {activeExportAction === "one_by_one" ? "Exporting files..." : "One by one"}
                   </button>
 
@@ -564,7 +565,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
                           void mergeIntoPdf()
                         }}
                         type="button">
-                        <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        <FileText size={16} className="text-red-500" />
                         {activeExportAction === "merge_pdf" ? "Merging PDF..." : "Merge into single PDF"}
                       </button>
                       <button
@@ -575,9 +576,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
                           setIsPdfSplitOpen((current) => !current)
                         }}
                         type="button">
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                        </svg>
+                        <ChevronDown size={16} />
                       </button>
                     </div>
 
@@ -617,7 +616,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
             type="file"
           />
           <div className="bg-white dark:bg-slate-800 rounded-full shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-slate-100 dark:border-slate-700/50">
-            <svg className="w-8 h-8 text-indigo-500/80 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            <Upload size={32} className="text-indigo-500/80 dark:text-indigo-400" />
           </div>
           <p className="text-base font-semibold text-slate-800 dark:text-slate-200">Drop images here or click to browse</p>
           <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Supports JPG, PNG, WebP, AVIF, BMP</p>
@@ -631,7 +630,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
 
         {queue.length === 0 ? (
           <div className="col-span-full py-12 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/10 text-slate-500 dark:text-slate-400">
-            <svg className="w-12 h-12 mb-3 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <Inbox size={48} className="mb-3 text-slate-300 dark:text-slate-600" />
             <p className="font-medium text-sm">No files in queue</p>
           </div>
         ) : null}

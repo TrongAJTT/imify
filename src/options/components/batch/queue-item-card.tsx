@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import { formatBytes } from "@/options/components/batch/utils"
 import type { BatchQueueItem } from "@/options/components/batch/types"
+import { X, ArrowRight } from "lucide-react"
 
 export function QueueItemCard({
   item,
@@ -39,9 +40,7 @@ export function QueueItemCard({
               className="absolute right-2 top-2 z-10 rounded-md bg-white/90 dark:bg-slate-900/90 p-1 text-slate-500 shadow-sm backdrop-blur hover:bg-white dark:hover:bg-slate-900 hover:text-red-500 transition-colors"
               onClick={() => onRemove(item.id)}
               type="button">
-              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-              </svg>
+              <X size={14} />
             </button>
           ) : null}
 
@@ -71,9 +70,7 @@ export function QueueItemCard({
           {item.outputBlob ? (
             <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
               {formatBytes(item.file.size)}
-              <svg className="h-3 w-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-              </svg>
+              <ArrowRight size={12} className="inline" />
               {formatBytes(item.outputBlob.size)}
             </span>
           ) : (

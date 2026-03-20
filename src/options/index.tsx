@@ -33,7 +33,7 @@ import {
   createCustomFormatId,
   normalizeCustomInput
 } from "@/options/shared"
-import { Edit, Globe, SlidersHorizontal } from "lucide-react"
+import { Edit, Globe, SlidersHorizontal, X, Heart } from "lucide-react"
 
 const syncStorage = new Storage({ area: "sync" })
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
@@ -366,9 +366,7 @@ export default function OptionsPage() {
                 className="absolute top-4 right-4 rounded-full border border-slate-200 dark:border-slate-800 p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors z-10"
                 onClick={() => setIsAboutDialogOpen(false)}
                 type="button">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-                </svg>
+                <X size={16} />
               </button>
 
               <div className="flex flex-col">
@@ -476,16 +474,12 @@ export default function OptionsPage() {
                 className="absolute top-4 right-4 rounded-full border border-slate-200 dark:border-slate-800 p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 onClick={() => setIsDonateDialogOpen(false)}
                 type="button">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-                </svg>
+                <X size={16} />
               </button>
 
               <div className="text-center">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 mb-6 group transition-transform hover:scale-110 duration-300">
-                  <svg className="h-8 w-8 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
+                  <Heart size={32} className="animate-pulse fill-current" />
                 </div>
 
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Support the Developer</h3>

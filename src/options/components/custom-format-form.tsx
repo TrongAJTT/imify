@@ -8,6 +8,7 @@ import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
 import { ResizeConfigPanel } from "@/options/components/resize-config-panel"
+import { Check } from "lucide-react"
 
 export function CustomFormatForm({
   value,
@@ -195,9 +196,7 @@ export function CustomFormatForm({
           className="inline-flex items-center gap-2 rounded-lg bg-sky-500 hover:bg-sky-600 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-sky-500/20 transition-all active:scale-95"
           onClick={onSubmit}
           type="button">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} />
-          </svg>
+          <Check size={16} />
           {submitLabel}
         </button>
       </div>
