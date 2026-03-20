@@ -1,3 +1,5 @@
+import { Tooltip } from "../tooltip"
+
 export interface QueueStats {
   queued: number
   processing: number
@@ -39,7 +41,7 @@ export function BatchActionBar({
   }
 
   return (
-    <div className="flex flex-wrap mb-4 items-center justify-between gap-4 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+    <div className="flex flex-wrap mb-4 items-center justify-between gap-4 rounded-lg">
       <div className="flex flex-wrap items-center gap-2">
         {canStartBatch ? (
           <button
@@ -91,22 +93,30 @@ export function BatchActionBar({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-900 px-2.5 py-1 border border-slate-200 dark:border-slate-700 shadow-sm text-xs font-medium">
-          <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h10M7 16h6"></path></svg>
-          <span className="text-slate-800 dark:text-slate-100">{queueStats.queued}</span>
-        </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-900 px-2.5 py-1 border border-sky-200 dark:border-sky-900 shadow-sm text-xs font-medium">
-          <svg className="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          <span className="text-sky-600 dark:text-sky-400">{queueStats.processing}</span>
-        </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-900 px-2.5 py-1 border border-emerald-200 dark:border-emerald-900 shadow-sm text-xs font-medium">
-          <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-          <span className="text-emerald-600 dark:text-emerald-400">{queueStats.success}</span>
-        </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-900 px-2.5 py-1 border border-red-200 dark:border-red-900 shadow-sm text-xs font-medium">
-          <svg className="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-          <span className="text-red-600 dark:text-red-400">{queueStats.error}</span>
-        </div>
+        <Tooltip content="Queued items">
+          <div className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-900 px-2.5 py-1 border border-slate-200 dark:border-slate-700 shadow-sm text-xs font-medium">
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h10M7 16h6"></path></svg>
+            <span className="text-slate-800 dark:text-slate-100">{queueStats.queued}</span>
+          </div>
+        </Tooltip>
+        <Tooltip content="Processing items">
+          <div className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-900 px-2.5 py-1 border border-sky-200 dark:border-sky-900 shadow-sm text-xs font-medium">
+            <svg className="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span className="text-sky-600 dark:text-sky-400">{queueStats.processing}</span>
+          </div>
+        </Tooltip>
+        <Tooltip content="Successful items">
+          <div className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-900 px-2.5 py-1 border border-emerald-200 dark:border-emerald-900 shadow-sm text-xs font-medium">
+            <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+            <span className="text-emerald-600 dark:text-emerald-400">{queueStats.success}</span>
+          </div>
+        </Tooltip>
+        <Tooltip content="Failed items">
+          <div className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-900 px-2.5 py-1 border border-red-200 dark:border-red-900 shadow-sm text-xs font-medium">
+            <svg className="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <span className="text-red-600 dark:text-red-400">{queueStats.error}</span>
+          </div>
+        </Tooltip>
       </div>
     </div>
   )
