@@ -10,7 +10,6 @@ import { QueueItemCard } from "./batch/queue-item-card"
 import type {
   BatchQueueItem,
   BatchRunMode,
-  BatchSetupHandlers,
   BatchSetupState,
   BatchSummary
 } from "./batch/types"
@@ -26,13 +25,11 @@ import {
 } from "./batch/utils"
 
 interface BatchConverterTabProps {
-  configs: FormatConfig[]
   setup: BatchSetupState
-  setupHandlers: BatchSetupHandlers
   onRunningStateChange?: (running: boolean) => void
 }
 
-export function BatchConverterTab({ configs, setup, setupHandlers, onRunningStateChange }: BatchConverterTabProps) {
+export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverterTabProps) {
   const [queue, setQueue] = useState<BatchQueueItem[]>([])
   const [isRunning, setIsRunning] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
@@ -50,39 +47,25 @@ export function BatchConverterTab({ configs, setup, setupHandlers, onRunningStat
     onRunningStateChange?.(isRunning)
   }, [isRunning, onRunningStateChange])
 
-  useEffect(() => {
-    if (!configs.length) {
-      if (setup.selectedConfigId) {
-        setupHandlers.onSelectedConfigIdChange("")
-      }
-      return
-    }
-
-    const exists = configs.some((entry) => entry.id === setup.selectedConfigId)
-    if (!exists) {
-      setupHandlers.onSelectedConfigIdChange(configs[0].id)
-    }
-  }, [configs, setup.selectedConfigId, setupHandlers])
-
-  const selectedConfig = useMemo(
-    () => configs.find((entry) => entry.id === setup.selectedConfigId) ?? null,
-    [configs, setup.selectedConfigId]
-  )
-
   const effectiveConfig = useMemo(() => {
-    if (!selectedConfig) {
-      return null
+    const baseConfig: FormatConfig = {
+      id: `batch_${setup.targetFormat}`,
+      name: `Batch ${setup.targetFormat.toUpperCase()}`,
+      format: setup.targetFormat,
+      enabled: true,
+      quality: setup.quality,
+      resize: { mode: "none" }
     }
 
     return withBatchResize(
-      selectedConfig,
+      baseConfig,
       setup.resizeMode,
       setup.quality,
       setup.resizeValue,
       setup.paperSize,
       setup.dpi
     )
-  }, [selectedConfig, setup.resizeMode, setup.quality, setup.resizeValue, setup.paperSize, setup.dpi])
+  }, [setup.targetFormat, setup.resizeMode, setup.quality, setup.resizeValue, setup.paperSize, setup.dpi])
 
   const setItemState = (
     id: string,
@@ -184,7 +167,7 @@ export function BatchConverterTab({ configs, setup, setupHandlers, onRunningStat
   }
 
   const runBatch = async (mode: BatchRunMode = "all") => {
-    if (!effectiveConfig || isRunning) {
+    if (isRunning) {
       return
     }
 

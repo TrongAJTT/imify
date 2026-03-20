@@ -1,8 +1,9 @@
-import type { FormatConfig, ImageFormat, PaperSize, SupportedDPI } from "../../../core/types"
+import type { ImageFormat, PaperSize, SupportedDPI } from "../../../core/types"
 
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
 export type BatchRunMode = "all" | "failed"
 export type BatchResizeMode = "inherit" | "none" | "change_width" | "change_height" | "scale" | "page_size"
+export type BatchTargetFormat = Exclude<ImageFormat, "pdf">
 
 export const HIGH_CONCURRENCY_FORMATS: ImageFormat[] = ["jpg", "png", "webp"]
 
@@ -26,7 +27,7 @@ export interface BatchSummary {
 }
 
 export interface BatchSetupState {
-  selectedConfigId: string
+  targetFormat: BatchTargetFormat
   concurrency: number
   quality: number
   resizeMode: BatchResizeMode
@@ -36,7 +37,7 @@ export interface BatchSetupState {
 }
 
 export interface BatchSetupHandlers {
-  onSelectedConfigIdChange: (value: string) => void
+  onTargetFormatChange: (value: BatchTargetFormat) => void
   onConcurrencyChange: (value: number) => void
   onQualityChange: (value: number) => void
   onResizeModeChange: (value: BatchResizeMode) => void
@@ -46,6 +47,5 @@ export interface BatchSetupHandlers {
 }
 
 export interface BatchSetupPanelProps extends BatchSetupState, BatchSetupHandlers {
-  configs: FormatConfig[]
   isRunning: boolean
 }

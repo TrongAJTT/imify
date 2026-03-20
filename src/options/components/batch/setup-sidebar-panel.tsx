@@ -1,8 +1,17 @@
 import { useEffect } from "react"
 import { DPI_OPTIONS, PAPER_OPTIONS, QUALITY_FORMATS } from "../../shared"
 import { HIGH_CONCURRENCY_FORMATS } from "./types"
+import type { BatchTargetFormat } from "./types"
 import type { BatchResizeMode } from "./types"
 import type { BatchSetupPanelProps } from "./types"
+
+const TARGET_FORMAT_OPTIONS: Array<{ value: BatchTargetFormat; label: string }> = [
+  { value: "jpg", label: "JPG" },
+  { value: "png", label: "PNG" },
+  { value: "webp", label: "WEBP" },
+  { value: "avif", label: "AVIF" },
+  { value: "bmp", label: "BMP" }
+]
 
 const BASE_CONCURRENCY_OPTIONS = [
   { value: 1, label: "1" },
@@ -15,16 +24,15 @@ const BASE_CONCURRENCY_OPTIONS = [
 const EXTENDED_CONCURRENCY_VALUES = [10, 15, 20, 25, 30] as const
 
 export function BatchSetupSidebarPanel({
-  configs,
   isRunning,
-  selectedConfigId,
+  targetFormat,
   concurrency,
   quality,
   resizeMode,
   resizeValue,
   paperSize,
   dpi,
-  onSelectedConfigIdChange,
+  onTargetFormatChange,
   onConcurrencyChange,
   onQualityChange,
   onResizeModeChange,
@@ -32,11 +40,8 @@ export function BatchSetupSidebarPanel({
   onPaperSizeChange,
   onDpiChange
 }: BatchSetupPanelProps) {
-  const selectedConfig = configs.find((config) => config.id === selectedConfigId)
-  const supportsQuality = Boolean(selectedConfig && QUALITY_FORMATS.includes(selectedConfig.format))
-  const supportsExtendedConcurrency = Boolean(
-    selectedConfig && HIGH_CONCURRENCY_FORMATS.includes(selectedConfig.format)
-  )
+  const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
+  const supportsExtendedConcurrency = HIGH_CONCURRENCY_FORMATS.includes(targetFormat)
   const concurrencyOptions = supportsExtendedConcurrency
     ? [
         ...BASE_CONCURRENCY_OPTIONS,
@@ -57,15 +62,15 @@ export function BatchSetupSidebarPanel({
       <div className="mt-3 space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-xs text-slate-700 dark:text-slate-200">
-            Target preset
+            Target format
             <select
               className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
-              disabled={!configs.length || isRunning}
-              onChange={(event) => onSelectedConfigIdChange(event.target.value)}
-              value={selectedConfigId}>
-              {configs.map((config) => (
-                <option key={config.id} value={config.id}>
-                  {config.name} (.{config.format})
+              disabled={isRunning}
+              onChange={(event) => onTargetFormatChange(event.target.value as BatchTargetFormat)}
+              value={targetFormat}>
+              {TARGET_FORMAT_OPTIONS.map((formatOption) => (
+                <option key={formatOption.value} value={formatOption.value}>
+                  {formatOption.label} (.{formatOption.value})
                 </option>
               ))}
             </select>

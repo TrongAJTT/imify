@@ -19,7 +19,7 @@ import {
 import { DEFAULT_STORAGE_STATE } from "../features/settings"
 import { BatchConverterTab } from "./components/batch-tab"
 import { BatchSetupSidebarPanel } from "./components/batch/setup-sidebar-panel"
-import type { BatchResizeMode } from "./components/batch/types"
+import type { BatchResizeMode, BatchTargetFormat } from "./components/batch/types"
 import { CustomFormatsTab } from "./components/custom-formats-tab"
 import { GlobalFormatsTab } from "./components/global-formats-tab"
 import { TabButton } from "./components/tab-button"
@@ -28,7 +28,6 @@ import {
   type PersistedStorageState,
   TAB_ITEMS,
   createCustomFormatId,
-  getAllTargetConfigs,
   normalizeCustomInput
 } from "./shared"
 
@@ -41,7 +40,7 @@ const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
 export default function OptionsPage() {
   const [activeTab, setActiveTab] = useState<OptionsTab>("batch")
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
-  const [batchSelectedConfigId, setBatchSelectedConfigId] = useState("")
+  const [batchTargetFormat, setBatchTargetFormat] = useState<BatchTargetFormat>("jpg")
   const [batchConcurrency, setBatchConcurrency] = useState(2)
   const [batchQuality, setBatchQuality] = useState(90)
   const [batchResizeMode, setBatchResizeMode] = useState<BatchResizeMode>("inherit")
@@ -258,22 +257,6 @@ export default function OptionsPage() {
     })
   }
 
-  const batchConfigs = useMemo(() => getAllTargetConfigs(state), [state])
-
-  useEffect(() => {
-    if (!batchConfigs.length) {
-      if (batchSelectedConfigId) {
-        setBatchSelectedConfigId("")
-      }
-      return
-    }
-
-    if (!batchConfigs.some((entry) => entry.id === batchSelectedConfigId)) {
-      setBatchSelectedConfigId(batchConfigs[0].id)
-    }
-  }, [batchConfigs, batchSelectedConfigId])
-
-
   const tabContent = useMemo(() => {
     switch (activeTab) {
       case "global":
@@ -300,25 +283,15 @@ export default function OptionsPage() {
       case "batch":
         return (
           <BatchConverterTab
-            configs={batchConfigs}
             onRunningStateChange={setBatchIsRunning}
             setup={{
-              selectedConfigId: batchSelectedConfigId,
+              targetFormat: batchTargetFormat,
               concurrency: batchConcurrency,
               quality: batchQuality,
               resizeMode: batchResizeMode,
               resizeValue: batchResizeValue,
               paperSize: batchPaperSize,
               dpi: batchDpi
-            }}
-            setupHandlers={{
-              onSelectedConfigIdChange: setBatchSelectedConfigId,
-              onConcurrencyChange: setBatchConcurrency,
-              onQualityChange: setBatchQuality,
-              onResizeModeChange: setBatchResizeMode,
-              onResizeValueChange: setBatchResizeValue,
-              onPaperSizeChange: setBatchPaperSize,
-              onDpiChange: setBatchDpi
             }}
           />
         )
@@ -328,8 +301,7 @@ export default function OptionsPage() {
   }, [
     activeTab,
     state,
-    batchConfigs,
-    batchSelectedConfigId,
+    batchTargetFormat,
     batchConcurrency,
     batchQuality,
     batchResizeMode,
@@ -462,7 +434,6 @@ export default function OptionsPage() {
 
                 {tab.id === "batch" && activeTab === "batch" ? (
                   <BatchSetupSidebarPanel
-                    configs={batchConfigs}
                     concurrency={batchConcurrency}
                     dpi={batchDpi}
                     isRunning={batchIsRunning}
@@ -472,12 +443,12 @@ export default function OptionsPage() {
                     onQualityChange={setBatchQuality}
                     onResizeModeChange={setBatchResizeMode}
                     onResizeValueChange={setBatchResizeValue}
-                    onSelectedConfigIdChange={setBatchSelectedConfigId}
+                    onTargetFormatChange={setBatchTargetFormat}
                     paperSize={batchPaperSize}
                     quality={batchQuality}
                     resizeMode={batchResizeMode}
                     resizeValue={batchResizeValue}
-                    selectedConfigId={batchSelectedConfigId}
+                    targetFormat={batchTargetFormat}
                   />
                 ) : null}
               </div>
