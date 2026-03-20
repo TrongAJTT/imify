@@ -1,11 +1,11 @@
-import type { CustomFormatInput } from "../../features/custom-formats"
-import type { ImageFormat, PaperSize, ResizeMode } from "../../core/types"
+import type { CustomFormatInput } from "@/features/custom-formats"
+import type { ImageFormat, PaperSize, ResizeMode } from "@/core/types"
 import {
   DPI_OPTIONS,
   PAPER_OPTIONS,
   QUALITY_FORMATS,
   RESIZE_MODE_OPTIONS
-} from "../shared"
+} from "@/options/shared"
 
 export function CustomFormatForm({
   value,

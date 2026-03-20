@@ -1,9 +1,9 @@
 import { PDFDocument } from "pdf-lib"
 
-import { calculateContainPlacement } from "../../core/image-utils"
-import { PAPER_DIMENSIONS } from "../../core/paper-constants"
-import type { ResizeConfig } from "../../core/types"
-import { convertRasterImage } from "./canvas-engine"
+import { calculateContainPlacement } from "@/core/image-utils"
+import { PAPER_DIMENSIONS } from "@/core/paper-constants"
+import type { ResizeConfig } from "@/core/types"
+import { convertRasterImage } from "@/features/converter/canvas-engine"
 
 interface PreparedImage {
   bytes: Uint8Array

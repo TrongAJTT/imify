@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 
-import { formatBytes } from "./utils"
-import type { BatchQueueItem } from "./types"
+import { formatBytes } from "@/options/components/batch/utils"
+import type { BatchQueueItem } from "@/options/components/batch/types"
 
 export function QueueItemCard({
   item,

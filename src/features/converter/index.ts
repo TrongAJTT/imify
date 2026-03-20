@@ -1,6 +1,6 @@
-import type { FormatConfig, ImageFormat } from "../../core/types"
-import { convertRasterImage } from "./canvas-engine"
-import { convertImageToPdf } from "./pdf-engine"
+import type { FormatConfig, ImageFormat } from "@/core/types"
+import { convertRasterImage } from "@/features/converter/canvas-engine"
+import { convertImageToPdf } from "@/features/converter/pdf-engine"
 
 export interface ConvertImageParams {
   sourceBlob: Blob

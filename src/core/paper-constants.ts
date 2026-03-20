@@ -1,4 +1,4 @@
-import type { PaperSize, SupportedDPI } from "./types"
+import type { PaperSize, SupportedDPI } from "@/core/types"
 
 export interface Dimension {
   width: number

@@ -5,8 +5,8 @@ import type {
   ResizeConfig,
   ResizeMode,
   SupportedDPI
-} from "../../core/types"
-import { patchStorageState } from "../settings"
+} from "@/core/types"
+import { patchStorageState } from "@/features/settings"
 
 export interface CustomFormatInput {
   name: string

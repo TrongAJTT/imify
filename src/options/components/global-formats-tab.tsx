@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import type { ExtensionStorageState, FormatConfig, ImageFormat } from "../../core/types"
-import { QUALITY_FORMATS } from "../shared"
+import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
+import { QUALITY_FORMATS } from "@/options/shared"
 
 export function GlobalFormatsTab({
   state,

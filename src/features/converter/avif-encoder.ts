@@ -1,5 +1,5 @@
 // @ts-ignore: This JS module is shipped as a static asset.
-import initAvifFactory from "../../../assets/wasm/avif_enc.js"
+import initAvifFactory from "@assets/wasm/avif_enc.js"
 
 export interface AvifEncodeOptions {
   quality?: number

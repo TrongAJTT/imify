@@ -1,4 +1,4 @@
-import type { ImageFormat, PaperSize, SupportedDPI } from "../../../core/types"
+import type { ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
 
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
 export type BatchRunMode = "all" | "failed"

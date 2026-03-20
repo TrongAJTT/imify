@@ -1,4 +1,4 @@
-import type { ConversionProgressPayload } from "../core/types"
+import type { ConversionProgressPayload } from "@/core/types"
 
 const MESSAGE_TYPE = "CONVERT_PROGRESS"
 

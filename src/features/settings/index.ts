@@ -1,8 +1,8 @@
-export { DEFAULT_STORAGE_STATE } from "./default-state"
+export { DEFAULT_STORAGE_STATE } from "@/features/settings/default-state"
 export {
   ensureStorageState,
   getStorageState,
   onStorageStateChanged,
   patchStorageState,
   setStorageState
-} from "./storage"
+} from "@/features/settings/storage"

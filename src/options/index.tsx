@@ -1,4 +1,4 @@
-import "../style.css"
+import "@/style.css"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useState, useEffect } from "react"
@@ -11,26 +11,26 @@ import {
   type SupportedDPI,
   STORAGE_KEY,
   STORAGE_VERSION
-} from "../core/types"
+} from "@/core/types"
 import {
   type CustomFormatInput,
   validateCustomFormatInput
-} from "../features/custom-formats"
-import { DEFAULT_STORAGE_STATE } from "../features/settings"
-import { BatchConverterTab } from "./components/batch-tab"
-import { BatchSetupSidebarPanel } from "./components/batch/setup-sidebar-panel"
-import type { BatchResizeMode, BatchTargetFormat } from "./components/batch/types"
-import { CustomFormatsTab } from "./components/custom-formats-tab"
-import { GlobalFormatsTab } from "./components/global-formats-tab"
-import { OptionsHeader } from "./components/options-header"
-import { TabButton } from "./components/tab-button"
+} from "@/features/custom-formats"
+import { DEFAULT_STORAGE_STATE } from "@/features/settings"
+import { BatchConverterTab } from "@/options/components/batch-tab"
+import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
+import type { BatchResizeMode, BatchTargetFormat } from "@/options/components/batch/types"
+import { CustomFormatsTab } from "@/options/components/custom-formats-tab"
+import { GlobalFormatsTab } from "@/options/components/global-formats-tab"
+import { OptionsHeader } from "@/options/components/options-header"
+import { TabButton } from "@/options/components/tab-button"
 import {
   type OptionsTab,
   type PersistedStorageState,
   TAB_ITEMS,
   createCustomFormatId,
   normalizeCustomInput
-} from "./shared"
+} from "@/options/shared"
 
 const syncStorage = new Storage({ area: "sync" })
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
@@ -340,7 +340,7 @@ export default function OptionsPage() {
               <div className="flex flex-col">
                 <div className="flex items-center gap-5 mb-8">
                   <img 
-                    src={require("url:../../assets/icon.png")} 
+                    src={require("url:@assets/icon.png")} 
                     alt="Imify Logo" 
                     className="w-20 h-20 rounded-2xl shadow-md rotate-3 bg-white p-1"
                   />

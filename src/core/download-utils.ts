@@ -1,4 +1,4 @@
-import type { ImageFormat } from "./types"
+import type { ImageFormat } from "@/core/types"
 
 function stripExtension(name: string): string {
   const trimmed = name.trim()

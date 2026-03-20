@@ -6,8 +6,8 @@ import type {
   ResizeConfig,
   ResizeMode,
   SupportedDPI
-} from "../core/types"
-import type { CustomFormatInput } from "../features/custom-formats"
+} from "@/core/types"
+import type { CustomFormatInput } from "@/features/custom-formats"
 
 export type OptionsTab = "global" | "custom" | "batch"
 

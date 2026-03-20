@@ -1,20 +1,20 @@
 import {
   blobToDownloadDataUrl,
   toOutputFilename
-} from "../core/download-utils"
-import { toUserFacingConversionError } from "../core/error-utils"
-import type { ExtensionStorageState, FormatConfig, ImageFormat } from "../core/types"
-import { convertImage } from "../features/converter"
+} from "@/core/download-utils"
+import { toUserFacingConversionError } from "@/core/error-utils"
+import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
+import { convertImage } from "@/features/converter"
 import {
   ensureStorageState,
   getStorageState,
   onStorageStateChanged
-} from "../features/settings"
+} from "@/features/settings"
 import {
   extractConfigIdFromMenuItem,
   rebuildContextMenu
-} from "./context-menu-builder"
-import { publishConvertProgress } from "./message-hub"
+} from "@/background/context-menu-builder"
+import { publishConvertProgress } from "@/background/message-hub"
 
 const pendingDownloadFilenameQueue: string[] = []
 const pendingDownloadFilenameById = new Map<number, string>()

@@ -1,4 +1,4 @@
-import type { ExtensionStorageState, FormatConfig } from "../core/types"
+import type { ExtensionStorageState, FormatConfig } from "@/core/types"
 
 export const MENU_ROOT_ID = "imify_convert_root"
 export const MENU_ITEM_PREFIX = "imify_format_"

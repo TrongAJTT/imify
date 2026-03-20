@@ -1,19 +1,19 @@
 import JSZip from "jszip"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { toOutputFilename } from "../../core/download-utils"
-import { toUserFacingConversionError } from "../../core/error-utils"
-import type { FormatConfig } from "../../core/types"
-import { convertImage } from "../../features/converter"
-import { convertImageToPdf, mergeImagesToPdf } from "../../features/converter/pdf-engine"
-import { BatchActionBar } from "./batch/action-bar"
-import { QueueItemCard } from "./batch/queue-item-card"
+import { toOutputFilename } from "@/core/download-utils"
+import { toUserFacingConversionError } from "@/core/error-utils"
+import type { FormatConfig } from "@/core/types"
+import { convertImage } from "@/features/converter"
+import { convertImageToPdf, mergeImagesToPdf } from "@/features/converter/pdf-engine"
+import { BatchActionBar } from "@/options/components/batch/action-bar"
+import { QueueItemCard } from "@/options/components/batch/queue-item-card"
 import type {
   BatchQueueItem,
   BatchRunMode,
   BatchSetupState,
   BatchSummary
-} from "./batch/types"
+} from "@/options/components/batch/types"
 import {
   MAX_FILE_SIZE_BYTES,
   MAX_TOTAL_QUEUE_BYTES,
@@ -23,7 +23,7 @@ import {
   sleep,
   toMb,
   withBatchResize
-} from "./batch/utils"
+} from "@/options/components/batch/utils"
 
 interface BatchConverterTabProps {
   setup: BatchSetupState

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import type { ConversionProgressPayload } from "../core/types"
+import type { ConversionProgressPayload } from "@/core/types"
 
 interface RuntimeMessage {
   type: string

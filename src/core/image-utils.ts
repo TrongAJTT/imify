@@ -1,5 +1,5 @@
-import { PAPER_DIMENSIONS } from "./paper-constants"
-import type { ResizeConfig } from "./types"
+import { PAPER_DIMENSIONS } from "@/core/paper-constants"
+import type { ResizeConfig } from "@/core/types"
 
 export interface TargetDimensions {
   targetWidth: number

@@ -1,13 +1,13 @@
-import { PAPER_OPTIONS, QUALITY_FORMATS } from "../../shared"
-import { toOutputFilename } from "../../../core/download-utils"
+import { PAPER_OPTIONS, QUALITY_FORMATS } from "@/options/shared"
+import { toOutputFilename } from "@/core/download-utils"
 import type {
   ConversionProgressPayload,
   FormatConfig,
   ResizeConfig,
   ResizeMode,
   SupportedDPI
-} from "../../../core/types"
-import type { BatchResizeMode } from "./types"
+} from "@/core/types"
+import type { BatchResizeMode } from "@/options/components/batch/types"
 
 export const MAX_FILE_SIZE_BYTES = 30 * 1024 * 1024
 export const MAX_TOTAL_QUEUE_BYTES = 150 * 1024 * 1024

@@ -1,4 +1,4 @@
-import type { ExtensionStorageState, FormatConfig, ImageFormat } from "../../core/types"
+import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
 
 const DEFAULT_QUALITY_BY_FORMAT: Partial<Record<ImageFormat, number>> = {
   jpg: 92,

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 
-import type { ExtensionStorageState, FormatConfig } from "../../core/types"
-import type { CustomFormatInput } from "../../features/custom-formats"
-import { CustomFormatForm } from "./custom-format-form"
+import type { ExtensionStorageState, FormatConfig } from "@/core/types"
+import type { CustomFormatInput } from "@/features/custom-formats"
+import { CustomFormatForm } from "@/options/components/custom-format-form"
 
 interface PendingDelete {
   item: FormatConfig

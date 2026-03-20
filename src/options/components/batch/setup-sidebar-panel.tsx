@@ -1,9 +1,9 @@
 import { useEffect } from "react"
-import { DPI_OPTIONS, PAPER_OPTIONS, QUALITY_FORMATS } from "../../shared"
-import { HIGH_CONCURRENCY_FORMATS } from "./types"
-import type { BatchTargetFormat } from "./types"
-import type { BatchResizeMode } from "./types"
-import type { BatchSetupPanelProps } from "./types"
+import { DPI_OPTIONS, PAPER_OPTIONS, QUALITY_FORMATS } from "@/options/shared"
+import { HIGH_CONCURRENCY_FORMATS } from "@/options/components/batch/types"
+import type { BatchTargetFormat } from "@/options/components/batch/types"
+import type { BatchResizeMode } from "@/options/components/batch/types"
+import type { BatchSetupPanelProps } from "@/options/components/batch/types"
 
 const TARGET_FORMAT_OPTIONS: Array<{ value: BatchTargetFormat; label: string }> = [
   { value: "jpg", label: "JPG" },

@@ -17,7 +17,7 @@ export function OptionsHeader({
     <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
       <div className="flex items-center gap-3">
         <img 
-          src={require("url:../../../assets/icon.png")} 
+          src={require("url:@assets/icon.png")} 
           alt="Imify Logo" 
           className="w-10 h-10 rounded-lg shadow-sm bg-white dark:bg-slate-800 p-1"
         />

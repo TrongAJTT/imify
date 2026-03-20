@@ -5,8 +5,8 @@ import {
   type FormatConfig,
   type ImageFormat,
   type ResizeConfig
-} from "../../core/types"
-import { DEFAULT_STORAGE_STATE } from "./default-state"
+} from "@/core/types"
+import { DEFAULT_STORAGE_STATE } from "@/features/settings/default-state"
 
 interface PersistedStorageState {
   version: number

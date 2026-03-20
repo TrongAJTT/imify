@@ -1,7 +1,7 @@
-import { calculateContainPlacement, calculateDimensions, clampQuality } from "../../core/image-utils"
-import type { ImageFormat, ResizeConfig } from "../../core/types"
-import { encodeAvif } from "./avif-encoder"
-import { encodeImageDataToBmp } from "./bmp-encoder"
+import { calculateContainPlacement, calculateDimensions, clampQuality } from "@/core/image-utils"
+import type { ImageFormat, ResizeConfig } from "@/core/types"
+import { encodeAvif } from "@/features/converter/avif-encoder"
+import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 
 const MIME_BY_FORMAT: Record<Exclude<ImageFormat, "bmp" | "pdf">, string> = {
   jpg: "image/jpeg",

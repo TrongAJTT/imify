@@ -1,4 +1,4 @@
-import { Tooltip } from "../tooltip"
+import { Tooltip } from "@/options/components/tooltip"
 
 export interface QueueStats {
   queued: number
