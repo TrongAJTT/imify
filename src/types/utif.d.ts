@@ -4,7 +4,7 @@ declare module "utif" {
     width: number,
     height: number,
     metadata?: Record<string, unknown>
-  ): unknown
+  ): ArrayBuffer
 
   export function encode(ifds: unknown[]): ArrayBuffer
 }
