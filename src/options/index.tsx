@@ -22,6 +22,7 @@ import { BatchSetupSidebarPanel } from "./components/batch/setup-sidebar-panel"
 import type { BatchResizeMode, BatchTargetFormat } from "./components/batch/types"
 import { CustomFormatsTab } from "./components/custom-formats-tab"
 import { GlobalFormatsTab } from "./components/global-formats-tab"
+import { OptionsHeader } from "./components/options-header"
 import { TabButton } from "./components/tab-button"
 import {
   type OptionsTab,
@@ -40,6 +41,7 @@ const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
 export default function OptionsPage() {
   const [activeTab, setActiveTab] = useState<OptionsTab>("batch")
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
+  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [batchTargetFormat, setBatchTargetFormat] = useState<BatchTargetFormat>("jpg")
   const [batchConcurrency, setBatchConcurrency] = useState(2)
   const [batchQuality, setBatchQuality] = useState(90)
@@ -63,13 +65,14 @@ export default function OptionsPage() {
   }, [isDark])
 
   useEffect(() => {
-    if (!isDonateDialogOpen) {
+    if (!isDonateDialogOpen && !isAboutDialogOpen) {
       return
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsDonateDialogOpen(false)
+        setIsAboutDialogOpen(false)
       }
     }
 
@@ -78,7 +81,7 @@ export default function OptionsPage() {
     return () => {
       window.removeEventListener("keydown", onKeyDown)
     }
-  }, [isDonateDialogOpen])
+  }, [isDonateDialogOpen, isAboutDialogOpen])
 
   const state = persistedState?.state ?? DEFAULT_STORAGE_STATE
 
@@ -313,53 +316,119 @@ export default function OptionsPage() {
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
       <div className="mx-auto max-w-5xl px-6 py-8">
-        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Imify</p>
-            <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">Image Save and Convert</h1>
-            {isLoading ? <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Loading settings...</p> : null}
-          </div>
+        <OptionsHeader
+          isDark={isDark}
+          isLoading={isLoading}
+          onOpenAbout={() => setIsAboutDialogOpen(true)}
+          onOpenDonate={() => setIsDonateDialogOpen(true)}
+          onToggleDark={() => setIsDark(!isDark)}
+        />
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsDark(!isDark)}
-              className="p-2.5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition-colors"
-              title="Toggle Dark Mode"
-            >
-              {isDark ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-              )}
-            </button>
-            <a
-              href="https://github.com/TrongAJTT"
-              target="_blank"
-              rel="noreferrer"
-              className="p-2.5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition-colors"
-              title="Author"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-            </a>
-            <a
-              href="https://github.com/TrongAJTT/imify"
-              target="_blank"
-              rel="noreferrer"
-              className="p-2.5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition-colors"
-              title="GitHub Repository"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" /></svg>
-            </a>
-            <button
-              aria-label="Open donate dialog"
-              className="p-2.5 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-600 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 dark:text-rose-400 transition-colors"
-              onClick={() => setIsDonateDialogOpen(true)}
-              title="Donate"
-              type="button">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-            </button>
+        {isAboutDialogOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="w-full max-w-2xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 shadow-2xl relative overflow-y-auto max-h-[90vh]">
+              <button
+                aria-label="Close about dialog"
+                className="absolute top-4 right-4 rounded-full border border-slate-200 dark:border-slate-800 p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors z-10"
+                onClick={() => setIsAboutDialogOpen(false)}
+                type="button">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                </svg>
+              </button>
+
+              <div className="flex flex-col">
+                <div className="flex items-center gap-5 mb-8">
+                  <img 
+                    src={require("url:../../assets/icon.png")} 
+                    alt="Imify Logo" 
+                    className="w-20 h-20 rounded-2xl shadow-md rotate-3 bg-white p-1"
+                  />
+                  <div>
+                    <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Imify</h3>
+                    <p className="text-sm text-sky-500 dark:text-sky-400 uppercase tracking-widest font-bold">Save and Convert images</p>
+                    <div className="flex items-center gap-2 mt-2">
+                       <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500">v1.0.0</span>
+                       <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Stable</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-600 dark:text-slate-300">
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold uppercase text-slate-400 tracking-widest">About the project</h4>
+                    <p className="text-sm leading-relaxed">
+                      Imify was born out of a simple need: <span className="text-slate-900 dark:text-white font-medium">Privacy-First</span> image processing. Unlike online converters that upload your data to remote servers, Imify handles every single byte <span className="text-slate-900 dark:text-white font-medium">locally</span> right in your browser memory.
+                    </p>
+                    <p className="text-sm leading-relaxed">
+                      Built for developers, designers, and privacy enthusiasts who need quick, reliable, and secure image formatting without compromise.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold uppercase text-slate-400 tracking-widest">Key Technologies</h4>
+                    <ul className="grid grid-cols-1 gap-2">
+                      <li className="flex items-center gap-2 text-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
+                        <span>Plasmo Extension Framework</span>
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
+                        <span>OffscreenCanvas API</span>
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
+                        <span>Modern AVIF & PDF Engines</span>
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
+                        <span>React + Tailwind CSS</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest leading-none">A project by</p>
+                      <a 
+                        href="https://github.com/TrongAJTT" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-lg text-slate-900 dark:text-white font-bold hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
+                      >
+                        TrongAJTT
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <a
+                      href="https://github.com/TrongAJTT/imify"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-5 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-bold shadow-lg shadow-slate-900/10 dark:shadow-none hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                    >
+                      Repository
+                    </a>
+                    <a
+                      href="https://github.com/TrongAJTT?tab=repositories"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2"
+                    >
+                      More Apps
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </header>
+        ) : null}
 
         {isDonateDialogOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
