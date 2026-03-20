@@ -97,5 +97,40 @@ export async function convertImageToPdf(params: PdfConvertParams): Promise<Blob>
 
   const pdfBytes = await pdfDoc.save()
 
-  return new Blob([pdfBytes], { type: "application/pdf" })
+  return new Blob([pdfBytes as Uint8Array<ArrayBuffer>], {
+    type: "application/pdf"
+  })
+}
+
+export async function mergeImagesToPdf(sourceBlobs: Blob[]): Promise<Blob> {
+  const pdfDoc = await PDFDocument.create()
+
+  for (const sourceBlob of sourceBlobs) {
+    const prepared = await prepareImageForPdf({
+      sourceBlob,
+      resize: { mode: "none" }
+    })
+
+    const embeddedImage =
+      prepared.kind === "png"
+        ? await pdfDoc.embedPng(prepared.bytes)
+        : await pdfDoc.embedJpg(prepared.bytes)
+
+    const imageWidth = prepared.width ?? embeddedImage.width
+    const imageHeight = prepared.height ?? embeddedImage.height
+    const page = pdfDoc.addPage([imageWidth, imageHeight])
+
+    page.drawImage(embeddedImage, {
+      x: 0,
+      y: 0,
+      width: imageWidth,
+      height: imageHeight
+    })
+  }
+
+  const pdfBytes = await pdfDoc.save()
+
+  return new Blob([pdfBytes as Uint8Array<ArrayBuffer>], {
+    type: "application/pdf"
+  })
 }

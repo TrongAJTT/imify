@@ -5,6 +5,7 @@ import { toOutputFilename } from "../../core/download-utils"
 import { toUserFacingConversionError } from "../../core/error-utils"
 import type { FormatConfig } from "../../core/types"
 import { convertImage } from "../../features/converter"
+import { convertImageToPdf, mergeImagesToPdf } from "../../features/converter/pdf-engine"
 import { BatchActionBar } from "./batch/action-bar"
 import { QueueItemCard } from "./batch/queue-item-card"
 import type {
@@ -36,8 +37,11 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
   const [cancelRequested, setCancelRequested] = useState(false)
   const [paused, setPaused] = useState(false)
   const [summary, setSummary] = useState<BatchSummary | null>(null)
+  const [activeExportAction, setActiveExportAction] = useState<"zip" | "one_by_one" | "merge_pdf" | "individual_pdf" | null>(null)
+  const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false)
   const cancelRef = useRef(false)
   const pauseRef = useRef(false)
+  const pdfSplitRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     pauseRef.current = paused
@@ -46,6 +50,28 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
   useEffect(() => {
     onRunningStateChange?.(isRunning)
   }, [isRunning, onRunningStateChange])
+
+  useEffect(() => {
+    if (!isPdfSplitOpen) {
+      return
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!pdfSplitRef.current) {
+        return
+      }
+
+      if (!pdfSplitRef.current.contains(event.target as Node)) {
+        setIsPdfSplitOpen(false)
+      }
+    }
+
+    window.addEventListener("pointerdown", handlePointerDown)
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown)
+    }
+  }, [isPdfSplitOpen])
 
   const effectiveConfig = useMemo(() => {
     const baseConfig: FormatConfig = {
@@ -267,6 +293,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
     }
 
     setIsExporting(true)
+    setActiveExportAction("one_by_one")
 
     try {
       for (const item of successful) {
@@ -275,6 +302,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
       }
     } finally {
       setIsExporting(false)
+      setActiveExportAction(null)
     }
   }
 
@@ -286,6 +314,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
     }
 
     setIsExporting(true)
+    setActiveExportAction("zip")
 
     try {
       const zip = new JSZip()
@@ -297,6 +326,58 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
       await downloadWithFilename(zipBlob, `imify_batch_${Date.now()}.zip`)
     } finally {
       setIsExporting(false)
+      setActiveExportAction(null)
+    }
+  }
+
+  const mergeIntoPdf = async () => {
+    const successful = queue.filter((item) => item.status === "success" && item.outputBlob)
+
+    if (!successful.length || isExporting) {
+      return
+    }
+
+    setIsExporting(true)
+    setActiveExportAction("merge_pdf")
+    setIsPdfSplitOpen(false)
+
+    try {
+      const mergedPdfBlob = await mergeImagesToPdf(successful.map((item) => item.outputBlob as Blob))
+      await downloadWithFilename(mergedPdfBlob, `imify_batch_${Date.now()}.pdf`)
+    } finally {
+      setIsExporting(false)
+      setActiveExportAction(null)
+    }
+  }
+
+  const downloadIndividualPdfs = async () => {
+    const successful = queue.filter((item) => item.status === "success" && item.outputBlob && item.outputFileName)
+
+    if (!successful.length || isExporting) {
+      return
+    }
+
+    setIsExporting(true)
+    setActiveExportAction("individual_pdf")
+    setIsPdfSplitOpen(false)
+
+    try {
+      const zip = new JSZip()
+
+      for (const item of successful) {
+        const pdfBlob = await convertImageToPdf({
+          sourceBlob: item.outputBlob as Blob,
+          resize: { mode: "none" }
+        })
+        const baseName = (item.outputFileName as string).replace(/\.[^.]+$/, "")
+        zip.file(`${baseName}.pdf`, pdfBlob)
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } })
+      await downloadWithFilename(zipBlob, `imify_batch_pdf_${Date.now()}.zip`)
+    } finally {
+      setIsExporting(false)
+      setActiveExportAction(null)
     }
   }
 
@@ -402,7 +483,9 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
           </div>
 
           {successfulOutputs.length > 0 ? (
-            <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
+            <>
+              <div className="my-4 border-t border-emerald-200/80 dark:border-emerald-800/60" />
+
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Size reduction</p>
@@ -418,28 +501,70 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
 
                 <div className="flex flex-wrap items-center gap-3">
                   <button
-                    className="rounded-lg bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-600 transition-all flex items-center gap-2"
+                    className="rounded-lg bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-600 transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={isExporting}
                     onClick={() => {
                       void downloadAsZip()
                     }}
                     type="button">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    {isExporting ? "Preparing ZIP..." : `Download ZIP (${successfulOutputs.length})`}
+                    {activeExportAction === "zip" ? "Preparing ZIP..." : `Download ZIP (${successfulOutputs.length})`}
                   </button>
 
-                  {!isExporting ? (
-                    <button
-                      className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      onClick={() => {
-                        void downloadIndividually()
-                      }}
-                      type="button">
-                      One by one
-                    </button>
-                  ) : null}
+                  <button
+                    className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={isExporting}
+                    onClick={() => {
+                      void downloadIndividually()
+                    }}
+                    type="button">
+                    {activeExportAction === "one_by_one" ? "Exporting files..." : "One by one"}
+                  </button>
+
+                  <div className="relative" ref={pdfSplitRef}>
+                    <div className="inline-flex rounded-lg shadow-sm">
+                      <button
+                        className="rounded-l-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={isExporting}
+                        onClick={() => {
+                          void mergeIntoPdf()
+                        }}
+                        type="button">
+                        {activeExportAction === "merge_pdf" ? "Merging PDF..." : "Merge into PDF"}
+                      </button>
+                      <button
+                        aria-label="Open PDF export options"
+                        className="rounded-r-lg border-y border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={isExporting}
+                        onClick={() => {
+                          setIsPdfSplitOpen((current) => !current)
+                        }}
+                        type="button">
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {isPdfSplitOpen ? (
+                      <div className="absolute right-0 z-10 mt-2 min-w-[220px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg p-1.5">
+                        <button
+                          className="w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-60"
+                          disabled={isExporting}
+                          onClick={() => {
+                            void downloadIndividualPdfs()
+                          }}
+                          type="button">
+                          {activeExportAction === "individual_pdf"
+                            ? "Preparing Individual PDFs..."
+                            : `Individual PDF (${successfulOutputs.length})`}
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           ) : null}
         </div>
       ) : (!isRunning ? (
