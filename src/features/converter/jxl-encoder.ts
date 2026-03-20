@@ -51,20 +51,28 @@ export async function encodeJxl(
   options?: JxlEncodeOptions
 ): Promise<Blob> {
   const jxlModule = await getJxlModule()
+
   const encodeOptions = {
     ...defaultOptions,
     quality: options?.quality ?? defaultOptions.quality
   }
 
-  const rgbaBytes = new Uint8Array(imageData.data)
-  const encoded = jxlModule.encode(rgbaBytes, imageData.width, imageData.height, encodeOptions)
+  // Zero copy: directly use the ImageData's underlying Uint8Array for encoding
+  const rgbaBytes = imageData.data as unknown as Uint8Array
+
+  const encoded = jxlModule.encode(
+    rgbaBytes,
+    imageData.width,
+    imageData.height,
+    encodeOptions
+  )
 
   if (!encoded || encoded.byteLength === 0) {
     throw new Error("JXL encoding failed in the WASM encoder")
   }
 
-  const normalized = new Uint8Array(encoded.byteLength)
-  normalized.set(encoded)
-
-  return new Blob([normalized], { type: "image/jxl" })
+  // Return the encoded JXL data as a Blob
+  return new Blob([encoded as Uint8Array<ArrayBuffer>], {
+    type: "image/jxl"
+  })
 }

@@ -55,21 +55,28 @@ export async function encodeAvif(
   options?: AvifEncodeOptions
 ): Promise<Blob> {
   const avifModule = await getAvifModule()
+
   const encodeOptions = {
     ...defaultOptions,
     quality: options?.quality ?? defaultOptions.quality
   }
 
-  const rgbaBytes = new Uint8Array(imageData.data)
-  const encoded = avifModule.encode(rgbaBytes, imageData.width, imageData.height, encodeOptions)
+  // Avoid copy if possible by using the original ArrayBuffer from ImageData (if it's already a Uint8Array)
+  const rgbaBytes = imageData.data as unknown as Uint8Array
+
+  const encoded = avifModule.encode(
+    rgbaBytes,
+    imageData.width,
+    imageData.height,
+    encodeOptions
+  )
 
   if (!encoded || encoded.byteLength === 0) {
     throw new Error("AVIF encoding failed in the WASM encoder")
   }
 
-  // Normalize into a fresh Uint8Array backed by ArrayBuffer for Blob typing.
-  const normalized = new Uint8Array(encoded.byteLength)
-  normalized.set(encoded)
-
-  return new Blob([normalized], { type: "image/avif" })
+  // Return the encoded AVIF data as a Blob
+  return new Blob([encoded as Uint8Array<ArrayBuffer>], {
+    type: "image/avif"
+  })
 }

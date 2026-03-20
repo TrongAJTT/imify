@@ -1,10 +1,16 @@
 import * as UTIF from "utif"
 
 export function encodeImageDataToTiff(imageData: ImageData): Blob {
-  const rgba = new Uint8Array(imageData.data)
+  // UTIF expects RGBA data as Uint8Array
+  const rgba = imageData.data as unknown as Uint8Array
 
-  // UTIF.encodeImage returns an ArrayBuffer
-  const tiffBuffer = UTIF.encodeImage(rgba, imageData.width, imageData.height)
+  // Encode the image data to TIFF format using UTIF
+  const tiffBuffer = UTIF.encodeImage(
+    rgba,
+    imageData.width,
+    imageData.height
+  )
 
-  return new Blob([new Uint8Array(tiffBuffer)], { type: "image/tiff" })
+  // Return the encoded TIFF data as a Blob
+  return new Blob([tiffBuffer], { type: "image/tiff" })
 }

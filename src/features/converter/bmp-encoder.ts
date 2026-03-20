@@ -17,7 +17,9 @@ export function encodeImageDataToBmp(imageData: ImageData): Blob {
 
   const buffer = new ArrayBuffer(fileSize)
   const view = new DataView(buffer)
+  const bytes = new Uint8Array(buffer)
 
+  // BMP file header
   writeAscii(view, 0, "BM")
   view.setUint32(2, fileSize, true)
   view.setUint32(6, 0, true)
@@ -37,26 +39,24 @@ export function encodeImageDataToBmp(imageData: ImageData): Blob {
 
   let offset = pixelDataOffset
 
-  for (let y = height - 1; y >= 0; y -= 1) {
-    const rowStart = y * width * 4
+  for (let y = height - 1; y >= 0; y--) {
+    let rowOffset = offset
 
-    for (let x = 0; x < width; x += 1) {
-      const index = rowStart + x * 4
-      const r = data[index]
-      const g = data[index + 1]
-      const b = data[index + 2]
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4
 
-      view.setUint8(offset, b)
-      view.setUint8(offset + 1, g)
-      view.setUint8(offset + 2, r)
-      offset += bytesPerPixel
+      bytes[rowOffset++] = data[i + 2] // B
+      bytes[rowOffset++] = data[i + 1] // G
+      bytes[rowOffset++] = data[i]     // R
     }
 
-    const rowPadding = rowStride - width * bytesPerPixel
-    for (let p = 0; p < rowPadding; p += 1) {
-      view.setUint8(offset, 0)
-      offset += 1
+    // padding
+    const pad = rowStride - width * bytesPerPixel
+    for (let p = 0; p < pad; p++) {
+      bytes[rowOffset++] = 0
     }
+
+    offset += rowStride
   }
 
   return new Blob([buffer], { type: "image/bmp" })
