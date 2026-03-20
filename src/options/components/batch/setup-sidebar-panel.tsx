@@ -1,15 +1,15 @@
 import { useEffect } from "react"
-import { DPI_OPTIONS, PAPER_OPTIONS } from "../../shared"
+import { DPI_OPTIONS, PAPER_OPTIONS, QUALITY_FORMATS } from "../../shared"
 import { HIGH_CONCURRENCY_FORMATS } from "./types"
 import type { BatchResizeMode } from "./types"
 import type { BatchSetupPanelProps } from "./types"
 
 const BASE_CONCURRENCY_OPTIONS = [
-  { value: 1, label: "1 (safe)" },
-  { value: 2, label: "2 (balanced)" },
-  { value: 3, label: "3 (faster)" },
-  { value: 4, label: "4 (very fast)" },
-  { value: 5, label: "5 (max)" }
+  { value: 1, label: "1" },
+  { value: 2, label: "2" },
+  { value: 3, label: "3 *" },
+  { value: 4, label: "4" },
+  { value: 5, label: "5" }
 ] as const
 
 const EXTENDED_CONCURRENCY_VALUES = [10, 15, 20, 25, 30] as const
@@ -19,18 +19,21 @@ export function BatchSetupSidebarPanel({
   isRunning,
   selectedConfigId,
   concurrency,
+  quality,
   resizeMode,
   resizeValue,
   paperSize,
   dpi,
   onSelectedConfigIdChange,
   onConcurrencyChange,
+  onQualityChange,
   onResizeModeChange,
   onResizeValueChange,
   onPaperSizeChange,
   onDpiChange
 }: BatchSetupPanelProps) {
   const selectedConfig = configs.find((config) => config.id === selectedConfigId)
+  const supportsQuality = Boolean(selectedConfig && QUALITY_FORMATS.includes(selectedConfig.format))
   const supportsExtendedConcurrency = Boolean(
     selectedConfig && HIGH_CONCURRENCY_FORMATS.includes(selectedConfig.format)
   )
@@ -84,20 +87,37 @@ export function BatchSetupSidebarPanel({
           </label>
         </div>
 
-        <label className="block text-xs text-slate-700 dark:text-slate-200">
-          Resize
-          <select
-            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
-            disabled={isRunning}
-            onChange={(event) => onResizeModeChange(event.target.value as BatchResizeMode)}
-            value={resizeMode}>
-            <option value="inherit">Use preset resize</option>
-            <option value="change_width">Force width</option>
-            <option value="change_height">Force height</option>
-            <option value="scale">Scale percent</option>
-            <option value="page_size">Paper size</option>
-          </select>
-        </label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block text-xs text-slate-700 dark:text-slate-200">
+            Quality
+            <input
+              className={`mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs transition-opacity ${
+                supportsQuality ? "" : "opacity-70 cursor-not-allowed bg-slate-100 dark:bg-slate-900/40 text-slate-400"
+              }`}
+              disabled={isRunning || !supportsQuality}
+              max={100}
+              min={1}
+              onChange={(event) => onQualityChange(Math.max(1, Math.min(100, Number(event.target.value) || 1)))}
+              type="number"
+              value={quality}
+            />
+          </label>
+
+          <label className="block text-xs text-slate-700 dark:text-slate-200">
+            Resize
+            <select
+              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
+              disabled={isRunning}
+              onChange={(event) => onResizeModeChange(event.target.value as BatchResizeMode)}
+              value={resizeMode}>
+              <option value="inherit">No resize</option>
+              <option value="change_width">Force width</option>
+              <option value="change_height">Force height</option>
+              <option value="scale">Scale percent</option>
+              <option value="page_size">Paper size</option>
+            </select>
+          </label>
+        </div>
 
         {resizeMode === "change_width" || resizeMode === "change_height" || resizeMode === "scale" ? (
           <label className="block text-xs text-slate-700 dark:text-slate-200">

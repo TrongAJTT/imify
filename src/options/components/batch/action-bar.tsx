@@ -39,7 +39,7 @@ export function BatchActionBar({
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+    <div className="flex flex-wrap mb-4 items-center justify-between gap-4 rounded-lg bg-slate-50 dark:bg-slate-800/50">
       <div className="flex flex-wrap items-center gap-2">
         {canStartBatch ? (
           <button

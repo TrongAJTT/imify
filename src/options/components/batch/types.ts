@@ -28,6 +28,7 @@ export interface BatchSummary {
 export interface BatchSetupState {
   selectedConfigId: string
   concurrency: number
+  quality: number
   resizeMode: BatchResizeMode
   resizeValue: number
   paperSize: PaperSize
@@ -37,6 +38,7 @@ export interface BatchSetupState {
 export interface BatchSetupHandlers {
   onSelectedConfigIdChange: (value: string) => void
   onConcurrencyChange: (value: number) => void
+  onQualityChange: (value: number) => void
   onResizeModeChange: (value: BatchResizeMode) => void
   onResizeValueChange: (value: number) => void
   onPaperSizeChange: (value: PaperSize) => void

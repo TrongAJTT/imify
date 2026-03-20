@@ -1,4 +1,4 @@
-import { PAPER_OPTIONS } from "../../shared"
+import { PAPER_OPTIONS, QUALITY_FORMATS } from "../../shared"
 import { toOutputFilename } from "../../../core/download-utils"
 import type {
   ConversionProgressPayload,
@@ -99,21 +99,26 @@ export function buildResizeOverride(
 export function withBatchResize(
   config: FormatConfig,
   mode: BatchResizeMode,
+  quality: number,
   value: number,
   paperSize: string,
   dpi: SupportedDPI
 ): FormatConfig {
   const override = buildResizeOverride(mode, value, paperSize, dpi)
+  const supportsQuality = QUALITY_FORMATS.includes(config.format)
+  const normalizedQuality = Math.max(1, Math.min(100, Math.round(quality)))
 
   if (!override) {
     return {
       ...config,
+      quality: supportsQuality ? normalizedQuality : undefined,
       resize: cloneResize(config.resize)
     }
   }
 
   return {
     ...config,
+    quality: supportsQuality ? normalizedQuality : undefined,
     resize: override
   }
 }

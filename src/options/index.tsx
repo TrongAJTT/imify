@@ -43,6 +43,7 @@ export default function OptionsPage() {
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [batchSelectedConfigId, setBatchSelectedConfigId] = useState("")
   const [batchConcurrency, setBatchConcurrency] = useState(2)
+  const [batchQuality, setBatchQuality] = useState(90)
   const [batchResizeMode, setBatchResizeMode] = useState<BatchResizeMode>("inherit")
   const [batchResizeValue, setBatchResizeValue] = useState(1280)
   const [batchPaperSize, setBatchPaperSize] = useState<PaperSize>("A4")
@@ -304,6 +305,7 @@ export default function OptionsPage() {
             setup={{
               selectedConfigId: batchSelectedConfigId,
               concurrency: batchConcurrency,
+              quality: batchQuality,
               resizeMode: batchResizeMode,
               resizeValue: batchResizeValue,
               paperSize: batchPaperSize,
@@ -312,6 +314,7 @@ export default function OptionsPage() {
             setupHandlers={{
               onSelectedConfigIdChange: setBatchSelectedConfigId,
               onConcurrencyChange: setBatchConcurrency,
+              onQualityChange: setBatchQuality,
               onResizeModeChange: setBatchResizeMode,
               onResizeValueChange: setBatchResizeValue,
               onPaperSizeChange: setBatchPaperSize,
@@ -328,6 +331,7 @@ export default function OptionsPage() {
     batchConfigs,
     batchSelectedConfigId,
     batchConcurrency,
+    batchQuality,
     batchResizeMode,
     batchResizeValue,
     batchPaperSize,
@@ -465,10 +469,12 @@ export default function OptionsPage() {
                     onConcurrencyChange={setBatchConcurrency}
                     onDpiChange={setBatchDpi}
                     onPaperSizeChange={setBatchPaperSize}
+                    onQualityChange={setBatchQuality}
                     onResizeModeChange={setBatchResizeMode}
                     onResizeValueChange={setBatchResizeValue}
                     onSelectedConfigIdChange={setBatchSelectedConfigId}
                     paperSize={batchPaperSize}
+                    quality={batchQuality}
                     resizeMode={batchResizeMode}
                     resizeValue={batchResizeValue}
                     selectedConfigId={batchSelectedConfigId}

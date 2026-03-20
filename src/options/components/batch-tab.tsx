@@ -77,11 +77,12 @@ export function BatchConverterTab({ configs, setup, setupHandlers, onRunningStat
     return withBatchResize(
       selectedConfig,
       setup.resizeMode,
+      setup.quality,
       setup.resizeValue,
       setup.paperSize,
       setup.dpi
     )
-  }, [selectedConfig, setup.resizeMode, setup.resizeValue, setup.paperSize, setup.dpi])
+  }, [selectedConfig, setup.resizeMode, setup.quality, setup.resizeValue, setup.paperSize, setup.dpi])
 
   const setItemState = (
     id: string,
@@ -406,7 +407,7 @@ export function BatchConverterTab({ configs, setup, setupHandlers, onRunningStat
       ) : null}
 
       {summary && !isRunning && queue.length > 0 ? (
-        <div className="mt-4 rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/10 p-5 shadow-sm">
+        <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/10 p-5 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-emerald-500 text-white rounded-full shadow-sm">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
@@ -460,7 +461,7 @@ export function BatchConverterTab({ configs, setup, setupHandlers, onRunningStat
         </div>
       ) : (!isRunning ? (
         <label
-          className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 px-4 py-10 text-center transition-colors group"
+          className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 px-4 py-10 text-center transition-colors group"
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault()
