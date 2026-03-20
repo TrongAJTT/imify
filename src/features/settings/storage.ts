@@ -30,6 +30,7 @@ function isImageFormat(value: unknown): value is ImageFormat {
     value === "png" ||
     value === "webp" ||
     value === "avif" ||
+    value === "jxl" ||
     value === "bmp" ||
     value === "ico" ||
     value === "tiff" ||

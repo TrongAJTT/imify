@@ -1,12 +1,13 @@
 import type { ImageFormat } from "@/core/types"
 
-export const QUALITY_FORMATS: ImageFormat[] = ["jpg", "webp", "avif"]
+export const QUALITY_FORMATS: ImageFormat[] = ["jpg", "webp", "avif", "jxl"]
 
 export const GLOBAL_FORMATS: ImageFormat[] = [
   "jpg",
   "png",
   "webp",
   "avif",
+  "jxl",
   "bmp",
   "ico",
   "tiff",
@@ -18,6 +19,7 @@ export const CUSTOM_FORMATS: ImageFormat[] = [
   "png",
   "webp",
   "avif",
+  "jxl",
   "bmp",
   "ico",
   "tiff"
@@ -28,6 +30,7 @@ export const BATCH_TARGET_FORMATS: Exclude<ImageFormat, "pdf">[] = [
   "png",
   "webp",
   "avif",
+  "jxl",
   "bmp",
   "ico",
   "tiff"
@@ -40,6 +43,7 @@ export const FORMAT_LABELS: Record<ImageFormat, string> = {
   png: "PNG",
   webp: "WebP",
   avif: "AVIF",
+  jxl: "JXL",
   bmp: "BMP",
   ico: "ICO",
   tiff: "TIFF",

@@ -5,7 +5,8 @@ import { GLOBAL_FORMATS } from "@/core/format-config"
 const DEFAULT_QUALITY_BY_FORMAT: Partial<Record<ImageFormat, number>> = {
   jpg: 92,
   webp: 90,
-  avif: 80
+  avif: 80,
+  jxl: 85
 }
 
 function createDefaultFormatConfig(format: ImageFormat): FormatConfig {

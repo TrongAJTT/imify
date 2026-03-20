@@ -3,6 +3,7 @@ export type ImageFormat =
   | "png"
   | "webp"
   | "avif"
+  | "jxl"
   | "bmp"
   | "ico"
   | "tiff"

@@ -619,7 +619,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
             <Upload size={32} className="text-indigo-500/80 dark:text-indigo-400" />
           </div>
           <p className="text-base font-semibold text-slate-800 dark:text-slate-200">Drop images here or click to browse</p>
-          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Supports JPG, PNG, WebP, AVIF, BMP</p>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Supports JPG, PNG, WebP, AVIF, JXL, BMP</p>
         </label>
       ) : null)}
 

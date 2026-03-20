@@ -2,13 +2,15 @@ import { calculateContainPlacement, calculateDimensions, clampQuality } from "@/
 import type { ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
+import { encodeJxl } from "@/features/converter/jxl-encoder"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
 
 const MIME_BY_FORMAT: Record<Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff">, string> = {
   jpg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
-  avif: "image/avif"
+  avif: "image/avif",
+  jxl: "image/jxl"
 }
 
 export interface RasterConvertParams {
@@ -134,6 +136,18 @@ export async function convertRasterImage(
         width: targetWidth,
         height: targetHeight,
         mimeType: "image/avif"
+      }
+    }
+
+    if (targetFormat === "jxl") {
+      const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
+      const outputBlob = await encodeJxl(imageData, { quality: clampQuality(quality) })
+
+      return {
+        outputBlob,
+        width: targetWidth,
+        height: targetHeight,
+        mimeType: "image/jxl"
       }
     }
 
