@@ -8,6 +8,7 @@ import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
 import { ResizeConfigPanel } from "@/options/components/resize-config-panel"
+import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { Check } from "lucide-react"
 
 export function CustomFormatForm({
@@ -185,12 +186,9 @@ export function CustomFormatForm({
 
       <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
         {onCancel ? (
-          <button
-            className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-            onClick={onCancel}
-            type="button">
+          <SecondaryButton onClick={onCancel}>
             Cancel
-          </button>
+          </SecondaryButton>
         ) : null}
         <button
           className="inline-flex items-center gap-2 rounded-lg bg-sky-500 hover:bg-sky-600 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-sky-500/20 transition-all active:scale-95"

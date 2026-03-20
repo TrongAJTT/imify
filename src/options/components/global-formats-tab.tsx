@@ -4,6 +4,8 @@ import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/ty
 import { QUALITY_FORMATS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
+import { SecondaryButton } from "@/options/components/ui/secondary-button"
+import { SurfaceCard } from "@/options/components/ui/surface-card"
 
 export function GlobalFormatsTab({
   state,
@@ -88,18 +90,20 @@ export function GlobalFormatsTab({
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 p-6 shadow-sm">
+    <SurfaceCard tone="soft">
       <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Global Formats</h2>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
         These settings control the default options shown in right-click image menu.
       </p>
 
-      <div className="mt-8 space-y-6">
+      <div className="mt-8">
         {configs.map((config) => {
           const supportsQuality = QUALITY_FORMATS.includes(config.format)
 
           return (
-            <div key={config.id} className="py-2 first:pt-0 last:pb-0">
+            <div
+              key={config.id}
+              className="py-4 first:pt-2 last:pb-2 border-b last:border-0 border-slate-100 dark:border-slate-700/50">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
@@ -191,14 +195,9 @@ export function GlobalFormatsTab({
 
       {hasChanges && (
         <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50 flex items-center justify-end gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <button
-            className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-            onClick={() => setDraft(state.global_formats)}
-            disabled={isSaving}
-            type="button"
-          >
+          <SecondaryButton onClick={() => setDraft(state.global_formats)} disabled={isSaving}>
             Cancel
-          </button>
+          </SecondaryButton>
           <button
             className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 hover:bg-sky-600 transition-all disabled:opacity-50"
             disabled={isSaving}
@@ -216,6 +215,6 @@ export function GlobalFormatsTab({
           </button>
         </div>
       )}
-    </section>
+    </SurfaceCard>
   )
 }

@@ -10,6 +10,7 @@ import { convertImageToPdf, mergeImagesToPdf } from "@/features/converter/pdf-en
 import { BatchActionBar } from "@/options/components/batch/action-bar"
 import { BatchQueueGrid } from "@/options/components/batch/queue-grid"
 import { BatchSummaryCard } from "@/options/components/batch/summary-card"
+import { SurfaceCard } from "@/options/components/ui/surface-card"
 import type {
   BatchExportAction,
   BatchQueueItem,
@@ -685,12 +686,19 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
   const queueTooLarge = totalQueueBytes > MAX_TOTAL_QUEUE_BYTES
 
   const queueStats = useMemo(
-    () => ({
-      queued: queue.filter((item) => item.status === "queued").length,
-      processing: queue.filter((item) => item.status === "processing").length,
-      success: queue.filter((item) => item.status === "success").length,
-      error: queue.filter((item) => item.status === "error").length
-    }),
+    () =>
+      queue.reduce(
+        (acc, item) => {
+          acc[item.status] += 1
+          return acc
+        },
+        {
+          queued: 0,
+          processing: 0,
+          success: 0,
+          error: 0
+        }
+      ),
     [queue]
   )
 
@@ -722,7 +730,7 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
   const canStartBatch = Boolean(effectiveConfig) && !isRunning && queue.length > 0
 
   return (
-    <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <SurfaceCard>
       <BatchActionBar
         canRetryFailed={canRetryFailed}
         canStartBatch={canStartBatch}
@@ -796,6 +804,6 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
       <BatchQueueGrid isRunning={isRunning} onRemoveItem={removeItem} queue={queue} />
 
       <ConversionProgressToastCard payload={exportToastPayload} />
-    </section>
+    </SurfaceCard>
   )
 }

@@ -4,6 +4,7 @@ import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig } from "@/core/types"
 import type { CustomFormatInput } from "@/features/custom-formats"
 import { CustomFormatForm } from "@/options/components/custom-format-form"
+import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Edit, Trash2, X } from 'lucide-react'
 
 interface PendingDelete {
@@ -198,11 +199,11 @@ export function CustomFormatsTab({
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <SurfaceCard>
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Custom Formats</h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
             Add your own format presets for resize mode, quality, and paper settings.
           </p>
         </div>
@@ -414,6 +415,6 @@ export function CustomFormatsTab({
           </div>
         </div>
       ) : null}
-    </section>
+    </SurfaceCard>
   )
 }
