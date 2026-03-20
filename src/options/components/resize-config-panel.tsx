@@ -1,5 +1,6 @@
 import type { PaperSize, SupportedDPI } from "@/core/types"
 import { DPI_OPTIONS, PAPER_OPTIONS } from "@/options/shared"
+import { PaperConfig } from "./paper-config"
 
 export function ResizeConfigPanel({
   mode,
@@ -28,7 +29,7 @@ export function ResizeConfigPanel({
   const isPageSize = mode === "page_size"
 
   return (
-    <div className="space-y-3">
+    <div className="contents">
       <label className="block text-xs text-slate-700 dark:text-slate-200">
         Resize
         <select
@@ -59,36 +60,14 @@ export function ResizeConfigPanel({
       ) : null}
 
       {isPageSize ? (
-        <div className="grid grid-cols-2 gap-2">
-          <label className="block text-xs text-slate-700 dark:text-slate-200">
-            Paper
-            <select
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
-              disabled={disabled}
-              onChange={(event) => onPaperSizeChange(event.target.value as PaperSize)}
-              value={paperSize}>
-              {PAPER_OPTIONS.map((paper) => (
-                <option key={paper} value={paper}>
-                  {paper}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block text-xs text-slate-700 dark:text-slate-200">
-            DPI
-            <select
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
-              disabled={disabled}
-              onChange={(event) => onDpiChange(Number(event.target.value) as SupportedDPI)}
-              value={dpi}>
-              {DPI_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt} DPI
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="col-span-full">
+          <PaperConfig
+            disabled={disabled}
+            dpi={dpi}
+            onDpiChange={onDpiChange}
+            onPaperSizeChange={onPaperSizeChange}
+            paperSize={paperSize}
+          />
         </div>
       ) : null}
     </div>

@@ -93,35 +93,32 @@ export function BatchSetupSidebarPanel({
         </div>
 
         {!isIcoTarget ? (
-          <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <QualityInput
-                disabled={isRunning || !supportsQuality}
-                label="Quality"
-                onChange={onQualityChange}
-                value={quality}
-              />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+            <QualityInput
+              disabled={isRunning || !supportsQuality}
+              onChange={onQualityChange}
+              value={quality}
+            />
 
-              <ResizeConfigPanel
-                disabled={isRunning}
-                dpi={dpi}
-                mode={resizeMode}
-                modeOptions={[
-                  { value: "inherit", label: "No resize" },
-                  { value: "change_width", label: "Force width" },
-                  { value: "change_height", label: "Force height" },
-                  { value: "scale", label: "Scale percent" },
-                  { value: "page_size", label: "Paper size" }
-                ]}
-                onDpiChange={onDpiChange}
-                onModeChange={(mode) => onResizeModeChange(mode as BatchSetupPanelProps["resizeMode"])}
-                onPaperSizeChange={onPaperSizeChange}
-                onValueChange={onResizeValueChange}
-                paperSize={paperSize}
-                value={resizeValue}
-              />
-            </div>
-          </>
+            <ResizeConfigPanel
+              disabled={isRunning}
+              dpi={dpi}
+              mode={resizeMode}
+              modeOptions={[
+                { value: "none", label: "No resize" },
+                { value: "change_width", label: "Force width" },
+                { value: "change_height", label: "Force height" },
+                { value: "scale", label: "Scale percent" },
+                { value: "page_size", label: "Paper size" }
+              ]}
+              onDpiChange={onDpiChange}
+              onModeChange={(mode) => onResizeModeChange(mode as any)}
+              onPaperSizeChange={onPaperSizeChange}
+              onValueChange={onResizeValueChange}
+              paperSize={paperSize}
+              value={resizeValue}
+            />
+          </div>
         ) : (
           <IcoSizeSelector
             disabled={isRunning}

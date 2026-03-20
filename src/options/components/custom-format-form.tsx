@@ -105,7 +105,6 @@ export function CustomFormatForm({
         <div className="grid gap-3 md:grid-cols-2">
           {canSetQuality ? (
             <QualityInput
-              label="Quality"
               onChange={(next) => onChange({ ...value, quality: next })}
               value={value.quality ?? 90}
             />

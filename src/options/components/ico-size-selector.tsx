@@ -1,4 +1,6 @@
 import { ICO_SIZE_OPTIONS } from "@/core/format-config"
+import { Tooltip } from "./tooltip"
+import { HelpCircle } from "lucide-react"
 
 export function IcoSizeSelector({
   sizes,
@@ -43,14 +45,19 @@ export function IcoSizeSelector({
         })}
       </div>
 
-      <label className={`flex items-center gap-2 rounded border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200 ${disabled ? "opacity-60" : ""}`}>
-        <input
-          checked={generateWebIconKit}
-          disabled={disabled}
-          onChange={(event) => onToggleWebKit(event.target.checked)}
-          type="checkbox"
-        />
-        <span className="font-medium">Generate Web Toolkit</span>
+      <label className={`flex items-center justify-between rounded border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200 ${disabled ? "opacity-60" : "cursor-pointer"}`}>
+        <span className="flex items-center gap-2">
+          <input
+            checked={generateWebIconKit}
+            disabled={disabled}
+            onChange={(event) => onToggleWebKit(event.target.checked)}
+            type="checkbox"
+          />
+          <span className="font-bold">Generate Web Toolkit</span>
+        </span>
+        <Tooltip content="Generate full icon set including favicon.ico and PNG files for Apple/Android">
+          <HelpCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+        </Tooltip>
       </label>
     </div>
   )
