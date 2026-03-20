@@ -43,6 +43,18 @@ function getBatchZipTimestamp(): number {
   return Math.floor(Date.now() / 1000)
 }
 
+function extensionFromMimeType(type: string): string {
+  if (type === "image/jpeg") {
+    return "jpg"
+  }
+  if (type === "image/svg+xml") {
+    return "svg"
+  }
+
+  const matched = /^image\/([a-z0-9.+-]+)$/i.exec(type)
+  return matched?.[1]?.toLowerCase() || "png"
+}
+
 interface BatchConverterTabProps {
   setup: BatchSetupState
   onRunningStateChange?: (running: boolean) => void
@@ -171,12 +183,12 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
     setQueue((current) => current.filter((item) => item.id !== id))
   }
 
-  const appendFiles = (files: FileList | null) => {
-    if (!files || files.length === 0) {
+  const appendImageFiles = (inputFiles: File[]) => {
+    if (!inputFiles.length) {
       return
     }
 
-    const nextItems: BatchQueueItem[] = Array.from(files)
+    const nextItems: BatchQueueItem[] = inputFiles
       .filter((file) => file.type.startsWith("image/"))
       .map((file) => {
         const tooLarge = file.size > MAX_FILE_SIZE_BYTES
@@ -198,6 +210,69 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
 
     setQueue((current) => [...current, ...nextItems])
   }
+
+  const appendFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) {
+      return
+    }
+
+    appendImageFiles(Array.from(files))
+  }
+
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent) => {
+      const clipboardItems = event.clipboardData?.items
+      if (!clipboardItems?.length) {
+        return
+      }
+
+      const target = event.target as HTMLElement | null
+      if (target) {
+        const tagName = target.tagName.toLowerCase()
+        const isEditableTarget =
+          tagName === "input" ||
+          tagName === "textarea" ||
+          target.isContentEditable ||
+          Boolean(target.closest("[contenteditable='true']"))
+
+        if (isEditableTarget) {
+          return
+        }
+      }
+
+      const clipboardImages = Array.from(clipboardItems)
+        .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
+        .map((item, index) => {
+          const blob = item.getAsFile()
+          if (!blob) {
+            return null
+          }
+
+          const timestamp = Date.now() + index
+          const extension = extensionFromMimeType(blob.type)
+          const generatedName = `cb-${timestamp}.${extension}`
+
+          return new File([blob], generatedName, {
+            type: blob.type || `image/${extension}`,
+            lastModified: timestamp
+          })
+        })
+        .filter((file): file is File => Boolean(file))
+
+      if (!clipboardImages.length) {
+        return
+      }
+
+      event.preventDefault()
+      appendImageFiles(clipboardImages)
+    }
+
+    window.addEventListener("paste", onPaste)
+
+    return () => {
+      window.removeEventListener("paste", onPaste)
+    }
+  }, [])
 
   const processItem = async (item: BatchQueueItem, config: FormatConfig): Promise<"success" | "error"> => {
     setItemState(item.id, {
