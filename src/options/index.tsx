@@ -12,6 +12,7 @@ import {
   STORAGE_KEY,
   STORAGE_VERSION
 } from "@/core/types"
+import { CUSTOM_FORMATS } from "@/core/format-config"
 import {
   type CustomFormatInput,
   validateCustomFormatInput
@@ -36,6 +37,23 @@ const syncStorage = new Storage({ area: "sync" })
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
   version: STORAGE_VERSION,
   state: DEFAULT_STORAGE_STATE
+}
+
+function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorageState {
+  const mergedGlobalFormats = {
+    ...DEFAULT_STORAGE_STATE.global_formats,
+    ...state.global_formats
+  }
+
+  const customFormats = Array.isArray(state.custom_formats)
+    ? state.custom_formats.filter((entry) => CUSTOM_FORMATS.includes(entry.format))
+    : []
+
+  return {
+    ...state,
+    global_formats: mergedGlobalFormats,
+    custom_formats: customFormats
+  }
 }
 
 export default function OptionsPage() {
@@ -83,7 +101,7 @@ export default function OptionsPage() {
     }
   }, [isDonateDialogOpen, isAboutDialogOpen])
 
-  const state = persistedState?.state ?? DEFAULT_STORAGE_STATE
+  const state = normalizeExtensionState(persistedState?.state ?? DEFAULT_STORAGE_STATE)
 
   const updateState = async (
     updater: (current: ExtensionStorageState) => ExtensionStorageState
@@ -92,7 +110,7 @@ export default function OptionsPage() {
 
     await setPersistedState((current) => {
       const sourceState = current?.state && typeof current.state === "object"
-        ? current.state
+        ? normalizeExtensionState(current.state)
         : DEFAULT_STORAGE_STATE
 
       nextState = updater(sourceState)

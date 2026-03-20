@@ -1,4 +1,5 @@
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
+import { GLOBAL_FORMATS } from "@/core/format-config"
 
 const DEFAULT_QUALITY_BY_FORMAT: Partial<Record<ImageFormat, number>> = {
   jpg: 92,
@@ -22,13 +23,9 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
 }
 
 export const DEFAULT_STORAGE_STATE: ExtensionStorageState = {
-  global_formats: {
-    jpg: createDefaultFormatConfig("jpg"),
-    png: createDefaultFormatConfig("png"),
-    webp: createDefaultFormatConfig("webp"),
-    avif: createDefaultFormatConfig("avif"),
-    bmp: createDefaultFormatConfig("bmp"),
-    pdf: createDefaultFormatConfig("pdf")
-  },
+  global_formats: GLOBAL_FORMATS.reduce((acc, format) => {
+    acc[format] = createDefaultFormatConfig(format)
+    return acc
+  }, {} as Record<ImageFormat, FormatConfig>),
   custom_formats: []
 }

@@ -1,17 +1,10 @@
 import { useEffect } from "react"
 import { DPI_OPTIONS, PAPER_OPTIONS, QUALITY_FORMATS } from "@/options/shared"
 import { HIGH_CONCURRENCY_FORMATS } from "@/options/components/batch/types"
+import { TARGET_FORMAT_OPTIONS } from "@/options/components/batch/types"
 import type { BatchTargetFormat } from "@/options/components/batch/types"
 import type { BatchResizeMode } from "@/options/components/batch/types"
 import type { BatchSetupPanelProps } from "@/options/components/batch/types"
-
-const TARGET_FORMAT_OPTIONS: Array<{ value: BatchTargetFormat; label: string }> = [
-  { value: "jpg", label: "JPG" },
-  { value: "png", label: "PNG" },
-  { value: "webp", label: "WEBP" },
-  { value: "avif", label: "AVIF" },
-  { value: "bmp", label: "BMP" }
-]
 
 const BASE_CONCURRENCY_OPTIONS = [
   { value: 1, label: "1" },

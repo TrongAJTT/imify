@@ -2,8 +2,10 @@ import { calculateContainPlacement, calculateDimensions, clampQuality } from "@/
 import type { ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
+import { encodePngBlobToIco } from "@/features/converter/ico-encoder"
+import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
 
-const MIME_BY_FORMAT: Record<Exclude<ImageFormat, "bmp" | "pdf">, string> = {
+const MIME_BY_FORMAT: Record<Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff">, string> = {
   jpg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
@@ -63,7 +65,7 @@ function drawSourceImage(
 
 async function convertToRasterBlob(
   canvas: OffscreenCanvas,
-  targetFormat: Exclude<ImageFormat, "bmp" | "pdf">,
+  targetFormat: Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff">,
   quality?: number
 ): Promise<Blob> {
   const mimeType = MIME_BY_FORMAT[targetFormat]
@@ -133,6 +135,30 @@ export async function convertRasterImage(
         width: targetWidth,
         height: targetHeight,
         mimeType: "image/avif"
+      }
+    }
+
+    if (targetFormat === "ico") {
+      const pngBlob = await canvas.convertToBlob({ type: "image/png" })
+      const outputBlob = await encodePngBlobToIco(pngBlob, targetWidth, targetHeight)
+
+      return {
+        outputBlob,
+        width: targetWidth,
+        height: targetHeight,
+        mimeType: "image/x-icon"
+      }
+    }
+
+    if (targetFormat === "tiff") {
+      const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
+      const outputBlob = encodeImageDataToTiff(imageData)
+
+      return {
+        outputBlob,
+        width: targetWidth,
+        height: targetHeight,
+        mimeType: "image/tiff"
       }
     }
 

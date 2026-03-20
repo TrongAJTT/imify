@@ -1,4 +1,12 @@
-export type ImageFormat = "jpg" | "png" | "webp" | "avif" | "bmp" | "pdf"
+export type ImageFormat =
+  | "jpg"
+  | "png"
+  | "webp"
+  | "avif"
+  | "bmp"
+  | "ico"
+  | "tiff"
+  | "pdf"
 
 export type SupportedDPI = 72 | 150 | 300
 

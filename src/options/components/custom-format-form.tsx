@@ -1,9 +1,9 @@
 import type { CustomFormatInput } from "@/features/custom-formats"
 import type { ImageFormat, PaperSize, ResizeMode } from "@/core/types"
+import { CUSTOM_FORMATS, FORMAT_LABELS, QUALITY_FORMATS } from "@/core/format-config"
 import {
   DPI_OPTIONS,
   PAPER_OPTIONS,
-  QUALITY_FORMATS,
   RESIZE_MODE_OPTIONS
 } from "@/options/shared"
 
@@ -53,18 +53,17 @@ export function CustomFormatForm({
                   ? value.quality ?? 90
                   : undefined,
                 resize:
-                  event.target.value === "pdf" && value.resize.mode === "page_size"
-                    ? { ...value.resize, dpi: undefined }
+                  value.resize.mode === "page_size"
+                    ? { ...value.resize, dpi: value.resize.dpi ?? 72 }
                     : value.resize
               })
             }
             value={value.format}>
-            <option value="jpg">JPG</option>
-            <option value="png">PNG</option>
-            <option value="webp">WebP</option>
-            <option value="avif">AVIF</option>
-            <option value="bmp">BMP</option>
-            <option value="pdf">PDF</option>
+            {CUSTOM_FORMATS.map((format) => (
+              <option key={format} value={format}>
+                {FORMAT_LABELS[format]}
+              </option>
+            ))}
           </select>
         </label>
       </div>
@@ -99,7 +98,7 @@ export function CustomFormatForm({
                       : event.target.value === "none"
                         ? undefined
                         : 100,
-                  dpi: event.target.value === "page_size" && value.format !== "pdf" ? 72 : undefined
+                  dpi: event.target.value === "page_size" ? 72 : undefined
                 }
               })
             }
@@ -161,8 +160,7 @@ export function CustomFormatForm({
           <label className="text-sm text-slate-700 dark:text-slate-200">
             DPI
             <select
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm disabled:bg-slate-200 dark:bg-slate-700"
-              disabled={value.format === "pdf"}
+              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-sm"
               onChange={(event) =>
                 onChange({
                   ...value,

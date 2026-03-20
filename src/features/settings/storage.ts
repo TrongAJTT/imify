@@ -6,6 +6,7 @@ import {
   type ImageFormat,
   type ResizeConfig
 } from "@/core/types"
+import { CUSTOM_FORMATS } from "@/core/format-config"
 import { DEFAULT_STORAGE_STATE } from "@/features/settings/default-state"
 
 interface PersistedStorageState {
@@ -30,6 +31,8 @@ function isImageFormat(value: unknown): value is ImageFormat {
     value === "webp" ||
     value === "avif" ||
     value === "bmp" ||
+    value === "ico" ||
+    value === "tiff" ||
     value === "pdf"
   )
 }
@@ -89,7 +92,10 @@ function sanitizeState(state: unknown): ExtensionStorageState {
   }
 
   const customFormats = Array.isArray(candidate.custom_formats)
-    ? candidate.custom_formats.filter((entry): entry is FormatConfig => isFormatConfig(entry))
+    ? candidate.custom_formats.filter(
+        (entry): entry is FormatConfig =>
+          isFormatConfig(entry) && CUSTOM_FORMATS.includes(entry.format)
+      )
     : []
 
   return {

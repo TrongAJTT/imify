@@ -1,3 +1,4 @@
+import { BATCH_TARGET_FORMATS, HIGH_CONCURRENCY_FORMATS as BASE_HIGH_CONCURRENCY_FORMATS } from "@/core/format-config"
 import type { ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
 
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
@@ -5,7 +6,10 @@ export type BatchRunMode = "all" | "failed"
 export type BatchResizeMode = "inherit" | "none" | "change_width" | "change_height" | "scale" | "page_size"
 export type BatchTargetFormat = Exclude<ImageFormat, "pdf">
 
-export const HIGH_CONCURRENCY_FORMATS: ImageFormat[] = ["jpg", "png", "webp"]
+export const TARGET_FORMAT_OPTIONS: Array<{ value: BatchTargetFormat; label: string }> =
+  BATCH_TARGET_FORMATS.map((format) => ({ value: format, label: format.toUpperCase() }))
+
+export const HIGH_CONCURRENCY_FORMATS: ImageFormat[] = BASE_HIGH_CONCURRENCY_FORMATS
 
 export interface BatchQueueItem {
   id: string

@@ -7,7 +7,10 @@ import type {
   ResizeMode,
   SupportedDPI
 } from "@/core/types"
+import { QUALITY_FORMATS } from "@/core/format-config"
 import type { CustomFormatInput } from "@/features/custom-formats"
+
+export { QUALITY_FORMATS }
 
 export type OptionsTab = "global" | "custom" | "batch"
 
@@ -32,7 +35,6 @@ export const RESIZE_MODE_OPTIONS: Array<{ value: ResizeMode; label: string }> = 
 
 export const PAPER_OPTIONS: PaperSize[] = ["A3", "A4", "A5", "B5", "Letter", "Legal"]
 export const DPI_OPTIONS: SupportedDPI[] = [72, 150, 300]
-export const QUALITY_FORMATS: ImageFormat[] = ["jpg", "webp", "avif"]
 
 export function getAllTargetConfigs(state: ExtensionStorageState): FormatConfig[] {
   return [...Object.values(state.global_formats), ...state.custom_formats].filter((entry) => entry.enabled)
@@ -56,13 +58,9 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
 
   if (baseResize.mode === "page_size") {
     baseResize.value = typeof baseResize.value === "string" ? baseResize.value : "A4"
-    if (input.format === "pdf") {
-      baseResize.dpi = undefined
-    } else {
-      baseResize.dpi = DPI_OPTIONS.includes(baseResize.dpi as SupportedDPI)
-        ? (baseResize.dpi as SupportedDPI)
-        : 72
-    }
+    baseResize.dpi = DPI_OPTIONS.includes(baseResize.dpi as SupportedDPI)
+      ? (baseResize.dpi as SupportedDPI)
+      : 72
   }
 
   return {

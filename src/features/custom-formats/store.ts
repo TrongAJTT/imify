@@ -6,6 +6,7 @@ import type {
   ResizeMode,
   SupportedDPI
 } from "@/core/types"
+import { CUSTOM_FORMATS, QUALITY_FORMATS } from "@/core/format-config"
 import { patchStorageState } from "@/features/settings"
 
 export interface CustomFormatInput {
@@ -60,13 +61,6 @@ function normalizeResizeConfig(config: ResizeConfig, format: FormatConfig["forma
     }
   }
 
-  if (format === "pdf") {
-    return {
-      mode,
-      value
-    }
-  }
-
   const dpi = DPI_VALUES.includes(config.dpi as SupportedDPI)
     ? (config.dpi as SupportedDPI)
     : 72
@@ -94,8 +88,11 @@ export function validateCustomFormatInput(input: CustomFormatInput): string | nu
     return "Name is required"
   }
 
-  if ((input.format === "jpg" || input.format === "webp" || input.format === "avif") &&
-      typeof input.quality !== "number") {
+  if (!CUSTOM_FORMATS.includes(input.format)) {
+    return "Unsupported custom format"
+  }
+
+  if (QUALITY_FORMATS.includes(input.format) && typeof input.quality !== "number") {
     return "Quality is required for JPG, WebP, and AVIF"
   }
 
