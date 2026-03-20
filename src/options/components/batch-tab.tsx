@@ -8,13 +8,16 @@ import type { ConversionProgressPayload, FormatConfig } from "@/core/types"
 import { convertImage } from "@/features/converter"
 import { convertImageToPdf, mergeImagesToPdf } from "@/features/converter/pdf-engine"
 import { BatchActionBar } from "@/options/components/batch/action-bar"
-import { QueueItemCard } from "@/options/components/batch/queue-item-card"
+import { BatchQueueGrid } from "@/options/components/batch/queue-grid"
+import { BatchSummaryCard } from "@/options/components/batch/summary-card"
 import type {
+  BatchExportAction,
   BatchQueueItem,
   BatchRunMode,
   BatchSetupState,
   BatchSummary
 } from "@/options/components/batch/types"
+import { BatchUploadDropzone } from "@/options/components/batch/upload-dropzone"
 import {
   MAX_FILE_SIZE_BYTES,
   MAX_TOTAL_QUEUE_BYTES,
@@ -25,7 +28,6 @@ import {
   toMb,
   withBatchResize
 } from "@/options/components/batch/utils"
-import { Check, Download, Save, FileText, ChevronDown, Upload, Inbox } from "lucide-react"
 
 function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
   const base = nameOrBase.replace(/\.[^.]+$/, "") || "image"
@@ -53,12 +55,12 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
   const [cancelRequested, setCancelRequested] = useState(false)
   const [paused, setPaused] = useState(false)
   const [summary, setSummary] = useState<BatchSummary | null>(null)
-  const [activeExportAction, setActiveExportAction] = useState<"zip" | "one_by_one" | "merge_pdf" | "individual_pdf" | null>(null)
+  const [activeExportAction, setActiveExportAction] = useState<BatchExportAction | null>(null)
   const [exportToastPayload, setExportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false)
   const cancelRef = useRef(false)
   const pauseRef = useRef(false)
-  const pdfSplitRef = useRef<HTMLDivElement | null>(null)
+  const pdfSplitRef = useRef<HTMLDivElement>(null)
   const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearExportToastHideTimer = () => {
@@ -685,144 +687,38 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
       ) : null}
 
       {summary && !isRunning && queue.length > 0 ? (
-        <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/10 p-5 shadow-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-emerald-500 text-white rounded-full shadow-sm">
-              <Check size={20} />
-            </div>
-            <div>
-              <p className="font-semibold text-lg text-slate-900 dark:text-white leading-tight">Batch Completed</p>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Successfully processed {summary.success} files in {(summary.durationMs / 1000).toFixed(1)}s.</p>
-            </div>
-          </div>
-
-          {successfulOutputs.length > 0 ? (
-            <>
-              <div className="my-4 border-t border-emerald-200/80 dark:border-emerald-800/60" />
-
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Result</p>
-                    <p className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${
-                      reductionPercent >= 0 
-                        ? "text-emerald-600 dark:text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30" 
-                        : "text-orange-600 dark:text-orange-500 bg-orange-100 dark:bg-orange-900/30"
-                    }`}>
-                      {reductionPercent >= 0 ? "Saved" : "Increased"} {Math.abs(reductionPercent).toFixed(1)}%
-                    </p>
-                  </div>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-xl font-bold text-slate-800 dark:text-slate-100">{formatBytes(sourceTotalAfterRun)}</span>
-                    <span className="text-slate-400 text-lg">→</span>
-                    <span className={`text-xl font-bold ${reductionPercent >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-orange-600 dark:text-orange-400"}`}>
-                      {formatBytes(outputTotalAfterRun)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    className="rounded-lg bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-600 transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                    disabled={isExporting}
-                    onClick={() => {
-                      void downloadAsZip()
-                    }}
-                    type="button">
-                    <Download size={16} />
-                    {activeExportAction === "zip" ? "Preparing ZIP..." : `Download ZIP (${successfulOutputs.length})`}
-                  </button>
-
-                  <button
-                    className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
-                    disabled={isExporting}
-                    onClick={() => {
-                      void downloadIndividually()
-                    }}
-                    type="button">
-                    <Save size={16} />
-                    {activeExportAction === "one_by_one" ? "Exporting files..." : "One by one"}
-                  </button>
-
-                  <div className="relative" ref={pdfSplitRef}>
-                    <div className="inline-flex rounded-lg shadow-sm">
-                      <button
-                        className="rounded-l-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
-                        disabled={isExporting}
-                        onClick={() => {
-                          void mergeIntoPdf()
-                        }}
-                        type="button">
-                        <FileText size={16} className="text-red-500" />
-                        {activeExportAction === "merge_pdf" ? "Merging PDF..." : "Merge into single PDF"}
-                      </button>
-                      <button
-                        aria-label="Open PDF export options"
-                        className="rounded-r-lg border-y border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
-                        disabled={isExporting}
-                        onClick={() => {
-                          setIsPdfSplitOpen((current) => !current)
-                        }}
-                        type="button">
-                        <ChevronDown size={16} />
-                      </button>
-                    </div>
-
-                    {isPdfSplitOpen ? (
-                      <div className="absolute right-0 z-10 mt-2 min-w-[220px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg p-1.5">
-                        <button
-                          className="w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-60"
-                          disabled={isExporting}
-                          onClick={() => {
-                            void downloadIndividualPdfs()
-                          }}
-                          type="button">
-                          {activeExportAction === "individual_pdf"
-                            ? "Preparing Individual PDFs..."
-                            : `Individual PDF (${successfulOutputs.length})`}
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : null}
-        </div>
+        <BatchSummaryCard
+          activeExportAction={activeExportAction}
+          formatBytes={formatBytes}
+          isExporting={isExporting}
+          isPdfSplitOpen={isPdfSplitOpen}
+          onDownloadAsZip={() => {
+            void downloadAsZip()
+          }}
+          onDownloadIndividualPdfs={() => {
+            void downloadIndividualPdfs()
+          }}
+          onDownloadIndividually={() => {
+            void downloadIndividually()
+          }}
+          onMergeIntoPdf={() => {
+            void mergeIntoPdf()
+          }}
+          onTogglePdfSplit={() => {
+            setIsPdfSplitOpen((current) => !current)
+          }}
+          outputTotalAfterRun={outputTotalAfterRun}
+          pdfSplitRef={pdfSplitRef}
+          reductionPercent={reductionPercent}
+          sourceTotalAfterRun={sourceTotalAfterRun}
+          successfulCount={successfulOutputs.length}
+          summary={summary}
+        />
       ) : (!isRunning ? (
-        <label
-          className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 px-4 py-10 text-center transition-colors group"
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={(event) => {
-            event.preventDefault()
-            appendFiles(event.dataTransfer.files)
-          }}>
-          <input
-            className="hidden"
-            multiple
-            onChange={(event) => appendFiles(event.target.files)}
-            type="file"
-          />
-          <div className="bg-white dark:bg-slate-800 rounded-full shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-slate-100 dark:border-slate-700/50">
-            <Upload size={32} className="text-indigo-500/80 dark:text-indigo-400" />
-          </div>
-          <p className="text-base font-semibold text-slate-800 dark:text-slate-200">Drop images here or click to browse</p>
-          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Supports JPG, PNG, WebP, AVIF, JXL, BMP</p>
-        </label>
+        <BatchUploadDropzone onAppendFiles={appendFiles} />
       ) : null)}
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 grid-flow-row">
-        {queue.map((item) => (
-          <QueueItemCard key={item.id} item={item} isRunning={isRunning} onRemove={removeItem} />
-        ))}
-
-        {queue.length === 0 ? (
-          <div className="col-span-full py-12 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/10 text-slate-500 dark:text-slate-400">
-            <Inbox size={48} className="mb-3 text-slate-300 dark:text-slate-600" />
-            <p className="font-medium text-sm">No files in queue</p>
-          </div>
-        ) : null}
-      </div>
+      <BatchQueueGrid isRunning={isRunning} onRemoveItem={removeItem} queue={queue} />
 
       <ConversionProgressToastCard payload={exportToastPayload} />
     </section>

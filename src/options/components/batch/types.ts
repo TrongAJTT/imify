@@ -3,6 +3,7 @@ import type { ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
 
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
 export type BatchRunMode = "all" | "failed"
+export type BatchExportAction = "zip" | "one_by_one" | "merge_pdf" | "individual_pdf"
 export type BatchResizeMode = "inherit" | "none" | "change_width" | "change_height" | "scale" | "page_size"
 export type BatchTargetFormat = Exclude<ImageFormat, "pdf">
 
