@@ -4,6 +4,7 @@ import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig } from "@/core/types"
 import type { CustomFormatInput } from "@/features/custom-formats"
 import { CustomFormatForm } from "@/options/components/custom-format-form"
+import { Edit, Trash2, X } from 'lucide-react'
 
 interface PendingDelete {
   item: FormatConfig
@@ -187,6 +188,15 @@ export function CustomFormatsTab({
     }
   }
 
+  const getIcoSizeLabel = (item: FormatConfig) => {
+    const sizes = (item.icoOptions?.sizes?.length ? item.icoOptions.sizes : [...DEFAULT_ICO_SIZES])
+      .slice()
+      .sort((a, b) => a - b)
+    const baseLabel = sizes.length === 1 ? `${sizes[0]}x${sizes[0]}` : "Multiple sizes"
+
+    return item.icoOptions?.generateWebIconKit ? `${baseLabel} Toolkit` : baseLabel
+  }
+
   return (
     <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4">
@@ -215,9 +225,7 @@ export function CustomFormatsTab({
                 className="rounded border border-slate-300 dark:border-slate-600 p-1.5 text-slate-700 dark:text-slate-200"
                 onClick={closeCreateDialog}
                 type="button">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-                </svg>
+                <X size={16} />
               </button>
             </div>
 
@@ -282,7 +290,9 @@ export function CustomFormatsTab({
                 <div className="col-span-2 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2 min-w-0">
                   <p className="text-slate-500 font-medium uppercase tracking-tighter">Size</p>
                   <p className="font-bold text-slate-800 dark:text-slate-200 truncate">
-                    {getResizeLabel(item.resize.mode, item.resize.value)}
+                    {item.format === "ico"
+                      ? getIcoSizeLabel(item)
+                      : getResizeLabel(item.resize.mode, item.resize.value)}
                   </p>
                 </div>
                 <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
@@ -293,7 +303,7 @@ export function CustomFormatsTab({
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-200/50 dark:border-slate-700/50 pt-3">
+              <div className="mt-1 flex items-center justify-between gap-2 dark:border-slate-700/50 pt-3">
                 <p className="text-[10px] text-slate-400 font-medium">Drag to reorder</p>
                 <div className="flex gap-1.5">
                   <button
@@ -313,18 +323,14 @@ export function CustomFormatsTab({
                       })
                     }
                     type="button">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-                    </svg>
+                    <Edit size={16} />
                   </button>
                   <button
                     aria-label="Delete"
                     className="rounded-lg border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
                     onClick={() => triggerDeleteWithUndo(item, index)}
                     type="button">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-                    </svg>
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>
@@ -349,9 +355,7 @@ export function CustomFormatsTab({
                 className="rounded border border-slate-300 dark:border-slate-600 p-1.5 text-slate-700 dark:text-slate-200"
                 onClick={() => setEditing(null)}
                 type="button">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-                </svg>
+                <X size={16} />
               </button>
             </div>
 

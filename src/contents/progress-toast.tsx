@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 
 import type { ConversionProgressPayload } from "@/core/types"
+import { Check, CircleAlert } from 'lucide-react'
 
 interface RuntimeMessage {
   type: string
@@ -125,13 +126,9 @@ export default function ProgressToast() {
               <style>{`@keyframes imify-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
             </svg>
           ) : payload.status === "success" ? (
-            <svg style={{ width: "18px", height: "18px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} />
-            </svg>
+            <Check size={18} />
           ) : (
-            <svg style={{ width: "18px", height: "18px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-            </svg>
+            <CircleAlert size={18} />
           )}
         </div>
 

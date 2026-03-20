@@ -1,3 +1,5 @@
+import type { ReactNode } from "react"
+
 export function TabButton({
   active,
   label,
@@ -6,7 +8,7 @@ export function TabButton({
 }: {
   active: boolean
   label: string
-  icon: string
+  icon: ReactNode
   onClick: () => void
 }) {
   return (
@@ -18,9 +20,9 @@ export function TabButton({
       }`}
       onClick={onClick}
       type="button">
-      <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
-      </svg>
+      <span className="w-5 h-5 flex-shrink-0 text-inherit flex items-center justify-center">
+        {icon}
+      </span>
       {label}
     </button>
   )

@@ -33,11 +33,18 @@ import {
   createCustomFormatId,
   normalizeCustomInput
 } from "@/options/shared"
+import { Edit, Globe, SlidersHorizontal } from "lucide-react"
 
 const syncStorage = new Storage({ area: "sync" })
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
   version: STORAGE_VERSION,
   state: DEFAULT_STORAGE_STATE
+}
+
+const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
+  batch: <SlidersHorizontal size={16} />,
+  global: <Globe size={16} />,
+  custom: <Edit size={16} />
 }
 
 function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorageState {
@@ -524,7 +531,7 @@ export default function OptionsPage() {
                 <TabButton
                   active={tab.id === activeTab}
                   label={tab.label}
-                  icon={tab.icon}
+                  icon={TAB_ICON_COMPONENTS[tab.id]}
                   onClick={() => setActiveTab(tab.id)}
                 />
 
