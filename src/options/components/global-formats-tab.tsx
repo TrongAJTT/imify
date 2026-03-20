@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
+import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
 import { QUALITY_FORMATS } from "@/options/shared"
+import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 
 export function GlobalFormatsTab({
   state,
@@ -36,6 +38,21 @@ export function GlobalFormatsTab({
     }))
   }
 
+  const updateIcoOptions = (updates: Partial<{ sizes: number[]; generateWebIconKit: boolean }>) => {
+    setDraft((previous) => ({
+      ...previous,
+      ico: {
+        ...previous.ico,
+        icoOptions: {
+          sizes: updates.sizes ?? previous.ico.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES],
+          generateWebIconKit: updates.generateWebIconKit !== undefined 
+            ? updates.generateWebIconKit 
+            : Boolean(previous.ico.icoOptions?.generateWebIconKit)
+        }
+      }
+    }))
+  }
+
   const configs = Object.values(draft)
   const hasChanges = configs.some((config) => {
     const original = state.global_formats[config.format]
@@ -47,7 +64,13 @@ export function GlobalFormatsTab({
       QUALITY_FORMATS.includes(config.format) &&
       ((original.quality ?? 90) !== (config.quality ?? 90))
 
-    return original.enabled !== config.enabled || qualityDiffers
+    const icoOptionsDiffer =
+      config.format === "ico" &&
+      (JSON.stringify((original.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]).slice().sort((a, b) => a - b)) !==
+        JSON.stringify((config.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]).slice().sort((a, b) => a - b)) ||
+        Boolean(original.icoOptions?.generateWebIconKit) !== Boolean(config.icoOptions?.generateWebIconKit))
+
+    return original.enabled !== config.enabled || qualityDiffers || icoOptionsDiffer
   })
 
   const handleSave = async () => {
@@ -70,12 +93,12 @@ export function GlobalFormatsTab({
         These settings control the default options shown in right-click image menu.
       </p>
 
-      <div className="mt-8 divide-y divide-slate-100 dark:divide-slate-700/50">
+      <div className="mt-8 space-y-6">
         {configs.map((config) => {
           const supportsQuality = QUALITY_FORMATS.includes(config.format)
 
           return (
-            <div key={config.id} className="py-4 first:pt-0 last:pb-0">
+            <div key={config.id} className="py-2 first:pt-0 last:pb-0">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
@@ -93,27 +116,54 @@ export function GlobalFormatsTab({
                     </span>
                   </div>
 
-                  {supportsQuality && config.enabled && (
-                    <div className="mt-3 max-w-xs group">
-                      <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-                        <span className="group-hover:text-sky-500 transition-colors uppercase tracking-tight">Quality</span>
-                        <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded transition-colors group-hover:bg-sky-500 group-hover:text-white">
-                          {config.quality ?? 90}%
-                        </span>
-                      </div>
-                      <input
-                        className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500 transition-all hover:h-2"
-                        max={100}
-                        min={1}
-                        onChange={(event) => updateQuality(config.format, Number(event.target.value))}
-                        type="range"
-                        value={config.quality ?? 90}
-                      />
+                  {config.enabled && (supportsQuality || config.format === "ico") && (
+                    <div className="mt-4 ml-2 pl-4 border-l-2 border-slate-100 dark:border-slate-700/50 space-y-4">
+                      {supportsQuality && (
+                        <div className="max-w-xs group">
+                          <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                            <span className="group-hover:text-sky-500 transition-colors uppercase tracking-tight">Quality</span>
+                            <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded transition-colors group-hover:bg-sky-500 group-hover:text-white">
+                              {config.quality ?? 90}%
+                            </span>
+                          </div>
+                          <input
+                            className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500 transition-all hover:h-2"
+                            max={100}
+                            min={1}
+                            onChange={(event) => updateQuality(config.format, Number(event.target.value))}
+                            type="range"
+                            value={config.quality ?? 90}
+                          />
+                        </div>
+                      )}
+
+                      {config.format === "ico" && (
+                        <div className="max-w-sm">
+                          <IcoSizeSelector
+                            disabled={false}
+                            generateWebIconKit={Boolean(config.icoOptions?.generateWebIconKit)}
+                            onToggleSize={(size) => {
+                              const current = config.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]
+                              const exists = current.includes(size)
+                              const next = exists
+                                ? current.filter((entry) => entry !== size)
+                                : [...current, size].sort((a, b) => a - b)
+
+                              updateIcoOptions({ sizes: next.length ? next : [16] })
+                            }}
+                            onToggleWebKit={(checked) => {
+                              updateIcoOptions({ generateWebIconKit: checked })
+                            }}
+                            sizes={config.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]}
+                            title="ICO output size"
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0 w-[20%] justify-end">
+                <div className="flex items-center gap-3 shrink-0 justify-end">
                   <button
                     type="button"
                     role="switch"

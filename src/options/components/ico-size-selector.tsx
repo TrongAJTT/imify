@@ -6,40 +6,47 @@ export function IcoSizeSelector({
   sizes,
   generateWebIconKit,
   disabled,
+  title = "ICO output sizes",
   onToggleSize,
   onToggleWebKit
 }: {
   sizes: number[]
   generateWebIconKit: boolean
   disabled?: boolean
+  title?: string
   onToggleSize: (size: number) => void
   onToggleWebKit: (next: boolean) => void
 }) {
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">ICO output sizes</p>
-      <div className="grid gap-2">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</p>
+      <div className="grid grid-cols-2 gap-2">
         {ICO_SIZE_OPTIONS.map((option) => {
           const checked = sizes.includes(option.value)
 
           return (
             <label
               key={option.value}
-              className={`flex items-center justify-between rounded border px-2.5 py-2 text-xs ${
+              className={`flex flex-col items-start justify-center rounded border px-2.5 py-1.5 transition-all ${
                 checked
                   ? "border-sky-300 bg-sky-50 text-sky-800 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-200"
-                  : "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200"
+                  : "border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
               } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
-              <span className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full">
                 <input
                   checked={checked}
                   disabled={disabled}
                   onChange={() => onToggleSize(option.value)}
                   type="checkbox"
+                  className="rounded border-slate-300 text-sky-500 focus:ring-sky-500/20 w-3.5 h-3.5"
                 />
-                <span className="font-medium">{option.label}</span>
-              </span>
-              {option.note ? <span className="text-[10px] text-slate-500 dark:text-slate-400">{option.note}</span> : null}
+                <span className="font-bold text-[11px] whitespace-nowrap">{option.label}</span>
+              </div>
+              {option.note ? (
+                <span className="text-[9px] mt-0.5 opacity-70 ml-5 truncate w-full leading-none">
+                  {option.note}
+                </span>
+              ) : null}
             </label>
           )
         })}
