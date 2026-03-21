@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, HelpCircle, FileEdit, ShieldCheck } from "lucide-react"
 import { QUALITY_FORMATS, RESIZE_MODE_OPTIONS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
 import { ResizeConfigPanel } from "@/options/components/resize-config-panel"
-import { LabelText } from "@/options/components/ui/typography"
+import { LabelText, Kicker } from "@/options/components/ui/typography"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
+import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import { BatchRenameDialog } from "./rename-dialog"
 import { HIGH_CONCURRENCY_FORMATS } from "@/options/components/batch/types"
 import { TARGET_FORMAT_OPTIONS } from "@/options/components/batch/types"
 import type { BatchTargetFormat } from "@/options/components/batch/types"
@@ -48,6 +50,7 @@ export function BatchSetupSidebarPanel({
   onFileNamePatternChange
 }: BatchSetupPanelProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
   const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
   const supportsExtendedConcurrency = HIGH_CONCURRENCY_FORMATS.includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
@@ -157,40 +160,46 @@ export function BatchSetupSidebarPanel({
         </div>
 
         {isAdvancedOpen ? (
-          <div className="space-y-3 rounded-md border border-slate-200 dark:border-slate-700/60 bg-slate-50/60 dark:bg-slate-900/30 p-3">
-            <label className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-200">
-              <input
-                checked={stripExif}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500/30"
-                disabled={isRunning}
-                onChange={(event) => onStripExifChange(event.target.checked)}
-                type="checkbox"
-              />
-              <span>
-                <span className="font-medium">Strip EXIF data (Privacy mode)</span>
-                <span className="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">
-                  Turn off this option to keep original EXIF when possible.
-                </span>
-              </span>
-            </label>
+          <div className="space-y-3 pt-1 animate-in fade-in slide-in-from-top-2 duration-300">
+            {/* Privacy Mode */}
+            <CheckboxCard
+              title="Privacy mode"
+              subtitle={stripExif ? "Strip EXIF data from output images" : "Keep EXIF data when possible"}
+              checked={stripExif}
+              onChange={onStripExifChange}
+              disabled={isRunning}
+              tooltip="Removes sensitive metadata (GPS, Camera info). Only JPEG source maintains EXIF for JPEG/AVIF targets."
+            />
 
-            <label className="block text-xs font-medium">
-              <LabelText>Smart file naming pattern</LabelText>
-              <input
-                className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
+            {/* Renaming */}
+            <div
+              className={`flex items-center justify-between rounded border px-2.5 py-2 transition-all border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900/40`}>
+              <div className="flex flex-col min-w-0 mr-2">
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">
+                  File Renaming
+                </span>
+                <span className="text-[9px] text-slate-400 truncate font-mono">
+                  {fileNamePattern}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsRenameDialogOpen(true)}
                 disabled={isRunning}
-                onChange={(event) => onFileNamePatternChange(event.target.value)}
-                placeholder="[OriginalName]_[Width]x[Height]_[Date].[Ext]"
-                type="text"
-                value={fileNamePattern}
-              />
-              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                Tokens: [OriginalName], [Width], [Height], [Date], [Time], [Index], [Ext]
-              </p>
-            </label>
+                title="Edit renaming pattern"
+                className="p-1.5 rounded-md text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 transition-colors shrink-0 disabled:opacity-50">
+                <FileEdit size={14} />
+              </button>
+            </div>
           </div>
         ) : null}
       </div>
+
+      <BatchRenameDialog
+        isOpen={isRenameDialogOpen}
+        onClose={() => setIsRenameDialogOpen(false)}
+        onSave={onFileNamePatternChange}
+        initialPattern={fileNamePattern}
+      />
     </SidebarPanel>
   )
 }

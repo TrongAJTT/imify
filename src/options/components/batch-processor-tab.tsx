@@ -313,6 +313,7 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
         originalFileName: item.file.name,
         outputExtension,
         index: itemIndex,
+        totalFiles: queue.length,
         dimensions,
         now: new Date()
       })

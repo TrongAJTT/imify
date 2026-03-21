@@ -8,6 +8,7 @@ export interface SmartNameContext {
   originalFileName: string
   outputExtension: string
   index: number
+  totalFiles?: number
   dimensions: ImageDimensions | null
   now: Date
 }
@@ -30,10 +31,15 @@ function baseNameFromFileName(fileName: string): string {
 }
 
 export function buildSmartOutputFileName(context: SmartNameContext): string {
-  const { pattern, originalFileName, outputExtension, index, dimensions, now } = context
+  const { pattern, originalFileName, outputExtension, index, totalFiles, dimensions, now } = context
   const normalizedPattern = pattern.trim() || "[OriginalName]_[Index].[Ext]"
   const date = `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}`
   const time = `${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`
+
+  // Calculate Zero-padding (Zero-padded Index)
+  // Term: "Natural Padding" or "Dynamic Padding" based on total file count
+  const paddingSize = totalFiles ? String(totalFiles).length : 3
+  const paddedIndex = String(index).padStart(Math.max(paddingSize, 2), "0")
 
   const replacements: Record<string, string> = {
     "[OriginalName]": safeSegment(baseNameFromFileName(originalFileName)) || "image",
@@ -42,6 +48,7 @@ export function buildSmartOutputFileName(context: SmartNameContext): string {
     "[Date]": date,
     "[Time]": time,
     "[Index]": String(index),
+    "[PaddedIndex]": paddedIndex,
     "[Ext]": outputExtension.replace(/^\./, "")
   }
 
