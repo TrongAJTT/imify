@@ -1,4 +1,5 @@
 import { NumberInput } from "@/options/components/ui/number-input"
+import { LabelText } from "@/options/components/ui/typography"
 
 export function ResizeConfigPanel({
   mode,
@@ -18,11 +19,11 @@ export function ResizeConfigPanel({
   const needsNumericResize = mode === "change_width" || mode === "change_height" || mode === "scale"
 
   return (
-    <div className="space-y-4">
-      <label className="block text-sm text-slate-700 dark:text-slate-200">
-        Resize
+    <div className="space-y-3">
+      <label className="block text-xs font-medium">
+        <LabelText>Resize</LabelText>
         <select
-          className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
+          className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
           disabled={disabled}
           onChange={(event) => onModeChange(event.target.value)}
           value={mode}>

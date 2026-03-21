@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react"
-import { ChevronDown, ChevronUp, HelpCircle, FileEdit, ShieldCheck } from "lucide-react"
+import { ChevronDown, ChevronUp, FileEdit, Bolt } from "lucide-react"
 import { QUALITY_FORMATS, RESIZE_MODE_OPTIONS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
-import { ResizeConfigPanel } from "@/options/components/resize-config-panel"
 import { LabelText, Kicker } from "@/options/components/ui/typography"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { BatchRenameDialog } from "./rename-dialog"
+import { NumberInput } from "@/options/components/ui/number-input"
 import { HIGH_CONCURRENCY_FORMATS } from "@/options/components/batch/types"
 import { TARGET_FORMAT_OPTIONS } from "@/options/components/batch/types"
 import type { BatchTargetFormat } from "@/options/components/batch/types"
@@ -111,15 +111,33 @@ export function BatchSetupSidebarPanel({
                 value={quality}
               />
 
-              <ResizeConfigPanel
-                disabled={isRunning}
-                mode={resizeMode}
-                modeOptions={RESIZE_MODE_OPTIONS}
-                onModeChange={(mode) => onResizeModeChange(mode as any)}
-                onValueChange={onResizeValueChange}
-                value={resizeValue}
-              />
+              <label className="block text-xs font-medium">
+                <LabelText>Resize</LabelText>
+                <select
+                  className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
+                  disabled={isRunning}
+                  onChange={(event) => onResizeModeChange(event.target.value as any)}
+                  value={resizeMode}>
+                  {RESIZE_MODE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
+
+            {(resizeMode === "change_width" || resizeMode === "change_height" || resizeMode === "scale") ? (
+              <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                <NumberInput
+                  label={resizeMode === "scale" ? "Resize value (%)" : "Resize value (px)"}
+                  disabled={isRunning}
+                  min={1}
+                  onChangeValue={(val) => onResizeValueChange(Math.max(1, val || 1))}
+                  value={resizeValue}
+                />
+              </div>
+            ) : null}
 
             {resizeMode === "page_size" ? (
               <PaperConfig
@@ -153,8 +171,9 @@ export function BatchSetupSidebarPanel({
             disabled={isRunning}
             onClick={() => setIsAdvancedOpen((current) => !current)}
             type="button"
-          >
-            <span>Advanced Settings</span>
+          >            
+            <Bolt className="w-4 h-4" />
+            <span> Advanced Settings</span>
             {isAdvancedOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
         </div>

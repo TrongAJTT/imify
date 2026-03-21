@@ -95,7 +95,7 @@ export function CustomFormatForm({
         {/* Right Column */}
         <div className="flex-1 w-full">
           {!isIcoFormat ? (
-            <div className="animate-in fade-in slide-in-from-right-1 duration-200 h-full space-y-3">
+            <div className="animate-in fade-in slide-in-from-right-1 duration-200 h-full space-y-1.5">
               <ResizeConfigPanel
                 disabled={false}
                 mode={value.resize.mode}

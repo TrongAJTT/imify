@@ -56,30 +56,39 @@ export function QueueItemCard({
         </div>
       ) : null}
 
-      <div className="flex flex-1 flex-col p-3 pb-8">
+      <div className="flex flex-1 flex-col p-3 pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <BodyText className="truncate font-medium" title={item.file.name}>
+            <BodyText className="truncate font-semibold" title={item.file.name}>
               {item.file.name}
             </BodyText>
+            {item.outputFileName && (
+              <MutedText className="block truncate text-[10px] text-sky-600 dark:text-sky-400 font-mono mt-0.5">
+                ↳ {item.outputFileName}
+              </MutedText>
+            )}
           </div>
-        </div>
-
-        <div className="mt-1.5 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-medium">
-          <span>{item.status}</span>
-          <span>{Math.round(item.percent)}%</span>
         </div>
 
         <div className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
           {item.outputBlob ? (
-            <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
+            <div className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded w-fit">
               {formatBytes(item.file.size)}
               <ArrowRight size={12} className="inline" />
               {formatBytes(item.outputBlob.size)}
-            </span>
+            </div>
           ) : (
-            <span>{formatBytes(item.file.size)}</span>
+            <span className="px-1.5 py-0.5 bg-slate-50 dark:bg-slate-900/40 rounded border border-transparent">
+              {formatBytes(item.file.size)}
+            </span>
           )}
+        </div>
+
+        <div className="mt-1.5 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold border-t border-slate-50 dark:border-slate-700/50 pt-1.5">
+          <span className={item.status === "error" ? "text-red-500" : item.status === "success" ? "text-emerald-500" : ""}>
+            {item.status}
+          </span>
+          <span>{Math.round(item.percent)}%</span>
         </div>
 
         {item.message ? <MutedText className="mt-2 text-[10px] leading-tight text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-1.5 rounded">{item.message}</MutedText> : null}
