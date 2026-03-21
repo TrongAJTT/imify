@@ -6,6 +6,8 @@ import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
+import { Button } from "@/options/components/ui/button"
+import { CheckCircle2, Circle } from "lucide-react"
 import { MutedText, Heading, Subheading, Kicker } from "@/options/components/ui/typography"
 
 export function GlobalFormatsTab({
@@ -88,6 +90,22 @@ export function GlobalFormatsTab({
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const allEnabled = configs.every((f) => f.enabled)
+
+  const handleToggleAll = () => {
+    const nextState = !allEnabled
+    setDraft((previous) => {
+      const next = { ...previous }
+      Object.keys(next).forEach((key) => {
+        next[key as ImageFormat] = {
+          ...next[key as ImageFormat],
+          enabled: nextState
+        }
+      })
+      return next
+    })
   }
 
   return (
@@ -189,28 +207,39 @@ export function GlobalFormatsTab({
         })}
       </div>
 
-      {hasChanges && (
-        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50 flex items-center justify-end gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <SecondaryButton onClick={() => setDraft(state.global_formats)} disabled={isSaving}>
-            Cancel
-          </SecondaryButton>
-          <button
-            className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 hover:bg-sky-600 transition-all disabled:opacity-50"
-            disabled={isSaving}
-            onClick={handleSave}
-            type="button"
-          >
-            {isSaving ? (
-              <>
-                <LoadingSpinner size={4} className="-ml-1 mr-2 text-white" />
-                Saving-
-              </>
-            ) : (
-              "Save changes"
-            )}
-          </button>
-        </div>
-      )}
+      <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <Button
+          onClick={handleToggleAll}
+          variant="outline"
+          className="rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all font-bold"
+        >
+          {allEnabled ? (
+            <Circle size={18} className="text-slate-400" />
+          ) : (
+            <CheckCircle2 size={18} className="text-sky-500" />
+          )}
+          {allEnabled ? "Disable All" : "Enable All"}
+        </Button>
+
+        {hasChanges && (
+          <div className="flex items-center gap-3 animate-in fade-in scale-95 duration-200">
+            <SecondaryButton onClick={() => setDraft(state.global_formats)} disabled={isSaving}>
+              Cancel
+            </SecondaryButton>
+            <button
+              className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 hover:bg-sky-600 transition-all disabled:opacity-50"
+              disabled={isSaving}
+              onClick={handleSave}
+              type="button"
+            >
+              {isSaving && <LoadingSpinner size={4} className="-ml-1 mr-2 text-white" />}
+              Save changes
+            </button>
+          </div>
+        )}
+      </div>
     </SurfaceCard>
   )
 }
+
+
