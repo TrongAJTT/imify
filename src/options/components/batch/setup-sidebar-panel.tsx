@@ -1,4 +1,5 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import { QUALITY_FORMATS, RESIZE_MODE_OPTIONS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
@@ -32,6 +33,8 @@ export function BatchSetupSidebarPanel({
   resizeValue,
   paperSize,
   dpi,
+  stripExif,
+  fileNamePattern,
   onTargetFormatChange,
   onConcurrencyChange,
   onQualityChange,
@@ -40,8 +43,11 @@ export function BatchSetupSidebarPanel({
   onResizeModeChange,
   onResizeValueChange,
   onPaperSizeChange,
-  onDpiChange
+  onDpiChange,
+  onStripExifChange,
+  onFileNamePatternChange
 }: BatchSetupPanelProps) {
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
   const supportsExtendedConcurrency = HIGH_CONCURRENCY_FORMATS.includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
@@ -137,6 +143,53 @@ export function BatchSetupSidebarPanel({
             sizes={icoSizes}
           />
         )}
+
+        <div className="pt-1">
+          <button
+            className="inline-flex w-full items-center justify-between rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-colors"
+            disabled={isRunning}
+            onClick={() => setIsAdvancedOpen((current) => !current)}
+            type="button"
+          >
+            <span>Advanced Settings</span>
+            {isAdvancedOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+
+        {isAdvancedOpen ? (
+          <div className="space-y-3 rounded-md border border-slate-200 dark:border-slate-700/60 bg-slate-50/60 dark:bg-slate-900/30 p-3">
+            <label className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-200">
+              <input
+                checked={stripExif}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500/30"
+                disabled={isRunning}
+                onChange={(event) => onStripExifChange(event.target.checked)}
+                type="checkbox"
+              />
+              <span>
+                <span className="font-medium">Strip EXIF data (Privacy mode)</span>
+                <span className="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">
+                  Turn off this option to keep original EXIF when possible.
+                </span>
+              </span>
+            </label>
+
+            <label className="block text-xs font-medium">
+              <LabelText>Smart file naming pattern</LabelText>
+              <input
+                className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
+                disabled={isRunning}
+                onChange={(event) => onFileNamePatternChange(event.target.value)}
+                placeholder="[OriginalName]_[Width]x[Height]_[Date].[Ext]"
+                type="text"
+                value={fileNamePattern}
+              />
+              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                Tokens: [OriginalName], [Width], [Height], [Date], [Time], [Index], [Ext]
+              </p>
+            </label>
+          </div>
+        ) : null}
       </div>
     </SidebarPanel>
   )

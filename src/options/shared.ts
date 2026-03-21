@@ -21,7 +21,7 @@ export interface PersistedStorageState {
 }
 
 export const TAB_ITEMS: Array<{ id: OptionsTab; label: string; description?: string }> = [
-  { id: "batch", label: "Batch Converter" },
+  { id: "batch", label: "Batch Processor" },
   { 
     id: "global", 
     label: "Global Formats",

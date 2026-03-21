@@ -20,7 +20,7 @@ import {
   validateCustomFormatInput
 } from "@/features/custom-formats"
 import { DEFAULT_STORAGE_STATE } from "@/features/settings"
-import { BatchConverterTab } from "@/options/components/batch-tab"
+import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
 import type { BatchResizeMode, BatchTargetFormat } from "@/options/components/batch/types"
 import { ContextMenuTab } from "@/options/components/context-menu-tab"
@@ -37,7 +37,7 @@ import {
   createCustomFormatId,
   normalizeCustomInput
 } from "@/options/shared"
-import { Globe, Heart, Layers, LayoutGrid, ListTree, X } from "lucide-react"
+import { Globe, Heart, Layers, ListTree, Workflow, X } from "lucide-react"
 
 const syncStorage = new Storage({ area: "sync" })
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
@@ -46,7 +46,7 @@ const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
 }
 
 const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
-  batch: <LayoutGrid size={18} />,
+  batch: <Workflow size={18} />,
   menu: <ListTree size={18} />,
   global: <Globe size={18} />,
   custom: <Layers size={18} />
@@ -85,6 +85,8 @@ export default function OptionsPage() {
   const [batchResizeValue, setBatchResizeValue] = useState(1280)
   const [batchPaperSize, setBatchPaperSize] = useState<PaperSize>("A4")
   const [batchDpi, setBatchDpi] = useState<SupportedDPI>(300)
+  const [batchStripExif, setBatchStripExif] = useState(true)
+  const [batchFileNamePattern, setBatchFileNamePattern] = useState("[OriginalName]_[Width]x[Height]_[Date].[Ext]")
   const [batchIsRunning, setBatchIsRunning] = useState(false)
   const [persistedState, setPersistedState, { isLoading }] = useStorage<PersistedStorageState>(
     { key: STORAGE_KEY, instance: syncStorage },
@@ -350,7 +352,7 @@ export default function OptionsPage() {
         )
       case "batch":
         return (
-          <BatchConverterTab
+          <BatchProcessorTab
             onRunningStateChange={setBatchIsRunning}
             setup={{
               targetFormat: batchTargetFormat,
@@ -361,7 +363,9 @@ export default function OptionsPage() {
               resizeMode: batchResizeMode,
               resizeValue: batchResizeValue,
               paperSize: batchPaperSize,
-              dpi: batchDpi
+              dpi: batchDpi,
+              stripExif: batchStripExif,
+              fileNamePattern: batchFileNamePattern
             }}
           />
         )
@@ -379,7 +383,9 @@ export default function OptionsPage() {
     batchResizeMode,
     batchResizeValue,
     batchPaperSize,
-    batchDpi
+    batchDpi,
+    batchStripExif,
+    batchFileNamePattern
   ])
 
   return (
@@ -567,11 +573,15 @@ export default function OptionsPage() {
                 onResizeModeChange={setBatchResizeMode}
                 onResizeValueChange={setBatchResizeValue}
                 onTargetFormatChange={setBatchTargetFormat}
+                onStripExifChange={setBatchStripExif}
+                onFileNamePatternChange={setBatchFileNamePattern}
                 paperSize={batchPaperSize}
                 quality={batchQuality}
                 resizeMode={batchResizeMode}
                 resizeValue={batchResizeValue}
                 targetFormat={batchTargetFormat}
+                stripExif={batchStripExif}
+                fileNamePattern={batchFileNamePattern}
               />
             )}
 

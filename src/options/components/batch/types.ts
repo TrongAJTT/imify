@@ -41,6 +41,8 @@ export interface BatchSetupState {
   resizeValue: number
   paperSize: PaperSize
   dpi: SupportedDPI
+  stripExif: boolean
+  fileNamePattern: string
 }
 
 export interface BatchSetupHandlers {
@@ -53,6 +55,8 @@ export interface BatchSetupHandlers {
   onResizeValueChange: (value: number) => void
   onPaperSizeChange: (value: PaperSize) => void
   onDpiChange: (value: SupportedDPI) => void
+  onStripExifChange: (value: boolean) => void
+  onFileNamePatternChange: (value: string) => void
 }
 
 export interface BatchSetupPanelProps extends BatchSetupState, BatchSetupHandlers {
