@@ -5,7 +5,7 @@ import type { ExtensionStorageState, FormatConfig } from "@/core/types"
 import type { CustomFormatInput } from "@/features/custom-formats"
 import { CustomFormatForm } from "@/options/components/custom-format-form"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
-import { Edit, Trash2, X } from 'lucide-react'
+import { Edit, Plus, Trash2, X } from 'lucide-react'
 
 interface PendingDelete {
   item: FormatConfig
@@ -175,7 +175,7 @@ export function CustomFormatsTab({
   const getResizeLabel = (mode: string, value: unknown) => {
     switch (mode) {
       case "none":
-        return "Keep original size"
+        return "No resize"
       case "change_width":
         return `Width ${typeof value === "number" ? value : 0}px`
       case "change_height":
@@ -201,17 +201,15 @@ export function CustomFormatsTab({
   return (
     <SurfaceCard>
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Custom Formats</h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            Add your own format presets for resize mode, quality, and paper settings.
-          </p>
-        </div>
+        <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+          Add your own format presets for resize mode, quality, and paper settings.
+        </p>
 
         <button
-          className="rounded-md bg-slate-900 dark:bg-slate-100 px-3 py-2 text-sm font-medium text-white dark:text-slate-900"
+          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-100 px-5 py-2.5 text-sm font-bold text-white dark:text-slate-900 shadow-lg shadow-slate-900/10 dark:shadow-slate-100/10 hover:-translate-y-0.5 transition-all active:translate-y-0"
           onClick={() => setIsCreateDialogOpen(true)}
           type="button">
+          <Plus size={18} />
           Add New
         </button>
       </div>

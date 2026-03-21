@@ -533,40 +533,41 @@ export default function OptionsPage() {
 
         <div className="mt-8 flex flex-col md:flex-row gap-8">
           <nav className="flex flex-col gap-2 w-full md:w-64 shrink-0">
-            {TAB_ITEMS.map((tab) => (
-              <div key={tab.id} className="space-y-2">
+            <div className="flex flex-col gap-2 mb-2">
+              {TAB_ITEMS.map((tab) => (
                 <TabButton
+                  key={tab.id}
                   active={tab.id === activeTab}
                   label={tab.label}
                   icon={TAB_ICON_COMPONENTS[tab.id]}
                   onClick={() => setActiveTab(tab.id)}
                 />
+              ))}
+            </div>
 
-                {tab.id === "batch" && activeTab === "batch" ? (
-                  <BatchSetupSidebarPanel
-                    concurrency={batchConcurrency}
-                    dpi={batchDpi}
-                    icoGenerateWebIconKit={batchIcoGenerateWebIconKit}
-                    icoSizes={batchIcoSizes}
-                    isRunning={batchIsRunning}
-                    onConcurrencyChange={setBatchConcurrency}
-                    onDpiChange={setBatchDpi}
-                    onIcoGenerateWebIconKitChange={setBatchIcoGenerateWebIconKit}
-                    onIcoSizesChange={setBatchIcoSizes}
-                    onPaperSizeChange={setBatchPaperSize}
-                    onQualityChange={setBatchQuality}
-                    onResizeModeChange={setBatchResizeMode}
-                    onResizeValueChange={setBatchResizeValue}
-                    onTargetFormatChange={setBatchTargetFormat}
-                    paperSize={batchPaperSize}
-                    quality={batchQuality}
-                    resizeMode={batchResizeMode}
-                    resizeValue={batchResizeValue}
-                    targetFormat={batchTargetFormat}
-                  />
-                ) : null}
-              </div>
-            ))}
+            {activeTab === "batch" && (
+              <BatchSetupSidebarPanel
+                concurrency={batchConcurrency}
+                dpi={batchDpi}
+                icoGenerateWebIconKit={batchIcoGenerateWebIconKit}
+                icoSizes={batchIcoSizes}
+                isRunning={batchIsRunning}
+                onConcurrencyChange={setBatchConcurrency}
+                onDpiChange={setBatchDpi}
+                onIcoGenerateWebIconKitChange={setBatchIcoGenerateWebIconKit}
+                onIcoSizesChange={setBatchIcoSizes}
+                onPaperSizeChange={setBatchPaperSize}
+                onQualityChange={setBatchQuality}
+                onResizeModeChange={setBatchResizeMode}
+                onResizeValueChange={setBatchResizeValue}
+                onTargetFormatChange={setBatchTargetFormat}
+                paperSize={batchPaperSize}
+                quality={batchQuality}
+                resizeMode={batchResizeMode}
+                resizeValue={batchResizeValue}
+                targetFormat={batchTargetFormat}
+              />
+            )}
           </nav>
 
           <div className="flex-1 min-w-0">

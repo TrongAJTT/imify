@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { QUALITY_FORMATS } from "@/options/shared"
+import { QUALITY_FORMATS, RESIZE_MODE_OPTIONS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
@@ -105,13 +105,7 @@ export function BatchSetupSidebarPanel({
               <ResizeConfigPanel
                 disabled={isRunning}
                 mode={resizeMode}
-                modeOptions={[
-                  { value: "none", label: "No resize" },
-                  { value: "change_width", label: "Force width" },
-                  { value: "change_height", label: "Force height" },
-                  { value: "scale", label: "Scale percent" },
-                  { value: "page_size", label: "Paper size" }
-                ]}
+                modeOptions={RESIZE_MODE_OPTIONS}
                 onModeChange={(mode) => onResizeModeChange(mode as any)}
                 onValueChange={onResizeValueChange}
                 value={resizeValue}

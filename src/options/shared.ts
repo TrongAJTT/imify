@@ -37,10 +37,10 @@ export const CONTEXT_MENU_SORT_OPTIONS: Array<{ value: MenuSortMode; label: stri
 ]
 
 export const RESIZE_MODE_OPTIONS: Array<{ value: ResizeMode; label: string }> = [
-  { value: "none", label: "Keep original size" },
-  { value: "change_width", label: "Set width (px)" },
-  { value: "change_height", label: "Set height (px)" },
-  { value: "scale", label: "Scale (%)" },
+  { value: "none", label: "No resize" },
+  { value: "change_width", label: "Set width" },
+  { value: "change_height", label: "Set height" },
+  { value: "scale", label: "Scale" },
   { value: "page_size", label: "Paper size" }
 ]
 
