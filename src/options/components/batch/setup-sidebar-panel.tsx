@@ -12,9 +12,9 @@ import { BatchWatermarkDialog } from "./watermark-dialog"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { HIGH_CONCURRENCY_FORMATS } from "@/options/components/batch/types"
 import { TARGET_FORMAT_OPTIONS } from "@/options/components/batch/types"
-import type { BatchTargetFormat } from "@/options/components/batch/types"
-import type { BatchSetupPanelProps } from "@/options/components/batch/types"
+import type { BatchResizeMode, BatchTargetFormat } from "@/options/components/batch/types"
 import { WATERMARK_POSITION_OPTIONS } from "@/options/components/batch/watermark"
+import { useBatchStore } from "@/options/stores/batch-store"
 
 const BASE_CONCURRENCY_OPTIONS = [
   { value: 1, label: "1" },
@@ -26,33 +26,33 @@ const BASE_CONCURRENCY_OPTIONS = [
 
 const EXTENDED_CONCURRENCY_VALUES = [10, 15, 20, 25, 30] as const
 
-export function BatchSetupSidebarPanel({
-  isRunning,
-  targetFormat,
-  concurrency,
-  quality,
-  icoSizes,
-  icoGenerateWebIconKit,
-  resizeMode,
-  resizeValue,
-  paperSize,
-  dpi,
-  stripExif,
-  fileNamePattern,
-  watermark,
-  onTargetFormatChange,
-  onConcurrencyChange,
-  onQualityChange,
-  onIcoSizesChange,
-  onIcoGenerateWebIconKitChange,
-  onResizeModeChange,
-  onResizeValueChange,
-  onPaperSizeChange,
-  onDpiChange,
-  onStripExifChange,
-  onFileNamePatternChange,
-  onWatermarkChange
-}: BatchSetupPanelProps) {
+export function BatchSetupSidebarPanel() {
+  const isRunning = useBatchStore((state) => state.isRunning)
+  const targetFormat = useBatchStore((state) => state.targetFormat)
+  const concurrency = useBatchStore((state) => state.concurrency)
+  const quality = useBatchStore((state) => state.quality)
+  const icoSizes = useBatchStore((state) => state.icoSizes)
+  const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
+  const resizeMode = useBatchStore((state) => state.resizeMode)
+  const resizeValue = useBatchStore((state) => state.resizeValue)
+  const paperSize = useBatchStore((state) => state.paperSize)
+  const dpi = useBatchStore((state) => state.dpi)
+  const stripExif = useBatchStore((state) => state.stripExif)
+  const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
+  const watermark = useBatchStore((state) => state.watermark)
+  const onTargetFormatChange = useBatchStore((state) => state.setTargetFormat)
+  const onConcurrencyChange = useBatchStore((state) => state.setConcurrency)
+  const onQualityChange = useBatchStore((state) => state.setQuality)
+  const onIcoSizesChange = useBatchStore((state) => state.setIcoSizes)
+  const onIcoGenerateWebIconKitChange = useBatchStore((state) => state.setIcoGenerateWebIconKit)
+  const onResizeModeChange = useBatchStore((state) => state.setResizeMode)
+  const onResizeValueChange = useBatchStore((state) => state.setResizeValue)
+  const onPaperSizeChange = useBatchStore((state) => state.setPaperSize)
+  const onDpiChange = useBatchStore((state) => state.setDpi)
+  const onStripExifChange = useBatchStore((state) => state.setStripExif)
+  const onFileNamePatternChange = useBatchStore((state) => state.setFileNamePattern)
+  const onWatermarkChange = useBatchStore((state) => state.setWatermark)
+
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
   const [isWatermarkDialogOpen, setIsWatermarkDialogOpen] = useState(false)
@@ -126,7 +126,7 @@ export function BatchSetupSidebarPanel({
                 <select
                   className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
                   disabled={isRunning}
-                  onChange={(event) => onResizeModeChange(event.target.value as any)}
+                  onChange={(event) => onResizeModeChange(event.target.value as BatchResizeMode)}
                   value={resizeMode}>
                   {RESIZE_MODE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>

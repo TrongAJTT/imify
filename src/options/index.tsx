@@ -8,13 +8,10 @@ import {
   type ExtensionStorageState,
   type FormatConfig,
   type ImageFormat,
-  type PaperSize,
-  type SupportedDPI,
   STORAGE_KEY,
   STORAGE_VERSION
 } from "@/core/types"
 import { CUSTOM_FORMATS } from "@/core/format-config"
-import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import {
   type CustomFormatInput,
   validateCustomFormatInput
@@ -22,9 +19,6 @@ import {
 import { DEFAULT_STORAGE_STATE } from "@/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
-import type { BatchResizeMode, BatchTargetFormat } from "@/options/components/batch/types"
-import type { BatchWatermarkConfig } from "@/options/components/batch/types"
-import { DEFAULT_BATCH_WATERMARK } from "@/options/components/batch/watermark"
 import { ContextMenuTab } from "@/options/components/context-menu-tab"
 import { CustomFormatsTab } from "@/options/components/custom-formats-tab"
 import { GlobalFormatsTab } from "@/options/components/global-formats-tab"
@@ -78,19 +72,6 @@ export default function OptionsPage() {
   const [activeTab, setActiveTab] = useState<OptionsTab>("batch")
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
-  const [batchTargetFormat, setBatchTargetFormat] = useState<BatchTargetFormat>("jpg")
-  const [batchConcurrency, setBatchConcurrency] = useState(3)
-  const [batchQuality, setBatchQuality] = useState(90)
-  const [batchIcoSizes, setBatchIcoSizes] = useState<number[]>([...DEFAULT_ICO_SIZES])
-  const [batchIcoGenerateWebIconKit, setBatchIcoGenerateWebIconKit] = useState(false)
-  const [batchResizeMode, setBatchResizeMode] = useState<BatchResizeMode>("inherit")
-  const [batchResizeValue, setBatchResizeValue] = useState(1280)
-  const [batchPaperSize, setBatchPaperSize] = useState<PaperSize>("A4")
-  const [batchDpi, setBatchDpi] = useState<SupportedDPI>(300)
-  const [batchStripExif, setBatchStripExif] = useState(true)
-  const [batchFileNamePattern, setBatchFileNamePattern] = useState("[OriginalName]_[Width]x[Height]_[Date].[Ext]")
-  const [batchWatermark, setBatchWatermark] = useState<BatchWatermarkConfig>(DEFAULT_BATCH_WATERMARK)
-  const [batchIsRunning, setBatchIsRunning] = useState(false)
   const [persistedState, setPersistedState, { isLoading }] = useStorage<PersistedStorageState>(
     { key: STORAGE_KEY, instance: syncStorage },
     DEFAULT_PERSISTED_STATE
@@ -355,42 +336,14 @@ export default function OptionsPage() {
         )
       case "batch":
         return (
-          <BatchProcessorTab
-            onRunningStateChange={setBatchIsRunning}
-            setup={{
-              targetFormat: batchTargetFormat,
-              concurrency: batchConcurrency,
-              quality: batchQuality,
-              icoSizes: batchIcoSizes,
-              icoGenerateWebIconKit: batchIcoGenerateWebIconKit,
-              resizeMode: batchResizeMode,
-              resizeValue: batchResizeValue,
-              paperSize: batchPaperSize,
-              dpi: batchDpi,
-              stripExif: batchStripExif,
-              fileNamePattern: batchFileNamePattern,
-              watermark: batchWatermark
-            }}
-          />
+          <BatchProcessorTab />
         )
       default:
         return null
     }
   }, [
     activeTab,
-    state,
-    batchTargetFormat,
-    batchConcurrency,
-    batchQuality,
-    batchIcoSizes,
-    batchIcoGenerateWebIconKit,
-    batchResizeMode,
-    batchResizeValue,
-    batchPaperSize,
-    batchDpi,
-    batchStripExif,
-    batchFileNamePattern,
-    batchWatermark
+    state
   ])
 
   return (
@@ -563,33 +516,7 @@ export default function OptionsPage() {
             </div>
 
             {activeTab === "batch" && (
-              <BatchSetupSidebarPanel
-                concurrency={batchConcurrency}
-                dpi={batchDpi}
-                icoGenerateWebIconKit={batchIcoGenerateWebIconKit}
-                icoSizes={batchIcoSizes}
-                isRunning={batchIsRunning}
-                onConcurrencyChange={setBatchConcurrency}
-                onDpiChange={setBatchDpi}
-                onIcoGenerateWebIconKitChange={setBatchIcoGenerateWebIconKit}
-                onIcoSizesChange={setBatchIcoSizes}
-                onPaperSizeChange={setBatchPaperSize}
-                onQualityChange={setBatchQuality}
-                onResizeModeChange={setBatchResizeMode}
-                onResizeValueChange={setBatchResizeValue}
-                onTargetFormatChange={setBatchTargetFormat}
-                onStripExifChange={setBatchStripExif}
-                onFileNamePatternChange={setBatchFileNamePattern}
-                onWatermarkChange={setBatchWatermark}
-                paperSize={batchPaperSize}
-                quality={batchQuality}
-                resizeMode={batchResizeMode}
-                resizeValue={batchResizeValue}
-                targetFormat={batchTargetFormat}
-                stripExif={batchStripExif}
-                fileNamePattern={batchFileNamePattern}
-                watermark={batchWatermark}
-              />
+              <BatchSetupSidebarPanel />
             )}
 
             {TAB_ITEMS.find((t) => t.id === activeTab)?.description && (

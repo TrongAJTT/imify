@@ -31,7 +31,6 @@ import type {
   BatchExportAction,
   BatchQueueItem,
   BatchRunMode,
-  BatchSetupState,
   BatchSummary
 } from "@/options/components/batch/types"
 import { BatchUploadDropzone } from "@/options/components/batch/upload-dropzone"
@@ -47,6 +46,7 @@ import {
 } from "@/options/components/batch/utils"
 import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
+import { useBatchStore } from "@/options/stores/batch-store"
 
 function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
   const base = nameOrBase.replace(/\.[^.]+$/, "") || "image"
@@ -74,12 +74,21 @@ function extensionFromMimeType(type: string): string {
   return matched?.[1]?.toLowerCase() || "png"
 }
 
-interface BatchProcessorTabProps {
-  setup: BatchSetupState
-  onRunningStateChange?: (running: boolean) => void
-}
+export function BatchProcessorTab() {
+  const targetFormat = useBatchStore((state) => state.targetFormat)
+  const concurrency = useBatchStore((state) => state.concurrency)
+  const quality = useBatchStore((state) => state.quality)
+  const icoSizes = useBatchStore((state) => state.icoSizes)
+  const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
+  const resizeMode = useBatchStore((state) => state.resizeMode)
+  const resizeValue = useBatchStore((state) => state.resizeValue)
+  const paperSize = useBatchStore((state) => state.paperSize)
+  const dpi = useBatchStore((state) => state.dpi)
+  const stripExif = useBatchStore((state) => state.stripExif)
+  const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
+  const watermark = useBatchStore((state) => state.watermark)
+  const setBatchIsRunning = useBatchStore((state) => state.setIsRunning)
 
-export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcessorTabProps) {
   const [queue, setQueue] = useState<BatchQueueItem[]>([])
   const [isRunning, setIsRunning] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
@@ -146,8 +155,8 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
   }, [])
 
   useEffect(() => {
-    onRunningStateChange?.(isRunning)
-  }, [isRunning, onRunningStateChange])
+    setBatchIsRunning(isRunning)
+  }, [isRunning, setBatchIsRunning])
 
   useEffect(() => {
     if (!isPdfSplitOpen) {
@@ -173,33 +182,33 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
 
   const effectiveConfig = useMemo(() => {
     const baseConfig: FormatConfig = {
-      id: `batch_${setup.targetFormat}`,
-      name: `Batch ${setup.targetFormat.toUpperCase()}`,
-      format: setup.targetFormat,
+      id: `batch_${targetFormat}`,
+      name: `Batch ${targetFormat.toUpperCase()}`,
+      format: targetFormat,
       enabled: true,
-      quality: setup.quality,
+      quality,
       resize: { mode: "none" }
     }
 
     return withBatchResize(
       baseConfig,
-      setup.resizeMode,
-      setup.quality,
-      setup.icoSizes,
-      setup.icoGenerateWebIconKit,
-      setup.resizeValue,
-      setup.paperSize,
-      setup.dpi
+      resizeMode,
+      quality,
+      icoSizes,
+      icoGenerateWebIconKit,
+      resizeValue,
+      paperSize,
+      dpi
     )
   }, [
-    setup.targetFormat,
-    setup.resizeMode,
-    setup.quality,
-    setup.icoSizes,
-    setup.icoGenerateWebIconKit,
-    setup.resizeValue,
-    setup.paperSize,
-    setup.dpi
+    targetFormat,
+    resizeMode,
+    quality,
+    icoSizes,
+    icoGenerateWebIconKit,
+    resizeValue,
+    paperSize,
+    dpi
   ])
 
   const setItemState = (
@@ -341,7 +350,7 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
     await notifyProgress(item.id, item.file.name, config, "processing", 10)
 
     try {
-      const sourceBlob = await applyWatermarkToImageBlob(item.file, setup.watermark)
+      const sourceBlob = await applyWatermarkToImageBlob(item.file, watermark)
 
       const converted = await convertImage({
         sourceBlob,
@@ -351,7 +360,7 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
       const normalizedBlob = await applyExifPolicy({
         sourceBlob: item.file,
         outputBlob: converted.blob,
-        stripExif: setup.stripExif
+        stripExif
       })
 
       const dimensions =
@@ -360,7 +369,7 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
 
       const outputExtension = converted.outputExtension ?? config.format
       const smartName = buildSmartOutputFileName({
-        pattern: setup.fileNamePattern,
+        pattern: fileNamePattern,
         originalFileName: item.file.name,
         outputExtension,
         index: itemIndex,
@@ -449,7 +458,7 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
     let failedCount = 0
 
     try {
-      for (let start = 0; start < itemsToProcess.length; start += setup.concurrency) {
+      for (let start = 0; start < itemsToProcess.length; start += concurrency) {
         if (cancelRef.current) {
           break
         }
@@ -462,7 +471,7 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
           break
         }
 
-        const batchSlice = itemsToProcess.slice(start, start + setup.concurrency)
+        const batchSlice = itemsToProcess.slice(start, start + concurrency)
         const results = await Promise.all(
           batchSlice.map((item, sliceIndex) => processItem(item, effectiveConfig, start + sliceIndex + 1))
         )
