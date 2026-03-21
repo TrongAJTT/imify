@@ -6,7 +6,7 @@ import type { CustomFormatInput } from "@/features/custom-formats"
 import { CustomFormatForm } from "@/options/components/custom-format-form"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Heading, Subheading, BodyText, MutedText, LabelText, Kicker } from "@/options/components/ui/typography"
-import { Edit, Plus, Trash2, X } from "lucide-react"
+import { CheckCircle2, Circle, Edit, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@/options/components/ui/button"
 
 interface PendingDelete {
@@ -22,6 +22,7 @@ export function CustomFormatsTab({
   onRestore,
   onReorder,
   onToggle,
+  onToggleAll,
   onUpdate
 }: {
   state: ExtensionStorageState
@@ -30,6 +31,7 @@ export function CustomFormatsTab({
   onRestore: (item: FormatConfig, index: number) => Promise<void>
   onReorder: (draggedId: string, targetId: string) => Promise<void>
   onToggle: (id: string, enabled: boolean) => Promise<void>
+  onToggleAll: (enabled: boolean) => Promise<void>
   onUpdate: (id: string, input: CustomFormatInput) => Promise<string | null>
 }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -193,14 +195,40 @@ export function CustomFormatsTab({
     const sizes = (item.icoOptions?.sizes?.length ? item.icoOptions.sizes : [...DEFAULT_ICO_SIZES])
       .slice()
       .sort((a, b) => a - b)
-    const baseLabel = sizes.length === 1 ? `${sizes[0]}x${sizes[0]}` : "Multiple sizes"
+    const baseLabel = sizes.length === 1 ? `${sizes[0]}x${sizes[0]}` : "Multiple"
 
-    return item.icoOptions?.generateWebIconKit ? `${baseLabel} Toolkit` : baseLabel
+    return item.icoOptions?.generateWebIconKit ? `${baseLabel}, Toolkit` : baseLabel
+  }
+
+  const allEnabled = state.custom_formats.length > 0 && state.custom_formats.every((f) => f.enabled)
+
+  const handleToggleAll = async () => {
+    await onToggleAll(!allEnabled)
   }
 
   return (
     <SurfaceCard>
-      <div className="flex items-start justify-end gap-4">
+      <div className="flex items-center justify-end gap-3">
+        {state.custom_formats.length > 0 && (
+          <Button
+            onClick={handleToggleAll}
+            variant="outline"
+            size="lg"
+            className="rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all font-bold"
+          >
+            {allEnabled ? (
+              <>
+                <Circle size={18} className="text-slate-400" />
+                Disable All
+              </>
+            ) : (
+              <>
+                <CheckCircle2 size={18} className="text-sky-500" />
+                Enable All
+              </>
+            )}
+          </Button>
+        )}
         <Button
           onClick={() => setIsCreateDialogOpen(true)}
           size="lg"
@@ -281,11 +309,11 @@ export function CustomFormatsTab({
               <div className="mt-4 grid gap-2 text-[11px] grid-cols-4 flex-1">
                 <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
                   <LabelText className="font-medium uppercase tracking-tighter">Ext</LabelText>
-                  <BodyText className="font-bold">.{item.format}</BodyText>
+                  <BodyText className="text-xs font-bold">.{item.format}</BodyText>
                 </div>
                 <div className="col-span-2 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2 min-w-0">
                   <LabelText className="font-medium uppercase tracking-tighter">Size</LabelText>
-                  <BodyText className="font-bold truncate">
+                  <BodyText className="text-xs font-bold truncate">
                     {item.format === "ico"
                       ? getIcoSizeLabel(item)
                       : getResizeLabel(item.resize.mode, item.resize.value)}
@@ -293,7 +321,7 @@ export function CustomFormatsTab({
                 </div>
                 <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
                   <LabelText className="font-medium uppercase tracking-tighter">Qual</LabelText>
-                  <BodyText className="font-bold text-center">
+                  <BodyText className="text-xs font-bold text-center">
                     {typeof item.quality === "number" ? `${item.quality}%` : "-"}
                   </BodyText>
                 </div>

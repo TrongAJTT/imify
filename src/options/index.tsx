@@ -283,6 +283,16 @@ export default function OptionsPage() {
     }))
   }
 
+  const handleToggleAllCustom = async (enabled: boolean): Promise<void> => {
+    await updateState((current) => ({
+      ...current,
+      custom_formats: current.custom_formats.map((entry) => ({
+        ...entry,
+        enabled
+      }))
+    }))
+  }
+
   const handleReorderCustom = async (draggedId: string, targetId: string): Promise<void> => {
     if (draggedId === targetId) {
       return
@@ -333,6 +343,7 @@ export default function OptionsPage() {
             onReorder={handleReorderCustom}
             onRestore={handleRestoreCustom}
             onToggle={handleToggleCustom}
+            onToggleAll={handleToggleAllCustom}
             onUpdate={handleUpdateCustom}
             state={state}
           />
