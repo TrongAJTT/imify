@@ -338,13 +338,19 @@ export function CustomFormatsTab({
             </div>
           )
         })}
-
-        {state.custom_formats.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-            No custom formats yet. Click Add New to create one.
-          </p>
-        ) : null}
       </div>
+
+      {state.custom_formats.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/10 py-8 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700">
+            <Edit className="h-8 w-8 text-slate-400" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">No custom formats yet</h3>
+          <p className="mt-1 max-w-[280px] text-sm text-slate-500 dark:text-slate-400">
+            Create your own presets for frequent conversion tasks and resize modes.
+          </p>
+        </div>
+      ) : null}
 
       {editing ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">

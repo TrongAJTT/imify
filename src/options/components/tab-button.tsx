@@ -13,14 +13,14 @@ export function TabButton({
 }) {
   return (
     <button
-      className={`w-full flex items-center gap-3 text-left rounded-md px-4 py-3 text-sm font-medium transition ${
+      className={`w-full flex items-center gap-3 text-left rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200 ${
         active
-          ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-md transform scale-[1.02]"
-          : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-lg shadow-slate-900/20 dark:shadow-none translate-x-1"
+          : "bg-slate-50 text-slate-600 hover:bg-slate-200/60 dark:bg-slate-800/40 dark:text-slate-400 dark:hover:bg-slate-800"
       }`}
       onClick={onClick}
       type="button">
-      <span className="w-5 h-5 flex-shrink-0 text-inherit flex items-center justify-center">
+      <span className={`w-5 h-5 flex-shrink-0 flex items-center justify-center transition-colors ${active ? "text-inherit" : "text-slate-400"}`}>
         {icon}
       </span>
       {label}
