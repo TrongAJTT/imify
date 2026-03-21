@@ -1,5 +1,20 @@
 import JSZip from "jszip"
 import { useEffect, useMemo, useRef, useState } from "react"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy
+} from "@dnd-kit/sortable"
 
 import { toUserFacingConversionError } from "@/core/error-utils"
 import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
@@ -78,6 +93,17 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
   const pdfSplitRef = useRef<HTMLDivElement>(null)
   const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8
+      }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  )
+
   const clearExportToastHideTimer = () => {
     if (!exportToastHideTimerRef.current) {
       return
@@ -97,6 +123,15 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
         exportToastHideTimerRef.current = null
       }, 3000)
     }
+  }
+
+  const requestCancel = () => {
+    setCancelRequested(true)
+    cancelRef.current = true
+  }
+
+  const togglePause = () => {
+    setPaused((current) => !current)
   }
 
   useEffect(() => {
@@ -220,6 +255,19 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
     }
 
     appendImageFiles(Array.from(files))
+  }
+
+  const onDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id && !isRunning) {
+      setQueue((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id)
+        const newIndex = items.findIndex((item) => item.id === over.id)
+
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
   }
 
   useEffect(() => {
@@ -701,15 +749,6 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
     }
   }
 
-  const requestCancel = () => {
-    cancelRef.current = true
-    setCancelRequested(true)
-  }
-
-  const togglePause = () => {
-    setPaused((current) => !current)
-  }
-
   const totalQueueBytes = useMemo(() => queue.reduce((sum, item) => sum + item.file.size, 0), [queue])
   const queueTooLarge = totalQueueBytes > MAX_TOTAL_QUEUE_BYTES
 
@@ -829,7 +868,9 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
         <BatchUploadDropzone onAppendFiles={appendFiles} />
       ) : null)}
 
-      <BatchQueueGrid isRunning={isRunning} onRemoveItem={removeItem} queue={queue} />
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <BatchQueueGrid isRunning={isRunning} onRemoveItem={removeItem} queue={queue} />
+      </DndContext>
 
       <ConversionProgressToastCard payload={exportToastPayload} />
     </SurfaceCard>
