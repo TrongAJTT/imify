@@ -53,7 +53,7 @@ export const FORMAT_LABELS: Record<ImageFormat, string> = {
 export const ICO_SIZE_OPTIONS: Array<{ value: number; label: string; note: string }> = [
   { value: 16, label: "16x16", note: "Web Tab" },
   { value: 32, label: "32x32", note: "Taskbar" },
-  { value: 48, label: "48x48", note: "Windows Standard" },
+  { value: 48, label: "48x48", note: "Windows Std" },
   { value: 64, label: "64x64", note: "" },
   { value: 128, label: "128x128", note: "" },
   { value: 256, label: "256x256", note: "Windows 10/11" }
