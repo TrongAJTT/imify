@@ -43,9 +43,22 @@ export interface FormatConfig {
 
 export type GlobalFormatsMap = Record<ImageFormat, FormatConfig>
 
+export type MenuSortMode =
+  | "global_then_custom"
+  | "custom_then_global"
+  | "name_a_to_z"
+  | "name_z_to_a"
+  | "name_length_asc"
+  | "name_length_desc"
+
+export interface ContextMenuSettings {
+  sort_mode: MenuSortMode
+}
+
 export interface ExtensionStorageState {
   global_formats: GlobalFormatsMap
   custom_formats: FormatConfig[]
+  context_menu: ContextMenuSettings
 }
 
 export interface ConversionProgressPayload {

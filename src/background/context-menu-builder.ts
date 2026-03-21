@@ -1,4 +1,5 @@
-import type { ExtensionStorageState, FormatConfig } from "@/core/types"
+import { getOrderedContextMenuConfigs } from "@/core/context-menu-order"
+import type { ExtensionStorageState } from "@/core/types"
 
 export const MENU_ROOT_ID = "imify_convert_root"
 export const MENU_ITEM_PREFIX = "imify_format_"
@@ -7,17 +8,10 @@ function toMenuItemId(formatConfigId: string): string {
   return `${MENU_ITEM_PREFIX}${formatConfigId}`
 }
 
-function getEnabledMenuConfigs(state: ExtensionStorageState): FormatConfig[] {
-  const globals = Object.values(state.global_formats)
-  const customs = state.custom_formats
-
-  return [...globals, ...customs].filter((config) => config.enabled)
-}
-
 export async function rebuildContextMenu(state: ExtensionStorageState): Promise<void> {
   await chrome.contextMenus.removeAll()
 
-  const enabledConfigs = getEnabledMenuConfigs(state)
+  const enabledConfigs = getOrderedContextMenuConfigs(state)
 
   if (enabledConfigs.length === 0) {
     return

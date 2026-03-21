@@ -22,6 +22,7 @@ import { DEFAULT_STORAGE_STATE } from "@/features/settings"
 import { BatchConverterTab } from "@/options/components/batch-tab"
 import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
 import type { BatchResizeMode, BatchTargetFormat } from "@/options/components/batch/types"
+import { ContextMenuTab } from "@/options/components/context-menu-tab"
 import { CustomFormatsTab } from "@/options/components/custom-formats-tab"
 import { GlobalFormatsTab } from "@/options/components/global-formats-tab"
 import { OptionsHeader } from "@/options/components/options-header"
@@ -33,7 +34,7 @@ import {
   createCustomFormatId,
   normalizeCustomInput
 } from "@/options/shared"
-import { Globe, Heart, Layers, LayoutGrid, SlidersHorizontal, X } from "lucide-react"
+import { Globe, Heart, Layers, LayoutGrid, ListTree, X } from "lucide-react"
 
 const syncStorage = new Storage({ area: "sync" })
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
@@ -43,6 +44,7 @@ const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
 
 const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
   batch: <LayoutGrid size={18} />,
+  menu: <ListTree size={18} />,
   global: <Globe size={18} />,
   custom: <Layers size={18} />
 }
@@ -60,7 +62,10 @@ function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorage
   return {
     ...state,
     global_formats: mergedGlobalFormats,
-    custom_formats: customFormats
+    custom_formats: customFormats,
+    context_menu: {
+      sort_mode: state.context_menu?.sort_mode ?? DEFAULT_STORAGE_STATE.context_menu.sort_mode
+    }
   }
 }
 
@@ -149,6 +154,15 @@ export default function OptionsPage() {
     await updateState((current) => ({
       ...current,
       global_formats: configs
+    }))
+  }
+
+  const handleSaveContextMenuSettings = async (sortMode: ExtensionStorageState["context_menu"]["sort_mode"]) => {
+    await updateState((current) => ({
+      ...current,
+      context_menu: {
+        sort_mode: sortMode
+      }
     }))
   }
 
@@ -292,6 +306,13 @@ export default function OptionsPage() {
 
   const tabContent = useMemo(() => {
     switch (activeTab) {
+      case "menu":
+        return (
+          <ContextMenuTab
+            onCommit={handleSaveContextMenuSettings}
+            state={state}
+          />
+        )
       case "global":
         return (
           <GlobalFormatsTab

@@ -36,5 +36,8 @@ export const DEFAULT_STORAGE_STATE: ExtensionStorageState = {
     acc[format] = createDefaultFormatConfig(format)
     return acc
   }, {} as Record<ImageFormat, FormatConfig>),
-  custom_formats: []
+  custom_formats: [],
+  context_menu: {
+    sort_mode: "global_then_custom"
+  }
 }

@@ -4,6 +4,7 @@ import {
   type ExtensionStorageState,
   type FormatConfig,
   type ImageFormat,
+  type MenuSortMode,
   type ResizeConfig
 } from "@/core/types"
 import { CUSTOM_FORMATS } from "@/core/format-config"
@@ -35,6 +36,17 @@ function isImageFormat(value: unknown): value is ImageFormat {
     value === "ico" ||
     value === "tiff" ||
     value === "pdf"
+  )
+}
+
+function isMenuSortMode(value: unknown): value is MenuSortMode {
+  return (
+    value === "global_then_custom" ||
+    value === "custom_then_global" ||
+    value === "name_a_to_z" ||
+    value === "name_z_to_a" ||
+    value === "name_length_asc" ||
+    value === "name_length_desc"
   )
 }
 
@@ -101,7 +113,12 @@ function sanitizeState(state: unknown): ExtensionStorageState {
 
   return {
     global_formats: mergedGlobalFormats,
-    custom_formats: customFormats
+    custom_formats: customFormats,
+    context_menu: {
+      sort_mode: isMenuSortMode((candidate as ExtensionStorageState).context_menu?.sort_mode)
+        ? (candidate as ExtensionStorageState).context_menu.sort_mode
+        : DEFAULT_STORAGE_STATE.context_menu.sort_mode
+    }
   }
 }
 

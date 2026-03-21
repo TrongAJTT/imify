@@ -3,6 +3,7 @@ import type {
   FormatConfig,
   IcoOptions,
   ImageFormat,
+  MenuSortMode,
   PaperSize,
   ResizeConfig,
   ResizeMode,
@@ -13,7 +14,7 @@ import type { CustomFormatInput } from "@/features/custom-formats"
 
 export { QUALITY_FORMATS }
 
-export type OptionsTab = "global" | "custom" | "batch"
+export type OptionsTab = "global" | "custom" | "batch" | "menu"
 export interface PersistedStorageState {
   version: number
   state: ExtensionStorageState
@@ -22,7 +23,17 @@ export interface PersistedStorageState {
 export const TAB_ITEMS: Array<{ id: OptionsTab; label: string }> = [
   { id: "batch", label: "Batch Converter" },
   { id: "global", label: "Global Formats" },
-  { id: "custom", label: "Custom Formats" }
+  { id: "custom", label: "Custom Formats" },
+  { id: "menu", label: "Context Menu" },
+]
+
+export const CONTEXT_MENU_SORT_OPTIONS: Array<{ value: MenuSortMode; label: string }> = [
+  { value: "global_then_custom", label: "Global formats, then custom formats" },
+  { value: "custom_then_global", label: "Custom formats, then global formats" },
+  { value: "name_a_to_z", label: "By name (A-Z)" },
+  { value: "name_z_to_a", label: "By name (Z-A)" },
+  { value: "name_length_asc", label: "By name length (short to long)" },
+  { value: "name_length_desc", label: "By name length (long to short)" }
 ]
 
 export const RESIZE_MODE_OPTIONS: Array<{ value: ResizeMode; label: string }> = [
