@@ -72,7 +72,7 @@ export async function encodeJxl(
   }
 
   // Return the encoded JXL data as a Blob
-  return new Blob([encoded as Uint8Array<ArrayBuffer>], {
+  return new Blob([encoded as unknown as BlobPart], {
     type: "image/jxl"
   })
 }

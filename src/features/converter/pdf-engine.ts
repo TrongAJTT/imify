@@ -13,13 +13,7 @@ interface PreparedImage {
 }
 
 function toPdfBlob(bytes: Uint8Array): Blob {
-  // const normalized = new Uint8Array(bytes.byteLength)
-  // normalized.set(bytes)
-
-  // return new Blob([normalized], {
-  //   type: "application/pdf"
-  // })
-  return new Blob([bytes as Uint8Array<ArrayBuffer>], {
+  return new Blob([bytes as unknown as BlobPart], {
     type: "application/pdf"
   })
 }

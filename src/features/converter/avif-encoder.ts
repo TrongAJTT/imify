@@ -76,7 +76,7 @@ export async function encodeAvif(
   }
 
   // Return the encoded AVIF data as a Blob
-  return new Blob([encoded as Uint8Array<ArrayBuffer>], {
+  return new Blob([encoded as unknown as BlobPart], {
     type: "image/avif"
   })
 }
