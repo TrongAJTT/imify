@@ -4,6 +4,7 @@ import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
 import { ResizeConfigPanel } from "@/options/components/resize-config-panel"
+import { Kicker, LabelText } from "@/options/components/ui/typography"
 import { HIGH_CONCURRENCY_FORMATS } from "@/options/components/batch/types"
 import { TARGET_FORMAT_OPTIONS } from "@/options/components/batch/types"
 import type { BatchTargetFormat } from "@/options/components/batch/types"
@@ -58,14 +59,14 @@ export function BatchSetupSidebarPanel({
 
   return (
     <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Batch setup</p>
+      <Kicker>Batch setup</Kicker>
 
       <div className="mt-3 space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-xs text-slate-700 dark:text-slate-200">
-            Target format
+          <label className="block text-xs font-medium">
+            <LabelText>Target format</LabelText>
             <select
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
+              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
               disabled={isRunning}
               onChange={(event) => onTargetFormatChange(event.target.value as BatchTargetFormat)}
               value={targetFormat}>
@@ -77,10 +78,10 @@ export function BatchSetupSidebarPanel({
             </select>
           </label>
 
-          <label className="block text-xs text-slate-700 dark:text-slate-200">
-            Concurrency
+          <label className="block text-xs font-medium">
+            <LabelText>Concurrency</LabelText>
             <select
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs"
+              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
               disabled={isRunning}
               onChange={(event) => onConcurrencyChange(Number(event.target.value))}
               value={concurrency}>

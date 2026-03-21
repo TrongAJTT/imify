@@ -1,6 +1,7 @@
 import { ICO_SIZE_OPTIONS } from "@/core/format-config"
 import { Tooltip } from "./tooltip"
 import { HelpCircle } from "lucide-react"
+import { Kicker } from "@/options/components/ui/typography"
 
 export function IcoSizeSelector({
   sizes,
@@ -19,7 +20,7 @@ export function IcoSizeSelector({
 }) {
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</p>
+      <Kicker>{title}</Kicker>
       <div className="grid grid-cols-2 gap-2">
         {ICO_SIZE_OPTIONS.map((option) => {
           const checked = sizes.includes(option.value)

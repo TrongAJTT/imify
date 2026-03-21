@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react"
+﻿import { useEffect, useRef, useState } from "react"
 
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig } from "@/core/types"
 import type { CustomFormatInput } from "@/features/custom-formats"
 import { CustomFormatForm } from "@/options/components/custom-format-form"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
+import { Heading, Subheading, BodyText, MutedText, LabelText, Kicker } from "@/options/components/ui/typography"
 import { Edit, Plus, Trash2, X } from 'lucide-react'
 
 interface PendingDelete {
@@ -94,7 +95,6 @@ export function CustomFormatsTab({
   }
 
   const submitCreate = async () => {
-    // Optimistically close the dialog immediately on Save
     setIsCreateDialogOpen(false)
 
     const error = await onCreate(createForm)
@@ -114,7 +114,6 @@ export function CustomFormatsTab({
       })
       setCreateError(null)
     } else {
-      // Re-open dialog and show error when creation failed
       setIsCreateDialogOpen(true)
     }
   }
@@ -201,9 +200,9 @@ export function CustomFormatsTab({
   return (
     <SurfaceCard>
       <div className="flex items-start justify-between gap-4">
-        <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+        <MutedText className="max-w-md">
           Add your own format presets for resize mode, quality, and paper settings.
-        </p>
+        </MutedText>
 
         <button
           className="inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-100 px-5 py-2.5 text-sm font-bold text-white dark:text-slate-900 shadow-lg shadow-slate-900/10 dark:shadow-slate-100/10 hover:-translate-y-0.5 transition-all active:translate-y-0"
@@ -218,7 +217,7 @@ export function CustomFormatsTab({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="w-full max-w-xl rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">Create Custom Format</h3>
+              <Heading className="text-base font-semibold">Create Custom Format</Heading>
               <button
                 aria-label="Close dialog"
                 className="rounded border border-slate-300 dark:border-slate-600 p-1.5 text-slate-700 dark:text-slate-200"
@@ -257,7 +256,7 @@ export function CustomFormatsTab({
               }}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.name}</p>
+                  <BodyText className="font-bold truncate">{item.name}</BodyText>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -283,27 +282,27 @@ export function CustomFormatsTab({
 
               <div className="mt-4 grid gap-2 text-[11px] grid-cols-4 flex-1">
                 <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
-                  <p className="text-slate-500 font-medium uppercase tracking-tighter">Ext</p>
-                  <p className="font-bold text-slate-800 dark:text-slate-200">.{item.format}</p>
+                  <LabelText className="font-medium uppercase tracking-tighter">Ext</LabelText>
+                  <BodyText className="font-bold">.{item.format}</BodyText>
                 </div>
                 <div className="col-span-2 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2 min-w-0">
-                  <p className="text-slate-500 font-medium uppercase tracking-tighter">Size</p>
-                  <p className="font-bold text-slate-800 dark:text-slate-200 truncate">
+                  <LabelText className="font-medium uppercase tracking-tighter">Size</LabelText>
+                  <BodyText className="font-bold truncate">
                     {item.format === "ico"
                       ? getIcoSizeLabel(item)
                       : getResizeLabel(item.resize.mode, item.resize.value)}
-                  </p>
+                  </BodyText>
                 </div>
                 <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
-                  <p className="text-slate-500 font-medium uppercase tracking-tighter">Qual</p>
-                  <p className="font-bold text-slate-800 dark:text-slate-200 text-center">
-                    {typeof item.quality === "number" ? `${item.quality}%` : "—"}
-                  </p>
+                  <LabelText className="font-medium uppercase tracking-tighter">Qual</LabelText>
+                  <BodyText className="font-bold text-center">
+                    {typeof item.quality === "number" ? `${item.quality}%` : "-"}
+                  </BodyText>
                 </div>
               </div>
 
               <div className="mt-1 flex items-center justify-between gap-2 dark:border-slate-700/50 pt-3">
-                <p className="text-[10px] text-slate-400 font-medium">Drag to reorder</p>
+                <LabelText className="text-[10px] font-medium">Drag to reorder</LabelText>
                 <div className="flex gap-1.5">
                   <button
                     aria-label="Edit"
@@ -343,10 +342,10 @@ export function CustomFormatsTab({
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700">
             <Edit className="h-8 w-8 text-slate-400" />
           </div>
-          <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">No custom formats yet</h3>
-          <p className="mt-1 max-w-[280px] text-sm text-slate-500 dark:text-slate-400">
+          <Heading className="text-base font-semibold">No custom formats yet</Heading>
+          <MutedText className="mt-1 max-w-[280px]">
             Create your own presets for frequent conversion tasks and resize modes.
-          </p>
+          </MutedText>
         </div>
       ) : null}
 
@@ -354,7 +353,7 @@ export function CustomFormatsTab({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="w-full max-w-xl rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">Edit Custom Format</h3>
+              <Heading className="text-base font-semibold">Edit Custom Format</Heading>
               <button
                 aria-label="Close dialog"
                 className="rounded border border-slate-300 dark:border-slate-600 p-1.5 text-slate-700 dark:text-slate-200"
@@ -372,13 +371,11 @@ export function CustomFormatsTab({
                 const current = editing
                 if (!current) return
 
-                // Optimistically close the dialog
                 setEditing(null)
 
                 const error = await onUpdate(current.id, current.form)
 
                 if (error) {
-                  // Re-open with error message
                   setEditing({ id: current.id, form: current.form, error })
                 }
               }}
@@ -394,10 +391,10 @@ export function CustomFormatsTab({
           <div className="px-4 py-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Custom format deleted</p>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                <Subheading className="text-sm font-semibold">Custom format deleted</Subheading>
+                <MutedText className="mt-1 text-xs">
                   {pendingDelete.item.name} will be removed permanently in {Math.max(1, Math.ceil(timeLeftMs / 1000))}s.
-                </p>
+                </MutedText>
               </div>
 
               <button

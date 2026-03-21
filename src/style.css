@@ -51,4 +51,16 @@
   .custom-scrollbar::-webkit-scrollbar-thumb {
     border: 1px solid transparent;
   }
+
+  /* Professional Number Input Spinner Styling */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 }

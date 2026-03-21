@@ -3,6 +3,8 @@ import { useEffect, useState } from "react"
 import { formatBytes } from "@/options/components/batch/utils"
 import type { BatchQueueItem } from "@/options/components/batch/types"
 import { X, ArrowRight } from "lucide-react"
+import { Button } from "@/options/components/ui/button"
+import { BodyText, MutedText } from "@/options/components/ui/typography"
 
 export function QueueItemCard({
   item,
@@ -28,20 +30,22 @@ export function QueueItemCard({
       ? "bg-emerald-500"
       : item.status === "error"
         ? "bg-red-500"
-        : "bg-blue-500"
+        : "bg-sky-500"
 
   return (
     <article className="relative flex flex-col overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
       {thumbnailUrl ? (
         <div className="aspect-square w-full overflow-hidden bg-slate-100 dark:bg-slate-900 flex items-center justify-center border-b border-slate-100 dark:border-slate-700/50">
           {!isRunning && item.status === "queued" ? (
-            <button
+            <Button
+              variant="secondary"
+              size="icon"
               aria-label="Remove file"
-              className="absolute right-2 top-2 z-10 rounded-md bg-white/90 dark:bg-slate-900/90 p-1 text-slate-500 shadow-sm backdrop-blur hover:bg-white dark:hover:bg-slate-900 hover:text-red-500 transition-colors"
+              className="absolute right-2 top-2 z-10 h-6 w-6 rounded-md bg-white/90 dark:bg-slate-900/90 p-1 text-slate-500 shadow-sm backdrop-blur hover:text-red-500 transition-colors border-0"
               onClick={() => onRemove(item.id)}
-              type="button">
+            >
               <X size={14} />
-            </button>
+            </Button>
           ) : null}
 
           <img
@@ -55,9 +59,9 @@ export function QueueItemCard({
       <div className="flex flex-1 flex-col p-3 pb-8">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-slate-800 dark:text-slate-200" title={item.file.name}>
+            <BodyText className="truncate font-medium" title={item.file.name}>
               {item.file.name}
-            </p>
+            </BodyText>
           </div>
         </div>
 
@@ -78,7 +82,7 @@ export function QueueItemCard({
           )}
         </div>
 
-        {item.message ? <p className="mt-2 text-[10px] leading-tight text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-1.5 rounded">{item.message}</p> : null}
+        {item.message ? <MutedText className="mt-2 text-[10px] leading-tight text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-1.5 rounded">{item.message}</MutedText> : null}
       </div>
 
       <div className="absolute bottom-0 left-0 h-1 w-full bg-slate-100 dark:bg-slate-800">

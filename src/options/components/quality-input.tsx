@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { NumberInput } from "@/options/components/ui/number-input"
 
 function clamp(value: number): number {
   if (!Number.isFinite(value)) {
@@ -30,27 +31,24 @@ export function QualityInput({
           setIsActive(false)
         }
       }}>
-      <label className="block text-sm text-slate-700 dark:text-slate-200">
-        {label}
-        <input
-          className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
-          disabled={disabled}
-          max={100}
-          min={1}
-          onFocus={() => setIsActive(true)}
-          onChange={(event) => onChange(clamp(Number(event.target.value)))}
-          onWheel={(event) => {
-            if (disabled) {
-              return
-            }
-            event.preventDefault()
-            const delta = event.deltaY > 0 ? -1 : 1
-            onChange(clamp(normalizedValue + delta))
-          }}
-          type="number"
-          value={normalizedValue}
-        />
-      </label>
+      <NumberInput
+        label={label}
+        disabled={disabled}
+        max={100}
+        min={1}
+        onFocus={() => setIsActive(true)}
+        onChangeValue={(val) => onChange(clamp(val))}
+        className="w-full"
+        onWheel={(event) => {
+          if (disabled) {
+            return
+          }
+          event.preventDefault()
+          const delta = event.deltaY > 0 ? -1 : 1
+          onChange(clamp(normalizedValue + delta))
+        }}
+        value={normalizedValue}
+      />
 
       {isActive ? (
         <div className="absolute left-0 right-0 z-20 -top-4 rounded-md border border-sky-300 bg-white/95 px-2 py-1.5 shadow-xl backdrop-blur dark:border-sky-700 dark:bg-slate-900/95">

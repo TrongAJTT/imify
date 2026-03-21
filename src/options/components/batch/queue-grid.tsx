@@ -2,6 +2,7 @@ import { Inbox } from "lucide-react"
 
 import { QueueItemCard } from "@/options/components/batch/queue-item-card"
 import type { BatchQueueItem } from "@/options/components/batch/types"
+import { BodyText } from "@/options/components/ui/typography"
 
 interface BatchQueueGridProps {
   queue: BatchQueueItem[]
@@ -19,7 +20,7 @@ export function BatchQueueGrid({ queue, isRunning, onRemoveItem }: BatchQueueGri
       {queue.length === 0 ? (
         <div className="col-span-full py-12 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/10 text-slate-500 dark:text-slate-400">
           <Inbox size={48} className="mb-3 text-slate-300 dark:text-slate-600" />
-          <p className="font-medium text-sm">No files in queue</p>
+          <BodyText className="font-medium">No files in queue</BodyText>
         </div>
       ) : null}
     </div>

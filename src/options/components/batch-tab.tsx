@@ -11,6 +11,7 @@ import { BatchActionBar } from "@/options/components/batch/action-bar"
 import { BatchQueueGrid } from "@/options/components/batch/queue-grid"
 import { BatchSummaryCard } from "@/options/components/batch/summary-card"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
+import { BodyText, Subheading, MutedText } from "@/options/components/ui/typography"
 import type {
   BatchExportAction,
   BatchQueueItem,
@@ -754,20 +755,20 @@ export function BatchConverterTab({ setup, onRunningStateChange }: BatchConverte
       />
 
       {cancelRequested ? (
-        <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">
-          Cancel requested. Current in-flight items will finish before stopping.
-        </p>
-      ) : null}
+          <BodyText className="mt-3 text-amber-700 dark:text-amber-400">
+            Cancel requested. Current in-flight items will finish before stopping.
+          </BodyText>
+        ) : null}
 
-      {paused ? (
-        <p className="mt-3 text-sm text-indigo-700 dark:text-indigo-400">Batch is paused. Click Resume to continue.</p>
-      ) : null}
+        {paused ? (
+          <BodyText className="mt-3 text-indigo-700 dark:text-indigo-400">Batch is paused. Click Resume to continue.</BodyText>
+        ) : null}
 
-      {queueTooLarge ? (
-        <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">
-          Warning: queue size is {toMb(totalQueueBytes)} MB. You may hit memory pressure on AVIF/PDF.
-        </p>
-      ) : null}
+        {queueTooLarge ? (
+          <BodyText className="mt-3 text-amber-700 dark:text-amber-400">
+            Warning: queue size is {toMb(totalQueueBytes)} MB. You may hit memory pressure on AVIF/PDF.
+          </BodyText>
+        ) : null}
 
       {summary && !isRunning && queue.length > 0 ? (
         <BatchSummaryCard

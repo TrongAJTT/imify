@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+﻿import { useEffect, useState } from "react"
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
 import { QUALITY_FORMATS } from "@/options/shared"
@@ -6,6 +6,7 @@ import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
+import { MutedText, Heading, Subheading, Kicker } from "@/options/components/ui/typography"
 
 export function GlobalFormatsTab({
   state,
@@ -91,9 +92,9 @@ export function GlobalFormatsTab({
 
   return (
     <SurfaceCard tone="soft">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <MutedText>
         These settings control the default options shown in right-click image menu.
-      </p>
+      </MutedText>
 
       <div className="mt-8">
         {configs.map((config) => {
@@ -106,9 +107,9 @@ export function GlobalFormatsTab({
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                    <Subheading className="text-sm uppercase tracking-wider">
                       {config.name}
-                    </h3>
+                    </Subheading>
                     <span
                       className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${
                         config.enabled
@@ -206,7 +207,7 @@ export function GlobalFormatsTab({
             {isSaving ? (
               <>
                 <LoadingSpinner size={4} className="-ml-1 mr-2 text-white" />
-                Saving…
+                Saving-
               </>
             ) : (
               "Save changes"

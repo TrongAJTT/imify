@@ -9,6 +9,8 @@ import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
 import { ResizeConfigPanel } from "@/options/components/resize-config-panel"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
+import { Button } from "@/options/components/ui/button"
+import { BodyText } from "@/options/components/ui/typography"
 import { Check } from "lucide-react"
 
 export function CustomFormatForm({
@@ -182,7 +184,7 @@ export function CustomFormatForm({
         </div>
       </div>
 
-      {errorMessage ? <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p> : null}
+      {errorMessage ? <BodyText className="text-red-600 dark:text-red-400">{errorMessage}</BodyText> : null}
 
       <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
         {onCancel ? (
@@ -190,13 +192,13 @@ export function CustomFormatForm({
             Cancel
           </SecondaryButton>
         ) : null}
-        <button
-          className="inline-flex items-center gap-2 rounded-lg bg-sky-500 hover:bg-sky-600 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-sky-500/20 transition-all active:scale-95"
+        <Button
+          variant="primary"
           onClick={onSubmit}
           type="button">
           <Check size={16} />
           {submitLabel}
-        </button>
+        </Button>
       </div>
     </div>
   )

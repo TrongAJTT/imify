@@ -1,4 +1,5 @@
 import { Upload } from "lucide-react"
+import { Heading, MutedText } from "@/options/components/ui/typography"
 
 interface BatchUploadDropzoneProps {
   onAppendFiles: (files: FileList | null) => void
@@ -19,13 +20,13 @@ export function BatchUploadDropzone({ onAppendFiles }: BatchUploadDropzoneProps)
         onChange={(event) => onAppendFiles(event.target.files)}
         type="file"
       />
-      <div className="bg-white dark:bg-slate-800 rounded-full shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-slate-100 dark:border-slate-700/50">
+      <div className="bg-white dark:bg-slate-800 rounded-full shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-slate-100 dark:border-slate-700/50 p-4">
         <Upload size={32} className="text-indigo-500/80 dark:text-indigo-400" />
       </div>
-      <p className="text-base font-semibold text-slate-800 dark:text-slate-200">
+      <Heading className="text-base font-semibold">
         Drop images here, click to browse, or paste from clipboard
-      </p>
-      <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Supports JPG, PNG, WebP, AVIF, JXL, BMP</p>
+      </Heading>
+      <MutedText className="mt-1.5">Supports JPG, PNG, WebP, AVIF, JXL, BMP</MutedText>
     </label>
   )
 }

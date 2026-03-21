@@ -1,3 +1,5 @@
+import { NumberInput } from "@/options/components/ui/number-input"
+
 export function ResizeConfigPanel({
   mode,
   value,
@@ -33,17 +35,15 @@ export function ResizeConfigPanel({
       </label>
 
       {needsNumericResize ? (
-        <label className="block text-sm text-slate-700 dark:text-slate-200 animate-in fade-in slide-in-from-top-1 duration-200">
-          {mode === "scale" ? "Resize value (%)" : "Resize value (px)"}
-          <input
-            className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
+        <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+          <NumberInput
+            label={mode === "scale" ? "Resize value (%)" : "Resize value (px)"}
             disabled={disabled}
             min={1}
-            onChange={(event) => onValueChange(Math.max(1, Number(event.target.value) || 1))}
-            type="number"
+            onChangeValue={(val) => onValueChange(Math.max(1, val || 1))}
             value={value}
           />
-        </label>
+        </div>
       ) : null}
     </div>
   )

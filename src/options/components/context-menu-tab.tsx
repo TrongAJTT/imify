@@ -6,6 +6,7 @@ import { getOrderedContextMenuConfigs, sortContextMenuConfigs } from "@/core/con
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
+import { MutedText, LabelText, Kicker, BodyText } from "@/options/components/ui/typography"
 import { CONTEXT_MENU_SORT_OPTIONS } from "@/options/shared"
 
 interface ContextMenuTabProps {
@@ -45,16 +46,16 @@ export function ContextMenuTab({ state, onCommit }: ContextMenuTabProps) {
   return (
     <div className="space-y-6">
       <SurfaceCard tone="soft">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <MutedText>
           Configure how formats are ordered in the "Save and Convert with Imify" right-click menu to optimize your workflow.
-        </p>
+        </MutedText>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2" htmlFor="context-sort-mode">
+              <LabelText className="mb-2" htmlFor="context-sort-mode">
                 Sort Mode
-              </label>
+              </LabelText>
               <div className="relative group">
                 <select
                   id="context-sort-mode"
@@ -71,9 +72,9 @@ export function ContextMenuTab({ state, onCommit }: ContextMenuTabProps) {
                   <Layout size={18} />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-slate-500 italic">
+              <MutedText className="mt-2 text-xs italic">
                 * Pro tip: Choose "Custom formats first" if you frequently use your own presets.
-              </p>
+              </MutedText>
             </div>
 
             <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/5 border border-amber-100 dark:border-amber-500/10">
@@ -81,9 +82,9 @@ export function ContextMenuTab({ state, onCommit }: ContextMenuTabProps) {
                 <div className="mt-0.5 text-amber-600 dark:text-amber-400">
                   <MousePointer2 size={16} />
                 </div>
-                <p className="text-sm text-amber-800 dark:text-amber-300/90 leading-relaxed font-medium">
+                <BodyText className="text-amber-800 dark:text-amber-300/90 font-medium">
                   Changes will be applied immediately to the browser context menu after clicking Save.
-                </p>
+                </BodyText>
               </div>
             </div>
 
@@ -116,7 +117,7 @@ export function ContextMenuTab({ state, onCommit }: ContextMenuTabProps) {
           <div className="relative">
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1 h-5">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Menu Preview</span>
+                <Kicker>Menu Preview</Kicker>
                 {hasChanges && (
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-500/20 text-[10px] font-bold text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 animate-in fade-in zoom-in-95 duration-300">
                     UNSAVED CHANGES

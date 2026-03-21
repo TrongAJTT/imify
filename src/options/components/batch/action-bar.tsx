@@ -1,4 +1,5 @@
 import { Tooltip } from "@/options/components/tooltip"
+import { Button } from "@/options/components/ui/button"
 import { Play, List, Clock, Check, X } from "lucide-react"
 
 export interface QueueStats {
@@ -45,51 +46,36 @@ export function BatchActionBar({
     <div className="flex flex-wrap mb-4 items-center justify-between gap-4 rounded-lg">
       <div className="flex flex-wrap items-center gap-2">
         {canStartBatch ? (
-          <button
-            className="rounded bg-slate-900 dark:bg-slate-100 px-4 py-2 text-sm font-medium text-white dark:text-slate-900 shadow-sm transition-colors hover:bg-slate-800 dark:hover:bg-slate-200"
-            onClick={onRunAll}
-            type="button">
+          <Button variant="default" onClick={onRunAll}>
             <span className="flex items-center gap-2">
               <Play size={16} />
               Start Batch
             </span>
-          </button>
+          </Button>
         ) : null}
 
         {canRetryFailed ? (
-          <button
-            className="rounded border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 text-sm font-medium text-amber-700 dark:text-amber-400 transition-colors hover:bg-amber-100 dark:hover:bg-amber-900/50"
-            onClick={onRunFailed}
-            type="button">
+          <Button variant="warning" onClick={onRunFailed}>
             Retry Failed
-          </button>
+          </Button>
         ) : null}
 
         {isRunning ? (
-          <button
-            className="rounded border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-400 transition-colors hover:bg-red-100 dark:hover:bg-red-900/50"
-            onClick={onCancel}
-            type="button">
+          <Button variant="destructive" onClick={onCancel}>
             {cancelRequested ? "Canceling..." : "Cancel"}
-          </button>
+          </Button>
         ) : null}
 
         {isRunning ? (
-          <button
-            className="rounded border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-400 transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-900/50"
-            onClick={onTogglePause}
-            type="button">
+          <Button variant="info" onClick={onTogglePause}>
             {paused ? "Resume" : "Pause"}
-          </button>
+          </Button>
         ) : null}
 
         {!isRunning && queueHasItems ? (
-          <button
-            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700"
-            onClick={onClear}
-            type="button">
+          <Button variant="secondary" onClick={onClear}>
             Clear
-          </button>
+          </Button>
         ) : null}
       </div>
 

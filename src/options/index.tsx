@@ -2,6 +2,7 @@ import "@/style.css"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useState, useEffect } from "react"
+import { Button } from "@/options/components/ui/button"
 
 import {
   type ExtensionStorageState,
@@ -382,13 +383,9 @@ export default function OptionsPage() {
         {isAboutDialogOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="w-full max-w-2xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 shadow-2xl relative overflow-y-auto max-h-[90vh]">
-              <button
-                aria-label="Close about dialog"
-                className="absolute top-4 right-4 rounded-full border border-slate-200 dark:border-slate-800 p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors z-10"
-                onClick={() => setIsAboutDialogOpen(false)}
-                type="button">
+              <Button variant="outline" size="icon" className="absolute top-4 right-4 rounded-full border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 z-10" onClick={() => setIsAboutDialogOpen(false)} aria-label="Close about dialog">
                 <X size={16} />
-              </button>
+              </Button>
 
               <div className="flex flex-col">
                 <div className="flex items-center gap-5 mb-8">
@@ -490,13 +487,9 @@ export default function OptionsPage() {
               <div className="absolute -top-12 -right-12 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
               <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
 
-              <button
-                aria-label="Close donate dialog"
-                className="absolute top-4 right-4 rounded-full border border-slate-200 dark:border-slate-800 p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                onClick={() => setIsDonateDialogOpen(false)}
-                type="button">
+              <Button variant="outline" size="icon" className="absolute top-4 right-4 rounded-full border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setIsDonateDialogOpen(false)} aria-label="Close donate dialog">
                 <X size={16} />
-              </button>
+              </Button>
 
               <div className="text-center">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 mb-6 group transition-transform hover:scale-110 duration-300">
@@ -578,3 +571,4 @@ export default function OptionsPage() {
     </main>
   )
 }
+

@@ -1,5 +1,6 @@
 import type { PaperSize, SupportedDPI } from "@/core/types"
 import { DPI_OPTIONS, PAPER_OPTIONS } from "@/options/shared"
+import { LabelText } from "@/options/components/ui/typography"
 
 interface PaperConfigProps {
   paperSize: PaperSize
@@ -18,10 +19,10 @@ export function PaperConfig({
 }: PaperConfigProps) {
   return (
     <div className="grid grid-cols-2 gap-3 w-full animate-in fade-in slide-in-from-top-1 duration-200">
-      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-        Paper
+      <label className="block text-xs font-medium">
+        <LabelText>Paper</LabelText>
         <select
-          className="mt-1 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2.5 py-2 text-xs focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-shadow outline-none"
+          className="mt-1 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2.5 py-2 text-xs focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-shadow outline-none text-slate-700 dark:text-slate-300"
           disabled={disabled}
           onChange={(event) => onPaperSizeChange(event.target.value as PaperSize)}
           value={paperSize}>
@@ -33,10 +34,10 @@ export function PaperConfig({
         </select>
       </label>
 
-      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-        DPI
+      <label className="block text-xs font-medium">
+        <LabelText>DPI</LabelText>
         <select
-          className="mt-1 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2.5 py-2 text-xs focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-shadow outline-none"
+          className="mt-1 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2.5 py-2 text-xs focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-shadow outline-none text-slate-700 dark:text-slate-300"
           disabled={disabled}
           onChange={(event) => onDpiChange(Number(event.target.value) as SupportedDPI)}
           value={dpi}>
