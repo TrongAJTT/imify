@@ -4,7 +4,8 @@ import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
 import { ResizeConfigPanel } from "@/options/components/resize-config-panel"
-import { Kicker, LabelText } from "@/options/components/ui/typography"
+import { LabelText } from "@/options/components/ui/typography"
+import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { HIGH_CONCURRENCY_FORMATS } from "@/options/components/batch/types"
 import { TARGET_FORMAT_OPTIONS } from "@/options/components/batch/types"
 import type { BatchTargetFormat } from "@/options/components/batch/types"
@@ -58,10 +59,8 @@ export function BatchSetupSidebarPanel({
   }, [concurrency, onConcurrencyChange, supportsExtendedConcurrency])
 
   return (
-    <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 p-3">
-      <Kicker>Batch setup</Kicker>
-
-      <div className="mt-3 space-y-3">
+    <SidebarPanel title="Batch setup">
+      <div className="space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-xs font-medium">
             <LabelText>Target format</LabelText>
@@ -139,6 +138,6 @@ export function BatchSetupSidebarPanel({
           />
         )}
       </div>
-    </div>
+    </SidebarPanel>
   )
 }

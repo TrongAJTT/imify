@@ -20,11 +20,23 @@ export interface PersistedStorageState {
   state: ExtensionStorageState
 }
 
-export const TAB_ITEMS: Array<{ id: OptionsTab; label: string }> = [
+export const TAB_ITEMS: Array<{ id: OptionsTab; label: string; description?: string }> = [
   { id: "batch", label: "Batch Converter" },
-  { id: "global", label: "Global Formats" },
-  { id: "custom", label: "Custom Formats" },
-  { id: "menu", label: "Context Menu" },
+  { 
+    id: "global", 
+    label: "Global Formats",
+    description: "These settings control the default options shown in right-click image menu."
+  },
+  { 
+    id: "custom", 
+    label: "Custom Formats",
+    description: "Add your own format presets for resize mode, quality, and paper settings."
+  },
+  { 
+    id: "menu", 
+    label: "Context Menu",
+    description: "Configure how formats are ordered in the Save and Convert with Imify right-click menu."
+  },
 ]
 
 export const CONTEXT_MENU_SORT_OPTIONS: Array<{ value: MenuSortMode; label: string }> = [

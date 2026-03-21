@@ -6,7 +6,8 @@ import type { CustomFormatInput } from "@/features/custom-formats"
 import { CustomFormatForm } from "@/options/components/custom-format-form"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Heading, Subheading, BodyText, MutedText, LabelText, Kicker } from "@/options/components/ui/typography"
-import { Edit, Plus, Trash2, X } from 'lucide-react'
+import { Edit, Plus, Trash2, X } from "lucide-react"
+import { Button } from "@/options/components/ui/button"
 
 interface PendingDelete {
   item: FormatConfig
@@ -199,18 +200,15 @@ export function CustomFormatsTab({
 
   return (
     <SurfaceCard>
-      <div className="flex items-start justify-between gap-4">
-        <MutedText className="max-w-md">
-          Add your own format presets for resize mode, quality, and paper settings.
-        </MutedText>
-
-        <button
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-100 px-5 py-2.5 text-sm font-bold text-white dark:text-slate-900 shadow-lg shadow-slate-900/10 dark:shadow-slate-100/10 hover:-translate-y-0.5 transition-all active:translate-y-0"
+      <div className="flex items-start justify-end gap-4">
+        <Button
           onClick={() => setIsCreateDialogOpen(true)}
-          type="button">
+          size="lg"
+          className="rounded-xl shadow-lg hover:-translate-y-0.5 transition-all active:translate-y-0"
+        >
           <Plus size={18} />
           Add New
-        </button>
+        </Button>
       </div>
 
       {isCreateDialogOpen ? (

@@ -17,7 +17,7 @@ const buttonVariants = cva(
         info: "border border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
       },
       size: {
-        default: "h-10 px-4 py-2",
+        default: "h-10 px-4 py-1",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         icon: "h-9 w-9",

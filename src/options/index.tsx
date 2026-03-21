@@ -28,6 +28,8 @@ import { CustomFormatsTab } from "@/options/components/custom-formats-tab"
 import { GlobalFormatsTab } from "@/options/components/global-formats-tab"
 import { OptionsHeader } from "@/options/components/options-header"
 import { TabButton } from "@/options/components/tab-button"
+import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
+import { MutedText } from "@/options/components/ui/typography"
 import {
   type OptionsTab,
   type PersistedStorageState,
@@ -560,6 +562,14 @@ export default function OptionsPage() {
                 resizeValue={batchResizeValue}
                 targetFormat={batchTargetFormat}
               />
+            )}
+
+            {TAB_ITEMS.find((t) => t.id === activeTab)?.description && (
+              <SidebarPanel>
+                <MutedText>
+                  {TAB_ITEMS.find((t) => t.id === activeTab)?.description}
+                </MutedText>
+              </SidebarPanel>
             )}
           </nav>
 

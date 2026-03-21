@@ -16,7 +16,7 @@ export function TabButton({
       className={`w-full flex items-center gap-3 text-left rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200 ${
         active
           ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-lg shadow-slate-900/20 dark:shadow-none translate-x-1"
-          : "bg-slate-50 text-slate-600 hover:bg-slate-200/60 dark:bg-slate-800/40 dark:text-slate-400 dark:hover:bg-slate-800"
+          : "bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-800/40 dark:text-slate-400 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-transparent"
       }`}
       onClick={onClick}
       type="button">

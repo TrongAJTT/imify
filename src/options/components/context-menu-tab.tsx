@@ -1,4 +1,4 @@
-import { ArrowRight, Check, History, Layout, MousePointer2 } from "lucide-react"
+﻿import { ArrowRight, Check, History, Layout, MousePointer2 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 import type { ExtensionStorageState, MenuSortMode } from "@/core/types"
@@ -46,11 +46,7 @@ export function ContextMenuTab({ state, onCommit }: ContextMenuTabProps) {
   return (
     <div className="space-y-6">
       <SurfaceCard tone="soft">
-        <MutedText>
-          Configure how formats are ordered in the "Save and Convert with Imify" right-click menu to optimize your workflow.
-        </MutedText>
-
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
           <div className="space-y-6">
             <div>
               <LabelText className="mb-2" htmlFor="context-sort-mode">
@@ -197,3 +193,4 @@ export function ContextMenuTab({ state, onCommit }: ContextMenuTabProps) {
     </div>
   )
 }
+

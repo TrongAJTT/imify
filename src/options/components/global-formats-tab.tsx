@@ -92,11 +92,7 @@ export function GlobalFormatsTab({
 
   return (
     <SurfaceCard tone="soft">
-      <MutedText>
-        These settings control the default options shown in right-click image menu.
-      </MutedText>
-
-      <div className="mt-8">
+      <div className="mt-2">
         {configs.map((config) => {
           const supportsQuality = QUALITY_FORMATS.includes(config.format)
 
