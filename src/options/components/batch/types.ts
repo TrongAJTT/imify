@@ -6,6 +6,29 @@ export type BatchRunMode = "all" | "failed"
 export type BatchExportAction = "zip" | "one_by_one" | "merge_pdf" | "individual_pdf"
 export type BatchResizeMode = "inherit" | "none" | "change_width" | "change_height" | "scale" | "page_size"
 export type BatchTargetFormat = Exclude<ImageFormat, "pdf">
+export type BatchWatermarkType = "none" | "text" | "logo"
+export type BatchWatermarkPosition =
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "middle-left"
+  | "center"
+  | "middle-right"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right"
+
+export interface BatchWatermarkConfig {
+  type: BatchWatermarkType
+  position: BatchWatermarkPosition
+  opacity: number
+  paddingPx: number
+  text: string
+  textColor: string
+  textScalePercent: number
+  logoDataUrl?: string
+  logoScalePercent: number
+}
 
 export const TARGET_FORMAT_OPTIONS: Array<{ value: BatchTargetFormat; label: string }> =
   BATCH_TARGET_FORMATS.map((format) => ({ value: format, label: format.toUpperCase() }))
@@ -43,6 +66,7 @@ export interface BatchSetupState {
   dpi: SupportedDPI
   stripExif: boolean
   fileNamePattern: string
+  watermark: BatchWatermarkConfig
 }
 
 export interface BatchSetupHandlers {
@@ -57,6 +81,7 @@ export interface BatchSetupHandlers {
   onDpiChange: (value: SupportedDPI) => void
   onStripExifChange: (value: boolean) => void
   onFileNamePatternChange: (value: string) => void
+  onWatermarkChange: (value: BatchWatermarkConfig) => void
 }
 
 export interface BatchSetupPanelProps extends BatchSetupState, BatchSetupHandlers {

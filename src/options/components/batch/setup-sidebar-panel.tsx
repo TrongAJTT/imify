@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ChevronDown, ChevronUp, FileEdit, Bolt } from "lucide-react"
+import { ChevronDown, ChevronUp, FileEdit, Bolt, Stamp } from "lucide-react"
 import { QUALITY_FORMATS, RESIZE_MODE_OPTIONS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
@@ -8,11 +8,13 @@ import { LabelText, Kicker } from "@/options/components/ui/typography"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { BatchRenameDialog } from "./rename-dialog"
+import { BatchWatermarkDialog } from "./watermark-dialog"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { HIGH_CONCURRENCY_FORMATS } from "@/options/components/batch/types"
 import { TARGET_FORMAT_OPTIONS } from "@/options/components/batch/types"
 import type { BatchTargetFormat } from "@/options/components/batch/types"
 import type { BatchSetupPanelProps } from "@/options/components/batch/types"
+import { WATERMARK_POSITION_OPTIONS } from "@/options/components/batch/watermark"
 
 const BASE_CONCURRENCY_OPTIONS = [
   { value: 1, label: "1" },
@@ -37,6 +39,7 @@ export function BatchSetupSidebarPanel({
   dpi,
   stripExif,
   fileNamePattern,
+  watermark,
   onTargetFormatChange,
   onConcurrencyChange,
   onQualityChange,
@@ -47,10 +50,12 @@ export function BatchSetupSidebarPanel({
   onPaperSizeChange,
   onDpiChange,
   onStripExifChange,
-  onFileNamePatternChange
+  onFileNamePatternChange,
+  onWatermarkChange
 }: BatchSetupPanelProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
+  const [isWatermarkDialogOpen, setIsWatermarkDialogOpen] = useState(false)
   const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
   const supportsExtendedConcurrency = HIGH_CONCURRENCY_FORMATS.includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
@@ -66,6 +71,11 @@ export function BatchSetupSidebarPanel({
       onConcurrencyChange(5)
     }
   }, [concurrency, onConcurrencyChange, supportsExtendedConcurrency])
+
+  const watermarkSummary =
+    watermark.type === "none"
+      ? "None"
+      : `${watermark.type === "text" ? "Text" : "Logo"} - ${WATERMARK_POSITION_OPTIONS.find((option) => option.value === watermark.position)?.label || "Bottom-Right"}`
 
   return (
     <SidebarPanel title="Batch setup">
@@ -209,6 +219,24 @@ export function BatchSetupSidebarPanel({
                 <FileEdit size={14} />
               </button>
             </div>
+
+            <div className="flex items-center justify-between rounded border px-2.5 py-2 transition-all border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="flex flex-col min-w-0 mr-2">
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">
+                  Watermarking
+                </span>
+                <span className="text-[9px] text-slate-400 truncate font-mono">
+                  {watermarkSummary}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsWatermarkDialogOpen(true)}
+                disabled={isRunning}
+                title="Edit watermark settings"
+                className="p-1.5 rounded-md text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 transition-colors shrink-0 disabled:opacity-50">
+                <Stamp size={14} />
+              </button>
+            </div>
           </div>
         ) : null}
       </div>
@@ -218,6 +246,13 @@ export function BatchSetupSidebarPanel({
         onClose={() => setIsRenameDialogOpen(false)}
         onSave={onFileNamePatternChange}
         initialPattern={fileNamePattern}
+      />
+
+      <BatchWatermarkDialog
+        isOpen={isWatermarkDialogOpen}
+        onClose={() => setIsWatermarkDialogOpen(false)}
+        onSave={onWatermarkChange}
+        initialConfig={watermark}
       />
     </SidebarPanel>
   )

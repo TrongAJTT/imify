@@ -46,6 +46,7 @@ import {
   withBatchResize
 } from "@/options/components/batch/utils"
 import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
+import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
 
 function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
   const base = nameOrBase.replace(/\.[^.]+$/, "") || "image"
@@ -340,8 +341,10 @@ export function BatchProcessorTab({ setup, onRunningStateChange }: BatchProcesso
     await notifyProgress(item.id, item.file.name, config, "processing", 10)
 
     try {
+      const sourceBlob = await applyWatermarkToImageBlob(item.file, setup.watermark)
+
       const converted = await convertImage({
-        sourceBlob: item.file,
+        sourceBlob,
         config
       })
 

@@ -23,6 +23,8 @@ import { DEFAULT_STORAGE_STATE } from "@/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
 import type { BatchResizeMode, BatchTargetFormat } from "@/options/components/batch/types"
+import type { BatchWatermarkConfig } from "@/options/components/batch/types"
+import { DEFAULT_BATCH_WATERMARK } from "@/options/components/batch/watermark"
 import { ContextMenuTab } from "@/options/components/context-menu-tab"
 import { CustomFormatsTab } from "@/options/components/custom-formats-tab"
 import { GlobalFormatsTab } from "@/options/components/global-formats-tab"
@@ -87,6 +89,7 @@ export default function OptionsPage() {
   const [batchDpi, setBatchDpi] = useState<SupportedDPI>(300)
   const [batchStripExif, setBatchStripExif] = useState(true)
   const [batchFileNamePattern, setBatchFileNamePattern] = useState("[OriginalName]_[Width]x[Height]_[Date].[Ext]")
+  const [batchWatermark, setBatchWatermark] = useState<BatchWatermarkConfig>(DEFAULT_BATCH_WATERMARK)
   const [batchIsRunning, setBatchIsRunning] = useState(false)
   const [persistedState, setPersistedState, { isLoading }] = useStorage<PersistedStorageState>(
     { key: STORAGE_KEY, instance: syncStorage },
@@ -365,7 +368,8 @@ export default function OptionsPage() {
               paperSize: batchPaperSize,
               dpi: batchDpi,
               stripExif: batchStripExif,
-              fileNamePattern: batchFileNamePattern
+              fileNamePattern: batchFileNamePattern,
+              watermark: batchWatermark
             }}
           />
         )
@@ -385,7 +389,8 @@ export default function OptionsPage() {
     batchPaperSize,
     batchDpi,
     batchStripExif,
-    batchFileNamePattern
+    batchFileNamePattern,
+    batchWatermark
   ])
 
   return (
@@ -575,6 +580,7 @@ export default function OptionsPage() {
                 onTargetFormatChange={setBatchTargetFormat}
                 onStripExifChange={setBatchStripExif}
                 onFileNamePatternChange={setBatchFileNamePattern}
+                onWatermarkChange={setBatchWatermark}
                 paperSize={batchPaperSize}
                 quality={batchQuality}
                 resizeMode={batchResizeMode}
@@ -582,6 +588,7 @@ export default function OptionsPage() {
                 targetFormat={batchTargetFormat}
                 stripExif={batchStripExif}
                 fileNamePattern={batchFileNamePattern}
+                watermark={batchWatermark}
               />
             )}
 
