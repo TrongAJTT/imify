@@ -1,4 +1,19 @@
 ﻿import { useEffect, useRef, useState } from "react"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy
+} from "@dnd-kit/sortable"
 
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig } from "@/core/types"
@@ -8,6 +23,7 @@ import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Heading, Subheading, BodyText, MutedText, LabelText, Kicker } from "@/options/components/ui/typography"
 import { CheckCircle2, Circle, Edit, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@/options/components/ui/button"
+import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
 
 interface PendingDelete {
   item: FormatConfig
@@ -50,10 +66,20 @@ export function CustomFormatsTab({
   const [editing, setEditing] = useState<{ id: string; form: CustomFormatInput; error: string | null } | null>(
     null
   )
-  const [draggedId, setDraggedId] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
   const [timeLeftMs, setTimeLeftMs] = useState(0)
   const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8
+      }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  )
 
   const clearDeleteTimer = () => {
     if (!deleteTimerRef.current) {
@@ -95,6 +121,14 @@ export function CustomFormatsTab({
     setTimeLeftMs(0)
 
     await onRestore(restoreTarget.item, restoreTarget.index)
+  }
+
+  const onDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      await onReorder(active.id.toString(), over.id.toString())
+    }
   }
 
   const submitCreate = async () => {
@@ -265,103 +299,103 @@ export function CustomFormatsTab({
         </div>
       ) : null}
 
-      <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-        {state.custom_formats.map((item, index) => {
-          return (
-            <div
-              key={item.id}
-              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-4 transition-all hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-md h-full flex flex-col"
-              draggable
-              onDragStart={() => setDraggedId(item.id)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={() => {
-                if (draggedId) {
-                  void onReorder(draggedId, item.id)
-                }
-                setDraggedId(null)
-              }}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <BodyText className="font-bold truncate">{item.name}</BodyText>
-                </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={state.custom_formats.map((f) => f.id)} strategy={rectSortingStrategy}>
+          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {state.custom_formats.map((item, index) => {
+              return (
+                <SortableQueueItem key={item.id} id={item.id}>
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-4 transition-all hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-md h-full flex flex-col">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <BodyText className="font-bold truncate">{item.name}</BodyText>
+                      </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={item.enabled}
-                    onClick={() => {
-                      void onToggle(item.id, !item.enabled)
-                    }}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      item.enabled ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
-                    }`}>
-                    <span
-                      aria-hidden="true"
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
-                        item.enabled ? "translate-x-4" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={item.enabled}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            void onToggle(item.id, !item.enabled)
+                          }}
+                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            item.enabled ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
+                          }`}>
+                          <span
+                            aria-hidden="true"
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                              item.enabled ? "translate-x-4" : "translate-x-0"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
 
-              <div className="mt-4 grid gap-2 text-[11px] grid-cols-4 flex-1">
-                <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
-                  <LabelText className="font-medium uppercase tracking-tighter">Ext</LabelText>
-                  <BodyText className="text-xs font-bold">.{item.format}</BodyText>
-                </div>
-                <div className="col-span-2 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2 min-w-0">
-                  <LabelText className="font-medium uppercase tracking-tighter">Size</LabelText>
-                  <BodyText className="text-xs font-bold truncate">
-                    {item.format === "ico"
-                      ? getIcoSizeLabel(item)
-                      : getResizeLabel(item.resize.mode, item.resize.value)}
-                  </BodyText>
-                </div>
-                <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
-                  <LabelText className="font-medium uppercase tracking-tighter">Qual</LabelText>
-                  <BodyText className="text-xs font-bold text-center">
-                    {typeof item.quality === "number" ? `${item.quality}%` : "-"}
-                  </BodyText>
-                </div>
-              </div>
+                    <div className="mt-4 grid gap-2 text-[11px] grid-cols-4 flex-1">
+                      <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
+                        <LabelText className="font-medium uppercase tracking-tighter">Ext</LabelText>
+                        <BodyText className="text-xs font-bold">.{item.format}</BodyText>
+                      </div>
+                      <div className="col-span-2 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2 min-w-0">
+                        <LabelText className="font-medium uppercase tracking-tighter">Size</LabelText>
+                        <BodyText className="text-xs font-bold truncate">
+                          {item.format === "ico"
+                            ? getIcoSizeLabel(item)
+                            : getResizeLabel(item.resize.mode, item.resize.value)}
+                        </BodyText>
+                      </div>
+                      <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">
+                        <LabelText className="font-medium uppercase tracking-tighter">Qual</LabelText>
+                        <BodyText className="text-xs font-bold text-center">
+                          {typeof item.quality === "number" ? `${item.quality}%` : "-"}
+                        </BodyText>
+                      </div>
+                    </div>
 
-              <div className="mt-1 flex items-center justify-between gap-2 dark:border-slate-700/50 pt-3">
-                <LabelText className="text-[10px] font-medium">Drag to reorder</LabelText>
-                <div className="flex gap-1.5">
-                  <button
-                    aria-label="Edit"
-                    className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                    onClick={() =>
-                      setEditing({
-                        id: item.id,
-                        form: {
-                          ...item,
-                          icoOptions: item.icoOptions ?? {
-                            sizes: [...DEFAULT_ICO_SIZES],
-                            generateWebIconKit: false
-                          }
-                        },
-                        error: null
-                      })
-                    }
-                    type="button">
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    aria-label="Delete"
-                    className="rounded-lg border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-                    onClick={() => triggerDeleteWithUndo(item, index)}
-                    type="button">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+                    <div className="mt-1 flex items-center justify-between gap-2 dark:border-slate-700/50 pt-3">
+                      <LabelText className="text-[10px] font-medium">Drag to reorder</LabelText>
+                      <div className="flex gap-1.5">
+                        <button
+                          aria-label="Edit"
+                          className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setEditing({
+                              id: item.id,
+                              form: {
+                                ...item,
+                                icoOptions: item.icoOptions ?? {
+                                  sizes: [...DEFAULT_ICO_SIZES],
+                                  generateWebIconKit: false
+                                }
+                              },
+                              error: null
+                            })
+                          }}
+                          type="button">
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          aria-label="Delete"
+                          className="rounded-lg border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            triggerDeleteWithUndo(item, index)
+                          }}
+                          type="button">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </SortableQueueItem>
+              )
+            })}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {state.custom_formats.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/10 py-8 text-center">
