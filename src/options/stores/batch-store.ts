@@ -40,11 +40,14 @@ interface BatchStoreState extends BatchSetupState {
   setStripExif: (value: boolean) => void
   setFileNamePattern: (value: string) => void
   setWatermark: (value: BatchWatermarkConfig) => void
+  skipDownloadConfirm: boolean
+  setSkipDownloadConfirm: (value: boolean) => void
 }
 
 export const useBatchStore = create<BatchStoreState>((set) => ({
   ...DEFAULT_BATCH_STATE,
   isRunning: false,
+  skipDownloadConfirm: false,
   setIsRunning: (value) => set({ isRunning: value }),
   setTargetFormat: (value) => set({ targetFormat: value }),
   setConcurrency: (value) => set({ concurrency: value }),
@@ -57,5 +60,6 @@ export const useBatchStore = create<BatchStoreState>((set) => ({
   setDpi: (value) => set({ dpi: value }),
   setStripExif: (value) => set({ stripExif: value }),
   setFileNamePattern: (value) => set({ fileNamePattern: value }),
-  setWatermark: (value) => set({ watermark: value })
+  setWatermark: (value) => set({ watermark: value }),
+  setSkipDownloadConfirm: (value) => set({ skipDownloadConfirm: value })
 }))

@@ -46,6 +46,7 @@ import {
 } from "@/options/components/batch/utils"
 import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
+import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { useBatchStore } from "@/options/stores/batch-store"
 
 function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
@@ -87,6 +88,7 @@ export function BatchProcessorTab() {
   const stripExif = useBatchStore((state) => state.stripExif)
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
   const watermark = useBatchStore((state) => state.watermark)
+  const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const setBatchIsRunning = useBatchStore((state) => state.setIsRunning)
 
   const [queue, setQueue] = useState<BatchQueueItem[]>([])
@@ -98,6 +100,7 @@ export function BatchProcessorTab() {
   const [activeExportAction, setActiveExportAction] = useState<BatchExportAction | null>(null)
   const [exportToastPayload, setExportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false)
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
   const cancelRef = useRef(false)
   const pauseRef = useRef(false)
   const pdfSplitRef = useRef<HTMLDivElement>(null)
@@ -511,10 +514,16 @@ export function BatchProcessorTab() {
     }
   }
 
-  const downloadIndividually = async () => {
+  const downloadIndividually = async (force: boolean = false) => {
     const successful = queue.filter((item) => item.status === "success" && item.outputBlob && item.outputFileName)
 
     if (!successful.length || isExporting) {
+      return
+    }
+
+    // Check for confirmation if > 4 files
+    if (!force && successful.length > 4 && !skipDownloadConfirm) {
+      setShowDownloadConfirm(true)
       return
     }
 
@@ -883,6 +892,16 @@ export function BatchProcessorTab() {
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <BatchQueueGrid isRunning={isRunning} onRemoveItem={removeItem} queue={queue} />
       </DndContext>
+
+      <BatchDownloadConfirmDialog
+        isOpen={showDownloadConfirm}
+        count={successfulOutputs.length}
+        onClose={() => setShowDownloadConfirm(false)}
+        onConfirm={() => {
+          setShowDownloadConfirm(false)
+          void downloadIndividually(true)
+        }}
+      />
 
       <ConversionProgressToastCard payload={exportToastPayload} />
     </SurfaceCard>

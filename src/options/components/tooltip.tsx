@@ -12,7 +12,7 @@ export function Tooltip({ content, children }: TooltipProps) {
                       opacity-0 group-hover:opacity-100
                       pointer-events-none
                       transition-opacity duration-200
-                      bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                      bg-black text-white text-xs px-2 py-1 rounded whitespace-normal max-w-[400px] z-[9999]">
         {content}
       </div>
     </div>
