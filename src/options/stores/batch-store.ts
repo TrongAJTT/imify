@@ -42,12 +42,15 @@ interface BatchStoreState extends BatchSetupState {
   setWatermark: (value: BatchWatermarkConfig) => void
   skipDownloadConfirm: boolean
   setSkipDownloadConfirm: (value: boolean) => void
+  heavyFormatToast: { id: string; format: string } | null
+  setHeavyFormatToast: (value: { id: string; format: string } | null) => void
 }
 
 export const useBatchStore = create<BatchStoreState>((set) => ({
   ...DEFAULT_BATCH_STATE,
   isRunning: false,
   skipDownloadConfirm: false,
+  heavyFormatToast: null,
   setIsRunning: (value) => set({ isRunning: value }),
   setTargetFormat: (value) => set({ targetFormat: value }),
   setConcurrency: (value) => set({ concurrency: value }),
@@ -61,5 +64,6 @@ export const useBatchStore = create<BatchStoreState>((set) => ({
   setStripExif: (value) => set({ stripExif: value }),
   setFileNamePattern: (value) => set({ fileNamePattern: value }),
   setWatermark: (value) => set({ watermark: value }),
-  setSkipDownloadConfirm: (value) => set({ skipDownloadConfirm: value })
+  setSkipDownloadConfirm: (value) => set({ skipDownloadConfirm: value }),
+  setHeavyFormatToast: (value) => set({ heavyFormatToast: value })
 }))

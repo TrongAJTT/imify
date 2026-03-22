@@ -1,20 +1,9 @@
 import JSZip from "jszip"
 import { useEffect, useMemo, useRef, useState } from "react"
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent
-} from "@dnd-kit/core"
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  rectSortingStrategy
-} from "@dnd-kit/sortable"
+import { AlertTriangle } from "lucide-react"
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor,
+  useSensors, type DragEndEvent } from "@dnd-kit/core"
+import { arrayMove, sortableKeyboardCoordinates, } from "@dnd-kit/sortable"
 
 import { toUserFacingConversionError } from "@/core/error-utils"
 import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
@@ -27,26 +16,14 @@ import { BatchQueueGrid } from "@/options/components/batch/queue-grid"
 import { BatchSummaryCard } from "@/options/components/batch/summary-card"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { BodyText, Subheading, MutedText } from "@/options/components/ui/typography"
-import type {
-  BatchExportAction,
-  BatchQueueItem,
-  BatchRunMode,
-  BatchSummary
-} from "@/options/components/batch/types"
+import type { BatchExportAction, BatchQueueItem, BatchRunMode, BatchSummary } from "@/options/components/batch/types"
 import { BatchUploadDropzone } from "@/options/components/batch/upload-dropzone"
-import {
-  MAX_FILE_SIZE_BYTES,
-  MAX_TOTAL_QUEUE_BYTES,
-  downloadWithFilename,
-  formatBytes,
-  notifyProgress,
-  sleep,
-  toMb,
-  withBatchResize
-} from "@/options/components/batch/utils"
+import { MAX_FILE_SIZE_BYTES, MAX_TOTAL_QUEUE_BYTES, downloadWithFilename,
+  formatBytes, notifyProgress, sleep, toMb, withBatchResize} from "@/options/components/batch/utils"
 import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
+import { HeavyFormatToast } from "@/options/components/batch/heavy-format-toast"
 import { useBatchStore } from "@/options/stores/batch-store"
 
 function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
@@ -89,6 +66,8 @@ export function BatchProcessorTab() {
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
   const watermark = useBatchStore((state) => state.watermark)
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
+  const heavyFormatToast = useBatchStore((state) => state.heavyFormatToast)
+  const setHeavyFormatToast = useBatchStore((state) => state.setHeavyFormatToast)
   const setBatchIsRunning = useBatchStore((state) => state.setIsRunning)
 
   const [queue, setQueue] = useState<BatchQueueItem[]>([])
@@ -939,6 +918,12 @@ export function BatchProcessorTab() {
 
       <ConversionProgressToastCard payload={exportToastPayload} />
       <ConversionProgressToastCard payload={batchToastPayload} />
+      {heavyFormatToast && (
+        <HeavyFormatToast 
+          format={heavyFormatToast.format}
+          onClose={() => setHeavyFormatToast(null)}
+        />
+      )}
     </SurfaceCard>
   )
 }

@@ -52,6 +52,8 @@ export function BatchSetupSidebarPanel() {
   const onStripExifChange = useBatchStore((state) => state.setStripExif)
   const onFileNamePatternChange = useBatchStore((state) => state.setFileNamePattern)
   const onWatermarkChange = useBatchStore((state) => state.setWatermark)
+  const heavyFormatToast = useBatchStore((state) => state.heavyFormatToast)
+  const setHeavyFormatToast = useBatchStore((state) => state.setHeavyFormatToast)
 
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
@@ -71,6 +73,23 @@ export function BatchSetupSidebarPanel() {
       onConcurrencyChange(5)
     }
   }, [concurrency, onConcurrencyChange, supportsExtendedConcurrency])
+
+  useEffect(() => {
+    if ((targetFormat === "avif" || targetFormat === "jxl")) {
+      const toastId = `heavy_${targetFormat}_${Date.now()}`
+      setHeavyFormatToast({ id: toastId, format: targetFormat.toUpperCase() })
+      
+      if (concurrency > 2) {
+        onConcurrencyChange(2)
+      }
+
+      const timer = setTimeout(() => {
+        setHeavyFormatToast(null)
+      }, 6000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [targetFormat, setHeavyFormatToast, onConcurrencyChange, concurrency])
 
   const watermarkSummary =
     watermark.type === "none"
@@ -96,10 +115,14 @@ export function BatchSetupSidebarPanel() {
             </select>
           </label>
 
-          <label className="block text-xs font-medium">
+          <label className="block text-xs font-medium relative">
             <LabelText>Concurrency</LabelText>
             <select
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
+              className={`mt-1 w-full rounded border bg-white dark:bg-slate-800 px-2 py-2 text-xs focus:ring-2 focus:ring-sky-500/10 outline-none transition-all ${
+                heavyFormatToast 
+                  ? "border-amber-500 ring-2 ring-amber-500/20 animate-pulse text-amber-700 dark:text-amber-400" 
+                  : "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
+              }`}
               disabled={isRunning}
               onChange={(event) => onConcurrencyChange(Number(event.target.value))}
               value={concurrency}>
