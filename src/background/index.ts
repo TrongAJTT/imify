@@ -1,19 +1,10 @@
-import {
-  blobToDownloadDataUrl,
-  toOutputFilename
-} from "@/core/download-utils"
+import { blobToDownloadDataUrl, toOutputFilename } from "@/core/download-utils"
 import { toUserFacingConversionError } from "@/core/error-utils"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
 import { convertImage } from "@/features/converter"
-import {
-  ensureStorageState,
-  getStorageState,
-  onStorageStateChanged
-} from "@/features/settings"
-import {
-  extractConfigIdFromMenuItem,
-  rebuildContextMenu
-} from "@/background/context-menu-builder"
+import { ensureStorageState, getStorageState, onStorageStateChanged } from "@/features/settings"
+import { extractConfigIdFromMenuItem, rebuildContextMenu } from "@/background/context-menu-builder"
+import { convertImageViaOffscreen } from "@/background/offscreen-bridge"
 import { publishConvertProgress } from "@/background/message-hub"
 
 const pendingDownloadFilenameQueue: string[] = []
@@ -169,10 +160,18 @@ async function handleImageMenuClick(
       percent: 35
     })
 
-    const converted = await convertImage({
-      sourceBlob,
-      config
-    })
+    const shouldUseOffscreenWorker = config.format === "avif" || config.format === "jxl"
+    const converted = shouldUseOffscreenWorker
+      ? await convertImageViaOffscreen(sourceBlob, config).catch(() =>
+          convertImage({
+            sourceBlob,
+            config
+          })
+        )
+      : await convertImage({
+          sourceBlob,
+          config
+        })
 
     await publishConvertProgress({
       id: progressId,

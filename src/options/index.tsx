@@ -4,18 +4,14 @@ import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useState, useEffect } from "react"
 import { Button } from "@/options/components/ui/button"
 
-import {
-  type ExtensionStorageState,
-  type FormatConfig,
-  type ImageFormat,
-  STORAGE_KEY,
-  STORAGE_VERSION
-} from "@/core/types"
+import { toUserFacingConversionError } from "@/core/error-utils"
+import { type ExtensionStorageState, type FormatConfig, type ImageFormat,
+  STORAGE_KEY, STORAGE_VERSION } from "@/core/types"
+import { convertImageWithWorker } from "@/features/converter/conversion-worker-pool"
+import { OFFSCREEN_CONVERT_REQUEST,
+  type OffscreenConvertRequest, type OffscreenConvertResponse } from "@/background/offscreen-types"
 import { CUSTOM_FORMATS } from "@/core/format-config"
-import {
-  type CustomFormatInput,
-  validateCustomFormatInput
-} from "@/features/custom-formats"
+import { type CustomFormatInput, validateCustomFormatInput } from "@/features/custom-formats"
 import { DEFAULT_STORAGE_STATE } from "@/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
@@ -26,19 +22,53 @@ import { OptionsHeader } from "@/options/components/options-header"
 import { TabButton } from "@/options/components/tab-button"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { MutedText } from "@/options/components/ui/typography"
-import {
-  type OptionsTab,
-  type PersistedStorageState,
-  TAB_ITEMS,
-  createCustomFormatId,
-  normalizeCustomInput
-} from "@/options/shared"
+import { type OptionsTab, type PersistedStorageState,
+  TAB_ITEMS, createCustomFormatId, normalizeCustomInput } from "@/options/shared"
 import { Globe, Heart, Layers, ListTree, Workflow, X } from "lucide-react"
 
 const syncStorage = new Storage({ area: "sync" })
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
   version: STORAGE_VERSION,
   state: DEFAULT_STORAGE_STATE
+}
+const IS_OFFSCREEN_OPTIONS_DOCUMENT =
+  typeof window !== "undefined" && new URLSearchParams(window.location.search).get("offscreen") === "1"
+
+let offscreenListenerAttached = false
+
+if (IS_OFFSCREEN_OPTIONS_DOCUMENT && !offscreenListenerAttached) {
+  offscreenListenerAttached = true
+
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message?.type !== OFFSCREEN_CONVERT_REQUEST || !message.payload) {
+      return
+    }
+
+    const payload = message.payload as OffscreenConvertRequest
+
+    void (async () => {
+      try {
+        if (payload.config.format === "pdf") {
+          throw new Error("PDF conversion is not supported in offscreen worker bridge")
+        }
+
+        const result = await convertImageWithWorker(payload.sourceBlob, payload.config)
+        const response: OffscreenConvertResponse = {
+          ok: true,
+          result
+        }
+        sendResponse(response)
+      } catch (error) {
+        const response: OffscreenConvertResponse = {
+          ok: false,
+          error: toUserFacingConversionError(error, "Offscreen conversion failed")
+        }
+        sendResponse(response)
+      }
+    })()
+
+    return true
+  })
 }
 
 const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
@@ -69,6 +99,10 @@ function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorage
 }
 
 export default function OptionsPage() {
+  if (IS_OFFSCREEN_OPTIONS_DOCUMENT) {
+    return null
+  }
+
   const [activeTab, setActiveTab] = useState<OptionsTab>("batch")
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)

@@ -50,6 +50,7 @@
     "permissions": [
       "contextMenus",
       "downloads",
+      "offscreen",
       "storage",
       "tabs"
     ],
