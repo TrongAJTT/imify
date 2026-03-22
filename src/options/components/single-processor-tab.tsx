@@ -13,6 +13,7 @@ import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Heading, MutedText } from "@/options/components/ui/typography"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { Tooltip } from "./tooltip"
+import { LoadingSpinner } from "./loading-spinner"
 
 const PREVIEW_DEBOUNCE_MS = 420
 const MIN_ZOOM = 1
@@ -141,6 +142,34 @@ export function SingleProcessorTab() {
 
   const requestSequenceRef = useRef(0)
   const panStartRef = useRef<{ x: number; y: number; originX: number; originY: number } | null>(null)
+  const viewerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      const element = viewerRef.current
+      if (!element) return
+
+      // Use contains to check if the wheel event target is inside our viewer container
+      const target = event.target as Node
+      if (!element.contains(target)) return
+
+      // Pre-emptively stop scroll if it's over our viewer
+      if (Math.abs(event.deltaY) < 1) return
+
+      event.preventDefault()
+      
+      const direction = event.deltaY > 0 ? -1 : 1
+      setZoom((current) => {
+        const next = current + direction * ZOOM_STEP
+        return Math.min(Math.max(next, MIN_ZOOM), MAX_ZOOM)
+      })
+    }
+
+    // Attach to window with { passive: false } to ensure preventDefault() works globally
+    // but filter by content area using contains() logic
+    window.addEventListener("wheel", handleWheel, { passive: false })
+    return () => window.removeEventListener("wheel", handleWheel)
+  }, []) // No longer dependent on isFullscreen for binding balance
 
   const effectiveConfig = useMemo(() => {
     const baseConfig: FormatConfig = {
@@ -452,26 +481,59 @@ export function SingleProcessorTab() {
               </div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900/30">
-                <MutedText className="text-[11px] uppercase tracking-wide">Original</MutedText>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">{formatBytes(sourceBytes)}</p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {sourceDimensionLabel} ({sourceMeta?.ratioLabel || "-"})
-                </p>
+            <div className="flex flex-col sm:flex-row items-center divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 overflow-hidden">
+              <div className="flex-1 w-full p-4 flex flex-col items-center sm:items-start text-center sm:text-left transition-colors hover:bg-white dark:hover:bg-slate-900">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Original</span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
+                    {formatBytes(sourceBytes)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-500 leading-none">
+                  <span className="bg-slate-200/50 dark:bg-slate-800 px-1 rounded uppercase">{sourceDimensionLabel}</span>
+                  <span className="bg-slate-200/50 dark:bg-slate-800 px-1 rounded opacity-70">{sourceMeta?.ratioLabel || "-"}</span>
+                </div>
               </div>
-              <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900/30">
-                <MutedText className="text-[11px] uppercase tracking-wide">Result</MutedText>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">
-                  {resultBlob ? formatBytes(resultBytes) : isProcessing ? "Processing..." : "-"}
-                </p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {resultDimensionLabel} ({resultMeta?.ratioLabel || "-"})
-                </p>
+
+              <div className="flex-1 w-full p-4 flex flex-col items-center sm:items-start text-center sm:text-left transition-colors hover:bg-white dark:hover:bg-slate-900 border-t sm:border-t-0">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className={`w-1.5 h-1.5 rounded-full ${isProcessing ? "bg-amber-400 animate-pulse" : "bg-blue-500"}`} />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Result</span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
+                    {resultBlob ? formatBytes(resultBytes) : isProcessing ? (
+                      <span className="animate-pulse">...</span>
+                    ) : "-"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-500 leading-none">
+                  <span className="bg-slate-200/50 dark:bg-slate-800 px-1 rounded uppercase">{resultDimensionLabel}</span>
+                  <span className="bg-slate-200/50 dark:bg-slate-800 px-1 rounded opacity-70">{resultMeta?.ratioLabel || "-"}</span>
+                </div>
               </div>
-              <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900/30">
-                <MutedText className="text-[11px] uppercase tracking-wide">Delta</MutedText>
-                <p className={`text-xl font-bold ${delta.className}`}>{resultBlob ? delta.label : "-"}</p>
+
+              <div className="flex-none w-full sm:w-auto p-4 flex flex-col items-center justify-center text-center bg-white/50 dark:bg-slate-900/30 border-t sm:border-t-0 min-w-[120px]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Impact</span>
+                <div className={`text-2xl font-black tabular-nums tracking-tight ${delta.className}`}>
+                  {resultBlob ? delta.label : "-"}
+                </div>
+                <div className="mt-1 flex items-center gap-1">
+                   {resultBlob && (
+                      <div className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase ${
+                        resultBytes < sourceBytes 
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" 
+                          : resultBytes > sourceBytes 
+                            ? "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
+                            : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-800"
+                      }`}>
+                        {resultBytes < sourceBytes ? "Optimized" : resultBytes > sourceBytes ? "Larger" : "Same Size"}
+                      </div>
+                   )}
+                </div>
               </div>
             </div>
 
@@ -544,6 +606,7 @@ export function SingleProcessorTab() {
 
               <div
                 className={`relative ${isFullscreen ? "flex-1" : "h-[480px]"} min-h-0 overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800/40 select-none ${zoom > 1 ? "cursor-grab" : "cursor-default"} ${isPanning ? "cursor-grabbing" : ""}`}
+                ref={viewerRef}
                 onPointerDown={(event) => {
                   if (zoom <= 1) {
                     return
@@ -586,10 +649,6 @@ export function SingleProcessorTab() {
                     panStartRef.current = null
                     setIsPanning(false)
                   }
-                }}
-                onWheel={(event) => {
-                  const direction = event.deltaY > 0 ? -1 : 1
-                  setZoom((current) => clamp(current + direction * ZOOM_STEP, MIN_ZOOM, MAX_ZOOM))
                 }}>
                 <div
                   className="absolute inset-0 pointer-events-none"
@@ -630,13 +689,22 @@ export function SingleProcessorTab() {
                   </div>
                 </div>
 
-                {!resultPreviewUrl ? (
+                {!resultPreviewUrl && !isProcessing ? (
                   <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
                     <MutedText>
                       Result preview is unavailable for this output type. You can still download the processed file.
                     </MutedText>
                   </div>
                 ) : null}
+
+                {isProcessing && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-900/10 backdrop-blur-[1px]">
+                    <LoadingSpinner className="h-8 w-8 text-blue-500" />
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400 animate-pulse">
+                      Generating preview...
+                    </span>
+                  </div>
+                )}
 
                 <div className="pointer-events-none absolute left-3 top-3 rounded bg-slate-900/70 px-2 py-1 text-[11px] font-semibold text-white">
                   Original
