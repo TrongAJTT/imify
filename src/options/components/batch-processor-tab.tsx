@@ -461,45 +461,57 @@ export function BatchProcessorTab() {
     let failedCount = 0
 
     try {
-      for (let start = 0; start < itemsToProcess.length; start += concurrency) {
-        if (cancelRef.current) {
-          break
-        }
+      const totalItems = itemsToProcess.length
+      let nextItemIndex = 0
 
-        while (pauseRef.current && !cancelRef.current) {
-          await sleep(120)
-        }
-
-        if (cancelRef.current) {
-          break
-        }
-
-        const currentTotalProcessed = successCount + failedCount
-        const overallPercent = Math.round((currentTotalProcessed / itemsToProcess.length) * 100)
+      const pushBatchProgress = () => {
+        const processed = successCount + failedCount
+        const percent = Math.round((processed / totalItems) * 100)
 
         setBatchToastPayload({
           id: batchToastId,
-          fileName: `Processing batch (${itemsToProcess.length} files)`,
+          fileName: `Processing batch (${totalItems} files)`,
           targetFormat: effectiveConfig.format,
           status: "processing",
-          percent: overallPercent,
-          message: `Converted ${currentTotalProcessed}/${itemsToProcess.length} files...`
+          percent,
+          message: `Converted ${processed}/${totalItems} files...`
         })
+      }
 
-        const batchSlice = itemsToProcess.slice(start, start + concurrency)
-        const results = await Promise.all(
-          batchSlice.map((item, sliceIndex) => processItem(item, effectiveConfig, start + sliceIndex + 1))
-        )
+      const runWorkerSlot = async () => {
+        while (!cancelRef.current) {
+          while (pauseRef.current && !cancelRef.current) {
+            await sleep(120)
+          }
 
-        for (const status of results) {
+          if (cancelRef.current) {
+            return
+          }
+
+          if (nextItemIndex >= totalItems) {
+            return
+          }
+
+          const currentIndex = nextItemIndex
+          nextItemIndex += 1
+          const item = itemsToProcess[currentIndex]
+
+          const status = await processItem(item, effectiveConfig, currentIndex + 1)
+
           if (status === "success") {
             successCount += 1
-          }
-          if (status === "error") {
+          } else {
             failedCount += 1
           }
+
+          pushBatchProgress()
         }
       }
+
+      pushBatchProgress()
+
+      const activeSlots = Math.max(1, Math.min(concurrency, totalItems))
+      await Promise.all(Array.from({ length: activeSlots }, () => runWorkerSlot()))
     } finally {
       const total = itemsToProcess.length
       const durationMs = Date.now() - startedAt
