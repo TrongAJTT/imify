@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { LabelText } from "@/options/components/ui/typography"
 
@@ -21,18 +22,41 @@ export function NumberInput({
   className = "",
   ...props
 }: NumberInputProps) {
+  const [draft, setDraft] = useState(String(value))
+  const [isFocused, setIsFocused] = useState(false)
+
+  useEffect(() => {
+    if (isFocused) {
+      return
+    }
+
+    setDraft(String(value))
+  }, [isFocused, value])
+
+  const normalize = (raw: number): number => {
+    let next = raw
+    if (min !== undefined) {
+      next = Math.max(min, next)
+    }
+    if (max !== undefined) {
+      next = Math.min(max, next)
+    }
+
+    return next
+  }
+
   const increment = () => {
     if (disabled) return
-    const next = value + step
-    if (max !== undefined && next > max) return
+    const next = normalize(value + step)
     onChangeValue(next)
+    setDraft(String(next))
   }
 
   const decrement = () => {
     if (disabled) return
-    const next = value - step
-    if (min !== undefined && next < min) return
+    const next = normalize(value - step)
     onChangeValue(next)
+    setDraft(String(next))
   }
 
   return (
@@ -46,12 +70,42 @@ export function NumberInput({
         <input
           {...props}
           type="number"
-          value={value}
+          value={draft}
           disabled={disabled}
           min={min}
           max={max}
           step={step}
-          onChange={(e) => onChangeValue(Number(e.target.value))}
+          onFocus={() => {
+            setIsFocused(true)
+          }}
+          onBlur={() => {
+            setIsFocused(false)
+
+            const parsed = Number(draft)
+            if (!Number.isFinite(parsed)) {
+              setDraft(String(value))
+              return
+            }
+
+            const next = normalize(parsed)
+            onChangeValue(next)
+            setDraft(String(next))
+          }}
+          onChange={(e) => {
+            const nextDraft = e.target.value
+            setDraft(nextDraft)
+
+            if (nextDraft.trim() === "") {
+              return
+            }
+
+            const parsed = Number(nextDraft)
+            if (!Number.isFinite(parsed)) {
+              return
+            }
+
+            onChangeValue(normalize(parsed))
+          }}
           className="w-full appearance-none rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all pr-8 disabled:opacity-50"
         />
         <div className="absolute right-1 flex h-[calc(100%-8px)] flex-col gap-0.5 border-l border-slate-200 dark:border-slate-700 pl-1 pr-0.5">

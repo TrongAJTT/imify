@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react"
 import type { CustomFormatInput } from "@/features/custom-formats"
 import type { ImageFormat, PaperSize, ResizeMode } from "@/core/types"
 import { CUSTOM_FORMATS, DEFAULT_ICO_SIZES, FORMAT_LABELS, QUALITY_FORMATS } from "@/core/format-config"
@@ -29,6 +30,29 @@ export function CustomFormatForm({
 }) {
   const canSetQuality = QUALITY_FORMATS.includes(value.format)
   const isIcoFormat = value.format === "ico"
+  const initialSetSizeWidth = typeof value.resize.width === "number" ? value.resize.width : 1280
+  const initialSetSizeHeight = typeof value.resize.height === "number" ? value.resize.height : 960
+  const resizeBaselineRef = useRef({
+    width: initialSetSizeWidth,
+    height: initialSetSizeHeight
+  })
+  const previousResizeModeRef = useRef<ResizeMode>(value.resize.mode)
+  const [resizeLockSignal, setResizeLockSignal] = useState(0)
+
+  useEffect(() => {
+    const previousMode = previousResizeModeRef.current
+    const currentMode = value.resize.mode
+
+    if (currentMode === "set_size" && previousMode !== "set_size") {
+      resizeBaselineRef.current = {
+        width: typeof value.resize.width === "number" ? value.resize.width : 1280,
+        height: typeof value.resize.height === "number" ? value.resize.height : 960
+      }
+      setResizeLockSignal((version) => version + 1)
+    }
+
+    previousResizeModeRef.current = currentMode
+  }, [value.resize.height, value.resize.mode, value.resize.width])
 
   return (
     <div className="space-y-6">
@@ -203,8 +227,9 @@ export function CustomFormatForm({
                       }
                     })
                   }
-                  originalHeight={typeof value.resize.height === "number" ? value.resize.height : 960}
-                  originalWidth={typeof value.resize.width === "number" ? value.resize.width : 1280}
+                  originalHeight={resizeBaselineRef.current.height}
+                  originalWidth={resizeBaselineRef.current.width}
+                  lockSignal={resizeLockSignal}
                   width={typeof value.resize.width === "number" ? value.resize.width : 1280}
                 />
               ) : null}

@@ -14,6 +14,7 @@ import type { BatchQueueItem } from "@/options/components/batch/types"
 import { BatchUploadDropzone } from "@/options/components/batch/upload-dropzone"
 import { MAX_FILE_SIZE_BYTES, MAX_TOTAL_QUEUE_BYTES,
   formatBytes, toMb, withBatchResize } from "@/options/components/batch/utils"
+import { readImageDimensions } from "@/options/components/batch/pipeline"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { HeavyFormatToast } from "@/options/components/batch/heavy-format-toast"
 import { OOMWarningDialog } from "@/options/components/batch/oom-warning-dialog"
@@ -60,10 +61,12 @@ export function BatchProcessorTab() {
   const heavyFormatToast = useBatchStore((state) => state.heavyFormatToast)
   const setHeavyFormatToast = useBatchStore((state) => state.setHeavyFormatToast)
   const setBatchIsRunning = useBatchStore((state) => state.setIsRunning)
+  const syncResizeToSource = useBatchStore((state) => state.syncResizeToSource)
 
   const [queue, setQueue] = useState<BatchQueueItem[]>([])
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false)
   const pdfSplitRef = useRef<HTMLDivElement>(null)
+  const firstQueueItem = queue[0]
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -195,6 +198,27 @@ export function BatchProcessorTab() {
       window.removeEventListener("pointerdown", handlePointerDown)
     }
   }, [isPdfSplitOpen])
+
+  useEffect(() => {
+    if (!firstQueueItem) {
+      return
+    }
+
+    let active = true
+
+    void (async () => {
+      const dimensions = await readImageDimensions(firstQueueItem.file)
+      if (!dimensions || !active) {
+        return
+      }
+
+      syncResizeToSource(dimensions.width, dimensions.height)
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [firstQueueItem?.file, firstQueueItem?.id, syncResizeToSource])
 
   const removeItem = (id: string) => {
     setQueue((current) => current.filter((item) => item.id !== id))

@@ -5,6 +5,26 @@ import type { PaperSize, SupportedDPI } from "@/core/types"
 import type { BatchResizeMode, BatchSetupState, BatchTargetFormat, BatchWatermarkConfig } from "@/options/components/batch/types"
 import { DEFAULT_BATCH_WATERMARK } from "@/options/components/batch/watermark"
 
+function toAspectRatioLabel(width: number, height: number): string {
+  if (width <= 0 || height <= 0) {
+    return "16:9"
+  }
+
+  const gcd = (a: number, b: number): number => {
+    if (!b) {
+      return a
+    }
+
+    return gcd(b, a % b)
+  }
+
+  const safeWidth = Math.max(1, Math.round(width))
+  const safeHeight = Math.max(1, Math.round(height))
+  const divisor = gcd(safeWidth, safeHeight)
+
+  return `${Math.round(safeWidth / divisor)}:${Math.round(safeHeight / divisor)}`
+}
+
 const DEFAULT_BATCH_STATE: BatchSetupState = {
   targetFormat: "jpg",
   concurrency: 3,
@@ -29,6 +49,9 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
 }
 
 interface BatchStoreState extends BatchSetupState {
+  resizeSourceWidth: number
+  resizeSourceHeight: number
+  resizeSyncVersion: number
   isRunning: boolean
   setIsRunning: (value: boolean) => void
   setTargetFormat: (value: BatchTargetFormat) => void
@@ -45,6 +68,7 @@ interface BatchStoreState extends BatchSetupState {
   setResizeAnchor: (value: BatchSetupState["resizeAnchor"]) => void
   setResizeFitMode: (value: BatchSetupState["resizeFitMode"]) => void
   setResizeContainBackground: (value: string) => void
+  syncResizeToSource: (width: number, height: number) => void
   setPaperSize: (value: PaperSize) => void
   setDpi: (value: SupportedDPI) => void
   setStripExif: (value: boolean) => void
@@ -61,6 +85,9 @@ interface BatchStoreState extends BatchSetupState {
 
 export const useBatchStore = create<BatchStoreState>((set) => ({
   ...DEFAULT_BATCH_STATE,
+  resizeSourceWidth: DEFAULT_BATCH_STATE.resizeWidth,
+  resizeSourceHeight: DEFAULT_BATCH_STATE.resizeHeight,
+  resizeSyncVersion: 0,
   isRunning: false,
   skipDownloadConfirm: false,
   skipOomWarning: false,
@@ -80,6 +107,22 @@ export const useBatchStore = create<BatchStoreState>((set) => ({
   setResizeAnchor: (value) => set({ resizeAnchor: value }),
   setResizeFitMode: (value) => set({ resizeFitMode: value }),
   setResizeContainBackground: (value) => set({ resizeContainBackground: value }),
+  syncResizeToSource: (width, height) =>
+    set((state) => {
+      const nextWidth = Math.max(1, Math.round(width))
+      const nextHeight = Math.max(1, Math.round(height))
+
+      return {
+        resizeSourceWidth: nextWidth,
+        resizeSourceHeight: nextHeight,
+        resizeWidth: nextWidth,
+        resizeHeight: nextHeight,
+        resizeAspectMode: "original",
+        resizeAspectRatio: toAspectRatioLabel(nextWidth, nextHeight),
+        resizeAnchor: "width",
+        resizeSyncVersion: state.resizeSyncVersion + 1
+      }
+    }),
   setPaperSize: (value) => set({ paperSize: value }),
   setDpi: (value) => set({ dpi: value }),
   setStripExif: (value) => set({ stripExif: value }),

@@ -122,6 +122,7 @@ export function SingleProcessorTab() {
   const stripExif = useBatchStore((state) => state.stripExif)
   const pngTinyMode = useBatchStore((state) => state.pngTinyMode)
   const watermark = useBatchStore((state) => state.watermark)
+  const syncResizeToSource = useBatchStore((state) => state.syncResizeToSource)
 
   const [sourceFile, setSourceFile] = useState<File | null>(null)
   const [sourcePreviewUrl, setSourcePreviewUrl] = useState<string | null>(null)
@@ -243,6 +244,10 @@ export function SingleProcessorTab() {
 
     const meta = await readImageMeta(file)
     setSourceMeta(meta)
+
+    if (meta) {
+      syncResizeToSource(meta.width, meta.height)
+    }
   }
 
   const onAppendFiles = (files: FileList | null) => {

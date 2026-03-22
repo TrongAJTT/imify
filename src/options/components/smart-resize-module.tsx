@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link2, RotateCcw, Unlink2 } from "lucide-react"
 
 import { Tooltip } from "@/options/components/tooltip"
@@ -58,6 +58,26 @@ function isSameRatio(a: number | null, b: number | null): boolean {
   return Math.abs(a - b) <= RATIO_EPSILON
 }
 
+function toAspectRatioLabel(width: number, height: number): string {
+  if (width <= 0 || height <= 0) {
+    return "16:9"
+  }
+
+  const gcd = (a: number, b: number): number => {
+    if (!b) {
+      return a
+    }
+
+    return gcd(b, a % b)
+  }
+
+  const safeWidth = Math.max(1, Math.round(width))
+  const safeHeight = Math.max(1, Math.round(height))
+  const divisor = gcd(safeWidth, safeHeight)
+
+  return `${Math.round(safeWidth / divisor)}:${Math.round(safeHeight / divisor)}`
+}
+
 export function SmartResizeModule({
   width,
   height,
@@ -72,7 +92,8 @@ export function SmartResizeModule({
   onFitModeChange,
   onContainBackgroundChange,
   originalWidth,
-  originalHeight
+  originalHeight,
+  lockSignal
 }: {
   width: number
   height: number
@@ -88,42 +109,73 @@ export function SmartResizeModule({
   onContainBackgroundChange: (value: string) => void
   originalWidth?: number
   originalHeight?: number
+  lockSignal?: number
 }) {
   const initialWidthRef = useRef(Math.max(1, Math.round(originalWidth ?? width)))
   const initialHeightRef = useRef(Math.max(1, Math.round(originalHeight ?? height)))
+  const lastLockSignalRef = useRef<number | undefined>(lockSignal)
 
   const [isRatioLocked, setIsRatioLocked] = useState(false)
   const [lockedRatio, setLockedRatio] = useState<number | null>(null)
 
-  const originalRatio = useMemo(
-    () => ratioFromDimensions(initialWidthRef.current, initialHeightRef.current),
-    []
-  )
+  const originalRatio = ratioFromDimensions(initialWidthRef.current, initialHeightRef.current)
 
-  const resolveAspectSelectByRatio = useMemo(() => {
-    return (ratio: number | null): { value: string; mode: "free" | "original" | "fixed" } => {
-      if (!ratio) {
-        return { value: "free", mode: "free" }
-      }
+  useEffect(() => {
+    if (typeof originalWidth !== "number" || typeof originalHeight !== "number") {
+      return
+    }
 
-      if (isSameRatio(ratio, originalRatio)) {
-        return { value: "original", mode: "original" }
-      }
+    initialWidthRef.current = Math.max(1, Math.round(originalWidth))
+    initialHeightRef.current = Math.max(1, Math.round(originalHeight))
+  }, [originalHeight, originalWidth])
 
-      for (const option of ASPECT_RATIO_OPTIONS) {
-        if (option.value === "free" || option.value === "original") {
-          continue
-        }
+  useEffect(() => {
+    if (typeof lockSignal !== "number") {
+      return
+    }
 
-        const parsed = parseAspectRatio(option.value)
-        if (isSameRatio(parsed, ratio)) {
-          return { value: option.value, mode: "fixed" }
-        }
-      }
+    if (lockSignal === lastLockSignalRef.current) {
+      return
+    }
 
+    lastLockSignalRef.current = lockSignal
+
+    const ratio =
+      ratioFromDimensions(initialWidthRef.current, initialHeightRef.current) ??
+      ratioFromDimensions(width, height)
+
+    if (!ratio) {
+      return
+    }
+
+    setIsRatioLocked(true)
+    setLockedRatio(ratio)
+    onAspectModeChange("original")
+    onAspectRatioChange(toAspectRatioLabel(initialWidthRef.current, initialHeightRef.current))
+  }, [height, lockSignal, onAspectModeChange, onAspectRatioChange, width])
+
+  const resolveAspectSelectByRatio = (ratio: number | null): { value: string; mode: "free" | "original" | "fixed" } => {
+    if (!ratio) {
       return { value: "free", mode: "free" }
     }
-  }, [originalRatio])
+
+    if (isSameRatio(ratio, originalRatio)) {
+      return { value: "original", mode: "original" }
+    }
+
+    for (const option of ASPECT_RATIO_OPTIONS) {
+      if (option.value === "free" || option.value === "original") {
+        continue
+      }
+
+      const parsed = parseAspectRatio(option.value)
+      if (isSameRatio(parsed, ratio)) {
+        return { value: option.value, mode: "fixed" }
+      }
+    }
+
+    return { value: "free", mode: "free" }
+  }
 
   const applyAspectStateFromDimensions = (nextWidth: number, nextHeight: number): void => {
     const detected = resolveAspectSelectByRatio(ratioFromDimensions(nextWidth, nextHeight))
@@ -135,11 +187,14 @@ export function SmartResizeModule({
   }
 
   const selectedAspectSelect = resolveAspectSelectByRatio(ratioFromDimensions(width, height)).value
-  const isFitModeEnabled = !isSameRatio(ratioFromDimensions(width, height), originalRatio)
+  const isFitModeEnabled = !isSameRatio(
+    ratioFromDimensions(width, height),
+    ratioFromDimensions(initialWidthRef.current, initialHeightRef.current)
+  )
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-1">
         <NumberInput
           label="Width"
           disabled={disabled}
@@ -177,8 +232,8 @@ export function SmartResizeModule({
               setLockedRatio(ratio)
               applyAspectStateFromDimensions(width, height)
             }}
-            className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-            {isRatioLocked ? <Link2 size={15} /> : <Unlink2 size={15} />}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            {isRatioLocked ? <Link2 size={18} /> : <Unlink2 size={18} />}
           </button>
         </Tooltip>
 
