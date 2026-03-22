@@ -79,17 +79,15 @@ export function BatchSetupSidebarPanel() {
       const toastId = `heavy_${targetFormat}_${Date.now()}`
       setHeavyFormatToast({ id: toastId, format: targetFormat.toUpperCase() })
       
-      if (concurrency > 2) {
-        onConcurrencyChange(2)
-      }
-
       const timer = setTimeout(() => {
         setHeavyFormatToast(null)
       }, 6000)
       
       return () => clearTimeout(timer)
+    } else {
+      setHeavyFormatToast(null)
     }
-  }, [targetFormat, setHeavyFormatToast, onConcurrencyChange, concurrency])
+  }, [targetFormat, setHeavyFormatToast])
 
   const watermarkSummary =
     watermark.type === "none"
@@ -120,7 +118,7 @@ export function BatchSetupSidebarPanel() {
             <select
               className={`mt-1 w-full rounded border bg-white dark:bg-slate-800 px-2 py-2 text-xs focus:ring-2 focus:ring-sky-500/10 outline-none transition-all ${
                 heavyFormatToast 
-                  ? "border-amber-500 ring-2 ring-amber-500/20 animate-pulse text-amber-700 dark:text-amber-400" 
+                  ? "border-amber-500 ring-2 ring-amber-500/40 opacity-100 shadow-[0_0_12px_rgba(245,158,11,0.4)] text-amber-700 dark:text-amber-400" 
                   : "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
               }`}
               disabled={isRunning}

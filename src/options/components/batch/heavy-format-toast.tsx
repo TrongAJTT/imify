@@ -41,9 +41,9 @@ export function HeavyFormatToast({ format, duration = 6000, onClose }: HeavyForm
             <AlertTriangle className="w-5 h-5 text-white" />
           </div>
           <div className="pr-4">
-            <p className="font-bold text-[14px] leading-tight mb-1">{format} encoding is very heavy</p>
+            <p className="font-bold text-[14px] leading-tight mb-1">{format} encoding is heavy</p>
             <p className="text-[12px] text-amber-50 leading-relaxed">
-              If you're on a low-spec PC, please lower the Concurrency to 1 or 2 to prevent your browser from freezing!
+              If your PC is low-spec, consider lowering Concurrency to 1 or 2 to avoid lags.
             </p>
           </div>
         </div>
