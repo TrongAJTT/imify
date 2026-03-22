@@ -1,46 +1,30 @@
-import JSZip from "jszip"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { AlertTriangle } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor,
   useSensors, type DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, sortableKeyboardCoordinates, } from "@dnd-kit/sortable"
 
-import { toUserFacingConversionError } from "@/core/error-utils"
 import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
-import type { ConversionProgressPayload, FormatConfig } from "@/core/types"
-import { applyExifPolicy } from "@/features/converter/exif"
-import { convertImage } from "@/features/converter"
-import { convertImageToPdf, mergeImagesToPdf } from "@/features/converter/pdf-engine"
-import { setConversionWorkerPoolSize, terminateConversionWorkerPool } from "@/features/converter/conversion-worker-pool"
+import type { FormatConfig } from "@/core/types"
 import { BatchActionBar } from "@/options/components/batch/action-bar"
 import { BatchQueueGrid } from "@/options/components/batch/queue-grid"
 import { BatchSummaryCard } from "@/options/components/batch/summary-card"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
-import { BodyText, Subheading, MutedText } from "@/options/components/ui/typography"
-import type { BatchExportAction, BatchQueueItem, BatchRunMode, BatchSummary } from "@/options/components/batch/types"
+import { BodyText } from "@/options/components/ui/typography"
+import type { BatchQueueItem } from "@/options/components/batch/types"
 import { BatchUploadDropzone } from "@/options/components/batch/upload-dropzone"
-import { MAX_FILE_SIZE_BYTES, MAX_TOTAL_QUEUE_BYTES, downloadWithFilename,
-  formatBytes, notifyProgress, sleep, toMb, withBatchResize} from "@/options/components/batch/utils"
-import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
-import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
+import {
+  MAX_FILE_SIZE_BYTES,
+  MAX_TOTAL_QUEUE_BYTES,
+  formatBytes,
+  toMb,
+  withBatchResize
+} from "@/options/components/batch/utils"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { HeavyFormatToast } from "@/options/components/batch/heavy-format-toast"
 import { OOMWarningDialog } from "@/options/components/batch/oom-warning-dialog"
+import { useBatchExecution } from "@/options/components/batch/hooks/use-batch-execution"
+import { useBatchExportActions } from "@/options/components/batch/hooks/use-batch-export-actions"
 import { useBatchStore } from "@/options/stores/batch-store"
-
-function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
-  const base = nameOrBase.replace(/\.[^.]+$/, "") || "image"
-  return `${base}.${extension}`
-}
-
-function toWebKitZipFilename(nameOrBase: string): string {
-  void nameOrBase
-  return "favicon_kit.zip"
-}
-
-function getBatchZipTimestamp(): number {
-  return Math.floor(Date.now() / 1000)
-}
 
 function extensionFromMimeType(type: string): string {
   if (type === "image/jpeg") {
@@ -52,10 +36,6 @@ function extensionFromMimeType(type: string): string {
 
   const matched = /^image\/([a-z0-9.+-]+)$/i.exec(type)
   return matched?.[1]?.toLowerCase() || "png"
-}
-
-function isWorkerConvertibleFormat(format: FormatConfig["format"]): format is Exclude<FormatConfig["format"], "pdf"> {
-  return format !== "pdf"
 }
 
 export function BatchProcessorTab() {
@@ -79,21 +59,8 @@ export function BatchProcessorTab() {
   const setBatchIsRunning = useBatchStore((state) => state.setIsRunning)
 
   const [queue, setQueue] = useState<BatchQueueItem[]>([])
-  const [isRunning, setIsRunning] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
-  const [cancelRequested, setCancelRequested] = useState(false)
-  const [paused, setPaused] = useState(false)
-  const [summary, setSummary] = useState<BatchSummary | null>(null)
-  const [activeExportAction, setActiveExportAction] = useState<BatchExportAction | null>(null)
-  const [exportToastPayload, setExportToastPayload] = useState<ConversionProgressPayload | null>(null)
-  const [batchToastPayload, setBatchToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false)
-  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
-  const [oomWarning, setOomWarning] = useState<{ isOpen: boolean; totalSize: string; recommendedSize: string; mode: BatchRunMode } | null>(null)
-  const cancelRef = useRef(false)
-  const pauseRef = useRef(false)
   const pdfSplitRef = useRef<HTMLDivElement>(null)
-  const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -105,77 +72,6 @@ export function BatchProcessorTab() {
       coordinateGetter: sortableKeyboardCoordinates
     })
   )
-
-  const clearExportToastHideTimer = () => {
-    if (!exportToastHideTimerRef.current) {
-      return
-    }
-
-    clearTimeout(exportToastHideTimerRef.current)
-    exportToastHideTimerRef.current = null
-  }
-
-  const pushExportToast = (payload: ConversionProgressPayload) => {
-    clearExportToastHideTimer()
-    setExportToastPayload(payload)
-
-    if (payload.status === "success" || payload.status === "error") {
-      exportToastHideTimerRef.current = setTimeout(() => {
-        setExportToastPayload(null)
-        exportToastHideTimerRef.current = null
-      }, 3000)
-    }
-  }
-
-  const requestCancel = () => {
-    setCancelRequested(true)
-    cancelRef.current = true
-
-    if (isWorkerConvertibleFormat(effectiveConfig.format)) {
-      terminateConversionWorkerPool(effectiveConfig.format)
-    }
-  }
-
-  const togglePause = () => {
-    setPaused((current) => !current)
-  }
-
-  useEffect(() => {
-    pauseRef.current = paused
-  }, [paused])
-
-  useEffect(() => {
-    return () => {
-      clearExportToastHideTimer()
-      terminateConversionWorkerPool()
-    }
-  }, [])
-
-  useEffect(() => {
-    setBatchIsRunning(isRunning)
-  }, [isRunning, setBatchIsRunning])
-
-  useEffect(() => {
-    if (!isPdfSplitOpen) {
-      return
-    }
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!pdfSplitRef.current) {
-        return
-      }
-
-      if (!pdfSplitRef.current.contains(event.target as Node)) {
-        setIsPdfSplitOpen(false)
-      }
-    }
-
-    window.addEventListener("pointerdown", handlePointerDown)
-
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown)
-    }
-  }, [isPdfSplitOpen])
 
   const effectiveConfig = useMemo(() => {
     const baseConfig: FormatConfig = {
@@ -208,21 +104,78 @@ export function BatchProcessorTab() {
     dpi
   ])
 
-  const setItemState = (
-    id: string,
-    partial: Partial<Pick<BatchQueueItem, "status" | "percent" | "message" | "outputBlob" | "outputFileName">>
-  ) => {
-    setQueue((current) =>
-      current.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              ...partial
-            }
-          : item
-      )
-    )
-  }
+  const {
+    isRunning,
+    paused,
+    cancelRequested,
+    summary,
+    batchToastPayload,
+    oomWarning,
+    runBatch,
+    requestCancel,
+    togglePause,
+    closeOomWarning,
+    confirmOomWarning,
+    clearSummary
+  } = useBatchExecution({
+    queue,
+    setQueue,
+    config: effectiveConfig,
+    concurrency,
+    stripExif,
+    fileNamePattern,
+    watermark,
+    skipOomWarning,
+    onPersistSkipOomWarning: () => {
+      setSkipOomWarning(true)
+    }
+  })
+
+  const {
+    isExporting,
+    activeExportAction,
+    exportToastPayload,
+    showDownloadConfirm,
+    closeDownloadConfirm,
+    confirmDownloadIndividually,
+    downloadIndividually,
+    downloadAsZip,
+    mergeIntoPdf,
+    downloadIndividualPdfs
+  } = useBatchExportActions({
+    queue,
+    config: effectiveConfig,
+    skipDownloadConfirm,
+    onClosePdfSplit: () => {
+      setIsPdfSplitOpen(false)
+    }
+  })
+
+  useEffect(() => {
+    setBatchIsRunning(isRunning)
+  }, [isRunning, setBatchIsRunning])
+
+  useEffect(() => {
+    if (!isPdfSplitOpen) {
+      return
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!pdfSplitRef.current) {
+        return
+      }
+
+      if (!pdfSplitRef.current.contains(event.target as Node)) {
+        setIsPdfSplitOpen(false)
+      }
+    }
+
+    window.addEventListener("pointerdown", handlePointerDown)
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown)
+    }
+  }, [isPdfSplitOpen])
 
   const removeItem = (id: string) => {
     setQueue((current) => current.filter((item) => item.id !== id))
@@ -332,498 +285,6 @@ export function BatchProcessorTab() {
     }
   }, [])
 
-  const processItem = async (
-    item: BatchQueueItem,
-    config: FormatConfig,
-    itemIndex: number
-  ): Promise<"success" | "error"> => {
-    setItemState(item.id, {
-      status: "processing",
-      percent: 10,
-      message: undefined,
-      outputBlob: undefined,
-      outputFileName: undefined
-    })
-    await notifyProgress(item.id, item.file.name, config, "processing", 10)
-
-    try {
-      const sourceBlob = await applyWatermarkToImageBlob(item.file, watermark)
-
-      const converted = await convertImage({
-        sourceBlob,
-        config
-      })
-
-      const normalizedBlob = await applyExifPolicy({
-        sourceBlob: item.file,
-        outputBlob: converted.blob,
-        stripExif
-      })
-
-      const dimensions =
-        (await readImageDimensions(normalizedBlob)) ||
-        (await readImageDimensions(item.file))
-
-      const outputExtension = converted.outputExtension ?? config.format
-      const smartName = buildSmartOutputFileName({
-        pattern: fileNamePattern,
-        originalFileName: item.file.name,
-        outputExtension,
-        index: itemIndex,
-        totalFiles: queue.length,
-        dimensions,
-        now: new Date()
-      })
-
-      setItemState(item.id, {
-        status: "processing",
-        percent: 72
-      })
-      await notifyProgress(item.id, item.file.name, config, "processing", 72, "Converting image...")
-
-      setItemState(item.id, {
-        status: "processing",
-        percent: 92
-      })
-      await notifyProgress(item.id, item.file.name, config, "processing", 92, "Preparing output preview...")
-
-      setItemState(item.id, {
-        status: "success",
-        percent: 100,
-        outputBlob: normalizedBlob,
-        outputFileName:
-          outputExtension === "zip"
-            ? smartName || toWebKitZipFilename(item.file.name)
-            : smartName || toOutputFilenameWithExtension(item.file.name, outputExtension)
-      })
-      await notifyProgress(item.id, item.file.name, config, "success", 100, "Ready for download")
-      return "success"
-    } catch (error) {
-      const message = toUserFacingConversionError(error, "Unknown batch conversion error")
-
-      setItemState(item.id, {
-        status: "error",
-        percent: 100,
-        message,
-        outputBlob: undefined,
-        outputFileName: undefined
-      })
-      await notifyProgress(item.id, item.file.name, config, "error", 100, message)
-      return "error"
-    }
-  }
-
-  const runBatch = async (mode: BatchRunMode = "all") => {
-    if (isRunning) {
-      return
-    }
-
-    const itemsToProcess =
-      mode === "failed"
-        ? queue.filter((item) => item.status === "error")
-        : queue.filter((item) => item.status === "queued" || item.status === "error")
-
-    if (!itemsToProcess.length) {
-      return
-    }
-
-    const selectedBytes = itemsToProcess.reduce((sum, item) => sum + item.file.size, 0)
-    const selectedTooLarge = selectedBytes > MAX_TOTAL_QUEUE_BYTES
-
-    if (selectedTooLarge && !skipOomWarning) {
-      setOomWarning({
-        isOpen: true,
-        totalSize: String(toMb(selectedBytes)),
-        recommendedSize: String(toMb(MAX_TOTAL_QUEUE_BYTES)),
-        mode
-      })
-      return
-    }
-
-    void startBatchExecution(itemsToProcess, mode)
-  }
-
-  const startBatchExecution = async (
-    itemsToProcess: BatchQueueItem[],
-    mode: BatchRunMode
-  ) => {
-    cancelRef.current = false
-    pauseRef.current = false
-    setPaused(false)
-    setCancelRequested(false)
-    setSummary(null)
-    setIsRunning(true)
-    const startedAt = Date.now()
-    const batchToastId = `batch_progress_${startedAt}`
-    const workerPoolFormat = isWorkerConvertibleFormat(effectiveConfig.format)
-      ? effectiveConfig.format
-      : null
-    const usesConversionWorkerPool = workerPoolFormat !== null
-
-    if (usesConversionWorkerPool) {
-      setConversionWorkerPoolSize(workerPoolFormat, concurrency)
-    }
-
-    let successCount = 0
-    let failedCount = 0
-
-    try {
-      const totalItems = itemsToProcess.length
-      let nextItemIndex = 0
-
-      const pushBatchProgress = () => {
-        const processed = successCount + failedCount
-        const percent = Math.round((processed / totalItems) * 100)
-
-        setBatchToastPayload({
-          id: batchToastId,
-          fileName: `Processing batch (${totalItems} files)`,
-          targetFormat: effectiveConfig.format,
-          status: "processing",
-          percent,
-          message: `Converted ${processed}/${totalItems} files...`
-        })
-      }
-
-      const runWorkerSlot = async () => {
-        while (!cancelRef.current) {
-          while (pauseRef.current && !cancelRef.current) {
-            await sleep(120)
-          }
-
-          if (cancelRef.current) {
-            return
-          }
-
-          if (nextItemIndex >= totalItems) {
-            return
-          }
-
-          const currentIndex = nextItemIndex
-          nextItemIndex += 1
-          const item = itemsToProcess[currentIndex]
-
-          const status = await processItem(item, effectiveConfig, currentIndex + 1)
-
-          if (status === "success") {
-            successCount += 1
-          } else {
-            failedCount += 1
-          }
-
-          pushBatchProgress()
-        }
-      }
-
-      pushBatchProgress()
-
-      const activeSlots = Math.max(1, Math.min(concurrency, totalItems))
-      await Promise.all(Array.from({ length: activeSlots }, () => runWorkerSlot()))
-    } finally {
-      const total = itemsToProcess.length
-      const durationMs = Date.now() - startedAt
-      const canceled = cancelRef.current
-
-      if (successCount + failedCount < total) {
-        failedCount += total - (successCount + failedCount)
-      }
-
-      setBatchToastPayload({
-        id: batchToastId,
-        fileName: canceled ? "Batch processing cancelled" : "Batch processing completed",
-        targetFormat: effectiveConfig.format,
-        status: canceled ? "error" : "success",
-        percent: 100,
-        message: canceled 
-          ? `Processed ${successCount} files before cancellation`
-          : `Successfully processed ${successCount} files in ${(durationMs / 1000).toFixed(1)}s`
-      })
-
-      // Hide batch toast after 4 seconds
-      setTimeout(() => {
-        setBatchToastPayload((current) => {
-          if (current?.id === batchToastId) return null
-          return current
-        })
-      }, 4000)
-
-      setSummary({
-        mode,
-        total,
-        success: successCount,
-        failed: failedCount,
-        canceled,
-        durationMs
-      })
-
-      setIsRunning(false)
-      setCancelRequested(false)
-      setPaused(false)
-      pauseRef.current = false
-      cancelRef.current = false
-
-      if (usesConversionWorkerPool) {
-        terminateConversionWorkerPool(workerPoolFormat)
-      }
-    }
-  }
-
-  const downloadIndividually = async (force: boolean = false) => {
-    const successful = queue.filter((item) => item.status === "success" && item.outputBlob && item.outputFileName)
-
-    if (!successful.length || isExporting) {
-      return
-    }
-
-    // Check for confirmation if > 4 files
-    if (!force && successful.length > 4 && !skipDownloadConfirm) {
-      setShowDownloadConfirm(true)
-      return
-    }
-
-    setIsExporting(true)
-    setActiveExportAction("one_by_one")
-
-    try {
-      for (const item of successful) {
-        await downloadWithFilename(item.outputBlob as Blob, item.outputFileName as string)
-        await sleep(120)
-      }
-    } finally {
-      setIsExporting(false)
-      setActiveExportAction(null)
-    }
-  }
-
-  const downloadAsZip = async () => {
-    const successful = queue.filter((item) => item.status === "success" && item.outputBlob && item.outputFileName)
-
-    if (!successful.length || isExporting) {
-      return
-    }
-
-    setIsExporting(true)
-    setActiveExportAction("zip")
-    const toastId = `batch_export_zip_${Date.now()}`
-    const exportFileName = `imify_batch_${getBatchZipTimestamp()}.zip`
-
-    try {
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: effectiveConfig.format,
-        status: "processing",
-        percent: 8,
-        message: "Collecting converted files..."
-      })
-
-      const zip = new JSZip()
-      for (let index = 0; index < successful.length; index += 1) {
-        const item = successful[index]
-        zip.file(item.outputFileName as string, item.outputBlob as Blob)
-
-        const percent = Math.min(70, 10 + Math.round(((index + 1) / successful.length) * 60))
-        pushExportToast({
-          id: toastId,
-          fileName: exportFileName,
-          targetFormat: effectiveConfig.format,
-          status: "processing",
-          percent,
-          message: `Added ${index + 1}/${successful.length} files to ZIP...`
-        })
-      }
-
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: effectiveConfig.format,
-        status: "processing",
-        percent: 82,
-        message: "Compressing ZIP archive..."
-      })
-
-      const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } })
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: effectiveConfig.format,
-        status: "processing",
-        percent: 96,
-        message: "Opening download dialog..."
-      })
-
-      await downloadWithFilename(zipBlob, exportFileName)
-
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: effectiveConfig.format,
-        status: "success",
-        percent: 100,
-        message: "ZIP download started"
-      })
-    } catch (error) {
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: effectiveConfig.format,
-        status: "error",
-        percent: 100,
-        message: toUserFacingConversionError(error, "Unable to export ZIP")
-      })
-    } finally {
-      setIsExporting(false)
-      setActiveExportAction(null)
-    }
-  }
-
-  const mergeIntoPdf = async () => {
-    const successful = queue.filter((item) => item.status === "success" && item.outputBlob)
-
-    if (!successful.length || isExporting) {
-      return
-    }
-
-    setIsExporting(true)
-    setActiveExportAction("merge_pdf")
-    setIsPdfSplitOpen(false)
-    const toastId = `batch_export_merge_pdf_${Date.now()}`
-    const exportFileName = `imify_batch_${getBatchZipTimestamp()}.pdf`
-
-    try {
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: "pdf",
-        status: "processing",
-        percent: 12,
-        message: "Preparing pages for merged PDF..."
-      })
-
-      const mergedPdfBlob = await mergeImagesToPdf(successful.map((item) => item.outputBlob as Blob))
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: "pdf",
-        status: "processing",
-        percent: 92,
-        message: "Opening download dialog..."
-      })
-
-      await downloadWithFilename(mergedPdfBlob, exportFileName)
-
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: "pdf",
-        status: "success",
-        percent: 100,
-        message: "PDF download started"
-      })
-    } catch (error) {
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: "pdf",
-        status: "error",
-        percent: 100,
-        message: toUserFacingConversionError(error, "Unable to merge PDF")
-      })
-    } finally {
-      setIsExporting(false)
-      setActiveExportAction(null)
-    }
-  }
-
-  const downloadIndividualPdfs = async () => {
-    const successful = queue.filter((item) => item.status === "success" && item.outputBlob && item.outputFileName)
-
-    if (!successful.length || isExporting) {
-      return
-    }
-
-    setIsExporting(true)
-    setActiveExportAction("individual_pdf")
-    setIsPdfSplitOpen(false)
-    const toastId = `batch_export_individual_pdf_${Date.now()}`
-    const exportFileName = `imify_batch_pdf_${getBatchZipTimestamp()}.zip`
-
-    try {
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: "pdf",
-        status: "processing",
-        percent: 8,
-        message: "Preparing individual PDFs..."
-      })
-
-      const zip = new JSZip()
-
-      for (let index = 0; index < successful.length; index += 1) {
-        const item = successful[index]
-        const pdfBlob = await convertImageToPdf({
-          sourceBlob: item.outputBlob as Blob,
-          resize: { mode: "none" }
-        })
-        const baseName = (item.outputFileName as string).replace(/\.[^.]+$/, "")
-        zip.file(`${baseName}.pdf`, pdfBlob)
-
-        const percent = Math.min(76, 10 + Math.round(((index + 1) / successful.length) * 66))
-        pushExportToast({
-          id: toastId,
-          fileName: exportFileName,
-          targetFormat: "pdf",
-          status: "processing",
-          percent,
-          message: `Created ${index + 1}/${successful.length} PDF files...`
-        })
-      }
-
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: "pdf",
-        status: "processing",
-        percent: 88,
-        message: "Compressing PDF ZIP archive..."
-      })
-
-      const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } })
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: "pdf",
-        status: "processing",
-        percent: 96,
-        message: "Opening download dialog..."
-      })
-
-      await downloadWithFilename(zipBlob, exportFileName)
-
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: "pdf",
-        status: "success",
-        percent: 100,
-        message: "PDF ZIP download started"
-      })
-    } catch (error) {
-      pushExportToast({
-        id: toastId,
-        fileName: exportFileName,
-        targetFormat: "pdf",
-        status: "error",
-        percent: 100,
-        message: toUserFacingConversionError(error, "Unable to export individual PDFs")
-      })
-    } finally {
-      setIsExporting(false)
-      setActiveExportAction(null)
-    }
-  }
-
   const totalQueueBytes = useMemo(() => queue.reduce((sum, item) => sum + item.file.size, 0), [queue])
   const queueTooLarge = totalQueueBytes > MAX_TOTAL_QUEUE_BYTES
 
@@ -881,7 +342,7 @@ export function BatchProcessorTab() {
         onCancel={requestCancel}
         onClear={() => {
           setQueue([])
-          setSummary(null)
+          clearSummary()
         }}
         onRunAll={() => {
           void runBatch("all")
@@ -951,10 +412,9 @@ export function BatchProcessorTab() {
       <BatchDownloadConfirmDialog
         isOpen={showDownloadConfirm}
         count={successfulOutputs.length}
-        onClose={() => setShowDownloadConfirm(false)}
+        onClose={closeDownloadConfirm}
         onConfirm={() => {
-          setShowDownloadConfirm(false)
-          void downloadIndividually(true)
+          void confirmDownloadIndividually()
         }}
       />
 
@@ -962,19 +422,9 @@ export function BatchProcessorTab() {
         isOpen={!!oomWarning?.isOpen}
         totalSize={oomWarning?.totalSize || "0"}
         recommendedSize={oomWarning?.recommendedSize || "350"}
-        onClose={() => setOomWarning(null)}
+        onClose={closeOomWarning}
         onConfirm={(dontShowAgain) => {
-          if (!oomWarning) return
-          if (dontShowAgain) {
-            setSkipOomWarning(true)
-          }
-          const mode = oomWarning.mode
-          setOomWarning(null)
-          const itemsToProcess =
-            mode === "failed"
-              ? queue.filter((item) => item.status === "error")
-              : queue.filter((item) => item.status === "queued" || item.status === "error")
-          void startBatchExecution(itemsToProcess, mode)
+          void confirmOomWarning(dontShowAgain)
         }}
       />
 
