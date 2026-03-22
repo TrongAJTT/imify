@@ -3,6 +3,7 @@ import type { ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { encodeJxl } from "@/features/converter/jxl-encoder"
+import { encodeTinyPngFromImageData } from "@/features/converter/png-tiny"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
 
 const MIME_BY_FORMAT: Record<Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff">, string> = {
@@ -18,6 +19,7 @@ export interface RasterConvertParams {
   targetFormat: Exclude<ImageFormat, "pdf" | "ico">
   resize: ResizeConfig
   quality?: number
+  pngTinyMode?: boolean
 }
 
 export interface RasterConvertResult {
@@ -96,7 +98,7 @@ async function convertToRasterBlob(
 export async function convertRasterImage(
   params: RasterConvertParams
 ): Promise<RasterConvertResult> {
-  const { sourceBlob, targetFormat, resize, quality } = params
+  const { sourceBlob, targetFormat, resize, quality, pngTinyMode } = params
   const imageBitmap = await createImageBitmap(sourceBlob)
 
   try {
@@ -160,6 +162,18 @@ export async function convertRasterImage(
         width: targetWidth,
         height: targetHeight,
         mimeType: "image/tiff"
+      }
+    }
+
+    if (targetFormat === "png" && pngTinyMode) {
+      const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
+      const outputBlob = encodeTinyPngFromImageData(imageData)
+
+      return {
+        outputBlob,
+        width: targetWidth,
+        height: targetHeight,
+        mimeType: "image/png"
       }
     }
 

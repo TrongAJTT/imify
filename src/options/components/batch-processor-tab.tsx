@@ -12,13 +12,8 @@ import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { BodyText } from "@/options/components/ui/typography"
 import type { BatchQueueItem } from "@/options/components/batch/types"
 import { BatchUploadDropzone } from "@/options/components/batch/upload-dropzone"
-import {
-  MAX_FILE_SIZE_BYTES,
-  MAX_TOTAL_QUEUE_BYTES,
-  formatBytes,
-  toMb,
-  withBatchResize
-} from "@/options/components/batch/utils"
+import { MAX_FILE_SIZE_BYTES, MAX_TOTAL_QUEUE_BYTES,
+  formatBytes, toMb, withBatchResize } from "@/options/components/batch/utils"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { HeavyFormatToast } from "@/options/components/batch/heavy-format-toast"
 import { OOMWarningDialog } from "@/options/components/batch/oom-warning-dialog"
@@ -49,6 +44,7 @@ export function BatchProcessorTab() {
   const paperSize = useBatchStore((state) => state.paperSize)
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
+  const pngTinyMode = useBatchStore((state) => state.pngTinyMode)
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
   const watermark = useBatchStore((state) => state.watermark)
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
@@ -80,6 +76,7 @@ export function BatchProcessorTab() {
       format: targetFormat,
       enabled: true,
       quality,
+      pngTinyMode,
       resize: { mode: "none" }
     }
 
@@ -101,7 +98,8 @@ export function BatchProcessorTab() {
     icoGenerateWebIconKit,
     resizeValue,
     paperSize,
-    dpi
+    dpi,
+    pngTinyMode
   ])
 
   const {

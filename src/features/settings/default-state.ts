@@ -18,6 +18,7 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
     format,
     enabled: true,
     quality,
+    pngTinyMode: false,
     icoOptions:
       format === "ico"
         ? {

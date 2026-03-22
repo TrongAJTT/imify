@@ -4,7 +4,7 @@ import { QUALITY_FORMATS, RESIZE_MODE_OPTIONS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
-import { LabelText, Kicker } from "@/options/components/ui/typography"
+import { LabelText } from "@/options/components/ui/typography"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { BatchRenameDialog } from "./rename-dialog"
@@ -38,6 +38,7 @@ export function BatchSetupSidebarPanel() {
   const paperSize = useBatchStore((state) => state.paperSize)
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
+  const pngTinyMode = useBatchStore((state) => state.pngTinyMode)
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
   const watermark = useBatchStore((state) => state.watermark)
   const onTargetFormatChange = useBatchStore((state) => state.setTargetFormat)
@@ -50,6 +51,7 @@ export function BatchSetupSidebarPanel() {
   const onPaperSizeChange = useBatchStore((state) => state.setPaperSize)
   const onDpiChange = useBatchStore((state) => state.setDpi)
   const onStripExifChange = useBatchStore((state) => state.setStripExif)
+  const onPngTinyModeChange = useBatchStore((state) => state.setPngTinyMode)
   const onFileNamePatternChange = useBatchStore((state) => state.setFileNamePattern)
   const onWatermarkChange = useBatchStore((state) => state.setWatermark)
   const heavyFormatToast = useBatchStore((state) => state.heavyFormatToast)
@@ -60,6 +62,7 @@ export function BatchSetupSidebarPanel() {
   const [isWatermarkDialogOpen, setIsWatermarkDialogOpen] = useState(false)
   const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
   const supportsExtendedConcurrency = HIGH_CONCURRENCY_FORMATS.includes(targetFormat)
+  const supportsTinyMode = targetFormat === "png"
   const isIcoTarget = targetFormat === "ico"
   const concurrencyOptions = supportsExtendedConcurrency
     ? [
@@ -219,6 +222,20 @@ export function BatchSetupSidebarPanel() {
               onChange={onStripExifChange}
               disabled={isRunning}
               tooltip="Removes sensitive metadata (GPS, Camera info). Only JPEG source maintains EXIF for JPEG/AVIF targets."
+            />
+
+            <CheckboxCard
+              title="Tiny Mode"
+              subtitle={
+                supportsTinyMode
+                  ? "Reduce PNG size"
+                  : "PNG Only"
+              }
+              checked={pngTinyMode}
+              onChange={onPngTinyModeChange}
+              disabled={isRunning || !supportsTinyMode}
+              tooltip="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
+              className={!supportsTinyMode ? "opacity-70" : ""}
             />
 
             {/* Renaming */}

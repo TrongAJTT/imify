@@ -47,6 +47,9 @@ importers:
       tailwind-merge:
         specifier: ^3.5.0
         version: 3.5.0
+      upng-js:
+        specifier: ^2.1.0
+        version: 2.1.0
       utif:
         specifier: ^3.1.0
         version: 3.1.0
@@ -3222,6 +3225,9 @@ packages:
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
+
+  upng-js@2.1.0:
+    resolution: {integrity: sha512-d3xzZzpMP64YkjP5pr8gNyvBt7dLk/uGI67EctzDuVp4lCZyVMo0aJO6l/VDlgbInJYDY6cnClLoBp29eKWI6g==}
 
   utif@3.1.0:
     resolution: {integrity: sha512-WEo4D/xOvFW53K5f5QTaTbbiORcm2/pCL9P6qmJnup+17eYfKaEhDeX9PeQkuyEoIxlbGklDuGl8xwuXYMrrXQ==}
@@ -6695,6 +6701,10 @@ snapshots:
       browserslist: 4.28.1
       escalade: 3.2.0
       picocolors: 1.1.1
+
+  upng-js@2.1.0:
+    dependencies:
+      pako: 1.0.11
 
   utif@3.1.0:
     dependencies:

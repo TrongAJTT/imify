@@ -62,7 +62,8 @@ export async function convertImage(
       sourceBlob,
       targetFormat: config.format,
       resize: config.resize,
-      quality: config.quality
+      quality: config.quality,
+      pngTinyMode: config.pngTinyMode
     })
 
     return {
@@ -78,7 +79,8 @@ export async function convertImage(
       sourceBlob,
       targetFormat: config.format,
       resize: config.resize,
-      quality: config.quality
+      quality: config.quality,
+      pngTinyMode: config.pngTinyMode
     })
 
     return {

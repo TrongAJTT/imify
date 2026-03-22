@@ -37,6 +37,7 @@ export interface FormatConfig {
   format: ImageFormat
   enabled: boolean
   quality?: number
+  pngTinyMode?: boolean
   resize: ResizeConfig
   icoOptions?: IcoOptions
 }

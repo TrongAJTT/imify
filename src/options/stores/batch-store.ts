@@ -2,12 +2,7 @@ import { create } from "zustand"
 
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { PaperSize, SupportedDPI } from "@/core/types"
-import type {
-  BatchResizeMode,
-  BatchSetupState,
-  BatchTargetFormat,
-  BatchWatermarkConfig
-} from "@/options/components/batch/types"
+import type { BatchResizeMode, BatchSetupState, BatchTargetFormat, BatchWatermarkConfig } from "@/options/components/batch/types"
 import { DEFAULT_BATCH_WATERMARK } from "@/options/components/batch/watermark"
 
 const DEFAULT_BATCH_STATE: BatchSetupState = {
@@ -21,6 +16,7 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   paperSize: "A4",
   dpi: 300,
   stripExif: true,
+  pngTinyMode: false,
   fileNamePattern: "[OriginalName]",
   watermark: DEFAULT_BATCH_WATERMARK
 }
@@ -38,6 +34,7 @@ interface BatchStoreState extends BatchSetupState {
   setPaperSize: (value: PaperSize) => void
   setDpi: (value: SupportedDPI) => void
   setStripExif: (value: boolean) => void
+  setPngTinyMode: (value: boolean) => void
   setFileNamePattern: (value: string) => void
   setWatermark: (value: BatchWatermarkConfig) => void
   skipDownloadConfirm: boolean
@@ -65,6 +62,7 @@ export const useBatchStore = create<BatchStoreState>((set) => ({
   setPaperSize: (value) => set({ paperSize: value }),
   setDpi: (value) => set({ dpi: value }),
   setStripExif: (value) => set({ stripExif: value }),
+  setPngTinyMode: (value) => set({ pngTinyMode: value }),
   setFileNamePattern: (value) => set({ fileNamePattern: value }),
   setWatermark: (value) => set({ watermark: value }),
   setSkipDownloadConfirm: (value) => set({ skipDownloadConfirm: value }),

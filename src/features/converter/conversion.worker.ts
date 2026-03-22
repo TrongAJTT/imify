@@ -7,6 +7,7 @@ import { calculateContainPlacement, calculateDimensions, clampQuality } from "@/
 import type { FormatConfig, ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { convertSourceToIcoOutput } from "@/features/converter/ico-encoder"
+import { encodeTinyPngFromImageData } from "@/features/converter/png-tiny"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
 
 interface WasmModule {
@@ -278,6 +279,15 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
       return {
         blob: await encodeJxlInWorker(imageData, config.quality),
         mimeType: "image/jxl"
+      }
+    }
+
+    if (config.format === "png" && config.pngTinyMode) {
+      const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
+
+      return {
+        blob: encodeTinyPngFromImageData(imageData),
+        mimeType: "image/png"
       }
     }
 

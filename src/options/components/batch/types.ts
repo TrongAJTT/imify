@@ -65,6 +65,7 @@ export interface BatchSetupState {
   paperSize: PaperSize
   dpi: SupportedDPI
   stripExif: boolean
+  pngTinyMode: boolean
   fileNamePattern: string
   watermark: BatchWatermarkConfig
 }
@@ -80,6 +81,7 @@ export interface BatchSetupHandlers {
   onPaperSizeChange: (value: PaperSize) => void
   onDpiChange: (value: SupportedDPI) => void
   onStripExifChange: (value: boolean) => void
+  onPngTinyModeChange: (value: boolean) => void
   onFileNamePatternChange: (value: string) => void
   onWatermarkChange: (value: BatchWatermarkConfig) => void
 }
