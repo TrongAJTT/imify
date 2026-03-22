@@ -6,6 +6,11 @@ import { toUserFacingConversionError } from "@/core/error-utils"
 import type { FormatConfig } from "@/core/types"
 import { convertImage } from "@/features/converter"
 import { applyExifPolicy } from "@/features/converter/exif"
+import {
+  createImagePreviewInWorker,
+  isImagePreviewWorkerSupported,
+  terminateImagePreviewWorker
+} from "@/features/converter/preview-worker-client"
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
 import { downloadWithFilename, formatBytes, withBatchResize } from "@/options/components/batch/utils"
 import { Button } from "@/options/components/ui/button"
@@ -16,6 +21,7 @@ import { Tooltip } from "./tooltip"
 import { LoadingSpinner } from "./loading-spinner"
 
 const PREVIEW_DEBOUNCE_MS = 420
+const PREVIEW_MAX_DIMENSION = 3072
 const MIN_ZOOM = 1
 const MAX_ZOOM = 5
 const ZOOM_STEP = 0.2
@@ -82,7 +88,15 @@ function toAspectRatioLabel(width: number, height: number): string {
   return `${ratioW}:${ratioH}`
 }
 
-async function readImageMeta(blob: Blob): Promise<ImageMeta | null> {
+function toImageMeta(width: number, height: number): ImageMeta {
+  return {
+    width,
+    height,
+    ratioLabel: toAspectRatioLabel(width, height)
+  }
+}
+
+async function readImageMetaOnMain(blob: Blob): Promise<ImageMeta | null> {
   if (!blob.type.startsWith("image/")) {
     return null
   }
@@ -90,13 +104,40 @@ async function readImageMeta(blob: Blob): Promise<ImageMeta | null> {
   const imageBitmap = await createImageBitmap(blob)
 
   try {
-    return {
-      width: imageBitmap.width,
-      height: imageBitmap.height,
-      ratioLabel: toAspectRatioLabel(imageBitmap.width, imageBitmap.height)
-    }
+    return toImageMeta(imageBitmap.width, imageBitmap.height)
   } finally {
     imageBitmap.close()
+  }
+}
+
+async function createPreviewAsset(
+  blob: Blob,
+  maxDimension: number
+): Promise<{ previewBlob: Blob; meta: ImageMeta } | null> {
+  if (!blob.type.startsWith("image/")) {
+    return null
+  }
+
+  if (isImagePreviewWorkerSupported()) {
+    try {
+      const preview = await createImagePreviewInWorker(blob, maxDimension)
+      return {
+        previewBlob: preview.previewBlob,
+        meta: toImageMeta(preview.width, preview.height)
+      }
+    } catch {
+      // Fallback to main-thread decode when worker initialization fails.
+    }
+  }
+
+  const meta = await readImageMetaOnMain(blob)
+  if (!meta) {
+    return null
+  }
+
+  return {
+    previewBlob: blob,
+    meta
   }
 }
 
@@ -141,8 +182,15 @@ export function SingleProcessorTab() {
   const [isPanning, setIsPanning] = useState(false)
 
   const requestSequenceRef = useRef(0)
+  const attachSequenceRef = useRef(0)
   const panStartRef = useRef<{ x: number; y: number; originX: number; originY: number } | null>(null)
   const viewerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    return () => {
+      terminateImagePreviewWorker()
+    }
+  }, [])
 
   useEffect(() => {
     const handleWheel = (event: WheelEvent) => {
@@ -256,6 +304,8 @@ export function SingleProcessorTab() {
   }
 
   const attachSingleFile = async (file: File) => {
+    const attachSequence = ++attachSequenceRef.current
+
     if (!file.type.startsWith("image/")) {
       setErrorText("Please choose an image file.")
       return
@@ -265,18 +315,28 @@ export function SingleProcessorTab() {
     setErrorText(null)
     setResultBlob(null)
     setResultMeta(null)
+    setSourceMeta(null)
     setResultFileName("")
     resetViewport()
 
     updateResultPreview(null)
-    updateSourcePreview(URL.createObjectURL(file))
+    updateSourcePreview(null)
 
-    const meta = await readImageMeta(file)
-    setSourceMeta(meta)
+    const previewAsset = await createPreviewAsset(file, PREVIEW_MAX_DIMENSION)
 
-    if (meta) {
-      syncResizeToSource(meta.width, meta.height)
+    if (attachSequenceRef.current !== attachSequence) {
+      return
     }
+
+    if (!previewAsset) {
+      setSourceMeta(null)
+      return
+    }
+
+    setSourceMeta(previewAsset.meta)
+    updateSourcePreview(URL.createObjectURL(previewAsset.previewBlob))
+
+    syncResizeToSource(previewAsset.meta.width, previewAsset.meta.height)
   }
 
   const onAppendFiles = (files: FileList | null) => {
@@ -361,11 +421,22 @@ export function SingleProcessorTab() {
               : toOutputFilenameWithExtension(sourceFile.name, outputExtension)
           )
 
-          setResultMeta(await readImageMeta(normalizedBlob))
-
           if (normalizedBlob.type.startsWith("image/")) {
-            updateResultPreview(URL.createObjectURL(normalizedBlob))
+            const previewAsset = await createPreviewAsset(normalizedBlob, PREVIEW_MAX_DIMENSION)
+
+            if (requestSequenceRef.current !== currentSequence) {
+              return
+            }
+
+            if (previewAsset) {
+              setResultMeta(previewAsset.meta)
+              updateResultPreview(URL.createObjectURL(previewAsset.previewBlob))
+            } else {
+              setResultMeta(null)
+              updateResultPreview(null)
+            }
           } else {
+            setResultMeta(null)
             updateResultPreview(null)
           }
         } catch (error) {
