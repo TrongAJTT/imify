@@ -19,7 +19,7 @@ export function OptionsHeader({
   onOpenDonate
 }: HeaderProps) {
   return (
-    <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+    <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
       <div className="flex items-center gap-3">
         <img
           src={require("url:@assets/icon.png")}

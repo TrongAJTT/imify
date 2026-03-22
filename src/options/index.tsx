@@ -22,7 +22,7 @@ import { OptionsHeader } from "@/options/components/options-header"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
 import { TabButton } from "@/options/components/tab-button"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { MutedText } from "@/options/components/ui/typography"
+import { Kicker, MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState,
   TAB_ITEMS, createCustomFormatId, normalizeCustomInput } from "@/options/shared"
 import { Globe, Heart, Image, Layers, ListTree, Workflow, X } from "lucide-react"
@@ -98,6 +98,16 @@ function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorage
       sort_mode: state.context_menu?.sort_mode ?? DEFAULT_STORAGE_STATE.context_menu.sort_mode
     }
   }
+}
+
+function TabInfoPanel({ activeTab }: { activeTab: OptionsTab }) {
+  const tab = TAB_ITEMS.find((t) => t.id === activeTab)
+  if (!tab?.description) return null
+  return (
+    <SidebarPanel title="INFORMATION">
+      <MutedText>{tab.description}</MutedText>
+    </SidebarPanel>
+  )
 }
 
 export default function OptionsPage() {
@@ -387,15 +397,19 @@ export default function OptionsPage() {
   ])
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
-      <div className="mx-auto max-w-5xl px-6 py-8">
-        <OptionsHeader
-          isDark={isDark}
-          isLoading={isLoading}
-          onOpenAbout={() => setIsAboutDialogOpen(true)}
-          onOpenDonate={() => setIsDonateDialogOpen(true)}
-          onToggleDark={() => setIsDark(!isDark)}
-        />
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200 overflow-x-hidden">
+      <div className="mx-auto max-w-full py-3 text-slate-950 dark:text-slate-50">
+        <div className="mx-auto max-w-5xl px-12">
+          <OptionsHeader
+            isDark={isDark}
+            isLoading={isLoading}
+            onOpenAbout={() => setIsAboutDialogOpen(true)}
+            onOpenDonate={() => setIsDonateDialogOpen(true)}
+            onToggleDark={() => setIsDark(!isDark)}
+          />
+        </div>
+
+        <div className="w-full border-b border-slate-200 dark:border-slate-800 mb-8" />
 
         {isAboutDialogOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -541,36 +555,45 @@ export default function OptionsPage() {
           </div>
         ) : null}
 
-        <div className="mt-8 flex flex-col md:flex-row gap-8">
-          <nav className="flex flex-col gap-2 w-full md:w-64 shrink-0">
-            <div className="flex flex-col gap-2 mb-2">
-              {TAB_ITEMS.map((tab) => (
-                <TabButton
-                  key={tab.id}
-                  active={tab.id === activeTab}
-                  label={tab.label}
-                  icon={TAB_ICON_COMPONENTS[tab.id]}
-                  onClick={() => setActiveTab(tab.id)}
-                />
-              ))}
-            </div>
+        <div className="flex px-12 flex-row gap-8 items-start justify-center">
+          <div className="flex flex-col gap-6 w-64 shrink-0 order-1">
+            <nav className="flex flex-col gap-6 w-full shrink-0">
+              <div className="flex flex-col gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-sm">
+                <div className="px-2 pt-1">
+                  <Kicker>NAVIGATION</Kicker>
+                </div>
+                {TAB_ITEMS.map((tab) => (
+                  <TabButton
+                    key={tab.id}
+                    active={tab.id === activeTab}
+                    label={tab.label}
+                    icon={TAB_ICON_COMPONENTS[tab.id]}
+                    onClick={() => setActiveTab(tab.id)}
+                  />
+                ))}
+              </div>
+            </nav>
 
+            <div className="xl:hidden">
+              {(activeTab === "batch" || activeTab === "single") && (
+                <BatchSetupSidebarPanel />
+              )}
+
+              <TabInfoPanel activeTab={activeTab} />
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0 max-w-5xl order-2">
+            {tabContent}
+          </div>
+
+          <aside className="w-72 shrink-0 order-3 sticky top-8 hidden xl:block">
             {(activeTab === "batch" || activeTab === "single") && (
               <BatchSetupSidebarPanel />
             )}
 
-            {TAB_ITEMS.find((t) => t.id === activeTab)?.description && (
-              <SidebarPanel>
-                <MutedText>
-                  {TAB_ITEMS.find((t) => t.id === activeTab)?.description}
-                </MutedText>
-              </SidebarPanel>
-            )}
-          </nav>
-
-          <div className="flex-1 min-w-0">
-            {tabContent}
-          </div>
+            <TabInfoPanel activeTab={activeTab} />
+          </aside>
         </div>
       </div>
     </main>

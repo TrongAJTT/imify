@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react"
-import {
-  Bolt,
-  ChevronDown,
-  ChevronUp,
-  FileEdit,
-  Stamp
-} from "lucide-react"
+import { FileEdit, Stamp } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
@@ -14,7 +8,7 @@ import { QualityInput } from "@/options/components/quality-input"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { LabelText } from "@/options/components/ui/typography"
+import { Kicker, LabelText } from "@/options/components/ui/typography"
 import { ResizeModeSelector } from "@/options/components/resize-mode-selector"
 import { SmartResizeModule } from "@/options/components/smart-resize-module"
 import {
@@ -51,7 +45,6 @@ export function BatchSetupSidebarPanel() {
   const resizeHeight = useBatchStore((state) => state.resizeHeight)
   const resizeAspectMode = useBatchStore((state) => state.resizeAspectMode)
   const resizeAspectRatio = useBatchStore((state) => state.resizeAspectRatio)
-  const resizeAnchor = useBatchStore((state) => state.resizeAnchor)
   const resizeFitMode = useBatchStore((state) => state.resizeFitMode)
   const resizeContainBackground = useBatchStore((state) => state.resizeContainBackground)
   const resizeSourceWidth = useBatchStore((state) => state.resizeSourceWidth)
@@ -87,7 +80,6 @@ export function BatchSetupSidebarPanel() {
   const heavyFormatToast = useBatchStore((state) => state.heavyFormatToast)
   const setHeavyFormatToast = useBatchStore((state) => state.setHeavyFormatToast)
 
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
   const [isWatermarkDialogOpen, setIsWatermarkDialogOpen] = useState(false)
   const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
@@ -131,7 +123,7 @@ export function BatchSetupSidebarPanel() {
 
   return (
     <SidebarPanel title="CONFIGURATION">
-      <div className="space-y-3">
+      <div className="space-y-3 mt-1">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-xs font-medium">
             <LabelText>Target format</LabelText>
@@ -251,75 +243,62 @@ export function BatchSetupSidebarPanel() {
           />
         )}
 
-        <div className="pt-1">
-          <button
-            className="inline-flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700/60"
-            disabled={isRunning}
-            onClick={() => setIsAdvancedOpen((current) => !current)}
-            type="button">
-            <Bolt className="h-4 w-4" />
-            <span> Advanced Settings</span>
-            {isAdvancedOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-        </div>
+        <div className="animate-in slide-in-from-top-2 fade-in space-y-3 pt-1 duration-300">
+          <Kicker>ADVANCED SETTINGS</Kicker>
+          <CheckboxCard
+            title="Privacy mode"
+            subtitle={
+              !supportsExif
+                ? "JPEG, WebP, and AVIF only"
+                : stripExif
+                  ? "Strip EXIF data from output images"
+                  : "Keep EXIF data when possible"
+            }
+            checked={stripExif && supportsExif}
+            onChange={onStripExifChange}
+            disabled={isRunning || !supportsExif}
+            tooltip="Removes sensitive metadata (GPS, Camera info)."
+            className={!supportsExif ? "opacity-70" : ""}
+          />
 
-        {isAdvancedOpen ? (
-          <div className="animate-in slide-in-from-top-2 fade-in space-y-3 pt-1 duration-300">
-            <CheckboxCard
-              title="Privacy mode"
-              subtitle={
-                !supportsExif
-                  ? "JPEG, WebP, and AVIF only"
-                  : stripExif
-                    ? "Strip EXIF data from output images"
-                    : "Keep EXIF data when possible"
-              }
-              checked={stripExif && supportsExif}
-              onChange={onStripExifChange}
-              disabled={isRunning || !supportsExif}
-              tooltip="Removes sensitive metadata (GPS, Camera info)."
-              className={!supportsExif ? "opacity-70" : ""}
-            />
+          <CheckboxCard
+            title="Tiny Mode"
+            subtitle={supportsTinyMode ? "Reduce PNG size" : "PNG Only"}
+            checked={pngTinyMode}
+            onChange={onPngTinyModeChange}
+            disabled={isRunning || !supportsTinyMode}
+            tooltip="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
+            className={!supportsTinyMode ? "opacity-70" : ""}
+          />
 
-            <CheckboxCard
-              title="Tiny Mode"
-              subtitle={supportsTinyMode ? "Reduce PNG size" : "PNG Only"}
-              checked={pngTinyMode}
-              onChange={onPngTinyModeChange}
-              disabled={isRunning || !supportsTinyMode}
-              tooltip="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
-              className={!supportsTinyMode ? "opacity-70" : ""}
-            />
-
-            <div className="flex items-center justify-between rounded border border-slate-200 bg-white px-2.5 py-2 transition-all dark:border-slate-700 dark:bg-slate-900/40">
-              <div className="mr-2 flex min-w-0 flex-col">
-                <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">File Renaming</span>
-                <span className="truncate font-mono text-[9px] text-slate-400">{fileNamePattern}</span>
-              </div>
-              <button
-                onClick={() => setIsRenameDialogOpen(true)}
-                disabled={isRunning}
-                title="Edit renaming pattern"
-                className="shrink-0 rounded-md p-1.5 text-sky-600 transition-colors hover:bg-sky-50 disabled:opacity-50 dark:hover:bg-sky-500/10">
-                <FileEdit size={14} />
-              </button>
+          <div className="flex items-center justify-between rounded border border-slate-200 bg-white px-2.5 py-2 transition-all dark:border-slate-700 dark:bg-slate-900/40">
+            <div className="mr-2 flex min-w-0 flex-col">
+              <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">File Renaming</span>
+              <span className="truncate font-mono text-[9px] text-slate-400">{fileNamePattern}</span>
             </div>
-
-            <div className="flex items-center justify-between rounded border border-slate-200 bg-white px-2.5 py-2 transition-all dark:border-slate-700 dark:bg-slate-900/40">
-              <div className="mr-2 flex min-w-0 flex-col">
-                <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">Watermarking</span>
-                <span className="truncate font-mono text-[9px] text-slate-400">{watermarkSummary}</span>
-              </div>
-              <button
-                onClick={() => setIsWatermarkDialogOpen(true)}
-                disabled={isRunning}
-                title="Edit watermark settings"
-                className="shrink-0 rounded-md p-1.5 text-sky-600 transition-colors hover:bg-sky-50 disabled:opacity-50 dark:hover:bg-sky-500/10">
-                <Stamp size={14} />
-              </button>
-            </div>
+            <button
+              onClick={() => setIsRenameDialogOpen(true)}
+              disabled={isRunning}
+              title="Edit renaming pattern"
+              className="shrink-0 rounded-md p-1.5 text-sky-600 transition-colors hover:bg-sky-50 disabled:opacity-50 dark:hover:bg-sky-500/10">
+              <FileEdit size={14} />
+            </button>
           </div>
-        ) : null}
+
+          <div className="flex items-center justify-between rounded border border-slate-200 bg-white px-2.5 py-2 transition-all dark:border-slate-700 dark:bg-slate-900/40">
+            <div className="mr-2 flex min-w-0 flex-col">
+              <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">Watermarking</span>
+              <span className="truncate font-mono text-[9px] text-slate-400">{watermarkSummary}</span>
+            </div>
+            <button
+              onClick={() => setIsWatermarkDialogOpen(true)}
+              disabled={isRunning}
+              title="Edit watermark settings"
+              className="shrink-0 rounded-md p-1.5 text-sky-600 transition-colors hover:bg-sky-50 disabled:opacity-50 dark:hover:bg-sky-500/10">
+              <Stamp size={14} />
+            </button>
+          </div>
+        </div>
       </div>
 
       <BatchRenameDialog

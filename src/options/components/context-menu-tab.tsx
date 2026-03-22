@@ -49,7 +49,7 @@ export function ContextMenuTab({ state, onCommit }: ContextMenuTabProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
           <div className="space-y-6">
             <div>
-              <LabelText className="mb-2" htmlFor="context-sort-mode">
+              <LabelText className="mb-3" htmlFor="context-sort-mode">
                 Sort Mode
               </LabelText>
               <div className="relative group">
@@ -113,7 +113,7 @@ export function ContextMenuTab({ state, onCommit }: ContextMenuTabProps) {
           <div className="relative">
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1 h-5">
-                <Kicker>Menu Preview</Kicker>
+                <LabelText>Menu Preview</LabelText>
                 {hasChanges && (
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-500/20 text-[10px] font-bold text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 animate-in fade-in zoom-in-95 duration-300">
                     UNSAVED CHANGES
