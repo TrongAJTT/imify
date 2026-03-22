@@ -15,15 +15,27 @@ export type PaperSize = "A3" | "A4" | "A5" | "B5" | "Letter" | "Legal"
 
 export type ResizeMode =
   | "none"
+  | "set_size"
   | "change_width"
   | "change_height"
   | "scale"
   | "page_size"
 
+export type ResizeAspectMode = "free" | "original" | "fixed"
+export type ResizeFitMode = "fill" | "cover" | "contain"
+export type ResizeSizeAnchor = "width" | "height"
+
 export interface ResizeConfig {
   mode: ResizeMode
   value?: number | PaperSize
   dpi?: SupportedDPI
+  width?: number
+  height?: number
+  aspectMode?: ResizeAspectMode
+  aspectRatio?: string
+  sizeAnchor?: ResizeSizeAnchor
+  fitMode?: ResizeFitMode
+  containBackground?: string
 }
 
 export interface IcoOptions {

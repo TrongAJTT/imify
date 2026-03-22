@@ -1,4 +1,9 @@
-import { calculateContainPlacement, calculateDimensions, clampQuality } from "@/core/image-utils"
+import {
+  calculateContainPlacement,
+  calculateCoverSourceRect,
+  calculateDimensions,
+  clampQuality
+} from "@/core/image-utils"
 import type { ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
@@ -61,6 +66,60 @@ function drawSourceImage(
     )
 
     return
+  }
+
+  if (resize.mode === "set_size") {
+    const fitMode = resize.fitMode ?? "fill"
+
+    if (fitMode === "cover") {
+      const cover = calculateCoverSourceRect(
+        imageBitmap.width,
+        imageBitmap.height,
+        targetWidth,
+        targetHeight
+      )
+
+      ctx.drawImage(
+        imageBitmap,
+        cover.sourceX,
+        cover.sourceY,
+        cover.sourceWidth,
+        cover.sourceHeight,
+        0,
+        0,
+        targetWidth,
+        targetHeight
+      )
+
+      return
+    }
+
+    if (fitMode === "contain") {
+      if (targetFormat === "jpg") {
+        ctx.fillStyle = resize.containBackground || "#FFFFFF"
+        ctx.fillRect(0, 0, targetWidth, targetHeight)
+      } else if (resize.containBackground) {
+        ctx.fillStyle = resize.containBackground
+        ctx.fillRect(0, 0, targetWidth, targetHeight)
+      }
+
+      const contain = calculateContainPlacement(
+        imageBitmap.width,
+        imageBitmap.height,
+        targetWidth,
+        targetHeight
+      )
+
+      ctx.drawImage(
+        imageBitmap,
+        contain.offsetX,
+        contain.offsetY,
+        contain.drawWidth,
+        contain.drawHeight
+      )
+
+      return
+    }
   }
 
   ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight)

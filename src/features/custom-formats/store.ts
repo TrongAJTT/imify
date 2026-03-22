@@ -50,6 +50,10 @@ function normalizeResizeValue(mode: ResizeMode, value: ResizeConfig["value"]): R
     return undefined
   }
 
+  if (mode === "set_size") {
+    return undefined
+  }
+
   if (mode === "page_size") {
     return typeof value === "string" && PAPER_SIZE_VALUES.includes(value as PaperSize)
       ? value
@@ -66,6 +70,19 @@ function normalizeResizeValue(mode: ResizeMode, value: ResizeConfig["value"]): R
 function normalizeResizeConfig(config: ResizeConfig, format: FormatConfig["format"]): ResizeConfig {
   const mode = config.mode
   const value = normalizeResizeValue(mode, config.value)
+
+  if (mode === "set_size") {
+    return {
+      mode,
+      width: typeof config.width === "number" ? Math.max(1, Math.round(config.width)) : 1280,
+      height: typeof config.height === "number" ? Math.max(1, Math.round(config.height)) : 960,
+      aspectMode: config.aspectMode ?? "original",
+      aspectRatio: config.aspectRatio ?? "16:9",
+      sizeAnchor: config.sizeAnchor ?? "width",
+      fitMode: config.fitMode ?? "fill",
+      containBackground: config.containBackground ?? "#000000"
+    }
+  }
 
   if (mode !== "page_size") {
     return {
@@ -124,6 +141,13 @@ export function validateCustomFormatInput(input: CustomFormatInput): string | nu
     typeof input.resize.value !== "number"
   ) {
     return "Resize value must be a number"
+  }
+
+  if (
+    input.resize.mode === "set_size" &&
+    (typeof input.resize.width !== "number" || typeof input.resize.height !== "number")
+  ) {
+    return "Set size mode requires width and height"
   }
 
   if (input.resize.mode === "page_size" && typeof input.resize.value !== "string") {

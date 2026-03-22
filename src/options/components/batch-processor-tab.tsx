@@ -41,6 +41,13 @@ export function BatchProcessorTab() {
   const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
   const resizeMode = useBatchStore((state) => state.resizeMode)
   const resizeValue = useBatchStore((state) => state.resizeValue)
+  const resizeWidth = useBatchStore((state) => state.resizeWidth)
+  const resizeHeight = useBatchStore((state) => state.resizeHeight)
+  const resizeAspectMode = useBatchStore((state) => state.resizeAspectMode)
+  const resizeAspectRatio = useBatchStore((state) => state.resizeAspectRatio)
+  const resizeAnchor = useBatchStore((state) => state.resizeAnchor)
+  const resizeFitMode = useBatchStore((state) => state.resizeFitMode)
+  const resizeContainBackground = useBatchStore((state) => state.resizeContainBackground)
   const paperSize = useBatchStore((state) => state.paperSize)
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
@@ -87,6 +94,13 @@ export function BatchProcessorTab() {
       icoSizes,
       icoGenerateWebIconKit,
       resizeValue,
+      resizeWidth,
+      resizeHeight,
+      resizeAspectMode,
+      resizeAspectRatio,
+      resizeAnchor,
+      resizeFitMode,
+      resizeContainBackground,
       paperSize,
       dpi
     )
@@ -97,6 +111,13 @@ export function BatchProcessorTab() {
     icoSizes,
     icoGenerateWebIconKit,
     resizeValue,
+    resizeWidth,
+    resizeHeight,
+    resizeAspectMode,
+    resizeAspectRatio,
+    resizeAnchor,
+    resizeFitMode,
+    resizeContainBackground,
     paperSize,
     dpi,
     pngTinyMode

@@ -68,6 +68,13 @@ export function cloneResize(config: ResizeConfig): ResizeConfig {
 export function buildResizeOverride(
   mode: BatchResizeMode,
   value: number,
+  width: number,
+  height: number,
+  aspectMode: "free" | "original" | "fixed",
+  aspectRatio: string,
+  anchor: "width" | "height",
+  fitMode: "fill" | "cover" | "contain",
+  containBackground: string,
   paperSize: string,
   dpi: SupportedDPI
 ): ResizeConfig | null {
@@ -90,6 +97,19 @@ export function buildResizeOverride(
     } as ResizeConfig
   }
 
+  if (mode === "set_size") {
+    return {
+      mode: "set_size",
+      width: Math.max(1, Math.round(width)),
+      height: Math.max(1, Math.round(height)),
+      aspectMode,
+      aspectRatio,
+      sizeAnchor: anchor,
+      fitMode,
+      containBackground
+    }
+  }
+
   return {
     mode: mode as Exclude<ResizeMode, "none" | "page_size">,
     value: Math.max(1, Math.round(value))
@@ -103,10 +123,29 @@ export function withBatchResize(
   icoSizes: number[],
   icoGenerateWebIconKit: boolean,
   value: number,
+  width: number,
+  height: number,
+  aspectMode: "free" | "original" | "fixed",
+  aspectRatio: string,
+  anchor: "width" | "height",
+  fitMode: "fill" | "cover" | "contain",
+  containBackground: string,
   paperSize: string,
   dpi: SupportedDPI
 ): FormatConfig {
-  const override = buildResizeOverride(mode, value, paperSize, dpi)
+  const override = buildResizeOverride(
+    mode,
+    value,
+    width,
+    height,
+    aspectMode,
+    aspectRatio,
+    anchor,
+    fitMode,
+    containBackground,
+    paperSize,
+    dpi
+  )
   const supportsQuality = QUALITY_FORMATS.includes(config.format)
   const normalizedQuality = Math.max(1, Math.min(100, Math.round(quality)))
 

@@ -1,20 +1,32 @@
 import { useEffect, useState } from "react"
-import { ChevronDown, ChevronUp, FileEdit, Bolt, Stamp } from "lucide-react"
-import { QUALITY_FORMATS, RESIZE_MODE_OPTIONS } from "@/options/shared"
+import {
+  Bolt,
+  ChevronDown,
+  ChevronUp,
+  FileEdit,
+  Stamp
+} from "lucide-react"
+
+import { QUALITY_FORMATS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
-import { LabelText } from "@/options/components/ui/typography"
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
-import { BatchRenameDialog } from "./rename-dialog"
-import { BatchWatermarkDialog } from "./watermark-dialog"
 import { NumberInput } from "@/options/components/ui/number-input"
-import { HIGH_CONCURRENCY_FORMATS } from "@/options/components/batch/types"
-import { TARGET_FORMAT_OPTIONS } from "@/options/components/batch/types"
-import type { BatchResizeMode, BatchTargetFormat } from "@/options/components/batch/types"
+import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
+import { LabelText } from "@/options/components/ui/typography"
+import { ResizeModeSelector } from "@/options/components/resize-mode-selector"
+import { SmartResizeModule } from "@/options/components/smart-resize-module"
+import {
+  HIGH_CONCURRENCY_FORMATS,
+  TARGET_FORMAT_OPTIONS,
+  type BatchResizeMode,
+  type BatchTargetFormat
+} from "@/options/components/batch/types"
 import { WATERMARK_POSITION_OPTIONS } from "@/options/components/batch/watermark"
 import { useBatchStore } from "@/options/stores/batch-store"
+import { BatchRenameDialog } from "./rename-dialog"
+import { BatchWatermarkDialog } from "./watermark-dialog"
 
 const BASE_CONCURRENCY_OPTIONS = [
   { value: 1, label: "1" },
@@ -35,12 +47,20 @@ export function BatchSetupSidebarPanel() {
   const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
   const resizeMode = useBatchStore((state) => state.resizeMode)
   const resizeValue = useBatchStore((state) => state.resizeValue)
+  const resizeWidth = useBatchStore((state) => state.resizeWidth)
+  const resizeHeight = useBatchStore((state) => state.resizeHeight)
+  const resizeAspectMode = useBatchStore((state) => state.resizeAspectMode)
+  const resizeAspectRatio = useBatchStore((state) => state.resizeAspectRatio)
+  const resizeAnchor = useBatchStore((state) => state.resizeAnchor)
+  const resizeFitMode = useBatchStore((state) => state.resizeFitMode)
+  const resizeContainBackground = useBatchStore((state) => state.resizeContainBackground)
   const paperSize = useBatchStore((state) => state.paperSize)
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
   const pngTinyMode = useBatchStore((state) => state.pngTinyMode)
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
   const watermark = useBatchStore((state) => state.watermark)
+
   const onTargetFormatChange = useBatchStore((state) => state.setTargetFormat)
   const onConcurrencyChange = useBatchStore((state) => state.setConcurrency)
   const onQualityChange = useBatchStore((state) => state.setQuality)
@@ -48,6 +68,13 @@ export function BatchSetupSidebarPanel() {
   const onIcoGenerateWebIconKitChange = useBatchStore((state) => state.setIcoGenerateWebIconKit)
   const onResizeModeChange = useBatchStore((state) => state.setResizeMode)
   const onResizeValueChange = useBatchStore((state) => state.setResizeValue)
+  const onResizeWidthChange = useBatchStore((state) => state.setResizeWidth)
+  const onResizeHeightChange = useBatchStore((state) => state.setResizeHeight)
+  const onResizeAspectModeChange = useBatchStore((state) => state.setResizeAspectMode)
+  const onResizeAspectRatioChange = useBatchStore((state) => state.setResizeAspectRatio)
+  const onResizeAnchorChange = useBatchStore((state) => state.setResizeAnchor)
+  const onResizeFitModeChange = useBatchStore((state) => state.setResizeFitMode)
+  const onResizeContainBackgroundChange = useBatchStore((state) => state.setResizeContainBackground)
   const onPaperSizeChange = useBatchStore((state) => state.setPaperSize)
   const onDpiChange = useBatchStore((state) => state.setDpi)
   const onStripExifChange = useBatchStore((state) => state.setStripExif)
@@ -65,6 +92,7 @@ export function BatchSetupSidebarPanel() {
   const supportsTinyMode = targetFormat === "png"
   const supportsExif = ["jpg", "webp", "avif"].includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
+
   const concurrencyOptions = supportsExtendedConcurrency
     ? [
         ...BASE_CONCURRENCY_OPTIONS,
@@ -79,18 +107,18 @@ export function BatchSetupSidebarPanel() {
   }, [concurrency, onConcurrencyChange, supportsExtendedConcurrency])
 
   useEffect(() => {
-    if ((targetFormat === "avif" || targetFormat === "jxl")) {
+    if (targetFormat === "avif" || targetFormat === "jxl") {
       const toastId = `heavy_${targetFormat}_${Date.now()}`
       setHeavyFormatToast({ id: toastId, format: targetFormat.toUpperCase() })
-      
+
       const timer = setTimeout(() => {
         setHeavyFormatToast(null)
       }, 6000)
-      
+
       return () => clearTimeout(timer)
-    } else {
-      setHeavyFormatToast(null)
     }
+
+    setHeavyFormatToast(null)
   }, [targetFormat, setHeavyFormatToast])
 
   const watermarkSummary =
@@ -105,7 +133,7 @@ export function BatchSetupSidebarPanel() {
           <label className="block text-xs font-medium">
             <LabelText>Target format</LabelText>
             <select
-              className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
+              className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 outline-none transition-all focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
               disabled={isRunning}
               onChange={(event) => onTargetFormatChange(event.target.value as BatchTargetFormat)}
               value={targetFormat}>
@@ -117,13 +145,13 @@ export function BatchSetupSidebarPanel() {
             </select>
           </label>
 
-          <label className="block text-xs font-medium relative">
+          <label className="relative block text-xs font-medium">
             <LabelText>Concurrency</LabelText>
             <select
-              className={`mt-1 w-full rounded border bg-white dark:bg-slate-800 px-2 py-2 text-xs focus:ring-2 focus:ring-sky-500/10 outline-none transition-all ${
-                heavyFormatToast 
-                  ? "border-amber-500 ring-2 ring-amber-500/40 opacity-100 shadow-[0_0_12px_rgba(245,158,11,0.4)] text-amber-700 dark:text-amber-400" 
-                  : "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
+              className={`mt-1 w-full rounded border bg-white px-2 py-2 text-xs outline-none transition-all focus:ring-2 focus:ring-sky-500/10 dark:bg-slate-800 ${
+                heavyFormatToast
+                  ? "border-amber-500 opacity-100 text-amber-700 ring-2 ring-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] dark:text-amber-400"
+                  : "border-slate-300 text-slate-700 dark:border-slate-600 dark:text-slate-200"
               }`}
               disabled={isRunning}
               onChange={(event) => onConcurrencyChange(Number(event.target.value))}
@@ -140,30 +168,36 @@ export function BatchSetupSidebarPanel() {
         {!isIcoTarget ? (
           <div className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
-              <QualityInput
-                disabled={isRunning || !supportsQuality}
-                onChange={onQualityChange}
-                value={quality}
-              />
+              <QualityInput disabled={isRunning || !supportsQuality} onChange={onQualityChange} value={quality} />
 
-              <label className="block text-xs font-medium">
-                <LabelText>Resize</LabelText>
-                <select
-                  className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
-                  disabled={isRunning}
-                  onChange={(event) => onResizeModeChange(event.target.value as BatchResizeMode)}
-                  value={resizeMode}>
-                  {RESIZE_MODE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <ResizeModeSelector
+                disabled={isRunning}
+                onChange={(mode) => onResizeModeChange(mode as BatchResizeMode)}
+                value={resizeMode === "inherit" ? "none" : resizeMode}
+              />
             </div>
 
+            {resizeMode === "set_size" ? (
+              <SmartResizeModule
+                containBackground={resizeContainBackground}
+                disabled={isRunning}
+                fitMode={resizeFitMode}
+                height={resizeHeight}
+                onAspectModeChange={onResizeAspectModeChange}
+                onAspectRatioChange={onResizeAspectRatioChange}
+                onContainBackgroundChange={onResizeContainBackgroundChange}
+                onFitModeChange={onResizeFitModeChange}
+                onHeightChange={onResizeHeightChange}
+                onSizeAnchorChange={onResizeAnchorChange}
+                onWidthChange={onResizeWidthChange}
+                originalHeight={resizeHeight}
+                originalWidth={resizeWidth}
+                width={resizeWidth}
+              />
+            ) : null}
+
             {(resizeMode === "change_width" || resizeMode === "change_height" || resizeMode === "scale") ? (
-              <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="animate-in slide-in-from-top-1 fade-in duration-200">
                 <NumberInput
                   label={resizeMode === "scale" ? "Resize value (%)" : "Resize value (px)"}
                   disabled={isRunning}
@@ -202,27 +236,25 @@ export function BatchSetupSidebarPanel() {
 
         <div className="pt-1">
           <button
-            className="inline-flex w-full items-center justify-between rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-colors"
+            className="inline-flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700/60"
             disabled={isRunning}
             onClick={() => setIsAdvancedOpen((current) => !current)}
-            type="button"
-          >            
-            <Bolt className="w-4 h-4" />
+            type="button">
+            <Bolt className="h-4 w-4" />
             <span> Advanced Settings</span>
             {isAdvancedOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
         </div>
 
         {isAdvancedOpen ? (
-          <div className="space-y-3 pt-1 animate-in fade-in slide-in-from-top-2 duration-300">
-            {/* Privacy Mode */}
+          <div className="animate-in slide-in-from-top-2 fade-in space-y-3 pt-1 duration-300">
             <CheckboxCard
               title="Privacy mode"
               subtitle={
-                !supportsExif 
-                  ? `JPEG, WebP, and AVIF only`
-                  : stripExif 
-                    ? "Strip EXIF data from output images" 
+                !supportsExif
+                  ? "JPEG, WebP, and AVIF only"
+                  : stripExif
+                    ? "Strip EXIF data from output images"
                     : "Keep EXIF data when possible"
               }
               checked={stripExif && supportsExif}
@@ -234,11 +266,7 @@ export function BatchSetupSidebarPanel() {
 
             <CheckboxCard
               title="Tiny Mode"
-              subtitle={
-                supportsTinyMode
-                  ? "Reduce PNG size"
-                  : "PNG Only"
-              }
+              subtitle={supportsTinyMode ? "Reduce PNG size" : "PNG Only"}
               checked={pngTinyMode}
               onChange={onPngTinyModeChange}
               disabled={isRunning || !supportsTinyMode}
@@ -246,40 +274,30 @@ export function BatchSetupSidebarPanel() {
               className={!supportsTinyMode ? "opacity-70" : ""}
             />
 
-            {/* Renaming */}
-            <div
-              className={`flex items-center justify-between rounded border px-2.5 py-2 transition-all border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900/40`}>
-              <div className="flex flex-col min-w-0 mr-2">
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">
-                  File Renaming
-                </span>
-                <span className="text-[9px] text-slate-400 truncate font-mono">
-                  {fileNamePattern}
-                </span>
+            <div className="flex items-center justify-between rounded border border-slate-200 bg-white px-2.5 py-2 transition-all dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="mr-2 flex min-w-0 flex-col">
+                <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">File Renaming</span>
+                <span className="truncate font-mono text-[9px] text-slate-400">{fileNamePattern}</span>
               </div>
               <button
                 onClick={() => setIsRenameDialogOpen(true)}
                 disabled={isRunning}
                 title="Edit renaming pattern"
-                className="p-1.5 rounded-md text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 transition-colors shrink-0 disabled:opacity-50">
+                className="shrink-0 rounded-md p-1.5 text-sky-600 transition-colors hover:bg-sky-50 disabled:opacity-50 dark:hover:bg-sky-500/10">
                 <FileEdit size={14} />
               </button>
             </div>
 
-            <div className="flex items-center justify-between rounded border px-2.5 py-2 transition-all border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900/40">
-              <div className="flex flex-col min-w-0 mr-2">
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">
-                  Watermarking
-                </span>
-                <span className="text-[9px] text-slate-400 truncate font-mono">
-                  {watermarkSummary}
-                </span>
+            <div className="flex items-center justify-between rounded border border-slate-200 bg-white px-2.5 py-2 transition-all dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="mr-2 flex min-w-0 flex-col">
+                <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">Watermarking</span>
+                <span className="truncate font-mono text-[9px] text-slate-400">{watermarkSummary}</span>
               </div>
               <button
                 onClick={() => setIsWatermarkDialogOpen(true)}
                 disabled={isRunning}
                 title="Edit watermark settings"
-                className="p-1.5 rounded-md text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 transition-colors shrink-0 disabled:opacity-50">
+                className="shrink-0 rounded-md p-1.5 text-sky-600 transition-colors hover:bg-sky-50 disabled:opacity-50 dark:hover:bg-sky-500/10">
                 <Stamp size={14} />
               </button>
             </div>
@@ -303,3 +321,4 @@ export function BatchSetupSidebarPanel() {
     </SidebarPanel>
   )
 }
+

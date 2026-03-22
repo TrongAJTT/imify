@@ -4,7 +4,17 @@ import type { ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
 export type BatchRunMode = "all" | "failed"
 export type BatchExportAction = "zip" | "one_by_one" | "merge_pdf" | "individual_pdf"
-export type BatchResizeMode = "inherit" | "none" | "change_width" | "change_height" | "scale" | "page_size"
+export type BatchResizeMode =
+  | "inherit"
+  | "none"
+  | "set_size"
+  | "change_width"
+  | "change_height"
+  | "scale"
+  | "page_size"
+export type BatchResizeAspectMode = "free" | "original" | "fixed"
+export type BatchResizeAnchor = "width" | "height"
+export type BatchResizeFitMode = "fill" | "cover" | "contain"
 export type BatchTargetFormat = Exclude<ImageFormat, "pdf">
 export type BatchWatermarkType = "none" | "text" | "logo"
 export type BatchWatermarkPosition =
@@ -62,6 +72,13 @@ export interface BatchSetupState {
   icoGenerateWebIconKit: boolean
   resizeMode: BatchResizeMode
   resizeValue: number
+  resizeWidth: number
+  resizeHeight: number
+  resizeAspectMode: BatchResizeAspectMode
+  resizeAspectRatio: string
+  resizeAnchor: BatchResizeAnchor
+  resizeFitMode: BatchResizeFitMode
+  resizeContainBackground: string
   paperSize: PaperSize
   dpi: SupportedDPI
   stripExif: boolean
@@ -78,6 +95,13 @@ export interface BatchSetupHandlers {
   onIcoGenerateWebIconKitChange: (value: boolean) => void
   onResizeModeChange: (value: BatchResizeMode) => void
   onResizeValueChange: (value: number) => void
+  onResizeWidthChange: (value: number) => void
+  onResizeHeightChange: (value: number) => void
+  onResizeAspectModeChange: (value: BatchResizeAspectMode) => void
+  onResizeAspectRatioChange: (value: string) => void
+  onResizeAnchorChange: (value: BatchResizeAnchor) => void
+  onResizeFitModeChange: (value: BatchResizeFitMode) => void
+  onResizeContainBackgroundChange: (value: string) => void
   onPaperSizeChange: (value: PaperSize) => void
   onDpiChange: (value: SupportedDPI) => void
   onStripExifChange: (value: boolean) => void

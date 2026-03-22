@@ -208,7 +208,7 @@ export function CustomFormatsTab({
     }
   }, [])
 
-  const getResizeLabel = (mode: string, value: unknown) => {
+  const getResizeLabel = (mode: string, value: unknown, resize?: FormatConfig["resize"]) => {
     switch (mode) {
       case "none":
         return "No resize"
@@ -216,6 +216,8 @@ export function CustomFormatsTab({
         return `Width ${typeof value === "number" ? value : 0}px`
       case "change_height":
         return `Height ${typeof value === "number" ? value : 0}px`
+      case "set_size":
+        return `${resize?.width ?? 0}x${resize?.height ?? 0}px`
       case "scale":
         return `Scale ${typeof value === "number" ? value : 100}%`
       case "page_size":
@@ -343,7 +345,7 @@ export function CustomFormatsTab({
                         <BodyText className="text-xs font-bold truncate">
                           {item.format === "ico"
                             ? getIcoSizeLabel(item)
-                            : getResizeLabel(item.resize.mode, item.resize.value)}
+                            : getResizeLabel(item.resize.mode, item.resize.value, item.resize)}
                         </BodyText>
                       </div>
                       <div className="col-span-1 rounded border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900/60 p-2">

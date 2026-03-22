@@ -13,6 +13,13 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   icoGenerateWebIconKit: false,
   resizeMode: "inherit",
   resizeValue: 1280,
+  resizeWidth: 1280,
+  resizeHeight: 960,
+  resizeAspectMode: "original",
+  resizeAspectRatio: "16:9",
+  resizeAnchor: "width",
+  resizeFitMode: "fill",
+  resizeContainBackground: "#000000",
   paperSize: "A4",
   dpi: 300,
   stripExif: false,
@@ -31,6 +38,13 @@ interface BatchStoreState extends BatchSetupState {
   setIcoGenerateWebIconKit: (value: boolean) => void
   setResizeMode: (value: BatchResizeMode) => void
   setResizeValue: (value: number) => void
+  setResizeWidth: (value: number) => void
+  setResizeHeight: (value: number) => void
+  setResizeAspectMode: (value: BatchSetupState["resizeAspectMode"]) => void
+  setResizeAspectRatio: (value: string) => void
+  setResizeAnchor: (value: BatchSetupState["resizeAnchor"]) => void
+  setResizeFitMode: (value: BatchSetupState["resizeFitMode"]) => void
+  setResizeContainBackground: (value: string) => void
   setPaperSize: (value: PaperSize) => void
   setDpi: (value: SupportedDPI) => void
   setStripExif: (value: boolean) => void
@@ -59,6 +73,13 @@ export const useBatchStore = create<BatchStoreState>((set) => ({
   setIcoGenerateWebIconKit: (value) => set({ icoGenerateWebIconKit: value }),
   setResizeMode: (value) => set({ resizeMode: value }),
   setResizeValue: (value) => set({ resizeValue: value }),
+  setResizeWidth: (value) => set({ resizeWidth: value }),
+  setResizeHeight: (value) => set({ resizeHeight: value }),
+  setResizeAspectMode: (value) => set({ resizeAspectMode: value }),
+  setResizeAspectRatio: (value) => set({ resizeAspectRatio: value }),
+  setResizeAnchor: (value) => set({ resizeAnchor: value }),
+  setResizeFitMode: (value) => set({ resizeFitMode: value }),
+  setResizeContainBackground: (value) => set({ resizeContainBackground: value }),
   setPaperSize: (value) => set({ paperSize: value }),
   setDpi: (value) => set({ dpi: value }),
   setStripExif: (value) => set({ stripExif: value }),

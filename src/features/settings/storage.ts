@@ -59,6 +59,7 @@ function isResizeConfig(value: unknown): value is ResizeConfig {
 
   return (
     resize.mode === "none" ||
+    resize.mode === "set_size" ||
     resize.mode === "change_width" ||
     resize.mode === "change_height" ||
     resize.mode === "scale" ||

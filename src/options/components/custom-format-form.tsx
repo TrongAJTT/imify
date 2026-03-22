@@ -1,13 +1,12 @@
 import type { CustomFormatInput } from "@/features/custom-formats"
 import type { ImageFormat, PaperSize, ResizeMode } from "@/core/types"
 import { CUSTOM_FORMATS, DEFAULT_ICO_SIZES, FORMAT_LABELS, QUALITY_FORMATS } from "@/core/format-config"
-import {
-  RESIZE_MODE_OPTIONS
-} from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { QualityInput } from "@/options/components/quality-input"
-import { ResizeConfigPanel } from "@/options/components/resize-config-panel"
+import { ResizeModeSelector } from "@/options/components/resize-mode-selector"
+import { SmartResizeModule } from "@/options/components/smart-resize-module"
+import { NumberInput } from "@/options/components/ui/number-input"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { Button } from "@/options/components/ui/button"
 import { BodyText } from "@/options/components/ui/typography"
@@ -96,11 +95,27 @@ export function CustomFormatForm({
         <div className="flex-1 w-full">
           {!isIcoFormat ? (
             <div className="animate-in fade-in slide-in-from-right-1 duration-200 h-full space-y-1.5">
-              <ResizeConfigPanel
+              <ResizeModeSelector
                 disabled={false}
-                mode={value.resize.mode}
-                modeOptions={RESIZE_MODE_OPTIONS.map((entry) => ({ value: entry.value, label: entry.label }))}
-                onModeChange={(next: any) =>
+                value={value.resize.mode}
+                onChange={(next) => {
+                  if (next === "set_size") {
+                    onChange({
+                      ...value,
+                      resize: {
+                        mode: next,
+                        width: typeof value.resize.width === "number" ? value.resize.width : 1280,
+                        height: typeof value.resize.height === "number" ? value.resize.height : 960,
+                        aspectMode: value.resize.aspectMode ?? "original",
+                        aspectRatio: value.resize.aspectRatio ?? "16:9",
+                        sizeAnchor: value.resize.sizeAnchor ?? "width",
+                        fitMode: value.resize.fitMode ?? "fill",
+                        containBackground: value.resize.containBackground ?? "#000000"
+                      }
+                    })
+                    return
+                  }
+
                   onChange({
                     ...value,
                     resize: {
@@ -109,18 +124,109 @@ export function CustomFormatForm({
                       dpi: next === "page_size" ? 72 : undefined
                     }
                   })
-                }
-                onValueChange={(next: number) =>
-                  onChange({
-                    ...value,
-                    resize: {
-                      ...value.resize,
-                      value: next
-                    }
-                  })
-                }
-                value={typeof value.resize.value === "number" ? value.resize.value : 100}
+                }}
               />
+
+              {value.resize.mode === "set_size" ? (
+                <SmartResizeModule
+                  containBackground={value.resize.containBackground ?? "#000000"}
+                  disabled={false}
+                  fitMode={value.resize.fitMode ?? "fill"}
+                  height={typeof value.resize.height === "number" ? value.resize.height : 960}
+                  onAspectModeChange={(next) =>
+                    onChange({
+                      ...value,
+                      resize: {
+                        ...value.resize,
+                        mode: "set_size",
+                        aspectMode: next
+                      }
+                    })
+                  }
+                  onAspectRatioChange={(next) =>
+                    onChange({
+                      ...value,
+                      resize: {
+                        ...value.resize,
+                        mode: "set_size",
+                        aspectRatio: next
+                      }
+                    })
+                  }
+                  onContainBackgroundChange={(next) =>
+                    onChange({
+                      ...value,
+                      resize: {
+                        ...value.resize,
+                        mode: "set_size",
+                        containBackground: next
+                      }
+                    })
+                  }
+                  onFitModeChange={(next) =>
+                    onChange({
+                      ...value,
+                      resize: {
+                        ...value.resize,
+                        mode: "set_size",
+                        fitMode: next
+                      }
+                    })
+                  }
+                  onHeightChange={(next) =>
+                    onChange({
+                      ...value,
+                      resize: {
+                        ...value.resize,
+                        mode: "set_size",
+                        height: next
+                      }
+                    })
+                  }
+                  onSizeAnchorChange={(next) =>
+                    onChange({
+                      ...value,
+                      resize: {
+                        ...value.resize,
+                        mode: "set_size",
+                        sizeAnchor: next
+                      }
+                    })
+                  }
+                  onWidthChange={(next) =>
+                    onChange({
+                      ...value,
+                      resize: {
+                        ...value.resize,
+                        mode: "set_size",
+                        width: next
+                      }
+                    })
+                  }
+                  originalHeight={typeof value.resize.height === "number" ? value.resize.height : 960}
+                  originalWidth={typeof value.resize.width === "number" ? value.resize.width : 1280}
+                  width={typeof value.resize.width === "number" ? value.resize.width : 1280}
+                />
+              ) : null}
+
+              {value.resize.mode === "scale" ? (
+                <NumberInput
+                  label="Resize value (%)"
+                  disabled={false}
+                  min={1}
+                  onChangeValue={(next) =>
+                    onChange({
+                      ...value,
+                      resize: {
+                        ...value.resize,
+                        value: Math.max(1, next || 1)
+                      }
+                    })
+                  }
+                  value={typeof value.resize.value === "number" ? value.resize.value : 100}
+                />
+              ) : null}
+
               {value.resize.mode === "page_size" && (
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
                   <PaperConfig
