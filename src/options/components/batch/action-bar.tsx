@@ -1,6 +1,6 @@
 import { Tooltip } from "@/options/components/tooltip"
 import { Button } from "@/options/components/ui/button"
-import { Play, List, Clock, Check, X } from "lucide-react"
+import { Play, List, Clock, Check, X, Pause, Trash2, RotateCw } from "lucide-react"
 
 export interface QueueStats {
   queued: number
@@ -56,24 +56,28 @@ export function BatchActionBar({
 
         {canRetryFailed ? (
           <Button variant="warning" onClick={onRunFailed}>
+            <RotateCw size={16} />
             Retry Failed
           </Button>
         ) : null}
 
         {isRunning ? (
           <Button variant="destructive" onClick={onCancel}>
+            <X size={16} />
             {cancelRequested ? "Canceling..." : "Cancel"}
           </Button>
         ) : null}
 
         {isRunning ? (
           <Button variant="info" onClick={onTogglePause}>
+            {paused ? <Play size={16} /> : <Pause size={16} />}
             {paused ? "Resume" : "Pause"}
           </Button>
         ) : null}
 
         {!isRunning && queueHasItems ? (
           <Button variant="secondary" onClick={onClear}>
+            <Trash2 size={16} />
             Clear
           </Button>
         ) : null}

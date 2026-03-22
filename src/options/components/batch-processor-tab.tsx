@@ -99,6 +99,7 @@ export function BatchProcessorTab() {
   const [summary, setSummary] = useState<BatchSummary | null>(null)
   const [activeExportAction, setActiveExportAction] = useState<BatchExportAction | null>(null)
   const [exportToastPayload, setExportToastPayload] = useState<ConversionProgressPayload | null>(null)
+  const [batchToastPayload, setBatchToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false)
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
   const cancelRef = useRef(false)
@@ -457,6 +458,8 @@ export function BatchProcessorTab() {
     setSummary(null)
     setIsRunning(true)
     const startedAt = Date.now()
+    const batchToastId = `batch_progress_${startedAt}`
+
     let successCount = 0
     let failedCount = 0
 
@@ -473,6 +476,18 @@ export function BatchProcessorTab() {
         if (cancelRef.current) {
           break
         }
+
+        const currentTotalProcessed = successCount + failedCount
+        const overallPercent = Math.round((currentTotalProcessed / itemsToProcess.length) * 100)
+
+        setBatchToastPayload({
+          id: batchToastId,
+          fileName: `Processing batch (${itemsToProcess.length} files)`,
+          targetFormat: effectiveConfig.format,
+          status: "processing",
+          percent: overallPercent,
+          message: `Converted ${currentTotalProcessed}/${itemsToProcess.length} files...`
+        })
 
         const batchSlice = itemsToProcess.slice(start, start + concurrency)
         const results = await Promise.all(
@@ -496,6 +511,25 @@ export function BatchProcessorTab() {
       if (successCount + failedCount < total) {
         failedCount += total - (successCount + failedCount)
       }
+
+      setBatchToastPayload({
+        id: batchToastId,
+        fileName: canceled ? "Batch processing cancelled" : "Batch processing completed",
+        targetFormat: effectiveConfig.format,
+        status: canceled ? "error" : "success",
+        percent: 100,
+        message: canceled 
+          ? `Processed ${successCount} files before cancellation`
+          : `Successfully processed ${successCount} files in ${(durationMs / 1000).toFixed(1)}s`
+      })
+
+      // Hide batch toast after 4 seconds
+      setTimeout(() => {
+        setBatchToastPayload((current) => {
+          if (current?.id === batchToastId) return null
+          return current
+        })
+      }, 4000)
 
       setSummary({
         mode,
@@ -904,6 +938,7 @@ export function BatchProcessorTab() {
       />
 
       <ConversionProgressToastCard payload={exportToastPayload} />
+      <ConversionProgressToastCard payload={batchToastPayload} />
     </SurfaceCard>
   )
 }
