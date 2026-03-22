@@ -92,6 +92,12 @@ export function GlobalFormatsTab({
     }
   }
 
+  useEffect(() => {
+    if (!hasChanges) {
+      setIsSaving(false)
+    }
+  }, [hasChanges])
+
   const allEnabled = configs.every((f) => f.enabled)
 
   const handleToggleAll = () => {
@@ -110,7 +116,7 @@ export function GlobalFormatsTab({
 
   return (
     <SurfaceCard tone="soft">
-      <div className="mt-2 2xl:grid 2xl:grid-cols-2 2xl:gap-x-16">
+      <div className="mt-2 xl:grid xl:grid-cols-2 xl:gap-x-12">
         {configs.map((config) => {
           const supportsQuality = QUALITY_FORMATS.includes(config.format)
 
