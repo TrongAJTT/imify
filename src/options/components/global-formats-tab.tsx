@@ -110,7 +110,7 @@ export function GlobalFormatsTab({
 
   return (
     <SurfaceCard tone="soft">
-      <div className="mt-2">
+      <div className="mt-2 2xl:grid 2xl:grid-cols-2 2xl:gap-x-16">
         {configs.map((config) => {
           const supportsQuality = QUALITY_FORMATS.includes(config.format)
 

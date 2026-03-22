@@ -307,7 +307,7 @@ export function CustomFormatsTab({
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={state.custom_formats.map((f) => f.id)} strategy={rectSortingStrategy}>
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
             {state.custom_formats.map((item, index) => {
               return (
                 <SortableQueueItem key={item.id} id={item.id}>
