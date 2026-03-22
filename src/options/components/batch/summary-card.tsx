@@ -9,6 +9,7 @@ import { Subheading, MutedText, Heading, Kicker } from "@/options/components/ui/
 interface BatchSummaryCardProps {
   summary: BatchSummary
   successfulCount: number
+  targetFormat: string
   reductionPercent: number
   sourceTotalAfterRun: number
   outputTotalAfterRun: number
@@ -27,6 +28,7 @@ interface BatchSummaryCardProps {
 export function BatchSummaryCard({
   summary,
   successfulCount,
+  targetFormat,
   reductionPercent,
   sourceTotalAfterRun,
   outputTotalAfterRun,
@@ -41,6 +43,8 @@ export function BatchSummaryCard({
   onTogglePdfSplit,
   onDownloadIndividualPdfs
 }: BatchSummaryCardProps) {
+  const supportsPdfExport = ["jpg", "png", "webp", "bmp"].includes(targetFormat.toLowerCase())
+
   return (
     <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/10 p-5 shadow-sm">
       <div className="flex items-center gap-3 mb-4">
@@ -103,43 +107,45 @@ export function BatchSummaryCard({
                 {activeExportAction === "one_by_one" ? "Exporting files..." : "One by one"}
               </Button>
 
-              <div className="relative" ref={pdfSplitRef}>
-                <div className="inline-flex shadow-sm">
-                  <Button
-                    variant="secondary"
-                    className="rounded-r-none border-r-0"
-                    disabled={isExporting}
-                    onClick={onMergeIntoPdf}
-                  >
-                    <FileText size={16} className="text-red-500 mr-2" />
-                    {activeExportAction === "merge_pdf" ? "Merging PDF..." : "Merge into single PDF"}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    className="rounded-l-none px-2.5"
-                    aria-label="Open PDF export options"
-                    disabled={isExporting}
-                    onClick={onTogglePdfSplit}
-                  >
-                    <ChevronDown size={16} />
-                  </Button>
-                </div>
-
-                {isPdfSplitOpen ? (
-                  <div className="absolute right-0 z-10 mt-2 min-w-[220px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg p-1.5 flex flex-col">
+              {supportsPdfExport ? (
+                <div className="relative" ref={pdfSplitRef}>
+                  <div className="inline-flex shadow-sm">
                     <Button
-                      variant="ghost"
-                      className="w-full justify-start font-normal"
+                      variant="secondary"
+                      className="rounded-r-none border-r-0"
                       disabled={isExporting}
-                      onClick={onDownloadIndividualPdfs}
+                      onClick={onMergeIntoPdf}
                     >
-                      {activeExportAction === "individual_pdf"
-                        ? "Preparing Individual PDFs..."
-                        : `Individual PDF (${successfulCount})`}
+                      <FileText size={16} className="text-red-500 mr-2" />
+                      {activeExportAction === "merge_pdf" ? "Merging PDF..." : "Merge into single PDF"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="rounded-l-none px-2.5"
+                      aria-label="Open PDF export options"
+                      disabled={isExporting}
+                      onClick={onTogglePdfSplit}
+                    >
+                      <ChevronDown size={16} />
                     </Button>
                   </div>
-                ) : null}
-              </div>
+
+                  {isPdfSplitOpen ? (
+                    <div className="absolute right-0 z-10 mt-2 min-w-[220px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg p-1.5 flex flex-col">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start font-normal"
+                        disabled={isExporting}
+                        onClick={onDownloadIndividualPdfs}
+                      >
+                        {activeExportAction === "individual_pdf"
+                          ? "Preparing Individual PDFs..."
+                          : `Individual PDF (${successfulCount})`}
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>
         </>

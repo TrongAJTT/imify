@@ -897,6 +897,7 @@ export function BatchProcessorTab() {
           sourceTotalAfterRun={sourceTotalAfterRun}
           successfulCount={successfulOutputs.length}
           summary={summary}
+          targetFormat={effectiveConfig?.format || "jpg"}
         />
       ) : (!isRunning ? (
         <BatchUploadDropzone onAppendFiles={appendFiles} />
