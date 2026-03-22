@@ -1,4 +1,4 @@
-import JSZip from "jszip"
+import { zipSync } from "fflate"
 
 import { convertImageToPdf, mergeImagesToPdf } from "@/features/converter/pdf-engine"
 import type {
@@ -19,10 +19,18 @@ interface BasePackagerJob {
   failed: boolean
 }
 
+interface ZipEntry {
+  name: string
+  data: Uint8Array
+}
+
+type ZipLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
 interface ZipPackagerJob extends BasePackagerJob {
   mode: "zip"
-  zip: JSZip
-  zipLevel: number
+  entries: ZipEntry[]
+  entryNames: Set<string>
+  zipLevel: ZipLevel
 }
 
 interface MergePdfPackagerJob extends BasePackagerJob {
@@ -32,8 +40,9 @@ interface MergePdfPackagerJob extends BasePackagerJob {
 
 interface PdfZipPackagerJob extends BasePackagerJob {
   mode: "pdf_zip"
-  zip: JSZip
-  zipLevel: number
+  entries: ZipEntry[]
+  entryNames: Set<string>
+  zipLevel: ZipLevel
 }
 
 type PackagerJob = ZipPackagerJob | MergePdfPackagerJob | PdfZipPackagerJob
@@ -68,17 +77,57 @@ function failJob(id: number, error: unknown): void {
   })
 }
 
-function parseZipLevel(level: number | undefined): number {
+function parseZipLevel(level: number | undefined): ZipLevel {
   if (!Number.isFinite(level)) {
     return 6
   }
 
-  return Math.min(9, Math.max(0, Math.round(level as number)))
+  return Math.min(9, Math.max(0, Math.round(level as number))) as ZipLevel
 }
 
 function sanitizeBaseName(fileName: string): string {
   const stripped = fileName.replace(/\.[^.]+$/, "").trim()
   return stripped.length ? stripped : "output"
+}
+
+function toTransferableArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const normalized = new Uint8Array(bytes)
+  return normalized.buffer
+}
+
+function ensureUniqueEntryName(name: string, usedNames: Set<string>): string {
+  const normalized = name.trim().length ? name.trim() : "output"
+
+  if (!usedNames.has(normalized)) {
+    usedNames.add(normalized)
+    return normalized
+  }
+
+  const dotIndex = normalized.lastIndexOf(".")
+  const hasExtension = dotIndex > 0 && dotIndex < normalized.length - 1
+  const base = hasExtension ? normalized.slice(0, dotIndex) : normalized
+  const extension = hasExtension ? normalized.slice(dotIndex) : ""
+
+  let suffix = 2
+  while (true) {
+    const candidate = `${base}_${suffix}${extension}`
+    if (!usedNames.has(candidate)) {
+      usedNames.add(candidate)
+      return candidate
+    }
+
+    suffix += 1
+  }
+}
+
+function buildZipBytes(entries: ZipEntry[], level: ZipLevel): Uint8Array {
+  const archive: Record<string, Uint8Array> = {}
+
+  for (const entry of entries) {
+    archive[entry.name] = entry.data
+  }
+
+  return zipSync(archive, { level })
 }
 
 function ensureJob(id: number): PackagerJob {
@@ -121,7 +170,8 @@ function onStart(message: PackagerStartMessage): void {
       exportFileName: message.exportFileName,
       queue: Promise.resolve(),
       failed: false,
-      zip: new JSZip(),
+      entries: [],
+      entryNames: new Set<string>(),
       zipLevel: parseZipLevel(message.zipLevel)
     })
 
@@ -151,7 +201,8 @@ function onStart(message: PackagerStartMessage): void {
     exportFileName: message.exportFileName,
     queue: Promise.resolve(),
     failed: false,
-    zip: new JSZip(),
+    entries: [],
+    entryNames: new Set<string>(),
     zipLevel: parseZipLevel(message.zipLevel)
   })
 
@@ -160,12 +211,17 @@ function onStart(message: PackagerStartMessage): void {
 
 async function onAdd(message: PackagerAddMessage): Promise<void> {
   const job = ensureJob(message.id)
+  const sourceBytes = new Uint8Array(message.buffer)
   const blob = new Blob([message.buffer], {
     type: message.mimeType || "application/octet-stream"
   })
 
   if (job.mode === "zip") {
-    job.zip.file(message.name, blob)
+    const entryName = ensureUniqueEntryName(message.name, job.entryNames)
+    job.entries.push({
+      name: entryName,
+      data: sourceBytes
+    })
     job.receivedFiles += 1
 
     const percent = job.totalFiles > 0
@@ -194,7 +250,12 @@ async function onAdd(message: PackagerAddMessage): Promise<void> {
   })
 
   job.receivedFiles += 1
-  job.zip.file(`${sanitizeBaseName(message.name)}.pdf`, pdfBlob)
+  const pdfBytes = new Uint8Array(await pdfBlob.arrayBuffer())
+  const entryName = ensureUniqueEntryName(`${sanitizeBaseName(message.name)}.pdf`, job.entryNames)
+  job.entries.push({
+    name: entryName,
+    data: pdfBytes
+  })
 
   const percent = job.totalFiles > 0
     ? Math.min(76, 10 + Math.round((job.receivedFiles / job.totalFiles) * 66))
@@ -209,15 +270,11 @@ async function onFinalize(message: PackagerFinalizeMessage): Promise<void> {
   if (job.mode === "zip") {
     postProgress(message.id, 82, "Compressing ZIP archive...")
 
-    const zipBlob = await job.zip.generateAsync({
-      type: "blob",
-      compression: "DEFLATE",
-      compressionOptions: { level: job.zipLevel }
-    })
+    const zipBytes = buildZipBytes(job.entries, job.zipLevel)
 
     postProgress(message.id, 96, "Finalizing ZIP archive...")
 
-    const outputBuffer = await zipBlob.arrayBuffer()
+    const outputBuffer = toTransferableArrayBuffer(zipBytes)
     jobs.delete(message.id)
 
     workerPostMessage.postMessage(
@@ -260,15 +317,11 @@ async function onFinalize(message: PackagerFinalizeMessage): Promise<void> {
 
   postProgress(message.id, 88, "Compressing PDF ZIP archive...")
 
-  const zipBlob = await job.zip.generateAsync({
-    type: "blob",
-    compression: "DEFLATE",
-    compressionOptions: { level: job.zipLevel }
-  })
+  const zipBytes = buildZipBytes(job.entries, job.zipLevel)
 
   postProgress(message.id, 96, "Finalizing PDF ZIP archive...")
 
-  const outputBuffer = await zipBlob.arrayBuffer()
+  const outputBuffer = toTransferableArrayBuffer(zipBytes)
   jobs.delete(message.id)
 
   workerPostMessage.postMessage(

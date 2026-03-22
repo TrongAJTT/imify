@@ -1,4 +1,4 @@
-import JSZip from "jszip"
+import { zipSync } from "fflate"
 
 import { DEFAULT_ICO_SIZES, ICO_SIZE_OPTIONS } from "@/core/format-config"
 import type { IcoOptions } from "@/core/types"
@@ -7,6 +7,13 @@ interface IcoImageEntry {
   size: number
   bytes: Uint8Array
 }
+
+interface ZipEntry {
+  name: string
+  data: Uint8Array
+}
+
+type ZipLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 const ALLOWED_ICO_SIZES = new Set(ICO_SIZE_OPTIONS.map((e) => e.value))
 
@@ -100,6 +107,22 @@ async function buildIcoFromPngBlobs(
   return new Blob([output], { type: "image/x-icon" })
 }
 
+async function blobToBytes(blob: Blob): Promise<Uint8Array> {
+  return new Uint8Array(await blob.arrayBuffer())
+}
+
+function buildZipBlob(entries: ZipEntry[], level: ZipLevel = 0): Blob {
+  const archive: Record<string, Uint8Array> = {}
+
+  for (const entry of entries) {
+    archive[entry.name] = entry.data
+  }
+
+  const zipped = zipSync(archive, { level })
+
+  return new Blob([zipped as BlobPart], { type: "application/zip" })
+}
+
 export async function convertSourceToIcoOutput(
   sourceBlob: Blob,
   options?: IcoOptions
@@ -138,8 +161,6 @@ export async function convertSourceToIcoOutput(
     }
 
     // ===== WebKit kit =====
-    const zip = new JSZip()
-
     const faviconEntries = [16, 32, 48].map((size) => ({
       size,
       blob: pngMap.get(size)!
@@ -147,16 +168,12 @@ export async function convertSourceToIcoOutput(
 
     const faviconIco = await buildIcoFromPngBlobs(faviconEntries)
 
-    zip.file("favicon.ico", faviconIco)
-    zip.file("apple-touch-icon.png", pngMap.get(180)!)
-    zip.file("android-chrome-192x192.png", pngMap.get(192)!)
-    zip.file("android-chrome-512x512.png", pngMap.get(512)!)
-
-    // Normalize into a fresh Uint8Array backed by ArrayBuffer for Blob typing.
-    const zipBlob = await zip.generateAsync({
-      type: "blob",
-      compression: "STORE"
-    })
+    const zipBlob = buildZipBlob([
+      { name: "favicon.ico", data: await blobToBytes(faviconIco) },
+      { name: "apple-touch-icon.png", data: await blobToBytes(pngMap.get(180)!) },
+      { name: "android-chrome-192x192.png", data: await blobToBytes(pngMap.get(192)!) },
+      { name: "android-chrome-512x512.png", data: await blobToBytes(pngMap.get(512)!) }
+    ])
 
     return {
       blob: zipBlob,
