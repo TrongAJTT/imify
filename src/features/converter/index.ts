@@ -2,6 +2,7 @@ import type { FormatConfig, ImageFormat } from "@/core/types"
 import { convertRasterImage } from "@/features/converter/canvas-engine"
 import { convertSourceToIcoOutput } from "./ico-encoder"
 import { convertImageToPdf } from "@/features/converter/pdf-engine"
+import { convertImageWithWorker } from "@/features/converter/conversion-worker-pool"
 
 export interface ConvertImageParams {
   sourceBlob: Blob
@@ -32,24 +33,33 @@ export async function convertImage(
   }
 
   if (config.format === "ico") {
-    const icoOutput = await convertSourceToIcoOutput(sourceBlob, config.icoOptions)
+    try {
+      return await convertImageWithWorker(sourceBlob, config)
+    } catch {
+      const icoOutput = await convertSourceToIcoOutput(sourceBlob, config.icoOptions)
 
-    return {
-      blob: icoOutput.blob,
-      format: "ico",
-      outputExtension: icoOutput.outputExtension
+      return {
+        blob: icoOutput.blob,
+        format: "ico",
+        outputExtension: icoOutput.outputExtension
+      }
     }
+
   }
 
-  const raster = await convertRasterImage({
-    sourceBlob,
-    targetFormat: config.format,
-    resize: config.resize,
-    quality: config.quality
-  })
+  try {
+    return await convertImageWithWorker(sourceBlob, config)
+  } catch {
+    const raster = await convertRasterImage({
+      sourceBlob,
+      targetFormat: config.format,
+      resize: config.resize,
+      quality: config.quality
+    })
 
-  return {
-    blob: raster.outputBlob,
-    format: config.format
+    return {
+      blob: raster.outputBlob,
+      format: config.format
+    }
   }
 }

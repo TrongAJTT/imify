@@ -11,7 +11,7 @@ import type { ConversionProgressPayload, FormatConfig } from "@/core/types"
 import { applyExifPolicy } from "@/features/converter/exif"
 import { convertImage } from "@/features/converter"
 import { convertImageToPdf, mergeImagesToPdf } from "@/features/converter/pdf-engine"
-import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@/features/converter/wasm-worker-pool"
+import { setConversionWorkerPoolSize, terminateConversionWorkerPool } from "@/features/converter/conversion-worker-pool"
 import { BatchActionBar } from "@/options/components/batch/action-bar"
 import { BatchQueueGrid } from "@/options/components/batch/queue-grid"
 import { BatchSummaryCard } from "@/options/components/batch/summary-card"
@@ -53,8 +53,8 @@ function extensionFromMimeType(type: string): string {
   return matched?.[1]?.toLowerCase() || "png"
 }
 
-function isWorkerEncodedFormat(format: FormatConfig["format"]): format is "avif" | "jxl" {
-  return format === "avif" || format === "jxl"
+function isWorkerConvertibleFormat(format: FormatConfig["format"]): format is Exclude<FormatConfig["format"], "pdf"> {
+  return format !== "pdf"
 }
 
 export function BatchProcessorTab() {
@@ -127,8 +127,8 @@ export function BatchProcessorTab() {
     setCancelRequested(true)
     cancelRef.current = true
 
-    if (isWorkerEncodedFormat(effectiveConfig.format)) {
-      terminateWasmWorkerPool(effectiveConfig.format)
+    if (isWorkerConvertibleFormat(effectiveConfig.format)) {
+      terminateConversionWorkerPool(effectiveConfig.format)
     }
   }
 
@@ -143,7 +143,7 @@ export function BatchProcessorTab() {
   useEffect(() => {
     return () => {
       clearExportToastHideTimer()
-      terminateWasmWorkerPool()
+      terminateConversionWorkerPool()
     }
   }, [])
 
@@ -448,13 +448,13 @@ export function BatchProcessorTab() {
     setIsRunning(true)
     const startedAt = Date.now()
     const batchToastId = `batch_progress_${startedAt}`
-    const workerPoolFormat = isWorkerEncodedFormat(effectiveConfig.format)
+    const workerPoolFormat = isWorkerConvertibleFormat(effectiveConfig.format)
       ? effectiveConfig.format
       : null
-    const usesWasmWorkerPool = workerPoolFormat !== null
+    const usesConversionWorkerPool = workerPoolFormat !== null
 
-    if (usesWasmWorkerPool) {
-      setWasmWorkerPoolSize(workerPoolFormat, concurrency)
+    if (usesConversionWorkerPool) {
+      setConversionWorkerPoolSize(workerPoolFormat, concurrency)
     }
 
     let successCount = 0
@@ -555,8 +555,8 @@ export function BatchProcessorTab() {
       pauseRef.current = false
       cancelRef.current = false
 
-      if (usesWasmWorkerPool) {
-        terminateWasmWorkerPool(workerPoolFormat)
+      if (usesConversionWorkerPool) {
+        terminateConversionWorkerPool(workerPoolFormat)
       }
     }
   }
