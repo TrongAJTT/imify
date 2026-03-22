@@ -6,6 +6,7 @@ import { toUserFacingConversionError } from "@/core/error-utils"
 import type { FormatConfig } from "@/core/types"
 import { convertImage } from "@/features/converter"
 import { applyExifPolicy } from "@/features/converter/exif"
+import { fetchRemoteImageAsFile, parseHttpUrlsFromText } from "@/features/converter/remote-image-import"
 import {
   createImagePreviewInWorker,
   isImagePreviewWorkerSupported,
@@ -17,6 +18,7 @@ import { Button } from "@/options/components/ui/button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Heading, MutedText } from "@/options/components/ui/typography"
 import { useBatchStore } from "@/options/stores/batch-store"
+import { ImageUrlImportControl } from "@/options/components/image-url-import-control"
 import { Tooltip } from "./tooltip"
 import { LoadingSpinner } from "./loading-spinner"
 
@@ -174,6 +176,7 @@ export function SingleProcessorTab() {
   const [resultMeta, setResultMeta] = useState<ImageMeta | null>(null)
   const [resultFileName, setResultFileName] = useState<string>("")
   const [errorText, setErrorText] = useState<string | null>(null)
+  const [isImportingUrl, setIsImportingUrl] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [compareRatio, setCompareRatio] = useState(50)
@@ -347,6 +350,28 @@ export function SingleProcessorTab() {
     void attachSingleFile(files[0])
   }
 
+  const importFromImageUrls = async (urls: string[]) => {
+    const firstUrl = urls[0]
+    if (!firstUrl) {
+      return
+    }
+
+    setIsImportingUrl(true)
+    setErrorText(null)
+
+    try {
+      const file = await fetchRemoteImageAsFile(firstUrl)
+      await attachSingleFile(file)
+    } catch (error) {
+      const message = error instanceof Error && error.message.trim()
+        ? error.message
+        : "Unable to import image URL"
+      setErrorText(message)
+    } finally {
+      setIsImportingUrl(false)
+    }
+  }
+
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
       const clipboardItems = event.clipboardData?.items
@@ -354,27 +379,49 @@ export function SingleProcessorTab() {
         return
       }
 
+      const target = event.target as HTMLElement | null
+      if (target) {
+        const tagName = target.tagName.toLowerCase()
+        const isEditableTarget =
+          tagName === "input" ||
+          tagName === "textarea" ||
+          target.isContentEditable ||
+          Boolean(target.closest("[contenteditable='true']"))
+
+        if (isEditableTarget) {
+          return
+        }
+      }
+
       const imageItem = Array.from(clipboardItems).find(
         (item) => item.kind === "file" && item.type.startsWith("image/")
       )
 
-      if (!imageItem) {
+      if (imageItem) {
+        const blob = imageItem.getAsFile()
+        if (!blob) {
+          return
+        }
+
+        event.preventDefault()
+        const extension = blob.type.split("/")[1] || "png"
+        const namedFile = new File([blob], `pasted_${Date.now()}.${extension}`, {
+          type: blob.type,
+          lastModified: Date.now()
+        })
+
+        void attachSingleFile(namedFile)
         return
       }
 
-      const blob = imageItem.getAsFile()
-      if (!blob) {
+      const text = event.clipboardData?.getData("text") || ""
+      const urls = parseHttpUrlsFromText(text)
+      if (!urls.length) {
         return
       }
 
       event.preventDefault()
-      const extension = blob.type.split("/")[1] || "png"
-      const namedFile = new File([blob], `pasted_${Date.now()}.${extension}`, {
-        type: blob.type,
-        lastModified: Date.now()
-      })
-
-      void attachSingleFile(namedFile)
+      void importFromImageUrls(urls)
     }
 
     window.addEventListener("paste", onPaste)
@@ -488,26 +535,36 @@ export function SingleProcessorTab() {
     <div className="space-y-4">
       {!sourceFile ? (
         <SurfaceCard className="p-4">
-          <label
-            className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 px-4 py-14 text-center transition-colors group"
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault()
-              onAppendFiles(event.dataTransfer.files)
-            }}>
-            <input
-              className="hidden"
-              onChange={(event) => onAppendFiles(event.target.files)}
-              type="file"
-            />
-            <div className="bg-white dark:bg-slate-800 rounded-full shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-slate-100 dark:border-slate-700/50 p-4">
-              <ImagePlus size={28} className="text-sky-500/80 dark:text-sky-400" />
+          <div className="relative">
+            <label
+              className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 px-4 py-14 text-center transition-colors group"
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault()
+                onAppendFiles(event.dataTransfer.files)
+              }}>
+              <input
+                className="hidden"
+                onChange={(event) => onAppendFiles(event.target.files)}
+                type="file"
+              />
+              <div className="bg-white dark:bg-slate-800 rounded-full shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-slate-100 dark:border-slate-700/50 p-4">
+                <ImagePlus size={28} className="text-sky-500/80 dark:text-sky-400" />
+              </div>
+              <Heading className="text-base font-semibold">
+                Drop one image here, click to browse, or paste from clipboard
+              </Heading>
+              <MutedText className="mt-1.5">Single Processor with live preview, debounce, and image URL import</MutedText>
+            </label>
+
+            <div className="absolute top-3 right-3">
+              <ImageUrlImportControl
+                allowMultiple={false}
+                disabled={isImportingUrl}
+                onProcessUrls={importFromImageUrls}
+              />
             </div>
-            <Heading className="text-base font-semibold">
-              Drop one image here, click to browse, or paste from clipboard
-            </Heading>
-            <MutedText className="mt-1.5">Single Processor with live preview and debounce</MutedText>
-          </label>
+          </div>
         </SurfaceCard>
       ) : (
         <>

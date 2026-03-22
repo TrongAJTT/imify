@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor,
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor,
   useSensors, type DragEndEvent } from "@dnd-kit/core"
-import { arrayMove, sortableKeyboardCoordinates, } from "@dnd-kit/sortable"
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 
 import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
-import type { FormatConfig } from "@/core/types"
+import type { ConversionProgressPayload, FormatConfig } from "@/core/types"
+import { fetchRemoteImagesFromUrls, parseHttpUrlsFromText } from "@/features/converter/remote-image-import"
 import { BatchActionBar } from "@/options/components/batch/action-bar"
 import { BatchQueueGrid } from "@/options/components/batch/queue-grid"
 import { BatchSummaryCard } from "@/options/components/batch/summary-card"
@@ -20,19 +21,8 @@ import { HeavyFormatToast } from "@/options/components/batch/heavy-format-toast"
 import { OOMWarningDialog } from "@/options/components/batch/oom-warning-dialog"
 import { useBatchExecution } from "@/options/components/batch/hooks/use-batch-execution"
 import { useBatchExportActions } from "@/options/components/batch/hooks/use-batch-export-actions"
+import { ImageUrlImportControl } from "@/options/components/image-url-import-control"
 import { useBatchStore } from "@/options/stores/batch-store"
-
-function extensionFromMimeType(type: string): string {
-  if (type === "image/jpeg") {
-    return "jpg"
-  }
-  if (type === "image/svg+xml") {
-    return "svg"
-  }
-
-  const matched = /^image\/([a-z0-9.+-]+)$/i.exec(type)
-  return matched?.[1]?.toLowerCase() || "png"
-}
 
 export function BatchProcessorTab() {
   const targetFormat = useBatchStore((state) => state.targetFormat)
@@ -64,6 +54,8 @@ export function BatchProcessorTab() {
   const syncResizeToSource = useBatchStore((state) => state.syncResizeToSource)
 
   const [queue, setQueue] = useState<BatchQueueItem[]>([])
+  const [urlImportToast, setUrlImportToast] = useState<ConversionProgressPayload | null>(null)
+  const [isImportingUrls, setIsImportingUrls] = useState(false)
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false)
   const pdfSplitRef = useRef<HTMLDivElement>(null)
   const firstQueueItem = queue[0]
@@ -252,6 +244,72 @@ export function BatchProcessorTab() {
     setQueue((current) => [...current, ...nextItems])
   }
 
+  const appendRemoteImportFailures = (failures: Array<{ url: string; reason: string }>) => {
+    if (!failures.length) {
+      return
+    }
+
+    const now = Date.now()
+    const errorItems: BatchQueueItem[] = failures.map((failure, index) => ({
+      id: `${now}_url_error_${index}_${Math.random().toString(36).slice(2, 7)}`,
+      file: new File([failure.url], `url-error-${index + 1}.txt`, {
+        type: "text/plain",
+        lastModified: now + index
+      }),
+      status: "error",
+      percent: 100,
+      message: `${failure.reason} URL: ${failure.url}`
+    }))
+
+    setQueue((current) => [...current, ...errorItems])
+  }
+
+  const importFromImageUrls = async (urls: string[]) => {
+    if (!urls.length) {
+      return
+    }
+
+    setIsImportingUrls(true)
+    setUrlImportToast(null)
+
+    try {
+      const { files, failures } = await fetchRemoteImagesFromUrls(urls)
+
+      if (files.length) {
+        appendImageFiles(files)
+      }
+
+      const toastId = `url_import_${Date.now()}`
+      let message = ""
+      let status: "success" | "error" = "success"
+
+      if (files.length && !failures.length) {
+        message = `Imported ${files.length} image URL${files.length > 1 ? "s" : ""}.`
+      } else if (files.length && failures.length) {
+        message = `Imported ${files.length} URL${files.length > 1 ? "s" : ""}, ${failures.length} failed.`
+        status = "error"
+      } else {
+        message = "No valid image URLs were imported."
+        status = "error"
+      }
+
+      setUrlImportToast({
+        id: toastId,
+        fileName: "URL Import Status",
+        targetFormat: targetFormat,
+        status,
+        percent: 100,
+        message
+      })
+
+      setTimeout(() => {
+        setUrlImportToast((current) => (current?.id === toastId ? null : current))
+      }, 2000)
+    } finally {
+      setIsImportingUrls(false)
+    }
+  }
+
   const appendFiles = (files: FileList | null) => {
     if (!files || files.length === 0) {
       return
@@ -296,29 +354,30 @@ export function BatchProcessorTab() {
 
       const clipboardImages = Array.from(clipboardItems)
         .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
-        .map((item, index) => {
+        .map((item) => {
           const blob = item.getAsFile()
           if (!blob) {
             return null
           }
 
-          const timestamp = Date.now() + index
-          const extension = extensionFromMimeType(blob.type)
-          const generatedName = `cb-${timestamp}.${extension}`
-
-          return new File([blob], generatedName, {
-            type: blob.type || `image/${extension}`,
-            lastModified: timestamp
-          })
+          return blob
         })
         .filter((file): file is File => Boolean(file))
 
-      if (!clipboardImages.length) {
+      if (clipboardImages.length) {
+        event.preventDefault()
+        appendImageFiles(clipboardImages)
+        return
+      }
+
+      const text = event.clipboardData?.getData("text") || ""
+      const urls = parseHttpUrlsFromText(text)
+      if (!urls.length) {
         return
       }
 
       event.preventDefault()
-      appendImageFiles(clipboardImages)
+      void importFromImageUrls(urls)
     }
 
     window.addEventListener("paste", onPaste)
@@ -445,7 +504,16 @@ export function BatchProcessorTab() {
           targetFormat={effectiveConfig?.format || "jpg"}
         />
       ) : (!isRunning ? (
-        <BatchUploadDropzone onAppendFiles={appendFiles} />
+        <BatchUploadDropzone
+          onAppendFiles={appendFiles}
+          urlImportControl={
+            <ImageUrlImportControl
+              allowMultiple
+              disabled={isImportingUrls}
+              onProcessUrls={importFromImageUrls}
+            />
+          }
+        />
       ) : null)}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -471,6 +539,7 @@ export function BatchProcessorTab() {
         }}
       />
 
+      <ConversionProgressToastCard payload={urlImportToast} />
       <ConversionProgressToastCard payload={exportToastPayload} />
       <ConversionProgressToastCard payload={batchToastPayload} />
       {heavyFormatToast && (

@@ -18,6 +18,11 @@ export function QueueItemCard({
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!item.file.type.startsWith("image/")) {
+      setThumbnailUrl(null)
+      return
+    }
+
     const url = URL.createObjectURL(item.file)
     setThumbnailUrl(url)
     return () => {
