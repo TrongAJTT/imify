@@ -25,6 +25,7 @@ import { buildSmartOutputFileName, readImageDimensions } from "@/options/compone
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { HeavyFormatToast } from "@/options/components/batch/heavy-format-toast"
+import { OOMWarningDialog } from "@/options/components/batch/oom-warning-dialog"
 import { useBatchStore } from "@/options/stores/batch-store"
 
 function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
@@ -71,6 +72,8 @@ export function BatchProcessorTab() {
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
   const watermark = useBatchStore((state) => state.watermark)
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
+  const skipOomWarning = useBatchStore((state) => state.skipOomWarning)
+  const setSkipOomWarning = useBatchStore((state) => state.setSkipOomWarning)
   const heavyFormatToast = useBatchStore((state) => state.heavyFormatToast)
   const setHeavyFormatToast = useBatchStore((state) => state.setHeavyFormatToast)
   const setBatchIsRunning = useBatchStore((state) => state.setIsRunning)
@@ -86,6 +89,7 @@ export function BatchProcessorTab() {
   const [batchToastPayload, setBatchToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false)
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
+  const [oomWarning, setOomWarning] = useState<{ isOpen: boolean; totalSize: string; recommendedSize: string; mode: BatchRunMode } | null>(null)
   const cancelRef = useRef(false)
   const pauseRef = useRef(false)
   const pdfSplitRef = useRef<HTMLDivElement>(null)
@@ -426,20 +430,23 @@ export function BatchProcessorTab() {
     const selectedBytes = itemsToProcess.reduce((sum, item) => sum + item.file.size, 0)
     const selectedTooLarge = selectedBytes > MAX_TOTAL_QUEUE_BYTES
 
-    if (selectedTooLarge) {
-      const shouldContinue = window.confirm(
-        [
-          `Selected batch is ${toMb(selectedBytes)} MB.`,
-          `Recommended limit is ${toMb(MAX_TOTAL_QUEUE_BYTES)} MB to reduce OOM risk.`,
-          "Continue anyway?"
-        ].join("\n")
-      )
-
-      if (!shouldContinue) {
-        return
-      }
+    if (selectedTooLarge && !skipOomWarning) {
+      setOomWarning({
+        isOpen: true,
+        totalSize: String(toMb(selectedBytes)),
+        recommendedSize: String(toMb(MAX_TOTAL_QUEUE_BYTES)),
+        mode
+      })
+      return
     }
 
+    void startBatchExecution(itemsToProcess, mode)
+  }
+
+  const startBatchExecution = async (
+    itemsToProcess: BatchQueueItem[],
+    mode: BatchRunMode
+  ) => {
     cancelRef.current = false
     pauseRef.current = false
     setPaused(false)
@@ -948,6 +955,26 @@ export function BatchProcessorTab() {
         onConfirm={() => {
           setShowDownloadConfirm(false)
           void downloadIndividually(true)
+        }}
+      />
+
+      <OOMWarningDialog
+        isOpen={!!oomWarning?.isOpen}
+        totalSize={oomWarning?.totalSize || "0"}
+        recommendedSize={oomWarning?.recommendedSize || "350"}
+        onClose={() => setOomWarning(null)}
+        onConfirm={(dontShowAgain) => {
+          if (!oomWarning) return
+          if (dontShowAgain) {
+            setSkipOomWarning(true)
+          }
+          const mode = oomWarning.mode
+          setOomWarning(null)
+          const itemsToProcess =
+            mode === "failed"
+              ? queue.filter((item) => item.status === "error")
+              : queue.filter((item) => item.status === "queued" || item.status === "error")
+          void startBatchExecution(itemsToProcess, mode)
         }}
       />
 

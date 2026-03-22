@@ -10,7 +10,7 @@ import type {
 import type { BatchResizeMode } from "@/options/components/batch/types"
 
 export const MAX_FILE_SIZE_BYTES = 30 * 1024 * 1024
-export const MAX_TOTAL_QUEUE_BYTES = 150 * 1024 * 1024
+export const MAX_TOTAL_QUEUE_BYTES = 350 * 1024 * 1024
 
 export function toMb(sizeInBytes: number): number {
   return Math.round(sizeInBytes / 1024 / 1024)
