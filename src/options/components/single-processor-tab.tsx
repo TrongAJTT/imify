@@ -676,13 +676,9 @@ export function SingleProcessorTab() {
               </div>
 
               <div
-                className={`relative ${isFullscreen ? "flex-1" : "h-[480px]"} min-h-0 overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800/40 select-none ${zoom > 1 ? "cursor-grab" : "cursor-default"} ${isPanning ? "cursor-grabbing" : ""}`}
+                className={`relative ${isFullscreen ? "flex-1" : "h-[480px]"} min-h-0 overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800/40 select-none cursor-grab ${isPanning ? "cursor-grabbing" : ""}`}
                 ref={viewerRef}
                 onPointerDown={(event) => {
-                  if (zoom <= 1) {
-                    return
-                  }
-
                   const container = event.currentTarget
                   container.setPointerCapture(event.pointerId)
 
