@@ -130,7 +130,7 @@ export function CustomFormatForm({
                         mode: next,
                         width: typeof value.resize.width === "number" ? value.resize.width : 1280,
                         height: typeof value.resize.height === "number" ? value.resize.height : 960,
-                        aspectMode: value.resize.aspectMode ?? "original",
+                        aspectMode: "free",
                         aspectRatio: value.resize.aspectRatio ?? "16:9",
                         sizeAnchor: value.resize.sizeAnchor ?? "width",
                         fitMode: value.resize.fitMode ?? "fill",
@@ -144,7 +144,14 @@ export function CustomFormatForm({
                     ...value,
                     resize: {
                       mode: next as ResizeMode,
-                      value: next === "page_size" ? "A4" : next === "none" ? undefined : 100,
+                      value:
+                        next === "page_size"
+                          ? "A4"
+                          : next === "none"
+                            ? undefined
+                            : next === "scale"
+                              ? 100
+                              : 1280,
                       dpi: next === "page_size" ? 72 : undefined
                     }
                   })
@@ -155,8 +162,12 @@ export function CustomFormatForm({
                 <SmartResizeModule
                   containBackground={value.resize.containBackground ?? "#000000"}
                   disabled={false}
+                  forceFreeAspect
                   fitMode={value.resize.fitMode ?? "fill"}
                   height={typeof value.resize.height === "number" ? value.resize.height : 960}
+                  hideRatioControls
+                  aspectMode={value.resize.aspectMode ?? "free"}
+                  aspectRatio={value.resize.aspectRatio ?? "16:9"}
                   onAspectModeChange={(next) =>
                     onChange({
                       ...value,
@@ -234,9 +245,17 @@ export function CustomFormatForm({
                 />
               ) : null}
 
-              {value.resize.mode === "scale" ? (
+              {(value.resize.mode === "change_width" ||
+                value.resize.mode === "change_height" ||
+                value.resize.mode === "scale") ? (
                 <NumberInput
-                  label="Resize value (%)"
+                  label={
+                    value.resize.mode === "scale"
+                      ? "Resize value (%)"
+                      : value.resize.mode === "change_width"
+                        ? "Width (px)"
+                        : "Height (px)"
+                  }
                   disabled={false}
                   min={1}
                   onChangeValue={(next) =>
@@ -248,7 +267,13 @@ export function CustomFormatForm({
                       }
                     })
                   }
-                  value={typeof value.resize.value === "number" ? value.resize.value : 100}
+                  value={
+                    typeof value.resize.value === "number"
+                      ? value.resize.value
+                      : value.resize.mode === "scale"
+                        ? 100
+                        : 1280
+                  }
                 />
               ) : null}
 

@@ -56,6 +56,7 @@ export const RESIZE_MODE_OPTIONS: Array<{ value: ResizeMode; label: string }> = 
   { value: "none", label: "No resize" },
   { value: "change_width", label: "Set width" },
   { value: "change_height", label: "Set height" },
+  { value: "set_size", label: "Set size" },
   { value: "scale", label: "Scale" },
   { value: "page_size", label: "Paper size" }
 ]
@@ -75,7 +76,14 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
   const baseResize: ResizeConfig = {
     mode: input.resize.mode,
     value: input.resize.value,
-    dpi: input.resize.dpi
+    dpi: input.resize.dpi,
+    width: input.resize.width,
+    height: input.resize.height,
+    aspectMode: input.resize.aspectMode,
+    aspectRatio: input.resize.aspectRatio,
+    sizeAnchor: input.resize.sizeAnchor,
+    fitMode: input.resize.fitMode,
+    containBackground: input.resize.containBackground
   }
 
   if (input.format === "ico") {
@@ -87,6 +95,25 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
   if (baseResize.mode === "none") {
     baseResize.value = undefined
     baseResize.dpi = undefined
+    baseResize.width = undefined
+    baseResize.height = undefined
+    baseResize.aspectMode = undefined
+    baseResize.aspectRatio = undefined
+    baseResize.sizeAnchor = undefined
+    baseResize.fitMode = undefined
+    baseResize.containBackground = undefined
+  }
+
+  if (baseResize.mode === "set_size") {
+    baseResize.value = undefined
+    baseResize.dpi = undefined
+    baseResize.width = typeof baseResize.width === "number" ? Math.max(1, Math.round(baseResize.width)) : 1280
+    baseResize.height = typeof baseResize.height === "number" ? Math.max(1, Math.round(baseResize.height)) : 960
+    baseResize.aspectMode = baseResize.aspectMode ?? "free"
+    baseResize.aspectRatio = baseResize.aspectRatio ?? "16:9"
+    baseResize.sizeAnchor = baseResize.sizeAnchor ?? "width"
+    baseResize.fitMode = baseResize.fitMode ?? "fill"
+    baseResize.containBackground = baseResize.containBackground ?? "#000000"
   }
 
   if (baseResize.mode === "page_size") {
@@ -94,6 +121,27 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
     baseResize.dpi = DPI_OPTIONS.includes(baseResize.dpi as SupportedDPI)
       ? (baseResize.dpi as SupportedDPI)
       : 72
+    baseResize.width = undefined
+    baseResize.height = undefined
+    baseResize.aspectMode = undefined
+    baseResize.aspectRatio = undefined
+    baseResize.sizeAnchor = undefined
+    baseResize.fitMode = undefined
+    baseResize.containBackground = undefined
+  }
+
+  if (
+    baseResize.mode === "change_width" ||
+    baseResize.mode === "change_height" ||
+    baseResize.mode === "scale"
+  ) {
+    baseResize.width = undefined
+    baseResize.height = undefined
+    baseResize.aspectMode = undefined
+    baseResize.aspectRatio = undefined
+    baseResize.sizeAnchor = undefined
+    baseResize.fitMode = undefined
+    baseResize.containBackground = undefined
   }
 
   const normalizedIcoOptions: IcoOptions | undefined = input.format === "ico"

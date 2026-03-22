@@ -175,7 +175,18 @@ export function BatchSetupSidebarPanel() {
 
               <ResizeModeSelector
                 disabled={isRunning}
-                onChange={(mode) => onResizeModeChange(mode as BatchResizeMode)}
+                onChange={(mode) => {
+                  onResizeModeChange(mode as BatchResizeMode)
+
+                  if (mode === "change_width" || mode === "change_height") {
+                    onResizeValueChange(1280)
+                    return
+                  }
+
+                  if (mode === "scale") {
+                    onResizeValueChange(100)
+                  }
+                }}
                 value={resizeMode === "inherit" ? "none" : resizeMode}
               />
             </div>
@@ -186,6 +197,8 @@ export function BatchSetupSidebarPanel() {
                 disabled={isRunning}
                 fitMode={resizeFitMode}
                 height={resizeHeight}
+                aspectMode={resizeAspectMode}
+                aspectRatio={resizeAspectRatio}
                 onAspectModeChange={onResizeAspectModeChange}
                 onAspectRatioChange={onResizeAspectRatioChange}
                 onContainBackgroundChange={onResizeContainBackgroundChange}

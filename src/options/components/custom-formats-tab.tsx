@@ -216,8 +216,12 @@ export function CustomFormatsTab({
         return `Width ${typeof value === "number" ? value : 0}px`
       case "change_height":
         return `Height ${typeof value === "number" ? value : 0}px`
-      case "set_size":
-        return `${resize?.width ?? 0}x${resize?.height ?? 0}px`
+      case "set_size": {
+        const width = typeof resize?.width === "number" ? resize.width : 1280
+        const height = typeof resize?.height === "number" ? resize.height : 960
+        const fitMode = resize?.fitMode ?? "fill"
+        return `${height}x${width}px ${fitMode}`
+      }
       case "scale":
         return `Scale ${typeof value === "number" ? value : 100}%`
       case "page_size":
@@ -364,10 +368,25 @@ export function CustomFormatsTab({
                           className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                           onClick={(e) => {
                             e.stopPropagation()
+                            const normalizedResize =
+                              item.resize.mode === "set_size"
+                                ? {
+                                    ...item.resize,
+                                    width: typeof item.resize.width === "number" ? item.resize.width : 1280,
+                                    height: typeof item.resize.height === "number" ? item.resize.height : 960,
+                                    aspectMode: "free" as const,
+                                    aspectRatio: item.resize.aspectRatio ?? "16:9",
+                                    sizeAnchor: item.resize.sizeAnchor ?? "width",
+                                    fitMode: item.resize.fitMode ?? "fill",
+                                    containBackground: item.resize.containBackground ?? "#000000"
+                                  }
+                                : item.resize
+
                             setEditing({
                               id: item.id,
                               form: {
                                 ...item,
+                                resize: normalizedResize,
                                 icoOptions: item.icoOptions ?? {
                                   sizes: [...DEFAULT_ICO_SIZES],
                                   generateWebIconKit: false

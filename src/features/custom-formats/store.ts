@@ -76,7 +76,7 @@ function normalizeResizeConfig(config: ResizeConfig, format: FormatConfig["forma
       mode,
       width: typeof config.width === "number" ? Math.max(1, Math.round(config.width)) : 1280,
       height: typeof config.height === "number" ? Math.max(1, Math.round(config.height)) : 960,
-      aspectMode: config.aspectMode ?? "original",
+      aspectMode: config.aspectMode ?? "free",
       aspectRatio: config.aspectRatio ?? "16:9",
       sizeAnchor: config.sizeAnchor ?? "width",
       fitMode: config.fitMode ?? "fill",

@@ -3,6 +3,8 @@ import { LabelText } from "@/options/components/ui/typography"
 
 const RESIZE_MODE_OPTIONS: Array<{ value: ResizeMode; label: string }> = [
   { value: "none", label: "No resize" },
+  { value: "change_width", label: "Set width" },
+  { value: "change_height", label: "Set height" },
   { value: "set_size", label: "Set size" },
   { value: "scale", label: "Scale" },
   { value: "page_size", label: "Paper size" }
