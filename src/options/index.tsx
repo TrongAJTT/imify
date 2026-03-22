@@ -19,12 +19,13 @@ import { ContextMenuTab } from "@/options/components/context-menu-tab"
 import { CustomFormatsTab } from "@/options/components/custom-formats-tab"
 import { GlobalFormatsTab } from "@/options/components/global-formats-tab"
 import { OptionsHeader } from "@/options/components/options-header"
+import { SingleProcessorTab } from "@/options/components/single-processor-tab"
 import { TabButton } from "@/options/components/tab-button"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState,
   TAB_ITEMS, createCustomFormatId, normalizeCustomInput } from "@/options/shared"
-import { Globe, Heart, Layers, ListTree, Workflow, X } from "lucide-react"
+import { Globe, Heart, Image, Layers, ListTree, Workflow, X } from "lucide-react"
 
 const syncStorage = new Storage({ area: "sync" })
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
@@ -72,6 +73,7 @@ if (IS_OFFSCREEN_OPTIONS_DOCUMENT && !offscreenListenerAttached) {
 }
 
 const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
+  single: <Image size={18} />,
   batch: <Workflow size={18} />,
   menu: <ListTree size={18} />,
   global: <Globe size={18} />,
@@ -103,7 +105,7 @@ export default function OptionsPage() {
     return null
   }
 
-  const [activeTab, setActiveTab] = useState<OptionsTab>("batch")
+  const [activeTab, setActiveTab] = useState<OptionsTab>("single")
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [persistedState, setPersistedState, { isLoading }] = useStorage<PersistedStorageState>(
@@ -339,6 +341,10 @@ export default function OptionsPage() {
 
   const tabContent = useMemo(() => {
     switch (activeTab) {
+      case "single":
+        return (
+          <SingleProcessorTab />
+        )
       case "menu":
         return (
           <ContextMenuTab
@@ -549,7 +555,7 @@ export default function OptionsPage() {
               ))}
             </div>
 
-            {activeTab === "batch" && (
+            {(activeTab === "batch" || activeTab === "single") && (
               <BatchSetupSidebarPanel />
             )}
 

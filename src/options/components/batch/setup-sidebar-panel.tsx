@@ -99,7 +99,7 @@ export function BatchSetupSidebarPanel() {
       : `${watermark.type === "text" ? "Text" : "Logo"} - ${WATERMARK_POSITION_OPTIONS.find((option) => option.value === watermark.position)?.label || "Bottom-Right"}`
 
   return (
-    <SidebarPanel title="Batch setup">
+    <SidebarPanel title="CONFIGURATION">
       <div className="space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-xs font-medium">

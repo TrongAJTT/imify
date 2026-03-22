@@ -14,13 +14,17 @@ import type { CustomFormatInput } from "@/features/custom-formats"
 
 export { QUALITY_FORMATS }
 
-export type OptionsTab = "global" | "custom" | "batch" | "menu"
+export type OptionsTab = "single" | "global" | "custom" | "batch" | "menu"
 export interface PersistedStorageState {
   version: number
   state: ExtensionStorageState
 }
 
 export const TAB_ITEMS: Array<{ id: OptionsTab; label: string; description?: string }> = [
+  {
+    id: "single",
+    label: "Single Processor"
+  },
   { id: "batch", label: "Batch Processor" },
   { 
     id: "global", 
