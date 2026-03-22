@@ -236,6 +236,10 @@ function normalizePoolSize(value: number): number {
 
 const pools = new Map<WorkerFormat, ConversionWorkerPool>()
 
+export function isConversionWorkerSupported(): boolean {
+  return typeof Worker === "function"
+}
+
 function getPool(format: WorkerFormat): ConversionWorkerPool {
   const existing = pools.get(format)
   if (existing) {
@@ -276,6 +280,10 @@ export function terminateConversionWorkerPool(format?: WorkerFormat): void {
 export function convertImageWithWorker(sourceBlob: Blob, config: FormatConfig): Promise<ConvertImageResult> {
   if (config.format === "pdf") {
     return Promise.reject(new Error("PDF conversion is not supported in conversion worker"))
+  }
+
+  if (!isConversionWorkerSupported()) {
+    return Promise.reject(new Error("Conversion worker is unavailable in this runtime"))
   }
 
   return getPool(config.format).execute(sourceBlob, config)

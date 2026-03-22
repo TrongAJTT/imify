@@ -1,4 +1,5 @@
 import { encodeWithWasmWorker } from "@/features/converter/wasm-worker-pool"
+import { encodeJxlDirect } from "@/features/converter/wasm-direct-encoder"
 
 export interface JxlEncodeOptions {
   quality?: number
@@ -25,7 +26,10 @@ export async function encodeJxl(
     quality: options?.quality ?? defaultOptions.quality
   }
 
-  const encoded = await encodeWithWasmWorker("jxl", imageData, encodeOptions)
+  const encoded =
+    typeof Worker === "function"
+      ? await encodeWithWasmWorker("jxl", imageData, encodeOptions)
+      : await encodeJxlDirect(imageData, options?.quality)
 
   if (!encoded || encoded.byteLength === 0) {
     throw new Error("JXL encoding failed in the WASM encoder")

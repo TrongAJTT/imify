@@ -1,4 +1,5 @@
 import { encodeWithWasmWorker } from "@/features/converter/wasm-worker-pool"
+import { encodeAvifDirect } from "@/features/converter/wasm-direct-encoder"
 
 export interface AvifEncodeOptions {
   quality?: number
@@ -29,7 +30,10 @@ export async function encodeAvif(
     quality: options?.quality ?? defaultOptions.quality
   }
 
-  const encoded = await encodeWithWasmWorker("avif", imageData, encodeOptions)
+  const encoded =
+    typeof Worker === "function"
+      ? await encodeWithWasmWorker("avif", imageData, encodeOptions)
+      : await encodeAvifDirect(imageData, options?.quality)
 
   if (!encoded || encoded.byteLength === 0) {
     throw new Error("AVIF encoding failed in the WASM encoder")
