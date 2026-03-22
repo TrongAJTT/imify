@@ -15,7 +15,7 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   resizeValue: 1280,
   paperSize: "A4",
   dpi: 300,
-  stripExif: true,
+  stripExif: false,
   pngTinyMode: false,
   fileNamePattern: "[OriginalName]",
   watermark: DEFAULT_BATCH_WATERMARK

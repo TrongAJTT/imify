@@ -63,6 +63,7 @@ export function BatchSetupSidebarPanel() {
   const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
   const supportsExtendedConcurrency = HIGH_CONCURRENCY_FORMATS.includes(targetFormat)
   const supportsTinyMode = targetFormat === "png"
+  const supportsExif = ["jpg", "webp", "avif"].includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
   const concurrencyOptions = supportsExtendedConcurrency
     ? [
@@ -217,11 +218,18 @@ export function BatchSetupSidebarPanel() {
             {/* Privacy Mode */}
             <CheckboxCard
               title="Privacy mode"
-              subtitle={stripExif ? "Strip EXIF data from output images" : "Keep EXIF data when possible"}
-              checked={stripExif}
+              subtitle={
+                !supportsExif 
+                  ? `JPEG, WebP, and AVIF only`
+                  : stripExif 
+                    ? "Strip EXIF data from output images" 
+                    : "Keep EXIF data when possible"
+              }
+              checked={stripExif && supportsExif}
               onChange={onStripExifChange}
-              disabled={isRunning}
-              tooltip="Removes sensitive metadata (GPS, Camera info). Only JPEG source maintains EXIF for JPEG/AVIF targets."
+              disabled={isRunning || !supportsExif}
+              tooltip="Removes sensitive metadata (GPS, Camera info)."
+              className={!supportsExif ? "opacity-70" : ""}
             />
 
             <CheckboxCard
