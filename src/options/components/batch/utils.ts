@@ -182,17 +182,14 @@ export async function downloadWithFilename(blob: Blob, fileName: string): Promis
   const objectUrl = URL.createObjectURL(blob)
 
   try {
-    void chrome.runtime.sendMessage({
-      type: "IMIFY_QUEUE_DOWNLOAD_FILENAME",
-      filename: fileName
-    })
-
-    await chrome.downloads.download({
-      url: objectUrl,
-      filename: fileName,
-      saveAs: false,
-      conflictAction: "uniquify"
-    })
+    const anchor = document.createElement("a")
+    anchor.href = objectUrl
+    anchor.download = fileName
+    anchor.rel = "noopener noreferrer"
+    anchor.style.display = "none"
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
   } finally {
     setTimeout(() => {
       URL.revokeObjectURL(objectUrl)

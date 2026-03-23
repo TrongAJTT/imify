@@ -46,7 +46,7 @@ export function QueueItemCard({
               variant="secondary"
               size="icon"
               aria-label="Remove file"
-              className="absolute right-2 top-2 z-10 h-6 w-6 rounded-md bg-white/90 dark:bg-slate-900/90 p-1 text-slate-500 shadow-sm backdrop-blur hover:text-red-500 transition-colors border-0"
+              className="absolute right-2 top-2 z-[5] h-6 w-6 rounded-md bg-white/90 dark:bg-slate-900/90 p-1 text-slate-500 shadow-sm backdrop-blur hover:text-red-500 transition-colors border-0"
               onClick={() => onRemove(item.id)}
             >
               <X size={14} />

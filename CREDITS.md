@@ -43,6 +43,9 @@ Imify is made possible thanks to the following open-source projects and their co
 *   **[clsx](https://github.com/lukeed/clsx)**
     *   **Author(s):** Luke Edwards
     *   **License:** MIT License
+*   **[idb](https://github.com/jakearchibald/idb)**
+    *   **Author(s):** Jake Archibald
+    *   **License:** Apache License 2.0
 *   **[tailwind-merge](https://github.com/dcastil/tailwind-merge)**
     *   **Author(s):** Danylo
     *   **License:** MIT License

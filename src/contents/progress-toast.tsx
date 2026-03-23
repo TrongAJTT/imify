@@ -5,7 +5,12 @@ import type { ConversionProgressPayload } from "@/core/types"
 
 interface RuntimeMessage {
   type: string
-  payload?: ConversionProgressPayload
+  payload?: ConversionProgressPayload | DownloadViaAnchorPayload
+}
+
+interface DownloadViaAnchorPayload {
+  dataUrl: string
+  filename: string
 }
 
 export default function ProgressToast() {
@@ -15,8 +20,36 @@ export default function ProgressToast() {
     let hideTimer: ReturnType<typeof setTimeout> | null = null
 
     const listener: Parameters<typeof chrome.runtime.onMessage.addListener>[0] = (
-      message: RuntimeMessage
+      message: RuntimeMessage,
+      _sender,
+      sendResponse
     ) => {
+      if (message.type === "IMIFY_DOWNLOAD_VIA_PAGE_ANCHOR") {
+        const payload = message.payload as unknown as DownloadViaAnchorPayload
+
+        if (!payload?.dataUrl || !payload?.filename) {
+          sendResponse({ ok: false })
+          return true
+        }
+
+        try {
+          const anchor = document.createElement("a")
+          anchor.href = payload.dataUrl
+          anchor.download = payload.filename
+          anchor.rel = "noopener noreferrer"
+          anchor.style.display = "none"
+          document.body.appendChild(anchor)
+          anchor.click()
+          anchor.remove()
+
+          sendResponse({ ok: true })
+        } catch {
+          sendResponse({ ok: false })
+        }
+
+        return true
+      }
+
       if (message.type !== "CONVERT_PROGRESS" || !message.payload) {
         return
       }

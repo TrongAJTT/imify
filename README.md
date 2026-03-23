@@ -2,6 +2,10 @@
 
 > A privacy-first, 100% client-side browser extension that allows users to seamlessly convert, resize, and format images directly from the browser. Built with Manifest V3, it utilizes the browser's native capabilities and WebAssembly (Wasm) to process images locally without ever sending user data to an external server.
 
+[![License](https://img.shields.io/badge/license-Apache%202-blue)](./LICENSE)
+[![React](https://img.shields.io/badge/React-18.2.0-61dafb.svg)](https://reactjs.org/)
+[![Plasmo](https://img.shields.io/badge/Plasmo-Framework-blue?logo=plasmo)](https://www.plasmo.com/)
+
 ## ✨ Key Features
 
 * **100% Client-Side Processing**: Zero server dependencies. Complete data privacy.
@@ -15,6 +19,16 @@
 * **Frictionless Import**: Easily fetch images via remote URLs directly from the UI or via clipboard paste, bypassing strict web CORS limits smoothly.
 * **Custom Presets**: Create, edit, and toggle your own custom conversion formats to appear in the right-click menu.
 * **Real-time Progress**: Non-intrusive sticky toasts inject into the current webpage to show conversion progress for heavy formats (e.g. AVIF, PDF).
+
+## 📸 Screenshots
+
+<div align="center">
+  <img src="https://cdn.trongajtt.com/apps/imify/your-menu-your-decision.webp" alt="ImifyPreview" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/single-image-processor.webp" alt="ImifyPreview" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/batch-image-processor.webp" alt="ImifyPreview" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/unmatched-format-compatibility.webp" alt="ImifyPreview" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/personalized-default-settings.webp" alt="ImifyPreview" style="width:32%;">
+</div>
 
 ## 🛠️ Tech Stack
 

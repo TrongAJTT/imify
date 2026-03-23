@@ -3,6 +3,7 @@ import { useKeyPress } from "@/options/hooks/use-key-press"
 import type { SavedSetupPreset } from "@/options/stores/batch-store"
 import { Check, Edit2, FolderOpen, Trash2, X } from "lucide-react"
 import React, { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 
 interface OpenPresetDialogProps {
   isOpen: boolean
@@ -108,8 +109,12 @@ export const OpenPresetDialog: React.FC<OpenPresetDialogProps> = ({
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+  if (typeof document === "undefined") {
+    return null
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -165,6 +170,7 @@ export const OpenPresetDialog: React.FC<OpenPresetDialogProps> = ({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

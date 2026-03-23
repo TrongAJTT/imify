@@ -7,19 +7,7 @@ import { extractConfigIdFromMenuItem, rebuildContextMenu } from "@/background/co
 import { convertImageViaOffscreen } from "@/background/offscreen-bridge"
 import { publishConvertProgress } from "@/background/message-hub"
 
-const pendingDownloadFilenameQueue: string[] = []
-const pendingDownloadFilenameById = new Map<number, string>()
-const DOWNLOAD_FILENAME_MESSAGE = "IMIFY_QUEUE_DOWNLOAD_FILENAME"
-const UUID_ZIP_FILE_NAME_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.zip$/i
-
-function removeFirstPendingFilename(target: string): void {
-  const index = pendingDownloadFilenameQueue.indexOf(target)
-
-  if (index >= 0) {
-    pendingDownloadFilenameQueue.splice(index, 1)
-  }
-}
+const DOWNLOAD_VIA_PAGE_ANCHOR_MESSAGE = "IMIFY_DOWNLOAD_VIA_PAGE_ANCHOR"
 
 function getAllConfigs(state: ExtensionStorageState): FormatConfig[] {
   return [...Object.values(state.global_formats), ...state.custom_formats]
@@ -84,23 +72,35 @@ function replaceFilenameExtension(fileName: string, extension: string): string {
 async function downloadBlob(
   blob: Blob,
   filename: string,
-  format: ImageFormat
+  format: ImageFormat,
+  tabId?: number
 ): Promise<void> {
   const dataUrl = await blobToDownloadDataUrl(blob, format)
 
-  // For data URL downloads Chrome can fall back to "download.ext" on some setups.
-  // Queue the intended filename so onDeterminingFilename can enforce it.
-  pendingDownloadFilenameQueue.push(filename)
+  if (typeof tabId === "number") {
+    try {
+      const response = await chrome.tabs.sendMessage(tabId, {
+        type: DOWNLOAD_VIA_PAGE_ANCHOR_MESSAGE,
+        payload: {
+          dataUrl,
+          filename
+        }
+      })
 
-  const downloadId = await chrome.downloads.download({
+      if (response?.ok) {
+        return
+      }
+    } catch {
+      // Content script may not be ready on this tab (e.g., restricted page).
+      // Fallback to downloads API below.
+    }
+  }
+
+  await chrome.downloads.download({
     url: dataUrl,
     filename,
     saveAs: false
   })
-
-  if (typeof downloadId === "number") {
-    pendingDownloadFilenameById.set(downloadId, filename)
-  }
 }
 
 function sleep(ms: number): Promise<void> {
@@ -206,7 +206,7 @@ async function handleImageMenuClick(
       ? replaceFilenameExtension(fileName, converted.outputExtension)
       : fileName
 
-    await downloadBlob(converted.blob, outputFilename, config.format)
+    await downloadBlob(converted.blob, outputFilename, config.format, tab?.id)
   } catch (error) {
     const message = toUserFacingConversionError(error, "Unexpected conversion error")
 
@@ -255,68 +255,6 @@ chrome.runtime.onStartup.addListener(() => {
     })
 })
 
-chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
-  let resolvedFilename = pendingDownloadFilenameById.get(item.id)
-
-  if (resolvedFilename) {
-    removeFirstPendingFilename(resolvedFilename)
-  }
-
-  const isExtensionGeneratedUrlDownload =
-    item.byExtensionId === chrome.runtime.id &&
-    (item.url.startsWith("data:") || item.url.startsWith("blob:"))
-
-  if (!resolvedFilename && isExtensionGeneratedUrlDownload && pendingDownloadFilenameQueue.length > 0) {
-    resolvedFilename = pendingDownloadFilenameQueue.shift()
-  }
-
-  if (resolvedFilename) {
-    pendingDownloadFilenameById.delete(item.id)
-
-    suggest({
-      filename: resolvedFilename,
-      conflictAction: "uniquify"
-    })
-
-    return true
-  }
-
-  const basename = item.filename.split(/[\\/]/).pop() ?? item.filename
-  if (
-    isExtensionGeneratedUrlDownload &&
-    UUID_ZIP_FILE_NAME_REGEX.test(basename)
-  ) {
-    suggest({
-      filename: `${Math.floor(Date.now() / 1000)}.zip`,
-      conflictAction: "uniquify"
-    })
-
-    return true
-  }
-
-  // If the browser attempts to save a JPEG as .jfif (due to Windows registry),
-  // we force it back to .jpg here.
-  if (item.filename.toLowerCase().endsWith(".jfif")) {
-    suggest({
-      filename: item.filename.replace(/\.jfif$/i, ".jpg")
-    })
-    return true
-  }
-})
-
-chrome.downloads.onChanged.addListener((delta) => {
-  if (typeof delta.id !== "number") {
-    return
-  }
-
-  const isFinished = delta.state?.current === "complete" || delta.state?.current === "interrupted"
-  if (!isFinished) {
-    return
-  }
-
-  pendingDownloadFilenameById.delete(delta.id)
-})
-
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   void handleImageMenuClick(info, tab)
 })
@@ -326,16 +264,6 @@ chrome.action.onClicked.addListener(() => {
 })
 
 chrome.runtime.onMessage.addListener((message) => {
-  if (message?.type === DOWNLOAD_FILENAME_MESSAGE) {
-    const filename = typeof message.filename === "string" ? message.filename.trim() : ""
-
-    if (filename) {
-      pendingDownloadFilenameQueue.push(filename)
-    }
-
-    return
-  }
-
   if (message?.type !== "IMIFY_STATE_UPDATED" || !message.payload) {
     return
   }

@@ -1,8 +1,10 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { X, Save, FileEdit, Zap, Tags } from "lucide-react"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { Button } from "@/options/components/ui/button"
 import { buildSmartOutputFileName } from "@/options/components/batch/pipeline"
+import { useKeyPress } from "@/options/hooks/use-key-press"
 
 interface BatchRenameDialogProps {
   isOpen: boolean
@@ -37,6 +39,14 @@ export function BatchRenameDialog({
 }: BatchRenameDialogProps) {
   const [pattern, setPattern] = useState(initialPattern)
 
+  useKeyPress("Escape", onClose, isOpen)
+
+  useEffect(() => {
+    if (isOpen) {
+      setPattern(initialPattern)
+    }
+  }, [isOpen, initialPattern])
+
   const preview = useMemo(() => {
     return buildSmartOutputFileName({
       pattern,
@@ -51,8 +61,12 @@ export function BatchRenameDialog({
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+  if (typeof document === "undefined") {
+    return null
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
@@ -171,6 +185,7 @@ export function BatchRenameDialog({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

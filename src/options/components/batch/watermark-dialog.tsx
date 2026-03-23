@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import { ImagePlus, Save, Stamp, Type, X, UploadCloud, CheckCircle2 } from "lucide-react"
 
 import { Button } from "@/options/components/ui/button"
@@ -15,6 +16,7 @@ import {
 } from "@/options/components/batch/watermark"
 import { watermarkStorage } from "@/core/indexed-db"
 import { useBatchStore, type SetupContext } from "@/options/stores/batch-store"
+import { useKeyPress } from "@/options/hooks/use-key-press"
 
 interface BatchWatermarkDialogProps {
   isOpen: boolean
@@ -27,15 +29,29 @@ function toBlobFromDataUrl(dataUrl: string): Promise<Blob> {
   return fetch(dataUrl).then((response) => response.blob())
 }
 
+function cloneWatermarkConfig(config: BatchWatermarkConfig): BatchWatermarkConfig {
+  return {
+    ...config
+  }
+}
+
 export function BatchWatermarkDialog({
   isOpen,
   initialConfig,
   onClose,
   onSave
 }: BatchWatermarkDialogProps) {
-  const [draft, setDraft] = useState<BatchWatermarkConfig>(initialConfig)
+  const [draft, setDraft] = useState<BatchWatermarkConfig>(cloneWatermarkConfig(initialConfig))
   const [previewUrl, setPreviewUrl] = useState<string>(WATERMARK_PREVIEW_DATA_URL)
   const [isLogoLoading, setIsLogoLoading] = useState(false)
+
+  useKeyPress("Escape", onClose, isOpen)
+
+  useEffect(() => {
+    if (isOpen) {
+      setDraft(cloneWatermarkConfig(initialConfig))
+    }
+  }, [isOpen, initialConfig])
 
   const summary = useMemo(() => {
     if (draft.type === "none") {
@@ -160,8 +176,12 @@ export function BatchWatermarkDialog({
     return null
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+  if (typeof document === "undefined") {
+    return null
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
         <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
           <div className="flex items-center gap-3">
@@ -413,6 +433,7 @@ export function BatchWatermarkDialog({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

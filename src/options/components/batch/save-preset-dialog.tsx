@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { Check, Save, X } from "lucide-react"
+import { createPortal } from "react-dom"
 
 import { Button } from "@/options/components/ui/button"
 import { useKeyPress } from "@/options/hooks/use-key-press"
@@ -40,8 +41,12 @@ export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+  if (typeof document === "undefined") {
+    return null
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">{title}</h3>
@@ -108,6 +113,7 @@ export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

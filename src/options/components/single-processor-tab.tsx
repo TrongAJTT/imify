@@ -13,6 +13,7 @@ import {
   terminateImagePreviewWorker
 } from "@/features/converter/preview-worker-client"
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
+import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
 import { downloadWithFilename, formatBytes, withBatchResize } from "@/options/components/batch/utils"
 import { Button } from "@/options/components/ui/button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
@@ -68,6 +69,11 @@ interface ImageMeta {
   width: number
   height: number
   ratioLabel: string
+}
+
+interface NameDimensions {
+  width: number
+  height: number
 }
 
 function toAspectRatioLabel(width: number, height: number): string {
@@ -165,6 +171,7 @@ export function SingleProcessorTab() {
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
   const pngTinyMode = useBatchStore((state) => state.pngTinyMode)
+  const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
   const watermark = useBatchStore((state) => state.watermark)
   const syncResizeToSource = useBatchStore((state) => state.syncResizeToSource)
 
@@ -174,6 +181,8 @@ export function SingleProcessorTab() {
   const [resultBlob, setResultBlob] = useState<Blob | null>(null)
   const [resultPreviewUrl, setResultPreviewUrl] = useState<string | null>(null)
   const [resultMeta, setResultMeta] = useState<ImageMeta | null>(null)
+  const [resultOutputExtension, setResultOutputExtension] = useState<string | null>(null)
+  const [resultNameDimensions, setResultNameDimensions] = useState<NameDimensions | null>(null)
   const [resultFileName, setResultFileName] = useState<string>("")
   const [errorText, setErrorText] = useState<string | null>(null)
   const [isImportingUrl, setIsImportingUrl] = useState(false)
@@ -318,6 +327,8 @@ export function SingleProcessorTab() {
     setErrorText(null)
     setResultBlob(null)
     setResultMeta(null)
+    setResultOutputExtension(null)
+    setResultNameDimensions(null)
     setSourceMeta(null)
     setResultFileName("")
     resetViewport()
@@ -431,6 +442,29 @@ export function SingleProcessorTab() {
   }, [])
 
   useEffect(() => {
+    if (!sourceFile || !resultBlob || !resultOutputExtension) {
+      setResultFileName("")
+      return
+    }
+
+    const smartName = buildSmartOutputFileName({
+      pattern: fileNamePattern,
+      originalFileName: sourceFile.name,
+      outputExtension: resultOutputExtension,
+      index: 1,
+      totalFiles: 1,
+      dimensions: resultNameDimensions,
+      now: new Date()
+    })
+
+    setResultFileName(
+      resultOutputExtension === "zip"
+        ? smartName || "favicon_kit.zip"
+        : smartName || toOutputFilenameWithExtension(sourceFile.name, resultOutputExtension)
+    )
+  }, [fileNamePattern, resultBlob, resultNameDimensions, resultOutputExtension, sourceFile])
+
+  useEffect(() => {
     if (!sourceFile) {
       setIsProcessing(false)
       return
@@ -461,11 +495,26 @@ export function SingleProcessorTab() {
           }
 
           const outputExtension = converted.outputExtension ?? effectiveConfig.format
+          const dimensions =
+            (await readImageDimensions(normalizedBlob)) ||
+            (await readImageDimensions(sourceFile))
+          const smartName = buildSmartOutputFileName({
+            pattern: fileNamePattern,
+            originalFileName: sourceFile.name,
+            outputExtension,
+            index: 1,
+            totalFiles: 1,
+            dimensions,
+            now: new Date()
+          })
+
           setResultBlob(normalizedBlob)
+          setResultOutputExtension(outputExtension)
+          setResultNameDimensions(dimensions)
           setResultFileName(
             outputExtension === "zip"
-              ? "favicon_kit.zip"
-              : toOutputFilenameWithExtension(sourceFile.name, outputExtension)
+              ? smartName || "favicon_kit.zip"
+              : smartName || toOutputFilenameWithExtension(sourceFile.name, outputExtension)
           )
 
           if (normalizedBlob.type.startsWith("image/")) {
@@ -493,6 +542,8 @@ export function SingleProcessorTab() {
 
           setResultBlob(null)
           setResultMeta(null)
+          setResultOutputExtension(null)
+          setResultNameDimensions(null)
           setResultFileName("")
           updateResultPreview(null)
           setErrorText(toUserFacingConversionError(error, "Unable to process image"))
@@ -507,7 +558,7 @@ export function SingleProcessorTab() {
     return () => {
       clearTimeout(timer)
     }
-  }, [effectiveConfig, sourceFile, stripExif, watermark])
+  }, [effectiveConfig, fileNamePattern, sourceFile, stripExif, watermark])
 
   const sourceBytes = sourceFile?.size || 0
   const resultBytes = resultBlob?.size || 0
@@ -584,6 +635,8 @@ export function SingleProcessorTab() {
                     setErrorText(null)
                     setResultBlob(null)
                     setResultMeta(null)
+                    setResultOutputExtension(null)
+                    setResultNameDimensions(null)
                     setResultFileName("")
                     updateSourcePreview(null)
                     updateResultPreview(null)

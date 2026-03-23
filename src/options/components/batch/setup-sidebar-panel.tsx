@@ -27,12 +27,16 @@ import { SavePresetDialog } from "./save-preset-dialog"
 import { OpenPresetDialog } from "./open-preset-dialog"
 
 const HIGHLIGHT_COLORS = [
-  "#0ea5e9",
-  "#22c55e",
-  "#f59e0b",
-  "#f43f5e",
-  "#6366f1",
-  "#14b8a6"
+  "#0ea5e9", // Sky
+  "#22c55e", // Green
+  "#f59e0b", // Amber
+  "#f43f5e", // Rose
+  "#6366f1", // Indigo
+  "#14b8a6", // Teal
+  "#a855f7", // Purple
+  "#f97316", // Orange
+  "#06b6d4", // Cyan
+  "#ec4899"  // Pink
 ] as const
 
 const BASE_CONCURRENCY_OPTIONS = [
