@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { ImagePlus, Save, Stamp, Type, X } from "lucide-react"
+import { ImagePlus, Save, Stamp, Type, X, UploadCloud, CheckCircle2 } from "lucide-react"
 
 import { Button } from "@/options/components/ui/button"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
@@ -13,6 +13,8 @@ import {
   applyWatermarkToImageBlob,
   toDataUrl
 } from "@/options/components/batch/watermark"
+import { watermarkStorage } from "@/core/indexed-db"
+import { useBatchStore, type SetupContext } from "@/options/stores/batch-store"
 
 interface BatchWatermarkDialogProps {
   isOpen: boolean
@@ -33,6 +35,7 @@ export function BatchWatermarkDialog({
 }: BatchWatermarkDialogProps) {
   const [draft, setDraft] = useState<BatchWatermarkConfig>(initialConfig)
   const [previewUrl, setPreviewUrl] = useState<string>(WATERMARK_PREVIEW_DATA_URL)
+  const [isLogoLoading, setIsLogoLoading] = useState(false)
 
   const summary = useMemo(() => {
     if (draft.type === "none") {
@@ -44,6 +47,23 @@ export function BatchWatermarkDialog({
     return `${typeLabel} - ${posLabel}`
   }, [draft.position, draft.type])
 
+  // Load logo from IndexedDB if it exists but DataURL is missing (after refresh)
+  useEffect(() => {
+    if (isOpen && draft.type === "logo" && draft.logoBlobId && !draft.logoDataUrl) {
+      void (async () => {
+        try {
+          const blob = await watermarkStorage.get(draft.logoBlobId!)
+          if (blob) {
+            const dataUrl = await toDataUrl(blob)
+            setDraft(c => ({ ...c, logoDataUrl: dataUrl }))
+          }
+        } catch (err) {
+          console.error("Failed to load logo from storage", err)
+        }
+      })()
+    }
+  }, [isOpen, draft.type, draft.logoBlobId, draft.logoDataUrl])
+
   useEffect(() => {
     if (!isOpen) {
       return
@@ -53,6 +73,10 @@ export function BatchWatermarkDialog({
 
     const renderPreview = async () => {
       try {
+        // We need a stable preview base. If draft has a logo but it's not loaded yet, 
+        // wait for it unless we have the DataUrl.
+        if (draft.type === "logo" && !draft.logoDataUrl) return
+
         // Create an Image object to handle SVG decoding safely
         const img = new Image()
         const ready = new Promise<void>((resolve, reject) => {
@@ -109,6 +133,28 @@ export function BatchWatermarkDialog({
       }
     }
   }, [previewUrl])
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsLogoLoading(true)
+    try {
+      const blobId = `logo_${Date.now()}`
+      await watermarkStorage.save(blobId, file)
+      const dataUrl = await toDataUrl(file)
+      
+      setDraft(c => ({
+        ...c,
+        logoDataUrl: dataUrl,
+        logoBlobId: blobId
+      }))
+    } catch (err) {
+      console.error("Failed to upload logo", err)
+    } finally {
+      setIsLogoLoading(false)
+    }
+  }
 
   if (!isOpen) {
     return null
@@ -281,24 +327,29 @@ export function BatchWatermarkDialog({
                       type="file"
                       id="watermark-logo-upload"
                       accept="image/png"
-                      onChange={(event) => {
-                        const file = event.target.files?.[0]
-                        if (!file) return
-                        void toDataUrl(file).then((dataUrl) => {
-                          setDraft((current) => ({ ...current, logoDataUrl: dataUrl }))
-                        })
-                      }}
+                      onChange={handleLogoUpload}
                       className="hidden"
                     />
                     <label 
                       htmlFor="watermark-logo-upload"
-                      className="cursor-pointer px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors"
+                      className={`cursor-pointer px-3 py-1.5 rounded text-[11px] font-bold transition-all flex items-center gap-2
+                        ${isLogoLoading 
+                          ? "bg-slate-100 text-slate-400" 
+                          : "bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:hover:bg-sky-500/20"}`}
                     >
-                      Choose file
+                      {isLogoLoading ? (
+                        <div className="w-3 h-3 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <UploadCloud size={14} />
+                      )}
+                      {draft.logoDataUrl ? "Change logo" : "Upload logo"}
                     </label>
-                    <span className="text-[10px] text-slate-500 truncate max-w-[150px]">
-                      {draft.logoDataUrl ? "Logo updated" : "No file selected"}
-                    </span>
+                    {draft.logoDataUrl && !isLogoLoading && (
+                      <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 size={12} />
+                        READY
+                      </div>
+                    )}
                   </div>
                 </label>
                 <div className="mt-4">
@@ -329,7 +380,28 @@ export function BatchWatermarkDialog({
           <div className="flex gap-3">
             <SecondaryButton onClick={onClose} className="px-6 font-semibold">Cancel</SecondaryButton>
             <Button
-              onClick={() => {
+              onClick={async () => {
+                // Check if we switched away from a previous logo to cleanup IndexedDB
+                if (initialConfig.logoBlobId && draft.logoBlobId !== initialConfig.logoBlobId) {
+                  const logoId = initialConfig.logoBlobId
+                  
+                  // Check if other presets or context configs are still using this logo before deleting
+                  const presets = useBatchStore.getState().presets
+                  const currentContextConfigs = (useBatchStore.getState() as any).contextConfigs
+
+                  const isLogoInUseByOtherPresets = presets.some(p => 
+                    p.config.watermark.logoBlobId === logoId
+                  )
+                  const isLogoInUseByCurrentContexts = (["single", "batch"] as SetupContext[]).some(ctx => {
+                    return currentContextConfigs?.[ctx]?.watermark?.logoBlobId === logoId && 
+                           (ctx !== useBatchStore.getState().setupContext || draft.logoBlobId !== logoId)
+                  })
+
+                  if (!isLogoInUseByOtherPresets && !isLogoInUseByCurrentContexts) {
+                    await watermarkStorage.remove(logoId)
+                  }
+                }
+
                 onSave(draft)
                 onClose()
               }}

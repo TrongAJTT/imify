@@ -25,6 +25,7 @@ import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker, MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState,
   TAB_ITEMS, createCustomFormatId, normalizeCustomInput } from "@/options/shared"
+import { useBatchStore } from "@/options/stores/batch-store"
 import { Globe, Heart, Image, Layers, ListTree, Workflow, X } from "lucide-react"
 import { Tooltip } from "./components/tooltip"
 
@@ -120,11 +121,15 @@ export default function OptionsPage() {
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
-  const [persistedState, setPersistedState, { isLoading }] = useStorage<PersistedStorageState>(
+  const setSetupContext = useBatchStore((store) => store.setSetupContext)
+  const isBatchStoreRehydrated = useBatchStore((store) => (store as any)._hasHydrated)
+  const [persistedState, setPersistedState, { isLoading: isSettingsLoading }] = useStorage<PersistedStorageState>(
     { key: STORAGE_KEY, instance: syncStorage },
     DEFAULT_PERSISTED_STATE
   )
   const [isDark, setIsDark] = useStorage<boolean>({ key: "imify_dark_mode", instance: syncStorage }, false)
+
+  const isLoading = isSettingsLoading || !isBatchStoreRehydrated
 
   useEffect(() => {
     if (isDark) {
@@ -133,6 +138,12 @@ export default function OptionsPage() {
       document.documentElement.classList.remove("dark")
     }
   }, [isDark])
+
+  useEffect(() => {
+    if (activeTab === "single" || activeTab === "batch") {
+      setSetupContext(activeTab)
+    }
+  }, [activeTab, setSetupContext])
 
   useEffect(() => {
     if (!isDonateDialogOpen && !isAboutDialogOpen && !isAttributionDialogOpen) {

@@ -1,4 +1,5 @@
 import type { BatchWatermarkConfig, BatchWatermarkPosition } from "@/options/components/batch/types"
+import { watermarkStorage } from "@/core/indexed-db"
 
 const PREVIEW_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
   <defs>
@@ -98,8 +99,30 @@ export async function applyWatermarkToImageBlob(sourceBlob: Blob, watermark: Bat
     return sourceBlob
   }
 
-  if (watermark.type === "logo" && !watermark.logoDataUrl) {
-    return sourceBlob
+  // Handle Logo retrieval logic
+  let logoBlob: Blob | null = null
+  if (watermark.type === "logo") {
+    if (watermark.logoDataUrl) {
+      // Direct DataURL (typical when just uploaded or from memory)
+      try {
+        logoBlob = await (await fetch(watermark.logoDataUrl)).blob()
+      } catch (err) {
+        console.warn("Failed to fetch logo from DataUrl", err)
+      }
+    }
+
+    if (!logoBlob && watermark.logoBlobId) {
+      // Fallback to IndexedDB (typical after refresh)
+      try {
+        logoBlob = await watermarkStorage.get(watermark.logoBlobId)
+      } catch (err) {
+        console.error("Failed to load logo from IndexedDB", err)
+      }
+    }
+
+    if (!logoBlob) {
+      return sourceBlob
+    }
   }
 
   const sourceBitmap = await createImageBitmap(sourceBlob)
@@ -142,8 +165,7 @@ export async function applyWatermarkToImageBlob(sourceBlob: Blob, watermark: Bat
       ctx.fillText(text, point.x, point.y)
     }
 
-    if (watermark.type === "logo" && watermark.logoDataUrl) {
-      const logoBlob = await (await fetch(watermark.logoDataUrl)).blob()
+    if (watermark.type === "logo" && logoBlob) {
       const logoBitmap = await createImageBitmap(logoBlob)
 
       try {

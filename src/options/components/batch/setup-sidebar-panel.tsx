@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { FileEdit, Stamp } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { Check, FileEdit, FolderOpen, History, Save, Stamp } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
@@ -19,8 +19,21 @@ import {
 } from "@/options/components/batch/types"
 import { WATERMARK_POSITION_OPTIONS } from "@/options/components/batch/watermark"
 import { useBatchStore } from "@/options/stores/batch-store"
+import { Tooltip } from "@/options/components/tooltip"
+import { Button } from "@/options/components/ui/button"
 import { BatchRenameDialog } from "./rename-dialog"
 import { BatchWatermarkDialog } from "./watermark-dialog"
+import { SavePresetDialog } from "./save-preset-dialog"
+import { OpenPresetDialog } from "./open-preset-dialog"
+
+const HIGHLIGHT_COLORS = [
+  "#0ea5e9",
+  "#22c55e",
+  "#f59e0b",
+  "#f43f5e",
+  "#6366f1",
+  "#14b8a6"
+] as const
 
 const BASE_CONCURRENCY_OPTIONS = [
   { value: 1, label: "1" },
@@ -33,6 +46,7 @@ const BASE_CONCURRENCY_OPTIONS = [
 const EXTENDED_CONCURRENCY_VALUES = [10, 15, 20, 25, 30] as const
 
 export function BatchSetupSidebarPanel() {
+  const setupContext = useBatchStore((state) => state.setupContext)
   const isRunning = useBatchStore((state) => state.isRunning)
   const targetFormat = useBatchStore((state) => state.targetFormat)
   const concurrency = useBatchStore((state) => state.concurrency)
@@ -79,9 +93,18 @@ export function BatchSetupSidebarPanel() {
   const onWatermarkChange = useBatchStore((state) => state.setWatermark)
   const heavyFormatToast = useBatchStore((state) => state.heavyFormatToast)
   const setHeavyFormatToast = useBatchStore((state) => state.setHeavyFormatToast)
+  const presets = useBatchStore((state) => state.presets)
+  const recentPresetIds = useBatchStore((state) => state.recentPresetIds)
+  const saveCurrentPreset = useBatchStore((state) => state.saveCurrentPreset)
+  const applyPresetToCurrentContext = useBatchStore((state) => state.applyPresetToCurrentContext)
+  const updatePresetMeta = useBatchStore((state) => state.updatePresetMeta)
+  const deletePreset = useBatchStore((state) => state.deletePreset)
 
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
   const [isWatermarkDialogOpen, setIsWatermarkDialogOpen] = useState(false)
+  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false)
+  const [isOpenPresetDialogOpen, setIsOpenPresetDialogOpen] = useState(false)
+  const [editingPreset, setEditingPreset] = useState<any | null>(null)
   const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
   const supportsExtendedConcurrency = HIGH_CONCURRENCY_FORMATS.includes(targetFormat)
   const supportsTinyMode = targetFormat === "png"
@@ -121,8 +144,97 @@ export function BatchSetupSidebarPanel() {
       ? "None"
       : `${watermark.type === "text" ? "Text" : "Logo"} - ${WATERMARK_POSITION_OPTIONS.find((option) => option.value === watermark.position)?.label || "Bottom-Right"}`
 
+  const scopedPresets = useMemo(
+    () => presets
+      .filter((preset) => preset.context === setupContext)
+      .sort((a, b) => b.updatedAt - a.updatedAt),
+    [presets, setupContext]
+  )
+
+  const recentPresetId = useMemo(() => {
+    const preferred = recentPresetIds[setupContext]
+    if (preferred && scopedPresets.some((preset) => preset.id === preferred)) {
+      return preferred
+    }
+
+    return scopedPresets[0]?.id ?? null
+  }, [recentPresetIds, scopedPresets, setupContext])
+
+  const onApplyRecentPreset = () => {
+    if (!recentPresetId) {
+      return
+    }
+
+    applyPresetToCurrentContext(recentPresetId)
+  }
+
+  const onApplyPreset = (id: string) => {
+    applyPresetToCurrentContext(id)
+    setIsOpenPresetDialogOpen(false)
+  }
+
+  const onSavePreset = (name: string, color: string) => {
+    if (editingPreset) {
+      updatePresetMeta({
+        id: editingPreset.id,
+        name,
+        highlightColor: color
+      })
+      setEditingPreset(null)
+    } else {
+      saveCurrentPreset({
+        name,
+        highlightColor: color
+      })
+    }
+    setIsSavePresetDialogOpen(false)
+  }
+
+  const onEditPreset = (preset: any) => {
+    setEditingPreset(preset)
+    setIsSavePresetDialogOpen(true)
+  }
+
+  const panelActions = (
+    <>
+      <Tooltip content="Save current" variant="nowrap">
+        <button
+          aria-label="Save current configuration"
+          className="rounded-md border border-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          type="button"
+          onClick={() => setIsSavePresetDialogOpen(true)}
+          disabled={isRunning}
+        >
+          <Save size={14} />
+        </button>
+      </Tooltip>
+      <Tooltip content="Open recent" variant="nowrap">
+        <button
+          aria-label="Open recent configuration"
+          className="rounded-md border border-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          type="button"
+          onClick={onApplyRecentPreset}
+          disabled={isRunning || !recentPresetId}
+        >
+          <History size={14} />
+        </button>
+      </Tooltip>
+      <Tooltip content="Open saved" variant="nowrap">
+        <button
+          aria-label="Open saved configuration"
+          className="rounded-md border border-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          type="button"
+          onClick={() => setIsOpenPresetDialogOpen(true)}
+          disabled={isRunning || !scopedPresets.length}
+        >
+          <FolderOpen size={14} />
+        </button>
+      </Tooltip>
+    </>
+  )
+
   return (
-    <SidebarPanel title="CONFIGURATION">
+    <SidebarPanel title="CONFIGURATION" headerActions={panelActions}>
       <div className="space-y-3 mt-1">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-xs font-medium">
@@ -139,6 +251,7 @@ export function BatchSetupSidebarPanel() {
               ))}
             </select>
           </label>
+
 
           <label className="relative block text-xs font-medium">
             <LabelText>Concurrency</LabelText>
@@ -313,6 +426,30 @@ export function BatchSetupSidebarPanel() {
         onClose={() => setIsWatermarkDialogOpen(false)}
         onSave={onWatermarkChange}
         initialConfig={watermark}
+      />
+
+      <SavePresetDialog
+        isOpen={isSavePresetDialogOpen}
+        onClose={() => {
+          setIsSavePresetDialogOpen(false)
+          setEditingPreset(null)
+        }}
+        onSave={onSavePreset}
+        highlightColors={[...HIGHLIGHT_COLORS]}
+        title={editingPreset ? "Edit Configuration Preset" : "Save Configuration Preset"}
+        defaultName={editingPreset ? editingPreset.name : `${setupContext === "single" ? "Single" : "Batch"} Preset ${new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit"
+        })}`}
+      />
+
+      <OpenPresetDialog
+        isOpen={isOpenPresetDialogOpen}
+        onClose={() => setIsOpenPresetDialogOpen(false)}
+        onApply={onApplyPreset}
+        onDelete={deletePreset}
+        onEdit={onEditPreset}
+        presets={scopedPresets}
       />
     </SidebarPanel>
   )
