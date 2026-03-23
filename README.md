@@ -1,26 +1,27 @@
-# 🖼️ Imify - Image Converter & Saver
+# <img src="assets/icon.png" alt="Imify" width="24" height="24" style="vertical-align: middle;"> Imify - Save & Convert Images
 
-A privacy-first, 100% client-side Chrome Extension that allows users to seamlessly convert, resize, and format images directly from the browser. Built with Manifest V3, it utilizes the browser's native `OffscreenCanvas` to process images locally without ever sending user data to an external server.
+> A privacy-first, 100% client-side browser extension that allows users to seamlessly convert, resize, and format images directly from the browser. Built with Manifest V3, it utilizes the browser's native capabilities and WebAssembly (Wasm) to process images locally without ever sending user data to an external server.
 
 ## ✨ Key Features
 
 * **100% Client-Side Processing**: Zero server dependencies. Complete data privacy.
-* **Rich Format Support**: Convert to `JPG`, `PNG`, `WebP`, `AVIF`, `BMP`, and `PDF`.
+* **Rich Format Support**: Read and convert to `JPG`, `PNG` (including TinyPNG-like quantization), `WebP`, `AVIF`, `JXL` (JPEG XL), `TIFF`, `ICO`, `BMP`, and `PDF`.
 * **Dynamic Context Menu**: Right-click any image on the web to instantly convert and download it using your predefined formats.
-* **Advanced Resizing Engine**:
-  * Constant (Keep original size)
-  * Change Width / Height (Maintains aspect ratio)
-  * Scale by Percentage (%)
-  * **Page Size Matching**: Automatically fit images to standard paper sizes (A4, A3, Letter, etc.) with adjustable DPI (72, 150, 300) for print-ready PDFs or JPGs.
-* **Batch Processing**: A dedicated dashboard to drag-and-drop multiple files/URLs and convert them in bulk.
-* **Custom Presets**: Create, edit, and toggle your own custom conversion formats (e.g., "Avatar 500px WebP") to appear in the right-click menu.
-* **Real-time Progress**: Non-intrusive sticky toasts inject into the current webpage to show conversion progress for heavy formats like AVIF.
+* **Smart Resizing Engine**:
+  * Keep original size / Change Width / Change Height / Scale by Percentage (%)
+  * **Smart Framing**: Fit (Contain) or Fill (Cover) target dimensions.
+  * **Page Size Matching**: Automatically fit images to standard paper sizes (A4, Letter, etc.) with adjustable DPI print-ready PDFs.
+* **Batch Processing**: A dedicated dashboard to drag-and-drop multiple files to convert them in bulk. Includes ZIP packaging.
+* **Frictionless Import**: Easily fetch images via remote URLs directly from the UI or via clipboard paste, bypassing strict web CORS limits smoothly.
+* **Custom Presets**: Create, edit, and toggle your own custom conversion formats to appear in the right-click menu.
+* **Real-time Progress**: Non-intrusive sticky toasts inject into the current webpage to show conversion progress for heavy formats (e.g. AVIF, PDF).
 
 ## 🛠️ Tech Stack
 
 * **Framework**: [Plasmo](https://docs.plasmo.com/) (React-based browser extension framework)
-* **UI/Styling**: React, Tailwind CSS
+* **UI/Styling**: React, Tailwind CSS, Lucide React
 * **Core Image Processing**: Native `OffscreenCanvas` API, Web Workers
+* **Advanced Encoders**: WebAssembly (Wasm) via `@jsquash/avif` & `@jsquash/jxl`, `UPNG.js`, `UTIF.js`, `fflate`
 * **PDF Generation**: `pdf-lib` (Client-side PDF document creation)
 * **Language**: TypeScript (Strict typing)
 * **Manifest Version**: MV3
@@ -97,4 +98,12 @@ This extension is explicitly designed to respect user privacy:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
+This project is licensed under the Apache 2.0 License - see the [LICENSE](./LICENSE) file for details.
+
+## 💝 Support & Donate
+
+If you find Heta useful, please consider supporting its development:
+
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-6e5494?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/TrongAJTT)
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/trongajtt)

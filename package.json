@@ -1,9 +1,9 @@
 {
   "name": "imify",
-  "displayName": "Imify - Save & Convert images",
-  "version": "0.0.1",
-  "description": "Save and Convert images",
-  "author": "TrongAJTT",
+  "displayName": "Imify - Save & Process images",
+  "version": "1.0.0",
+  "description": "A privacy-first, powerful image toolkit. Save image directly from your context menu, and even more. Supports ICO, AVIF, JPEG XL.",
+  "author": "TrongAJTT <trong.ajtt.dev@gmail.com>",
   "scripts": {
     "sync:wasm": "node scripts/sync-wasm.mjs",
     "predev": "pnpm sync:wasm",

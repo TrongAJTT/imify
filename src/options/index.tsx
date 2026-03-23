@@ -26,6 +26,7 @@ import { Kicker, MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState,
   TAB_ITEMS, createCustomFormatId, normalizeCustomInput } from "@/options/shared"
 import { Globe, Heart, Image, Layers, ListTree, Workflow, X } from "lucide-react"
+import { Tooltip } from "./components/tooltip"
 
 const syncStorage = new Storage({ area: "sync" })
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
@@ -118,6 +119,7 @@ export default function OptionsPage() {
   const [activeTab, setActiveTab] = useState<OptionsTab>("single")
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
+  const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
   const [persistedState, setPersistedState, { isLoading }] = useStorage<PersistedStorageState>(
     { key: STORAGE_KEY, instance: syncStorage },
     DEFAULT_PERSISTED_STATE
@@ -133,14 +135,18 @@ export default function OptionsPage() {
   }, [isDark])
 
   useEffect(() => {
-    if (!isDonateDialogOpen && !isAboutDialogOpen) {
+    if (!isDonateDialogOpen && !isAboutDialogOpen && !isAttributionDialogOpen) {
       return
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsDonateDialogOpen(false)
-        setIsAboutDialogOpen(false)
+        if (isAttributionDialogOpen) {
+          setIsAttributionDialogOpen(false)
+        } else {
+          setIsDonateDialogOpen(false)
+          setIsAboutDialogOpen(false)
+        }
       }
     }
 
@@ -149,7 +155,7 @@ export default function OptionsPage() {
     return () => {
       window.removeEventListener("keydown", onKeyDown)
     }
-  }, [isDonateDialogOpen, isAboutDialogOpen])
+  }, [isDonateDialogOpen, isAboutDialogOpen, isAttributionDialogOpen])
 
   const state = normalizeExtensionState(persistedState?.state ?? DEFAULT_STORAGE_STATE)
 
@@ -427,7 +433,7 @@ export default function OptionsPage() {
                   />
                   <div>
                     <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Imify</h3>
-                    <p className="text-sm text-sky-500 dark:text-sky-400 uppercase tracking-widest font-bold">Save and Convert images</p>
+                    <p className="text-sm text-sky-500 dark:text-sky-400 uppercase tracking-widest font-bold">Save and Process images</p>
                     <div className="flex items-center gap-2 mt-2">
                        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500">v1.0.0</span>
                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Stable</span>
@@ -488,22 +494,35 @@ export default function OptionsPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <a
-                      href="https://github.com/TrongAJTT/imify"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-5 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-bold shadow-lg shadow-slate-900/10 dark:shadow-none hover:-translate-y-0.5 transition-all flex items-center gap-2"
-                    >
-                      Repository
-                    </a>
-                    <a
-                      href="https://www.trongajtt.com/apps"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2"
-                    >
-                      More Apps
-                    </a>
+                    <Tooltip content="Open Source Licenses" variant="nowrap">
+                      <button
+                        type="button"
+                        onClick={() => setIsAttributionDialogOpen(true)}
+                        className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2"
+                      >
+                        Attribution
+                      </button>
+                    </Tooltip>
+                    <Tooltip content="View Github repo of Imify" variant="nowrap">
+                      <a
+                        href="https://github.com/TrongAJTT/imify"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-5 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-bold shadow-lg shadow-slate-900/10 dark:shadow-none hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                      >
+                        Repository
+                      </a>
+                    </Tooltip>
+                    <Tooltip content="View Author's Apps" variant="nowrap">
+                      <a
+                        href="https://www.trongajtt.com/apps"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2"
+                      >
+                        More Apps
+                      </a>
+                    </Tooltip>
                   </div>
                 </div>
               </div>
@@ -549,6 +568,45 @@ export default function OptionsPage() {
                     <svg className="w-5 h-5 text-rose-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M20.2 7c-.4-1.1-1.3-1.8-2.2-2.3C17.1 4.2 16 4 15 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h11c1 0 2.1-.2 3-.7s1.8-1.2 2.2-2.3c.4-1.1.4-2.4 0-3.5 0-.1 0-.1-.1-.2.4-1.1.4-2.4 0-3.5 0-.1-.1-.1-.1-.2-.1.1 0 0 0 0zm-2 7.7c-.1.3-.3.6-.5.8-.2.2-.5.3-.8.4H15v-2h1.9c.3.1.6.2.8.4.2.2.4.5.5.8.1.5.1 1.1 0 1.6zm0-5.4c-.1.3-.3.6-.5.8-.2.2-.5.3-.8.4H15V8.4h1.9c.3.1.6.2.8.4.2.2.4.5.5.8.1.6.1 1.2 0 1.7z"/></svg>
                     <span className="truncate">Buy Me A Coffee</span>
                   </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {isAttributionDialogOpen ? (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="w-full max-w-2xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 shadow-2xl relative overflow-y-auto max-h-[90vh]">
+              <Button variant="outline" size="icon" className="absolute top-4 right-4 rounded-full border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 z-10" onClick={() => setIsAttributionDialogOpen(false)} aria-label="Close attribution dialog">
+                <X size={16} />
+              </Button>
+              <div className="flex flex-col">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Open Source Attribution</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">Imify is made possible thanks to the following open-source projects.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {[
+                    { name: 'React', url: 'https://react.dev/', author: 'Meta Platforms, Inc.', license: 'MIT' },
+                    { name: 'Plasmo', url: 'https://docs.plasmo.com/', author: 'Plasmo Corp.', license: 'MIT' },
+                    { name: 'Tailwind CSS', url: 'https://tailwindcss.com/', author: 'Tailwind Labs, Inc.', license: 'MIT' },
+                    { name: 'pdf-lib', url: 'https://pdf-lib.js.org/', author: 'Andrew Dillon (Hopding)', license: 'MIT' },
+                    { name: 'Lucide React', url: 'https://lucide.dev/', author: 'Lucide Contributors', license: 'ISC' },
+                    { name: 'fflate', url: 'https://github.com/101arrowz/fflate', author: 'Arjun Barrett (101arrowz)', license: 'MIT' },
+                    { name: 'UPNG.js', url: 'https://github.com/photopea/UPNG.js', author: 'Ivan Kutskir (photopea)', license: 'MIT' },
+                    { name: 'UTIF.js', url: 'https://github.com/photopea/UTIF.js', author: 'Ivan Kutskir (photopea)', license: 'MIT' },
+                    { name: 'Zustand', url: 'https://github.com/pmndrs/zustand', author: 'Poimandres', license: 'MIT' },
+                    { name: 'dnd-kit', url: 'https://dndkit.com/', author: 'Claudéric Demers', license: 'MIT' },
+                    { name: '@jsquash/avif & jxl', url: 'https://github.com/jSquash/jSquash', author: 'jSquash Contributors', license: 'MIT' },
+                  ].map((lib) => (
+                    <div key={lib.name} className="flex flex-col p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                      <a href={lib.url} target="_blank" rel="noreferrer" className="font-bold text-slate-900 dark:text-white hover:text-sky-500 transition-colors">
+                        {lib.name}
+                      </a>
+                      <div className="text-xs text-slate-500 mt-1 flex items-center justify-between">
+                        <span>{lib.author}</span>
+                        <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-medium">{lib.license}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

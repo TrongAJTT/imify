@@ -28,13 +28,13 @@ export function OptionsHeader({
         />
         <div>
           <Kicker className="leading-none mb-1">Imify</Kicker>
-          <Heading className="mt-1 text-xl leading-none">Save and Convert Images</Heading>
+          <Heading className="text-xl leading-none">Save and Process Images</Heading>
           {isLoading ? <MutedText className="mt-1 text-[10px]">Loading settings...</MutedText> : null}
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <Tooltip content="Toggle dark mode">
+        <Tooltip content="Toggle dark mode" position="down" variant="nowrap">
           <Button
             variant="ghost"
             size="icon"
@@ -48,7 +48,7 @@ export function OptionsHeader({
               )}
           </Button>
         </Tooltip>
-        <Tooltip content="About Imify">
+        <Tooltip content="About Imify" position="down" variant="nowrap">
           <Button
             variant="ghost"
             size="icon"
@@ -58,7 +58,7 @@ export function OptionsHeader({
             <Info className="w-5 h-5" />
           </Button>
         </Tooltip>
-        <Tooltip content="Donate">
+        <Tooltip content="Donate" position="down" variant="nowrap">
           <Button
             variant="ghost"
             size="icon"
