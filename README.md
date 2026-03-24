@@ -123,9 +123,21 @@ pnpm package:chrome
 pnpm package:firefox
 ```
 
-> **Note for Firefox**: Our build pipeline includes a sanitation script (`scripts/sanitize-firefox-manifest.mjs`) that automatically removes the `offscreen` permission from the Firefox manifest to comply with AMO policies while maintaining maximum performance for Chrome users.
-
 This will generate a zip-ready folder in `build/chrome-mv3-prod` which you can upload directly to the Chrome Web Store.
+
+### 🦊 Note for Mozilla AMO Reviewers
+
+If you are reviewing this extension for the Mozilla Add-ons Store, please follow these steps to reproduce the exact build:
+
+1. Install dependencies: `pnpm install`
+2. Generate the Firefox package: `pnpm package:firefox`
+3. The generated add-on will be an archive located in the output build directory.
+
+**Compliance Declaration regarding WebAssembly (WASM) & Minification:**
+- **WASM Origin:** All `.wasm` binaries used in this project for image encoding/decoding (e.g., AVIF, JXL) are sourced standardly and transparently via open-source NPM packages (`@jsquash/avif`, `@jsquash/jxl`, etc.) as defined in `package.json`. There are no custom-compiled, opaque binary blobs hidden in the source tree.
+- **Zero Remote Execution:** The extension processes all images 100% locally and does not fetch any executable code, scripts, or WASM files from remote servers.
+
+> **Note for Firefox**: Our build pipeline includes a sanitation script (`scripts/sanitize-firefox-manifest.mjs`) that automatically removes the `offscreen` permission from the Firefox manifest to comply with AMO policies while maintaining maximum performance for Chrome users.
 
 ## 🔒 Privacy & Security
 
