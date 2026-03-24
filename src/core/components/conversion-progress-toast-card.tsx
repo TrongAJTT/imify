@@ -1,7 +1,7 @@
 import { Check, CircleAlert } from "lucide-react"
 
 import type { ConversionProgressPayload } from "@/core/types"
-import { AnimatingSpinner } from "@/contents/animating-spinner"
+import { AnimatingSpinner } from "@/core/components/animating-spinner"
 
 function getAccentColor(status: ConversionProgressPayload["status"]): string {
   if (status === "success") {
