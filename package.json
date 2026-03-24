@@ -8,10 +8,18 @@
     "sync:wasm": "node scripts/sync-wasm.mjs",
     "predev": "pnpm sync:wasm",
     "dev": "plasmo dev",
+    "dev:chrome": "plasmo dev --target=chrome-mv3",
+    "dev:firefox": "plasmo dev --target=firefox-mv3",
     "prebuild": "pnpm sync:wasm",
     "build": "plasmo build",
+    "build:ci": "pnpm build:chrome && pnpm build:firefox && pnpm verify:manifests",
+    "build:chrome": "plasmo build --target=chrome-mv3",
+    "build:firefox": "plasmo build --target=firefox-mv3 && node scripts/sanitize-firefox-manifest.mjs",
     "prepackage": "pnpm sync:wasm",
     "package": "plasmo package",
+    "package:chrome": "plasmo build --target=chrome-mv3 --zip",
+    "package:firefox": "pnpm build:firefox && node scripts/zip-firefox-build.mjs",
+    "verify:manifests": "node scripts/verify-target-manifests.mjs",
     "sync:avif-wasm": "node scripts/sync-avif-wasm.mjs",
     "sync:jxl-wasm": "node scripts/sync-jxl-wasm.mjs"
   },
@@ -49,6 +57,12 @@
     "typescript": "5.3.3"
   },
   "manifest": {
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "imify@trongajtt.com",
+        "strict_min_version": "109.0"
+      }
+    },
     "permissions": [
       "contextMenus",
       "downloads",

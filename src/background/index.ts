@@ -8,6 +8,8 @@ import { convertImageViaOffscreen } from "@/background/offscreen-bridge"
 import { publishConvertProgress } from "@/background/message-hub"
 
 const DOWNLOAD_VIA_PAGE_ANCHOR_MESSAGE = "IMIFY_DOWNLOAD_VIA_PAGE_ANCHOR"
+const OFFSCREEN_PERMISSION_ENABLED =
+  chrome.runtime.getManifest().permissions?.includes("offscreen") ?? false
 
 function getAllConfigs(state: ExtensionStorageState): FormatConfig[] {
   return [...Object.values(state.global_formats), ...state.custom_formats]
@@ -160,7 +162,10 @@ async function handleImageMenuClick(
       percent: 35
     })
 
-    const shouldUseOffscreenWorker = config.format === "avif" || config.format === "jxl"
+    const shouldUseOffscreenWorker =
+      OFFSCREEN_PERMISSION_ENABLED &&
+      typeof chrome.offscreen?.createDocument === "function" &&
+      (config.format === "avif" || config.format === "jxl")
     const converted = shouldUseOffscreenWorker
       ? await convertImageViaOffscreen(sourceBlob, config).catch(() =>
           convertImage({
