@@ -30,6 +30,15 @@
   <img src="https://cdn.trongajtt.com/apps/imify/personalized-default-settings.webp" alt="ImifyPreview" style="width:32%;">
 </div>
 
+## 📥 Installation
+
+Imify is officially available on the Firefox Add-ons Store. Links to the Chrome Web Store and Microsoft Edge Add-ons store will be updated as soon as they are approved. Click the badges below to install it directly:
+
+<!--Imify is officially available on major browser extension stores. Click the badges below to install it directly:
+[![Chrome Web Store](https://img.shields.io/badge/Chrome-Web_Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](LINK_CHROME_WEB_STORE_CỦA_BẠN)
+[![Microsoft Edge Add-ons](https://img.shields.io/badge/Edge-Add--ons-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white)](LINK_EDGE_ADDONS_CỦA_BẠN)-->
+[![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--ons-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/imify-save-process-images/)
+
 ## 🛠️ Tech Stack
 
 * **Framework**: [Plasmo](https://docs.plasmo.com/) (React-based browser extension framework)
