@@ -1,6 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Download, ImagePlus, Trash2 } from "lucide-react"
 
+import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
+import type { ConversionProgressPayload } from "@/core/types"
 import { exportSplicedImage } from "@/features/splicing/canvas-renderer"
 import type {
   SplicingImageItem,
@@ -22,6 +24,7 @@ import {
 import { getCanonicalExtension } from "@/core/download-utils"
 
 const THUMB_MAX = 256
+const LARGE_IMPORT_THRESHOLD = 20
 
 async function generateThumbnail(
   file: File
@@ -67,7 +70,11 @@ export function SplicingTab() {
   const [isExporting, setIsExporting] = useState(false)
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
   const [isScrollPan, setIsScrollPan] = useState(false)
+  const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const imagesCountRef = useRef(0)
+  const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingRenderRef = useRef<{ toastId: string; expectedCount: number } | null>(null)
 
   const preset = useSplicingStore((s) => s.preset)
   const primaryDirection = useSplicingStore((s) => s.primaryDirection)
@@ -111,12 +118,47 @@ export function SplicingTab() {
     [imagePadding, imagePaddingColor, imageBorderRadius, imageBorderWidth, imageBorderColor]
   )
 
+  useEffect(() => {
+    imagesCountRef.current = images.length
+  }, [images.length])
+
+  useEffect(() => {
+    return () => {
+      if (importToastHideTimerRef.current) {
+        clearTimeout(importToastHideTimerRef.current)
+      }
+    }
+  }, [])
+
+  const pushImportToast = useCallback((payload: ConversionProgressPayload) => {
+    if (importToastHideTimerRef.current) {
+      clearTimeout(importToastHideTimerRef.current)
+      importToastHideTimerRef.current = null
+    }
+    setImportToastPayload(payload)
+  }, [])
+
   const addFiles = useCallback(async (files: File[]) => {
     const imageFiles = files.filter((f) => f.type.startsWith("image/"))
     if (imageFiles.length === 0) return
 
+    const shouldShowProgress = imageFiles.length >= LARGE_IMPORT_THRESHOLD
+    const toastId = `splicing_import_${Date.now()}`
+    if (shouldShowProgress) {
+      pushImportToast({
+        id: toastId,
+        fileName: `Importing ${imageFiles.length} images`,
+        targetFormat: exportFormat,
+        status: "processing",
+        percent: 5,
+        message: "Preparing image import..."
+      })
+    }
+
     const newItems: SplicingImageItem[] = []
-    for (const file of imageFiles) {
+    let processedCount = 0
+    for (let i = 0; i < imageFiles.length; i++) {
+      const file = imageFiles[i]
       try {
         const thumb = await generateThumbnail(file)
         newItems.push({
@@ -129,10 +171,87 @@ export function SplicingTab() {
       } catch {
         // Skip invalid files
       }
+      processedCount = i + 1
+
+      if (shouldShowProgress) {
+        const percent = Math.min(78, 5 + Math.round((processedCount / imageFiles.length) * 73))
+        pushImportToast({
+          id: toastId,
+          fileName: `Importing ${imageFiles.length} images`,
+          targetFormat: exportFormat,
+          status: "processing",
+          percent,
+          message: `Creating thumbnails ${processedCount}/${imageFiles.length}...`
+        })
+      }
+    }
+
+    if (newItems.length === 0) {
+      if (shouldShowProgress) {
+        pushImportToast({
+          id: toastId,
+          fileName: "Image import failed",
+          targetFormat: exportFormat,
+          status: "error",
+          percent: 100,
+          message: "No valid images were imported."
+        })
+        importToastHideTimerRef.current = setTimeout(() => {
+          setImportToastPayload((current) => (current?.id === toastId ? null : current))
+          importToastHideTimerRef.current = null
+        }, 3000)
+      }
+      return
+    }
+
+    if (shouldShowProgress) {
+      pushImportToast({
+        id: toastId,
+        fileName: `Importing ${imageFiles.length} images`,
+        targetFormat: exportFormat,
+        status: "processing",
+        percent: 85,
+        message: "Rendering preview canvas..."
+      })
+    }
+
+    const expectedCount = imagesCountRef.current + newItems.length
+    if (shouldShowProgress) {
+      pendingRenderRef.current = { toastId, expectedCount }
     }
 
     setImages((prev) => [...prev, ...newItems])
-  }, [])
+
+    if (!shouldShowProgress) {
+      pendingRenderRef.current = null
+    }
+  }, [exportFormat, pushImportToast])
+
+  const handlePreviewRendered = useCallback((imageCount: number) => {
+    const pending = pendingRenderRef.current
+    if (!pending) {
+      return
+    }
+
+    if (imageCount < pending.expectedCount) {
+      return
+    }
+
+    pendingRenderRef.current = null
+    pushImportToast({
+      id: pending.toastId,
+      fileName: "Image import complete",
+      targetFormat: exportFormat,
+      status: "success",
+      percent: 100,
+      message: `Imported and rendered ${imageCount} images.`
+    })
+
+    importToastHideTimerRef.current = setTimeout(() => {
+      setImportToastPayload((current) => (current?.id === pending.toastId ? null : current))
+      importToastHideTimerRef.current = null
+    }, 2500)
+  }, [exportFormat, pushImportToast])
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -315,6 +434,7 @@ export function SplicingTab() {
               fitValue={imageFitValue}
               isScrollPan={isScrollPan}
               onLayoutComputed={setLayoutResult}
+              onPreviewRendered={handlePreviewRendered}
             />
           </div>
 
@@ -326,6 +446,7 @@ export function SplicingTab() {
           />
         </div>
       )}
+      <ConversionProgressToastCard payload={importToastPayload} />
     </SurfaceCard>
   )
 }

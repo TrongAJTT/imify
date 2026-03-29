@@ -22,6 +22,7 @@ interface CanvasPreviewProps {
   fitValue: number
   isScrollPan?: boolean
   onLayoutComputed?: (result: LayoutResult) => void
+  onPreviewRendered?: (imageCount: number) => void
 }
 
 export function CanvasPreview({
@@ -32,7 +33,8 @@ export function CanvasPreview({
   imageResize,
   fitValue,
   isScrollPan = false,
-  onLayoutComputed
+  onLayoutComputed,
+  onPreviewRendered
 }: CanvasPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -125,7 +127,8 @@ export function CanvasPreview({
     
     setCanvasWidth(canvas.offsetWidth)
     setCanvasHeight(canvas.offsetHeight)
-  }, [images, thumbs, layoutConfig, canvasStyle, imageStyle, imageResize, fitValue, containerHeight, zoom, onLayoutComputed])
+    onPreviewRendered?.(images.length)
+  }, [images, thumbs, layoutConfig, canvasStyle, imageStyle, imageResize, fitValue, containerHeight, zoom, onLayoutComputed, onPreviewRendered])
 
   useEffect(() => {
     draw()
@@ -198,7 +201,7 @@ export function CanvasPreview({
         } else {
           // Scroll to zoom
           const delta = e.deltaY > 0 ? -10 : 10;
-          setZoom((current) => Math.max(50, Math.min(800, current + delta)))
+          setZoom((current) => Math.max(50, current + delta))
         }
       }
     }
