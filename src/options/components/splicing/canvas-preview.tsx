@@ -170,12 +170,14 @@ export function CanvasPreview({
   }, [isResizing])
 
   useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
     const handleWheelCapture = (e: WheelEvent) => {
-      const container = containerRef.current
-      if (!container) return
-      
-      if (container.contains(e.target as Node)) {
+      if (e.target && container.contains(e.target as Node)) {
         e.preventDefault()
+        const delta = e.deltaY > 0 ? -10 : 10
+        setZoom((current) => Math.max(50, Math.min(800, current + delta)))
       }
     }
 
@@ -185,14 +187,6 @@ export function CanvasPreview({
       document.removeEventListener("wheel", handleWheelCapture, { capture: true })
     }
   }, [])
-
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const delta = e.deltaY > 0 ? -10 : 10
-    const newZoom = Math.max(50, Math.min(800, zoom + delta))
-    setZoom(newZoom)
-  }, [zoom])
 
   const resetZoom = useCallback(() => {
     const wrapper = canvasWrapperRef.current
@@ -213,7 +207,6 @@ export function CanvasPreview({
       ref={containerRef}
       className="relative rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-slate-100/50 dark:bg-slate-800/30 p-4 overflow-hidden select-none"
       style={{ height: `${containerHeight}px` }}
-      onWheel={handleWheel}
     >
       <div
         ref={canvasWrapperRef}

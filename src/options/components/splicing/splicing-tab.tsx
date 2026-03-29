@@ -164,6 +164,22 @@ export function SplicingTab() {
     })
   }, [])
 
+  const handleReorder = useCallback((draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return
+    
+    setImages((prev) => {
+      const draggedIndex = prev.findIndex((img) => img.id === draggedId)
+      const targetIndex = prev.findIndex((img) => img.id === targetId)
+
+      if (draggedIndex < 0 || targetIndex < 0) return prev
+
+      const next = [...prev]
+      const [moved] = next.splice(draggedIndex, 1)
+      next.splice(targetIndex, 0, moved)
+      return next
+    })
+  }, [])
+
   const handleAddMore = useCallback(() => {
     openFilePicker()
   }, [openFilePicker])
@@ -301,8 +317,7 @@ export function SplicingTab() {
           <ImageStrip
             images={images}
             onRemove={handleRemove}
-            onMoveLeft={() => {}}
-            onMoveRight={() => {}}
+            onReorder={handleReorder}
             onAddMore={handleAddMore}
           />
         </div>
