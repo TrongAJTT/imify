@@ -149,74 +149,73 @@ export function SplicingSidebarPanel() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Preset */}
-      <SidebarPanel title="PRESET">
-        <div className="grid grid-cols-2 gap-1.5">
-          {PRESET_OPTIONS.map((opt) => (
-            <RadioCard
-              key={opt.value}
-              title={opt.title}
-              subtitle={opt.subtitle}
-              value={opt.value}
-              selectedValue={preset}
-              onChange={(v) => setPreset(v as SplicingPreset)}
-            />
-          ))}
+      {/* Preset + Layout */}
+      <SidebarPanel title="PRESET & LAYOUT">
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-1.5">
+            {PRESET_OPTIONS.map((opt) => (
+              <RadioCard
+                key={opt.value}
+                title={opt.title}
+                subtitle={opt.subtitle}
+                value={opt.value}
+                selectedValue={preset}
+                onChange={(v) => setPreset(v as SplicingPreset)}
+              />
+            ))}
+          </div>
+
+          {(isCustom || preset === "grid") && (
+            <div className="space-y-3">
+              {isCustom && (
+                <div className="grid grid-cols-2 gap-2">
+                  <SelectField
+                    label="Primary Direction"
+                    value={primaryDirection}
+                    options={DIRECTION_OPTIONS}
+                    onChange={(v) => setPrimaryDirection(v as SplicingDirection)}
+                  />
+                  <SelectField
+                    label="Secondary Direction"
+                    value={secondaryDirection}
+                    options={DIRECTION_OPTIONS}
+                    onChange={(v) => setSecondaryDirection(v as SplicingDirection)}
+                  />
+                </div>
+              )}
+
+              {isGrid && (
+                <NumberInput
+                  label={preset === "grid" ? "Columns" : "Count"}
+                  value={gridCount}
+                  onChangeValue={setGridCount}
+                  min={1}
+                  max={20}
+                />
+              )}
+
+              {isFlow && (
+                <div className="grid grid-cols-2 gap-2">
+                  <NumberInput
+                    label={primaryDirection === "vertical" ? "Max Height (px)" : "Max Width (px)"}
+                    value={flowMaxSize}
+                    onChangeValue={setFlowMaxSize}
+                    min={100}
+                    max={99999}
+                    step={50}
+                  />
+                  <SelectField
+                    label="Alignment"
+                    value={alignment}
+                    options={ALIGNMENT_OPTIONS}
+                    onChange={(v) => setAlignment(v as SplicingAlignment)}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </SidebarPanel>
-
-      {/* Layout */}
-      {(isCustom || preset === "grid") && (
-        <SidebarPanel title="LAYOUT">
-          <div className="space-y-3">
-            {isCustom && (
-              <div className="grid grid-cols-2 gap-2">
-                <SelectField
-                  label="Primary Direction"
-                  value={primaryDirection}
-                  options={DIRECTION_OPTIONS}
-                  onChange={(v) => setPrimaryDirection(v as SplicingDirection)}
-                />
-                <SelectField
-                  label="Secondary Direction"
-                  value={secondaryDirection}
-                  options={DIRECTION_OPTIONS}
-                  onChange={(v) => setSecondaryDirection(v as SplicingDirection)}
-                />
-              </div>
-            )}
-
-            {isGrid && (
-              <NumberInput
-                label={preset === "grid" ? "Columns" : "Count"}
-                value={gridCount}
-                onChangeValue={setGridCount}
-                min={1}
-                max={20}
-              />
-            )}
-
-            {isFlow && (
-              <div className="grid grid-cols-2 gap-2">
-                <NumberInput
-                  label={primaryDirection === "vertical" ? "Max Height (px)" : "Max Width (px)"}
-                  value={flowMaxSize}
-                  onChangeValue={setFlowMaxSize}
-                  min={100}
-                  max={99999}
-                  step={50}
-                />
-                <SelectField
-                  label="Alignment"
-                  value={alignment}
-                  options={ALIGNMENT_OPTIONS}
-                  onChange={(v) => setAlignment(v as SplicingAlignment)}
-                />
-              </div>
-            )}
-          </div>
-        </SidebarPanel>
-      )}
 
       {/* Canvas Style */}
       <SidebarPanel title="CANVAS">
@@ -252,7 +251,7 @@ export function SplicingSidebarPanel() {
       {/* Image Style */}
       <SidebarPanel title="IMAGES">
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 items-start gap-2">
             <SelectField
               label="Resize"
               value={imageResize}
@@ -301,7 +300,7 @@ export function SplicingSidebarPanel() {
       {/* Export */}
       <SidebarPanel title="EXPORT">
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 items-start gap-2">
             <SelectField
               label="Format"
               value={exportFormat}

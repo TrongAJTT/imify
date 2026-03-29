@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { LabelText } from "@/options/components/ui/typography"
 
@@ -24,6 +24,7 @@ export function NumberInput({
 }: NumberInputProps) {
   const [draft, setDraft] = useState(String(value))
   const [isFocused, setIsFocused] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (isFocused) {
@@ -59,15 +60,42 @@ export function NumberInput({
     setDraft(String(next))
   }
 
+  useEffect(() => {
+    const input = inputRef.current
+    if (!input || !isFocused || disabled) {
+      return
+    }
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (e.deltaY < 0) {
+        increment()
+        return
+      }
+
+      if (e.deltaY > 0) {
+        decrement()
+      }
+    }
+
+    input.addEventListener("wheel", handleWheel, { passive: false })
+    return () => {
+      input.removeEventListener("wheel", handleWheel)
+    }
+  }, [isFocused, disabled, value, min, max, step])
+
   return (
     <div className={`space-y-1 ${className}`}>
       {label && (
         <label className="block text-xs font-medium ml-1">
-          <LabelText>{label}</LabelText>
+          <LabelText className="text-xs">{label}</LabelText>
         </label>
       )}
       <div className="group relative flex items-center">
         <input
+          ref={inputRef}
           {...props}
           type="number"
           value={draft}
