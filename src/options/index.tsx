@@ -29,6 +29,7 @@ import { useBatchStore } from "@/options/stores/batch-store"
 import { Globe, Heart, Image, Layers, ListTree, Workflow, X } from "lucide-react"
 import { AboutDialog } from "./components/about-dialog"
 import { AttributionDialog } from "./components/attribution-dialog"
+import { SettingsDialog } from "./components/settings-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
 
 const syncStorage = new Storage({ area: "sync" })
@@ -123,6 +124,7 @@ export default function OptionsPage() {
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false)
   const setSetupContext = useBatchStore((store) => store.setSetupContext)
   const isBatchStoreRehydrated = useBatchStore((store) => (store as any)._hasHydrated)
   const [persistedState, setPersistedState, { isLoading: isSettingsLoading }] = useStorage<PersistedStorageState>(
@@ -150,12 +152,14 @@ export default function OptionsPage() {
   useKeyPress("Escape", () => {
     if (isAttributionDialogOpen) {
       setIsAttributionDialogOpen(false)
+    } else if (isSettingsDialogOpen) {
+      setIsSettingsDialogOpen(false)
     } else if (isAboutDialogOpen) {
       setIsAboutDialogOpen(false)
     } else if (isDonateDialogOpen) {
       setIsDonateDialogOpen(false)
     }
-  }, isAboutDialogOpen || isAttributionDialogOpen || isDonateDialogOpen)
+  }, isAboutDialogOpen || isAttributionDialogOpen || isDonateDialogOpen || isSettingsDialogOpen)
 
   const state = normalizeExtensionState(persistedState?.state ?? DEFAULT_STORAGE_STATE)
 
@@ -410,6 +414,7 @@ export default function OptionsPage() {
             isDark={isDark}
             isLoading={isLoading}
             onOpenAbout={() => setIsAboutDialogOpen(true)}
+            onOpenSettings={() => setIsSettingsDialogOpen(true)}
             onOpenDonate={() => setIsDonateDialogOpen(true)}
             onToggleDark={() => setIsDark(!isDark)}
           />
@@ -421,6 +426,11 @@ export default function OptionsPage() {
           isOpen={isAboutDialogOpen}
           onClose={() => setIsAboutDialogOpen(false)}
           onOpenAttribution={() => setIsAttributionDialogOpen(true)}
+        />
+
+        <SettingsDialog
+          isOpen={isSettingsDialogOpen}
+          onClose={() => setIsSettingsDialogOpen(false)}
         />
 
         {isDonateDialogOpen ? (

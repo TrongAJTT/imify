@@ -1,5 +1,5 @@
 import { Tooltip } from "./tooltip"
-import { Moon, Sun, Info, Heart } from "lucide-react"
+import { Moon, Sun, Info, Heart, Settings } from "lucide-react"
 import { Heading, Kicker, MutedText } from "@/options/components/ui/typography"
 import { Button } from "@/options/components/ui/button"
 
@@ -8,6 +8,7 @@ interface HeaderProps {
   isDark: boolean
   onToggleDark: () => void
   onOpenAbout: () => void
+  onOpenSettings: () => void
   onOpenDonate: () => void
 }
 
@@ -16,6 +17,7 @@ export function OptionsHeader({
   isDark,
   onToggleDark,
   onOpenAbout,
+  onOpenSettings,
   onOpenDonate
 }: HeaderProps) {
   return (
@@ -56,6 +58,16 @@ export function OptionsHeader({
             className="rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 dark:bg-slate-800/50 dark:hover:bg-slate-800 dark:text-slate-400"
           >
             <Info className="w-5 h-5" />
+          </Button>
+        </Tooltip>
+        <Tooltip content="Settings" position="down" variant="nowrap">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenSettings}
+            className="rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 dark:bg-slate-800/50 dark:hover:bg-slate-800 dark:text-slate-400"
+          >
+            <Settings className="w-5 h-5" />
           </Button>
         </Tooltip>
         <Tooltip content="Donate" position="down" variant="nowrap">

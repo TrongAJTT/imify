@@ -1,5 +1,6 @@
 import { PAPER_OPTIONS, QUALITY_FORMATS } from "@/options/shared"
 import { toOutputFilename } from "@/core/download-utils"
+import { APP_CONFIG } from "@/core/config"
 import type {
   ConversionProgressPayload,
   FormatConfig,
@@ -9,8 +10,8 @@ import type {
 } from "@/core/types"
 import type { BatchResizeMode } from "@/options/components/batch/types"
 
-export const MAX_FILE_SIZE_BYTES = 30 * 1024 * 1024
-export const MAX_TOTAL_QUEUE_BYTES = 350 * 1024 * 1024
+export const MAX_FILE_SIZE_BYTES = APP_CONFIG.BATCH.MAX_FILE_SIZE_MB * 1024 * 1024
+export const MAX_TOTAL_QUEUE_BYTES = APP_CONFIG.BATCH.OOM_WARNING_MB * 1024 * 1024
 
 export function toMb(sizeInBytes: number): number {
   return Math.round(sizeInBytes / 1024 / 1024)

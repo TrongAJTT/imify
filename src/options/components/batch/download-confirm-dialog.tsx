@@ -27,7 +27,7 @@ export function BatchDownloadConfirmDialog({
   onConfirm,
   count
 }: BatchDownloadConfirmDialogProps) {
-  const { skipDownloadConfirm, setSkipDownloadConfirm } = useBatchStore()
+  const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
   const [localSkip, setLocalSkip] = useState(false)
   const browser = detectBrowser()
   const downloadHintImg = DOWNLOAD_HINT_IMAGE_BY_BROWSER[browser]
