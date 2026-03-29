@@ -164,23 +164,9 @@ export function SplicingTab() {
     })
   }, [])
 
-  const handleMoveLeft = useCallback((index: number) => {
-    if (index <= 0) return
-    setImages((prev) => {
-      const next = [...prev]
-      ;[next[index - 1], next[index]] = [next[index], next[index - 1]]
-      return next
-    })
-  }, [])
-
-  const handleMoveRight = useCallback((index: number) => {
-    setImages((prev) => {
-      if (index >= prev.length - 1) return prev
-      const next = [...prev]
-      ;[next[index], next[index + 1]] = [next[index + 1], next[index]]
-      return next
-    })
-  }, [])
+  const handleAddMore = useCallback(() => {
+    openFilePicker()
+  }, [openFilePicker])
 
   const handleClearAll = useCallback(() => {
     for (const img of images) {
@@ -315,9 +301,9 @@ export function SplicingTab() {
           <ImageStrip
             images={images}
             onRemove={handleRemove}
-            onMoveLeft={handleMoveLeft}
-            onMoveRight={handleMoveRight}
-            onAddMore={openFilePicker}
+            onMoveLeft={() => {}}
+            onMoveRight={() => {}}
+            onAddMore={handleAddMore}
           />
         </div>
       )}
