@@ -183,7 +183,7 @@ export function SplicingSidebarPanel() {
         <SidebarPanel title="LAYOUT">
           <div className="space-y-3">
             {isCustom && (
-              <>
+              <div className="grid grid-cols-2 gap-2">
                 <SelectField
                   label="Primary Direction"
                   value={primaryDirection}
@@ -196,7 +196,7 @@ export function SplicingSidebarPanel() {
                   options={DIRECTION_OPTIONS}
                   onChange={(v) => setSecondaryDirection(v as SplicingDirection)}
                 />
-              </>
+              </div>
             )}
 
             {isGrid && (
@@ -210,7 +210,7 @@ export function SplicingSidebarPanel() {
             )}
 
             {isFlow && (
-              <>
+              <div className="grid grid-cols-2 gap-2">
                 <NumberInput
                   label={primaryDirection === "vertical" ? "Max Height (px)" : "Max Width (px)"}
                   value={flowMaxSize}
@@ -225,7 +225,7 @@ export function SplicingSidebarPanel() {
                   options={ALIGNMENT_OPTIONS}
                   onChange={(v) => setAlignment(v as SplicingAlignment)}
                 />
-              </>
+              </div>
             )}
           </div>
         </SidebarPanel>
@@ -238,11 +238,9 @@ export function SplicingSidebarPanel() {
             <NumberInput label="Main Gap" value={mainSpacing} onChangeValue={setMainSpacing} min={0} max={200} />
             <NumberInput label="Cross Gap" value={crossSpacing} onChangeValue={setCrossSpacing} min={0} max={200} />
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <NumberInput label="Padding" value={canvasPadding} onChangeValue={setCanvasPadding} min={0} max={200} />
             <NumberInput label="Radius" value={canvasBorderRadius} onChangeValue={setCanvasBorderRadius} min={0} max={200} />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
             <NumberInput label="Border" value={canvasBorderWidth} onChangeValue={setCanvasBorderWidth} min={0} max={50} />
           </div>
           <ColorField label="Background" value={backgroundColor} onChange={setBackgroundColor} />
@@ -255,27 +253,31 @@ export function SplicingSidebarPanel() {
       {/* Image Style */}
       <SidebarPanel title="IMAGES">
         <div className="space-y-3">
-          <SelectField
-            label="Resize"
-            value={imageResize}
-            options={RESIZE_OPTIONS}
-            onChange={(v) => setImageResize(v as SplicingImageResize)}
-          />
-          {imageResize !== "original" && (
-            <NumberInput
-              label={imageResize === "fit_width" ? "Target Width (px)" : "Target Height (px)"}
-              value={imageFitValue}
-              onChangeValue={setImageFitValue}
-              min={1}
-              max={10000}
-              step={10}
-            />
-          )}
           <div className="grid grid-cols-2 gap-2">
+            <SelectField
+              label="Resize"
+              value={imageResize}
+              options={RESIZE_OPTIONS}
+              onChange={(v) => setImageResize(v as SplicingImageResize)}
+            />
+            {imageResize !== "original" ? (
+              <NumberInput
+                label={imageResize === "fit_width" ? "Target Width (px)" : "Target Height (px)"}
+                value={imageFitValue}
+                onChangeValue={setImageFitValue}
+                min={1}
+                max={10000}
+                step={10}
+              />
+            ) : (
+              <div />
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-2">
             <NumberInput label="Padding" value={imagePadding} onChangeValue={setImagePadding} min={0} max={100} />
             <NumberInput label="Radius" value={imageBorderRadius} onChangeValue={setImageBorderRadius} min={0} max={100} />
+            <NumberInput label="Border" value={imageBorderWidth} onChangeValue={setImageBorderWidth} min={0} max={20} />
           </div>
-          <NumberInput label="Border" value={imageBorderWidth} onChangeValue={setImageBorderWidth} min={0} max={20} />
           {imagePadding > 0 && (
             <ColorField label="Padding Color" value={imagePaddingColor} onChange={setImagePaddingColor} />
           )}
@@ -288,19 +290,23 @@ export function SplicingSidebarPanel() {
       {/* Export */}
       <SidebarPanel title="EXPORT">
         <div className="space-y-3">
-          <SelectField
-            label="Format"
-            value={exportFormat}
-            options={EXPORT_FORMAT_OPTIONS}
-            onChange={(v) => setExportFormat(v as SplicingExportFormat)}
-          />
-          {showQuality && (
-            <QualityInput
-              label="Quality"
-              value={exportQuality}
-              onChange={setExportQuality}
+          <div className="grid grid-cols-2 gap-2">
+            <SelectField
+              label="Format"
+              value={exportFormat}
+              options={EXPORT_FORMAT_OPTIONS}
+              onChange={(v) => setExportFormat(v as SplicingExportFormat)}
             />
-          )}
+            {showQuality ? (
+              <QualityInput
+                label="Quality"
+                value={exportQuality}
+                onChange={setExportQuality}
+              />
+            ) : (
+              <div />
+            )}
+          </div>
           {showTinyMode && (
             <CheckboxCard
               title="TinyPNG Mode"
