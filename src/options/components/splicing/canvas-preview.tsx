@@ -20,6 +20,7 @@ interface CanvasPreviewProps {
   imageStyle: SplicingImageStyle
   imageResize: SplicingImageResize
   fitValue: number
+  isScrollPan?: boolean
   onLayoutComputed?: (result: LayoutResult) => void
 }
 
@@ -30,6 +31,7 @@ export function CanvasPreview({
   imageStyle,
   imageResize,
   fitValue,
+  isScrollPan = false,
   onLayoutComputed
 }: CanvasPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -44,7 +46,7 @@ export function CanvasPreview({
   const [isResizing, setIsResizing] = useState(false)
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
 
-  const { pan, resetPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
+  const { pan, setPan, resetPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
     onlyWhenZoomed: true,
     currentZoom: zoom
   })
@@ -176,8 +178,28 @@ export function CanvasPreview({
     const handleWheelCapture = (e: WheelEvent) => {
       if (e.target && container.contains(e.target as Node)) {
         e.preventDefault()
-        const delta = e.deltaY > 0 ? -10 : 10
-        setZoom((current) => Math.max(50, Math.min(800, current + delta)))
+        
+        if (isScrollPan) {
+          // Scroll to pan
+          const isPanVertical = !e.shiftKey
+          const delta = e.deltaY > 0 ? 50 : -50
+          
+          if (isPanVertical) {
+            setPan((current) => ({
+              ...current,
+              y: current.y - delta
+            }))
+          } else {
+            setPan((current) => ({
+              ...current,
+              x: current.x - delta
+            }))
+          }
+        } else {
+          // Scroll to zoom
+          const delta = e.deltaY > 0 ? -10 : 10;
+          setZoom((current) => Math.max(50, Math.min(800, current + delta)))
+        }
       }
     }
 
@@ -186,7 +208,7 @@ export function CanvasPreview({
     return () => {
       document.removeEventListener("wheel", handleWheelCapture, { capture: true })
     }
-  }, [])
+  }, [isScrollPan, setPan])
 
   const resetZoom = useCallback(() => {
     const wrapper = canvasWrapperRef.current

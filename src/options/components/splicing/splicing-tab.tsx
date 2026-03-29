@@ -11,6 +11,7 @@ import { CanvasPreview } from "@/options/components/splicing/canvas-preview"
 import { ImageStrip } from "@/options/components/splicing/image-strip"
 import { Button } from "@/options/components/ui/button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
+import { ScrollModeToggle } from "@/options/components/ui/scroll-mode-toggle"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 import {
   useSplicingStore,
@@ -65,6 +66,7 @@ export function SplicingTab() {
   const [images, setImages] = useState<SplicingImageItem[]>([])
   const [isExporting, setIsExporting] = useState(false)
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
+  const [isScrollPan, setIsScrollPan] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const preset = useSplicingStore((s) => s.preset)
@@ -246,7 +248,8 @@ export function SplicingTab() {
           )}
         </div>
         {hasImages && (
-          <div className="flex gap-2">
+          <div className="flex gap-3 items-center">
+            <ScrollModeToggle isScrollPan={isScrollPan} onToggle={setIsScrollPan} />
             <Button
               variant="secondary"
               size="sm"
@@ -310,6 +313,7 @@ export function SplicingTab() {
               imageStyle={imageStyle}
               imageResize={imageResize}
               fitValue={imageFitValue}
+              isScrollPan={isScrollPan}
               onLayoutComputed={setLayoutResult}
             />
           </div>

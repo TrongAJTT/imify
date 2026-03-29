@@ -1,3 +1,4 @@
+import type React from "react"
 import { useCallback, useRef, useState } from "react"
 
 export interface PanState {
@@ -13,7 +14,7 @@ export interface UsePanDragOptions {
 
 export interface UsePanDragResult {
   pan: PanState
-  setPan: (pan: PanState) => void
+  setPan: React.Dispatch<React.SetStateAction<PanState>>
   resetPan: () => void
   handlePointerDown: (e: React.PointerEvent<HTMLElement>) => void
   handlePointerMove: (e: React.PointerEvent<HTMLElement>) => void
