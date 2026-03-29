@@ -143,6 +143,23 @@ export const useSplicingStore = create<SplicingStoreState>()(
     {
       name: "imify_splicing",
       storage: createJSONStorage(() => plasmoStorage),
+      merge: (persistedState, currentState) => {
+        const p = persistedState as Partial<SplicingStoreState>
+        const next: SplicingStoreState = { ...currentState, ...p }
+        const rawPreset = (persistedState as { preset?: string }).preset
+        if (rawPreset === "custom") {
+          next.preset = "bento"
+        }
+        if (
+          next.preset === "bento" &&
+          next.primaryDirection === "vertical" &&
+          next.secondaryDirection === "horizontal"
+        ) {
+          next.primaryDirection = "vertical"
+          next.secondaryDirection = "vertical"
+        }
+        return next
+      },
       partialize: (state) => {
         const { setPreset, setPrimaryDirection, setSecondaryDirection, setGridCount,
           setFlowMaxSize, setAlignment, setCanvasPadding, setMainSpacing, setCrossSpacing,
@@ -183,7 +200,7 @@ export function resolveLayoutConfig(state: SplicingStoreState): SplicingLayoutCo
         flowMaxSize: state.flowMaxSize,
         alignment: "start"
       }
-    default:
+    case "bento":
       return {
         primaryDirection: state.primaryDirection,
         secondaryDirection: state.secondaryDirection,

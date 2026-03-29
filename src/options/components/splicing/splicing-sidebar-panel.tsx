@@ -20,13 +20,26 @@ const PRESET_OPTIONS: Array<{ value: SplicingPreset; title: string; subtitle: st
   { value: "stitch_vertical", title: "Stitch V", subtitle: "Top to bottom" },
   { value: "stitch_horizontal", title: "Stitch H", subtitle: "Left to right" },
   { value: "grid", title: "Grid", subtitle: "N columns" },
-  { value: "custom", title: "Custom", subtitle: "Full control" }
+  { value: "bento", title: "Bento", subtitle: "Flow or columns" }
 ]
 
-const DIRECTION_OPTIONS: Array<{ value: SplicingDirection; label: string }> = [
+type BentoLayoutMode = "vertical" | "horizontal" | "fixed_vertical"
+
+const BENTO_LAYOUT_OPTIONS: Array<{ value: BentoLayoutMode; label: string }> = [
   { value: "vertical", label: "Vertical" },
-  { value: "horizontal", label: "Horizontal" }
+  { value: "horizontal", label: "Horizontal" },
+  { value: "fixed_vertical", label: "Fixed Vertical" }
 ]
+
+function deriveBentoLayoutMode(
+  primary: SplicingDirection,
+  secondary: SplicingDirection
+): BentoLayoutMode {
+  if (primary === "horizontal" && secondary === "vertical") return "fixed_vertical"
+  if (primary === "vertical" && secondary === "vertical") return "vertical"
+  if (primary === "horizontal" && secondary === "horizontal") return "horizontal"
+  return "vertical"
+}
 
 const ALIGNMENT_OPTIONS: Array<{ value: SplicingAlignment; label: string }> = [
   { value: "start", label: "Start" },
@@ -136,13 +149,9 @@ export function SplicingSidebarPanel() {
   const setExportPngTinyMode = useSplicingStore((s) => s.setExportPngTinyMode)
   const setExportMode = useSplicingStore((s) => s.setExportMode)
 
-  const isCustom = preset === "custom"
-  const isGrid = isCustom
-    ? primaryDirection !== secondaryDirection
-    : preset === "grid"
-  const isFlow = isCustom
-    ? primaryDirection === secondaryDirection
-    : false
+  const bentoLayoutMode = deriveBentoLayoutMode(primaryDirection, secondaryDirection)
+  const bentoIsFlow =
+    bentoLayoutMode === "vertical" || bentoLayoutMode === "horizontal"
 
   const showQuality = QUALITY_FORMATS.includes(exportFormat)
   const showTinyMode = exportFormat === "png"
@@ -165,52 +174,71 @@ export function SplicingSidebarPanel() {
             ))}
           </div>
 
-          {(isCustom || preset === "grid") && (
+          {(preset === "bento" || preset === "grid") && (
             <div className="space-y-3">
-              {isCustom && (
-                <div className="grid grid-cols-2 gap-2">
-                  <SelectField
-                    label="Primary Direction"
-                    value={primaryDirection}
-                    options={DIRECTION_OPTIONS}
-                    onChange={(v) => setPrimaryDirection(v as SplicingDirection)}
-                  />
-                  <SelectField
-                    label="Secondary Direction"
-                    value={secondaryDirection}
-                    options={DIRECTION_OPTIONS}
-                    onChange={(v) => setSecondaryDirection(v as SplicingDirection)}
-                  />
-                </div>
+              {preset === "bento" && (
+                <>
+                  <div className="grid grid-cols-2 gap-2 items-start">
+                    <SelectField
+                      label="Layout"
+                      value={bentoLayoutMode}
+                      options={BENTO_LAYOUT_OPTIONS}
+                      onChange={(v) => {
+                        const mode = v as BentoLayoutMode
+                        if (mode === "vertical") {
+                          setPrimaryDirection("vertical")
+                          setSecondaryDirection("vertical")
+                        } else if (mode === "horizontal") {
+                          setPrimaryDirection("horizontal")
+                          setSecondaryDirection("horizontal")
+                        } else {
+                          setPrimaryDirection("horizontal")
+                          setSecondaryDirection("vertical")
+                        }
+                      }}
+                    />
+                    {bentoIsFlow ? (
+                      <NumberInput
+                        label={
+                          bentoLayoutMode === "vertical"
+                            ? "Max Height (px)"
+                            : "Max Width (px)"
+                        }
+                        value={flowMaxSize}
+                        onChangeValue={setFlowMaxSize}
+                        min={100}
+                        max={99999}
+                        step={50}
+                      />
+                    ) : (
+                      <NumberInput
+                        label="Count"
+                        value={gridCount}
+                        onChangeValue={setGridCount}
+                        min={1}
+                        max={20}
+                      />
+                    )}
+                  </div>
+                  {bentoIsFlow && (
+                    <SelectField
+                      label="Image Alignment"
+                      value={alignment}
+                      options={ALIGNMENT_OPTIONS}
+                      onChange={(v) => setAlignment(v as SplicingAlignment)}
+                    />
+                  )}
+                </>
               )}
 
-              {isGrid && (
+              {preset === "grid" && (
                 <NumberInput
-                  label={preset === "grid" ? "Columns" : "Count"}
+                  label="Columns"
                   value={gridCount}
                   onChangeValue={setGridCount}
                   min={1}
                   max={20}
                 />
-              )}
-
-              {isFlow && (
-                <div className="grid grid-cols-2 gap-2">
-                  <NumberInput
-                    label={primaryDirection === "vertical" ? "Max Height (px)" : "Max Width (px)"}
-                    value={flowMaxSize}
-                    onChangeValue={setFlowMaxSize}
-                    min={100}
-                    max={99999}
-                    step={50}
-                  />
-                  <SelectField
-                    label="Alignment"
-                    value={alignment}
-                    options={ALIGNMENT_OPTIONS}
-                    onChange={(v) => setAlignment(v as SplicingAlignment)}
-                  />
-                </div>
               )}
             </div>
           )}

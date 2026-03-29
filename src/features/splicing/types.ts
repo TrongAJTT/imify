@@ -10,7 +10,7 @@ export type SplicingAlignment =
   | "spaceAround"
   | "spaceEvenly"
 
-export type SplicingPreset = "stitch_vertical" | "stitch_horizontal" | "grid" | "custom"
+export type SplicingPreset = "stitch_vertical" | "stitch_horizontal" | "grid" | "bento"
 
 export type SplicingImageResize = "original" | "fit_width" | "fit_height"
 
