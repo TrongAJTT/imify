@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Link2, RotateCcw, Unlink2 } from "lucide-react"
 
 import { Tooltip } from "@/options/components/tooltip"
+import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { RadioCard } from "@/options/components/ui/radio-card"
 import { LabelText } from "@/options/components/ui/typography"
@@ -409,13 +410,13 @@ export function SmartResizeModule({
             disabled={disabled || !isFitModeEnabled}
             tooltip="Fits inside target frame and leaves letterboxing area when needed."
             rightSlot={
-              <input
-                type="color"
-                aria-label="Contain background color"
-                disabled={disabled || !isFitModeEnabled || fitMode !== "contain"}
+              <ColorPickerPopover
+                label=""
                 value={containBackground}
-                onChange={(event) => onContainBackgroundChange(event.target.value)}
-                className="h-7 w-9 cursor-pointer rounded border border-slate-300 bg-transparent p-0.5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700"
+                onChange={onContainBackgroundChange}
+                outputMode="hex"
+                enableAlpha={false}
+                className={disabled || !isFitModeEnabled || fitMode !== "contain" ? "pointer-events-none opacity-50" : undefined}
               />
             }
           />

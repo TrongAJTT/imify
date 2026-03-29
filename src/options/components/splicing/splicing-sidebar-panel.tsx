@@ -10,7 +10,8 @@ import type {
 import { NumberInput } from "@/options/components/ui/number-input"
 import { RadioCard } from "@/options/components/ui/radio-card"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { Kicker, LabelText } from "@/options/components/ui/typography"
+import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
+import { LabelText } from "@/options/components/ui/typography"
 import { QualityInput } from "@/options/components/quality-input"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
@@ -56,20 +57,6 @@ const EXPORT_MODE_OPTIONS: Array<{ value: SplicingExportMode; label: string }> =
   { value: "single", label: "Single Image" },
   { value: "per_group", label: "Per Group" }
 ]
-
-function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <LabelText className="text-xs">{label}</LabelText>
-      <input
-        type="color"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-7 h-7 rounded border border-slate-200 dark:border-slate-700 cursor-pointer bg-transparent p-0.5"
-      />
-    </div>
-  )
-}
 
 function SelectField({ label, value, options, onChange }: {
   label: string
@@ -243,9 +230,21 @@ export function SplicingSidebarPanel() {
             <NumberInput label="Radius" value={canvasBorderRadius} onChangeValue={setCanvasBorderRadius} min={0} max={200} />
             <NumberInput label="Border" value={canvasBorderWidth} onChangeValue={setCanvasBorderWidth} min={0} max={50} />
           </div>
-          <ColorField label="Background" value={backgroundColor} onChange={setBackgroundColor} />
+          <ColorPickerPopover
+            label="Background"
+            value={backgroundColor}
+            onChange={setBackgroundColor}
+            enableAlpha
+            outputMode="rgba"
+          />
           {canvasBorderWidth > 0 && (
-            <ColorField label="Border Color" value={canvasBorderColor} onChange={setCanvasBorderColor} />
+            <ColorPickerPopover
+              label="Border Color"
+              value={canvasBorderColor}
+              onChange={setCanvasBorderColor}
+              enableAlpha={false}
+              outputMode="hex"
+            />
           )}
         </div>
       </SidebarPanel>
@@ -279,10 +278,22 @@ export function SplicingSidebarPanel() {
             <NumberInput label="Border" value={imageBorderWidth} onChangeValue={setImageBorderWidth} min={0} max={20} />
           </div>
           {imagePadding > 0 && (
-            <ColorField label="Padding Color" value={imagePaddingColor} onChange={setImagePaddingColor} />
+            <ColorPickerPopover
+              label="Padding Color"
+              value={imagePaddingColor}
+              onChange={setImagePaddingColor}
+              enableAlpha={false}
+              outputMode="hex"
+            />
           )}
           {imageBorderWidth > 0 && (
-            <ColorField label="Border Color" value={imageBorderColor} onChange={setImageBorderColor} />
+            <ColorPickerPopover
+              label="Border Color"
+              value={imageBorderColor}
+              onChange={setImageBorderColor}
+              enableAlpha={false}
+              outputMode="hex"
+            />
           )}
         </div>
       </SidebarPanel>
