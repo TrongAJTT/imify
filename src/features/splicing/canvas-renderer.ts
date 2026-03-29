@@ -1,0 +1,297 @@
+import { clampQuality } from "@/core/image-utils"
+import { encodeAvif } from "@/features/converter/avif-encoder"
+import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
+import { encodeJxl } from "@/features/converter/jxl-encoder"
+import { encodeTinyPngFromImageData } from "@/features/converter/png-tiny"
+import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
+import { calculateLayout, calculateProcessedSize } from "@/features/splicing/layout-engine"
+import type {
+  LayoutResult,
+  SplicingCanvasStyle,
+  SplicingExportConfig,
+  SplicingExportFormat,
+  SplicingImageItem,
+  SplicingImageResize,
+  SplicingImageStyle,
+  SplicingLayoutConfig
+} from "@/features/splicing/types"
+
+type AnyContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+
+function drawRoundedRect(
+  ctx: AnyContext,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+): void {
+  const radius = Math.max(0, Math.min(r, w / 2, h / 2))
+  ctx.beginPath()
+  ctx.moveTo(x + radius, y)
+  ctx.lineTo(x + w - radius, y)
+  ctx.arcTo(x + w, y, x + w, y + radius, radius)
+  ctx.lineTo(x + w, y + h - radius)
+  ctx.arcTo(x + w, y + h, x + w - radius, y + h, radius)
+  ctx.lineTo(x + radius, y + h)
+  ctx.arcTo(x, y + h, x, y + h - radius, radius)
+  ctx.lineTo(x, y + radius)
+  ctx.arcTo(x, y, x + radius, y, radius)
+  ctx.closePath()
+}
+
+export function drawSplicingCanvas(
+  ctx: AnyContext,
+  sources: CanvasImageSource[],
+  layout: LayoutResult,
+  canvasStyle: SplicingCanvasStyle,
+  imageStyle: SplicingImageStyle,
+  scale: number
+): void {
+  const cw = layout.canvasWidth * scale
+  const ch = layout.canvasHeight * scale
+
+  ctx.clearRect(0, 0, cw, ch)
+
+  // Canvas background
+  ctx.save()
+  drawRoundedRect(ctx, 0, 0, cw, ch, canvasStyle.borderRadius * scale)
+  ctx.clip()
+  ctx.fillStyle = canvasStyle.backgroundColor
+  ctx.fillRect(0, 0, cw, ch)
+  ctx.restore()
+
+  for (const group of layout.groups) {
+    for (const placement of group.placements) {
+      const source = sources[placement.imageIndex]
+      if (!source) continue
+
+      const ox = placement.outerRect.x * scale
+      const oy = placement.outerRect.y * scale
+      const ow = placement.outerRect.width * scale
+      const oh = placement.outerRect.height * scale
+
+      const cx = placement.contentRect.x * scale
+      const cy = placement.contentRect.y * scale
+      const ccw = placement.contentRect.width * scale
+      const cch = placement.contentRect.height * scale
+
+      const outerR = imageStyle.borderRadius * scale
+      const bw = imageStyle.borderWidth * scale
+      const innerR = Math.max(0, outerR - bw)
+      const contentR = Math.max(0, innerR - imageStyle.padding * scale)
+
+      // Padding / border background
+      if (imageStyle.padding > 0 || imageStyle.borderWidth > 0) {
+        ctx.save()
+        drawRoundedRect(ctx, ox, oy, ow, oh, outerR)
+        ctx.fillStyle = imageStyle.paddingColor
+        ctx.fill()
+        ctx.restore()
+      }
+
+      // Image content with clip
+      ctx.save()
+      drawRoundedRect(ctx, cx, cy, ccw, cch, contentR)
+      ctx.clip()
+      ctx.drawImage(source, cx, cy, ccw, cch)
+      ctx.restore()
+
+      // Border stroke
+      if (imageStyle.borderWidth > 0) {
+        ctx.save()
+        ctx.lineWidth = bw
+        ctx.strokeStyle = imageStyle.borderColor
+        const half = bw / 2
+        drawRoundedRect(
+          ctx,
+          ox + half,
+          oy + half,
+          ow - bw,
+          oh - bw,
+          Math.max(0, outerR - half)
+        )
+        ctx.stroke()
+        ctx.restore()
+      }
+    }
+  }
+
+  // Canvas border
+  if (canvasStyle.borderWidth > 0) {
+    ctx.save()
+    const cbw = canvasStyle.borderWidth * scale
+    ctx.lineWidth = cbw
+    ctx.strokeStyle = canvasStyle.borderColor
+    const half = cbw / 2
+    drawRoundedRect(
+      ctx,
+      half,
+      half,
+      cw - cbw,
+      ch - cbw,
+      Math.max(0, canvasStyle.borderRadius * scale - half)
+    )
+    ctx.stroke()
+    ctx.restore()
+  }
+}
+
+const MIME_MAP: Record<string, string> = {
+  jpg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp"
+}
+
+async function canvasToBlob(
+  canvas: OffscreenCanvas,
+  format: SplicingExportFormat,
+  quality: number,
+  pngTinyMode: boolean
+): Promise<Blob> {
+  const ctx = canvas.getContext("2d")
+  if (!ctx) throw new Error("Failed to get 2D context")
+
+  const q = clampQuality(quality) / 100
+
+  switch (format) {
+    case "avif": {
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      return encodeAvif(data, { quality: clampQuality(quality) })
+    }
+    case "jxl": {
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      return encodeJxl(data, { quality: clampQuality(quality) })
+    }
+    case "bmp": {
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      return encodeImageDataToBmp(data)
+    }
+    case "tiff": {
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      return encodeImageDataToTiff(data)
+    }
+    case "png": {
+      if (pngTinyMode) {
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        return encodeTinyPngFromImageData(data)
+      }
+      return canvas.convertToBlob({ type: "image/png" })
+    }
+    default: {
+      const mime = MIME_MAP[format]
+      if (!mime) throw new Error(`Unsupported format: ${format}`)
+      return canvas.convertToBlob({ type: mime, quality: q })
+    }
+  }
+}
+
+function renderToOffscreen(
+  width: number,
+  height: number,
+  sources: ImageBitmap[],
+  layoutResult: LayoutResult,
+  canvasStyle: SplicingCanvasStyle,
+  imageStyle: SplicingImageStyle
+): OffscreenCanvas {
+  const canvas = new OffscreenCanvas(width, height)
+  const ctx = canvas.getContext("2d")
+  if (!ctx) throw new Error("Failed to create OffscreenCanvas context")
+
+  drawSplicingCanvas(ctx, sources, layoutResult, canvasStyle, imageStyle, 1)
+  return canvas
+}
+
+export async function exportSplicedImage(
+  images: SplicingImageItem[],
+  layoutConfig: SplicingLayoutConfig,
+  canvasStyle: SplicingCanvasStyle,
+  imageStyle: SplicingImageStyle,
+  imageResize: SplicingImageResize,
+  fitValue: number,
+  exportConfig: SplicingExportConfig
+): Promise<Blob[]> {
+  const bitmaps: ImageBitmap[] = []
+
+  try {
+    for (const img of images) {
+      bitmaps.push(await createImageBitmap(img.file))
+    }
+
+    const imageSizes = bitmaps.map((bm) => {
+      const processed = calculateProcessedSize(bm.width, bm.height, imageResize, fitValue)
+      return { width: processed.width, height: processed.height }
+    })
+
+    const layoutResult = calculateLayout(
+      imageSizes,
+      layoutConfig,
+      canvasStyle,
+      imageStyle,
+      imageResize,
+      fitValue
+    )
+
+    if (exportConfig.exportMode === "single") {
+      const canvas = renderToOffscreen(
+        layoutResult.canvasWidth,
+        layoutResult.canvasHeight,
+        bitmaps,
+        layoutResult,
+        canvasStyle,
+        imageStyle
+      )
+      const blob = await canvasToBlob(canvas, exportConfig.format, exportConfig.quality, exportConfig.pngTinyMode)
+      return [blob]
+    }
+
+    const results: Blob[] = []
+    const edgePad = canvasStyle.padding + canvasStyle.borderWidth
+
+    for (const group of layoutResult.groups) {
+      const groupW = group.bounds.width + edgePad * 2
+      const groupH = group.bounds.height + edgePad * 2
+      const offsetX = group.bounds.x - edgePad
+      const offsetY = group.bounds.y - edgePad
+
+      const shifted: LayoutResult = {
+        groups: [
+          {
+            ...group,
+            placements: group.placements.map((p) => ({
+              ...p,
+              outerRect: {
+                ...p.outerRect,
+                x: p.outerRect.x - offsetX,
+                y: p.outerRect.y - offsetY
+              },
+              contentRect: {
+                ...p.contentRect,
+                x: p.contentRect.x - offsetX,
+                y: p.contentRect.y - offsetY
+              }
+            })),
+            bounds: {
+              ...group.bounds,
+              x: edgePad,
+              y: edgePad
+            }
+          }
+        ],
+        canvasWidth: groupW,
+        canvasHeight: groupH
+      }
+
+      const canvas = renderToOffscreen(groupW, groupH, bitmaps, shifted, canvasStyle, imageStyle)
+      results.push(
+        await canvasToBlob(canvas, exportConfig.format, exportConfig.quality, exportConfig.pngTinyMode)
+      )
+    }
+
+    return results
+  } finally {
+    for (const bm of bitmaps) {
+      bm.close()
+    }
+  }
+}
