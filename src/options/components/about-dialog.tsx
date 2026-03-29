@@ -1,9 +1,12 @@
 import { Button } from "@/options/components/ui/button"
 import { useKeyPress } from "@/options/hooks/use-key-press"
+import { getAppMetadata } from "@/core/app-metadata"
 import { Heart, X } from "lucide-react"
 import React from "react"
 
 import { Tooltip } from "./tooltip"
+
+const appMetadata = getAppMetadata()
 
 interface AboutDialogProps {
   isOpen: boolean
@@ -48,10 +51,10 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500">
-                  v1.0.0
+                  {`v${appMetadata.version}`}
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                  Stable
+                  {appMetadata.versionType}
                 </span>
               </div>
             </div>
