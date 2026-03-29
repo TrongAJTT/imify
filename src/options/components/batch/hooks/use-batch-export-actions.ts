@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-
+import { APP_CONFIG } from "@/core/config"
 import { toUserFacingConversionError } from "@/core/error-utils"
 import type { ConversionProgressPayload, FormatConfig } from "@/core/types"
 import type { BatchExportAction, BatchQueueItem } from "@/options/components/batch/types"
@@ -99,7 +99,7 @@ export function useBatchExportActions({
       return
     }
 
-    if (!force && successful.length > 4 && !skipDownloadConfirm) {
+    if (!force && successful.length > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD && !skipDownloadConfirm) {
       setShowDownloadConfirm(true)
       return
     }

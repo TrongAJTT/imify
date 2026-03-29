@@ -1,7 +1,8 @@
 {
   "name": "imify",
   "displayName": "Imify - Save & Process images",
-  "version": "1.0.1",
+  "version": "1.1.0",
+  "versionType": "dev",
   "description": "A privacy-first, powerful image toolkit. Save image directly from your context menu, and even more. Supports ICO, AVIF, JPEG XL.",
   "author": "TrongAJTT <trong.ajtt.dev@gmail.com>",
   "scripts": {

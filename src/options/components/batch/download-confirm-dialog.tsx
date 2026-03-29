@@ -1,9 +1,18 @@
 import { useState } from "react"
 import { AlertCircle, Download, X } from "lucide-react"
+import { detectBrowser, type SupportedBrowser } from "@/core/browser-detection"
 import { Button } from "@/options/components/ui/button"
 import { BodyText, Subheading, MutedText } from "@/options/components/ui/typography"
 import { useBatchStore } from "@/options/stores/batch-store"
-import downloadHintImg from "url:assets/img-download-not-ask.webp"
+import chromeDownloadHintImg from "url:assets/img-download-not-ask-chrome.webp"
+import edgeDownloadHintImg from "url:assets/img-download-not-ask-edge.webp"
+import firefoxDownloadHintImg from "url:assets/img-download-not-ask-firefox.webp"
+
+const DOWNLOAD_HINT_IMAGE_BY_BROWSER: Record<SupportedBrowser, string> = {
+  chrome: chromeDownloadHintImg,
+  edge: edgeDownloadHintImg,
+  firefox: firefoxDownloadHintImg
+}
 
 interface BatchDownloadConfirmDialogProps {
   isOpen: boolean
@@ -18,8 +27,10 @@ export function BatchDownloadConfirmDialog({
   onConfirm,
   count
 }: BatchDownloadConfirmDialogProps) {
-  const { skipDownloadConfirm, setSkipDownloadConfirm } = useBatchStore()
+  const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
   const [localSkip, setLocalSkip] = useState(false)
+  const browser = detectBrowser()
+  const downloadHintImg = DOWNLOAD_HINT_IMAGE_BY_BROWSER[browser]
 
   if (!isOpen) return null
 
