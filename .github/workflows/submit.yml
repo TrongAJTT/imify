@@ -1,34 +1,97 @@
-name: "Submit to Web Store"
+name: Release Packages
 on:
   workflow_dispatch:
+    inputs:
+      version_tag:
+        description: "Existing tag to release (Semantic Versioning, e.g. v1.1.0)"
+        required: true
+        type: string
+      release_title:
+        description: "Release title"
+        required: true
+        type: string
+      release_description:
+        description: "Release description"
+        required: true
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Cache pnpm modules
-        uses: actions/cache@v3
+      - name: Checkout selected tag
+        uses: actions/checkout@v4
         with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-
-      - uses: pnpm/action-setup@v2.2.4
+          ref: ${{ inputs.version_tag }}
+          fetch-depth: 0
+
+      - name: Validate release tag format
+        shell: bash
+        run: |
+          TAG="${{ inputs.version_tag }}"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Input tag '$TAG' is not a valid semantic version"
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: latest
-          run_install: true
-      - name: Use Node.js 16.x
-        uses: actions/setup-node@v3.4.1
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 16.x
-          cache: "pnpm"
-      - name: Build the extension
-        run: pnpm build
-      - name: Package the extension into a zip artifact
-        run: pnpm package
-      - name: Browser Platform Publish
-        uses: PlasmoHQ/bpp@v3
+          node-version: 20
+          cache: pnpm
+
+      - name: Validate tag matches package version
+        shell: bash
+        run: |
+          TAG="${{ inputs.version_tag }}"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if [[ "$TAG" != "v$PACKAGE_VERSION" ]]; then
+            echo "Tag '$TAG' does not match package.json version 'v$PACKAGE_VERSION'"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Sync WASM assets
+        run: pnpm sync:wasm
+
+      - name: Build Chrome package
+        run: pnpm package:chrome
+
+      - name: Build Edge package
+        run: pnpm exec plasmo build --target=edge-mv3 --zip
+
+      - name: Build Firefox package
+        run: pnpm package:firefox
+
+      - name: Prepare release artifacts
+        shell: bash
+        run: |
+          VERSION_TAG="${{ inputs.version_tag }}"
+          mkdir -p release-artifacts
+
+          cp build/chrome-mv3-prod.zip "release-artifacts/imify-chrome-${VERSION_TAG}.zip"
+          cp build/edge-mv3-prod.zip "release-artifacts/imify-edge-${VERSION_TAG}.zip"
+          cp build/firefox-mv3-prod.zip "release-artifacts/imify-firefox-${VERSION_TAG}.zip"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          keys: ${{ secrets.SUBMIT_KEYS }}
-          artifact: build/chrome-mv3-prod.zip
+          tag_name: ${{ inputs.version_tag }}
+          name: ${{ inputs.release_title }}
+          body: ${{ inputs.release_description }}
+          files: |
+            release-artifacts/imify-chrome-${{ inputs.version_tag }}.zip
+            release-artifacts/imify-edge-${{ inputs.version_tag }}.zip
+            release-artifacts/imify-firefox-${{ inputs.version_tag }}.zip
+          fail_on_unmatched_files: true
