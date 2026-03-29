@@ -68,8 +68,27 @@ const EXPORT_FORMAT_OPTIONS: Array<{ value: SplicingExportFormat; label: string 
 
 const EXPORT_MODE_OPTIONS: Array<{ value: SplicingExportMode; label: string }> = [
   { value: "single", label: "Single Image" },
-  { value: "per_group", label: "Per Group" }
+  { value: "per_row", label: "Per Row" },
+  { value: "per_col", label: "Per Column" }
 ]
+
+function getAvailableExportModes(preset: SplicingPreset, bentoMode?: BentoLayoutMode): SplicingExportMode[] {
+  if (preset === "stitch_vertical" || preset === "stitch_horizontal") {
+    return ["single"]
+  }
+  if (preset === "grid") {
+    return ["single", "per_row", "per_col"]
+  }
+  if (preset === "bento") {
+    if (bentoMode === "vertical" || bentoMode === "fixed_vertical") {
+      return ["single", "per_col"]
+    }
+    if (bentoMode === "horizontal") {
+      return ["single", "per_row"]
+    }
+  }
+  return ["single"]
+}
 
 function SelectField({ label, value, options, onChange }: {
   label: string
@@ -119,10 +138,11 @@ export function SplicingSidebarPanel() {
   const imageBorderWidth = useSplicingStore((s) => s.imageBorderWidth)
   const imageBorderColor = useSplicingStore((s) => s.imageBorderColor)
 
+  const exportMode = useSplicingStore((s) => s.exportMode)
+  const exportTrimBackground = useSplicingStore((s) => s.exportTrimBackground)
   const exportFormat = useSplicingStore((s) => s.exportFormat)
   const exportQuality = useSplicingStore((s) => s.exportQuality)
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
-  const exportMode = useSplicingStore((s) => s.exportMode)
 
   const setPreset = useSplicingStore((s) => s.setPreset)
   const setPrimaryDirection = useSplicingStore((s) => s.setPrimaryDirection)
@@ -148,11 +168,13 @@ export function SplicingSidebarPanel() {
   const setExportQuality = useSplicingStore((s) => s.setExportQuality)
   const setExportPngTinyMode = useSplicingStore((s) => s.setExportPngTinyMode)
   const setExportMode = useSplicingStore((s) => s.setExportMode)
+  const setExportTrimBackground = useSplicingStore((s) => s.setExportTrimBackground)
 
   const bentoLayoutMode = deriveBentoLayoutMode(primaryDirection, secondaryDirection)
   const bentoIsFlow =
     bentoLayoutMode === "vertical" || bentoLayoutMode === "horizontal"
-
+  const availableExportModes = getAvailableExportModes(preset, preset === "bento" ? bentoLayoutMode : undefined)
+  const showTrimBackground = exportMode !== "single"
   const showQuality = QUALITY_FORMATS.includes(exportFormat)
   const showTinyMode = exportFormat === "png"
 
@@ -356,9 +378,28 @@ export function SplicingSidebarPanel() {
           <SelectField
             label="Export Mode"
             value={exportMode}
-            options={EXPORT_MODE_OPTIONS}
-            onChange={(v) => setExportMode(v as SplicingExportMode)}
+            options={EXPORT_MODE_OPTIONS.filter((opt) =>
+              availableExportModes.includes(opt.value)
+            )}
+            onChange={(v) => {
+              setExportMode(v as SplicingExportMode)
+              if (v === "single") {
+                setExportTrimBackground(false)
+              }
+            }}
           />
+          {showTrimBackground && (
+            <CheckboxCard
+              title="Trim Background"
+              subtitle={
+                exportMode === "per_col"
+                  ? "Remove top and bottom padding"
+                  : "Remove left and right padding"
+              }
+              checked={exportTrimBackground}
+              onChange={setExportTrimBackground}
+            />
+          )}
         </div>
       </SidebarPanel>
     </div>

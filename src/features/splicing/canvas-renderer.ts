@@ -249,10 +249,20 @@ export async function exportSplicedImage(
     const edgePad = canvasStyle.padding + canvasStyle.borderWidth
 
     for (const group of layoutResult.groups) {
-      const groupW = group.bounds.width + edgePad * 2
-      const groupH = group.bounds.height + edgePad * 2
-      const offsetX = group.bounds.x - edgePad
-      const offsetY = group.bounds.y - edgePad
+      let groupW = group.bounds.width + edgePad * 2
+      let groupH = group.bounds.height + edgePad * 2
+      let offsetX = group.bounds.x - edgePad
+      let offsetY = group.bounds.y - edgePad
+
+      if (exportConfig.trimBackground) {
+        if (exportConfig.exportMode === "per_row") {
+          groupH = group.bounds.height
+          offsetY = group.bounds.y
+        } else if (exportConfig.exportMode === "per_col") {
+          groupW = group.bounds.width
+          offsetX = group.bounds.x
+        }
+      }
 
       const shifted: LayoutResult = {
         groups: [
@@ -273,8 +283,8 @@ export async function exportSplicedImage(
             })),
             bounds: {
               ...group.bounds,
-              x: edgePad,
-              y: edgePad
+              x: exportConfig.trimBackground && exportConfig.exportMode === "per_row" ? group.bounds.x - offsetX : edgePad,
+              y: exportConfig.trimBackground && exportConfig.exportMode === "per_col" ? group.bounds.y - offsetY : edgePad
             }
           }
         ],

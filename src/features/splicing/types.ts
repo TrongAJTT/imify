@@ -14,7 +14,7 @@ export type SplicingPreset = "stitch_vertical" | "stitch_horizontal" | "grid" | 
 
 export type SplicingImageResize = "original" | "fit_width" | "fit_height"
 
-export type SplicingExportMode = "single" | "per_group"
+export type SplicingExportMode = "single" | "per_row" | "per_col"
 
 export type SplicingExportFormat = Exclude<ImageFormat, "pdf" | "ico">
 
@@ -49,6 +49,7 @@ export interface SplicingExportConfig {
   quality: number
   pngTinyMode: boolean
   exportMode: SplicingExportMode
+  trimBackground: boolean
 }
 
 export interface SplicingImageItem {

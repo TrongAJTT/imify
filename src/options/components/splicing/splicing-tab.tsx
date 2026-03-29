@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Download, ImagePlus, Trash2 } from "lucide-react"
+import { zip } from "fflate"
 
+import { APP_CONFIG } from "@/core/config"
 import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
 import type { ConversionProgressPayload } from "@/core/types"
 import { exportSplicedImage } from "@/features/splicing/canvas-renderer"
@@ -10,7 +12,9 @@ import type {
   SplicingExportConfig
 } from "@/features/splicing/types"
 import { CanvasPreview } from "@/options/components/splicing/canvas-preview"
+import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { ImageStrip } from "@/options/components/splicing/image-strip"
+import { SplicingExportDialog, type SplicingExportMode } from "@/options/components/splicing/splicing-export-dialog"
 import { Button } from "@/options/components/ui/button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { ScrollModeToggle } from "@/options/components/ui/scroll-mode-toggle"
@@ -21,7 +25,9 @@ import {
   resolveCanvasStyle,
   resolveImageStyle
 } from "@/options/stores/splicing-store"
+import { useBatchStore } from "@/options/stores/batch-store"
 import { getCanonicalExtension } from "@/core/download-utils"
+import { PDFDocument } from "pdf-lib"
 
 const THUMB_MAX = 256
 const LARGE_IMPORT_THRESHOLD = 20
@@ -68,6 +74,8 @@ function downloadBlob(blob: Blob, filename: string) {
 export function SplicingTab() {
   const [images, setImages] = useState<SplicingImageItem[]>([])
   const [isExporting, setIsExporting] = useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
   const [isScrollPan, setIsScrollPan] = useState(false)
   const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
@@ -103,6 +111,9 @@ export function SplicingTab() {
   const exportQuality = useSplicingStore((s) => s.exportQuality)
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
   const exportMode = useSplicingStore((s) => s.exportMode)
+  const exportTrimBackground = useSplicingStore((s) => s.exportTrimBackground)
+  const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
+  const canExportPdf = exportFormat === "jpg" || exportFormat === "png" || exportFormat === "webp"
 
   const storeState = useSplicingStore.getState()
   const layoutConfig = useMemo(
@@ -312,51 +323,145 @@ export function SplicingTab() {
     setImages([])
     setLayoutResult(null)
   }, [images])
+  const exportTargetCount = exportMode === "single"
+    ? 1
+    : layoutResult?.groups.length ?? 0
 
   const handleExport = useCallback(async () => {
     if (images.length === 0 || isExporting) return
-    setIsExporting(true)
-
-    try {
-      const store = useSplicingStore.getState()
-      const layout = resolveLayoutConfig(store)
-      const canvas = resolveCanvasStyle(store)
-      const imgStyle = resolveImageStyle(store)
-
-      const config: SplicingExportConfig = {
-        format: store.exportFormat,
-        quality: store.exportQuality,
-        pngTinyMode: store.exportPngTinyMode,
-        exportMode: store.exportMode
-      }
-
-      const blobs = await exportSplicedImage(
-        images,
-        layout,
-        canvas,
-        imgStyle,
-        store.imageResize,
-        store.imageFitValue,
-        config
-      )
-
-      const ext = getCanonicalExtension(store.exportFormat)
-      for (let i = 0; i < blobs.length; i++) {
-        const suffix = blobs.length > 1 ? `-${i + 1}` : ""
-        downloadBlob(blobs[i], `spliced-image${suffix}.${ext}`)
-      }
-    } catch (err) {
-      console.error("Export failed:", err)
-    } finally {
-      setIsExporting(false)
+    if (exportMode !== "single") {
+      setExportDialogOpen(true)
+    } else {
+      void performExport("one_by_one")
     }
-  }, [images, isExporting])
+  }, [images.length, isExporting, exportMode])
+
+  const performExport = useCallback(
+    async (downloadMode: SplicingExportMode, forceDownloadConfirm: boolean = false) => {
+      if (images.length === 0 || isExporting) return
+      if (
+        downloadMode === "one_by_one" &&
+        !forceDownloadConfirm &&
+        exportTargetCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD &&
+        !skipDownloadConfirm
+      ) {
+        setExportDialogOpen(false)
+        setShowDownloadConfirm(true)
+        return
+      }
+      setIsExporting(true)
+      setExportDialogOpen(false)
+
+      try {
+        const store = useSplicingStore.getState()
+        const layout = resolveLayoutConfig(store)
+        const canvas = resolveCanvasStyle(store)
+        const imgStyle = resolveImageStyle(store)
+
+        const config: SplicingExportConfig = {
+          format: store.exportFormat,
+          quality: store.exportQuality,
+          pngTinyMode: store.exportPngTinyMode,
+          exportMode: store.exportMode,
+          trimBackground: store.exportTrimBackground
+        }
+
+        const blobs = await exportSplicedImage(
+          images,
+          layout,
+          canvas,
+          imgStyle,
+          store.imageResize,
+          store.imageFitValue,
+          config
+        )
+
+        const ext = getCanonicalExtension(store.exportFormat)
+
+        if (downloadMode === "one_by_one") {
+          for (let i = 0; i < blobs.length; i++) {
+            const suffix = blobs.length > 1 ? `-${i + 1}` : ""
+            downloadBlob(blobs[i], `spliced-image${suffix}.${ext}`)
+            if (i < blobs.length - 1) {
+              await new Promise((r) => setTimeout(r, 100))
+            }
+          }
+        } else if (downloadMode === "zip") {
+          const zipData: Record<string, Uint8Array> = {}
+          for (let i = 0; i < blobs.length; i++) {
+            const suffix = blobs.length > 1 ? `-${i + 1}` : ""
+            const filename = `spliced-image${suffix}.${ext}`
+            zipData[filename] = new Uint8Array(await blobs[i].arrayBuffer())
+          }
+
+          zip(zipData, (_err, data) => {
+            if (data) {
+              const zipBlob = new Blob([data as BlobPart], { type: "application/zip" })
+              downloadBlob(zipBlob, "spliced-images.zip")
+            }
+          })
+        } else if (downloadMode === "pdf" || downloadMode === "individual_pdf") {
+          const convertBlobToPdfPage = async (pdfDoc: PDFDocument, blob: Blob) => {
+            let image: Awaited<ReturnType<typeof pdfDoc.embedPng | typeof pdfDoc.embedJpg>>
+            if (ext === "png") {
+              image = await pdfDoc.embedPng(await blob.arrayBuffer())
+            } else if (ext === "jpg" || ext === "jpeg") {
+              image = await pdfDoc.embedJpg(await blob.arrayBuffer())
+            } else {
+              const canvas = new OffscreenCanvas(100, 100)
+              const ctx = canvas.getContext("2d")
+              if (!ctx) return
+
+              const bitmap = await createImageBitmap(blob)
+              canvas.width = bitmap.width
+              canvas.height = bitmap.height
+              ctx.drawImage(bitmap, 0, 0)
+              bitmap.close()
+
+              const pngBlob = await canvas.convertToBlob({ type: "image/png" })
+              image = await pdfDoc.embedPng(await pngBlob.arrayBuffer())
+            }
+
+            const width = image.width as number
+            const height = image.height as number
+            const page = pdfDoc.addPage([width, height])
+            page.drawImage(image, { x: 0, y: 0, width, height })
+          }
+
+          if (downloadMode === "individual_pdf") {
+            for (let i = 0; i < blobs.length; i++) {
+              const pdfDoc = await PDFDocument.create()
+              await convertBlobToPdfPage(pdfDoc, blobs[i])
+              const pdfBytes = await pdfDoc.save()
+              const suffix = blobs.length > 1 ? `-${i + 1}` : ""
+              const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
+              downloadBlob(pdfBlob, `spliced-image${suffix}.pdf`)
+            }
+            return
+          }
+
+          const pdfDoc = await PDFDocument.create()
+          for (const blob of blobs) {
+            await convertBlobToPdfPage(pdfDoc, blob)
+          }
+
+          const pdfBytes = await pdfDoc.save()
+          const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
+          downloadBlob(pdfBlob, "spliced-images.pdf")
+        }
+      } catch (err) {
+        console.error("Export failed:", err)
+      } finally {
+        setIsExporting(false)
+      }
+    },
+    [images, isExporting, exportTargetCount, skipDownloadConfirm]
+  )
 
   const hasImages = images.length > 0
   const dimensionLabel = layoutResult
     ? `${layoutResult.canvasWidth} x ${layoutResult.canvasHeight} px`
     : null
-
   return (
     <SurfaceCard>
       <div className="flex items-center justify-between mb-4">
@@ -447,6 +552,22 @@ export function SplicingTab() {
         </div>
       )}
       <ConversionProgressToastCard payload={importToastPayload} />
+      <SplicingExportDialog
+        isOpen={exportDialogOpen}
+        totalImages={exportTargetCount}
+        showPdfOptions={canExportPdf}
+        onExport={performExport}
+        onCancel={() => setExportDialogOpen(false)}
+        isLoading={isExporting}
+      />
+      <BatchDownloadConfirmDialog
+        isOpen={showDownloadConfirm}
+        count={exportTargetCount}
+        onClose={() => setShowDownloadConfirm(false)}
+        onConfirm={() => {
+          void performExport("one_by_one", true)
+        }}
+      />
     </SurfaceCard>
   )
 }
