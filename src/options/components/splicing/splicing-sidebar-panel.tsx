@@ -13,7 +13,6 @@ import { RadioCard } from "@/options/components/ui/radio-card"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { LabelText } from "@/options/components/ui/typography"
-import { QualityInput } from "@/options/components/quality-input"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 
@@ -447,10 +446,14 @@ export function SplicingSidebarPanel() {
               onChange={(v) => setExportFormat(v as SplicingExportFormat)}
             />
             {showQuality ? (
-              <QualityInput
+              <NumberInput
                 label="Quality"
+                className="w-full"
+                min={1}
+                max={100}
+                step={1}
                 value={exportQuality}
-                onChange={setExportQuality}
+                onChangeValue={setExportQuality}
               />
             ) : (
               <div />

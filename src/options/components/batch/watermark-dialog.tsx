@@ -4,7 +4,6 @@ import { ImagePlus, Save, Stamp, Type, X, UploadCloud, CheckCircle2 } from "luci
 
 import { Button } from "@/options/components/ui/button"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
-import { QualityInput } from "@/options/components/quality-input"
 import { NumberInput } from "@/options/components/ui/number-input"
 import type { BatchWatermarkConfig } from "@/options/components/batch/types"
 import {
@@ -284,10 +283,14 @@ export function BatchWatermarkDialog({
             {draft.type !== "none" && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <QualityInput
+                  <NumberInput
                     label="Opacity (%)"
+                    className="w-full"
+                    min={1}
+                    max={100}
+                    step={1}
                     value={draft.opacity}
-                    onChange={v => setDraft(c => ({ ...c, opacity: v }))}
+                    onChangeValue={(v) => setDraft((c) => ({ ...c, opacity: v }))}
                   />
 
                   <NumberInput

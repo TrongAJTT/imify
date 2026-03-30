@@ -81,7 +81,7 @@ export interface SplicingStoreState {
 
   /** Preview panel height (px) in Image Splicing tab */
   previewContainerHeight: number
-  /** Canvas preview zoom percent (minimum 50; no upper cap in UI) */
+  /** Canvas preview zoom percent (minimum 50; not persisted—resets when options page reloads) */
   previewZoom: number
   /** Downscale quality for preview rendering (% of original size) */
   previewQualityPercent: number
@@ -213,6 +213,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
         if (typeof next.previewQualityPercent === "number") {
           next.previewQualityPercent = normalizePreviewQualityPercent(next.previewQualityPercent)
         }
+        // Preview zoom is session-only (not persisted).
+        next.previewZoom = currentState.previewZoom
         return next
       },
       partialize: (state) => {
@@ -224,6 +226,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setExportFormat, setExportQuality, setExportPngTinyMode, setExportMode,
           setExportTrimBackground, setExportConcurrency,
           setPreviewContainerHeight, setPreviewZoom, setPreviewQualityPercent, setPreviewShowImageNumber,
+          previewZoom,
           ...persisted } = state
         return persisted
       }
