@@ -114,6 +114,12 @@ export function DiffcheckerSidebarPanel() {
               Drag the slider on the viewer to adjust the split position.
             </MutedText>
           )}
+
+          {viewMode === "side_by_side" && (
+            <MutedText className="text-xs">
+              Compare Image A and Image B in parallel. Zoom and pan are synchronized.
+            </MutedText>
+          )}
         </div>
       </SidebarPanel>
 

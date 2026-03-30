@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import { Expand, Shrink } from "lucide-react"
 import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
+import { Tooltip } from "@/options/components/tooltip"
 
 interface ViewerShellProps {
   children: ReactNode
@@ -35,6 +37,7 @@ export function ViewerShell({
   } | null>(null)
   const [dragging, setDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => {
     const el = ref.current
@@ -52,6 +55,15 @@ export function ViewerShell({
     el.addEventListener("wheel", onWheel, { passive: false })
     return () => el.removeEventListener("wheel", onWheel)
   }, [zoom, onZoomChange])
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === ref.current)
+    }
+
+    document.addEventListener("fullscreenchange", onFullscreenChange)
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange)
+  }, [])
 
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -117,6 +129,21 @@ export function ViewerShell({
     onPanChange(0, 0)
   }, [onZoomChange, onPanChange])
 
+  const handleToggleFullscreen = useCallback(async () => {
+    const el = ref.current
+    if (!el) return
+
+    try {
+      if (document.fullscreenElement === el) {
+        await document.exitFullscreen()
+      } else if (!document.fullscreenElement) {
+        await el.requestFullscreen()
+      }
+    } catch {
+      // Ignore browser fullscreen API failures.
+    }
+  }, [])
+
   return (
     <div
       ref={ref}
@@ -124,7 +151,7 @@ export function ViewerShell({
         dragging ? "cursor-grabbing" : "cursor-grab"
       } ${className}`}
       style={{
-        height: `${Math.max(120, Math.round(containerHeight))}px`,
+        height: isFullscreen ? "100dvh" : `${Math.max(120, Math.round(containerHeight))}px`,
         backgroundImage:
           "repeating-conic-gradient(var(--ck-a) 0% 25%, var(--ck-b) 0% 50%)",
         backgroundSize: "16px 16px"
@@ -136,11 +163,26 @@ export function ViewerShell({
       onDoubleClick={handleDoubleClick}
     >
       {children}
+      <div className="absolute top-1/2 right-2 z-20 -translate-y-1/2">
+        <Tooltip
+          content={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+        >
+          <button
+            type="button"
+            onClick={handleToggleFullscreen}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300/90 bg-white/90 text-slate-700 shadow-sm transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-900 opacity-60 hover:opacity-100"
+            aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+          >
+            {isFullscreen ? <Shrink size={14} /> : <Expand size={14} />}
+          </button>
+        </Tooltip>
+      </div>
       <div
         onMouseDown={handleResizeStart}
         className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors ${
           isResizing ? "bg-sky-400 dark:bg-sky-500" : ""
-        }`}
+        } ${isFullscreen ? "hidden" : ""}`}
         style={{ cursor: "ns-resize" }}
       />
       <div className="absolute bottom-2 right-2 z-20 rounded-md bg-slate-900/70 px-2 py-0.5 text-[10px] font-mono text-white pointer-events-none select-none">
