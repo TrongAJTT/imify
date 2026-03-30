@@ -46,7 +46,10 @@ export function drawSplicingCanvas(
   layout: LayoutResult,
   canvasStyle: SplicingCanvasStyle,
   imageStyle: SplicingImageStyle,
-  scale: number
+  scale: number,
+  options?: {
+    showImageNumber?: boolean
+  }
 ): void {
   const cw = layout.canvasWidth * scale
   const ch = layout.canvasHeight * scale
@@ -112,6 +115,27 @@ export function drawSplicingCanvas(
           Math.max(0, outerR - half)
         )
         ctx.stroke()
+        ctx.restore()
+      }
+
+      if (options?.showImageNumber) {
+        const label = String(placement.imageIndex + 1)
+        const paddingX = 6 * scale
+        const paddingY = 3 * scale
+        const fontSize = Math.max(10, 11 * scale)
+        ctx.save()
+        ctx.font = `600 ${fontSize}px Inter, system-ui, sans-serif`
+        const textWidth = ctx.measureText(label).width
+        const badgeWidth = textWidth + paddingX * 2
+        const badgeHeight = fontSize + paddingY * 2
+        const badgeX = ox + ow - badgeWidth - 4 * scale
+        const badgeY = oy + 4 * scale
+        drawRoundedRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, 6 * scale)
+        ctx.fillStyle = "rgba(15, 23, 42, 0.75)"
+        ctx.fill()
+        ctx.fillStyle = "#ffffff"
+        ctx.textBaseline = "top"
+        ctx.fillText(label, badgeX + paddingX, badgeY + paddingY)
         ctx.restore()
       }
     }

@@ -27,6 +27,11 @@ interface CanvasPreviewProps {
   isScrollPan?: boolean
   onLayoutComputed?: (result: LayoutResult) => void
   onPreviewRendered?: (imageCount: number) => void
+  onNumberingProgress?: (payload: {
+    status: "processing" | "done"
+    completed: number
+    total: number
+  }) => void
 }
 
 export function CanvasPreview({
@@ -38,24 +43,30 @@ export function CanvasPreview({
   fitValue,
   isScrollPan = false,
   onLayoutComputed,
-  onPreviewRendered
+  onPreviewRendered,
+  onNumberingProgress
 }: CanvasPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const resizeHandleRef = useRef<HTMLDivElement>(null)
   const canvasWrapperRef = useRef<HTMLDivElement>(null)
   const zoomInputRef = useRef<HTMLInputElement>(null)
-  const [thumbs, setThumbs] = useState<Map<string, HTMLImageElement>>(new Map())
+  const previewUrlsRef = useRef<string[]>([])
+  const [previewSources, setPreviewSources] = useState<Map<string, HTMLImageElement>>(new Map())
   const containerHeight = useSplicingStore((s) => s.previewContainerHeight)
   const setPreviewContainerHeight = useSplicingStore((s) => s.setPreviewContainerHeight)
   const zoom = useSplicingStore((s) => s.previewZoom)
   const setPreviewZoom = useSplicingStore((s) => s.setPreviewZoom)
+  const previewQualityPercent = useSplicingStore((s) => s.previewQualityPercent)
+  const previewShowImageNumber = useSplicingStore((s) => s.previewShowImageNumber)
   const [canvasWidth, setCanvasWidth] = useState(0)
   const [canvasHeight, setCanvasHeight] = useState(0)
   const [isResizing, setIsResizing] = useState(false)
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
   const [editingZoom, setEditingZoom] = useState(false)
   const [zoomDraft, setZoomDraft] = useState("")
+  const [numberingReady, setNumberingReady] = useState(false)
+  const numberingTaskRef = useRef(0)
 
   const { pan, setPan, resetPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
     onlyWhenZoomed: false,
@@ -90,29 +101,131 @@ export function CanvasPreview({
   }, [zoom])
 
   useEffect(() => {
-    const map = new Map<string, HTMLImageElement>()
     let cancelled = false
+    const scaleRatio = Math.min(1, Math.max(0.1, previewQualityPercent / 100))
 
-    for (const img of images) {
-      const el = new Image()
-      el.src = img.thumbnailUrl
-      el.onload = () => {
-        if (cancelled) return
-        map.set(img.id, el)
-        if (map.size === images.length) {
-          setThumbs(new Map(map))
-        }
+    const revokeAll = (urls: string[]) => {
+      for (const url of urls) {
+        URL.revokeObjectURL(url)
       }
     }
 
-    if (images.length === 0) {
-      setThumbs(new Map())
+    const buildPreviewSources = async () => {
+      const nextMap = new Map<string, HTMLImageElement>()
+      const nextUrls: string[] = []
+
+      for (const img of images) {
+        const bitmap = await createImageBitmap(img.file)
+        const tw = Math.max(1, Math.round(bitmap.width * scaleRatio))
+        const th = Math.max(1, Math.round(bitmap.height * scaleRatio))
+        const offscreen = new OffscreenCanvas(tw, th)
+        const offCtx = offscreen.getContext("2d")
+        if (!offCtx) {
+          bitmap.close()
+          continue
+        }
+        offCtx.imageSmoothingEnabled = true
+        offCtx.imageSmoothingQuality = "medium"
+        offCtx.drawImage(bitmap, 0, 0, tw, th)
+        bitmap.close()
+
+        const blob = await offscreen.convertToBlob({ type: "image/png" })
+        const objectUrl = URL.createObjectURL(blob)
+        nextUrls.push(objectUrl)
+
+        const imageEl = new Image()
+        await new Promise<void>((resolve) => {
+          imageEl.onload = () => resolve()
+          imageEl.onerror = () => resolve()
+          imageEl.src = objectUrl
+        })
+        nextMap.set(img.id, imageEl)
+      }
+
+      if (cancelled) {
+        revokeAll(nextUrls)
+        return
+      }
+
+      revokeAll(previewUrlsRef.current)
+      previewUrlsRef.current = nextUrls
+      setPreviewSources(nextMap)
     }
+
+    if (images.length === 0) {
+      revokeAll(previewUrlsRef.current)
+      previewUrlsRef.current = []
+      setPreviewSources(new Map())
+      return
+    }
+
+    // Phase 1: render immediately from existing thumbnails for snappy UX.
+    const immediateMap = new Map<string, HTMLImageElement>()
+    for (const img of images) {
+      const el = new Image()
+      el.src = img.thumbnailUrl
+      immediateMap.set(img.id, el)
+    }
+    setPreviewSources(immediateMap)
+
+    // Phase 2: build quality-adjusted preview sources in background.
+    void buildPreviewSources()
 
     return () => {
       cancelled = true
     }
-  }, [images])
+  }, [images, previewQualityPercent])
+
+  useEffect(() => {
+    let cancelled = false
+    const taskId = numberingTaskRef.current + 1
+    numberingTaskRef.current = taskId
+
+    if (images.length === 0) {
+      setNumberingReady(false)
+      onNumberingProgress?.({ status: "done", completed: 0, total: 0 })
+      return
+    }
+
+    setNumberingReady(false)
+    onNumberingProgress?.({ status: "processing", completed: 0, total: images.length })
+
+    const run = async () => {
+      for (let i = 0; i < images.length; i++) {
+        // Yield between items so first canvas render is never blocked.
+        await new Promise<void>((resolve) => setTimeout(resolve, 0))
+        if (cancelled || numberingTaskRef.current !== taskId) {
+          return
+        }
+        onNumberingProgress?.({
+          status: "processing",
+          completed: i + 1,
+          total: images.length
+        })
+      }
+
+      if (cancelled || numberingTaskRef.current !== taskId) {
+        return
+      }
+      setNumberingReady(true)
+      onNumberingProgress?.({ status: "done", completed: images.length, total: images.length })
+    }
+
+    void run()
+
+    return () => {
+      cancelled = true
+    }
+  }, [images, onNumberingProgress])
+
+  useEffect(() => {
+    return () => {
+      for (const url of previewUrlsRef.current) {
+        URL.revokeObjectURL(url)
+      }
+      previewUrlsRef.current = []
+    }
+  }, [])
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current
@@ -156,15 +269,31 @@ export function CanvasPreview({
     if (!ctx) return
 
     const sources: CanvasImageSource[] = images.map((img) => {
-      return thumbs.get(img.id) ?? new Image()
+      return previewSources.get(img.id) ?? new Image()
     })
 
-    drawSplicingCanvas(ctx, sources, layoutResult, canvasStyle, imageStyle, previewScale * (zoom / 100))
+    drawSplicingCanvas(ctx, sources, layoutResult, canvasStyle, imageStyle, previewScale * (zoom / 100), {
+      showImageNumber: previewShowImageNumber && numberingReady
+    })
     
     setCanvasWidth(canvas.offsetWidth)
     setCanvasHeight(canvas.offsetHeight)
     onPreviewRendered?.(images.length)
-  }, [images, thumbs, layoutConfig, canvasStyle, imageStyle, imageResize, fitValue, containerHeight, zoom, onLayoutComputed, onPreviewRendered])
+  }, [
+    images,
+    previewSources,
+    layoutConfig,
+    canvasStyle,
+    imageStyle,
+    imageResize,
+    fitValue,
+    containerHeight,
+    zoom,
+    previewShowImageNumber,
+    numberingReady,
+    onLayoutComputed,
+    onPreviewRendered
+  ])
 
   useEffect(() => {
     draw()

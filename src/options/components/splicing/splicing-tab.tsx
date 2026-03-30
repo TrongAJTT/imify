@@ -21,9 +21,10 @@ import { SplicingExportDialog, type SplicingExportMode } from "@/options/compone
 import { Button } from "@/options/components/ui/button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { ScrollModeToggle } from "@/options/components/ui/scroll-mode-toggle"
-import { Subheading, MutedText } from "@/options/components/ui/typography"
+import { Subheading, MutedText, LabelText } from "@/options/components/ui/typography"
 import {
   useSplicingStore,
+  PREVIEW_QUALITY_PERCENTS,
   resolveLayoutConfig,
   resolveCanvasStyle,
   resolveImageStyle
@@ -168,7 +169,13 @@ export function SplicingTab() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imagesCountRef = useRef(0)
   const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingRenderRef = useRef<{ toastId: string; expectedCount: number } | null>(null)
+  const pendingRenderRef = useRef<{
+    toastId: string
+    expectedCount: number
+    requiresNumbering: boolean
+    previewDone: boolean
+    numberingDone: boolean
+  } | null>(null)
 
   const preset = useSplicingStore((s) => s.preset)
   const primaryDirection = useSplicingStore((s) => s.primaryDirection)
@@ -200,6 +207,10 @@ export function SplicingTab() {
   const exportMode = useSplicingStore((s) => s.exportMode)
   const exportTrimBackground = useSplicingStore((s) => s.exportTrimBackground)
   const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
+  const previewQualityPercent = useSplicingStore((s) => s.previewQualityPercent)
+  const previewShowImageNumber = useSplicingStore((s) => s.previewShowImageNumber)
+  const setPreviewQualityPercent = useSplicingStore((s) => s.setPreviewQualityPercent)
+  const setPreviewShowImageNumber = useSplicingStore((s) => s.setPreviewShowImageNumber)
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const canExportPdf = exportFormat === "jpg" || exportFormat === "png" || exportFormat === "webp"
 
@@ -316,7 +327,13 @@ export function SplicingTab() {
 
     const expectedCount = imagesCountRef.current + newItems.length
     if (shouldShowProgress) {
-      pendingRenderRef.current = { toastId, expectedCount }
+      pendingRenderRef.current = {
+        toastId,
+        expectedCount,
+        requiresNumbering: previewShowImageNumber,
+        previewDone: false,
+        numberingDone: !previewShowImageNumber
+      }
     }
 
     setImages((prev) => [...prev, ...newItems])
@@ -324,6 +341,23 @@ export function SplicingTab() {
     if (!shouldShowProgress) {
       pendingRenderRef.current = null
     }
+  }, [exportFormat, previewShowImageNumber, pushImportToast])
+
+  const finalizeImportToast = useCallback((toastId: string, imageCount: number) => {
+    pendingRenderRef.current = null
+    pushImportToast({
+      id: toastId,
+      fileName: "Image import complete",
+      targetFormat: exportFormat,
+      status: "success",
+      percent: 100,
+      message: `Imported and rendered ${imageCount} images.`
+    })
+
+    importToastHideTimerRef.current = setTimeout(() => {
+      setImportToastPayload((current) => (current?.id === toastId ? null : current))
+      importToastHideTimerRef.current = null
+    }, 2500)
   }, [exportFormat, pushImportToast])
 
   const handlePreviewRendered = useCallback((imageCount: number) => {
@@ -336,21 +370,49 @@ export function SplicingTab() {
       return
     }
 
-    pendingRenderRef.current = null
+    pending.previewDone = true
+    if (!pending.requiresNumbering || pending.numberingDone) {
+      finalizeImportToast(pending.toastId, imageCount)
+      return
+    }
+
     pushImportToast({
       id: pending.toastId,
-      fileName: "Image import complete",
+      fileName: `Importing ${pending.expectedCount} images`,
       targetFormat: exportFormat,
-      status: "success",
-      percent: 100,
-      message: `Imported and rendered ${imageCount} images.`
+      status: "processing",
+      percent: 90,
+      message: "Preparing image numbers..."
     })
+  }, [exportFormat, finalizeImportToast, pushImportToast])
 
-    importToastHideTimerRef.current = setTimeout(() => {
-      setImportToastPayload((current) => (current?.id === pending.toastId ? null : current))
-      importToastHideTimerRef.current = null
-    }, 2500)
-  }, [exportFormat, pushImportToast])
+  const handlePreviewNumberingProgress = useCallback((payload: {
+    status: "processing" | "done"
+    completed: number
+    total: number
+  }) => {
+    const pending = pendingRenderRef.current
+    if (!pending || !pending.requiresNumbering) return
+
+    if (payload.status === "processing") {
+      const ratio = payload.total > 0 ? payload.completed / payload.total : 0
+      const percent = Math.min(99, 90 + Math.round(ratio * 9))
+      pushImportToast({
+        id: pending.toastId,
+        fileName: `Importing ${pending.expectedCount} images`,
+        targetFormat: exportFormat,
+        status: "processing",
+        percent,
+        message: `Preparing image numbers ${payload.completed}/${payload.total}...`
+      })
+      return
+    }
+
+    pending.numberingDone = true
+    if (pending.previewDone) {
+      finalizeImportToast(pending.toastId, pending.expectedCount)
+    }
+  }, [exportFormat, finalizeImportToast, pushImportToast])
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -749,6 +811,7 @@ export function SplicingTab() {
               isScrollPan={isScrollPan}
               onLayoutComputed={setLayoutResult}
               onPreviewRendered={handlePreviewRendered}
+              onNumberingProgress={handlePreviewNumberingProgress}
             />
           </div>
 
@@ -758,6 +821,48 @@ export function SplicingTab() {
             onReorder={handleReorder}
             onAddMore={handleAddMore}
           />
+          <div>
+            <div className="text-[11px] font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400 mb-2">
+              Preview Settings
+            </div>
+            <div className="grid grid-cols-2 gap-4 items-start">
+              <div className="space-y-1">
+                <LabelText className="text-xs">Preview Image Quality (%)</LabelText>
+                <select
+                  value={previewQualityPercent}
+                  onChange={(e) => setPreviewQualityPercent(Number(e.target.value))}
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all"
+                >
+                  {PREVIEW_QUALITY_PERCENTS.map((pct) => (
+                    <option key={pct} value={pct}>
+                      {pct}%
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Lower values speed up rendering. Default is 20%.
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 px-3 py-2">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={previewShowImageNumber}
+                    onChange={(e) => setPreviewShowImageNumber(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500/30"
+                  />
+                  <div>
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Show image numbers on preview
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      Match image order with the strip.
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
       )}
       <ConversionProgressToastCard payload={importToastPayload} />

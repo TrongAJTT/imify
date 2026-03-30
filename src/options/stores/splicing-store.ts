@@ -30,6 +30,23 @@ const plasmoStorage = {
   }
 }
 
+export const PREVIEW_QUALITY_PERCENTS = [20, 30, 50, 75, 100] as const
+
+function normalizePreviewQualityPercent(value: number): number {
+  const allowed = PREVIEW_QUALITY_PERCENTS as readonly number[]
+  if (allowed.includes(value)) return value
+  let best = allowed[0]
+  let bestDist = Math.abs(value - best)
+  for (const option of allowed) {
+    const dist = Math.abs(value - option)
+    if (dist < bestDist) {
+      best = option
+      bestDist = dist
+    }
+  }
+  return best
+}
+
 export interface SplicingStoreState {
   preset: SplicingPreset
   primaryDirection: SplicingDirection
@@ -66,6 +83,10 @@ export interface SplicingStoreState {
   previewContainerHeight: number
   /** Canvas preview zoom percent (minimum 50; no upper cap in UI) */
   previewZoom: number
+  /** Downscale quality for preview rendering (% of original size) */
+  previewQualityPercent: number
+  /** Show image order number overlay on preview canvas */
+  previewShowImageNumber: boolean
 
   setPreset: (v: SplicingPreset) => void
   setPrimaryDirection: (v: SplicingDirection) => void
@@ -96,6 +117,8 @@ export interface SplicingStoreState {
   setExportConcurrency: (v: number) => void
   setPreviewContainerHeight: (v: number) => void
   setPreviewZoom: (v: number) => void
+  setPreviewQualityPercent: (v: number) => void
+  setPreviewShowImageNumber: (v: boolean) => void
 }
 
 export const useSplicingStore = create<SplicingStoreState>()(
@@ -134,6 +157,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
 
       previewContainerHeight: 400,
       previewZoom: 100,
+      previewQualityPercent: 25,
+      previewShowImageNumber: false,
 
       setPreset: (v) => set({ preset: v }),
       setPrimaryDirection: (v) => set({ primaryDirection: v }),
@@ -163,7 +188,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportTrimBackground: (v) => set({ exportTrimBackground: v }),
       setExportConcurrency: (v) => set({ exportConcurrency: v }),
       setPreviewContainerHeight: (v) => set({ previewContainerHeight: v }),
-      setPreviewZoom: (v) => set({ previewZoom: v })
+      setPreviewZoom: (v) => set({ previewZoom: v }),
+      setPreviewQualityPercent: (v) => set({ previewQualityPercent: v }),
+      setPreviewShowImageNumber: (v) => set({ previewShowImageNumber: v })
     }),
     {
       name: "imify_splicing",
@@ -183,6 +210,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
           next.primaryDirection = "vertical"
           next.secondaryDirection = "vertical"
         }
+        if (typeof next.previewQualityPercent === "number") {
+          next.previewQualityPercent = normalizePreviewQualityPercent(next.previewQualityPercent)
+        }
         return next
       },
       partialize: (state) => {
@@ -193,7 +223,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setImageBorderRadius, setImageBorderWidth, setImageBorderColor,
           setExportFormat, setExportQuality, setExportPngTinyMode, setExportMode,
           setExportTrimBackground, setExportConcurrency,
-          setPreviewContainerHeight, setPreviewZoom,
+          setPreviewContainerHeight, setPreviewZoom, setPreviewQualityPercent, setPreviewShowImageNumber,
           ...persisted } = state
         return persisted
       }
