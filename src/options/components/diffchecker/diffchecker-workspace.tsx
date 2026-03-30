@@ -7,6 +7,7 @@ import { DiffStatsBar } from "@/options/components/diffchecker/diff-stats-bar"
 import { ImageDropPair } from "@/options/components/diffchecker/image-drop-pair"
 import { ViewerDiff } from "@/options/components/diffchecker/viewer-diff"
 import { ViewerOverlay } from "@/options/components/diffchecker/viewer-overlay"
+import { ViewerSideBySide } from "@/options/components/diffchecker/viewer-side-by-side"
 import { ViewerShell } from "@/options/components/diffchecker/viewer-shell"
 import { ViewerSplit } from "@/options/components/diffchecker/viewer-split"
 
@@ -79,6 +80,16 @@ export function DiffcheckerWorkspace({
                 urlB={displayUrlB}
                 splitPosition={splitPosition}
                 onSplitChange={onSplitChange}
+                zoom={zoom}
+                panX={panX}
+                panY={panY}
+              />
+            )}
+
+            {viewMode === "side_by_side" && (
+              <ViewerSideBySide
+                urlA={displayUrlA}
+                urlB={displayUrlB}
                 zoom={zoom}
                 panX={panX}
                 panY={panY}

@@ -4,6 +4,7 @@ import type {
   DiffAlignAnchor,
   DiffAlignMode,
   DiffComputeResult,
+  DiffViewMode,
   DiffStats
 } from "@/features/diffchecker/types"
 
@@ -288,7 +289,7 @@ export async function computeFullDiff(
 export async function exportCompositeView(
   imgA: ImageBitmap,
   imgB: ImageBitmap,
-  viewMode: "split" | "overlay",
+  viewMode: DiffViewMode,
   splitPosition: number,
   overlayOpacity: number,
   alignMode: DiffAlignMode,
@@ -302,7 +303,7 @@ export async function exportCompositeView(
   const tmpB = new OffscreenCanvas(w, h)
   tmpB.getContext("2d")!.putImageData(pair.dataB, 0, 0)
 
-  const out = new OffscreenCanvas(w, h)
+  const out = new OffscreenCanvas(viewMode === "side_by_side" ? w * 2 : w, h)
   const ctx = out.getContext("2d")!
 
   if (viewMode === "split") {
@@ -316,10 +317,15 @@ export async function exportCompositeView(
     ctx.restore()
     ctx.fillStyle = "#ffffff"
     ctx.fillRect(sx - 1, 0, 2, h)
-  } else {
+  } else if (viewMode === "overlay") {
     ctx.drawImage(tmpA, 0, 0)
     ctx.globalAlpha = overlayOpacity / 100
     ctx.drawImage(tmpB, 0, 0)
+  } else if (viewMode === "side_by_side") {
+    ctx.drawImage(tmpA, 0, 0, w, h)
+    ctx.drawImage(tmpB, w, 0, w, h)
+    ctx.fillStyle = "#ffffff"
+    ctx.fillRect(w - 1, 0, 2, h)
   }
 
   return out.convertToBlob({ type: "image/png" })

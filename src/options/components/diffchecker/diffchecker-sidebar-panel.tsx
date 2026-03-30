@@ -9,6 +9,7 @@ import { SelectInput } from "@/options/components/ui/select-input"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { MutedText } from "@/options/components/ui/typography"
 import { SliderInput } from "@/options/components/ui/slider-input"
+import { NumberInput } from "@/options/components/ui/number-input"
 import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
 
 const VIEW_MODES: Array<{
@@ -17,6 +18,7 @@ const VIEW_MODES: Array<{
   subtitle: string
 }> = [
   { value: "split", title: "Split", subtitle: "Drag slider to compare" },
+  { value: "side_by_side", title: "Side by Side", subtitle: "View both images in parallel" },
   { value: "overlay", title: "Overlay", subtitle: "Adjust opacity to blend" },
   {
     value: "difference",

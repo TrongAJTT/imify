@@ -205,7 +205,7 @@ export function DiffcheckerTab() {
       if (viewMode === "difference" && diffResult?.diffImageUrl) {
         const resp = await fetch(diffResult.diffImageUrl)
         blob = await resp.blob()
-      } else if (viewMode === "split" || viewMode === "overlay") {
+      } else if (viewMode === "split" || viewMode === "overlay" || viewMode === "side_by_side") {
         blob = await exportCompositeView(
           bitmapA,
           bitmapB,

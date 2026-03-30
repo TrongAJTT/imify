@@ -1,4 +1,4 @@
-export type DiffViewMode = "split" | "overlay" | "difference"
+export type DiffViewMode = "split" | "side_by_side" | "overlay" | "difference"
 
 export type DiffAlgorithm = "heatmap" | "binary"
 
