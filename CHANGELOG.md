@@ -12,28 +12,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dynamic configuration system for batch processing thresholds
 - Sidebar navigation in Settings dialog for future extensibility
 - Enhanced `Tooltip` component (label highlight + delayed hover, portal-based rendering to avoid clipping)
-- Image Splicing preview upgrades:
-  - Zoom/pan controls + scroll mode toggle
-  - Value scrubbing (hold + drag) for fast zoom adjustments
-  - Zoom tooltip support + image numbering overlay
-  - Preview rebuild progress tracking
-- Heavy preview quality warning for Splicing (with confirmation + “don’t show again” preference)
-- Image Splicing UX improvements:
-  - Grid statistics
-  - Keyboard shortcuts
-  - Drag-and-drop reordering in the image strip
-  - Image appearance direction options + Bento layout preset
-- Image Splicing export upgrades:
-  - Concurrency and progress tracking
-  - New export modes and background trimming options
-  - File renaming pattern support for splicing exports (with unique-name collision fallback)
-- Splicing import progress tracking
+- **Image Splicing** (in development, not yet released):
+  - Preview: zoom/pan, scroll mode toggle, value scrubbing for zoom, numbering overlay, preview rebuild progress
+  - Heavy preview quality warning (confirmation + “don’t show again” preference)
+  - Grid statistics, keyboard shortcuts, strip reorder, image direction options, Bento layout preset
+  - Export: concurrency and progress, modes and background trimming, file renaming pattern with collision fallback
+  - Import progress tracking
+- **Diffchecker** (in development, not yet released):
+  - Side-by-side viewer mode, fullscreen toggle and usage guidance
+  - SSIM option for image comparison
+  - `SliderInput` control and compare input handling
+- **Single Processor**: refinements to preview/compare (zoom and side-by-side behavior)
 
 ### Changed
 - Updated About dialog to use `package.json` as single source of truth for version info
 - Refactored warning descriptions with concrete numbers (thresholds)
 - Replaced `QualityInput` with `NumberInput` for quality settings
 - Refactored/condensed `SplicingSidebarPanel` layout + option section structure
+- `SingleProcessorTab`: compare/zoom logic and viewer integration
 
 ## [1.0.1] - 2024-03-24
 

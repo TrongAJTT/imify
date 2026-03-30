@@ -1,3 +1,4 @@
+import { arrayMove } from "@dnd-kit/sortable"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Download, Trash2 } from "lucide-react"
 
@@ -124,6 +125,24 @@ export function SplicingTab() {
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
+  const setPreviewBentoFlowGroupCount = useSplicingStore((s) => s.setPreviewBentoFlowGroupCount)
+
+  const handleLayoutComputed = useCallback(
+    (layout: LayoutResult | null) => {
+      setLayoutResult(layout)
+      setPreviewBentoFlowGroupCount(
+        layout && layout.groups.length > 0 ? layout.groups.length : null
+      )
+    },
+    [setPreviewBentoFlowGroupCount]
+  )
+
+  useEffect(() => {
+    if (images.length === 0) {
+      setPreviewBentoFlowGroupCount(null)
+    }
+  }, [images.length, setPreviewBentoFlowGroupCount])
+
   const [isScrollPan, setIsScrollPan] = useState(false)
   const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [previewQualityToastPayload, setPreviewQualityToastPayload] = useState<ConversionProgressPayload | null>(null)
@@ -602,20 +621,9 @@ export function SplicingTab() {
     })
   }, [])
 
-  const handleReorder = useCallback((draggedId: string, targetId: string) => {
-    if (draggedId === targetId) return
-    
-    setImages((prev) => {
-      const draggedIndex = prev.findIndex((img) => img.id === draggedId)
-      const targetIndex = prev.findIndex((img) => img.id === targetId)
-
-      if (draggedIndex < 0 || targetIndex < 0) return prev
-
-      const next = [...prev]
-      const [moved] = next.splice(draggedIndex, 1)
-      next.splice(targetIndex, 0, moved)
-      return next
-    })
+  const handleReorder = useCallback((fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return
+    setImages((prev) => arrayMove(prev, fromIndex, toIndex))
   }, [])
 
   const handleAddMore = useCallback(() => {
@@ -711,7 +719,7 @@ export function SplicingTab() {
         isScrollPan={isScrollPan}
         previewQualityPercent={previewQualityPercent}
         previewShowImageNumber={previewShowImageNumber}
-        onLayoutComputed={setLayoutResult}
+        onLayoutComputed={handleLayoutComputed}
         onPreviewRendered={handlePreviewRendered}
         onPreviewSourcesProgress={handlePreviewSourcesProgress}
         onPreviewNumberingProgress={handlePreviewNumberingProgress}

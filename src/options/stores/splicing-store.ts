@@ -90,6 +90,12 @@ export interface SplicingStoreState {
   /** Show image order number overlay on preview canvas */
   previewShowImageNumber: boolean
 
+  /**
+   * Latest Bento *preview* flow group count from layout (`layout.groups.length`): columns for
+   * vertical/fixed-vertical flow, rows for horizontal flow. Session-only; not persisted.
+   */
+  previewBentoFlowGroupCount: number | null
+
   setPreset: (v: SplicingPreset) => void
   setPrimaryDirection: (v: SplicingDirection) => void
   setSecondaryDirection: (v: SplicingDirection) => void
@@ -122,6 +128,7 @@ export interface SplicingStoreState {
   setPreviewZoom: (v: number) => void
   setPreviewQualityPercent: (v: number) => void
   setPreviewShowImageNumber: (v: boolean) => void
+  setPreviewBentoFlowGroupCount: (v: number | null) => void
 }
 
 export const useSplicingStore = create<SplicingStoreState>()(
@@ -163,6 +170,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       previewZoom: 100,
       previewQualityPercent: 20,
       previewShowImageNumber: false,
+      previewBentoFlowGroupCount: null,
 
       setPreset: (v) => set({ preset: v }),
       setPrimaryDirection: (v) => set({ primaryDirection: v }),
@@ -195,7 +203,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setPreviewContainerHeight: (v) => set({ previewContainerHeight: v }),
       setPreviewZoom: (v) => set({ previewZoom: v }),
       setPreviewQualityPercent: (v) => set({ previewQualityPercent: normalizePreviewQualityPercent(v) }),
-      setPreviewShowImageNumber: (v) => set({ previewShowImageNumber: v })
+      setPreviewShowImageNumber: (v) => set({ previewShowImageNumber: v }),
+      setPreviewBentoFlowGroupCount: (v) => set({ previewBentoFlowGroupCount: v })
     }),
     {
       name: "imify_splicing",
@@ -220,6 +229,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
         }
         // Preview zoom is session-only (not persisted).
         next.previewZoom = currentState.previewZoom
+        next.previewBentoFlowGroupCount = currentState.previewBentoFlowGroupCount
         return next
       },
       partialize: (state) => {
@@ -231,7 +241,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setExportFormat, setExportQuality, setExportPngTinyMode, setExportMode,
           setExportTrimBackground, setExportConcurrency, setExportFileNamePattern,
           setPreviewContainerHeight, setPreviewZoom, setPreviewQualityPercent, setPreviewShowImageNumber,
+          setPreviewBentoFlowGroupCount,
           previewZoom,
+          previewBentoFlowGroupCount,
           ...persisted } = state
         return persisted
       }

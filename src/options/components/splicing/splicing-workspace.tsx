@@ -33,7 +33,7 @@ interface SplicingWorkspaceProps {
   onDropFiles: (e: React.DragEvent) => void
   onFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void
   onRemoveImage: (id: string) => void
-  onReorderImage: (draggedId: string, targetId: string) => void
+  onReorderImage: (fromIndex: number, toIndex: number) => void
   onAddMore: () => void
   onPreviewQualityChange: (next: number) => void
   onPreviewShowImageNumberChange: (next: boolean) => void
