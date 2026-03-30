@@ -4,6 +4,7 @@ import type {
   SplicingDirection,
   SplicingExportFormat,
   SplicingExportMode,
+  SplicingImageAppearanceDirection,
   SplicingImageResize,
   SplicingPreset
 } from "@/features/splicing/types"
@@ -17,9 +18,9 @@ import { useSplicingStore } from "@/options/stores/splicing-store"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 
 const PRESET_OPTIONS: Array<{ value: SplicingPreset; title: string; subtitle: string }> = [
-  { value: "stitch_vertical", title: "Stitch V", subtitle: "Top to bottom" },
-  { value: "stitch_horizontal", title: "Stitch H", subtitle: "Left to right" },
-  { value: "grid", title: "Grid", subtitle: "N columns" },
+  { value: "stitch_vertical", title: "Stitch V", subtitle: "Vertical stack" },
+  { value: "stitch_horizontal", title: "Stitch H", subtitle: "Horizontal row" },
+  { value: "grid", title: "Grid", subtitle: "Fixed columns" },
   { value: "bento", title: "Bento", subtitle: "Flow or columns" }
 ]
 
@@ -29,6 +30,33 @@ const BENTO_LAYOUT_OPTIONS: Array<{ value: BentoLayoutMode; label: string }> = [
   { value: "vertical", label: "Vertical" },
   { value: "horizontal", label: "Horizontal" },
   { value: "fixed_vertical", label: "Fixed Vertical" }
+]
+
+const STITCH_V_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
+  { value: "top_to_bottom", label: "Top to bottom" },
+  { value: "bottom_to_top", label: "Bottom to top" }
+]
+
+const STITCH_H_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
+  { value: "left_to_right", label: "Left to right" },
+  { value: "right_to_left", label: "Right to left" }
+]
+
+const GRID_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
+  { value: "lr_tb", label: "Left to right, Top to bottom" },
+  { value: "rl_tb", label: "Right to left, Top to bottom" },
+  { value: "rl_bt", label: "Right to left, Bottom to top" },
+  { value: "lr_bt", label: "Left to right, Bottom to top" }
+]
+
+const BENTO_V_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
+  { value: "top_to_bottom", label: "Top to bottom" },
+  { value: "bottom_to_top", label: "Bottom to top" }
+]
+
+const BENTO_H_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
+  { value: "left_to_right", label: "Left to right" },
+  { value: "right_to_left", label: "Right to left" }
 ]
 
 function deriveBentoLayoutMode(
@@ -121,6 +149,7 @@ export function SplicingSidebarPanel() {
   const gridCount = useSplicingStore((s) => s.gridCount)
   const flowMaxSize = useSplicingStore((s) => s.flowMaxSize)
   const alignment = useSplicingStore((s) => s.alignment)
+  const imageAppearanceDirection = useSplicingStore((s) => s.imageAppearanceDirection)
 
   const canvasPadding = useSplicingStore((s) => s.canvasPadding)
   const mainSpacing = useSplicingStore((s) => s.mainSpacing)
@@ -151,6 +180,7 @@ export function SplicingSidebarPanel() {
   const setGridCount = useSplicingStore((s) => s.setGridCount)
   const setFlowMaxSize = useSplicingStore((s) => s.setFlowMaxSize)
   const setAlignment = useSplicingStore((s) => s.setAlignment)
+  const setImageAppearanceDirection = useSplicingStore((s) => s.setImageAppearanceDirection)
   const setCanvasPadding = useSplicingStore((s) => s.setCanvasPadding)
   const setMainSpacing = useSplicingStore((s) => s.setMainSpacing)
   const setCrossSpacing = useSplicingStore((s) => s.setCrossSpacing)
@@ -193,7 +223,18 @@ export function SplicingSidebarPanel() {
                 subtitle={opt.subtitle}
                 value={opt.value}
                 selectedValue={preset}
-                onChange={(v) => setPreset(v as SplicingPreset)}
+                onChange={(v) => {
+                  setPreset(v as SplicingPreset)
+                  if (v === "stitch_vertical") {
+                    setImageAppearanceDirection("top_to_bottom")
+                  } else if (v === "stitch_horizontal") {
+                    setImageAppearanceDirection("left_to_right")
+                  } else if (v === "grid") {
+                    setImageAppearanceDirection("lr_tb")
+                  } else if (v === "bento") {
+                    setImageAppearanceDirection("top_to_bottom")
+                  }
+                }}
               />
             ))}
           </div>
@@ -245,26 +286,72 @@ export function SplicingSidebarPanel() {
                     )}
                   </div>
                   {bentoIsFlow && (
+                    <div className="grid grid-cols-2 gap-2 items-start">
+                      <SelectField
+                        label="Image Alignment"
+                        value={alignment}
+                        options={ALIGNMENT_OPTIONS}
+                        onChange={(v) => setAlignment(v as SplicingAlignment)}
+                      />
+                      <SelectField
+                        label="Image Direction"
+                        value={imageAppearanceDirection}
+                        options={bentoLayoutMode === "horizontal" ? BENTO_H_DIRECTION_OPTIONS : BENTO_V_DIRECTION_OPTIONS}
+                        onChange={(v) => setImageAppearanceDirection(v as SplicingImageAppearanceDirection)}
+                      />
+                    </div>
+                  )}
+                  {!bentoIsFlow && (
                     <SelectField
-                      label="Image Alignment"
-                      value={alignment}
-                      options={ALIGNMENT_OPTIONS}
-                      onChange={(v) => setAlignment(v as SplicingAlignment)}
+                      label="Image Direction"
+                      value={imageAppearanceDirection}
+                      options={BENTO_V_DIRECTION_OPTIONS}
+                      onChange={(v) => setImageAppearanceDirection(v as SplicingImageAppearanceDirection)}
                     />
                   )}
                 </>
               )}
 
               {preset === "grid" && (
-                <NumberInput
-                  label="Columns"
-                  value={gridCount}
-                  onChangeValue={setGridCount}
-                  min={1}
-                  max={20}
-                />
+                <div className="flex gap-2 items-start">
+                  <div className="min-w-0 shrink-0 flex-[1]">
+                    <NumberInput
+                      label="Columns"
+                      value={gridCount}
+                      onChangeValue={setGridCount}
+                      min={1}
+                      max={20}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-[2]">
+                    <SelectField
+                      label="Image Direction"
+                      value={imageAppearanceDirection}
+                      options={GRID_DIRECTION_OPTIONS}
+                      onChange={(v) => setImageAppearanceDirection(v as SplicingImageAppearanceDirection)}
+                    />
+                  </div>
+                </div>
               )}
             </div>
+          )}
+
+          {preset === "stitch_vertical" && (
+            <SelectField
+              label="Image Direction"
+              value={imageAppearanceDirection}
+              options={STITCH_V_DIRECTION_OPTIONS}
+              onChange={(v) => setImageAppearanceDirection(v as SplicingImageAppearanceDirection)}
+            />
+          )}
+
+          {preset === "stitch_horizontal" && (
+            <SelectField
+              label="Image Direction"
+              value={imageAppearanceDirection}
+              options={STITCH_H_DIRECTION_OPTIONS}
+              onChange={(v) => setImageAppearanceDirection(v as SplicingImageAppearanceDirection)}
+            />
           )}
         </div>
       </SidebarPanel>

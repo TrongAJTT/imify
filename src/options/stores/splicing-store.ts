@@ -8,6 +8,7 @@ import type {
   SplicingDirection,
   SplicingExportFormat,
   SplicingExportMode,
+  SplicingImageAppearanceDirection,
   SplicingImageResize,
   SplicingImageStyle,
   SplicingLayoutConfig,
@@ -36,6 +37,7 @@ export interface SplicingStoreState {
   gridCount: number
   flowMaxSize: number
   alignment: SplicingAlignment
+  imageAppearanceDirection: SplicingImageAppearanceDirection
 
   canvasPadding: number
   mainSpacing: number
@@ -66,6 +68,7 @@ export interface SplicingStoreState {
   setGridCount: (v: number) => void
   setFlowMaxSize: (v: number) => void
   setAlignment: (v: SplicingAlignment) => void
+  setImageAppearanceDirection: (v: SplicingImageAppearanceDirection) => void
   setCanvasPadding: (v: number) => void
   setMainSpacing: (v: number) => void
   setCrossSpacing: (v: number) => void
@@ -97,6 +100,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       gridCount: 2,
       flowMaxSize: 2000,
       alignment: "start",
+      imageAppearanceDirection: "top_to_bottom",
 
       canvasPadding: 0,
       mainSpacing: 0,
@@ -127,6 +131,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setGridCount: (v) => set({ gridCount: v }),
       setFlowMaxSize: (v) => set({ flowMaxSize: v }),
       setAlignment: (v) => set({ alignment: v }),
+      setImageAppearanceDirection: (v) => set({ imageAppearanceDirection: v }),
       setCanvasPadding: (v) => set({ canvasPadding: v }),
       setMainSpacing: (v) => set({ mainSpacing: v }),
       setCrossSpacing: (v) => set({ crossSpacing: v }),
@@ -170,7 +175,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       },
       partialize: (state) => {
         const { setPreset, setPrimaryDirection, setSecondaryDirection, setGridCount,
-          setFlowMaxSize, setAlignment, setCanvasPadding, setMainSpacing, setCrossSpacing,
+          setFlowMaxSize, setAlignment, setImageAppearanceDirection, setCanvasPadding, setMainSpacing, setCrossSpacing,
           setCanvasBorderRadius, setCanvasBorderWidth, setCanvasBorderColor, setBackgroundColor,
           setImageResize, setImageFitValue, setImagePadding, setImagePaddingColor,
           setImageBorderRadius, setImageBorderWidth, setImageBorderColor,
@@ -191,7 +196,8 @@ export function resolveLayoutConfig(state: SplicingStoreState): SplicingLayoutCo
         secondaryDirection: "vertical",
         gridCount: 1,
         flowMaxSize: 999999,
-        alignment: "start"
+        alignment: "start",
+        imageAppearanceDirection: state.imageAppearanceDirection as any
       }
     case "stitch_horizontal":
       return {
@@ -199,7 +205,8 @@ export function resolveLayoutConfig(state: SplicingStoreState): SplicingLayoutCo
         secondaryDirection: "horizontal",
         gridCount: 1,
         flowMaxSize: 999999,
-        alignment: "start"
+        alignment: "start",
+        imageAppearanceDirection: state.imageAppearanceDirection as any
       }
     case "grid":
       return {
@@ -207,7 +214,8 @@ export function resolveLayoutConfig(state: SplicingStoreState): SplicingLayoutCo
         secondaryDirection: "horizontal",
         gridCount: state.gridCount,
         flowMaxSize: state.flowMaxSize,
-        alignment: "start"
+        alignment: "start",
+        imageAppearanceDirection: state.imageAppearanceDirection as any
       }
     case "bento":
       return {
@@ -215,7 +223,8 @@ export function resolveLayoutConfig(state: SplicingStoreState): SplicingLayoutCo
         secondaryDirection: state.secondaryDirection,
         gridCount: state.gridCount,
         flowMaxSize: state.flowMaxSize,
-        alignment: state.alignment
+        alignment: state.alignment,
+        imageAppearanceDirection: state.imageAppearanceDirection as any
       }
   }
 }

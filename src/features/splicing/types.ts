@@ -2,6 +2,16 @@ import type { ImageFormat } from "@/core/types"
 
 export type SplicingDirection = "vertical" | "horizontal"
 
+export type SplicingImageAppearanceDirection =
+  | "top_to_bottom"
+  | "bottom_to_top"
+  | "left_to_right"
+  | "right_to_left"
+  | "lr_tb"    // left to right, top to bottom
+  | "rl_tb"    // right to left, top to bottom
+  | "rl_bt"    // right to left, bottom to top
+  | "lr_bt"    // left to right, bottom to top
+
 export type SplicingAlignment =
   | "start"
   | "end"
@@ -24,6 +34,7 @@ export interface SplicingLayoutConfig {
   gridCount: number
   flowMaxSize: number
   alignment: SplicingAlignment
+  imageAppearanceDirection?: SplicingImageAppearanceDirection
 }
 
 export interface SplicingCanvasStyle {

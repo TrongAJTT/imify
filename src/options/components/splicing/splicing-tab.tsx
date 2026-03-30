@@ -176,6 +176,7 @@ export function SplicingTab() {
   const gridCount = useSplicingStore((s) => s.gridCount)
   const flowMaxSize = useSplicingStore((s) => s.flowMaxSize)
   const alignment = useSplicingStore((s) => s.alignment)
+  const imageAppearanceDirection = useSplicingStore((s) => s.imageAppearanceDirection)
 
   const canvasPadding = useSplicingStore((s) => s.canvasPadding)
   const mainSpacing = useSplicingStore((s) => s.mainSpacing)
@@ -205,7 +206,7 @@ export function SplicingTab() {
   const storeState = useSplicingStore.getState()
   const layoutConfig = useMemo(
     () => resolveLayoutConfig(storeState),
-    [preset, primaryDirection, secondaryDirection, gridCount, flowMaxSize, alignment]
+    [preset, primaryDirection, secondaryDirection, gridCount, flowMaxSize, alignment, imageAppearanceDirection]
   )
   const canvasStyle = useMemo(
     () => resolveCanvasStyle(storeState),
