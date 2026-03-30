@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { FileEdit } from "lucide-react"
 import { QUALITY_FORMATS } from "@/core/format-config"
 import { getCanonicalExtension } from "@/core/download-utils"
@@ -47,6 +47,7 @@ export function SplicingSidebarPanel() {
   const flowMaxSize = useSplicingStore((s) => s.flowMaxSize)
   const alignment = useSplicingStore((s) => s.alignment)
   const imageAppearanceDirection = useSplicingStore((s) => s.imageAppearanceDirection)
+  const previewBentoFlowGroupCount = useSplicingStore((s) => s.previewBentoFlowGroupCount)
 
   const canvasPadding = useSplicingStore((s) => s.canvasPadding)
   const mainSpacing = useSplicingStore((s) => s.mainSpacing)
@@ -117,6 +118,25 @@ export function SplicingSidebarPanel() {
   const bentoLayoutMode = deriveBentoLayoutMode(primaryDirection, secondaryDirection)
   const bentoIsFlow =
     bentoLayoutMode === "vertical" || bentoLayoutMode === "horizontal"
+  /** Matches header line (`N columns` / `N rows`): from last preview `layout.groups.length`. */
+  const bentoFlowAlignmentLimited =
+    preset === "bento" &&
+    bentoIsFlow &&
+    (previewBentoFlowGroupCount === null || previewBentoFlowGroupCount <= 1)
+  const bentoAlignmentOptions = useMemo(
+    () =>
+      bentoFlowAlignmentLimited
+        ? ALIGNMENT_OPTIONS.filter((o) => o.value === "start")
+        : ALIGNMENT_OPTIONS,
+    [bentoFlowAlignmentLimited]
+  )
+
+  useEffect(() => {
+    if (bentoFlowAlignmentLimited && alignment !== "start") {
+      setAlignment("start")
+    }
+  }, [alignment, bentoFlowAlignmentLimited, setAlignment])
+
   const availableExportModes = getAvailableExportModes(preset, preset === "bento" ? bentoLayoutMode : undefined)
   const showTrimBackground = exportMode !== "single"
   const showQuality = QUALITY_FORMATS.includes(exportFormat)
@@ -202,7 +222,7 @@ export function SplicingSidebarPanel() {
                       <SelectField
                         label="Image Alignment"
                         value={alignment}
-                        options={ALIGNMENT_OPTIONS}
+                        options={bentoAlignmentOptions}
                         onChange={(v) => setAlignment(v as SplicingAlignment)}
                       />
                       <SelectField

@@ -113,21 +113,21 @@ function createImageIndexMap(
 }
 
 function createGridIndexMap(
-  rowCount: number,
+  imageCount: number,
   colCount: number,
   direction: SplicingImageAppearanceDirection | undefined
 ): number[] {
-  const indices = Array.from({ length: rowCount * colCount }, (_, i) => i)
+  const indices = Array.from({ length: imageCount }, (_, i) => i)
 
   if (!direction) return indices
 
   const isHorizontalReverse = direction === "rl_tb" || direction === "rl_bt"
   const isVerticalReverse = direction === "rl_bt" || direction === "lr_bt"
 
-  // Create 2D array
+  // Create 2D array from actual image count (last row may be shorter).
   const grid: number[][] = []
-  for (let i = 0; i < rowCount; i++) {
-    grid.push(indices.slice(i * colCount, (i + 1) * colCount))
+  for (let i = 0; i < indices.length; i += colCount) {
+    grid.push(indices.slice(i, i + colCount))
   }
 
   // Reverse columns if horizontal reverse
@@ -143,40 +143,64 @@ function createGridIndexMap(
   return grid.flat()
 }
 
+function createFixedVerticalIndexMap(
+  imageCount: number,
+  perColumnCount: number,
+  direction: SplicingImageAppearanceDirection | undefined
+): number[] {
+  const indices = Array.from({ length: imageCount }, (_, i) => i)
+  if (!direction || direction === "top_to_bottom") return indices
+
+  const isHorizontalReverse = direction === "right_to_left" || direction === "rl_tb" || direction === "rl_bt"
+  const isVerticalReverse = direction === "bottom_to_top" || direction === "lr_bt" || direction === "rl_bt"
+
+  const columns: number[][] = []
+  for (let i = 0; i < indices.length; i += perColumnCount) {
+    columns.push(indices.slice(i, i + perColumnCount))
+  }
+
+  if (isVerticalReverse) {
+    columns.forEach((col) => col.reverse())
+  }
+  if (isHorizontalReverse) {
+    columns.reverse()
+  }
+
+  return columns.flat()
+}
+
 interface RawGroup {
-  items: ProcessedImage[]
-  startIndex: number
+  items: ProcessedImageWithIndex[]
 }
 
 function buildFlowGroups(
-  processed: ProcessedImage[],
+  processed: ProcessedImageWithIndex[],
   lineDir: SplicingDirection,
   maxSize: number,
   spacing: number
 ): RawGroup[] {
   const groups: RawGroup[] = []
-  let current: ProcessedImage[] = []
+  let current: ProcessedImageWithIndex[] = []
   let currentSize = 0
-  let startIndex = 0
 
   for (let i = 0; i < processed.length; i++) {
-    const img = processed[i]
+    const entry = processed[i]
+    const img = entry.item
     const imgMain = getMainDim({ width: img.outerWidth, height: img.outerHeight }, lineDir)
 
     if (current.length > 0 && currentSize + spacing + imgMain > maxSize) {
-      groups.push({ items: [...current], startIndex })
-      current = [img]
+      groups.push({ items: [...current] })
+      current = [entry]
       currentSize = imgMain
-      startIndex = i
       continue
     }
 
-    current.push(img)
+    current.push(entry)
     currentSize += (current.length > 1 ? spacing : 0) + imgMain
   }
 
   if (current.length > 0) {
-    groups.push({ items: current, startIndex })
+    groups.push({ items: current })
   }
 
   return groups
@@ -247,22 +271,35 @@ function computeLayout(
   edgePadding: number,
   imageStyle: SplicingImageStyle,
   alignment: SplicingAlignment | null,
-  flowMaxSize: number | null,
-  indexMap?: number[]
+  flowMaxSize: number | null
 ): LayoutResult {
   const groups: LayoutGroup[] = []
   let stackCursor = edgePadding
+  const lineMainSizes = rawGroups.map((group) => {
+    if (group.items.length === 0) return 0
+    let total = 0
+    for (let i = 0; i < group.items.length; i++) {
+      const img = group.items[i].item
+      const mainDim = getMainDim({ width: img.outerWidth, height: img.outerHeight }, lineDir)
+      total += mainDim
+      if (i > 0) total += lineSpacing
+    }
+    return total
+  })
+  const maxObservedLineMain = lineMainSizes.length > 0 ? Math.max(...lineMainSizes) : 0
+  const alignedLineMain =
+    alignment && flowMaxSize ? Math.min(flowMaxSize, maxObservedLineMain) : null
   let maxLineMain = 0
   const bp = imageStyle.padding + imageStyle.borderWidth
 
   for (let gi = 0; gi < rawGroups.length; gi++) {
-    const { items, startIndex } = rawGroups[gi]
+    const { items } = rawGroups[gi]
     let lineCursor = edgePadding
     let maxLineCross = 0
     const placements: LayoutPlacement[] = []
 
     for (let ii = 0; ii < items.length; ii++) {
-      const img = items[ii]
+      const { item: img, originalIndex } = items[ii]
       const outerSize = { width: img.outerWidth, height: img.outerHeight }
       const mainDim = getMainDim(outerSize, lineDir)
       const crossDim = getCrossDim(outerSize, lineDir)
@@ -270,10 +307,8 @@ function computeLayout(
       const x = lineDir === "horizontal" ? lineCursor : stackCursor
       const y = lineDir === "horizontal" ? stackCursor : lineCursor
 
-      const originalImageIndex = indexMap ? indexMap[startIndex + ii] : startIndex + ii
-
       placements.push({
-        imageIndex: originalImageIndex,
+        imageIndex: originalIndex,
         outerRect: { x, y, width: img.outerWidth, height: img.outerHeight },
         contentRect: {
           x: x + bp,
@@ -290,14 +325,16 @@ function computeLayout(
     const lineMainSize = Math.max(0, lineCursor - lineSpacing - edgePadding)
     maxLineMain = Math.max(maxLineMain, lineMainSize)
 
-    if (alignment && flowMaxSize) {
-      applyAlignment(placements, lineDir, lineMainSize, flowMaxSize, alignment)
+    if (alignment && alignedLineMain) {
+      applyAlignment(placements, lineDir, lineMainSize, alignedLineMain, alignment)
     }
+    const groupMainSize = alignedLineMain ?? lineMainSize
+    maxLineMain = Math.max(maxLineMain, groupMainSize)
 
     const bounds: LayoutRect =
       lineDir === "horizontal"
-        ? { x: edgePadding, y: stackCursor, width: lineMainSize, height: maxLineCross }
-        : { x: stackCursor, y: edgePadding, width: maxLineCross, height: lineMainSize }
+        ? { x: edgePadding, y: stackCursor, width: groupMainSize, height: maxLineCross }
+        : { x: stackCursor, y: edgePadding, width: maxLineCross, height: groupMainSize }
 
     groups.push({ index: gi, placements, bounds })
     stackCursor += maxLineCross + stackSpacing
@@ -335,14 +372,17 @@ export function calculateLayout(
 
   if (isGrid) {
     const count = Math.max(1, layout.gridCount)
-    const chunks = chunkArray(processed, count)
-    const rowCount = chunks.length
-    const indexMap = createGridIndexMap(rowCount, count, layout.imageAppearanceDirection)
-
-    const rawGroups: RawGroup[] = chunks.map((items, i) => ({
-      items,
-      startIndex: i * count
+    const isBentoFixedVertical = layout.primaryDirection === "horizontal" && layout.secondaryDirection === "vertical"
+    const indexMap = isBentoFixedVertical
+      ? createFixedVerticalIndexMap(processed.length, count, layout.imageAppearanceDirection)
+      : createGridIndexMap(processed.length, count, layout.imageAppearanceDirection)
+    const orderedProcessed: ProcessedImageWithIndex[] = indexMap.map((idx) => ({
+      item: processed[idx],
+      originalIndex: idx
     }))
+    const chunks = chunkArray(orderedProcessed, count)
+
+    const rawGroups: RawGroup[] = chunks.map((items) => ({ items }))
 
     const lineDir = layout.secondaryDirection
     const stackDir = layout.primaryDirection
@@ -356,13 +396,15 @@ export function calculateLayout(
       edgePadding,
       imageStyle,
       null,
-      null,
-      indexMap
+      null
     )
   }
 
   const indexMap = createImageIndexMap(processed.length, layout.imageAppearanceDirection)
-  const orderedProcessed = indexMap.map((idx) => processed[idx])
+  const orderedProcessed: ProcessedImageWithIndex[] = indexMap.map((idx) => ({
+    item: processed[idx],
+    originalIndex: idx
+  }))
 
   const lineDir = layout.primaryDirection
   const stackDir = layout.primaryDirection === "vertical" ? "horizontal" : "vertical"
@@ -382,7 +424,6 @@ export function calculateLayout(
     edgePadding,
     imageStyle,
     layout.alignment,
-    layout.flowMaxSize,
-    indexMap
+    layout.flowMaxSize
   )
 }
