@@ -209,13 +209,31 @@ export async function exportSplicedImage(
   imageStyle: SplicingImageStyle,
   imageResize: SplicingImageResize,
   fitValue: number,
-  exportConfig: SplicingExportConfig
+  exportConfig: SplicingExportConfig,
+  options?: {
+    concurrency?: number
+    onProgress?: (payload: {
+      phase: "decode" | "render"
+      completed: number
+      total: number
+      active: number
+      message: string
+    }) => void
+  }
 ): Promise<Blob[]> {
   const bitmaps: ImageBitmap[] = []
 
   try {
-    for (const img of images) {
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i]
       bitmaps.push(await createImageBitmap(img.file))
+      options?.onProgress?.({
+        phase: "decode",
+        completed: i + 1,
+        total: images.length,
+        active: 1,
+        message: `Decoded images ${i + 1}/${images.length}`
+      })
     }
 
     const imageSizes = bitmaps.map((bm) => {
@@ -233,6 +251,13 @@ export async function exportSplicedImage(
     )
 
     if (exportConfig.exportMode === "single") {
+      options?.onProgress?.({
+        phase: "render",
+        completed: 0,
+        total: 1,
+        active: 1,
+        message: "Rendering single image..."
+      })
       const canvas = renderToOffscreen(
         layoutResult.canvasWidth,
         layoutResult.canvasHeight,
@@ -242,13 +267,34 @@ export async function exportSplicedImage(
         imageStyle
       )
       const blob = await canvasToBlob(canvas, exportConfig.format, exportConfig.quality, exportConfig.pngTinyMode)
+      options?.onProgress?.({
+        phase: "render",
+        completed: 1,
+        total: 1,
+        active: 0,
+        message: "Rendered 1/1"
+      })
       return [blob]
     }
 
-    const results: Blob[] = []
+    const results: Blob[] = new Array(layoutResult.groups.length)
     const edgePad = canvasStyle.padding + canvasStyle.borderWidth
+    let completed = 0
+    let active = 0
+    let nextIndex = 0
+    const total = layoutResult.groups.length
+    const concurrency = Math.max(1, Math.min(5, options?.concurrency ?? 1))
 
-    for (const group of layoutResult.groups) {
+    const runOne = async (groupIndex: number): Promise<void> => {
+      active += 1
+      options?.onProgress?.({
+        phase: "render",
+        completed,
+        total,
+        active,
+        message: `Rendering ${completed + 1}/${total}...`
+      })
+      const group = layoutResult.groups[groupIndex]
       let groupW = group.bounds.width + edgePad * 2
       let groupH = group.bounds.height + edgePad * 2
       let offsetX = group.bounds.x - edgePad
@@ -293,10 +339,29 @@ export async function exportSplicedImage(
       }
 
       const canvas = renderToOffscreen(groupW, groupH, bitmaps, shifted, canvasStyle, imageStyle)
-      results.push(
-        await canvasToBlob(canvas, exportConfig.format, exportConfig.quality, exportConfig.pngTinyMode)
-      )
+      results[groupIndex] = await canvasToBlob(canvas, exportConfig.format, exportConfig.quality, exportConfig.pngTinyMode)
+      completed += 1
+      active = Math.max(0, active - 1)
+      options?.onProgress?.({
+        phase: "render",
+        completed,
+        total,
+        active,
+        message: `Rendered ${completed}/${total}`
+      })
     }
+
+    const workers = Array.from({ length: Math.min(concurrency, total) }, async () => {
+      while (true) {
+        const index = nextIndex
+        nextIndex += 1
+        if (index >= total) {
+          break
+        }
+        await runOne(index)
+      }
+    })
+    await Promise.all(workers)
 
     return results
   } finally {

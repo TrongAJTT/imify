@@ -5,6 +5,7 @@ import { zip } from "fflate"
 import { APP_CONFIG } from "@/core/config"
 import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
 import type { ConversionProgressPayload } from "@/core/types"
+import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@/features/converter/wasm-worker-pool"
 import { exportSplicedImage } from "@/features/splicing/canvas-renderer"
 import type {
   SplicingImageItem,
@@ -71,6 +72,23 @@ function downloadBlob(blob: Blob, filename: string) {
   }, 500)
 }
 
+async function createZipBlob(files: Array<{ name: string; blob: Blob }>): Promise<Blob> {
+  const zipData: Record<string, Uint8Array> = {}
+  for (const file of files) {
+    zipData[file.name] = new Uint8Array(await file.blob.arrayBuffer())
+  }
+
+  return new Promise((resolve, reject) => {
+    zip(zipData, (err, data) => {
+      if (err || !data) {
+        reject(err ?? new Error("Unable to create ZIP"))
+        return
+      }
+      resolve(new Blob([data as unknown as BlobPart], { type: "application/zip" }))
+    })
+  })
+}
+
 export function SplicingTab() {
   const [images, setImages] = useState<SplicingImageItem[]>([])
   const [isExporting, setIsExporting] = useState(false)
@@ -112,6 +130,7 @@ export function SplicingTab() {
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
   const exportMode = useSplicingStore((s) => s.exportMode)
   const exportTrimBackground = useSplicingStore((s) => s.exportTrimBackground)
+  const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const canExportPdf = exportFormat === "jpg" || exportFormat === "png" || exportFormat === "webp"
 
@@ -354,6 +373,10 @@ export function SplicingTab() {
 
       try {
         const store = useSplicingStore.getState()
+        const usesWasmEncoder = store.exportFormat === "avif" || store.exportFormat === "jxl"
+        if (usesWasmEncoder) {
+          setWasmWorkerPoolSize(store.exportFormat, store.exportConcurrency)
+        }
         const layout = resolveLayoutConfig(store)
         const canvas = resolveCanvasStyle(store)
         const imgStyle = resolveImageStyle(store)
@@ -365,6 +388,15 @@ export function SplicingTab() {
           exportMode: store.exportMode,
           trimBackground: store.exportTrimBackground
         }
+        const toastId = `splicing_export_${Date.now()}`
+        pushImportToast({
+          id: toastId,
+          fileName: `Exporting ${exportTargetCount} images`,
+          targetFormat: store.exportFormat,
+          status: "processing",
+          percent: 2,
+          message: "Preparing export..."
+        })
 
         const blobs = await exportSplicedImage(
           images,
@@ -373,7 +405,31 @@ export function SplicingTab() {
           imgStyle,
           store.imageResize,
           store.imageFitValue,
-          config
+          config,
+          {
+            concurrency: store.exportConcurrency,
+            onProgress: ({ phase, completed, total, active, message }) => {
+              const safeTotal = Math.max(1, total)
+              const ratio =
+                phase === "render"
+                  ? Math.min(1, (completed + active * 0.55) / safeTotal)
+                  : Math.min(1, completed / safeTotal)
+              const percent = phase === "decode"
+                ? Math.min(30, Math.round(4 + ratio * 26))
+                : Math.min(78, Math.round(30 + ratio * 48))
+              pushImportToast({
+                id: toastId,
+                fileName: `Exporting ${exportTargetCount} images`,
+                targetFormat: store.exportFormat,
+                status: "processing",
+                percent,
+                message: message
+                  // phase === "render"
+                  //   ? `${message} (${active}/${store.exportConcurrency} workers active)`
+                  //   : message
+              })
+            }
+          }
         )
 
         const ext = getCanonicalExtension(store.exportFormat)
@@ -382,23 +438,56 @@ export function SplicingTab() {
           for (let i = 0; i < blobs.length; i++) {
             const suffix = blobs.length > 1 ? `-${i + 1}` : ""
             downloadBlob(blobs[i], `spliced-image${suffix}.${ext}`)
-            if (i < blobs.length - 1) {
-              await new Promise((r) => setTimeout(r, 100))
-            }
+            const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
+            pushImportToast({
+              id: toastId,
+              fileName: `Exporting ${blobs.length} images`,
+              targetFormat: store.exportFormat,
+              status: "processing",
+              percent: Math.min(98, percent),
+              message: `Downloaded ${i + 1}/${blobs.length} files...`
+            })
+            await new Promise((r) => setTimeout(r, 120))
           }
+          pushImportToast({
+            id: toastId,
+            fileName: `Export complete`,
+            targetFormat: store.exportFormat,
+            status: "success",
+            percent: 100,
+            message: `Successfully exported ${blobs.length} images.`
+          })
         } else if (downloadMode === "zip") {
-          const zipData: Record<string, Uint8Array> = {}
+          pushImportToast({
+            id: toastId,
+            fileName: "spliced-images.zip",
+            targetFormat: store.exportFormat,
+            status: "processing",
+            percent: 85,
+            message: "Packaging ZIP..."
+          })
+          const files: Array<{ name: string; blob: Blob }> = []
           for (let i = 0; i < blobs.length; i++) {
             const suffix = blobs.length > 1 ? `-${i + 1}` : ""
-            const filename = `spliced-image${suffix}.${ext}`
-            zipData[filename] = new Uint8Array(await blobs[i].arrayBuffer())
+            files.push({ name: `spliced-image${suffix}.${ext}`, blob: blobs[i] })
           }
-
-          zip(zipData, (_err, data) => {
-            if (data) {
-              const zipBlob = new Blob([data as BlobPart], { type: "application/zip" })
-              downloadBlob(zipBlob, "spliced-images.zip")
-            }
+          const zipBlob = await createZipBlob(files)
+          pushImportToast({
+            id: toastId,
+            fileName: "spliced-images.zip",
+            targetFormat: store.exportFormat,
+            status: "processing",
+            percent: 96,
+            message: "Starting ZIP download..."
+          })
+          downloadBlob(zipBlob, "spliced-images.zip")
+          pushImportToast({
+            id: toastId,
+            fileName: "spliced-images.zip",
+            targetFormat: store.exportFormat,
+            status: "success",
+            percent: 100,
+            message: "ZIP download started"
           })
         } else if (downloadMode === "pdf" || downloadMode === "individual_pdf") {
           const convertBlobToPdfPage = async (pdfDoc: PDFDocument, blob: Blob) => {
@@ -436,7 +525,28 @@ export function SplicingTab() {
               const suffix = blobs.length > 1 ? `-${i + 1}` : ""
               const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
               downloadBlob(pdfBlob, `spliced-image${suffix}.pdf`)
+              const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
+              pushImportToast({
+                id: toastId,
+                fileName: `Exporting ${blobs.length} PDFs`,
+                targetFormat: "pdf",
+                status: "processing",
+                percent: Math.min(98, percent),
+                message: `Downloaded ${i + 1}/${blobs.length} PDFs...`
+              })
             }
+            pushImportToast({
+              id: toastId,
+              fileName: "Export complete",
+              targetFormat: "pdf",
+              status: "success",
+              percent: 100,
+              message: `Successfully exported ${blobs.length} PDFs.`
+            })
+            importToastHideTimerRef.current = setTimeout(() => {
+              setImportToastPayload((current) => (current?.id === toastId ? null : current))
+              importToastHideTimerRef.current = null
+            }, 2500)
             return
           }
 
@@ -448,10 +558,34 @@ export function SplicingTab() {
           const pdfBytes = await pdfDoc.save()
           const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
           downloadBlob(pdfBlob, "spliced-images.pdf")
+          pushImportToast({
+            id: toastId,
+            fileName: "spliced-images.pdf",
+            targetFormat: "pdf",
+            status: "success",
+            percent: 100,
+            message: "PDF download started"
+          })
         }
+        importToastHideTimerRef.current = setTimeout(() => {
+          setImportToastPayload((current) => (current?.id === toastId ? null : current))
+          importToastHideTimerRef.current = null
+        }, 2500)
       } catch (err) {
         console.error("Export failed:", err)
+        pushImportToast({
+          id: `splicing_export_err_${Date.now()}`,
+          fileName: "Export failed",
+          targetFormat: exportFormat,
+          status: "error",
+          percent: 100,
+          message: "Unable to export images"
+        })
       } finally {
+        const store = useSplicingStore.getState()
+        if (store.exportFormat === "avif" || store.exportFormat === "jxl") {
+          terminateWasmWorkerPool(store.exportFormat)
+        }
         setIsExporting(false)
       }
     },

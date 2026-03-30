@@ -143,6 +143,7 @@ export function SplicingSidebarPanel() {
   const exportFormat = useSplicingStore((s) => s.exportFormat)
   const exportQuality = useSplicingStore((s) => s.exportQuality)
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
+  const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
 
   const setPreset = useSplicingStore((s) => s.setPreset)
   const setPrimaryDirection = useSplicingStore((s) => s.setPrimaryDirection)
@@ -169,6 +170,7 @@ export function SplicingSidebarPanel() {
   const setExportPngTinyMode = useSplicingStore((s) => s.setExportPngTinyMode)
   const setExportMode = useSplicingStore((s) => s.setExportMode)
   const setExportTrimBackground = useSplicingStore((s) => s.setExportTrimBackground)
+  const setExportConcurrency = useSplicingStore((s) => s.setExportConcurrency)
 
   const bentoLayoutMode = deriveBentoLayoutMode(primaryDirection, secondaryDirection)
   const bentoIsFlow =
@@ -375,19 +377,30 @@ export function SplicingSidebarPanel() {
               onChange={setExportPngTinyMode}
             />
           )}
-          <SelectField
-            label="Export Mode"
-            value={exportMode}
-            options={EXPORT_MODE_OPTIONS.filter((opt) =>
-              availableExportModes.includes(opt.value)
+          <div className="grid grid-cols-2 gap-2">
+            <SelectField
+              label="Export Mode"
+              value={exportMode}
+              options={EXPORT_MODE_OPTIONS.filter((opt) =>
+                availableExportModes.includes(opt.value)
+              )}
+              onChange={(v) => {
+                setExportMode(v as SplicingExportMode)
+                if (v === "single") {
+                  setExportTrimBackground(false)
+                }
+              }}
+            />
+            {exportMode !== "single" && (
+              <NumberInput
+                label="Concurrency"
+                value={exportConcurrency}
+                onChangeValue={setExportConcurrency}
+                min={1}
+                max={5}
+              />
             )}
-            onChange={(v) => {
-              setExportMode(v as SplicingExportMode)
-              if (v === "single") {
-                setExportTrimBackground(false)
-              }
-            }}
-          />
+          </div>
           {showTrimBackground && (
             <CheckboxCard
               title="Trim Background"

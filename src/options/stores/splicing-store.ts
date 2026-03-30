@@ -58,6 +58,7 @@ export interface SplicingStoreState {
   exportPngTinyMode: boolean
   exportMode: SplicingExportMode
   exportTrimBackground: boolean
+  exportConcurrency: number
 
   setPreset: (v: SplicingPreset) => void
   setPrimaryDirection: (v: SplicingDirection) => void
@@ -84,6 +85,7 @@ export interface SplicingStoreState {
   setExportPngTinyMode: (v: boolean) => void
   setExportMode: (v: SplicingExportMode) => void
   setExportTrimBackground: (v: boolean) => void
+  setExportConcurrency: (v: number) => void
 }
 
 export const useSplicingStore = create<SplicingStoreState>()(
@@ -117,6 +119,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportPngTinyMode: false,
       exportMode: "single",
       exportTrimBackground: false,
+      exportConcurrency: 2,
 
       setPreset: (v) => set({ preset: v }),
       setPrimaryDirection: (v) => set({ primaryDirection: v }),
@@ -142,7 +145,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportQuality: (v) => set({ exportQuality: v }),
       setExportPngTinyMode: (v) => set({ exportPngTinyMode: v }),
       setExportMode: (v) => set({ exportMode: v }),
-      setExportTrimBackground: (v) => set({ exportTrimBackground: v })
+      setExportTrimBackground: (v) => set({ exportTrimBackground: v }),
+      setExportConcurrency: (v) => set({ exportConcurrency: v })
     }),
     {
       name: "imify_splicing",
@@ -171,7 +175,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setImageResize, setImageFitValue, setImagePadding, setImagePaddingColor,
           setImageBorderRadius, setImageBorderWidth, setImageBorderColor,
           setExportFormat, setExportQuality, setExportPngTinyMode, setExportMode,
-          setExportTrimBackground,
+          setExportTrimBackground, setExportConcurrency,
           ...persisted } = state
         return persisted
       }
