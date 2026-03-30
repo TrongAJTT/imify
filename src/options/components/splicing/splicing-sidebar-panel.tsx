@@ -1,4 +1,7 @@
+import { useMemo, useState } from "react"
+import { FileEdit } from "lucide-react"
 import { QUALITY_FORMATS } from "@/core/format-config"
+import { getCanonicalExtension } from "@/core/download-utils"
 import type {
   SplicingAlignment,
   SplicingDirection,
@@ -15,6 +18,11 @@ import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover
 import { LabelText } from "@/options/components/ui/typography"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import {
+  RenamePatternDialog,
+  SPLICING_EXPORT_RENAME_PRESETS,
+  SPLICING_EXPORT_RENAME_TAGS
+} from "@/options/components/ui/rename-pattern-dialog"
 
 const PRESET_OPTIONS: Array<{ value: SplicingPreset; title: string; subtitle: string }> = [
   { value: "stitch_vertical", title: "Stitch V", subtitle: "Vertical stack" },
@@ -172,6 +180,9 @@ export function SplicingSidebarPanel() {
   const exportQuality = useSplicingStore((s) => s.exportQuality)
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
   const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
+  const exportFileNamePattern = useSplicingStore((s) => s.exportFileNamePattern)
+
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
 
   const setPreset = useSplicingStore((s) => s.setPreset)
   const setPrimaryDirection = useSplicingStore((s) => s.setPrimaryDirection)
@@ -200,6 +211,18 @@ export function SplicingSidebarPanel() {
   const setExportMode = useSplicingStore((s) => s.setExportMode)
   const setExportTrimBackground = useSplicingStore((s) => s.setExportTrimBackground)
   const setExportConcurrency = useSplicingStore((s) => s.setExportConcurrency)
+  const setExportFileNamePattern = useSplicingStore((s) => s.setExportFileNamePattern)
+
+  const splicingRenamePreviewSample = useMemo(
+    () => ({
+      originalFileName: "splice-preview",
+      dimensions: { width: 1920, height: 1080 },
+      index: 3,
+      totalFiles: 12,
+      outputExtension: getCanonicalExtension(exportFormat)
+    }),
+    [exportFormat]
+  )
 
   const bentoLayoutMode = deriveBentoLayoutMode(primaryDirection, secondaryDirection)
   const bentoIsFlow =
@@ -503,8 +526,37 @@ export function SplicingSidebarPanel() {
               onChange={setExportTrimBackground}
             />
           )}
+
+          <div className="flex items-center justify-between rounded border border-slate-200 bg-white px-2.5 py-2 transition-all dark:border-slate-700 dark:bg-slate-900/40">
+            <div className="mr-2 flex min-w-0 flex-col">
+              <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">File renaming</span>
+              <span className="truncate font-mono text-[9px] text-slate-400">{exportFileNamePattern}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsRenameDialogOpen(true)}
+              title="Edit export filename pattern"
+              className="shrink-0 rounded-md p-1.5 text-sky-600 transition-colors hover:bg-sky-50 dark:hover:bg-sky-500/10"
+            >
+              <FileEdit size={14} />
+            </button>
+          </div>
         </div>
       </SidebarPanel>
+
+      <RenamePatternDialog
+        isOpen={isRenameDialogOpen}
+        onClose={() => setIsRenameDialogOpen(false)}
+        onSave={setExportFileNamePattern}
+        initialPattern={exportFileNamePattern}
+        title="Export file naming"
+        presets={SPLICING_EXPORT_RENAME_PRESETS}
+        availableTags={SPLICING_EXPORT_RENAME_TAGS}
+        previewSample={splicingRenamePreviewSample}
+        emptyPatternFallback="spliced-[Index]"
+        patternPlaceholder="e.g. spliced-[Index] or [Date]-[PaddedIndex]"
+        previewInputHint="Splicing export (sample dimensions & index)"
+      />
     </div>
   )
 }

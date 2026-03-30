@@ -78,6 +78,8 @@ export interface SplicingStoreState {
   exportMode: SplicingExportMode
   exportTrimBackground: boolean
   exportConcurrency: number
+  /** Pattern for exported filenames (no [OriginalName]; default spliced-[Index]) */
+  exportFileNamePattern: string
 
   /** Preview panel height (px) in Image Splicing tab */
   previewContainerHeight: number
@@ -115,6 +117,7 @@ export interface SplicingStoreState {
   setExportMode: (v: SplicingExportMode) => void
   setExportTrimBackground: (v: boolean) => void
   setExportConcurrency: (v: number) => void
+  setExportFileNamePattern: (v: string) => void
   setPreviewContainerHeight: (v: number) => void
   setPreviewZoom: (v: number) => void
   setPreviewQualityPercent: (v: number) => void
@@ -154,6 +157,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportMode: "single",
       exportTrimBackground: false,
       exportConcurrency: 2,
+      exportFileNamePattern: "spliced-[Index]",
 
       previewContainerHeight: 400,
       previewZoom: 100,
@@ -187,6 +191,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportMode: (v) => set({ exportMode: v }),
       setExportTrimBackground: (v) => set({ exportTrimBackground: v }),
       setExportConcurrency: (v) => set({ exportConcurrency: v }),
+      setExportFileNamePattern: (v: string) => set({ exportFileNamePattern: v }),
       setPreviewContainerHeight: (v) => set({ previewContainerHeight: v }),
       setPreviewZoom: (v) => set({ previewZoom: v }),
       setPreviewQualityPercent: (v) => set({ previewQualityPercent: normalizePreviewQualityPercent(v) }),
@@ -224,7 +229,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setImageResize, setImageFitValue, setImagePadding, setImagePaddingColor,
           setImageBorderRadius, setImageBorderWidth, setImageBorderColor,
           setExportFormat, setExportQuality, setExportPngTinyMode, setExportMode,
-          setExportTrimBackground, setExportConcurrency,
+          setExportTrimBackground, setExportConcurrency, setExportFileNamePattern,
           setPreviewContainerHeight, setPreviewZoom, setPreviewQualityPercent, setPreviewShowImageNumber,
           previewZoom,
           ...persisted } = state

@@ -226,6 +226,35 @@ function renderToOffscreen(
   return canvas
 }
 
+/** Pixel size of each exported image (matches {@link exportSplicedImage} rendering). */
+export function computeSplicingExportCanvasDimensions(
+  layout: LayoutResult,
+  canvasStyle: SplicingCanvasStyle,
+  exportConfig: SplicingExportConfig,
+  groupIndex: number
+): { width: number; height: number } {
+  if (exportConfig.exportMode === "single") {
+    return { width: layout.canvasWidth, height: layout.canvasHeight }
+  }
+  const edgePad = canvasStyle.padding + canvasStyle.borderWidth
+  const group = layout.groups[groupIndex]
+  if (!group) {
+    return { width: layout.canvasWidth, height: layout.canvasHeight }
+  }
+  let groupW = group.bounds.width + edgePad * 2
+  let groupH = group.bounds.height + edgePad * 2
+
+  if (exportConfig.trimBackground) {
+    if (exportConfig.exportMode === "per_row") {
+      groupH = group.bounds.height
+    } else if (exportConfig.exportMode === "per_col") {
+      groupW = group.bounds.width
+    }
+  }
+
+  return { width: groupW, height: groupH }
+}
+
 export async function exportSplicedImage(
   images: SplicingImageItem[],
   layoutConfig: SplicingLayoutConfig,

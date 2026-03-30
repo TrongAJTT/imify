@@ -6,7 +6,9 @@ import { APP_CONFIG } from "@/core/config"
 import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
 import type { ConversionProgressPayload } from "@/core/types"
 import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@/features/converter/wasm-worker-pool"
-import { exportSplicedImage } from "@/features/splicing/canvas-renderer"
+import { computeSplicingExportCanvasDimensions, exportSplicedImage } from "@/features/splicing/canvas-renderer"
+import { calculateLayout, calculateProcessedSize } from "@/features/splicing/layout-engine"
+import { buildSmartOutputFileName, reserveUniqueFileName } from "@/options/components/batch/pipeline"
 import type {
   SplicingImageItem,
   LayoutResult,
@@ -711,7 +713,8 @@ export function SplicingTab() {
           exportMode: store.exportMode,
           trimBackground: store.exportTrimBackground
         }
-        const toastId = `splicing_export_${Date.now()}`
+        const exportTsMs = Date.now()
+        const toastId = `splicing_export_${exportTsMs}`
         pushImportToast({
           id: toastId,
           fileName: `Exporting ${exportTargetCount} images`,
@@ -757,10 +760,75 @@ export function SplicingTab() {
 
         const ext = getCanonicalExtension(store.exportFormat)
 
+        const imageSizes = images.map((img) => {
+          const processed = calculateProcessedSize(
+            img.originalWidth,
+            img.originalHeight,
+            store.imageResize,
+            store.imageFitValue
+          )
+          return { width: processed.width, height: processed.height }
+        })
+        const exportLayout = calculateLayout(
+          imageSizes,
+          layout,
+          canvas,
+          imgStyle,
+          store.imageResize,
+          store.imageFitValue
+        )
+
+        const pattern = store.exportFileNamePattern.trim() || "spliced-[Index]"
+        const now = new Date(exportTsMs)
+        const usedExportNames = new Set<string>()
+
+        const buildImageFileName = (i: number) => {
+          const dims = computeSplicingExportCanvasDimensions(exportLayout, canvas, config, i)
+          const raw = buildSmartOutputFileName({
+            pattern,
+            originalFileName: "image",
+            dimensions: dims,
+            index: i + 1,
+            totalFiles: blobs.length,
+            outputExtension: ext,
+            now
+          })
+          return reserveUniqueFileName(raw, usedExportNames)
+        }
+
+        const buildPdfFileName = (i: number) => {
+          const dims = computeSplicingExportCanvasDimensions(exportLayout, canvas, config, i)
+          const raw = buildSmartOutputFileName({
+            pattern,
+            originalFileName: "image",
+            dimensions: dims,
+            index: i + 1,
+            totalFiles: blobs.length,
+            outputExtension: "pdf",
+            now
+          })
+          return reserveUniqueFileName(raw, usedExportNames)
+        }
+
+        const buildCombinedPdfFileName = () => {
+          const raw = buildSmartOutputFileName({
+            pattern,
+            originalFileName: "image",
+            dimensions: {
+              width: exportLayout.canvasWidth,
+              height: exportLayout.canvasHeight
+            },
+            index: 1,
+            totalFiles: 1,
+            outputExtension: "pdf",
+            now
+          })
+          return reserveUniqueFileName(raw, usedExportNames)
+        }
+
         if (downloadMode === "one_by_one") {
           for (let i = 0; i < blobs.length; i++) {
-            const suffix = blobs.length > 1 ? `-${i + 1}` : ""
-            downloadBlob(blobs[i], `spliced-image${suffix}.${ext}`)
+            downloadBlob(blobs[i], buildImageFileName(i))
             const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
             pushImportToast({
               id: toastId,
@@ -781,9 +849,10 @@ export function SplicingTab() {
             message: `Successfully exported ${blobs.length} images.`
           })
         } else if (downloadMode === "zip") {
+          const zipFileName = `spliced-image-${exportTsMs}.zip`
           pushImportToast({
             id: toastId,
-            fileName: "spliced-images.zip",
+            fileName: zipFileName,
             targetFormat: store.exportFormat,
             status: "processing",
             percent: 85,
@@ -791,22 +860,21 @@ export function SplicingTab() {
           })
           const files: Array<{ name: string; blob: Blob }> = []
           for (let i = 0; i < blobs.length; i++) {
-            const suffix = blobs.length > 1 ? `-${i + 1}` : ""
-            files.push({ name: `spliced-image${suffix}.${ext}`, blob: blobs[i] })
+            files.push({ name: buildImageFileName(i), blob: blobs[i] })
           }
           const zipBlob = await createZipBlob(files)
           pushImportToast({
             id: toastId,
-            fileName: "spliced-images.zip",
+            fileName: zipFileName,
             targetFormat: store.exportFormat,
             status: "processing",
             percent: 96,
             message: "Starting ZIP download..."
           })
-          downloadBlob(zipBlob, "spliced-images.zip")
+          downloadBlob(zipBlob, zipFileName)
           pushImportToast({
             id: toastId,
-            fileName: "spliced-images.zip",
+            fileName: zipFileName,
             targetFormat: store.exportFormat,
             status: "success",
             percent: 100,
@@ -845,9 +913,8 @@ export function SplicingTab() {
               const pdfDoc = await PDFDocument.create()
               await convertBlobToPdfPage(pdfDoc, blobs[i])
               const pdfBytes = await pdfDoc.save()
-              const suffix = blobs.length > 1 ? `-${i + 1}` : ""
               const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
-              downloadBlob(pdfBlob, `spliced-image${suffix}.pdf`)
+              downloadBlob(pdfBlob, buildPdfFileName(i))
               const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
               pushImportToast({
                 id: toastId,
@@ -880,10 +947,11 @@ export function SplicingTab() {
 
           const pdfBytes = await pdfDoc.save()
           const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
-          downloadBlob(pdfBlob, "spliced-images.pdf")
+          const singlePdfFileName = `spliced-image-${exportTsMs}.pdf`
+          downloadBlob(pdfBlob, singlePdfFileName)
           pushImportToast({
             id: toastId,
-            fileName: "spliced-images.pdf",
+            fileName: singlePdfFileName,
             targetFormat: "pdf",
             status: "success",
             percent: 100,
