@@ -8,6 +8,8 @@ interface ViewerSplitProps {
   zoom: number
   panX: number
   panY: number
+  labelA?: string
+  labelB?: string
 }
 
 export function ViewerSplit({
@@ -17,7 +19,9 @@ export function ViewerSplit({
   onSplitChange,
   zoom,
   panX,
-  panY
+  panY,
+  labelA = "A",
+  labelB = "B"
 }: ViewerSplitProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -80,10 +84,10 @@ export function ViewerSplit({
 
       {/* A / B labels */}
       <div className="absolute top-3 left-3 z-10 rounded-md bg-slate-900/70 px-2 py-0.5 text-[10px] font-bold text-white pointer-events-none select-none">
-        A
+        {labelA}
       </div>
       <div className="absolute top-3 right-3 z-10 rounded-md bg-slate-900/70 px-2 py-0.5 text-[10px] font-bold text-white pointer-events-none select-none">
-        B
+        {labelB}
       </div>
 
       {/* Draggable divider */}

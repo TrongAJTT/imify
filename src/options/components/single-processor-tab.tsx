@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Download, ImagePlus, Loader2, Maximize2, Minimize2, Move, RefreshCcw,
+import { Download, ImagePlus, Loader2, Move, RefreshCcw,
   ZoomIn, ZoomOut } from "lucide-react"
 
 import { toUserFacingConversionError } from "@/core/error-utils"
@@ -15,7 +15,9 @@ import {
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
 import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
 import { downloadWithFilename, formatBytes, withBatchResize } from "@/options/components/batch/utils"
-import { usePanDrag } from "@/options/hooks/use-pan-drag"
+import { ViewerShell } from "@/options/components/diffchecker/viewer-shell"
+import { ViewerSideBySide } from "@/options/components/diffchecker/viewer-side-by-side"
+import { ViewerSplit } from "@/options/components/diffchecker/viewer-split"
 import { Button } from "@/options/components/ui/button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Heading, MutedText } from "@/options/components/ui/typography"
@@ -26,9 +28,9 @@ import { LoadingSpinner } from "./loading-spinner"
 
 const PREVIEW_DEBOUNCE_MS = 420
 const PREVIEW_MAX_DIMENSION = 3072
-const MIN_ZOOM = 1
-const MAX_ZOOM = 5
-const ZOOM_STEP = 0.2
+const MIN_ZOOM = 10
+const MAX_ZOOM = 800
+const ZOOM_STEP = 10
 
 function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
   const base = nameOrBase.replace(/\.[^.]+$/, "") || "image"
@@ -188,51 +190,22 @@ export function SingleProcessorTab() {
   const [errorText, setErrorText] = useState<string | null>(null)
   const [isImportingUrl, setIsImportingUrl] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [compareRatio, setCompareRatio] = useState(50)
-  const [zoom, setZoom] = useState(1)
-
-  const { pan, resetPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
-    enabled: true,
-    currentZoom: zoom
-  })
+  const [compareViewMode, setCompareViewMode] = useState<"split" | "side_by_side">("split")
+  const [splitPosition, setSplitPosition] = useState(50)
+  const [zoom, setZoom] = useState(100)
+  const [panX, setPanX] = useState(0)
+  const [panY, setPanY] = useState(0)
 
   const requestSequenceRef = useRef(0)
   const attachSequenceRef = useRef(0)
-  const viewerRef = useRef<HTMLDivElement>(null)
+  const sourcePreviewUrlRef = useRef<string | null>(null)
+  const resultPreviewUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
     return () => {
       terminateImagePreviewWorker()
     }
   }, [])
-
-  useEffect(() => {
-    const handleWheel = (event: WheelEvent) => {
-      const element = viewerRef.current
-      if (!element) return
-
-      // Use contains to check if the wheel event target is inside our viewer container
-      const target = event.target as Node
-      if (!element.contains(target)) return
-
-      // Pre-emptively stop scroll if it's over our viewer
-      if (Math.abs(event.deltaY) < 1) return
-
-      event.preventDefault()
-      
-      const direction = event.deltaY > 0 ? -1 : 1
-      setZoom((current) => {
-        const next = current + direction * ZOOM_STEP
-        return Math.min(Math.max(next, MIN_ZOOM), MAX_ZOOM)
-      })
-    }
-
-    // Attach to window with { passive: false } to ensure preventDefault() works globally
-    // but filter by content area using contains() logic
-    window.addEventListener("wheel", handleWheel, { passive: false })
-    return () => window.removeEventListener("wheel", handleWheel)
-  }, []) // No longer dependent on isFullscreen for binding balance
 
   const effectiveConfig = useMemo(() => {
     const baseConfig: FormatConfig = {
@@ -283,22 +256,21 @@ export function SingleProcessorTab() {
 
   useEffect(() => {
     return () => {
-      if (sourcePreviewUrl) {
-        URL.revokeObjectURL(sourcePreviewUrl)
+      if (sourcePreviewUrlRef.current) {
+        URL.revokeObjectURL(sourcePreviewUrlRef.current)
       }
-
-      if (resultPreviewUrl) {
-        URL.revokeObjectURL(resultPreviewUrl)
+      if (resultPreviewUrlRef.current) {
+        URL.revokeObjectURL(resultPreviewUrlRef.current)
       }
     }
-  }, [resultPreviewUrl, sourcePreviewUrl])
+  }, [])
 
   const updateSourcePreview = (next: string | null) => {
     setSourcePreviewUrl((previous) => {
       if (previous) {
         URL.revokeObjectURL(previous)
       }
-
+      sourcePreviewUrlRef.current = next
       return next
     })
   }
@@ -308,14 +280,15 @@ export function SingleProcessorTab() {
       if (previous) {
         URL.revokeObjectURL(previous)
       }
-
+      resultPreviewUrlRef.current = next
       return next
     })
   }
 
   const resetViewport = () => {
-    setZoom(1)
-    resetPan()
+    setZoom(100)
+    setPanX(0)
+    setPanY(0)
   }
 
   const attachSingleFile = async (file: File) => {
@@ -567,14 +540,6 @@ export function SingleProcessorTab() {
   const resultBytes = resultBlob?.size || 0
   const delta = describeDeltaRatio(sourceBytes, resultBytes)
 
-  const imageLayerTransform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`
-  // The split bar is a global percentage of the container width.
-  // To make the image boundary match the split bar, we must account for the zoom and pan
-  // so that the clip-path is effectively relative to the container, not the transformed image.
-  // 
-  // Formula: (SplitPercentage - PanX_as_Percentage) / Zoom
-  const sourceClipPath = `inset(0 ${100 - compareRatio}% 0 0)`
-
   const sourceDimensionLabel = sourceMeta
     ? `${sourceMeta.width} x ${sourceMeta.height}`
     : "-"
@@ -729,10 +694,29 @@ export function SingleProcessorTab() {
           </div>
           </SurfaceCard>
 
-          <SurfaceCard className={`p-4 ${isFullscreen ? "fixed inset-0 z-[9999] flex flex-col rounded-none h-screen w-screen overflow-hidden bg-white dark:bg-slate-950" : ""}`}>
-            <div className={`space-y-3 flex flex-col ${isFullscreen ? "h-full" : "h-auto"}`}>
+          <SurfaceCard className="p-4">
+            <div className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <MutedText className="text-xs">Before / After Split View</MutedText>
+                <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 p-0.5">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={compareViewMode === "split" ? "primary" : "ghost"}
+                    className="h-8"
+                    onClick={() => setCompareViewMode("split")}
+                  >
+                    Split View
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={compareViewMode === "side_by_side" ? "primary" : "ghost"}
+                    className="h-8"
+                    onClick={() => setCompareViewMode("side_by_side")}
+                  >
+                    Side by Side
+                  </Button>
+                </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mr-2">
                     <Move size={12} />
@@ -751,7 +735,7 @@ export function SingleProcessorTab() {
                     </Button>
                   </Tooltip>
                   <span className="w-14 text-center text-xs font-semibold text-slate-700 dark:text-slate-200">
-                    {Math.round(zoom * 100)}%
+                    {Math.round(zoom)}%
                   </span>
                   <Tooltip content="Zoom In (Scroll wheel up)" variant="nowrap">
                     <Button
@@ -775,111 +759,67 @@ export function SingleProcessorTab() {
                       <RefreshCcw size={15} />
                     </Button>
                   </Tooltip>
-                  <Tooltip content={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"} variant="nowrap">
-                    <Button
-                      size="icon"
-                      type="button"
-                      variant="secondary"
-                      className="h-8 w-8 ml-1"
-                      onClick={() => setIsFullscreen(!isFullscreen)}>
-                      {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-                    </Button>
-                  </Tooltip>
                 </div>
               </div>
 
-              <div
-                className={`relative ${isFullscreen ? "flex-1" : "h-[480px]"} min-h-0 overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800/40 select-none cursor-grab`}
-                ref={viewerRef}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerCancel}>
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    transform: imageLayerTransform,
-                    transformOrigin: "center center"
-                  }}
-                >
-                  {resultPreviewUrl ? (
-                    <img
-                      alt="Processed preview"
-                      className="absolute inset-0 h-full w-full object-contain pointer-events-none"
-                      src={resultPreviewUrl}
-                    />
-                  ) : null}
-                </div>
+              <ViewerShell
+                className="h-[480px]"
+                zoom={zoom}
+                panX={panX}
+                panY={panY}
+                onZoomChange={setZoom}
+                onPanChange={(x, y) => {
+                  setPanX(x)
+                  setPanY(y)
+                }}
+              >
+                {sourcePreviewUrl && resultPreviewUrl && compareViewMode === "split" && (
+                  <ViewerSplit
+                    urlA={sourcePreviewUrl}
+                    urlB={resultPreviewUrl}
+                    labelA="Original"
+                    labelB="Result"
+                    splitPosition={splitPosition}
+                    onSplitChange={setSplitPosition}
+                    zoom={zoom}
+                    panX={panX}
+                    panY={panY}
+                  />
+                )}
 
-                <div
-                  className="absolute inset-0 pointer-events-none overflow-hidden"
-                  style={{
-                    clipPath: sourceClipPath
-                  }}
-                >
-                  <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      transform: imageLayerTransform,
-                      transformOrigin: "center center"
-                    }}
-                  >
-                    {sourcePreviewUrl ? (
-                      <img
-                        alt="Original preview"
-                        className="absolute inset-0 h-full w-full object-contain pointer-events-none"
-                        src={sourcePreviewUrl}
-                      />
-                    ) : null}
-                  </div>
-                </div>
+                {sourcePreviewUrl && resultPreviewUrl && compareViewMode === "side_by_side" && (
+                  <ViewerSideBySide
+                    urlA={sourcePreviewUrl}
+                    urlB={resultPreviewUrl}
+                    labelA="Original"
+                    labelB="Result"
+                    zoom={zoom}
+                    panX={panX}
+                    panY={panY}
+                  />
+                )}
 
                 {!resultPreviewUrl && !isProcessing ? (
-                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
+                  <div className="absolute inset-0 z-10 flex items-center justify-center px-6 text-center">
                     <MutedText>
                       Result preview is unavailable for this output type. You can still download the processed file.
                     </MutedText>
                   </div>
                 ) : null}
 
-                {isProcessing && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-900/10 backdrop-blur-[1px]">
+                {isProcessing ? (
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-900/10 backdrop-blur-[1px]">
                     <LoadingSpinner className="h-8 w-8 text-blue-500" />
                     <span className="text-xs font-medium text-slate-600 dark:text-slate-400 animate-pulse">
                       Generating preview...
                     </span>
-                  </div>
-                )}
-
-                <div className="pointer-events-none absolute left-3 top-3 rounded bg-slate-900/70 px-2 py-1 text-[11px] font-semibold text-white">
-                  Original
-                </div>
-                <div className="pointer-events-none absolute right-3 top-3 rounded bg-slate-900/70 px-2 py-1 text-[11px] font-semibold text-white">
-                  Result
-                </div>
-
-                <div
-                  className="pointer-events-none absolute inset-y-0 w-0.5 bg-white/90 shadow-[0_0_0_1px_rgba(15,23,42,0.25)]"
-                  style={{ left: `${compareRatio}%` }}
-                />
-
-                {isProcessing ? (
-                  <div className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1 rounded bg-sky-600/90 px-2 py-1 text-xs text-white">
-                    <Loader2 size={13} className="animate-spin" />
-                    Rendering preview...
+                    <div className="inline-flex items-center gap-1 rounded bg-sky-600/90 px-2 py-1 text-xs text-white">
+                      <Loader2 size={13} className="animate-spin" />
+                      Rendering preview...
+                    </div>
                   </div>
                 ) : null}
-              </div>
-
-              <input
-                className="w-full"
-                max={100}
-                min={0}
-                onChange={(event) => setCompareRatio(Number(event.target.value))}
-                step={1}
-                type="range"
-                value={compareRatio}
-              />
+              </ViewerShell>
             </div>
           </SurfaceCard>
         </>
