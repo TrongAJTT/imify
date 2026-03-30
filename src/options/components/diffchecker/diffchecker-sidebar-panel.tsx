@@ -29,7 +29,8 @@ const VIEW_MODES: Array<{
 
 const ALGORITHM_OPTIONS = [
   { value: "heatmap", label: "Heatmap" },
-  { value: "binary", label: "Binary (B/W)" }
+  { value: "binary", label: "Binary (B/W)" },
+  { value: "ssim", label: "SSIM (Structural Similarity)" }
 ]
 
 const ALIGN_MODE_OPTIONS = [

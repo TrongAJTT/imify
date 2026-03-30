@@ -93,6 +93,14 @@ function heatColor(diff: number, maxRef: number): [number, number, number] {
   return [255, 255, Math.round(255 * s)]
 }
 
+function ssimToColor(ssim: number): [number, number, number] {
+  if (ssim >= 0.95) return [0, 200, 50]
+  if (ssim >= 0.85) return [100, 200, 0]
+  if (ssim >= 0.70) return [255, 255, 0]
+  if (ssim >= 0.50) return [255, 180, 0]
+  return [255, 0, 0]
+}
+
 export function computeHeatmapDiff(pair: AlignedPair): ImageData {
   const { dataA, dataB, width, height } = pair
   const pA = dataA.data
@@ -150,6 +158,97 @@ export function computeBinaryDiff(
     out[o + 1] = v
     out[o + 2] = v
     out[o + 3] = 255
+  }
+
+  return result
+}
+
+function toGrayscale(data: ImageData): Float32Array {
+  const px = data.data
+  const n = data.width * data.height
+  const gray = new Float32Array(n)
+  for (let i = 0; i < n; i++) {
+    const o = i * 4
+    gray[i] = 0.299 * px[o] + 0.587 * px[o + 1] + 0.114 * px[o + 2]
+  }
+  return gray
+}
+
+function computeSSIMBlock(
+  grayA: Float32Array,
+  grayB: Float32Array,
+  width: number,
+  height: number,
+  blockX: number,
+  blockY: number
+): number {
+  const B = SSIM_BLOCK
+  let sA = 0, sB = 0, sAA = 0, sBB = 0, sAB = 0
+  const nPx = B * B
+
+  for (let dy = 0; dy < B; dy++) {
+    const row = (blockY + dy) * width + blockX
+    for (let dx = 0; dx < B; dx++) {
+      const a = grayA[row + dx]
+      const b = grayB[row + dx]
+      sA += a
+      sB += b
+      sAA += a * a
+      sBB += b * b
+      sAB += a * b
+    }
+  }
+
+  const mA = sA / nPx
+  const mB = sB / nPx
+  const vAA = sAA / nPx - mA * mA
+  const vBB = sBB / nPx - mB * mB
+  const vAB = sAB / nPx - mA * mB
+
+  const num = (2 * mA * mB + SSIM_C1) * (2 * vAB + SSIM_C2)
+  const denom = (mA * mA + mB * mB + SSIM_C1) * (vAA + vBB + SSIM_C2)
+
+  return denom !== 0 ? num / denom : 1
+}
+
+export function computeSSIMHeatmap(pair: AlignedPair): ImageData {
+  const { dataA, dataB, width, height } = pair
+  const grayA = toGrayscale(dataA)
+  const grayB = toGrayscale(dataB)
+  const result = new ImageData(width, height)
+  const out = result.data
+  const B = SSIM_BLOCK
+
+  for (let blockY = 0; blockY < height; blockY += B) {
+    for (let blockX = 0; blockX < width; blockX += B) {
+      const bh = Math.min(B, height - blockY)
+      const bw = Math.min(B, width - blockX)
+
+      if (bh === B && bw === B) {
+        const ssim = computeSSIMBlock(grayA, grayB, width, height, blockX, blockY)
+        const [r, g, b] = ssimToColor(ssim)
+
+        for (let dy = 0; dy < B; dy++) {
+          for (let dx = 0; dx < B; dx++) {
+            const idx = ((blockY + dy) * width + (blockX + dx)) * 4
+            out[idx] = r
+            out[idx + 1] = g
+            out[idx + 2] = b
+            out[idx + 3] = 255
+          }
+        }
+      } else {
+        for (let dy = 0; dy < bh; dy++) {
+          for (let dx = 0; dx < bw; dx++) {
+            const idx = ((blockY + dy) * width + (blockX + dx)) * 4
+            out[idx] = 128
+            out[idx + 1] = 128
+            out[idx + 2] = 128
+            out[idx + 3] = 255
+          }
+        }
+      }
+    }
   }
 
   return result
@@ -266,7 +365,9 @@ export async function computeFullDiff(
   const diffData =
     algorithm === "heatmap"
       ? computeHeatmapDiff(pair)
-      : computeBinaryDiff(pair, threshold)
+      : algorithm === "ssim"
+        ? computeSSIMHeatmap(pair)
+        : computeBinaryDiff(pair, threshold)
 
   const stats = computeDiffStats(pair, threshold)
 

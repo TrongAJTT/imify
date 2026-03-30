@@ -1,6 +1,6 @@
 export type DiffViewMode = "split" | "side_by_side" | "overlay" | "difference"
 
-export type DiffAlgorithm = "heatmap" | "binary"
+export type DiffAlgorithm = "heatmap" | "binary" | "ssim"
 
 export type DiffAlignMode = "original" | "fit-larger" | "fit-smaller"
 
