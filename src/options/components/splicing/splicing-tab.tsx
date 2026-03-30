@@ -684,7 +684,7 @@ export function SplicingTab() {
     async (downloadMode: SplicingExportMode, forceDownloadConfirm: boolean = false) => {
       if (images.length === 0 || isExporting) return
       if (
-        downloadMode === "one_by_one" &&
+        (downloadMode === "one_by_one" || downloadMode === "individual_pdf") &&
         !forceDownloadConfirm &&
         exportTargetCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD &&
         !skipDownloadConfirm

@@ -4,6 +4,7 @@ import { RotateCcw } from "lucide-react"
 import { drawSplicingCanvas } from "@/features/splicing/canvas-renderer"
 import { calculateLayout } from "@/features/splicing/layout-engine"
 import { usePanDrag } from "@/options/hooks/use-pan-drag"
+import { useValueScrubbing } from "@/options/hooks/use-value-scrubbing"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import type {
   LayoutResult,
@@ -13,6 +14,7 @@ import type {
   SplicingImageStyle,
   SplicingLayoutConfig
 } from "@/features/splicing/types"
+import { Tooltip } from "@/options/components/tooltip"
 
 /** Show reset when pan exceeds this distance from center (px), any axis */
 const PREVIEW_PAN_RESET_THRESHOLD_PX = 150
@@ -443,6 +445,22 @@ export function CanvasPreview({
     resetPan()
   }, [resetPan, setPreviewZoom])
 
+  const zoomScrub = useValueScrubbing({
+    enabled: !editingZoom,
+    value: zoom,
+    clamp: clampPreviewZoom,
+    onChange: setPreviewZoom,
+    // Faster than wheel default step: 0.25%/px + modest acceleration.
+    percentPerPx: 0.25,
+    maxAccelMultiplier: 2.5,
+    clickThresholdPx: 3,
+    onScrubClick: () => {
+      // Click without dragging => switch to input mode.
+      setZoomDraft(String(zoom))
+      setEditingZoom(true)
+    }
+  })
+
   if (images.length === 0) return null
 
   const showPreviewReset =
@@ -500,17 +518,19 @@ export function CanvasPreview({
               }}
             />
           ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setZoomDraft(String(zoom))
-                setEditingZoom(true)
-              }}
-              className="min-w-[2.75rem] text-left tabular-nums hover:text-sky-300"
-              title="Click to set zoom (min 50%)"
+            <Tooltip 
+              variant="wide"
+              content="Hold and drag left/right to scrub zoom. Click to type exact value (min 50%)."
             >
-              {zoom}%
-            </button>
+              <button
+                type="button"
+                className="min-w-[2.75rem] text-left tabular-nums hover:text-sky-300"
+                aria-label="Zoom percent (hold+drag to scrub, click to edit)"
+                {...zoomScrub.handlers}
+                >
+                {zoom}%
+              </button>
+            </Tooltip>
           )}
           {showPreviewReset && (
             <button

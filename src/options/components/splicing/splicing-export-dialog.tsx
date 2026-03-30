@@ -32,7 +32,7 @@ export function SplicingExportDialog({
   }> = [
     {
       value: "zip",
-      title: `Download ZIP (${totalImages})`,
+      title: `Download ZIP`,
       description: "Package all images into one ZIP archive",
       icon: Archive,
       colorClass: "bg-sky-500 hover:bg-sky-600 text-white border-sky-500 shadow-sm shadow-sky-200/50 dark:shadow-none",
@@ -40,7 +40,7 @@ export function SplicingExportDialog({
     },
     {
       value: "one_by_one",
-      title: "One by one",
+      title: `One by one (${totalImages})`,
       description: "Download images as separate files",
       icon: Download,
       colorClass: "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:border-sky-400 dark:hover:border-sky-500",
