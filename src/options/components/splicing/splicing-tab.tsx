@@ -15,6 +15,7 @@ import type {
   SplicingDirection
 } from "@/features/splicing/types"
 import { CanvasPreview } from "@/options/components/splicing/canvas-preview"
+import { SplicingHeavyPreviewQualityDialog } from "@/options/components/splicing/splicing-heavy-preview-quality-dialog"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { ImageStrip } from "@/options/components/splicing/image-strip"
 import { SplicingExportDialog, type SplicingExportMode } from "@/options/components/splicing/splicing-export-dialog"
@@ -25,6 +26,7 @@ import { Subheading, MutedText, LabelText } from "@/options/components/ui/typogr
 import {
   useSplicingStore,
   PREVIEW_QUALITY_PERCENTS,
+  normalizePreviewQualityPercent,
   resolveLayoutConfig,
   resolveCanvasStyle,
   resolveImageStyle
@@ -141,6 +143,18 @@ async function createZipBlob(files: Array<{ name: string; blob: Blob }>): Promis
   })
 }
 
+function shouldWarnHeavySplicingPreviewQuality(
+  nextPercent: number,
+  imageList: SplicingImageItem[],
+  skipPreference: boolean
+): boolean {
+  if (skipPreference || nextPercent < 50) return false
+  const cfg = APP_CONFIG.SPLICING
+  if (imageList.length > cfg.HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT) return true
+  const totalPixels = imageList.reduce((s, img) => s + img.originalWidth * img.originalHeight, 0)
+  return totalPixels > cfg.HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS
+}
+
 export function SplicingTab() {
   const [images, setImages] = useState<SplicingImageItem[]>([])
   const [isExporting, setIsExporting] = useState(false)
@@ -149,6 +163,9 @@ export function SplicingTab() {
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
   const [isScrollPan, setIsScrollPan] = useState(false)
   const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
+  const [previewQualityToastPayload, setPreviewQualityToastPayload] = useState<ConversionProgressPayload | null>(null)
+  const [heavyPreviewQualityDialogOpen, setHeavyPreviewQualityDialogOpen] = useState(false)
+  const [pendingPreviewQualityPercent, setPendingPreviewQualityPercent] = useState<number | null>(null)
 
   const onSplicingPanModeShortcut = useCallback(() => {
     if (isActiveElementEditable()) return
@@ -161,7 +178,7 @@ export function SplicingTab() {
   }, [])
 
   const splicingPreviewShortcutsEnabled =
-    images.length > 0 && !exportDialogOpen && !showDownloadConfirm
+    images.length > 0 && !exportDialogOpen && !showDownloadConfirm && !heavyPreviewQualityDialogOpen
   useKeyPress("v", onSplicingPanModeShortcut, splicingPreviewShortcutsEnabled)
   useKeyPress("V", onSplicingPanModeShortcut, splicingPreviewShortcutsEnabled)
   useKeyPress("z", onSplicingZoomModeShortcut, splicingPreviewShortcutsEnabled)
@@ -169,12 +186,21 @@ export function SplicingTab() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imagesCountRef = useRef(0)
   const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previewQualityToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingRenderRef = useRef<{
     toastId: string
     expectedCount: number
     requiresNumbering: boolean
     previewDone: boolean
     numberingDone: boolean
+  } | null>(null)
+  const previewQualityRenderRef = useRef<{
+    toastId: string
+    expectedCount: number
+    requiresNumbering: boolean
+    previewDone: boolean
+    numberingDone: boolean
+    qualityPercent: number
   } | null>(null)
 
   const preset = useSplicingStore((s) => s.preset)
@@ -212,6 +238,9 @@ export function SplicingTab() {
   const setPreviewQualityPercent = useSplicingStore((s) => s.setPreviewQualityPercent)
   const setPreviewShowImageNumber = useSplicingStore((s) => s.setPreviewShowImageNumber)
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
+  const skipSplicingHeavyPreviewQualityWarning = useBatchStore(
+    (state) => state.skipSplicingHeavyPreviewQualityWarning
+  )
   const canExportPdf = exportFormat === "jpg" || exportFormat === "png" || exportFormat === "webp"
 
   const storeState = useSplicingStore.getState()
@@ -228,6 +257,93 @@ export function SplicingTab() {
     [imagePadding, imagePaddingColor, imageBorderRadius, imageBorderWidth, imageBorderColor]
   )
 
+  const previewImagesTotalPixels = useMemo(
+    () => images.reduce((s, img) => s + img.originalWidth * img.originalHeight, 0),
+    [images]
+  )
+
+  const pushPreviewQualityToast = useCallback((payload: ConversionProgressPayload) => {
+    if (previewQualityToastHideTimerRef.current) {
+      clearTimeout(previewQualityToastHideTimerRef.current)
+      previewQualityToastHideTimerRef.current = null
+    }
+    setPreviewQualityToastPayload(payload)
+  }, [])
+
+  const applyPreviewQualityChange = useCallback(
+    (rawNext: number) => {
+      const next = normalizePreviewQualityPercent(rawNext)
+      const prev = useSplicingStore.getState().previewQualityPercent
+      if (next === prev) {
+        return
+      }
+      setPreviewQualityPercent(next)
+      if (images.length === 0) {
+        return
+      }
+      const toastId = `splicing_preview_quality_${Date.now()}`
+      previewQualityRenderRef.current = {
+        toastId,
+        expectedCount: images.length,
+        requiresNumbering: previewShowImageNumber,
+        previewDone: false,
+        numberingDone: !previewShowImageNumber,
+        qualityPercent: next
+      }
+      pushPreviewQualityToast({
+        id: toastId,
+        fileName: `Preview quality ${next}%`,
+        targetFormat: exportFormat,
+        status: "processing",
+        percent: 5,
+        message: "Rebuilding preview images..."
+      })
+    },
+    [images.length, previewShowImageNumber, exportFormat, setPreviewQualityPercent, pushPreviewQualityToast]
+  )
+
+  const handlePreviewQualitySelectChange = useCallback(
+    (raw: number) => {
+      const next = normalizePreviewQualityPercent(raw)
+      if (!shouldWarnHeavySplicingPreviewQuality(next, images, skipSplicingHeavyPreviewQualityWarning)) {
+        applyPreviewQualityChange(next)
+        return
+      }
+      setPendingPreviewQualityPercent(next)
+      setHeavyPreviewQualityDialogOpen(true)
+    },
+    [images, skipSplicingHeavyPreviewQualityWarning, applyPreviewQualityChange]
+  )
+
+  const confirmHeavyPreviewQuality = useCallback(() => {
+    if (pendingPreviewQualityPercent != null) {
+      applyPreviewQualityChange(pendingPreviewQualityPercent)
+    }
+    setHeavyPreviewQualityDialogOpen(false)
+    setPendingPreviewQualityPercent(null)
+  }, [pendingPreviewQualityPercent, applyPreviewQualityChange])
+
+  const cancelHeavyPreviewQuality = useCallback(() => {
+    setHeavyPreviewQualityDialogOpen(false)
+    setPendingPreviewQualityPercent(null)
+  }, [])
+
+  useEffect(() => {
+    if (images.length === 0 && heavyPreviewQualityDialogOpen) {
+      cancelHeavyPreviewQuality()
+    }
+  }, [images.length, heavyPreviewQualityDialogOpen, cancelHeavyPreviewQuality])
+
+  useEffect(() => {
+    if (images.length > 0) return
+    previewQualityRenderRef.current = null
+    if (previewQualityToastHideTimerRef.current) {
+      clearTimeout(previewQualityToastHideTimerRef.current)
+      previewQualityToastHideTimerRef.current = null
+    }
+    setPreviewQualityToastPayload(null)
+  }, [images.length])
+
   useEffect(() => {
     imagesCountRef.current = images.length
   }, [images.length])
@@ -236,6 +352,9 @@ export function SplicingTab() {
     return () => {
       if (importToastHideTimerRef.current) {
         clearTimeout(importToastHideTimerRef.current)
+      }
+      if (previewQualityToastHideTimerRef.current) {
+        clearTimeout(previewQualityToastHideTimerRef.current)
       }
     }
   }, [])
@@ -360,59 +479,132 @@ export function SplicingTab() {
     }, 2500)
   }, [exportFormat, pushImportToast])
 
-  const handlePreviewRendered = useCallback((imageCount: number) => {
-    const pending = pendingRenderRef.current
-    if (!pending) {
-      return
-    }
+  const finalizePreviewQualityToast = useCallback(
+    (toastId: string, qualityPercent: number) => {
+      previewQualityRenderRef.current = null
+      pushPreviewQualityToast({
+        id: toastId,
+        fileName: `Preview quality ${qualityPercent}%`,
+        targetFormat: exportFormat,
+        status: "success",
+        percent: 100,
+        message: "Preview updated."
+      })
 
-    if (imageCount < pending.expectedCount) {
-      return
-    }
+      previewQualityToastHideTimerRef.current = setTimeout(() => {
+        setPreviewQualityToastPayload((current) => (current?.id === toastId ? null : current))
+        previewQualityToastHideTimerRef.current = null
+      }, 2500)
+    },
+    [exportFormat, pushPreviewQualityToast]
+  )
 
-    pending.previewDone = true
-    if (!pending.requiresNumbering || pending.numberingDone) {
-      finalizeImportToast(pending.toastId, imageCount)
-      return
-    }
-
-    pushImportToast({
-      id: pending.toastId,
-      fileName: `Importing ${pending.expectedCount} images`,
-      targetFormat: exportFormat,
-      status: "processing",
-      percent: 90,
-      message: "Preparing image numbers..."
-    })
-  }, [exportFormat, finalizeImportToast, pushImportToast])
-
-  const handlePreviewNumberingProgress = useCallback((payload: {
-    status: "processing" | "done"
-    completed: number
-    total: number
-  }) => {
-    const pending = pendingRenderRef.current
-    if (!pending || !pending.requiresNumbering) return
-
-    if (payload.status === "processing") {
-      const ratio = payload.total > 0 ? payload.completed / payload.total : 0
-      const percent = Math.min(99, 90 + Math.round(ratio * 9))
-      pushImportToast({
+  const handlePreviewSourcesProgress = useCallback(
+    (p: { completed: number; total: number }) => {
+      const pending = previewQualityRenderRef.current
+      if (!pending) {
+        return
+      }
+      const ratio = p.total > 0 ? p.completed / p.total : 0
+      const percent = Math.min(88, 5 + Math.round(ratio * 83))
+      pushPreviewQualityToast({
         id: pending.toastId,
-        fileName: `Importing ${pending.expectedCount} images`,
+        fileName: `Preview quality ${pending.qualityPercent}%`,
         targetFormat: exportFormat,
         status: "processing",
         percent,
-        message: `Preparing image numbers ${payload.completed}/${payload.total}...`
+        message:
+          p.total > 0 ? `Scaling images ${p.completed}/${p.total}...` : "Rebuilding preview images..."
       })
-      return
-    }
+    },
+    [exportFormat, pushPreviewQualityToast]
+  )
 
-    pending.numberingDone = true
-    if (pending.previewDone) {
-      finalizeImportToast(pending.toastId, pending.expectedCount)
-    }
-  }, [exportFormat, finalizeImportToast, pushImportToast])
+  const handlePreviewRendered = useCallback(
+    (imageCount: number) => {
+      const importPending = pendingRenderRef.current
+      if (importPending && imageCount >= importPending.expectedCount) {
+        importPending.previewDone = true
+        if (!importPending.requiresNumbering || importPending.numberingDone) {
+          finalizeImportToast(importPending.toastId, imageCount)
+        } else {
+          pushImportToast({
+            id: importPending.toastId,
+            fileName: `Importing ${importPending.expectedCount} images`,
+            targetFormat: exportFormat,
+            status: "processing",
+            percent: 90,
+            message: "Preparing image numbers..."
+          })
+        }
+      }
+
+      const qualityPending = previewQualityRenderRef.current
+      if (qualityPending && imageCount >= qualityPending.expectedCount) {
+        qualityPending.previewDone = true
+        if (!qualityPending.requiresNumbering || qualityPending.numberingDone) {
+          finalizePreviewQualityToast(qualityPending.toastId, qualityPending.qualityPercent)
+        } else {
+          pushPreviewQualityToast({
+            id: qualityPending.toastId,
+            fileName: `Preview quality ${qualityPending.qualityPercent}%`,
+            targetFormat: exportFormat,
+            status: "processing",
+            percent: 90,
+            message: "Preparing image numbers..."
+          })
+        }
+      }
+    },
+    [exportFormat, finalizeImportToast, finalizePreviewQualityToast, pushImportToast, pushPreviewQualityToast]
+  )
+
+  const handlePreviewNumberingProgress = useCallback(
+    (payload: { status: "processing" | "done"; completed: number; total: number }) => {
+ const importPending = pendingRenderRef.current
+      if (importPending?.requiresNumbering) {
+        if (payload.status === "processing") {
+          const ratio = payload.total > 0 ? payload.completed / payload.total : 0
+          const percent = Math.min(99, 90 + Math.round(ratio * 9))
+          pushImportToast({
+            id: importPending.toastId,
+            fileName: `Importing ${importPending.expectedCount} images`,
+            targetFormat: exportFormat,
+            status: "processing",
+            percent,
+            message: `Preparing image numbers ${payload.completed}/${payload.total}...`
+          })
+        } else {
+          importPending.numberingDone = true
+          if (importPending.previewDone) {
+            finalizeImportToast(importPending.toastId, importPending.expectedCount)
+          }
+        }
+      }
+
+      const qualityPending = previewQualityRenderRef.current
+      if (qualityPending?.requiresNumbering) {
+        if (payload.status === "processing") {
+          const ratio = payload.total > 0 ? payload.completed / payload.total : 0
+          const percent = Math.min(99, 90 + Math.round(ratio * 9))
+          pushPreviewQualityToast({
+            id: qualityPending.toastId,
+            fileName: `Preview quality ${qualityPending.qualityPercent}%`,
+            targetFormat: exportFormat,
+            status: "processing",
+            percent,
+            message: `Preparing image numbers ${payload.completed}/${payload.total}...`
+          })
+        } else {
+          qualityPending.numberingDone = true
+          if (qualityPending.previewDone) {
+            finalizePreviewQualityToast(qualityPending.toastId, qualityPending.qualityPercent)
+          }
+        }
+      }
+    },
+    [exportFormat, finalizeImportToast, finalizePreviewQualityToast, pushImportToast, pushPreviewQualityToast]
+  )
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -811,6 +1003,7 @@ export function SplicingTab() {
               isScrollPan={isScrollPan}
               onLayoutComputed={setLayoutResult}
               onPreviewRendered={handlePreviewRendered}
+              onPreviewSourcesProgress={handlePreviewSourcesProgress}
               onNumberingProgress={handlePreviewNumberingProgress}
             />
           </div>
@@ -830,7 +1023,7 @@ export function SplicingTab() {
                 <LabelText className="text-xs">Preview Image Quality (%)</LabelText>
                 <select
                   value={previewQualityPercent}
-                  onChange={(e) => setPreviewQualityPercent(Number(e.target.value))}
+                  onChange={(e) => handlePreviewQualitySelectChange(Number(e.target.value))}
                   className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all"
                 >
                   {PREVIEW_QUALITY_PERCENTS.map((pct) => (
@@ -840,7 +1033,7 @@ export function SplicingTab() {
                   ))}
                 </select>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Lower values speed up rendering. Default is 20%.
+                  The higher the quality, the longer the preview will take to load.
                 </p>
               </div>
               <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 px-3 py-2">
@@ -866,6 +1059,7 @@ export function SplicingTab() {
         </div>
       )}
       <ConversionProgressToastCard payload={importToastPayload} />
+      <ConversionProgressToastCard payload={previewQualityToastPayload} />
       <SplicingExportDialog
         isOpen={exportDialogOpen}
         totalImages={exportTargetCount}
@@ -881,6 +1075,14 @@ export function SplicingTab() {
         onConfirm={() => {
           void performExport("one_by_one", true)
         }}
+      />
+      <SplicingHeavyPreviewQualityDialog
+        isOpen={heavyPreviewQualityDialogOpen}
+        nextQualityPercent={pendingPreviewQualityPercent ?? previewQualityPercent}
+        imageCount={images.length}
+        totalPixels={previewImagesTotalPixels}
+        onClose={cancelHeavyPreviewQuality}
+        onConfirm={confirmHeavyPreviewQuality}
       />
     </SurfaceCard>
   )

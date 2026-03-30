@@ -166,6 +166,9 @@ interface BatchStoreState extends BatchSetupState {
   setSkipDownloadConfirm: (value: boolean) => void
   skipOomWarning: boolean
   setSkipOomWarning: (value: boolean) => void
+  /** If true, do not show Image Splicing “high preview quality” warning */
+  skipSplicingHeavyPreviewQualityWarning: boolean
+  setSkipSplicingHeavyPreviewQualityWarning: (value: boolean) => void
   heavyFormatToast: { id: string; format: string } | null
   setHeavyFormatToast: (value: { id: string; format: string } | null) => void
   saveCurrentPreset: (payload: { name: string; highlightColor: string }) => void
@@ -592,6 +595,8 @@ export const useBatchStore = create<BatchStoreState>()(
           } as Partial<BatchStoreState>
         }),
       setSkipDownloadConfirm: (value) => set({ skipDownloadConfirm: value }),
+      setSkipSplicingHeavyPreviewQualityWarning: (value) =>
+        set({ skipSplicingHeavyPreviewQualityWarning: value }),
       setSkipOomWarning: (value) => set({ skipOomWarning: value }),
       setHeavyFormatToast: (value) => set({ heavyFormatToast: value }),
       saveCurrentPreset: ({ name, highlightColor }) =>

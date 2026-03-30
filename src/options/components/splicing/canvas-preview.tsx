@@ -27,6 +27,8 @@ interface CanvasPreviewProps {
   isScrollPan?: boolean
   onLayoutComputed?: (result: LayoutResult) => void
   onPreviewRendered?: (imageCount: number) => void
+  /** Fired while scaled preview bitmaps are rebuilt (e.g. after quality change). */
+  onPreviewSourcesProgress?: (payload: { completed: number; total: number }) => void
   onNumberingProgress?: (payload: {
     status: "processing" | "done"
     completed: number
@@ -44,6 +46,7 @@ export function CanvasPreview({
   isScrollPan = false,
   onLayoutComputed,
   onPreviewRendered,
+  onPreviewSourcesProgress,
   onNumberingProgress
 }: CanvasPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -114,14 +117,23 @@ export function CanvasPreview({
       const nextMap = new Map<string, HTMLImageElement>()
       const nextUrls: string[] = []
 
-      for (const img of images) {
+      onPreviewSourcesProgress?.({ completed: 0, total: images.length })
+
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i]
         const bitmap = await createImageBitmap(img.file)
+        if (cancelled) {
+          bitmap.close()
+          revokeAll(nextUrls)
+          return
+        }
         const tw = Math.max(1, Math.round(bitmap.width * scaleRatio))
         const th = Math.max(1, Math.round(bitmap.height * scaleRatio))
         const offscreen = new OffscreenCanvas(tw, th)
         const offCtx = offscreen.getContext("2d")
         if (!offCtx) {
           bitmap.close()
+          onPreviewSourcesProgress?.({ completed: i + 1, total: images.length })
           continue
         }
         offCtx.imageSmoothingEnabled = true
@@ -130,6 +142,10 @@ export function CanvasPreview({
         bitmap.close()
 
         const blob = await offscreen.convertToBlob({ type: "image/png" })
+        if (cancelled) {
+          revokeAll(nextUrls)
+          return
+        }
         const objectUrl = URL.createObjectURL(blob)
         nextUrls.push(objectUrl)
 
@@ -139,7 +155,12 @@ export function CanvasPreview({
           imageEl.onerror = () => resolve()
           imageEl.src = objectUrl
         })
+        if (cancelled) {
+          revokeAll(nextUrls)
+          return
+        }
         nextMap.set(img.id, imageEl)
+        onPreviewSourcesProgress?.({ completed: i + 1, total: images.length })
       }
 
       if (cancelled) {
@@ -174,7 +195,7 @@ export function CanvasPreview({
     return () => {
       cancelled = true
     }
-  }, [images, previewQualityPercent])
+  }, [images, previewQualityPercent, onPreviewSourcesProgress])
 
   useEffect(() => {
     let cancelled = false
@@ -216,7 +237,8 @@ export function CanvasPreview({
     return () => {
       cancelled = true
     }
-  }, [images, onNumberingProgress])
+    // Re-run when preview quality changes so "numbering done" fires again (images alone may be unchanged).
+  }, [images, previewQualityPercent, onNumberingProgress])
 
   useEffect(() => {
     return () => {

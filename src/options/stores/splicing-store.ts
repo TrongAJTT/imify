@@ -32,7 +32,7 @@ const plasmoStorage = {
 
 export const PREVIEW_QUALITY_PERCENTS = [20, 30, 50, 75, 100] as const
 
-function normalizePreviewQualityPercent(value: number): number {
+export function normalizePreviewQualityPercent(value: number): number {
   const allowed = PREVIEW_QUALITY_PERCENTS as readonly number[]
   if (allowed.includes(value)) return value
   let best = allowed[0]
@@ -157,7 +157,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
 
       previewContainerHeight: 400,
       previewZoom: 100,
-      previewQualityPercent: 25,
+      previewQualityPercent: 20,
       previewShowImageNumber: false,
 
       setPreset: (v) => set({ preset: v }),
@@ -189,7 +189,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportConcurrency: (v) => set({ exportConcurrency: v }),
       setPreviewContainerHeight: (v) => set({ previewContainerHeight: v }),
       setPreviewZoom: (v) => set({ previewZoom: v }),
-      setPreviewQualityPercent: (v) => set({ previewQualityPercent: v }),
+      setPreviewQualityPercent: (v) => set({ previewQualityPercent: normalizePreviewQualityPercent(v) }),
       setPreviewShowImageNumber: (v) => set({ previewShowImageNumber: v })
     }),
     {
