@@ -1,4 +1,4 @@
-import { Mouse, Move } from "lucide-react"
+import { Mouse } from "lucide-react"
 import { Tooltip } from "@/options/components/tooltip"
 
 interface ScrollModeToggleProps {
@@ -34,7 +34,7 @@ export function ScrollModeToggle({ isScrollPan, onToggle }: ScrollModeToggleProp
               : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
-          <Move size={14} />
+          <Mouse size={14} />
           <span>Pan</span>
         </button>
       </Tooltip>

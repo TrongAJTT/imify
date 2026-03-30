@@ -62,6 +62,11 @@ export interface SplicingStoreState {
   exportTrimBackground: boolean
   exportConcurrency: number
 
+  /** Preview panel height (px) in Image Splicing tab */
+  previewContainerHeight: number
+  /** Canvas preview zoom percent (minimum 50; no upper cap in UI) */
+  previewZoom: number
+
   setPreset: (v: SplicingPreset) => void
   setPrimaryDirection: (v: SplicingDirection) => void
   setSecondaryDirection: (v: SplicingDirection) => void
@@ -89,6 +94,8 @@ export interface SplicingStoreState {
   setExportMode: (v: SplicingExportMode) => void
   setExportTrimBackground: (v: boolean) => void
   setExportConcurrency: (v: number) => void
+  setPreviewContainerHeight: (v: number) => void
+  setPreviewZoom: (v: number) => void
 }
 
 export const useSplicingStore = create<SplicingStoreState>()(
@@ -125,6 +132,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportTrimBackground: false,
       exportConcurrency: 2,
 
+      previewContainerHeight: 400,
+      previewZoom: 100,
+
       setPreset: (v) => set({ preset: v }),
       setPrimaryDirection: (v) => set({ primaryDirection: v }),
       setSecondaryDirection: (v) => set({ secondaryDirection: v }),
@@ -151,7 +161,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportPngTinyMode: (v) => set({ exportPngTinyMode: v }),
       setExportMode: (v) => set({ exportMode: v }),
       setExportTrimBackground: (v) => set({ exportTrimBackground: v }),
-      setExportConcurrency: (v) => set({ exportConcurrency: v })
+      setExportConcurrency: (v) => set({ exportConcurrency: v }),
+      setPreviewContainerHeight: (v) => set({ previewContainerHeight: v }),
+      setPreviewZoom: (v) => set({ previewZoom: v })
     }),
     {
       name: "imify_splicing",
@@ -181,6 +193,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setImageBorderRadius, setImageBorderWidth, setImageBorderColor,
           setExportFormat, setExportQuality, setExportPngTinyMode, setExportMode,
           setExportTrimBackground, setExportConcurrency,
+          setPreviewContainerHeight, setPreviewZoom,
           ...persisted } = state
         return persisted
       }
