@@ -519,8 +519,9 @@ export function CanvasPreview({
             />
           ) : (
             <Tooltip 
-              variant="wide"
-              content="Hold and drag left/right to scrub zoom. Click to type exact value (min 50%)."
+              variant="wide1"
+              label={"Zoom"}
+              content={"Hold and drag left/right to scrub zoom.\nClick to type exact value (min 50%)."}
             >
               <button
                 type="button"

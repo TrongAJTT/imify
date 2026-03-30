@@ -9,7 +9,7 @@ interface ScrollModeToggleProps {
 export function ScrollModeToggle({ isScrollPan, onToggle }: ScrollModeToggleProps) {
   return (
     <div className="inline-flex rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-1 gap-1">
-      <Tooltip content="(Z) Scroll wheel to zoom" variant="nowrap">
+      <Tooltip label="Zoom Mode (Z)" content="Scroll wheel to zoom" variant="nowrap">
         <button
           type="button"
           onClick={() => onToggle(false)}
@@ -24,7 +24,7 @@ export function ScrollModeToggle({ isScrollPan, onToggle }: ScrollModeToggleProp
         </button>
       </Tooltip>
 
-      <Tooltip content="(V) Scroll wheel to pan (Shift+Scroll for horizontal)" variant="nowrap">
+      <Tooltip label="Pan Mode (V)" content="Scroll wheel to pan (Shift+Scroll for horizontal)" variant="nowrap">
         <button
           type="button"
           onClick={() => onToggle(true)}
