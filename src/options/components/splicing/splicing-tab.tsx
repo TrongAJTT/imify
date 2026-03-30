@@ -1,42 +1,34 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Download, ImagePlus, Trash2 } from "lucide-react"
-import { zip } from "fflate"
+import { Download, Trash2 } from "lucide-react"
 
 import { APP_CONFIG } from "@/core/config"
 import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
 import type { ConversionProgressPayload } from "@/core/types"
 import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@/features/converter/wasm-worker-pool"
-import { computeSplicingExportCanvasDimensions, exportSplicedImage } from "@/features/splicing/canvas-renderer"
-import { calculateLayout, calculateProcessedSize } from "@/features/splicing/layout-engine"
-import { buildSmartOutputFileName, reserveUniqueFileName } from "@/options/components/batch/pipeline"
+import { useSplicingExport } from "@/options/components/splicing/use-splicing-export"
 import type {
   SplicingImageItem,
   LayoutResult,
-  SplicingExportConfig,
   SplicingPreset,
   SplicingDirection
 } from "@/features/splicing/types"
-import { CanvasPreview } from "@/options/components/splicing/canvas-preview"
 import { SplicingHeavyPreviewQualityDialog } from "@/options/components/splicing/splicing-heavy-preview-quality-dialog"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
-import { ImageStrip } from "@/options/components/splicing/image-strip"
+import { SplicingWorkspace } from "@/options/components/splicing/splicing-workspace"
 import { SplicingExportDialog, type SplicingExportMode } from "@/options/components/splicing/splicing-export-dialog"
 import { Button } from "@/options/components/ui/button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { ScrollModeToggle } from "@/options/components/ui/scroll-mode-toggle"
-import { Subheading, MutedText, LabelText } from "@/options/components/ui/typography"
+import { Subheading, MutedText } from "@/options/components/ui/typography"
 import {
   useSplicingStore,
-  PREVIEW_QUALITY_PERCENTS,
   normalizePreviewQualityPercent,
   resolveLayoutConfig,
   resolveCanvasStyle,
   resolveImageStyle
 } from "@/options/stores/splicing-store"
 import { useBatchStore } from "@/options/stores/batch-store"
-import { getCanonicalExtension } from "@/core/download-utils"
 import { useKeyPress } from "@/options/hooks/use-key-press"
-import { PDFDocument } from "pdf-lib"
 
 const THUMB_MAX = 256
 const LARGE_IMPORT_THRESHOLD = 20
@@ -64,20 +56,6 @@ async function generateThumbnail(
   const url = URL.createObjectURL(blob)
 
   return { url, width, height }
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-
-  setTimeout(() => {
-    URL.revokeObjectURL(url)
-    a.remove()
-  }, 500)
 }
 
 function maxPlacementsPerGroup(layout: LayoutResult): number {
@@ -128,23 +106,6 @@ function isActiveElementEditable(): boolean {
   return el.isContentEditable
 }
 
-async function createZipBlob(files: Array<{ name: string; blob: Blob }>): Promise<Blob> {
-  const zipData: Record<string, Uint8Array> = {}
-  for (const file of files) {
-    zipData[file.name] = new Uint8Array(await file.blob.arrayBuffer())
-  }
-
-  return new Promise((resolve, reject) => {
-    zip(zipData, (err, data) => {
-      if (err || !data) {
-        reject(err ?? new Error("Unable to create ZIP"))
-        return
-      }
-      resolve(new Blob([data as unknown as BlobPart], { type: "application/zip" }))
-    })
-  })
-}
-
 function shouldWarnHeavySplicingPreviewQuality(
   nextPercent: number,
   imageList: SplicingImageItem[],
@@ -168,6 +129,7 @@ export function SplicingTab() {
   const [previewQualityToastPayload, setPreviewQualityToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [heavyPreviewQualityDialogOpen, setHeavyPreviewQualityDialogOpen] = useState(false)
   const [pendingPreviewQualityPercent, setPendingPreviewQualityPercent] = useState<number | null>(null)
+  const [pendingExportModeForConfirm, setPendingExportModeForConfirm] = useState<SplicingExportMode | null>(null)
 
   const onSplicingPanModeShortcut = useCallback(() => {
     if (isActiveElementEditable()) return
@@ -670,6 +632,19 @@ export function SplicingTab() {
   const exportTargetCount = exportMode === "single"
     ? 1
     : layoutResult?.groups.length ?? 0
+  const { performExport } = useSplicingExport({
+    images,
+    exportTargetCount,
+    isExporting,
+    skipDownloadConfirm,
+    pushToast: pushImportToast,
+    setImportToastPayload,
+    importToastHideTimerRef,
+    setIsExporting,
+    setExportDialogOpen,
+    setShowDownloadConfirm,
+    setPendingExportModeForConfirm
+  })
 
   const handleExport = useCallback(async () => {
     if (images.length === 0 || isExporting) return
@@ -678,310 +653,7 @@ export function SplicingTab() {
     } else {
       void performExport("one_by_one")
     }
-  }, [images.length, isExporting, exportMode])
-
-  const performExport = useCallback(
-    async (downloadMode: SplicingExportMode, forceDownloadConfirm: boolean = false) => {
-      if (images.length === 0 || isExporting) return
-      if (
-        (downloadMode === "one_by_one" || downloadMode === "individual_pdf") &&
-        !forceDownloadConfirm &&
-        exportTargetCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD &&
-        !skipDownloadConfirm
-      ) {
-        setExportDialogOpen(false)
-        setShowDownloadConfirm(true)
-        return
-      }
-      setIsExporting(true)
-      setExportDialogOpen(false)
-
-      try {
-        const store = useSplicingStore.getState()
-        const usesWasmEncoder = store.exportFormat === "avif" || store.exportFormat === "jxl"
-        if (usesWasmEncoder) {
-          setWasmWorkerPoolSize(store.exportFormat, store.exportConcurrency)
-        }
-        const layout = resolveLayoutConfig(store)
-        const canvas = resolveCanvasStyle(store)
-        const imgStyle = resolveImageStyle(store)
-
-        const config: SplicingExportConfig = {
-          format: store.exportFormat,
-          quality: store.exportQuality,
-          pngTinyMode: store.exportPngTinyMode,
-          exportMode: store.exportMode,
-          trimBackground: store.exportTrimBackground
-        }
-        const exportTsMs = Date.now()
-        const toastId = `splicing_export_${exportTsMs}`
-        pushImportToast({
-          id: toastId,
-          fileName: `Exporting ${exportTargetCount} images`,
-          targetFormat: store.exportFormat,
-          status: "processing",
-          percent: 2,
-          message: "Preparing export..."
-        })
-
-        const blobs = await exportSplicedImage(
-          images,
-          layout,
-          canvas,
-          imgStyle,
-          store.imageResize,
-          store.imageFitValue,
-          config,
-          {
-            concurrency: store.exportConcurrency,
-            onProgress: ({ phase, completed, total, active, message }) => {
-              const safeTotal = Math.max(1, total)
-              const ratio =
-                phase === "render"
-                  ? Math.min(1, (completed + active * 0.55) / safeTotal)
-                  : Math.min(1, completed / safeTotal)
-              const percent = phase === "decode"
-                ? Math.min(30, Math.round(4 + ratio * 26))
-                : Math.min(78, Math.round(30 + ratio * 48))
-              pushImportToast({
-                id: toastId,
-                fileName: `Exporting ${exportTargetCount} images`,
-                targetFormat: store.exportFormat,
-                status: "processing",
-                percent,
-                message: message
-                  // phase === "render"
-                  //   ? `${message} (${active}/${store.exportConcurrency} workers active)`
-                  //   : message
-              })
-            }
-          }
-        )
-
-        const ext = getCanonicalExtension(store.exportFormat)
-
-        const imageSizes = images.map((img) => {
-          const processed = calculateProcessedSize(
-            img.originalWidth,
-            img.originalHeight,
-            store.imageResize,
-            store.imageFitValue
-          )
-          return { width: processed.width, height: processed.height }
-        })
-        const exportLayout = calculateLayout(
-          imageSizes,
-          layout,
-          canvas,
-          imgStyle,
-          store.imageResize,
-          store.imageFitValue
-        )
-
-        const pattern = store.exportFileNamePattern.trim() || "spliced-[Index]"
-        const now = new Date(exportTsMs)
-        const usedExportNames = new Set<string>()
-
-        const buildImageFileName = (i: number) => {
-          const dims = computeSplicingExportCanvasDimensions(exportLayout, canvas, config, i)
-          const raw = buildSmartOutputFileName({
-            pattern,
-            originalFileName: "image",
-            dimensions: dims,
-            index: i + 1,
-            totalFiles: blobs.length,
-            outputExtension: ext,
-            now
-          })
-          return reserveUniqueFileName(raw, usedExportNames)
-        }
-
-        const buildPdfFileName = (i: number) => {
-          const dims = computeSplicingExportCanvasDimensions(exportLayout, canvas, config, i)
-          const raw = buildSmartOutputFileName({
-            pattern,
-            originalFileName: "image",
-            dimensions: dims,
-            index: i + 1,
-            totalFiles: blobs.length,
-            outputExtension: "pdf",
-            now
-          })
-          return reserveUniqueFileName(raw, usedExportNames)
-        }
-
-        const buildCombinedPdfFileName = () => {
-          const raw = buildSmartOutputFileName({
-            pattern,
-            originalFileName: "image",
-            dimensions: {
-              width: exportLayout.canvasWidth,
-              height: exportLayout.canvasHeight
-            },
-            index: 1,
-            totalFiles: 1,
-            outputExtension: "pdf",
-            now
-          })
-          return reserveUniqueFileName(raw, usedExportNames)
-        }
-
-        if (downloadMode === "one_by_one") {
-          for (let i = 0; i < blobs.length; i++) {
-            downloadBlob(blobs[i], buildImageFileName(i))
-            const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
-            pushImportToast({
-              id: toastId,
-              fileName: `Exporting ${blobs.length} images`,
-              targetFormat: store.exportFormat,
-              status: "processing",
-              percent: Math.min(98, percent),
-              message: `Downloaded ${i + 1}/${blobs.length} files...`
-            })
-            await new Promise((r) => setTimeout(r, 120))
-          }
-          pushImportToast({
-            id: toastId,
-            fileName: `Export complete`,
-            targetFormat: store.exportFormat,
-            status: "success",
-            percent: 100,
-            message: `Successfully exported ${blobs.length} images.`
-          })
-        } else if (downloadMode === "zip") {
-          const zipFileName = `spliced-image-${exportTsMs}.zip`
-          pushImportToast({
-            id: toastId,
-            fileName: zipFileName,
-            targetFormat: store.exportFormat,
-            status: "processing",
-            percent: 85,
-            message: "Packaging ZIP..."
-          })
-          const files: Array<{ name: string; blob: Blob }> = []
-          for (let i = 0; i < blobs.length; i++) {
-            files.push({ name: buildImageFileName(i), blob: blobs[i] })
-          }
-          const zipBlob = await createZipBlob(files)
-          pushImportToast({
-            id: toastId,
-            fileName: zipFileName,
-            targetFormat: store.exportFormat,
-            status: "processing",
-            percent: 96,
-            message: "Starting ZIP download..."
-          })
-          downloadBlob(zipBlob, zipFileName)
-          pushImportToast({
-            id: toastId,
-            fileName: zipFileName,
-            targetFormat: store.exportFormat,
-            status: "success",
-            percent: 100,
-            message: "ZIP download started"
-          })
-        } else if (downloadMode === "pdf" || downloadMode === "individual_pdf") {
-          const convertBlobToPdfPage = async (pdfDoc: PDFDocument, blob: Blob) => {
-            let image: Awaited<ReturnType<typeof pdfDoc.embedPng | typeof pdfDoc.embedJpg>>
-            if (ext === "png") {
-              image = await pdfDoc.embedPng(await blob.arrayBuffer())
-            } else if (ext === "jpg" || ext === "jpeg") {
-              image = await pdfDoc.embedJpg(await blob.arrayBuffer())
-            } else {
-              const canvas = new OffscreenCanvas(100, 100)
-              const ctx = canvas.getContext("2d")
-              if (!ctx) return
-
-              const bitmap = await createImageBitmap(blob)
-              canvas.width = bitmap.width
-              canvas.height = bitmap.height
-              ctx.drawImage(bitmap, 0, 0)
-              bitmap.close()
-
-              const pngBlob = await canvas.convertToBlob({ type: "image/png" })
-              image = await pdfDoc.embedPng(await pngBlob.arrayBuffer())
-            }
-
-            const width = image.width as number
-            const height = image.height as number
-            const page = pdfDoc.addPage([width, height])
-            page.drawImage(image, { x: 0, y: 0, width, height })
-          }
-
-          if (downloadMode === "individual_pdf") {
-            for (let i = 0; i < blobs.length; i++) {
-              const pdfDoc = await PDFDocument.create()
-              await convertBlobToPdfPage(pdfDoc, blobs[i])
-              const pdfBytes = await pdfDoc.save()
-              const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
-              downloadBlob(pdfBlob, buildPdfFileName(i))
-              const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
-              pushImportToast({
-                id: toastId,
-                fileName: `Exporting ${blobs.length} PDFs`,
-                targetFormat: "pdf",
-                status: "processing",
-                percent: Math.min(98, percent),
-                message: `Downloaded ${i + 1}/${blobs.length} PDFs...`
-              })
-            }
-            pushImportToast({
-              id: toastId,
-              fileName: "Export complete",
-              targetFormat: "pdf",
-              status: "success",
-              percent: 100,
-              message: `Successfully exported ${blobs.length} PDFs.`
-            })
-            importToastHideTimerRef.current = setTimeout(() => {
-              setImportToastPayload((current) => (current?.id === toastId ? null : current))
-              importToastHideTimerRef.current = null
-            }, 2500)
-            return
-          }
-
-          const pdfDoc = await PDFDocument.create()
-          for (const blob of blobs) {
-            await convertBlobToPdfPage(pdfDoc, blob)
-          }
-
-          const pdfBytes = await pdfDoc.save()
-          const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
-          const singlePdfFileName = `spliced-image-${exportTsMs}.pdf`
-          downloadBlob(pdfBlob, singlePdfFileName)
-          pushImportToast({
-            id: toastId,
-            fileName: singlePdfFileName,
-            targetFormat: "pdf",
-            status: "success",
-            percent: 100,
-            message: "PDF download started"
-          })
-        }
-        importToastHideTimerRef.current = setTimeout(() => {
-          setImportToastPayload((current) => (current?.id === toastId ? null : current))
-          importToastHideTimerRef.current = null
-        }, 2500)
-      } catch (err) {
-        console.error("Export failed:", err)
-        pushImportToast({
-          id: `splicing_export_err_${Date.now()}`,
-          fileName: "Export failed",
-          targetFormat: exportFormat,
-          status: "error",
-          percent: 100,
-          message: "Unable to export images"
-        })
-      } finally {
-        const store = useSplicingStore.getState()
-        if (store.exportFormat === "avif" || store.exportFormat === "jxl") {
-          terminateWasmWorkerPool(store.exportFormat)
-        }
-        setIsExporting(false)
-      }
-    },
-    [images, isExporting, exportTargetCount, skipDownloadConfirm]
-  )
+  }, [images.length, isExporting, exportMode, performExport])
 
   const hasImages = images.length > 0
   const gridStatsLabel = useMemo(
@@ -1027,105 +699,31 @@ export function SplicingTab() {
         )}
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={handleFileInput}
+      <SplicingWorkspace
+        hasImages={hasImages}
+        fileInputRef={fileInputRef}
+        images={images}
+        layoutConfig={layoutConfig}
+        canvasStyle={canvasStyle}
+        imageStyle={imageStyle}
+        imageResize={imageResize}
+        imageFitValue={imageFitValue}
+        isScrollPan={isScrollPan}
+        previewQualityPercent={previewQualityPercent}
+        previewShowImageNumber={previewShowImageNumber}
+        onLayoutComputed={setLayoutResult}
+        onPreviewRendered={handlePreviewRendered}
+        onPreviewSourcesProgress={handlePreviewSourcesProgress}
+        onPreviewNumberingProgress={handlePreviewNumberingProgress}
+        onOpenFilePicker={openFilePicker}
+        onDropFiles={handleDrop}
+        onFileInput={handleFileInput}
+        onRemoveImage={handleRemove}
+        onReorderImage={handleReorder}
+        onAddMore={handleAddMore}
+        onPreviewQualityChange={handlePreviewQualitySelectChange}
+        onPreviewShowImageNumberChange={setPreviewShowImageNumber}
       />
-
-      {!hasImages ? (
-        <div
-          className="flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/30 py-16 cursor-pointer hover:border-sky-400 dark:hover:border-sky-600 hover:bg-sky-50/50 dark:hover:bg-sky-900/10 transition-all"
-          onClick={openFilePicker}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/30 text-sky-500">
-            <ImagePlus size={28} />
-          </div>
-          <div className="text-center">
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Drop images here or click to browse
-            </p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              Supports JPG, PNG, WebP, AVIF, and more
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-          >
-            <CanvasPreview
-              images={images}
-              layoutConfig={layoutConfig}
-              canvasStyle={canvasStyle}
-              imageStyle={imageStyle}
-              imageResize={imageResize}
-              fitValue={imageFitValue}
-              isScrollPan={isScrollPan}
-              onLayoutComputed={setLayoutResult}
-              onPreviewRendered={handlePreviewRendered}
-              onPreviewSourcesProgress={handlePreviewSourcesProgress}
-              onNumberingProgress={handlePreviewNumberingProgress}
-            />
-          </div>
-
-          <ImageStrip
-            images={images}
-            onRemove={handleRemove}
-            onReorder={handleReorder}
-            onAddMore={handleAddMore}
-          />
-          <div>
-            <div className="text-[11px] font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400 mb-2">
-              Preview Settings
-            </div>
-            <div className="grid grid-cols-2 gap-4 items-start">
-              <div className="space-y-1">
-                <LabelText className="text-xs">Preview Image Quality (%)</LabelText>
-                <select
-                  value={previewQualityPercent}
-                  onChange={(e) => handlePreviewQualitySelectChange(Number(e.target.value))}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all"
-                >
-                  {PREVIEW_QUALITY_PERCENTS.map((pct) => (
-                    <option key={pct} value={pct}>
-                      {pct}%
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  The higher the quality, the longer the preview will take to load.
-                </p>
-              </div>
-              <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 px-3 py-2">
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={previewShowImageNumber}
-                    onChange={(e) => setPreviewShowImageNumber(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500/30"
-                  />
-                  <div>
-                    <div className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                      Show image numbers on preview
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      Match image order with the strip.
-                    </div>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       <ConversionProgressToastCard payload={importToastPayload} />
       <ConversionProgressToastCard payload={previewQualityToastPayload} />
       <SplicingExportDialog
@@ -1139,9 +737,13 @@ export function SplicingTab() {
       <BatchDownloadConfirmDialog
         isOpen={showDownloadConfirm}
         count={exportTargetCount}
-        onClose={() => setShowDownloadConfirm(false)}
+        onClose={() => {
+          setShowDownloadConfirm(false)
+          setPendingExportModeForConfirm(null)
+        }}
         onConfirm={() => {
-          void performExport("one_by_one", true)
+          const mode = pendingExportModeForConfirm ?? "one_by_one"
+          void performExport(mode, true)
         }}
       />
       <SplicingHeavyPreviewQualityDialog

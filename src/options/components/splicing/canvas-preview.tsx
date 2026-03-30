@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { RotateCcw } from "lucide-react"
 
 import { drawSplicingCanvas } from "@/features/splicing/canvas-renderer"
 import { calculateLayout } from "@/features/splicing/layout-engine"
 import { usePanDrag } from "@/options/hooks/use-pan-drag"
 import { useValueScrubbing } from "@/options/hooks/use-value-scrubbing"
 import { useSplicingStore } from "@/options/stores/splicing-store"
+import { PreviewZoomControl } from "@/options/components/splicing/preview-zoom-control"
 import type {
   LayoutResult,
   SplicingCanvasStyle,
@@ -14,7 +14,6 @@ import type {
   SplicingImageStyle,
   SplicingLayoutConfig
 } from "@/features/splicing/types"
-import { Tooltip } from "@/options/components/tooltip"
 
 /** Show reset when pan exceeds this distance from center (px), any axis */
 const PREVIEW_PAN_RESET_THRESHOLD_PX = 150
@@ -72,6 +71,10 @@ export function CanvasPreview({
   const [zoomDraft, setZoomDraft] = useState("")
   const [numberingReady, setNumberingReady] = useState(false)
   const numberingTaskRef = useRef(0)
+  const onLayoutComputedRef = useRef(onLayoutComputed)
+  const onPreviewRenderedRef = useRef(onPreviewRendered)
+  const onPreviewSourcesProgressRef = useRef(onPreviewSourcesProgress)
+  const onNumberingProgressRef = useRef(onNumberingProgress)
 
   const { pan, setPan, resetPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
     onlyWhenZoomed: false,
@@ -88,6 +91,22 @@ export function CanvasPreview({
       zoomInputRef.current?.select()
     }
   }, [editingZoom])
+
+  useEffect(() => {
+    onLayoutComputedRef.current = onLayoutComputed
+  }, [onLayoutComputed])
+
+  useEffect(() => {
+    onPreviewRenderedRef.current = onPreviewRendered
+  }, [onPreviewRendered])
+
+  useEffect(() => {
+    onPreviewSourcesProgressRef.current = onPreviewSourcesProgress
+  }, [onPreviewSourcesProgress])
+
+  useEffect(() => {
+    onNumberingProgressRef.current = onNumberingProgress
+  }, [onNumberingProgress])
 
   const commitZoomDraft = useCallback(() => {
     const n = parseInt(zoomDraft.replace(/\D/g, ""), 10)
@@ -119,7 +138,7 @@ export function CanvasPreview({
       const nextMap = new Map<string, HTMLImageElement>()
       const nextUrls: string[] = []
 
-      onPreviewSourcesProgress?.({ completed: 0, total: images.length })
+      onPreviewSourcesProgressRef.current?.({ completed: 0, total: images.length })
 
       for (let i = 0; i < images.length; i++) {
         const img = images[i]
@@ -135,7 +154,7 @@ export function CanvasPreview({
         const offCtx = offscreen.getContext("2d")
         if (!offCtx) {
           bitmap.close()
-          onPreviewSourcesProgress?.({ completed: i + 1, total: images.length })
+          onPreviewSourcesProgressRef.current?.({ completed: i + 1, total: images.length })
           continue
         }
         offCtx.imageSmoothingEnabled = true
@@ -162,7 +181,7 @@ export function CanvasPreview({
           return
         }
         nextMap.set(img.id, imageEl)
-        onPreviewSourcesProgress?.({ completed: i + 1, total: images.length })
+        onPreviewSourcesProgressRef.current?.({ completed: i + 1, total: images.length })
       }
 
       if (cancelled) {
@@ -197,7 +216,7 @@ export function CanvasPreview({
     return () => {
       cancelled = true
     }
-  }, [images, previewQualityPercent, onPreviewSourcesProgress])
+  }, [images, previewQualityPercent])
 
   useEffect(() => {
     let cancelled = false
@@ -206,12 +225,12 @@ export function CanvasPreview({
 
     if (images.length === 0) {
       setNumberingReady(false)
-      onNumberingProgress?.({ status: "done", completed: 0, total: 0 })
+      onNumberingProgressRef.current?.({ status: "done", completed: 0, total: 0 })
       return
     }
 
     setNumberingReady(false)
-    onNumberingProgress?.({ status: "processing", completed: 0, total: images.length })
+    onNumberingProgressRef.current?.({ status: "processing", completed: 0, total: images.length })
 
     const run = async () => {
       for (let i = 0; i < images.length; i++) {
@@ -220,7 +239,7 @@ export function CanvasPreview({
         if (cancelled || numberingTaskRef.current !== taskId) {
           return
         }
-        onNumberingProgress?.({
+        onNumberingProgressRef.current?.({
           status: "processing",
           completed: i + 1,
           total: images.length
@@ -231,7 +250,7 @@ export function CanvasPreview({
         return
       }
       setNumberingReady(true)
-      onNumberingProgress?.({ status: "done", completed: images.length, total: images.length })
+      onNumberingProgressRef.current?.({ status: "done", completed: images.length, total: images.length })
     }
 
     void run()
@@ -240,7 +259,7 @@ export function CanvasPreview({
       cancelled = true
     }
     // Re-run when preview quality changes so "numbering done" fires again (images alone may be unchanged).
-  }, [images, previewQualityPercent, onNumberingProgress])
+  }, [images, previewQualityPercent])
 
   useEffect(() => {
     return () => {
@@ -266,7 +285,7 @@ export function CanvasPreview({
     )
 
     setLayoutResult(layoutResult)
-    onLayoutComputed?.(layoutResult)
+    onLayoutComputedRef.current?.(layoutResult)
 
     const containerWidth = container.clientWidth
     const displayHeight = containerHeight
@@ -302,7 +321,7 @@ export function CanvasPreview({
     
     setCanvasWidth(canvas.offsetWidth)
     setCanvasHeight(canvas.offsetHeight)
-    onPreviewRendered?.(images.length)
+    onPreviewRenderedRef.current?.(images.length)
   }, [
     images,
     previewSources,
@@ -314,9 +333,7 @@ export function CanvasPreview({
     containerHeight,
     zoom,
     previewShowImageNumber,
-    numberingReady,
-    onLayoutComputed,
-    onPreviewRendered
+    numberingReady
   ])
 
   useEffect(() => {
@@ -493,57 +510,18 @@ export function CanvasPreview({
           onPointerCancel={handlePointerCancel}
         />
 
-        {/* Zoom control */}
-        <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-slate-900/90 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-lg z-10 pointer-events-auto select-text">
-          {editingZoom ? (
-            <input
-              ref={zoomInputRef}
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              aria-label="Zoom percent"
-              className="w-14 rounded bg-slate-800 px-1.5 py-0.5 text-right tabular-nums text-white outline-none ring-1 ring-sky-500"
-              value={zoomDraft}
-              onChange={(e) => setZoomDraft(e.target.value.replace(/\D/g, ""))}
-              onBlur={commitZoomDraft}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault()
-                  commitZoomDraft()
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault()
-                  cancelZoomEdit()
-                }
-              }}
-            />
-          ) : (
-            <Tooltip 
-              variant="wide1"
-              label={"Zoom"}
-              content={"Hold and drag left/right to scrub zoom.\nClick to type exact value (min 50%)."}
-            >
-              <button
-                type="button"
-                className="min-w-[2.75rem] text-left tabular-nums hover:text-sky-300"
-                aria-label="Zoom percent (hold+drag to scrub, click to edit)"
-                {...zoomScrub.handlers}
-                >
-                {zoom}%
-              </button>
-            </Tooltip>
-          )}
-          {showPreviewReset && (
-            <button
-              type="button"
-              onClick={resetZoom}
-              className="p-1.5 rounded hover:bg-slate-700 transition-colors"
-              aria-label="Reset zoom and pan"
-            >
-              <RotateCcw size={14} />
-            </button>
-          )}
-        </div>
+        <PreviewZoomControl
+          editingZoom={editingZoom}
+          zoom={zoom}
+          zoomDraft={zoomDraft}
+          showPreviewReset={showPreviewReset}
+          zoomInputRef={zoomInputRef}
+          onZoomDraftChange={setZoomDraft}
+          onCommitZoomDraft={commitZoomDraft}
+          onCancelZoomEdit={cancelZoomEdit}
+          onResetZoom={resetZoom}
+          scrubHandlers={zoomScrub.handlers}
+        />
       </div>
 
       <div

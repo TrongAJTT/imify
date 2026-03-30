@@ -4,7 +4,6 @@ import { QUALITY_FORMATS } from "@/core/format-config"
 import { getCanonicalExtension } from "@/core/download-utils"
 import type {
   SplicingAlignment,
-  SplicingDirection,
   SplicingExportFormat,
   SplicingExportMode,
   SplicingImageAppearanceDirection,
@@ -15,7 +14,6 @@ import { NumberInput } from "@/options/components/ui/number-input"
 import { RadioCard } from "@/options/components/ui/radio-card"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
-import { LabelText } from "@/options/components/ui/typography"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import {
@@ -23,131 +21,23 @@ import {
   SPLICING_EXPORT_RENAME_PRESETS,
   SPLICING_EXPORT_RENAME_TAGS
 } from "@/options/components/ui/rename-pattern-dialog"
-
-const PRESET_OPTIONS: Array<{ value: SplicingPreset; title: string; subtitle: string }> = [
-  { value: "stitch_vertical", title: "Stitch V", subtitle: "Vertical stack" },
-  { value: "stitch_horizontal", title: "Stitch H", subtitle: "Horizontal row" },
-  { value: "grid", title: "Grid", subtitle: "Fixed columns" },
-  { value: "bento", title: "Bento", subtitle: "Flow or columns" }
-]
-
-type BentoLayoutMode = "vertical" | "horizontal" | "fixed_vertical"
-
-const BENTO_LAYOUT_OPTIONS: Array<{ value: BentoLayoutMode; label: string }> = [
-  { value: "vertical", label: "Vertical" },
-  { value: "horizontal", label: "Horizontal" },
-  { value: "fixed_vertical", label: "Fixed Vertical" }
-]
-
-const STITCH_V_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
-  { value: "top_to_bottom", label: "Top to bottom" },
-  { value: "bottom_to_top", label: "Bottom to top" }
-]
-
-const STITCH_H_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
-  { value: "left_to_right", label: "Left to right" },
-  { value: "right_to_left", label: "Right to left" }
-]
-
-const GRID_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
-  { value: "lr_tb", label: "Left to right, Top to bottom" },
-  { value: "rl_tb", label: "Right to left, Top to bottom" },
-  { value: "rl_bt", label: "Right to left, Bottom to top" },
-  { value: "lr_bt", label: "Left to right, Bottom to top" }
-]
-
-const BENTO_V_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
-  { value: "top_to_bottom", label: "Top to bottom" },
-  { value: "bottom_to_top", label: "Bottom to top" }
-]
-
-const BENTO_H_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
-  { value: "left_to_right", label: "Left to right" },
-  { value: "right_to_left", label: "Right to left" }
-]
-
-function deriveBentoLayoutMode(
-  primary: SplicingDirection,
-  secondary: SplicingDirection
-): BentoLayoutMode {
-  if (primary === "horizontal" && secondary === "vertical") return "fixed_vertical"
-  if (primary === "vertical" && secondary === "vertical") return "vertical"
-  if (primary === "horizontal" && secondary === "horizontal") return "horizontal"
-  return "vertical"
-}
-
-const ALIGNMENT_OPTIONS: Array<{ value: SplicingAlignment; label: string }> = [
-  { value: "start", label: "Start" },
-  { value: "end", label: "End" },
-  { value: "center", label: "Center" },
-  { value: "spaceBetween", label: "Space Between" },
-  { value: "spaceAround", label: "Space Around" },
-  { value: "spaceEvenly", label: "Space Evenly" }
-]
-
-const RESIZE_OPTIONS: Array<{ value: SplicingImageResize; label: string }> = [
-  { value: "original", label: "Original" },
-  { value: "fit_width", label: "Fit Width" },
-  { value: "fit_height", label: "Fit Height" }
-]
-
-const EXPORT_FORMAT_OPTIONS: Array<{ value: SplicingExportFormat; label: string }> = [
-  { value: "jpg", label: "JPG" },
-  { value: "png", label: "PNG" },
-  { value: "webp", label: "WebP" },
-  { value: "avif", label: "AVIF" },
-  { value: "jxl", label: "JXL" },
-  { value: "bmp", label: "BMP" },
-  { value: "tiff", label: "TIFF" }
-]
-
-const EXPORT_MODE_OPTIONS: Array<{ value: SplicingExportMode; label: string }> = [
-  { value: "single", label: "Single Image" },
-  { value: "per_row", label: "Per Row" },
-  { value: "per_col", label: "Per Column" }
-]
-
-function getAvailableExportModes(preset: SplicingPreset, bentoMode?: BentoLayoutMode): SplicingExportMode[] {
-  if (preset === "stitch_vertical" || preset === "stitch_horizontal") {
-    return ["single"]
-  }
-  if (preset === "grid") {
-    return ["single", "per_row", "per_col"]
-  }
-  if (preset === "bento") {
-    if (bentoMode === "vertical" || bentoMode === "fixed_vertical") {
-      return ["single", "per_col"]
-    }
-    if (bentoMode === "horizontal") {
-      return ["single", "per_row"]
-    }
-  }
-  return ["single"]
-}
-
-function SelectField({ label, value, options, onChange }: {
-  label: string
-  value: string
-  options: Array<{ value: string; label: string }>
-  onChange: (v: string) => void
-}) {
-  return (
-    <div className="space-y-1">
-      <LabelText className="text-xs">{label}</LabelText>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all"
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  )
-}
+import {
+  ALIGNMENT_OPTIONS,
+  BENTO_H_DIRECTION_OPTIONS,
+  BENTO_LAYOUT_OPTIONS,
+  type BentoLayoutMode,
+  BENTO_V_DIRECTION_OPTIONS,
+  EXPORT_FORMAT_OPTIONS,
+  EXPORT_MODE_OPTIONS,
+  GRID_DIRECTION_OPTIONS,
+  PRESET_OPTIONS,
+  RESIZE_OPTIONS,
+  STITCH_H_DIRECTION_OPTIONS,
+  STITCH_V_DIRECTION_OPTIONS,
+  SelectField,
+  deriveBentoLayoutMode,
+  getAvailableExportModes
+} from "@/options/components/splicing/splicing-sidebar-fields"
 
 export function SplicingSidebarPanel() {
   const preset = useSplicingStore((s) => s.preset)
