@@ -1,6 +1,7 @@
 # Credits and Attribution
 
 Imify is made possible thanks to the following open-source projects and their contributors.
+This list is synchronized with `src/core/attributions.ts` (source of truth for the Acknowledgements dialog).
 
 ## Core Frameworks & UI
 *   **[React](https://react.dev/)**
@@ -13,13 +14,16 @@ Imify is made possible thanks to the following open-source projects and their co
     *   **Author(s):** Tailwind Labs, Inc.
     *   **License:** MIT License
 *   **[Lucide React](https://lucide.dev/)**
-    *   **Author(s):** Lucide Contributors
+    *   **Author(s):** Eric Fennis and Lucide contributors
     *   **License:** ISC License
 *   **[Zustand](https://github.com/pmndrs/zustand)**
-    *   **Author(s):** Poimandres and contributors
+    *   **Author(s):** Paul Henschel and Poimandres contributors
     *   **License:** MIT License
 *   **[dnd-kit](https://dndkit.com/)**
     *   **Author(s):** Claudéric Demers
+    *   **License:** MIT License
+*   **[react-colorful](https://github.com/omgovich/react-colorful)**
+    *   **Author(s):** Vlad Shilov and contributors
     *   **License:** MIT License
 
 ## Image & Document Processing
@@ -35,9 +39,9 @@ Imify is made possible thanks to the following open-source projects and their co
 *   **[UTIF.js](https://github.com/photopea/UTIF.js)**
     *   **Author(s):** Ivan Kutskir (photopea)
     *   **License:** MIT License
-*   **[@jsquash/avif & @jsquash/jxl](https://github.com/jSquash/jSquash)**
-    *   **Author(s):** jSquash Contributors
-    *   **License:** MIT License
+*   **[@jsquash/avif & jxl](https://github.com/jSquash/jSquash)**
+    *   **Author(s):** Jamie Sinclair and jSquash contributors
+    *   **License:** Apache License 2.0
 
 ## Utilities
 *   **[clsx](https://github.com/lukeed/clsx)**
@@ -45,7 +49,7 @@ Imify is made possible thanks to the following open-source projects and their co
     *   **License:** MIT License
 *   **[idb](https://github.com/jakearchibald/idb)**
     *   **Author(s):** Jake Archibald
-    *   **License:** Apache License 2.0
+    *   **License:** ISC License
 *   **[tailwind-merge](https://github.com/dcastil/tailwind-merge)**
-    *   **Author(s):** Danylo
+    *   **Author(s):** Danylo and contributors
     *   **License:** MIT License

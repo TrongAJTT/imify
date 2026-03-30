@@ -60,6 +60,23 @@ export function buildSmartOutputFileName(context: SmartNameContext): string {
   return `${sanitized}.${outputExtension.replace(/^\./, "")}`
 }
 
+/**
+ * Ensures a filename is unique within a batch by appending `-2`, `-3`, … before the extension when needed.
+ */
+export function reserveUniqueFileName(fileName: string, used: Set<string>): string {
+  const lastDot = fileName.lastIndexOf(".")
+  const stem = lastDot > 0 ? fileName.slice(0, lastDot) : fileName
+  const ext = lastDot > 0 ? fileName.slice(lastDot) : ""
+  let candidate = fileName
+  let n = 2
+  while (used.has(candidate)) {
+    candidate = `${stem}-${n}${ext}`
+    n += 1
+  }
+  used.add(candidate)
+  return candidate
+}
+
 export async function readImageDimensions(sourceBlob: Blob): Promise<ImageDimensions | null> {
   if (!sourceBlob.type.startsWith("image/")) {
     return null

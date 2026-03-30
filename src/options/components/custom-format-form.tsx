@@ -4,7 +4,6 @@ import type { ImageFormat, PaperSize, ResizeMode } from "@/core/types"
 import { CUSTOM_FORMATS, DEFAULT_ICO_SIZES, FORMAT_LABELS, QUALITY_FORMATS } from "@/core/format-config"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
-import { QualityInput } from "@/options/components/quality-input"
 import { ResizeModeSelector } from "@/options/components/resize-mode-selector"
 import { SmartResizeModule } from "@/options/components/smart-resize-module"
 import { NumberInput } from "@/options/components/ui/number-input"
@@ -104,9 +103,14 @@ export function CustomFormatForm({
             </label>
 
             <div className={`flex-1 transition-opacity duration-300 ${!canSetQuality ? "opacity-30 grayscale pointer-events-none" : ""}`}>
-              <QualityInput
-                onChange={(next) => onChange({ ...value, quality: next })}
+              <NumberInput
+                label="Quality"
+                className="w-full"
+                min={1}
+                max={100}
+                step={1}
                 value={value.quality ?? 90}
+                onChangeValue={(next) => onChange({ ...value, quality: next })}
               />
             </div>
           </div>

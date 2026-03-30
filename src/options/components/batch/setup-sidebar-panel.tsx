@@ -4,7 +4,6 @@ import { Check, FileEdit, FolderOpen, History, Save, Stamp } from "lucide-react"
 import { QUALITY_FORMATS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
-import { QualityInput } from "@/options/components/quality-input"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
@@ -280,7 +279,16 @@ export function BatchSetupSidebarPanel() {
         {!isIcoTarget ? (
           <div className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
-              <QualityInput disabled={isRunning || !supportsQuality} onChange={onQualityChange} value={quality} />
+              <NumberInput
+                disabled={isRunning || !supportsQuality}
+                label="Quality"
+                className="w-full"
+                min={1}
+                max={100}
+                step={1}
+                value={quality}
+                onChangeValue={onQualityChange}
+              />
 
               <ResizeModeSelector
                 disabled={isRunning}

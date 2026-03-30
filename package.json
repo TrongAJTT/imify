@@ -1,7 +1,7 @@
 {
   "name": "imify",
   "displayName": "Imify - Save & Process images",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "versionType": "dev",
   "description": "A privacy-first, powerful image toolkit. Save image directly from your context menu, and even more. Supports ICO, AVIF, JPEG XL.",
   "author": "TrongAJTT <trong.ajtt.dev@gmail.com>",
@@ -37,6 +37,7 @@
     "pdf-lib": "^1.17.1",
     "plasmo": "0.90.5",
     "react": "18.2.0",
+    "react-colorful": "^5.6.1",
     "react-dom": "18.2.0",
     "tailwind-merge": "^3.5.0",
     "upng-js": "^2.1.0",

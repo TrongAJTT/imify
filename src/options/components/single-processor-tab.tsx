@@ -15,6 +15,7 @@ import {
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
 import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
 import { downloadWithFilename, formatBytes, withBatchResize } from "@/options/components/batch/utils"
+import { usePanDrag } from "@/options/hooks/use-pan-drag"
 import { Button } from "@/options/components/ui/button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Heading, MutedText } from "@/options/components/ui/typography"
@@ -190,12 +191,14 @@ export function SingleProcessorTab() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [compareRatio, setCompareRatio] = useState(50)
   const [zoom, setZoom] = useState(1)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [isPanning, setIsPanning] = useState(false)
+
+  const { pan, resetPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
+    enabled: true,
+    currentZoom: zoom
+  })
 
   const requestSequenceRef = useRef(0)
   const attachSequenceRef = useRef(0)
-  const panStartRef = useRef<{ x: number; y: number; originX: number; originY: number } | null>(null)
   const viewerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -312,7 +315,7 @@ export function SingleProcessorTab() {
 
   const resetViewport = () => {
     setZoom(1)
-    setPan({ x: 0, y: 0 })
+    resetPan()
   }
 
   const attachSingleFile = async (file: File) => {
@@ -786,47 +789,12 @@ export function SingleProcessorTab() {
               </div>
 
               <div
-                className={`relative ${isFullscreen ? "flex-1" : "h-[480px]"} min-h-0 overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800/40 select-none cursor-grab ${isPanning ? "cursor-grabbing" : ""}`}
+                className={`relative ${isFullscreen ? "flex-1" : "h-[480px]"} min-h-0 overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800/40 select-none cursor-grab`}
                 ref={viewerRef}
-                onPointerDown={(event) => {
-                  const container = event.currentTarget
-                  container.setPointerCapture(event.pointerId)
-
-                  panStartRef.current = {
-                    x: event.clientX,
-                    y: event.clientY,
-                    originX: pan.x,
-                    originY: pan.y
-                  }
-                  setIsPanning(true)
-                }}
-                onPointerMove={(event) => {
-                  if (!panStartRef.current || !isPanning) {
-                    return
-                  }
-
-                  const dx = event.clientX - panStartRef.current.x
-                  const dy = event.clientY - panStartRef.current.y
-
-                  setPan({
-                    x: panStartRef.current.originX + dx,
-                    y: panStartRef.current.originY + dy
-                  })
-                }}
-                onPointerUp={(event) => {
-                  if (isPanning) {
-                    event.currentTarget.releasePointerCapture(event.pointerId)
-                    panStartRef.current = null
-                    setIsPanning(false)
-                  }
-                }}
-                onPointerCancel={(event) => {
-                  if (isPanning) {
-                    event.currentTarget.releasePointerCapture(event.pointerId)
-                    panStartRef.current = null
-                    setIsPanning(false)
-                  }
-                }}>
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}>
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{

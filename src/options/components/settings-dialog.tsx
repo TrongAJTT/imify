@@ -14,7 +14,13 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
   const skipOomWarning = useBatchStore((state) => state.skipOomWarning)
-  const setSkipOomWarning = useBatchStore((state) => state.setSkipOomWarning)   
+  const setSkipOomWarning = useBatchStore((state) => state.setSkipOomWarning)
+  const skipSplicingHeavyPreviewQualityWarning = useBatchStore(
+    (state) => state.skipSplicingHeavyPreviewQualityWarning
+  )
+  const setSkipSplicingHeavyPreviewQualityWarning = useBatchStore(
+    (state) => state.setSkipSplicingHeavyPreviewQualityWarning
+  )
 
   const [activeTab, setActiveTab] = useState<"warnings">("warnings")
 
@@ -70,7 +76,7 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
                   <div>
                     <Kicker className="mb-1">PREFERENCES</Kicker>
                     <MutedText className="text-sm">
-                      These preferences are saved automatically and synced across Single/Batch setup contexts.
+                      These preferences are saved automatically. Batch options apply across Single/Batch setup; Image Splicing uses the preview-quality warning here as well.
                     </MutedText>
                   </div>
 
@@ -120,6 +126,33 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
                           <span
                             aria-hidden="true"
                             className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${!skipOomWarning ? 'translate-x-5' : 'translate-x-0'}`}
+                          />
+                        </button>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center justify-between gap-4 py-3 rounded-lg transition-colors cursor-pointer select-none group">
+                      <div className="flex-1 pr-6">
+                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-900 transition-colors">
+                          Show Image Splicing high preview quality warning
+                        </p>
+                        <MutedText className="text-sm mt-0.5 leading-relaxed">
+                          When choosing preview quality 50% or higher, warn if there are more than{" "}
+                          {APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT} images or total area exceeds
+                          ~{APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS / 1_000_000}M px².
+                        </MutedText>
+                      </div>
+                      <div className="flex items-center">
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={!skipSplicingHeavyPreviewQualityWarning}
+                          onClick={() => setSkipSplicingHeavyPreviewQualityWarning(!skipSplicingHeavyPreviewQualityWarning)}
+                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 ${!skipSplicingHeavyPreviewQualityWarning ? 'bg-sky-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${!skipSplicingHeavyPreviewQualityWarning ? 'translate-x-5' : 'translate-x-0'}`}
                           />
                         </button>
                       </div>

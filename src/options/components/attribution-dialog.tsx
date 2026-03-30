@@ -2,26 +2,12 @@ import React from "react"
 import { ExternalLink, X } from "lucide-react"
 import { Button } from "@/options/components/ui/button"
 import { useKeyPress } from "@/options/hooks/use-key-press"
+import { ATTRIBUTIONS } from "@/core/attributions"
 
 interface AttributionDialogProps {
   isOpen: boolean
   onClose: () => void
 }
-
-const ATTRIBUTIONS = [
-  { name: "React", author: "Meta", license: "MIT", url: "https://react.dev/" },
-  { name: "Plasmo", author: "Plasmo Corp", license: "MIT", url: "https://docs.plasmo.com/" },
-  { name: "Tailwind CSS", author: "Tailwind Labs", license: "MIT", url: "https://tailwindcss.com/" },
-  { name: "Lucide React", author: "Lucide Contributors", license: "ISC", url: "https://lucide.dev/" },
-  { name: "Zustand", author: "Poimandres", license: "MIT", url: "https://github.com/pmndrs/zustand" },
-  { name: "idb", author: "Jake Archibald", license: "Apache 2.0", url: "https://github.com/jakearchibald/idb" },
-  { name: "pdf-lib", author: "Andrew Dillon", license: "MIT", url: "https://pdf-lib.js.org/" },
-  { name: "UPNG.js", author: "Ivan Kutskir", license: "MIT", url: "https://github.com/photopea/UPNG.js" },
-  { name: "UTIF.js", author: "Ivan Kutskir", license: "MIT", url: "https://github.com/photopea/UTIF.js" },
-  { name: 'fflate', url: 'https://github.com/101arrowz/fflate', author: 'Arjun Barrett (101arrowz)', license: 'MIT' },
-  { name: 'dnd-kit', url: 'https://dndkit.com/', author: 'Claudéric Demers', license: 'MIT' },
-  { name: '@jsquash/avif & jxl', url: 'https://github.com/jamsinclair/jSquash', author: 'Jamie', license: 'MIT' },
-]
 
 export const AttributionDialog: React.FC<AttributionDialogProps> = ({ isOpen, onClose }) => {
   useKeyPress("Escape", onClose, isOpen)
@@ -30,7 +16,7 @@ export const AttributionDialog: React.FC<AttributionDialogProps> = ({ isOpen, on
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-3xl rounded-3xl border border-slate-200/50 bg-white/95 p-8 shadow-2xl backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/95 relative overflow-hidden">
+      <div className="w-full max-w-3xl rounded-xl border border-slate-200/50 bg-white/95 p-8 shadow-2xl backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/95 relative overflow-hidden">
         {/* Decorative background element */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />

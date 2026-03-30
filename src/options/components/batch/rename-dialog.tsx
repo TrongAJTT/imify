@@ -1,191 +1,36 @@
-import { useState, useMemo, useEffect } from "react"
-import { createPortal } from "react-dom"
-import { X, Save, FileEdit, Zap, Tags } from "lucide-react"
-import { SecondaryButton } from "@/options/components/ui/secondary-button"
-import { Button } from "@/options/components/ui/button"
-import { buildSmartOutputFileName } from "@/options/components/batch/pipeline"
-import { useKeyPress } from "@/options/hooks/use-key-press"
+import {
+  RenamePatternDialog,
+  BATCH_RENAME_PRESETS,
+  BATCH_RENAME_TAGS
+} from "@/options/components/ui/rename-pattern-dialog"
 
-interface BatchRenameDialogProps {
+export interface BatchRenameDialogProps {
   isOpen: boolean
   onClose: () => void
   onSave: (pattern: string) => void
   initialPattern: string
 }
 
-const PRESETS = [
-  { label: "Default", pattern: "[OriginalName]" },
-  { label: "Designer", pattern: "[OriginalName]_[Width]x[Height]" },
-  { label: "Marketing", pattern: "Imify_[Date]_[OriginalName]" },
-  { label: "SEO", pattern: "[Date]-[OriginalName]" }
-]
+const BATCH_PREVIEW_SAMPLE = {
+  originalFileName: "vacation-photo.jpg",
+  dimensions: { width: 3840, height: 2160 },
+  index: 7,
+  totalFiles: 100,
+  outputExtension: "webp"
+} as const
 
-const AVAILABLE_TAGS = [
-  { tag: "[OriginalName]", label: "Original filename" },
-  { tag: "[Width]", label: "Image width" },
-  { tag: "[Height]", label: "Image height" },
-  { tag: "[Date]", label: "Current date (YYYYMMDD)" },
-  { tag: "[Time]", label: "Current time (HHMMSS)" },
-  { tag: "[Index]", label: "Sequence index (1, 2, 3...)" },
-  { tag: "[PaddedIndex]", label: "Padded index (001, 002...)" },
-  { tag: "[Ext]", label: "Target extension" }
-]
-
-export function BatchRenameDialog({
-  isOpen,
-  onClose,
-  onSave,
-  initialPattern
-}: BatchRenameDialogProps) {
-  const [pattern, setPattern] = useState(initialPattern)
-
-  useKeyPress("Escape", onClose, isOpen)
-
-  useEffect(() => {
-    if (isOpen) {
-      setPattern(initialPattern)
-    }
-  }, [isOpen, initialPattern])
-
-  const preview = useMemo(() => {
-    return buildSmartOutputFileName({
-      pattern,
-      originalFileName: "vacation-photo.jpg",
-      dimensions: { width: 3840, height: 2160 },
-      index: 7,
-      totalFiles: 100, // For 007 preview
-      outputExtension: "webp",
-      now: new Date()
-    })
-  }, [pattern])
-
-  if (!isOpen) return null
-
-  if (typeof document === "undefined") {
-    return null
-  }
-
-  return createPortal(
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-sky-100 dark:bg-sky-500/10 rounded-xl">
-              <FileEdit className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">Advanced Renaming</h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x dark:divide-slate-800">
-          {/* Main Editing Area */}
-          <div className="flex-1 p-6 space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Naming Pattern
-              </label>
-              <input
-                type="text"
-                value={pattern}
-                onChange={(e) => setPattern(e.target.value)}
-                placeholder="e.g. [OriginalName]_[Width]x[Height]"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all font-mono shadow-sm"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                <Zap size={12} className="text-amber-500" />
-                Quick presets
-              </div>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                {PRESETS.map((preset) => (
-                  <button
-                    key={preset.label}
-                    onClick={() => setPattern(preset.pattern)}
-                    className={`px-3 py-2 rounded-lg border text-[11px] font-bold transition-all ${
-                      pattern === preset.pattern
-                        ? "border-sky-500 bg-sky-50 text-sky-700 dark:border-sky-500 dark:bg-sky-500/10 dark:text-sky-300"
-                        : "border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800"
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Preview Section */}
-            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex flex-col gap-4">
-                <div className="space-y-1.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Input</span>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[8px] text-slate-400 font-bold shrink-0">JPG</div>
-                    <span className="text-xs text-slate-500 truncate italic">vacation-photo.jpg (3840x2160, 7 of 100)</span>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <span className="text-[10px] font-bold text-sky-500 uppercase tracking-widest block">Output</span>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded bg-sky-100 dark:bg-sky-500/10 flex items-center justify-center text-[8px] text-sky-600 dark:text-sky-400 font-bold shrink-0 uppercase">webp</div>
-                    <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-200 truncate break-all">
-                      {preview}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tags Sidebar */}
-          <div className="w-full md:w-56 p-6 bg-slate-50/50 dark:bg-slate-800/20">
-            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-              <Tags size={12} className="text-sky-500" />
-              Dynamic Tags
-            </div>
-            <div className="space-y-2">
-              {AVAILABLE_TAGS.map((item) => (
-                <button
-                  key={item.tag}
-                  onClick={() => setPattern((p) => p + item.tag)}
-                  className="flex flex-col w-full text-left p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-700 transition-all group"
-                >
-                  <code className="text-[11px] font-bold text-sky-600 dark:text-sky-400 group-hover:text-sky-500">
-                    {item.tag}
-                  </code>
-                  <span className="text-[10px] text-slate-400 group-hover:text-slate-500 mt-0.5 leading-tight">{item.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-end gap-3">
-          <SecondaryButton onClick={onClose} className="px-6">Cancel</SecondaryButton>
-          <Button
-            onClick={() => {
-              const finalPattern = pattern.trim() || "[OriginalName]"
-              onSave(finalPattern)
-              onClose()
-            }}
-            className="px-6 flex items-center gap-2 shadow-lg shadow-sky-500/10"
-          >
-            <Save className="w-4 h-4" />
-            Apply pattern
-          </Button>
-        </div>
-      </div>
-    </div>,
-    document.body
+export function BatchRenameDialog({ isOpen, onClose, onSave, initialPattern }: BatchRenameDialogProps) {
+  return (
+    <RenamePatternDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      onSave={onSave}
+      initialPattern={initialPattern}
+      presets={BATCH_RENAME_PRESETS}
+      availableTags={BATCH_RENAME_TAGS}
+      previewSample={BATCH_PREVIEW_SAMPLE}
+      emptyPatternFallback="[OriginalName]"
+      patternPlaceholder="e.g. [OriginalName]_[Width]x[Height]"
+    />
   )
 }

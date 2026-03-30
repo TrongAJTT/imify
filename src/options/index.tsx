@@ -15,6 +15,8 @@ import { type CustomFormatInput, validateCustomFormatInput } from "@/features/cu
 import { DEFAULT_STORAGE_STATE } from "@/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
+import { SplicingTab } from "@/options/components/splicing/splicing-tab"
+import { SplicingSidebarPanel } from "@/options/components/splicing/splicing-sidebar-panel"
 import { ContextMenuTab } from "@/options/components/context-menu-tab"
 import { CustomFormatsTab } from "@/options/components/custom-formats-tab"
 import { GlobalFormatsTab } from "@/options/components/global-formats-tab"
@@ -26,7 +28,7 @@ import { Kicker, MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState,
   TAB_ITEMS, createCustomFormatId, normalizeCustomInput } from "@/options/shared"
 import { useBatchStore } from "@/options/stores/batch-store"
-import { Globe, Heart, Image, Layers, ListTree, Workflow, X } from "lucide-react"
+import { Globe, Heart, Image, LayoutGrid, Layers, ListTree, Workflow, X } from "lucide-react"
 import { AboutDialog } from "./components/about-dialog"
 import { AttributionDialog } from "./components/attribution-dialog"
 import { SettingsDialog } from "./components/settings-dialog"
@@ -80,6 +82,7 @@ if (IS_OFFSCREEN_OPTIONS_DOCUMENT && !offscreenListenerAttached) {
 const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
   single: <Image size={18} />,
   batch: <Workflow size={18} />,
+  splicing: <LayoutGrid size={18} />,
   menu: <ListTree size={18} />,
   global: <Globe size={18} />,
   custom: <Layers size={18} />
@@ -398,6 +401,10 @@ export default function OptionsPage() {
         return (
           <BatchProcessorTab />
         )
+      case "splicing":
+        return (
+          <SplicingTab />
+        )
       default:
         return null
     }
@@ -506,6 +513,10 @@ export default function OptionsPage() {
                 <BatchSetupSidebarPanel />
               )}
 
+              {activeTab === "splicing" && (
+                <SplicingSidebarPanel />
+              )}
+
               <TabInfoPanel activeTab={activeTab} />
             </div>
           </div>
@@ -517,6 +528,10 @@ export default function OptionsPage() {
           <aside className="w-72 shrink-0 order-3 sticky top-8 hidden xl:block">
             {(activeTab === "batch" || activeTab === "single") && (
               <BatchSetupSidebarPanel />
+            )}
+
+            {activeTab === "splicing" && (
+              <SplicingSidebarPanel />
             )}
 
             <TabInfoPanel activeTab={activeTab} />
