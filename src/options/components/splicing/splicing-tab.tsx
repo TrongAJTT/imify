@@ -10,7 +10,9 @@ import { exportSplicedImage } from "@/features/splicing/canvas-renderer"
 import type {
   SplicingImageItem,
   LayoutResult,
-  SplicingExportConfig
+  SplicingExportConfig,
+  SplicingPreset,
+  SplicingDirection
 } from "@/features/splicing/types"
 import { CanvasPreview } from "@/options/components/splicing/canvas-preview"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
@@ -28,6 +30,7 @@ import {
 } from "@/options/stores/splicing-store"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { getCanonicalExtension } from "@/core/download-utils"
+import { useKeyPress } from "@/options/hooks/use-key-press"
 import { PDFDocument } from "pdf-lib"
 
 const THUMB_MAX = 256
@@ -72,6 +75,54 @@ function downloadBlob(blob: Blob, filename: string) {
   }, 500)
 }
 
+function maxPlacementsPerGroup(layout: LayoutResult): number {
+  if (layout.groups.length === 0) return 0
+  return Math.max(...layout.groups.map((g) => g.placements.length))
+}
+
+function buildGridStatsLabel(
+  preset: SplicingPreset,
+  primary: SplicingDirection,
+  secondary: SplicingDirection,
+  layout: LayoutResult | null
+): string | null {
+  if (!layout || layout.groups.length === 0) return null
+
+  const groupCount = layout.groups.length
+  const perGroupMax = maxPlacementsPerGroup(layout)
+
+  if (preset === "bento") {
+    const isVerticalFlow = primary === "vertical" && secondary === "vertical"
+    const isFixedVertical = primary === "horizontal" && secondary === "vertical"
+    if (isVerticalFlow || isFixedVertical) {
+      return `${groupCount} column${groupCount === 1 ? "" : "s"}`
+    }
+    return `${groupCount} row${groupCount === 1 ? "" : "s"} × ${perGroupMax} column${perGroupMax === 1 ? "" : "s"}`
+  }
+
+  if (preset === "stitch_vertical") {
+    return `${perGroupMax} row${perGroupMax === 1 ? "" : "s"}`
+  }
+
+  if (preset === "stitch_horizontal") {
+    return `${perGroupMax} column${perGroupMax === 1 ? "" : "s"}`
+  }
+
+  if (preset === "grid") {
+    return `${groupCount} row${groupCount === 1 ? "" : "s"} × ${perGroupMax} column${perGroupMax === 1 ? "" : "s"}`
+  }
+
+  return null
+}
+
+function isActiveElementEditable(): boolean {
+  const el = document.activeElement
+  if (!el || !(el instanceof HTMLElement)) return false
+  const tag = el.tagName
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true
+  return el.isContentEditable
+}
+
 async function createZipBlob(files: Array<{ name: string; blob: Blob }>): Promise<Blob> {
   const zipData: Record<string, Uint8Array> = {}
   for (const file of files) {
@@ -97,6 +148,23 @@ export function SplicingTab() {
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
   const [isScrollPan, setIsScrollPan] = useState(false)
   const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
+
+  const onSplicingPanModeShortcut = useCallback(() => {
+    if (isActiveElementEditable()) return
+    setIsScrollPan(true)
+  }, [])
+
+  const onSplicingZoomModeShortcut = useCallback(() => {
+    if (isActiveElementEditable()) return
+    setIsScrollPan(false)
+  }, [])
+
+  const splicingPreviewShortcutsEnabled =
+    images.length > 0 && !exportDialogOpen && !showDownloadConfirm
+  useKeyPress("v", onSplicingPanModeShortcut, splicingPreviewShortcutsEnabled)
+  useKeyPress("V", onSplicingPanModeShortcut, splicingPreviewShortcutsEnabled)
+  useKeyPress("z", onSplicingZoomModeShortcut, splicingPreviewShortcutsEnabled)
+  useKeyPress("Z", onSplicingZoomModeShortcut, splicingPreviewShortcutsEnabled)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imagesCountRef = useRef(0)
   const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -593,8 +661,14 @@ export function SplicingTab() {
   )
 
   const hasImages = images.length > 0
+  const gridStatsLabel = useMemo(
+    () => buildGridStatsLabel(preset, primaryDirection, secondaryDirection, layoutResult),
+    [preset, primaryDirection, secondaryDirection, layoutResult]
+  )
   const dimensionLabel = layoutResult
-    ? `${layoutResult.canvasWidth} x ${layoutResult.canvasHeight} px`
+    ? `${layoutResult.canvasWidth} x ${layoutResult.canvasHeight} px${
+        gridStatsLabel ? ` · ${gridStatsLabel}` : ""
+      }`
     : null
   return (
     <SurfaceCard>
