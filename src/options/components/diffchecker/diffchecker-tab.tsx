@@ -12,9 +12,10 @@ import { Button } from "@/options/components/ui/button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 
-async function loadImageItem(file: File): Promise<DiffImageItem> {
+async function createImageItemWithBitmap(file: File): Promise<{ item: DiffImageItem; bitmap: ImageBitmap }> {
   const bitmap = await createImageBitmap(file)
   const url = URL.createObjectURL(file)
+
   const item: DiffImageItem = {
     id: `diff_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     file,
@@ -23,8 +24,8 @@ async function loadImageItem(file: File): Promise<DiffImageItem> {
     height: bitmap.height,
     name: file.name
   }
-  bitmap.close()
-  return item
+
+  return { item, bitmap }
 }
 
 export function DiffcheckerTab() {
@@ -50,36 +51,73 @@ export function DiffcheckerTab() {
   const diffThreshold = useDiffcheckerStore((s) => s.diffThreshold)
   const setSplitPosition = useDiffcheckerStore((s) => s.setSplitPosition)
 
-  const handleLoadA = useCallback(
-    async (file: File) => {
+  const handleLoadFromSide = useCallback(
+    async (side: "A" | "B", files: File[]) => {
+      const validFiles = files.filter((f) => f.type.startsWith("image/"))
+      if (validFiles.length === 0) return
+
+      setDiffResult(null)
+
+      const oldImageA = imageA
+      const oldImageB = imageB
+      const oldBitmapA = bitmapA
+      const oldBitmapB = bitmapB
+
+      const mainFile = validFiles[0]
+      // "Overflow" strategy: first file goes to the drop side,
+      // and all remaining files are collapsed into the opposite side (the last one wins).
+      const overflowFile = validFiles.length > 1 ? validFiles[validFiles.length - 1] : null
+
+      let nextA: { item: DiffImageItem; bitmap: ImageBitmap } | null = null
+      let nextB: { item: DiffImageItem; bitmap: ImageBitmap } | null = null
+
       try {
-        const item = await loadImageItem(file)
-        const bitmap = await createImageBitmap(file)
-        if (imageA) URL.revokeObjectURL(imageA.url)
-        if (bitmapA) bitmapA.close()
-        setImageA(item)
-        setBitmapA(bitmap)
+        const created = await createImageItemWithBitmap(mainFile)
+        if (side === "A") nextA = created
+        else nextB = created
       } catch {
-        /* invalid image */
+        // Invalid first file; no meaningful updates.
+      }
+
+      if (overflowFile) {
+        try {
+          const created = await createImageItemWithBitmap(overflowFile)
+          if (side === "A") nextB = created
+          else nextA = created
+        } catch {
+          // Skip invalid overflow file
+        }
+      }
+
+      if (nextA) {
+        if (oldImageA) URL.revokeObjectURL(oldImageA.url)
+        if (oldBitmapA) oldBitmapA.close()
+        setImageA(nextA.item)
+        setBitmapA(nextA.bitmap)
+      }
+
+      if (nextB) {
+        if (oldImageB) URL.revokeObjectURL(oldImageB.url)
+        if (oldBitmapB) oldBitmapB.close()
+        setImageB(nextB.item)
+        setBitmapB(nextB.bitmap)
       }
     },
-    [imageA, bitmapA]
+    [imageA, imageB, bitmapA, bitmapB]
+  )
+
+  const handleLoadA = useCallback(
+    async (files: File[]) => {
+      await handleLoadFromSide("A", files)
+    },
+    [handleLoadFromSide]
   )
 
   const handleLoadB = useCallback(
-    async (file: File) => {
-      try {
-        const item = await loadImageItem(file)
-        const bitmap = await createImageBitmap(file)
-        if (imageB) URL.revokeObjectURL(imageB.url)
-        if (bitmapB) bitmapB.close()
-        setImageB(item)
-        setBitmapB(bitmap)
-      } catch {
-        /* invalid image */
-      }
+    async (files: File[]) => {
+      await handleLoadFromSide("B", files)
     },
-    [imageB, bitmapB]
+    [handleLoadFromSide]
   )
 
   const handleClearA = useCallback(() => {

@@ -5,10 +5,10 @@ import type {
   DiffViewMode
 } from "@/features/diffchecker/types"
 import { RadioCard } from "@/options/components/ui/radio-card"
-import { RangeInput } from "@/options/components/ui/range-input"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { MutedText } from "@/options/components/ui/typography"
+import { SliderInput } from "@/options/components/ui/slider-input"
 import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
 
 const VIEW_MODES: Array<{
@@ -76,7 +76,7 @@ export function DiffcheckerSidebarPanel() {
       <SidebarPanel title="COMPARISON">
         <div className="flex flex-col gap-3">
           {viewMode === "overlay" && (
-            <RangeInput
+            <SliderInput
               label="Opacity"
               value={overlayOpacity}
               onChange={setOverlayOpacity}
@@ -95,7 +95,7 @@ export function DiffcheckerSidebarPanel() {
                 onChange={(v) => setAlgorithm(v as DiffAlgorithm)}
               />
               {algorithm === "binary" && (
-                <RangeInput
+                <SliderInput
                   label="Threshold"
                   value={diffThreshold}
                   onChange={setDiffThreshold}
@@ -116,18 +116,24 @@ export function DiffcheckerSidebarPanel() {
 
       <SidebarPanel title="ALIGNMENT">
         <div className="flex flex-col gap-3">
-          <SelectInput
-            label="Scale Mode"
-            value={alignMode}
-            options={ALIGN_MODE_OPTIONS}
-            onChange={(v) => setAlignMode(v as DiffAlignMode)}
-          />
-          <SelectInput
-            label="Anchor"
-            value={alignAnchor}
-            options={ANCHOR_OPTIONS}
-            onChange={(v) => setAlignAnchor(v as DiffAlignAnchor)}
-          />
+          <div className="flex gap-3">
+            <div className="flex-1 min-w-0">
+              <SelectInput
+                label="Scale Mode"
+                value={alignMode}
+                options={ALIGN_MODE_OPTIONS}
+                onChange={(v) => setAlignMode(v as DiffAlignMode)}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <SelectInput
+                label="Anchor"
+                value={alignAnchor}
+                options={ANCHOR_OPTIONS}
+                onChange={(v) => setAlignAnchor(v as DiffAlignAnchor)}
+              />
+            </div>
+          </div>
         </div>
       </SidebarPanel>
     </div>

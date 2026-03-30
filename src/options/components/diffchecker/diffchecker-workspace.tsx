@@ -21,8 +21,8 @@ interface DiffcheckerWorkspaceProps {
   zoom: number
   panX: number
   panY: number
-  onLoadA: (file: File) => void
-  onLoadB: (file: File) => void
+  onLoadA: (files: File[]) => void
+  onLoadB: (files: File[]) => void
   onClearA: () => void
   onClearB: () => void
   onSplitChange: (position: number) => void

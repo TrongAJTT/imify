@@ -1,12 +1,13 @@
 import { ImagePlus, X, Upload } from "lucide-react"
 import type { DiffImageItem } from "@/features/diffchecker/types"
 import { MutedText } from "@/options/components/ui/typography"
+import { Tooltip } from "@/options/components/tooltip"
 
 interface ImageDropPairProps {
   imageA: DiffImageItem | null
   imageB: DiffImageItem | null
-  onLoadA: (file: File) => void
-  onLoadB: (file: File) => void
+  onLoadA: (files: File[]) => void
+  onLoadB: (files: File[]) => void
   onClearA: () => void
   onClearB: () => void
 }
@@ -17,13 +18,13 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function openFilePicker(onFile: (f: File) => void) {
+function openFilePicker(onFiles: (files: File[]) => void) {
   const input = document.createElement("input")
   input.type = "file"
   input.accept = "image/*"
   input.onchange = () => {
     const file = input.files?.[0]
-    if (file) onFile(file)
+    if (file) onFiles([file])
   }
   input.click()
 }
@@ -36,13 +37,13 @@ function DropZone({
 }: {
   label: string
   image: DiffImageItem | null
-  onLoad: (file: File) => void
+  onLoad: (files: File[]) => void
   onClear: () => void
 }) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
-    const file = e.dataTransfer.files[0]
-    if (file?.type.startsWith("image/")) onLoad(file)
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"))
+    if (files.length > 0) onLoad(files)
   }
 
   if (image) {
@@ -56,6 +57,18 @@ function DropZone({
         >
           <X size={12} />
         </button>
+        <div className="absolute top-9 right-2 z-10">
+          <Tooltip content={`Replace ${label}`} variant="nowrap" position="top">
+            <button
+              type="button"
+              onClick={() => openFilePicker(onLoad)}
+              aria-label={`Replace ${label}`}
+              className="h-6 w-6 rounded-full bg-slate-900/60 text-white hover:bg-slate-900/80 transition-colors flex items-center justify-center"
+            >
+              <Upload size={13} />
+            </button>
+          </Tooltip>
+        </div>
         <div className="flex items-center gap-3">
           <img
             src={image.url}
@@ -74,14 +87,6 @@ function DropZone({
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => openFilePicker(onLoad)}
-          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-slate-300 dark:border-slate-600 py-1.5 text-[11px] text-slate-500 dark:text-slate-400 hover:border-sky-400 hover:text-sky-500 transition-colors"
-        >
-          <Upload size={12} />
-          Replace
-        </button>
       </div>
     )
   }
