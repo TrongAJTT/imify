@@ -17,6 +17,8 @@ import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
 import { SplicingTab } from "@/options/components/splicing/splicing-tab"
 import { SplicingSidebarPanel } from "@/options/components/splicing/splicing-sidebar-panel"
+import { DiffcheckerTab } from "@/options/components/diffchecker/diffchecker-tab"
+import { DiffcheckerSidebarPanel } from "@/options/components/diffchecker/diffchecker-sidebar-panel"
 import { ContextMenuTab } from "@/options/components/context-menu-tab"
 import { CustomFormatsTab } from "@/options/components/custom-formats-tab"
 import { GlobalFormatsTab } from "@/options/components/global-formats-tab"
@@ -28,7 +30,7 @@ import { Kicker, MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState,
   TAB_ITEMS, createCustomFormatId, normalizeCustomInput } from "@/options/shared"
 import { useBatchStore } from "@/options/stores/batch-store"
-import { Globe, Heart, Image, LayoutGrid, Layers, ListTree, Workflow, X } from "lucide-react"
+import { ArrowLeftRight, Globe, Heart, Image, LayoutGrid, Layers, ListTree, Workflow, X } from "lucide-react"
 import { AboutDialog } from "./components/about-dialog"
 import { AttributionDialog } from "./components/attribution-dialog"
 import { SettingsDialog } from "./components/settings-dialog"
@@ -83,6 +85,7 @@ const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
   single: <Image size={18} />,
   batch: <Workflow size={18} />,
   splicing: <LayoutGrid size={18} />,
+  diffchecker: <ArrowLeftRight size={18} />,
   menu: <ListTree size={18} />,
   global: <Globe size={18} />,
   custom: <Layers size={18} />
@@ -405,6 +408,10 @@ export default function OptionsPage() {
         return (
           <SplicingTab />
         )
+      case "diffchecker":
+        return (
+          <DiffcheckerTab />
+        )
       default:
         return null
     }
@@ -517,6 +524,10 @@ export default function OptionsPage() {
                 <SplicingSidebarPanel />
               )}
 
+              {activeTab === "diffchecker" && (
+                <DiffcheckerSidebarPanel />
+              )}
+
               <TabInfoPanel activeTab={activeTab} />
             </div>
           </div>
@@ -532,6 +543,10 @@ export default function OptionsPage() {
 
             {activeTab === "splicing" && (
               <SplicingSidebarPanel />
+            )}
+
+            {activeTab === "diffchecker" && (
+              <DiffcheckerSidebarPanel />
             )}
 
             <TabInfoPanel activeTab={activeTab} />

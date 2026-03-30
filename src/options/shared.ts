@@ -14,7 +14,7 @@ import type { CustomFormatInput } from "@/features/custom-formats"
 
 export { QUALITY_FORMATS }
 
-export type OptionsTab = "single" | "batch" | "splicing" | "global" | "custom" | "menu"
+export type OptionsTab = "single" | "batch" | "splicing" | "diffchecker" | "global" | "custom" | "menu"
 export interface PersistedStorageState {
   version: number
   state: ExtensionStorageState
@@ -27,6 +27,7 @@ export const TAB_ITEMS: Array<{ id: OptionsTab; label: string; description?: str
   },
   { id: "batch", label: "Batch Processor" },
   { id: "splicing", label: "Image Splicing" },
+  { id: "diffchecker", label: "Difference Checker" },
   { 
     id: "global", 
     label: "Global Formats",
