@@ -6,7 +6,8 @@ import { toUserFacingConversionError } from "@/core/error-utils"
 import type { FormatConfig } from "@/core/types"
 import { convertImage } from "@/features/converter"
 import { applyExifPolicy } from "@/features/converter/exif"
-import { fetchRemoteImageAsFile, parseHttpUrlsFromText } from "@/features/converter/remote-image-import"
+import { fetchRemoteImageAsFile } from "@/features/converter/remote-image-import"
+import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import {
   createImagePreviewInWorker,
   isImagePreviewWorkerSupported,
@@ -359,63 +360,11 @@ export function SingleProcessorTab() {
     }
   }
 
-  useEffect(() => {
-    const onPaste = (event: ClipboardEvent) => {
-      const clipboardItems = event.clipboardData?.items
-      if (!clipboardItems?.length) {
-        return
-      }
-
-      const target = event.target as HTMLElement | null
-      if (target) {
-        const tagName = target.tagName.toLowerCase()
-        const isEditableTarget =
-          tagName === "input" ||
-          tagName === "textarea" ||
-          target.isContentEditable ||
-          Boolean(target.closest("[contenteditable='true']"))
-
-        if (isEditableTarget) {
-          return
-        }
-      }
-
-      const imageItem = Array.from(clipboardItems).find(
-        (item) => item.kind === "file" && item.type.startsWith("image/")
-      )
-
-      if (imageItem) {
-        const blob = imageItem.getAsFile()
-        if (!blob) {
-          return
-        }
-
-        event.preventDefault()
-        const extension = blob.type.split("/")[1] || "png"
-        const namedFile = new File([blob], `pasted_${Date.now()}.${extension}`, {
-          type: blob.type,
-          lastModified: Date.now()
-        })
-
-        void attachSingleFile(namedFile)
-        return
-      }
-
-      const text = event.clipboardData?.getData("text") || ""
-      const urls = parseHttpUrlsFromText(text)
-      if (!urls.length) {
-        return
-      }
-
-      event.preventDefault()
-      void importFromImageUrls(urls)
-    }
-
-    window.addEventListener("paste", onPaste)
-    return () => {
-      window.removeEventListener("paste", onPaste)
-    }
-  }, [])
+  useClipboardPaste({
+    onFiles: (files) => { if (files[0]) void attachSingleFile(files[0]) },
+    onUrls: importFromImageUrls,
+    enabled: !sourceFile
+  })
 
   useEffect(() => {
     if (!sourceFile || !resultBlob || !resultOutputExtension) {

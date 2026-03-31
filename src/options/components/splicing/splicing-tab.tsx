@@ -30,6 +30,7 @@ import {
 } from "@/options/stores/splicing-store"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { useKeyPress } from "@/options/hooks/use-key-press"
+import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 
 const THUMB_MAX = 256
 const LARGE_IMPORT_THRESHOLD = 20
@@ -166,6 +167,7 @@ export function SplicingTab() {
   useKeyPress("V", onSplicingPanModeShortcut, splicingPreviewShortcutsEnabled)
   useKeyPress("z", onSplicingZoomModeShortcut, splicingPreviewShortcutsEnabled)
   useKeyPress("Z", onSplicingZoomModeShortcut, splicingPreviewShortcutsEnabled)
+  useClipboardPaste({ onFiles: (files) => void addFiles(files) })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imagesCountRef = useRef(0)
   const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
