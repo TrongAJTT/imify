@@ -28,7 +28,7 @@ export function InspectorSidebarPanel() {
   const setPaletteCount = useInspectorStore((s) => s.setPaletteCount)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <SidebarPanel title="DISPLAY">
         <div className="flex flex-col gap-3">
           <SelectInput

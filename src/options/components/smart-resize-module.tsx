@@ -369,7 +369,7 @@ export function SmartResizeModule({
             setIsRatioLocked(false)
             setLockedRatio(null)
           }}
-          className="mt-5 inline-flex h-9 items-center gap-1 rounded-md border border-slate-300 px-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
+          className="mt-5 inline-flex h-8 items-center gap-1 rounded-md border border-slate-300 px-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
           title="Reset to original size">
           <RotateCcw size={12} />
           Reset

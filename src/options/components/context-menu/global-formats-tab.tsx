@@ -22,7 +22,6 @@ import { QUALITY_FORMATS } from "@/options/shared"
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Button } from "@/options/components/ui/button"
 import { BodyText, LabelText, Subheading } from "@/options/components/ui/typography"
 import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
@@ -230,7 +229,7 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={orderedIds} strategy={rectSortingStrategy}>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
             {orderedConfigs.map((config) => {
               const supportsQuality = QUALITY_FORMATS.includes(config.format)
 

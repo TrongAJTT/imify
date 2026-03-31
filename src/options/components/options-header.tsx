@@ -1,4 +1,5 @@
 import { Moon, Sun, Info, Heart, Settings } from "lucide-react"
+import { Tooltip } from "./tooltip"
 
 interface HeaderProps {
   isLoading: boolean
@@ -12,23 +13,30 @@ interface HeaderProps {
 function TitleBarButton({
   children,
   onClick,
-  title,
+  tooltipText,
+  isDonate = false,
   className = ""
 }: {
   children: React.ReactNode
   onClick: () => void
-  title: string
+  tooltipText: string
+  isDonate?: boolean
   className?: string
 }) {
-  return (
+  const button = (
     <button
       type="button"
-      title={title}
       onClick={onClick}
-      className={`w-9 h-9 flex items-center justify-center rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors ${className}`}
+      className={`w-9 h-9 flex items-center justify-center rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors ${isDonate ? "text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300" : ""} ${className}`}
     >
       {children}
     </button>
+  )
+
+  return (
+    <Tooltip content={tooltipText} position="down">
+      {button}
+    </Tooltip>
   )
 }
 
@@ -57,17 +65,20 @@ export function OptionsHeader({
       </div>
 
       <div className="flex items-center gap-1 shrink-0">
-        <TitleBarButton onClick={onToggleDark} title={isDark ? "Switch to light mode" : "Switch to dark mode"}>
-          {isDark ? <Moon size={16} /> : <Sun size={16} />}
+        <TitleBarButton
+          onClick={onToggleDark}
+          tooltipText={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {isDark ? <Moon size={18} /> : <Sun size={18} />}
         </TitleBarButton>
-        <TitleBarButton onClick={onOpenAbout} title="About Imify">
-          <Info size={16} />
+        <TitleBarButton onClick={onOpenAbout} tooltipText="About Imify">
+          <Info size={18} />
         </TitleBarButton>
-        <TitleBarButton onClick={onOpenSettings} title="Settings">
-          <Settings size={16} />
+        <TitleBarButton onClick={onOpenSettings} tooltipText="Settings">
+          <Settings size={18} />
         </TitleBarButton>
-        <TitleBarButton onClick={onOpenDonate} title="Support the developer" className="bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/50">
-          <Heart size={16} />
+        <TitleBarButton onClick={onOpenDonate} tooltipText="Support the dev" isDonate>
+          <Heart size={18} fill="red" stroke="red" />
         </TitleBarButton>
       </div>
     </header>

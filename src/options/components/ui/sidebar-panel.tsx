@@ -17,7 +17,7 @@ export function SidebarPanel({ title, children, className = "", headerActions }:
           {headerActions ? <div className="flex items-center gap-1">{headerActions}</div> : null}
         </div>
       ) : null}
-      <div className="p-4">
+      <div className="p-3">
         {children}
       </div>
     </div>

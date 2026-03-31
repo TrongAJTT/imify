@@ -8,7 +8,7 @@ type TooltipProps = {
   /** Optional highlighted label displayed above `content` inside the tooltip */
   label?: React.ReactNode
   variant?: "normal" | "wide1" | "wide2" | "nowrap"
-  position?: "top" | "down"
+  position?: "top" | "down" | "right"
 }
 
 const variants = {
@@ -34,7 +34,9 @@ export function Tooltip({
     const transform =
       position === "top"
         ? "-translate-x-1/2 -translate-y-full"
-        : "-translate-x-1/2 translate-y-0"
+        : position === "down"
+          ? "-translate-x-1/2 translate-y-0"
+          : "translate-x-0 -translate-y-1/2"
 
     return `fixed left-0 top-0 z-[9999] pointer-events-none bg-black/90 text-white text-[11px] px-2 py-1 rounded shadow-xl ${transform} ${variants[variant]}`
   }, [position, variant])
@@ -45,8 +47,19 @@ export function Tooltip({
     if (!el) return
 
     const rect = el.getBoundingClientRect()
-    const left = rect.left + rect.width / 2
-    const top = position === "top" ? rect.top : rect.bottom
+    const GAP = 8
+
+    const left =
+      position === "right"
+        ? rect.right + GAP
+        : rect.left + rect.width / 2
+
+    const top =
+      position === "top"
+        ? rect.top - GAP
+        : position === "down"
+          ? rect.bottom + GAP
+          : rect.top + rect.height / 2
     setCoords({ left, top })
   }, [open, position])
 
@@ -70,7 +83,7 @@ export function Tooltip({
   return (
     <div
       ref={triggerRef}
-      className="relative w-fit"
+      className="relative"
       {...handlers}
     >
       {children}

@@ -29,7 +29,19 @@ import { MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState, TAB_ITEMS } from "@/options/shared"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
-import { ArrowLeftRight, Heart, Image, LayoutGrid, ListTree, ScanSearch, Workflow, X } from "lucide-react"
+import { Tooltip } from "@/options/components/tooltip"
+import {
+  ArrowLeftRight,
+  Heart,
+  Image,
+  LayoutGrid,
+  ListTree,
+  PanelLeftClose,
+  PanelLeftOpen,
+  ScanSearch,
+  Workflow,
+  X
+} from "lucide-react"
 import { AboutDialog } from "./components/about-dialog"
 import { AttributionDialog } from "./components/attribution-dialog"
 import { SettingsDialog } from "./components/settings-dialog"
@@ -213,6 +225,10 @@ export default function OptionsPage() {
     "global"
   )
   const [activeTab, setActiveTab] = useState<OptionsTab>("context-menu")
+  const [isNavCollapsed, setIsNavCollapsed] = useStorage<boolean>(
+    { key: "imify_options_nav_collapsed", instance: syncStorage },
+    false
+  )
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
@@ -406,9 +422,36 @@ export default function OptionsPage() {
       <div className="flex-1 flex overflow-hidden min-h-0">
 
         {/* Left sidebar nav */}
-        <nav className="w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto">
+        <nav
+          className={`shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto transition-[width] duration-200 ${
+            isNavCollapsed ? "w-14" : "w-64"
+          }`}>
           <div className="pt-4 pb-2 px-2 flex flex-col gap-0.5">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600 px-3 pb-2 pt-0.5">Navigation</div>
+            <div
+              className={`${
+                isNavCollapsed ? "px-0 pb-2 justify-center" : "px-3 pb-2 pt-0.5 justify-between"
+              } flex items-center`}
+            >
+              {!isNavCollapsed ? (
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600">
+                  Navigation
+                </div>
+              ) : null}
+
+              <Tooltip
+                content={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}
+                position={isNavCollapsed ? "right" : "down"}
+                variant="nowrap"
+              >
+                <button
+                  type="button"
+                  onClick={() => void setIsNavCollapsed(!isNavCollapsed)}
+                  className="h-7 w-7 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+                  aria-label={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}>
+                  {isNavCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+                </button>
+              </Tooltip>
+            </div>
             {TAB_ITEMS.map((tab) => (
               <TabButton
                 key={tab.id}
@@ -416,12 +459,13 @@ export default function OptionsPage() {
                 label={tab.label}
                 icon={TAB_ICON_COMPONENTS[tab.id]}
                 onClick={() => setActiveTab(tab.id)}
+                collapsed={isNavCollapsed}
               />
             ))}
           </div>
 
           {/* Right panel content collapsed into left sidebar on smaller screens */}
-          <div className="xl:hidden border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col">
+          <div className={`xl:hidden border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col ${isNavCollapsed ? "hidden" : ""}`}>
             {(activeTab === "batch" || activeTab === "single") && (
               <BatchSetupSidebarPanel />
             )}

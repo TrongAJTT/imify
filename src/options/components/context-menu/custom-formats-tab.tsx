@@ -20,7 +20,6 @@ import type { ExtensionStorageState, FormatConfig } from "@/core/types"
 import { type CustomFormatInput, validateCustomFormatInput } from "@/features/custom-formats"
 import { CustomFormatForm } from "@/options/components/context-menu/custom-format-form"
 import { createCustomFormatId, normalizeCustomInput } from "@/options/shared"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Heading, Subheading, BodyText, MutedText, LabelText } from "@/options/components/ui/typography"
 import { CheckCircle2, Circle, Edit, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@/options/components/ui/button"
@@ -385,7 +384,7 @@ export function CustomFormatsTab({
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={draftFormats.map((f) => f.id)} strategy={rectSortingStrategy}>
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
+          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
             {draftFormats.map((item, index) => {
               return (
                 <SortableQueueItem key={item.id} id={item.id}>
