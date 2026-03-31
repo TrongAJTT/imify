@@ -5,7 +5,8 @@ import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 
 import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
 import type { ConversionProgressPayload, FormatConfig } from "@/core/types"
-import { fetchRemoteImagesFromUrls, parseHttpUrlsFromText } from "@/features/converter/remote-image-import"
+import { fetchRemoteImagesFromUrls } from "@/features/converter/remote-image-import"
+import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import { BatchActionBar } from "@/options/components/batch/action-bar"
 import { BatchQueueGrid } from "@/options/components/batch/queue-grid"
 import { BatchSummaryCard } from "@/options/components/batch/summary-card"
@@ -331,61 +332,10 @@ export function BatchProcessorTab() {
     }
   }
 
-  useEffect(() => {
-    const onPaste = (event: ClipboardEvent) => {
-      const clipboardItems = event.clipboardData?.items
-      if (!clipboardItems?.length) {
-        return
-      }
-
-      const target = event.target as HTMLElement | null
-      if (target) {
-        const tagName = target.tagName.toLowerCase()
-        const isEditableTarget =
-          tagName === "input" ||
-          tagName === "textarea" ||
-          target.isContentEditable ||
-          Boolean(target.closest("[contenteditable='true']"))
-
-        if (isEditableTarget) {
-          return
-        }
-      }
-
-      const clipboardImages = Array.from(clipboardItems)
-        .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
-        .map((item) => {
-          const blob = item.getAsFile()
-          if (!blob) {
-            return null
-          }
-
-          return blob
-        })
-        .filter((file): file is File => Boolean(file))
-
-      if (clipboardImages.length) {
-        event.preventDefault()
-        appendImageFiles(clipboardImages)
-        return
-      }
-
-      const text = event.clipboardData?.getData("text") || ""
-      const urls = parseHttpUrlsFromText(text)
-      if (!urls.length) {
-        return
-      }
-
-      event.preventDefault()
-      void importFromImageUrls(urls)
-    }
-
-    window.addEventListener("paste", onPaste)
-
-    return () => {
-      window.removeEventListener("paste", onPaste)
-    }
-  }, [])
+  useClipboardPaste({
+    onFiles: appendImageFiles,
+    onUrls: importFromImageUrls
+  })
 
   const totalQueueBytes = useMemo(() => queue.reduce((sum, item) => sum + item.file.size, 0), [queue])
   const queueTooLarge = totalQueueBytes > MAX_TOTAL_QUEUE_BYTES

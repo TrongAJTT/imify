@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react"
 import { inspectImage } from "@/features/inspector"
 import type { InspectorResult } from "@/features/inspector"
 import { useInspectorStore } from "@/options/stores/inspector-store"
+import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import { Button } from "@/options/components/ui/button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
@@ -75,6 +76,14 @@ export function InspectorTab() {
       if (prevUrlRef.current) URL.revokeObjectURL(prevUrlRef.current)
     }
   }, [])
+
+  useClipboardPaste({
+    onFiles: (files) => { if (files[0]) void handleLoadFile(files[0]) },
+    onFetchStart: () => setIsAnalyzing(true),
+    onFetchEnd: () => setIsAnalyzing(false),
+    onError: (msg) => setError(msg),
+    enabled: !file
+  })
 
   const handleReanalyze = useCallback(async () => {
     if (!file || !bitmap) return

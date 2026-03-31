@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Download, Trash2 } from "lucide-react"
+import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 
 import type { DiffComputeResult, DiffImageItem } from "@/features/diffchecker/types"
 import {
@@ -241,6 +242,25 @@ export function DiffcheckerTab() {
     alignAnchor,
     isExporting
   ])
+
+  // Sequential paste slot: first paste fills A, second fills B, then cycles back to A.
+  const pasteSlotRef = useRef<"A" | "B">("A")
+
+  useClipboardPaste({
+    onFiles: (files) => {
+      const file = files[0]
+      if (!file) return
+
+      if (!imageA || pasteSlotRef.current === "A") {
+        void handleLoadA([file])
+        pasteSlotRef.current = "B"
+      } else {
+        void handleLoadB([file])
+        pasteSlotRef.current = "A"
+      }
+    },
+    enabled: !imageA || !imageB
+  })
 
   const handlePanChange = useCallback((x: number, y: number) => {
     setPanX(x)
