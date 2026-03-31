@@ -21,19 +21,13 @@ export interface PersistedStorageState {
 }
 
 export const TAB_ITEMS: Array<{ id: OptionsTab; label: string; description?: string }> = [
-  {
-    id: "single",
-    label: "Single Processor"
-  },
+  { id: "context-menu", label: "Context Menu",
+    description: "Manage global format defaults, custom presets, and right-click menu sort order." },
+  { id: "single", label: "Single Processor" },
   { id: "batch", label: "Batch Processor" },
   { id: "splicing", label: "Image Splicing" },
   { id: "diffchecker", label: "Difference Checker" },
   { id: "inspector", label: "Image Inspector" },
-  {
-    id: "context-menu",
-    label: "Context Menu",
-    description: "Manage global format defaults, custom presets, and right-click menu sort order."
-  },
 ]
 
 export const CONTEXT_MENU_SORT_OPTIONS: Array<{ value: MenuSortMode; label: string }> = [

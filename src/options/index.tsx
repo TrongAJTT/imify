@@ -1,7 +1,7 @@
 import "@/style.css"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useRef, useState, useEffect } from "react"
 import { Button } from "@/options/components/ui/button"
 
 import { toUserFacingConversionError } from "@/core/error-utils"
@@ -26,8 +26,7 @@ import { SingleProcessorTab } from "@/options/components/single-processor-tab"
 import { TabButton } from "@/options/components/tab-button"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker, MutedText } from "@/options/components/ui/typography"
-import { type OptionsTab, type PersistedStorageState,
-  TAB_ITEMS } from "@/options/shared"
+import { type OptionsTab, type PersistedStorageState, TAB_ITEMS } from "@/options/shared"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
 import { ArrowLeftRight, Heart, Image, LayoutGrid, ListTree, ScanSearch, Workflow, X } from "lucide-react"
@@ -35,6 +34,7 @@ import { AboutDialog } from "./components/about-dialog"
 import { AttributionDialog } from "./components/attribution-dialog"
 import { SettingsDialog } from "./components/settings-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
+import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 
 const syncStorage = new Storage({ area: "sync" })
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
@@ -45,6 +45,23 @@ const IS_OFFSCREEN_OPTIONS_DOCUMENT =
   typeof window !== "undefined" && new URLSearchParams(window.location.search).get("offscreen") === "1"
 
 let offscreenListenerAttached = false
+const VALID_TAB_IDS = new Set<OptionsTab>(TAB_ITEMS.map((tab) => tab.id))
+
+function sanitizeOptionsTab(value: unknown): OptionsTab {
+  if (typeof value === "string" && VALID_TAB_IDS.has(value as OptionsTab)) {
+    return value as OptionsTab
+  }
+
+  return "context-menu"
+}
+
+function sanitizeContextMenuSubTab(value: unknown): ContextMenuSubTab {
+  if (value === "global" || value === "custom" || value === "preview") {
+    return value
+  }
+
+  return "global"
+}
 
 if (IS_OFFSCREEN_OPTIONS_DOCUMENT && !offscreenListenerAttached) {
   offscreenListenerAttached = true
@@ -162,7 +179,15 @@ export default function OptionsPage() {
     return null
   }
 
-  const [activeTab, setActiveTab] = useState<OptionsTab>("single")
+  const [defaultOptionsTab, setDefaultOptionsTab, { isLoading: isDefaultTabLoading }] = useStorage<OptionsTab>(
+    { key: "imify_options_default_tab", instance: syncStorage },
+    "context-menu"
+  )
+  const [activeContextMenuSubTab, setActiveContextMenuSubTab, { isLoading: isContextSubTabLoading }] = useStorage<ContextMenuSubTab>(
+    { key: "imify_context_menu_active_sub_tab", instance: syncStorage },
+    "global"
+  )
+  const [activeTab, setActiveTab] = useState<OptionsTab>("context-menu")
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
@@ -176,6 +201,24 @@ export default function OptionsPage() {
   const [isDark, setIsDark] = useStorage<boolean>({ key: "imify_dark_mode", instance: syncStorage }, false)
 
   const isLoading = isSettingsLoading || !isBatchStoreRehydrated
+  const safeDefaultOptionsTab = sanitizeOptionsTab(defaultOptionsTab)
+  const safeActiveContextMenuSubTab = sanitizeContextMenuSubTab(activeContextMenuSubTab)
+
+  const didInitDefaultTabRef = useRef(false)
+  useEffect(() => {
+    if (didInitDefaultTabRef.current) {
+      return
+    }
+
+    if (isDefaultTabLoading) {
+      return
+    }
+
+    // Only apply the user's "default tab" once on initial load.
+    // Changing it in Settings should NOT force-navigate the current screen.
+    setActiveTab(safeDefaultOptionsTab)
+    didInitDefaultTabRef.current = true
+  }, [isDefaultTabLoading, safeDefaultOptionsTab])
 
   useEffect(() => {
     if (isDark) {
@@ -220,6 +263,10 @@ export default function OptionsPage() {
         return (
           <ContextMenuSettingsTab
             state={state}
+            activeSubTab={safeActiveContextMenuSubTab}
+            onActiveSubTabChange={(tab) => {
+              void setActiveContextMenuSubTab(tab)
+            }}
             onCommitGlobal={commitGlobalFormats}
             onCommitMenu={async (sortMode) => {
               await commitContextMenuSettings({ sort_mode: sortMode })
@@ -279,6 +326,11 @@ export default function OptionsPage() {
         <SettingsDialog
           isOpen={isSettingsDialogOpen}
           onClose={() => setIsSettingsDialogOpen(false)}
+          defaultOptionsTab={safeDefaultOptionsTab}
+          onChangeDefaultOptionsTab={(tab) => {
+            const nextTab = sanitizeOptionsTab(tab)
+            void setDefaultOptionsTab(nextTab)
+          }}
         />
 
         {isDonateDialogOpen ? (

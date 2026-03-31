@@ -3,14 +3,22 @@ import { useBatchStore } from "@/options/stores/batch-store"
 import { APP_CONFIG } from "@/core/config"
 import { Button } from "@/options/components/ui/button"
 import { Kicker, MutedText, Subheading } from "@/options/components/ui/typography"
-import { ShieldAlert, X } from "lucide-react"
+import { ListTree, ShieldAlert, X } from "lucide-react"
+import { TAB_ITEMS, type OptionsTab } from "@/options/shared"
 
 interface SettingsDialogProps {
   isOpen: boolean
   onClose: () => void
+  defaultOptionsTab: OptionsTab
+  onChangeDefaultOptionsTab: (tab: OptionsTab) => void
 }
 
-export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {      
+export function SettingsDialog({
+  isOpen,
+  onClose,
+  defaultOptionsTab,
+  onChangeDefaultOptionsTab
+}: SettingsDialogProps) {
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
   const skipOomWarning = useBatchStore((state) => state.skipOomWarning)
@@ -22,7 +30,7 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
     (state) => state.setSkipSplicingHeavyPreviewQualityWarning
   )
 
-  const [activeTab, setActiveTab] = useState<"warnings">("warnings")
+  const [activeTab, setActiveTab] = useState<"general" | "warnings">("general")
 
   if (!isOpen) {
     return null
@@ -30,7 +38,7 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl flex overflow-hidden min-h-[500px]">
+      <div className="relative w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl flex overflow-hidden h-[600px] max-h-[calc(100vh-4rem)]">
         
         {/* Sidebar */}
         <div className="w-56 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4 shrink-0">
@@ -38,6 +46,17 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
             <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">Settings</Subheading>
           </div>
           <nav className="flex-1 px-3 space-y-1">
+            <button
+              onClick={() => setActiveTab("general")}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === "general"
+                  ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+              }`}
+            >
+              <ListTree size={16} />
+              General
+            </button>
             <button
               onClick={() => setActiveTab("warnings")}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -64,6 +83,46 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
           </Button>
           
           <div className="flex-1 overflow-y-auto p-8 pt-12">
+            {activeTab === "general" && (
+              <div className="animate-in fade-in duration-300">
+                <div className="mb-8 border-b border-slate-200 dark:border-slate-800 pb-5">
+                  <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-2">General</h2>
+                  <MutedText>Control default behavior when opening the Options page.</MutedText>
+                </div>
+
+                <section className="space-y-4">
+                  <div>
+                    <Kicker className="mb-1">DEFAULT OPEN SCREEN</Kicker>
+                    <MutedText className="text-sm">
+                      Choose which feature tab opens by default when you click the extension and navigate to this page.
+                    </MutedText>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-slate-900 dark:text-slate-100 block mb-2" htmlFor="default-options-tab">
+                      Default feature
+                    </label>
+                    <div className="relative group max-w-md">
+                      <select
+                        id="default-options-tab"
+                        className="w-full appearance-none rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 pr-10 text-sm font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none cursor-pointer"
+                        value={defaultOptionsTab}
+                        onChange={(event) => onChangeDefaultOptionsTab(event.target.value as OptionsTab)}
+                      >
+                        {TAB_ITEMS.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-slate-600 transition-colors">
+                        <ListTree size={18} />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
             
             {activeTab === "warnings" && (
               <div className="animate-in fade-in duration-300">
