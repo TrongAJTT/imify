@@ -57,6 +57,7 @@ export function ColorInspectorCard({ color, palette }: { color: ColorInfo; palet
       title="COLOR"
       icon={<Palette size={13} />}
       badge={palette.length > 0 ? formatToggle : undefined}
+      collapsible={false}
     >
       <div className="space-y-3">
         <div className="divide-y divide-slate-100 dark:divide-slate-700/50">

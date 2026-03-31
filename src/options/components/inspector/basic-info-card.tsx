@@ -13,7 +13,7 @@ interface BasicInfoCardProps {
 export function BasicInfoCard({ basic, dimensions, resolution, time }: BasicInfoCardProps) {
   return (
     <div className="flex flex-col gap-3">
-      <InfoSection title="FILE INFORMATION" icon={<FileImage size={13} />}>
+      <InfoSection title="FILE INFORMATION" icon={<FileImage size={13} />} collapsible={false}>
         <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
           <InfoRow label="File Name" value={basic.fileName} />
           <InfoRow label="Format" value={basic.format} />
@@ -22,7 +22,7 @@ export function BasicInfoCard({ basic, dimensions, resolution, time }: BasicInfo
         </div>
       </InfoSection>
 
-      <InfoSection title="DIMENSIONS" icon={<Ruler size={13} />}>
+      <InfoSection title="DIMENSIONS" icon={<Ruler size={13} />} collapsible={false}>
         <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
           <InfoRow label="Size" value={`${dimensions.width} x ${dimensions.height} px`} />
           <InfoRow label="Megapixels" value={`${dimensions.megapixels} MP`} />
@@ -54,7 +54,7 @@ export function BasicInfoCard({ basic, dimensions, resolution, time }: BasicInfo
         )}
       </InfoSection>
 
-      <InfoSection title="DATE & TIME" icon={<Clock size={13} />}>
+      <InfoSection title="DATE & TIME" icon={<Clock size={13} />} collapsible={false}>
         <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
           <InfoRow label="Last Modified" value={time.lastModified.toLocaleString()} />
           {(time.exifDateTimeOriginal || time.exifDateTime) && (
