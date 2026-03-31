@@ -1,8 +1,7 @@
 import { useCallback, useState } from "react"
 import type { InspectorResult } from "@/features/inspector"
 import { BasicInfoCard } from "./basic-info-card"
-import { ColorInfoCard } from "./color-info-card"
-import { ColorPaletteCard } from "./color-palette-card"
+import { ColorInspectorCard } from "./color-inspector-card"
 import { ExifTableCard } from "./exif-table-card"
 import { GpsCard } from "./gps-card"
 import { PrivacyAlertsCard } from "./privacy-alerts-card"
@@ -63,7 +62,7 @@ export function InspectorWorkspace({ result, bitmap, imageUrl }: InspectorWorksp
           time={result.time}
         />
 
-        <ColorInfoCard color={result.color} />
+        <ColorInspectorCard color={result.color} palette={result.palette} />
       </div>
 
       <div className="flex flex-col gap-3">
@@ -76,8 +75,6 @@ export function InspectorWorkspace({ result, bitmap, imageUrl }: InspectorWorksp
         )}
 
         {result.gps && <GpsCard gps={result.gps} />}
-
-        <ColorPaletteCard palette={result.palette} />
 
         <ExportToolsCard
           bitmap={bitmap}

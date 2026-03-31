@@ -57,8 +57,10 @@ export function BasicInfoCard({ basic, dimensions, resolution, time }: BasicInfo
       <InfoSection title="DATE & TIME" icon={<Clock size={13} />}>
         <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
           <InfoRow label="Last Modified" value={time.lastModified.toLocaleString()} />
+          {(time.exifDateTimeOriginal || time.exifDateTime) && (
+            <InfoRow label="Created (EXIF)" value={time.exifDateTimeOriginal ?? time.exifDateTime ?? ""} />
+          )}
           {time.exifDateTime && <InfoRow label="EXIF DateTime" value={time.exifDateTime} />}
-          {time.exifDateTimeOriginal && <InfoRow label="Date Taken" value={time.exifDateTimeOriginal} />}
           {time.exifDateTimeDigitized && <InfoRow label="Date Digitized" value={time.exifDateTimeDigitized} />}
         </div>
       </InfoSection>

@@ -49,7 +49,7 @@ export function InspectorTab() {
       setBitmap(bmp)
       setImageUrl(url)
 
-      const inspectionResult = await inspectImage(newFile, bmp, buf)
+      const inspectionResult = await inspectImage(newFile, bmp, buf, { paletteCount })
       setResult(inspectionResult)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to analyze image")
@@ -59,7 +59,7 @@ export function InspectorTab() {
     } finally {
       setIsAnalyzing(false)
     }
-  }, [cleanup])
+  }, [cleanup, paletteCount])
 
   const handleClear = useCallback(() => {
     cleanup()
@@ -81,7 +81,7 @@ export function InspectorTab() {
     setIsAnalyzing(true)
     try {
       const buf = await file.arrayBuffer()
-      const inspectionResult = await inspectImage(file, bitmap, buf)
+      const inspectionResult = await inspectImage(file, bitmap, buf, { paletteCount })
       setResult(inspectionResult)
     } catch {
       /* re-analysis failed, keep previous result */

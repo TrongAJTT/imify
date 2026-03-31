@@ -7,7 +7,10 @@ import { detectFormat, computeDimensions, detectPrivacyAlerts } from "./format-u
 export async function inspectImage(
   file: File,
   bitmap: ImageBitmap,
-  arrayBuffer: ArrayBuffer
+  arrayBuffer: ArrayBuffer,
+  options?: {
+    paletteCount?: number
+  }
 ): Promise<InspectorResult> {
   const basic = detectFormat(file)
   const dimensions = computeDimensions(bitmap.width, bitmap.height)
@@ -54,7 +57,7 @@ export async function inspectImage(
 
   const privacyAlerts = detectPrivacyAlerts(exifEntries, gps, parsed?.software ?? null)
 
-  const palette = extractPalette(bitmap, 8)
+  const palette = extractPalette(bitmap, options?.paletteCount ?? 8)
 
   const thumbHash = generateThumbHash(bitmap)
 

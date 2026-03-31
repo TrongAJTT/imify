@@ -15,20 +15,22 @@ export function InfoSection({ title, icon, badge, defaultOpen = true, children }
 
   return (
     <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <button
-        type="button"
-        className="w-full flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-        onClick={() => setOpen(!open)}
-      >
-        <span className="text-slate-400 dark:text-slate-500 flex-shrink-0">
-          {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        </span>
-        {icon && (
-          <span className="text-slate-500 dark:text-slate-400 flex-shrink-0">{icon}</span>
-        )}
-        <Kicker className="flex-1">{title}</Kicker>
-        {badge}
-      </button>
+      <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <button
+          type="button"
+          className="flex items-center gap-2 px-4 py-2.5 flex-1 text-left"
+          onClick={() => setOpen(!open)}
+        >
+          <span className="text-slate-400 dark:text-slate-500 flex-shrink-0">
+            {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </span>
+          {icon && (
+            <span className="text-slate-500 dark:text-slate-400 flex-shrink-0">{icon}</span>
+          )}
+          <Kicker className="flex-1">{title}</Kicker>
+        </button>
+        {badge ? <div className="px-4 py-2.5">{badge}</div> : null}
+      </div>
       {open && (
         <div className="px-4 py-3 bg-white dark:bg-slate-800/30">
           {children}
