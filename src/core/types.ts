@@ -63,9 +63,13 @@ export type MenuSortMode =
   | "name_z_to_a"
   | "name_length_asc"
   | "name_length_desc"
+  | "most_used"
 
 export interface ContextMenuSettings {
   sort_mode: MenuSortMode
+  global_order_ids: string[]
+  pinned_ids: string[]
+  usage_counts: Record<string, number>
 }
 
 export interface ExtensionStorageState {

@@ -1,5 +1,6 @@
 import { PREVIEW_QUALITY_PERCENTS } from "@/options/stores/splicing-store"
-import { LabelText } from "@/options/components/ui/typography"
+import { SelectInput } from "@/options/components/ui/select-input"
+import { MutedText } from "@/options/components/ui/typography"
 
 interface SplicingPreviewSettingsProps {
   previewQualityPercent: number
@@ -20,22 +21,19 @@ export function SplicingPreviewSettings({
         Preview Settings
       </div>
       <div className="grid grid-cols-2 gap-4 items-start">
-        <div className="space-y-1">
-          <LabelText className="text-xs">Preview Image Quality (%)</LabelText>
-          <select
-            value={previewQualityPercent}
-            onChange={(e) => onPreviewQualityChange(Number(e.target.value))}
-            className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all"
-          >
-            {PREVIEW_QUALITY_PERCENTS.map((pct) => (
-              <option key={pct} value={pct}>
-                {pct}%
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+        <div className="space-y-2">
+          <SelectInput
+            label="Preview Image Quality (%)"
+            value={String(previewQualityPercent)}
+            options={PREVIEW_QUALITY_PERCENTS.map((pct) => ({
+              value: String(pct),
+              label: `${pct}%`
+            }))}
+            onChange={(nextValue) => onPreviewQualityChange(Number(nextValue))}
+          />
+          <MutedText className="text-xs">
             The higher the quality, the longer the preview will take to load.
-          </p>
+          </MutedText>
         </div>
         <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 px-3 py-2">
           <label className="flex items-start gap-2 cursor-pointer">

@@ -5,6 +5,7 @@ import { Tooltip } from "@/options/components/tooltip"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { RadioCard } from "@/options/components/ui/radio-card"
+import { SelectInput } from "@/options/components/ui/select-input"
 import { LabelText } from "@/options/components/ui/typography"
 
 const ASPECT_RATIO_OPTIONS = [
@@ -308,14 +309,16 @@ export function SmartResizeModule({
 
       {!hideRatioControls ? (
       <div className="flex items-center gap-2">
-        <label className="min-w-0 flex-1 text-xs font-medium">
-          <LabelText>Ratio</LabelText>
-          <select
-            className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 outline-none transition-all focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+        <div className="min-w-0 flex-1">
+          <SelectInput
+            label="Ratio"
+            value={selectedAspectSelect}
             disabled={disabled}
-            onChange={(event) => {
-              const nextValue = event.target.value
-
+            options={ASPECT_RATIO_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label
+            }))}
+            onChange={(nextValue) => {
               if (nextValue === "free") {
                 setIsRatioLocked(false)
                 setLockedRatio(null)
@@ -352,14 +355,8 @@ export function SmartResizeModule({
               onAspectModeChange("fixed")
               onAspectRatioChange(nextValue)
             }}
-            value={selectedAspectSelect}>
-            {ASPECT_RATIO_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+          />
+        </div>
 
         <button
           type="button"
@@ -372,7 +369,7 @@ export function SmartResizeModule({
             setIsRatioLocked(false)
             setLockedRatio(null)
           }}
-          className="mt-5 inline-flex h-9 items-center gap-1 rounded-md border border-slate-300 px-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
+          className="mt-5 inline-flex h-8 items-center gap-1 rounded-md border border-slate-300 px-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
           title="Reset to original size">
           <RotateCcw size={12} />
           Reset

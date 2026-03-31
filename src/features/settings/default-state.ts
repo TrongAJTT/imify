@@ -39,6 +39,9 @@ export const DEFAULT_STORAGE_STATE: ExtensionStorageState = {
   }, {} as Record<ImageFormat, FormatConfig>),
   custom_formats: [],
   context_menu: {
-    sort_mode: "global_then_custom"
+    sort_mode: "global_then_custom",
+    global_order_ids: GLOBAL_FORMATS.map((format) => `global_${format}`),
+    pinned_ids: [],
+    usage_counts: {}
   }
 }

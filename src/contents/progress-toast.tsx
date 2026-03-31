@@ -3,14 +3,25 @@ import { useEffect, useState } from "react"
 import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
 import type { ConversionProgressPayload } from "@/core/types"
 
-interface RuntimeMessage {
-  type: string
-  payload?: ConversionProgressPayload | DownloadViaAnchorPayload
-}
-
 interface DownloadViaAnchorPayload {
   dataUrl: string
   filename: string
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+function isDownloadViaAnchorMessage(
+  message: unknown
+): message is { type: "IMIFY_DOWNLOAD_VIA_PAGE_ANCHOR"; payload?: DownloadViaAnchorPayload } {
+  return isObject(message) && message.type === "IMIFY_DOWNLOAD_VIA_PAGE_ANCHOR"
+}
+
+function isConvertProgressMessage(
+  message: unknown
+): message is { type: "CONVERT_PROGRESS"; payload: ConversionProgressPayload } {
+  return isObject(message) && message.type === "CONVERT_PROGRESS" && "payload" in message
 }
 
 export default function ProgressToast() {
@@ -20,12 +31,12 @@ export default function ProgressToast() {
     let hideTimer: ReturnType<typeof setTimeout> | null = null
 
     const listener: Parameters<typeof chrome.runtime.onMessage.addListener>[0] = (
-      message: RuntimeMessage,
+      message: unknown,
       _sender,
       sendResponse
     ) => {
-      if (message.type === "IMIFY_DOWNLOAD_VIA_PAGE_ANCHOR") {
-        const payload = message.payload as unknown as DownloadViaAnchorPayload
+      if (isDownloadViaAnchorMessage(message)) {
+        const payload = message.payload as DownloadViaAnchorPayload | undefined
 
         if (!payload?.dataUrl || !payload?.filename) {
           sendResponse({ ok: false })
@@ -50,7 +61,7 @@ export default function ProgressToast() {
         return true
       }
 
-      if (message.type !== "CONVERT_PROGRESS" || !message.payload) {
+      if (!isConvertProgressMessage(message)) {
         return
       }
 

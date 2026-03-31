@@ -46,7 +46,8 @@ function isMenuSortMode(value: unknown): value is MenuSortMode {
     value === "name_a_to_z" ||
     value === "name_z_to_a" ||
     value === "name_length_asc" ||
-    value === "name_length_desc"
+    value === "name_length_desc" ||
+    value === "most_used"
   )
 }
 
@@ -118,7 +119,22 @@ function sanitizeState(state: unknown): ExtensionStorageState {
     context_menu: {
       sort_mode: isMenuSortMode((candidate as ExtensionStorageState).context_menu?.sort_mode)
         ? (candidate as ExtensionStorageState).context_menu.sort_mode
-        : DEFAULT_STORAGE_STATE.context_menu.sort_mode
+        : DEFAULT_STORAGE_STATE.context_menu.sort_mode,
+      global_order_ids: Array.isArray((candidate as ExtensionStorageState).context_menu?.global_order_ids)
+        ? (candidate as ExtensionStorageState).context_menu.global_order_ids.filter((id): id is string => typeof id === "string")
+        : DEFAULT_STORAGE_STATE.context_menu.global_order_ids,
+      pinned_ids: Array.isArray((candidate as ExtensionStorageState).context_menu?.pinned_ids)
+        ? (candidate as ExtensionStorageState).context_menu.pinned_ids.filter((id): id is string => typeof id === "string")
+        : DEFAULT_STORAGE_STATE.context_menu.pinned_ids,
+      usage_counts:
+        (candidate as ExtensionStorageState).context_menu?.usage_counts &&
+        typeof (candidate as ExtensionStorageState).context_menu.usage_counts === "object"
+          ? Object.fromEntries(
+              Object.entries((candidate as ExtensionStorageState).context_menu.usage_counts).filter(
+                ([id, count]) => typeof id === "string" && typeof count === "number" && Number.isFinite(count) && count >= 0
+              )
+            )
+          : DEFAULT_STORAGE_STATE.context_menu.usage_counts
     }
   }
 }
@@ -175,11 +191,13 @@ export async function getStorageState(): Promise<ExtensionStorageState> {
 }
 
 export async function setStorageState(state: ExtensionStorageState): Promise<void> {
+  const payload = {
+    version: STORAGE_VERSION,
+    state: sanitizeState(state)
+  } satisfies PersistedStorageState
+
   await chrome.storage.sync.set({
-    [STORAGE_KEY]: {
-      version: STORAGE_VERSION,
-      state: sanitizeState(state)
-    } satisfies PersistedStorageState
+    [STORAGE_KEY]: JSON.stringify(payload)
   })
 }
 

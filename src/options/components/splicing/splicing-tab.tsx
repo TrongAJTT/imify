@@ -18,7 +18,6 @@ import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-
 import { SplicingWorkspace } from "@/options/components/splicing/splicing-workspace"
 import { SplicingExportDialog, type SplicingExportMode } from "@/options/components/splicing/splicing-export-dialog"
 import { Button } from "@/options/components/ui/button"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { ScrollModeToggle } from "@/options/components/ui/scroll-mode-toggle"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 import {
@@ -676,15 +675,15 @@ export function SplicingTab() {
       }`
     : null
   return (
-    <SurfaceCard>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <Subheading>Image Splicing</Subheading>
-          {dimensionLabel && hasImages && (
-            <MutedText className="text-xs mt-0.5">{dimensionLabel}</MutedText>
-          )}
-        </div>
-        {hasImages && (
+    <div className="p-6">
+      {hasImages ? (
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <Subheading>Image Splicing</Subheading>
+            {dimensionLabel && (
+              <MutedText className="text-xs mt-0.5">{dimensionLabel}</MutedText>
+            )}
+          </div>
           <div className="flex gap-3 items-center">
             <ScrollModeToggle isScrollPan={isScrollPan} onToggle={setIsScrollPan} />
             <Button
@@ -706,8 +705,8 @@ export function SplicingTab() {
               {isExporting ? "Exporting..." : "Export"}
             </Button>
           </div>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       <SplicingWorkspace
         hasImages={hasImages}
@@ -764,6 +763,6 @@ export function SplicingTab() {
         onClose={cancelHeavyPreviewQuality}
         onConfirm={confirmHeavyPreviewQuality}
       />
-    </SurfaceCard>
+    </div>
   )
 }

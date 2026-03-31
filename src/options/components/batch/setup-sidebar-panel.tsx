@@ -6,8 +6,9 @@ import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import { SelectInput } from "@/options/components/ui/select-input"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { Kicker, LabelText } from "@/options/components/ui/typography"
+import { Kicker } from "@/options/components/ui/typography"
 import { ResizeModeSelector } from "@/options/components/resize-mode-selector"
 import { SmartResizeModule } from "@/options/components/smart-resize-module"
 import {
@@ -240,49 +241,43 @@ export function BatchSetupSidebarPanel() {
     <SidebarPanel title="CONFIGURATION" headerActions={panelActions}>
       <div className="space-y-3 mt-1">
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-xs font-medium">
-            <LabelText>Target format</LabelText>
-            <select
-              className="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 outline-none transition-all focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-              disabled={isRunning}
-              onChange={(event) => onTargetFormatChange(event.target.value as BatchTargetFormat)}
-              value={targetFormat}>
-              {TARGET_FORMAT_OPTIONS.map((formatOption) => (
-                <option key={formatOption.value} value={formatOption.value}>
-                  {formatOption.label} (.{formatOption.value})
-                </option>
-              ))}
-            </select>
-          </label>
+          <SelectInput
+            label="Target format"
+            value={targetFormat}
+            disabled={isRunning}
+            options={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
+              value: formatOption.value,
+              label: `${formatOption.label} (.${formatOption.value})`
+            }))}
+            onChange={(nextValue) => onTargetFormatChange(nextValue as BatchTargetFormat)}
+          />
 
-
-          <label className="relative block text-xs font-medium">
-            <LabelText>Concurrency</LabelText>
-            <select
-              className={`mt-1 w-full rounded border bg-white px-2 py-2 text-xs outline-none transition-all focus:ring-2 focus:ring-sky-500/10 dark:bg-slate-800 ${
-                heavyFormatToast
-                  ? "border-amber-500 opacity-100 text-amber-700 ring-2 ring-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] dark:text-amber-400"
-                  : "border-slate-300 text-slate-700 dark:border-slate-600 dark:text-slate-200"
-              }`}
+          <div
+            className={`transition-all ${
+              heavyFormatToast
+                ? "rounded-md border border-amber-500 bg-amber-50/30 dark:bg-amber-900/20 ring-2 ring-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] p-1"
+                : ""
+            }`}
+          >
+            <SelectInput
+              label="Concurrency"
+              value={String(concurrency)}
               disabled={isRunning}
-              onChange={(event) => onConcurrencyChange(Number(event.target.value))}
-              value={concurrency}>
-              {concurrencyOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              options={concurrencyOptions.map((option) => ({
+                value: String(option.value),
+                label: option.label
+              }))}
+              onChange={(nextValue) => onConcurrencyChange(Number(nextValue))}
+            />
+          </div>
         </div>
 
         {!isIcoTarget ? (
-          <div className="space-y-3">
+          <>
             <div className="grid gap-3 sm:grid-cols-2">
               <NumberInput
                 disabled={isRunning || !supportsQuality}
                 label="Quality"
-                className="w-full"
                 min={1}
                 max={100}
                 step={1}
@@ -351,7 +346,7 @@ export function BatchSetupSidebarPanel() {
                 paperSize={paperSize}
               />
             ) : null}
-          </div>
+          </>
         ) : (
           <IcoSizeSelector
             disabled={isRunning}

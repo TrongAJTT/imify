@@ -19,7 +19,6 @@ export function NumberInput({
   step = 1,
   label,
   disabled,
-  className = "",
   ...props
 }: NumberInputProps) {
   const [draft, setDraft] = useState(String(value))
@@ -87,7 +86,7 @@ export function NumberInput({
   }, [isFocused, disabled, value, min, max, step])
 
   return (
-    <div className={`space-y-1 ${className}`}>
+    <div className="space-y-1">
       {label && (
           <LabelText className="text-xs">{label}</LabelText>
       )}

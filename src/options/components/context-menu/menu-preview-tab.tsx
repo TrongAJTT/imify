@@ -1,0 +1,261 @@
+import { ArrowRight, Check, MousePointer2, Pin, PinOff } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+
+import type { ExtensionStorageState, MenuSortMode } from "@/core/types"
+import { getContextMenuLayout } from "@/core/context-menu-order"
+import { LoadingSpinner } from "@/options/components/loading-spinner"
+import { SecondaryButton } from "@/options/components/ui/secondary-button"
+import { SelectInput } from "@/options/components/ui/select-input"
+import { SurfaceCard } from "@/options/components/ui/surface-card"
+import { MutedText, BodyText, LabelText } from "@/options/components/ui/typography"
+import { CONTEXT_MENU_SORT_OPTIONS } from "@/options/shared"
+
+interface ContextMenuTabProps {
+  state: ExtensionStorageState
+  onCommit: (settings: Partial<ExtensionStorageState["context_menu"]>) => Promise<void>
+}
+
+export function MenuPreviewTab({ state, onCommit }: ContextMenuTabProps) {
+  const currentSortMode = state.context_menu?.sort_mode ?? "global_then_custom"
+  const currentPinnedIds = state.context_menu?.pinned_ids ?? []
+  const [draftSortMode, setDraftSortMode] = useState<MenuSortMode>(currentSortMode)
+  const [draftPinnedIds, setDraftPinnedIds] = useState<string[]>(currentPinnedIds)
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    setDraftSortMode(currentSortMode)
+  }, [currentSortMode])
+
+  useEffect(() => {
+    setDraftPinnedIds(currentPinnedIds)
+  }, [currentPinnedIds])
+
+  const hasChanges =
+    draftSortMode !== currentSortMode ||
+    JSON.stringify(draftPinnedIds) !== JSON.stringify(currentPinnedIds)
+
+  const previewState = useMemo<ExtensionStorageState>(() => ({
+    ...state,
+    context_menu: {
+      ...state.context_menu,
+      sort_mode: draftSortMode,
+      pinned_ids: draftPinnedIds
+    }
+  }), [draftPinnedIds, draftSortMode, state])
+
+  const { pinned, free } = useMemo(() => getContextMenuLayout(previewState), [previewState])
+  const nextPreviewItems = [...pinned, ...free]
+
+  const handleTogglePin = (id: string) => {
+    setDraftPinnedIds((previous) => {
+      if (previous.includes(id)) {
+        return previous.filter((itemId) => itemId !== id)
+      }
+      if (previous.length >= 2) {
+        return previous
+      }
+      return [...previous, id]
+    })
+  }
+
+  const handleSave = async () => {
+    if (!hasChanges) {
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      await onCommit({
+        sort_mode: draftSortMode,
+        pinned_ids: draftPinnedIds
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+          {/* Left Column: Menu Preview & Actions */}
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-1 h-5">
+                <LabelText>Menu Preview</LabelText>
+                {hasChanges && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-500/20 text-[10px] font-bold text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 animate-in fade-in zoom-in-95 duration-300">
+                    UNSAVED CHANGES
+                  </span>
+                )}
+              </div>
+
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-800/40 rounded-2xl blur-sm opacity-25 group-hover:opacity-40 transition-opacity" />
+                
+                <div className="relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl min-h-[300px] flex flex-col">
+                  {/* Fake Chrome Menu Window Header */}
+                  <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between rounded-t-xl">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                    </div>
+                    <span className="text-[10px] font-medium text-slate-400">Right Click Menu</span>
+                  </div>
+
+                  {/* Main Menu Items */}
+                  <div className="p-2 space-y-0.5">
+                    <div className="px-3 py-1.5 text-xs text-slate-400 font-medium whitespace-nowrap">Copy image</div>
+                    <div className="px-3 py-1.5 text-xs text-slate-400 font-medium whitespace-nowrap">Save image as...</div>
+                    
+                    <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                    
+                    {/* Imify Context Menu Entry */}
+                    <div className="px-3 py-2 rounded-lg bg-sky-50 dark:bg-sky-500/10 flex items-center justify-between group/item relative">
+                      <span className="text-sm font-bold text-sky-700 dark:text-sky-400 whitespace-nowrap">Save and Convert with Imify</span>
+                      <ArrowRight size={14} className="text-sky-400 shrink-0 ml-2" />
+                      
+                      {/* Nested Submenu Preview */}
+                      <div className="absolute left-full ml-1 -top-2 w-[180px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl p-1.5 z-20 animate-in fade-in zoom-in-95 slide-in-from-left-2 duration-200">
+                        <div className="max-h-[350px] overflow-y-auto custom-scrollbar pr-1">
+                          {nextPreviewItems.length ? (
+                            <>
+                              {pinned.map((item) => (
+                                <div
+                                  key={`pinned_${item.id}`}
+                                  className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-md text-[11px] transition-colors text-slate-500 dark:text-slate-400"
+                                >
+                                  <div className="min-w-0 flex items-center gap-2">
+                                    <Pin size={10} className="text-amber-500 shrink-0" />
+                                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${item.id.startsWith("global_") ? "bg-sky-400" : "bg-purple-400"}`} />
+                                    <span className="truncate">{item.name}</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleTogglePin(item.id)}
+                                    className="p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    aria-label={`Unpin ${item.name}`}
+                                  >
+                                    <Pin size={11} className="text-amber-500 shrink-0" />
+                                  </button>
+                                </div>
+                              ))}
+
+                              {pinned.length > 0 && free.length > 0 && (
+                                <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
+                              )}
+
+                              {free.map((item) => (
+                                <div
+                                  key={`free_${item.id}`}
+                                  className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-md text-[11px] transition-colors text-slate-500 dark:text-slate-400"
+                                >
+                                  <div className="min-w-0 flex items-center gap-2">
+                                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${item.id.startsWith("global_") ? "bg-sky-400" : "bg-purple-400"}`} />
+                                    <span className="truncate">{item.name}</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleTogglePin(item.id)}
+                                    disabled={draftPinnedIds.length >= 2}
+                                    className="p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    aria-label={`Pin ${item.name}`}
+                                  >
+                                    <PinOff size={11} className="text-slate-400 dark:text-slate-500 shrink-0" />
+                                  </button>
+                                </div>
+                              ))}
+                            </>
+                          ) : (
+                            <div className="px-3 py-2 text-xs text-slate-400 italic text-center">Empty</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                    <div className="px-3 py-1.5 text-xs text-slate-400 font-medium whitespace-nowrap">Search image with Google</div>
+                  </div>
+
+                  {/* Menu Footer / Legend */}
+                  <div className="mt-auto p-3 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 rounded-b-xl">
+                    <div className="flex gap-2">
+                       <div className="flex items-center gap-1">
+                         <div className="w-2 h-2 rounded-full bg-sky-400" />
+                         <span className="text-[10px] text-slate-400 font-medium">Default</span>
+                       </div>
+                       <div className="flex items-center gap-1">
+                         <div className="w-2 h-2 rounded-full bg-purple-400" />
+                         <span className="text-[10px] text-slate-400 font-medium">Custom</span>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/5 border border-amber-100 dark:border-amber-500/10">
+              <div className="flex gap-3">
+                <div className="mt-0.5 text-amber-600 dark:text-amber-400">
+                  <MousePointer2 size={16} />
+                </div>
+                <BodyText className="text-amber-800 dark:text-amber-300/90 font-medium">
+                  Changes will be applied immediately to the browser context menu after clicking Save.
+                </BodyText>
+              </div>
+            </div>
+
+            {hasChanges && (
+              <div className="flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <SecondaryButton
+                  onClick={() => {
+                    setDraftSortMode(currentSortMode)
+                    setDraftPinnedIds(currentPinnedIds)
+                  }}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </SecondaryButton>
+                <button
+                  className="group relative inline-flex items-center gap-2 rounded-xl bg-sky-500 px-8 py-3 text-sm font-bold text-white shadow-[0_8px_20px_-6px_rgba(14,165,233,0.5)] hover:bg-sky-600 hover:shadow-sky-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:translate-y-0"
+                  disabled={isSaving}
+                  onClick={handleSave}
+                  type="button">
+                  {isSaving ? (
+                    <>
+                      <LoadingSpinner size={4} className="text-white" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={18} />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Sort Mode Settings */}
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <SelectInput
+                label="Sort Mode"
+                value={draftSortMode}
+                options={CONTEXT_MENU_SORT_OPTIONS.map((option) => ({
+                  value: option.value,
+                  label: option.label
+                }))}
+                onChange={(nextValue) => setDraftSortMode(nextValue as MenuSortMode)}
+              />
+              <MutedText className="text-xs italic">
+                * Tip: Choose "Most used (stable)" to adapt based on usage while preserving muscle memory.
+              </MutedText>
+            </div>
+          </div>
+        </div>
+    </div>
+  )
+}
+

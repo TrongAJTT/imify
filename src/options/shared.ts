@@ -14,36 +14,20 @@ import type { CustomFormatInput } from "@/features/custom-formats"
 
 export { QUALITY_FORMATS }
 
-export type OptionsTab = "single" | "batch" | "splicing" | "diffchecker" | "inspector" | "global" | "custom" | "menu"
+export type OptionsTab = "single" | "batch" | "splicing" | "diffchecker" | "inspector" | "context-menu"
 export interface PersistedStorageState {
   version: number
   state: ExtensionStorageState
 }
 
 export const TAB_ITEMS: Array<{ id: OptionsTab; label: string; description?: string }> = [
-  {
-    id: "single",
-    label: "Single Processor"
-  },
+  { id: "context-menu", label: "Context Menu",
+    description: "Manage global format defaults, custom presets, and right-click menu sort order." },
+  { id: "single", label: "Single Processor" },
   { id: "batch", label: "Batch Processor" },
   { id: "splicing", label: "Image Splicing" },
   { id: "diffchecker", label: "Difference Checker" },
   { id: "inspector", label: "Image Inspector" },
-  { 
-    id: "global", 
-    label: "Global Formats",
-    description: "These settings control the default options shown in right-click image menu."
-  },
-  { 
-    id: "custom", 
-    label: "Custom Formats",
-    description: "Add your own format presets for resize mode, quality, and paper settings."
-  },
-  { 
-    id: "menu", 
-    label: "Context Menu",
-    description: "Configure how formats are ordered in the Save and Convert with Imify right-click menu."
-  },
 ]
 
 export const CONTEXT_MENU_SORT_OPTIONS: Array<{ value: MenuSortMode; label: string }> = [
@@ -52,7 +36,8 @@ export const CONTEXT_MENU_SORT_OPTIONS: Array<{ value: MenuSortMode; label: stri
   { value: "name_a_to_z", label: "By name (A-Z)" },
   { value: "name_z_to_a", label: "By name (Z-A)" },
   { value: "name_length_asc", label: "By name length (short to long)" },
-  { value: "name_length_desc", label: "By name length (long to short)" }
+  { value: "name_length_desc", label: "By name length (long to short)" },
+  { value: "most_used", label: "Most used (stable)" }
 ]
 
 export const RESIZE_MODE_OPTIONS: Array<{ value: ResizeMode; label: string }> = [

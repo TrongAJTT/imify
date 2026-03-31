@@ -6,7 +6,6 @@ import type { InspectorResult } from "@/features/inspector"
 import { useInspectorStore } from "@/options/stores/inspector-store"
 import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import { Button } from "@/options/components/ui/button"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 import { InspectorDropZone } from "./inspector-drop-zone"
 import { InspectorWorkspace } from "./inspector-workspace"
@@ -106,17 +105,17 @@ export function InspectorTab() {
   }, [paletteCount])
 
   return (
-    <SurfaceCard>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <Subheading>Image Inspector</Subheading>
-          {file && result && !isAnalyzing && (
-            <MutedText className="text-xs mt-0.5">
-              {result.basic.format} &middot; {result.dimensions.width} x {result.dimensions.height} &middot; {result.exifEntries.length} metadata tags
-            </MutedText>
-          )}
-        </div>
-        {file && (
+    <div className="p-6">
+      {file ? (
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <Subheading>Image Inspector</Subheading>
+            {result && !isAnalyzing && (
+              <MutedText className="text-xs mt-0.5">
+                {result.basic.format} &middot; {result.dimensions.width} x {result.dimensions.height} &middot; {result.exifEntries.length} metadata tags
+              </MutedText>
+            )}
+          </div>
           <Button
             variant="secondary"
             size="sm"
@@ -126,8 +125,8 @@ export function InspectorTab() {
             <Trash2 size={14} />
             Clear
           </Button>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       {isAnalyzing && (
         <div className="flex flex-col items-center justify-center py-16">
@@ -154,6 +153,6 @@ export function InspectorTab() {
           file={file}
         />
       )}
-    </SurfaceCard>
+    </div>
   )
 }

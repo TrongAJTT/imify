@@ -2,15 +2,28 @@ import { useState } from "react"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { APP_CONFIG } from "@/core/config"
 import { Button } from "@/options/components/ui/button"
+import { SelectInput } from "@/options/components/ui/select-input"
 import { Kicker, MutedText, Subheading } from "@/options/components/ui/typography"
-import { ShieldAlert, X } from "lucide-react"
+import { BarChart3, ListTree, RotateCcw, ShieldAlert, X } from "lucide-react"
+import { TAB_ITEMS, type OptionsTab } from "@/options/shared"
 
 interface SettingsDialogProps {
   isOpen: boolean
   onClose: () => void
+  defaultOptionsTab: OptionsTab
+  onChangeDefaultOptionsTab: (tab: OptionsTab) => void
+  usageEntries: Array<{ id: string; name: string; count: number }>
+  onResetUsageStats: () => void
 }
 
-export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {      
+export function SettingsDialog({
+  isOpen,
+  onClose,
+  defaultOptionsTab,
+  onChangeDefaultOptionsTab,
+  usageEntries,
+  onResetUsageStats
+}: SettingsDialogProps) {
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
   const skipOomWarning = useBatchStore((state) => state.skipOomWarning)
@@ -22,7 +35,7 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
     (state) => state.setSkipSplicingHeavyPreviewQualityWarning
   )
 
-  const [activeTab, setActiveTab] = useState<"warnings">("warnings")
+  const [activeTab, setActiveTab] = useState<"general" | "warnings" | "usage">("general")
 
   if (!isOpen) {
     return null
@@ -30,7 +43,7 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl flex overflow-hidden min-h-[500px]">
+      <div className="relative w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl flex overflow-hidden h-[600px] max-h-[calc(100vh-4rem)]">
         
         {/* Sidebar */}
         <div className="w-56 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4 shrink-0">
@@ -38,6 +51,17 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
             <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">Settings</Subheading>
           </div>
           <nav className="flex-1 px-3 space-y-1">
+            <button
+              onClick={() => setActiveTab("general")}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === "general"
+                  ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+              }`}
+            >
+              <ListTree size={16} />
+              General
+            </button>
             <button
               onClick={() => setActiveTab("warnings")}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -48,6 +72,17 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
             >
               <ShieldAlert size={16} />
               Warnings
+            </button>
+            <button
+              onClick={() => setActiveTab("usage")}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === "usage"
+                  ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+              }`}
+            >
+              <BarChart3 size={16} />
+              Usage Stats
             </button>
           </nav>
         </div>
@@ -64,6 +99,33 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
           </Button>
           
           <div className="flex-1 overflow-y-auto p-8 pt-12">
+            {activeTab === "general" && (
+              <div className="animate-in fade-in duration-300">
+                <div className="mb-8 border-b border-slate-200 dark:border-slate-800 pb-5">
+                  <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-2">General</h2>
+                  <MutedText>Control default behavior when opening the Options page.</MutedText>
+                </div>
+
+                <section className="space-y-4">
+                  <div>
+                    <Kicker className="mb-1">DEFAULT OPEN SCREEN</Kicker>
+                    <MutedText className="text-sm">
+                      Choose which feature tab opens by default when you click the extension and navigate to this page.
+                    </MutedText>
+                  </div>
+
+                  <SelectInput
+                    label="Default feature"
+                    value={defaultOptionsTab}
+                    options={TAB_ITEMS.map((item) => ({
+                      value: item.id,
+                      label: item.label
+                    }))}
+                    onChange={(nextValue) => onChangeDefaultOptionsTab(nextValue as OptionsTab)}
+                  />
+                </section>
+              </div>
+            )}
             
             {activeTab === "warnings" && (
               <div className="animate-in fade-in duration-300">
@@ -157,6 +219,56 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
                         </button>
                       </div>
                     </label>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {activeTab === "usage" && (
+              <div className="animate-in fade-in duration-300">
+                <div className="mb-8 border-b border-slate-200 dark:border-slate-800 pb-5">
+                  <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-2">Usage Stats</h2>
+                  <MutedText>Review how often each format/preset is used in the right-click context menu.</MutedText>
+                </div>
+
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <Kicker className="mb-1">FREQUENCY DATA</Kicker>
+                      <MutedText className="text-sm">
+                        These counters drive the "Most used (stable)" sorting mode.
+                      </MutedText>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      className="rounded-lg border-slate-200 dark:border-slate-700"
+                      onClick={onResetUsageStats}
+                    >
+                      <RotateCcw size={14} />
+                      Reset
+                    </Button>
+                  </div>
+
+                  <div className="overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                    {usageEntries.length ? (
+                      <div className="divide-y divide-slate-200 dark:divide-slate-700">
+                        {usageEntries.map((entry) => (
+                          <div key={entry.id} className="flex items-center justify-between px-4 py-3">
+                            <span className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate pr-3">
+                              {entry.name}
+                            </span>
+                            <span className="text-xs font-semibold rounded-md px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+                              {entry.count}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">
+                        No usage data yet.
+                      </div>
+                    )}
                   </div>
                 </section>
               </div>

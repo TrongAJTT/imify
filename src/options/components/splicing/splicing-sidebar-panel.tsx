@@ -143,7 +143,7 @@ export function SplicingSidebarPanel() {
   const showTinyMode = exportFormat === "png"
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-1">
       {/* Preset + Layout */}
       <SidebarPanel title="PRESET & LAYOUT">
         <div className="space-y-3">

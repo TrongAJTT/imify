@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   DndContext,
   closestCenter,
@@ -17,12 +17,14 @@ import {
 
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig } from "@/core/types"
-import type { CustomFormatInput } from "@/features/custom-formats"
-import { CustomFormatForm } from "@/options/components/custom-format-form"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
-import { Heading, Subheading, BodyText, MutedText, LabelText, Kicker } from "@/options/components/ui/typography"
+import { type CustomFormatInput, validateCustomFormatInput } from "@/features/custom-formats"
+import { CustomFormatForm } from "@/options/components/context-menu/custom-format-form"
+import { createCustomFormatId, normalizeCustomInput } from "@/options/shared"
+import { Heading, Subheading, BodyText, MutedText, LabelText } from "@/options/components/ui/typography"
 import { CheckCircle2, Circle, Edit, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@/options/components/ui/button"
+import { LoadingSpinner } from "@/options/components/loading-spinner"
+import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
 
 interface PendingDelete {
@@ -33,24 +35,14 @@ interface PendingDelete {
 
 export function CustomFormatsTab({
   state,
-  onCreate,
-  onDelete,
-  onRestore,
-  onReorder,
-  onToggle,
-  onToggleAll,
-  onUpdate
+  onCommit
 }: {
   state: ExtensionStorageState
-  onCreate: (input: CustomFormatInput) => Promise<string | null>
-  onDelete: (id: string) => Promise<void>
-  onRestore: (item: FormatConfig, index: number) => Promise<void>
-  onReorder: (draggedId: string, targetId: string) => Promise<void>
-  onToggle: (id: string, enabled: boolean) => Promise<void>
-  onToggleAll: (enabled: boolean) => Promise<void>
-  onUpdate: (id: string, input: CustomFormatInput) => Promise<string | null>
+  onCommit: (customFormats: FormatConfig[]) => Promise<void>
 }) {
+  const [draftFormats, setDraftFormats] = useState<FormatConfig[]>(state.custom_formats)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [createForm, setCreateForm] = useState<CustomFormatInput>({
     name: "",
     format: "jpg",
@@ -100,8 +92,7 @@ export function CustomFormatsTab({
       expiresAt
     })
     setTimeLeftMs(10_000)
-
-    void onDelete(item.id)
+    setDraftFormats((previous) => previous.filter((entry) => entry.id !== item.id))
 
     deleteTimerRef.current = setTimeout(() => {
       setPendingDelete(null)
@@ -119,46 +110,86 @@ export function CustomFormatsTab({
     clearDeleteTimer()
     setPendingDelete(null)
     setTimeLeftMs(0)
+    setDraftFormats((previous) => {
+      if (previous.some((entry) => entry.id === restoreTarget.item.id)) {
+        return previous
+      }
 
-    await onRestore(restoreTarget.item, restoreTarget.index)
+      const next = [...previous]
+      const safeIndex = Math.max(0, Math.min(restoreTarget.index, next.length))
+      next.splice(safeIndex, 0, restoreTarget.item)
+      return next
+    })
   }
 
-  const onDragEnd = async (event: DragEndEvent) => {
+  const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
 
-    if (over && active.id !== over.id) {
-      await onReorder(active.id.toString(), over.id.toString())
-    }
+    if (!over || active.id === over.id) return
+
+    const activeId = active.id.toString()
+    const overId = over.id.toString()
+
+    setDraftFormats((previous) => {
+      const oldIndex = previous.findIndex((entry) => entry.id === activeId)
+      const newIndex = previous.findIndex((entry) => entry.id === overId)
+
+      if (oldIndex < 0 || newIndex < 0) {
+        return previous
+      }
+
+      return arrayMove(previous, oldIndex, newIndex)
+    })
   }
 
   const submitCreate = async () => {
-    setIsCreateDialogOpen(false)
-
-    const error = await onCreate(createForm)
-    setCreateError(error)
-
-    if (!error) {
-      setCreateForm({
-        name: "",
-        format: "jpg",
-        enabled: true,
-        quality: 90,
-        icoOptions: {
-          sizes: [...DEFAULT_ICO_SIZES],
-          generateWebIconKit: false
-        },
-        resize: { mode: "none" }
-      })
-      setCreateError(null)
-    } else {
-      setIsCreateDialogOpen(true)
+    const normalized = normalizeCustomInput(createForm)
+    const validationError = validateCustomFormatInput(normalized)
+    if (validationError) {
+      setCreateError(validationError)
+      return
     }
+
+    const duplicate = draftFormats.some((entry) => entry.name.trim().toLowerCase() === normalized.name.trim().toLowerCase())
+    if (duplicate) {
+      setCreateError("Name already exists")
+      return
+    }
+
+    const nextFormat: FormatConfig = {
+      id: createCustomFormatId(),
+      name: normalized.name.trim(),
+      format: normalized.format,
+      enabled: normalized.enabled,
+      quality: normalized.quality,
+      icoOptions: normalized.icoOptions,
+      resize: normalized.resize
+    }
+
+    setDraftFormats((previous) => [...previous, nextFormat])
+    setCreateForm({
+      name: "",
+      format: "jpg",
+      enabled: true,
+      quality: 90,
+      icoOptions: {
+        sizes: [...DEFAULT_ICO_SIZES],
+        generateWebIconKit: false
+      },
+      resize: { mode: "none" }
+    })
+    setCreateError(null)
+    setIsCreateDialogOpen(false)
   }
 
   const closeCreateDialog = () => {
     setCreateError(null)
     setIsCreateDialogOpen(false)
   }
+
+  useEffect(() => {
+    setDraftFormats(state.custom_formats)
+  }, [state.custom_formats])
 
   useEffect(() => {
     const hasOpenDialog = isCreateDialogOpen || Boolean(editing)
@@ -240,43 +271,89 @@ export function CustomFormatsTab({
     return item.icoOptions?.generateWebIconKit ? `${baseLabel}, Toolkit` : baseLabel
   }
 
-  const allEnabled = state.custom_formats.length > 0 && state.custom_formats.every((f) => f.enabled)
+  const allEnabled = draftFormats.length > 0 && draftFormats.every((f) => f.enabled)
 
-  const handleToggleAll = async () => {
-    await onToggleAll(!allEnabled)
+  const handleToggleAll = () => {
+    const nextEnabled = !allEnabled
+    setDraftFormats((previous) => previous.map((entry) => ({ ...entry, enabled: nextEnabled })))
+  }
+
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(draftFormats) !== JSON.stringify(state.custom_formats)
+  }, [draftFormats, state.custom_formats])
+
+  const handleSave = async () => {
+    if (!hasChanges) {
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      await onCommit(draftFormats)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
-    <SurfaceCard>
-      <div className="flex items-center justify-end gap-3">
-        {state.custom_formats.length > 0 && (
+    <>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <Button
-            onClick={handleToggleAll}
-            variant="outline"
+            onClick={() => setIsCreateDialogOpen(true)}
             size="lg"
-            className="rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all font-bold"
+            className="rounded-xl shadow-lg hover:-translate-y-0.5 transition-all active:translate-y-0"
           >
-            {allEnabled ? (
-              <>
-                <Circle size={18} className="text-slate-400" />
-                Disable All
-              </>
-            ) : (
-              <>
-                <CheckCircle2 size={18} className="text-sky-500" />
-                Enable All
-              </>
-            )}
+            <Plus size={18} />
+            Add New
           </Button>
+
+          {draftFormats.length > 0 && (
+            <Button
+              onClick={handleToggleAll}
+              variant="outline"
+              size="lg"
+              className="rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all font-bold"
+            >
+              {allEnabled ? (
+                <>
+                  <Circle size={18} className="text-slate-400" />
+                  Disable All
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={18} className="text-sky-500" />
+                  Enable All
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+
+        {hasChanges && (
+          <div className="flex items-center gap-3 animate-in fade-in scale-95 duration-200">
+            <SecondaryButton
+              disabled={isSaving}
+              onClick={() => {
+                setDraftFormats(state.custom_formats)
+                setPendingDelete(null)
+                setTimeLeftMs(0)
+                clearDeleteTimer()
+              }}
+            >
+              Cancel
+            </SecondaryButton>
+            <button
+              className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 hover:bg-sky-600 transition-all disabled:opacity-50"
+              disabled={isSaving}
+              onClick={handleSave}
+              type="button"
+            >
+              {isSaving && <LoadingSpinner size={4} className="-ml-1 mr-2 text-white" />}
+              Save changes
+            </button>
+          </div>
         )}
-        <Button
-          onClick={() => setIsCreateDialogOpen(true)}
-          size="lg"
-          className="rounded-xl shadow-lg hover:-translate-y-0.5 transition-all active:translate-y-0"
-        >
-          <Plus size={18} />
-          Add New
-        </Button>
       </div>
 
       {isCreateDialogOpen ? (
@@ -306,9 +383,9 @@ export function CustomFormatsTab({
       ) : null}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={state.custom_formats.map((f) => f.id)} strategy={rectSortingStrategy}>
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
-            {state.custom_formats.map((item, index) => {
+        <SortableContext items={draftFormats.map((f) => f.id)} strategy={rectSortingStrategy}>
+          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+            {draftFormats.map((item, index) => {
               return (
                 <SortableQueueItem key={item.id} id={item.id}>
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-4 transition-all hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-md h-full flex flex-col">
@@ -324,7 +401,13 @@ export function CustomFormatsTab({
                           aria-checked={item.enabled}
                           onClick={(e) => {
                             e.stopPropagation()
-                            void onToggle(item.id, !item.enabled)
+                            setDraftFormats((previous) =>
+                              previous.map((entry) => (
+                                entry.id === item.id
+                                  ? { ...entry, enabled: !item.enabled }
+                                  : entry
+                              ))
+                            )
                           }}
                           className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                             item.enabled ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
@@ -418,7 +501,7 @@ export function CustomFormatsTab({
         </SortableContext>
       </DndContext>
 
-      {state.custom_formats.length === 0 ? (
+      {draftFormats.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/10 py-8 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700">
             <Edit className="h-8 w-8 text-slate-400" />
@@ -454,11 +537,39 @@ export function CustomFormatsTab({
 
                 setEditing(null)
 
-                const error = await onUpdate(current.id, current.form)
+                const normalized = normalizeCustomInput(current.form)
+                const validationError = validateCustomFormatInput(normalized)
 
-                if (error) {
-                  setEditing({ id: current.id, form: current.form, error })
+                if (validationError) {
+                  setEditing({ id: current.id, form: current.form, error: validationError })
+                  return
                 }
+
+                const duplicate = draftFormats.some((entry) =>
+                  entry.id !== current.id &&
+                  entry.name.trim().toLowerCase() === normalized.name.trim().toLowerCase()
+                )
+
+                if (duplicate) {
+                  setEditing({ id: current.id, form: current.form, error: "Name already exists" })
+                  return
+                }
+
+                setDraftFormats((previous) =>
+                  previous.map((entry) =>
+                    entry.id === current.id
+                      ? {
+                          ...entry,
+                          name: normalized.name.trim(),
+                          format: normalized.format,
+                          enabled: normalized.enabled,
+                          quality: normalized.quality,
+                          icoOptions: normalized.icoOptions,
+                          resize: normalized.resize
+                        }
+                      : entry
+                  )
+                )
               }}
               submitLabel="Save changes"
               value={editing.form}
@@ -497,6 +608,6 @@ export function CustomFormatsTab({
           </div>
         </div>
       ) : null}
-    </SurfaceCard>
+    </>
   )
 }

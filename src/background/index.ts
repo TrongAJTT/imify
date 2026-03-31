@@ -2,7 +2,7 @@ import { blobToDownloadDataUrl, toOutputFilename } from "@/core/download-utils"
 import { toUserFacingConversionError } from "@/core/error-utils"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
 import { convertImage } from "@/features/converter"
-import { ensureStorageState, getStorageState, onStorageStateChanged } from "@/features/settings"
+import { ensureStorageState, getStorageState, onStorageStateChanged, patchStorageState } from "@/features/settings"
 import { extractConfigIdFromMenuItem, rebuildContextMenu } from "@/background/context-menu-builder"
 import { convertImageViaOffscreen } from "@/background/offscreen-bridge"
 import { publishConvertProgress } from "@/background/message-hub"
@@ -71,6 +71,23 @@ function replaceFilenameExtension(fileName: string, extension: string): string {
   return `${base}.${extension}`
 }
 
+function trackConfigUsageSilently(configId: string): void {
+  void patchStorageState((current) => {
+    const currentCount = current.context_menu?.usage_counts?.[configId] ?? 0
+
+    return {
+      ...current,
+      context_menu: {
+        ...current.context_menu,
+        usage_counts: {
+          ...(current.context_menu?.usage_counts ?? {}),
+          [configId]: currentCount + 1
+        }
+      }
+    }
+  }).catch(() => {})
+}
+
 async function downloadBlob(
   blob: Blob,
   filename: string,
@@ -127,6 +144,8 @@ async function handleImageMenuClick(
   if (!config || !config.enabled) {
     return
   }
+
+  trackConfigUsageSilently(config.id)
 
   const progressId = `${Date.now()}_${config.id}`
   let fileName = buildOutputFilename(info.srcUrl, config)
