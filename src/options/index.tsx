@@ -48,6 +48,8 @@ import { SettingsDialog } from "./components/settings-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 import { CONTEXT_MENU_SUB_TABS } from "./components/context-menu/context-menu-settings-tab"
+import bmcLogo from "url:assets/images/bmc-logo.svg"
+import githubLogo from "url:assets/images/github-logo.svg"
 
 const syncStorage = new Storage({
   area: "sync",
@@ -400,11 +402,11 @@ export default function OptionsPage() {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <a className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all hover:shadow-md" href="https://github.com/sponsors/TrongAJTT" rel="noreferrer" target="_blank">
-                  <svg className="w-5 h-5 text-pink-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                  <span className="truncate">Sponsor me on Github</span>
+                  <img src={githubLogo} alt="GitHub" className="w-5 h-5 flex-shrink-0 brightness-0 dark:invert" />
+                  <span className="truncate">Sponsor me on GitHub</span>
                 </a>
-                <a className="flex items-center justify-center gap-2 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-900/30 px-3 py-3 text-sm font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all hover:shadow-md h-full" href="https://www.buymeacoffee.com/TrongAJTT" rel="noreferrer" target="_blank">
-                  <svg className="w-5 h-5 text-rose-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M20.2 7c-.4-1.1-1.3-1.8-2.2-2.3C17.1 4.2 16 4 15 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h11c1 0 2.1-.2 3-.7s1.8-1.2 2.2-2.3c.4-1.1.4-2.4 0-3.5 0-.1 0-.1-.1-.2.4-1.1.4-2.4 0-3.5 0-.1-.1-.1-.1-.2-.1.1 0 0 0 0zm-2 7.7c-.1.3-.3.6-.5.8-.2.2-.5.3-.8.4H15v-2h1.9c.3.1.6.2.8.4.2.2.4.5.5.8.1.5.1 1.1 0 1.6zm0-5.4c-.1.3-.3.6-.5.8-.2.2-.5.3-.8.4H15V8.4h1.9c.3.1.6.2.8.4.2.2.4.5.5.8.1.6.1 1.2 0 1.7z"/></svg>
+                <a className="flex items-center justify-center gap-2 rounded-xl border border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-900/30 px-3 py-3 text-sm font-semibold text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-all hover:shadow-md h-full" href="https://www.buymeacoffee.com/TrongAJTT" rel="noreferrer" target="_blank">
+                  <img src={bmcLogo} alt="Buy Me A Coffee" className="w-5 h-5 flex-shrink-0" />
                   <span className="truncate">Buy Me A Coffee</span>
                 </a>
               </div>

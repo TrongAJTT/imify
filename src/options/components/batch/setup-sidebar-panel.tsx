@@ -252,11 +252,13 @@ export function BatchSetupSidebarPanel() {
             onChange={(nextValue) => onTargetFormatChange(nextValue as BatchTargetFormat)}
           />
 
-          <div className={`transition-all ${
-            heavyFormatToast
-              ? "rounded-md border border-amber-500 bg-amber-50/30 dark:bg-amber-900/20 ring-2 ring-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] p-3 -m-3"
-              : ""
-          }`}>
+          <div
+            className={`transition-all ${
+              heavyFormatToast
+                ? "rounded-md border border-amber-500 bg-amber-50/30 dark:bg-amber-900/20 ring-2 ring-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] p-1"
+                : ""
+            }`}
+          >
             <SelectInput
               label="Concurrency"
               value={String(concurrency)}

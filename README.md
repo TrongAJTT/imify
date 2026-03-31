@@ -1,6 +1,6 @@
-# <img src="assets/icon.png" alt="Imify" width="24" height="24" style="vertical-align: middle;"> Imify - Save & Convert Images
+# <img src="assets/icon.png" alt="Imify" width="24" height="24" style="vertical-align: middle;"> Imify - Save & Process Images
 
-> A privacy-first, 100% client-side browser extension that allows users to seamlessly convert, resize, and format images directly from the browser. Built with Manifest V3, it utilizes the browser's native capabilities and WebAssembly (Wasm) to process images locally without ever sending user data to an external server.
+> A privacy-first, 100% client-side browser extension that lets you save, convert, resize, and inspect images directly in your browser — without uploading anything to a server.
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue)](./LICENSE)
 [![React](https://img.shields.io/badge/React-18.2.0-61dafb.svg)](https://reactjs.org/)
@@ -10,7 +10,9 @@
 
 * **100% Client-Side Processing**: Zero server dependencies. Complete data privacy.
 * **Rich Format Support**: Read and convert to `JPG`, `PNG` (including TinyPNG-like quantization), `WebP`, `AVIF`, `JXL` (JPEG XL), `TIFF`, `ICO`, `BMP`, and `PDF`.
-* **Dynamic Context Menu**: Right-click any image on the web to instantly convert and download it using your predefined formats.
+* **Right-Click Context Menu**: Right-click any image on the web to instantly convert and download using your preferred formats and presets.
+  * **Pin to Top**: Pin up to **2** items so your most important actions never move.
+  * **Most Used (Stable) Sorting**: Sort by usage frequency with a stability threshold to avoid constant reshuffling.
 * **Smart Resizing Engine**:
   * Keep original size / Change Width / Change Height / Scale by Percentage (%)
   * **Smart Framing**: Fit (Contain) or Fill (Cover) target dimensions.
@@ -19,15 +21,17 @@
 * **Frictionless Import**: Easily fetch images via remote URLs directly from the UI or via clipboard paste, bypassing strict web CORS limits smoothly.
 * **Custom Presets**: Create, edit, and toggle your own custom conversion formats to appear in the right-click menu.
 * **Real-time Progress**: Non-intrusive sticky toasts inject into the current webpage to show conversion progress for heavy formats (e.g. AVIF, PDF).
+* **Usage Stats**: See how often each format/preset is used and reset stats anytime.
+* **Modern Options UI**: Desktop-like layout with a collapsible navigation sidebar and clearer empty-state drop areas.
 
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="https://cdn.trongajtt.com/apps/imify/your-menu-your-decision.webp" alt="ImifyPreview" style="width:32%;">
-  <img src="https://cdn.trongajtt.com/apps/imify/single-image-processor.webp" alt="ImifyPreview" style="width:32%;">
-  <img src="https://cdn.trongajtt.com/apps/imify/batch-image-processor.webp" alt="ImifyPreview" style="width:32%;">
-  <img src="https://cdn.trongajtt.com/apps/imify/unmatched-format-compatibility.webp" alt="ImifyPreview" style="width:32%;">
-  <img src="https://cdn.trongajtt.com/apps/imify/personalized-default-settings.webp" alt="ImifyPreview" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/context-menu.webp" alt="ImifyPreview" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/image-splicing.webp" alt="ImifyPreview" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/difference-checker.webp" alt="ImifyPreview" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/image-processor.webp" alt="ImifyPreview" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/image-inspector.webp" alt="ImifyPreview" style="width:32%;">
 </div>
 
 ## 📥 Installation

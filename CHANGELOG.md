@@ -5,32 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.5.0] - 2024-04-01
 
 ### Added
-- **Image Inspector:** A comprehensive new workspace for deep image analysis.
-  - Extracts rich metadata (dimensions, EXIF, GPS, color space) with built-in privacy alerts for sensitive data.
-  - Generates custom color palettes with semantic naming and suggests two-color gradients.
-  - Built-in WCAG contrast checker (AAA/AA compliance) for accessibility analysis.
-  - Developer export utilities: CSS/SCSS variables, Tailwind config, `<picture>` tags, and ThumbHash support.
-  - Secure GPS visualization (links to external maps without embedding trackers).
-- **Universal Clipboard Support:** - Paste images directly into any tool (Inspector, Single/Batch Processor, Splicing, Diffchecker) using standard keyboard shortcuts.
-  - Paste image URLs to automatically fetch and import remote images.
-  - Smart import handling prevents accidental overwrites when a workspace is already active.
-- **Image Splicing Tool:**
-  - Interactive preview with zoom, pan, scroll modes, and a numbering overlay.
-  - Advanced configuration including grid statistics, custom layouts (e.g., Bento preset), and keyboard shortcuts.
-  - Robust export system with concurrency, background trimming, and smart file renaming to prevent collisions.
-- **Difference Checker:** - New side-by-side viewer mode with fullscreen toggle.
-  - Added SSIM (Structural Similarity Index) option for highly accurate image comparison.
-- **Global Settings:** Added a new Settings dialog with sidebar navigation to manage warning preferences (e.g., download confirmations, out-of-memory alerts) and batch processing thresholds.
-- Improved tooltips across the entire extension for better visibility and smoother hover interactions.
+- **Context Menu (new unified settings page):**
+  - Global formats, custom presets, and menu preview are now grouped under one “Context Menu” section with top tabs.
+  - Choose how the right‑click menu is sorted, and preview the final menu layout before using it.
+  - Pin up to **2** items to the top of the menu so your “must-have” actions never move.
+  - New “Most Used (Stable)” sort mode that adapts to your habits without constantly reshuffling.
+- **Usage Stats:** View how often each format/preset is used, and reset stats anytime.
+- **Navigation & Layout:**
+  - Collapsible left navigation sidebar (icon-only mode with tooltips).
+  - New “desktop app” layout: full-height workspace, denser spacing, and consistent side panels.
+- **Better empty states:** Standardized drag‑and‑drop cards across tools for clearer “drop files here” guidance.
+- **Settings:** New option to choose which feature opens by default when you open the extension page.
 
 ### Changed
-- **UI Refinements:** Redesigned the Image Splicing sidebar and quality input fields for a cleaner, more condensed look.
-- **Clearer Warnings:** Warning messages now display exact threshold numbers instead of generic alerts.
-- **Single Processor:** Refined the zoom behavior and side-by-side viewer logic for a smoother comparison experience.
-- The "About" dialog now automatically stays synchronized with the exact extension build version.
+- **Context Menu management:** Reordering and enabling/disabling formats/presets is smoother and more consistent, with a clear “Save changes” workflow where needed.
+- **Menus feel more predictable:** Your pinned items stay fixed, while the rest can be sorted without breaking muscle memory.
+- **UI consistency:** Inputs and selectors across dialogs/pages now share a more consistent look and spacing.
+- **Side panels:** Tighter spacing so you can see more controls without scrolling as much.
+
+### Fixed
+- **Context Menu editing:** Fixed cases where “Save changes” could become unresponsive after the first save.
 
 ## [1.0.1] - 2024-03-24
 

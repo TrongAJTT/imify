@@ -59,7 +59,7 @@ export function InspectorSidebarPanel() {
 
       <SidebarPanel title="INFORMATION">
         <MutedText>
-          All analysis is performed 100% locally in your browser. No image data is ever sent to any server.
+        Inspect an image in detail: view file info, extract metadata (EXIF), explore dominant colors, and quickly check for privacy-sensitive fields before sharing. All analysis is performed 100% locally in your browser. No image data is ever sent to any server.
         </MutedText>
       </SidebarPanel>
     </div>

@@ -4,9 +4,9 @@ import { detectBrowser, type SupportedBrowser } from "@/core/browser-detection"
 import { Button } from "@/options/components/ui/button"
 import { BodyText, Subheading, MutedText } from "@/options/components/ui/typography"
 import { useBatchStore } from "@/options/stores/batch-store"
-import chromeDownloadHintImg from "url:assets/img-download-not-ask-chrome.webp"
-import edgeDownloadHintImg from "url:assets/img-download-not-ask-edge.webp"
-import firefoxDownloadHintImg from "url:assets/img-download-not-ask-firefox.webp"
+import chromeDownloadHintImg from "url:assets/images/img-download-not-ask-chrome.webp"
+import edgeDownloadHintImg from "url:assets/images/img-download-not-ask-edge.webp"
+import firefoxDownloadHintImg from "url:assets/images/img-download-not-ask-firefox.webp"
 
 const DOWNLOAD_HINT_IMAGE_BY_BROWSER: Record<SupportedBrowser, string> = {
   chrome: chromeDownloadHintImg,
