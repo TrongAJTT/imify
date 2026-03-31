@@ -8,12 +8,20 @@ interface BasicInfoCardProps {
   dimensions: DimensionInfo
   resolution: ResolutionInfo | null
   time: TimeInfo
+  imageUrl: string
 }
 
-export function BasicInfoCard({ basic, dimensions, resolution, time }: BasicInfoCardProps) {
+export function BasicInfoCard({ basic, dimensions, resolution, time, imageUrl }: BasicInfoCardProps) {
   return (
     <div className="flex flex-col gap-3">
       <InfoSection title="FILE INFORMATION" icon={<FileImage size={13} />} collapsible={false}>
+        <div className="relative flex items-center justify-center mb-3" style={{ maxHeight: 280 }}>
+          <img
+            src={imageUrl}
+            alt={basic.fileName}
+            className="max-w-full max-h-[260px] object-contain rounded"
+          />
+        </div>
         <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
           <InfoRow label="File Name" value={basic.fileName} />
           <InfoRow label="Format" value={basic.format} />

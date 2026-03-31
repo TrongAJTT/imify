@@ -1,8 +1,9 @@
-import { Palette } from "lucide-react"
+import { Copy, Palette } from "lucide-react"
 import type { ColorInfo, PaletteColor, ColorDisplayFormat } from "@/features/inspector"
 import { InfoSection, InfoRow } from "./info-section"
 import { generateCssVariables } from "@/features/inspector"
 import { useInspectorStore } from "@/options/stores/inspector-store"
+import { Tooltip } from "@/options/components/tooltip"
 
 function formatColor(color: PaletteColor, format: ColorDisplayFormat): string {
   switch (format) {
@@ -85,21 +86,23 @@ export function ColorInspectorCard({ color, palette }: { color: ColorInfo; palet
                           <code className="text-xs font-mono text-slate-700 dark:text-slate-200 truncate">
                             {formatted}
                           </code>
-                          <button
-                            type="button"
-                            onClick={async (e) => {
-                              e.stopPropagation()
-                              try {
-                                await navigator.clipboard.writeText(formatted)
-                              } catch {
-                                // ignore
-                              }
-                            }}
-                            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
-                            title={`Copy ${formatted}`}
-                          >
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">COPY</span>
-                          </button>
+                          <Tooltip content={`Copy ${formatted}`}>
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation()
+                                try {
+                                  await navigator.clipboard.writeText(formatted)
+                                } catch {
+                                  // ignore
+                                }
+                              }}
+                              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                              aria-label={`Copy ${formatted}`}
+                            >
+                              <Copy size={12} />
+                            </button>
+                          </Tooltip>
                         </div>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500">{c.percentage}%</span>
                       </div>

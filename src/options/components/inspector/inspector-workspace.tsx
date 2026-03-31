@@ -44,25 +44,13 @@ export function InspectorWorkspace({ result, bitmap, imageUrl }: InspectorWorksp
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="flex flex-col gap-3">
-        {/* Image preview */}
-        <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-800/50">
-          <div className="relative flex items-center justify-center p-3" style={{ maxHeight: 280 }}>
-            <img
-              src={imageUrl}
-              alt={result.basic.fileName}
-              className="max-w-full max-h-[260px] object-contain rounded"
-            />
-          </div>
-        </div>
-
         <BasicInfoCard
           basic={result.basic}
           dimensions={result.dimensions}
           resolution={result.resolution}
           time={result.time}
+          imageUrl={imageUrl}
         />
-
-        <ColorInspectorCard color={result.color} palette={result.palette} />
       </div>
 
       <div className="flex flex-col gap-3">
@@ -75,6 +63,8 @@ export function InspectorWorkspace({ result, bitmap, imageUrl }: InspectorWorksp
         )}
 
         {result.gps && <GpsCard gps={result.gps} />}
+
+        <ColorInspectorCard color={result.color} palette={result.palette} />
 
         <ExportToolsCard
           bitmap={bitmap}
