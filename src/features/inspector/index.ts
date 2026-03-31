@@ -1,4 +1,13 @@
 export { inspectImage } from "./inspect-image"
+export {
+  checkContrast,
+  getColorName,
+  buildTailwindConfig,
+  buildGradientCss,
+  buildScssVariables,
+  getSuggestedGradient
+} from "./color-utils"
+export type { ContrastResult, WcagLevel } from "./color-utils"
 export { extractPalette, generateCssVariables } from "./color-extractor"
 export { generateThumbHash, imageToBase64 } from "./thumbhash"
 export { formatFileSize } from "./format-utils"

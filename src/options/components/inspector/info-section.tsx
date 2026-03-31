@@ -8,6 +8,7 @@ interface InfoSectionProps {
   badge?: ReactNode
   defaultOpen?: boolean
   collapsible?: boolean
+  onOpenChange?: (open: boolean) => void
   children: ReactNode
 }
 
@@ -17,9 +18,16 @@ export function InfoSection({
   badge,
   defaultOpen = true,
   collapsible = true,
+  onOpenChange,
   children
 }: InfoSectionProps) {
   const [open, setOpen] = useState(defaultOpen)
+
+  const toggle = () => {
+    const next = !open
+    setOpen(next)
+    onOpenChange?.(next)
+  }
   const isOpen = collapsible ? open : true
 
   return (
@@ -29,7 +37,7 @@ export function InfoSection({
           <button
             type="button"
             className="flex items-center gap-2 px-4 py-2.5 flex-1 text-left"
-            onClick={() => setOpen(!open)}
+            onClick={toggle}
           >
             <span className="text-slate-400 dark:text-slate-500 flex-shrink-0">
               {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
