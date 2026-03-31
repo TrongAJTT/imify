@@ -1,0 +1,86 @@
+import { useState } from "react"
+import { Globe, Layers, ListTree } from "lucide-react"
+import type { ExtensionStorageState, FormatConfig, ImageFormat, MenuSortMode } from "@/core/types"
+import type { CustomFormatInput } from "@/features/custom-formats"
+import { GlobalFormatsTab } from "@/options/components/context-menu/global-formats-tab"
+import { CustomFormatsTab } from "@/options/components/context-menu/custom-formats-tab"
+import { MenuPreviewTab } from "@/options/components/context-menu/menu-preview-tab"
+
+type ContextMenuSubTab = "global" | "custom" | "preview"
+
+const SUB_TABS: Array<{ id: ContextMenuSubTab; label: string; icon: JSX.Element }> = [
+  { id: "global", label: "Global Formats", icon: <Globe size={16} /> },
+  { id: "custom", label: "Custom Presets", icon: <Layers size={16} /> },
+  { id: "preview", label: "Menu Preview & Sorting", icon: <ListTree size={16} /> }
+]
+
+interface ContextMenuSettingsTabProps {
+  state: ExtensionStorageState
+  onCommitGlobal: (configs: Record<ImageFormat, FormatConfig>) => Promise<void>
+  onCommitMenu: (sortMode: MenuSortMode) => Promise<void>
+  onCreate: (input: CustomFormatInput) => Promise<string | null>
+  onDelete: (id: string) => Promise<void>
+  onReorder: (draggedId: string, targetId: string) => Promise<void>
+  onRestore: (item: FormatConfig, index: number) => Promise<void>
+  onToggle: (id: string, enabled: boolean) => Promise<void>
+  onToggleAll: (enabled: boolean) => Promise<void>
+  onUpdate: (id: string, input: CustomFormatInput) => Promise<string | null>
+}
+
+export function ContextMenuSettingsTab({
+  state,
+  onCommitGlobal,
+  onCommitMenu,
+  onCreate,
+  onDelete,
+  onReorder,
+  onRestore,
+  onToggle,
+  onToggleAll,
+  onUpdate
+}: ContextMenuSettingsTabProps) {
+  const [activeSubTab, setActiveSubTab] = useState<ContextMenuSubTab>("global")
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 p-1 shadow-sm">
+        {SUB_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveSubTab(tab.id)}
+            className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+              activeSubTab === tab.id
+                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+            }`}
+          >
+            <span className="shrink-0">{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeSubTab === "global" && (
+        <GlobalFormatsTab state={state} onCommit={onCommitGlobal} />
+      )}
+
+      {activeSubTab === "custom" && (
+        <CustomFormatsTab
+          state={state}
+          onCreate={onCreate}
+          onDelete={onDelete}
+          onReorder={onReorder}
+          onRestore={onRestore}
+          onToggle={onToggle}
+          onToggleAll={onToggleAll}
+          onUpdate={onUpdate}
+        />
+      )}
+
+      {activeSubTab === "preview" && (
+        <MenuPreviewTab state={state} onCommit={onCommitMenu} />
+      )}
+    </div>
+  )
+}

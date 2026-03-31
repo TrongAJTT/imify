@@ -14,7 +14,7 @@ import type { CustomFormatInput } from "@/features/custom-formats"
 
 export { QUALITY_FORMATS }
 
-export type OptionsTab = "single" | "batch" | "splicing" | "diffchecker" | "inspector" | "global" | "custom" | "menu"
+export type OptionsTab = "single" | "batch" | "splicing" | "diffchecker" | "inspector" | "context-menu"
 export interface PersistedStorageState {
   version: number
   state: ExtensionStorageState
@@ -29,20 +29,10 @@ export const TAB_ITEMS: Array<{ id: OptionsTab; label: string; description?: str
   { id: "splicing", label: "Image Splicing" },
   { id: "diffchecker", label: "Difference Checker" },
   { id: "inspector", label: "Image Inspector" },
-  { 
-    id: "global", 
-    label: "Global Formats",
-    description: "These settings control the default options shown in right-click image menu."
-  },
-  { 
-    id: "custom", 
-    label: "Custom Formats",
-    description: "Add your own format presets for resize mode, quality, and paper settings."
-  },
-  { 
-    id: "menu", 
+  {
+    id: "context-menu",
     label: "Context Menu",
-    description: "Configure how formats are ordered in the Save and Convert with Imify right-click menu."
+    description: "Manage global format defaults, custom presets, and right-click menu sort order."
   },
 ]
 

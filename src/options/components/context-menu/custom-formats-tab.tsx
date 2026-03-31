@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   DndContext,
   closestCenter,
@@ -18,7 +18,7 @@ import {
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig } from "@/core/types"
 import type { CustomFormatInput } from "@/features/custom-formats"
-import { CustomFormatForm } from "@/options/components/custom-format-form"
+import { CustomFormatForm } from "@/options/components/context-menu/custom-format-form"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Heading, Subheading, BodyText, MutedText, LabelText, Kicker } from "@/options/components/ui/typography"
 import { CheckCircle2, Circle, Edit, Plus, Trash2, X } from "lucide-react"

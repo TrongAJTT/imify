@@ -21,9 +21,7 @@ import { DiffcheckerTab } from "@/options/components/diffchecker/diffchecker-tab
 import { DiffcheckerSidebarPanel } from "@/options/components/diffchecker/diffchecker-sidebar-panel"
 import { InspectorTab } from "@/options/components/inspector/inspector-tab"
 import { InspectorSidebarPanel } from "@/options/components/inspector/inspector-sidebar-panel"
-import { ContextMenuTab } from "@/options/components/context-menu-tab"
-import { CustomFormatsTab } from "@/options/components/custom-formats-tab"
-import { GlobalFormatsTab } from "@/options/components/global-formats-tab"
+import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
 import { OptionsHeader } from "@/options/components/options-header"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
 import { TabButton } from "@/options/components/tab-button"
@@ -32,7 +30,7 @@ import { Kicker, MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState,
   TAB_ITEMS, createCustomFormatId, normalizeCustomInput } from "@/options/shared"
 import { useBatchStore } from "@/options/stores/batch-store"
-import { ArrowLeftRight, Globe, Heart, Image, LayoutGrid, Layers, ListTree, ScanSearch, Workflow, X } from "lucide-react"
+import { ArrowLeftRight, Heart, Image, LayoutGrid, ListTree, ScanSearch, Workflow, X } from "lucide-react"
 import { AboutDialog } from "./components/about-dialog"
 import { AttributionDialog } from "./components/attribution-dialog"
 import { SettingsDialog } from "./components/settings-dialog"
@@ -89,9 +87,7 @@ const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
   splicing: <LayoutGrid size={18} />,
   diffchecker: <ArrowLeftRight size={18} />,
   inspector: <ScanSearch size={18} />,
-  menu: <ListTree size={18} />,
-  global: <Globe size={18} />,
-  custom: <Layers size={18} />
+  "context-menu": <ListTree size={18} />
 }
 
 function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorageState {
@@ -117,6 +113,40 @@ function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorage
 function TabInfoPanel({ activeTab }: { activeTab: OptionsTab }) {
   const tab = TAB_ITEMS.find((t) => t.id === activeTab)
   if (!tab?.description) return null
+
+  if (activeTab === "context-menu") {
+    return (
+      <SidebarPanel title="INFORMATION">
+        <div className="space-y-3">
+          <MutedText>{tab.description}</MutedText>
+
+          <div className="space-y-2">
+            <div>
+              <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">Global Formats</div>
+              <MutedText className="text-xs">
+                Enable/disable built-in formats and set default quality / ICO options used across the right-click menu.
+              </MutedText>
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">Custom Presets</div>
+              <MutedText className="text-xs">
+                Create your own presets (resize, quality, paper settings) and reorder them for faster access.
+              </MutedText>
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">Menu Preview & Sorting</div>
+              <MutedText className="text-xs">
+                Choose how entries are sorted and preview how “Save and Convert with Imify” will look in the context menu.
+              </MutedText>
+            </div>
+          </div>
+        </div>
+      </SidebarPanel>
+    )
+  }
+
   return (
     <SidebarPanel title="INFORMATION">
       <MutedText>{tab.description}</MutedText>
@@ -374,25 +404,12 @@ export default function OptionsPage() {
         return (
           <SingleProcessorTab />
         )
-      case "menu":
+      case "context-menu":
         return (
-          <ContextMenuTab
-            onCommit={handleSaveContextMenuSettings}
+          <ContextMenuSettingsTab
             state={state}
-          />
-        )
-      case "global":
-        return (
-          <GlobalFormatsTab
-            onCommit={async (configs) => {
-              await handleSaveGlobalFormats(configs)
-            }}
-            state={state}
-          />
-        )
-      case "custom":
-        return (
-          <CustomFormatsTab
+            onCommitGlobal={handleSaveGlobalFormats}
+            onCommitMenu={handleSaveContextMenuSettings}
             onCreate={handleCreateCustom}
             onDelete={handleDeleteCustom}
             onReorder={handleReorderCustom}
@@ -400,7 +417,6 @@ export default function OptionsPage() {
             onToggle={handleToggleCustom}
             onToggleAll={handleToggleAllCustom}
             onUpdate={handleUpdateCustom}
-            state={state}
           />
         )
       case "batch":
