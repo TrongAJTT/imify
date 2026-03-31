@@ -20,7 +20,7 @@ import { ViewerShell } from "@/options/components/diffchecker/viewer-shell"
 import { ViewerSideBySide } from "@/options/components/diffchecker/viewer-side-by-side"
 import { ViewerSplit } from "@/options/components/diffchecker/viewer-split"
 import { Button } from "@/options/components/ui/button"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
+import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
 import { Heading, MutedText } from "@/options/components/ui/typography"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { ImageUrlImportControl } from "@/options/components/image-url-import-control"
@@ -500,43 +500,29 @@ export function SingleProcessorTab() {
       : "-"
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {!sourceFile ? (
-        <SurfaceCard className="p-4">
-          <div className="relative">
-            <label
-              className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 px-4 py-14 text-center transition-colors group"
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                event.preventDefault()
-                onAppendFiles(event.dataTransfer.files)
-              }}>
-              <input
-                className="hidden"
-                onChange={(event) => onAppendFiles(event.target.files)}
-                type="file"
-              />
-              <div className="bg-white dark:bg-slate-800 rounded-full shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-slate-100 dark:border-slate-700/50 p-4">
-                <ImagePlus size={28} className="text-sky-500/80 dark:text-sky-400" />
-              </div>
-              <Heading className="text-base font-semibold">
-                Drop one image here, click to browse, or paste from clipboard
-              </Heading>
-              <MutedText className="mt-1.5">Single Processor with live preview, debounce, and image URL import</MutedText>
-            </label>
-
-            <div className="absolute top-3 right-3">
+        <div className="p-6">
+          <EmptyDropCard
+            icon={<ImagePlus size={28} className="text-sky-500/80 dark:text-sky-400" />}
+            title="Drop one image here, click to browse, or paste from clipboard"
+            subtitle="Single Processor with live preview, debounce, and image URL import"
+            onDropFiles={onAppendFiles}
+            fileInput={{
+              onInputFiles: onAppendFiles
+            }}
+            topRightSlot={
               <ImageUrlImportControl
                 allowMultiple={false}
                 disabled={isImportingUrl}
                 onProcessUrls={importFromImageUrls}
               />
-            </div>
-          </div>
-        </SurfaceCard>
+            }
+          />
+        </div>
       ) : (
         <>
-          <SurfaceCard className="p-4">
+          <div className="p-4">
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="min-w-0">
@@ -641,9 +627,9 @@ export function SingleProcessorTab() {
               </div>
             ) : null}
           </div>
-          </SurfaceCard>
+          </div>
 
-          <SurfaceCard className="p-4">
+          <div className="p-4">
             <div className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 p-0.5">
@@ -770,7 +756,7 @@ export function SingleProcessorTab() {
                 ) : null}
               </ViewerShell>
             </div>
-          </SurfaceCard>
+          </div>
         </>
       )}
     </div>

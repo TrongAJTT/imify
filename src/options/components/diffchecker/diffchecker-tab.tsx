@@ -10,7 +10,6 @@ import {
 import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
 import { DiffcheckerWorkspace } from "@/options/components/diffchecker/diffchecker-workspace"
 import { Button } from "@/options/components/ui/button"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 
 async function createImageItemWithBitmap(file: File): Promise<{ item: DiffImageItem; bitmap: ImageBitmap }> {
@@ -273,7 +272,7 @@ export function DiffcheckerTab() {
     : null
 
   return (
-    <SurfaceCard>
+    <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <Subheading>Difference Checker</Subheading>
@@ -324,6 +323,6 @@ export function DiffcheckerTab() {
         onZoomChange={setZoom}
         onPanChange={handlePanChange}
       />
-    </SurfaceCard>
+    </div>
   )
 }

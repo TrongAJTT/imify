@@ -10,7 +10,6 @@ import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import { BatchActionBar } from "@/options/components/batch/action-bar"
 import { BatchQueueGrid } from "@/options/components/batch/queue-grid"
 import { BatchSummaryCard } from "@/options/components/batch/summary-card"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { BodyText } from "@/options/components/ui/typography"
 import type { BatchQueueItem } from "@/options/components/batch/types"
 import { BatchUploadDropzone } from "@/options/components/batch/upload-dropzone"
@@ -385,7 +384,7 @@ export function BatchProcessorTab() {
   const canStartBatch = Boolean(effectiveConfig) && !isRunning && queue.length > 0
 
   return (
-    <SurfaceCard>
+    <div className="p-6">
       <BatchActionBar
         canRetryFailed={canRetryFailed}
         canStartBatch={canStartBatch}
@@ -498,6 +497,6 @@ export function BatchProcessorTab() {
           onClose={() => setHeavyFormatToast(null)}
         />
       )}
-    </SurfaceCard>
+    </div>
   )
 }
