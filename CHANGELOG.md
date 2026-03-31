@@ -8,28 +8,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Settings dialog for managing warning dialogs (download confirmation & OOM warnings)
-- Dynamic configuration system for batch processing thresholds
-- Sidebar navigation in Settings dialog for future extensibility
-- Enhanced `Tooltip` component (label highlight + delayed hover, portal-based rendering to avoid clipping)
-- **Image Splicing** (in development, not yet released):
-  - Preview: zoom/pan, scroll mode toggle, value scrubbing for zoom, numbering overlay, preview rebuild progress
-  - Heavy preview quality warning (confirmation + “don’t show again” preference)
-  - Grid statistics, keyboard shortcuts, strip reorder, image direction options, Bento layout preset
-  - Export: concurrency and progress, modes and background trimming, file renaming pattern with collision fallback
-  - Import progress tracking
-- **Diffchecker** (in development, not yet released):
-  - Side-by-side viewer mode, fullscreen toggle and usage guidance
-  - SSIM option for image comparison
-  - `SliderInput` control and compare input handling
-- **Single Processor**: refinements to preview/compare (zoom and side-by-side behavior)
+- **Image Inspector:** A comprehensive new workspace for deep image analysis.
+  - Extracts rich metadata (dimensions, EXIF, GPS, color space) with built-in privacy alerts for sensitive data.
+  - Generates custom color palettes with semantic naming and suggests two-color gradients.
+  - Built-in WCAG contrast checker (AAA/AA compliance) for accessibility analysis.
+  - Developer export utilities: CSS/SCSS variables, Tailwind config, `<picture>` tags, and ThumbHash support.
+  - Secure GPS visualization (links to external maps without embedding trackers).
+- **Universal Clipboard Support:** - Paste images directly into any tool (Inspector, Single/Batch Processor, Splicing, Diffchecker) using standard keyboard shortcuts.
+  - Paste image URLs to automatically fetch and import remote images.
+  - Smart import handling prevents accidental overwrites when a workspace is already active.
+- **Image Splicing Tool:**
+  - Interactive preview with zoom, pan, scroll modes, and a numbering overlay.
+  - Advanced configuration including grid statistics, custom layouts (e.g., Bento preset), and keyboard shortcuts.
+  - Robust export system with concurrency, background trimming, and smart file renaming to prevent collisions.
+- **Difference Checker:** - New side-by-side viewer mode with fullscreen toggle.
+  - Added SSIM (Structural Similarity Index) option for highly accurate image comparison.
+- **Global Settings:** Added a new Settings dialog with sidebar navigation to manage warning preferences (e.g., download confirmations, out-of-memory alerts) and batch processing thresholds.
+- Improved tooltips across the entire extension for better visibility and smoother hover interactions.
 
 ### Changed
-- Updated About dialog to use `package.json` as single source of truth for version info
-- Refactored warning descriptions with concrete numbers (thresholds)
-- Replaced `QualityInput` with `NumberInput` for quality settings
-- Refactored/condensed `SplicingSidebarPanel` layout + option section structure
-- `SingleProcessorTab`: compare/zoom logic and viewer integration
+- **UI Refinements:** Redesigned the Image Splicing sidebar and quality input fields for a cleaner, more condensed look.
+- **Clearer Warnings:** Warning messages now display exact threshold numbers instead of generic alerts.
+- **Single Processor:** Refined the zoom behavior and side-by-side viewer logic for a smoother comparison experience.
+- The "About" dialog now automatically stays synchronized with the exact extension build version.
 
 ## [1.0.1] - 2024-03-24
 
