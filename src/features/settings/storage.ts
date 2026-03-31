@@ -118,7 +118,10 @@ function sanitizeState(state: unknown): ExtensionStorageState {
     context_menu: {
       sort_mode: isMenuSortMode((candidate as ExtensionStorageState).context_menu?.sort_mode)
         ? (candidate as ExtensionStorageState).context_menu.sort_mode
-        : DEFAULT_STORAGE_STATE.context_menu.sort_mode
+        : DEFAULT_STORAGE_STATE.context_menu.sort_mode,
+      global_order_ids: Array.isArray((candidate as ExtensionStorageState).context_menu?.global_order_ids)
+        ? (candidate as ExtensionStorageState).context_menu.global_order_ids.filter((id): id is string => typeof id === "string")
+        : DEFAULT_STORAGE_STATE.context_menu.global_order_ids
     }
   }
 }

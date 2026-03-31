@@ -1,4 +1,21 @@
-﻿import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy
+} from "@dnd-kit/sortable"
+import { CheckCircle2, Circle } from "lucide-react"
+
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
 import { QUALITY_FORMATS } from "@/options/shared"
@@ -7,25 +24,74 @@ import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
 import { Button } from "@/options/components/ui/button"
-import { CheckCircle2, Circle } from "lucide-react"
-import { MutedText, Heading, Subheading, Kicker } from "@/options/components/ui/typography"
+import { BodyText, LabelText, Subheading } from "@/options/components/ui/typography"
+import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
 
-export function GlobalFormatsTab({
-  state,
-  onCommit
-}: {
+interface GlobalFormatsTabProps {
   state: ExtensionStorageState
-  onCommit: (configs: Record<ImageFormat, FormatConfig>) => Promise<void>
-}) {
-  const [draft, setDraft] = useState(() => state.global_formats)
+  onCommit: (configs: Record<ImageFormat, FormatConfig>, globalOrderIds: string[]) => Promise<void>
+}
+
+export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
+  const [draftMap, setDraftMap] = useState(() => state.global_formats)
+  const [draftOrderIds, setDraftOrderIds] = useState<string[]>(() => state.context_menu.global_order_ids)
   const [isSaving, setIsSaving] = useState(false)
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8
+      }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  )
+
   useEffect(() => {
-    setDraft(state.global_formats)
+    setDraftMap(state.global_formats)
   }, [state.global_formats])
 
+  useEffect(() => {
+    setDraftOrderIds(state.context_menu.global_order_ids)
+  }, [state.context_menu.global_order_ids])
+
+  const orderedConfigs = useMemo(() => {
+    const allConfigs = Object.values(draftMap)
+    const byId = new Map(allConfigs.map((config) => [config.id, config]))
+    const used = new Set<string>()
+    const ordered: FormatConfig[] = []
+
+    for (const id of draftOrderIds) {
+      const match = byId.get(id)
+      if (!match || used.has(id)) {
+        continue
+      }
+      used.add(id)
+      ordered.push(match)
+    }
+
+    for (const config of allConfigs) {
+      if (!used.has(config.id)) {
+        ordered.push(config)
+      }
+    }
+
+    return ordered
+  }, [draftMap, draftOrderIds])
+
+  const orderedIds = orderedConfigs.map((config) => config.id)
+
+  const hasChanges = useMemo(() => {
+    const mapChanged = JSON.stringify(draftMap) !== JSON.stringify(state.global_formats)
+    const orderChanged = JSON.stringify(orderedIds) !== JSON.stringify(state.context_menu.global_order_ids)
+    return mapChanged || orderChanged
+  }, [draftMap, orderedIds, state.context_menu.global_order_ids, state.global_formats])
+
+  const allEnabled = orderedConfigs.every((config) => config.enabled)
+
   const toggleFormat = (format: ImageFormat) => {
-    setDraft((previous) => ({
+    setDraftMap((previous) => ({
       ...previous,
       [format]: {
         ...previous[format],
@@ -35,7 +101,7 @@ export function GlobalFormatsTab({
   }
 
   const updateQuality = (format: ImageFormat, quality: number) => {
-    setDraft((previous) => ({
+    setDraftMap((previous) => ({
       ...previous,
       [format]: {
         ...previous[format],
@@ -45,39 +111,56 @@ export function GlobalFormatsTab({
   }
 
   const updateIcoOptions = (updates: Partial<{ sizes: number[]; generateWebIconKit: boolean }>) => {
-    setDraft((previous) => ({
+    setDraftMap((previous) => ({
       ...previous,
       ico: {
         ...previous.ico,
         icoOptions: {
           sizes: updates.sizes ?? previous.ico.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES],
-          generateWebIconKit: updates.generateWebIconKit !== undefined 
-            ? updates.generateWebIconKit 
-            : Boolean(previous.ico.icoOptions?.generateWebIconKit)
+          generateWebIconKit:
+            updates.generateWebIconKit !== undefined
+              ? updates.generateWebIconKit
+              : Boolean(previous.ico.icoOptions?.generateWebIconKit)
         }
       }
     }))
   }
 
-  const configs = Object.values(draft)
-  const hasChanges = configs.some((config) => {
-    const original = state.global_formats[config.format]
-    if (!original) {
-      return true
+  const handleToggleAll = () => {
+    const nextEnabled = !allEnabled
+    setDraftMap((previous) => {
+      const next = { ...previous }
+      for (const key of Object.keys(next) as ImageFormat[]) {
+        next[key] = {
+          ...next[key],
+          enabled: nextEnabled
+        }
+      }
+      return next
+    })
+  }
+
+  const onDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (!over || active.id === over.id) {
+      return
     }
 
-    const qualityDiffers =
-      QUALITY_FORMATS.includes(config.format) &&
-      ((original.quality ?? 90) !== (config.quality ?? 90))
+    const activeId = active.id.toString()
+    const overId = over.id.toString()
 
-    const icoOptionsDiffer =
-      config.format === "ico" &&
-      (JSON.stringify((original.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]).slice().sort((a, b) => a - b)) !==
-        JSON.stringify((config.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]).slice().sort((a, b) => a - b)) ||
-        Boolean(original.icoOptions?.generateWebIconKit) !== Boolean(config.icoOptions?.generateWebIconKit))
+    setDraftOrderIds((previous) => {
+      const oldIndex = previous.indexOf(activeId)
+      const newIndex = previous.indexOf(overId)
 
-    return original.enabled !== config.enabled || qualityDiffers || icoOptionsDiffer
-  })
+      if (oldIndex < 0 || newIndex < 0) {
+        return previous
+      }
+
+      return arrayMove(previous, oldIndex, newIndex)
+    })
+  }
 
   const handleSave = async () => {
     if (!hasChanges) {
@@ -86,32 +169,10 @@ export function GlobalFormatsTab({
 
     setIsSaving(true)
     try {
-      await onCommit(draft)
+      await onCommit(draftMap, orderedIds)
     } finally {
       setIsSaving(false)
     }
-  }
-
-  useEffect(() => {
-    if (!hasChanges) {
-      setIsSaving(false)
-    }
-  }, [hasChanges])
-
-  const allEnabled = configs.every((f) => f.enabled)
-
-  const handleToggleAll = () => {
-    const nextState = !allEnabled
-    setDraft((previous) => {
-      const next = { ...previous }
-      Object.keys(next).forEach((key) => {
-        next[key as ImageFormat] = {
-          ...next[key as ImageFormat],
-          enabled: nextState
-        }
-      })
-      return next
-    })
   }
 
   return (
@@ -132,7 +193,13 @@ export function GlobalFormatsTab({
 
         {hasChanges && (
           <div className="flex items-center gap-3 animate-in fade-in scale-95 duration-200">
-            <SecondaryButton onClick={() => setDraft(state.global_formats)} disabled={isSaving}>
+            <SecondaryButton
+              onClick={() => {
+                setDraftMap(state.global_formats)
+                setDraftOrderIds(state.context_menu.global_order_ids)
+              }}
+              disabled={isSaving}
+            >
               Cancel
             </SecondaryButton>
             <button
@@ -147,54 +214,75 @@ export function GlobalFormatsTab({
           </div>
         )}
       </div>
-      <div className="mt-3 xl:grid xl:grid-cols-2 xl:gap-x-12">
-        {configs.map((config) => {
-          const supportsQuality = QUALITY_FORMATS.includes(config.format)
 
-          return (
-            <div
-              key={config.id}
-              className="py-4 first:pt-2 last:pb-2 border-b last:border-0 border-slate-100 dark:border-slate-700/50">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3">
-                    <Subheading className="text-sm uppercase tracking-wider">
-                      {config.name}
-                    </Subheading>
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${
-                        config.enabled
-                          ? "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400"
-                          : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                      }`}
-                    >
-                      {config.enabled ? "Active" : "Disabled"}
-                    </span>
-                  </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={orderedIds} strategy={rectSortingStrategy}>
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
+            {orderedConfigs.map((config) => {
+              const supportsQuality = QUALITY_FORMATS.includes(config.format)
 
-                  {config.enabled && (supportsQuality || config.format === "ico") && (
-                    <div className="mt-4 ml-2 pl-4 border-l-2 border-slate-100 dark:border-slate-700/50 space-y-4">
-                      {supportsQuality && (
-                        <div className="max-w-xs group">
-                          <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-                            <span className="group-hover:text-sky-500 transition-colors uppercase tracking-tight">Quality</span>
-                            <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded transition-colors group-hover:bg-sky-500 group-hover:text-white">
-                              {config.quality ?? 90}%
-                            </span>
-                          </div>
-                          <input
-                            className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500 transition-all hover:h-2"
-                            max={100}
-                            min={1}
-                            onChange={(event) => updateQuality(config.format, Number(event.target.value))}
-                            type="range"
-                            value={config.quality ?? 90}
-                          />
+              return (
+                <SortableQueueItem key={config.id} id={config.id}>
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-4 transition-all hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-md h-full flex flex-col">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Subheading className="text-sm uppercase tracking-wider">
+                            {config.name}
+                          </Subheading>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${
+                              config.enabled
+                                ? "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400"
+                                : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                            }`}
+                          >
+                            {config.enabled ? "Active" : "Disabled"}
+                          </span>
                         </div>
-                      )}
+                      </div>
 
-                      {config.format === "ico" && (
-                        <div className="max-w-sm">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={config.enabled}
+                        onClick={() => toggleFormat(config.format)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${
+                          config.enabled ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
+                        }`}
+                      >
+                        <span className="sr-only">Toggle format</span>
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                            config.enabled ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {config.enabled && (supportsQuality || config.format === "ico") ? (
+                      <div className="mt-4 space-y-4 flex-1">
+                        {supportsQuality && (
+                          <div className="group">
+                            <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                              <span className="group-hover:text-sky-500 transition-colors uppercase tracking-tight">Quality</span>
+                              <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded transition-colors group-hover:bg-sky-500 group-hover:text-white">
+                                {config.quality ?? 90}%
+                              </span>
+                            </div>
+                            <input
+                              className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500 transition-all hover:h-2"
+                              max={100}
+                              min={1}
+                              onChange={(event) => updateQuality(config.format, Number(event.target.value))}
+                              type="range"
+                              value={config.quality ?? 90}
+                            />
+                          </div>
+                        )}
+
+                        {config.format === "ico" && (
                           <IcoSizeSelector
                             disabled={false}
                             generateWebIconKit={Boolean(config.icoOptions?.generateWebIconKit)}
@@ -204,7 +292,6 @@ export function GlobalFormatsTab({
                               const next = exists
                                 ? current.filter((entry) => entry !== size)
                                 : [...current, size].sort((a, b) => a - b)
-
                               updateIcoOptions({ sizes: next.length ? next : [16] })
                             }}
                             onToggleWebKit={(checked) => {
@@ -213,36 +300,19 @@ export function GlobalFormatsTab({
                             sizes={config.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]}
                             title="ICO output size"
                           />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-4 flex-1" />
+                    )}
 
-                <div className="flex items-center gap-3 shrink-0 justify-end">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={config.enabled}
-                    onClick={() => toggleFormat(config.format)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${
-                      config.enabled ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
-                    }`}
-                  >
-                    <span className="sr-only">Toggle format</span>
-                    <span
-                      aria-hidden="true"
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                        config.enabled ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+                  </div>
+                </SortableQueueItem>
+              )
+            })}
+          </div>
+        </SortableContext>
+      </DndContext>
     </SurfaceCard>
   )
 }

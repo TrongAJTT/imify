@@ -1,11 +1,41 @@
 import type { ExtensionStorageState, FormatConfig, MenuSortMode } from "@/core/types"
 
-function enabledConfigs(state: ExtensionStorageState): FormatConfig[] {
-  return [...Object.values(state.global_formats), ...state.custom_formats].filter((config) => config.enabled)
-}
-
 function compareByName(a: FormatConfig, b: FormatConfig): number {
   return a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+}
+
+function orderGlobalConfigs(state: ExtensionStorageState): FormatConfig[] {
+  const allGlobal = Object.values(state.global_formats)
+  const byId = new Map(allGlobal.map((config) => [config.id, config]))
+  const orderedFromSettings = state.context_menu?.global_order_ids ?? []
+  const used = new Set<string>()
+  const ordered: FormatConfig[] = []
+
+  for (const id of orderedFromSettings) {
+    const match = byId.get(id)
+    if (!match || used.has(id)) {
+      continue
+    }
+
+    used.add(id)
+    ordered.push(match)
+  }
+
+  for (const config of allGlobal) {
+    if (!used.has(config.id)) {
+      ordered.push(config)
+    }
+  }
+
+  return ordered
+}
+
+function enabledGlobalConfigs(state: ExtensionStorageState): FormatConfig[] {
+  return orderGlobalConfigs(state).filter((config) => config.enabled)
+}
+
+function enabledCustomConfigs(state: ExtensionStorageState): FormatConfig[] {
+  return state.custom_formats.filter((config) => config.enabled)
 }
 
 export function sortContextMenuConfigs(configs: FormatConfig[], mode: MenuSortMode): FormatConfig[] {
@@ -50,5 +80,16 @@ export function sortContextMenuConfigs(configs: FormatConfig[], mode: MenuSortMo
 
 export function getOrderedContextMenuConfigs(state: ExtensionStorageState): FormatConfig[] {
   const mode = state.context_menu?.sort_mode ?? "global_then_custom"
-  return sortContextMenuConfigs(enabledConfigs(state), mode)
+  const globals = enabledGlobalConfigs(state)
+  const customs = enabledCustomConfigs(state)
+
+  if (mode === "global_then_custom") {
+    return [...globals, ...customs]
+  }
+
+  if (mode === "custom_then_global") {
+    return [...customs, ...globals]
+  }
+
+  return sortContextMenuConfigs([...globals, ...customs], mode)
 }

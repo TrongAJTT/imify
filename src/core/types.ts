@@ -66,6 +66,7 @@ export type MenuSortMode =
 
 export interface ContextMenuSettings {
   sort_mode: MenuSortMode
+  global_order_ids: string[]
 }
 
 export interface ExtensionStorageState {

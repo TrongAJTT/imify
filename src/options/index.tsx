@@ -5,13 +5,12 @@ import { useMemo, useState, useEffect } from "react"
 import { Button } from "@/options/components/ui/button"
 
 import { toUserFacingConversionError } from "@/core/error-utils"
-import { type ExtensionStorageState, type FormatConfig, type ImageFormat,
+import { type ExtensionStorageState,
   STORAGE_KEY, STORAGE_VERSION } from "@/core/types"
 import { convertImageWithWorker } from "@/features/converter/conversion-worker-pool"
 import { OFFSCREEN_CONVERT_REQUEST,
   type OffscreenConvertRequest, type OffscreenConvertResponse } from "@/background/offscreen-types"
 import { CUSTOM_FORMATS } from "@/core/format-config"
-import { type CustomFormatInput, validateCustomFormatInput } from "@/features/custom-formats"
 import { DEFAULT_STORAGE_STATE } from "@/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
@@ -28,8 +27,9 @@ import { TabButton } from "@/options/components/tab-button"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker, MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState,
-  TAB_ITEMS, createCustomFormatId, normalizeCustomInput } from "@/options/shared"
+  TAB_ITEMS } from "@/options/shared"
 import { useBatchStore } from "@/options/stores/batch-store"
+import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
 import { ArrowLeftRight, Heart, Image, LayoutGrid, ListTree, ScanSearch, Workflow, X } from "lucide-react"
 import { AboutDialog } from "./components/about-dialog"
 import { AttributionDialog } from "./components/attribution-dialog"
@@ -105,7 +105,10 @@ function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorage
     global_formats: mergedGlobalFormats,
     custom_formats: customFormats,
     context_menu: {
-      sort_mode: state.context_menu?.sort_mode ?? DEFAULT_STORAGE_STATE.context_menu.sort_mode
+      sort_mode: state.context_menu?.sort_mode ?? DEFAULT_STORAGE_STATE.context_menu.sort_mode,
+      global_order_ids: Array.isArray(state.context_menu?.global_order_ids)
+        ? state.context_menu.global_order_ids
+        : DEFAULT_STORAGE_STATE.context_menu.global_order_ids
     }
   }
 }
@@ -124,14 +127,14 @@ function TabInfoPanel({ activeTab }: { activeTab: OptionsTab }) {
             <div>
               <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">Global Formats</div>
               <MutedText className="text-xs">
-                Enable/disable built-in formats and set default quality / ICO options used across the right-click menu.
+                Enable/disable built-in formats, tweak default quality / ICO options, and reorder their positions in the right-click menu.
               </MutedText>
             </div>
 
             <div>
               <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">Custom Presets</div>
               <MutedText className="text-xs">
-                Create your own presets (resize, quality, paper settings) and reorder them for faster access.
+                Create your own presets (resize, quality, paper settings) and reorder them for faster access in the context menu.
               </MutedText>
             </div>
 
@@ -201,202 +204,11 @@ export default function OptionsPage() {
   }, isAboutDialogOpen || isAttributionDialogOpen || isDonateDialogOpen || isSettingsDialogOpen)
 
   const state = normalizeExtensionState(persistedState?.state ?? DEFAULT_STORAGE_STATE)
-
-  const updateState = async (
-    updater: (current: ExtensionStorageState) => ExtensionStorageState
-  ): Promise<void> => {
-    let nextState: ExtensionStorageState | null = null
-
-    await setPersistedState((current) => {
-      const sourceState = current?.state && typeof current.state === "object"
-        ? normalizeExtensionState(current.state)
-        : DEFAULT_STORAGE_STATE
-
-      nextState = updater(sourceState)
-
-      return {
-        version: STORAGE_VERSION,
-        state: nextState
-      }
-    })
-
-    if (!nextState) {
-      return
-    }
-
-    try {
-      await chrome.runtime.sendMessage({
-        type: "IMIFY_STATE_UPDATED",
-        payload: nextState
-      })
-    } catch {
-      // Background might be spinning up. Storage listener/lifecycle handlers still provide fallback.
-    }
-  }
-
-  const handleSaveGlobalFormats = async (configs: Record<ImageFormat, FormatConfig>) => {
-    await updateState((current) => ({
-      ...current,
-      global_formats: configs
-    }))
-  }
-
-  const handleSaveContextMenuSettings = async (sortMode: ExtensionStorageState["context_menu"]["sort_mode"]) => {
-    await updateState((current) => ({
-      ...current,
-      context_menu: {
-        sort_mode: sortMode
-      }
-    }))
-  }
-
-  const isDuplicateCustomName = (name: string, excludeId?: string): boolean => {
-    const normalizedName = name.trim().toLowerCase()
-
-    return state.custom_formats.some((entry) => {
-      if (excludeId && entry.id === excludeId) {
-        return false
-      }
-
-      return entry.name.trim().toLowerCase() === normalizedName
-    })
-  }
-
-  const handleCreateCustom = async (input: CustomFormatInput): Promise<string | null> => {
-    const normalized = normalizeCustomInput(input)
-    const error = validateCustomFormatInput(normalized)
-
-    if (error) {
-      return error
-    }
-
-    if (isDuplicateCustomName(normalized.name)) {
-      return "Name already exists"
-    }
-
-    const nextFormat: FormatConfig = {
-      id: createCustomFormatId(),
-      name: normalized.name.trim(),
-      format: normalized.format,
-      enabled: normalized.enabled,
-      quality: normalized.quality,
-      icoOptions: normalized.icoOptions,
-      resize: normalized.resize
-    }
-
-    await updateState((current) => ({
-      ...current,
-      custom_formats: [...current.custom_formats, nextFormat]
-    }))
-
-    return null
-  }
-
-  const handleUpdateCustom = async (id: string, input: CustomFormatInput): Promise<string | null> => {
-    const normalized = normalizeCustomInput(input)
-    const error = validateCustomFormatInput(normalized)
-
-    if (error) {
-      return error
-    }
-
-    if (isDuplicateCustomName(normalized.name, id)) {
-      return "Name already exists"
-    }
-
-    await updateState((current) => ({
-      ...current,
-      custom_formats: current.custom_formats.map((entry) =>
-        entry.id === id
-          ? {
-              ...entry,
-              name: normalized.name.trim(),
-              format: normalized.format,
-              enabled: normalized.enabled,
-              quality: normalized.quality,
-              icoOptions: normalized.icoOptions,
-              resize: normalized.resize
-            }
-          : entry
-      )
-    }))
-
-    return null
-  }
-
-  const handleDeleteCustom = async (id: string): Promise<void> => {
-    await updateState((current) => ({
-      ...current,
-      custom_formats: current.custom_formats.filter((entry) => entry.id !== id)
-    }))
-  }
-
-  const handleRestoreCustom = async (entry: FormatConfig, index: number): Promise<void> => {
-    await updateState((current) => {
-      const alreadyExists = current.custom_formats.some((item) => item.id === entry.id)
-
-      if (alreadyExists) {
-        return current
-      }
-
-      const next = [...current.custom_formats]
-      const safeIndex = Math.max(0, Math.min(index, next.length))
-      next.splice(safeIndex, 0, entry)
-
-      return {
-        ...current,
-        custom_formats: next
-      }
-    })
-  }
-
-  const handleToggleCustom = async (id: string, enabled: boolean): Promise<void> => {
-    await updateState((current) => ({
-      ...current,
-      custom_formats: current.custom_formats.map((entry) =>
-        entry.id === id
-          ? {
-              ...entry,
-              enabled
-            }
-          : entry
-      )
-    }))
-  }
-
-  const handleToggleAllCustom = async (enabled: boolean): Promise<void> => {
-    await updateState((current) => ({
-      ...current,
-      custom_formats: current.custom_formats.map((entry) => ({
-        ...entry,
-        enabled
-      }))
-    }))
-  }
-
-  const handleReorderCustom = async (draggedId: string, targetId: string): Promise<void> => {
-    if (draggedId === targetId) {
-      return
-    }
-
-    await updateState((current) => {
-      const sourceIndex = current.custom_formats.findIndex((entry) => entry.id === draggedId)
-      const targetIndex = current.custom_formats.findIndex((entry) => entry.id === targetId)
-
-      if (sourceIndex < 0 || targetIndex < 0) {
-        return current
-      }
-
-      const next = [...current.custom_formats]
-      const [moved] = next.splice(sourceIndex, 1)
-      next.splice(targetIndex, 0, moved)
-
-      return {
-        ...current,
-        custom_formats: next
-      }
-    })
-  }
+  const {
+    commitContextMenuSettings,
+    commitCustomFormats,
+    commitGlobalFormats
+  } = useContextMenuStateActions(setPersistedState)
 
   const tabContent = useMemo(() => {
     switch (activeTab) {
@@ -408,15 +220,11 @@ export default function OptionsPage() {
         return (
           <ContextMenuSettingsTab
             state={state}
-            onCommitGlobal={handleSaveGlobalFormats}
-            onCommitMenu={handleSaveContextMenuSettings}
-            onCreate={handleCreateCustom}
-            onDelete={handleDeleteCustom}
-            onReorder={handleReorderCustom}
-            onRestore={handleRestoreCustom}
-            onToggle={handleToggleCustom}
-            onToggleAll={handleToggleAllCustom}
-            onUpdate={handleUpdateCustom}
+            onCommitGlobal={commitGlobalFormats}
+            onCommitMenu={async (sortMode) => {
+              await commitContextMenuSettings({ sort_mode: sortMode })
+            }}
+            onCommitCustom={commitCustomFormats}
           />
         )
       case "batch":
@@ -440,6 +248,9 @@ export default function OptionsPage() {
     }
   }, [
     activeTab,
+    commitContextMenuSettings,
+    commitCustomFormats,
+    commitGlobalFormats,
     state
   ])
 

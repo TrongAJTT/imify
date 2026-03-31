@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { Globe, Layers, ListTree } from "lucide-react"
 import type { ExtensionStorageState, FormatConfig, ImageFormat, MenuSortMode } from "@/core/types"
-import type { CustomFormatInput } from "@/features/custom-formats"
 import { GlobalFormatsTab } from "@/options/components/context-menu/global-formats-tab"
 import { CustomFormatsTab } from "@/options/components/context-menu/custom-formats-tab"
 import { MenuPreviewTab } from "@/options/components/context-menu/menu-preview-tab"
@@ -16,28 +15,16 @@ const SUB_TABS: Array<{ id: ContextMenuSubTab; label: string; icon: JSX.Element 
 
 interface ContextMenuSettingsTabProps {
   state: ExtensionStorageState
-  onCommitGlobal: (configs: Record<ImageFormat, FormatConfig>) => Promise<void>
+  onCommitGlobal: (configs: Record<ImageFormat, FormatConfig>, globalOrderIds: string[]) => Promise<void>
   onCommitMenu: (sortMode: MenuSortMode) => Promise<void>
-  onCreate: (input: CustomFormatInput) => Promise<string | null>
-  onDelete: (id: string) => Promise<void>
-  onReorder: (draggedId: string, targetId: string) => Promise<void>
-  onRestore: (item: FormatConfig, index: number) => Promise<void>
-  onToggle: (id: string, enabled: boolean) => Promise<void>
-  onToggleAll: (enabled: boolean) => Promise<void>
-  onUpdate: (id: string, input: CustomFormatInput) => Promise<string | null>
+  onCommitCustom: (customFormats: FormatConfig[]) => Promise<void>
 }
 
 export function ContextMenuSettingsTab({
   state,
   onCommitGlobal,
   onCommitMenu,
-  onCreate,
-  onDelete,
-  onReorder,
-  onRestore,
-  onToggle,
-  onToggleAll,
-  onUpdate
+  onCommitCustom
 }: ContextMenuSettingsTabProps) {
   const [activeSubTab, setActiveSubTab] = useState<ContextMenuSubTab>("global")
 
@@ -68,13 +55,7 @@ export function ContextMenuSettingsTab({
       {activeSubTab === "custom" && (
         <CustomFormatsTab
           state={state}
-          onCreate={onCreate}
-          onDelete={onDelete}
-          onReorder={onReorder}
-          onRestore={onRestore}
-          onToggle={onToggle}
-          onToggleAll={onToggleAll}
-          onUpdate={onUpdate}
+          onCommit={onCommitCustom}
         />
       )}
 
