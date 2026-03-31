@@ -1,5 +1,5 @@
 import { Globe, Layers, ListTree } from "lucide-react"
-import type { ExtensionStorageState, FormatConfig, ImageFormat, MenuSortMode } from "@/core/types"
+import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
 import { GlobalFormatsTab } from "@/options/components/context-menu/global-formats-tab"
 import { CustomFormatsTab } from "@/options/components/context-menu/custom-formats-tab"
 import { MenuPreviewTab } from "@/options/components/context-menu/menu-preview-tab"
@@ -17,7 +17,7 @@ interface ContextMenuSettingsTabProps {
   activeSubTab: ContextMenuSubTab
   onActiveSubTabChange: (tab: ContextMenuSubTab) => void
   onCommitGlobal: (configs: Record<ImageFormat, FormatConfig>, globalOrderIds: string[]) => Promise<void>
-  onCommitMenu: (sortMode: MenuSortMode) => Promise<void>
+  onCommitMenu: (settings: Partial<ExtensionStorageState["context_menu"]>) => Promise<void>
   onCommitCustom: (customFormats: FormatConfig[]) => Promise<void>
 }
 

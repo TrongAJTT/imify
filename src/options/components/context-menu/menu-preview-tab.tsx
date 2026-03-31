@@ -1,34 +1,61 @@
-import { ArrowRight, Check, History, Layout, MousePointer2 } from "lucide-react"
+import { ArrowRight, Check, Layout, MousePointer2, Pin, PinOff } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 import type { ExtensionStorageState, MenuSortMode } from "@/core/types"
-import { getOrderedContextMenuConfigs, sortContextMenuConfigs } from "@/core/context-menu-order"
+import { getContextMenuLayout } from "@/core/context-menu-order"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
-import { MutedText, LabelText, Kicker, BodyText } from "@/options/components/ui/typography"
+import { MutedText, LabelText, BodyText } from "@/options/components/ui/typography"
 import { CONTEXT_MENU_SORT_OPTIONS } from "@/options/shared"
 
 interface ContextMenuTabProps {
   state: ExtensionStorageState
-  onCommit: (sortMode: MenuSortMode) => Promise<void>
+  onCommit: (settings: Partial<ExtensionStorageState["context_menu"]>) => Promise<void>
 }
 
 export function MenuPreviewTab({ state, onCommit }: ContextMenuTabProps) {
   const currentSortMode = state.context_menu?.sort_mode ?? "global_then_custom"
+  const currentPinnedIds = state.context_menu?.pinned_ids ?? []
   const [draftSortMode, setDraftSortMode] = useState<MenuSortMode>(currentSortMode)
+  const [draftPinnedIds, setDraftPinnedIds] = useState<string[]>(currentPinnedIds)
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     setDraftSortMode(currentSortMode)
   }, [currentSortMode])
 
-  const hasChanges = draftSortMode !== currentSortMode
-  const currentPreviewItems = useMemo(() => getOrderedContextMenuConfigs(state), [state])
-  const nextPreviewItems = useMemo(
-    () => sortContextMenuConfigs(currentPreviewItems, draftSortMode),
-    [currentPreviewItems, draftSortMode]
-  )
+  useEffect(() => {
+    setDraftPinnedIds(currentPinnedIds)
+  }, [currentPinnedIds])
+
+  const hasChanges =
+    draftSortMode !== currentSortMode ||
+    JSON.stringify(draftPinnedIds) !== JSON.stringify(currentPinnedIds)
+
+  const previewState = useMemo<ExtensionStorageState>(() => ({
+    ...state,
+    context_menu: {
+      ...state.context_menu,
+      sort_mode: draftSortMode,
+      pinned_ids: draftPinnedIds
+    }
+  }), [draftPinnedIds, draftSortMode, state])
+
+  const { pinned, free } = useMemo(() => getContextMenuLayout(previewState), [previewState])
+  const nextPreviewItems = [...pinned, ...free]
+
+  const handleTogglePin = (id: string) => {
+    setDraftPinnedIds((previous) => {
+      if (previous.includes(id)) {
+        return previous.filter((itemId) => itemId !== id)
+      }
+      if (previous.length >= 2) {
+        return previous
+      }
+      return [...previous, id]
+    })
+  }
 
   const handleSave = async () => {
     if (!hasChanges) {
@@ -37,7 +64,10 @@ export function MenuPreviewTab({ state, onCommit }: ContextMenuTabProps) {
 
     setIsSaving(true)
     try {
-      await onCommit(draftSortMode)
+      await onCommit({
+        sort_mode: draftSortMode,
+        pinned_ids: draftPinnedIds
+      })
     } finally {
       setIsSaving(false)
     }
@@ -89,15 +119,53 @@ export function MenuPreviewTab({ state, onCommit }: ContextMenuTabProps) {
                       <div className="absolute left-full ml-1 -top-2 w-[180px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl p-1.5 z-20 animate-in fade-in zoom-in-95 slide-in-from-left-2 duration-200">
                         <div className="max-h-[350px] overflow-y-auto custom-scrollbar pr-1">
                           {nextPreviewItems.length ? (
-                            nextPreviewItems.map((item, idx) => (
-                              <div 
-                                key={`next_${item.id}`} 
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px] transition-colors text-slate-500 dark:text-slate-400`}
-                              >
-                                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${item.id.startsWith("global_") ? "bg-sky-400" : "bg-purple-400"}`} />
-                                <span className="truncate">{item.name}</span>
-                              </div>
-                            ))
+                            <>
+                              {pinned.map((item) => (
+                                <div
+                                  key={`pinned_${item.id}`}
+                                  className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-md text-[11px] transition-colors text-slate-500 dark:text-slate-400"
+                                >
+                                  <div className="min-w-0 flex items-center gap-2">
+                                    <Pin size={10} className="text-amber-500 shrink-0" />
+                                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${item.id.startsWith("global_") ? "bg-sky-400" : "bg-purple-400"}`} />
+                                    <span className="truncate">{item.name}</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleTogglePin(item.id)}
+                                    className="p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    aria-label={`Unpin ${item.name}`}
+                                  >
+                                    <Pin size={11} className="text-amber-500 shrink-0" />
+                                  </button>
+                                </div>
+                              ))}
+
+                              {pinned.length > 0 && free.length > 0 && (
+                                <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
+                              )}
+
+                              {free.map((item) => (
+                                <div
+                                  key={`free_${item.id}`}
+                                  className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-md text-[11px] transition-colors text-slate-500 dark:text-slate-400"
+                                >
+                                  <div className="min-w-0 flex items-center gap-2">
+                                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${item.id.startsWith("global_") ? "bg-sky-400" : "bg-purple-400"}`} />
+                                    <span className="truncate">{item.name}</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleTogglePin(item.id)}
+                                    disabled={draftPinnedIds.length >= 2}
+                                    className="p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    aria-label={`Pin ${item.name}`}
+                                  >
+                                    <PinOff size={11} className="text-slate-400 dark:text-slate-500 shrink-0" />
+                                  </button>
+                                </div>
+                              ))}
+                            </>
                           ) : (
                             <div className="px-3 py-2 text-xs text-slate-400 italic text-center">Empty</div>
                           )}
@@ -139,7 +207,13 @@ export function MenuPreviewTab({ state, onCommit }: ContextMenuTabProps) {
 
             {hasChanges && (
               <div className="flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <SecondaryButton onClick={() => setDraftSortMode(currentSortMode)} disabled={isSaving}>
+                <SecondaryButton
+                  onClick={() => {
+                    setDraftSortMode(currentSortMode)
+                    setDraftPinnedIds(currentPinnedIds)
+                  }}
+                  disabled={isSaving}
+                >
                   Cancel
                 </SecondaryButton>
                 <button
@@ -186,7 +260,7 @@ export function MenuPreviewTab({ state, onCommit }: ContextMenuTabProps) {
                 </div>
               </div>
               <MutedText className="mt-2 text-xs italic">
-                * Pro tip: Choose "Custom formats first" if you frequently use your own presets.
+                * Tip: Choose "Most used (stable)" to adapt based on usage while preserving muscle memory.
               </MutedText>
             </div>
           </div>

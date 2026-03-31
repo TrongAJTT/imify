@@ -1,8 +1,9 @@
-import { getOrderedContextMenuConfigs } from "@/core/context-menu-order"
+import { getContextMenuLayout } from "@/core/context-menu-order"
 import type { ExtensionStorageState } from "@/core/types"
 
 export const MENU_ROOT_ID = "imify_convert_root"
 export const MENU_ITEM_PREFIX = "imify_format_"
+const MENU_PINNED_SEPARATOR_ID = "imify_pinned_separator"
 
 let pendingRebuildState: ExtensionStorageState | null = null
 let rebuildQueue: Promise<void> = Promise.resolve()
@@ -40,7 +41,8 @@ function createContextMenuItem(options: chrome.contextMenus.CreateProperties): P
 async function rebuildContextMenuNow(state: ExtensionStorageState): Promise<void> {
   await removeAllContextMenus()
 
-  const enabledConfigs = getOrderedContextMenuConfigs(state)
+  const { pinned, free } = getContextMenuLayout(state)
+  const enabledConfigs = [...pinned, ...free]
 
   if (enabledConfigs.length === 0) {
     return
@@ -52,7 +54,25 @@ async function rebuildContextMenuNow(state: ExtensionStorageState): Promise<void
     contexts: ["image"]
   })
 
-  for (const config of enabledConfigs) {
+  for (const config of pinned) {
+    await createContextMenuItem({
+      id: toMenuItemId(config.id),
+      parentId: MENU_ROOT_ID,
+      title: config.name,
+      contexts: ["image"]
+    })
+  }
+
+  if (pinned.length > 0 && free.length > 0) {
+    await createContextMenuItem({
+      id: MENU_PINNED_SEPARATOR_ID,
+      parentId: MENU_ROOT_ID,
+      type: "separator",
+      contexts: ["image"]
+    })
+  }
+
+  for (const config of free) {
     await createContextMenuItem({
       id: toMenuItemId(config.id),
       parentId: MENU_ROOT_ID,

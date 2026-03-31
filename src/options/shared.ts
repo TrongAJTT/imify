@@ -36,7 +36,8 @@ export const CONTEXT_MENU_SORT_OPTIONS: Array<{ value: MenuSortMode; label: stri
   { value: "name_a_to_z", label: "By name (A-Z)" },
   { value: "name_z_to_a", label: "By name (Z-A)" },
   { value: "name_length_asc", label: "By name length (short to long)" },
-  { value: "name_length_desc", label: "By name length (long to short)" }
+  { value: "name_length_desc", label: "By name length (long to short)" },
+  { value: "most_used", label: "Most used (stable)" }
 ]
 
 export const RESIZE_MODE_OPTIONS: Array<{ value: ResizeMode; label: string }> = [

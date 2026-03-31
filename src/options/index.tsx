@@ -36,7 +36,24 @@ import { SettingsDialog } from "./components/settings-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 
-const syncStorage = new Storage({ area: "sync" })
+const syncStorage = new Storage({
+  area: "sync",
+  serde: {
+    serializer: (value) => JSON.stringify(value),
+    deserializer: (value) => {
+      if (typeof value !== "string") {
+        return value
+      }
+
+      try {
+        return JSON.parse(value)
+      } catch {
+        // Backward compatibility for previously non-JSON string values.
+        return value
+      }
+    }
+  }
+})
 const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
   version: STORAGE_VERSION,
   state: DEFAULT_STORAGE_STATE
@@ -125,7 +142,14 @@ function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorage
       sort_mode: state.context_menu?.sort_mode ?? DEFAULT_STORAGE_STATE.context_menu.sort_mode,
       global_order_ids: Array.isArray(state.context_menu?.global_order_ids)
         ? state.context_menu.global_order_ids
-        : DEFAULT_STORAGE_STATE.context_menu.global_order_ids
+        : DEFAULT_STORAGE_STATE.context_menu.global_order_ids,
+      pinned_ids: Array.isArray(state.context_menu?.pinned_ids)
+        ? state.context_menu.pinned_ids
+        : DEFAULT_STORAGE_STATE.context_menu.pinned_ids,
+      usage_counts:
+        state.context_menu?.usage_counts && typeof state.context_menu.usage_counts === "object"
+          ? state.context_menu.usage_counts
+          : DEFAULT_STORAGE_STATE.context_menu.usage_counts
     }
   }
 }
@@ -252,6 +276,18 @@ export default function OptionsPage() {
     commitCustomFormats,
     commitGlobalFormats
   } = useContextMenuStateActions(setPersistedState)
+  const usageEntries = useMemo(() => {
+    const usageCounts = state.context_menu?.usage_counts ?? {}
+    const configs = [...Object.values(state.global_formats), ...state.custom_formats]
+
+    return configs
+      .map((config) => ({
+        id: config.id,
+        name: config.name,
+        count: usageCounts[config.id] ?? 0
+      }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, undefined, { sensitivity: "base" }))
+  }, [state.context_menu, state.custom_formats, state.global_formats])
 
   const tabContent = useMemo(() => {
     switch (activeTab) {
@@ -268,9 +304,7 @@ export default function OptionsPage() {
               void setActiveContextMenuSubTab(tab)
             }}
             onCommitGlobal={commitGlobalFormats}
-            onCommitMenu={async (sortMode) => {
-              await commitContextMenuSettings({ sort_mode: sortMode })
-            }}
+            onCommitMenu={commitContextMenuSettings}
             onCommitCustom={commitCustomFormats}
           />
         )
@@ -330,6 +364,10 @@ export default function OptionsPage() {
           onChangeDefaultOptionsTab={(tab) => {
             const nextTab = sanitizeOptionsTab(tab)
             void setDefaultOptionsTab(nextTab)
+          }}
+          usageEntries={usageEntries}
+          onResetUsageStats={() => {
+            void commitContextMenuSettings({ usage_counts: {} })
           }}
         />
 

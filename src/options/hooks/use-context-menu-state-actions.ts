@@ -32,14 +32,14 @@ export function useContextMenuStateActions(setPersistedState: PersistedStateSett
       return
     }
 
-    try {
-      await chrome.runtime.sendMessage({
+    // Fire-and-forget: in some extension lifecycles `sendMessage()` may not resolve
+    // if the background isn't ready to respond. Storage listeners still provide fallback.
+    void chrome.runtime
+      .sendMessage({
         type: "IMIFY_STATE_UPDATED",
         payload: nextState
       })
-    } catch {
-      // Background might be spinning up. Storage listener/lifecycle handlers still provide fallback.
-    }
+      .catch(() => {})
   }, [setPersistedState])
 
   const commitGlobalFormats = useCallback(async (
