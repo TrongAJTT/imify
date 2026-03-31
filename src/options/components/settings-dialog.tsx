@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { APP_CONFIG } from "@/core/config"
 import { Button } from "@/options/components/ui/button"
+import { SelectInput } from "@/options/components/ui/select-input"
 import { Kicker, MutedText, Subheading } from "@/options/components/ui/typography"
 import { BarChart3, ListTree, RotateCcw, ShieldAlert, X } from "lucide-react"
 import { TAB_ITEMS, type OptionsTab } from "@/options/shared"
@@ -113,28 +114,15 @@ export function SettingsDialog({
                     </MutedText>
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-slate-900 dark:text-slate-100 block mb-2" htmlFor="default-options-tab">
-                      Default feature
-                    </label>
-                    <div className="relative group max-w-md">
-                      <select
-                        id="default-options-tab"
-                        className="w-full appearance-none rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 pr-10 text-sm font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none cursor-pointer"
-                        value={defaultOptionsTab}
-                        onChange={(event) => onChangeDefaultOptionsTab(event.target.value as OptionsTab)}
-                      >
-                        {TAB_ITEMS.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-slate-600 transition-colors">
-                        <ListTree size={18} />
-                      </div>
-                    </div>
-                  </div>
+                  <SelectInput
+                    label="Default feature"
+                    value={defaultOptionsTab}
+                    options={TAB_ITEMS.map((item) => ({
+                      value: item.id,
+                      label: item.label
+                    }))}
+                    onChange={(nextValue) => onChangeDefaultOptionsTab(nextValue as OptionsTab)}
+                  />
                 </section>
               </div>
             )}

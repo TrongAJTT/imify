@@ -7,6 +7,8 @@ import { PaperConfig } from "@/options/components/paper-config"
 import { ResizeModeSelector } from "@/options/components/resize-mode-selector"
 import { SmartResizeModule } from "@/options/components/smart-resize-module"
 import { NumberInput } from "@/options/components/ui/number-input"
+import { TextInput } from "@/options/components/ui/text-input"
+import { SelectInput } from "@/options/components/ui/select-input"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { Button } from "@/options/components/ui/button"
 import { BodyText } from "@/options/components/ui/typography"
@@ -58,30 +60,31 @@ export function CustomFormatForm({
       <div className="flex flex-col md:flex-row gap-5 items-stretch relative">
         {/* Left Column */}
         <div className="flex-1 space-y-4 w-full">
-          <label className="block text-sm text-slate-700 dark:text-slate-200">
-            Name
-            <input
-              className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
-              onChange={(event) => onChange({ ...value, name: event.target.value })}
-              placeholder="e.g. My Custom JPG"
-              value={value.name}
-            />
-          </label>
+          <TextInput
+            label="Name"
+            placeholder="e.g. My Custom JPG"
+            value={value.name}
+            onChange={(next) => onChange({ ...value, name: next })}
+          />
 
-          <div className="flex gap-4 items-start">
-            <label className="flex-1 text-sm text-slate-700 dark:text-slate-200">
-              Format
-              <select
-                className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all h-[38px]"
-                onChange={(event) =>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <SelectInput
+                label="Format"
+                value={value.format}
+                options={CUSTOM_FORMATS.map((format) => ({
+                  value: format,
+                  label: FORMAT_LABELS[format]
+                }))}
+                onChange={(nextFormat) =>
                   onChange({
                     ...value,
-                    format: event.target.value as ImageFormat,
-                    quality: QUALITY_FORMATS.includes(event.target.value as ImageFormat)
+                    format: nextFormat as ImageFormat,
+                    quality: QUALITY_FORMATS.includes(nextFormat as ImageFormat)
                       ? value.quality ?? 90
                       : value.quality,
                     icoOptions:
-                      event.target.value === "ico"
+                      nextFormat === "ico"
                         ? value.icoOptions ?? {
                             sizes: [...DEFAULT_ICO_SIZES],
                             generateWebIconKit: false
@@ -93,19 +96,12 @@ export function CustomFormatForm({
                         : value.resize
                   })
                 }
-                value={value.format}>
-                {CUSTOM_FORMATS.map((format) => (
-                  <option key={format} value={format}>
-                    {FORMAT_LABELS[format]}
-                  </option>
-                ))}
-              </select>
-            </label>
+              />
+            </div>
 
             <div className={`flex-1 transition-opacity duration-300 ${!canSetQuality ? "opacity-30 grayscale pointer-events-none" : ""}`}>
               <NumberInput
                 label="Quality"
-                className="w-full"
                 min={1}
                 max={100}
                 step={1}
@@ -122,7 +118,7 @@ export function CustomFormatForm({
         {/* Right Column */}
         <div className="flex-1 w-full">
           {!isIcoFormat ? (
-            <div className="animate-in fade-in slide-in-from-right-1 duration-200 h-full space-y-1.5">
+            <div className="animate-in fade-in slide-in-from-right-1 duration-200 h-full space-y-4">
               <ResizeModeSelector
                 disabled={false}
                 value={value.resize.mode}

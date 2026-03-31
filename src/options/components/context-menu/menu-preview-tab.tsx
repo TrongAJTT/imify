@@ -1,12 +1,13 @@
-import { ArrowRight, Check, Layout, MousePointer2, Pin, PinOff } from "lucide-react"
+import { ArrowRight, Check, MousePointer2, Pin, PinOff } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 import type { ExtensionStorageState, MenuSortMode } from "@/core/types"
 import { getContextMenuLayout } from "@/core/context-menu-order"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
+import { SelectInput } from "@/options/components/ui/select-input"
 import { SurfaceCard } from "@/options/components/ui/surface-card"
-import { MutedText, LabelText, BodyText } from "@/options/components/ui/typography"
+import { MutedText, BodyText, LabelText } from "@/options/components/ui/typography"
 import { CONTEXT_MENU_SORT_OPTIONS } from "@/options/shared"
 
 interface ContextMenuTabProps {
@@ -239,27 +240,17 @@ export function MenuPreviewTab({ state, onCommit }: ContextMenuTabProps) {
 
           {/* Right Column: Sort Mode Settings */}
           <div className="space-y-6">
-            <div>
-              <LabelText className="mb-3" htmlFor="context-sort-mode">
-                Sort Mode
-              </LabelText>
-              <div className="relative group">
-                <select
-                  id="context-sort-mode"
-                  className="w-full appearance-none rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 pr-10 text-sm font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none cursor-pointer"
-                  value={draftSortMode}
-                  onChange={(event) => setDraftSortMode(event.target.value as MenuSortMode)}>
-                  {CONTEXT_MENU_SORT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-slate-600 transition-colors">
-                  <Layout size={18} />
-                </div>
-              </div>
-              <MutedText className="mt-2 text-xs italic">
+            <div className="space-y-2">
+              <SelectInput
+                label="Sort Mode"
+                value={draftSortMode}
+                options={CONTEXT_MENU_SORT_OPTIONS.map((option) => ({
+                  value: option.value,
+                  label: option.label
+                }))}
+                onChange={(nextValue) => setDraftSortMode(nextValue as MenuSortMode)}
+              />
+              <MutedText className="text-xs italic">
                 * Tip: Choose "Most used (stable)" to adapt based on usage while preserving muscle memory.
               </MutedText>
             </div>
