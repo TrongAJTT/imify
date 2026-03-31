@@ -5,15 +5,16 @@ import { ColorInspectorCard } from "./color-inspector-card"
 import { ExifTableCard } from "./exif-table-card"
 import { GpsCard } from "./gps-card"
 import { PrivacyAlertsCard } from "./privacy-alerts-card"
-import { ExportToolsCard } from "./export-tools-card"
+import { DeveloperActionsCard } from "./developer-actions-card"
 
 interface InspectorWorkspaceProps {
   result: InspectorResult
   bitmap: ImageBitmap
   imageUrl: string
+  file: File
 }
 
-export function InspectorWorkspace({ result, bitmap, imageUrl }: InspectorWorkspaceProps) {
+export function InspectorWorkspace({ result, bitmap, imageUrl, file }: InspectorWorkspaceProps) {
   const [isNuking, setIsNuking] = useState(false)
 
   const handleNukeExif = useCallback(async () => {
@@ -51,6 +52,15 @@ export function InspectorWorkspace({ result, bitmap, imageUrl }: InspectorWorksp
           time={result.time}
           imageUrl={imageUrl}
         />
+
+        <DeveloperActionsCard
+          bitmap={bitmap}
+          mimeType={result.basic.mimeType}
+          thumbHash={result.thumbHash}
+          result={result}
+          palette={result.palette}
+          file={file}
+        />
       </div>
 
       <div className="flex flex-col gap-3">
@@ -65,12 +75,6 @@ export function InspectorWorkspace({ result, bitmap, imageUrl }: InspectorWorksp
         {result.gps && <GpsCard gps={result.gps} />}
 
         <ColorInspectorCard color={result.color} palette={result.palette} />
-
-        <ExportToolsCard
-          bitmap={bitmap}
-          mimeType={result.basic.mimeType}
-          thumbHash={result.thumbHash}
-        />
 
         <ExifTableCard entries={result.exifEntries} />
       </div>

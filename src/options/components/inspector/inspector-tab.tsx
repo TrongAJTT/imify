@@ -137,11 +137,12 @@ export function InspectorTab() {
         <InspectorDropZone onLoadFile={handleLoadFile} />
       )}
 
-      {result && bitmap && imageUrl && !isAnalyzing && (
+      {result && bitmap && imageUrl && file && !isAnalyzing && (
         <InspectorWorkspace
           result={result}
           bitmap={bitmap}
           imageUrl={imageUrl}
+          file={file}
         />
       )}
     </SurfaceCard>
