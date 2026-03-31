@@ -297,7 +297,7 @@ export function CustomFormatsTab({
   }
 
   return (
-    <SurfaceCard>
+    <>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Button
@@ -609,6 +609,6 @@ export function CustomFormatsTab({
           </div>
         </div>
       ) : null}
-    </SurfaceCard>
+    </>
   )
 }

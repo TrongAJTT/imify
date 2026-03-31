@@ -189,7 +189,7 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
   }
 
   return (
-    <SurfaceCard tone="soft">
+    <>
       <div className="pb-4 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
         <Button
           onClick={handleToggleAll}
@@ -328,7 +328,7 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
           </div>
         </SortableContext>
       </DndContext>
-    </SurfaceCard>
+    </>
   )
 }
 

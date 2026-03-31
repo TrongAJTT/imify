@@ -6,16 +6,15 @@ import { MenuPreviewTab } from "@/options/components/context-menu/menu-preview-t
 
 export type ContextMenuSubTab = "global" | "custom" | "preview"
 
-const SUB_TABS: Array<{ id: ContextMenuSubTab; label: string; icon: JSX.Element }> = [
-  { id: "global", label: "Global Formats", icon: <Globe size={16} /> },
-  { id: "custom", label: "Custom Presets", icon: <Layers size={16} /> },
-  { id: "preview", label: "Menu Preview & Sorting", icon: <ListTree size={16} /> }
+export const CONTEXT_MENU_SUB_TABS: Array<{ id: ContextMenuSubTab; label: string; icon: JSX.Element }> = [
+  { id: "global", label: "Global Formats", icon: <Globe size={15} /> },
+  { id: "custom", label: "Custom Presets", icon: <Layers size={15} /> },
+  { id: "preview", label: "Menu Preview & Sorting", icon: <ListTree size={15} /> }
 ]
 
 interface ContextMenuSettingsTabProps {
   state: ExtensionStorageState
   activeSubTab: ContextMenuSubTab
-  onActiveSubTabChange: (tab: ContextMenuSubTab) => void
   onCommitGlobal: (configs: Record<ImageFormat, FormatConfig>, globalOrderIds: string[]) => Promise<void>
   onCommitMenu: (settings: Partial<ExtensionStorageState["context_menu"]>) => Promise<void>
   onCommitCustom: (customFormats: FormatConfig[]) => Promise<void>
@@ -24,40 +23,18 @@ interface ContextMenuSettingsTabProps {
 export function ContextMenuSettingsTab({
   state,
   activeSubTab,
-  onActiveSubTabChange,
   onCommitGlobal,
   onCommitMenu,
   onCommitCustom
 }: ContextMenuSettingsTabProps) {
   return (
-    <div className="space-y-4">
-      <div className="flex gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 p-1 shadow-sm">
-        {SUB_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onActiveSubTabChange(tab.id)}
-            className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-              activeSubTab === tab.id
-                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-            }`}
-          >
-            <span className="shrink-0">{tab.icon}</span>
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
+    <div className="p-6">
       {activeSubTab === "global" && (
         <GlobalFormatsTab state={state} onCommit={onCommitGlobal} />
       )}
 
       {activeSubTab === "custom" && (
-        <CustomFormatsTab
-          state={state}
-          onCommit={onCommitCustom}
-        />
+        <CustomFormatsTab state={state} onCommit={onCommitCustom} />
       )}
 
       {activeSubTab === "preview" && (

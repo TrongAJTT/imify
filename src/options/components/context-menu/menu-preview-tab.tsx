@@ -76,8 +76,7 @@ export function MenuPreviewTab({ state, onCommit }: ContextMenuTabProps) {
 
   return (
     <div className="space-y-6">
-      <SurfaceCard tone="soft">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           {/* Left Column: Menu Preview & Actions */}
           <div className="space-y-6">
             <div className="space-y-3">
@@ -256,7 +255,6 @@ export function MenuPreviewTab({ state, onCommit }: ContextMenuTabProps) {
             </div>
           </div>
         </div>
-      </SurfaceCard>
     </div>
   )
 }
