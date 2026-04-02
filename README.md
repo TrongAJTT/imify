@@ -2,6 +2,7 @@
 
 > A privacy-first, 100% client-side browser extension that lets you save, convert, resize, and inspect images directly in your browser — without uploading anything to a server.
 
+![version](https://img.shields.io/github/release/trongajtt/imify?color=green)
 [![License](https://img.shields.io/badge/license-Apache%202-blue)](./LICENSE)
 [![React](https://img.shields.io/badge/React-18.2.0-61dafb.svg)](https://reactjs.org/)
 [![Plasmo](https://img.shields.io/badge/Plasmo-Framework-blue?logo=plasmo)](https://www.plasmo.com/)
@@ -36,12 +37,16 @@
 
 ## 📥 Installation
 
-Imify is officially available on the Firefox Add-ons Store. Links to the Chrome Web Store and Microsoft Edge Add-ons store will be updated as soon as they are approved. Click the badges below to install it directly:
+Imify is officially available on the Chrome Web Store, Microsoft Edge Add-ons Store, and Firefox Add-ons Store. Click the badges below to install it directly:
 
-<!--Imify is officially available on major browser extension stores. Click the badges below to install it directly:
-[![Chrome Web Store](https://img.shields.io/badge/Chrome-Web_Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](LINK_CHROME_WEB_STORE_CỦA_BẠN)
-[![Microsoft Edge Add-ons](https://img.shields.io/badge/Edge-Add--ons-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white)](LINK_EDGE_ADDONS_CỦA_BẠN)-->
-[![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--ons-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/imify-save-process-images/)
+[![Chrome Web Store](https://cdn.trongajtt.com/assets/get-on-chrome.webp)](https://chromewebstore.google.com/detail/imify-powerful-image-tool/ilhbmbkcakhlelcifilnlcmpklkafabg?authuser=0&hl=en)
+[![Microsoft Edge Add-ons](https://cdn.trongajtt.com/assets/get-on-edge.webp)](https://microsoftedge.microsoft.com/addons/detail/jgdgjoioljlhigbnifkjeniojoeianfm)
+[![Firefox Add-ons](https://cdn.trongajtt.com/assets/get-on-firefox.webp)](https://addons.mozilla.org/en-US/firefox/addon/imify-save-process-images/)
+
+> [!IMPORTANT]
+> 🛡️ **Note for Chrome Users (Enhanced Safe Browsing):**
+> - Because Imify is a newly published extension, users with Chrome's "Enhanced Safe Browsing" enabled might see a warning stating the extension is *"not trusted."*
+> - This is a standard Google policy applied to all **new developer accounts** until they build a history of trust over a few months. It is not related to the code itself. Imify is completely open-source, operates 100% offline, and requires no external servers. You can verify every line of code in this repository. It is entirely safe to click "Continue to install".
 
 ## 🛠️ Tech Stack
 
@@ -169,5 +174,4 @@ This project is licensed under the Apache 2.0 License - see the [LICENSE](./LICE
 If you find Imify useful, please consider supporting its development:
 
 [![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-6e5494?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/TrongAJTT)
-
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/trongajtt)
