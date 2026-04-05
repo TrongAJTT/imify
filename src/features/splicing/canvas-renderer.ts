@@ -246,9 +246,9 @@ export function computeSplicingExportCanvasDimensions(
 
   if (exportConfig.trimBackground) {
     if (exportConfig.exportMode === "per_row") {
-      groupH = group.bounds.height
-    } else if (exportConfig.exportMode === "per_col") {
       groupW = group.bounds.width
+    } else if (exportConfig.exportMode === "per_col") {
+      groupH = group.bounds.height
     }
   }
 
@@ -355,11 +355,11 @@ export async function exportSplicedImage(
 
       if (exportConfig.trimBackground) {
         if (exportConfig.exportMode === "per_row") {
-          groupH = group.bounds.height
-          offsetY = group.bounds.y
-        } else if (exportConfig.exportMode === "per_col") {
           groupW = group.bounds.width
           offsetX = group.bounds.x
+        } else if (exportConfig.exportMode === "per_col") {
+          groupH = group.bounds.height
+          offsetY = group.bounds.y
         }
       }
 
