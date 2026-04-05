@@ -169,6 +169,26 @@ function createFixedVerticalIndexMap(
   return columns.flat()
 }
 
+function createFixedHorizontalIndexMap(
+  imageCount: number,
+  perRowCount: number,
+  direction: SplicingImageAppearanceDirection | undefined
+): number[] {
+  const indices = Array.from({ length: imageCount }, (_, i) => i)
+  if (!direction || direction === "left_to_right" || direction === "top_to_bottom") return indices
+
+  const rows: number[][] = []
+  for (let i = 0; i < indices.length; i += perRowCount) {
+    rows.push(indices.slice(i, i + perRowCount))
+  }
+
+  if (direction === "right_to_left" || direction === "bottom_to_top") {
+    rows.forEach((row) => row.reverse())
+  }
+
+  return rows.flat()
+}
+
 interface RawGroup {
   items: ProcessedImageWithIndex[]
 }
@@ -288,7 +308,7 @@ function computeLayout(
   })
   const maxObservedLineMain = lineMainSizes.length > 0 ? Math.max(...lineMainSizes) : 0
   const alignedLineMain =
-    alignment && flowMaxSize ? Math.min(flowMaxSize, maxObservedLineMain) : null
+    alignment ? (flowMaxSize ? Math.min(flowMaxSize, maxObservedLineMain) : maxObservedLineMain) : null
   let maxLineMain = 0
   const bp = imageStyle.padding + imageStyle.borderWidth
 
@@ -372,10 +392,21 @@ export function calculateLayout(
 
   if (isGrid) {
     const count = Math.max(1, layout.gridCount)
+    const usesGridDirection =
+      layout.imageAppearanceDirection === "lr_tb" ||
+      layout.imageAppearanceDirection === "rl_tb" ||
+      layout.imageAppearanceDirection === "rl_bt" ||
+      layout.imageAppearanceDirection === "lr_bt"
     const isBentoFixedVertical = layout.primaryDirection === "horizontal" && layout.secondaryDirection === "vertical"
+    const isBentoFixedHorizontal =
+      layout.primaryDirection === "vertical" &&
+      layout.secondaryDirection === "horizontal" &&
+      !usesGridDirection
     const indexMap = isBentoFixedVertical
       ? createFixedVerticalIndexMap(processed.length, count, layout.imageAppearanceDirection)
-      : createGridIndexMap(processed.length, count, layout.imageAppearanceDirection)
+      : isBentoFixedHorizontal
+        ? createFixedHorizontalIndexMap(processed.length, count, layout.imageAppearanceDirection)
+        : createGridIndexMap(processed.length, count, layout.imageAppearanceDirection)
     const orderedProcessed: ProcessedImageWithIndex[] = indexMap.map((idx) => ({
       item: processed[idx],
       originalIndex: idx
@@ -395,7 +426,7 @@ export function calculateLayout(
       canvasStyle.mainSpacing,
       edgePadding,
       imageStyle,
-      null,
+      isBentoFixedVertical || isBentoFixedHorizontal ? layout.alignment : null,
       null
     )
   }

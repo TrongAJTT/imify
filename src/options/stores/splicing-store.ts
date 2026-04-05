@@ -91,8 +91,8 @@ export interface SplicingStoreState {
   previewShowImageNumber: boolean
 
   /**
-   * Latest Bento *preview* flow group count from layout (`layout.groups.length`): columns for
-   * vertical/fixed-vertical flow, rows for horizontal flow. Session-only; not persisted.
+   * Latest Bento preview group count from layout (`layout.groups.length`): columns for
+   * vertical/fixed-vertical, rows for horizontal/fixed-horizontal. Session-only; not persisted.
    */
   previewBentoFlowGroupCount: number | null
 
@@ -215,14 +215,6 @@ export const useSplicingStore = create<SplicingStoreState>()(
         const rawPreset = (persistedState as { preset?: string }).preset
         if (rawPreset === "custom") {
           next.preset = "bento"
-        }
-        if (
-          next.preset === "bento" &&
-          next.primaryDirection === "vertical" &&
-          next.secondaryDirection === "horizontal"
-        ) {
-          next.primaryDirection = "vertical"
-          next.secondaryDirection = "vertical"
         }
         if (typeof next.previewQualityPercent === "number") {
           next.previewQualityPercent = normalizePreviewQualityPercent(next.previewQualityPercent)

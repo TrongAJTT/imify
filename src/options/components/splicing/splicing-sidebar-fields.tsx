@@ -1,4 +1,3 @@
-import { LabelText } from "@/options/components/ui/typography"
 import { SelectInput } from "@/options/components/ui/select-input"
 import type {
   SplicingAlignment,
@@ -10,7 +9,7 @@ import type {
   SplicingPreset
 } from "@/features/splicing/types"
 
-export type BentoLayoutMode = "vertical" | "horizontal" | "fixed_vertical"
+export type BentoLayoutMode = "vertical" | "horizontal" | "fixed_vertical" | "fixed_horizontal"
 
 export const PRESET_OPTIONS: Array<{ value: SplicingPreset; title: string; subtitle: string }> = [
   { value: "stitch_vertical", title: "Stitch V", subtitle: "Vertical stack" },
@@ -22,7 +21,8 @@ export const PRESET_OPTIONS: Array<{ value: SplicingPreset; title: string; subti
 export const BENTO_LAYOUT_OPTIONS: Array<{ value: BentoLayoutMode; label: string }> = [
   { value: "vertical", label: "Vertical" },
   { value: "horizontal", label: "Horizontal" },
-  { value: "fixed_vertical", label: "Fixed Vertical" }
+  { value: "fixed_vertical", label: "Fixed Vertical" },
+  { value: "fixed_horizontal", label: "Fixed Horizontal" }
 ]
 
 export const STITCH_V_DIRECTION_OPTIONS: Array<{ value: SplicingImageAppearanceDirection; label: string }> = [
@@ -83,11 +83,52 @@ export const EXPORT_MODE_OPTIONS: Array<{ value: SplicingExportMode; label: stri
   { value: "per_col", label: "Per Column" }
 ]
 
+export function isBentoFlowLayoutMode(mode: BentoLayoutMode): boolean {
+  return mode === "vertical" || mode === "horizontal"
+}
+
+export function mapBentoLayoutModeToDirections(mode: BentoLayoutMode): {
+  primary: SplicingDirection
+  secondary: SplicingDirection
+} {
+  switch (mode) {
+    case "vertical":
+      return { primary: "vertical", secondary: "vertical" }
+    case "horizontal":
+      return { primary: "horizontal", secondary: "horizontal" }
+    case "fixed_vertical":
+      return { primary: "horizontal", secondary: "vertical" }
+    case "fixed_horizontal":
+      return { primary: "vertical", secondary: "horizontal" }
+  }
+}
+
+export function getBentoDefaultImageDirection(mode: BentoLayoutMode): SplicingImageAppearanceDirection {
+  if (mode === "horizontal" || mode === "fixed_horizontal") {
+    return "left_to_right"
+  }
+  return "top_to_bottom"
+}
+
+export function getBentoDirectionOptions(
+  mode: BentoLayoutMode
+): Array<{ value: SplicingImageAppearanceDirection; label: string }> {
+  if (mode === "horizontal" || mode === "fixed_horizontal") {
+    return BENTO_H_DIRECTION_OPTIONS
+  }
+  return BENTO_V_DIRECTION_OPTIONS
+}
+
+export function getBentoFlowSizeLabel(mode: BentoLayoutMode): string {
+  return mode === "vertical" ? "Max Height (px)" : "Max Width (px)"
+}
+
 export function deriveBentoLayoutMode(
   primary: SplicingDirection,
   secondary: SplicingDirection
 ): BentoLayoutMode {
   if (primary === "horizontal" && secondary === "vertical") return "fixed_vertical"
+  if (primary === "vertical" && secondary === "horizontal") return "fixed_horizontal"
   if (primary === "vertical" && secondary === "vertical") return "vertical"
   if (primary === "horizontal" && secondary === "horizontal") return "horizontal"
   return "vertical"
@@ -104,7 +145,7 @@ export function getAvailableExportModes(preset: SplicingPreset, bentoMode?: Bent
     if (bentoMode === "vertical" || bentoMode === "fixed_vertical") {
       return ["single", "per_col"]
     }
-    if (bentoMode === "horizontal") {
+    if (bentoMode === "horizontal" || bentoMode === "fixed_horizontal") {
       return ["single", "per_row"]
     }
   }

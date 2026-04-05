@@ -3,7 +3,6 @@ import { FileEdit } from "lucide-react"
 import { QUALITY_FORMATS } from "@/core/format-config"
 import { getCanonicalExtension } from "@/core/download-utils"
 import type {
-  SplicingAlignment,
   SplicingExportFormat,
   SplicingExportMode,
   SplicingImageAppearanceDirection,
@@ -23,10 +22,7 @@ import {
 } from "@/options/components/ui/rename-pattern-dialog"
 import {
   ALIGNMENT_OPTIONS,
-  BENTO_H_DIRECTION_OPTIONS,
-  BENTO_LAYOUT_OPTIONS,
   type BentoLayoutMode,
-  BENTO_V_DIRECTION_OPTIONS,
   EXPORT_FORMAT_OPTIONS,
   EXPORT_MODE_OPTIONS,
   GRID_DIRECTION_OPTIONS,
@@ -36,8 +32,11 @@ import {
   STITCH_V_DIRECTION_OPTIONS,
   SelectField,
   deriveBentoLayoutMode,
-  getAvailableExportModes
+  getAvailableExportModes,
+  getBentoDefaultImageDirection,
+  mapBentoLayoutModeToDirections
 } from "@/options/components/splicing/splicing-sidebar-fields"
+import { BentoLayoutControls } from "@/options/components/splicing/bento-layout-controls"
 
 export function SplicingSidebarPanel() {
   const preset = useSplicingStore((s) => s.preset)
@@ -116,26 +115,23 @@ export function SplicingSidebarPanel() {
   )
 
   const bentoLayoutMode = deriveBentoLayoutMode(primaryDirection, secondaryDirection)
-  const bentoIsFlow =
-    bentoLayoutMode === "vertical" || bentoLayoutMode === "horizontal"
-  /** Matches header line (`N columns` / `N rows`): from last preview `layout.groups.length`. */
-  const bentoFlowAlignmentLimited =
+  /** For Bento, non-start alignments only apply when preview has at least 2 lines (columns/rows). */
+  const bentoAlignmentLimited =
     preset === "bento" &&
-    bentoIsFlow &&
     (previewBentoFlowGroupCount === null || previewBentoFlowGroupCount <= 1)
   const bentoAlignmentOptions = useMemo(
     () =>
-      bentoFlowAlignmentLimited
+      bentoAlignmentLimited
         ? ALIGNMENT_OPTIONS.filter((o) => o.value === "start")
         : ALIGNMENT_OPTIONS,
-    [bentoFlowAlignmentLimited]
+    [bentoAlignmentLimited]
   )
 
   useEffect(() => {
-    if (bentoFlowAlignmentLimited && alignment !== "start") {
+    if (bentoAlignmentLimited && alignment !== "start") {
       setAlignment("start")
     }
-  }, [alignment, bentoFlowAlignmentLimited, setAlignment])
+  }, [alignment, bentoAlignmentLimited, setAlignment])
 
   const availableExportModes = getAvailableExportModes(preset, preset === "bento" ? bentoLayoutMode : undefined)
   const showTrimBackground = exportMode !== "single"
@@ -164,7 +160,8 @@ export function SplicingSidebarPanel() {
                   } else if (v === "grid") {
                     setImageAppearanceDirection("lr_tb")
                   } else if (v === "bento") {
-                    setImageAppearanceDirection("top_to_bottom")
+                    const mode = deriveBentoLayoutMode(primaryDirection, secondaryDirection)
+                    setImageAppearanceDirection(getBentoDefaultImageDirection(mode))
                   }
                 }}
               />
@@ -174,74 +171,24 @@ export function SplicingSidebarPanel() {
           {(preset === "bento" || preset === "grid") && (
             <div className="space-y-3">
               {preset === "bento" && (
-                <>
-                  <div className="grid grid-cols-2 gap-2 items-start">
-                    <SelectField
-                      label="Layout"
-                      value={bentoLayoutMode}
-                      options={BENTO_LAYOUT_OPTIONS}
-                      onChange={(v) => {
-                        const mode = v as BentoLayoutMode
-                        if (mode === "vertical") {
-                          setPrimaryDirection("vertical")
-                          setSecondaryDirection("vertical")
-                        } else if (mode === "horizontal") {
-                          setPrimaryDirection("horizontal")
-                          setSecondaryDirection("horizontal")
-                        } else {
-                          setPrimaryDirection("horizontal")
-                          setSecondaryDirection("vertical")
-                        }
-                      }}
-                    />
-                    {bentoIsFlow ? (
-                      <NumberInput
-                        label={
-                          bentoLayoutMode === "vertical"
-                            ? "Max Height (px)"
-                            : "Max Width (px)"
-                        }
-                        value={flowMaxSize}
-                        onChangeValue={setFlowMaxSize}
-                        min={100}
-                        max={99999}
-                        step={50}
-                      />
-                    ) : (
-                      <NumberInput
-                        label="Count"
-                        value={gridCount}
-                        onChangeValue={setGridCount}
-                        min={1}
-                        max={20}
-                      />
-                    )}
-                  </div>
-                  {bentoIsFlow && (
-                    <div className="grid grid-cols-2 gap-2 items-start">
-                      <SelectField
-                        label="Image Alignment"
-                        value={alignment}
-                        options={bentoAlignmentOptions}
-                        onChange={(v) => setAlignment(v as SplicingAlignment)}
-                      />
-                      <SelectField
-                        label="Image Direction"
-                        value={imageAppearanceDirection}
-                        options={bentoLayoutMode === "horizontal" ? BENTO_H_DIRECTION_OPTIONS : BENTO_V_DIRECTION_OPTIONS}
-                        onChange={(v) => setImageAppearanceDirection(v as SplicingImageAppearanceDirection)}
-                      />
-                    </div>
-                  )}
-                  {!bentoIsFlow && (
-                    <SelectField
-                      label="Image Direction"
-                      value={imageAppearanceDirection}
-                      options={BENTO_V_DIRECTION_OPTIONS}
-                      onChange={(v) => setImageAppearanceDirection(v as SplicingImageAppearanceDirection)}
-                    />
-                  )}
-                </>
+                <BentoLayoutControls
+                  mode={bentoLayoutMode}
+                  flowMaxSize={flowMaxSize}
+                  count={gridCount}
+                  alignment={alignment}
+                  alignmentOptions={bentoAlignmentOptions}
+                  imageAppearanceDirection={imageAppearanceDirection}
+                  onLayoutModeChange={(mode: BentoLayoutMode) => {
+                    const { primary, secondary } = mapBentoLayoutModeToDirections(mode)
+                    setPrimaryDirection(primary)
+                    setSecondaryDirection(secondary)
+                    setImageAppearanceDirection(getBentoDefaultImageDirection(mode))
+                  }}
+                  onFlowMaxSizeChange={setFlowMaxSize}
+                  onCountChange={setGridCount}
+                  onAlignmentChange={setAlignment}
+                  onImageAppearanceDirectionChange={setImageAppearanceDirection}
+                />
               )}
 
               {preset === "grid" && (
