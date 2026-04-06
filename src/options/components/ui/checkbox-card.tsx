@@ -45,8 +45,8 @@ export function CheckboxCard({
             isSky ? "text-sky-500 focus:ring-sky-500/20" : "text-primary-500 focus:ring-primary-500/20"
           }`}
         />
-        <div className="flex items-center justify-between w-full min-w-0">
-          <span className="font-bold text-[12px] whitespace-nowrap truncate mr-1">{title}</span>
+        <div className="flex items-center pl-1 justify-between w-full min-w-0">
+          <span className="font-bold text-[12px] text-slate-700 dark:text-slate-300 whitespace-nowrap truncate mr-1">{title}</span>
           {tooltip && (
             <Tooltip content={tooltip}>
               <HelpCircle size={16} className="text-slate-400 cursor-help shrink-0" />
@@ -55,7 +55,7 @@ export function CheckboxCard({
         </div>
       </div>
       {subtitle && (
-        <span className="text-[10px] mt-0.5 opacity-70 ml-5 truncate w-full leading-none">
+        <span className="text-[10px] mt-0.5 pl-1 pb-1 opacity-70 ml-5 truncate w-full leading-none">
           {subtitle}
         </span>
       )}

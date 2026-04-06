@@ -32,7 +32,7 @@ export function RadioCard({
 
   return (
     <label
-      className={`flex items-center justify-between rounded border px-2.5 py-2 transition-all ${
+      className={`flex items-center justify-between rounded border px-2.5 py-1.5 transition-all ${
         checked ? activeClasses : inactiveClasses
       } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className}`}>
       <div className="flex items-start gap-2 min-w-0">
@@ -45,14 +45,14 @@ export function RadioCard({
         />
         <div className="min-w-0">
           <div className="flex items-center gap-1">
-            <span className="truncate text-[12px] font-bold">{title}</span>
+            <span className="truncate text-[12px] font-bold text-slate-700 dark:text-slate-300">{title}</span>
             {tooltip ? (
-              <Tooltip content={tooltip} variant="wide">
+              <Tooltip content={tooltip} variant="wide1">
                 <HelpCircle size={14} className="shrink-0 cursor-help text-slate-400" />
               </Tooltip>
             ) : null}
           </div>
-          {subtitle ? <div className="mt-0.5 text-[10px] opacity-70">{subtitle}</div> : null}
+          {subtitle ? <div className="text-[10px] opacity-70">{subtitle}</div> : null}
         </div>
       </div>
 

@@ -1,0 +1,36 @@
+import React from "react"
+
+type SidebarCardProps = {
+  icon?: React.ReactNode
+  label: string
+  sublabel?: string
+  onClick?: () => void
+  disabled?: boolean
+  className?: string
+}
+
+export function SidebarCard({ icon, label, sublabel, onClick, disabled, className }: SidebarCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`w-full text-left flex items-center gap-3 rounded border border-slate-200 bg-white px-2.5 py-1.5 transition-all hover:shadow-sm hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-sky-500/10 dark:hover:border-sky-500 cursor-pointer disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/40 ${className || ""}`}
+    >
+        {icon ? (
+        <div className="shrink-0 flex items-center justify-center text-sky-600 dark:text-sky-400">
+          {icon}
+        </div>
+      ) : null}
+
+      <div className="min-w-0">
+        <div className="truncate text-[12px] font-bold text-slate-700 dark:text-slate-300">{label}</div>
+        {sublabel ? (
+          <div className="truncate text-[10px] text-slate-400">{sublabel}</div>
+        ) : null}
+      </div>
+    </button>
+  )
+}
+
+export default SidebarCard

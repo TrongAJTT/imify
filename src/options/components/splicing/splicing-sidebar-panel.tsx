@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { FileEdit } from "lucide-react"
+import SidebarCard from "@/options/components/ui/sidebar-card"
 import { QUALITY_FORMATS } from "@/core/format-config"
 import { getCanonicalExtension } from "@/core/download-utils"
 import type {
@@ -384,20 +385,12 @@ export function SplicingSidebarPanel() {
             />
           )}
 
-          <div className="flex items-center justify-between rounded border border-slate-200 bg-white px-2.5 py-2 transition-all dark:border-slate-700 dark:bg-slate-900/40">
-            <div className="mr-2 flex min-w-0 flex-col">
-              <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">File renaming</span>
-              <span className="truncate font-mono text-[9px] text-slate-400">{exportFileNamePattern}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsRenameDialogOpen(true)}
-              title="Edit export filename pattern"
-              className="shrink-0 rounded-md p-1.5 text-sky-600 transition-colors hover:bg-sky-50 dark:hover:bg-sky-500/10"
-            >
-              <FileEdit size={14} />
-            </button>
-          </div>
+          <SidebarCard
+            icon={<FileEdit size={14} />}
+            label="File renaming"
+            sublabel={exportFileNamePattern}
+            onClick={() => setIsRenameDialogOpen(true)}
+          />
         </div>
       </SidebarPanel>
 

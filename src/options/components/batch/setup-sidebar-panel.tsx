@@ -6,6 +6,7 @@ import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import SidebarCard from "@/options/components/ui/sidebar-card"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker } from "@/options/components/ui/typography"
@@ -391,33 +392,21 @@ export function BatchSetupSidebarPanel() {
             className={!supportsTinyMode ? "opacity-70" : ""}
           />
 
-          <div className="flex items-center justify-between rounded border border-slate-200 bg-white px-2.5 py-2 transition-all dark:border-slate-700 dark:bg-slate-900/40">
-            <div className="mr-2 flex min-w-0 flex-col">
-              <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">File Renaming</span>
-              <span className="truncate font-mono text-[9px] text-slate-400">{fileNamePattern}</span>
-            </div>
-            <button
-              onClick={() => setIsRenameDialogOpen(true)}
-              disabled={isRunning}
-              title="Edit renaming pattern"
-              className="shrink-0 rounded-md p-1.5 text-sky-600 transition-colors hover:bg-sky-50 disabled:opacity-50 dark:hover:bg-sky-500/10">
-              <FileEdit size={14} />
-            </button>
-          </div>
+          <SidebarCard
+            icon={<FileEdit size={14} />}
+            label="File Renaming"
+            sublabel={fileNamePattern}
+            onClick={() => setIsRenameDialogOpen(true)}
+            disabled={isRunning}
+          />
 
-          <div className="flex items-center justify-between rounded border border-slate-200 bg-white px-2.5 py-2 transition-all dark:border-slate-700 dark:bg-slate-900/40">
-            <div className="mr-2 flex min-w-0 flex-col">
-              <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">Watermarking</span>
-              <span className="truncate font-mono text-[9px] text-slate-400">{watermarkSummary}</span>
-            </div>
-            <button
-              onClick={() => setIsWatermarkDialogOpen(true)}
-              disabled={isRunning}
-              title="Edit watermark settings"
-              className="shrink-0 rounded-md p-1.5 text-sky-600 transition-colors hover:bg-sky-50 disabled:opacity-50 dark:hover:bg-sky-500/10">
-              <Stamp size={14} />
-            </button>
-          </div>
+          <SidebarCard
+            icon={<Stamp size={14} />}
+            label="Watermarking"
+            sublabel={watermarkSummary}
+            onClick={() => setIsWatermarkDialogOpen(true)}
+            disabled={isRunning}
+          />
         </div>
       </div>
 
