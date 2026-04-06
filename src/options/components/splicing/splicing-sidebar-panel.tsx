@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { FileEdit } from "lucide-react"
-import SidebarCard from "@/options/components/ui/sidebar-card"
+
 import { QUALITY_FORMATS } from "@/core/format-config"
 import { getCanonicalExtension } from "@/core/download-utils"
 import type {
@@ -16,6 +16,8 @@ import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import SidebarCard from "@/options/components/ui/sidebar-card"
+import { TargetFormatQualityPopover } from "../shared/target-format-quality-popover"
 import {
   RenamePatternDialog,
   SPLICING_EXPORT_RENAME_PRESETS,
@@ -319,35 +321,18 @@ export function SplicingSidebarPanel() {
       {/* Export */}
       <SidebarPanel title="EXPORT">
         <div className="space-y-3">
-          <div className="grid grid-cols-2 items-start gap-2">
-            <SelectField
-              label="Format"
-              value={exportFormat}
-              options={EXPORT_FORMAT_OPTIONS}
-              onChange={(v) => setExportFormat(v as SplicingExportFormat)}
-            />
-            {showQuality ? (
-              <NumberInput
-                label="Quality"
-                className="w-full"
-                min={1}
-                max={100}
-                step={1}
-                value={exportQuality}
-                onChangeValue={setExportQuality}
-              />
-            ) : (
-              <div />
-            )}
-          </div>
-          {showTinyMode && (
-            <CheckboxCard
-              title="TinyPNG Mode"
-              subtitle="Quantize to reduce file size"
-              checked={exportPngTinyMode}
-              onChange={setExportPngTinyMode}
-            />
-          )}
+          {/* Target Format & Quality Popover */}
+          <TargetFormatQualityPopover
+            targetFormat={exportFormat}
+            quality={exportQuality}
+            pngTinyMode={exportPngTinyMode}
+            formatOptions={EXPORT_FORMAT_OPTIONS}
+            supportsQuality={showQuality}
+            supportsTinyMode={showTinyMode}
+            onTargetFormatChange={(v: string) => setExportFormat(v as SplicingExportFormat)}
+            onQualityChange={setExportQuality}
+            onPngTinyModeChange={setExportPngTinyMode}
+          />
           <div className="grid grid-cols-2 gap-2">
             <SelectField
               label="Export Mode"

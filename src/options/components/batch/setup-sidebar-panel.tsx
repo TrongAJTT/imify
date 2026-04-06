@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from "react"
-import { Check, FileEdit, FolderOpen, History, Save, Stamp } from "lucide-react"
+import { FileEdit, FolderOpen, History, Save, Stamp } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/options/shared"
-import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { PaperConfig } from "@/options/components/paper-config"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
-import SidebarCard from "@/options/components/ui/sidebar-card"
+
 import { SelectInput } from "@/options/components/ui/select-input"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker } from "@/options/components/ui/typography"
 import { ResizeModeSelector } from "@/options/components/resize-mode-selector"
 import { SmartResizeModule } from "@/options/components/smart-resize-module"
+import SidebarCard from "@/options/components/ui/sidebar-card"
+import { TargetFormatQualityPopover } from "@/options/components/shared/target-format-quality-popover"
 import {
   HIGH_CONCURRENCY_FORMATS,
   TARGET_FORMAT_OPTIONS,
@@ -21,7 +22,6 @@ import {
 import { WATERMARK_POSITION_OPTIONS } from "@/options/components/batch/watermark"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { Tooltip } from "@/options/components/tooltip"
-import { Button } from "@/options/components/ui/button"
 import { BatchRenameDialog } from "./rename-dialog"
 import { BatchWatermarkDialog } from "./watermark-dialog"
 import { SavePresetDialog } from "./save-preset-dialog"
@@ -241,51 +241,30 @@ export function BatchSetupSidebarPanel() {
   return (
     <SidebarPanel title="CONFIGURATION" headerActions={panelActions}>
       <div className="space-y-3 mt-1">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <SelectInput
-            label="Target format"
-            value={targetFormat}
-            disabled={isRunning}
-            options={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
-              value: formatOption.value,
-              label: `${formatOption.label} (.${formatOption.value})`
-            }))}
-            onChange={(nextValue) => onTargetFormatChange(nextValue as BatchTargetFormat)}
-          />
-
-          <div
-            className={`transition-all ${
-              heavyFormatToast
-                ? "rounded-md border border-amber-500 bg-amber-50/30 dark:bg-amber-900/20 ring-2 ring-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] p-1"
-                : ""
-            }`}
-          >
-            <SelectInput
-              label="Concurrency"
-              value={String(concurrency)}
-              disabled={isRunning}
-              options={concurrencyOptions.map((option) => ({
-                value: String(option.value),
-                label: option.label
-              }))}
-              onChange={(nextValue) => onConcurrencyChange(Number(nextValue))}
-            />
-          </div>
-        </div>
+        {/* Target Format & Quality Popover */}
+        <TargetFormatQualityPopover
+          targetFormat={targetFormat}
+          quality={quality}
+          pngTinyMode={pngTinyMode}
+          formatOptions={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
+            value: formatOption.value,
+            label: `${formatOption.label} (.${formatOption.value})`
+          }))}
+          supportsQuality={supportsQuality}
+          supportsTinyMode={supportsTinyMode}
+          icoSizes={icoSizes}
+          icoGenerateWebIconKit={icoGenerateWebIconKit}
+          onToggleWebIconKit={(v: boolean) => onIcoGenerateWebIconKitChange(v)}
+          onIcoSizesChange={onIcoSizesChange}
+          onTargetFormatChange={(nextValue: string) => onTargetFormatChange(nextValue as BatchTargetFormat)}
+          onQualityChange={onQualityChange}
+          onPngTinyModeChange={onPngTinyModeChange}
+          disabled={isRunning}
+        />
 
         {!isIcoTarget ? (
           <>
             <div className="grid gap-3 sm:grid-cols-2">
-              <NumberInput
-                disabled={isRunning || !supportsQuality}
-                label="Quality"
-                min={1}
-                max={100}
-                step={1}
-                value={quality}
-                onChangeValue={onQualityChange}
-              />
-
               <ResizeModeSelector
                 disabled={isRunning}
                 onChange={(mode) => {
@@ -302,6 +281,25 @@ export function BatchSetupSidebarPanel() {
                 }}
                 value={resizeMode === "inherit" ? "none" : resizeMode}
               />
+
+              <div
+                className={`transition-all ${
+                  heavyFormatToast
+                    ? "rounded-md border border-amber-500 bg-amber-50/30 dark:bg-amber-900/20 ring-2 ring-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] p-1"
+                    : ""
+                }`}
+              >
+                <SelectInput
+                  label="Concurrency"
+                  value={String(concurrency)}
+                  disabled={isRunning}
+                  options={concurrencyOptions.map((option) => ({
+                    value: String(option.value),
+                    label: option.label
+                  }))}
+                  onChange={(nextValue) => onConcurrencyChange(Number(nextValue))}
+                />
+              </div>
             </div>
 
             {resizeMode === "set_size" ? (
@@ -348,21 +346,7 @@ export function BatchSetupSidebarPanel() {
               />
             ) : null}
           </>
-        ) : (
-          <IcoSizeSelector
-            disabled={isRunning}
-            generateWebIconKit={icoGenerateWebIconKit}
-            onToggleSize={(size) => {
-              const exists = icoSizes.includes(size)
-              const next = exists
-                ? icoSizes.filter((entry) => entry !== size)
-                : [...icoSizes, size].sort((a, b) => a - b)
-              onIcoSizesChange(next.length ? next : [16])
-            }}
-            onToggleWebKit={onIcoGenerateWebIconKitChange}
-            sizes={icoSizes}
-          />
-        )}
+        ) : null}
 
         <div className="animate-in slide-in-from-top-2 fade-in space-y-3 pt-1 duration-300">
           <Kicker>ADVANCED SETTINGS</Kicker>
@@ -382,15 +366,7 @@ export function BatchSetupSidebarPanel() {
             className={!supportsExif ? "opacity-70" : ""}
           />
 
-          <CheckboxCard
-            title="Tiny Mode"
-            subtitle={supportsTinyMode ? "Reduce PNG size" : "PNG Only"}
-            checked={pngTinyMode}
-            onChange={onPngTinyModeChange}
-            disabled={isRunning || !supportsTinyMode}
-            tooltip="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
-            className={!supportsTinyMode ? "opacity-70" : ""}
-          />
+
 
           <SidebarCard
             icon={<FileEdit size={14} />}

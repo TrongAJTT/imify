@@ -48,7 +48,7 @@ export function CheckboxCard({
         <div className="flex items-center pl-1 justify-between w-full min-w-0">
           <span className="font-bold text-[12px] text-slate-700 dark:text-slate-300 whitespace-nowrap truncate mr-1">{title}</span>
           {tooltip && (
-            <Tooltip content={tooltip}>
+            <Tooltip content={tooltip} variant="wide2">
               <HelpCircle size={16} className="text-slate-400 cursor-help shrink-0" />
             </Tooltip>
           )}
