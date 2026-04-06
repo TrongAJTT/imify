@@ -283,7 +283,7 @@ export function SmartResizeModule({
                 onAspectModeChange("fixed")
                 onAspectRatioChange(toAspectRatioLabel(width, height))
               }}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-700">
               {isRatioLocked ? <Link2 size={18} /> : <Unlink2 size={18} />}
             </button>
           </Tooltip>

@@ -2,17 +2,14 @@ import { useEffect, useMemo, useState } from "react"
 import { FileEdit, FolderOpen, History, Save, Stamp } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/options/shared"
-import { PaperConfig } from "@/options/components/paper-config"
-import { NumberInput } from "@/options/components/ui/number-input"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 
 import { SelectInput } from "@/options/components/ui/select-input"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker } from "@/options/components/ui/typography"
-import { ResizeModeSelector } from "@/options/components/resize-mode-selector"
-import { SmartResizeModule } from "@/options/components/smart-resize-module"
 import SidebarCard from "@/options/components/ui/sidebar-card"
 import { TargetFormatQualityPopover } from "@/options/components/shared/target-format-quality-popover"
+import { ResizePopover } from "@/options/components/shared/resize-popover"
 import {
   HIGH_CONCURRENCY_FORMATS,
   TARGET_FORMAT_OPTIONS,
@@ -264,87 +261,64 @@ export function BatchSetupSidebarPanel() {
 
         {!isIcoTarget ? (
           <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <ResizeModeSelector
+            {/* Resize Popover */}
+            <ResizePopover
+              resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
+              resizeValue={resizeValue}
+              resizeWidth={resizeWidth}
+              resizeHeight={resizeHeight}
+              resizeAspectMode={resizeAspectMode}
+              resizeAspectRatio={resizeAspectRatio}
+              resizeFitMode={resizeFitMode}
+              resizeContainBackground={resizeContainBackground}
+              resizeSourceWidth={resizeSourceWidth}
+              resizeSourceHeight={resizeSourceHeight}
+              resizeSyncVersion={resizeSyncVersion}
+              paperSize={paperSize}
+              dpi={dpi}
+              onResizeModeChange={(mode) => {
+                onResizeModeChange(mode as BatchResizeMode)
+
+                if (mode === "change_width" || mode === "change_height") {
+                  onResizeValueChange(1280)
+                  return
+                }
+
+                if (mode === "scale") {
+                  onResizeValueChange(100)
+                }
+              }}
+              onResizeValueChange={onResizeValueChange}
+              onResizeWidthChange={onResizeWidthChange}
+              onResizeHeightChange={onResizeHeightChange}
+              onResizeAspectModeChange={(mode) => onResizeAspectModeChange(mode as any)}
+              onResizeAspectRatioChange={(ratio) => onResizeAspectRatioChange(String(ratio))}
+              onResizeFitModeChange={(mode) => onResizeFitModeChange(mode as any)}
+              onResizeContainBackgroundChange={onResizeContainBackgroundChange}
+              onPaperSizeChange={(size) => onPaperSizeChange(size as any)}
+              onDpiChange={(d) => onDpiChange(d as any)}
+              disabled={isRunning}
+            />
+
+            {/* Concurrency */}
+            <div
+              className={`transition-all ${
+                heavyFormatToast
+                  ? "rounded-md border border-amber-500 bg-amber-50/30 dark:bg-amber-900/20 ring-2 ring-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] p-1"
+                  : ""
+              }`}
+            >
+              <SelectInput
+                label="Concurrency"
+                value={String(concurrency)}
                 disabled={isRunning}
-                onChange={(mode) => {
-                  onResizeModeChange(mode as BatchResizeMode)
-
-                  if (mode === "change_width" || mode === "change_height") {
-                    onResizeValueChange(1280)
-                    return
-                  }
-
-                  if (mode === "scale") {
-                    onResizeValueChange(100)
-                  }
-                }}
-                value={resizeMode === "inherit" ? "none" : resizeMode}
+                options={concurrencyOptions.map((option) => ({
+                  value: String(option.value),
+                  label: option.label
+                }))}
+                onChange={(nextValue) => onConcurrencyChange(Number(nextValue))}
               />
-
-              <div
-                className={`transition-all ${
-                  heavyFormatToast
-                    ? "rounded-md border border-amber-500 bg-amber-50/30 dark:bg-amber-900/20 ring-2 ring-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] p-1"
-                    : ""
-                }`}
-              >
-                <SelectInput
-                  label="Concurrency"
-                  value={String(concurrency)}
-                  disabled={isRunning}
-                  options={concurrencyOptions.map((option) => ({
-                    value: String(option.value),
-                    label: option.label
-                  }))}
-                  onChange={(nextValue) => onConcurrencyChange(Number(nextValue))}
-                />
-              </div>
             </div>
-
-            {resizeMode === "set_size" ? (
-              <SmartResizeModule
-                containBackground={resizeContainBackground}
-                disabled={isRunning}
-                fitMode={resizeFitMode}
-                height={resizeHeight}
-                aspectMode={resizeAspectMode}
-                aspectRatio={resizeAspectRatio}
-                onAspectModeChange={onResizeAspectModeChange}
-                onAspectRatioChange={onResizeAspectRatioChange}
-                onContainBackgroundChange={onResizeContainBackgroundChange}
-                onFitModeChange={onResizeFitModeChange}
-                onHeightChange={onResizeHeightChange}
-                onSizeAnchorChange={onResizeAnchorChange}
-                onWidthChange={onResizeWidthChange}
-                originalHeight={resizeSourceHeight}
-                originalWidth={resizeSourceWidth}
-                lockSignal={resizeSyncVersion}
-                width={resizeWidth}
-              />
-            ) : null}
-
-            {(resizeMode === "change_width" || resizeMode === "change_height" || resizeMode === "scale") ? (
-              <div className="animate-in slide-in-from-top-1 fade-in duration-200">
-                <NumberInput
-                  label={resizeMode === "scale" ? "Resize value (%)" : "Resize value (px)"}
-                  disabled={isRunning}
-                  min={1}
-                  onChangeValue={(val) => onResizeValueChange(Math.max(1, val || 1))}
-                  value={resizeValue}
-                />
-              </div>
-            ) : null}
-
-            {resizeMode === "page_size" ? (
-              <PaperConfig
-                disabled={isRunning}
-                dpi={dpi}
-                onDpiChange={onDpiChange}
-                onPaperSizeChange={onPaperSizeChange}
-                paperSize={paperSize}
-              />
-            ) : null}
           </>
         ) : null}
 

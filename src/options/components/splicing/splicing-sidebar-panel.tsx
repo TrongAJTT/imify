@@ -18,6 +18,7 @@ import { useSplicingStore } from "@/options/stores/splicing-store"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import SidebarCard from "@/options/components/ui/sidebar-card"
 import { TargetFormatQualityPopover } from "../shared/target-format-quality-popover"
+import { ResizePopover } from "../shared/resize-popover"
 import {
   RenamePatternDialog,
   SPLICING_EXPORT_RENAME_PRESETS,
@@ -30,7 +31,6 @@ import {
   EXPORT_MODE_OPTIONS,
   GRID_DIRECTION_OPTIONS,
   PRESET_OPTIONS,
-  RESIZE_OPTIONS,
   STITCH_H_DIRECTION_OPTIONS,
   STITCH_V_DIRECTION_OPTIONS,
   SelectField,
@@ -272,26 +272,34 @@ export function SplicingSidebarPanel() {
       {/* Image Style */}
       <SidebarPanel title="IMAGES">
         <div className="space-y-3">
-          <div className="grid grid-cols-2 items-start gap-2">
-            <SelectField
-              label="Resize"
-              value={imageResize}
-              options={RESIZE_OPTIONS}
-              onChange={(v) => setImageResize(v as SplicingImageResize)}
-            />
-            {imageResize !== "original" ? (
-              <NumberInput
-                label={imageResize === "fit_width" ? "Target Width (px)" : "Target Height (px)"}
-                value={imageFitValue}
-                onChangeValue={setImageFitValue}
-                min={1}
-                max={10000}
-                step={10}
-              />
-            ) : (
-              <div />
-            )}
-          </div>
+          {/* Resize Popover */}
+          <ResizePopover
+            resizeMode={imageResize === "original" ? "none" : imageResize}
+            resizeValue={imageFitValue}
+            resizeWidth={0}
+            resizeHeight={0}
+            resizeAspectMode="fixed"
+            resizeAspectRatio={0}
+            resizeFitMode="contain"
+            resizeContainBackground="#000000"
+            resizeSourceWidth={0}
+            resizeSourceHeight={0}
+            resizeSyncVersion={0}
+            paperSize="A4"
+            dpi={300}
+            onResizeModeChange={(mode) => setImageResize((mode === "none" ? "original" : mode) as SplicingImageResize)}
+            onResizeValueChange={setImageFitValue}
+            onResizeWidthChange={() => {}}
+            onResizeHeightChange={() => {}}
+            onResizeAspectModeChange={() => {}}
+            onResizeAspectRatioChange={() => {}}
+            onResizeFitModeChange={() => {}}
+            onResizeContainBackgroundChange={() => {}}
+            onPaperSizeChange={() => {}}
+            onDpiChange={() => {}}
+            availableModes={["none", "fit_width", "fit_height"]}
+          />
+
           <div className="grid grid-cols-3 gap-2">
             <NumberInput label="Padding" value={imagePadding} onChangeValue={setImagePadding} min={0} max={100} />
             <NumberInput label="Radius" value={imageBorderRadius} onChangeValue={setImageBorderRadius} min={0} max={100} />

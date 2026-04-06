@@ -15,12 +15,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI:** Added new `SelectChip` component for reusable selections.
 - **UI:** Enhanced `TextInput` with a large variant for better focus on content.
 - **UI:** Migrated all dialogs (**Auto Renaming**, **Watermarking**, **Settings**, **Attribution**, **About**) to use `BaseDialog` component with native click-outside and Esc key handling.
+- **UI:** Added `SidebarCard` component for reusable popover entrance cards with icon (left), label, and sublabel support.
+- **UI:** Added `TargetFormatQualityPopover` component consolidating format, quality, ICO sizes, and PNG tiny mode selection into a single popover interface.
+- **UI:** Added `ResizePopover` component providing unified resize controls (6 modes: No resize, Fit width, Fit height, Set size, Scale, Paper size) with mode-aware sublabel display.
+- **Single/Batch Processor:** Replaced grid-based Resize UI with new `ResizePopover` component for improved layout flexibility and cleaner control hierarchy.
+- **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
+
+### Changed
+- **TypeScript Configuration:** Migrated from deprecated `moduleResolution: "node10"` and `baseUrl` to modern `"bundler"` resolver with relative path mappings.
+- **Single/Batch Processor:** Moved Concurrency selector to separate row below Resize popover for better visual separation.
 
 ### Fixed
 - **Splicing**: Fixed an issue where the "Trim background" feature could work incorrectly.
 - **UI**: Implemented "Click outside to close" and native Escape key handling for all dialogs using `BaseDialog`.
 - **UI**: Fixed dark mode visibility issues in the naming pattern input and quick presets buttons.
 - **UI**: Added "Apply Pattern" button disable state for **Auto Renaming** and **Watermarking** dialogs when no changes are made.
+- **UI:** Fixed Resize card sublabel to display mode-specific values (e.g., "Fit width • 1280px", "Set size • 3000×4000", "Paper size • A4 @ 300dpi") instead of generic mode label.
+- **Image Splicing:** Added support for `fit_width` and `fit_height` resize modes in ResizePopover (previously only supported via legacy SelectField).
 - **DX**: Resolved TypeScript error `Cannot find name 'require'` by adding `node` types to `tsconfig.json`.
 
 ## [1.5.0] - 2024-04-01
