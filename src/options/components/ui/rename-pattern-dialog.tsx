@@ -3,6 +3,8 @@ import { createPortal } from "react-dom"
 import { X, Save, FileEdit, Zap, Tags } from "lucide-react"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { Button } from "@/options/components/ui/button"
+import { TextInput } from "@/options/components/ui/text-input"
+import { SelectChip } from "@/options/components/ui/select-chip"
 import { buildSmartOutputFileName } from "@/options/components/batch/pipeline"
 import { useKeyPress } from "@/options/hooks/use-key-press"
 
@@ -98,18 +100,13 @@ export function RenamePatternDialog({
 
         <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x dark:divide-slate-800">
           <div className="flex-1 p-6 space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Naming Pattern
-              </label>
-              <input
-                type="text"
-                value={pattern}
-                onChange={(e) => setPattern(e.target.value)}
-                placeholder={patternPlaceholder}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all font-mono shadow-sm"
-              />
-            </div>
+            <TextInput
+              label="Naming Pattern"
+              value={pattern}
+              onChange={setPattern}
+              placeholder={patternPlaceholder}
+              variant="large"
+            />
 
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -118,18 +115,12 @@ export function RenamePatternDialog({
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                 {presets.map((preset) => (
-                  <button
+                  <SelectChip
                     key={preset.label}
-                    type="button"
+                    label={preset.label}
+                    isActive={pattern === preset.pattern}
                     onClick={() => setPattern(preset.pattern)}
-                    className={`px-3 py-2 rounded-lg border text-[11px] font-bold transition-all ${
-                      pattern === preset.pattern
-                        ? "border-sky-500 bg-sky-50 text-sky-700 dark:border-sky-500 dark:bg-sky-500/10 dark:text-sky-300"
-                        : "border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800"
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
+                  />
                 ))}
               </div>
             </div>

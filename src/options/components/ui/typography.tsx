@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cn } from "./utils"
+import { cn } from "@/options/components/ui/utils"
 
 export function Heading({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (

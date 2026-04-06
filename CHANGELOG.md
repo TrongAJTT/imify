@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Splicing (Bento):** Added a new **Fixed Horizontal** layout, where **Count** is the maximum number of images per row.
 - **Splicing (Bento):** Added **Image Alignment** controls for fixed layouts, including **Fixed Vertical** and **Fixed Horizontal**.
+- **UI:** Improved **Auto Renaming** dialog with full dark mode support and consistent components.
+- **UI:** Added new `SelectChip` component for reusable selections.
+- **UI:** Enhanced `TextInput` with a large variant for better focus on content.
 
 ### Fixed
 - **Splicing**: Fixed an issue where the "Trim background" feature could work incorrectly.
+- **UI**: Fixed dark mode visibility issues in the naming pattern input and quick presets buttons.
 
 ## [1.5.0] - 2024-04-01
 
