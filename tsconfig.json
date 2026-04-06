@@ -12,19 +12,20 @@
   ],
   "compilerOptions": {
     "strict": true,
+    "moduleResolution": "bundler",
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ],
       "@assets/*": [
-        "assets/*"
+        "./assets/*"
       ],
       "~*": [
         "./*"
       ]
     },
-    "baseUrl": ".",
     "types": [
+      "chrome",
       "node"
     ]
   }

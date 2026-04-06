@@ -99,7 +99,7 @@ function sanitizeContextMenuSubTab(value: unknown): ContextMenuSubTab {
 if (IS_OFFSCREEN_OPTIONS_DOCUMENT && !offscreenListenerAttached) {
   offscreenListenerAttached = true
 
-  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  chrome.runtime.onMessage.addListener((message: Record<string, unknown>, _sender: chrome.runtime.MessageSender, sendResponse: (response?: unknown) => void) => {
     if (message?.type !== OFFSCREEN_CONVERT_REQUEST || !message.payload) {
       return
     }
