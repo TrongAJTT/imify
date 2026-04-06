@@ -10,13 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Splicing (Bento):** Added a new **Fixed Horizontal** layout, where **Count** is the maximum number of images per row.
 - **Splicing (Bento):** Added **Image Alignment** controls for fixed layouts, including **Fixed Vertical** and **Fixed Horizontal**.
+- **UI:** Added new `BaseDialog` component using HTML5 native `<dialog>` element for better accessibility and native backdrop handling.
 - **UI:** Improved **Auto Renaming** dialog with full dark mode support and consistent components.
 - **UI:** Added new `SelectChip` component for reusable selections.
 - **UI:** Enhanced `TextInput` with a large variant for better focus on content.
+- **UI:** Migrated all dialogs (**Auto Renaming**, **Watermarking**, **Settings**, **Attribution**, **About**) to use `BaseDialog` component with native click-outside and Esc key handling.
 
 ### Fixed
 - **Splicing**: Fixed an issue where the "Trim background" feature could work incorrectly.
+- **UI**: Implemented "Click outside to close" and native Escape key handling for all dialogs using `BaseDialog`.
 - **UI**: Fixed dark mode visibility issues in the naming pattern input and quick presets buttons.
+- **UI**: Added "Apply Pattern" button disable state for **Auto Renaming** and **Watermarking** dialogs when no changes are made.
+- **DX**: Resolved TypeScript error `Cannot find name 'require'` by adding `node` types to `tsconfig.json`.
 
 ## [1.5.0] - 2024-04-01
 

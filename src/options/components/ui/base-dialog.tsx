@@ -1,0 +1,112 @@
+import React, { useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
+import { cn } from "@/options/components/ui/utils"
+
+interface BaseDialogProps {
+  isOpen: boolean
+  onClose: () => void
+  isDirty?: boolean
+  children: React.ReactNode
+  className?: string
+  /** The container class for the inner content wrapper */
+  contentClassName?: string
+}
+
+/**
+ * BaseDialog component using HTML5 native <dialog> element.
+ * Handles:
+ * 1. Modal backdrop and focus trap via showModal()
+ * 2. Escape key handling via onCancel
+ * 3. Click outside to close (backdrop click)
+ * 4. isDirty check before closing
+ */
+export const BaseDialog: React.FC<BaseDialogProps> = ({
+  isOpen,
+  onClose,
+  isDirty = false,
+  children,
+  className = "",
+  contentClassName = ""
+}) => {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  // Sync React's isOpen state with Native Dialog API
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+
+    if (isOpen) {
+      if (!dialog.open) {
+        dialog.showModal()
+        // Prevent body scroll when dialog is open
+        document.body.style.overflow = "hidden"
+      }
+    } else {
+      if (dialog.open) {
+        dialog.close()
+        document.body.style.overflow = ""
+      }
+    }
+  }, [isOpen])
+
+  // Cleanup overflow on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [])
+
+  const handleCloseAttempt = (e?: React.SyntheticEvent) => {
+    // If it's a native cancel (Esc key), prevent the default behavior 
+    // to let our React state handle the closing (so we can check isDirty)
+    if (e && e.type === "cancel") {
+      e.preventDefault()
+    }
+
+    if (isDirty) {
+      const confirmLeave = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      )
+      if (!confirmLeave) return
+    }
+
+    onClose()
+  }
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
+    // In native <dialog>, the dialog element itself is the backdrop
+    // if the click target is the dialog, it means the user clicked the backdrop.
+    if (e.target === e.currentTarget) {
+      handleCloseAttempt()
+    }
+  }
+
+  if (!isOpen && typeof document !== "undefined") return null
+
+  // Ensure we are in a browser environment before using Portal
+  if (typeof document === "undefined") return null
+
+  return createPortal(
+    <dialog
+      ref={dialogRef}
+      onCancel={handleCloseAttempt}
+      onClick={handleBackdropClick}
+      className={cn(
+        // prevent the native dialog from showing its own scrollbars
+        "m-auto p-0 rounded-2xl border-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden",
+        className
+      )}
+    >
+      <div 
+        className={cn(
+          // inner container handles scrolling when content is tall
+          "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-auto max-h-[calc(100vh-4rem)]",
+          contentClassName
+        )}
+      >
+        {children}
+      </div>
+    </dialog>,
+    document.body
+  )
+}

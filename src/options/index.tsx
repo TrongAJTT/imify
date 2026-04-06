@@ -45,6 +45,7 @@ import {
 import { AboutDialog } from "./components/about-dialog"
 import { AttributionDialog } from "./components/attribution-dialog"
 import { SettingsDialog } from "./components/settings-dialog"
+import { DonateDialog } from "./components/donate-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 import { CONTEXT_MENU_SUB_TABS } from "./components/context-menu/context-menu-settings-tab"
@@ -384,36 +385,7 @@ export default function OptionsPage() {
         }}
       />
 
-      {isDonateDialogOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 shadow-2xl relative overflow-hidden">
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
-            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
-            <Button variant="outline" size="icon" className="absolute top-4 right-4 rounded-full border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setIsDonateDialogOpen(false)} aria-label="Close donate dialog">
-              <X size={16} />
-            </Button>
-            <div className="text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 mb-6 group transition-transform hover:scale-110 duration-300">
-                <Heart size={32} className="animate-pulse fill-current" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Support the Developer</h3>
-              <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed max-w-md mx-auto">
-                Thank you for using Imify! If you find it helpful, consider supporting the developer to help keep the project alive and free for everyone.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <a className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all hover:shadow-md" href="https://github.com/sponsors/TrongAJTT" rel="noreferrer" target="_blank">
-                  <img src={githubLogo} alt="GitHub" className="w-5 h-5 flex-shrink-0 brightness-0 dark:invert" />
-                  <span className="truncate">Sponsor me on GitHub</span>
-                </a>
-                <a className="flex items-center justify-center gap-2 rounded-xl border border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-900/30 px-3 py-3 text-sm font-semibold text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-all hover:shadow-md h-full" href="https://www.buymeacoffee.com/TrongAJTT" rel="noreferrer" target="_blank">
-                  <img src={bmcLogo} alt="Buy Me A Coffee" className="w-5 h-5 flex-shrink-0" />
-                  <span className="truncate">Buy Me A Coffee</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <DonateDialog isOpen={isDonateDialogOpen} onClose={() => setIsDonateDialogOpen(false)} />
 
       <AttributionDialog
         isOpen={isAttributionDialogOpen}

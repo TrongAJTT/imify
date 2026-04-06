@@ -5,6 +5,7 @@ import { Button } from "@/options/components/ui/button"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { Kicker, MutedText, Subheading } from "@/options/components/ui/typography"
 import { BarChart3, ListTree, RotateCcw, ShieldAlert, X } from "lucide-react"
+import { BaseDialog } from "@/options/components/ui/base-dialog"
 import { TAB_ITEMS, type OptionsTab } from "@/options/shared"
 
 interface SettingsDialogProps {
@@ -37,27 +38,25 @@ export function SettingsDialog({
 
   const [activeTab, setActiveTab] = useState<"general" | "warnings" | "usage">("general")
 
-  if (!isOpen) {
-    return null
-  }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl flex overflow-hidden h-[600px] max-h-[calc(100vh-4rem)]">
-        
-        {/* Sidebar */}
-        <div className="w-56 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4 shrink-0">
-          <div className="px-5 mb-6">
-            <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">Settings</Subheading>
-          </div>
-          <nav className="flex-1 px-3 space-y-1">
-            <button
-              onClick={() => setActiveTab("general")}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === "general"
-                  ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
-              }`}
+    <BaseDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      contentClassName="relative w-full max-w-3xl rounded-2xl overflow-hidden h-[600px] max-h-[calc(100vh-4rem)] flex"
+    >
+      {/* Sidebar */}
+      <div className="w-56 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4 shrink-0">
+        <div className="px-5 mb-6">
+          <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">Settings</Subheading>
+        </div>
+        <nav className="flex-1 px-3 space-y-1">
+          <button
+            onClick={() => setActiveTab("general")}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === "general"
+                ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+            }`}
             >
               <ListTree size={16} />
               General
@@ -276,7 +275,6 @@ export function SettingsDialog({
             
           </div>
         </div>
-      </div>
-    </div>
-  )
+      </BaseDialog>
+    )
 }
