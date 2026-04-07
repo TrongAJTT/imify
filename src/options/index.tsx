@@ -414,7 +414,6 @@ export default function OptionsPage() {
 
               <Tooltip
                 content={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}
-                position={isNavCollapsed ? "right" : "down"}
                 variant="nowrap"
               >
                 <button

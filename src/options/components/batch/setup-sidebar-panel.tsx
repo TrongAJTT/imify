@@ -237,59 +237,59 @@ export function BatchSetupSidebarPanel() {
           disabled={isRunning}
         />
 
+<ResizePopover
+  resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
+  resizeValue={resizeValue}
+  resizeWidth={resizeWidth}
+  resizeHeight={resizeHeight}
+  resizeAspectMode={resizeAspectMode}
+  resizeAspectRatio={resizeAspectRatio}
+  resizeFitMode={resizeFitMode}
+  resizeContainBackground={resizeContainBackground}
+  resizeSourceWidth={resizeSourceWidth}
+  resizeSourceHeight={resizeSourceHeight}
+  resizeSyncVersion={resizeSyncVersion}
+  paperSize={paperSize}
+  dpi={dpi}
+  onResizeModeChange={(mode) => {
+    onResizeModeChange(mode as BatchResizeMode)
+
+    if (mode === "change_width" || mode === "change_height") {
+      onResizeValueChange(1280)
+      return
+    }
+
+    if (mode === "scale") {
+      onResizeValueChange(100)
+    }
+  }}
+  onResizeValueChange={onResizeValueChange}
+  onResizeWidthChange={onResizeWidthChange}
+  onResizeHeightChange={onResizeHeightChange}
+  onResizeAspectModeChange={(mode) => onResizeAspectModeChange(mode as any)}
+  onResizeAspectRatioChange={(ratio) => onResizeAspectRatioChange(String(ratio))}
+  onResizeFitModeChange={(mode) => onResizeFitModeChange(mode as any)}
+  onResizeContainBackgroundChange={onResizeContainBackgroundChange}
+  onPaperSizeChange={(size) => onPaperSizeChange(size as any)}
+  onDpiChange={(d) => onDpiChange(d as any)}
+  disabled={isRunning || isIcoTarget}
+/>
+
+{/* Concurrency */}
+<SelectInput
+  label="Concurrency"
+  value={String(concurrency)}
+  disabled={isRunning}
+  tooltip={CONCURRENCY_TOOLTIP}
+  options={concurrencyOptions.map((option) => ({
+    value: String(option.value),
+    label: option.label
+  }))}
+  onChange={(nextValue) => onConcurrencyChange(Number(nextValue))}
+/>
         {!isIcoTarget ? (
           <>
             {/* Resize Popover */}
-            <ResizePopover
-              resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
-              resizeValue={resizeValue}
-              resizeWidth={resizeWidth}
-              resizeHeight={resizeHeight}
-              resizeAspectMode={resizeAspectMode}
-              resizeAspectRatio={resizeAspectRatio}
-              resizeFitMode={resizeFitMode}
-              resizeContainBackground={resizeContainBackground}
-              resizeSourceWidth={resizeSourceWidth}
-              resizeSourceHeight={resizeSourceHeight}
-              resizeSyncVersion={resizeSyncVersion}
-              paperSize={paperSize}
-              dpi={dpi}
-              onResizeModeChange={(mode) => {
-                onResizeModeChange(mode as BatchResizeMode)
-
-                if (mode === "change_width" || mode === "change_height") {
-                  onResizeValueChange(1280)
-                  return
-                }
-
-                if (mode === "scale") {
-                  onResizeValueChange(100)
-                }
-              }}
-              onResizeValueChange={onResizeValueChange}
-              onResizeWidthChange={onResizeWidthChange}
-              onResizeHeightChange={onResizeHeightChange}
-              onResizeAspectModeChange={(mode) => onResizeAspectModeChange(mode as any)}
-              onResizeAspectRatioChange={(ratio) => onResizeAspectRatioChange(String(ratio))}
-              onResizeFitModeChange={(mode) => onResizeFitModeChange(mode as any)}
-              onResizeContainBackgroundChange={onResizeContainBackgroundChange}
-              onPaperSizeChange={(size) => onPaperSizeChange(size as any)}
-              onDpiChange={(d) => onDpiChange(d as any)}
-              disabled={isRunning}
-            />
-
-            {/* Concurrency */}
-            <SelectInput
-              label="Concurrency"
-              value={String(concurrency)}
-              disabled={isRunning}
-              tooltip={CONCURRENCY_TOOLTIP}
-              options={concurrencyOptions.map((option) => ({
-                value: String(option.value),
-                label: option.label
-              }))}
-              onChange={(nextValue) => onConcurrencyChange(Number(nextValue))}
-            />
           </>
         ) : null}
 

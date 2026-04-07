@@ -356,9 +356,9 @@ export function CustomFormatsTab({
         )}
       </div>
 
-      {isCreateDialogOpen ? (
+      {isCreateDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="w-full max-w-xl rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
+          <div className="w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <Heading className="text-base font-semibold">Create Custom Format</Heading>
               <button
@@ -380,7 +380,7 @@ export function CustomFormatsTab({
             />
           </div>
         </div>
-      ) : null}
+      )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={draftFormats.map((f) => f.id)} strategy={rectSortingStrategy}>
@@ -513,9 +513,9 @@ export function CustomFormatsTab({
         </div>
       ) : null}
 
-      {editing ? (
+      {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="w-full max-w-xl rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
+          <div className="w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <Heading className="text-base font-semibold">Edit Custom Format</Heading>
               <button
@@ -576,9 +576,9 @@ export function CustomFormatsTab({
             />
           </div>
         </div>
-      ) : null}
+      )}
 
-      {pendingDelete ? (
+      {pendingDelete && (
         <div className="fixed bottom-6 right-6 z-[70] w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl overflow-hidden">
           <div className="px-4 py-3">
             <div className="flex items-start justify-between gap-3">
@@ -607,7 +607,7 @@ export function CustomFormatsTab({
             />
           </div>
         </div>
-      ) : null}
+      )}
     </>
   )
 }
