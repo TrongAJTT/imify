@@ -271,7 +271,7 @@ async function encodeAvifInWorker(imageData: ImageData, quality?: number): Promi
   return new Blob([encoded as unknown as BlobPart], { type: "image/avif" })
 }
 
-async function encodeJxlInWorker(imageData: ImageData, quality?: number): Promise<Blob> {
+async function encodeJxlInWorker(imageData: ImageData, quality?: number, effort?: number): Promise<Blob> {
   const jxlModule = await getJxlModule()
   const encoded = jxlModule.encode(
     imageData.data as unknown as Uint8Array,
@@ -279,7 +279,8 @@ async function encodeJxlInWorker(imageData: ImageData, quality?: number): Promis
     imageData.height,
     {
       ...JXL_DEFAULT_OPTIONS,
-      quality: clampQuality(quality)
+      quality: clampQuality(quality),
+      effort: effort ?? JXL_DEFAULT_OPTIONS.effort
     }
   )
 
@@ -336,7 +337,7 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
     if (config.format === "jxl") {
       const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
       return {
-        blob: await encodeJxlInWorker(imageData, config.quality),
+        blob: await encodeJxlInWorker(imageData, config.quality, config.jxlEffort),
         mimeType: "image/jxl"
       }
     }

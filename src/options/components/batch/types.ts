@@ -69,6 +69,7 @@ export interface BatchSetupState {
   targetFormat: BatchTargetFormat
   concurrency: number
   quality: number
+  jxlEffort: number
   icoSizes: number[]
   icoGenerateWebIconKit: boolean
   resizeMode: BatchResizeMode
@@ -92,6 +93,7 @@ export interface BatchSetupHandlers {
   onTargetFormatChange: (value: BatchTargetFormat) => void
   onConcurrencyChange: (value: number) => void
   onQualityChange: (value: number) => void
+  onJxlEffortChange: (value: number) => void
   onIcoSizesChange: (value: number[]) => void
   onIcoGenerateWebIconKitChange: (value: boolean) => void
   onResizeModeChange: (value: BatchResizeMode) => void

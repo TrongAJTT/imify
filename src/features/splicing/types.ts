@@ -58,6 +58,7 @@ export interface SplicingImageStyle {
 export interface SplicingExportConfig {
   format: SplicingExportFormat
   quality: number
+  jxlEffort?: number
   pngTinyMode: boolean
   exportMode: SplicingExportMode
   trimBackground: boolean

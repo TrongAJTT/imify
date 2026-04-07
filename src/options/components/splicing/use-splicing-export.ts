@@ -107,6 +107,7 @@ export function useSplicingExport({
         const config: SplicingExportConfig = {
           format: store.exportFormat,
           quality: store.exportQuality,
+          jxlEffort: store.exportFormat === "jxl" ? store.exportJxlEffort : undefined,
           pngTinyMode: store.exportPngTinyMode,
           exportMode: store.exportMode,
           trimBackground: store.exportTrimBackground

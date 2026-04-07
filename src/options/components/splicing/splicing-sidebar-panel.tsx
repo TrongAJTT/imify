@@ -73,6 +73,7 @@ export function SplicingSidebarPanel() {
   const exportTrimBackground = useSplicingStore((s) => s.exportTrimBackground)
   const exportFormat = useSplicingStore((s) => s.exportFormat)
   const exportQuality = useSplicingStore((s) => s.exportQuality)
+  const exportJxlEffort = useSplicingStore((s) => s.exportJxlEffort)
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
   const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
   const exportFileNamePattern = useSplicingStore((s) => s.exportFileNamePattern)
@@ -103,6 +104,7 @@ export function SplicingSidebarPanel() {
   const setImageBorderColor = useSplicingStore((s) => s.setImageBorderColor)
   const setExportFormat = useSplicingStore((s) => s.setExportFormat)
   const setExportQuality = useSplicingStore((s) => s.setExportQuality)
+  const setExportJxlEffort = useSplicingStore((s) => s.setExportJxlEffort)
   const setExportPngTinyMode = useSplicingStore((s) => s.setExportPngTinyMode)
   const setExportMode = useSplicingStore((s) => s.setExportMode)
   const setExportTrimBackground = useSplicingStore((s) => s.setExportTrimBackground)
@@ -340,12 +342,14 @@ export function SplicingSidebarPanel() {
           <TargetFormatQualityCard
             targetFormat={exportFormat}
             quality={exportQuality}
+            jxlEffort={exportJxlEffort}
             pngTinyMode={exportPngTinyMode}
             formatOptions={EXPORT_FORMAT_OPTIONS}
             supportsQuality={showQuality}
             supportsTinyMode={showTinyMode}
             onTargetFormatChange={(v: string) => setExportFormat(v as SplicingExportFormat)}
             onQualityChange={setExportQuality}
+            onJxlEffortChange={setExportJxlEffort}
             onPngTinyModeChange={setExportPngTinyMode}
             disabled={false}
             isOpen={isExportFormatQualityOpen}

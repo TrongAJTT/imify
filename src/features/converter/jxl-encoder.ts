@@ -3,6 +3,7 @@ import { encodeJxlDirect } from "@/features/converter/wasm-direct-encoder"
 
 export interface JxlEncodeOptions {
   quality?: number
+  effort?: number
 }
 
 const defaultOptions = {
@@ -23,13 +24,14 @@ export async function encodeJxl(
 ): Promise<Blob> {
   const encodeOptions = {
     ...defaultOptions,
-    quality: options?.quality ?? defaultOptions.quality
+    quality: options?.quality ?? defaultOptions.quality,
+    effort: options?.effort ?? defaultOptions.effort
   }
 
   const encoded =
     typeof Worker === "function"
       ? await encodeWithWasmWorker("jxl", imageData, encodeOptions)
-      : await encodeJxlDirect(imageData, options?.quality)
+      : await encodeJxlDirect(imageData, options?.quality, options?.effort)
 
   if (!encoded || encoded.byteLength === 0) {
     throw new Error("JXL encoding failed in the WASM encoder")

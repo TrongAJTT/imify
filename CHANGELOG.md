@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **JXL Effort Control:** Added `Effort Level` selector in **Target Format & Quality** card for JXL format, allowing users to control compression algorithm complexity (1-9 scale):
+  - **1-3:** Lightning/Fast modes - faster encoding, larger file sizes (recommended for Batch processing)
+  - **4-6:** Fast-Balanced/Balanced modes - balanced performance and compression
+  - **7-9:** Optimal/Maximum modes - maximum compression, slower encoding (default: 7, recommended for Single processing)
+  - Fully integrated into Custom Presets, Single/Batch Processor, and Image Splicing workflows with tooltips explaining trade-offs.
 - **Splicing (Bento):** Added a new **Fixed Horizontal** layout, where **Count** is the maximum number of images per row.
 - **Splicing (Bento):** Added **Image Alignment** controls for fixed layouts, including **Fixed Vertical** and **Fixed Horizontal**.
 - **UI:** Added new `BaseDialog` component using HTML5 native `<dialog>` element for better accessibility and native backdrop handling.

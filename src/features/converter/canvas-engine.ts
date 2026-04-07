@@ -24,6 +24,7 @@ export interface RasterConvertParams {
   targetFormat: Exclude<ImageFormat, "pdf" | "ico">
   resize: ResizeConfig
   quality?: number
+  jxlEffort?: number
   pngTinyMode?: boolean
 }
 
@@ -157,7 +158,7 @@ async function convertToRasterBlob(
 export async function convertRasterImage(
   params: RasterConvertParams
 ): Promise<RasterConvertResult> {
-  const { sourceBlob, targetFormat, resize, quality, pngTinyMode } = params
+  const { sourceBlob, targetFormat, resize, quality, jxlEffort, pngTinyMode } = params
   const imageBitmap = await createImageBitmap(sourceBlob)
 
   try {
@@ -202,7 +203,10 @@ export async function convertRasterImage(
 
     if (targetFormat === "jxl") {
       const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
-      const outputBlob = await encodeJxl(imageData, { quality: clampQuality(quality) })
+      const outputBlob = await encodeJxl(imageData, {
+        quality: clampQuality(quality),
+        effort: jxlEffort
+      })
 
       return {
         outputBlob,

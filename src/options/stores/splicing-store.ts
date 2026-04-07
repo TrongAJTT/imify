@@ -74,6 +74,7 @@ export interface SplicingStoreState {
 
   exportFormat: SplicingExportFormat
   exportQuality: number
+  exportJxlEffort: number
   exportPngTinyMode: boolean
   exportMode: SplicingExportMode
   exportTrimBackground: boolean
@@ -119,6 +120,7 @@ export interface SplicingStoreState {
   setImageBorderColor: (v: string) => void
   setExportFormat: (v: SplicingExportFormat) => void
   setExportQuality: (v: number) => void
+  setExportJxlEffort: (v: number) => void
   setExportPngTinyMode: (v: boolean) => void
   setExportMode: (v: SplicingExportMode) => void
   setExportTrimBackground: (v: boolean) => void
@@ -166,6 +168,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
 
       exportFormat: "png",
       exportQuality: 92,
+      exportJxlEffort: 7,
       exportPngTinyMode: false,
       exportMode: "single",
       exportTrimBackground: false,
@@ -203,6 +206,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setImageBorderColor: (v) => set({ imageBorderColor: v }),
       setExportFormat: (v) => set({ exportFormat: v }),
       setExportQuality: (v) => set({ exportQuality: v }),
+      setExportJxlEffort: (v) => set({ exportJxlEffort: v }),
       setExportPngTinyMode: (v) => set({ exportPngTinyMode: v }),
       setExportMode: (v) => set({ exportMode: v }),
       setExportTrimBackground: (v) => set({ exportTrimBackground: v }),

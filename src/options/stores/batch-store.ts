@@ -62,6 +62,7 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   targetFormat: "jpg",
   concurrency: 3,
   quality: 90,
+  jxlEffort: 7,
   icoSizes: [...DEFAULT_ICO_SIZES],
   icoGenerateWebIconKit: false,
   resizeMode: "inherit",
@@ -151,6 +152,7 @@ interface BatchStoreState extends BatchSetupState {
   setTargetFormat: (value: BatchTargetFormat) => void
   setConcurrency: (value: number) => void
   setQuality: (value: number) => void
+  setJxlEffort: (value: number) => void
   setIcoSizes: (value: number[]) => void
   setIcoGenerateWebIconKit: (value: boolean) => void
   setResizeMode: (value: BatchResizeMode) => void
@@ -283,6 +285,23 @@ export const useBatchStore = create<BatchStoreState>()(
 
           return {
             quality: value,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setJxlEffort: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const nextConfig = {
+            ...contextConfigs[setupContext],
+            jxlEffort: value
+          }
+
+          return {
+            jxlEffort: value,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -665,6 +684,7 @@ export const useBatchStore = create<BatchStoreState>()(
             targetFormat: state.targetFormat,
             concurrency: state.concurrency,
             quality: state.quality,
+            jxlEffort: state.jxlEffort,
             icoSizes: [...state.icoSizes],
             icoGenerateWebIconKit: state.icoGenerateWebIconKit,
             resizeMode: state.resizeMode,

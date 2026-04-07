@@ -15,6 +15,7 @@ export interface CustomFormatInput {
   format: FormatConfig["format"]
   enabled: boolean
   quality?: number
+  jxlEffort?: number
   icoOptions?: IcoOptions
   resize: ResizeConfig
 }
@@ -109,6 +110,7 @@ function normalizeCustomFormat(input: CustomFormatInput, id: string): FormatConf
     format: input.format,
     enabled: input.enabled,
     quality: clampQuality(input.quality),
+    jxlEffort: input.format === "jxl" ? Math.max(1, Math.min(9, Math.round(input.jxlEffort ?? 7))) : undefined,
     icoOptions: input.format === "ico" ? normalizeIcoOptions(input.icoOptions) : undefined,
     resize: normalizeResizeConfig(input.resize, input.format)
   }

@@ -108,7 +108,7 @@ export async function encodeAvifDirect(imageData: ImageData, quality?: number): 
   return encoded
 }
 
-export async function encodeJxlDirect(imageData: ImageData, quality?: number): Promise<Uint8Array> {
+export async function encodeJxlDirect(imageData: ImageData, quality?: number, effort?: number): Promise<Uint8Array> {
   const module = await getJxlModule()
   const encoded = module.encode(
     imageData.data as unknown as Uint8Array,
@@ -116,7 +116,8 @@ export async function encodeJxlDirect(imageData: ImageData, quality?: number): P
     imageData.height,
     {
       ...JXL_DEFAULT_OPTIONS,
-      quality: clampQuality(quality)
+      quality: clampQuality(quality),
+      effort: effort ?? JXL_DEFAULT_OPTIONS.effort
     }
   )
 

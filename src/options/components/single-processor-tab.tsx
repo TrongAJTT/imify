@@ -160,6 +160,7 @@ function clamp(value: number, min: number, max: number): number {
 export function SingleProcessorTab() {
   const targetFormat = useBatchStore((state) => state.targetFormat)
   const quality = useBatchStore((state) => state.quality)
+  const jxlEffort = useBatchStore((state) => state.jxlEffort)
   const icoSizes = useBatchStore((state) => state.icoSizes)
   const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
   const resizeMode = useBatchStore((state) => state.resizeMode)
@@ -215,6 +216,7 @@ export function SingleProcessorTab() {
       format: targetFormat,
       enabled: true,
       quality,
+      jxlEffort,
       pngTinyMode,
       resize: { mode: "none" }
     }
@@ -240,6 +242,7 @@ export function SingleProcessorTab() {
     targetFormat,
     resizeMode,
     quality,
+    jxlEffort,
     icoSizes,
     icoGenerateWebIconKit,
     resizeValue,

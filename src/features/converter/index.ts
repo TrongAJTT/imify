@@ -63,6 +63,7 @@ export async function convertImage(
       targetFormat: config.format,
       resize: config.resize,
       quality: config.quality,
+      jxlEffort: config.jxlEffort,
       pngTinyMode: config.pngTinyMode
     })
 
@@ -80,6 +81,7 @@ export async function convertImage(
       targetFormat: config.format,
       resize: config.resize,
       quality: config.quality,
+      jxlEffort: config.jxlEffort,
       pngTinyMode: config.pngTinyMode
     })
 

@@ -50,6 +50,7 @@ export interface FormatConfig {
   enabled: boolean
   quality?: number
   pngTinyMode?: boolean
+  jxlEffort?: number
   resize: ResizeConfig
   icoOptions?: IcoOptions
 }

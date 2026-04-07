@@ -171,7 +171,8 @@ async function canvasToBlob(
   canvas: OffscreenCanvas,
   format: SplicingExportFormat,
   quality: number,
-  pngTinyMode: boolean
+  pngTinyMode: boolean,
+  jxlEffort?: number
 ): Promise<Blob> {
   const ctx = canvas.getContext("2d")
   if (!ctx) throw new Error("Failed to get 2D context")
@@ -185,7 +186,10 @@ async function canvasToBlob(
     }
     case "jxl": {
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      return encodeJxl(data, { quality: clampQuality(quality) })
+      return encodeJxl(data, {
+        quality: clampQuality(quality),
+        effort: jxlEffort
+      })
     }
     case "bmp": {
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
@@ -319,7 +323,13 @@ export async function exportSplicedImage(
         canvasStyle,
         imageStyle
       )
-      const blob = await canvasToBlob(canvas, exportConfig.format, exportConfig.quality, exportConfig.pngTinyMode)
+      const blob = await canvasToBlob(
+        canvas,
+        exportConfig.format,
+        exportConfig.quality,
+        exportConfig.pngTinyMode,
+        exportConfig.jxlEffort
+      )
       options?.onProgress?.({
         phase: "render",
         completed: 1,
@@ -392,7 +402,13 @@ export async function exportSplicedImage(
       }
 
       const canvas = renderToOffscreen(groupW, groupH, bitmaps, shifted, canvasStyle, imageStyle)
-      results[groupIndex] = await canvasToBlob(canvas, exportConfig.format, exportConfig.quality, exportConfig.pngTinyMode)
+      results[groupIndex] = await canvasToBlob(
+        canvas,
+        exportConfig.format,
+        exportConfig.quality,
+        exportConfig.pngTinyMode,
+        exportConfig.jxlEffort
+      )
       completed += 1
       active = Math.max(0, active - 1)
       options?.onProgress?.({

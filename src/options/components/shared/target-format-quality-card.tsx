@@ -12,6 +12,8 @@ export type TargetFormatQualityCardProps = {
   quality: number
   /** PNG Tiny Mode toggle state */
   pngTinyMode: boolean
+  /** JXL Effort level (1-9) for compression optimization */
+  jxlEffort?: number
   /** Available format options for dropdown */
   formatOptions: Array<{ value: string; label: string }>
   /** Whether quality is supported for current format */
@@ -28,6 +30,8 @@ export type TargetFormatQualityCardProps = {
   onQualityChange: (quality: number) => void
   /** Callback when tiny mode toggle changes */
   onPngTinyModeChange: (enabled: boolean) => void
+  /** Callback when JXL effort level changes */
+  onJxlEffortChange?: (effort: number) => void
   /** Callback when ICO sizes change (optional for ICO handling) */
   onIcoSizesChange?: (sizes: number[]) => void
   /** Disable all inputs */
@@ -46,6 +50,7 @@ export function TargetFormatQualityCard({
   targetFormat,
   quality,
   pngTinyMode,
+  jxlEffort,
   formatOptions,
   supportsQuality,
   supportsTinyMode,
@@ -55,6 +60,7 @@ export function TargetFormatQualityCard({
   onTargetFormatChange,
   onQualityChange,
   onPngTinyModeChange,
+  onJxlEffortChange,
   onIcoSizesChange,
   disabled,
   isOpen,
@@ -75,6 +81,7 @@ export function TargetFormatQualityCard({
   const extraFlags: string[] = []
   if (isIcoTarget && icoGenerateWebIconKit) extraFlags.push("Web Toolkit")
   if (!isIcoTarget && targetFormat === "png" && pngTinyMode) extraFlags.push("Tiny")
+  if (targetFormat === "jxl" && jxlEffort) extraFlags.push(`Effort ${jxlEffort}`)
 
   const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
 
@@ -110,6 +117,29 @@ export function TargetFormatQualityCard({
               step={1}
               value={quality}
               onChangeValue={onQualityChange}
+            />
+          </div>
+        )}
+
+        {targetFormat === "jxl" && (
+          <div>
+            <SelectInput
+              label="Effort Level"
+              tooltip={`Effort controls compression algorithm complexity.\n- Higher values (7-9) produce smaller files but are slower.\n- Lower values (1-3) are faster but files are larger.\n- Default (5) is balanced.`}
+              disabled={disabled}
+              options={[
+                { value: "1", label: "1 - Lightning (fastest)" },
+                { value: "2", label: "2 - Very Fast" },
+                { value: "3", label: "3 - Fast" },
+                { value: "4", label: "4 - Fast-Balanced" },
+                { value: "5", label: "5 - Balanced (default)" },
+                { value: "6", label: "6 - Balanced - Optimal" },
+                { value: "7", label: "7 - Optimal" },
+                { value: "8", label: "8 - Very Optimal" },
+                { value: "9", label: "9 - Maximum (slowest)" }
+              ]}
+              onChange={(v) => onJxlEffortChange?.(parseInt(v, 10))}
+              value={String(jxlEffort ?? 5)}
             />
           </div>
         )}

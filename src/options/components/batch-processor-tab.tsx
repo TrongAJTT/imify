@@ -28,6 +28,7 @@ export function BatchProcessorTab() {
   const targetFormat = useBatchStore((state) => state.targetFormat)
   const concurrency = useBatchStore((state) => state.concurrency)
   const quality = useBatchStore((state) => state.quality)
+  const jxlEffort = useBatchStore((state) => state.jxlEffort)
   const icoSizes = useBatchStore((state) => state.icoSizes)
   const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
   const resizeMode = useBatchStore((state) => state.resizeMode)
@@ -78,6 +79,7 @@ export function BatchProcessorTab() {
       format: targetFormat,
       enabled: true,
       quality,
+      jxlEffort,
       pngTinyMode,
       resize: { mode: "none" }
     }
@@ -103,6 +105,7 @@ export function BatchProcessorTab() {
     targetFormat,
     resizeMode,
     quality,
+    jxlEffort,
     icoSizes,
     icoGenerateWebIconKit,
     resizeValue,

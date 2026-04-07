@@ -58,6 +58,7 @@ export function BatchSetupSidebarPanel() {
   const targetFormat = useBatchStore((state) => state.targetFormat)
   const concurrency = useBatchStore((state) => state.concurrency)
   const quality = useBatchStore((state) => state.quality)
+  const jxlEffort = useBatchStore((state) => state.jxlEffort)
   const icoSizes = useBatchStore((state) => state.icoSizes)
   const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
   const resizeMode = useBatchStore((state) => state.resizeMode)
@@ -81,6 +82,7 @@ export function BatchSetupSidebarPanel() {
   const onTargetFormatChange = useBatchStore((state) => state.setTargetFormat)
   const onConcurrencyChange = useBatchStore((state) => state.setConcurrency)
   const onQualityChange = useBatchStore((state) => state.setQuality)
+  const onJxlEffortChange = useBatchStore((state) => state.setJxlEffort)
   const onIcoSizesChange = useBatchStore((state) => state.setIcoSizes)
   const onIcoGenerateWebIconKitChange = useBatchStore((state) => state.setIcoGenerateWebIconKit)
   const onResizeModeChange = useBatchStore((state) => state.setResizeMode)
@@ -224,6 +226,7 @@ export function BatchSetupSidebarPanel() {
         <TargetFormatQualityCard
           targetFormat={targetFormat}
           quality={quality}
+          jxlEffort={jxlEffort}
           pngTinyMode={pngTinyMode}
           formatOptions={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
             value: formatOption.value,
@@ -237,6 +240,7 @@ export function BatchSetupSidebarPanel() {
           onIcoSizesChange={onIcoSizesChange}
           onTargetFormatChange={(nextValue: string) => onTargetFormatChange(nextValue as BatchTargetFormat)}
           onQualityChange={onQualityChange}
+          onJxlEffortChange={onJxlEffortChange}
           onPngTinyModeChange={onPngTinyModeChange}
           disabled={isRunning}
           isOpen={isTargetFormatQualityOpen}

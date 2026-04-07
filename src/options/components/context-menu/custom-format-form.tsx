@@ -46,6 +46,7 @@ export function CustomFormatForm({
             targetFormat={value.format}
             quality={value.quality ?? 90}
             pngTinyMode={false}
+            jxlEffort={value.jxlEffort ?? 7}
             formatOptions={CUSTOM_FORMATS.map((formatOption) => ({
               value: formatOption,
               label: FORMAT_LABELS[formatOption]
@@ -79,6 +80,7 @@ export function CustomFormatForm({
                 quality: QUALITY_FORMATS.includes(nextFormat as ImageFormat)
                   ? value.quality ?? 90
                   : value.quality,
+                jxlEffort: nextFormat === "jxl" ? value.jxlEffort ?? 7 : value.jxlEffort,
                 icoOptions:
                   nextFormat === "ico"
                     ? value.icoOptions ?? {
@@ -93,6 +95,7 @@ export function CustomFormatForm({
               })
             }
             onQualityChange={(next) => onChange({ ...value, quality: next })}
+            onJxlEffortChange={(next) => onChange({ ...value, jxlEffort: next })}
             onPngTinyModeChange={() => {}}
             disabled={false}
             alwaysOpen
