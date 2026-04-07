@@ -122,25 +122,42 @@ export function ResizePopover({
 }: ResizePopoverProps) {
   const [isOpen, setIsOpen] = useState(false)
 
-  // Build available modes with mapping - support both batch and splicing mode names
-  const ALL_MODES = [
-    { value: "none", label: "No resize" },
-    { value: "change_width", label: "Fit width" },     // batch store mode
-    { value: "fit_width", label: "Fit width" },        // splicing mode (alias)
-    { value: "change_height", label: "Fit height" },   // batch store mode
-    { value: "fit_height", label: "Fit height" },      // splicing mode (alias)
-    { value: "set_size", label: "Set size" },
-    { value: "scale", label: "Scale" },
-    { value: "page_size", label: "Paper size" }
-  ]
+  // Build mode options: batch modes by default, replace with availableModes if provided
+  const getModeOptions = () => {
+    // Base batch modes
+    const batchModeMap: Record<string, string> = {
+      none: "No resize",
+      change_width: "Fit width",
+      change_height: "Fit height",
+      set_size: "Set size",
+      scale: "Scale",
+      page_size: "Paper size"
+    }
 
-  const modeOptions = availableModes
-    ? ALL_MODES.filter((m) => availableModes.includes(m.value))
-    : ALL_MODES
+    // If availableModes is provided (for splicing), map splicing modes to labels
+    if (availableModes) {
+      const splicingModeMap: Record<string, string> = {
+        none: "No resize",
+        fit_width: "Fit width",
+        fit_height: "Fit height"
+      }
+      return availableModes.map((mode) => ({
+        value: mode,
+        label: splicingModeMap[mode] || mode
+      }))
+    }
 
+    // Otherwise use all batch modes
+    return Object.entries(batchModeMap).map(([value, label]) => ({
+      value,
+      label
+    }))
+  }
+
+  const modeOptions = getModeOptions()
   const modeLabel = modeOptions.find((m) => m.value === resizeMode)?.label || getModeLabel(resizeMode)
   const sublabel = generateSublabel(resizeMode, resizeValue, resizeWidth, resizeHeight, paperSize, dpi)
-  const isSimpleMode = resizeMode === "change_width" || resizeMode === "change_height" || resizeMode === "fit_width" || resizeMode === "fit_height" || resizeMode === "scale"
+  const isSimpleMode = resizeMode === "change_width" || resizeMode === "fit_width" || resizeMode === "change_height" || resizeMode === "fit_height" || resizeMode === "scale"
   const isSetSize = resizeMode === "set_size"
   const isPageSize = resizeMode === "page_size"
 

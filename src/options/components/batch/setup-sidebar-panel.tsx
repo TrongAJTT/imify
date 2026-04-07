@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { FileEdit, FolderOpen, History, Save, Stamp } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/options/shared"
+import { CONCURRENCY_TOOLTIP } from "@/options/shared/concurrency-messages"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 
 import { SelectInput } from "@/options/components/ui/select-input"
@@ -93,8 +94,6 @@ export function BatchSetupSidebarPanel() {
   const onPngTinyModeChange = useBatchStore((state) => state.setPngTinyMode)
   const onFileNamePatternChange = useBatchStore((state) => state.setFileNamePattern)
   const onWatermarkChange = useBatchStore((state) => state.setWatermark)
-  const heavyFormatToast = useBatchStore((state) => state.heavyFormatToast)
-  const setHeavyFormatToast = useBatchStore((state) => state.setHeavyFormatToast)
   const presets = useBatchStore((state) => state.presets)
   const recentPresetIds = useBatchStore((state) => state.recentPresetIds)
   const saveCurrentPreset = useBatchStore((state) => state.saveCurrentPreset)
@@ -119,27 +118,6 @@ export function BatchSetupSidebarPanel() {
         ...EXTENDED_CONCURRENCY_VALUES.map((value) => ({ value, label: `${value}` }))
       ]
     : BASE_CONCURRENCY_OPTIONS
-
-  useEffect(() => {
-    if (!supportsExtendedConcurrency && concurrency > 5) {
-      onConcurrencyChange(5)
-    }
-  }, [concurrency, onConcurrencyChange, supportsExtendedConcurrency])
-
-  useEffect(() => {
-    if (targetFormat === "avif" || targetFormat === "jxl") {
-      const toastId = `heavy_${targetFormat}_${Date.now()}`
-      setHeavyFormatToast({ id: toastId, format: targetFormat.toUpperCase() })
-
-      const timer = setTimeout(() => {
-        setHeavyFormatToast(null)
-      }, 6000)
-
-      return () => clearTimeout(timer)
-    }
-
-    setHeavyFormatToast(null)
-  }, [targetFormat, setHeavyFormatToast])
 
   const watermarkSummary =
     watermark.type === "none"
@@ -301,24 +279,17 @@ export function BatchSetupSidebarPanel() {
             />
 
             {/* Concurrency */}
-            <div
-              className={`transition-all ${
-                heavyFormatToast
-                  ? "rounded-md border border-amber-500 bg-amber-50/30 dark:bg-amber-900/20 ring-2 ring-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] p-1"
-                  : ""
-              }`}
-            >
-              <SelectInput
-                label="Concurrency"
-                value={String(concurrency)}
-                disabled={isRunning}
-                options={concurrencyOptions.map((option) => ({
-                  value: String(option.value),
-                  label: option.label
-                }))}
-                onChange={(nextValue) => onConcurrencyChange(Number(nextValue))}
-              />
-            </div>
+            <SelectInput
+              label="Concurrency"
+              value={String(concurrency)}
+              disabled={isRunning}
+              tooltip={CONCURRENCY_TOOLTIP}
+              options={concurrencyOptions.map((option) => ({
+                value: String(option.value),
+                label: option.label
+              }))}
+              onChange={(nextValue) => onConcurrencyChange(Number(nextValue))}
+            />
           </>
         ) : null}
 

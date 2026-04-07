@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { FileEdit } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/core/format-config"
+import { CONCURRENCY_TOOLTIP } from "@/options/shared/concurrency-messages"
 import { getCanonicalExtension } from "@/core/download-utils"
 import type {
   SplicingExportFormat,
@@ -360,6 +361,7 @@ export function SplicingSidebarPanel() {
                 label="Concurrency"
                 value={exportConcurrency}
                 onChangeValue={setExportConcurrency}
+                tooltip={CONCURRENCY_TOOLTIP}
                 min={1}
                 max={5}
               />

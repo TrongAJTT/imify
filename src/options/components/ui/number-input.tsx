@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react"
 import { LabelText } from "@/options/components/ui/typography"
+import { Tooltip } from "@/options/components/tooltip"
 
 interface NumberInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: number
@@ -9,6 +10,7 @@ interface NumberInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   max?: number
   step?: number
   label?: string
+  tooltip?: string
 }
 
 export function NumberInput({
@@ -19,6 +21,7 @@ export function NumberInput({
   step = 1,
   label,
   disabled,
+  tooltip,
   ...props
 }: NumberInputProps) {
   const [draft, setDraft] = useState(String(value))
@@ -88,7 +91,14 @@ export function NumberInput({
   return (
     <div className="space-y-1">
       {label && (
+        <div className="flex items-center gap-1">
           <LabelText className="text-xs">{label}</LabelText>
+          {tooltip && (
+            <Tooltip content={tooltip} position="top">
+              <HelpCircle size={12} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help" />
+            </Tooltip>
+          )}
+        </div>
       )}
       <div className="group relative flex items-center">
         <input
