@@ -18,8 +18,8 @@ import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import SidebarCard from "@/options/components/ui/sidebar-card"
-import { TargetFormatQualityPopover } from "../shared/target-format-quality-popover"
-import { ResizePopover } from "../shared/resize-popover"
+import { TargetFormatQualityCard } from "../shared/target-format-quality-card"
+import { ResizeCard } from "../shared/resize-card"
 import {
   RenamePatternDialog,
   SPLICING_EXPORT_RENAME_PRESETS,
@@ -67,6 +67,7 @@ export function SplicingSidebarPanel() {
   const imageBorderRadius = useSplicingStore((s) => s.imageBorderRadius)
   const imageBorderWidth = useSplicingStore((s) => s.imageBorderWidth)
   const imageBorderColor = useSplicingStore((s) => s.imageBorderColor)
+  const isImageResizeOpen = useSplicingStore((s) => s.isImageResizeOpen)
 
   const exportMode = useSplicingStore((s) => s.exportMode)
   const exportTrimBackground = useSplicingStore((s) => s.exportTrimBackground)
@@ -75,6 +76,7 @@ export function SplicingSidebarPanel() {
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
   const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
   const exportFileNamePattern = useSplicingStore((s) => s.exportFileNamePattern)
+  const isExportFormatQualityOpen = useSplicingStore((s) => s.isExportFormatQualityOpen)
 
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
 
@@ -106,6 +108,8 @@ export function SplicingSidebarPanel() {
   const setExportTrimBackground = useSplicingStore((s) => s.setExportTrimBackground)
   const setExportConcurrency = useSplicingStore((s) => s.setExportConcurrency)
   const setExportFileNamePattern = useSplicingStore((s) => s.setExportFileNamePattern)
+  const setIsImageResizeOpen = useSplicingStore((s) => s.setIsImageResizeOpen)
+  const setIsExportFormatQualityOpen = useSplicingStore((s) => s.setIsExportFormatQualityOpen)
 
   const splicingRenamePreviewSample = useMemo(
     () => ({
@@ -273,8 +277,8 @@ export function SplicingSidebarPanel() {
       {/* Image Style */}
       <SidebarPanel title="IMAGES">
         <div className="space-y-3">
-          {/* Resize Popover */}
-          <ResizePopover
+          {/* Image Resize Card */}
+          <ResizeCard
             resizeMode={imageResize === "original" ? "none" : imageResize}
             resizeValue={imageFitValue}
             resizeWidth={0}
@@ -299,6 +303,8 @@ export function SplicingSidebarPanel() {
             onPaperSizeChange={() => {}}
             onDpiChange={() => {}}
             availableModes={["none", "fit_width", "fit_height"]}
+            isOpen={isImageResizeOpen}
+            onOpenChange={setIsImageResizeOpen}
           />
 
           <div className="grid grid-cols-3 gap-2">
@@ -330,8 +336,8 @@ export function SplicingSidebarPanel() {
       {/* Export */}
       <SidebarPanel title="EXPORT">
         <div className="space-y-3">
-          {/* Target Format & Quality Popover */}
-          <TargetFormatQualityPopover
+          {/* Export Format & Quality Card */}
+          <TargetFormatQualityCard
             targetFormat={exportFormat}
             quality={exportQuality}
             pngTinyMode={exportPngTinyMode}
@@ -341,6 +347,9 @@ export function SplicingSidebarPanel() {
             onTargetFormatChange={(v: string) => setExportFormat(v as SplicingExportFormat)}
             onQualityChange={setExportQuality}
             onPngTinyModeChange={setExportPngTinyMode}
+            disabled={false}
+            isOpen={isExportFormatQualityOpen}
+            onOpenChange={setIsExportFormatQualityOpen}
           />
           <div className="grid grid-cols-2 gap-2">
             <SelectField

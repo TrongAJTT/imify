@@ -11,6 +11,7 @@ export const ATTRIBUTIONS: AttributionItem[] = [
   { name: "Plasmo", author: "Plasmo Corp.", license: "MIT", url: "https://docs.plasmo.com/" },
   { name: "Tailwind CSS", author: "Tailwind Labs, Inc.", license: "MIT", url: "https://tailwindcss.com/" },
   { name: "Lucide React", author: "Eric Fennis and Lucide contributors", license: "ISC", url: "https://lucide.dev/" },
+  { name: "Radix UI", author: "Modulz Inc. and Radix UI contributors", license: "MIT", url: "https://www.radix-ui.com/" },
   { name: "Zustand", author: "Paul Henschel and Poimandres contributors", license: "MIT", url: "https://github.com/pmndrs/zustand" },
   { name: "dnd-kit", author: "Claudéric Demers", license: "MIT", url: "https://dndkit.com/" },
   { name: "react-colorful", author: "Vlad Shilov and contributors", license: "MIT", url: "https://github.com/omgovich/react-colorful" },

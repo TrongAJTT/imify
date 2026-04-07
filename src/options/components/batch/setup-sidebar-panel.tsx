@@ -9,8 +9,8 @@ import { SelectInput } from "@/options/components/ui/select-input"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker } from "@/options/components/ui/typography"
 import SidebarCard from "@/options/components/ui/sidebar-card"
-import { TargetFormatQualityPopover } from "@/options/components/shared/target-format-quality-popover"
-import { ResizePopover } from "@/options/components/shared/resize-popover"
+import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
+import { ResizeCard } from "@/options/components/shared/resize-card"
 import {
   HIGH_CONCURRENCY_FORMATS,
   TARGET_FORMAT_OPTIONS,
@@ -51,6 +51,10 @@ const EXTENDED_CONCURRENCY_VALUES = [10, 15, 20, 25, 30] as const
 export function BatchSetupSidebarPanel() {
   const setupContext = useBatchStore((state) => state.setupContext)
   const isRunning = useBatchStore((state) => state.isRunning)
+  const isTargetFormatQualityOpen = useBatchStore((state) => state.isTargetFormatQualityOpen)
+  const isResizeOpen = useBatchStore((state) => state.isResizeOpen)
+  const setIsTargetFormatQualityOpen = useBatchStore((state) => state.setIsTargetFormatQualityOpen)
+  const setIsResizeOpen = useBatchStore((state) => state.setIsResizeOpen)
   const targetFormat = useBatchStore((state) => state.targetFormat)
   const concurrency = useBatchStore((state) => state.concurrency)
   const quality = useBatchStore((state) => state.quality)
@@ -216,8 +220,8 @@ export function BatchSetupSidebarPanel() {
   return (
     <SidebarPanel title="CONFIGURATION" headerActions={panelActions}>
       <div className="space-y-3 mt-1">
-        {/* Target Format & Quality Popover */}
-        <TargetFormatQualityPopover
+        {/* Target Format & Quality Card */}
+        <TargetFormatQualityCard
           targetFormat={targetFormat}
           quality={quality}
           pngTinyMode={pngTinyMode}
@@ -235,45 +239,50 @@ export function BatchSetupSidebarPanel() {
           onQualityChange={onQualityChange}
           onPngTinyModeChange={onPngTinyModeChange}
           disabled={isRunning}
+          isOpen={isTargetFormatQualityOpen}
+          onOpenChange={setIsTargetFormatQualityOpen}
         />
 
-<ResizePopover
-  resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
-  resizeValue={resizeValue}
-  resizeWidth={resizeWidth}
-  resizeHeight={resizeHeight}
-  resizeAspectMode={resizeAspectMode}
-  resizeAspectRatio={resizeAspectRatio}
-  resizeFitMode={resizeFitMode}
-  resizeContainBackground={resizeContainBackground}
-  resizeSourceWidth={resizeSourceWidth}
-  resizeSourceHeight={resizeSourceHeight}
-  resizeSyncVersion={resizeSyncVersion}
-  paperSize={paperSize}
-  dpi={dpi}
-  onResizeModeChange={(mode) => {
-    onResizeModeChange(mode as BatchResizeMode)
+        {/* Resize Card */}
+        <ResizeCard
+          resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
+          resizeValue={resizeValue}
+          resizeWidth={resizeWidth}
+          resizeHeight={resizeHeight}
+          resizeAspectMode={resizeAspectMode}
+          resizeAspectRatio={resizeAspectRatio}
+          resizeFitMode={resizeFitMode}
+          resizeContainBackground={resizeContainBackground}
+          resizeSourceWidth={resizeSourceWidth}
+          resizeSourceHeight={resizeSourceHeight}
+          resizeSyncVersion={resizeSyncVersion}
+          paperSize={paperSize}
+          dpi={dpi}
+          onResizeModeChange={(mode) => {
+            onResizeModeChange(mode as BatchResizeMode)
 
-    if (mode === "change_width" || mode === "change_height") {
-      onResizeValueChange(1280)
-      return
-    }
+            if (mode === "change_width" || mode === "change_height") {
+              onResizeValueChange(1280)
+              return
+            }
 
-    if (mode === "scale") {
-      onResizeValueChange(100)
-    }
-  }}
-  onResizeValueChange={onResizeValueChange}
-  onResizeWidthChange={onResizeWidthChange}
-  onResizeHeightChange={onResizeHeightChange}
-  onResizeAspectModeChange={(mode) => onResizeAspectModeChange(mode as any)}
-  onResizeAspectRatioChange={(ratio) => onResizeAspectRatioChange(String(ratio))}
-  onResizeFitModeChange={(mode) => onResizeFitModeChange(mode as any)}
-  onResizeContainBackgroundChange={onResizeContainBackgroundChange}
-  onPaperSizeChange={(size) => onPaperSizeChange(size as any)}
-  onDpiChange={(d) => onDpiChange(d as any)}
-  disabled={isRunning || isIcoTarget}
-/>
+            if (mode === "scale") {
+              onResizeValueChange(100)
+            }
+          }}
+          onResizeValueChange={onResizeValueChange}
+          onResizeWidthChange={onResizeWidthChange}
+          onResizeHeightChange={onResizeHeightChange}
+          onResizeAspectModeChange={(mode) => onResizeAspectModeChange(mode as any)}
+          onResizeAspectRatioChange={(ratio) => onResizeAspectRatioChange(String(ratio))}
+          onResizeFitModeChange={(mode) => onResizeFitModeChange(mode as any)}
+          onResizeContainBackgroundChange={onResizeContainBackgroundChange}
+          onPaperSizeChange={(size) => onPaperSizeChange(size as any)}
+          onDpiChange={(d) => onDpiChange(d as any)}
+          disabled={isRunning || isIcoTarget}
+          isOpen={isResizeOpen}
+          onOpenChange={setIsResizeOpen}
+        />
 
 {/* Concurrency */}
 <SelectInput

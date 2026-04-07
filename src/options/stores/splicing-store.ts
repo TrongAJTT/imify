@@ -129,6 +129,12 @@ export interface SplicingStoreState {
   setPreviewQualityPercent: (v: number) => void
   setPreviewShowImageNumber: (v: boolean) => void
   setPreviewBentoFlowGroupCount: (v: number | null) => void
+  /** Accordion open/close state for Image Resize */
+  isImageResizeOpen: boolean
+  setIsImageResizeOpen: (v: boolean) => void
+  /** Accordion open/close state for Export Format & Quality */
+  isExportFormatQualityOpen: boolean
+  setIsExportFormatQualityOpen: (v: boolean) => void
 }
 
 export const useSplicingStore = create<SplicingStoreState>()(
@@ -171,6 +177,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
       previewQualityPercent: 20,
       previewShowImageNumber: false,
       previewBentoFlowGroupCount: null,
+      isImageResizeOpen: false,
+      isExportFormatQualityOpen: false,
 
       setPreset: (v) => set({ preset: v }),
       setPrimaryDirection: (v) => set({ primaryDirection: v }),
@@ -204,7 +212,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setPreviewZoom: (v) => set({ previewZoom: v }),
       setPreviewQualityPercent: (v) => set({ previewQualityPercent: normalizePreviewQualityPercent(v) }),
       setPreviewShowImageNumber: (v) => set({ previewShowImageNumber: v }),
-      setPreviewBentoFlowGroupCount: (v) => set({ previewBentoFlowGroupCount: v })
+      setPreviewBentoFlowGroupCount: (v) => set({ previewBentoFlowGroupCount: v }),
+      setIsImageResizeOpen: (v) => set({ isImageResizeOpen: v }),
+      setIsExportFormatQualityOpen: (v) => set({ isExportFormatQualityOpen: v })
     }),
     {
       name: "imify_splicing",

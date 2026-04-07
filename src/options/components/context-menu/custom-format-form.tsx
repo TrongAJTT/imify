@@ -1,3 +1,4 @@
+import { useState } from "react"
 import type { CustomFormatInput } from "@/features/custom-formats"
 import type { ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
 import { CUSTOM_FORMATS, DEFAULT_ICO_SIZES, FORMAT_LABELS, QUALITY_FORMATS } from "@/core/format-config"
@@ -5,8 +6,8 @@ import { TextInput } from "@/options/components/ui/text-input"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { Button } from "@/options/components/ui/button"
 import { BodyText } from "@/options/components/ui/typography"
-import { TargetFormatQualityPopover } from "@/options/components/shared/target-format-quality-popover"
-import { ResizePopover } from "@/options/components/shared/resize-popover"
+import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
+import { ResizeCard } from "@/options/components/shared/resize-card"
 import { Check } from "lucide-react"
 
 export function CustomFormatForm({
@@ -26,6 +27,8 @@ export function CustomFormatForm({
 }) {
   const canSetQuality = QUALITY_FORMATS.includes(value.format)
   const isIcoFormat = value.format === "ico"
+  const [isTargetFormatQualityOpen, setIsTargetFormatQualityOpen] = useState(false)
+  const [isResizeOpen, setIsResizeOpen] = useState(false)
 
   return (
     <div className="space-y-4">
@@ -37,8 +40,8 @@ export function CustomFormatForm({
         onChange={(next) => onChange({ ...value, name: next })}
       />
 
-      {/* Format & Quality Popover */}
-      <TargetFormatQualityPopover
+      {/* Format & Quality Card */}
+      <TargetFormatQualityCard
         targetFormat={value.format}
         quality={value.quality ?? 90}
         pngTinyMode={false}
@@ -91,11 +94,13 @@ export function CustomFormatForm({
         onQualityChange={(next) => onChange({ ...value, quality: next })}
         onPngTinyModeChange={() => {}}
         disabled={false}
+        isOpen={isTargetFormatQualityOpen}
+        onOpenChange={setIsTargetFormatQualityOpen}
       />
 
-      {/* Resize Popover - only show if not ICO */}
+      {/* Resize Card - only show if not ICO */}
       {!isIcoFormat && (
-        <ResizePopover
+        <ResizeCard
           resizeMode={value.resize.mode}
           resizeValue={typeof value.resize.value === "number" ? value.resize.value : 1280}
           resizeWidth={typeof value.resize.width === "number" ? value.resize.width : 1280}
@@ -225,6 +230,8 @@ export function CustomFormatForm({
             })
           }
           disabled={false}
+          isOpen={isResizeOpen}
+          onOpenChange={setIsResizeOpen}
         />
       )}
 

@@ -16,6 +16,9 @@ This list is synchronized with `src/core/attributions.ts` (source of truth for t
 *   **[Lucide React](https://lucide.dev/)**
     *   **Author(s):** Eric Fennis and Lucide contributors
     *   **License:** ISC License
+*   **[Radix UI](https://www.radix-ui.com/)**
+    *   **Author(s):** Modulz Inc. and Radix UI contributors
+    *   **License:** MIT License
 *   **[Zustand](https://github.com/pmndrs/zustand)**
     *   **Author(s):** Paul Henschel and Poimandres contributors
     *   **License:** MIT License

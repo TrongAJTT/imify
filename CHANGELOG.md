@@ -16,16 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI:** Enhanced `TextInput` with a large variant for better focus on content.
 - **UI:** Migrated all dialogs (**Auto Renaming**, **Watermarking**, **Settings**, **Attribution**, **About**) to use `BaseDialog` component with native click-outside and Esc key handling.
 - **UI:** Added `SidebarCard` component for reusable popover entrance cards with icon (left), label, and sublabel support.
+- **UI:** Added `AccordionCard` component extending SidebarCard with collapsible content for improved UX in workspace contexts.
+- **UI:** Added `TargetFormatQualityCard` and `ResizeCard` accordion-based components replacing popovers in Single/Batch Processor and Image Splicing.
 - **UI:** Added `TargetFormatQualityPopover` component consolidating format, quality, ICO sizes, and PNG tiny mode selection into a single popover interface.
 - **UI:** Added `ResizePopover` component providing unified resize controls (6 modes: No resize, Fit width, Fit height, Set size, Scale, Paper size) with mode-aware sublabel display.
 - **UI:** Added `tooltip` prop to `SelectInput` and `NumberInput` components for inline help documentation with (?) icon.
 - **Single/Batch Processor:** Replaced grid-based Resize UI with new `ResizePopover` component for improved layout flexibility and cleaner control hierarchy.
+- **Single/Batch Processor:** Persisted accordion open/close state for Target Format & Quality and Resize controls per-context (Single vs Batch).
+- **Image Splicing:** Migrated resize and export format controls from popovers to accordion cards for better UX continuity.
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
 ### Changed
 - **TypeScript Configuration:** Migrated from deprecated `moduleResolution: "node10"` and `baseUrl` to modern `"bundler"` resolver with relative path mappings.
+- **Dependencies:** Added `@radix-ui/react-collapsible` (^1.1.12) for accordion component implementation.
 - **Single/Batch Processor:** Moved Concurrency selector to separate row below Resize popover for better visual separation.
 - **UI:** Refactored `Tooltip` component to use Radix UI Popover for automatic viewport collision detection and safe area positioning instead of manual coordinates.
+- **UI/UX:** Improved accordion card layout padding to align form inputs correctly when expanded (changed from `pl-7 pr-0` to `px-2.5`).
 
 ### Fixed
 - **Splicing**: Fixed an issue where the "Trim background" feature could work incorrectly.
@@ -34,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI**: Added "Apply Pattern" button disable state for **Auto Renaming** and **Watermarking** dialogs when no changes are made.
 - **UI:** Fixed Resize card sublabel to display mode-specific values (e.g., "Fit width • 1280px", "Set size • 3000×4000", "Paper size • A4 @ 300dpi") instead of generic mode label.
 - **UI:** Fixed Resize Type dropdown showing duplicate "Fit width" and "Fit height" options by deduplicating batch and splicing mode names.
+- **UI**: Fixed accordion card state persistence to correctly restore open/close state when switching between Single and Batch Processor contexts.
+- **Single/Batch Processor:** Persists accordion open/close state per processor context (Single and Batch maintain independent state).
 - **Image Splicing:** Added support for `fit_width` and `fit_height` resize modes in ResizePopover (previously only supported via legacy SelectField).
 - **Single/Batch Processor:** Replaced heavy format toast notification with inline tooltip on Concurrency selector explaining format limitations.
 - **DX**: Resolved TypeScript error `Cannot find name 'require'` by adding `node` types to `tsconfig.json`.

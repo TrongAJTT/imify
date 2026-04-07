@@ -1,0 +1,141 @@
+import { IcoSizeSelector } from "@/options/components/ico-size-selector"
+import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import { NumberInput } from "@/options/components/ui/number-input"
+import { SelectInput } from "@/options/components/ui/select-input"
+import { AccordionCard } from "@/options/components/ui/accordion-card"
+import { FileJson } from "lucide-react"
+
+export type TargetFormatQualityCardProps = {
+  /** Selected target format value */
+  targetFormat: string
+  /** Quality value (1-100) */
+  quality: number
+  /** PNG Tiny Mode toggle state */
+  pngTinyMode: boolean
+  /** Available format options for dropdown */
+  formatOptions: Array<{ value: string; label: string }>
+  /** Whether quality is supported for current format */
+  supportsQuality: boolean
+  /** Whether tiny mode is supported (PNG only) */
+  supportsTinyMode: boolean
+  /** ICO sizes array (optional, for ICO format) */
+  icoSizes?: number[]
+  icoGenerateWebIconKit?: boolean
+  onToggleWebIconKit?: (v: boolean) => void
+  /** Callback when target format changes */
+  onTargetFormatChange: (format: string) => void
+  /** Callback when quality changes */
+  onQualityChange: (quality: number) => void
+  /** Callback when tiny mode toggle changes */
+  onPngTinyModeChange: (enabled: boolean) => void
+  /** Callback when ICO sizes change (optional for ICO handling) */
+  onIcoSizesChange?: (sizes: number[]) => void
+  /** Disable all inputs */
+  disabled?: boolean
+  /** Whether accordion is open */
+  isOpen?: boolean
+  /** Callback when open state changes */
+  onOpenChange?: (open: boolean) => void
+}
+
+export function TargetFormatQualityCard({
+  targetFormat,
+  quality,
+  pngTinyMode,
+  formatOptions,
+  supportsQuality,
+  supportsTinyMode,
+  icoSizes,
+  icoGenerateWebIconKit,
+  onToggleWebIconKit,
+  onTargetFormatChange,
+  onQualityChange,
+  onPngTinyModeChange,
+  onIcoSizesChange,
+  disabled,
+  isOpen,
+  onOpenChange
+}: TargetFormatQualityCardProps) {
+  const isIcoTarget = targetFormat === "ico"
+
+  const formatLabel = targetFormat.toUpperCase()
+  const qualityLabel = isIcoTarget
+    ? `${icoSizes?.length ?? 0} size${(icoSizes?.length ?? 0) !== 1 ? "s" : ""}`
+    : supportsQuality
+    ? `Quality ${quality}`
+    : "Default"
+
+  // Add small badges into sublabel for ICO web toolkit or PNG tiny mode
+  const extraFlags: string[] = []
+  if (isIcoTarget && icoGenerateWebIconKit) extraFlags.push("Web Toolkit")
+  if (!isIcoTarget && targetFormat === "png" && pngTinyMode) extraFlags.push("Tiny")
+
+  const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
+
+  return (
+    <AccordionCard
+      icon={<FileJson size={14} />}
+      label="Target Format & Quality"
+      sublabel={sublabel}
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      disabled={disabled}
+    >
+      <div className="space-y-3">
+        <div>
+          <SelectInput
+            label="Target format"
+            disabled={disabled}
+            options={formatOptions}
+            onChange={(v) => onTargetFormatChange(v)}
+            value={targetFormat}
+          />
+        </div>
+
+        {supportsQuality && (
+          <div>
+            <NumberInput
+              label="Quality"
+              disabled={disabled || !supportsQuality}
+              min={1}
+              max={100}
+              step={1}
+              value={quality}
+              onChangeValue={onQualityChange}
+            />
+          </div>
+        )}
+
+        {isIcoTarget && (
+          <div>
+            <IcoSizeSelector
+              disabled={disabled}
+              generateWebIconKit={icoGenerateWebIconKit ?? false}
+              onToggleSize={(size) => {
+                if (!onIcoSizesChange) return
+                const exists = icoSizes?.includes(size)
+                const next = exists
+                  ? (icoSizes || []).filter((entry) => entry !== size)
+                  : [...(icoSizes || []), size].sort((a, b) => a - b)
+                onIcoSizesChange(next.length ? next : [16])
+              }}
+              onToggleWebKit={(v) => onToggleWebIconKit?.(v)}
+              sizes={icoSizes || [16]}
+            />
+          </div>
+        )}
+
+        {supportsTinyMode && (
+          <CheckboxCard
+            title="Tiny Mode"
+            subtitle="Quantize to reduce PNG size"
+            tooltip="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
+            checked={pngTinyMode}
+            onChange={onPngTinyModeChange}
+            disabled={disabled || !supportsTinyMode}
+          />
+        )}
+      </div>
+    </AccordionCard>
+  )
+}

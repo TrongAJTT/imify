@@ -113,6 +113,13 @@ function createDefaultSourceState(): Record<SetupContext, { width: number; heigh
   }
 }
 
+function createDefaultUIState(): Record<SetupContext, { isTargetFormatQualityOpen: boolean; isResizeOpen: boolean }> {
+  return {
+    single: { isTargetFormatQualityOpen: false, isResizeOpen: false },
+    batch: { isTargetFormatQualityOpen: false, isResizeOpen: false }
+  }
+}
+
 function getRecentPresetIdForContext(
   context: SetupContext,
   recentPresetIds: Partial<Record<SetupContext, string>>,
@@ -171,6 +178,12 @@ interface BatchStoreState extends BatchSetupState {
   setSkipSplicingHeavyPreviewQualityWarning: (value: boolean) => void
   heavyFormatToast: { id: string; format: string } | null
   setHeavyFormatToast: (value: { id: string; format: string } | null) => void
+  /** Accordion open/close state for Target Format & Quality - per context */
+  isTargetFormatQualityOpen: boolean
+  setIsTargetFormatQualityOpen: (value: boolean) => void
+  /** Accordion open/close state for Resize - per context */
+  isResizeOpen: boolean
+  setIsResizeOpen: (value: boolean) => void
   saveCurrentPreset: (payload: { name: string; highlightColor: string }) => void
   applyPresetToCurrentContext: (presetId: string) => void
   updatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
@@ -190,7 +203,13 @@ export const useBatchStore = create<BatchStoreState>()(
       recentPresetIds: {},
       skipDownloadConfirm: false,
       skipOomWarning: false,
+      skipSplicingHeavyPreviewQualityWarning: false,
       heavyFormatToast: null,
+      isTargetFormatQualityOpen: false,
+      isResizeOpen: false,
+      contextConfigs: createDefaultContextConfigs(),
+      sourceStateByContext: createDefaultSourceState(),
+      uiStates: createDefaultUIState(),
       setSetupContext: (context) =>
         set((state) => {
           if (state.setupContext === context) {
@@ -199,9 +218,11 @@ export const useBatchStore = create<BatchStoreState>()(
 
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
           const sourceStateByContext = (state as any).sourceStateByContext ?? createDefaultSourceState()
+          const uiStates = (state as any).uiStates ?? createDefaultUIState()
 
           const nextConfig = contextConfigs[context]
           const nextSourceState = sourceStateByContext[context]
+          const nextUIState = uiStates[context]
 
           return {
             setupContext: context,
@@ -209,8 +230,11 @@ export const useBatchStore = create<BatchStoreState>()(
             resizeSourceWidth: nextSourceState.width,
             resizeSourceHeight: nextSourceState.height,
             resizeSyncVersion: nextSourceState.syncVersion,
+            isTargetFormatQualityOpen: nextUIState.isTargetFormatQualityOpen,
+            isResizeOpen: nextUIState.isResizeOpen,
             contextConfigs,
-            sourceStateByContext
+            sourceStateByContext,
+            uiStates
           } as Partial<BatchStoreState>
         }),
       setIsRunning: (value) => set({ isRunning: value }),
@@ -599,6 +623,40 @@ export const useBatchStore = create<BatchStoreState>()(
         set({ skipSplicingHeavyPreviewQualityWarning: value }),
       setSkipOomWarning: (value) => set({ skipOomWarning: value }),
       setHeavyFormatToast: (value) => set({ heavyFormatToast: value }),
+      setIsTargetFormatQualityOpen: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const uiStates = (state as any).uiStates ?? createDefaultUIState()
+          const nextUIState = {
+            ...uiStates[setupContext],
+            isTargetFormatQualityOpen: value
+          }
+
+          return {
+            isTargetFormatQualityOpen: value,
+            uiStates: {
+              ...uiStates,
+              [setupContext]: nextUIState
+            }
+          }
+        }),
+      setIsResizeOpen: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const uiStates = (state as any).uiStates ?? createDefaultUIState()
+          const nextUIState = {
+            ...uiStates[setupContext],
+            isResizeOpen: value
+          }
+
+          return {
+            isResizeOpen: value,
+            uiStates: {
+              ...uiStates,
+              [setupContext]: nextUIState
+            }
+          }
+        }),
       saveCurrentPreset: ({ name, highlightColor }) =>
         set((state) => {
           const timestamp = Date.now()
@@ -730,7 +788,7 @@ export const useBatchStore = create<BatchStoreState>()(
       storage: createJSONStorage(() => plasmoStorage),
       partialize: (state) => {
         // Only persist the non-runtime state
-        const { isRunning, heavyFormatToast, ...rest } = state
+        const { isRunning, heavyFormatToast, isTargetFormatQualityOpen, isResizeOpen, ...rest } = state
 
         // Deep clean watermark to remove logoDataUrl from permanent storage
         // IndexedDB handles the actual image data via logoBlobId
