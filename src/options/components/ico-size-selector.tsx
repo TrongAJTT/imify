@@ -19,7 +19,7 @@ export function IcoSizeSelector({
 }) {
   return (
     <div className="space-y-2">
-      <LabelText>{title}</LabelText>
+      <LabelText className="text-xs">{title}</LabelText>
       
       <div className="grid grid-cols-2 gap-2">
         {ICO_SIZE_OPTIONS.map((option) => (

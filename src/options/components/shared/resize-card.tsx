@@ -37,6 +37,10 @@ export type ResizeCardProps = {
   availableModes?: string[]
   isOpen?: boolean
   onOpenChange?: (open: boolean) => void
+  /** If true, accordion is always open, chevron is hidden, and cannot be collapsed */
+  alwaysOpen?: boolean
+  /** Unique ID for mutually exclusive accordion group */
+  groupId?: string
 }
 
 const getModeLabel = (mode: string): string => {
@@ -117,7 +121,9 @@ export function ResizeCard({
   disabled,
   availableModes,
   isOpen,
-  onOpenChange
+  onOpenChange,
+  alwaysOpen,
+  groupId,
 }: ResizeCardProps) {
   // Build mode options: batch modes by default, replace with availableModes if provided
   const getModeOptions = () => {
@@ -163,6 +169,8 @@ export function ResizeCard({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       disabled={disabled}
+      alwaysOpen={alwaysOpen}
+      groupId={groupId}
     >
       <div className="space-y-3">
         {/* Resize Mode Selector */}

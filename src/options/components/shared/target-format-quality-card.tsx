@@ -36,6 +36,10 @@ export type TargetFormatQualityCardProps = {
   isOpen?: boolean
   /** Callback when open state changes */
   onOpenChange?: (open: boolean) => void
+  /** If true, accordion is always open, chevron is hidden, and cannot be collapsed */
+  alwaysOpen?: boolean
+  /** Unique ID for mutually exclusive accordion group */
+  groupId?: string
 }
 
 export function TargetFormatQualityCard({
@@ -54,7 +58,9 @@ export function TargetFormatQualityCard({
   onIcoSizesChange,
   disabled,
   isOpen,
-  onOpenChange
+  onOpenChange,
+  alwaysOpen,
+  groupId,
 }: TargetFormatQualityCardProps) {
   const isIcoTarget = targetFormat === "ico"
 
@@ -80,6 +86,8 @@ export function TargetFormatQualityCard({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       disabled={disabled}
+      alwaysOpen={alwaysOpen}
+      groupId={groupId}
     >
       <div className="space-y-3">
         <div>

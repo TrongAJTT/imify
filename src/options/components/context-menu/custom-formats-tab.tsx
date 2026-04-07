@@ -358,7 +358,7 @@ export function CustomFormatsTab({
 
       {isCreateDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
+          <div className="w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <Heading className="text-base font-semibold">Create Custom Format</Heading>
               <button
@@ -515,7 +515,7 @@ export function CustomFormatsTab({
 
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
+          <div className="w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <Heading className="text-base font-semibold">Edit Custom Format</Heading>
               <button
