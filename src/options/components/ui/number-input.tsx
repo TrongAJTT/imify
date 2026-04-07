@@ -94,7 +94,7 @@ export function NumberInput({
         <div className="flex items-center gap-1">
           <LabelText className="text-xs">{label}</LabelText>
           {tooltip && (
-            <Tooltip content={tooltip} position="top">
+            <Tooltip content={tooltip}>
               <HelpCircle size={12} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help" />
             </Tooltip>
           )}

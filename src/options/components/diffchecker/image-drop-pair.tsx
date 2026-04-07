@@ -58,7 +58,7 @@ function DropZone({
           <X size={12} />
         </button>
         <div className="absolute top-9 right-2 z-10">
-          <Tooltip content={`Replace ${label}`} variant="nowrap" position="top">
+          <Tooltip content={`Replace ${label}`} variant="nowrap">
             <button
               type="button"
               onClick={() => openFilePicker(onLoad)}

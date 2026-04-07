@@ -34,7 +34,7 @@ function TitleBarButton({
   )
 
   return (
-    <Tooltip content={tooltipText} position="down">
+    <Tooltip content={tooltipText}>
       {button}
     </Tooltip>
   )

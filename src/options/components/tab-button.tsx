@@ -40,7 +40,7 @@ export function TabButton({
   }
 
   return (
-    <Tooltip content={label} position="right" variant="nowrap">
+    <Tooltip content={label} variant="nowrap">
       {button}
     </Tooltip>
   )

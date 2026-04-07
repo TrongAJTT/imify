@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **TypeScript Configuration:** Migrated from deprecated `moduleResolution: "node10"` and `baseUrl` to modern `"bundler"` resolver with relative path mappings.
 - **Single/Batch Processor:** Moved Concurrency selector to separate row below Resize popover for better visual separation.
+- **UI:** Refactored `Tooltip` component to use Radix UI Popover for automatic viewport collision detection and safe area positioning instead of manual coordinates.
 
 ### Fixed
 - **Splicing**: Fixed an issue where the "Trim background" feature could work incorrectly.
