@@ -1,4 +1,4 @@
-import { Globe, Layers, ListTree } from "lucide-react"
+import { Globe, Layers, LayoutTemplate } from "lucide-react"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
 import { GlobalFormatsTab } from "@/options/components/context-menu/global-formats-tab"
 import { CustomFormatsTab } from "@/options/components/context-menu/custom-formats-tab"
@@ -9,7 +9,7 @@ export type ContextMenuSubTab = "global" | "custom" | "preview"
 export const CONTEXT_MENU_SUB_TABS: Array<{ id: ContextMenuSubTab; label: string; icon: JSX.Element }> = [
   { id: "global", label: "Global Formats", icon: <Globe size={15} /> },
   { id: "custom", label: "Custom Presets", icon: <Layers size={15} /> },
-  { id: "preview", label: "Menu Preview & Sorting", icon: <ListTree size={15} /> }
+  { id: "preview", label: "Menu Preview & Sorting", icon: <LayoutTemplate size={15} /> }
 ]
 
 interface ContextMenuSettingsTabProps {

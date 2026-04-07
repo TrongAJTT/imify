@@ -21,6 +21,7 @@ import { DiffcheckerSidebarPanel } from "@/options/components/diffchecker/diffch
 import { InspectorTab } from "@/options/components/inspector/inspector-tab"
 import { InspectorSidebarPanel } from "@/options/components/inspector/inspector-sidebar-panel"
 import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
+import { ContextMenuInfoPanel } from "@/options/components/context-menu/context-menu-info-panel"
 import { OptionsHeader } from "@/options/components/options-header"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
 import { TabButton } from "@/options/components/tab-button"
@@ -171,47 +172,11 @@ function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorage
 }
 
 function TabInfoPanel({ activeTab }: { activeTab: OptionsTab }) {
-  const tab = TAB_ITEMS.find((t) => t.id === activeTab)
-  if (!tab?.description) return null
-
   if (activeTab === "context-menu") {
-    return (
-      <SidebarPanel title="INFORMATION">
-        <div className="space-y-3">
-          <MutedText>{tab.description}</MutedText>
-
-          <div className="space-y-2">
-            <div>
-              <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">Global Formats</div>
-              <MutedText className="text-xs">
-                Enable/disable built-in formats, tweak default quality / ICO options, and reorder their positions in the right-click menu.
-              </MutedText>
-            </div>
-
-            <div>
-              <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">Custom Presets</div>
-              <MutedText className="text-xs">
-                Create your own presets (resize, quality, paper settings) and reorder them for faster access in the context menu.
-              </MutedText>
-            </div>
-
-            <div>
-              <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">Menu Preview & Sorting</div>
-              <MutedText className="text-xs">
-                Choose how entries are sorted and preview how “Save and Convert with Imify” will look in the context menu.
-              </MutedText>
-            </div>
-          </div>
-        </div>
-      </SidebarPanel>
-    )
+    return <ContextMenuInfoPanel />
   }
 
-  return (
-    <SidebarPanel title="INFORMATION">
-      <MutedText>{tab.description}</MutedText>
-    </SidebarPanel>
-  )
+  return null
 }
 
 export default function OptionsPage() {

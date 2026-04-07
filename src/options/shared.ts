@@ -20,9 +20,8 @@ export interface PersistedStorageState {
   state: ExtensionStorageState
 }
 
-export const TAB_ITEMS: Array<{ id: OptionsTab; label: string; description?: string }> = [
-  { id: "context-menu", label: "Context Menu",
-    description: "Manage global format defaults, custom presets, and right-click menu sort order." },
+export const TAB_ITEMS: Array<{ id: OptionsTab; label: string }> = [
+  { id: "context-menu", label: "Context Menu" },
   { id: "single", label: "Single Processor" },
   { id: "batch", label: "Batch Processor" },
   { id: "splicing", label: "Image Splicing" },
