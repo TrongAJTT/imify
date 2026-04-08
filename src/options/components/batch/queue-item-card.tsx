@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react"
-
 import { formatBytes } from "@/options/components/batch/utils"
 import type { BatchQueueItem } from "@/options/components/batch/types"
 import { X, ArrowRight } from "lucide-react"
 import { Button } from "@/options/components/ui/button"
 import { BodyText, MutedText } from "@/options/components/ui/typography"
+import { useThumbnail } from "@/options/hooks/use-thumbnail"
 
 export function QueueItemCard({
   item,
@@ -15,20 +14,7 @@ export function QueueItemCard({
   isRunning: boolean
   onRemove: (id: string) => void
 }) {
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!item.file.type.startsWith("image/")) {
-      setThumbnailUrl(null)
-      return
-    }
-
-    const url = URL.createObjectURL(item.file)
-    setThumbnailUrl(url)
-    return () => {
-      URL.revokeObjectURL(url)
-    }
-  }, [item.file])
+  const { thumbnail } = useThumbnail(item.file)
 
   const color =
     item.status === "success"
@@ -39,7 +25,7 @@ export function QueueItemCard({
 
   return (
     <article className="relative flex flex-col overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
-      {thumbnailUrl ? (
+      {thumbnail ? (
         <div className="aspect-square w-full overflow-hidden bg-slate-100 dark:bg-slate-900 flex items-center justify-center border-b border-slate-100 dark:border-slate-700/50">
           {!isRunning && item.status === "queued" ? (
             <Button
@@ -56,7 +42,7 @@ export function QueueItemCard({
           <img
             alt={item.file.name}
             className="h-full w-full object-cover"
-            src={thumbnailUrl}
+            src={thumbnail}
           />
         </div>
       ) : null}

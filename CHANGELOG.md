@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
 ### Changed
+- **Batch Processor, DiffChecker:** Batch queue grid items now use low-quality thumbnail generation via `createImageBitmap` (200px, 0.6 JPEG quality) to prevent OOM (Out of Memory) crashes when processing multiple large images. Thumbnails are generated asynchronously via new `useThumbnail` React hook.
 - **UI:** Consolidated per-component Tailwind class maps into `src/options/components/ui/theme-config.ts` and updated `AccordionCard` and `SidebarCard` to consume those tokens as a single source of truth (removed duplicated class maps across components).
 - **UI:** Adjusted `AccordionCard` visuals: stronger collapsed header tint and thicker neutral left border when collapsed, thinner themed left-accent when expanded, and transparent expanded content background for a cleaner overlay appearance.
 - **TypeScript Configuration:** Migrated from deprecated `moduleResolution: "node10"` and `baseUrl` to modern `"bundler"` resolver with relative path mappings.
@@ -66,8 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Changed background from `bg-slate-50/dark:bg-slate-800/50` to `bg-white/dark:bg-slate-800/80` with shadow for better visual hierarchy.
   - Added `shadow-sm` to inputs for subtle depth against accordion/sidebar backgrounds.
 - **UI:** Added semantic `theme` prop to `CheckboxCard` component for color-coded visual grouping matching `AccordionCard` and `SidebarCard` theming system.
+- **UI:** Refactored `ColorPickerPopover` from manual absolute positioning with `useState` to Radix UI Popover component with Portal, automatic viewport collision detection (`sideOffset: 8`, `collisionPadding: 12`), and native Escape key handling.
 
 ### Fixed
+- **UI:** Fixed `ColorPickerPopover` clipping inside accordion cards by refactoring from manual absolute positioning to Radix UI Popover component with Portal and automatic viewport collision detection.
 - **DX:** Fixed strict TypeScript issue in context menu builder when checking optional `chrome.runtime.lastError.message`.
 - **Splicing**: Fixed an issue where the "Trim background" feature could work incorrectly.
 - **UI**: Implemented "Click outside to close" and native Escape key handling for all dialogs using `BaseDialog`.

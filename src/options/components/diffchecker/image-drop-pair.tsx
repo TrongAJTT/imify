@@ -2,6 +2,7 @@ import { ImagePlus, X, Upload } from "lucide-react"
 import type { DiffImageItem } from "@/features/diffchecker/types"
 import { MutedText } from "@/options/components/ui/typography"
 import { Tooltip } from "@/options/components/tooltip"
+import { useThumbnail } from "@/options/hooks/use-thumbnail"
 
 interface ImageDropPairProps {
   imageA: DiffImageItem | null
@@ -40,13 +41,15 @@ function DropZone({
   onLoad: (files: File[]) => void
   onClear: () => void
 }) {
+  const { thumbnail } = useThumbnail(image ? image.file : null)
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"))
     if (files.length > 0) onLoad(files)
   }
 
-  if (image) {
+    if (image) {
     return (
       <div className="relative flex-1 min-w-0 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 p-3">
         <button
@@ -71,7 +74,7 @@ function DropZone({
         </div>
         <div className="flex items-center gap-3">
           <img
-            src={image.url}
+            src={thumbnail ?? image.url}
             alt={label}
             className="h-16 w-16 rounded object-cover border border-slate-200 dark:border-slate-700 shrink-0"
           />
