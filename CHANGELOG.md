@@ -52,6 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
 ### Changed
+- **UI:** Consolidated per-component Tailwind class maps into `src/options/components/ui/theme-config.ts` and updated `AccordionCard` and `SidebarCard` to consume those tokens as a single source of truth (removed duplicated class maps across components).
+- **UI:** Adjusted `AccordionCard` visuals: stronger collapsed header tint and thicker neutral left border when collapsed, thinner themed left-accent when expanded, and transparent expanded content background for a cleaner overlay appearance.
 - **TypeScript Configuration:** Migrated from deprecated `moduleResolution: "node10"` and `baseUrl` to modern `"bundler"` resolver with relative path mappings.
 - **Dependencies:** Added `@radix-ui/react-collapsible` (^1.1.12) for accordion component implementation.
 - **Single/Batch Processor:** Moved Concurrency selector to separate row below Resize popover for better visual separation.

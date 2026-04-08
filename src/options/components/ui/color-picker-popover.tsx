@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useRef } from "react"
+import * as Popover from "@radix-ui/react-popover"
 import { HexAlphaColorPicker, HexColorInput, HexColorPicker } from "react-colorful"
 
-import { useKeyPress } from "@/options/hooks/use-key-press"
 import { LabelText } from "@/options/components/ui/typography"
 
 type ColorOutputMode = "rgba" | "hex"
@@ -108,8 +108,7 @@ export function ColorPickerPopover({
   outputMode = "hex",
   className
 }: ColorPickerPopoverProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const parsed = useMemo(() => parseColor(value), [value])
   const pickerValue = enableAlpha ? toHex8(parsed) : toHex6(parsed)
   const swatchValue = toRgbaString(parsed)
@@ -123,64 +122,56 @@ export function ColorPickerPopover({
     onChange(outputMode === "rgba" ? toRgbaString(nextParsed) : enableAlpha ? toHex8(nextParsed) : toHex6(nextParsed))
   }
 
-  useKeyPress("Escape", () => setIsOpen(false), isOpen)
-
-  useEffect(() => {
-    if (!isOpen) return
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!rootRef.current) return
-      if (!rootRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-
-    window.addEventListener("pointerdown", handlePointerDown)
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown)
-    }
-  }, [isOpen])
-
   return (
-    <div ref={rootRef} className={`relative ${className ?? ""}`.trim()}>
-      <div className="flex items-center justify-between gap-2">
-        <LabelText className="text-xs">{label}</LabelText>
-        <button
-          type="button"
-          onClick={() => setIsOpen((current) => !current)}
-          className="h-7 w-7 rounded border border-slate-200 dark:border-slate-700 bg-transparent p-0.5"
-          aria-label={`Pick ${label} color`}
-        >
-          <span className="block h-full w-full rounded-sm" style={{ backgroundColor: swatchValue }} />
-        </button>
-      </div>
-
-      {isOpen && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-9 z-30 w-max rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-3">
-          <div className="w-[200px]">
-            {enableAlpha ? (
-              <HexAlphaColorPicker color={pickerValue} onChange={emitColor} />
-            ) : (
-              <HexColorPicker color={pickerValue} onChange={emitColor} />
-            )}
-            <div className="mt-3 flex items-center justify-between gap-2">
-              <LabelText className="text-[11px]">Hex</LabelText>
-              <HexColorInput
-                color={pickerValue}
-                alpha={enableAlpha}
-                prefixed
-                onChange={emitColor}
-                className="w-[112px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-700 dark:text-slate-200 outline-none"
-              />
-              {enableAlpha ? (
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 min-w-[38px] text-right">
-                  {Math.round(parsed.a * 100)}%
-                </span>
-              ) : null}
-            </div>
-          </div>
+    <Popover.Root>
+      <div className={`relative ${className ?? ""}`.trim()}>
+        <div className="flex items-center justify-between gap-2">
+          <LabelText className="text-xs">{label}</LabelText>
+          <Popover.Trigger asChild>
+            <button
+              ref={triggerRef}
+              type="button"
+              className="h-7 w-7 rounded border border-slate-200 dark:border-slate-700 bg-transparent p-0.5 transition-all hover:shadow-sm"
+              aria-label={`Pick ${label} color`}
+            >
+              <span className="block h-full w-full rounded-sm" style={{ backgroundColor: swatchValue }} />
+            </button>
+          </Popover.Trigger>
         </div>
-      )}
-    </div>
+
+        <Popover.Portal>
+          <Popover.Content
+            className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xl p-3 z-[9999]"
+            sideOffset={8}
+            side="bottom"
+            align="center"
+            collisionPadding={12}
+          >
+            <div className="w-[200px]">
+              {enableAlpha ? (
+                <HexAlphaColorPicker color={pickerValue} onChange={emitColor} />
+              ) : (
+                <HexColorPicker color={pickerValue} onChange={emitColor} />
+              )}
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <LabelText className="text-[11px]">Hex</LabelText>
+                <HexColorInput
+                  color={pickerValue}
+                  alpha={enableAlpha}
+                  prefixed
+                  onChange={emitColor}
+                  className="w-[112px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-700 dark:text-slate-200 outline-none"
+                />
+                {enableAlpha ? (
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 min-w-[38px] text-right">
+                    {Math.round(parsed.a * 100)}%
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </div>
+    </Popover.Root>
   )
 }
