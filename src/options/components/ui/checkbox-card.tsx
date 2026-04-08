@@ -32,7 +32,7 @@ export function CheckboxCard({
 
   const activeClasses = checked 
     ? `${themeClasses.activeBorder} ${themeClasses.activeBg} ${themeClasses.activeText}`
-    : `border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 ${themeClasses.hover}`
+    : `border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 ${themeClasses.sidebarBgHover} ${themeClasses.sidebarEdgeBorderHover}`
 
   return (
     <label

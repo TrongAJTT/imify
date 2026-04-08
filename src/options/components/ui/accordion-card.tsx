@@ -68,10 +68,10 @@ export function AccordionCard({
 
   return (
     <Collapsible.Root open={isOpen} onOpenChange={handleOpenChange} disabled={isDisabled}>
-      <div className={`rounded overflow-hidden transition-all duration-200 border-y border-r ${
+      <div className={`rounded overflow-hidden transition-all duration-200 border border-l-2 ${
         isOpen
-          ? `border-l-2 ${theme.activeBorder} border-slate-200 dark:border-slate-700 shadow-sm`
-          : "border-l border-slate-200 dark:border-slate-700"
+          ? `${theme.accordionOpenEdgeBorder} ${theme.accordionLeftBorder} shadow-sm`
+          : `border-slate-200 dark:border-slate-700 ${theme.accordionLeftBorder}`
       }`}>
         <Collapsible.Trigger asChild>
           <button
@@ -79,10 +79,10 @@ export function AccordionCard({
             disabled={isDisabled}
             className={`w-full text-left flex items-center gap-3 px-2.5 py-1.5 transition-all ${
               isOpen
-                ? theme.activeBg
+                ? `${theme.activeBg} ${alwaysOpen ? "cursor-default" : "cursor-pointer"}`
                 : alwaysOpen
-                  ? "cursor-default bg-white dark:bg-slate-900/40"
-                  : `bg-white hover:shadow-sm dark:bg-slate-900/40 ${theme.hover} cursor-pointer`
+                  ? `${theme.activeBg} cursor-default`
+                  : `bg-white hover:shadow-sm dark:bg-slate-900/40 cursor-pointer`
             } disabled:opacity-50 ${className || ""}`}
           >
             {icon ? (
@@ -110,7 +110,11 @@ export function AccordionCard({
           </button>
         </Collapsible.Trigger>
 
-        <Collapsible.Content className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/20">
+        <Collapsible.Content className={`overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up border-t ${
+          isOpen
+            ? `${theme.accordionContentBorder}`
+            : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/20"
+        }`}>
           <div className="p-3">
             {children}
           </div>
