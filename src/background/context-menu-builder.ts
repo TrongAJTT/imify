@@ -29,8 +29,9 @@ function createContextMenuItem(options: chrome.contextMenus.CreateProperties): P
   return new Promise((resolve) => {
     chrome.contextMenus.create(options, () => {
       const error = chrome.runtime.lastError
-      if (error && !/duplicate id/i.test(error.message)) {
-        console.error("[imify] contextMenus.create failed:", error.message, options.id)
+      const message = error?.message ?? ""
+      if (error && !/duplicate id/i.test(message)) {
+        console.error("[imify] contextMenus.create failed:", message, options.id)
       }
 
       resolve()

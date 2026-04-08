@@ -70,6 +70,12 @@ export interface BatchSetupState {
   concurrency: number
   quality: number
   jxlEffort: number
+  avifSpeed: number
+  avifQualityAlpha?: number
+  avifLossless: boolean
+  avifSubsample: 1 | 2 | 3
+  avifTune: "auto" | "ssim" | "psnr"
+  avifHighAlphaQuality: boolean
   icoSizes: number[]
   icoGenerateWebIconKit: boolean
   resizeMode: BatchResizeMode
@@ -94,6 +100,12 @@ export interface BatchSetupHandlers {
   onConcurrencyChange: (value: number) => void
   onQualityChange: (value: number) => void
   onJxlEffortChange: (value: number) => void
+  onAvifSpeedChange: (value: number) => void
+  onAvifQualityAlphaChange: (value: number) => void
+  onAvifLosslessChange: (value: boolean) => void
+  onAvifSubsampleChange: (value: 1 | 2 | 3) => void
+  onAvifTuneChange: (value: "auto" | "ssim" | "psnr") => void
+  onAvifHighAlphaQualityChange: (value: boolean) => void
   onIcoSizesChange: (value: number[]) => void
   onIcoGenerateWebIconKitChange: (value: boolean) => void
   onResizeModeChange: (value: BatchResizeMode) => void

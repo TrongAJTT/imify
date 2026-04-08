@@ -59,6 +59,12 @@ export interface SplicingExportConfig {
   format: SplicingExportFormat
   quality: number
   jxlEffort?: number
+  avifSpeed?: number
+  avifQualityAlpha?: number
+  avifLossless?: boolean
+  avifSubsample?: 1 | 2 | 3
+  avifTune?: "auto" | "ssim" | "psnr"
+  avifHighAlphaQuality?: boolean
   pngTinyMode: boolean
   exportMode: SplicingExportMode
   trimBackground: boolean

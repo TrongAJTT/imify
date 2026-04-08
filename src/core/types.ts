@@ -43,6 +43,10 @@ export interface IcoOptions {
   generateWebIconKit?: boolean
 }
 
+export type AvifSubsample = 1 | 2 | 3
+
+export type AvifTune = "auto" | "ssim" | "psnr"
+
 export interface FormatConfig {
   id: string
   name: string
@@ -51,6 +55,12 @@ export interface FormatConfig {
   quality?: number
   pngTinyMode?: boolean
   jxlEffort?: number
+  avifSpeed?: number
+  avifQualityAlpha?: number
+  avifLossless?: boolean
+  avifSubsample?: AvifSubsample
+  avifTune?: AvifTune
+  avifHighAlphaQuality?: boolean
   resize: ResizeConfig
   icoOptions?: IcoOptions
 }

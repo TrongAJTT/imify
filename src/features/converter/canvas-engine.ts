@@ -25,6 +25,12 @@ export interface RasterConvertParams {
   resize: ResizeConfig
   quality?: number
   jxlEffort?: number
+  avifSpeed?: number
+  avifQualityAlpha?: number
+  avifLossless?: boolean
+  avifSubsample?: 1 | 2 | 3
+  avifTune?: "auto" | "ssim" | "psnr"
+  avifHighAlphaQuality?: boolean
   pngTinyMode?: boolean
 }
 
@@ -158,7 +164,20 @@ async function convertToRasterBlob(
 export async function convertRasterImage(
   params: RasterConvertParams
 ): Promise<RasterConvertResult> {
-  const { sourceBlob, targetFormat, resize, quality, jxlEffort, pngTinyMode } = params
+  const {
+    sourceBlob,
+    targetFormat,
+    resize,
+    quality,
+    jxlEffort,
+    avifSpeed,
+    avifQualityAlpha,
+    avifLossless,
+    avifSubsample,
+    avifTune,
+    avifHighAlphaQuality,
+    pngTinyMode
+  } = params
   const imageBitmap = await createImageBitmap(sourceBlob)
 
   try {
@@ -191,7 +210,15 @@ export async function convertRasterImage(
 
     if (targetFormat === "avif") {
       const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
-      const outputBlob = await encodeAvif(imageData, { quality: clampQuality(quality) })
+      const outputBlob = await encodeAvif(imageData, {
+        quality: clampQuality(quality),
+        avifSpeed,
+        avifQualityAlpha,
+        avifLossless,
+        avifSubsample,
+        avifTune,
+        avifHighAlphaQuality
+      })
 
       return {
         outputBlob,

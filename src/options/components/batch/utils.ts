@@ -121,6 +121,12 @@ export function withBatchResize(
   config: FormatConfig,
   mode: BatchResizeMode,
   quality: number,
+  avifSpeed: number,
+  avifQualityAlpha: number | undefined,
+  avifLossless: boolean,
+  avifSubsample: 1 | 2 | 3,
+  avifTune: "auto" | "ssim" | "psnr",
+  avifHighAlphaQuality: boolean,
   icoSizes: number[],
   icoGenerateWebIconKit: boolean,
   value: number,
@@ -148,12 +154,24 @@ export function withBatchResize(
     dpi
   )
   const supportsQuality = QUALITY_FORMATS.includes(config.format)
+  const isAvifTarget = config.format === "avif"
   const normalizedQuality = Math.max(1, Math.min(100, Math.round(quality)))
+  const normalizedAvifSpeed = Math.max(0, Math.min(10, Math.round(avifSpeed)))
+  const normalizedAvifQualityAlpha =
+    typeof avifQualityAlpha === "number"
+      ? Math.max(0, Math.min(100, Math.round(avifQualityAlpha)))
+      : undefined
 
   if (!override) {
     return {
       ...config,
       quality: supportsQuality ? normalizedQuality : undefined,
+      avifSpeed: isAvifTarget ? normalizedAvifSpeed : undefined,
+      avifQualityAlpha: isAvifTarget ? normalizedAvifQualityAlpha : undefined,
+      avifLossless: isAvifTarget ? avifLossless : undefined,
+      avifSubsample: isAvifTarget ? avifSubsample : undefined,
+      avifTune: isAvifTarget ? avifTune : undefined,
+      avifHighAlphaQuality: isAvifTarget ? avifHighAlphaQuality : undefined,
       icoOptions:
         config.format === "ico"
           ? {
@@ -168,6 +186,12 @@ export function withBatchResize(
   return {
     ...config,
     quality: supportsQuality ? normalizedQuality : undefined,
+    avifSpeed: isAvifTarget ? normalizedAvifSpeed : undefined,
+    avifQualityAlpha: isAvifTarget ? normalizedAvifQualityAlpha : undefined,
+    avifLossless: isAvifTarget ? avifLossless : undefined,
+    avifSubsample: isAvifTarget ? avifSubsample : undefined,
+    avifTune: isAvifTarget ? avifTune : undefined,
+    avifHighAlphaQuality: isAvifTarget ? avifHighAlphaQuality : undefined,
     icoOptions:
       config.format === "ico"
         ? {

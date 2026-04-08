@@ -10,6 +10,8 @@ export type TargetFormatQualityCardProps = {
   targetFormat: string
   /** Quality value (1-100) */
   quality: number
+  /** AVIF speed (0-10, lower is slower but yields better compression) */
+  avifSpeed?: number
   /** PNG Tiny Mode toggle state */
   pngTinyMode: boolean
   /** JXL Effort level (1-9) for compression optimization */
@@ -28,6 +30,8 @@ export type TargetFormatQualityCardProps = {
   onTargetFormatChange: (format: string) => void
   /** Callback when quality changes */
   onQualityChange: (quality: number) => void
+  /** Callback when AVIF speed changes */
+  onAvifSpeedChange?: (speed: number) => void
   /** Callback when tiny mode toggle changes */
   onPngTinyModeChange: (enabled: boolean) => void
   /** Callback when JXL effort level changes */
@@ -49,6 +53,7 @@ export type TargetFormatQualityCardProps = {
 export function TargetFormatQualityCard({
   targetFormat,
   quality,
+  avifSpeed,
   pngTinyMode,
   jxlEffort,
   formatOptions,
@@ -59,6 +64,7 @@ export function TargetFormatQualityCard({
   onToggleWebIconKit,
   onTargetFormatChange,
   onQualityChange,
+  onAvifSpeedChange,
   onPngTinyModeChange,
   onJxlEffortChange,
   onIcoSizesChange,
@@ -82,6 +88,7 @@ export function TargetFormatQualityCard({
   if (isIcoTarget && icoGenerateWebIconKit) extraFlags.push("Web Toolkit")
   if (!isIcoTarget && targetFormat === "png" && pngTinyMode) extraFlags.push("Tiny")
   if (targetFormat === "jxl" && jxlEffort) extraFlags.push(`Effort ${jxlEffort}`)
+  if (targetFormat === "avif" && typeof avifSpeed === "number") extraFlags.push(`Speed ${avifSpeed}`)
 
   const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
 
@@ -141,6 +148,31 @@ export function TargetFormatQualityCard({
               ]}
               onChange={(v) => onJxlEffortChange?.(parseInt(v, 10))}
               value={String(jxlEffort ?? 5)}
+            />
+          </div>
+        )}
+
+        {targetFormat === "avif" && onAvifSpeedChange && (
+          <div>
+            <SelectInput
+              label="Speed"
+              tooltip={`AVIF speed is inverse effort:\n- 0 = smallest file, best quality, slowest\n- 10 = fastest encode, larger file\nDefault 6 is balanced.`}
+              disabled={disabled}
+              options={[
+                { value: "0", label: "0 - Maximum quality (slowest)" },
+                { value: "1", label: "1 - Very High quality" },
+                { value: "2", label: "2 - High quality" },
+                { value: "3", label: "3 - Balanced quality" },
+                { value: "4", label: "4 - Medium" },
+                { value: "5", label: "5 - Medium/Fast" },
+                { value: "6", label: "6 - Balanced (default)" },
+                { value: "7", label: "7 - Fast" },
+                { value: "8", label: "8 - Very Fast" },
+                { value: "9", label: "9 - Fastest practical" },
+                { value: "10", label: "10 - Fastest encode" }
+              ]}
+              onChange={(v) => onAvifSpeedChange(parseInt(v, 10))}
+              value={String(avifSpeed ?? 6)}
             />
           </div>
         )}

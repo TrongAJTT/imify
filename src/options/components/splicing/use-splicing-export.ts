@@ -108,6 +108,12 @@ export function useSplicingExport({
           format: store.exportFormat,
           quality: store.exportQuality,
           jxlEffort: store.exportFormat === "jxl" ? store.exportJxlEffort : undefined,
+          avifSpeed: store.exportFormat === "avif" ? store.exportAvifSpeed : undefined,
+          avifQualityAlpha: store.exportFormat === "avif" ? store.exportAvifQualityAlpha : undefined,
+          avifLossless: store.exportFormat === "avif" ? store.exportAvifLossless : undefined,
+          avifSubsample: store.exportFormat === "avif" ? store.exportAvifSubsample : undefined,
+          avifTune: store.exportFormat === "avif" ? store.exportAvifTune : undefined,
+          avifHighAlphaQuality: store.exportFormat === "avif" ? store.exportAvifHighAlphaQuality : undefined,
           pngTinyMode: store.exportPngTinyMode,
           exportMode: store.exportMode,
           trimBackground: store.exportTrimBackground

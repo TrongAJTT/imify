@@ -63,6 +63,12 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   concurrency: 3,
   quality: 90,
   jxlEffort: 7,
+  avifSpeed: 6,
+  avifQualityAlpha: undefined,
+  avifLossless: false,
+  avifSubsample: 1,
+  avifTune: "auto",
+  avifHighAlphaQuality: false,
   icoSizes: [...DEFAULT_ICO_SIZES],
   icoGenerateWebIconKit: false,
   resizeMode: "inherit",
@@ -153,6 +159,12 @@ interface BatchStoreState extends BatchSetupState {
   setConcurrency: (value: number) => void
   setQuality: (value: number) => void
   setJxlEffort: (value: number) => void
+  setAvifSpeed: (value: number) => void
+  setAvifQualityAlpha: (value: number) => void
+  setAvifLossless: (value: boolean) => void
+  setAvifSubsample: (value: 1 | 2 | 3) => void
+  setAvifTune: (value: "auto" | "ssim" | "psnr") => void
+  setAvifHighAlphaQuality: (value: boolean) => void
   setIcoSizes: (value: number[]) => void
   setIcoGenerateWebIconKit: (value: boolean) => void
   setResizeMode: (value: BatchResizeMode) => void
@@ -302,6 +314,108 @@ export const useBatchStore = create<BatchStoreState>()(
 
           return {
             jxlEffort: value,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setAvifSpeed: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const nextConfig = {
+            ...contextConfigs[setupContext],
+            avifSpeed: value
+          }
+
+          return {
+            avifSpeed: value,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setAvifQualityAlpha: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const nextConfig = {
+            ...contextConfigs[setupContext],
+            avifQualityAlpha: value
+          }
+
+          return {
+            avifQualityAlpha: value,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setAvifLossless: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const nextConfig = {
+            ...contextConfigs[setupContext],
+            avifLossless: value
+          }
+
+          return {
+            avifLossless: value,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setAvifSubsample: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const nextConfig = {
+            ...contextConfigs[setupContext],
+            avifSubsample: value
+          }
+
+          return {
+            avifSubsample: value,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setAvifTune: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const nextConfig = {
+            ...contextConfigs[setupContext],
+            avifTune: value
+          }
+
+          return {
+            avifTune: value,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setAvifHighAlphaQuality: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const nextConfig = {
+            ...contextConfigs[setupContext],
+            avifHighAlphaQuality: value
+          }
+
+          return {
+            avifHighAlphaQuality: value,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -685,6 +799,12 @@ export const useBatchStore = create<BatchStoreState>()(
             concurrency: state.concurrency,
             quality: state.quality,
             jxlEffort: state.jxlEffort,
+            avifSpeed: state.avifSpeed,
+            avifQualityAlpha: state.avifQualityAlpha,
+            avifLossless: state.avifLossless,
+            avifSubsample: state.avifSubsample,
+            avifTune: state.avifTune,
+            avifHighAlphaQuality: state.avifHighAlphaQuality,
             icoSizes: [...state.icoSizes],
             icoGenerateWebIconKit: state.icoGenerateWebIconKit,
             resizeMode: state.resizeMode,

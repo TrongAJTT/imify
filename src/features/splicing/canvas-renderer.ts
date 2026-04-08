@@ -172,7 +172,15 @@ async function canvasToBlob(
   format: SplicingExportFormat,
   quality: number,
   pngTinyMode: boolean,
-  jxlEffort?: number
+  jxlEffort?: number,
+  avifOptions?: {
+    avifSpeed?: number
+    avifQualityAlpha?: number
+    avifLossless?: boolean
+    avifSubsample?: 1 | 2 | 3
+    avifTune?: "auto" | "ssim" | "psnr"
+    avifHighAlphaQuality?: boolean
+  }
 ): Promise<Blob> {
   const ctx = canvas.getContext("2d")
   if (!ctx) throw new Error("Failed to get 2D context")
@@ -182,7 +190,10 @@ async function canvasToBlob(
   switch (format) {
     case "avif": {
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      return encodeAvif(data, { quality: clampQuality(quality) })
+      return encodeAvif(data, {
+        quality: clampQuality(quality),
+        ...avifOptions
+      })
     }
     case "jxl": {
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
@@ -328,7 +339,15 @@ export async function exportSplicedImage(
         exportConfig.format,
         exportConfig.quality,
         exportConfig.pngTinyMode,
-        exportConfig.jxlEffort
+        exportConfig.jxlEffort,
+        {
+          avifSpeed: exportConfig.avifSpeed,
+          avifQualityAlpha: exportConfig.avifQualityAlpha,
+          avifLossless: exportConfig.avifLossless,
+          avifSubsample: exportConfig.avifSubsample,
+          avifTune: exportConfig.avifTune,
+          avifHighAlphaQuality: exportConfig.avifHighAlphaQuality
+        }
       )
       options?.onProgress?.({
         phase: "render",
@@ -407,7 +426,15 @@ export async function exportSplicedImage(
         exportConfig.format,
         exportConfig.quality,
         exportConfig.pngTinyMode,
-        exportConfig.jxlEffort
+        exportConfig.jxlEffort,
+        {
+          avifSpeed: exportConfig.avifSpeed,
+          avifQualityAlpha: exportConfig.avifQualityAlpha,
+          avifLossless: exportConfig.avifLossless,
+          avifSubsample: exportConfig.avifSubsample,
+          avifTune: exportConfig.avifTune,
+          avifHighAlphaQuality: exportConfig.avifHighAlphaQuality
+        }
       )
       completed += 1
       active = Math.max(0, active - 1)

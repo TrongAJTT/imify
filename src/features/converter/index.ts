@@ -64,6 +64,12 @@ export async function convertImage(
       resize: config.resize,
       quality: config.quality,
       jxlEffort: config.jxlEffort,
+      avifSpeed: config.avifSpeed,
+      avifQualityAlpha: config.avifQualityAlpha,
+      avifLossless: config.avifLossless,
+      avifSubsample: config.avifSubsample,
+      avifTune: config.avifTune,
+      avifHighAlphaQuality: config.avifHighAlphaQuality,
       pngTinyMode: config.pngTinyMode
     })
 
@@ -82,6 +88,12 @@ export async function convertImage(
       resize: config.resize,
       quality: config.quality,
       jxlEffort: config.jxlEffort,
+      avifSpeed: config.avifSpeed,
+      avifQualityAlpha: config.avifQualityAlpha,
+      avifLossless: config.avifLossless,
+      avifSubsample: config.avifSubsample,
+      avifTune: config.avifTune,
+      avifHighAlphaQuality: config.avifHighAlphaQuality,
       pngTinyMode: config.pngTinyMode
     })
 

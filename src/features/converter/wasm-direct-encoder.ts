@@ -89,7 +89,10 @@ async function getJxlModule(): Promise<WasmModule> {
   return jxlModulePromise
 }
 
-export async function encodeAvifDirect(imageData: ImageData, quality?: number): Promise<Uint8Array> {
+export async function encodeAvifDirect(
+  imageData: ImageData,
+  options?: Partial<typeof AVIF_DEFAULT_OPTIONS>
+): Promise<Uint8Array> {
   const module = await getAvifModule()
   const encoded = module.encode(
     imageData.data as unknown as Uint8Array,
@@ -97,7 +100,7 @@ export async function encodeAvifDirect(imageData: ImageData, quality?: number): 
     imageData.height,
     {
       ...AVIF_DEFAULT_OPTIONS,
-      quality: clampQuality(quality)
+      ...(options ?? {})
     }
   )
 

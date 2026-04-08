@@ -75,6 +75,12 @@ export interface SplicingStoreState {
   exportFormat: SplicingExportFormat
   exportQuality: number
   exportJxlEffort: number
+  exportAvifSpeed: number
+  exportAvifQualityAlpha?: number
+  exportAvifLossless: boolean
+  exportAvifSubsample: 1 | 2 | 3
+  exportAvifTune: "auto" | "ssim" | "psnr"
+  exportAvifHighAlphaQuality: boolean
   exportPngTinyMode: boolean
   exportMode: SplicingExportMode
   exportTrimBackground: boolean
@@ -121,6 +127,12 @@ export interface SplicingStoreState {
   setExportFormat: (v: SplicingExportFormat) => void
   setExportQuality: (v: number) => void
   setExportJxlEffort: (v: number) => void
+  setExportAvifSpeed: (v: number) => void
+  setExportAvifQualityAlpha: (v: number) => void
+  setExportAvifLossless: (v: boolean) => void
+  setExportAvifSubsample: (v: 1 | 2 | 3) => void
+  setExportAvifTune: (v: "auto" | "ssim" | "psnr") => void
+  setExportAvifHighAlphaQuality: (v: boolean) => void
   setExportPngTinyMode: (v: boolean) => void
   setExportMode: (v: SplicingExportMode) => void
   setExportTrimBackground: (v: boolean) => void
@@ -169,6 +181,12 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportFormat: "png",
       exportQuality: 92,
       exportJxlEffort: 7,
+      exportAvifSpeed: 6,
+      exportAvifQualityAlpha: undefined,
+      exportAvifLossless: false,
+      exportAvifSubsample: 1,
+      exportAvifTune: "auto",
+      exportAvifHighAlphaQuality: false,
       exportPngTinyMode: false,
       exportMode: "single",
       exportTrimBackground: false,
@@ -207,6 +225,12 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportFormat: (v) => set({ exportFormat: v }),
       setExportQuality: (v) => set({ exportQuality: v }),
       setExportJxlEffort: (v) => set({ exportJxlEffort: v }),
+      setExportAvifSpeed: (v) => set({ exportAvifSpeed: v }),
+      setExportAvifQualityAlpha: (v) => set({ exportAvifQualityAlpha: v }),
+      setExportAvifLossless: (v) => set({ exportAvifLossless: v }),
+      setExportAvifSubsample: (v) => set({ exportAvifSubsample: v }),
+      setExportAvifTune: (v) => set({ exportAvifTune: v }),
+      setExportAvifHighAlphaQuality: (v) => set({ exportAvifHighAlphaQuality: v }),
       setExportPngTinyMode: (v) => set({ exportPngTinyMode: v }),
       setExportMode: (v) => set({ exportMode: v }),
       setExportTrimBackground: (v) => set({ exportTrimBackground: v }),
@@ -244,7 +268,10 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setCanvasBorderRadius, setCanvasBorderWidth, setCanvasBorderColor, setBackgroundColor,
           setImageResize, setImageFitValue, setImagePadding, setImagePaddingColor,
           setImageBorderRadius, setImageBorderWidth, setImageBorderColor,
-          setExportFormat, setExportQuality, setExportPngTinyMode, setExportMode,
+          setExportFormat, setExportQuality, setExportJxlEffort,
+          setExportAvifSpeed, setExportAvifQualityAlpha, setExportAvifLossless,
+          setExportAvifSubsample, setExportAvifTune, setExportAvifHighAlphaQuality,
+          setExportPngTinyMode, setExportMode,
           setExportTrimBackground, setExportConcurrency, setExportFileNamePattern,
           setPreviewContainerHeight, setPreviewZoom, setPreviewQualityPercent, setPreviewShowImageNumber,
           setPreviewBentoFlowGroupCount,

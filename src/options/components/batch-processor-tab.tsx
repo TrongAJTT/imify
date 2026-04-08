@@ -29,6 +29,12 @@ export function BatchProcessorTab() {
   const concurrency = useBatchStore((state) => state.concurrency)
   const quality = useBatchStore((state) => state.quality)
   const jxlEffort = useBatchStore((state) => state.jxlEffort)
+  const avifSpeed = useBatchStore((state) => state.avifSpeed)
+  const avifQualityAlpha = useBatchStore((state) => state.avifQualityAlpha)
+  const avifLossless = useBatchStore((state) => state.avifLossless)
+  const avifSubsample = useBatchStore((state) => state.avifSubsample)
+  const avifTune = useBatchStore((state) => state.avifTune)
+  const avifHighAlphaQuality = useBatchStore((state) => state.avifHighAlphaQuality)
   const icoSizes = useBatchStore((state) => state.icoSizes)
   const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
   const resizeMode = useBatchStore((state) => state.resizeMode)
@@ -80,6 +86,12 @@ export function BatchProcessorTab() {
       enabled: true,
       quality,
       jxlEffort,
+      avifSpeed,
+      avifQualityAlpha,
+      avifLossless,
+      avifSubsample,
+      avifTune,
+      avifHighAlphaQuality,
       pngTinyMode,
       resize: { mode: "none" }
     }
@@ -88,6 +100,12 @@ export function BatchProcessorTab() {
       baseConfig,
       resizeMode,
       quality,
+      avifSpeed,
+      avifQualityAlpha,
+      avifLossless,
+      avifSubsample,
+      avifTune,
+      avifHighAlphaQuality,
       icoSizes,
       icoGenerateWebIconKit,
       resizeValue,
@@ -106,6 +124,12 @@ export function BatchProcessorTab() {
     resizeMode,
     quality,
     jxlEffort,
+    avifSpeed,
+    avifQualityAlpha,
+    avifLossless,
+    avifSubsample,
+    avifTune,
+    avifHighAlphaQuality,
     icoSizes,
     icoGenerateWebIconKit,
     resizeValue,

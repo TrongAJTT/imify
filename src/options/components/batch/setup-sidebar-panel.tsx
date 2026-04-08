@@ -8,6 +8,7 @@ import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker } from "@/options/components/ui/typography"
 import SidebarCard from "@/options/components/ui/sidebar-card"
 import { ConcurrencySelector } from "@/options/components/shared/concurrency-selector"
+import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import { ResizeCard } from "@/options/components/shared/resize-card"
 import {
@@ -54,6 +55,12 @@ export function BatchSetupSidebarPanel({
   const concurrency = useBatchStore((state) => state.concurrency)
   const quality = useBatchStore((state) => state.quality)
   const jxlEffort = useBatchStore((state) => state.jxlEffort)
+  const avifSpeed = useBatchStore((state) => state.avifSpeed)
+  const avifQualityAlpha = useBatchStore((state) => state.avifQualityAlpha)
+  const avifLossless = useBatchStore((state) => state.avifLossless)
+  const avifSubsample = useBatchStore((state) => state.avifSubsample)
+  const avifTune = useBatchStore((state) => state.avifTune)
+  const avifHighAlphaQuality = useBatchStore((state) => state.avifHighAlphaQuality)
   const icoSizes = useBatchStore((state) => state.icoSizes)
   const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
   const resizeMode = useBatchStore((state) => state.resizeMode)
@@ -78,6 +85,12 @@ export function BatchSetupSidebarPanel({
   const onConcurrencyChange = useBatchStore((state) => state.setConcurrency)
   const onQualityChange = useBatchStore((state) => state.setQuality)
   const onJxlEffortChange = useBatchStore((state) => state.setJxlEffort)
+  const onAvifSpeedChange = useBatchStore((state) => state.setAvifSpeed)
+  const onAvifQualityAlphaChange = useBatchStore((state) => state.setAvifQualityAlpha)
+  const onAvifLosslessChange = useBatchStore((state) => state.setAvifLossless)
+  const onAvifSubsampleChange = useBatchStore((state) => state.setAvifSubsample)
+  const onAvifTuneChange = useBatchStore((state) => state.setAvifTune)
+  const onAvifHighAlphaQualityChange = useBatchStore((state) => state.setAvifHighAlphaQuality)
   const onIcoSizesChange = useBatchStore((state) => state.setIcoSizes)
   const onIcoGenerateWebIconKitChange = useBatchStore((state) => state.setIcoGenerateWebIconKit)
   const onResizeModeChange = useBatchStore((state) => state.setResizeMode)
@@ -213,6 +226,7 @@ export function BatchSetupSidebarPanel({
         <TargetFormatQualityCard
           targetFormat={targetFormat}
           quality={quality}
+          avifSpeed={avifSpeed}
           jxlEffort={jxlEffort}
           pngTinyMode={pngTinyMode}
           formatOptions={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
@@ -227,6 +241,7 @@ export function BatchSetupSidebarPanel({
           onIcoSizesChange={onIcoSizesChange}
           onTargetFormatChange={(nextValue: string) => onTargetFormatChange(nextValue as BatchTargetFormat)}
           onQualityChange={onQualityChange}
+          onAvifSpeedChange={onAvifSpeedChange}
           onJxlEffortChange={onJxlEffortChange}
           onPngTinyModeChange={onPngTinyModeChange}
           disabled={isRunning}
@@ -289,6 +304,22 @@ export function BatchSetupSidebarPanel({
 
         <div className="animate-in slide-in-from-top-2 fade-in space-y-3 pt-1 duration-300">
           <Kicker>ADVANCED SETTINGS</Kicker>
+          <FormatAdvancedSettingsCard
+            targetFormat={targetFormat}
+            disabled={isRunning}
+            avif={{
+              qualityAlpha: avifQualityAlpha,
+              lossless: avifLossless,
+              subsample: avifSubsample,
+              tune: avifTune,
+              highAlphaQuality: avifHighAlphaQuality,
+              onQualityAlphaChange: onAvifQualityAlphaChange,
+              onLosslessChange: onAvifLosslessChange,
+              onSubsampleChange: onAvifSubsampleChange,
+              onTuneChange: onAvifTuneChange,
+              onHighAlphaQualityChange: onAvifHighAlphaQualityChange
+            }}
+          />
           <CheckboxCard
             icon={<Lock size={16} />}
             title="Privacy mode"

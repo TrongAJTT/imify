@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **AVIF Advanced Controls:** Added AVIF-specific controls across Single/Batch Processor and Image Splicing:
+  - **Speed (0-10)** in `Target Format & Quality` with guidance about AVIF's inverse speed/effort behavior.
+  - New advanced AVIF options: transparent-edge preservation (high alpha quality), alpha quality override, lossless mode, chroma subsampling (4:2:0 / 4:2:2 / 4:4:4), and tune mode (Auto / SSIM / PSNR).
+  - All AVIF options are wired end-to-end through direct encoder, worker encoder, batch pipeline, and splicing export pipeline.
+- **UI:** Added reusable `FormatAdvancedSettingsCard` wrapper for format-specific advanced options (currently AVIF mapping).
+- **UI:** Added reusable `AvifAdvancedSettingsCard` accordion for AVIF expert controls with light/dark friendly styling.
 - **JXL Effort Control:** Added `Effort Level` selector in **Target Format & Quality** card for JXL format, allowing users to control compression algorithm complexity (1-9 scale):
   - **1-3:** Lightning/Fast modes - faster encoding, larger file sizes (recommended for Batch processing)
   - **4-6:** Fast-Balanced/Balanced modes - balanced performance and compression
@@ -60,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI:** Added semantic `theme` prop to `CheckboxCard` component for color-coded visual grouping matching `AccordionCard` and `SidebarCard` theming system.
 
 ### Fixed
+- **DX:** Fixed strict TypeScript issue in context menu builder when checking optional `chrome.runtime.lastError.message`.
 - **Splicing**: Fixed an issue where the "Trim background" feature could work incorrectly.
 - **UI**: Implemented "Click outside to close" and native Escape key handling for all dialogs using `BaseDialog`.
 - **UI**: Fixed dark mode visibility issues in the naming pattern input and quick presets buttons.

@@ -19,6 +19,7 @@ import { useSplicingStore } from "@/options/stores/splicing-store"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import SidebarCard from "@/options/components/ui/sidebar-card"
 import { ConcurrencySelector } from "@/options/components/shared/concurrency-selector"
+import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "../shared/target-format-quality-card"
 import { ResizeCard } from "../shared/resize-card"
 import {
@@ -81,6 +82,12 @@ export function SplicingSidebarPanel({
   const exportFormat = useSplicingStore((s) => s.exportFormat)
   const exportQuality = useSplicingStore((s) => s.exportQuality)
   const exportJxlEffort = useSplicingStore((s) => s.exportJxlEffort)
+  const exportAvifSpeed = useSplicingStore((s) => s.exportAvifSpeed)
+  const exportAvifQualityAlpha = useSplicingStore((s) => s.exportAvifQualityAlpha)
+  const exportAvifLossless = useSplicingStore((s) => s.exportAvifLossless)
+  const exportAvifSubsample = useSplicingStore((s) => s.exportAvifSubsample)
+  const exportAvifTune = useSplicingStore((s) => s.exportAvifTune)
+  const exportAvifHighAlphaQuality = useSplicingStore((s) => s.exportAvifHighAlphaQuality)
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
   const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
   const exportFileNamePattern = useSplicingStore((s) => s.exportFileNamePattern)
@@ -112,6 +119,12 @@ export function SplicingSidebarPanel({
   const setExportFormat = useSplicingStore((s) => s.setExportFormat)
   const setExportQuality = useSplicingStore((s) => s.setExportQuality)
   const setExportJxlEffort = useSplicingStore((s) => s.setExportJxlEffort)
+  const setExportAvifSpeed = useSplicingStore((s) => s.setExportAvifSpeed)
+  const setExportAvifQualityAlpha = useSplicingStore((s) => s.setExportAvifQualityAlpha)
+  const setExportAvifLossless = useSplicingStore((s) => s.setExportAvifLossless)
+  const setExportAvifSubsample = useSplicingStore((s) => s.setExportAvifSubsample)
+  const setExportAvifTune = useSplicingStore((s) => s.setExportAvifTune)
+  const setExportAvifHighAlphaQuality = useSplicingStore((s) => s.setExportAvifHighAlphaQuality)
   const setExportPngTinyMode = useSplicingStore((s) => s.setExportPngTinyMode)
   const setExportMode = useSplicingStore((s) => s.setExportMode)
   const setExportTrimBackground = useSplicingStore((s) => s.setExportTrimBackground)
@@ -349,6 +362,7 @@ export function SplicingSidebarPanel({
           <TargetFormatQualityCard
             targetFormat={exportFormat}
             quality={exportQuality}
+            avifSpeed={exportAvifSpeed}
             jxlEffort={exportJxlEffort}
             pngTinyMode={exportPngTinyMode}
             formatOptions={EXPORT_FORMAT_OPTIONS}
@@ -356,11 +370,27 @@ export function SplicingSidebarPanel({
             supportsTinyMode={showTinyMode}
             onTargetFormatChange={(v: string) => setExportFormat(v as SplicingExportFormat)}
             onQualityChange={setExportQuality}
+            onAvifSpeedChange={setExportAvifSpeed}
             onJxlEffortChange={setExportJxlEffort}
             onPngTinyModeChange={setExportPngTinyMode}
             disabled={false}
             isOpen={isExportFormatQualityOpen}
             onOpenChange={setIsExportFormatQualityOpen}
+          />
+          <FormatAdvancedSettingsCard
+            targetFormat={exportFormat}
+            avif={{
+              qualityAlpha: exportAvifQualityAlpha,
+              lossless: exportAvifLossless,
+              subsample: exportAvifSubsample,
+              tune: exportAvifTune,
+              highAlphaQuality: exportAvifHighAlphaQuality,
+              onQualityAlphaChange: setExportAvifQualityAlpha,
+              onLosslessChange: setExportAvifLossless,
+              onSubsampleChange: setExportAvifSubsample,
+              onTuneChange: setExportAvifTune,
+              onHighAlphaQualityChange: setExportAvifHighAlphaQuality
+            }}
           />
           <div className="grid grid-cols-2 gap-2">
             <SelectField

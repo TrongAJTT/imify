@@ -9,6 +9,7 @@ import {
   calculateDimensions,
   clampQuality
 } from "@/core/image-utils"
+import { buildNormalizedAvifOptions } from "@/core/avif-options"
 import type { FormatConfig, ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { convertSourceToIcoOutput } from "@/features/converter/ico-encoder"
@@ -252,15 +253,32 @@ async function convertToRasterBlob(
   return outputBlob
 }
 
-async function encodeAvifInWorker(imageData: ImageData, quality?: number): Promise<Blob> {
+async function encodeAvifInWorker(
+  imageData: ImageData,
+  options?: {
+    quality?: number
+    avifSpeed?: number
+    avifQualityAlpha?: number
+    avifLossless?: boolean
+    avifSubsample?: 1 | 2 | 3
+    avifTune?: "auto" | "ssim" | "psnr"
+    avifHighAlphaQuality?: boolean
+  }
+): Promise<Blob> {
   const avifModule = await getAvifModule()
+  const normalized = buildNormalizedAvifOptions(options ?? {})
   const encoded = avifModule.encode(
     imageData.data as unknown as Uint8Array,
     imageData.width,
     imageData.height,
     {
       ...AVIF_DEFAULT_OPTIONS,
-      quality: clampQuality(quality)
+      quality: normalized.quality,
+      qualityAlpha: normalized.qualityAlpha,
+      speed: normalized.speed,
+      subsample: normalized.subsample,
+      tune: normalized.tune,
+      lossless: normalized.lossless
     }
   )
 
@@ -329,7 +347,15 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
     if (config.format === "avif") {
       const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
       return {
-        blob: await encodeAvifInWorker(imageData, config.quality),
+        blob: await encodeAvifInWorker(imageData, {
+          quality: config.quality,
+          avifSpeed: config.avifSpeed,
+          avifQualityAlpha: config.avifQualityAlpha,
+          avifLossless: config.avifLossless,
+          avifSubsample: config.avifSubsample,
+          avifTune: config.avifTune,
+          avifHighAlphaQuality: config.avifHighAlphaQuality
+        }),
         mimeType: "image/avif"
       }
     }
