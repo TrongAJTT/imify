@@ -26,6 +26,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI:** Added `TargetFormatQualityPopover` component consolidating format, quality, ICO sizes, and PNG tiny mode selection into a single popover interface.
 - **UI:** Added `ResizePopover` component providing unified resize controls (6 modes: No resize, Fit width, Fit height, Set size, Scale, Paper size) with mode-aware sublabel display.
 - **UI:** Added `tooltip` prop to `SelectInput` and `NumberInput` components for inline help documentation with (?) icon.
+- **Settings:** Added workspace layout controls in **General** tab to customize both sidebar widths using 6-step discrete sliders:
+  - Navigation sidebar width levels (Compact → Max).
+  - Configuration sidebar width levels (Compact → Max).
+  - Real-time preview while the Settings dialog is open.
+- **Settings:** Added new **Performance** tab with discrete sliders for concurrency limits:
+  - `Standard formats max concurrency` (JPG, PNG, WebP, BMP, TIFF, ICO).
+  - `Heavy formats max concurrency` (AVIF, JXL).
+  - Safety warning for high AVIF/JXL concurrency values.
+- **UI:** Added reusable `DiscreteSlider` component for non-linear preset-based configuration controls.
+- **UI:** Added reusable shared `ConcurrencySelector` component and integrated it across Single/Batch Processor and Image Splicing sidebars.
 - **UI:** Added shared theme configuration system (`theme-config.ts`) for semantic visual hierarchy using color coding across Accordion, Checkbox, and Sidebar cards.
   - **Color Theming:** Blue for Format & Quality, Purple for Resize, Amber for Advanced Settings, Sky/Orange for additional actions.
   - Left border highlight on active accordion cards with subtle background wash based on theme color.
@@ -39,9 +49,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **TypeScript Configuration:** Migrated from deprecated `moduleResolution: "node10"` and `baseUrl` to modern `"bundler"` resolver with relative path mappings.
 - **Dependencies:** Added `@radix-ui/react-collapsible` (^1.1.12) for accordion component implementation.
 - **Single/Batch Processor:** Moved Concurrency selector to separate row below Resize popover for better visual separation.
+- **Workspace Layout:** Sidebar widths are now driven by persisted Settings preferences instead of hardcoded static widths.
 - **UI:** Refactored `Tooltip` component to use Radix UI Popover for automatic viewport collision detection and safe area positioning instead of manual coordinates.
 - **UI/UX:** Improved accordion card layout padding to align form inputs correctly when expanded (changed from `pl-7 pr-0` to `px-2.5`).
 - **UI:** Consolidated theme configuration into shared `theme-config.ts` utility module to eliminate code duplication across `AccordionCard`, `CheckboxCard`, and `SidebarCard` components.
+- **Concurrency:** Replaced format-specific inline concurrency option logic with centralized performance-preference driven limits and shared option builders.
 - **UI:** Enhanced input components (`SelectInput`, `NumberInput`, `TextInput`) with improved background contrast:
   - Changed background from `bg-slate-50/dark:bg-slate-800/50` to `bg-white/dark:bg-slate-800/80` with shadow for better visual hierarchy.
   - Added `shadow-sm` to inputs for subtle depth against accordion/sidebar backgrounds.

@@ -28,6 +28,19 @@ import { TabButton } from "@/options/components/tab-button"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState, TAB_ITEMS } from "@/options/shared"
+import {
+  DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
+  getConfigurationSidebarWidthPx,
+  getNavigationSidebarWidthPx,
+  normalizeWorkspaceLayoutPreferences,
+  WORKSPACE_LAYOUT_PREFERENCES_KEY,
+  type SidebarWidthLevel
+} from "@/options/shared/layout-preferences"
+import {
+  DEFAULT_PERFORMANCE_PREFERENCES,
+  normalizePerformancePreferences,
+  PERFORMANCE_PREFERENCES_KEY
+} from "@/options/shared/performance-preferences"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
 import { Tooltip } from "@/options/components/tooltip"
@@ -45,7 +58,7 @@ import {
 } from "lucide-react"
 import { AboutDialog } from "./components/about-dialog"
 import { AttributionDialog } from "./components/attribution-dialog"
-import { SettingsDialog } from "./components/settings-dialog"
+import { SettingsDialog } from "@/options/components/settings-dialog"
 import { DonateDialog } from "./components/donate-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
@@ -208,10 +221,30 @@ export default function OptionsPage() {
     DEFAULT_PERSISTED_STATE
   )
   const [isDark, setIsDark] = useStorage<boolean>({ key: "imify_dark_mode", instance: syncStorage }, false)
+  const [layoutPreferences, setLayoutPreferences, { isLoading: isLayoutPreferencesLoading }] = useStorage(
+    { key: WORKSPACE_LAYOUT_PREFERENCES_KEY, instance: syncStorage },
+    DEFAULT_WORKSPACE_LAYOUT_PREFERENCES
+  )
+  const [performancePreferences, setPerformancePreferences, { isLoading: isPerformancePreferencesLoading }] = useStorage(
+    { key: PERFORMANCE_PREFERENCES_KEY, instance: syncStorage },
+    DEFAULT_PERFORMANCE_PREFERENCES
+  )
 
-  const isLoading = isSettingsLoading || !isBatchStoreRehydrated
+  const isLoading =
+    isSettingsLoading ||
+    isLayoutPreferencesLoading ||
+    isPerformancePreferencesLoading ||
+    !isBatchStoreRehydrated
   const safeDefaultOptionsTab = sanitizeOptionsTab(defaultOptionsTab)
   const safeActiveContextMenuSubTab = sanitizeContextMenuSubTab(activeContextMenuSubTab)
+  const safeLayoutPreferences = normalizeWorkspaceLayoutPreferences(layoutPreferences)
+  const safePerformancePreferences = normalizePerformancePreferences(performancePreferences)
+  const navigationSidebarWidth = getNavigationSidebarWidthPx(
+    safeLayoutPreferences.navigationSidebarLevel
+  )
+  const configurationSidebarWidth = getConfigurationSidebarWidthPx(
+    safeLayoutPreferences.configurationSidebarLevel
+  )
 
   const didInitDefaultTabRef = useRef(false)
   useEffect(() => {
@@ -340,13 +373,39 @@ export default function OptionsPage() {
         isOpen={isSettingsDialogOpen}
         onClose={() => setIsSettingsDialogOpen(false)}
         defaultOptionsTab={safeDefaultOptionsTab}
-        onChangeDefaultOptionsTab={(tab) => {
+        onChangeDefaultOptionsTab={(tab: OptionsTab) => {
           const nextTab = sanitizeOptionsTab(tab)
           void setDefaultOptionsTab(nextTab)
         }}
         usageEntries={usageEntries}
         onResetUsageStats={() => {
           void commitContextMenuSettings({ usage_counts: {} })
+        }}
+        layoutPreferences={safeLayoutPreferences}
+        onChangeNavigationSidebarLevel={(level: SidebarWidthLevel) => {
+          void setLayoutPreferences({
+            ...safeLayoutPreferences,
+            navigationSidebarLevel: level
+          })
+        }}
+        onChangeConfigurationSidebarLevel={(level: SidebarWidthLevel) => {
+          void setLayoutPreferences({
+            ...safeLayoutPreferences,
+            configurationSidebarLevel: level
+          })
+        }}
+        performancePreferences={safePerformancePreferences}
+        onChangeMaxStandardConcurrency={(value: number) => {
+          void setPerformancePreferences({
+            ...safePerformancePreferences,
+            maxStandardFormatConcurrency: value
+          })
+        }}
+        onChangeMaxHeavyConcurrency={(value: number) => {
+          void setPerformancePreferences({
+            ...safePerformancePreferences,
+            maxHeavyFormatConcurrency: value
+          })
         }}
       />
 
@@ -362,9 +421,8 @@ export default function OptionsPage() {
 
         {/* Left sidebar nav */}
         <nav
-          className={`shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto transition-[width] duration-200 ${
-            isNavCollapsed ? "w-14" : "w-64"
-          }`}>
+          className="shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto transition-[width] duration-200"
+          style={{ width: isNavCollapsed ? 56 : navigationSidebarWidth }}>
           <div className="pt-4 pb-2 px-2 flex flex-col gap-0.5">
             <div
               className={`${
@@ -405,11 +463,11 @@ export default function OptionsPage() {
           {/* Right panel content collapsed into left sidebar on smaller screens */}
           <div className={`xl:hidden border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col ${isNavCollapsed ? "hidden" : ""}`}>
             {(activeTab === "batch" || activeTab === "single") && (
-              <BatchSetupSidebarPanel />
+              <BatchSetupSidebarPanel performancePreferences={safePerformancePreferences} />
             )}
 
             {activeTab === "splicing" && (
-              <SplicingSidebarPanel />
+              <SplicingSidebarPanel performancePreferences={safePerformancePreferences} />
             )}
 
             {activeTab === "diffchecker" && (
@@ -454,13 +512,15 @@ export default function OptionsPage() {
         </div>
 
         {/* Right panel */}
-        <aside className="w-72 shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hidden xl:flex flex-col overflow-y-auto">
+        <aside
+          className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hidden xl:flex flex-col overflow-y-auto"
+          style={{ width: configurationSidebarWidth }}>
           {(activeTab === "batch" || activeTab === "single") && (
-            <BatchSetupSidebarPanel />
+            <BatchSetupSidebarPanel performancePreferences={safePerformancePreferences} />
           )}
 
           {activeTab === "splicing" && (
-            <SplicingSidebarPanel />
+            <SplicingSidebarPanel performancePreferences={safePerformancePreferences} />
           )}
 
           {activeTab === "diffchecker" && (

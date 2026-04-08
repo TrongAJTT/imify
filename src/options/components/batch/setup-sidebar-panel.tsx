@@ -2,17 +2,15 @@ import { useMemo, useState } from "react"
 import { FileEdit, FolderOpen, History, Save, Stamp, Lock } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/options/shared"
-import { CONCURRENCY_TOOLTIP } from "@/options/shared/concurrency-messages"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 
-import { SelectInput } from "@/options/components/ui/select-input"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker } from "@/options/components/ui/typography"
 import SidebarCard from "@/options/components/ui/sidebar-card"
+import { ConcurrencySelector } from "@/options/components/shared/concurrency-selector"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import { ResizeCard } from "@/options/components/shared/resize-card"
 import {
-  HIGH_CONCURRENCY_FORMATS,
   TARGET_FORMAT_OPTIONS,
   type BatchResizeMode,
   type BatchTargetFormat
@@ -20,6 +18,7 @@ import {
 import { WATERMARK_POSITION_OPTIONS } from "@/options/components/batch/watermark"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { Tooltip } from "@/options/components/tooltip"
+import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import { BatchRenameDialog } from "./rename-dialog"
 import { BatchWatermarkDialog } from "./watermark-dialog"
 import { SavePresetDialog } from "./save-preset-dialog"
@@ -38,17 +37,13 @@ const HIGHLIGHT_COLORS = [
   "#ec4899"  // Pink
 ] as const
 
-const BASE_CONCURRENCY_OPTIONS = [
-  { value: 1, label: "1" },
-  { value: 2, label: "2" },
-  { value: 3, label: "3 *" },
-  { value: 4, label: "4" },
-  { value: 5, label: "5" }
-] as const
+interface BatchSetupSidebarPanelProps {
+  performancePreferences: PerformancePreferences
+}
 
-const EXTENDED_CONCURRENCY_VALUES = [10, 15, 20, 25, 30] as const
-
-export function BatchSetupSidebarPanel() {
+export function BatchSetupSidebarPanel({
+  performancePreferences
+}: BatchSetupSidebarPanelProps) {
   const setupContext = useBatchStore((state) => state.setupContext)
   const isRunning = useBatchStore((state) => state.isRunning)
   const isTargetFormatQualityOpen = useBatchStore((state) => state.isTargetFormatQualityOpen)
@@ -113,17 +108,9 @@ export function BatchSetupSidebarPanel() {
   const [isOpenPresetDialogOpen, setIsOpenPresetDialogOpen] = useState(false)
   const [editingPreset, setEditingPreset] = useState<any | null>(null)
   const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
-  const supportsExtendedConcurrency = HIGH_CONCURRENCY_FORMATS.includes(targetFormat)
   const supportsTinyMode = targetFormat === "png"
   const supportsExif = ["jpg", "webp", "avif"].includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
-
-  const concurrencyOptions = supportsExtendedConcurrency
-    ? [
-        ...BASE_CONCURRENCY_OPTIONS,
-        ...EXTENDED_CONCURRENCY_VALUES.map((value) => ({ value, label: `${value}` }))
-      ]
-    : BASE_CONCURRENCY_OPTIONS
 
   const watermarkSummary =
     watermark.type === "none"
@@ -287,19 +274,13 @@ export function BatchSetupSidebarPanel() {
           isOpen={isResizeOpen}
           onOpenChange={setIsResizeOpen}
         />
-
-{/* Concurrency */}
-<SelectInput
-  label="Concurrency"
-  value={String(concurrency)}
-  disabled={isRunning}
-  tooltip={CONCURRENCY_TOOLTIP}
-  options={concurrencyOptions.map((option) => ({
-    value: String(option.value),
-    label: option.label
-  }))}
-  onChange={(nextValue) => onConcurrencyChange(Number(nextValue))}
-/>
+        <ConcurrencySelector
+          format={targetFormat}
+          value={concurrency}
+          onChange={onConcurrencyChange}
+          disabled={isRunning}
+          limits={performancePreferences}
+        />
         {!isIcoTarget ? (
           <>
             {/* Resize Popover */}

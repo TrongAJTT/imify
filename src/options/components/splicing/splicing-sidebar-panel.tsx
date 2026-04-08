@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react"
 import { FileEdit, Crop } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/core/format-config"
-import { CONCURRENCY_TOOLTIP } from "@/options/shared/concurrency-messages"
 import { getCanonicalExtension } from "@/core/download-utils"
+import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type {
   SplicingExportFormat,
   SplicingExportMode,
@@ -18,6 +18,7 @@ import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import SidebarCard from "@/options/components/ui/sidebar-card"
+import { ConcurrencySelector } from "@/options/components/shared/concurrency-selector"
 import { TargetFormatQualityCard } from "../shared/target-format-quality-card"
 import { ResizeCard } from "../shared/resize-card"
 import {
@@ -42,7 +43,13 @@ import {
 } from "@/options/components/splicing/splicing-sidebar-fields"
 import { BentoLayoutControls } from "@/options/components/splicing/bento-layout-controls"
 
-export function SplicingSidebarPanel() {
+interface SplicingSidebarPanelProps {
+  performancePreferences: PerformancePreferences
+}
+
+export function SplicingSidebarPanel({
+  performancePreferences
+}: SplicingSidebarPanelProps) {
   const preset = useSplicingStore((s) => s.preset)
   const primaryDirection = useSplicingStore((s) => s.primaryDirection)
   const secondaryDirection = useSplicingStore((s) => s.secondaryDirection)
@@ -370,13 +377,11 @@ export function SplicingSidebarPanel() {
               }}
             />
             {exportMode !== "single" && (
-              <NumberInput
-                label="Concurrency"
+              <ConcurrencySelector
+                format={exportFormat}
                 value={exportConcurrency}
-                onChangeValue={setExportConcurrency}
-                tooltip={CONCURRENCY_TOOLTIP}
-                min={1}
-                max={5}
+                onChange={setExportConcurrency}
+                limits={performancePreferences}
               />
             )}
           </div>
