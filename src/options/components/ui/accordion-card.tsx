@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import * as Collapsible from "@radix-ui/react-collapsible"
 import { ChevronDown } from "lucide-react"
 import { useAccordionGroup } from "@/options/components/ui/accordion-group"
+import { getThemeClasses, type ColorTheme } from "@/options/components/ui/theme-config"
 
 type AccordionCardProps = {
   icon?: React.ReactNode
@@ -17,14 +18,13 @@ type AccordionCardProps = {
   alwaysOpen?: boolean
   /** Unique ID for mutually exclusive accordion group */
   groupId?: string
+  /** Color theme for semantic highlights based on SPECIFICATIONS.md */
+  colorTheme?: ColorTheme
 }
 
 /**
  * Accordion Card component that extends SidebarCard functionality
  * with collapsible content. When expanded, sublabel is hidden.
- *
- * @param alwaysOpen - If true, accordion is always open, chevron is hidden, and cannot be collapsed
- * @param groupId - If provided, accordion is part of a mutually exclusive group (only one open at a time)
  */
 export function AccordionCard({
   icon,
@@ -38,6 +38,7 @@ export function AccordionCard({
   children,
   alwaysOpen = false,
   groupId,
+  colorTheme = "sky",
 }: AccordionCardProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen ?? false)
   const groupContext = groupId ? useAccordionGroup() : null
@@ -63,20 +64,29 @@ export function AccordionCard({
   }
 
   const isDisabled = disabled || alwaysOpen
+  const theme = getThemeClasses(colorTheme)
 
   return (
     <Collapsible.Root open={isOpen} onOpenChange={handleOpenChange} disabled={isDisabled}>
-      <div className="border border-slate-200 rounded dark:border-slate-700 overflow-hidden">
+      <div className={`rounded overflow-hidden transition-all duration-200 border-y border-r ${
+        isOpen
+          ? `border-l-2 ${theme.activeBorder} border-slate-200 dark:border-slate-700 shadow-sm`
+          : "border-l border-slate-200 dark:border-slate-700"
+      }`}>
         <Collapsible.Trigger asChild>
           <button
             type="button"
             disabled={isDisabled}
-            className={`w-full text-left flex items-center gap-3 bg-white px-2.5 py-1.5 transition-all ${
-              alwaysOpen ? "cursor-default" : "hover:shadow-sm hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-sky-500/10 dark:hover:border-sky-500 cursor-pointer"
-            } disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/40 ${className || ""}`}
+            className={`w-full text-left flex items-center gap-3 px-2.5 py-1.5 transition-all ${
+              isOpen
+                ? theme.activeBg
+                : alwaysOpen
+                  ? "cursor-default bg-white dark:bg-slate-900/40"
+                  : `bg-white hover:shadow-sm dark:bg-slate-900/40 ${theme.hover} cursor-pointer`
+            } disabled:opacity-50 ${className || ""}`}
           >
             {icon ? (
-              <div className="shrink-0 flex items-center justify-center text-sky-600 dark:text-sky-400">
+              <div className={`shrink-0 flex items-center justify-center ${theme.icon}`}>
                 {icon}
               </div>
             ) : null}

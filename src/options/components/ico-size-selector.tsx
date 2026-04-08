@@ -26,13 +26,13 @@ export function IcoSizeSelector({
         {ICO_SIZE_OPTIONS.map((option) => (
           <CheckboxCard
             key={option.value}
-            icon={<Package size={16} />}
+            // icon={<Package size={16} />}
             checked={sizes.includes(option.value)}
             disabled={disabled}
             onChange={() => onToggleSize(option.value)}
             title={option.label}
             subtitle={option.note}
-            variant="sky"
+            theme="blue"
           />
         ))}
       </div>
@@ -45,8 +45,7 @@ export function IcoSizeSelector({
           onChange={onToggleWebKit}
           title="Generate Web Toolkit"
           tooltip="Generate full icon set including favicon.ico and PNG files for Apple/Android"
-          variant="primary"
-          className="border-amber-200 bg-amber-50/50 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200"
+          theme="amber"
           />
       </div>
     </div>

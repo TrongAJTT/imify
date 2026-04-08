@@ -1,8 +1,9 @@
 import { HelpCircle } from "lucide-react"
 import { Tooltip } from "@/options/components/tooltip"
+import { getThemeClasses, type ColorTheme } from "@/options/components/ui/theme-config"
 
 interface CheckboxCardProps {
-  icon: React.ReactNode
+  icon?: React.ReactNode
   title: string
   subtitle?: string
   checked: boolean
@@ -10,6 +11,7 @@ interface CheckboxCardProps {
   disabled?: boolean
   tooltip?: string
   variant?: "primary" | "sky"
+  theme?: ColorTheme
   className?: string
 }
 
@@ -22,24 +24,22 @@ export function CheckboxCard({
   disabled,
   tooltip,
   variant = "sky",
+  theme = "sky",
   className = ""
 }: CheckboxCardProps) {
   const isSky = variant === "sky"
+  const themeClasses = getThemeClasses(theme)
 
-  const activeClasses = isSky
-    ? "border-sky-300 bg-sky-50 text-sky-800 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-200"
-    : "border-primary-300 bg-primary-50 text-primary-800 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-200"
-
-  const inactiveClasses = "border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
+  const activeClasses = checked 
+    ? `${themeClasses.activeBorder} ${themeClasses.activeBg} ${themeClasses.activeText}`
+    : `border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 ${themeClasses.hover}`
 
   return (
     <label
-      className={`flex flex-col items-start justify-center rounded border px-2.5 py-1.5 transition-all ${
-        checked ? activeClasses : inactiveClasses
-      } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className}`}>
+      className={`flex flex-col items-start justify-center rounded border px-2.5 py-1.5 transition-all ${activeClasses} ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className}`}>
       <div className="flex items-center gap-2 w-full">
         {icon && (
-        <div className="shrink-0 flex items-center justify-center text-sky-600 dark:text-sky-400">
+        <div className={`shrink-0 flex items-center justify-center ${themeClasses.icon}`}>
           {icon}
         </div>)}
         <div className="flex items-center justify-between w-full min-w-0 gap-2">
@@ -63,9 +63,11 @@ export function CheckboxCard({
         </div>
       </div>
       {subtitle && (
-        <span className="text-[10px] mt-0.5 pb-1 opacity-70 ml-6 truncate w-full leading-none">
-          {subtitle}
-        </span>
+        <div className={`w-full ${icon ? "pl-[24px]" : ""}`}>
+          <div className="text-[10px] mt-0.5 pb-1 opacity-70 truncate w-full leading-none">
+            {subtitle}
+          </div>
+        </div>
       )}
     </label>
   )

@@ -95,6 +95,7 @@ export function TargetFormatQualityCard({
       disabled={disabled}
       alwaysOpen={alwaysOpen}
       groupId={groupId}
+      colorTheme="blue"
     >
       <div className="space-y-3">
         <div>
@@ -172,6 +173,7 @@ export function TargetFormatQualityCard({
             checked={pngTinyMode}
             onChange={onPngTinyModeChange}
             disabled={disabled || !supportsTinyMode}
+            theme="blue"
           />
         )}
       </div>

@@ -391,6 +391,7 @@ export function SplicingSidebarPanel() {
               }
               checked={exportTrimBackground}
               onChange={setExportTrimBackground}
+              theme="amber"
             />
           )}
 

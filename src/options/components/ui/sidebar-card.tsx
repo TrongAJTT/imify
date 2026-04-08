@@ -1,4 +1,8 @@
 import React from "react"
+import { getThemeClasses, type ColorTheme } from "@/options/components/ui/theme-config"
+
+// Re-export ColorTheme for backward compatibility
+export type { ColorTheme }
 
 type SidebarCardProps = {
   icon?: React.ReactNode
@@ -7,18 +11,21 @@ type SidebarCardProps = {
   onClick?: () => void
   disabled?: boolean
   className?: string
+  theme?: ColorTheme
 }
 
-export function SidebarCard({ icon, label, sublabel, onClick, disabled, className }: SidebarCardProps) {
+export function SidebarCard({ icon, label, sublabel, onClick, disabled, className, theme = "sky" }: SidebarCardProps) {
+  const themeClasses = getThemeClasses(theme)
+  
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`w-full text-left flex items-center gap-3 rounded border border-slate-200 bg-white px-2.5 py-1.5 transition-all hover:shadow-sm hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-sky-500/10 dark:hover:border-sky-500 cursor-pointer disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/40 ${className || ""}`}
+      className={`w-full text-left flex items-center gap-3 rounded border border-slate-200 bg-white px-2.5 py-1.5 transition-all shadow-sm ${themeClasses.hover} cursor-pointer disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/40 ${className || ""}`}
     >
         {icon ? (
-        <div className="shrink-0 flex items-center justify-center text-sky-600 dark:text-sky-400">
+        <div className={`shrink-0 flex items-center justify-center ${themeClasses.icon}`}>
           {icon}
         </div>
       ) : null}

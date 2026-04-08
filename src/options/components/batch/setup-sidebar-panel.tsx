@@ -323,9 +323,8 @@ export function BatchSetupSidebarPanel() {
             disabled={isRunning || !supportsExif}
             tooltip="Removes sensitive metadata (GPS, Camera info)."
             className={!supportsExif ? "opacity-70" : ""}
+            theme="amber"
           />
-
-
 
           <SidebarCard
             icon={<FileEdit size={14} />}
@@ -333,6 +332,7 @@ export function BatchSetupSidebarPanel() {
             sublabel={fileNamePattern}
             onClick={() => setIsRenameDialogOpen(true)}
             disabled={isRunning}
+            theme="amber"
           />
 
           <SidebarCard
@@ -341,6 +341,7 @@ export function BatchSetupSidebarPanel() {
             sublabel={watermarkSummary}
             onClick={() => setIsWatermarkDialogOpen(true)}
             disabled={isRunning}
+            theme="amber"
           />
         </div>
       </div>

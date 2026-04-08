@@ -55,6 +55,7 @@ export function InspectorSidebarPanel() {
             subtitle="Show only privacy-relevant tags"
             checked={showSensitiveOnly}
             onChange={setShowSensitiveOnly}
+            theme="amber"
           />
         </div>
       </SidebarPanel>

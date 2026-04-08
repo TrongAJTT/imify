@@ -171,6 +171,7 @@ export function ResizeCard({
       disabled={disabled}
       alwaysOpen={alwaysOpen}
       groupId={groupId}
+      colorTheme="purple"
     >
       <div className="space-y-3">
         {/* Resize Mode Selector */}
