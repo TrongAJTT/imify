@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { FileEdit } from "lucide-react"
+import { FileEdit, Crop } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/core/format-config"
 import { CONCURRENCY_TOOLTIP } from "@/options/shared/concurrency-messages"
@@ -382,6 +382,7 @@ export function SplicingSidebarPanel() {
           </div>
           {showTrimBackground && (
             <CheckboxCard
+              icon={<Crop size={16} />}
               title="Trim Background"
               subtitle={
                 exportMode === "per_col"

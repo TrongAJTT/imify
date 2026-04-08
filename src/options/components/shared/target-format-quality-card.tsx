@@ -3,7 +3,7 @@ import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { FileJson } from "lucide-react"
+import { FileJson, Zap } from "lucide-react"
 
 export type TargetFormatQualityCardProps = {
   /** Selected target format value */
@@ -165,6 +165,7 @@ export function TargetFormatQualityCard({
 
         {supportsTinyMode && (
           <CheckboxCard
+            icon={<Zap size={16} />}
             title="Tiny Mode"
             subtitle="Quantize to reduce PNG size"
             tooltip="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."

@@ -2,6 +2,7 @@ import { HelpCircle } from "lucide-react"
 import { Tooltip } from "@/options/components/tooltip"
 
 interface CheckboxCardProps {
+  icon: React.ReactNode
   title: string
   subtitle?: string
   checked: boolean
@@ -13,6 +14,7 @@ interface CheckboxCardProps {
 }
 
 export function CheckboxCard({
+  icon,
   title,
   subtitle,
   checked,
@@ -36,26 +38,32 @@ export function CheckboxCard({
         checked ? activeClasses : inactiveClasses
       } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className}`}>
       <div className="flex items-center gap-2 w-full">
-        <input
-          checked={checked}
-          disabled={disabled}
-          onChange={(e) => onChange(e.target.checked)}
-          type="checkbox"
-          className={`rounded border-slate-300 focus:ring-2 focus:ring-offset-0 w-3.5 h-4 ${
-            isSky ? "text-sky-500 focus:ring-sky-500/20" : "text-primary-500 focus:ring-primary-500/20"
-          }`}
-        />
-        <div className="flex items-center pl-1 justify-between w-full min-w-0">
-          <span className="font-bold text-[12px] text-slate-700 dark:text-slate-300 whitespace-nowrap truncate mr-1">{title}</span>
-          {tooltip && (
-            <Tooltip content={tooltip} variant="wide2">
-              <HelpCircle size={16} className="text-slate-400 cursor-help shrink-0" />
-            </Tooltip>
-          )}
+        {icon && (
+        <div className="shrink-0 flex items-center justify-center text-sky-600 dark:text-sky-400">
+          {icon}
+        </div>)}
+        <div className="flex items-center justify-between w-full min-w-0 gap-2">
+          <span className="font-bold text-[12px] text-slate-700 dark:text-slate-300 whitespace-nowrap truncate">{title}</span>
+          <div className="flex items-center gap-2 shrink-0">
+            {tooltip && (
+              <Tooltip content={tooltip} variant="wide2">
+                <HelpCircle size={16} className="text-slate-400 cursor-help" />
+              </Tooltip>
+            )}
+            <input
+              checked={checked}
+              disabled={disabled}
+              onChange={(e) => onChange(e.target.checked)}
+              type="checkbox"
+              className={`rounded border-slate-300 focus:ring-2 focus:ring-offset-0 w-3.5 h-4 ${
+                isSky ? "text-sky-500 focus:ring-sky-500/20" : "text-primary-500 focus:ring-primary-500/20"
+              }`}
+            />
+          </div>
         </div>
       </div>
       {subtitle && (
-        <span className="text-[10px] mt-0.5 pl-1 pb-1 opacity-70 ml-5 truncate w-full leading-none">
+        <span className="text-[10px] mt-0.5 pb-1 opacity-70 ml-6 truncate w-full leading-none">
           {subtitle}
         </span>
       )}

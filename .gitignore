@@ -6,35 +6,37 @@
 /.pnp
 .pnp.js
 
-# testing
-/coverage
+# Build & Production
+dist/
+build/
+out/
+.plasmo/
+*.tsbuildinfo
 
-# misc
-.DS_Store
+# Environment & Secrets
+.env*.local
 *.pem
 
-# debug
+# Logs, Debug & Testing
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local env files
-.env*.local
+# Testing
+coverage/
 
-out/
-build/
-dist/
+# OS & IDE Specific
+.DS_Store
 
-# plasmo
-.plasmo
-
-# typescript
-*.tsbuildinfo
-
-backups/
-SPECIFICATIONS.md
-.docs/
-.github/copilot-instructions.md
+# AI Tooling & IDE (Cursor, GitHub Copilot, Nexus)
 .cursorrules
 .gitnexus
+.github/copilot-instructions.md
+
+# Documentation & Backups
+backups/
+.docs/
+SPECIFICATIONS.md

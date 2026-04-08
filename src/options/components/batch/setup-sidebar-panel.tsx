@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { FileEdit, FolderOpen, History, Save, Stamp } from "lucide-react"
+import { FileEdit, FolderOpen, History, Save, Stamp, Lock } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/options/shared"
 import { CONCURRENCY_TOOLTIP } from "@/options/shared/concurrency-messages"
@@ -309,6 +309,7 @@ export function BatchSetupSidebarPanel() {
         <div className="animate-in slide-in-from-top-2 fade-in space-y-3 pt-1 duration-300">
           <Kicker>ADVANCED SETTINGS</Kicker>
           <CheckboxCard
+            icon={<Lock size={16} />}
             title="Privacy mode"
             subtitle={
               !supportsExif

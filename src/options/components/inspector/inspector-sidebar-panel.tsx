@@ -3,6 +3,7 @@ import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { MutedText } from "@/options/components/ui/typography"
 import { useInspectorStore } from "@/options/stores/inspector-store"
+import { Eye } from "lucide-react"
 
 const EXIF_SORT_OPTIONS = [
   { value: "group", label: "Group by category" },
@@ -49,6 +50,7 @@ export function InspectorSidebarPanel() {
             onChange={(v) => setExifSortMode(v as "group" | "name" | "tag")}
           />
           <CheckboxCard
+            icon={<Eye size={16} />}
             title="Sensitive Only"
             subtitle="Show only privacy-relevant tags"
             checked={showSensitiveOnly}
