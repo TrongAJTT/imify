@@ -221,9 +221,27 @@ function parseJpegExif(buffer: ArrayBuffer): ParsedExifData | null {
     const segLen = view.getUint16(offset + 2)
 
     if (marker === 0xFFE1) {
-      const exifHeader = view.getUint32(offset + 4)
-      if (exifHeader === 0x45786966) { // "Exif"
-        return parseTiffData(buffer, offset + 10)
+      // Try offset + 10 first (standard: "Exif\0\0" + TIFF)
+      let tiffOffset = offset + 10
+      
+      // Check if we have enough data
+      if (tiffOffset + 8 <= view.byteLength) {
+        const result = parseTiffData(buffer, tiffOffset)
+        if (result) return result
+      }
+      
+      // Fallback: try offset + 8 (some files may not have padding)
+      tiffOffset = offset + 8
+      if (tiffOffset + 8 <= view.byteLength) {
+        const result = parseTiffData(buffer, tiffOffset)
+        if (result) return result
+      }
+      
+      // Fallback: try offset + 6 (minimal structure)
+      tiffOffset = offset + 6
+      if (tiffOffset + 8 <= view.byteLength) {
+        const result = parseTiffData(buffer, tiffOffset)
+        if (result) return result
       }
     }
 
@@ -239,6 +257,9 @@ function parseTiffData(buffer: ArrayBuffer, tiffStart: number): ParsedExifData |
 
   const byteOrder = view.getUint16(tiffStart)
   const le = byteOrder === 0x4949 // II = little-endian
+  
+  // Also handle 0x4D4D for big-endian
+  if (byteOrder !== 0x4949 && byteOrder !== 0x4D4D) return null
 
   const magic = view.getUint16(tiffStart + 2, le)
   if (magic !== 42) return null
@@ -252,6 +273,11 @@ function parseTiffData(buffer: ArrayBuffer, tiffStart: number): ParsedExifData |
   const timeInfo: Partial<TimeInfo> = {}
   let orientation: number | null = null
   let software: string | null = null
+
+  // Add defensive bound checking
+  if (tiffStart + ifd0Offset + 2 > view.byteLength) {
+    return { entries, gps, resolution, colorInfo, timeInfo, orientation, software }
+  }
 
   const ifd0Entries = readIfd(view, tiffStart + ifd0Offset, le, tiffStart)
 
@@ -505,17 +531,20 @@ function parsePngMetadata(buffer: ArrayBuffer): ParsedExifData | null {
 
 export function parseExifData(buffer: ArrayBuffer, mimeType: string): ParsedExifData | null {
   try {
+    let result: ParsedExifData | null = null
+    
     if (mimeType === "image/jpeg" || mimeType === "image/jpg") {
-      return parseJpegExif(buffer)
+      result = parseJpegExif(buffer)
+    } else if (mimeType === "image/png") {
+      result = parsePngMetadata(buffer)
+    } else if (mimeType === "image/webp") {
+      result = parseWebpExif(buffer)
     }
-    if (mimeType === "image/png") {
-      return parsePngMetadata(buffer)
-    }
-    if (mimeType === "image/webp") {
-      return parseWebpExif(buffer)
-    }
-    return null
-  } catch {
+    
+    return result
+  } catch (err) {
+    // Return null on error, but log for debugging
+    console.warn("EXIF parsing error:", err)
     return null
   }
 }

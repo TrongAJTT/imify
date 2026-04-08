@@ -101,15 +101,21 @@ export function ExifTableCard({ entries }: ExifTableCardProps) {
     return groups
   }, [filtered, exifSortMode])
 
-  if (entries.length === 0) return null
-
   const countBadge = (
     <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
       {filtered.length}
     </span>
   )
 
-  const renderTable = (items: ExifEntry[]) => (
+  const renderTable = (items: ExifEntry[]) => {
+    if (items.length === 0) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <span className="text-sm text-slate-500 dark:text-slate-400">No metadata tags found</span>
+        </div>
+      )
+    }
+    return (
     <table className="w-full text-left">
       <thead>
         <tr className="border-b border-slate-100 dark:border-slate-700/50">
@@ -134,7 +140,8 @@ export function ExifTableCard({ entries }: ExifTableCardProps) {
         ))}
       </tbody>
     </table>
-  )
+    )
+  }
 
   return (
     <InfoSection

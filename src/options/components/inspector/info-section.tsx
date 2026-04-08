@@ -57,11 +57,17 @@ export function InfoSection({
         )}
         {badge ? <div className="px-4 py-2.5">{badge}</div> : null}
       </div>
-      {isOpen && (
+      <div
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          maxHeight: isOpen ? "1000px" : "0",
+          opacity: isOpen ? 1 : 0
+        }}
+      >
         <div className="px-4 py-3 bg-white dark:bg-slate-800/30">
           {children}
         </div>
-      )}
+      </div>
     </div>
   )
 }
