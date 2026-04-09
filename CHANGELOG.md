@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All AVIF options are wired end-to-end through direct encoder, worker encoder, batch pipeline, and splicing export pipeline.
 - **UI:** Added reusable `FormatAdvancedSettingsCard` wrapper for format-specific advanced options (currently AVIF mapping).
 - **UI:** Added reusable `AvifAdvancedSettingsCard` accordion for AVIF expert controls with light/dark friendly styling.
+- **PNG Advanced Controls:** Added PNG-specific optimization controls across Batch Processor, Image Splicing, and Custom Format editor:
+  - Kept **Tiny Mode** in `Target Format & Quality` for fast access.
+  - Added new **PNG Advanced** accordion with `Clean Transparent Pixels` and `Auto Grayscale Detection`.
+  - Wired PNG advanced options through shared `FormatAdvancedSettingsCard` using the new reusable `PngAdvancedSettingsCard`.
 - **JXL Effort Control:** Added `Effort Level` selector in **Target Format & Quality** card for JXL format, allowing users to control compression algorithm complexity (1-9 scale):
   - **1-3:** Lightning/Fast modes - faster encoding, larger file sizes (recommended for Batch processing)
   - **4-6:** Fast-Balanced/Balanced modes - balanced performance and compression
@@ -53,6 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Config Contracts (Breaking):** Removed all legacy flat codec props from conversion and options payloads (`jxlEffort`, `avif*`, `pngTinyMode`, `icoOptions`, etc.) and standardized on grouped `formatOptions` only across core types, converter worker/main pipeline, batch/single processors, splicing export, and custom format flows (no compatibility migration path retained).
+- **PNG Encoding Pipeline:** PNG now uses an option-aware adapter route:
+  - Default PNG still uses browser `canvas.convertToBlob(...)` for lightweight path.
+  - When any PNG optimization is enabled (`tinyMode`, `cleanTransparentPixels`, `autoGrayscale`), encoding switches to UPNG-based processing with shared main-thread/worker behavior.
 - **Converter Architecture:** Introduced a modular adapter-style raster encoding pipeline (`raster-encode-adapters.ts`) to standardize format-specific encoding across main thread and conversion worker. This removes duplicated `if/switch` logic and makes future format extension easier.
 - **Color Pipeline (Global Decode):** Added shared color-managed decode utilities (`color-managed-pipeline.ts`) and applied them to conversion, worker, ICO generation, preview rendering, and splicing decode stages for consistent color behavior.
 - **JXL Workflow:** JXL encode input is now normalized through the shared color-managed decode path and sRGB canvas context pipeline before WASM encoding, reducing color desaturation risk from wide-gamut source profiles.

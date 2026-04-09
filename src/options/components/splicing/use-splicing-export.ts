@@ -120,7 +120,14 @@ export function useSplicingExport({
                     highAlphaQuality: store.exportAvifHighAlphaQuality
                   }
                 : undefined,
-            png: store.exportFormat === "png" ? { tinyMode: store.exportPngTinyMode } : undefined
+            png:
+              store.exportFormat === "png"
+                ? {
+                    tinyMode: store.exportPngTinyMode,
+                    cleanTransparentPixels: store.exportPngCleanTransparentPixels,
+                    autoGrayscale: store.exportPngAutoGrayscale
+                  }
+                : undefined
           },
           exportMode: store.exportMode,
           trimBackground: store.exportTrimBackground

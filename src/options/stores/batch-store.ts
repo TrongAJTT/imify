@@ -79,7 +79,9 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
       generateWebIconKit: false
     },
     png: {
-      tinyMode: false
+      tinyMode: false,
+      cleanTransparentPixels: false,
+      autoGrayscale: false
     }
   },
   resizeMode: "inherit",
@@ -105,24 +107,32 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
   }
 
   const formatOptions = state.formatOptions ?? DEFAULT_BATCH_STATE.formatOptions
+  const avifOptions = {
+    ...DEFAULT_BATCH_STATE.formatOptions.avif,
+    ...formatOptions.avif
+  }
+  const jxlOptions = {
+    ...DEFAULT_BATCH_STATE.formatOptions.jxl,
+    ...formatOptions.jxl
+  }
+  const pngOptions = {
+    ...DEFAULT_BATCH_STATE.formatOptions.png,
+    ...formatOptions.png
+  }
+  const icoOptions = {
+    ...DEFAULT_BATCH_STATE.formatOptions.ico,
+    ...formatOptions.ico,
+    sizes: [...(formatOptions.ico?.sizes ?? DEFAULT_BATCH_STATE.formatOptions.ico.sizes)]
+  }
 
   return {
     ...state,
     formatOptions: {
       ...formatOptions,
-      avif: {
-        ...formatOptions.avif
-      },
-      jxl: {
-        ...formatOptions.jxl
-      },
-      png: {
-        ...formatOptions.png
-      },
-      ico: {
-        ...formatOptions.ico,
-        sizes: [...(formatOptions.ico?.sizes ?? DEFAULT_BATCH_STATE.formatOptions.ico.sizes)]
-      }
+      avif: avifOptions,
+      jxl: jxlOptions,
+      png: pngOptions,
+      ico: icoOptions
     },
     watermark: {
       ...state.watermark
@@ -213,6 +223,8 @@ interface BatchStoreState extends BatchSetupState {
   setDpi: (value: SupportedDPI) => void
   setStripExif: (value: boolean) => void
   setPngTinyMode: (value: boolean) => void
+  setPngCleanTransparentPixels: (value: boolean) => void
+  setPngAutoGrayscale: (value: boolean) => void
   setFileNamePattern: (value: string) => void
   setWatermark: (value: BatchWatermarkConfig) => void
   skipDownloadConfirm: boolean
@@ -829,6 +841,56 @@ export const useBatchStore = create<BatchStoreState>()(
             }
           } as Partial<BatchStoreState>
         }),
+      setPngCleanTransparentPixels: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            png: {
+              ...currentConfig.formatOptions.png,
+              cleanTransparentPixels: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setPngAutoGrayscale: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            png: {
+              ...currentConfig.formatOptions.png,
+              autoGrayscale: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
       setFileNamePattern: (value) =>
         set((state) => {
           const setupContext = state.setupContext
@@ -1073,32 +1135,31 @@ export const useBatchStore = create<BatchStoreState>()(
           // Migration: ensure all contextConfigs have formatOptions
           const migrateContextConfigs = (configs: Record<SetupContext, BatchSetupState>) => {
             return {
-              single: {
-                ...configs.single,
-                formatOptions: {
-                  ...DEFAULT_BATCH_STATE.formatOptions,
-                  ...configs.single?.formatOptions
-                }
-              },
-              batch: {
-                ...configs.batch,
-                formatOptions: {
-                  ...DEFAULT_BATCH_STATE.formatOptions,
-                  ...configs.batch?.formatOptions
-                }
-              }
+              single: cloneSetupState(configs.single),
+              batch: cloneSetupState(configs.batch)
             }
           }
 
           useBatchStore.setState((state) => {
+            const setupContext = state.setupContext ?? "single"
             const contextConfigs = (state as any).contextConfigs
-            if (contextConfigs) {
+            if (contextConfigs?.single && contextConfigs?.batch) {
+              const migratedContextConfigs = migrateContextConfigs(contextConfigs)
+              const activeConfig = cloneSetupState(migratedContextConfigs[setupContext])
+
               return {
-                contextConfigs: migrateContextConfigs(contextConfigs),
+                ...activeConfig,
+                contextConfigs: migratedContextConfigs,
                 _hasHydrated: true
               } as any
             }
-            return { _hasHydrated: true } as any
+
+            const normalizedRootConfig = cloneSetupState(state as unknown as BatchSetupState)
+
+            return {
+              ...normalizedRootConfig,
+              _hasHydrated: true
+            } as any
           })
         }
       }

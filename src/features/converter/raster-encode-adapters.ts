@@ -44,7 +44,7 @@ export interface RasterEncodeDependencies {
       jxl?: JxlCodecOptions
     }
   ) => Promise<Blob>
-  encodeTinyPng: (imageData: ImageData) => Blob
+  encodePng: (imageData: ImageData, options?: PngCodecOptions) => Blob
   convertToRasterBlob: (
     canvas: OffscreenCanvas,
     targetFormat: CanvasConvertibleFormat,
@@ -120,12 +120,18 @@ const adapters: RasterEncoderAdapter[] = [
     }
   },
   {
-    id: "png-tiny",
-    supports: (format, input) => format === "png" && Boolean(input.formatOptions?.png?.tinyMode),
+    id: "png-upng",
+    supports: (format, input) =>
+      format === "png" &&
+      Boolean(
+        input.formatOptions?.png?.tinyMode ||
+        input.formatOptions?.png?.cleanTransparentPixels ||
+        input.formatOptions?.png?.autoGrayscale
+      ),
     encode: async ({ input, deps }) => {
       const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
       return {
-        blob: deps.encodeTinyPng(imageData),
+        blob: deps.encodePng(imageData, input.formatOptions?.png),
         mimeType: "image/png"
       }
     }

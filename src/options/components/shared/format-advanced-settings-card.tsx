@@ -1,4 +1,5 @@
 import { AvifAdvancedSettingsCard } from "@/options/components/shared/avif-advanced-settings-card"
+import { PngAdvancedSettingsCard } from "@/options/components/shared/png-advanced-settings-card"
 
 type AvifAdvancedProps = {
   qualityAlpha?: number
@@ -13,6 +14,13 @@ type AvifAdvancedProps = {
   onHighAlphaQualityChange: (value: boolean) => void
 }
 
+type PngAdvancedProps = {
+  cleanTransparentPixels: boolean
+  autoGrayscale: boolean
+  onCleanTransparentPixelsChange: (value: boolean) => void
+  onAutoGrayscaleChange: (value: boolean) => void
+}
+
 export interface FormatAdvancedSettingsCardProps {
   targetFormat: string
   disabled?: boolean
@@ -21,6 +29,7 @@ export interface FormatAdvancedSettingsCardProps {
   alwaysOpen?: boolean
   groupId?: string
   avif?: AvifAdvancedProps
+  png?: PngAdvancedProps
 }
 
 export function FormatAdvancedSettingsCard({
@@ -30,29 +39,46 @@ export function FormatAdvancedSettingsCard({
   onOpenChange,
   alwaysOpen,
   groupId,
-  avif
+  avif,
+  png
 }: FormatAdvancedSettingsCardProps) {
-  if (targetFormat !== "avif" || !avif) {
-    return null
+  if (targetFormat === "avif" && avif) {
+    return (
+      <AvifAdvancedSettingsCard
+        qualityAlpha={avif.qualityAlpha}
+        lossless={avif.lossless}
+        subsample={avif.subsample}
+        tune={avif.tune}
+        highAlphaQuality={avif.highAlphaQuality}
+        onQualityAlphaChange={avif.onQualityAlphaChange}
+        onLosslessChange={avif.onLosslessChange}
+        onSubsampleChange={avif.onSubsampleChange}
+        onTuneChange={avif.onTuneChange}
+        onHighAlphaQualityChange={avif.onHighAlphaQualityChange}
+        disabled={disabled}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        alwaysOpen={alwaysOpen}
+        groupId={groupId}
+      />
+    )
   }
 
-  return (
-    <AvifAdvancedSettingsCard
-      qualityAlpha={avif.qualityAlpha}
-      lossless={avif.lossless}
-      subsample={avif.subsample}
-      tune={avif.tune}
-      highAlphaQuality={avif.highAlphaQuality}
-      onQualityAlphaChange={avif.onQualityAlphaChange}
-      onLosslessChange={avif.onLosslessChange}
-      onSubsampleChange={avif.onSubsampleChange}
-      onTuneChange={avif.onTuneChange}
-      onHighAlphaQualityChange={avif.onHighAlphaQualityChange}
-      disabled={disabled}
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      alwaysOpen={alwaysOpen}
-      groupId={groupId}
-    />
-  )
+  if (targetFormat === "png" && png) {
+    return (
+      <PngAdvancedSettingsCard
+        cleanTransparentPixels={png.cleanTransparentPixels}
+        autoGrayscale={png.autoGrayscale}
+        onCleanTransparentPixelsChange={png.onCleanTransparentPixelsChange}
+        onAutoGrayscaleChange={png.onAutoGrayscaleChange}
+        disabled={disabled}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        alwaysOpen={alwaysOpen}
+        groupId={groupId}
+      />
+    )
+  }
+
+  return null
 }

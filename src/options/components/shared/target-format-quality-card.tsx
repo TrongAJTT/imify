@@ -17,6 +17,8 @@ export type TargetFormatQualityCardProps = {
     }
     png?: {
       tinyMode?: boolean
+      cleanTransparentPixels?: boolean
+      autoGrayscale?: boolean
     }
     jxl?: {
       effort?: number
@@ -80,6 +82,8 @@ export function TargetFormatQualityCard({
   const isIcoTarget = targetFormat === "ico"
   const avifSpeedOption = formatConfig?.avif?.speed
   const pngTinyModeEnabled = Boolean(formatConfig?.png?.tinyMode)
+  const pngCleanTransparentPixels = Boolean(formatConfig?.png?.cleanTransparentPixels)
+  const pngAutoGrayscale = Boolean(formatConfig?.png?.autoGrayscale)
   const jxlEffortOption = formatConfig?.jxl?.effort
   const icoSizeOptions = formatConfig?.ico?.sizes
   const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit
@@ -95,6 +99,8 @@ export function TargetFormatQualityCard({
   const extraFlags: string[] = []
   if (isIcoTarget && icoWebToolkitEnabled) extraFlags.push("Web Toolkit")
   if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled) extraFlags.push("Tiny")
+  if (!isIcoTarget && targetFormat === "png" && pngCleanTransparentPixels) extraFlags.push("Clean Alpha")
+  if (!isIcoTarget && targetFormat === "png" && pngAutoGrayscale) extraFlags.push("Auto Gray")
   if (targetFormat === "jxl" && jxlEffortOption) extraFlags.push(`Effort ${jxlEffortOption}`)
   if (targetFormat === "avif" && typeof avifSpeedOption === "number") extraFlags.push(`Speed ${avifSpeedOption}`)
 

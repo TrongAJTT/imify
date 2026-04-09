@@ -45,6 +45,8 @@ export interface IcoOptions {
 
 export interface PngCodecOptions {
   tinyMode?: boolean
+  cleanTransparentPixels?: boolean
+  autoGrayscale?: boolean
 }
 
 export interface JxlCodecOptions {

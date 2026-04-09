@@ -22,7 +22,9 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
       png:
         format === "png"
           ? {
-              tinyMode: false
+              tinyMode: false,
+              cleanTransparentPixels: false,
+              autoGrayscale: false
             }
           : undefined,
       ico:

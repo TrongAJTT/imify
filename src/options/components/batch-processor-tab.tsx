@@ -86,7 +86,14 @@ export function BatchProcessorTab() {
                 generateWebIconKit: formatOptions.ico.generateWebIconKit
               }
             : undefined,
-        png: targetFormat === "png" ? { tinyMode: formatOptions.png.tinyMode } : undefined
+        png:
+          targetFormat === "png"
+            ? {
+                tinyMode: formatOptions.png.tinyMode,
+                cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
+                autoGrayscale: formatOptions.png.autoGrayscale
+              }
+            : undefined
       },
       resize: { mode: "none" }
     }

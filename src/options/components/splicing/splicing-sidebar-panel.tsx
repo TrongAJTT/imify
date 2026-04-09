@@ -89,6 +89,8 @@ export function SplicingSidebarPanel({
   const exportAvifTune = useSplicingStore((s) => s.exportAvifTune)
   const exportAvifHighAlphaQuality = useSplicingStore((s) => s.exportAvifHighAlphaQuality)
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
+  const exportPngCleanTransparentPixels = useSplicingStore((s) => s.exportPngCleanTransparentPixels)
+  const exportPngAutoGrayscale = useSplicingStore((s) => s.exportPngAutoGrayscale)
   const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
   const exportFileNamePattern = useSplicingStore((s) => s.exportFileNamePattern)
   const isExportFormatQualityOpen = useSplicingStore((s) => s.isExportFormatQualityOpen)
@@ -126,6 +128,8 @@ export function SplicingSidebarPanel({
   const setExportAvifTune = useSplicingStore((s) => s.setExportAvifTune)
   const setExportAvifHighAlphaQuality = useSplicingStore((s) => s.setExportAvifHighAlphaQuality)
   const setExportPngTinyMode = useSplicingStore((s) => s.setExportPngTinyMode)
+  const setExportPngCleanTransparentPixels = useSplicingStore((s) => s.setExportPngCleanTransparentPixels)
+  const setExportPngAutoGrayscale = useSplicingStore((s) => s.setExportPngAutoGrayscale)
   const setExportMode = useSplicingStore((s) => s.setExportMode)
   const setExportTrimBackground = useSplicingStore((s) => s.setExportTrimBackground)
   const setExportConcurrency = useSplicingStore((s) => s.setExportConcurrency)
@@ -365,7 +369,11 @@ export function SplicingSidebarPanel({
             formatConfig={{
               avif: { speed: exportAvifSpeed },
               jxl: { effort: exportJxlEffort },
-              png: { tinyMode: exportPngTinyMode }
+              png: {
+                tinyMode: exportPngTinyMode,
+                cleanTransparentPixels: exportPngCleanTransparentPixels,
+                autoGrayscale: exportPngAutoGrayscale
+              }
             }}
             formatOptions={EXPORT_FORMAT_OPTIONS}
             supportsQuality={showQuality}
@@ -392,6 +400,12 @@ export function SplicingSidebarPanel({
               onSubsampleChange: setExportAvifSubsample,
               onTuneChange: setExportAvifTune,
               onHighAlphaQualityChange: setExportAvifHighAlphaQuality
+            }}
+            png={{
+              cleanTransparentPixels: exportPngCleanTransparentPixels,
+              autoGrayscale: exportPngAutoGrayscale,
+              onCleanTransparentPixelsChange: setExportPngCleanTransparentPixels,
+              onAutoGrayscaleChange: setExportPngAutoGrayscale
             }}
           />
           <div className="grid grid-cols-2 gap-2">

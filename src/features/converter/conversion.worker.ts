@@ -17,7 +17,7 @@ import {
   getOffscreen2DContext
 } from "@/features/converter/color-managed-pipeline"
 import { convertSourceToIcoOutput } from "@/features/converter/ico-encoder"
-import { encodeTinyPngFromImageData } from "@/features/converter/png-tiny"
+import { encodePngFromImageData } from "@/features/converter/png-tiny"
 import { encodeRasterWithAdapters } from "@/features/converter/raster-encode-adapters"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
 
@@ -355,7 +355,7 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
         encodeTiff: encodeImageDataToTiff,
         encodeAvif: encodeAvifInWorker,
         encodeJxl: encodeJxlInWorker,
-        encodeTinyPng: encodeTinyPngFromImageData,
+        encodePng: encodePngFromImageData,
         convertToRasterBlob,
         mimeByFormat: MIME_BY_FORMAT
       }

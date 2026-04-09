@@ -190,7 +190,9 @@ export function withBatchResize(
     png: isPngTarget
       ? {
           ...config.formatOptions?.png,
-          tinyMode: Boolean(formatOptions.png.tinyMode)
+          tinyMode: Boolean(formatOptions.png.tinyMode),
+          cleanTransparentPixels: Boolean(formatOptions.png.cleanTransparentPixels),
+          autoGrayscale: Boolean(formatOptions.png.autoGrayscale)
         }
       : undefined
   }

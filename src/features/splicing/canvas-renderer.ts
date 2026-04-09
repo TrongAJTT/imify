@@ -3,7 +3,7 @@ import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { decodeImageBitmapForEncoding } from "@/features/converter/color-managed-pipeline"
 import { encodeJxl } from "@/features/converter/jxl-encoder"
-import { encodeTinyPngFromImageData } from "@/features/converter/png-tiny"
+import { encodePngFromImageData } from "@/features/converter/png-tiny"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
 import { calculateLayout, calculateProcessedSize } from "@/features/splicing/layout-engine"
 import type {
@@ -203,9 +203,13 @@ async function canvasToBlob(
       return encodeImageDataToTiff(data)
     }
     case "png": {
-      if (formatOptions?.png?.tinyMode) {
+      if (
+        formatOptions?.png?.tinyMode ||
+        formatOptions?.png?.cleanTransparentPixels ||
+        formatOptions?.png?.autoGrayscale
+      ) {
         const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        return encodeTinyPngFromImageData(data)
+        return encodePngFromImageData(data, formatOptions?.png)
       }
       return canvas.convertToBlob({ type: "image/png" })
     }

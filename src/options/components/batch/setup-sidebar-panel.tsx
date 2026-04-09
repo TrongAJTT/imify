@@ -97,6 +97,8 @@ export function BatchSetupSidebarPanel({
   const onDpiChange = useBatchStore((state) => state.setDpi)
   const onStripExifChange = useBatchStore((state) => state.setStripExif)
   const onPngTinyModeChange = useBatchStore((state) => state.setPngTinyMode)
+  const onPngCleanTransparentPixelsChange = useBatchStore((state) => state.setPngCleanTransparentPixels)
+  const onPngAutoGrayscaleChange = useBatchStore((state) => state.setPngAutoGrayscale)
   const onFileNamePatternChange = useBatchStore((state) => state.setFileNamePattern)
   const onWatermarkChange = useBatchStore((state) => state.setWatermark)
   const presets = useBatchStore((state) => state.presets)
@@ -225,7 +227,9 @@ export function BatchSetupSidebarPanel({
               effort: formatOptions.jxl.effort
             },
             png: {
-              tinyMode: formatOptions.png.tinyMode
+              tinyMode: formatOptions.png.tinyMode,
+              cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
+              autoGrayscale: formatOptions.png.autoGrayscale
             },
             ico: {
               sizes: formatOptions.ico.sizes,
@@ -319,6 +323,12 @@ export function BatchSetupSidebarPanel({
               onSubsampleChange: onAvifSubsampleChange,
               onTuneChange: onAvifTuneChange,
               onHighAlphaQualityChange: onAvifHighAlphaQualityChange
+            }}
+            png={{
+              cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
+              autoGrayscale: formatOptions.png.autoGrayscale,
+              onCleanTransparentPixelsChange: onPngCleanTransparentPixelsChange,
+              onAutoGrayscaleChange: onPngAutoGrayscaleChange
             }}
           />
           <CheckboxCard

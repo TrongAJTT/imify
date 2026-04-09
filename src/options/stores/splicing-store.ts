@@ -82,6 +82,8 @@ export interface SplicingStoreState {
   exportAvifTune: "auto" | "ssim" | "psnr"
   exportAvifHighAlphaQuality: boolean
   exportPngTinyMode: boolean
+  exportPngCleanTransparentPixels: boolean
+  exportPngAutoGrayscale: boolean
   exportMode: SplicingExportMode
   exportTrimBackground: boolean
   exportConcurrency: number
@@ -134,6 +136,8 @@ export interface SplicingStoreState {
   setExportAvifTune: (v: "auto" | "ssim" | "psnr") => void
   setExportAvifHighAlphaQuality: (v: boolean) => void
   setExportPngTinyMode: (v: boolean) => void
+  setExportPngCleanTransparentPixels: (v: boolean) => void
+  setExportPngAutoGrayscale: (v: boolean) => void
   setExportMode: (v: SplicingExportMode) => void
   setExportTrimBackground: (v: boolean) => void
   setExportConcurrency: (v: number) => void
@@ -188,6 +192,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportAvifTune: "auto",
       exportAvifHighAlphaQuality: false,
       exportPngTinyMode: false,
+      exportPngCleanTransparentPixels: false,
+      exportPngAutoGrayscale: false,
       exportMode: "single",
       exportTrimBackground: false,
       exportConcurrency: 2,
@@ -232,6 +238,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportAvifTune: (v) => set({ exportAvifTune: v }),
       setExportAvifHighAlphaQuality: (v) => set({ exportAvifHighAlphaQuality: v }),
       setExportPngTinyMode: (v) => set({ exportPngTinyMode: v }),
+      setExportPngCleanTransparentPixels: (v) => set({ exportPngCleanTransparentPixels: v }),
+      setExportPngAutoGrayscale: (v) => set({ exportPngAutoGrayscale: v }),
       setExportMode: (v) => set({ exportMode: v }),
       setExportTrimBackground: (v) => set({ exportTrimBackground: v }),
       setExportConcurrency: (v) => set({ exportConcurrency: v }),
@@ -271,7 +279,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setExportFormat, setExportQuality, setExportJxlEffort,
           setExportAvifSpeed, setExportAvifQualityAlpha, setExportAvifLossless,
           setExportAvifSubsample, setExportAvifTune, setExportAvifHighAlphaQuality,
-          setExportPngTinyMode, setExportMode,
+          setExportPngTinyMode, setExportPngCleanTransparentPixels, setExportPngAutoGrayscale, setExportMode,
           setExportTrimBackground, setExportConcurrency, setExportFileNamePattern,
           setPreviewContainerHeight, setPreviewZoom, setPreviewQualityPercent, setPreviewShowImageNumber,
           setPreviewBentoFlowGroupCount,

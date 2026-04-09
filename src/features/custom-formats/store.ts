@@ -116,7 +116,9 @@ function normalizeCustomFormat(input: CustomFormatInput, id: string): FormatConf
     png:
       input.format === "png"
         ? {
-            tinyMode: Boolean(input.formatOptions?.png?.tinyMode)
+            tinyMode: Boolean(input.formatOptions?.png?.tinyMode),
+            cleanTransparentPixels: Boolean(input.formatOptions?.png?.cleanTransparentPixels),
+            autoGrayscale: Boolean(input.formatOptions?.png?.autoGrayscale)
           }
         : undefined,
     avif:

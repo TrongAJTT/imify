@@ -79,6 +79,8 @@ export interface BatchFormatOptions {
   }
   png: {
     tinyMode: boolean
+    cleanTransparentPixels: boolean
+    autoGrayscale: boolean
   }
   ico: {
     sizes: number[]
@@ -133,6 +135,8 @@ export interface BatchSetupHandlers {
   onDpiChange: (value: SupportedDPI) => void
   onStripExifChange: (value: boolean) => void
   onPngTinyModeChange: (value: boolean) => void
+  onPngCleanTransparentPixelsChange: (value: boolean) => void
+  onPngAutoGrayscaleChange: (value: boolean) => void
   onFileNamePatternChange: (value: string) => void
   onWatermarkChange: (value: BatchWatermarkConfig) => void
 }

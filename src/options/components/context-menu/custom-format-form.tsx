@@ -6,6 +6,7 @@ import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { Button } from "@/options/components/ui/button"
 import { BodyText } from "@/options/components/ui/typography"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
+import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { ResizeCard } from "@/options/components/shared/resize-card"
 import { Check } from "lucide-react"
 
@@ -26,6 +27,7 @@ export function CustomFormatForm({
 }) {
   const canSetQuality = QUALITY_FORMATS.includes(value.format)
   const isIcoFormat = value.format === "ico"
+  const supportsTinyMode = value.format === "png"
 
   return (
     <div className="space-y-4">
@@ -50,7 +52,9 @@ export function CustomFormatForm({
                 speed: value.formatOptions?.avif?.speed
               },
               png: {
-                tinyMode: Boolean(value.formatOptions?.png?.tinyMode)
+                tinyMode: Boolean(value.formatOptions?.png?.tinyMode),
+                cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
+                autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale)
               },
               jxl: {
                 effort: value.formatOptions?.jxl?.effort ?? 7
@@ -65,7 +69,7 @@ export function CustomFormatForm({
               label: FORMAT_LABELS[formatOption]
             }))}
             supportsQuality={canSetQuality}
-            supportsTinyMode={false}
+            supportsTinyMode={supportsTinyMode}
             onToggleWebIconKit={(next) =>
               onChange({
                 ...value,
@@ -111,7 +115,15 @@ export function CustomFormatForm({
                           sizes: [...DEFAULT_ICO_SIZES],
                           generateWebIconKit: false
                         }
-                      : value.formatOptions?.ico
+                      : value.formatOptions?.ico,
+                  png:
+                    nextFormat === "png"
+                      ? {
+                          tinyMode: Boolean(value.formatOptions?.png?.tinyMode),
+                          cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
+                          autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale)
+                        }
+                      : value.formatOptions?.png
                 },
                 resize:
                   value.resize.mode === "page_size"
@@ -131,8 +143,53 @@ export function CustomFormatForm({
                 }
               })
             }
-            onPngTinyModeChange={() => {}}
+            onPngTinyModeChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  png: {
+                    tinyMode: next,
+                    cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
+                    autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale)
+                  }
+                }
+              })
+            }
             disabled={false}
+            alwaysOpen
+          />
+
+          <FormatAdvancedSettingsCard
+            targetFormat={value.format}
+            png={{
+              cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
+              autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale),
+              onCleanTransparentPixelsChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    png: {
+                      tinyMode: Boolean(value.formatOptions?.png?.tinyMode),
+                      cleanTransparentPixels: next,
+                      autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale)
+                    }
+                  }
+                }),
+              onAutoGrayscaleChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    png: {
+                      tinyMode: Boolean(value.formatOptions?.png?.tinyMode),
+                      cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
+                      autoGrayscale: next
+                    }
+                  }
+                })
+            }}
             alwaysOpen
           />
         </div>
