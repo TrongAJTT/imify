@@ -10,7 +10,7 @@
 ## ✨ Key Features
 
 * **100% Client-Side Processing**: Zero server dependencies. Complete data privacy.
-* **Rich Format Support**: Read and convert to `JPG`, `PNG` (including TinyPNG-like quantization), `WebP`, `AVIF`, `JXL` (JPEG XL), `TIFF`, `ICO`, `BMP`, and `PDF`.
+* **Rich Format Support**: Read and convert to `JPG`, `PNG` (Tiny mode, Floyd-Steinberg dithering, and optional OxiPNG WASM optimization), `WebP`, `AVIF`, `JXL` (JPEG XL), `TIFF`, `ICO`, `BMP`, and `PDF`.
 * **Right-Click Context Menu**: Right-click any image on the web to instantly convert and download using your preferred formats and presets.
   * **Pin to Top**: Pin up to **2** items so your most important actions never move.
   * **Most Used (Stable) Sorting**: Sort by usage frequency with a stability threshold to avoid constant reshuffling.
@@ -53,7 +53,7 @@ Imify is officially available on the Chrome Web Store, Microsoft Edge Add-ons St
 * **Framework**: [Plasmo](https://docs.plasmo.com/) (React-based browser extension framework)
 * **UI/Styling**: React, Tailwind CSS, Lucide React
 * **Core Image Processing**: Native `OffscreenCanvas` API, Web Workers
-* **Advanced Encoders**: WebAssembly (Wasm) via `@jsquash/avif` & `@jsquash/jxl`, `UPNG.js`, `UTIF.js`, `fflate`
+* **Advanced Encoders**: WebAssembly (Wasm) via `@jsquash/avif`, `@jsquash/jxl`, `@jsquash/oxipng`; plus `image-q`, `UPNG.js`, `UTIF.js`, `fflate`
 * **PDF Generation**: `pdf-lib` (Client-side PDF document creation)
 * **Language**: TypeScript (Strict typing)
 * **Manifest Version**: MV3
@@ -152,7 +152,7 @@ If you are reviewing this extension for the Mozilla Add-ons Store, please follow
 3. The generated add-on will be an archive located in the output build directory.
 
 **Compliance Declaration regarding WebAssembly (WASM) & Minification:**
-- **WASM Origin:** All `.wasm` binaries used in this project for image encoding/decoding (e.g., AVIF, JXL) are sourced standardly and transparently via open-source NPM packages (`@jsquash/avif`, `@jsquash/jxl`, etc.) as defined in `package.json`. There are no custom-compiled, opaque binary blobs hidden in the source tree.
+- **WASM Origin:** All `.wasm` binaries used in this project for image encoding/decoding/optimisation (AVIF, JXL, OxiPNG) are sourced standardly via open-source NPM packages (`@jsquash/avif`, `@jsquash/jxl`, `@jsquash/oxipng`) as declared in `package.json`. There are no privately built or obfuscated custom wasm payloads.
 - **Zero Remote Execution:** The extension processes all images 100% locally and does not fetch any executable code, scripts, or WASM files from remote servers.
 
 > **Note for Firefox**: Our build pipeline includes a sanitation script (`scripts/sanitize-firefox-manifest.mjs`) that automatically removes the `offscreen` permission from the Firefox manifest to comply with AMO policies while maintaining maximum performance for Chrome users.

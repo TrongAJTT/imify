@@ -45,6 +45,7 @@ export interface RasterEncodeDependencies {
     }
   ) => Promise<Blob>
   encodePng: (imageData: ImageData, options?: PngCodecOptions) => Blob
+  optimisePng?: (blob: Blob, options?: PngCodecOptions) => Promise<Blob>
   convertToRasterBlob: (
     canvas: OffscreenCanvas,
     targetFormat: CanvasConvertibleFormat,
@@ -62,6 +63,14 @@ interface RasterEncoderAdapter {
   id: string
   supports: (targetFormat: RasterPipelineFormat, input: RasterEncodeInput) => boolean
   encode: (context: RasterAdapterContext) => Promise<RasterEncodeResult>
+}
+
+function hasPngDithering(options?: PngCodecOptions): boolean {
+  if (typeof options?.ditheringLevel === "number") {
+    return options.ditheringLevel > 0
+  }
+
+  return Boolean(options?.dithering)
 }
 
 function getImageData(ctx: OffscreenCanvasRenderingContext2D, width: number, height: number): ImageData {
@@ -126,12 +135,39 @@ const adapters: RasterEncoderAdapter[] = [
       Boolean(
         input.formatOptions?.png?.tinyMode ||
         input.formatOptions?.png?.cleanTransparentPixels ||
-        input.formatOptions?.png?.autoGrayscale
+        input.formatOptions?.png?.autoGrayscale ||
+        hasPngDithering(input.formatOptions?.png) ||
+        input.formatOptions?.png?.progressiveInterlaced ||
+        input.formatOptions?.png?.oxipngCompression
       ),
     encode: async ({ input, deps }) => {
-      const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
+      const pngOptions = input.formatOptions?.png
+      const needsPixelPipeline = Boolean(
+        pngOptions?.tinyMode ||
+        pngOptions?.cleanTransparentPixels ||
+        pngOptions?.autoGrayscale ||
+        hasPngDithering(pngOptions)
+      )
+
+      let pngBlob: Blob
+
+      if (needsPixelPipeline) {
+        const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
+        pngBlob = deps.encodePng(imageData, pngOptions)
+      } else {
+        pngBlob = await deps.convertToRasterBlob(input.canvas, "png", input.quality)
+      }
+
+      if ((pngOptions?.oxipngCompression || pngOptions?.progressiveInterlaced) && deps.optimisePng) {
+        try {
+          pngBlob = await deps.optimisePng(pngBlob, pngOptions)
+        } catch {
+          // Fall back to pre-optimised PNG when wasm optimisation fails.
+        }
+      }
+
       return {
-        blob: deps.encodePng(imageData, input.formatOptions?.png),
+        blob: pngBlob,
         mimeType: "image/png"
       }
     }

@@ -81,7 +81,11 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
     png: {
       tinyMode: false,
       cleanTransparentPixels: false,
-      autoGrayscale: false
+      autoGrayscale: false,
+      dithering: false,
+      ditheringLevel: 0,
+      progressiveInterlaced: false,
+      oxipngCompression: false
     }
   },
   resizeMode: "inherit",
@@ -115,9 +119,21 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
     ...DEFAULT_BATCH_STATE.formatOptions.jxl,
     ...formatOptions.jxl
   }
-  const pngOptions = {
+  const rawPngOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.png,
     ...formatOptions.png
+  }
+  const normalizedPngDitheringLevel =
+    typeof rawPngOptions.ditheringLevel === "number"
+      ? Math.max(0, Math.min(100, Math.round(rawPngOptions.ditheringLevel)))
+      : rawPngOptions.dithering
+      ? 100
+      : 0
+  const pngOptions = {
+    ...rawPngOptions,
+    dithering: normalizedPngDitheringLevel > 0,
+    ditheringLevel: normalizedPngDitheringLevel,
+    progressiveInterlaced: Boolean(rawPngOptions.progressiveInterlaced)
   }
   const icoOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.ico,
@@ -225,6 +241,9 @@ interface BatchStoreState extends BatchSetupState {
   setPngTinyMode: (value: boolean) => void
   setPngCleanTransparentPixels: (value: boolean) => void
   setPngAutoGrayscale: (value: boolean) => void
+  setPngDitheringLevel: (value: number) => void
+  setPngProgressiveInterlaced: (value: boolean) => void
+  setPngOxiPngCompression: (value: boolean) => void
   setFileNamePattern: (value: string) => void
   setWatermark: (value: BatchWatermarkConfig) => void
   skipDownloadConfirm: boolean
@@ -876,6 +895,83 @@ export const useBatchStore = create<BatchStoreState>()(
             png: {
               ...currentConfig.formatOptions.png,
               autoGrayscale: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setPngDitheringLevel: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const normalizedValue = Math.max(0, Math.min(100, Math.round(value)))
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            png: {
+              ...currentConfig.formatOptions.png,
+              dithering: normalizedValue > 0,
+              ditheringLevel: normalizedValue
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setPngProgressiveInterlaced: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            png: {
+              ...currentConfig.formatOptions.png,
+              progressiveInterlaced: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setPngOxiPngCompression: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            png: {
+              ...currentConfig.formatOptions.png,
+              oxipngCompression: value
             }
           }
           const nextConfig = {

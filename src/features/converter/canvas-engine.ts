@@ -12,6 +12,7 @@ import {
 import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { encodeJxl } from "@/features/converter/jxl-encoder"
+import { optimisePngWithOxi } from "@/features/converter/oxipng"
 import { encodePngFromImageData } from "@/features/converter/png-tiny"
 import { encodeRasterWithAdapters } from "@/features/converter/raster-encode-adapters"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
@@ -207,6 +208,7 @@ export async function convertRasterImage(
             effort: options.jxl?.effort
           }),
         encodePng: encodePngFromImageData,
+        optimisePng: optimisePngWithOxi,
         convertToRasterBlob,
         mimeByFormat: MIME_BY_FORMAT
       }

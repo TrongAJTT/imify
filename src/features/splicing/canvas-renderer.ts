@@ -3,6 +3,7 @@ import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { decodeImageBitmapForEncoding } from "@/features/converter/color-managed-pipeline"
 import { encodeJxl } from "@/features/converter/jxl-encoder"
+import { optimisePngWithOxi } from "@/features/converter/oxipng"
 import { encodePngFromImageData } from "@/features/converter/png-tiny"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
 import { calculateLayout, calculateProcessedSize } from "@/features/splicing/layout-engine"
@@ -168,6 +169,18 @@ const MIME_MAP: Record<string, string> = {
   webp: "image/webp"
 }
 
+function hasPngDithering(options?: NonNullable<SplicingExportConfig["formatOptions"]>["png"]): boolean {
+  if (!options) {
+    return false
+  }
+
+  if (typeof options.ditheringLevel === "number") {
+    return options.ditheringLevel > 0
+  }
+
+  return Boolean(options.dithering)
+}
+
 async function canvasToBlob(
   canvas: OffscreenCanvas,
   format: SplicingExportFormat,
@@ -203,15 +216,34 @@ async function canvasToBlob(
       return encodeImageDataToTiff(data)
     }
     case "png": {
+      const pngOptions = formatOptions?.png
+      const needsPixelPipeline = Boolean(
+        pngOptions?.tinyMode ||
+        pngOptions?.cleanTransparentPixels ||
+        pngOptions?.autoGrayscale ||
+        hasPngDithering(pngOptions)
+      )
+
+      let pngBlob: Blob
+
       if (
-        formatOptions?.png?.tinyMode ||
-        formatOptions?.png?.cleanTransparentPixels ||
-        formatOptions?.png?.autoGrayscale
+        needsPixelPipeline
       ) {
         const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        return encodePngFromImageData(data, formatOptions?.png)
+        pngBlob = encodePngFromImageData(data, pngOptions)
+      } else {
+        pngBlob = await canvas.convertToBlob({ type: "image/png" })
       }
-      return canvas.convertToBlob({ type: "image/png" })
+
+      if (pngOptions?.oxipngCompression || pngOptions?.progressiveInterlaced) {
+        try {
+          return await optimisePngWithOxi(pngBlob, pngOptions)
+        } catch {
+          return pngBlob
+        }
+      }
+
+      return pngBlob
     }
     default: {
       const mime = MIME_MAP[format]

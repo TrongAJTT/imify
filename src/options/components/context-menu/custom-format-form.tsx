@@ -28,6 +28,21 @@ export function CustomFormatForm({
   const canSetQuality = QUALITY_FORMATS.includes(value.format)
   const isIcoFormat = value.format === "ico"
   const supportsTinyMode = value.format === "png"
+  const normalizedPngDitheringLevel =
+    typeof value.formatOptions?.png?.ditheringLevel === "number"
+      ? Math.max(0, Math.min(100, Math.round(value.formatOptions.png.ditheringLevel)))
+      : value.formatOptions?.png?.dithering
+      ? 100
+      : 0
+  const pngOptions = {
+    tinyMode: Boolean(value.formatOptions?.png?.tinyMode),
+    cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
+    autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale),
+    dithering: normalizedPngDitheringLevel > 0,
+    ditheringLevel: normalizedPngDitheringLevel,
+    progressiveInterlaced: Boolean(value.formatOptions?.png?.progressiveInterlaced),
+    oxipngCompression: Boolean(value.formatOptions?.png?.oxipngCompression)
+  }
 
   return (
     <div className="space-y-4">
@@ -51,11 +66,7 @@ export function CustomFormatForm({
               avif: {
                 speed: value.formatOptions?.avif?.speed
               },
-              png: {
-                tinyMode: Boolean(value.formatOptions?.png?.tinyMode),
-                cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
-                autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale)
-              },
+              png: pngOptions,
               jxl: {
                 effort: value.formatOptions?.jxl?.effort ?? 7
               },
@@ -119,9 +130,7 @@ export function CustomFormatForm({
                   png:
                     nextFormat === "png"
                       ? {
-                          tinyMode: Boolean(value.formatOptions?.png?.tinyMode),
-                          cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
-                          autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale)
+                          ...pngOptions
                         }
                       : value.formatOptions?.png
                 },
@@ -149,9 +158,21 @@ export function CustomFormatForm({
                 formatOptions: {
                   ...(value.formatOptions ?? {}),
                   png: {
-                    tinyMode: next,
-                    cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
-                    autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale)
+                    ...pngOptions,
+                    tinyMode: next
+                  }
+                }
+              })
+            }
+            onPngDitheringLevelChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  png: {
+                    ...pngOptions,
+                    ditheringLevel: next,
+                    dithering: next > 0
                   }
                 }
               })
@@ -163,17 +184,18 @@ export function CustomFormatForm({
           <FormatAdvancedSettingsCard
             targetFormat={value.format}
             png={{
-              cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
-              autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale),
+              cleanTransparentPixels: pngOptions.cleanTransparentPixels,
+              autoGrayscale: pngOptions.autoGrayscale,
+              oxipngCompression: pngOptions.oxipngCompression,
+              progressiveInterlaced: pngOptions.progressiveInterlaced,
               onCleanTransparentPixelsChange: (next) =>
                 onChange({
                   ...value,
                   formatOptions: {
                     ...(value.formatOptions ?? {}),
                     png: {
-                      tinyMode: Boolean(value.formatOptions?.png?.tinyMode),
+                      ...pngOptions,
                       cleanTransparentPixels: next,
-                      autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale)
                     }
                   }
                 }),
@@ -183,9 +205,30 @@ export function CustomFormatForm({
                   formatOptions: {
                     ...(value.formatOptions ?? {}),
                     png: {
-                      tinyMode: Boolean(value.formatOptions?.png?.tinyMode),
-                      cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
-                      autoGrayscale: next
+                      ...pngOptions,
+                      autoGrayscale: next,
+                    }
+                  }
+                }),
+              onOxiPngCompressionChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    png: {
+                      ...pngOptions,
+                      oxipngCompression: next
+                    }
+                  }
+                }),
+              onProgressiveInterlacedChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    png: {
+                      ...pngOptions,
+                      progressiveInterlaced: next
                     }
                   }
                 })

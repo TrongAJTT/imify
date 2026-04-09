@@ -39,10 +39,13 @@ This list is synchronized with `src/core/attributions.ts` (source of truth for t
 *   **[UPNG.js](https://github.com/photopea/UPNG.js)**
     *   **Author(s):** Ivan Kutskir (photopea)
     *   **License:** MIT License
+*   **[image-q](https://github.com/ibezkrovnyi/image-quantization)**
+    *   **Author(s):** Igor Bezkrovnyi and contributors
+    *   **License:** MIT License
 *   **[UTIF.js](https://github.com/photopea/UTIF.js)**
     *   **Author(s):** Ivan Kutskir (photopea)
     *   **License:** MIT License
-*   **[@jsquash/avif & jxl](https://github.com/jSquash/jSquash)**
+*   **[@jsquash/avif, @jsquash/jxl, @jsquash/oxipng](https://github.com/jSquash/jSquash)**
     *   **Author(s):** Jamie Sinclair and jSquash contributors
     *   **License:** Apache License 2.0
 

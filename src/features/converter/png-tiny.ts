@@ -1,7 +1,51 @@
 import UPNG from "upng-js"
+import { applyPaletteSync, buildPaletteSync, utils } from "image-q"
 import type { PngCodecOptions } from "@/core/types"
 
 const TINY_MODE_COLOR_COUNT = 256
+const IMAGE_Q_COLOR_DISTANCE = "euclidean-bt709"
+
+type DitheringAlgorithm = "nearest" | "sierra-lite" | "atkinson" | "floyd-steinberg"
+
+function normalizeDitheringLevel(options?: PngCodecOptions): number {
+  if (typeof options?.ditheringLevel === "number") {
+    return Math.max(0, Math.min(100, Math.round(options.ditheringLevel)))
+  }
+
+  return options?.dithering ? 100 : 0
+}
+
+function resolveDitheringAlgorithm(level: number): DitheringAlgorithm {
+  if (level <= 0) {
+    return "nearest"
+  }
+
+  if (level <= 33) {
+    return "sierra-lite"
+  }
+
+  if (level <= 66) {
+    return "atkinson"
+  }
+
+  return "floyd-steinberg"
+}
+
+function applyPaletteQuantization(imageData: ImageData, algorithm: DitheringAlgorithm): Uint8Array {
+  const container = utils.PointContainer.fromImageData(imageData)
+  const palette = buildPaletteSync([container], {
+    colors: TINY_MODE_COLOR_COUNT,
+    colorDistanceFormula: IMAGE_Q_COLOR_DISTANCE,
+    paletteQuantization: "wuquant"
+  })
+
+  const dithered = applyPaletteSync(container, palette, {
+    colorDistanceFormula: IMAGE_Q_COLOR_DISTANCE,
+    imageQuantization: algorithm
+  })
+
+  return dithered.toUint8Array()
+}
 
 function toMutableRgba(imageData: ImageData): Uint8Array {
   return new Uint8Array(imageData.data)
@@ -27,7 +71,11 @@ export function encodePngFromImageData(
   imageData: ImageData,
   options?: PngCodecOptions
 ): Blob {
-  const rgba = toMutableRgba(imageData)
+  const ditheringLevel = normalizeDitheringLevel(options)
+  const enableDithering = Boolean(options?.tinyMode && ditheringLevel > 0)
+  const rgba = enableDithering
+    ? applyPaletteQuantization(imageData, resolveDitheringAlgorithm(ditheringLevel))
+    : toMutableRgba(imageData)
 
   if (options?.cleanTransparentPixels) {
     cleanTransparentPixelsInPlace(rgba)

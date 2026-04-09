@@ -81,6 +81,10 @@ export interface BatchFormatOptions {
     tinyMode: boolean
     cleanTransparentPixels: boolean
     autoGrayscale: boolean
+    dithering: boolean
+    ditheringLevel: number
+    progressiveInterlaced: boolean
+    oxipngCompression: boolean
   }
   ico: {
     sizes: number[]
@@ -137,6 +141,9 @@ export interface BatchSetupHandlers {
   onPngTinyModeChange: (value: boolean) => void
   onPngCleanTransparentPixelsChange: (value: boolean) => void
   onPngAutoGrayscaleChange: (value: boolean) => void
+  onPngDitheringLevelChange: (value: number) => void
+  onPngProgressiveInterlacedChange: (value: boolean) => void
+  onPngOxiPngCompressionChange: (value: boolean) => void
   onFileNamePatternChange: (value: string) => void
   onWatermarkChange: (value: BatchWatermarkConfig) => void
 }

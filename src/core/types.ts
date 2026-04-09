@@ -47,6 +47,10 @@ export interface PngCodecOptions {
   tinyMode?: boolean
   cleanTransparentPixels?: boolean
   autoGrayscale?: boolean
+  dithering?: boolean
+  ditheringLevel?: number
+  progressiveInterlaced?: boolean
+  oxipngCompression?: boolean
 }
 
 export interface JxlCodecOptions {

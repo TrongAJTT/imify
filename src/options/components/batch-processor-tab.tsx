@@ -91,7 +91,11 @@ export function BatchProcessorTab() {
             ? {
                 tinyMode: formatOptions.png.tinyMode,
                 cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
-                autoGrayscale: formatOptions.png.autoGrayscale
+                autoGrayscale: formatOptions.png.autoGrayscale,
+                dithering: formatOptions.png.dithering,
+                ditheringLevel: formatOptions.png.ditheringLevel,
+                progressiveInterlaced: formatOptions.png.progressiveInterlaced,
+                oxipngCompression: formatOptions.png.oxipngCompression
               }
             : undefined
       },

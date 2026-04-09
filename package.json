@@ -22,12 +22,14 @@
     "package:firefox": "pnpm build:firefox && node scripts/zip-firefox-build.mjs",
     "verify:manifests": "node scripts/verify-target-manifests.mjs",
     "sync:avif-wasm": "node scripts/sync-avif-wasm.mjs",
-    "sync:jxl-wasm": "node scripts/sync-jxl-wasm.mjs"
+    "sync:jxl-wasm": "node scripts/sync-jxl-wasm.mjs",
+    "sync:oxipng-wasm": "node scripts/sync-oxipng-wasm.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@jsquash/oxipng": "^2.3.0",
     "@plasmohq/storage": "^1.15.0",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-popover": "^1.1.15",
@@ -35,6 +37,7 @@
     "clsx": "^2.1.1",
     "fflate": "^0.8.2",
     "idb": "^8.0.3",
+    "image-q": "^4.0.0",
     "lucide-react": "^0.577.0",
     "pdf-lib": "^1.17.1",
     "plasmo": "0.90.5",

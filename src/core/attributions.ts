@@ -18,9 +18,10 @@ export const ATTRIBUTIONS: AttributionItem[] = [
   { name: "idb", author: "Jake Archibald", license: "ISC", url: "https://github.com/jakearchibald/idb" },
   { name: "pdf-lib", author: "Andrew Dillon", license: "MIT", url: "https://pdf-lib.js.org/" },
   { name: "UPNG.js", author: "Ivan Kutskir", license: "MIT", url: "https://github.com/photopea/UPNG.js" },
+  { name: "image-q", author: "Igor Bezkrovnyi", license: "MIT", url: "https://github.com/ibezkrovnyi/image-quantization" },
   { name: "UTIF.js", author: "Ivan Kutskir", license: "MIT", url: "https://github.com/photopea/UTIF.js" },
   { name: "fflate", author: "Arjun Barrett (101arrowz)", license: "MIT", url: "https://github.com/101arrowz/fflate" },
-  { name: "@jsquash/avif & @jsquash/jxl", author: "Jamie Sinclair and jSquash contributors", license: "Apache-2.0", url: "https://github.com/jamsinclair/jSquash" },
+  { name: "@jsquash/avif, @jsquash/jxl & @jsquash/oxipng", author: "Jamie Sinclair and jSquash contributors", license: "Apache-2.0", url: "https://github.com/jamsinclair/jSquash" },
   { name: "clsx", author: "Luke Edwards", license: "MIT", url: "https://github.com/lukeed/clsx" },
   { name: "tailwind-merge", author: "Danylo and contributors", license: "MIT", url: "https://github.com/dcastil/tailwind-merge" }
 ]

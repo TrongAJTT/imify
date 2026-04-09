@@ -158,6 +158,12 @@ export function withBatchResize(
       ? Math.max(0, Math.min(100, Math.round(formatOptions.avif.qualityAlpha)))
       : undefined
   const normalizedJxlEffort = Math.max(1, Math.min(9, Math.round(formatOptions.jxl.effort)))
+  const normalizedPngDitheringLevel =
+    typeof formatOptions.png.ditheringLevel === "number"
+      ? Math.max(0, Math.min(100, Math.round(formatOptions.png.ditheringLevel)))
+      : formatOptions.png.dithering
+      ? 100
+      : 0
   const normalizedIcoSizes = Array.from(
     new Set((formatOptions.ico.sizes ?? []).filter((size) => Number.isInteger(size) && size > 0))
   ).sort((a, b) => a - b)
@@ -192,7 +198,11 @@ export function withBatchResize(
           ...config.formatOptions?.png,
           tinyMode: Boolean(formatOptions.png.tinyMode),
           cleanTransparentPixels: Boolean(formatOptions.png.cleanTransparentPixels),
-          autoGrayscale: Boolean(formatOptions.png.autoGrayscale)
+          autoGrayscale: Boolean(formatOptions.png.autoGrayscale),
+          dithering: normalizedPngDitheringLevel > 0,
+          ditheringLevel: normalizedPngDitheringLevel,
+          progressiveInterlaced: Boolean(formatOptions.png.progressiveInterlaced),
+          oxipngCompression: Boolean(formatOptions.png.oxipngCompression)
         }
       : undefined
   }

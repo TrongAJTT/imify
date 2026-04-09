@@ -84,6 +84,10 @@ export interface SplicingStoreState {
   exportPngTinyMode: boolean
   exportPngCleanTransparentPixels: boolean
   exportPngAutoGrayscale: boolean
+  exportPngDithering: boolean
+  exportPngDitheringLevel: number
+  exportPngProgressiveInterlaced: boolean
+  exportPngOxiPngCompression: boolean
   exportMode: SplicingExportMode
   exportTrimBackground: boolean
   exportConcurrency: number
@@ -138,6 +142,9 @@ export interface SplicingStoreState {
   setExportPngTinyMode: (v: boolean) => void
   setExportPngCleanTransparentPixels: (v: boolean) => void
   setExportPngAutoGrayscale: (v: boolean) => void
+  setExportPngDitheringLevel: (v: number) => void
+  setExportPngProgressiveInterlaced: (v: boolean) => void
+  setExportPngOxiPngCompression: (v: boolean) => void
   setExportMode: (v: SplicingExportMode) => void
   setExportTrimBackground: (v: boolean) => void
   setExportConcurrency: (v: number) => void
@@ -194,6 +201,10 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportPngTinyMode: false,
       exportPngCleanTransparentPixels: false,
       exportPngAutoGrayscale: false,
+      exportPngDithering: false,
+      exportPngDitheringLevel: 0,
+      exportPngProgressiveInterlaced: false,
+      exportPngOxiPngCompression: false,
       exportMode: "single",
       exportTrimBackground: false,
       exportConcurrency: 2,
@@ -240,6 +251,15 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportPngTinyMode: (v) => set({ exportPngTinyMode: v }),
       setExportPngCleanTransparentPixels: (v) => set({ exportPngCleanTransparentPixels: v }),
       setExportPngAutoGrayscale: (v) => set({ exportPngAutoGrayscale: v }),
+      setExportPngDitheringLevel: (v) => {
+        const normalized = Math.max(0, Math.min(100, Math.round(v)))
+        set({
+          exportPngDitheringLevel: normalized,
+          exportPngDithering: normalized > 0
+        })
+      },
+      setExportPngProgressiveInterlaced: (v) => set({ exportPngProgressiveInterlaced: v }),
+      setExportPngOxiPngCompression: (v) => set({ exportPngOxiPngCompression: v }),
       setExportMode: (v) => set({ exportMode: v }),
       setExportTrimBackground: (v) => set({ exportTrimBackground: v }),
       setExportConcurrency: (v) => set({ exportConcurrency: v }),
@@ -258,6 +278,12 @@ export const useSplicingStore = create<SplicingStoreState>()(
       merge: (persistedState, currentState) => {
         const p = persistedState as Partial<SplicingStoreState>
         const next: SplicingStoreState = { ...currentState, ...p }
+        if (typeof next.exportPngDitheringLevel !== "number") {
+          next.exportPngDitheringLevel = next.exportPngDithering ? 100 : 0
+        }
+        next.exportPngDitheringLevel = Math.max(0, Math.min(100, Math.round(next.exportPngDitheringLevel)))
+        next.exportPngDithering = next.exportPngDitheringLevel > 0
+        next.exportPngProgressiveInterlaced = Boolean(next.exportPngProgressiveInterlaced)
         const rawPreset = (persistedState as { preset?: string }).preset
         if (rawPreset === "custom") {
           next.preset = "bento"
@@ -279,7 +305,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setExportFormat, setExportQuality, setExportJxlEffort,
           setExportAvifSpeed, setExportAvifQualityAlpha, setExportAvifLossless,
           setExportAvifSubsample, setExportAvifTune, setExportAvifHighAlphaQuality,
-          setExportPngTinyMode, setExportPngCleanTransparentPixels, setExportPngAutoGrayscale, setExportMode,
+          setExportPngTinyMode, setExportPngCleanTransparentPixels, setExportPngAutoGrayscale,
+          setExportPngDitheringLevel, setExportPngProgressiveInterlaced,
+          setExportPngOxiPngCompression, setExportMode,
           setExportTrimBackground, setExportConcurrency, setExportFileNamePattern,
           setPreviewContainerHeight, setPreviewZoom, setPreviewQualityPercent, setPreviewShowImageNumber,
           setPreviewBentoFlowGroupCount,

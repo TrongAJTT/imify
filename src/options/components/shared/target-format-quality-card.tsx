@@ -2,6 +2,7 @@ import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectInput } from "@/options/components/ui/select-input"
+import { SliderInput } from "@/options/components/ui/slider-input"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { FileJson, Zap } from "lucide-react"
 
@@ -19,6 +20,10 @@ export type TargetFormatQualityCardProps = {
       tinyMode?: boolean
       cleanTransparentPixels?: boolean
       autoGrayscale?: boolean
+      dithering?: boolean
+      ditheringLevel?: number
+      progressiveInterlaced?: boolean
+      oxipngCompression?: boolean
     }
     jxl?: {
       effort?: number
@@ -43,6 +48,8 @@ export type TargetFormatQualityCardProps = {
   onAvifSpeedChange?: (speed: number) => void
   /** Callback when tiny mode toggle changes */
   onPngTinyModeChange: (enabled: boolean) => void
+  /** Callback when dithering level changes (0-100) */
+  onPngDitheringLevelChange?: (level: number) => void
   /** Callback when JXL effort level changes */
   onJxlEffortChange?: (effort: number) => void
   /** Callback when ICO sizes change (optional for ICO handling) */
@@ -59,6 +66,14 @@ export type TargetFormatQualityCardProps = {
   groupId?: string
 }
 
+function normalizeDitheringLevel(level: number | undefined, legacyDithering: boolean | undefined): number {
+  if (typeof level === "number") {
+    return Math.max(0, Math.min(100, Math.round(level)))
+  }
+
+  return legacyDithering ? 100 : 0
+}
+
 export function TargetFormatQualityCard({
   targetFormat,
   quality,
@@ -71,6 +86,7 @@ export function TargetFormatQualityCard({
   onQualityChange,
   onAvifSpeedChange,
   onPngTinyModeChange,
+  onPngDitheringLevelChange,
   onJxlEffortChange,
   onIcoSizesChange,
   disabled,
@@ -84,6 +100,13 @@ export function TargetFormatQualityCard({
   const pngTinyModeEnabled = Boolean(formatConfig?.png?.tinyMode)
   const pngCleanTransparentPixels = Boolean(formatConfig?.png?.cleanTransparentPixels)
   const pngAutoGrayscale = Boolean(formatConfig?.png?.autoGrayscale)
+  const pngDitheringLevel = normalizeDitheringLevel(
+    formatConfig?.png?.ditheringLevel,
+    formatConfig?.png?.dithering
+  )
+  const pngDithering = pngDitheringLevel > 0
+  const pngProgressiveInterlaced = Boolean(formatConfig?.png?.progressiveInterlaced)
+  const pngOxiPngCompression = Boolean(formatConfig?.png?.oxipngCompression)
   const jxlEffortOption = formatConfig?.jxl?.effort
   const icoSizeOptions = formatConfig?.ico?.sizes
   const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit
@@ -101,6 +124,11 @@ export function TargetFormatQualityCard({
   if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled) extraFlags.push("Tiny")
   if (!isIcoTarget && targetFormat === "png" && pngCleanTransparentPixels) extraFlags.push("Clean Alpha")
   if (!isIcoTarget && targetFormat === "png" && pngAutoGrayscale) extraFlags.push("Auto Gray")
+  if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled && pngDithering) {
+    extraFlags.push(`Dither ${pngDitheringLevel}%`)
+  }
+  if (!isIcoTarget && targetFormat === "png" && pngProgressiveInterlaced) extraFlags.push("Interlaced")
+  if (!isIcoTarget && targetFormat === "png" && pngOxiPngCompression) extraFlags.push("OxiPNG")
   if (targetFormat === "jxl" && jxlEffortOption) extraFlags.push(`Effort ${jxlEffortOption}`)
   if (targetFormat === "avif" && typeof avifSpeedOption === "number") extraFlags.push(`Speed ${avifSpeedOption}`)
 
@@ -211,16 +239,36 @@ export function TargetFormatQualityCard({
         )}
 
         {supportsTinyMode && (
-          <CheckboxCard
-            icon={<Zap size={16} />}
-            title="Tiny Mode"
-            subtitle="Quantize to reduce PNG size"
-            tooltipContent="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
-            checked={pngTinyModeEnabled}
-            onChange={onPngTinyModeChange}
-            disabled={disabled || !supportsTinyMode}
-            theme="blue"
-          />
+          <div className="space-y-2">
+            <CheckboxCard
+              icon={<Zap size={16} />}
+              title="Tiny Mode"
+              subtitle="Quantize to reduce PNG size"
+              tooltipContent="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
+              checked={pngTinyModeEnabled}
+              onChange={onPngTinyModeChange}
+              disabled={disabled || !supportsTinyMode}
+              theme="blue"
+            />
+
+            {pngTinyModeEnabled && onPngDitheringLevelChange && (
+              <div className="rounded-md border border-sky-200 bg-sky-50/60 p-3 dark:border-sky-900/50 dark:bg-sky-900/10">
+                <SliderInput
+                  label="Dithering Level"
+                  value={pngDitheringLevel}
+                  min={0}
+                  max={100}
+                  step={1}
+                  suffix="%"
+                  disabled={disabled}
+                  onChange={onPngDitheringLevelChange}
+                />
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                  0% disables dithering. Higher values improve gradient smoothness with stronger diffusion.
+                </p>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </AccordionCard>

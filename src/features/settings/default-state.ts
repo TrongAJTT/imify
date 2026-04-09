@@ -24,7 +24,11 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
           ? {
               tinyMode: false,
               cleanTransparentPixels: false,
-              autoGrayscale: false
+              autoGrayscale: false,
+              dithering: false,
+              ditheringLevel: 0,
+              progressiveInterlaced: false,
+              oxipngCompression: false
             }
           : undefined,
       ico:

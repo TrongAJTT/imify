@@ -91,6 +91,10 @@ export function SplicingSidebarPanel({
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
   const exportPngCleanTransparentPixels = useSplicingStore((s) => s.exportPngCleanTransparentPixels)
   const exportPngAutoGrayscale = useSplicingStore((s) => s.exportPngAutoGrayscale)
+  const exportPngDithering = useSplicingStore((s) => s.exportPngDithering)
+  const exportPngDitheringLevel = useSplicingStore((s) => s.exportPngDitheringLevel)
+  const exportPngProgressiveInterlaced = useSplicingStore((s) => s.exportPngProgressiveInterlaced)
+  const exportPngOxiPngCompression = useSplicingStore((s) => s.exportPngOxiPngCompression)
   const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
   const exportFileNamePattern = useSplicingStore((s) => s.exportFileNamePattern)
   const isExportFormatQualityOpen = useSplicingStore((s) => s.isExportFormatQualityOpen)
@@ -130,6 +134,9 @@ export function SplicingSidebarPanel({
   const setExportPngTinyMode = useSplicingStore((s) => s.setExportPngTinyMode)
   const setExportPngCleanTransparentPixels = useSplicingStore((s) => s.setExportPngCleanTransparentPixels)
   const setExportPngAutoGrayscale = useSplicingStore((s) => s.setExportPngAutoGrayscale)
+  const setExportPngDitheringLevel = useSplicingStore((s) => s.setExportPngDitheringLevel)
+  const setExportPngProgressiveInterlaced = useSplicingStore((s) => s.setExportPngProgressiveInterlaced)
+  const setExportPngOxiPngCompression = useSplicingStore((s) => s.setExportPngOxiPngCompression)
   const setExportMode = useSplicingStore((s) => s.setExportMode)
   const setExportTrimBackground = useSplicingStore((s) => s.setExportTrimBackground)
   const setExportConcurrency = useSplicingStore((s) => s.setExportConcurrency)
@@ -372,7 +379,11 @@ export function SplicingSidebarPanel({
               png: {
                 tinyMode: exportPngTinyMode,
                 cleanTransparentPixels: exportPngCleanTransparentPixels,
-                autoGrayscale: exportPngAutoGrayscale
+                autoGrayscale: exportPngAutoGrayscale,
+                dithering: exportPngDithering,
+                ditheringLevel: exportPngDitheringLevel,
+                progressiveInterlaced: exportPngProgressiveInterlaced,
+                oxipngCompression: exportPngOxiPngCompression
               }
             }}
             formatOptions={EXPORT_FORMAT_OPTIONS}
@@ -383,6 +394,7 @@ export function SplicingSidebarPanel({
             onAvifSpeedChange={setExportAvifSpeed}
             onJxlEffortChange={setExportJxlEffort}
             onPngTinyModeChange={setExportPngTinyMode}
+            onPngDitheringLevelChange={setExportPngDitheringLevel}
             disabled={false}
             isOpen={isExportFormatQualityOpen}
             onOpenChange={setIsExportFormatQualityOpen}
@@ -404,8 +416,12 @@ export function SplicingSidebarPanel({
             png={{
               cleanTransparentPixels: exportPngCleanTransparentPixels,
               autoGrayscale: exportPngAutoGrayscale,
+              oxipngCompression: exportPngOxiPngCompression,
+              progressiveInterlaced: exportPngProgressiveInterlaced,
               onCleanTransparentPixelsChange: setExportPngCleanTransparentPixels,
-              onAutoGrayscaleChange: setExportPngAutoGrayscale
+              onAutoGrayscaleChange: setExportPngAutoGrayscale,
+              onOxiPngCompressionChange: setExportPngOxiPngCompression,
+              onProgressiveInterlacedChange: setExportPngProgressiveInterlaced
             }}
           />
           <div className="grid grid-cols-2 gap-2">

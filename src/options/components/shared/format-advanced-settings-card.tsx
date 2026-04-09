@@ -17,8 +17,12 @@ type AvifAdvancedProps = {
 type PngAdvancedProps = {
   cleanTransparentPixels: boolean
   autoGrayscale: boolean
+  oxipngCompression: boolean
+  progressiveInterlaced: boolean
   onCleanTransparentPixelsChange: (value: boolean) => void
   onAutoGrayscaleChange: (value: boolean) => void
+  onOxiPngCompressionChange: (value: boolean) => void
+  onProgressiveInterlacedChange: (value: boolean) => void
 }
 
 export interface FormatAdvancedSettingsCardProps {
@@ -69,8 +73,12 @@ export function FormatAdvancedSettingsCard({
       <PngAdvancedSettingsCard
         cleanTransparentPixels={png.cleanTransparentPixels}
         autoGrayscale={png.autoGrayscale}
+        oxipngCompression={png.oxipngCompression}
+        progressiveInterlaced={png.progressiveInterlaced}
         onCleanTransparentPixelsChange={png.onCleanTransparentPixelsChange}
         onAutoGrayscaleChange={png.onAutoGrayscaleChange}
+        onOxiPngCompressionChange={png.onOxiPngCompressionChange}
+        onProgressiveInterlacedChange={png.onProgressiveInterlacedChange}
         disabled={disabled}
         isOpen={isOpen}
         onOpenChange={onOpenChange}

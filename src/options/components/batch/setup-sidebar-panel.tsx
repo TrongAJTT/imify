@@ -99,6 +99,9 @@ export function BatchSetupSidebarPanel({
   const onPngTinyModeChange = useBatchStore((state) => state.setPngTinyMode)
   const onPngCleanTransparentPixelsChange = useBatchStore((state) => state.setPngCleanTransparentPixels)
   const onPngAutoGrayscaleChange = useBatchStore((state) => state.setPngAutoGrayscale)
+  const onPngDitheringLevelChange = useBatchStore((state) => state.setPngDitheringLevel)
+  const onPngProgressiveInterlacedChange = useBatchStore((state) => state.setPngProgressiveInterlaced)
+  const onPngOxiPngCompressionChange = useBatchStore((state) => state.setPngOxiPngCompression)
   const onFileNamePatternChange = useBatchStore((state) => state.setFileNamePattern)
   const onWatermarkChange = useBatchStore((state) => state.setWatermark)
   const presets = useBatchStore((state) => state.presets)
@@ -229,7 +232,11 @@ export function BatchSetupSidebarPanel({
             png: {
               tinyMode: formatOptions.png.tinyMode,
               cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
-              autoGrayscale: formatOptions.png.autoGrayscale
+              autoGrayscale: formatOptions.png.autoGrayscale,
+              dithering: formatOptions.png.dithering,
+              ditheringLevel: formatOptions.png.ditheringLevel,
+              progressiveInterlaced: formatOptions.png.progressiveInterlaced,
+              oxipngCompression: formatOptions.png.oxipngCompression
             },
             ico: {
               sizes: formatOptions.ico.sizes,
@@ -249,6 +256,7 @@ export function BatchSetupSidebarPanel({
           onAvifSpeedChange={onAvifSpeedChange}
           onJxlEffortChange={onJxlEffortChange}
           onPngTinyModeChange={onPngTinyModeChange}
+          onPngDitheringLevelChange={onPngDitheringLevelChange}
           disabled={isRunning}
           isOpen={isTargetFormatQualityOpen}
           onOpenChange={setIsTargetFormatQualityOpen}
@@ -327,8 +335,12 @@ export function BatchSetupSidebarPanel({
             png={{
               cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
               autoGrayscale: formatOptions.png.autoGrayscale,
+              oxipngCompression: formatOptions.png.oxipngCompression,
+              progressiveInterlaced: formatOptions.png.progressiveInterlaced,
               onCleanTransparentPixelsChange: onPngCleanTransparentPixelsChange,
-              onAutoGrayscaleChange: onPngAutoGrayscaleChange
+              onAutoGrayscaleChange: onPngAutoGrayscaleChange,
+              onOxiPngCompressionChange: onPngOxiPngCompressionChange,
+              onProgressiveInterlacedChange: onPngProgressiveInterlacedChange
             }}
           />
           <CheckboxCard

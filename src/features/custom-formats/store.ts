@@ -105,6 +105,13 @@ function normalizeResizeConfig(config: ResizeConfig, format: FormatConfig["forma
 }
 
 function normalizeCustomFormat(input: CustomFormatInput, id: string): FormatConfig {
+  const normalizedPngDitheringLevel =
+    typeof input.formatOptions?.png?.ditheringLevel === "number"
+      ? Math.max(0, Math.min(100, Math.round(input.formatOptions.png.ditheringLevel)))
+      : input.formatOptions?.png?.dithering
+      ? 100
+      : 0
+
   const formatOptions: FormatCodecOptions = {
     jxl:
       input.format === "jxl"
@@ -118,7 +125,11 @@ function normalizeCustomFormat(input: CustomFormatInput, id: string): FormatConf
         ? {
             tinyMode: Boolean(input.formatOptions?.png?.tinyMode),
             cleanTransparentPixels: Boolean(input.formatOptions?.png?.cleanTransparentPixels),
-            autoGrayscale: Boolean(input.formatOptions?.png?.autoGrayscale)
+            autoGrayscale: Boolean(input.formatOptions?.png?.autoGrayscale),
+            dithering: normalizedPngDitheringLevel > 0,
+            ditheringLevel: normalizedPngDitheringLevel,
+            progressiveInterlaced: Boolean(input.formatOptions?.png?.progressiveInterlaced),
+            oxipngCompression: Boolean(input.formatOptions?.png?.oxipngCompression)
           }
         : undefined,
     avif:

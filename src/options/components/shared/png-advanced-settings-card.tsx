@@ -1,4 +1,4 @@
-import { Sparkles, Eraser, Palette } from "lucide-react"
+import { Sparkles, Eraser, Palette, Cpu, ScanLine } from "lucide-react"
 
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
@@ -6,8 +6,12 @@ import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 export interface PngAdvancedSettingsCardProps {
   cleanTransparentPixels: boolean
   autoGrayscale: boolean
+  oxipngCompression: boolean
+  progressiveInterlaced: boolean
   onCleanTransparentPixelsChange: (value: boolean) => void
   onAutoGrayscaleChange: (value: boolean) => void
+  onOxiPngCompressionChange: (value: boolean) => void
+  onProgressiveInterlacedChange: (value: boolean) => void
   disabled?: boolean
   isOpen?: boolean
   onOpenChange?: (open: boolean) => void
@@ -18,8 +22,12 @@ export interface PngAdvancedSettingsCardProps {
 export function PngAdvancedSettingsCard({
   cleanTransparentPixels,
   autoGrayscale,
+  oxipngCompression,
+  progressiveInterlaced,
   onCleanTransparentPixelsChange,
   onAutoGrayscaleChange,
+  onOxiPngCompressionChange,
+  onProgressiveInterlacedChange,
   disabled,
   isOpen,
   onOpenChange,
@@ -34,6 +42,14 @@ export function PngAdvancedSettingsCard({
 
   if (autoGrayscale) {
     tags.push("Auto Gray")
+  }
+
+  if (oxipngCompression) {
+    tags.push("OxiPNG")
+  }
+
+  if (progressiveInterlaced) {
+    tags.push("Interlaced")
   }
 
   const sublabel = tags.length > 0 ? tags.join(" • ") : "Visual lossless optimizations"
@@ -69,6 +85,32 @@ export function PngAdvancedSettingsCard({
           tooltipContent="When image content is grayscale, encoder can choose a smaller PNG representation. This is visually lossless and helpful for monochrome assets."
           checked={autoGrayscale}
           onChange={onAutoGrayscaleChange}
+          disabled={disabled}
+          theme="amber"
+        />
+
+        <CheckboxCard
+          icon={<Cpu size={16} />}
+          title="OxiPNG Compression"
+          subtitle={oxipngCompression ? "Enabled" : "Run OxiPNG pass for stronger lossless compression"}
+          tooltipContent="Uses @jsquash/oxipng WebAssembly to optimize PNG deflate/filters after encoding. Output is lossless but encode time is slower."
+          checked={oxipngCompression}
+          onChange={onOxiPngCompressionChange}
+          disabled={disabled}
+          theme="amber"
+        />
+
+        <CheckboxCard
+          icon={<ScanLine size={16} />}
+          title="Progressive Loading"
+          subtitle={
+            progressiveInterlaced
+              ? "Enabled"
+              : "Adam7 interlacing for progressive web loading"
+          }
+          tooltipContent="Encodes PNG with Adam7 interlacing so browsers can show a coarse full-frame preview before details load. This usually increases file size by around 5-10%."
+          checked={progressiveInterlaced}
+          onChange={onProgressiveInterlacedChange}
           disabled={disabled}
           theme="amber"
         />

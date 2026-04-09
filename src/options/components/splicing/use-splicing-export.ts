@@ -125,7 +125,11 @@ export function useSplicingExport({
                 ? {
                     tinyMode: store.exportPngTinyMode,
                     cleanTransparentPixels: store.exportPngCleanTransparentPixels,
-                    autoGrayscale: store.exportPngAutoGrayscale
+                    autoGrayscale: store.exportPngAutoGrayscale,
+                    dithering: store.exportPngDithering,
+                    ditheringLevel: store.exportPngDitheringLevel,
+                    progressiveInterlaced: store.exportPngProgressiveInterlaced,
+                    oxipngCompression: store.exportPngOxiPngCompression
                   }
                 : undefined
           },
