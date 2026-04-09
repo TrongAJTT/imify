@@ -45,31 +45,48 @@ export function CustomFormatForm({
           <TargetFormatQualityCard
             targetFormat={value.format}
             quality={value.quality ?? 90}
-            pngTinyMode={false}
-            jxlEffort={value.jxlEffort ?? 7}
+            formatConfig={{
+              avif: {
+                speed: value.formatOptions?.avif?.speed
+              },
+              png: {
+                tinyMode: Boolean(value.formatOptions?.png?.tinyMode)
+              },
+              jxl: {
+                effort: value.formatOptions?.jxl?.effort ?? 7
+              },
+              ico: {
+                sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
+                generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false
+              }
+            }}
             formatOptions={CUSTOM_FORMATS.map((formatOption) => ({
               value: formatOption,
               label: FORMAT_LABELS[formatOption]
             }))}
             supportsQuality={canSetQuality}
             supportsTinyMode={false}
-            icoSizes={value.icoOptions?.sizes ?? Array.from(DEFAULT_ICO_SIZES)}
-            icoGenerateWebIconKit={value.icoOptions?.generateWebIconKit ?? false}
             onToggleWebIconKit={(next) =>
               onChange({
                 ...value,
-                icoOptions: {
-                  sizes: value.icoOptions?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
-                  generateWebIconKit: next
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  ico: {
+                    sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
+                    generateWebIconKit: next
+                  }
                 }
               })
             }
             onIcoSizesChange={(next) =>
               onChange({
                 ...value,
-                icoOptions: {
-                  sizes: next,
-                  generateWebIconKit: value.icoOptions?.generateWebIconKit ?? false
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  ico: {
+                    sizes: next,
+                    generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false
+                  }
                 }
               })
             }
@@ -80,14 +97,22 @@ export function CustomFormatForm({
                 quality: QUALITY_FORMATS.includes(nextFormat as ImageFormat)
                   ? value.quality ?? 90
                   : value.quality,
-                jxlEffort: nextFormat === "jxl" ? value.jxlEffort ?? 7 : value.jxlEffort,
-                icoOptions:
-                  nextFormat === "ico"
-                    ? value.icoOptions ?? {
-                        sizes: [...DEFAULT_ICO_SIZES],
-                        generateWebIconKit: false
-                      }
-                    : value.icoOptions,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  jxl:
+                    nextFormat === "jxl"
+                      ? {
+                          effort: value.formatOptions?.jxl?.effort ?? 7
+                        }
+                      : value.formatOptions?.jxl,
+                  ico:
+                    nextFormat === "ico"
+                      ? value.formatOptions?.ico ?? {
+                          sizes: [...DEFAULT_ICO_SIZES],
+                          generateWebIconKit: false
+                        }
+                      : value.formatOptions?.ico
+                },
                 resize:
                   value.resize.mode === "page_size"
                     ? { ...value.resize, dpi: value.resize.dpi ?? 72 }
@@ -95,7 +120,17 @@ export function CustomFormatForm({
               })
             }
             onQualityChange={(next) => onChange({ ...value, quality: next })}
-            onJxlEffortChange={(next) => onChange({ ...value, jxlEffort: next })}
+            onJxlEffortChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  jxl: {
+                    effort: next
+                  }
+                }
+              })
+            }
             onPngTinyModeChange={() => {}}
             disabled={false}
             alwaysOpen

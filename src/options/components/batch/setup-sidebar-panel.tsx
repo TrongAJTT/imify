@@ -54,15 +54,7 @@ export function BatchSetupSidebarPanel({
   const targetFormat = useBatchStore((state) => state.targetFormat)
   const concurrency = useBatchStore((state) => state.concurrency)
   const quality = useBatchStore((state) => state.quality)
-  const jxlEffort = useBatchStore((state) => state.jxlEffort)
-  const avifSpeed = useBatchStore((state) => state.avifSpeed)
-  const avifQualityAlpha = useBatchStore((state) => state.avifQualityAlpha)
-  const avifLossless = useBatchStore((state) => state.avifLossless)
-  const avifSubsample = useBatchStore((state) => state.avifSubsample)
-  const avifTune = useBatchStore((state) => state.avifTune)
-  const avifHighAlphaQuality = useBatchStore((state) => state.avifHighAlphaQuality)
-  const icoSizes = useBatchStore((state) => state.icoSizes)
-  const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
+  const formatOptions = useBatchStore((state) => state.formatOptions)
   const resizeMode = useBatchStore((state) => state.resizeMode)
   const resizeValue = useBatchStore((state) => state.resizeValue)
   const resizeWidth = useBatchStore((state) => state.resizeWidth)
@@ -77,7 +69,6 @@ export function BatchSetupSidebarPanel({
   const paperSize = useBatchStore((state) => state.paperSize)
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
-  const pngTinyMode = useBatchStore((state) => state.pngTinyMode)
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
   const watermark = useBatchStore((state) => state.watermark)
 
@@ -226,17 +217,27 @@ export function BatchSetupSidebarPanel({
         <TargetFormatQualityCard
           targetFormat={targetFormat}
           quality={quality}
-          avifSpeed={avifSpeed}
-          jxlEffort={jxlEffort}
-          pngTinyMode={pngTinyMode}
+          formatConfig={{
+            avif: {
+              speed: formatOptions.avif.speed
+            },
+            jxl: {
+              effort: formatOptions.jxl.effort
+            },
+            png: {
+              tinyMode: formatOptions.png.tinyMode
+            },
+            ico: {
+              sizes: formatOptions.ico.sizes,
+              generateWebIconKit: formatOptions.ico.generateWebIconKit
+            }
+          }}
           formatOptions={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
             value: formatOption.value,
             label: `${formatOption.label} (.${formatOption.value})`
           }))}
           supportsQuality={supportsQuality}
           supportsTinyMode={supportsTinyMode}
-          icoSizes={icoSizes}
-          icoGenerateWebIconKit={icoGenerateWebIconKit}
           onToggleWebIconKit={(v: boolean) => onIcoGenerateWebIconKitChange(v)}
           onIcoSizesChange={onIcoSizesChange}
           onTargetFormatChange={(nextValue: string) => onTargetFormatChange(nextValue as BatchTargetFormat)}
@@ -308,11 +309,11 @@ export function BatchSetupSidebarPanel({
             targetFormat={targetFormat}
             disabled={isRunning}
             avif={{
-              qualityAlpha: avifQualityAlpha,
-              lossless: avifLossless,
-              subsample: avifSubsample,
-              tune: avifTune,
-              highAlphaQuality: avifHighAlphaQuality,
+              qualityAlpha: formatOptions.avif.qualityAlpha,
+              lossless: formatOptions.avif.lossless,
+              subsample: formatOptions.avif.subsample,
+              tune: formatOptions.avif.tune,
+              highAlphaQuality: formatOptions.avif.highAlphaQuality,
               onQualityAlphaChange: onAvifQualityAlphaChange,
               onLosslessChange: onAvifLosslessChange,
               onSubsampleChange: onAvifSubsampleChange,

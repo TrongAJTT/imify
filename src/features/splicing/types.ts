@@ -1,4 +1,4 @@
-import type { ImageFormat } from "@/core/types"
+import type { FormatCodecOptions, ImageFormat } from "@/core/types"
 
 export type SplicingDirection = "vertical" | "horizontal"
 
@@ -58,14 +58,7 @@ export interface SplicingImageStyle {
 export interface SplicingExportConfig {
   format: SplicingExportFormat
   quality: number
-  jxlEffort?: number
-  avifSpeed?: number
-  avifQualityAlpha?: number
-  avifLossless?: boolean
-  avifSubsample?: 1 | 2 | 3
-  avifTune?: "auto" | "ssim" | "psnr"
-  avifHighAlphaQuality?: boolean
-  pngTinyMode: boolean
+  formatOptions?: Pick<FormatCodecOptions, "png" | "jxl" | "avif">
   exportMode: SplicingExportMode
   trimBackground: boolean
 }

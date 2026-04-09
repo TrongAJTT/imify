@@ -10,21 +10,28 @@ export type TargetFormatQualityCardProps = {
   targetFormat: string
   /** Quality value (1-100) */
   quality: number
-  /** AVIF speed (0-10, lower is slower but yields better compression) */
-  avifSpeed?: number
-  /** PNG Tiny Mode toggle state */
-  pngTinyMode: boolean
-  /** JXL Effort level (1-9) for compression optimization */
-  jxlEffort?: number
+  /** Grouped format-specific codec config */
+  formatConfig?: {
+    avif?: {
+      speed?: number
+    }
+    png?: {
+      tinyMode?: boolean
+    }
+    jxl?: {
+      effort?: number
+    }
+    ico?: {
+      sizes?: number[]
+      generateWebIconKit?: boolean
+    }
+  }
   /** Available format options for dropdown */
   formatOptions: Array<{ value: string; label: string }>
   /** Whether quality is supported for current format */
   supportsQuality: boolean
   /** Whether tiny mode is supported (PNG only) */
   supportsTinyMode: boolean
-  /** ICO sizes array (optional, for ICO format) */
-  icoSizes?: number[]
-  icoGenerateWebIconKit?: boolean
   onToggleWebIconKit?: (v: boolean) => void
   /** Callback when target format changes */
   onTargetFormatChange: (format: string) => void
@@ -53,14 +60,10 @@ export type TargetFormatQualityCardProps = {
 export function TargetFormatQualityCard({
   targetFormat,
   quality,
-  avifSpeed,
-  pngTinyMode,
-  jxlEffort,
+  formatConfig,
   formatOptions,
   supportsQuality,
   supportsTinyMode,
-  icoSizes,
-  icoGenerateWebIconKit,
   onToggleWebIconKit,
   onTargetFormatChange,
   onQualityChange,
@@ -75,20 +78,25 @@ export function TargetFormatQualityCard({
   groupId,
 }: TargetFormatQualityCardProps) {
   const isIcoTarget = targetFormat === "ico"
+  const avifSpeedOption = formatConfig?.avif?.speed
+  const pngTinyModeEnabled = Boolean(formatConfig?.png?.tinyMode)
+  const jxlEffortOption = formatConfig?.jxl?.effort
+  const icoSizeOptions = formatConfig?.ico?.sizes
+  const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit
 
   const formatLabel = targetFormat.toUpperCase()
   const qualityLabel = isIcoTarget
-    ? `${icoSizes?.length ?? 0} size${(icoSizes?.length ?? 0) !== 1 ? "s" : ""}`
+    ? `${icoSizeOptions?.length ?? 0} size${(icoSizeOptions?.length ?? 0) !== 1 ? "s" : ""}`
     : supportsQuality
     ? `Quality ${quality}`
     : "Default"
 
   // Add small badges into sublabel for ICO web toolkit or PNG tiny mode
   const extraFlags: string[] = []
-  if (isIcoTarget && icoGenerateWebIconKit) extraFlags.push("Web Toolkit")
-  if (!isIcoTarget && targetFormat === "png" && pngTinyMode) extraFlags.push("Tiny")
-  if (targetFormat === "jxl" && jxlEffort) extraFlags.push(`Effort ${jxlEffort}`)
-  if (targetFormat === "avif" && typeof avifSpeed === "number") extraFlags.push(`Speed ${avifSpeed}`)
+  if (isIcoTarget && icoWebToolkitEnabled) extraFlags.push("Web Toolkit")
+  if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled) extraFlags.push("Tiny")
+  if (targetFormat === "jxl" && jxlEffortOption) extraFlags.push(`Effort ${jxlEffortOption}`)
+  if (targetFormat === "avif" && typeof avifSpeedOption === "number") extraFlags.push(`Speed ${avifSpeedOption}`)
 
   const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
 
@@ -147,7 +155,7 @@ export function TargetFormatQualityCard({
                 { value: "9", label: "9 - Maximum (slowest)" }
               ]}
               onChange={(v) => onJxlEffortChange?.(parseInt(v, 10))}
-              value={String(jxlEffort ?? 5)}
+              value={String(jxlEffortOption ?? 5)}
             />
           </div>
         )}
@@ -172,7 +180,7 @@ export function TargetFormatQualityCard({
                 { value: "10", label: "10 - Fastest encode" }
               ]}
               onChange={(v) => onAvifSpeedChange(parseInt(v, 10))}
-              value={String(avifSpeed ?? 6)}
+              value={String(avifSpeedOption ?? 6)}
             />
           </div>
         )}
@@ -181,17 +189,17 @@ export function TargetFormatQualityCard({
           <div>
             <IcoSizeSelector
               disabled={disabled}
-              generateWebIconKit={icoGenerateWebIconKit ?? false}
+              generateWebIconKit={icoWebToolkitEnabled ?? false}
               onToggleSize={(size) => {
                 if (!onIcoSizesChange) return
-                const exists = icoSizes?.includes(size)
+                const exists = icoSizeOptions?.includes(size)
                 const next = exists
-                  ? (icoSizes || []).filter((entry) => entry !== size)
-                  : [...(icoSizes || []), size].sort((a, b) => a - b)
+                  ? (icoSizeOptions || []).filter((entry) => entry !== size)
+                  : [...(icoSizeOptions || []), size].sort((a, b) => a - b)
                 onIcoSizesChange(next.length ? next : [16])
               }}
               onToggleWebKit={(v) => onToggleWebIconKit?.(v)}
-              sizes={icoSizes || [16]}
+              sizes={icoSizeOptions || [16]}
             />
           </div>
         )}
@@ -202,7 +210,7 @@ export function TargetFormatQualityCard({
             title="Tiny Mode"
             subtitle="Quantize to reduce PNG size"
             tooltipContent="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
-            checked={pngTinyMode}
+            checked={pngTinyModeEnabled}
             onChange={onPngTinyModeChange}
             disabled={disabled || !supportsTinyMode}
             theme="blue"

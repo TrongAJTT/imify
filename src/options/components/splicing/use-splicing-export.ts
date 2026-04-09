@@ -107,14 +107,21 @@ export function useSplicingExport({
         const config: SplicingExportConfig = {
           format: store.exportFormat,
           quality: store.exportQuality,
-          jxlEffort: store.exportFormat === "jxl" ? store.exportJxlEffort : undefined,
-          avifSpeed: store.exportFormat === "avif" ? store.exportAvifSpeed : undefined,
-          avifQualityAlpha: store.exportFormat === "avif" ? store.exportAvifQualityAlpha : undefined,
-          avifLossless: store.exportFormat === "avif" ? store.exportAvifLossless : undefined,
-          avifSubsample: store.exportFormat === "avif" ? store.exportAvifSubsample : undefined,
-          avifTune: store.exportFormat === "avif" ? store.exportAvifTune : undefined,
-          avifHighAlphaQuality: store.exportFormat === "avif" ? store.exportAvifHighAlphaQuality : undefined,
-          pngTinyMode: store.exportPngTinyMode,
+          formatOptions: {
+            jxl: store.exportFormat === "jxl" ? { effort: store.exportJxlEffort } : undefined,
+            avif:
+              store.exportFormat === "avif"
+                ? {
+                    speed: store.exportAvifSpeed,
+                    qualityAlpha: store.exportAvifQualityAlpha,
+                    lossless: store.exportAvifLossless,
+                    subsample: store.exportAvifSubsample,
+                    tune: store.exportAvifTune,
+                    highAlphaQuality: store.exportAvifHighAlphaQuality
+                  }
+                : undefined,
+            png: store.exportFormat === "png" ? { tinyMode: store.exportPngTinyMode } : undefined
+          },
           exportMode: store.exportMode,
           trimBackground: store.exportTrimBackground
         }

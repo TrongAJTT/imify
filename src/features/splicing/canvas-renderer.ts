@@ -172,16 +172,7 @@ async function canvasToBlob(
   canvas: OffscreenCanvas,
   format: SplicingExportFormat,
   quality: number,
-  pngTinyMode: boolean,
-  jxlEffort?: number,
-  avifOptions?: {
-    avifSpeed?: number
-    avifQualityAlpha?: number
-    avifLossless?: boolean
-    avifSubsample?: 1 | 2 | 3
-    avifTune?: "auto" | "ssim" | "psnr"
-    avifHighAlphaQuality?: boolean
-  }
+  formatOptions?: SplicingExportConfig["formatOptions"]
 ): Promise<Blob> {
   const ctx = canvas.getContext("2d")
   if (!ctx) throw new Error("Failed to get 2D context")
@@ -193,14 +184,14 @@ async function canvasToBlob(
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
       return encodeAvif(data, {
         quality: clampQuality(quality),
-        ...avifOptions
+        avif: formatOptions?.avif
       })
     }
     case "jxl": {
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
       return encodeJxl(data, {
         quality: clampQuality(quality),
-        effort: jxlEffort
+        effort: formatOptions?.jxl?.effort
       })
     }
     case "bmp": {
@@ -212,7 +203,7 @@ async function canvasToBlob(
       return encodeImageDataToTiff(data)
     }
     case "png": {
-      if (pngTinyMode) {
+      if (formatOptions?.png?.tinyMode) {
         const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
         return encodeTinyPngFromImageData(data)
       }
@@ -339,16 +330,7 @@ export async function exportSplicedImage(
         canvas,
         exportConfig.format,
         exportConfig.quality,
-        exportConfig.pngTinyMode,
-        exportConfig.jxlEffort,
-        {
-          avifSpeed: exportConfig.avifSpeed,
-          avifQualityAlpha: exportConfig.avifQualityAlpha,
-          avifLossless: exportConfig.avifLossless,
-          avifSubsample: exportConfig.avifSubsample,
-          avifTune: exportConfig.avifTune,
-          avifHighAlphaQuality: exportConfig.avifHighAlphaQuality
-        }
+        exportConfig.formatOptions
       )
       options?.onProgress?.({
         phase: "render",
@@ -426,16 +408,7 @@ export async function exportSplicedImage(
         canvas,
         exportConfig.format,
         exportConfig.quality,
-        exportConfig.pngTinyMode,
-        exportConfig.jxlEffort,
-        {
-          avifSpeed: exportConfig.avifSpeed,
-          avifQualityAlpha: exportConfig.avifQualityAlpha,
-          avifLossless: exportConfig.avifLossless,
-          avifSubsample: exportConfig.avifSubsample,
-          avifTune: exportConfig.avifTune,
-          avifHighAlphaQuality: exportConfig.avifHighAlphaQuality
-        }
+        exportConfig.formatOptions
       )
       completed += 1
       active = Math.max(0, active - 1)

@@ -1,16 +1,11 @@
 import { encodeWithWasmWorker } from "@/features/converter/wasm-worker-pool"
 import { encodeAvifDirect } from "@/features/converter/wasm-direct-encoder"
 import { buildNormalizedAvifOptions } from "@/core/avif-options"
-import type { AvifSubsample, AvifTune } from "@/core/types"
+import type { AvifCodecOptions } from "@/core/types"
 
 export interface AvifEncodeOptions {
   quality?: number
-  avifSpeed?: number
-  avifQualityAlpha?: number
-  avifLossless?: boolean
-  avifSubsample?: AvifSubsample
-  avifTune?: AvifTune
-  avifHighAlphaQuality?: boolean
+  avif?: AvifCodecOptions
 }
 
 const defaultOptions = {

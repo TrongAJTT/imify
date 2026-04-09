@@ -1,7 +1,7 @@
 import type {
   ExtensionStorageState,
+  FormatCodecOptions,
   FormatConfig,
-  IcoOptions,
   PaperSize,
   ResizeConfig,
   ResizeMode,
@@ -15,12 +15,13 @@ export interface CustomFormatInput {
   format: FormatConfig["format"]
   enabled: boolean
   quality?: number
-  jxlEffort?: number
-  icoOptions?: IcoOptions
+  formatOptions?: FormatCodecOptions
   resize: ResizeConfig
 }
 
-function normalizeIcoOptions(options: IcoOptions | undefined): IcoOptions {
+type IcoFormatOptions = NonNullable<FormatCodecOptions["ico"]>
+
+function normalizeIcoOptions(options: IcoFormatOptions | undefined): IcoFormatOptions {
   const sizes = Array.isArray(options?.sizes)
     ? Array.from(new Set(options.sizes.filter((size) => Number.isInteger(size) && size > 0))).sort((a, b) => a - b)
     : [16, 32, 48]
@@ -104,14 +105,52 @@ function normalizeResizeConfig(config: ResizeConfig, format: FormatConfig["forma
 }
 
 function normalizeCustomFormat(input: CustomFormatInput, id: string): FormatConfig {
+  const formatOptions: FormatCodecOptions = {
+    jxl:
+      input.format === "jxl"
+        ? {
+            effort: Math.max(1, Math.min(9, Math.round(input.formatOptions?.jxl?.effort ?? 7)))
+          }
+        : undefined,
+    ico: input.format === "ico" ? normalizeIcoOptions(input.formatOptions?.ico) : undefined,
+    png:
+      input.format === "png"
+        ? {
+            tinyMode: Boolean(input.formatOptions?.png?.tinyMode)
+          }
+        : undefined,
+    avif:
+      input.format === "avif"
+        ? {
+            speed:
+              typeof input.formatOptions?.avif?.speed === "number"
+                ? Math.max(0, Math.min(10, Math.round(input.formatOptions.avif.speed)))
+                : 6,
+            qualityAlpha:
+              typeof input.formatOptions?.avif?.qualityAlpha === "number"
+                ? Math.max(0, Math.min(100, Math.round(input.formatOptions.avif.qualityAlpha)))
+                : undefined,
+            lossless: Boolean(input.formatOptions?.avif?.lossless),
+            subsample:
+              input.formatOptions?.avif?.subsample === 2 || input.formatOptions?.avif?.subsample === 3
+                ? input.formatOptions.avif.subsample
+                : 1,
+            tune:
+              input.formatOptions?.avif?.tune === "ssim" || input.formatOptions?.avif?.tune === "psnr"
+                ? input.formatOptions.avif.tune
+                : "auto",
+            highAlphaQuality: Boolean(input.formatOptions?.avif?.highAlphaQuality)
+          }
+        : undefined
+  }
+
   return {
     id,
     name: input.name.trim() || "Custom Format",
     format: input.format,
     enabled: input.enabled,
     quality: clampQuality(input.quality),
-    jxlEffort: input.format === "jxl" ? Math.max(1, Math.min(9, Math.round(input.jxlEffort ?? 7))) : undefined,
-    icoOptions: input.format === "ico" ? normalizeIcoOptions(input.icoOptions) : undefined,
+    formatOptions,
     resize: normalizeResizeConfig(input.resize, input.format)
   }
 }
@@ -126,7 +165,7 @@ export function validateCustomFormatInput(input: CustomFormatInput): string | nu
   }
 
   if (input.format === "ico") {
-    const sizes = input.icoOptions?.sizes ?? []
+    const sizes = input.formatOptions?.ico?.sizes ?? []
     if (!sizes.length) {
       return "Select at least one ICO size"
     }

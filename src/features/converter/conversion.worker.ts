@@ -10,7 +10,7 @@ import {
   clampQuality
 } from "@/core/image-utils"
 import { buildNormalizedAvifOptions } from "@/core/avif-options"
-import type { FormatConfig, ImageFormat, ResizeConfig } from "@/core/types"
+import type { AvifCodecOptions, FormatConfig, ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import {
   decodeImageBitmapForEncoding,
@@ -262,12 +262,7 @@ async function encodeAvifInWorker(
   imageData: ImageData,
   options?: {
     quality?: number
-    avifSpeed?: number
-    avifQualityAlpha?: number
-    avifLossless?: boolean
-    avifSubsample?: 1 | 2 | 3
-    avifTune?: "auto" | "ssim" | "psnr"
-    avifHighAlphaQuality?: boolean
+    avif?: AvifCodecOptions
   }
 ): Promise<Blob> {
   const avifModule = await getAvifModule()
@@ -294,7 +289,15 @@ async function encodeAvifInWorker(
   return new Blob([encoded as unknown as BlobPart], { type: "image/avif" })
 }
 
-async function encodeJxlInWorker(imageData: ImageData, quality?: number, effort?: number): Promise<Blob> {
+async function encodeJxlInWorker(
+  imageData: ImageData,
+  options?: {
+    quality?: number
+    jxl?: {
+      effort?: number
+    }
+  }
+): Promise<Blob> {
   const jxlModule = await getJxlModule()
   const encoded = jxlModule.encode(
     imageData.data as unknown as Uint8Array,
@@ -302,8 +305,8 @@ async function encodeJxlInWorker(imageData: ImageData, quality?: number, effort?
     imageData.height,
     {
       ...JXL_DEFAULT_OPTIONS,
-      quality: clampQuality(quality),
-      effort: effort ?? JXL_DEFAULT_OPTIONS.effort
+      quality: clampQuality(options?.quality),
+      effort: options?.jxl?.effort ?? JXL_DEFAULT_OPTIONS.effort
     }
   )
 
@@ -341,14 +344,11 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
         targetHeight,
         targetFormat: config.format,
         quality: config.quality,
-        jxlEffort: config.jxlEffort,
-        avifSpeed: config.avifSpeed,
-        avifQualityAlpha: config.avifQualityAlpha,
-        avifLossless: config.avifLossless,
-        avifSubsample: config.avifSubsample,
-        avifTune: config.avifTune,
-        avifHighAlphaQuality: config.avifHighAlphaQuality,
-        pngTinyMode: config.pngTinyMode
+        formatOptions: {
+          avif: config.formatOptions?.avif,
+          jxl: config.formatOptions?.jxl,
+          png: config.formatOptions?.png
+        }
       },
       {
         encodeBmp: encodeImageDataToBmp,
@@ -383,7 +383,10 @@ self.onmessage = async (event: MessageEvent<ConvertRequestMessage>) => {
     }
 
     if (message.config.format === "ico") {
-      const icoOutput = await convertSourceToIcoOutput(message.sourceBlob, message.config.icoOptions)
+      const icoOutput = await convertSourceToIcoOutput(
+        message.sourceBlob,
+        message.config.formatOptions?.ico
+      )
       const outputBuffer = await icoOutput.blob.arrayBuffer()
 
       workerPostMessage.postMessage(

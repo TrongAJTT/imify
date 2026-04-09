@@ -8,7 +8,7 @@ import type {
   ResizeMode,
   SupportedDPI
 } from "@/core/types"
-import type { BatchResizeMode } from "@/options/components/batch/types"
+import type { BatchFormatOptions, BatchResizeMode } from "@/options/components/batch/types"
 
 export const MAX_FILE_SIZE_BYTES = APP_CONFIG.BATCH.MAX_FILE_SIZE_MB * 1024 * 1024
 export const MAX_TOTAL_QUEUE_BYTES = APP_CONFIG.BATCH.OOM_WARNING_MB * 1024 * 1024
@@ -121,14 +121,7 @@ export function withBatchResize(
   config: FormatConfig,
   mode: BatchResizeMode,
   quality: number,
-  avifSpeed: number,
-  avifQualityAlpha: number | undefined,
-  avifLossless: boolean,
-  avifSubsample: 1 | 2 | 3,
-  avifTune: "auto" | "ssim" | "psnr",
-  avifHighAlphaQuality: boolean,
-  icoSizes: number[],
-  icoGenerateWebIconKit: boolean,
+  formatOptions: BatchFormatOptions,
   value: number,
   width: number,
   height: number,
@@ -155,30 +148,58 @@ export function withBatchResize(
   )
   const supportsQuality = QUALITY_FORMATS.includes(config.format)
   const isAvifTarget = config.format === "avif"
+  const isPngTarget = config.format === "png"
+  const isJxlTarget = config.format === "jxl"
+  const isIcoTarget = config.format === "ico"
   const normalizedQuality = Math.max(1, Math.min(100, Math.round(quality)))
-  const normalizedAvifSpeed = Math.max(0, Math.min(10, Math.round(avifSpeed)))
+  const normalizedAvifSpeed = Math.max(0, Math.min(10, Math.round(formatOptions.avif.speed)))
   const normalizedAvifQualityAlpha =
-    typeof avifQualityAlpha === "number"
-      ? Math.max(0, Math.min(100, Math.round(avifQualityAlpha)))
+    typeof formatOptions.avif.qualityAlpha === "number"
+      ? Math.max(0, Math.min(100, Math.round(formatOptions.avif.qualityAlpha)))
       : undefined
+  const normalizedJxlEffort = Math.max(1, Math.min(9, Math.round(formatOptions.jxl.effort)))
+  const normalizedIcoSizes = Array.from(
+    new Set((formatOptions.ico.sizes ?? []).filter((size) => Number.isInteger(size) && size > 0))
+  ).sort((a, b) => a - b)
+
+  const mergedFormatOptions = {
+    ...config.formatOptions,
+    jxl: isJxlTarget
+      ? {
+          ...config.formatOptions?.jxl,
+          effort: normalizedJxlEffort
+        }
+      : undefined,
+    avif: isAvifTarget
+      ? {
+          ...config.formatOptions?.avif,
+          speed: normalizedAvifSpeed,
+          qualityAlpha: normalizedAvifQualityAlpha,
+          lossless: formatOptions.avif.lossless,
+          subsample: formatOptions.avif.subsample,
+          tune: formatOptions.avif.tune,
+          highAlphaQuality: formatOptions.avif.highAlphaQuality
+        }
+      : undefined,
+    ico: isIcoTarget
+      ? {
+          sizes: normalizedIcoSizes.length ? normalizedIcoSizes : [16],
+          generateWebIconKit: formatOptions.ico.generateWebIconKit
+        }
+      : undefined,
+    png: isPngTarget
+      ? {
+          ...config.formatOptions?.png,
+          tinyMode: Boolean(formatOptions.png.tinyMode)
+        }
+      : undefined
+  }
 
   if (!override) {
     return {
       ...config,
       quality: supportsQuality ? normalizedQuality : undefined,
-      avifSpeed: isAvifTarget ? normalizedAvifSpeed : undefined,
-      avifQualityAlpha: isAvifTarget ? normalizedAvifQualityAlpha : undefined,
-      avifLossless: isAvifTarget ? avifLossless : undefined,
-      avifSubsample: isAvifTarget ? avifSubsample : undefined,
-      avifTune: isAvifTarget ? avifTune : undefined,
-      avifHighAlphaQuality: isAvifTarget ? avifHighAlphaQuality : undefined,
-      icoOptions:
-        config.format === "ico"
-          ? {
-              sizes: icoSizes,
-              generateWebIconKit: icoGenerateWebIconKit
-            }
-          : undefined,
+      formatOptions: mergedFormatOptions,
       resize: cloneResize(config.resize)
     }
   }
@@ -186,19 +207,7 @@ export function withBatchResize(
   return {
     ...config,
     quality: supportsQuality ? normalizedQuality : undefined,
-    avifSpeed: isAvifTarget ? normalizedAvifSpeed : undefined,
-    avifQualityAlpha: isAvifTarget ? normalizedAvifQualityAlpha : undefined,
-    avifLossless: isAvifTarget ? avifLossless : undefined,
-    avifSubsample: isAvifTarget ? avifSubsample : undefined,
-    avifTune: isAvifTarget ? avifTune : undefined,
-    avifHighAlphaQuality: isAvifTarget ? avifHighAlphaQuality : undefined,
-    icoOptions:
-      config.format === "ico"
-        ? {
-            sizes: icoSizes,
-            generateWebIconKit: icoGenerateWebIconKit
-          }
-        : undefined,
+    formatOptions: mergedFormatOptions,
     resize: override
   }
 }

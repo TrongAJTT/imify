@@ -362,9 +362,11 @@ export function SplicingSidebarPanel({
           <TargetFormatQualityCard
             targetFormat={exportFormat}
             quality={exportQuality}
-            avifSpeed={exportAvifSpeed}
-            jxlEffort={exportJxlEffort}
-            pngTinyMode={exportPngTinyMode}
+            formatConfig={{
+              avif: { speed: exportAvifSpeed },
+              jxl: { effort: exportJxlEffort },
+              png: { tinyMode: exportPngTinyMode }
+            }}
             formatOptions={EXPORT_FORMAT_OPTIONS}
             supportsQuality={showQuality}
             supportsTinyMode={showTinyMode}

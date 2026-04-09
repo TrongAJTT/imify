@@ -62,15 +62,26 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   targetFormat: "jpg",
   concurrency: 3,
   quality: 90,
-  jxlEffort: 7,
-  avifSpeed: 6,
-  avifQualityAlpha: undefined,
-  avifLossless: false,
-  avifSubsample: 1,
-  avifTune: "auto",
-  avifHighAlphaQuality: false,
-  icoSizes: [...DEFAULT_ICO_SIZES],
-  icoGenerateWebIconKit: false,
+  formatOptions: {
+    jxl: {
+      effort: 7
+    },
+    avif: {
+      speed: 6,
+      qualityAlpha: undefined,
+      lossless: false,
+      subsample: 1,
+      tune: "auto",
+      highAlphaQuality: false
+    },
+    ico: {
+      sizes: [...DEFAULT_ICO_SIZES],
+      generateWebIconKit: false
+    },
+    png: {
+      tinyMode: false
+    }
+  },
   resizeMode: "inherit",
   resizeValue: 1280,
   resizeWidth: 1280,
@@ -83,15 +94,36 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   paperSize: "A4",
   dpi: 300,
   stripExif: false,
-  pngTinyMode: false,
   fileNamePattern: "[OriginalName]",
   watermark: DEFAULT_BATCH_WATERMARK
 }
 
-function cloneSetupState(state: BatchSetupState): BatchSetupState {
+function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
+  if (!state) {
+    // Fallback to default if state is undefined
+    return cloneSetupState(DEFAULT_BATCH_STATE)
+  }
+
+  const formatOptions = state.formatOptions ?? DEFAULT_BATCH_STATE.formatOptions
+
   return {
     ...state,
-    icoSizes: [...state.icoSizes],
+    formatOptions: {
+      ...formatOptions,
+      avif: {
+        ...formatOptions.avif
+      },
+      jxl: {
+        ...formatOptions.jxl
+      },
+      png: {
+        ...formatOptions.png
+      },
+      ico: {
+        ...formatOptions.ico,
+        sizes: [...(formatOptions.ico?.sizes ?? DEFAULT_BATCH_STATE.formatOptions.ico.sizes)]
+      }
+    },
     watermark: {
       ...state.watermark
     }
@@ -307,13 +339,21 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            jxl: {
+              ...currentConfig.formatOptions.jxl,
+              effort: value
+            }
+          }
           const nextConfig = {
-            ...contextConfigs[setupContext],
-            jxlEffort: value
+            ...currentConfig,
+            formatOptions: nextFormatOptions
           }
 
           return {
-            jxlEffort: value,
+            formatOptions: nextFormatOptions,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -324,13 +364,21 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            avif: {
+              ...currentConfig.formatOptions.avif,
+              speed: value
+            }
+          }
           const nextConfig = {
-            ...contextConfigs[setupContext],
-            avifSpeed: value
+            ...currentConfig,
+            formatOptions: nextFormatOptions
           }
 
           return {
-            avifSpeed: value,
+            formatOptions: nextFormatOptions,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -341,13 +389,21 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            avif: {
+              ...currentConfig.formatOptions.avif,
+              qualityAlpha: value
+            }
+          }
           const nextConfig = {
-            ...contextConfigs[setupContext],
-            avifQualityAlpha: value
+            ...currentConfig,
+            formatOptions: nextFormatOptions
           }
 
           return {
-            avifQualityAlpha: value,
+            formatOptions: nextFormatOptions,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -358,13 +414,21 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            avif: {
+              ...currentConfig.formatOptions.avif,
+              lossless: value
+            }
+          }
           const nextConfig = {
-            ...contextConfigs[setupContext],
-            avifLossless: value
+            ...currentConfig,
+            formatOptions: nextFormatOptions
           }
 
           return {
-            avifLossless: value,
+            formatOptions: nextFormatOptions,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -375,13 +439,21 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            avif: {
+              ...currentConfig.formatOptions.avif,
+              subsample: value
+            }
+          }
           const nextConfig = {
-            ...contextConfigs[setupContext],
-            avifSubsample: value
+            ...currentConfig,
+            formatOptions: nextFormatOptions
           }
 
           return {
-            avifSubsample: value,
+            formatOptions: nextFormatOptions,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -392,13 +464,21 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            avif: {
+              ...currentConfig.formatOptions.avif,
+              tune: value
+            }
+          }
           const nextConfig = {
-            ...contextConfigs[setupContext],
-            avifTune: value
+            ...currentConfig,
+            formatOptions: nextFormatOptions
           }
 
           return {
-            avifTune: value,
+            formatOptions: nextFormatOptions,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -409,13 +489,21 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            avif: {
+              ...currentConfig.formatOptions.avif,
+              highAlphaQuality: value
+            }
+          }
           const nextConfig = {
-            ...contextConfigs[setupContext],
-            avifHighAlphaQuality: value
+            ...currentConfig,
+            formatOptions: nextFormatOptions
           }
 
           return {
-            avifHighAlphaQuality: value,
+            formatOptions: nextFormatOptions,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -426,13 +514,21 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            ico: {
+              ...currentConfig.formatOptions.ico,
+              sizes: value
+            }
+          }
           const nextConfig = {
-            ...contextConfigs[setupContext],
-            icoSizes: value
+            ...currentConfig,
+            formatOptions: nextFormatOptions
           }
 
           return {
-            icoSizes: value,
+            formatOptions: nextFormatOptions,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -443,13 +539,21 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            ico: {
+              ...currentConfig.formatOptions.ico,
+              generateWebIconKit: value
+            }
+          }
           const nextConfig = {
-            ...contextConfigs[setupContext],
-            icoGenerateWebIconKit: value
+            ...currentConfig,
+            formatOptions: nextFormatOptions
           }
 
           return {
-            icoGenerateWebIconKit: value,
+            formatOptions: nextFormatOptions,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -704,13 +808,21 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            png: {
+              ...currentConfig.formatOptions.png,
+              tinyMode: value
+            }
+          }
           const nextConfig = {
-            ...contextConfigs[setupContext],
-            pngTinyMode: value
+            ...currentConfig,
+            formatOptions: nextFormatOptions
           }
 
           return {
-            pngTinyMode: value,
+            formatOptions: nextFormatOptions,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig
@@ -798,15 +910,21 @@ export const useBatchStore = create<BatchStoreState>()(
             targetFormat: state.targetFormat,
             concurrency: state.concurrency,
             quality: state.quality,
-            jxlEffort: state.jxlEffort,
-            avifSpeed: state.avifSpeed,
-            avifQualityAlpha: state.avifQualityAlpha,
-            avifLossless: state.avifLossless,
-            avifSubsample: state.avifSubsample,
-            avifTune: state.avifTune,
-            avifHighAlphaQuality: state.avifHighAlphaQuality,
-            icoSizes: [...state.icoSizes],
-            icoGenerateWebIconKit: state.icoGenerateWebIconKit,
+            formatOptions: {
+              jxl: {
+                ...state.formatOptions.jxl
+              },
+              avif: {
+                ...state.formatOptions.avif
+              },
+              png: {
+                ...state.formatOptions.png
+              },
+              ico: {
+                ...state.formatOptions.ico,
+                sizes: [...state.formatOptions.ico.sizes]
+              }
+            },
             resizeMode: state.resizeMode,
             resizeValue: state.resizeValue,
             resizeWidth: state.resizeWidth,
@@ -819,7 +937,6 @@ export const useBatchStore = create<BatchStoreState>()(
             paperSize: state.paperSize,
             dpi: state.dpi,
             stripExif: state.stripExif,
-            pngTinyMode: state.pngTinyMode,
             fileNamePattern: state.fileNamePattern,
             watermark: {
               ...state.watermark
@@ -953,7 +1070,36 @@ export const useBatchStore = create<BatchStoreState>()(
       },
       onRehydrateStorage: (state) => {
         return () => {
-          useBatchStore.setState({ _hasHydrated: true } as any)
+          // Migration: ensure all contextConfigs have formatOptions
+          const migrateContextConfigs = (configs: Record<SetupContext, BatchSetupState>) => {
+            return {
+              single: {
+                ...configs.single,
+                formatOptions: {
+                  ...DEFAULT_BATCH_STATE.formatOptions,
+                  ...configs.single?.formatOptions
+                }
+              },
+              batch: {
+                ...configs.batch,
+                formatOptions: {
+                  ...DEFAULT_BATCH_STATE.formatOptions,
+                  ...configs.batch?.formatOptions
+                }
+              }
+            }
+          }
+
+          useBatchStore.setState((state) => {
+            const contextConfigs = (state as any).contextConfigs
+            if (contextConfigs) {
+              return {
+                contextConfigs: migrateContextConfigs(contextConfigs),
+                _hasHydrated: true
+              } as any
+            }
+            return { _hasHydrated: true } as any
+          })
         }
       }
     }

@@ -65,19 +65,32 @@ export interface BatchSummary {
   durationMs: number
 }
 
+export interface BatchFormatOptions {
+  jxl: {
+    effort: number
+  }
+  avif: {
+    speed: number
+    qualityAlpha?: number
+    lossless: boolean
+    subsample: 1 | 2 | 3
+    tune: "auto" | "ssim" | "psnr"
+    highAlphaQuality: boolean
+  }
+  png: {
+    tinyMode: boolean
+  }
+  ico: {
+    sizes: number[]
+    generateWebIconKit: boolean
+  }
+}
+
 export interface BatchSetupState {
   targetFormat: BatchTargetFormat
   concurrency: number
   quality: number
-  jxlEffort: number
-  avifSpeed: number
-  avifQualityAlpha?: number
-  avifLossless: boolean
-  avifSubsample: 1 | 2 | 3
-  avifTune: "auto" | "ssim" | "psnr"
-  avifHighAlphaQuality: boolean
-  icoSizes: number[]
-  icoGenerateWebIconKit: boolean
+  formatOptions: BatchFormatOptions
   resizeMode: BatchResizeMode
   resizeValue: number
   resizeWidth: number
@@ -90,7 +103,6 @@ export interface BatchSetupState {
   paperSize: PaperSize
   dpi: SupportedDPI
   stripExif: boolean
-  pngTinyMode: boolean
   fileNamePattern: string
   watermark: BatchWatermarkConfig
 }

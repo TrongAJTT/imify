@@ -4,7 +4,7 @@ import {
   calculateDimensions,
   clampQuality
 } from "@/core/image-utils"
-import type { ImageFormat, ResizeConfig } from "@/core/types"
+import type { FormatCodecOptions, ImageFormat, ResizeConfig } from "@/core/types"
 import {
   decodeImageBitmapForEncoding,
   getOffscreen2DContext
@@ -29,14 +29,7 @@ export interface RasterConvertParams {
   targetFormat: Exclude<ImageFormat, "pdf" | "ico">
   resize: ResizeConfig
   quality?: number
-  jxlEffort?: number
-  avifSpeed?: number
-  avifQualityAlpha?: number
-  avifLossless?: boolean
-  avifSubsample?: 1 | 2 | 3
-  avifTune?: "auto" | "ssim" | "psnr"
-  avifHighAlphaQuality?: boolean
-  pngTinyMode?: boolean
+  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "png">
 }
 
 export interface RasterConvertResult {
@@ -174,14 +167,7 @@ export async function convertRasterImage(
     targetFormat,
     resize,
     quality,
-    jxlEffort,
-    avifSpeed,
-    avifQualityAlpha,
-    avifLossless,
-    avifSubsample,
-    avifTune,
-    avifHighAlphaQuality,
-    pngTinyMode
+    formatOptions
   } = params
   const imageBitmap = await decodeImageBitmapForEncoding(sourceBlob)
 
@@ -209,23 +195,16 @@ export async function convertRasterImage(
         targetHeight,
         targetFormat,
         quality,
-        jxlEffort,
-        avifSpeed,
-        avifQualityAlpha,
-        avifLossless,
-        avifSubsample,
-        avifTune,
-        avifHighAlphaQuality,
-        pngTinyMode
+        formatOptions
       },
       {
         encodeBmp: encodeImageDataToBmp,
         encodeTiff: encodeImageDataToTiff,
         encodeAvif,
-        encodeJxl: (imageData, q, effort) =>
+        encodeJxl: (imageData, options) =>
           encodeJxl(imageData, {
-            quality: clampQuality(q),
-            effort
+            quality: clampQuality(options.quality),
+            effort: options.jxl?.effort
           }),
         encodeTinyPng: encodeTinyPngFromImageData,
         convertToRasterBlob,

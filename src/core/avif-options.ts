@@ -1,5 +1,5 @@
 import { clampQuality } from "@/core/image-utils"
-import type { AvifSubsample, AvifTune } from "@/core/types"
+import type { AvifCodecOptions, AvifSubsample, AvifTune } from "@/core/types"
 
 export const AVIF_DEFAULT_SPEED = 6
 export const AVIF_DEFAULT_SUBSAMPLE: AvifSubsample = 1
@@ -7,12 +7,7 @@ export const AVIF_DEFAULT_TUNE: AvifTune = "auto"
 
 export interface AvifOptionSource {
   quality?: number
-  avifSpeed?: number
-  avifQualityAlpha?: number
-  avifLossless?: boolean
-  avifSubsample?: AvifSubsample
-  avifTune?: AvifTune
-  avifHighAlphaQuality?: boolean
+  avif?: AvifCodecOptions
 }
 
 export function clampAvifSpeed(value: number | undefined): number {
@@ -53,16 +48,16 @@ export function mapAvifTuneToNumeric(value: AvifTune | undefined): 0 | 1 | 2 {
   return 0
 }
 
-export function resolveAvifQualityAlpha(input: Pick<AvifOptionSource, "avifHighAlphaQuality" | "avifQualityAlpha">): number {
-  if (input.avifHighAlphaQuality) {
+export function resolveAvifQualityAlpha(input: Pick<AvifCodecOptions, "highAlphaQuality" | "qualityAlpha">): number {
+  if (input.highAlphaQuality) {
     return 100
   }
 
-  if (typeof input.avifQualityAlpha !== "number" || Number.isNaN(input.avifQualityAlpha)) {
+  if (typeof input.qualityAlpha !== "number" || Number.isNaN(input.qualityAlpha)) {
     return -1
   }
 
-  return Math.max(0, Math.min(100, Math.round(input.avifQualityAlpha)))
+  return Math.max(0, Math.min(100, Math.round(input.qualityAlpha)))
 }
 
 export function buildNormalizedAvifOptions(input: AvifOptionSource): {
@@ -73,12 +68,14 @@ export function buildNormalizedAvifOptions(input: AvifOptionSource): {
   tune: 0 | 1 | 2
   lossless: boolean
 } {
+  const avifOptions = input.avif
+
   return {
     quality: clampQuality(input.quality),
-    qualityAlpha: resolveAvifQualityAlpha(input),
-    speed: clampAvifSpeed(input.avifSpeed),
-    subsample: normalizeAvifSubsample(input.avifSubsample),
-    tune: mapAvifTuneToNumeric(input.avifTune),
-    lossless: Boolean(input.avifLossless)
+    qualityAlpha: resolveAvifQualityAlpha(avifOptions ?? {}),
+    speed: clampAvifSpeed(avifOptions?.speed),
+    subsample: normalizeAvifSubsample(avifOptions?.subsample),
+    tune: mapAvifTuneToNumeric(avifOptions?.tune),
+    lossless: Boolean(avifOptions?.lossless)
   }
 }

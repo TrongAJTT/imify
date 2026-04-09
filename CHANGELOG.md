@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
 ### Changed
+- **Config Contracts (Breaking):** Removed all legacy flat codec props from conversion and options payloads (`jxlEffort`, `avif*`, `pngTinyMode`, `icoOptions`, etc.) and standardized on grouped `formatOptions` only across core types, converter worker/main pipeline, batch/single processors, splicing export, and custom format flows (no compatibility migration path retained).
 - **Converter Architecture:** Introduced a modular adapter-style raster encoding pipeline (`raster-encode-adapters.ts`) to standardize format-specific encoding across main thread and conversion worker. This removes duplicated `if/switch` logic and makes future format extension easier.
 - **Color Pipeline (Global Decode):** Added shared color-managed decode utilities (`color-managed-pipeline.ts`) and applied them to conversion, worker, ICO generation, preview rendering, and splicing decode stages for consistent color behavior.
 - **JXL Workflow:** JXL encode input is now normalized through the shared color-managed decode path and sRGB canvas context pipeline before WASM encoding, reducing color desaturation risk from wide-gamut source profiles.

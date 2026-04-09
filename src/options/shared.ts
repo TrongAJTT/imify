@@ -1,7 +1,7 @@
 import type {
+  FormatCodecOptions,
   ExtensionStorageState,
   FormatConfig,
-  IcoOptions,
   ImageFormat,
   MenuSortMode,
   PaperSize,
@@ -131,19 +131,63 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
     baseResize.containBackground = undefined
   }
 
-  const normalizedIcoOptions: IcoOptions | undefined = input.format === "ico"
-    ? {
-        sizes: Array.from(new Set((input.icoOptions?.sizes ?? [16, 32, 48]).filter((size) => Number.isInteger(size) && size > 0))).sort((a, b) => a - b),
-        generateWebIconKit: Boolean(input.icoOptions?.generateWebIconKit)
-      }
-    : undefined
+  const normalizedFormatOptions: FormatCodecOptions = {
+    jxl:
+      input.format === "jxl"
+        ? {
+            effort: Math.max(1, Math.min(9, Math.round(input.formatOptions?.jxl?.effort ?? 7)))
+          }
+        : undefined,
+    ico:
+      input.format === "ico"
+        ? {
+            sizes: Array.from(
+              new Set(
+                (input.formatOptions?.ico?.sizes ?? [16, 32, 48]).filter(
+                  (size) => Number.isInteger(size) && size > 0
+                )
+              )
+            ).sort((a, b) => a - b),
+            generateWebIconKit: Boolean(input.formatOptions?.ico?.generateWebIconKit)
+          }
+        : undefined,
+    png:
+      input.format === "png"
+        ? {
+            tinyMode: Boolean(input.formatOptions?.png?.tinyMode)
+          }
+        : undefined,
+    avif:
+      input.format === "avif"
+        ? {
+            speed:
+              typeof input.formatOptions?.avif?.speed === "number"
+                ? Math.max(0, Math.min(10, Math.round(input.formatOptions.avif.speed)))
+                : 6,
+            qualityAlpha:
+              typeof input.formatOptions?.avif?.qualityAlpha === "number"
+                ? Math.max(0, Math.min(100, Math.round(input.formatOptions.avif.qualityAlpha)))
+                : undefined,
+            lossless: Boolean(input.formatOptions?.avif?.lossless),
+            subsample:
+              input.formatOptions?.avif?.subsample === 2 || input.formatOptions?.avif?.subsample === 3
+                ? input.formatOptions.avif.subsample
+                : 1,
+            tune:
+              input.formatOptions?.avif?.tune === "ssim" || input.formatOptions?.avif?.tune === "psnr"
+                ? input.formatOptions.avif.tune
+                : "auto",
+            highAlphaQuality: Boolean(input.formatOptions?.avif?.highAlphaQuality)
+          }
+        : undefined
+  }
 
   return {
     ...input,
     quality: QUALITY_FORMATS.includes(input.format)
       ? Math.max(1, Math.min(100, Math.round(input.quality ?? 90)))
       : undefined,
-    icoOptions: normalizedIcoOptions,
+    formatOptions: normalizedFormatOptions,
     resize: baseResize
   }
 }

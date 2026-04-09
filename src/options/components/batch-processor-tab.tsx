@@ -28,15 +28,7 @@ export function BatchProcessorTab() {
   const targetFormat = useBatchStore((state) => state.targetFormat)
   const concurrency = useBatchStore((state) => state.concurrency)
   const quality = useBatchStore((state) => state.quality)
-  const jxlEffort = useBatchStore((state) => state.jxlEffort)
-  const avifSpeed = useBatchStore((state) => state.avifSpeed)
-  const avifQualityAlpha = useBatchStore((state) => state.avifQualityAlpha)
-  const avifLossless = useBatchStore((state) => state.avifLossless)
-  const avifSubsample = useBatchStore((state) => state.avifSubsample)
-  const avifTune = useBatchStore((state) => state.avifTune)
-  const avifHighAlphaQuality = useBatchStore((state) => state.avifHighAlphaQuality)
-  const icoSizes = useBatchStore((state) => state.icoSizes)
-  const icoGenerateWebIconKit = useBatchStore((state) => state.icoGenerateWebIconKit)
+  const formatOptions = useBatchStore((state) => state.formatOptions)
   const resizeMode = useBatchStore((state) => state.resizeMode)
   const resizeValue = useBatchStore((state) => state.resizeValue)
   const resizeWidth = useBatchStore((state) => state.resizeWidth)
@@ -49,7 +41,6 @@ export function BatchProcessorTab() {
   const paperSize = useBatchStore((state) => state.paperSize)
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
-  const pngTinyMode = useBatchStore((state) => state.pngTinyMode)
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
   const watermark = useBatchStore((state) => state.watermark)
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
@@ -85,14 +76,18 @@ export function BatchProcessorTab() {
       format: targetFormat,
       enabled: true,
       quality,
-      jxlEffort,
-      avifSpeed,
-      avifQualityAlpha,
-      avifLossless,
-      avifSubsample,
-      avifTune,
-      avifHighAlphaQuality,
-      pngTinyMode,
+      formatOptions: {
+        jxl: targetFormat === "jxl" ? { effort: formatOptions.jxl.effort } : undefined,
+        avif: targetFormat === "avif" ? { ...formatOptions.avif } : undefined,
+        ico:
+          targetFormat === "ico"
+            ? {
+                sizes: [...formatOptions.ico.sizes],
+                generateWebIconKit: formatOptions.ico.generateWebIconKit
+              }
+            : undefined,
+        png: targetFormat === "png" ? { tinyMode: formatOptions.png.tinyMode } : undefined
+      },
       resize: { mode: "none" }
     }
 
@@ -100,14 +95,7 @@ export function BatchProcessorTab() {
       baseConfig,
       resizeMode,
       quality,
-      avifSpeed,
-      avifQualityAlpha,
-      avifLossless,
-      avifSubsample,
-      avifTune,
-      avifHighAlphaQuality,
-      icoSizes,
-      icoGenerateWebIconKit,
+      formatOptions,
       resizeValue,
       resizeWidth,
       resizeHeight,
@@ -123,15 +111,7 @@ export function BatchProcessorTab() {
     targetFormat,
     resizeMode,
     quality,
-    jxlEffort,
-    avifSpeed,
-    avifQualityAlpha,
-    avifLossless,
-    avifSubsample,
-    avifTune,
-    avifHighAlphaQuality,
-    icoSizes,
-    icoGenerateWebIconKit,
+    formatOptions,
     resizeValue,
     resizeWidth,
     resizeHeight,
@@ -141,8 +121,7 @@ export function BatchProcessorTab() {
     resizeFitMode,
     resizeContainBackground,
     paperSize,
-    dpi,
-    pngTinyMode
+    dpi
   ])
 
   const {

@@ -18,14 +18,21 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
     format,
     enabled: true,
     quality,
-    pngTinyMode: false,
-    icoOptions:
-      format === "ico"
-        ? {
-            sizes: [...DEFAULT_ICO_SIZES],
-            generateWebIconKit: false
-          }
-        : undefined,
+    formatOptions: {
+      png:
+        format === "png"
+          ? {
+              tinyMode: false
+            }
+          : undefined,
+      ico:
+        format === "ico"
+          ? {
+              sizes: [...DEFAULT_ICO_SIZES],
+              generateWebIconKit: false
+            }
+          : undefined
+    },
     resize: {
       mode: "none"
     }

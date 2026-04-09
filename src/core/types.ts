@@ -43,6 +43,30 @@ export interface IcoOptions {
   generateWebIconKit?: boolean
 }
 
+export interface PngCodecOptions {
+  tinyMode?: boolean
+}
+
+export interface JxlCodecOptions {
+  effort?: number
+}
+
+export interface AvifCodecOptions {
+  speed?: number
+  qualityAlpha?: number
+  lossless?: boolean
+  subsample?: AvifSubsample
+  tune?: AvifTune
+  highAlphaQuality?: boolean
+}
+
+export interface FormatCodecOptions {
+  png?: PngCodecOptions
+  jxl?: JxlCodecOptions
+  avif?: AvifCodecOptions
+  ico?: IcoOptions
+}
+
 export type AvifSubsample = 1 | 2 | 3
 
 export type AvifTune = "auto" | "ssim" | "psnr"
@@ -53,16 +77,8 @@ export interface FormatConfig {
   format: ImageFormat
   enabled: boolean
   quality?: number
-  pngTinyMode?: boolean
-  jxlEffort?: number
-  avifSpeed?: number
-  avifQualityAlpha?: number
-  avifLossless?: boolean
-  avifSubsample?: AvifSubsample
-  avifTune?: AvifTune
-  avifHighAlphaQuality?: boolean
+  formatOptions?: FormatCodecOptions
   resize: ResizeConfig
-  icoOptions?: IcoOptions
 }
 
 export type GlobalFormatsMap = Record<ImageFormat, FormatConfig>

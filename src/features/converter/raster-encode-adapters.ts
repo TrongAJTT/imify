@@ -1,4 +1,9 @@
-import type { AvifSubsample, AvifTune, ImageFormat } from "@/core/types"
+import type {
+  AvifCodecOptions,
+  ImageFormat,
+  JxlCodecOptions,
+  PngCodecOptions
+} from "@/core/types"
 
 export type RasterPipelineFormat = Exclude<ImageFormat, "pdf" | "ico">
 export type CanvasConvertibleFormat = Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff">
@@ -10,14 +15,11 @@ export interface RasterEncodeInput {
   targetHeight: number
   targetFormat: RasterPipelineFormat
   quality?: number
-  jxlEffort?: number
-  avifSpeed?: number
-  avifQualityAlpha?: number
-  avifLossless?: boolean
-  avifSubsample?: AvifSubsample
-  avifTune?: AvifTune
-  avifHighAlphaQuality?: boolean
-  pngTinyMode?: boolean
+  formatOptions?: {
+    avif?: AvifCodecOptions
+    jxl?: JxlCodecOptions
+    png?: PngCodecOptions
+  }
 }
 
 export interface RasterEncodeResult {
@@ -28,16 +30,20 @@ export interface RasterEncodeResult {
 export interface RasterEncodeDependencies {
   encodeBmp: (imageData: ImageData) => Blob
   encodeTiff: (imageData: ImageData) => Blob
-  encodeAvif: (imageData: ImageData, options: {
-    quality?: number
-    avifSpeed?: number
-    avifQualityAlpha?: number
-    avifLossless?: boolean
-    avifSubsample?: AvifSubsample
-    avifTune?: AvifTune
-    avifHighAlphaQuality?: boolean
-  }) => Promise<Blob>
-  encodeJxl: (imageData: ImageData, quality?: number, effort?: number) => Promise<Blob>
+  encodeAvif: (
+    imageData: ImageData,
+    options: {
+      quality?: number
+      avif?: AvifCodecOptions
+    }
+  ) => Promise<Blob>
+  encodeJxl: (
+    imageData: ImageData,
+    options: {
+      quality?: number
+      jxl?: JxlCodecOptions
+    }
+  ) => Promise<Blob>
   encodeTinyPng: (imageData: ImageData) => Blob
   convertToRasterBlob: (
     canvas: OffscreenCanvas,
@@ -93,12 +99,7 @@ const adapters: RasterEncoderAdapter[] = [
       return {
         blob: await deps.encodeAvif(imageData, {
           quality: input.quality,
-          avifSpeed: input.avifSpeed,
-          avifQualityAlpha: input.avifQualityAlpha,
-          avifLossless: input.avifLossless,
-          avifSubsample: input.avifSubsample,
-          avifTune: input.avifTune,
-          avifHighAlphaQuality: input.avifHighAlphaQuality
+          avif: input.formatOptions?.avif
         }),
         mimeType: "image/avif"
       }
@@ -110,14 +111,17 @@ const adapters: RasterEncoderAdapter[] = [
     encode: async ({ input, deps }) => {
       const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
       return {
-        blob: await deps.encodeJxl(imageData, input.quality, input.jxlEffort),
+        blob: await deps.encodeJxl(imageData, {
+          quality: input.quality,
+          jxl: input.formatOptions?.jxl
+        }),
         mimeType: "image/jxl"
       }
     }
   },
   {
     id: "png-tiny",
-    supports: (format, input) => format === "png" && Boolean(input.pngTinyMode),
+    supports: (format, input) => format === "png" && Boolean(input.formatOptions?.png?.tinyMode),
     encode: async ({ input, deps }) => {
       const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
       return {

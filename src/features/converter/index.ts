@@ -34,7 +34,7 @@ export async function convertImage(
 
   if (config.format === "ico") {
     if (!isConversionWorkerSupported()) {
-      const icoOutput = await convertSourceToIcoOutput(sourceBlob, config.icoOptions)
+      const icoOutput = await convertSourceToIcoOutput(sourceBlob, config.formatOptions?.ico)
 
       return {
         blob: icoOutput.blob,
@@ -46,7 +46,7 @@ export async function convertImage(
     try {
       return await convertImageWithWorker(sourceBlob, config)
     } catch {
-      const icoOutput = await convertSourceToIcoOutput(sourceBlob, config.icoOptions)
+      const icoOutput = await convertSourceToIcoOutput(sourceBlob, config.formatOptions?.ico)
 
       return {
         blob: icoOutput.blob,
@@ -63,14 +63,11 @@ export async function convertImage(
       targetFormat: config.format,
       resize: config.resize,
       quality: config.quality,
-      jxlEffort: config.jxlEffort,
-      avifSpeed: config.avifSpeed,
-      avifQualityAlpha: config.avifQualityAlpha,
-      avifLossless: config.avifLossless,
-      avifSubsample: config.avifSubsample,
-      avifTune: config.avifTune,
-      avifHighAlphaQuality: config.avifHighAlphaQuality,
-      pngTinyMode: config.pngTinyMode
+      formatOptions: {
+        avif: config.formatOptions?.avif,
+        jxl: config.formatOptions?.jxl,
+        png: config.formatOptions?.png
+      }
     })
 
     return {
@@ -87,14 +84,11 @@ export async function convertImage(
       targetFormat: config.format,
       resize: config.resize,
       quality: config.quality,
-      jxlEffort: config.jxlEffort,
-      avifSpeed: config.avifSpeed,
-      avifQualityAlpha: config.avifQualityAlpha,
-      avifLossless: config.avifLossless,
-      avifSubsample: config.avifSubsample,
-      avifTune: config.avifTune,
-      avifHighAlphaQuality: config.avifHighAlphaQuality,
-      pngTinyMode: config.pngTinyMode
+      formatOptions: {
+        avif: config.formatOptions?.avif,
+        jxl: config.formatOptions?.jxl,
+        png: config.formatOptions?.png
+      }
     })
 
     return {
