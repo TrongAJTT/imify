@@ -1,6 +1,6 @@
 import { HelpCircle } from "lucide-react"
 import { Tooltip } from "@/options/components/tooltip"
-import { getThemeClasses, type ColorTheme } from "@/options/components/ui/theme-config"
+import { getThemeClasses, type ColorTheme, type ThemeClasses } from "@/options/components/ui/theme-config"
 
 interface CheckboxCardProps {
   icon?: React.ReactNode
@@ -9,10 +9,11 @@ interface CheckboxCardProps {
   checked: boolean
   onChange: (checked: boolean) => void
   disabled?: boolean
-  tooltip?: string
+  tooltipLabel?: string
+  tooltipContent?: string
   variant?: "primary" | "sky"
-  theme?: ColorTheme
   className?: string
+  theme?: ColorTheme
 }
 
 export function CheckboxCard({
@@ -22,7 +23,8 @@ export function CheckboxCard({
   checked,
   onChange,
   disabled,
-  tooltip,
+  tooltipLabel,
+  tooltipContent,
   variant = "sky",
   theme = "sky",
   className = ""
@@ -45,8 +47,8 @@ export function CheckboxCard({
         <div className="flex items-center justify-between w-full min-w-0 gap-2">
           <span className="font-bold text-[12px] text-slate-700 dark:text-slate-300 whitespace-nowrap truncate">{title}</span>
           <div className="flex items-center gap-2 shrink-0">
-            {tooltip && (
-              <Tooltip content={tooltip} variant="wide2">
+            {(tooltipContent || tooltipLabel) && (
+              <Tooltip content={tooltipContent} label={tooltipLabel} variant="wide2">
                 <HelpCircle size={16} className="text-slate-400 cursor-help" />
               </Tooltip>
             )}

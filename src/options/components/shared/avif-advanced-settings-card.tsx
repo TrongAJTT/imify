@@ -93,6 +93,8 @@ export function AvifAdvancedSettingsCard({
               ? "Enabled: alpha quality forced to 100"
               : "Use this when logos or soft shadows lose edge clarity"
           }
+          tooltipLabel="Keep sharp edges for transparent images"
+          tooltipContent="When enabled, forces alpha quality to 100 to preserve sharp edges in logos and soft shadows. When disabled, you can manually adjust alpha quality for smaller file sizes at the cost of potential blurriness around edges."
           checked={highAlphaQuality}
           onChange={onHighAlphaQualityChange}
           disabled={disabled}

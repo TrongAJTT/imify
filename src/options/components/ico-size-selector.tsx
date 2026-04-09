@@ -44,7 +44,7 @@ export function IcoSizeSelector({
           disabled={disabled}
           onChange={onToggleWebKit}
           title="Generate Web Toolkit"
-          tooltip="Generate full icon set including favicon.ico and PNG files for Apple/Android"
+          tooltipContent="Generate full icon set including favicon.ico and PNG files for Apple/Android"
           theme="amber"
           />
       </div>

@@ -201,7 +201,7 @@ export function TargetFormatQualityCard({
             icon={<Zap size={16} />}
             title="Tiny Mode"
             subtitle="Quantize to reduce PNG size"
-            tooltip="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
+            tooltipContent="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
             checked={pngTinyMode}
             onChange={onPngTinyModeChange}
             disabled={disabled || !supportsTinyMode}

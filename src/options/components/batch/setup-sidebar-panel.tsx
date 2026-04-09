@@ -333,7 +333,7 @@ export function BatchSetupSidebarPanel({
             checked={stripExif && supportsExif}
             onChange={onStripExifChange}
             disabled={isRunning || !supportsExif}
-            tooltip="Removes sensitive metadata (GPS, Camera info)."
+            tooltipContent="Removes sensitive metadata (GPS, Camera info)."
             className={!supportsExif ? "opacity-70" : ""}
             theme="amber"
           />
