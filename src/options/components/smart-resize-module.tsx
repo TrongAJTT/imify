@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Link2, RotateCcw, Unlink2 } from "lucide-react"
+import { Link2, RotateCcw, Unlink2, Maximize2, Crop, Minimize } from "lucide-react"
 
 import { Tooltip } from "@/options/components/tooltip"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
@@ -381,31 +381,34 @@ export function SmartResizeModule({
         <LabelText>Fit mode</LabelText>
         <div className="space-y-2">
           <RadioCard
+            icon={<Maximize2 size={14} />}
             title="Fill"
             subtitle="Stretch to exact size"
             value="fill"
             selectedValue={fitMode}
             onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
             disabled={disabled || !isFitModeEnabled}
-            tooltip="May distort image when target ratio differs from source ratio."
+            tooltipContent="May distort image when target ratio differs from source ratio."
           />
           <RadioCard
+            icon={<Crop size={14} />}
             title="Cover"
             subtitle="Keep ratio, crop overflow"
             value="cover"
             selectedValue={fitMode}
             onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
             disabled={disabled || !isFitModeEnabled}
-            tooltip="Fills the target frame completely by center-cropping extra edges."
+            tooltipContent="Fills the target frame completely by center-cropping extra edges."
           />
           <RadioCard
+            icon={<Minimize size={14} />}
             title="Contain"
             subtitle="Keep ratio, add padding"
             value="contain"
             selectedValue={fitMode}
             onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
             disabled={disabled || !isFitModeEnabled}
-            tooltip="Fits inside target frame and leaves letterboxing area when needed."
+            tooltipContent="Fits inside target frame and leaves letterboxing area when needed."
             rightSlot={
               <ColorPickerPopover
                 label=""

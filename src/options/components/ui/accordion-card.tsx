@@ -77,7 +77,7 @@ export function AccordionCard({
           <button
             type="button"
             disabled={isDisabled}
-            className={`w-full text-left flex items-center gap-3 px-2.5 py-1.5 transition-all ${
+            className={`w-full text-left flex items-center gap-2.5 px-2.5 py-1.5 transition-all ${
               isOpen
                 ? `${theme.activeBg} ${alwaysOpen ? "cursor-default" : "cursor-pointer"}`
                 : alwaysOpen

@@ -188,6 +188,7 @@ export function SplicingSidebarPanel({
             {PRESET_OPTIONS.map((opt) => (
               <RadioCard
                 key={opt.value}
+                icon={opt.icon}
                 title={opt.title}
                 subtitle={opt.subtitle}
                 value={opt.value}

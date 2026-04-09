@@ -4,6 +4,7 @@ import type {
   DiffAlignMode,
   DiffViewMode
 } from "@/features/diffchecker/types"
+import { Columns, Layers, Zap } from "lucide-react"
 import { RadioCard } from "@/options/components/ui/radio-card"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
@@ -16,14 +17,16 @@ const VIEW_MODES: Array<{
   value: DiffViewMode
   title: string
   subtitle: string
+  icon: React.ReactNode
 }> = [
-  { value: "split", title: "Split", subtitle: "Drag slider to compare" },
-  { value: "side_by_side", title: "Side by Side", subtitle: "View both images in parallel" },
-  { value: "overlay", title: "Overlay", subtitle: "Adjust opacity to blend" },
+  { value: "split", title: "Split", subtitle: "Drag slider to compare", icon: <Columns size={14} /> },
+  { value: "side_by_side", title: "Side by Side", subtitle: "View both images in parallel", icon: <Columns size={14} /> },
+  { value: "overlay", title: "Overlay", subtitle: "Adjust opacity to blend", icon: <Layers size={14} /> },
   {
     value: "difference",
     title: "Difference",
-    subtitle: "Pixel-level analysis"
+    subtitle: "Pixel-level analysis",
+    icon: <Zap size={14} />
   }
 ]
 
@@ -66,6 +69,7 @@ export function DiffcheckerSidebarPanel() {
           {VIEW_MODES.map((m) => (
             <RadioCard
               key={m.value}
+              icon={m.icon}
               title={m.title}
               subtitle={m.subtitle}
               value={m.value}

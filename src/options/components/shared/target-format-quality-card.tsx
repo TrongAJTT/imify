@@ -1,8 +1,8 @@
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import { ColoredSliderCard } from "@/options/components/ui/colored-slider-card"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectInput } from "@/options/components/ui/select-input"
-import { SliderInput } from "@/options/components/ui/slider-input"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { FileJson, Zap } from "lucide-react"
 
@@ -252,21 +252,18 @@ export function TargetFormatQualityCard({
             />
 
             {pngTinyModeEnabled && onPngDitheringLevelChange && (
-              <div className="rounded-md border border-sky-200 bg-sky-50/60 p-3 dark:border-sky-900/50 dark:bg-sky-900/10">
-                <SliderInput
-                  label="Dithering Level"
-                  value={pngDitheringLevel}
-                  min={0}
-                  max={100}
-                  step={1}
-                  suffix="%"
-                  disabled={disabled}
-                  onChange={onPngDitheringLevelChange}
-                />
-                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                  0% disables dithering. Higher values improve gradient smoothness with stronger diffusion.
-                </p>
-              </div>
+              <ColoredSliderCard
+                label="Dithering Level"
+                value={pngDitheringLevel}
+                min={0}
+                max={100}
+                step={1}
+                suffix="%"
+                theme="sky"
+                disabled={disabled}
+                onChange={onPngDitheringLevelChange}
+                subtitle="0% disables dithering. Higher values improve gradient smoothness with stronger diffusion."
+              />
             )}
           </div>
         )}

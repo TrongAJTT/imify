@@ -1,4 +1,5 @@
 import { SelectInput } from "@/options/components/ui/select-input"
+import { Rows, Columns, Grid3x3, LayoutGrid } from "lucide-react"
 import type {
   SplicingAlignment,
   SplicingDirection,
@@ -11,11 +12,11 @@ import type {
 
 export type BentoLayoutMode = "vertical" | "horizontal" | "fixed_vertical" | "fixed_horizontal"
 
-export const PRESET_OPTIONS: Array<{ value: SplicingPreset; title: string; subtitle: string }> = [
-  { value: "stitch_vertical", title: "Stitch V", subtitle: "Vertical stack" },
-  { value: "stitch_horizontal", title: "Stitch H", subtitle: "Horizontal row" },
-  { value: "grid", title: "Grid", subtitle: "Fixed columns" },
-  { value: "bento", title: "Bento", subtitle: "Flow or columns" }
+export const PRESET_OPTIONS: Array<{ value: SplicingPreset; title: string; subtitle: string; icon: React.ReactNode }> = [
+  { value: "stitch_vertical", title: "Stitch V", subtitle: "Vertical stack", icon: <Rows size={14} /> },
+  { value: "stitch_horizontal", title: "Stitch H", subtitle: "Horizontal row", icon: <Columns size={14} /> },
+  { value: "grid", title: "Grid", subtitle: "Fixed columns", icon: <Grid3x3 size={14} /> },
+  { value: "bento", title: "Bento", subtitle: "Flow or columns", icon: <LayoutGrid size={14} /> }
 ]
 
 export const BENTO_LAYOUT_OPTIONS: Array<{ value: BentoLayoutMode; label: string }> = [

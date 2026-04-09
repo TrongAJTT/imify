@@ -38,39 +38,36 @@ export function CheckboxCard({
 
   return (
     <label
-      className={`flex flex-col items-start justify-center rounded border px-2.5 py-1.5 transition-all ${activeClasses} ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className}`}>
-      <div className="flex items-center gap-2 w-full">
-        {icon && (
-        <div className={`shrink-0 flex items-center justify-center ${themeClasses.icon}`}>
-          {icon}
-        </div>)}
-        <div className="flex items-center justify-between w-full min-w-0 gap-2">
-          <span className="font-bold text-[12px] text-slate-700 dark:text-slate-300 whitespace-nowrap truncate">{title}</span>
-          <div className="flex items-center gap-2 shrink-0">
+      className={`flex items-start justify-between rounded border px-2.5 py-1.5 pb-2 transition-all ${activeClasses} ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className}`}>
+      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+        {icon && <div className={`shrink-0 m-auto ${themeClasses.icon}`}>{icon}</div>}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[12px] text-slate-700 dark:text-slate-300 whitespace-nowrap truncate">{title}</span>
             {(tooltipContent || tooltipLabel) && (
               <Tooltip content={tooltipContent} label={tooltipLabel} variant="wide2">
-                <HelpCircle size={16} className="text-slate-400 cursor-help" />
+                <HelpCircle size={16} className="text-slate-400 cursor-help shrink-0" />
               </Tooltip>
             )}
-            <input
-              checked={checked}
-              disabled={disabled}
-              onChange={(e) => onChange(e.target.checked)}
-              type="checkbox"
-              className={`rounded border-slate-300 focus:ring-2 focus:ring-offset-0 w-3.5 h-4 ${
-                isSky ? "text-sky-500 focus:ring-sky-500/20" : "text-primary-500 focus:ring-primary-500/20"
-              }`}
-            />
           </div>
+          {subtitle && (
+            <div className="text-[10px] mt-0.5 opacity-70 truncate w-full leading-none">
+              {subtitle}
+            </div>
+          )}
         </div>
       </div>
-      {subtitle && (
-        <div className={`w-full ${icon ? "pl-[24px]" : ""}`}>
-          <div className="text-[10px] mt-0.5 pb-1 opacity-70 truncate w-full leading-none">
-            {subtitle}
-          </div>
-        </div>
-      )}
+      <div className="flex items-center gap-2 shrink-0 ml-2">
+        <input
+          checked={checked}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.checked)}
+          type="checkbox"
+          className={`rounded border-slate-300 focus:ring-2 focus:ring-offset-0 w-3.5 h-4 ${
+            isSky ? "text-sky-500 focus:ring-sky-500/20" : "text-primary-500 focus:ring-primary-500/20"
+          }`}
+        />
+      </div>
     </label>
   )
 }

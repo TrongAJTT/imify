@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **UI:** Added new `ColoredSliderCard` reusable wrapper component for theme-customizable slider inputs with subtitle support (placed in `/ui` folder for general composition).
+- **UI Refactor:** Enhanced `RadioCard` component with new features for improved consistency with `CheckboxCard`:
+  - Added optional `icon` prop to display icon at the card's start.
+  - Renamed `tooltip` prop to `tooltipContent` and added `tooltipLabel` for structured tooltip content/label pairs.
+  - Moved help icon (?) from inline with title to the right edge of card, positioned left of `rightSlot` when present.
+- **UI Refactor:** Updated all `RadioCard` usage sites with appropriate contextual icons:
+  - **Smart Resize (Fit mode):** Added icons for Fill (Maximize2), Cover (Crop), Contain (Minimize).
+  - **Diffchecker:** Added icons for Split (Columns), Side by Side (Columns), Overlay (Layers), Difference (Zap).
+  - **Splicing Presets:** Added icons for Stitch V (Rows), Stitch H (Columns), Grid (Grid3x3), Bento (LayoutGrid).
 - **AVIF Advanced Controls:** Added AVIF-specific controls across Single/Batch Processor and Image Splicing:
   - **Speed (0-10)** in `Target Format & Quality` with guidance about AVIF's inverse speed/effort behavior.
   - New advanced AVIF options: transparent-edge preservation (high alpha quality), alpha quality override, lossless mode, chroma subsampling (4:2:0 / 4:2:2 / 4:4:4), and tune mode (Auto / SSIM / PSNR).
