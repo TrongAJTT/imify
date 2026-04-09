@@ -1,6 +1,7 @@
 import { clampQuality } from "@/core/image-utils"
 import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
+import { decodeImageBitmapForEncoding } from "@/features/converter/color-managed-pipeline"
 import { encodeJxl } from "@/features/converter/jxl-encoder"
 import { encodeTinyPngFromImageData } from "@/features/converter/png-tiny"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
@@ -294,7 +295,7 @@ export async function exportSplicedImage(
   try {
     for (let i = 0; i < images.length; i++) {
       const img = images[i]
-      bitmaps.push(await createImageBitmap(img.file))
+      bitmaps.push(await decodeImageBitmapForEncoding(img.file))
       options?.onProgress?.({
         phase: "decode",
         completed: i + 1,

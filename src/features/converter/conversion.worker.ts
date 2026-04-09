@@ -12,8 +12,13 @@ import {
 import { buildNormalizedAvifOptions } from "@/core/avif-options"
 import type { FormatConfig, ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
+import {
+  decodeImageBitmapForEncoding,
+  getOffscreen2DContext
+} from "@/features/converter/color-managed-pipeline"
 import { convertSourceToIcoOutput } from "@/features/converter/ico-encoder"
 import { encodeTinyPngFromImageData } from "@/features/converter/png-tiny"
+import { encodeRasterWithAdapters } from "@/features/converter/raster-encode-adapters"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
 
 interface WasmModule {
@@ -310,7 +315,7 @@ async function encodeJxlInWorker(imageData: ImageData, quality?: number, effort?
 }
 
 async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfig): Promise<{ blob: Blob; mimeType: string }> {
-  const imageBitmap = await createImageBitmap(sourceBlob)
+  const imageBitmap = await decodeImageBitmapForEncoding(sourceBlob)
 
   try {
     const { targetWidth, targetHeight } = calculateDimensions(
@@ -320,7 +325,7 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
     )
 
     const canvas = new OffscreenCanvas(targetWidth, targetHeight)
-    const ctx = canvas.getContext("2d")
+    const ctx = getOffscreen2DContext(canvas)
 
     if (!ctx) {
       throw new Error("Cannot acquire 2D context from OffscreenCanvas")
@@ -328,60 +333,37 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
 
     drawSourceImage(ctx, imageBitmap, targetWidth, targetHeight, config.resize, config.format)
 
-    if (config.format === "bmp") {
-      const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
-      return {
-        blob: encodeImageDataToBmp(imageData),
-        mimeType: "image/bmp"
+    const encoded = await encodeRasterWithAdapters(
+      {
+        ctx,
+        canvas,
+        targetWidth,
+        targetHeight,
+        targetFormat: config.format,
+        quality: config.quality,
+        jxlEffort: config.jxlEffort,
+        avifSpeed: config.avifSpeed,
+        avifQualityAlpha: config.avifQualityAlpha,
+        avifLossless: config.avifLossless,
+        avifSubsample: config.avifSubsample,
+        avifTune: config.avifTune,
+        avifHighAlphaQuality: config.avifHighAlphaQuality,
+        pngTinyMode: config.pngTinyMode
+      },
+      {
+        encodeBmp: encodeImageDataToBmp,
+        encodeTiff: encodeImageDataToTiff,
+        encodeAvif: encodeAvifInWorker,
+        encodeJxl: encodeJxlInWorker,
+        encodeTinyPng: encodeTinyPngFromImageData,
+        convertToRasterBlob,
+        mimeByFormat: MIME_BY_FORMAT
       }
-    }
-
-    if (config.format === "tiff") {
-      const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
-      return {
-        blob: encodeImageDataToTiff(imageData),
-        mimeType: "image/tiff"
-      }
-    }
-
-    if (config.format === "avif") {
-      const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
-      return {
-        blob: await encodeAvifInWorker(imageData, {
-          quality: config.quality,
-          avifSpeed: config.avifSpeed,
-          avifQualityAlpha: config.avifQualityAlpha,
-          avifLossless: config.avifLossless,
-          avifSubsample: config.avifSubsample,
-          avifTune: config.avifTune,
-          avifHighAlphaQuality: config.avifHighAlphaQuality
-        }),
-        mimeType: "image/avif"
-      }
-    }
-
-    if (config.format === "jxl") {
-      const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
-      return {
-        blob: await encodeJxlInWorker(imageData, config.quality, config.jxlEffort),
-        mimeType: "image/jxl"
-      }
-    }
-
-    if (config.format === "png" && config.pngTinyMode) {
-      const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
-
-      return {
-        blob: encodeTinyPngFromImageData(imageData),
-        mimeType: "image/png"
-      }
-    }
-
-    const blob = await convertToRasterBlob(canvas, config.format, config.quality)
+    )
 
     return {
-      blob,
-      mimeType: MIME_BY_FORMAT[config.format]
+      blob: encoded.blob,
+      mimeType: encoded.mimeType
     }
   } finally {
     imageBitmap.close()

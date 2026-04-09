@@ -127,12 +127,15 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
       ...previous,
       ico: {
         ...previous.ico,
-        icoOptions: {
-          sizes: updates.sizes ?? previous.ico.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES],
-          generateWebIconKit:
-            updates.generateWebIconKit !== undefined
-              ? updates.generateWebIconKit
-              : Boolean(previous.ico.icoOptions?.generateWebIconKit)
+        formatOptions: {
+          ...(previous.ico.formatOptions ?? {}),
+          ico: {
+            sizes: updates.sizes ?? previous.ico.formatOptions?.ico?.sizes ?? [...DEFAULT_ICO_SIZES],
+            generateWebIconKit:
+              updates.generateWebIconKit !== undefined
+                ? updates.generateWebIconKit
+                : Boolean(previous.ico.formatOptions?.ico?.generateWebIconKit)
+          }
         }
       }
     }))
@@ -297,9 +300,9 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
                         {config.format === "ico" && (
                           <IcoSizeSelector
                             disabled={false}
-                            generateWebIconKit={Boolean(config.icoOptions?.generateWebIconKit)}
+                            generateWebIconKit={Boolean(config.formatOptions?.ico?.generateWebIconKit)}
                             onToggleSize={(size) => {
-                              const current = config.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]
+                              const current = config.formatOptions?.ico?.sizes ?? [...DEFAULT_ICO_SIZES]
                               const exists = current.includes(size)
                               const next = exists
                                 ? current.filter((entry) => entry !== size)
@@ -309,7 +312,7 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
                             onToggleWebKit={(checked) => {
                               updateIcoOptions({ generateWebIconKit: checked })
                             }}
-                            sizes={config.icoOptions?.sizes ?? [...DEFAULT_ICO_SIZES]}
+                            sizes={config.formatOptions?.ico?.sizes ?? [...DEFAULT_ICO_SIZES]}
                             title="ICO output size"
                           />
                         )}

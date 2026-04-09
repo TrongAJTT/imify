@@ -1,3 +1,5 @@
+import { decodeImageBitmapForEncoding } from "@/features/converter/color-managed-pipeline"
+
 interface PreviewRequestMessage {
   id: number
   type: "preview"
@@ -50,7 +52,7 @@ self.onmessage = (event: MessageEvent<PreviewRequestMessage>) => {
     let imageBitmap: ImageBitmap | null = null
 
     try {
-      imageBitmap = await createImageBitmap(message.sourceBlob)
+      imageBitmap = await decodeImageBitmapForEncoding(message.sourceBlob)
 
       const width = Math.max(1, imageBitmap.width)
       const height = Math.max(1, imageBitmap.height)

@@ -48,9 +48,11 @@ export function CustomFormatsTab({
     format: "jpg",
     enabled: true,
     quality: 90,
-    icoOptions: {
-      sizes: [...DEFAULT_ICO_SIZES],
-      generateWebIconKit: false
+    formatOptions: {
+      ico: {
+        sizes: [...DEFAULT_ICO_SIZES],
+        generateWebIconKit: false
+      }
     },
     resize: { mode: "none" }
   })
@@ -162,7 +164,7 @@ export function CustomFormatsTab({
       format: normalized.format,
       enabled: normalized.enabled,
       quality: normalized.quality,
-      icoOptions: normalized.icoOptions,
+      formatOptions: normalized.formatOptions,
       resize: normalized.resize
     }
 
@@ -172,9 +174,11 @@ export function CustomFormatsTab({
       format: "jpg",
       enabled: true,
       quality: 90,
-      icoOptions: {
-        sizes: [...DEFAULT_ICO_SIZES],
-        generateWebIconKit: false
+      formatOptions: {
+        ico: {
+          sizes: [...DEFAULT_ICO_SIZES],
+          generateWebIconKit: false
+        }
       },
       resize: { mode: "none" }
     })
@@ -263,12 +267,12 @@ export function CustomFormatsTab({
   }
 
   const getIcoSizeLabel = (item: FormatConfig) => {
-    const sizes = (item.icoOptions?.sizes?.length ? item.icoOptions.sizes : [...DEFAULT_ICO_SIZES])
+    const sizes = (item.formatOptions?.ico?.sizes?.length ? item.formatOptions.ico.sizes : [...DEFAULT_ICO_SIZES])
       .slice()
       .sort((a, b) => a - b)
     const baseLabel = sizes.length === 1 ? `${sizes[0]}x${sizes[0]}` : "Multiple"
 
-    return item.icoOptions?.generateWebIconKit ? `${baseLabel}, Toolkit` : baseLabel
+    return item.formatOptions?.ico?.generateWebIconKit ? `${baseLabel}, Toolkit` : baseLabel
   }
 
   const allEnabled = draftFormats.length > 0 && draftFormats.every((f) => f.enabled)
@@ -470,9 +474,12 @@ export function CustomFormatsTab({
                               form: {
                                 ...item,
                                 resize: normalizedResize,
-                                icoOptions: item.icoOptions ?? {
-                                  sizes: [...DEFAULT_ICO_SIZES],
-                                  generateWebIconKit: false
+                                formatOptions: {
+                                  ...(item.formatOptions ?? {}),
+                                  ico: item.formatOptions?.ico ?? {
+                                    sizes: [...DEFAULT_ICO_SIZES],
+                                    generateWebIconKit: false
+                                  }
                                 }
                               },
                               error: null
@@ -564,7 +571,7 @@ export function CustomFormatsTab({
                           format: normalized.format,
                           enabled: normalized.enabled,
                           quality: normalized.quality,
-                          icoOptions: normalized.icoOptions,
+                          formatOptions: normalized.formatOptions,
                           resize: normalized.resize
                         }
                       : entry

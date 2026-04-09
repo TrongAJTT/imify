@@ -8,6 +8,7 @@ export type ColorTheme = "blue" | "purple" | "amber" | "sky" | "orange"
 
 export type ThemeClasses = {
   icon: string
+  hover?: string
   activeBg?: string
   activeBorder?: string
   activeText?: string
@@ -28,6 +29,7 @@ export function getThemeClasses(theme: ColorTheme): ThemeClasses {
   const themes: Record<ColorTheme, ThemeClasses> = {
     blue: {
       icon: "text-blue-500 dark:text-blue-400",
+      hover: "hover:bg-blue-50/60 dark:hover:bg-blue-500/10",
       activeBg: "bg-blue-50 dark:bg-blue-500/10",
       activeBorder: "border-l-blue-500 dark:border-l-blue-500 border-blue-300 dark:border-blue-800",
       activeText: "text-blue-800 dark:text-blue-200",
@@ -41,6 +43,7 @@ export function getThemeClasses(theme: ColorTheme): ThemeClasses {
     },
     purple: {
       icon: "text-purple-500 dark:text-purple-400",
+      hover: "hover:bg-purple-50/60 dark:hover:bg-purple-500/10",
       activeBg: "bg-purple-50 dark:bg-purple-500/10",
       activeBorder: "border-l-purple-500 dark:border-l-purple-500 border-purple-300 dark:border-purple-800",
       activeText: "text-purple-800 dark:text-purple-200",
@@ -54,6 +57,7 @@ export function getThemeClasses(theme: ColorTheme): ThemeClasses {
     },
     amber: {
       icon: "text-amber-500 dark:text-amber-400",
+      hover: "hover:bg-amber-50/60 dark:hover:bg-amber-500/10",
       activeBg: "bg-amber-50 dark:bg-amber-500/10",
       activeBorder: "border-l-amber-500 dark:border-l-amber-500 border-amber-300 dark:border-amber-800",
       activeText: "text-amber-800 dark:text-amber-200",
@@ -67,6 +71,7 @@ export function getThemeClasses(theme: ColorTheme): ThemeClasses {
     },
     sky: {
       icon: "text-sky-500 dark:text-sky-400",
+      hover: "hover:bg-sky-50/60 dark:hover:bg-sky-500/10",
       activeBg: "bg-sky-50 dark:bg-sky-500/10",
       activeBorder: "border-l-sky-500 dark:border-l-sky-500 border-sky-300 dark:border-sky-800",
       activeText: "text-sky-800 dark:text-sky-200",
@@ -80,6 +85,7 @@ export function getThemeClasses(theme: ColorTheme): ThemeClasses {
     },
     orange: {
       icon: "text-orange-500 dark:text-orange-400",
+      hover: "hover:bg-orange-50/60 dark:hover:bg-orange-500/10",
       activeBg: "bg-orange-50 dark:bg-orange-500/10",
       activeBorder: "border-l-orange-500 dark:border-l-orange-500 border-orange-300 dark:border-orange-800",
       activeText: "text-orange-800 dark:text-orange-200",

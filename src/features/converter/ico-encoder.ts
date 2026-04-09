@@ -2,6 +2,7 @@ import { zipSync } from "fflate"
 
 import { DEFAULT_ICO_SIZES, ICO_SIZE_OPTIONS } from "@/core/format-config"
 import type { IcoOptions } from "@/core/types"
+import { decodeImageBitmapForEncoding } from "@/features/converter/color-managed-pipeline"
 
 interface IcoImageEntry {
   size: number
@@ -128,7 +129,7 @@ export async function convertSourceToIcoOutput(
   options?: IcoOptions
 ): Promise<{ blob: Blob; outputExtension: "ico" | "zip" }> {
   const sizes = normalizeIcoSizes(options?.sizes)
-  const sourceImage = await createImageBitmap(sourceBlob)
+  const sourceImage = await decodeImageBitmapForEncoding(sourceBlob)
 
   try {
     const render = await createPngRenderer(sourceImage)
