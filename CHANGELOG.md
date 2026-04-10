@@ -106,6 +106,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - When pixel-level PNG optimization is enabled (`tinyMode`, `cleanTransparentPixels`, `autoGrayscale`, `dithering`), encoding switches to UPNG-based processing with shared main-thread/worker behavior.
   - Optional `oxipngCompression` now runs an additional lossless wasm optimization pass via `@jsquash/oxipng` after PNG encode (with safe fallback if wasm optimization fails).
 - **Converter Architecture:** Introduced a modular adapter-style raster encoding pipeline (`raster-encode-adapters.ts`) to standardize format-specific encoding across main thread and conversion worker. This removes duplicated `if/switch` logic and makes future format extension easier.
+- **Converter Pipeline Refactor (Adaptive / Loosely Coupled):** Decoupled raster conversion into a shared ImageData-first pipeline (`raster-processing-pipeline.ts`) used by both main-thread engine and conversion worker.
+  - `extractRasterFrame(...)` now centralizes decode + resize + draw into a single reusable stage.
+  - `raster-encode-adapters.ts` now accepts pure `ImageData` payload instead of direct `ctx/canvas` coupling.
+  - Canvas fallback encode path is now injected via `encodeCanvasFormatFromImageData(...)`, reducing environment-specific branching in high-impact engine files.
+  - Added `raster-conversion-facade.ts` as a shared orchestration layer so runtime entrypoints delegate conversion flow instead of embedding pipeline wiring.
+  - Adapter registry is now fully dependency-injected (`createRasterAdapterRegistry(...)` / `createDefaultRasterAdapterRegistry(...)`) to support format extension with minimal callsite churn.
 - **Color Pipeline (Global Decode):** Added shared color-managed decode utilities (`color-managed-pipeline.ts`) and applied them to conversion, worker, ICO generation, preview rendering, and splicing decode stages for consistent color behavior.
 - **JXL Workflow:** JXL encode input is now normalized through the shared color-managed decode path and sRGB canvas context pipeline before WASM encoding, reducing color desaturation risk from wide-gamut source profiles.
 - **Batch Processor, DiffChecker:** Batch queue grid items and Difference Checker image preview thumbnails now use low-quality thumbnail generation via `createImageBitmap` (200px, 0.6 JPEG quality) to prevent OOM (Out of Memory) crashes when processing multiple large images. Thumbnails are generated asynchronously via new `useThumbnail` React hook.

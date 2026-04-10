@@ -1,19 +1,16 @@
 import type {
   AvifCodecOptions,
-  ImageFormat,
   JxlCodecOptions,
   MozJpegCodecOptions,
   PngCodecOptions
 } from "@/core/types"
-
-export type RasterPipelineFormat = Exclude<ImageFormat, "pdf" | "ico">
-export type CanvasConvertibleFormat = Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff">
+import type {
+  CanvasConvertibleFormat,
+  RasterPipelineFormat
+} from "@/features/converter/raster-processing-pipeline"
 
 export interface RasterEncodeInput {
-  ctx: OffscreenCanvasRenderingContext2D
-  canvas: OffscreenCanvas
-  targetWidth: number
-  targetHeight: number
+  imageData: ImageData
   targetFormat: RasterPipelineFormat
   quality?: number
   formatOptions?: {
@@ -55,23 +52,28 @@ export interface RasterEncodeDependencies {
     }
   ) => Promise<Blob>
   optimisePng?: (blob: Blob, options?: PngCodecOptions) => Promise<Blob>
-  convertToRasterBlob: (
-    canvas: OffscreenCanvas,
+  convertImageDataToRasterBlob: (
+    imageData: ImageData,
     targetFormat: CanvasConvertibleFormat,
     quality?: number
   ) => Promise<Blob>
   mimeByFormat: Record<CanvasConvertibleFormat, string>
 }
 
-interface RasterAdapterContext {
+export interface RasterAdapterContext {
   input: RasterEncodeInput
   deps: RasterEncodeDependencies
 }
 
-interface RasterEncoderAdapter {
+export interface RasterEncoderAdapter {
   id: string
   supports: (targetFormat: RasterPipelineFormat, input: RasterEncodeInput) => boolean
   encode: (context: RasterAdapterContext) => Promise<RasterEncodeResult>
+}
+
+export interface RasterAdapterRegistry {
+  adapters: readonly RasterEncoderAdapter[]
+  resolve: (input: RasterEncodeInput) => RasterEncoderAdapter | null
 }
 
 function hasPngDithering(options?: PngCodecOptions): boolean {
@@ -82,143 +84,161 @@ function hasPngDithering(options?: PngCodecOptions): boolean {
   return Boolean(options?.dithering)
 }
 
-function getImageData(ctx: OffscreenCanvasRenderingContext2D, width: number, height: number): ImageData {
-  return ctx.getImageData(0, 0, width, height)
+function createBuiltInRasterEncoderAdapters(): RasterEncoderAdapter[] {
+  return [
+    {
+      id: "bmp",
+      supports: (format) => format === "bmp",
+      encode: async ({ input, deps }) => {
+        return {
+          blob: deps.encodeBmp(input.imageData),
+          mimeType: "image/bmp"
+        }
+      }
+    },
+    {
+      id: "tiff",
+      supports: (format) => format === "tiff",
+      encode: async ({ input, deps }) => {
+        return {
+          blob: deps.encodeTiff(input.imageData),
+          mimeType: "image/tiff"
+        }
+      }
+    },
+    {
+      id: "avif",
+      supports: (format) => format === "avif",
+      encode: async ({ input, deps }) => {
+        return {
+          blob: await deps.encodeAvif(input.imageData, {
+            quality: input.quality,
+            avif: input.formatOptions?.avif
+          }),
+          mimeType: "image/avif"
+        }
+      }
+    },
+    {
+      id: "jxl",
+      supports: (format) => format === "jxl",
+      encode: async ({ input, deps }) => {
+        return {
+          blob: await deps.encodeJxl(input.imageData, {
+            quality: input.quality,
+            jxl: input.formatOptions?.jxl
+          }),
+          mimeType: "image/jxl"
+        }
+      }
+    },
+    {
+      id: "png-upng",
+      supports: (format, input) =>
+        format === "png" &&
+        Boolean(
+          input.formatOptions?.png?.tinyMode ||
+          input.formatOptions?.png?.cleanTransparentPixels ||
+          input.formatOptions?.png?.autoGrayscale ||
+          hasPngDithering(input.formatOptions?.png) ||
+          input.formatOptions?.png?.progressiveInterlaced ||
+          input.formatOptions?.png?.oxipngCompression
+        ),
+      encode: async ({ input, deps }) => {
+        const pngOptions = input.formatOptions?.png
+        const needsPixelPipeline = Boolean(
+          pngOptions?.tinyMode ||
+          pngOptions?.cleanTransparentPixels ||
+          pngOptions?.autoGrayscale ||
+          hasPngDithering(pngOptions)
+        )
+
+        let pngBlob: Blob
+
+        if (needsPixelPipeline) {
+          pngBlob = deps.encodePng(input.imageData, pngOptions)
+        } else {
+          pngBlob = await deps.convertImageDataToRasterBlob(input.imageData, "png", input.quality)
+        }
+
+        if ((pngOptions?.oxipngCompression || pngOptions?.progressiveInterlaced) && deps.optimisePng) {
+          try {
+            pngBlob = await deps.optimisePng(pngBlob, pngOptions)
+          } catch {
+            // Fall back to pre-optimised PNG when wasm optimisation fails.
+          }
+        }
+
+        return {
+          blob: pngBlob,
+          mimeType: "image/png"
+        }
+      }
+    },
+    {
+      id: "mozjpeg",
+      supports: (format, input) =>
+        format === "jpg" && Boolean(input.formatOptions?.mozjpeg?.enabled),
+      encode: async ({ input, deps }) => {
+        return {
+          blob: await deps.encodeMozJpeg(input.imageData, {
+            quality: input.quality,
+            mozjpeg: input.formatOptions?.mozjpeg
+          }),
+          mimeType: "image/jpeg"
+        }
+      }
+    },
+    {
+      id: "canvas-default",
+      supports: (format) => format === "jpg" || format === "png" || format === "webp",
+      encode: async ({ input, deps }) => {
+        const canvasFormat = input.targetFormat as CanvasConvertibleFormat
+        const blob = await deps.convertImageDataToRasterBlob(input.imageData, canvasFormat, input.quality)
+        return {
+          blob,
+          mimeType: deps.mimeByFormat[canvasFormat]
+        }
+      }
+    }
+  ]
 }
 
-const adapters: RasterEncoderAdapter[] = [
-  {
-    id: "bmp",
-    supports: (format) => format === "bmp",
-    encode: async ({ input, deps }) => {
-      const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
-      return {
-        blob: deps.encodeBmp(imageData),
-        mimeType: "image/bmp"
-      }
-    }
-  },
-  {
-    id: "tiff",
-    supports: (format) => format === "tiff",
-    encode: async ({ input, deps }) => {
-      const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
-      return {
-        blob: deps.encodeTiff(imageData),
-        mimeType: "image/tiff"
-      }
-    }
-  },
-  {
-    id: "avif",
-    supports: (format) => format === "avif",
-    encode: async ({ input, deps }) => {
-      const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
-      return {
-        blob: await deps.encodeAvif(imageData, {
-          quality: input.quality,
-          avif: input.formatOptions?.avif
-        }),
-        mimeType: "image/avif"
-      }
-    }
-  },
-  {
-    id: "jxl",
-    supports: (format) => format === "jxl",
-    encode: async ({ input, deps }) => {
-      const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
-      return {
-        blob: await deps.encodeJxl(imageData, {
-          quality: input.quality,
-          jxl: input.formatOptions?.jxl
-        }),
-        mimeType: "image/jxl"
-      }
-    }
-  },
-  {
-    id: "png-upng",
-    supports: (format, input) =>
-      format === "png" &&
-      Boolean(
-        input.formatOptions?.png?.tinyMode ||
-        input.formatOptions?.png?.cleanTransparentPixels ||
-        input.formatOptions?.png?.autoGrayscale ||
-        hasPngDithering(input.formatOptions?.png) ||
-        input.formatOptions?.png?.progressiveInterlaced ||
-        input.formatOptions?.png?.oxipngCompression
-      ),
-    encode: async ({ input, deps }) => {
-      const pngOptions = input.formatOptions?.png
-      const needsPixelPipeline = Boolean(
-        pngOptions?.tinyMode ||
-        pngOptions?.cleanTransparentPixels ||
-        pngOptions?.autoGrayscale ||
-        hasPngDithering(pngOptions)
-      )
-
-      let pngBlob: Blob
-
-      if (needsPixelPipeline) {
-        const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
-        pngBlob = deps.encodePng(imageData, pngOptions)
-      } else {
-        pngBlob = await deps.convertToRasterBlob(input.canvas, "png", input.quality)
-      }
-
-      if ((pngOptions?.oxipngCompression || pngOptions?.progressiveInterlaced) && deps.optimisePng) {
-        try {
-          pngBlob = await deps.optimisePng(pngBlob, pngOptions)
-        } catch {
-          // Fall back to pre-optimised PNG when wasm optimisation fails.
+export function createRasterAdapterRegistry(
+  adapters: readonly RasterEncoderAdapter[]
+): RasterAdapterRegistry {
+  return {
+    adapters,
+    resolve: (input) => {
+      for (const adapter of adapters) {
+        if (adapter.supports(input.targetFormat, input)) {
+          return adapter
         }
       }
 
-      return {
-        blob: pngBlob,
-        mimeType: "image/png"
-      }
-    }
-  },
-  {
-    id: "mozjpeg",
-    supports: (format, input) =>
-      format === "jpg" && Boolean(input.formatOptions?.mozjpeg?.enabled),
-    encode: async ({ input, deps }) => {
-      const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
-      return {
-        blob: await deps.encodeMozJpeg(imageData, {
-          quality: input.quality,
-          mozjpeg: input.formatOptions?.mozjpeg
-        }),
-        mimeType: "image/jpeg"
-      }
-    }
-  },
-  {
-    id: "canvas-default",
-    supports: (format) => format === "jpg" || format === "png" || format === "webp",
-    encode: async ({ input, deps }) => {
-      const canvasFormat = input.targetFormat as CanvasConvertibleFormat
-      const blob = await deps.convertToRasterBlob(input.canvas, canvasFormat, input.quality)
-      return {
-        blob,
-        mimeType: deps.mimeByFormat[canvasFormat]
-      }
+      return null
     }
   }
-]
+}
+
+export function createDefaultRasterAdapterRegistry(
+  customAdapters: readonly RasterEncoderAdapter[] = []
+): RasterAdapterRegistry {
+  // Custom adapters come first so callers can override default behavior safely.
+  return createRasterAdapterRegistry([
+    ...customAdapters,
+    ...createBuiltInRasterEncoderAdapters()
+  ])
+}
 
 export async function encodeRasterWithAdapters(
   input: RasterEncodeInput,
-  deps: RasterEncodeDependencies
+  deps: RasterEncodeDependencies,
+  registry: RasterAdapterRegistry
 ): Promise<RasterEncodeResult> {
-  for (const adapter of adapters) {
-    if (!adapter.supports(input.targetFormat, input)) {
-      continue
-    }
+  const adapter = registry.resolve(input)
 
+  if (adapter) {
     return adapter.encode({ input, deps })
   }
 

@@ -4,23 +4,21 @@ import initAvifFactory from "@assets/wasm/avif_enc.js"
 import initJxlFactory from "@assets/wasm/jxl_enc.js"
 
 import {
-  calculateContainPlacement,
-  calculateCoverSourceRect,
-  calculateDimensions,
   clampQuality
 } from "@/core/image-utils"
 import { buildNormalizedAvifOptions } from "@/core/avif-options"
 import type { AvifCodecOptions, FormatConfig, ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
-import {
-  decodeImageBitmapForEncoding,
-  getOffscreen2DContext
-} from "@/features/converter/color-managed-pipeline"
 import { convertSourceToIcoOutput } from "@/features/converter/ico-encoder"
 import { encodeMozJpeg } from "@/features/converter/mozjpeg-encoder"
 import { optimisePngWithOxi } from "@/features/converter/oxipng"
 import { encodePngFromImageData } from "@/features/converter/png-tiny"
-import { encodeRasterWithAdapters } from "@/features/converter/raster-encode-adapters"
+import { createRasterConversionFacade } from "@/features/converter/raster-conversion-facade"
+import { createDefaultRasterAdapterRegistry } from "@/features/converter/raster-encode-adapters"
+import {
+  CANVAS_MIME_BY_FORMAT,
+  encodeCanvasFormatFromImageData
+} from "@/features/converter/raster-processing-pipeline"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
 
 interface WasmModule {
@@ -60,14 +58,6 @@ interface ConvertErrorMessage {
 }
 
 type ConvertResponseMessage = ConvertSuccessMessage | ConvertErrorMessage
-
-const MIME_BY_FORMAT: Record<Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff">, string> = {
-  jpg: "image/jpeg",
-  png: "image/png",
-  webp: "image/webp",
-  avif: "image/avif",
-  jxl: "image/jxl"
-}
 
 const AVIF_DEFAULT_OPTIONS = {
   quality: 50,
@@ -144,122 +134,6 @@ async function getJxlModule(): Promise<WasmModule> {
   return jxlModulePromise
 }
 
-function drawSourceImage(
-  ctx: OffscreenCanvasRenderingContext2D,
-  imageBitmap: ImageBitmap,
-  targetWidth: number,
-  targetHeight: number,
-  resize: ResizeConfig,
-  targetFormat: Exclude<ImageFormat, "pdf" | "ico">
-): void {
-  const requiresWhiteBackground = targetFormat === "jpg" || resize.mode === "page_size"
-
-  if (requiresWhiteBackground) {
-    ctx.fillStyle = "#FFFFFF"
-    ctx.fillRect(0, 0, targetWidth, targetHeight)
-  }
-
-  if (resize.mode === "page_size") {
-    const contain = calculateContainPlacement(
-      imageBitmap.width,
-      imageBitmap.height,
-      targetWidth,
-      targetHeight
-    )
-
-    ctx.drawImage(
-      imageBitmap,
-      contain.offsetX,
-      contain.offsetY,
-      contain.drawWidth,
-      contain.drawHeight
-    )
-
-    return
-  }
-
-  if (resize.mode === "set_size") {
-    const fitMode = resize.fitMode ?? "fill"
-
-    if (fitMode === "cover") {
-      const cover = calculateCoverSourceRect(
-        imageBitmap.width,
-        imageBitmap.height,
-        targetWidth,
-        targetHeight
-      )
-
-      ctx.drawImage(
-        imageBitmap,
-        cover.sourceX,
-        cover.sourceY,
-        cover.sourceWidth,
-        cover.sourceHeight,
-        0,
-        0,
-        targetWidth,
-        targetHeight
-      )
-
-      return
-    }
-
-    if (fitMode === "contain") {
-      if (targetFormat === "jpg") {
-        ctx.fillStyle = resize.containBackground || "#FFFFFF"
-        ctx.fillRect(0, 0, targetWidth, targetHeight)
-      } else if (resize.containBackground) {
-        ctx.fillStyle = resize.containBackground
-        ctx.fillRect(0, 0, targetWidth, targetHeight)
-      }
-
-      const contain = calculateContainPlacement(
-        imageBitmap.width,
-        imageBitmap.height,
-        targetWidth,
-        targetHeight
-      )
-
-      ctx.drawImage(
-        imageBitmap,
-        contain.offsetX,
-        contain.offsetY,
-        contain.drawWidth,
-        contain.drawHeight
-      )
-
-      return
-    }
-  }
-
-  ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight)
-}
-
-async function convertToRasterBlob(
-  canvas: OffscreenCanvas,
-  targetFormat: Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff">,
-  quality?: number
-): Promise<Blob> {
-  const mimeType = MIME_BY_FORMAT[targetFormat]
-
-  if (targetFormat === "png") {
-    return canvas.convertToBlob({ type: mimeType })
-  }
-
-  const outputBlob = await canvas.convertToBlob({
-    type: mimeType,
-    quality: clampQuality(quality) / 100
-  })
-
-  const normalizedType = outputBlob.type.toLowerCase()
-
-  if (targetFormat === "webp" && normalizedType !== "image/webp") {
-    throw new Error("WebP encoding is not supported in this browser environment. Please choose JPG/PNG.")
-  }
-
-  return outputBlob
-}
-
 async function encodeAvifInWorker(
   imageData: ImageData,
   options?: {
@@ -319,59 +193,40 @@ async function encodeJxlInWorker(
   return new Blob([encoded as unknown as BlobPart], { type: "image/jxl" })
 }
 
+const workerRasterConversionFacade = createRasterConversionFacade({
+  adapterRegistry: createDefaultRasterAdapterRegistry(),
+  adapterDependencies: {
+    encodeBmp: encodeImageDataToBmp,
+    encodeTiff: encodeImageDataToTiff,
+    encodeAvif: encodeAvifInWorker,
+    encodeJxl: encodeJxlInWorker,
+    encodeMozJpeg,
+    encodePng: encodePngFromImageData,
+    optimisePng: optimisePngWithOxi,
+    convertImageDataToRasterBlob: encodeCanvasFormatFromImageData,
+    mimeByFormat: CANVAS_MIME_BY_FORMAT
+  }
+})
+
 async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfig): Promise<{ blob: Blob; mimeType: string }> {
-  const imageBitmap = await decodeImageBitmapForEncoding(sourceBlob)
-
-  try {
-    const { targetWidth, targetHeight } = calculateDimensions(
-      imageBitmap.width,
-      imageBitmap.height,
-      config.resize
-    )
-
-    const canvas = new OffscreenCanvas(targetWidth, targetHeight)
-    const ctx = getOffscreen2DContext(canvas)
-
-    if (!ctx) {
-      throw new Error("Cannot acquire 2D context from OffscreenCanvas")
-    }
-
-    drawSourceImage(ctx, imageBitmap, targetWidth, targetHeight, config.resize, config.format)
-
-    const encoded = await encodeRasterWithAdapters(
-      {
-        ctx,
-        canvas,
-        targetWidth,
-        targetHeight,
-        targetFormat: config.format,
-        quality: config.quality,
-        formatOptions: {
-          avif: config.formatOptions?.avif,
-          jxl: config.formatOptions?.jxl,
-          mozjpeg: config.formatOptions?.mozjpeg,
-          png: config.formatOptions?.png
-        }
-      },
-      {
-        encodeBmp: encodeImageDataToBmp,
-        encodeTiff: encodeImageDataToTiff,
-        encodeAvif: encodeAvifInWorker,
-        encodeJxl: encodeJxlInWorker,
-        encodeMozJpeg,
-        encodePng: encodePngFromImageData,
-        optimisePng: optimisePngWithOxi,
-        convertToRasterBlob,
-        mimeByFormat: MIME_BY_FORMAT
+  const result = await workerRasterConversionFacade.convert(
+    {
+      sourceBlob,
+      targetFormat: config.format,
+      resize: config.resize,
+      quality: config.quality,
+      formatOptions: {
+        avif: config.formatOptions?.avif,
+        jxl: config.formatOptions?.jxl,
+        mozjpeg: config.formatOptions?.mozjpeg,
+        png: config.formatOptions?.png
       }
-    )
-
-    return {
-      blob: encoded.blob,
-      mimeType: encoded.mimeType
     }
-  } finally {
-    imageBitmap.close()
+  )
+
+  return {
+    blob: result.outputBlob,
+    mimeType: result.mimeType
   }
 }
 
