@@ -217,6 +217,16 @@ export function SingleProcessorTab() {
       quality,
       formatOptions: {
         jxl: targetFormat === "jxl" ? { effort: formatOptions.jxl.effort } : undefined,
+        webp:
+          targetFormat === "webp"
+            ? {
+                lossless: formatOptions.webp.lossless,
+                nearLossless: formatOptions.webp.nearLossless,
+                effort: formatOptions.webp.effort,
+                sharpYuv: formatOptions.webp.sharpYuv,
+                preserveExactAlpha: formatOptions.webp.preserveExactAlpha
+              }
+            : undefined,
         avif: targetFormat === "avif" ? { ...formatOptions.avif } : undefined,
         mozjpeg:
           targetFormat === "mozjpeg"

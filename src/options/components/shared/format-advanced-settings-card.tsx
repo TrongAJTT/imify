@@ -1,6 +1,7 @@
 import { AvifAdvancedSettingsCard } from "@/options/components/shared/avif-advanced-settings-card"
 import { MozJpegAdvancedSettingsCard } from "@/options/components/shared/mozjpeg-advanced-settings-card"
 import { PngAdvancedSettingsCard } from "@/options/components/shared/png-advanced-settings-card"
+import { WebpAdvancedSettingsCard } from "@/options/components/shared/webp-advanced-settings-card"
 
 type AvifAdvancedProps = {
   qualityAlpha?: number
@@ -33,6 +34,13 @@ type MozJpegAdvancedProps = {
   onChromaSubsamplingChange: (value: 0 | 1 | 2) => void
 }
 
+type WebpAdvancedProps = {
+  sharpYuv: boolean
+  preserveExactAlpha: boolean
+  onSharpYuvChange: (value: boolean) => void
+  onPreserveExactAlphaChange: (value: boolean) => void
+}
+
 export interface FormatAdvancedSettingsCardProps {
   targetFormat: string
   disabled?: boolean
@@ -43,6 +51,7 @@ export interface FormatAdvancedSettingsCardProps {
   avif?: AvifAdvancedProps
   mozjpeg?: MozJpegAdvancedProps
   png?: PngAdvancedProps
+  webp?: WebpAdvancedProps
 }
 
 export function FormatAdvancedSettingsCard({
@@ -54,7 +63,8 @@ export function FormatAdvancedSettingsCard({
   groupId,
   avif,
   mozjpeg,
-  png
+  png,
+  webp
 }: FormatAdvancedSettingsCardProps) {
   if (targetFormat === "avif" && avif) {
     return (
@@ -105,6 +115,22 @@ export function FormatAdvancedSettingsCard({
         chromaSubsampling={mozjpeg.chromaSubsampling}
         onProgressiveChange={mozjpeg.onProgressiveChange}
         onChromaSubsamplingChange={mozjpeg.onChromaSubsamplingChange}
+        disabled={disabled}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        alwaysOpen={alwaysOpen}
+        groupId={groupId}
+      />
+    )
+  }
+
+  if (targetFormat === "webp" && webp) {
+    return (
+      <WebpAdvancedSettingsCard
+        sharpYuv={webp.sharpYuv}
+        preserveExactAlpha={webp.preserveExactAlpha}
+        onSharpYuvChange={webp.onSharpYuvChange}
+        onPreserveExactAlphaChange={webp.onPreserveExactAlphaChange}
         disabled={disabled}
         isOpen={isOpen}
         onOpenChange={onOpenChange}

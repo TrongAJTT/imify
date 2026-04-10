@@ -66,6 +66,14 @@ export interface AvifCodecOptions {
   highAlphaQuality?: boolean
 }
 
+export interface WebpCodecOptions {
+  lossless?: boolean
+  nearLossless?: number
+  effort?: number
+  sharpYuv?: boolean
+  preserveExactAlpha?: boolean
+}
+
 export type MozJpegChromaSubsampling = 0 | 1 | 2
 
 export interface MozJpegCodecOptions {
@@ -78,6 +86,7 @@ export interface FormatCodecOptions {
   png?: PngCodecOptions
   jxl?: JxlCodecOptions
   avif?: AvifCodecOptions
+  webp?: WebpCodecOptions
   mozjpeg?: MozJpegCodecOptions
   ico?: IcoOptions
 }

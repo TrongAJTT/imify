@@ -19,6 +19,16 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
     enabled: true,
     quality,
     formatOptions: {
+      webp:
+        format === "webp"
+          ? {
+              lossless: false,
+              nearLossless: 100,
+              effort: 5,
+              sharpYuv: false,
+              preserveExactAlpha: false
+            }
+          : undefined,
       png:
         format === "png"
           ? {

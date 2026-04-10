@@ -71,6 +71,13 @@ export interface BatchFormatOptions {
   jxl: {
     effort: number
   }
+  webp: {
+    lossless: boolean
+    nearLossless: number
+    effort: number
+    sharpYuv: boolean
+    preserveExactAlpha: boolean
+  }
   avif: {
     speed: number
     qualityAlpha?: number
@@ -124,6 +131,11 @@ export interface BatchSetupHandlers {
   onConcurrencyChange: (value: number) => void
   onQualityChange: (value: number) => void
   onJxlEffortChange: (value: number) => void
+  onWebpLosslessChange: (value: boolean) => void
+  onWebpNearLosslessChange: (value: number) => void
+  onWebpEffortChange: (value: number) => void
+  onWebpSharpYuvChange: (value: boolean) => void
+  onWebpPreserveExactAlphaChange: (value: boolean) => void
   onAvifSpeedChange: (value: number) => void
   onAvifQualityAlphaChange: (value: number) => void
   onAvifLosslessChange: (value: boolean) => void

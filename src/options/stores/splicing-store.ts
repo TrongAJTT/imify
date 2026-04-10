@@ -75,6 +75,11 @@ export interface SplicingStoreState {
   exportFormat: SplicingExportFormat
   exportQuality: number
   exportJxlEffort: number
+  exportWebpLossless: boolean
+  exportWebpNearLossless: number
+  exportWebpEffort: number
+  exportWebpSharpYuv: boolean
+  exportWebpPreserveExactAlpha: boolean
   exportAvifSpeed: number
   exportAvifQualityAlpha?: number
   exportAvifLossless: boolean
@@ -135,6 +140,11 @@ export interface SplicingStoreState {
   setExportFormat: (v: SplicingExportFormat) => void
   setExportQuality: (v: number) => void
   setExportJxlEffort: (v: number) => void
+  setExportWebpLossless: (v: boolean) => void
+  setExportWebpNearLossless: (v: number) => void
+  setExportWebpEffort: (v: number) => void
+  setExportWebpSharpYuv: (v: boolean) => void
+  setExportWebpPreserveExactAlpha: (v: boolean) => void
   setExportAvifSpeed: (v: number) => void
   setExportAvifQualityAlpha: (v: number) => void
   setExportAvifLossless: (v: boolean) => void
@@ -196,6 +206,11 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportFormat: "png",
       exportQuality: 92,
       exportJxlEffort: 7,
+      exportWebpLossless: false,
+      exportWebpNearLossless: 100,
+      exportWebpEffort: 5,
+      exportWebpSharpYuv: false,
+      exportWebpPreserveExactAlpha: false,
       exportAvifSpeed: 6,
       exportAvifQualityAlpha: undefined,
       exportAvifLossless: false,
@@ -248,6 +263,13 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportFormat: (v) => set({ exportFormat: v }),
       setExportQuality: (v) => set({ exportQuality: v }),
       setExportJxlEffort: (v) => set({ exportJxlEffort: v }),
+      setExportWebpLossless: (v) => set({ exportWebpLossless: v }),
+      setExportWebpNearLossless: (v) =>
+        set({ exportWebpNearLossless: Math.max(0, Math.min(100, Math.round(v))) }),
+      setExportWebpEffort: (v) =>
+        set({ exportWebpEffort: Math.max(1, Math.min(9, Math.round(v))) }),
+      setExportWebpSharpYuv: (v) => set({ exportWebpSharpYuv: v }),
+      setExportWebpPreserveExactAlpha: (v) => set({ exportWebpPreserveExactAlpha: v }),
       setExportAvifSpeed: (v) => set({ exportAvifSpeed: v }),
       setExportAvifQualityAlpha: (v) => set({ exportAvifQualityAlpha: v }),
       setExportAvifLossless: (v) => set({ exportAvifLossless: v }),
@@ -298,6 +320,17 @@ export const useSplicingStore = create<SplicingStoreState>()(
         next.exportPngDitheringLevel = Math.max(0, Math.min(100, Math.round(next.exportPngDitheringLevel)))
         next.exportPngDithering = next.exportPngDitheringLevel > 0
         next.exportPngProgressiveInterlaced = Boolean(next.exportPngProgressiveInterlaced)
+        next.exportWebpLossless = Boolean(next.exportWebpLossless)
+        next.exportWebpNearLossless =
+          typeof next.exportWebpNearLossless === "number"
+            ? Math.max(0, Math.min(100, Math.round(next.exportWebpNearLossless)))
+            : 100
+        next.exportWebpEffort =
+          typeof next.exportWebpEffort === "number"
+            ? Math.max(1, Math.min(9, Math.round(next.exportWebpEffort)))
+            : 5
+        next.exportWebpSharpYuv = Boolean(next.exportWebpSharpYuv)
+        next.exportWebpPreserveExactAlpha = Boolean(next.exportWebpPreserveExactAlpha)
         next.exportMozJpegProgressive = Boolean(next.exportMozJpegProgressive)
         next.exportMozJpegChromaSubsampling =
           next.exportMozJpegChromaSubsampling === 0 || next.exportMozJpegChromaSubsampling === 1
@@ -322,6 +355,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setImageResize, setImageFitValue, setImagePadding, setImagePaddingColor,
           setImageBorderRadius, setImageBorderWidth, setImageBorderColor,
           setExportFormat, setExportQuality, setExportJxlEffort,
+          setExportWebpLossless, setExportWebpNearLossless, setExportWebpEffort,
+          setExportWebpSharpYuv, setExportWebpPreserveExactAlpha,
           setExportAvifSpeed, setExportAvifQualityAlpha, setExportAvifLossless,
           setExportAvifSubsample, setExportAvifTune, setExportAvifHighAlphaQuality,
           setExportMozJpegProgressive, setExportMozJpegChromaSubsampling,

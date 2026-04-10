@@ -68,6 +68,11 @@ export function SplicingSidebarPanel({
   const exportFormat = useSplicingStore((s) => s.exportFormat)
   const exportQuality = useSplicingStore((s) => s.exportQuality)
   const exportJxlEffort = useSplicingStore((s) => s.exportJxlEffort)
+  const exportWebpLossless = useSplicingStore((s) => s.exportWebpLossless)
+  const exportWebpNearLossless = useSplicingStore((s) => s.exportWebpNearLossless)
+  const exportWebpEffort = useSplicingStore((s) => s.exportWebpEffort)
+  const exportWebpSharpYuv = useSplicingStore((s) => s.exportWebpSharpYuv)
+  const exportWebpPreserveExactAlpha = useSplicingStore((s) => s.exportWebpPreserveExactAlpha)
   const exportAvifSpeed = useSplicingStore((s) => s.exportAvifSpeed)
   const exportAvifQualityAlpha = useSplicingStore((s) => s.exportAvifQualityAlpha)
   const exportAvifLossless = useSplicingStore((s) => s.exportAvifLossless)
@@ -116,6 +121,11 @@ export function SplicingSidebarPanel({
   const setExportFormat = useSplicingStore((s) => s.setExportFormat)
   const setExportQuality = useSplicingStore((s) => s.setExportQuality)
   const setExportJxlEffort = useSplicingStore((s) => s.setExportJxlEffort)
+  const setExportWebpLossless = useSplicingStore((s) => s.setExportWebpLossless)
+  const setExportWebpNearLossless = useSplicingStore((s) => s.setExportWebpNearLossless)
+  const setExportWebpEffort = useSplicingStore((s) => s.setExportWebpEffort)
+  const setExportWebpSharpYuv = useSplicingStore((s) => s.setExportWebpSharpYuv)
+  const setExportWebpPreserveExactAlpha = useSplicingStore((s) => s.setExportWebpPreserveExactAlpha)
   const setExportAvifSpeed = useSplicingStore((s) => s.setExportAvifSpeed)
   const setExportAvifQualityAlpha = useSplicingStore((s) => s.setExportAvifQualityAlpha)
   const setExportAvifLossless = useSplicingStore((s) => s.setExportAvifLossless)
@@ -242,6 +252,11 @@ export function SplicingSidebarPanel({
           formatConfig={{
             avif: { speed: exportAvifSpeed },
             jxl: { effort: exportJxlEffort },
+            webp: {
+              lossless: exportWebpLossless,
+              nearLossless: exportWebpNearLossless,
+              effort: exportWebpEffort
+            },
             mozjpeg: {
               progressive: exportMozJpegProgressive,
               chromaSubsampling: exportMozJpegChromaSubsampling
@@ -263,6 +278,9 @@ export function SplicingSidebarPanel({
           onQualityChange={setExportQuality}
           onAvifSpeedChange={setExportAvifSpeed}
           onJxlEffortChange={setExportJxlEffort}
+          onWebpLosslessChange={setExportWebpLossless}
+          onWebpNearLosslessChange={setExportWebpNearLossless}
+          onWebpEffortChange={setExportWebpEffort}
           onPngTinyModeChange={setExportPngTinyMode}
           onPngDitheringLevelChange={setExportPngDitheringLevel}
           disabled={false}
@@ -300,6 +318,12 @@ export function SplicingSidebarPanel({
             onAutoGrayscaleChange: setExportPngAutoGrayscale,
             onOxiPngCompressionChange: setExportPngOxiPngCompression,
             onProgressiveInterlacedChange: setExportPngProgressiveInterlaced
+          }}
+          webp={{
+            sharpYuv: exportWebpSharpYuv,
+            preserveExactAlpha: exportWebpPreserveExactAlpha,
+            onSharpYuvChange: setExportWebpSharpYuv,
+            onPreserveExactAlphaChange: setExportWebpPreserveExactAlpha
           }}
         />
 

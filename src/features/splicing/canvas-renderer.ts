@@ -7,6 +7,7 @@ import { encodeMozJpeg } from "@/features/converter/mozjpeg-encoder"
 import { optimisePngWithOxi } from "@/features/converter/oxipng"
 import { encodePngFromImageData } from "@/features/converter/png-tiny"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
+import { encodeWebp, shouldUseWebpWasm } from "@/features/converter/webp-encoder"
 import { calculateLayout, calculateProcessedSize } from "@/features/splicing/layout-engine"
 import type {
   LayoutResult,
@@ -253,6 +254,19 @@ async function canvasToBlob(
       }
 
       return pngBlob
+    }
+    case "webp": {
+      const webpOptions = formatOptions?.webp
+
+      if (shouldUseWebpWasm({ quality: clampQuality(quality), webp: webpOptions })) {
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        return encodeWebp(data, {
+          quality: clampQuality(quality),
+          webp: webpOptions
+        })
+      }
+
+      return canvas.convertToBlob({ type: "image/webp", quality: q })
     }
     default: {
       const mime = MIME_MAP[format]

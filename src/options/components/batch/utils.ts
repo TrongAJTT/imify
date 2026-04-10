@@ -149,6 +149,7 @@ export function withBatchResize(
   const supportsQuality = QUALITY_FORMATS.includes(config.format)
   const isAvifTarget = config.format === "avif"
   const isPngTarget = config.format === "png"
+  const isWebpTarget = config.format === "webp"
   const isJxlTarget = config.format === "jxl"
   const isIcoTarget = config.format === "ico"
   const normalizedQuality = Math.max(1, Math.min(100, Math.round(quality)))
@@ -158,6 +159,8 @@ export function withBatchResize(
       ? Math.max(0, Math.min(100, Math.round(formatOptions.avif.qualityAlpha)))
       : undefined
   const normalizedJxlEffort = Math.max(1, Math.min(9, Math.round(formatOptions.jxl.effort)))
+  const normalizedWebpEffort = Math.max(1, Math.min(9, Math.round(formatOptions.webp.effort)))
+  const normalizedWebpNearLossless = Math.max(0, Math.min(100, Math.round(formatOptions.webp.nearLossless)))
   const normalizedPngDitheringLevel =
     typeof formatOptions.png.ditheringLevel === "number"
       ? Math.max(0, Math.min(100, Math.round(formatOptions.png.ditheringLevel)))
@@ -174,6 +177,16 @@ export function withBatchResize(
       ? {
           ...config.formatOptions?.jxl,
           effort: normalizedJxlEffort
+        }
+      : undefined,
+    webp: isWebpTarget
+      ? {
+          ...config.formatOptions?.webp,
+          lossless: Boolean(formatOptions.webp.lossless),
+          nearLossless: normalizedWebpNearLossless,
+          effort: normalizedWebpEffort,
+          sharpYuv: Boolean(formatOptions.webp.sharpYuv),
+          preserveExactAlpha: Boolean(formatOptions.webp.preserveExactAlpha)
         }
       : undefined,
     avif: isAvifTarget

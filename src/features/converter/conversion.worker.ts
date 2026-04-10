@@ -20,6 +20,7 @@ import {
   encodeCanvasFormatFromImageData
 } from "@/features/converter/raster-processing-pipeline"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
+import { encodeWebp } from "@/features/converter/webp-encoder"
 
 interface WasmModule {
   encode: (
@@ -201,6 +202,7 @@ const workerRasterConversionFacade = createRasterConversionFacade({
     encodeAvif: encodeAvifInWorker,
     encodeJxl: encodeJxlInWorker,
     encodeMozJpeg,
+    encodeWebp,
     encodePng: encodePngFromImageData,
     optimisePng: optimisePngWithOxi,
     convertImageDataToRasterBlob: encodeCanvasFormatFromImageData,
@@ -219,7 +221,8 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
         avif: config.formatOptions?.avif,
         jxl: config.formatOptions?.jxl,
         mozjpeg: config.formatOptions?.mozjpeg,
-        png: config.formatOptions?.png
+        png: config.formatOptions?.png,
+        webp: config.formatOptions?.webp
       }
     }
   )

@@ -24,7 +24,8 @@
     "sync:avif-wasm": "node scripts/sync-avif-wasm.mjs",
     "sync:jxl-wasm": "node scripts/sync-jxl-wasm.mjs",
     "sync:mozjpeg-wasm": "node scripts/sync-mozjpeg-wasm.mjs",
-    "sync:oxipng-wasm": "node scripts/sync-oxipng-wasm.mjs"
+    "sync:oxipng-wasm": "node scripts/sync-oxipng-wasm.mjs",
+    "sync:webp-wasm": "node scripts/sync-webp-wasm.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -55,6 +56,7 @@
     "@jsquash/avif": "^2.1.1",
     "@jsquash/jpeg": "^1.6.0",
     "@jsquash/jxl": "^1.3.0",
+    "@jsquash/webp": "^1.5.0",
     "@types/chrome": "0.0.258",
     "@types/node": "20.11.5",
     "@types/react": "18.2.48",

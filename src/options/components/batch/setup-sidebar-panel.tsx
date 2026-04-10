@@ -74,6 +74,11 @@ export function BatchSetupSidebarPanel({
   const onConcurrencyChange = useBatchStore((state) => state.setConcurrency)
   const onQualityChange = useBatchStore((state) => state.setQuality)
   const onJxlEffortChange = useBatchStore((state) => state.setJxlEffort)
+  const onWebpLosslessChange = useBatchStore((state) => state.setWebpLossless)
+  const onWebpNearLosslessChange = useBatchStore((state) => state.setWebpNearLossless)
+  const onWebpEffortChange = useBatchStore((state) => state.setWebpEffort)
+  const onWebpSharpYuvChange = useBatchStore((state) => state.setWebpSharpYuv)
+  const onWebpPreserveExactAlphaChange = useBatchStore((state) => state.setWebpPreserveExactAlpha)
   const onAvifSpeedChange = useBatchStore((state) => state.setAvifSpeed)
   const onAvifQualityAlphaChange = useBatchStore((state) => state.setAvifQualityAlpha)
   const onAvifLosslessChange = useBatchStore((state) => state.setAvifLossless)
@@ -223,6 +228,11 @@ export function BatchSetupSidebarPanel({
           jxl: {
             effort: formatOptions.jxl.effort
           },
+          webp: {
+            lossless: formatOptions.webp.lossless,
+            nearLossless: formatOptions.webp.nearLossless,
+            effort: formatOptions.webp.effort
+          },
           png: {
             tinyMode: formatOptions.png.tinyMode,
             cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
@@ -253,6 +263,9 @@ export function BatchSetupSidebarPanel({
         onQualityChange={onQualityChange}
         onAvifSpeedChange={onAvifSpeedChange}
         onJxlEffortChange={onJxlEffortChange}
+        onWebpLosslessChange={onWebpLosslessChange}
+        onWebpNearLosslessChange={onWebpNearLosslessChange}
+        onWebpEffortChange={onWebpEffortChange}
         onPngTinyModeChange={onPngTinyModeChange}
         onPngDitheringLevelChange={onPngDitheringLevelChange}
         disabled={isRunning}
@@ -260,7 +273,46 @@ export function BatchSetupSidebarPanel({
         onOpenChange={setIsTargetFormatQualityOpen}
       />
 
-      {/* Resize Card */}
+      <FormatAdvancedSettingsCard
+        targetFormat={targetFormat}
+        disabled={isRunning}
+        avif={{
+          qualityAlpha: formatOptions.avif.qualityAlpha,
+          lossless: formatOptions.avif.lossless,
+          subsample: formatOptions.avif.subsample,
+          tune: formatOptions.avif.tune,
+          highAlphaQuality: formatOptions.avif.highAlphaQuality,
+          onQualityAlphaChange: onAvifQualityAlphaChange,
+          onLosslessChange: onAvifLosslessChange,
+          onSubsampleChange: onAvifSubsampleChange,
+          onTuneChange: onAvifTuneChange,
+          onHighAlphaQualityChange: onAvifHighAlphaQualityChange
+        }}
+        mozjpeg={{
+          progressive: formatOptions.mozjpeg.progressive,
+          chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling,
+          onProgressiveChange: onMozJpegProgressiveChange,
+          onChromaSubsamplingChange: onMozJpegChromaSubsamplingChange
+        }}
+        png={{
+          cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
+          autoGrayscale: formatOptions.png.autoGrayscale,
+          oxipngCompression: formatOptions.png.oxipngCompression,
+          progressiveInterlaced: formatOptions.png.progressiveInterlaced,
+          onCleanTransparentPixelsChange: onPngCleanTransparentPixelsChange,
+          onAutoGrayscaleChange: onPngAutoGrayscaleChange,
+          onOxiPngCompressionChange: onPngOxiPngCompressionChange,
+          onProgressiveInterlacedChange: onPngProgressiveInterlacedChange
+        }}
+        webp={{
+          sharpYuv: formatOptions.webp.sharpYuv,
+          preserveExactAlpha: formatOptions.webp.preserveExactAlpha,
+          onSharpYuvChange: onWebpSharpYuvChange,
+          onPreserveExactAlphaChange: onWebpPreserveExactAlphaChange
+        }}
+      />
+
+            {/* Resize Card */}
       <ResizeCard
         resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
         resizeValue={resizeValue}
@@ -299,39 +351,6 @@ export function BatchSetupSidebarPanel({
         disabled={isRunning || isIcoTarget}
         isOpen={isResizeOpen}
         onOpenChange={setIsResizeOpen}
-      />
-
-      <FormatAdvancedSettingsCard
-        targetFormat={targetFormat}
-        disabled={isRunning}
-        avif={{
-          qualityAlpha: formatOptions.avif.qualityAlpha,
-          lossless: formatOptions.avif.lossless,
-          subsample: formatOptions.avif.subsample,
-          tune: formatOptions.avif.tune,
-          highAlphaQuality: formatOptions.avif.highAlphaQuality,
-          onQualityAlphaChange: onAvifQualityAlphaChange,
-          onLosslessChange: onAvifLosslessChange,
-          onSubsampleChange: onAvifSubsampleChange,
-          onTuneChange: onAvifTuneChange,
-          onHighAlphaQualityChange: onAvifHighAlphaQualityChange
-        }}
-        mozjpeg={{
-          progressive: formatOptions.mozjpeg.progressive,
-          chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling,
-          onProgressiveChange: onMozJpegProgressiveChange,
-          onChromaSubsamplingChange: onMozJpegChromaSubsamplingChange
-        }}
-        png={{
-          cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
-          autoGrayscale: formatOptions.png.autoGrayscale,
-          oxipngCompression: formatOptions.png.oxipngCompression,
-          progressiveInterlaced: formatOptions.png.progressiveInterlaced,
-          onCleanTransparentPixelsChange: onPngCleanTransparentPixelsChange,
-          onAutoGrayscaleChange: onPngAutoGrayscaleChange,
-          onOxiPngCompressionChange: onPngOxiPngCompressionChange,
-          onProgressiveInterlacedChange: onPngProgressiveInterlacedChange
-        }}
       />
 
       <BatchExportPanel

@@ -138,6 +138,16 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
       ? 100
       : 0
 
+  const normalizedWebpNearLossless =
+    typeof input.formatOptions?.webp?.nearLossless === "number"
+      ? Math.max(0, Math.min(100, Math.round(input.formatOptions.webp.nearLossless)))
+      : 100
+
+  const normalizedWebpEffort =
+    typeof input.formatOptions?.webp?.effort === "number"
+      ? Math.max(1, Math.min(9, Math.round(input.formatOptions.webp.effort)))
+      : 5
+
   const normalizedFormatOptions: FormatCodecOptions = {
     jxl:
       input.format === "jxl"
@@ -191,6 +201,16 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
                 ? input.formatOptions.avif.tune
                 : "auto",
             highAlphaQuality: Boolean(input.formatOptions?.avif?.highAlphaQuality)
+          }
+        : undefined,
+    webp:
+      input.format === "webp"
+        ? {
+            lossless: Boolean(input.formatOptions?.webp?.lossless),
+            nearLossless: normalizedWebpNearLossless,
+            effort: normalizedWebpEffort,
+            sharpYuv: Boolean(input.formatOptions?.webp?.sharpYuv),
+            preserveExactAlpha: Boolean(input.formatOptions?.webp?.preserveExactAlpha)
           }
         : undefined
   }

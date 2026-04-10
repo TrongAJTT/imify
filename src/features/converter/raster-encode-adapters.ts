@@ -2,12 +2,14 @@ import type {
   AvifCodecOptions,
   JxlCodecOptions,
   MozJpegCodecOptions,
-  PngCodecOptions
+  PngCodecOptions,
+  WebpCodecOptions
 } from "@/core/types"
 import type {
   CanvasConvertibleFormat,
   RasterPipelineFormat
 } from "@/features/converter/raster-processing-pipeline"
+import { shouldUseWebpWasm } from "@/features/converter/webp-encoder"
 
 export interface RasterEncodeInput {
   imageData: ImageData
@@ -18,6 +20,7 @@ export interface RasterEncodeInput {
     jxl?: JxlCodecOptions
     mozjpeg?: MozJpegCodecOptions
     png?: PngCodecOptions
+    webp?: WebpCodecOptions
   }
 }
 
@@ -49,6 +52,13 @@ export interface RasterEncodeDependencies {
     options?: {
       quality?: number
       mozjpeg?: MozJpegCodecOptions
+    }
+  ) => Promise<Blob>
+  encodeWebp: (
+    imageData: ImageData,
+    options?: {
+      quality?: number
+      webp?: WebpCodecOptions
     }
   ) => Promise<Blob>
   optimisePng?: (blob: Blob, options?: PngCodecOptions) => Promise<Blob>
@@ -190,8 +200,34 @@ function createBuiltInRasterEncoderAdapters(): RasterEncoderAdapter[] {
       }
     },
     {
+      id: "webp-hybrid",
+      supports: (format) => format === "webp",
+      encode: async ({ input, deps }) => {
+        const useWasm = shouldUseWebpWasm({
+          quality: input.quality,
+          webp: input.formatOptions?.webp
+        })
+
+        if (useWasm) {
+          return {
+            blob: await deps.encodeWebp(input.imageData, {
+              quality: input.quality,
+              webp: input.formatOptions?.webp
+            }),
+            mimeType: "image/webp"
+          }
+        }
+
+        const blob = await deps.convertImageDataToRasterBlob(input.imageData, "webp", input.quality)
+        return {
+          blob,
+          mimeType: "image/webp"
+        }
+      }
+    },
+    {
       id: "canvas-default",
-      supports: (format) => format === "jpg" || format === "png" || format === "webp",
+      supports: (format) => format === "jpg" || format === "png",
       encode: async ({ input, deps }) => {
         const canvasFormat = input.targetFormat as CanvasConvertibleFormat
         const blob = await deps.convertImageDataToRasterBlob(input.imageData, canvasFormat, input.quality)

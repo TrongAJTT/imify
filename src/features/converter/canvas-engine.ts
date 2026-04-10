@@ -19,13 +19,14 @@ import {
   encodeCanvasFormatFromImageData
 } from "@/features/converter/raster-processing-pipeline"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
+import { encodeWebp } from "@/features/converter/webp-encoder"
 
 export interface RasterConvertParams extends RasterConversionParams {
   sourceBlob: Blob
   targetFormat: Exclude<ImageFormat, "pdf" | "ico">
   resize: ResizeConfig
   quality?: number
-  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "mozjpeg" | "png">
+  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "mozjpeg" | "png" | "webp">
 }
 
 export interface RasterConvertResult extends RasterConversionResult {
@@ -47,6 +48,7 @@ const mainThreadRasterConversionFacade = createRasterConversionFacade({
         effort: options.jxl?.effort
       }),
     encodeMozJpeg,
+    encodeWebp,
     encodePng: encodePngFromImageData,
     optimisePng: optimisePngWithOxi,
     convertImageDataToRasterBlob: encodeCanvasFormatFromImageData,

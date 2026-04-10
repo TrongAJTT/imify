@@ -67,6 +67,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added dedicated **MozJPEG Advanced** accordion with `Progressive Loading` and `Chroma Subsampling (4:2:0 / 4:2:2 / 4:4:4)` controls.
   - Wired MozJPEG options through shared format settings, conversion worker/main raster adapter pipeline, and splicing export pipeline.
   - Added local-only WASM asset sync flow via `scripts/sync-mozjpeg-wasm.mjs` and `sync:mozjpeg-wasm` (no remote encoder fetch).
+- **WebP Advanced + Lossless Controls:** Added WebP-specific controls across Single/Batch Processor, Image Splicing, and Custom Format editor:
+  - Added `Lossless Mode`, `Near-Lossless` slider, and `Effort Level (1-9)` in `Target Format & Quality`.
+  - Added new `WebP Advanced` accordion with `Sharp YUV` and `Preserve Exact Alpha`.
+  - Wired WebP options end-to-end through shared format cards, stores, batch/single config builders, splicing export config, and custom-format normalization.
+- **WebP Local WASM Workflow:** Added local-only WebP WASM sync support:
+  - New `scripts/sync-webp-wasm.mjs` script and `sync:webp-wasm` package command.
+  - Included WebP sync in aggregate `sync:wasm` pipeline.
+  - Added bundled local assets `assets/wasm/webp_enc.js` and `assets/wasm/webp_enc.wasm` (no remote encoder fetch).
 - **Splicing (Bento):** Added a new **Fixed Horizontal** layout, where **Count** is the maximum number of images per row.
 - **Splicing (Bento):** Added **Image Alignment** controls for fixed layouts, including **Fixed Vertical** and **Fixed Horizontal**.
 - **UI:** Added new `BaseDialog` component using HTML5 native `<dialog>` element for better accessibility and native backdrop handling.
@@ -106,6 +114,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - When pixel-level PNG optimization is enabled (`tinyMode`, `cleanTransparentPixels`, `autoGrayscale`, `dithering`), encoding switches to UPNG-based processing with shared main-thread/worker behavior.
   - Optional `oxipngCompression` now runs an additional lossless wasm optimization pass via `@jsquash/oxipng` after PNG encode (with safe fallback if wasm optimization fails).
 - **Converter Architecture:** Introduced a modular adapter-style raster encoding pipeline (`raster-encode-adapters.ts`) to standardize format-specific encoding across main thread and conversion worker. This removes duplicated `if/switch` logic and makes future format extension easier.
+- **WebP Encoding Path:** Added hybrid WebP adapter behavior in raster encoding and splicing export:
+  - Default/basic WebP stays on native canvas encode.
+  - Advanced/lossless WebP options automatically switch to local `@jsquash/webp` WASM encode path.
 - **Converter Pipeline Refactor (Adaptive / Loosely Coupled):** Decoupled raster conversion into a shared ImageData-first pipeline (`raster-processing-pipeline.ts`) used by both main-thread engine and conversion worker.
   - `extractRasterFrame(...)` now centralizes decode + resize + draw into a single reusable stage.
   - `raster-encode-adapters.ts` now accepts pure `ImageData` payload instead of direct `ctx/canvas` coupling.

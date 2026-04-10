@@ -66,6 +66,13 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
     jxl: {
       effort: 7
     },
+    webp: {
+      lossless: false,
+      nearLossless: 100,
+      effort: 5,
+      sharpYuv: false,
+      preserveExactAlpha: false
+    },
     avif: {
       speed: 6,
       qualityAlpha: undefined,
@@ -127,6 +134,23 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
     ...DEFAULT_BATCH_STATE.formatOptions.jxl,
     ...formatOptions.jxl
   }
+  const rawWebpOptions = {
+    ...DEFAULT_BATCH_STATE.formatOptions.webp,
+    ...formatOptions.webp
+  }
+  const webpOptions = {
+    lossless: Boolean(rawWebpOptions.lossless),
+    nearLossless:
+      typeof rawWebpOptions.nearLossless === "number"
+        ? Math.max(0, Math.min(100, Math.round(rawWebpOptions.nearLossless)))
+        : 100,
+    effort:
+      typeof rawWebpOptions.effort === "number"
+        ? Math.max(1, Math.min(9, Math.round(rawWebpOptions.effort)))
+        : 5,
+    sharpYuv: Boolean(rawWebpOptions.sharpYuv),
+    preserveExactAlpha: Boolean(rawWebpOptions.preserveExactAlpha)
+  }
   const rawPngOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.png,
     ...formatOptions.png
@@ -162,6 +186,7 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
             : 2
       },
       jxl: jxlOptions,
+      webp: webpOptions,
       png: pngOptions,
       ico: icoOptions
     },
@@ -232,6 +257,11 @@ interface BatchStoreState extends BatchSetupState {
   setConcurrency: (value: number) => void
   setQuality: (value: number) => void
   setJxlEffort: (value: number) => void
+  setWebpLossless: (value: boolean) => void
+  setWebpNearLossless: (value: number) => void
+  setWebpEffort: (value: number) => void
+  setWebpSharpYuv: (value: boolean) => void
+  setWebpPreserveExactAlpha: (value: boolean) => void
   setAvifSpeed: (value: number) => void
   setAvifQualityAlpha: (value: number) => void
   setAvifLossless: (value: boolean) => void
@@ -393,6 +423,133 @@ export const useBatchStore = create<BatchStoreState>()(
             jxl: {
               ...currentConfig.formatOptions.jxl,
               effort: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setWebpLossless: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            webp: {
+              ...currentConfig.formatOptions.webp,
+              lossless: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setWebpNearLossless: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const normalizedValue = Math.max(0, Math.min(100, Math.round(value)))
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            webp: {
+              ...currentConfig.formatOptions.webp,
+              nearLossless: normalizedValue
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setWebpEffort: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const normalizedValue = Math.max(1, Math.min(9, Math.round(value)))
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            webp: {
+              ...currentConfig.formatOptions.webp,
+              effort: normalizedValue
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setWebpSharpYuv: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            webp: {
+              ...currentConfig.formatOptions.webp,
+              sharpYuv: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setWebpPreserveExactAlpha: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            webp: {
+              ...currentConfig.formatOptions.webp,
+              preserveExactAlpha: value
             }
           }
           const nextConfig = {
@@ -1138,6 +1295,9 @@ export const useBatchStore = create<BatchStoreState>()(
             formatOptions: {
               jxl: {
                 ...state.formatOptions.jxl
+              },
+              webp: {
+                ...state.formatOptions.webp
               },
               avif: {
                 ...state.formatOptions.avif

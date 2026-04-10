@@ -109,6 +109,16 @@ export function useSplicingExport({
           quality: store.exportQuality,
           formatOptions: {
             jxl: store.exportFormat === "jxl" ? { effort: store.exportJxlEffort } : undefined,
+            webp:
+              store.exportFormat === "webp"
+                ? {
+                    lossless: store.exportWebpLossless,
+                    nearLossless: store.exportWebpNearLossless,
+                    effort: store.exportWebpEffort,
+                    sharpYuv: store.exportWebpSharpYuv,
+                    preserveExactAlpha: store.exportWebpPreserveExactAlpha
+                  }
+                : undefined,
             avif:
               store.exportFormat === "avif"
                 ? {

@@ -17,7 +17,7 @@ export interface RasterConversionParams {
   targetFormat: RasterPipelineFormat
   resize: ResizeConfig
   quality?: number
-  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "mozjpeg" | "png">
+  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "mozjpeg" | "png" | "webp">
 }
 
 export interface RasterConversionResult {

@@ -16,6 +16,11 @@ export type TargetFormatQualityCardProps = {
     avif?: {
       speed?: number
     }
+    webp?: {
+      lossless?: boolean
+      nearLossless?: number
+      effort?: number
+    }
     mozjpeg?: {
       progressive?: boolean
       chromaSubsampling?: 0 | 1 | 2
@@ -56,6 +61,12 @@ export type TargetFormatQualityCardProps = {
   onPngDitheringLevelChange?: (level: number) => void
   /** Callback when JXL effort level changes */
   onJxlEffortChange?: (effort: number) => void
+  /** Callback when WebP lossless mode changes */
+  onWebpLosslessChange?: (enabled: boolean) => void
+  /** Callback when WebP near-lossless level changes */
+  onWebpNearLosslessChange?: (value: number) => void
+  /** Callback when WebP effort level changes */
+  onWebpEffortChange?: (effort: number) => void
   /** Callback when ICO sizes change (optional for ICO handling) */
   onIcoSizesChange?: (sizes: number[]) => void
   /** Disable all inputs */
@@ -92,6 +103,9 @@ export function TargetFormatQualityCard({
   onPngTinyModeChange,
   onPngDitheringLevelChange,
   onJxlEffortChange,
+  onWebpLosslessChange,
+  onWebpNearLosslessChange,
+  onWebpEffortChange,
   onIcoSizesChange,
   disabled,
   isOpen,
@@ -108,6 +122,16 @@ export function TargetFormatQualityCard({
   )
   const pngDithering = pngDitheringLevel > 0
   const jxlEffortOption = formatConfig?.jxl?.effort
+  const webpOptions = formatConfig?.webp
+  const webpLosslessEnabled = Boolean(webpOptions?.lossless)
+  const webpNearLossless =
+    typeof webpOptions?.nearLossless === "number"
+      ? Math.max(0, Math.min(100, Math.round(webpOptions.nearLossless)))
+      : 100
+  const webpEffort =
+    typeof webpOptions?.effort === "number"
+      ? Math.max(1, Math.min(9, Math.round(webpOptions.effort)))
+      : 5
   const mozJpegOptions = formatConfig?.mozjpeg
   const icoSizeOptions = formatConfig?.ico?.sizes
   const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit
@@ -115,6 +139,8 @@ export function TargetFormatQualityCard({
   const formatLabel = targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat.toUpperCase()
   const qualityLabel = isIcoTarget
     ? `${icoSizeOptions?.length ?? 0} size${(icoSizeOptions?.length ?? 0) !== 1 ? "s" : ""}`
+    : targetFormat === "webp" && webpLosslessEnabled
+    ? `Near-Lossless ${webpNearLossless}`
     : supportsQuality
     ? `Quality ${quality}`
     : "Default"
@@ -128,6 +154,10 @@ export function TargetFormatQualityCard({
   }
   if (targetFormat === "jxl" && jxlEffortOption) extraFlags.push(`Effort ${jxlEffortOption}`)
   if (targetFormat === "avif" && typeof avifSpeedOption === "number") extraFlags.push(`Speed ${avifSpeedOption}`)
+  if (targetFormat === "webp") {
+    if (webpLosslessEnabled) extraFlags.push("Lossless")
+    extraFlags.push(`Effort ${webpEffort}`)
+  }
   if (targetFormat === "mozjpeg") {
     extraFlags.push(mozJpegOptions?.progressive ?? true ? "Progressive" : "Baseline")
     const chroma = mozJpegOptions?.chromaSubsampling ?? 2
@@ -160,8 +190,22 @@ export function TargetFormatQualityCard({
         </div>
 
         {supportsQuality && (
-          <div>
-            <NumberInput
+          <>
+            {targetFormat === "webp" && onWebpNearLosslessChange && webpLosslessEnabled ? (
+              <NumberInput
+                label="Near-Lossless"
+                disabled={disabled || !webpLosslessEnabled}
+                min={0}
+                max={100}
+                step={1}
+                value={webpNearLossless}
+                onChangeValue={onWebpNearLosslessChange}
+                tooltip="Subtly adjusts pixels to significantly reduce file size while maintaining near-perfect quality. Use 100 for true lossless."
+              />
+            ): (
+
+              
+              <NumberInput
               label="Quality"
               disabled={disabled || !supportsQuality}
               min={1}
@@ -169,7 +213,50 @@ export function TargetFormatQualityCard({
               step={1}
               value={quality}
               onChangeValue={onQualityChange}
-            />
+              />
+            )}
+
+          </>
+        )}
+
+        {targetFormat === "webp" && (
+          <div className="space-y-2">
+            {onWebpLosslessChange && (
+              <CheckboxCard
+                icon={<Zap size={16} />}
+                title="Lossless Mode"
+                subtitle={
+                  webpLosslessEnabled
+                    ? "Enabled: preserves exact pixels (larger file, supports near-lossless tuning)."
+                    : "Disabled: lossy WebP mode (smaller files with quality-based compression)."
+                }
+                checked={webpLosslessEnabled}
+                onChange={onWebpLosslessChange}
+                disabled={disabled}
+                theme="blue"
+              />
+            )}
+
+            {onWebpEffortChange && (
+              <SelectInput
+                label="Effort Level"
+                tooltip={`Higher effort uses slower but stronger compression search.\n- 1 is fastest\n- 5 is balanced\n- 9 is best compression (slowest)`}
+                disabled={disabled}
+                options={[
+                  { value: "1", label: "1 - Lightning (fastest)" },
+                  { value: "2", label: "2 - Very Fast" },
+                  { value: "3", label: "3 - Fast" },
+                  { value: "4", label: "4 - Fast-Balanced" },
+                  { value: "5", label: "5 - Balanced (default)" },
+                  { value: "6", label: "6 - Balanced - Optimal" },
+                  { value: "7", label: "7 - Optimal" },
+                  { value: "8", label: "8 - Very Optimal" },
+                  { value: "9", label: "9 - Maximum (slowest)" }
+                ]}
+                onChange={(v) => onWebpEffortChange(parseInt(v, 10))}
+                value={String(webpEffort)}
+              />
+            )}
           </div>
         )}
 

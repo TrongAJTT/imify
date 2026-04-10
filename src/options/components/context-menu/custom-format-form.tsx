@@ -43,6 +43,19 @@ export function CustomFormatForm({
     progressiveInterlaced: Boolean(value.formatOptions?.png?.progressiveInterlaced),
     oxipngCompression: Boolean(value.formatOptions?.png?.oxipngCompression)
   }
+  const webpOptions = {
+    lossless: Boolean(value.formatOptions?.webp?.lossless),
+    nearLossless:
+      typeof value.formatOptions?.webp?.nearLossless === "number"
+        ? Math.max(0, Math.min(100, Math.round(value.formatOptions.webp.nearLossless)))
+        : 100,
+    effort:
+      typeof value.formatOptions?.webp?.effort === "number"
+        ? Math.max(1, Math.min(9, Math.round(value.formatOptions.webp.effort)))
+        : 5,
+    sharpYuv: Boolean(value.formatOptions?.webp?.sharpYuv),
+    preserveExactAlpha: Boolean(value.formatOptions?.webp?.preserveExactAlpha)
+  }
 
   return (
     <div className="space-y-4">
@@ -65,6 +78,11 @@ export function CustomFormatForm({
             formatConfig={{
               avif: {
                 speed: value.formatOptions?.avif?.speed
+              },
+              webp: {
+                lossless: webpOptions.lossless,
+                nearLossless: webpOptions.nearLossless,
+                effort: webpOptions.effort
               },
               png: pngOptions,
               jxl: {
@@ -120,6 +138,16 @@ export function CustomFormatForm({
                           effort: value.formatOptions?.jxl?.effort ?? 7
                         }
                       : value.formatOptions?.jxl,
+                  webp:
+                    nextFormat === "webp"
+                      ? {
+                          lossless: webpOptions.lossless,
+                          nearLossless: webpOptions.nearLossless,
+                          effort: webpOptions.effort,
+                          sharpYuv: webpOptions.sharpYuv,
+                          preserveExactAlpha: webpOptions.preserveExactAlpha
+                        }
+                      : value.formatOptions?.webp,
                   ico:
                     nextFormat === "ico"
                       ? value.formatOptions?.ico ?? {
@@ -147,6 +175,42 @@ export function CustomFormatForm({
                 formatOptions: {
                   ...(value.formatOptions ?? {}),
                   jxl: {
+                    effort: next
+                  }
+                }
+              })
+            }
+            onWebpLosslessChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  webp: {
+                    ...webpOptions,
+                    lossless: next
+                  }
+                }
+              })
+            }
+            onWebpNearLosslessChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  webp: {
+                    ...webpOptions,
+                    nearLossless: next
+                  }
+                }
+              })
+            }
+            onWebpEffortChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  webp: {
+                    ...webpOptions,
                     effort: next
                   }
                 }
@@ -229,6 +293,32 @@ export function CustomFormatForm({
                     png: {
                       ...pngOptions,
                       progressiveInterlaced: next
+                    }
+                  }
+                })
+            }}
+            webp={{
+              sharpYuv: webpOptions.sharpYuv,
+              preserveExactAlpha: webpOptions.preserveExactAlpha,
+              onSharpYuvChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    webp: {
+                      ...webpOptions,
+                      sharpYuv: next
+                    }
+                  }
+                }),
+              onPreserveExactAlphaChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    webp: {
+                      ...webpOptions,
+                      preserveExactAlpha: next
                     }
                   }
                 })

@@ -49,6 +49,13 @@ export function CustomFormatsTab({
     enabled: true,
     quality: 90,
     formatOptions: {
+      webp: {
+        lossless: false,
+        nearLossless: 100,
+        effort: 5,
+        sharpYuv: false,
+        preserveExactAlpha: false
+      },
       ico: {
         sizes: [...DEFAULT_ICO_SIZES],
         generateWebIconKit: false
@@ -175,6 +182,13 @@ export function CustomFormatsTab({
       enabled: true,
       quality: 90,
       formatOptions: {
+        webp: {
+          lossless: false,
+          nearLossless: 100,
+          effort: 5,
+          sharpYuv: false,
+          preserveExactAlpha: false
+        },
         ico: {
           sizes: [...DEFAULT_ICO_SIZES],
           generateWebIconKit: false
@@ -476,6 +490,13 @@ export function CustomFormatsTab({
                                 resize: normalizedResize,
                                 formatOptions: {
                                   ...(item.formatOptions ?? {}),
+                                  webp: item.formatOptions?.webp ?? {
+                                    lossless: false,
+                                    nearLossless: 100,
+                                    effort: 5,
+                                    sharpYuv: false,
+                                    preserveExactAlpha: false
+                                  },
                                   ico: item.formatOptions?.ico ?? {
                                     sizes: [...DEFAULT_ICO_SIZES],
                                     generateWebIconKit: false
