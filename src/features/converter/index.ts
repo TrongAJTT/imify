@@ -66,6 +66,7 @@ export async function convertImage(
       formatOptions: {
         avif: config.formatOptions?.avif,
         jxl: config.formatOptions?.jxl,
+        mozjpeg: config.formatOptions?.mozjpeg,
         png: config.formatOptions?.png
       }
     })
@@ -87,6 +88,7 @@ export async function convertImage(
       formatOptions: {
         avif: config.formatOptions?.avif,
         jxl: config.formatOptions?.jxl,
+        mozjpeg: config.formatOptions?.mozjpeg,
         png: config.formatOptions?.png
       }
     })

@@ -70,6 +70,7 @@ export const RESIZE_OPTIONS: Array<{ value: SplicingImageResize; label: string }
 
 export const EXPORT_FORMAT_OPTIONS: Array<{ value: SplicingExportFormat; label: string }> = [
   { value: "jpg", label: "JPG" },
+  { value: "mozjpeg", label: "MozJPEG (.jpg)" },
   { value: "png", label: "PNG" },
   { value: "webp", label: "WebP" },
   { value: "avif", label: "AVIF" },

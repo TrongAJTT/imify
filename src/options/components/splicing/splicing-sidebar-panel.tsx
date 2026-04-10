@@ -74,6 +74,8 @@ export function SplicingSidebarPanel({
   const exportAvifSubsample = useSplicingStore((s) => s.exportAvifSubsample)
   const exportAvifTune = useSplicingStore((s) => s.exportAvifTune)
   const exportAvifHighAlphaQuality = useSplicingStore((s) => s.exportAvifHighAlphaQuality)
+  const exportMozJpegProgressive = useSplicingStore((s) => s.exportMozJpegProgressive)
+  const exportMozJpegChromaSubsampling = useSplicingStore((s) => s.exportMozJpegChromaSubsampling)
   const exportPngTinyMode = useSplicingStore((s) => s.exportPngTinyMode)
   const exportPngCleanTransparentPixels = useSplicingStore((s) => s.exportPngCleanTransparentPixels)
   const exportPngAutoGrayscale = useSplicingStore((s) => s.exportPngAutoGrayscale)
@@ -120,6 +122,8 @@ export function SplicingSidebarPanel({
   const setExportAvifSubsample = useSplicingStore((s) => s.setExportAvifSubsample)
   const setExportAvifTune = useSplicingStore((s) => s.setExportAvifTune)
   const setExportAvifHighAlphaQuality = useSplicingStore((s) => s.setExportAvifHighAlphaQuality)
+  const setExportMozJpegProgressive = useSplicingStore((s) => s.setExportMozJpegProgressive)
+  const setExportMozJpegChromaSubsampling = useSplicingStore((s) => s.setExportMozJpegChromaSubsampling)
   const setExportPngTinyMode = useSplicingStore((s) => s.setExportPngTinyMode)
   const setExportPngCleanTransparentPixels = useSplicingStore((s) => s.setExportPngCleanTransparentPixels)
   const setExportPngAutoGrayscale = useSplicingStore((s) => s.setExportPngAutoGrayscale)
@@ -165,7 +169,7 @@ export function SplicingSidebarPanel({
   }, [alignment, bentoAlignmentLimited, setAlignment])
 
   const availableExportModes = getAvailableExportModes(preset, preset === "bento" ? bentoLayoutMode : undefined)
-  const showQuality = QUALITY_FORMATS.includes(exportFormat)
+  const showQuality = exportFormat === "mozjpeg" || QUALITY_FORMATS.includes(exportFormat as any)
   const showTinyMode = exportFormat === "png"
 
   return (
@@ -238,6 +242,10 @@ export function SplicingSidebarPanel({
           formatConfig={{
             avif: { speed: exportAvifSpeed },
             jxl: { effort: exportJxlEffort },
+            mozjpeg: {
+              progressive: exportMozJpegProgressive,
+              chromaSubsampling: exportMozJpegChromaSubsampling
+            },
             png: {
               tinyMode: exportPngTinyMode,
               cleanTransparentPixels: exportPngCleanTransparentPixels,
@@ -276,6 +284,12 @@ export function SplicingSidebarPanel({
             onSubsampleChange: setExportAvifSubsample,
             onTuneChange: setExportAvifTune,
             onHighAlphaQualityChange: setExportAvifHighAlphaQuality
+          }}
+          mozjpeg={{
+            progressive: exportMozJpegProgressive,
+            chromaSubsampling: exportMozJpegChromaSubsampling,
+            onProgressiveChange: setExportMozJpegProgressive,
+            onChromaSubsamplingChange: setExportMozJpegChromaSubsampling
           }}
           png={{
             cleanTransparentPixels: exportPngCleanTransparentPixels,

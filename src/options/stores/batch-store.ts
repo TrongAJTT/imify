@@ -74,6 +74,10 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
       tune: "auto",
       highAlphaQuality: false
     },
+    mozjpeg: {
+      progressive: true,
+      chromaSubsampling: 2
+    },
     ico: {
       sizes: [...DEFAULT_ICO_SIZES],
       generateWebIconKit: false
@@ -115,6 +119,10 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
     ...DEFAULT_BATCH_STATE.formatOptions.avif,
     ...formatOptions.avif
   }
+  const mozjpegOptions = {
+    ...DEFAULT_BATCH_STATE.formatOptions.mozjpeg,
+    ...formatOptions.mozjpeg
+  }
   const jxlOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.jxl,
     ...formatOptions.jxl
@@ -146,6 +154,13 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
     formatOptions: {
       ...formatOptions,
       avif: avifOptions,
+      mozjpeg: {
+        progressive: Boolean(mozjpegOptions.progressive),
+        chromaSubsampling:
+          mozjpegOptions.chromaSubsampling === 0 || mozjpegOptions.chromaSubsampling === 1
+            ? mozjpegOptions.chromaSubsampling
+            : 2
+      },
       jxl: jxlOptions,
       png: pngOptions,
       ico: icoOptions
@@ -223,6 +238,8 @@ interface BatchStoreState extends BatchSetupState {
   setAvifSubsample: (value: 1 | 2 | 3) => void
   setAvifTune: (value: "auto" | "ssim" | "psnr") => void
   setAvifHighAlphaQuality: (value: boolean) => void
+  setMozJpegProgressive: (value: boolean) => void
+  setMozJpegChromaSubsampling: (value: 0 | 1 | 2) => void
   setIcoSizes: (value: number[]) => void
   setIcoGenerateWebIconKit: (value: boolean) => void
   setResizeMode: (value: BatchResizeMode) => void
@@ -526,6 +543,56 @@ export const useBatchStore = create<BatchStoreState>()(
             avif: {
               ...currentConfig.formatOptions.avif,
               highAlphaQuality: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setMozJpegProgressive: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            mozjpeg: {
+              ...currentConfig.formatOptions.mozjpeg,
+              progressive: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setMozJpegChromaSubsampling: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            mozjpeg: {
+              ...currentConfig.formatOptions.mozjpeg,
+              chromaSubsampling: value
             }
           }
           const nextConfig = {
@@ -1074,6 +1141,9 @@ export const useBatchStore = create<BatchStoreState>()(
               },
               avif: {
                 ...state.formatOptions.avif
+              },
+              mozjpeg: {
+                ...state.formatOptions.mozjpeg
               },
               png: {
                 ...state.formatOptions.png

@@ -15,7 +15,7 @@ export type BatchResizeMode =
 export type BatchResizeAspectMode = "free" | "original" | "fixed"
 export type BatchResizeAnchor = "width" | "height"
 export type BatchResizeFitMode = "fill" | "cover" | "contain"
-export type BatchTargetFormat = Exclude<ImageFormat, "pdf">
+export type BatchTargetFormat = Exclude<ImageFormat, "pdf"> | "mozjpeg"
 export type BatchWatermarkType = "none" | "text" | "logo"
 export type BatchWatermarkPosition =
   | "top-left"
@@ -41,8 +41,10 @@ export interface BatchWatermarkConfig {
   logoScalePercent: number
 }
 
-export const TARGET_FORMAT_OPTIONS: Array<{ value: BatchTargetFormat; label: string }> =
-  BATCH_TARGET_FORMATS.map((format) => ({ value: format, label: format.toUpperCase() }))
+export const TARGET_FORMAT_OPTIONS: Array<{ value: BatchTargetFormat; label: string }> = [
+  ...BATCH_TARGET_FORMATS.map((format) => ({ value: format, label: format.toUpperCase() })),
+  { value: "mozjpeg", label: "MozJPEG" }
+]
 
 export const HIGH_CONCURRENCY_FORMATS: ImageFormat[] = BASE_HIGH_CONCURRENCY_FORMATS
 
@@ -76,6 +78,10 @@ export interface BatchFormatOptions {
     subsample: 1 | 2 | 3
     tune: "auto" | "ssim" | "psnr"
     highAlphaQuality: boolean
+  }
+  mozjpeg: {
+    progressive: boolean
+    chromaSubsampling: 0 | 1 | 2
   }
   png: {
     tinyMode: boolean

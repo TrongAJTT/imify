@@ -26,7 +26,7 @@ export type SplicingImageResize = "original" | "fit_width" | "fit_height"
 
 export type SplicingExportMode = "single" | "per_row" | "per_col"
 
-export type SplicingExportFormat = Exclude<ImageFormat, "pdf" | "ico">
+export type SplicingExportFormat = Exclude<ImageFormat, "pdf" | "ico"> | "mozjpeg"
 
 export interface SplicingLayoutConfig {
   primaryDirection: SplicingDirection
@@ -58,7 +58,7 @@ export interface SplicingImageStyle {
 export interface SplicingExportConfig {
   format: SplicingExportFormat
   quality: number
-  formatOptions?: Pick<FormatCodecOptions, "png" | "jxl" | "avif">
+  formatOptions?: Pick<FormatCodecOptions, "png" | "jxl" | "avif" | "mozjpeg">
   exportMode: SplicingExportMode
   trimBackground: boolean
 }

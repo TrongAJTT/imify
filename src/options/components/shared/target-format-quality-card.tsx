@@ -16,6 +16,10 @@ export type TargetFormatQualityCardProps = {
     avif?: {
       speed?: number
     }
+    mozjpeg?: {
+      progressive?: boolean
+      chromaSubsampling?: 0 | 1 | 2
+    }
     png?: {
       tinyMode?: boolean
       cleanTransparentPixels?: boolean
@@ -104,10 +108,11 @@ export function TargetFormatQualityCard({
   )
   const pngDithering = pngDitheringLevel > 0
   const jxlEffortOption = formatConfig?.jxl?.effort
+  const mozJpegOptions = formatConfig?.mozjpeg
   const icoSizeOptions = formatConfig?.ico?.sizes
   const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit
 
-  const formatLabel = targetFormat.toUpperCase()
+  const formatLabel = targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat.toUpperCase()
   const qualityLabel = isIcoTarget
     ? `${icoSizeOptions?.length ?? 0} size${(icoSizeOptions?.length ?? 0) !== 1 ? "s" : ""}`
     : supportsQuality
@@ -123,6 +128,11 @@ export function TargetFormatQualityCard({
   }
   if (targetFormat === "jxl" && jxlEffortOption) extraFlags.push(`Effort ${jxlEffortOption}`)
   if (targetFormat === "avif" && typeof avifSpeedOption === "number") extraFlags.push(`Speed ${avifSpeedOption}`)
+  if (targetFormat === "mozjpeg") {
+    extraFlags.push(mozJpegOptions?.progressive ?? true ? "Progressive" : "Baseline")
+    const chroma = mozJpegOptions?.chromaSubsampling ?? 2
+    extraFlags.push(`Chroma ${chroma === 1 ? "4:2:2" : "4:2:0"}`)
+  }
 
   const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
 

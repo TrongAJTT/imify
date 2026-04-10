@@ -3,6 +3,7 @@ import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { decodeImageBitmapForEncoding } from "@/features/converter/color-managed-pipeline"
 import { encodeJxl } from "@/features/converter/jxl-encoder"
+import { encodeMozJpeg } from "@/features/converter/mozjpeg-encoder"
 import { optimisePngWithOxi } from "@/features/converter/oxipng"
 import { encodePngFromImageData } from "@/features/converter/png-tiny"
 import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
@@ -165,6 +166,7 @@ export function drawSplicingCanvas(
 
 const MIME_MAP: Record<string, string> = {
   jpg: "image/jpeg",
+  mozjpeg: "image/jpeg",
   png: "image/png",
   webp: "image/webp"
 }
@@ -205,6 +207,13 @@ async function canvasToBlob(
       return encodeJxl(data, {
         quality: clampQuality(quality),
         effort: formatOptions?.jxl?.effort
+      })
+    }
+    case "mozjpeg": {
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      return encodeMozJpeg(data, {
+        quality: clampQuality(quality),
+        mozjpeg: formatOptions?.mozjpeg
       })
     }
     case "bmp": {

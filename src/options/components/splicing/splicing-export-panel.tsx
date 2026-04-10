@@ -62,6 +62,7 @@ export function SplicingExportPanel({
       onExportTrimBackgroundChange(false)
     }
   }
+  const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat
 
   // Filter options if availableExportModes is provided
   const modeOptions = availableExportModes
@@ -86,7 +87,7 @@ export function SplicingExportPanel({
           />
           {exportMode !== "single" && (
             <ConcurrencySelector
-              format={targetFormat}
+              format={concurrencyFormat}
               value={concurrency}
               onChange={onConcurrencyChange}
               limits={performancePreferences}

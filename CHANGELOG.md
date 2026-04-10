@@ -63,6 +63,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **4-6:** Fast-Balanced/Balanced modes - balanced performance and compression
   - **7-9:** Optimal/Maximum modes - maximum compression, slower encoding (default: 7, recommended for Single processing)
   - Fully integrated into Custom Presets, Single/Batch Processor, and Image Splicing workflows with tooltips explaining trade-offs.
+- **MozJPEG Format (JPG Output):** Added a new `MozJPEG (.jpg)` target format in Single/Batch Processor and Image Splicing.
+  - Added dedicated **MozJPEG Advanced** accordion with `Progressive Loading` and `Chroma Subsampling (4:2:0 / 4:2:2 / 4:4:4)` controls.
+  - Wired MozJPEG options through shared format settings, conversion worker/main raster adapter pipeline, and splicing export pipeline.
+  - Added local-only WASM asset sync flow via `scripts/sync-mozjpeg-wasm.mjs` and `sync:mozjpeg-wasm` (no remote encoder fetch).
 - **Splicing (Bento):** Added a new **Fixed Horizontal** layout, where **Count** is the maximum number of images per row.
 - **Splicing (Bento):** Added **Image Alignment** controls for fixed layouts, including **Fixed Vertical** and **Fixed Horizontal**.
 - **UI:** Added new `BaseDialog` component using HTML5 native `<dialog>` element for better accessibility and native backdrop handling.

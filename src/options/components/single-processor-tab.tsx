@@ -207,15 +207,25 @@ export function SingleProcessorTab() {
   }, [])
 
   const effectiveConfig = useMemo(() => {
+    const isMozJpegTarget = targetFormat === "mozjpeg"
+
     const baseConfig: FormatConfig = {
       id: `single_${targetFormat}`,
-      name: `Single ${targetFormat.toUpperCase()}`,
-      format: targetFormat,
+      name: `Single ${isMozJpegTarget ? "MOZJPEG" : targetFormat.toUpperCase()}`,
+      format: isMozJpegTarget ? "jpg" : targetFormat,
       enabled: true,
       quality,
       formatOptions: {
         jxl: targetFormat === "jxl" ? { effort: formatOptions.jxl.effort } : undefined,
         avif: targetFormat === "avif" ? { ...formatOptions.avif } : undefined,
+        mozjpeg:
+          targetFormat === "mozjpeg"
+            ? {
+                enabled: true,
+                progressive: formatOptions.mozjpeg.progressive,
+                chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling
+              }
+            : undefined,
         ico:
           targetFormat === "ico"
             ? {

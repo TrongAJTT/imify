@@ -12,6 +12,7 @@ import {
 import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { encodeJxl } from "@/features/converter/jxl-encoder"
+import { encodeMozJpeg } from "@/features/converter/mozjpeg-encoder"
 import { optimisePngWithOxi } from "@/features/converter/oxipng"
 import { encodePngFromImageData } from "@/features/converter/png-tiny"
 import { encodeRasterWithAdapters } from "@/features/converter/raster-encode-adapters"
@@ -30,7 +31,7 @@ export interface RasterConvertParams {
   targetFormat: Exclude<ImageFormat, "pdf" | "ico">
   resize: ResizeConfig
   quality?: number
-  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "png">
+  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "mozjpeg" | "png">
 }
 
 export interface RasterConvertResult {
@@ -207,6 +208,7 @@ export async function convertRasterImage(
             quality: clampQuality(options.quality),
             effort: options.jxl?.effort
           }),
+        encodeMozJpeg,
         encodePng: encodePngFromImageData,
         optimisePng: optimisePngWithOxi,
         convertToRasterBlob,

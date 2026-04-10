@@ -66,10 +66,19 @@ export interface AvifCodecOptions {
   highAlphaQuality?: boolean
 }
 
+export type MozJpegChromaSubsampling = 0 | 1 | 2
+
+export interface MozJpegCodecOptions {
+  enabled?: boolean
+  progressive?: boolean
+  chromaSubsampling?: MozJpegChromaSubsampling
+}
+
 export interface FormatCodecOptions {
   png?: PngCodecOptions
   jxl?: JxlCodecOptions
   avif?: AvifCodecOptions
+  mozjpeg?: MozJpegCodecOptions
   ico?: IcoOptions
 }
 
@@ -114,7 +123,7 @@ export interface ExtensionStorageState {
 export interface ConversionProgressPayload {
   id: string
   fileName: string
-  targetFormat: ImageFormat
+  targetFormat: ImageFormat | "mozjpeg"
   status: "queued" | "processing" | "success" | "error"
   percent: number
   message?: string

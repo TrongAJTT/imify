@@ -1,5 +1,7 @@
 import type { ImageFormat } from "@/core/types"
 
+export type OutputFormat = ImageFormat | "mozjpeg"
+
 function stripExtension(name: string): string {
   const trimmed = name.trim()
   const lastDot = trimmed.lastIndexOf(".")
@@ -11,11 +13,15 @@ function stripExtension(name: string): string {
   return trimmed.slice(0, lastDot)
 }
 
-export function getCanonicalExtension(format: ImageFormat): string {
-  return format === "jpg" ? "jpg" : format
+export function getCanonicalExtension(format: OutputFormat): string {
+  if (format === "jpg" || format === "mozjpeg") {
+    return "jpg"
+  }
+
+  return format
 }
 
-export function toOutputFilename(nameOrBase: string, format: ImageFormat): string {
+export function toOutputFilename(nameOrBase: string, format: OutputFormat): string {
   const base = stripExtension(nameOrBase) || "image"
   const ext = getCanonicalExtension(format)
 
@@ -26,7 +32,7 @@ function rewriteDataUrlMime(dataUrl: string, mimeType: string): string {
   return dataUrl.replace(/^data:[^;]+;/i, `data:${mimeType};`)
 }
 
-export function blobToDownloadDataUrl(blob: Blob, format: ImageFormat): Promise<string> {
+export function blobToDownloadDataUrl(blob: Blob, format: OutputFormat): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
 
@@ -43,7 +49,7 @@ export function blobToDownloadDataUrl(blob: Blob, format: ImageFormat): Promise<
       // If we use image/jpeg, Windows may save it as .jfif.
       // But using image/jpg breaks the "Save As" dialog type filter.
       // We will keep it as image/jpeg, and handle the extension strictly via filename.
-      if (format === "jpg") {
+      if (format === "jpg" || format === "mozjpeg") {
         resolve(rewriteDataUrlMime(reader.result, "image/jpeg"))
         return
       }

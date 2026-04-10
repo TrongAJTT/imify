@@ -17,6 +17,7 @@ import {
   getOffscreen2DContext
 } from "@/features/converter/color-managed-pipeline"
 import { convertSourceToIcoOutput } from "@/features/converter/ico-encoder"
+import { encodeMozJpeg } from "@/features/converter/mozjpeg-encoder"
 import { optimisePngWithOxi } from "@/features/converter/oxipng"
 import { encodePngFromImageData } from "@/features/converter/png-tiny"
 import { encodeRasterWithAdapters } from "@/features/converter/raster-encode-adapters"
@@ -348,6 +349,7 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
         formatOptions: {
           avif: config.formatOptions?.avif,
           jxl: config.formatOptions?.jxl,
+          mozjpeg: config.formatOptions?.mozjpeg,
           png: config.formatOptions?.png
         }
       },
@@ -356,6 +358,7 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
         encodeTiff: encodeImageDataToTiff,
         encodeAvif: encodeAvifInWorker,
         encodeJxl: encodeJxlInWorker,
+        encodeMozJpeg,
         encodePng: encodePngFromImageData,
         optimisePng: optimisePngWithOxi,
         convertToRasterBlob,

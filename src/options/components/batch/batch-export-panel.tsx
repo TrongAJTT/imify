@@ -62,6 +62,7 @@ export function BatchExportPanel({
     watermark.type === "none"
       ? "None"
       : `${watermark.type === "text" ? "Text" : "Logo"} - ${WATERMARK_POSITION_OPTIONS.find((option) => option.value === watermark.position)?.label || "Bottom-Right"}`
+  const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat
 
   return (
     <AccordionCard
@@ -73,7 +74,7 @@ export function BatchExportPanel({
     >
       <div className="space-y-3">
         <ExportControlsPanel
-          targetFormat={targetFormat}
+          targetFormat={concurrencyFormat}
           concurrency={concurrency}
           fileNamePattern={fileNamePattern}
           onConcurrencyChange={onConcurrencyChange}

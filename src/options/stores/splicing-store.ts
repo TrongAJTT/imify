@@ -81,6 +81,8 @@ export interface SplicingStoreState {
   exportAvifSubsample: 1 | 2 | 3
   exportAvifTune: "auto" | "ssim" | "psnr"
   exportAvifHighAlphaQuality: boolean
+  exportMozJpegProgressive: boolean
+  exportMozJpegChromaSubsampling: 0 | 1 | 2
   exportPngTinyMode: boolean
   exportPngCleanTransparentPixels: boolean
   exportPngAutoGrayscale: boolean
@@ -139,6 +141,8 @@ export interface SplicingStoreState {
   setExportAvifSubsample: (v: 1 | 2 | 3) => void
   setExportAvifTune: (v: "auto" | "ssim" | "psnr") => void
   setExportAvifHighAlphaQuality: (v: boolean) => void
+  setExportMozJpegProgressive: (v: boolean) => void
+  setExportMozJpegChromaSubsampling: (v: 0 | 1 | 2) => void
   setExportPngTinyMode: (v: boolean) => void
   setExportPngCleanTransparentPixels: (v: boolean) => void
   setExportPngAutoGrayscale: (v: boolean) => void
@@ -198,6 +202,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportAvifSubsample: 1,
       exportAvifTune: "auto",
       exportAvifHighAlphaQuality: false,
+      exportMozJpegProgressive: true,
+      exportMozJpegChromaSubsampling: 2,
       exportPngTinyMode: false,
       exportPngCleanTransparentPixels: false,
       exportPngAutoGrayscale: false,
@@ -248,6 +254,14 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportAvifSubsample: (v) => set({ exportAvifSubsample: v }),
       setExportAvifTune: (v) => set({ exportAvifTune: v }),
       setExportAvifHighAlphaQuality: (v) => set({ exportAvifHighAlphaQuality: v }),
+      setExportMozJpegProgressive: (v) => set({ exportMozJpegProgressive: v }),
+      setExportMozJpegChromaSubsampling: (v) =>
+        set({
+          exportMozJpegChromaSubsampling:
+            v === 0 || v === 1
+              ? v
+              : 2
+        }),
       setExportPngTinyMode: (v) => set({ exportPngTinyMode: v }),
       setExportPngCleanTransparentPixels: (v) => set({ exportPngCleanTransparentPixels: v }),
       setExportPngAutoGrayscale: (v) => set({ exportPngAutoGrayscale: v }),
@@ -284,6 +298,11 @@ export const useSplicingStore = create<SplicingStoreState>()(
         next.exportPngDitheringLevel = Math.max(0, Math.min(100, Math.round(next.exportPngDitheringLevel)))
         next.exportPngDithering = next.exportPngDitheringLevel > 0
         next.exportPngProgressiveInterlaced = Boolean(next.exportPngProgressiveInterlaced)
+        next.exportMozJpegProgressive = Boolean(next.exportMozJpegProgressive)
+        next.exportMozJpegChromaSubsampling =
+          next.exportMozJpegChromaSubsampling === 0 || next.exportMozJpegChromaSubsampling === 1
+            ? next.exportMozJpegChromaSubsampling
+            : 2
         const rawPreset = (persistedState as { preset?: string }).preset
         if (rawPreset === "custom") {
           next.preset = "bento"
@@ -305,6 +324,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setExportFormat, setExportQuality, setExportJxlEffort,
           setExportAvifSpeed, setExportAvifQualityAlpha, setExportAvifLossless,
           setExportAvifSubsample, setExportAvifTune, setExportAvifHighAlphaQuality,
+          setExportMozJpegProgressive, setExportMozJpegChromaSubsampling,
           setExportPngTinyMode, setExportPngCleanTransparentPixels, setExportPngAutoGrayscale,
           setExportPngDitheringLevel, setExportPngProgressiveInterlaced,
           setExportPngOxiPngCompression, setExportMode,

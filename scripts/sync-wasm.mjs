@@ -13,4 +13,5 @@ function run(command, args) {
 
 run("pnpm", ["sync:avif-wasm"])
 run("pnpm", ["sync:jxl-wasm"])
+run("pnpm", ["sync:mozjpeg-wasm"])
 run("pnpm", ["sync:oxipng-wasm"])

@@ -70,15 +70,25 @@ export function BatchProcessorTab() {
   )
 
   const effectiveConfig = useMemo(() => {
+    const isMozJpegTarget = targetFormat === "mozjpeg"
+
     const baseConfig: FormatConfig = {
       id: `batch_${targetFormat}`,
-      name: `Batch ${targetFormat.toUpperCase()}`,
-      format: targetFormat,
+      name: `Batch ${isMozJpegTarget ? "MOZJPEG" : targetFormat.toUpperCase()}`,
+      format: isMozJpegTarget ? "jpg" : targetFormat,
       enabled: true,
       quality,
       formatOptions: {
         jxl: targetFormat === "jxl" ? { effort: formatOptions.jxl.effort } : undefined,
         avif: targetFormat === "avif" ? { ...formatOptions.avif } : undefined,
+        mozjpeg:
+          targetFormat === "mozjpeg"
+            ? {
+                enabled: true,
+                progressive: formatOptions.mozjpeg.progressive,
+                chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling
+              }
+            : undefined,
         ico:
           targetFormat === "ico"
             ? {

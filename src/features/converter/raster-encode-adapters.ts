@@ -2,6 +2,7 @@ import type {
   AvifCodecOptions,
   ImageFormat,
   JxlCodecOptions,
+  MozJpegCodecOptions,
   PngCodecOptions
 } from "@/core/types"
 
@@ -18,6 +19,7 @@ export interface RasterEncodeInput {
   formatOptions?: {
     avif?: AvifCodecOptions
     jxl?: JxlCodecOptions
+    mozjpeg?: MozJpegCodecOptions
     png?: PngCodecOptions
   }
 }
@@ -45,6 +47,13 @@ export interface RasterEncodeDependencies {
     }
   ) => Promise<Blob>
   encodePng: (imageData: ImageData, options?: PngCodecOptions) => Blob
+  encodeMozJpeg: (
+    imageData: ImageData,
+    options?: {
+      quality?: number
+      mozjpeg?: MozJpegCodecOptions
+    }
+  ) => Promise<Blob>
   optimisePng?: (blob: Blob, options?: PngCodecOptions) => Promise<Blob>
   convertToRasterBlob: (
     canvas: OffscreenCanvas,
@@ -169,6 +178,21 @@ const adapters: RasterEncoderAdapter[] = [
       return {
         blob: pngBlob,
         mimeType: "image/png"
+      }
+    }
+  },
+  {
+    id: "mozjpeg",
+    supports: (format, input) =>
+      format === "jpg" && Boolean(input.formatOptions?.mozjpeg?.enabled),
+    encode: async ({ input, deps }) => {
+      const imageData = getImageData(input.ctx, input.targetWidth, input.targetHeight)
+      return {
+        blob: await deps.encodeMozJpeg(imageData, {
+          quality: input.quality,
+          mozjpeg: input.formatOptions?.mozjpeg
+        }),
+        mimeType: "image/jpeg"
       }
     }
   },

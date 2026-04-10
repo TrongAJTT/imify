@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { FolderOpen, History, Save } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/options/shared"
+import { getCanonicalExtension } from "@/core/download-utils"
 
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker } from "@/options/components/ui/typography"
@@ -79,6 +80,8 @@ export function BatchSetupSidebarPanel({
   const onAvifSubsampleChange = useBatchStore((state) => state.setAvifSubsample)
   const onAvifTuneChange = useBatchStore((state) => state.setAvifTune)
   const onAvifHighAlphaQualityChange = useBatchStore((state) => state.setAvifHighAlphaQuality)
+  const onMozJpegProgressiveChange = useBatchStore((state) => state.setMozJpegProgressive)
+  const onMozJpegChromaSubsamplingChange = useBatchStore((state) => state.setMozJpegChromaSubsampling)
   const onIcoSizesChange = useBatchStore((state) => state.setIcoSizes)
   const onIcoGenerateWebIconKitChange = useBatchStore((state) => state.setIcoGenerateWebIconKit)
   const onResizeModeChange = useBatchStore((state) => state.setResizeMode)
@@ -113,9 +116,9 @@ export function BatchSetupSidebarPanel({
   const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false)
   const [isOpenPresetDialogOpen, setIsOpenPresetDialogOpen] = useState(false)
   const [editingPreset, setEditingPreset] = useState<any | null>(null)
-  const supportsQuality = QUALITY_FORMATS.includes(targetFormat)
+  const supportsQuality = targetFormat === "mozjpeg" || QUALITY_FORMATS.includes(targetFormat as any)
   const supportsTinyMode = targetFormat === "png"
-  const supportsExif = ["jpg", "webp", "avif"].includes(targetFormat)
+  const supportsExif = ["jpg", "webp", "avif", "mozjpeg"].includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
 
   const scopedPresets = useMemo(
@@ -229,6 +232,10 @@ export function BatchSetupSidebarPanel({
             progressiveInterlaced: formatOptions.png.progressiveInterlaced,
             oxipngCompression: formatOptions.png.oxipngCompression
           },
+          mozjpeg: {
+            progressive: formatOptions.mozjpeg.progressive,
+            chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling
+          },
           ico: {
             sizes: formatOptions.ico.sizes,
             generateWebIconKit: formatOptions.ico.generateWebIconKit
@@ -236,7 +243,7 @@ export function BatchSetupSidebarPanel({
         }}
         formatOptions={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
           value: formatOption.value,
-          label: `${formatOption.label} (.${formatOption.value})`
+          label: `${formatOption.label} (.${getCanonicalExtension(formatOption.value)})`
         }))}
         supportsQuality={supportsQuality}
         supportsTinyMode={supportsTinyMode}
@@ -308,6 +315,12 @@ export function BatchSetupSidebarPanel({
           onSubsampleChange: onAvifSubsampleChange,
           onTuneChange: onAvifTuneChange,
           onHighAlphaQualityChange: onAvifHighAlphaQualityChange
+        }}
+        mozjpeg={{
+          progressive: formatOptions.mozjpeg.progressive,
+          chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling,
+          onProgressiveChange: onMozJpegProgressiveChange,
+          onChromaSubsamplingChange: onMozJpegChromaSubsamplingChange
         }}
         png={{
           cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,

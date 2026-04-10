@@ -1,4 +1,5 @@
 import { AvifAdvancedSettingsCard } from "@/options/components/shared/avif-advanced-settings-card"
+import { MozJpegAdvancedSettingsCard } from "@/options/components/shared/mozjpeg-advanced-settings-card"
 import { PngAdvancedSettingsCard } from "@/options/components/shared/png-advanced-settings-card"
 
 type AvifAdvancedProps = {
@@ -25,6 +26,13 @@ type PngAdvancedProps = {
   onProgressiveInterlacedChange: (value: boolean) => void
 }
 
+type MozJpegAdvancedProps = {
+  progressive: boolean
+  chromaSubsampling: 0 | 1 | 2
+  onProgressiveChange: (value: boolean) => void
+  onChromaSubsamplingChange: (value: 0 | 1 | 2) => void
+}
+
 export interface FormatAdvancedSettingsCardProps {
   targetFormat: string
   disabled?: boolean
@@ -33,6 +41,7 @@ export interface FormatAdvancedSettingsCardProps {
   alwaysOpen?: boolean
   groupId?: string
   avif?: AvifAdvancedProps
+  mozjpeg?: MozJpegAdvancedProps
   png?: PngAdvancedProps
 }
 
@@ -44,6 +53,7 @@ export function FormatAdvancedSettingsCard({
   alwaysOpen,
   groupId,
   avif,
+  mozjpeg,
   png
 }: FormatAdvancedSettingsCardProps) {
   if (targetFormat === "avif" && avif) {
@@ -79,6 +89,22 @@ export function FormatAdvancedSettingsCard({
         onAutoGrayscaleChange={png.onAutoGrayscaleChange}
         onOxiPngCompressionChange={png.onOxiPngCompressionChange}
         onProgressiveInterlacedChange={png.onProgressiveInterlacedChange}
+        disabled={disabled}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        alwaysOpen={alwaysOpen}
+        groupId={groupId}
+      />
+    )
+  }
+
+  if (targetFormat === "mozjpeg" && mozjpeg) {
+    return (
+      <MozJpegAdvancedSettingsCard
+        progressive={mozjpeg.progressive}
+        chromaSubsampling={mozjpeg.chromaSubsampling}
+        onProgressiveChange={mozjpeg.onProgressiveChange}
+        onChromaSubsamplingChange={mozjpeg.onChromaSubsamplingChange}
         disabled={disabled}
         isOpen={isOpen}
         onOpenChange={onOpenChange}

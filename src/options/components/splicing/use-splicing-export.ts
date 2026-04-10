@@ -97,7 +97,7 @@ export function useSplicingExport({
         const store = useSplicingStore.getState()
         const usesWasmEncoder = store.exportFormat === "avif" || store.exportFormat === "jxl"
         if (usesWasmEncoder) {
-          setWasmWorkerPoolSize(store.exportFormat, store.exportConcurrency)
+          setWasmWorkerPoolSize(store.exportFormat === "jxl" ? "jxl" : "avif", store.exportConcurrency)
         }
 
         const layout = resolveLayoutConfig(store)
@@ -118,6 +118,14 @@ export function useSplicingExport({
                     subsample: store.exportAvifSubsample,
                     tune: store.exportAvifTune,
                     highAlphaQuality: store.exportAvifHighAlphaQuality
+                  }
+                : undefined,
+            mozjpeg:
+              store.exportFormat === "mozjpeg"
+                ? {
+                    enabled: true,
+                    progressive: store.exportMozJpegProgressive,
+                    chromaSubsampling: store.exportMozJpegChromaSubsampling
                   }
                 : undefined,
             png:

@@ -152,7 +152,7 @@ If you are reviewing this extension for the Mozilla Add-ons Store, please follow
 3. The generated add-on will be an archive located in the output build directory.
 
 **Compliance Declaration regarding WebAssembly (WASM) & Minification:**
-- **WASM Origin:** All `.wasm` binaries used in this project for image encoding/decoding/optimisation (AVIF, JXL, OxiPNG) are sourced standardly via open-source NPM packages (`@jsquash/avif`, `@jsquash/jxl`, `@jsquash/oxipng`) as declared in `package.json`. There are no privately built or obfuscated custom wasm payloads.
+- **WASM Origin:** All `.wasm` binaries used in this project for image encoding/decoding/optimisation (AVIF, JXL, OxiPNG, MozJPEG) are sourced standardly via open-source NPM packages (`@jsquash/avif`, `@jsquash/jxl`, `@jsquash/oxipng`, `@jsquash/mozjpeg`) as declared in `package.json`. There are no privately built or obfuscated custom wasm payloads.
 - **Zero Remote Execution:** The extension processes all images 100% locally and does not fetch any executable code, scripts, or WASM files from remote servers.
 
 > **Note for Firefox**: Our build pipeline includes a sanitation script (`scripts/sanitize-firefox-manifest.mjs`) that automatically removes the `offscreen` permission from the Firefox manifest to comply with AMO policies while maintaining maximum performance for Chrome users.
