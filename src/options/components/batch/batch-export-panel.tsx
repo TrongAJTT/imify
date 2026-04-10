@@ -71,7 +71,7 @@ export function BatchExportPanel({
       colorTheme="amber"
       defaultOpen={false}
     >
-      <div className="space-y-3 pt-1">
+      <div className="space-y-3">
         <ExportControlsPanel
           targetFormat={targetFormat}
           concurrency={concurrency}

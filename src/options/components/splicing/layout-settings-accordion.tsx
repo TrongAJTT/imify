@@ -1,29 +1,30 @@
-import { Rows, Columns, Grid3X3, LayoutGrid } from "lucide-react"
+import { Rows, } from "lucide-react"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectField } from "@/options/components/splicing/splicing-sidebar-fields"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { RadioCard } from "@/options/components/ui/radio-card"
+import type {
+  SplicingAlignment,
+  SplicingDirection,
+  SplicingImageAppearanceDirection,
+  SplicingPreset
+} from "@/features/splicing/types"
 import {
-  ALIGNMENT_OPTIONS,
   type BentoLayoutMode,
   GRID_DIRECTION_OPTIONS,
   PRESET_OPTIONS,
   STITCH_H_DIRECTION_OPTIONS,
   STITCH_V_DIRECTION_OPTIONS,
-  type BentoPrimaryDirection,
-  type BentoSecondaryDirection,
-  type SplicingAlignment,
   deriveBentoLayoutMode,
   getBentoDefaultImageDirection,
   mapBentoLayoutModeToDirections
 } from "@/options/components/splicing/splicing-sidebar-fields"
 import { BentoLayoutControls } from "@/options/components/splicing/bento-layout-controls"
-import type { SplicingImageAppearanceDirection, SplicingPreset } from "@/features/splicing/types"
 
 interface LayoutSettingsAccordionProps {
   preset: SplicingPreset
-  primaryDirection: BentoPrimaryDirection
-  secondaryDirection: BentoSecondaryDirection
+  primaryDirection: SplicingDirection
+  secondaryDirection: SplicingDirection
   gridCount: number
   flowMaxSize: number
   alignment: SplicingAlignment
@@ -33,8 +34,8 @@ interface LayoutSettingsAccordionProps {
   bentoAlignmentOptions: Array<{ value: SplicingAlignment; label: string }>
 
   onPresetChange: (preset: SplicingPreset) => void
-  onPrimaryDirectionChange: (direction: BentoPrimaryDirection) => void
-  onSecondaryDirectionChange: (direction: BentoSecondaryDirection) => void
+  onPrimaryDirectionChange: (direction: SplicingDirection) => void
+  onSecondaryDirectionChange: (direction: SplicingDirection) => void
   onGridCountChange: (count: number) => void
   onFlowMaxSizeChange: (size: number) => void
   onAlignmentChange: (alignment: SplicingAlignment) => void
@@ -54,7 +55,6 @@ export function LayoutSettingsAccordion({
   flowMaxSize,
   alignment,
   imageAppearanceDirection,
-  previewBentoFlowGroupCount,
   bentoLayoutMode,
   bentoAlignmentOptions,
   onPresetChange,

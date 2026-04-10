@@ -63,15 +63,16 @@ export function AccordionCard({
     }
   }
 
-  const isDisabled = disabled || alwaysOpen
+  const isDisabled = disabled
   const theme = getThemeClasses(colorTheme)
+  const themeAccordionLeftBorder = isDisabled ? "" : theme.accordionLeftBorder
 
   return (
     <Collapsible.Root open={isOpen} onOpenChange={handleOpenChange} disabled={isDisabled}>
       <div className={`rounded overflow-hidden transition-all duration-200 border border-l-2 ${
         isOpen
-          ? `${theme.accordionOpenEdgeBorder} ${theme.accordionLeftBorder} shadow-sm`
-          : `border-slate-200 dark:border-slate-700 ${theme.accordionLeftBorder}`
+          ? `${theme.accordionOpenEdgeBorder} ${themeAccordionLeftBorder} shadow-sm`
+          : `border-slate-200 dark:border-slate-700 ${themeAccordionLeftBorder}`
       }`}>
         <Collapsible.Trigger asChild>
           <button

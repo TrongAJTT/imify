@@ -11,7 +11,6 @@ import type {
 } from "@/features/splicing/types"
 import { CanvasPreview } from "@/options/components/splicing/canvas-preview"
 import { ImageStrip } from "@/options/components/splicing/image-strip"
-import { SplicingPreviewSettings } from "@/options/components/splicing/splicing-preview-settings"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
 
 interface SplicingWorkspaceProps {
@@ -114,13 +113,6 @@ export function SplicingWorkspace({
             onRemove={onRemoveImage}
             onReorder={onReorderImage}
             onAddMore={onAddMore}
-          />
-
-          <SplicingPreviewSettings
-            previewQualityPercent={previewQualityPercent}
-            previewShowImageNumber={previewShowImageNumber}
-            onPreviewQualityChange={onPreviewQualityChange}
-            onPreviewShowImageNumberChange={onPreviewShowImageNumberChange}
           />
         </div>
       )}

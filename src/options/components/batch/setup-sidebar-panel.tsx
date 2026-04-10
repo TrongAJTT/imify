@@ -208,7 +208,8 @@ export function BatchSetupSidebarPanel({
   )
 
   return (
-    <SidebarPanel title="CONFIGURATION" childrenClassName="flex flex-col gap-2" headerActions={panelActions}>
+    <SidebarPanel title="CONFIGURATION" childrenClassName="flex flex-col gap-3"
+    headerActions={panelActions}>
       <TargetFormatQualityCard
         targetFormat={targetFormat}
         quality={quality}

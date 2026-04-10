@@ -17,16 +17,15 @@ import {
 } from "@/options/components/ui/rename-pattern-dialog"
 import {
   ALIGNMENT_OPTIONS,
-  type BentoLayoutMode,
   EXPORT_FORMAT_OPTIONS,
   deriveBentoLayoutMode,
   getAvailableExportModes,
 } from "@/options/components/splicing/splicing-sidebar-fields"
-import { BentoLayoutControls } from "@/options/components/splicing/bento-layout-controls"
 import { SplicingExportPanel } from "@/options/components/splicing/splicing-export-panel"
 import { LayoutSettingsAccordion } from "@/options/components/splicing/layout-settings-accordion"
 import { CanvasSettingsAccordion } from "@/options/components/splicing/canvas-settings-accordion"
 import { ImageSettingsAccordion } from "@/options/components/splicing/image-settings-accordion"
+import { PreviewSettingsAccordion } from "@/options/components/splicing/preview-settings-accordion"
 import { SidebarPanel } from "../ui/sidebar-panel"
 
 interface SplicingSidebarPanelProps {
@@ -84,6 +83,9 @@ export function SplicingSidebarPanel({
   const exportFileNamePattern = useSplicingStore((s) => s.exportFileNamePattern)
   const isExportFormatQualityOpen = useSplicingStore((s) => s.isExportFormatQualityOpen)
 
+  const previewQualityPercent = useSplicingStore((s) => s.previewQualityPercent)
+  const previewShowImageNumber = useSplicingStore((s) => s.previewShowImageNumber)
+
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
 
   const setPreset = useSplicingStore((s) => s.setPreset)
@@ -128,6 +130,8 @@ export function SplicingSidebarPanel({
   const setExportFileNamePattern = useSplicingStore((s) => s.setExportFileNamePattern)
   const setIsImageResizeOpen = useSplicingStore((s) => s.setIsImageResizeOpen)
   const setIsExportFormatQualityOpen = useSplicingStore((s) => s.setIsExportFormatQualityOpen)
+  const setPreviewQualityPercent = useSplicingStore((s) => s.setPreviewQualityPercent)
+  const setPreviewShowImageNumber = useSplicingStore((s) => s.setPreviewShowImageNumber)
 
   const splicingRenamePreviewSample = useMemo(
     () => ({
@@ -165,7 +169,7 @@ export function SplicingSidebarPanel({
 
   return (
     <div className="flex flex-col gap-1">
-      <SidebarPanel title="CONFIGURATION" childrenClassName="flex flex-col gap-2">
+      <SidebarPanel title="CONFIGURATION" childrenClassName="flex flex-col gap-3">
         {/* Layout Settings Accordion */}
         <LayoutSettingsAccordion
           preset={preset}
@@ -318,6 +322,14 @@ export function SplicingSidebarPanel({
           emptyPatternFallback="spliced-[Index]"
           patternPlaceholder="e.g. spliced-[Index] or [Date]-[PaddedIndex]"
           previewInputHint="Splicing export (sample dimensions & index)"
+        />
+
+        {/* Preview Settings Accordion */}
+        <PreviewSettingsAccordion
+          previewQualityPercent={previewQualityPercent}
+          previewShowImageNumber={previewShowImageNumber}
+          onPreviewQualityChange={setPreviewQualityPercent}
+          onPreviewShowImageNumberChange={setPreviewShowImageNumber}
         />
       </SidebarPanel>
     </div>

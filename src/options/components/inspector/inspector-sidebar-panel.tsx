@@ -1,23 +1,8 @@
-import { SelectInput } from "@/options/components/ui/select-input"
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
-import { MutedText } from "@/options/components/ui/typography"
 import { useInspectorStore } from "@/options/stores/inspector-store"
-import { Eye } from "lucide-react"
-
-const EXIF_SORT_OPTIONS = [
-  { value: "group", label: "Group by category" },
-  { value: "name", label: "Sort by tag name" },
-  { value: "tag", label: "Sort by tag ID" }
-]
-
-const PALETTE_COUNT_OPTIONS = [
-  { value: "4", label: "4 colors" },
-  { value: "6", label: "6 colors" },
-  { value: "8", label: "8 colors" },
-  { value: "10", label: "10 colors" },
-  { value: "12", label: "12 colors" }
-]
+import { DisplayAccordion } from "@/options/components/inspector/display-accordion"
+import { MetadataAccordion } from "@/options/components/inspector/metadata-accordion"
+import { InformationAccordion } from "@/options/components/inspector/information-accordion"
+import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 
 export function InspectorSidebarPanel() {
   const exifSortMode = useInspectorStore((s) => s.exifSortMode)
@@ -29,42 +14,23 @@ export function InspectorSidebarPanel() {
   const setPaletteCount = useInspectorStore((s) => s.setPaletteCount)
 
   return (
-    <div className="flex flex-col gap-3">
-      <SidebarPanel title="DISPLAY">
-        <div className="flex flex-col gap-3">
-          <SelectInput
-            label="Palette Colors"
-            value={String(paletteCount)}
-            options={PALETTE_COUNT_OPTIONS}
-            onChange={(v) => setPaletteCount(Number(v))}
-          />
-        </div>
-      </SidebarPanel>
+    <SidebarPanel title="INSPECTOR SETTINGS" childrenClassName="flex flex-col gap-3">
+      {/* Display Accordion */}
+      <DisplayAccordion
+        paletteCount={paletteCount}
+        onPaletteCountChange={setPaletteCount}
+      />
 
-      <SidebarPanel title="METADATA">
-        <div className="flex flex-col gap-3">
-          <SelectInput
-            label="Sort Mode"
-            value={exifSortMode}
-            options={EXIF_SORT_OPTIONS}
-            onChange={(v) => setExifSortMode(v as "group" | "name" | "tag")}
-          />
-          <CheckboxCard
-            icon={<Eye size={16} />}
-            title="Sensitive Only"
-            subtitle="Show only privacy-relevant tags"
-            checked={showSensitiveOnly}
-            onChange={setShowSensitiveOnly}
-            theme="amber"
-          />
-        </div>
-      </SidebarPanel>
+      {/* Metadata Accordion */}
+      <MetadataAccordion
+        exifSortMode={exifSortMode}
+        showSensitiveOnly={showSensitiveOnly}
+        onExifSortModeChange={setExifSortMode}
+        onShowSensitiveOnlyChange={setShowSensitiveOnly}
+      />
 
-      <SidebarPanel title="INFORMATION">
-        <MutedText>
-        Inspect an image in detail: view file info, extract metadata (EXIF), explore dominant colors, and quickly check for privacy-sensitive fields before sharing. All analysis is performed 100% locally in your browser. No image data is ever sent to any server.
-        </MutedText>
-      </SidebarPanel>
-    </div>
+      {/* Information Accordion */}
+      <InformationAccordion />
+    </SidebarPanel>
   )
 }

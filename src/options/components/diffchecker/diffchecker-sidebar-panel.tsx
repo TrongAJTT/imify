@@ -4,48 +4,12 @@ import type {
   DiffAlignMode,
   DiffViewMode
 } from "@/features/diffchecker/types"
-import { Columns, Layers, Zap } from "lucide-react"
-import { RadioCard } from "@/options/components/ui/radio-card"
-import { SelectInput } from "@/options/components/ui/select-input"
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { MutedText } from "@/options/components/ui/typography"
-import { SliderInput } from "@/options/components/ui/slider-input"
-import { NumberInput } from "@/options/components/ui/number-input"
 import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
-
-const VIEW_MODES: Array<{
-  value: DiffViewMode
-  title: string
-  subtitle: string
-  icon: React.ReactNode
-}> = [
-  { value: "split", title: "Split", subtitle: "Drag slider to compare", icon: <Columns size={14} /> },
-  { value: "side_by_side", title: "Side by Side", subtitle: "View both images in parallel", icon: <Columns size={14} /> },
-  { value: "overlay", title: "Overlay", subtitle: "Adjust opacity to blend", icon: <Layers size={14} /> },
-  {
-    value: "difference",
-    title: "Difference",
-    subtitle: "Pixel-level analysis",
-    icon: <Zap size={14} />
-  }
-]
-
-const ALGORITHM_OPTIONS = [
-  { value: "heatmap", label: "Heatmap" },
-  { value: "binary", label: "Binary (B/W)" },
-  { value: "ssim", label: "SSIM (Structural Similarity)" }
-]
-
-const ALIGN_MODE_OPTIONS = [
-  { value: "fit-larger", label: "Match Larger" },
-  { value: "fit-smaller", label: "Match Smaller" },
-  { value: "original", label: "Original Size" }
-]
-
-const ANCHOR_OPTIONS = [
-  { value: "center", label: "Center" },
-  { value: "top-left", label: "Top-Left" }
-]
+import { ViewModeAccordion } from "@/options/components/diffchecker/view-mode-accordion"
+import { ComparisonAccordion } from "@/options/components/diffchecker/comparison-accordion"
+import { AlignmentAccordion } from "@/options/components/diffchecker/alignment-accordion"
+import { Sidebar } from "~node_modules/lucide-react/dist/lucide-react"
+import { SidebarPanel } from "../ui/sidebar-panel"
 
 export function DiffcheckerSidebarPanel() {
   const viewMode = useDiffcheckerStore((s) => s.viewMode)
@@ -63,92 +27,31 @@ export function DiffcheckerSidebarPanel() {
   const setDiffThreshold = useDiffcheckerStore((s) => s.setDiffThreshold)
 
   return (
-    <div className="flex flex-col gap-3">
-      <SidebarPanel title="VIEW MODE">
-        <div className="flex flex-col gap-1.5">
-          {VIEW_MODES.map((m) => (
-            <RadioCard
-              key={m.value}
-              icon={m.icon}
-              title={m.title}
-              subtitle={m.subtitle}
-              value={m.value}
-              selectedValue={viewMode}
-              onChange={(v) => setViewMode(v as DiffViewMode)}
-            />
-          ))}
-        </div>
-      </SidebarPanel>
+    <SidebarPanel title="Diffchecker Settings" childrenClassName="flex flex-col gap-3">
+      {/* View Mode Accordion */}
+      <ViewModeAccordion
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
 
-      <SidebarPanel title="COMPARISON">
-        <div className="flex flex-col gap-3">
-          {viewMode === "overlay" && (
-            <SliderInput
-              label="Opacity"
-              value={overlayOpacity}
-              onChange={setOverlayOpacity}
-              min={0}
-              max={100}
-              suffix="%"
-            />
-          )}
+      {/* Comparison Accordion */}
+      <ComparisonAccordion
+        viewMode={viewMode}
+        algorithm={algorithm}
+        overlayOpacity={overlayOpacity}
+        diffThreshold={diffThreshold}
+        onAlgorithmChange={setAlgorithm}
+        onOverlayOpacityChange={setOverlayOpacity}
+        onDiffThresholdChange={setDiffThreshold}
+      />
 
-          {viewMode === "difference" && (
-            <>
-              <SelectInput
-                label="Algorithm"
-                value={algorithm}
-                options={ALGORITHM_OPTIONS}
-                onChange={(v) => setAlgorithm(v as DiffAlgorithm)}
-              />
-              {algorithm === "binary" && (
-                <SliderInput
-                  label="Threshold"
-                  value={diffThreshold}
-                  onChange={setDiffThreshold}
-                  min={0}
-                  max={128}
-                />
-              )}
-            </>
-          )}
-
-          {viewMode === "split" && (
-            <MutedText className="text-xs">
-              Drag the slider on the viewer to adjust the split position.
-            </MutedText>
-          )}
-
-          {viewMode === "side_by_side" && (
-            <MutedText className="text-xs">
-              Compare Image A and Image B in parallel. Zoom and pan are synchronized.
-            </MutedText>
-          )}
-        </div>
-      </SidebarPanel>
-
-      <SidebarPanel title="ALIGNMENT">
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-3">
-            <div className="flex-1 min-w-0">
-              <SelectInput
-                label="Scale Mode"
-                value={alignMode}
-                options={ALIGN_MODE_OPTIONS}
-                onChange={(v) => setAlignMode(v as DiffAlignMode)}
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <SelectInput
-                label="Anchor"
-                value={alignAnchor}
-                options={ANCHOR_OPTIONS}
-                onChange={(v) => setAlignAnchor(v as DiffAlignAnchor)}
-              />
-            </div>
-          </div>
-        </div>
-      </SidebarPanel>
-    </div>
+      {/* Alignment Accordion */}
+      <AlignmentAccordion
+        alignMode={alignMode}
+        alignAnchor={alignAnchor}
+        onAlignModeChange={setAlignMode}
+        onAlignAnchorChange={setAlignAnchor}
+      />
+    </SidebarPanel>
   )
 }

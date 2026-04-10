@@ -22,6 +22,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Replaced three `SidebarPanel` sections with new accordion components for visual consistency with export controls.
   - Added standardized horizontal padding (`px-2`) to export-related cards (`TargetFormatQualityCard`, `FormatAdvancedSettingsCard`, `SplicingExportPanel`) to align visual spacing with accordion margins.
   - Removed old `NumberInput`, `ColorPickerPopover`, and `ResizeCard` inline markup from `SplicingPresetLayout`, `SplicingCanvasSettings`, and `SplicingImageSettings` sections.
+- **Diffchecker UI Standardization:** Standardized all Diffchecker sidebar sections into reusable accordion components with dynamic sublabels and always-open state:
+  - `ViewModeAccordion` (blue theme): Collapsible view mode selector with dynamic sublabel showing current mode (e.g., "Split", "Side by Side", "Overlay", "Difference").
+  - `ComparisonAccordion` (purple theme): Collapsible comparison controls with dynamic sublabel reflecting active comparison settings (e.g., "Opacity: 85%", "Algorithm: Binary, Threshold: 50", "Drag on viewer to adjust").
+  - `AlignmentAccordion` (orange theme): Collapsible alignment controls with dynamic sublabel showing scale mode and anchor position (e.g., "Scale: Match Larger, Anchor: Center").
+  - All three accordions set to `defaultOpen={true}` (always visible/expanded) for constant accessibility.
+  - Replaced three `SidebarPanel` sections with new accordion components for visual consistency with other sidebar patterns.
+  - Removed old `RadioCard`, `SelectInput`, and `SliderInput` inline markup from diffchecker sidebar panel sections.
+  - Improved gap spacing from `gap-3` to `gap-1` for tighter accordion layout.
+- **Image Splicing Preview Settings Accordion:** Standardized Preview Settings section into collapsible accordion component:
+  - `PreviewSettingsAccordion` (sky theme): Collapsible preview quality and image numbering controls with dynamic sublabel showing current quality percentage and numbering status (e.g., "Quality: 20%, Numbers: On").
+  - Responsive grid layout (`grid-cols-1 lg:grid-cols-2 xl:grid-cols-3`) that scales based on content area width for optimal readability across different sidebar sizes.
+  - Replaced flat `SplicingPreviewSettings` section with accordion for consistent visual hierarchy with other settings.
+- **Image Inspector UI Standardization:** Standardized all Image Inspector sidebar sections into reusable accordion components with dynamic sublabels:
+  - `DisplayAccordion` (blue theme, always open): Collapsible palette color controls with dynamic sublabel showing selected count (e.g., "4 colors").
+  - Changed Palette Colors from discrete SelectInput options to SliderInput for smooth value selection (4-12 colors, step 2).
+  - `MetadataAccordion` (purple theme, always open): Collapsible EXIF sorting and privacy controls with dynamic sublabel showing current sort mode and privacy filter status (e.g., "Group by category, Privacy: On").
+  - `InformationAccordion` (orange theme, collapsible): Tool information and privacy assurance text with clear explanation of 100% client-side analysis.
+  - Replaced three `SidebarPanel` sections with new accordion components for visual consistency across the application.
 - **UI Refactor:** Enhanced `RadioCard` component with new features for improved consistency with `CheckboxCard`:
   - Added optional `icon` prop to display icon at the card's start.
   - Renamed `tooltip` prop to `tooltipContent` and added `tooltipLabel` for structured tooltip content/label pairs.
