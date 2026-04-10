@@ -1,7 +1,7 @@
 import "@/style.css"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
-import { useMemo, useRef, useState, useEffect } from "react"
+import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import { Button } from "@/options/components/ui/button"
 
 import { toUserFacingConversionError } from "@/core/error-utils"
@@ -25,8 +25,6 @@ import { ContextMenuInfoPanel } from "@/options/components/context-menu/context-
 import { OptionsHeader } from "@/options/components/options-header"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
 import { TabButton } from "@/options/components/tab-button"
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { MutedText } from "@/options/components/ui/typography"
 import { type OptionsTab, type PersistedStorageState, TAB_ITEMS } from "@/options/shared"
 import {
   DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
@@ -42,6 +40,7 @@ import {
   PERFORMANCE_PREFERENCES_KEY
 } from "@/options/shared/performance-preferences"
 import { useBatchStore } from "@/options/stores/batch-store"
+import { useSplicingStore } from "@/options/stores/splicing-store"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
 import { Tooltip } from "@/options/components/tooltip"
 import {
@@ -63,8 +62,6 @@ import { DonateDialog } from "./components/donate-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 import { CONTEXT_MENU_SUB_TABS } from "./components/context-menu/context-menu-settings-tab"
-import bmcLogo from "url:assets/images/bmc-logo.svg"
-import githubLogo from "url:assets/images/github-logo.svg"
 
 const syncStorage = new Storage({
   area: "sync",
@@ -215,6 +212,7 @@ export default function OptionsPage() {
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false)
   const setSetupContext = useBatchStore((store) => store.setSetupContext)
+  const setPreviewQualityPercent = useSplicingStore((store) => store.setPreviewQualityPercent)
   const isBatchStoreRehydrated = useBatchStore((store) => (store as any)._hasHydrated)
   const [persistedState, setPersistedState, { isLoading: isSettingsLoading }] = useStorage<PersistedStorageState>(
     { key: STORAGE_KEY, instance: syncStorage },
@@ -246,7 +244,22 @@ export default function OptionsPage() {
     safeLayoutPreferences.configurationSidebarLevel
   )
 
+  const previewQualityChangeHandlerRef = useRef<((next: number) => void) | null>(null)
   const didInitDefaultTabRef = useRef(false)
+
+  const registerPreviewQualityChangeHandler = useCallback((handler: ((next: number) => void) | null) => {
+    previewQualityChangeHandlerRef.current = handler
+  }, [])
+
+  const handleSidebarPreviewQualityChange = useCallback((next: number) => {
+    const handler = previewQualityChangeHandlerRef.current
+    if (handler) {
+      handler(next)
+      return
+    }
+    setPreviewQualityPercent(next)
+  }, [setPreviewQualityPercent])
+
   useEffect(() => {
     if (didInitDefaultTabRef.current) {
       return
@@ -329,7 +342,7 @@ export default function OptionsPage() {
         )
       case "splicing":
         return (
-          <SplicingTab />
+          <SplicingTab onRegisterPreviewQualityChangeHandler={registerPreviewQualityChangeHandler} />
         )
       case "diffchecker":
         return (
@@ -347,6 +360,7 @@ export default function OptionsPage() {
     commitContextMenuSettings,
     commitCustomFormats,
     commitGlobalFormats,
+    registerPreviewQualityChangeHandler,
     state
   ])
 
@@ -467,7 +481,10 @@ export default function OptionsPage() {
             )}
 
             {activeTab === "splicing" && (
-              <SplicingSidebarPanel performancePreferences={safePerformancePreferences} />
+              <SplicingSidebarPanel
+                performancePreferences={safePerformancePreferences}
+                onPreviewQualityChange={handleSidebarPreviewQualityChange}
+              />
             )}
 
             {activeTab === "diffchecker" && (
@@ -520,7 +537,10 @@ export default function OptionsPage() {
           )}
 
           {activeTab === "splicing" && (
-            <SplicingSidebarPanel performancePreferences={safePerformancePreferences} />
+            <SplicingSidebarPanel
+              performancePreferences={safePerformancePreferences}
+              onPreviewQualityChange={handleSidebarPreviewQualityChange}
+            />
           )}
 
           {activeTab === "diffchecker" && (

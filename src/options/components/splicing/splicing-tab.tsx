@@ -114,12 +114,16 @@ function shouldWarnHeavySplicingPreviewQuality(
 ): boolean {
   if (skipPreference || nextPercent < 50) return false
   const cfg = APP_CONFIG.SPLICING
-  if (imageList.length > cfg.HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT) return true
+  if (imageList.length >= cfg.HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT) return true
   const totalPixels = imageList.reduce((s, img) => s + img.originalWidth * img.originalHeight, 0)
-  return totalPixels > cfg.HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS
+  return totalPixels >= cfg.HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS
 }
 
-export function SplicingTab() {
+interface SplicingTabProps {
+  onRegisterPreviewQualityChangeHandler?: (handler: ((next: number) => void) | null) => void
+}
+
+export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingTabProps) {
   const [images, setImages] = useState<SplicingImageItem[]>([])
   const [isExporting, setIsExporting] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
@@ -298,6 +302,13 @@ export function SplicingTab() {
     },
     [images, skipSplicingHeavyPreviewQualityWarning, applyPreviewQualityChange]
   )
+
+  useEffect(() => {
+    onRegisterPreviewQualityChangeHandler?.(handlePreviewQualitySelectChange)
+    return () => {
+      onRegisterPreviewQualityChangeHandler?.(null)
+    }
+  }, [onRegisterPreviewQualityChangeHandler, handlePreviewQualitySelectChange])
 
   const confirmHeavyPreviewQuality = useCallback(() => {
     if (pendingPreviewQualityPercent != null) {

@@ -30,10 +30,12 @@ import { SidebarPanel } from "../ui/sidebar-panel"
 
 interface SplicingSidebarPanelProps {
   performancePreferences: PerformancePreferences
+  onPreviewQualityChange: (next: number) => void
 }
 
 export function SplicingSidebarPanel({
-  performancePreferences
+  performancePreferences,
+  onPreviewQualityChange
 }: SplicingSidebarPanelProps) {
   const preset = useSplicingStore((s) => s.preset)
   const primaryDirection = useSplicingStore((s) => s.primaryDirection)
@@ -130,7 +132,6 @@ export function SplicingSidebarPanel({
   const setExportFileNamePattern = useSplicingStore((s) => s.setExportFileNamePattern)
   const setIsImageResizeOpen = useSplicingStore((s) => s.setIsImageResizeOpen)
   const setIsExportFormatQualityOpen = useSplicingStore((s) => s.setIsExportFormatQualityOpen)
-  const setPreviewQualityPercent = useSplicingStore((s) => s.setPreviewQualityPercent)
   const setPreviewShowImageNumber = useSplicingStore((s) => s.setPreviewShowImageNumber)
 
   const splicingRenamePreviewSample = useMemo(
@@ -328,7 +329,7 @@ export function SplicingSidebarPanel({
         <PreviewSettingsAccordion
           previewQualityPercent={previewQualityPercent}
           previewShowImageNumber={previewShowImageNumber}
-          onPreviewQualityChange={setPreviewQualityPercent}
+          onPreviewQualityChange={onPreviewQualityChange}
           onPreviewShowImageNumberChange={setPreviewShowImageNumber}
         />
       </SidebarPanel>
