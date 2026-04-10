@@ -74,7 +74,7 @@ export function ColoredSliderCard({
 
   return (
     <div
-      className={`rounded-xl border ${themeClasses.border} ${themeClasses.bg} p-3 ${className}`}
+      className={`rounded-md border ${themeClasses.border} ${themeClasses.bg} p-3 ${className}`}
     >
       <SliderInput
         label={label}

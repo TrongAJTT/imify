@@ -98,15 +98,11 @@ export function TargetFormatQualityCard({
   const isIcoTarget = targetFormat === "ico"
   const avifSpeedOption = formatConfig?.avif?.speed
   const pngTinyModeEnabled = Boolean(formatConfig?.png?.tinyMode)
-  const pngCleanTransparentPixels = Boolean(formatConfig?.png?.cleanTransparentPixels)
-  const pngAutoGrayscale = Boolean(formatConfig?.png?.autoGrayscale)
   const pngDitheringLevel = normalizeDitheringLevel(
     formatConfig?.png?.ditheringLevel,
     formatConfig?.png?.dithering
   )
   const pngDithering = pngDitheringLevel > 0
-  const pngProgressiveInterlaced = Boolean(formatConfig?.png?.progressiveInterlaced)
-  const pngOxiPngCompression = Boolean(formatConfig?.png?.oxipngCompression)
   const jxlEffortOption = formatConfig?.jxl?.effort
   const icoSizeOptions = formatConfig?.ico?.sizes
   const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit
@@ -122,13 +118,9 @@ export function TargetFormatQualityCard({
   const extraFlags: string[] = []
   if (isIcoTarget && icoWebToolkitEnabled) extraFlags.push("Web Toolkit")
   if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled) extraFlags.push("Tiny")
-  if (!isIcoTarget && targetFormat === "png" && pngCleanTransparentPixels) extraFlags.push("Clean Alpha")
-  if (!isIcoTarget && targetFormat === "png" && pngAutoGrayscale) extraFlags.push("Auto Gray")
   if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled && pngDithering) {
     extraFlags.push(`Dither ${pngDitheringLevel}%`)
   }
-  if (!isIcoTarget && targetFormat === "png" && pngProgressiveInterlaced) extraFlags.push("Interlaced")
-  if (!isIcoTarget && targetFormat === "png" && pngOxiPngCompression) extraFlags.push("OxiPNG")
   if (targetFormat === "jxl" && jxlEffortOption) extraFlags.push(`Effort ${jxlEffortOption}`)
   if (targetFormat === "avif" && typeof avifSpeedOption === "number") extraFlags.push(`Speed ${avifSpeedOption}`)
 

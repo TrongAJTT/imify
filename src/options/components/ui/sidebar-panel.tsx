@@ -5,10 +5,11 @@ interface SidebarPanelProps {
   title?: string
   children: React.ReactNode
   className?: string
+  childrenClassName?: string
   headerActions?: React.ReactNode
 }
 
-export function SidebarPanel({ title, children, className = "", headerActions }: SidebarPanelProps) {
+export function SidebarPanel({ title, children, className = "", childrenClassName = "", headerActions }: SidebarPanelProps) {
   return (
     <div className={`${className}`}>
       {title ? (
@@ -17,7 +18,7 @@ export function SidebarPanel({ title, children, className = "", headerActions }:
           {headerActions ? <div className="flex items-center gap-1">{headerActions}</div> : null}
         </div>
       ) : null}
-      <div className="p-3">
+      <div className={`p-3 ${childrenClassName}`}>
         {children}
       </div>
     </div>

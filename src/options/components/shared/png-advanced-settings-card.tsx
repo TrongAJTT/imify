@@ -71,7 +71,7 @@ export function PngAdvancedSettingsCard({
           icon={<Eraser size={16} />}
           title="Clean Transparent Pixels"
           subtitle={cleanTransparentPixels ? "Enabled" : "Zero RGB where alpha is 0 to improve PNG compression"}
-          tooltipContent="Removes hidden RGB color data from fully transparent pixels. This is visually lossless and usually reduces PNG size for logos, icons, and UI assets."
+          tooltipContent={`Removes hidden data from transparent areas to shrink file size. It's 100% invisible to the eye and perfect for logos and icons.\nSometimes 'invisible' parts of an image still carry hidden data. We scrub that away to make your file lighter while keeping it looking exactly the same.`}
           checked={cleanTransparentPixels}
           onChange={onCleanTransparentPixelsChange}
           disabled={disabled}
@@ -82,7 +82,7 @@ export function PngAdvancedSettingsCard({
           icon={<Palette size={16} />}
           title="Auto Grayscale Detection"
           subtitle={autoGrayscale ? "Enabled" : "Prefer grayscale encode path when image has no chroma"}
-          tooltipContent="When image content is grayscale, encoder can choose a smaller PNG representation. This is visually lossless and helpful for monochrome assets."
+          tooltipContent="Automatically shrinks the file size for black-and-white images without any loss in quality. Perfect for logos and scans."
           checked={autoGrayscale}
           onChange={onAutoGrayscaleChange}
           disabled={disabled}
@@ -93,7 +93,7 @@ export function PngAdvancedSettingsCard({
           icon={<Cpu size={16} />}
           title="OxiPNG Compression"
           subtitle={oxipngCompression ? "Enabled" : "Run OxiPNG pass for stronger lossless compression"}
-          tooltipContent="Uses @jsquash/oxipng WebAssembly to optimize PNG deflate/filters after encoding. Output is lossless but encode time is slower."
+          tooltipContent="Optimizes PNG filters for minimum file size. Process is slower but results are lossless."
           checked={oxipngCompression}
           onChange={onOxiPngCompressionChange}
           disabled={disabled}
@@ -102,13 +102,14 @@ export function PngAdvancedSettingsCard({
 
         <CheckboxCard
           icon={<ScanLine size={16} />}
-          title="Progressive Loading"
+          title="Progressive Loading (Interlaced)"
+          tooltipLabel="Progressive Loading (Interlaced)"
           subtitle={
             progressiveInterlaced
               ? "Enabled"
               : "Adam7 interlacing for progressive web loading"
           }
-          tooltipContent="Encodes PNG with Adam7 interlacing so browsers can show a coarse full-frame preview before details load. This usually increases file size by around 5-10%."
+          tooltipContent="Makes the image appear faster on websites by showing a blurry version first. Recommended for web use, though it increases file size by 5-10%."
           checked={progressiveInterlaced}
           onChange={onProgressiveInterlacedChange}
           disabled={disabled}

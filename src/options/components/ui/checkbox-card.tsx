@@ -44,11 +44,6 @@ export function CheckboxCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="font-bold text-[12px] text-slate-700 dark:text-slate-300 whitespace-nowrap truncate">{title}</span>
-            {(tooltipContent || tooltipLabel) && (
-              <Tooltip content={tooltipContent} label={tooltipLabel} variant="wide2">
-                <HelpCircle size={16} className="text-slate-400 cursor-help shrink-0" />
-              </Tooltip>
-            )}
           </div>
           {subtitle && (
             <div className="text-[10px] mt-0.5 opacity-70 truncate w-full leading-none">
@@ -58,6 +53,11 @@ export function CheckboxCard({
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0 ml-2">
+          {(tooltipContent || tooltipLabel) && (
+            <Tooltip content={tooltipContent} label={tooltipLabel} variant="wide2">
+              <HelpCircle size={16} className="text-slate-400 cursor-help shrink-0" />
+            </Tooltip>
+          )}
         <input
           checked={checked}
           disabled={disabled}

@@ -1,13 +1,10 @@
 import { useMemo, useState } from "react"
-import { FileEdit, FolderOpen, History, Save, Stamp, Lock } from "lucide-react"
+import { FolderOpen, History, Save } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/options/shared"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker } from "@/options/components/ui/typography"
-import SidebarCard from "@/options/components/ui/sidebar-card"
-import { ConcurrencySelector } from "@/options/components/shared/concurrency-selector"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import { ResizeCard } from "@/options/components/shared/resize-card"
@@ -16,7 +13,6 @@ import {
   type BatchResizeMode,
   type BatchTargetFormat
 } from "@/options/components/batch/types"
-import { WATERMARK_POSITION_OPTIONS } from "@/options/components/batch/watermark"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { Tooltip } from "@/options/components/tooltip"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
@@ -24,6 +20,7 @@ import { BatchRenameDialog } from "./rename-dialog"
 import { BatchWatermarkDialog } from "./watermark-dialog"
 import { SavePresetDialog } from "./save-preset-dialog"
 import { OpenPresetDialog } from "./open-preset-dialog"
+import { BatchExportPanel } from "./batch-export-panel"
 
 const HIGHLIGHT_COLORS = [
   "#0ea5e9", // Sky
@@ -121,11 +118,6 @@ export function BatchSetupSidebarPanel({
   const supportsExif = ["jpg", "webp", "avif"].includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
 
-  const watermarkSummary =
-    watermark.type === "none"
-      ? "None"
-      : `${watermark.type === "text" ? "Text" : "Logo"} - ${WATERMARK_POSITION_OPTIONS.find((option) => option.value === watermark.position)?.label || "Bottom-Right"}`
-
   const scopedPresets = useMemo(
     () => presets
       .filter((preset) => preset.context === setupContext)
@@ -216,170 +208,132 @@ export function BatchSetupSidebarPanel({
   )
 
   return (
-    <SidebarPanel title="CONFIGURATION" headerActions={panelActions}>
-      <div className="space-y-3 mt-1">
-        {/* Target Format & Quality Card */}
-        <TargetFormatQualityCard
-          targetFormat={targetFormat}
-          quality={quality}
-          formatConfig={{
-            avif: {
-              speed: formatOptions.avif.speed
-            },
-            jxl: {
-              effort: formatOptions.jxl.effort
-            },
-            png: {
-              tinyMode: formatOptions.png.tinyMode,
-              cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
-              autoGrayscale: formatOptions.png.autoGrayscale,
-              dithering: formatOptions.png.dithering,
-              ditheringLevel: formatOptions.png.ditheringLevel,
-              progressiveInterlaced: formatOptions.png.progressiveInterlaced,
-              oxipngCompression: formatOptions.png.oxipngCompression
-            },
-            ico: {
-              sizes: formatOptions.ico.sizes,
-              generateWebIconKit: formatOptions.ico.generateWebIconKit
-            }
-          }}
-          formatOptions={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
-            value: formatOption.value,
-            label: `${formatOption.label} (.${formatOption.value})`
-          }))}
-          supportsQuality={supportsQuality}
-          supportsTinyMode={supportsTinyMode}
-          onToggleWebIconKit={(v: boolean) => onIcoGenerateWebIconKitChange(v)}
-          onIcoSizesChange={onIcoSizesChange}
-          onTargetFormatChange={(nextValue: string) => onTargetFormatChange(nextValue as BatchTargetFormat)}
-          onQualityChange={onQualityChange}
-          onAvifSpeedChange={onAvifSpeedChange}
-          onJxlEffortChange={onJxlEffortChange}
-          onPngTinyModeChange={onPngTinyModeChange}
-          onPngDitheringLevelChange={onPngDitheringLevelChange}
-          disabled={isRunning}
-          isOpen={isTargetFormatQualityOpen}
-          onOpenChange={setIsTargetFormatQualityOpen}
-        />
+    <SidebarPanel title="CONFIGURATION" childrenClassName="flex flex-col gap-2" headerActions={panelActions}>
+      <TargetFormatQualityCard
+        targetFormat={targetFormat}
+        quality={quality}
+        formatConfig={{
+          avif: {
+            speed: formatOptions.avif.speed
+          },
+          jxl: {
+            effort: formatOptions.jxl.effort
+          },
+          png: {
+            tinyMode: formatOptions.png.tinyMode,
+            cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
+            autoGrayscale: formatOptions.png.autoGrayscale,
+            dithering: formatOptions.png.dithering,
+            ditheringLevel: formatOptions.png.ditheringLevel,
+            progressiveInterlaced: formatOptions.png.progressiveInterlaced,
+            oxipngCompression: formatOptions.png.oxipngCompression
+          },
+          ico: {
+            sizes: formatOptions.ico.sizes,
+            generateWebIconKit: formatOptions.ico.generateWebIconKit
+          }
+        }}
+        formatOptions={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
+          value: formatOption.value,
+          label: `${formatOption.label} (.${formatOption.value})`
+        }))}
+        supportsQuality={supportsQuality}
+        supportsTinyMode={supportsTinyMode}
+        onToggleWebIconKit={(v: boolean) => onIcoGenerateWebIconKitChange(v)}
+        onIcoSizesChange={onIcoSizesChange}
+        onTargetFormatChange={(nextValue: string) => onTargetFormatChange(nextValue as BatchTargetFormat)}
+        onQualityChange={onQualityChange}
+        onAvifSpeedChange={onAvifSpeedChange}
+        onJxlEffortChange={onJxlEffortChange}
+        onPngTinyModeChange={onPngTinyModeChange}
+        onPngDitheringLevelChange={onPngDitheringLevelChange}
+        disabled={isRunning}
+        isOpen={isTargetFormatQualityOpen}
+        onOpenChange={setIsTargetFormatQualityOpen}
+      />
 
-        {/* Resize Card */}
-        <ResizeCard
-          resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
-          resizeValue={resizeValue}
-          resizeWidth={resizeWidth}
-          resizeHeight={resizeHeight}
-          resizeAspectMode={resizeAspectMode}
-          resizeAspectRatio={resizeAspectRatio}
-          resizeFitMode={resizeFitMode}
-          resizeContainBackground={resizeContainBackground}
-          resizeSourceWidth={resizeSourceWidth}
-          resizeSourceHeight={resizeSourceHeight}
-          resizeSyncVersion={resizeSyncVersion}
-          paperSize={paperSize}
-          dpi={dpi}
-          onResizeModeChange={(mode) => {
-            onResizeModeChange(mode as BatchResizeMode)
+      {/* Resize Card */}
+      <ResizeCard
+        resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
+        resizeValue={resizeValue}
+        resizeWidth={resizeWidth}
+        resizeHeight={resizeHeight}
+        resizeAspectMode={resizeAspectMode}
+        resizeAspectRatio={resizeAspectRatio}
+        resizeFitMode={resizeFitMode}
+        resizeContainBackground={resizeContainBackground}
+        resizeSourceWidth={resizeSourceWidth}
+        resizeSourceHeight={resizeSourceHeight}
+        resizeSyncVersion={resizeSyncVersion}
+        paperSize={paperSize}
+        dpi={dpi}
+        onResizeModeChange={(mode) => {
+          onResizeModeChange(mode as BatchResizeMode)
 
-            if (mode === "change_width" || mode === "change_height") {
-              onResizeValueChange(1280)
-              return
-            }
+          if (mode === "change_width" || mode === "change_height") {
+            onResizeValueChange(1280)
+            return
+          }
 
-            if (mode === "scale") {
-              onResizeValueChange(100)
-            }
-          }}
-          onResizeValueChange={onResizeValueChange}
-          onResizeWidthChange={onResizeWidthChange}
-          onResizeHeightChange={onResizeHeightChange}
-          onResizeAspectModeChange={(mode) => onResizeAspectModeChange(mode as any)}
-          onResizeAspectRatioChange={(ratio) => onResizeAspectRatioChange(String(ratio))}
-          onResizeFitModeChange={(mode) => onResizeFitModeChange(mode as any)}
-          onResizeContainBackgroundChange={onResizeContainBackgroundChange}
-          onPaperSizeChange={(size) => onPaperSizeChange(size as any)}
-          onDpiChange={(d) => onDpiChange(d as any)}
-          disabled={isRunning || isIcoTarget}
-          isOpen={isResizeOpen}
-          onOpenChange={setIsResizeOpen}
-        />
-        <ConcurrencySelector
-          format={targetFormat}
-          value={concurrency}
-          onChange={onConcurrencyChange}
-          disabled={isRunning}
-          limits={performancePreferences}
-        />
-        {!isIcoTarget ? (
-          <>
-            {/* Resize Popover */}
-          </>
-        ) : null}
+          if (mode === "scale") {
+            onResizeValueChange(100)
+          }
+        }}
+        onResizeValueChange={onResizeValueChange}
+        onResizeWidthChange={onResizeWidthChange}
+        onResizeHeightChange={onResizeHeightChange}
+        onResizeAspectModeChange={(mode) => onResizeAspectModeChange(mode as any)}
+        onResizeAspectRatioChange={(ratio) => onResizeAspectRatioChange(String(ratio))}
+        onResizeFitModeChange={(mode) => onResizeFitModeChange(mode as any)}
+        onResizeContainBackgroundChange={onResizeContainBackgroundChange}
+        onPaperSizeChange={(size) => onPaperSizeChange(size as any)}
+        onDpiChange={(d) => onDpiChange(d as any)}
+        disabled={isRunning || isIcoTarget}
+        isOpen={isResizeOpen}
+        onOpenChange={setIsResizeOpen}
+      />
 
-        <div className="animate-in slide-in-from-top-2 fade-in space-y-3 pt-1 duration-300">
-          <Kicker>ADVANCED SETTINGS</Kicker>
-          <FormatAdvancedSettingsCard
-            targetFormat={targetFormat}
-            disabled={isRunning}
-            avif={{
-              qualityAlpha: formatOptions.avif.qualityAlpha,
-              lossless: formatOptions.avif.lossless,
-              subsample: formatOptions.avif.subsample,
-              tune: formatOptions.avif.tune,
-              highAlphaQuality: formatOptions.avif.highAlphaQuality,
-              onQualityAlphaChange: onAvifQualityAlphaChange,
-              onLosslessChange: onAvifLosslessChange,
-              onSubsampleChange: onAvifSubsampleChange,
-              onTuneChange: onAvifTuneChange,
-              onHighAlphaQualityChange: onAvifHighAlphaQualityChange
-            }}
-            png={{
-              cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
-              autoGrayscale: formatOptions.png.autoGrayscale,
-              oxipngCompression: formatOptions.png.oxipngCompression,
-              progressiveInterlaced: formatOptions.png.progressiveInterlaced,
-              onCleanTransparentPixelsChange: onPngCleanTransparentPixelsChange,
-              onAutoGrayscaleChange: onPngAutoGrayscaleChange,
-              onOxiPngCompressionChange: onPngOxiPngCompressionChange,
-              onProgressiveInterlacedChange: onPngProgressiveInterlacedChange
-            }}
-          />
-          <CheckboxCard
-            icon={<Lock size={16} />}
-            title="Privacy mode"
-            subtitle={
-              !supportsExif
-                ? "JPEG, WebP, and AVIF only"
-                : stripExif
-                  ? "Strip EXIF data from output images"
-                  : "Keep EXIF data when possible"
-            }
-            checked={stripExif && supportsExif}
-            onChange={onStripExifChange}
-            disabled={isRunning || !supportsExif}
-            tooltipContent="Removes sensitive metadata (GPS, Camera info)."
-            className={!supportsExif ? "opacity-70" : ""}
-            theme="amber"
-          />
+      <FormatAdvancedSettingsCard
+        targetFormat={targetFormat}
+        disabled={isRunning}
+        avif={{
+          qualityAlpha: formatOptions.avif.qualityAlpha,
+          lossless: formatOptions.avif.lossless,
+          subsample: formatOptions.avif.subsample,
+          tune: formatOptions.avif.tune,
+          highAlphaQuality: formatOptions.avif.highAlphaQuality,
+          onQualityAlphaChange: onAvifQualityAlphaChange,
+          onLosslessChange: onAvifLosslessChange,
+          onSubsampleChange: onAvifSubsampleChange,
+          onTuneChange: onAvifTuneChange,
+          onHighAlphaQualityChange: onAvifHighAlphaQualityChange
+        }}
+        png={{
+          cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
+          autoGrayscale: formatOptions.png.autoGrayscale,
+          oxipngCompression: formatOptions.png.oxipngCompression,
+          progressiveInterlaced: formatOptions.png.progressiveInterlaced,
+          onCleanTransparentPixelsChange: onPngCleanTransparentPixelsChange,
+          onAutoGrayscaleChange: onPngAutoGrayscaleChange,
+          onOxiPngCompressionChange: onPngOxiPngCompressionChange,
+          onProgressiveInterlacedChange: onPngProgressiveInterlacedChange
+        }}
+      />
 
-          <SidebarCard
-            icon={<FileEdit size={14} />}
-            label="File Renaming"
-            sublabel={fileNamePattern}
-            onClick={() => setIsRenameDialogOpen(true)}
-            disabled={isRunning}
-            theme="amber"
-          />
-
-          <SidebarCard
-            icon={<Stamp size={14} />}
-            label="Watermarking"
-            sublabel={watermarkSummary}
-            onClick={() => setIsWatermarkDialogOpen(true)}
-            disabled={isRunning}
-            theme="amber"
-          />
-        </div>
-      </div>
+      <BatchExportPanel
+        targetFormat={targetFormat}
+        concurrency={concurrency}
+        fileNamePattern={fileNamePattern}
+        stripExif={stripExif}
+        supportsExif={supportsExif}
+        watermark={watermark}
+        onConcurrencyChange={onConcurrencyChange}
+        onFileRenamingClick={() => setIsRenameDialogOpen(true)}
+        onStripExifChange={onStripExifChange}
+        onWatermarkingClick={() => setIsWatermarkDialogOpen(true)}
+        performancePreferences={performancePreferences}
+        disabled={isRunning}
+      />
 
       <BatchRenameDialog
         isOpen={isRenameDialogOpen}

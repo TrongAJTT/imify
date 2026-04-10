@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **UI:** Added new `ColoredSliderCard` reusable wrapper component for theme-customizable slider inputs with subtitle support (placed in `/ui` folder for general composition).
+- **Export Standardization:** Created reusable export control components to standardize export settings across Batch Processor and Image Splicing:
+  - `ExportControlsPanel` (shared): Reusable base component combining Concurrency Selector and File Renaming controls.
+  - `BatchExportPanel`: Feature-specific accordion wrapper for Batch Processing that adds Privacy Mode and Watermarking controls on top of shared export controls. Renders as collapsible AccordionCard with amber theme.
+  - `SplicingExportPanel`: Feature-specific accordion wrapper for Image Splicing that adds Export Mode selector and Trim Background control with smart conditional rendering (hides Concurrency when mode is "single"). Renders as collapsible AccordionCard with amber theme.
+  - Removed redundant `SidebarPanel title="EXPORT"` wrappers—export panels are now self-contained accordions providing both visual grouping and interaction (collapse/expand).
+  - Consolidated scattered export controls into organized, maintainable component hierarchy with proper separation of concerns.
+- **Image Splicing UI Standardization:** Standardized all Image Splicing sidebar sections into reusable accordion components with dynamic sublabels:
+  - `LayoutSettingsAccordion` (sky theme): Collapsible preset selector + layout direction controls with dynamic sublabel showing preset mode (e.g., "Vertical stitching", "3 columns", "Layout: auto").
+  - `CanvasSettingsAccordion` (purple theme): Collapsible canvas styling controls (spacing, padding, border, colors) with dynamic sublabel displaying current padding and gap values (e.g., "Padding: 5, Gaps: 10/6").
+  - `ImageSettingsAccordion` (orange theme): Collapsible image styling controls (resize, padding, border, colors) with dynamic sublabel showing current resize mode and padding (e.g., "Mode: Fit Width, Padding: 8").
+  - Replaced three `SidebarPanel` sections with new accordion components for visual consistency with export controls.
+  - Added standardized horizontal padding (`px-2`) to export-related cards (`TargetFormatQualityCard`, `FormatAdvancedSettingsCard`, `SplicingExportPanel`) to align visual spacing with accordion margins.
+  - Removed old `NumberInput`, `ColorPickerPopover`, and `ResizeCard` inline markup from `SplicingPresetLayout`, `SplicingCanvasSettings`, and `SplicingImageSettings` sections.
 - **UI Refactor:** Enhanced `RadioCard` component with new features for improved consistency with `CheckboxCard`:
   - Added optional `icon` prop to display icon at the card's start.
   - Renamed `tooltip` prop to `tooltipContent` and added `tooltipLabel` for structured tooltip content/label pairs.
