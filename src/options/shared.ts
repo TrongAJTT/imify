@@ -1,5 +1,4 @@
 import type {
-  FormatCodecOptions,
   ExtensionStorageState,
   FormatConfig,
   ImageFormat,
@@ -10,6 +9,7 @@ import type {
   SupportedDPI
 } from "@/core/types"
 import { QUALITY_FORMATS } from "@/core/format-config"
+import { normalizeFormatOptionsForCustomFormat } from "@/features/custom-formats/format-options-normalizer"
 import type { CustomFormatInput } from "@/features/custom-formats"
 
 export { QUALITY_FORMATS }
@@ -131,89 +131,10 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
     baseResize.containBackground = undefined
   }
 
-  const normalizedPngDitheringLevel =
-    typeof input.formatOptions?.png?.ditheringLevel === "number"
-      ? Math.max(0, Math.min(100, Math.round(input.formatOptions.png.ditheringLevel)))
-      : input.formatOptions?.png?.dithering
-      ? 100
-      : 0
-
-  const normalizedWebpNearLossless =
-    typeof input.formatOptions?.webp?.nearLossless === "number"
-      ? Math.max(0, Math.min(100, Math.round(input.formatOptions.webp.nearLossless)))
-      : 100
-
-  const normalizedWebpEffort =
-    typeof input.formatOptions?.webp?.effort === "number"
-      ? Math.max(1, Math.min(9, Math.round(input.formatOptions.webp.effort)))
-      : 5
-
-  const normalizedFormatOptions: FormatCodecOptions = {
-    jxl:
-      input.format === "jxl"
-        ? {
-            effort: Math.max(1, Math.min(9, Math.round(input.formatOptions?.jxl?.effort ?? 7)))
-          }
-        : undefined,
-    ico:
-      input.format === "ico"
-        ? {
-            sizes: Array.from(
-              new Set(
-                (input.formatOptions?.ico?.sizes ?? [16, 32, 48]).filter(
-                  (size) => Number.isInteger(size) && size > 0
-                )
-              )
-            ).sort((a, b) => a - b),
-            generateWebIconKit: Boolean(input.formatOptions?.ico?.generateWebIconKit)
-          }
-        : undefined,
-    png:
-      input.format === "png"
-        ? {
-            tinyMode: Boolean(input.formatOptions?.png?.tinyMode),
-            cleanTransparentPixels: Boolean(input.formatOptions?.png?.cleanTransparentPixels),
-            autoGrayscale: Boolean(input.formatOptions?.png?.autoGrayscale),
-            dithering: normalizedPngDitheringLevel > 0,
-            ditheringLevel: normalizedPngDitheringLevel,
-            progressiveInterlaced: Boolean(input.formatOptions?.png?.progressiveInterlaced),
-            oxipngCompression: Boolean(input.formatOptions?.png?.oxipngCompression)
-          }
-        : undefined,
-    avif:
-      input.format === "avif"
-        ? {
-            speed:
-              typeof input.formatOptions?.avif?.speed === "number"
-                ? Math.max(0, Math.min(10, Math.round(input.formatOptions.avif.speed)))
-                : 6,
-            qualityAlpha:
-              typeof input.formatOptions?.avif?.qualityAlpha === "number"
-                ? Math.max(0, Math.min(100, Math.round(input.formatOptions.avif.qualityAlpha)))
-                : undefined,
-            lossless: Boolean(input.formatOptions?.avif?.lossless),
-            subsample:
-              input.formatOptions?.avif?.subsample === 2 || input.formatOptions?.avif?.subsample === 3
-                ? input.formatOptions.avif.subsample
-                : 1,
-            tune:
-              input.formatOptions?.avif?.tune === "ssim" || input.formatOptions?.avif?.tune === "psnr"
-                ? input.formatOptions.avif.tune
-                : "auto",
-            highAlphaQuality: Boolean(input.formatOptions?.avif?.highAlphaQuality)
-          }
-        : undefined,
-    webp:
-      input.format === "webp"
-        ? {
-            lossless: Boolean(input.formatOptions?.webp?.lossless),
-            nearLossless: normalizedWebpNearLossless,
-            effort: normalizedWebpEffort,
-            sharpYuv: Boolean(input.formatOptions?.webp?.sharpYuv),
-            preserveExactAlpha: Boolean(input.formatOptions?.webp?.preserveExactAlpha)
-          }
-        : undefined
-  }
+  const normalizedFormatOptions = normalizeFormatOptionsForCustomFormat(
+    input.format,
+    input.formatOptions
+  )
 
   return {
     ...input,

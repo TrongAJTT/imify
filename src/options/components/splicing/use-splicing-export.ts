@@ -11,6 +11,7 @@ import { exportSplicedImage, computeSplicingExportCanvasDimensions } from "@/fea
 import { calculateLayout, calculateProcessedSize } from "@/features/splicing/layout-engine"
 import type { SplicingExportConfig, SplicingImageItem } from "@/features/splicing/types"
 import { buildSmartOutputFileName, reserveUniqueFileName } from "@/options/components/batch/pipeline"
+import { buildActiveSplicingFormatOptions } from "@/options/stores/splicing-format-options"
 import { useSplicingStore, resolveCanvasStyle, resolveImageStyle, resolveLayoutConfig } from "@/options/stores/splicing-store"
 import type { SplicingExportMode } from "@/options/components/splicing/splicing-export-dialog"
 
@@ -107,50 +108,7 @@ export function useSplicingExport({
         const config: SplicingExportConfig = {
           format: store.exportFormat,
           quality: store.exportQuality,
-          formatOptions: {
-            jxl: store.exportFormat === "jxl" ? { effort: store.exportJxlEffort } : undefined,
-            webp:
-              store.exportFormat === "webp"
-                ? {
-                    lossless: store.exportWebpLossless,
-                    nearLossless: store.exportWebpNearLossless,
-                    effort: store.exportWebpEffort,
-                    sharpYuv: store.exportWebpSharpYuv,
-                    preserveExactAlpha: store.exportWebpPreserveExactAlpha
-                  }
-                : undefined,
-            avif:
-              store.exportFormat === "avif"
-                ? {
-                    speed: store.exportAvifSpeed,
-                    qualityAlpha: store.exportAvifQualityAlpha,
-                    lossless: store.exportAvifLossless,
-                    subsample: store.exportAvifSubsample,
-                    tune: store.exportAvifTune,
-                    highAlphaQuality: store.exportAvifHighAlphaQuality
-                  }
-                : undefined,
-            mozjpeg:
-              store.exportFormat === "mozjpeg"
-                ? {
-                    enabled: true,
-                    progressive: store.exportMozJpegProgressive,
-                    chromaSubsampling: store.exportMozJpegChromaSubsampling
-                  }
-                : undefined,
-            png:
-              store.exportFormat === "png"
-                ? {
-                    tinyMode: store.exportPngTinyMode,
-                    cleanTransparentPixels: store.exportPngCleanTransparentPixels,
-                    autoGrayscale: store.exportPngAutoGrayscale,
-                    dithering: store.exportPngDithering,
-                    ditheringLevel: store.exportPngDitheringLevel,
-                    progressiveInterlaced: store.exportPngProgressiveInterlaced,
-                    oxipngCompression: store.exportPngOxiPngCompression
-                  }
-                : undefined
-          },
+          formatOptions: buildActiveSplicingFormatOptions(store),
           exportMode: store.exportMode,
           trimBackground: store.exportTrimBackground
         }

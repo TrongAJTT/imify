@@ -114,6 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - When pixel-level PNG optimization is enabled (`tinyMode`, `cleanTransparentPixels`, `autoGrayscale`, `dithering`), encoding switches to UPNG-based processing with shared main-thread/worker behavior.
   - Optional `oxipngCompression` now runs an additional lossless wasm optimization pass via `@jsquash/oxipng` after PNG encode (with safe fallback if wasm optimization fails).
 - **Converter Architecture:** Introduced a modular adapter-style raster encoding pipeline (`raster-encode-adapters.ts`) to standardize format-specific encoding across main thread and conversion worker. This removes duplicated `if/switch` logic and makes future format extension easier.
+- **Boilerplate Reduction (Custom Format Options):** Extracted shared codec options normalization into `src/features/custom-formats/format-options-normalizer.ts` and reused it from both `src/options/shared.ts` and `src/features/custom-formats/store.ts` to avoid duplicated WebP/AVIF/JXL/PNG/ICO normalization logic.
+- **Boilerplate Reduction (Splicing Export DTO Mapping):** Added shared builder `src/options/stores/splicing-format-options.ts` and switched `use-splicing-export` to use a single `buildActiveSplicingFormatOptions(...)` mapping path instead of repeating per-format option wiring inline.
 - **WebP Encoding Path:** Added hybrid WebP adapter behavior in raster encoding and splicing export:
   - Default/basic WebP stays on native canvas encode.
   - Advanced/lossless WebP options automatically switch to local `@jsquash/webp` WASM encode path.
