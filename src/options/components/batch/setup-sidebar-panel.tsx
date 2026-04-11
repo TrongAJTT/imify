@@ -38,10 +38,12 @@ const HIGHLIGHT_COLORS = [
 
 interface BatchSetupSidebarPanelProps {
   performancePreferences: PerformancePreferences
+  onOpenSettings: () => void
 }
 
 export function BatchSetupSidebarPanel({
-  performancePreferences
+  performancePreferences,
+  onOpenSettings
 }: BatchSetupSidebarPanelProps) {
   const setupContext = useBatchStore((state) => state.setupContext)
   const isRunning = useBatchStore((state) => state.isRunning)
@@ -377,11 +379,13 @@ export function BatchSetupSidebarPanel({
         stripExif={stripExif}
         supportsExif={supportsExif}
         watermark={watermark}
+        formatOptions={formatOptions}
         onConcurrencyChange={onConcurrencyChange}
         onFileRenamingClick={() => setIsRenameDialogOpen(true)}
         onStripExifChange={onStripExifChange}
         onWatermarkingClick={() => setIsWatermarkDialogOpen(true)}
         performancePreferences={performancePreferences}
+        onOpenSettings={onOpenSettings}
         disabled={isRunning}
       />
 

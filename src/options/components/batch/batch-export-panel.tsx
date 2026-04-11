@@ -3,9 +3,10 @@ import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import SidebarCard from "@/options/components/ui/sidebar-card"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { ExportControlsPanel } from "@/options/components/shared/export-controls-panel"
+import { SmartConcurrencyAdvisorCard } from "@/options/components/shared/smart-concurrency-advisor-card"
 import { WATERMARK_POSITION_OPTIONS } from "@/options/components/batch/watermark"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
-import type { BatchTargetFormat } from "@/options/components/batch/types"
+import type { BatchFormatOptions, BatchTargetFormat } from "@/options/components/batch/types"
 
 interface BatchWatermarkConfig {
   type: "none" | "text" | "logo"
@@ -26,6 +27,8 @@ interface BatchExportPanelProps {
   supportsExif: boolean
   /** Watermark configuration */
   watermark: BatchWatermarkConfig
+  /** Active format options for advisor simulation */
+  formatOptions: BatchFormatOptions
   /** Callback when concurrency changes */
   onConcurrencyChange: (value: number) => void
   /** Callback when file renaming is opened */
@@ -36,6 +39,8 @@ interface BatchExportPanelProps {
   onWatermarkingClick: () => void
   /** Performance preferences for concurrency limits */
   performancePreferences: PerformancePreferences
+  /** Open settings dialog callback */
+  onOpenSettings: () => void
   /** Whether inputs are disabled */
   disabled?: boolean
 }
@@ -51,11 +56,13 @@ export function BatchExportPanel({
   stripExif,
   supportsExif,
   watermark,
+  formatOptions,
   onConcurrencyChange,
   onFileRenamingClick,
   onStripExifChange,
   onWatermarkingClick,
   performancePreferences,
+  onOpenSettings,
   disabled = false
 }: BatchExportPanelProps) {
   const watermarkSummary =
@@ -79,7 +86,6 @@ export function BatchExportPanel({
           fileNamePattern={fileNamePattern}
           onConcurrencyChange={onConcurrencyChange}
           onFileRenamingClick={onFileRenamingClick}
-          performancePreferences={performancePreferences}
           disabled={disabled}
           beforeFileRenaming={
             <>
@@ -109,6 +115,26 @@ export function BatchExportPanel({
                 theme="amber"
               />
             </>
+          }
+          afterFileRenaming={
+            <SmartConcurrencyAdvisorCard
+              targetFormat={targetFormat}
+              selectedConcurrency={concurrency}
+              formatOptions={{
+                bmp: { ...formatOptions.bmp },
+                jxl: { ...formatOptions.jxl },
+                webp: { ...formatOptions.webp },
+                avif: { ...formatOptions.avif },
+                mozjpeg: { ...formatOptions.mozjpeg },
+                png: { ...formatOptions.png },
+                tiff: { ...formatOptions.tiff },
+                ico: { ...formatOptions.ico }
+              }}
+              performancePreferences={performancePreferences}
+              onApplyRecommended={onConcurrencyChange}
+              onOpenSettings={onOpenSettings}
+              disabled={disabled}
+            />
           }
         />
       </div>

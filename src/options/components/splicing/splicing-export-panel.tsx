@@ -3,11 +3,13 @@ import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import SidebarCard from "@/options/components/ui/sidebar-card"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { ConcurrencySelector } from "@/options/components/shared/concurrency-selector"
+import { SmartConcurrencyAdvisorCard } from "@/options/components/shared/smart-concurrency-advisor-card"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import {
   EXPORT_MODE_OPTIONS,
   SelectField
 } from "@/options/components/splicing/splicing-sidebar-fields"
+import type { FormatCodecOptions } from "@/core/types"
 import type { SplicingExportFormat, SplicingExportMode } from "@/features/splicing/types"
 
 interface SplicingExportPanelProps {
@@ -23,6 +25,11 @@ interface SplicingExportPanelProps {
   exportTrimBackground: boolean
   /** Available export modes based on current preset */
   availableExportModes?: Array<SplicingExportMode>
+  /** Active format options for advisor simulation */
+  advisorFormatOptions: Pick<
+    FormatCodecOptions,
+    "bmp" | "png" | "jxl" | "avif" | "mozjpeg" | "tiff" | "webp"
+  >
   /** Callback when concurrency changes */
   onConcurrencyChange: (value: number) => void
   /** Callback when file renaming is opened */
@@ -33,6 +40,8 @@ interface SplicingExportPanelProps {
   onExportTrimBackgroundChange: (enabled: boolean) => void
   /** Performance preferences for concurrency limits */
   performancePreferences: PerformancePreferences
+  /** Open settings dialog callback */
+  onOpenSettings: () => void
   /** Whether inputs are disabled */
   disabled?: boolean
 }
@@ -48,11 +57,13 @@ export function SplicingExportPanel({
   exportMode,
   exportTrimBackground,
   availableExportModes,
+  advisorFormatOptions,
   onConcurrencyChange,
   onFileRenamingClick,
   onExportModeChange,
   onExportTrimBackgroundChange,
   performancePreferences,
+  onOpenSettings,
   disabled = false
 }: SplicingExportPanelProps) {
   const handleExportModeChange = (mode: SplicingExportMode) => {
@@ -90,7 +101,6 @@ export function SplicingExportPanel({
               format={concurrencyFormat}
               value={concurrency}
               onChange={onConcurrencyChange}
-              limits={performancePreferences}
               disabled={disabled}
             />
           )}
@@ -115,6 +125,15 @@ export function SplicingExportPanel({
           label="File renaming"
           sublabel={fileNamePattern}
           onClick={onFileRenamingClick}
+          disabled={disabled}
+        />
+        <SmartConcurrencyAdvisorCard
+          targetFormat={targetFormat}
+          selectedConcurrency={concurrency}
+          formatOptions={advisorFormatOptions}
+          performancePreferences={performancePreferences}
+          onApplyRecommended={exportMode === "single" ? undefined : onConcurrencyChange}
+          onOpenSettings={onOpenSettings}
           disabled={disabled}
         />
       </div>

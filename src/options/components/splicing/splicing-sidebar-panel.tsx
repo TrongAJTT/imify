@@ -31,11 +31,13 @@ import { SidebarPanel } from "../ui/sidebar-panel"
 interface SplicingSidebarPanelProps {
   performancePreferences: PerformancePreferences
   onPreviewQualityChange: (next: number) => void
+  onOpenSettings: () => void
 }
 
 export function SplicingSidebarPanel({
   performancePreferences,
-  onPreviewQualityChange
+  onPreviewQualityChange,
+  onOpenSettings
 }: SplicingSidebarPanelProps) {
   const preset = useSplicingStore((s) => s.preset)
   const primaryDirection = useSplicingStore((s) => s.primaryDirection)
@@ -353,6 +355,47 @@ export function SplicingSidebarPanel({
           exportMode={exportMode}
           exportTrimBackground={exportTrimBackground}
           availableExportModes={availableExportModes}
+          advisorFormatOptions={{
+            bmp: {
+              colorDepth: exportBmpColorDepth,
+              dithering: exportBmpDithering,
+              ditheringLevel: exportBmpDitheringLevel
+            },
+            jxl: {
+              effort: exportJxlEffort
+            },
+            webp: {
+              lossless: exportWebpLossless,
+              nearLossless: exportWebpNearLossless,
+              effort: exportWebpEffort,
+              sharpYuv: exportWebpSharpYuv,
+              preserveExactAlpha: exportWebpPreserveExactAlpha
+            },
+            avif: {
+              speed: exportAvifSpeed,
+              qualityAlpha: exportAvifQualityAlpha,
+              lossless: exportAvifLossless,
+              subsample: exportAvifSubsample,
+              tune: exportAvifTune,
+              highAlphaQuality: exportAvifHighAlphaQuality
+            },
+            mozjpeg: {
+              progressive: exportMozJpegProgressive,
+              chromaSubsampling: exportMozJpegChromaSubsampling
+            },
+            png: {
+              tinyMode: exportPngTinyMode,
+              cleanTransparentPixels: exportPngCleanTransparentPixels,
+              autoGrayscale: exportPngAutoGrayscale,
+              dithering: exportPngDithering,
+              ditheringLevel: exportPngDitheringLevel,
+              progressiveInterlaced: exportPngProgressiveInterlaced,
+              oxipngCompression: exportPngOxiPngCompression
+            },
+            tiff: {
+              colorMode: exportTiffColorMode
+            }
+          }}
           onConcurrencyChange={setExportConcurrency}
           onFileRenamingClick={() => setIsRenameDialogOpen(true)}
           onExportModeChange={(mode) => {
@@ -363,6 +406,7 @@ export function SplicingSidebarPanel({
           }}
           onExportTrimBackgroundChange={setExportTrimBackground}
           performancePreferences={performancePreferences}
+          onOpenSettings={onOpenSettings}
           disabled={false}
         />
 

@@ -4,10 +4,7 @@ import type { ImageFormat } from "@/core/types"
 import { SelectInput } from "@/options/components/ui/select-input"
 import {
   buildConcurrencyOptions,
-  clampConcurrencyValue,
-  getMaxConcurrencyForFormat,
-  isHeavyConcurrencyFormat,
-  type PerformancePreferences
+  clampConcurrencyValue
 } from "@/options/shared/performance-preferences"
 import { getConcurrencyTooltip } from "@/options/shared/concurrency-messages"
 
@@ -15,7 +12,6 @@ interface ConcurrencySelectorProps {
   format: ImageFormat
   value: number
   onChange: (value: number) => void
-  limits: PerformancePreferences
   disabled?: boolean
   className?: string
 }
@@ -24,13 +20,11 @@ export function ConcurrencySelector({
   format,
   value,
   onChange,
-  limits,
   disabled,
   className = ""
 }: ConcurrencySelectorProps) {
-  const maxConcurrency = getMaxConcurrencyForFormat(format, limits)
-  const options = useMemo(() => buildConcurrencyOptions(maxConcurrency), [maxConcurrency])
-  const safeValue = clampConcurrencyValue(value, maxConcurrency)
+  const options = useMemo(() => buildConcurrencyOptions(), [])
+  const safeValue = clampConcurrencyValue(value)
 
   useEffect(() => {
     if (safeValue !== value) {
@@ -38,11 +32,7 @@ export function ConcurrencySelector({
     }
   }, [safeValue, value, onChange])
 
-  const isHeavy = isHeavyConcurrencyFormat(format)
-  const tooltip = `${getConcurrencyTooltip(
-    limits.maxStandardFormatConcurrency,
-    limits.maxHeavyFormatConcurrency
-  )}\n\nCurrent format: ${format.toUpperCase()} (${isHeavy ? "Heavy" : "Standard"})\nCurrent max: ${maxConcurrency}`
+  const tooltip = getConcurrencyTooltip(format)
 
   return (
     <SelectInput

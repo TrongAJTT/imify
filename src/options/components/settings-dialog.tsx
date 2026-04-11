@@ -7,6 +7,7 @@ import {
   type DiscreteSliderOption
 } from "@/options/components/ui/discrete-slider"
 import { SelectInput } from "@/options/components/ui/select-input"
+import { NumberInput } from "@/options/components/ui/number-input"
 import { Kicker, MutedText, Subheading } from "@/options/components/ui/typography"
 import {
   BarChart3,
@@ -25,8 +26,8 @@ import {
   type WorkspaceLayoutPreferences
 } from "@/options/shared/layout-preferences"
 import {
-  HEAVY_CONCURRENCY_MAX_OPTIONS,
-  STANDARD_CONCURRENCY_MAX_OPTIONS,
+  detectHardwareProfile,
+  normalizePerformancePreferences,
   type PerformancePreferences
 } from "@/options/shared/performance-preferences"
 
@@ -41,8 +42,7 @@ interface SettingsDialogProps {
   onChangeNavigationSidebarLevel: (level: SidebarWidthLevel) => void
   onChangeConfigurationSidebarLevel: (level: SidebarWidthLevel) => void
   performancePreferences: PerformancePreferences
-  onChangeMaxStandardConcurrency: (value: number) => void
-  onChangeMaxHeavyConcurrency: (value: number) => void
+  onChangePerformancePreferences: (value: PerformancePreferences) => void
 }
 
 export function SettingsDialog({
@@ -56,8 +56,7 @@ export function SettingsDialog({
   onChangeNavigationSidebarLevel,
   onChangeConfigurationSidebarLevel,
   performancePreferences,
-  onChangeMaxStandardConcurrency,
-  onChangeMaxHeavyConcurrency
+  onChangePerformancePreferences
 }: SettingsDialogProps) {
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
@@ -92,24 +91,6 @@ export function SettingsDialog({
     []
   )
 
-  const standardConcurrencySliderOptions = useMemo<DiscreteSliderOption[]>(
-    () =>
-      STANDARD_CONCURRENCY_MAX_OPTIONS.map((value, index) => ({
-        value,
-        label: ["Safe", "Balanced", "Default", "Fast", "Max"][index] ?? String(value)
-      })),
-    []
-  )
-
-  const heavyConcurrencySliderOptions = useMemo<DiscreteSliderOption[]>(
-    () =>
-      HEAVY_CONCURRENCY_MAX_OPTIONS.map((value, index) => ({
-        value,
-        label: ["Safe", "Low", "Default", "High", "Max"][index] ?? String(value)
-      })),
-    []
-  )
-
   const navigationWidthPx =
     NAVIGATION_SIDEBAR_WIDTH_OPTIONS.find(
       (option) => option.level === layoutPreferences.navigationSidebarLevel
@@ -119,6 +100,25 @@ export function SettingsDialog({
     CONFIGURATION_SIDEBAR_WIDTH_OPTIONS.find(
       (option) => option.level === layoutPreferences.configurationSidebarLevel
     )?.widthPx ?? CONFIGURATION_SIDEBAR_WIDTH_OPTIONS[1].widthPx
+
+  const safePerformancePreferences = normalizePerformancePreferences(performancePreferences)
+  const advisorEnabled = safePerformancePreferences.smartAdvisorEnabled
+  const hardwareProfile = safePerformancePreferences.hardwareProfile
+
+  const updatePerformancePreferences = (next: PerformancePreferences) => {
+    onChangePerformancePreferences(normalizePerformancePreferences(next))
+  }
+
+  const updateHardwareProfile = (updates: Partial<PerformancePreferences["hardwareProfile"]>) => {
+    updatePerformancePreferences({
+      ...safePerformancePreferences,
+      hardwareProfile: {
+        ...safePerformancePreferences.hardwareProfile,
+        ...updates,
+        source: "manual"
+      }
+    })
+  }
 
   return (
     <BaseDialog
@@ -260,38 +260,116 @@ export function SettingsDialog({
                   Performance
                 </h2>
                 <MutedText>
-                  Set upper concurrency limits for standard and heavy formats.
+                  Smart Concurrency Advisor helps simulate safe worker counts using your hardware profile and active format settings.
                 </MutedText>
               </div>
 
               <section className="space-y-4">
                 <div>
-                  <Kicker className="mb-1">WORKER CONCURRENCY LIMITS</Kicker>
+                  <Kicker className="mb-1">SMART CONCURRENCY ADVISOR</Kicker>
                   <MutedText className="text-sm">
-                    These values define the maximum options shown in workspace concurrency selectors.
+                    Modern encoders like AVIF and JXL can consume high CPU and memory in browser workers. Enable advisor to get dynamic recommendations based on machine profile and current format options.
                   </MutedText>
                 </div>
 
-                <DiscreteSlider
-                  label="Standard formats max concurrency"
-                  value={performancePreferences.maxStandardFormatConcurrency}
-                  options={standardConcurrencySliderOptions}
-                  onChange={onChangeMaxStandardConcurrency}
-                  helperText="Applies to JPG, PNG, WebP, BMP, TIFF, and ICO."
-                  valueFormatter={(option) => `${option.label} (${option.value})`}
-                />
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+                  Privacy note: hardware data is only read and processed locally in your browser. No telemetry or external upload.
+                </div>
 
-                <DiscreteSlider
-                  label="Heavy formats max concurrency"
-                  value={performancePreferences.maxHeavyFormatConcurrency}
-                  options={heavyConcurrencySliderOptions}
-                  onChange={onChangeMaxHeavyConcurrency}
-                  helperText="Applies to AVIF and JXL encoding."
-                  valueFormatter={(option) => `${option.label} (${option.value})`}
-                />
+                <label className="flex items-center justify-between gap-4 py-2 rounded-lg transition-colors cursor-pointer select-none group">
+                  <div className="flex-1 pr-6">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-900 transition-colors">
+                      Enable Smart Concurrency Advisor
+                    </p>
+                    <MutedText className="text-sm mt-0.5 leading-relaxed">
+                      Keep manual concurrency free (1-90), but show contextual safe recommendations under Export Settings.
+                    </MutedText>
+                  </div>
+                  <div className="flex items-center">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={advisorEnabled}
+                      onClick={() =>
+                        updatePerformancePreferences({
+                          ...safePerformancePreferences,
+                          smartAdvisorEnabled: !advisorEnabled
+                        })
+                      }
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 ${
+                        advisorEnabled ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          advisorEnabled ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </label>
+
+                {advisorEnabled && (
+                  <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                          Hardware Profile
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Source: {hardwareProfile.source === "detected" ? "Auto-detected" : hardwareProfile.source === "manual" ? "Manual override" : "Fallback"}
+                        </p>
+                      </div>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const detected = detectHardwareProfile()
+                          updatePerformancePreferences({
+                            ...safePerformancePreferences,
+                            hardwareProfile: detected
+                          })
+                        }}
+                      >
+                        Auto-Detect Hardware
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <NumberInput
+                        label="CPU Cores (logical threads)"
+                        value={hardwareProfile.cpuCores}
+                        min={1}
+                        max={64}
+                        step={1}
+                        onChangeValue={(nextValue) => {
+                          updateHardwareProfile({ cpuCores: nextValue })
+                        }}
+                      />
+
+                      <NumberInput
+                        label="RAM Budget (GB)"
+                        value={hardwareProfile.ramBudgetGb}
+                        min={0.5}
+                        max={64}
+                        step={0.5}
+                        onChangeValue={(nextValue) => {
+                          updateHardwareProfile({ ramBudgetGb: nextValue })
+                        }}
+                      />
+                    </div>
+
+                    <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+                      Recommended baseline detected: {hardwareProfile.detectedLogicalCores ?? hardwareProfile.cpuCores} threads, ~{hardwareProfile.detectedDeviceMemoryGb ?? "unknown"}GB device memory.
+                    </div>
+                  </div>
+                )}
 
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
-                  Warning: AVIF/JXL encoding is highly memory-intensive in the browser. High values may cause slowdowns or out-of-memory crashes on low-RAM devices.
+                  Concurrency selector remains fully open (1-90). Advisor only provides guidance and does not enforce limits.
                 </div>
               </section>
             </div>

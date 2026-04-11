@@ -409,17 +409,8 @@ export default function OptionsPage() {
           })
         }}
         performancePreferences={safePerformancePreferences}
-        onChangeMaxStandardConcurrency={(value: number) => {
-          void setPerformancePreferences({
-            ...safePerformancePreferences,
-            maxStandardFormatConcurrency: value
-          })
-        }}
-        onChangeMaxHeavyConcurrency={(value: number) => {
-          void setPerformancePreferences({
-            ...safePerformancePreferences,
-            maxHeavyFormatConcurrency: value
-          })
+        onChangePerformancePreferences={(value) => {
+          void setPerformancePreferences(value)
         }}
       />
 
@@ -477,13 +468,17 @@ export default function OptionsPage() {
           {/* Right panel content collapsed into left sidebar on smaller screens */}
           <div className={`xl:hidden border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col ${isNavCollapsed ? "hidden" : ""}`}>
             {(activeTab === "batch" || activeTab === "single") && (
-              <BatchSetupSidebarPanel performancePreferences={safePerformancePreferences} />
+              <BatchSetupSidebarPanel
+                performancePreferences={safePerformancePreferences}
+                onOpenSettings={() => setIsSettingsDialogOpen(true)}
+              />
             )}
 
             {activeTab === "splicing" && (
               <SplicingSidebarPanel
                 performancePreferences={safePerformancePreferences}
                 onPreviewQualityChange={handleSidebarPreviewQualityChange}
+                onOpenSettings={() => setIsSettingsDialogOpen(true)}
               />
             )}
 
@@ -533,13 +528,17 @@ export default function OptionsPage() {
           className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hidden xl:flex flex-col overflow-y-auto"
           style={{ width: configurationSidebarWidth }}>
           {(activeTab === "batch" || activeTab === "single") && (
-            <BatchSetupSidebarPanel performancePreferences={safePerformancePreferences} />
+            <BatchSetupSidebarPanel
+              performancePreferences={safePerformancePreferences}
+              onOpenSettings={() => setIsSettingsDialogOpen(true)}
+            />
           )}
 
           {activeTab === "splicing" && (
             <SplicingSidebarPanel
               performancePreferences={safePerformancePreferences}
               onPreviewQualityChange={handleSidebarPreviewQualityChange}
+              onOpenSettings={() => setIsSettingsDialogOpen(true)}
             />
           )}
 

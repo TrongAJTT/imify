@@ -3,11 +3,8 @@
  * Used across Batch Processor and Image Splicing
  */
 
-export const CONCURRENCY_TOOLTIP = `Controls how many images are processed simultaneously.\n\nHigher values = faster processing but more RAM usage.\n\nHeavy formats (AVIF, JXL) are limited to maximum 5.`
+export const CONCURRENCY_TOOLTIP = `Controls how many images are processed simultaneously (1-90).\n\nHigher values process faster but increase CPU and RAM pressure.`
 
-export function getConcurrencyTooltip(
-	maxStandardFormatConcurrency: number,
-	maxHeavyFormatConcurrency: number
-): string {
-	return `Controls how many images are processed simultaneously.\n\nHigher values = faster processing but more RAM usage.\n\nStandard formats (JPG, PNG, WebP, BMP, TIFF, ICO): max ${maxStandardFormatConcurrency}.\nHeavy formats (AVIF, JXL): max ${maxHeavyFormatConcurrency}.`
+export function getConcurrencyTooltip(currentFormat: string): string {
+	return `${CONCURRENCY_TOOLTIP}\n\nCurrent format: ${currentFormat.toUpperCase()}. Use Smart Concurrency Advisor below for hardware-aware recommendations.`
 }

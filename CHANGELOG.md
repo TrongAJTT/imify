@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ICO Quality Upgrade:** Added high-quality step-down downsampling in ICO rendering so very small outputs (especially `16x16`) preserve edges and readability better than one-pass scale-down.
 - **ICO Internal PNG Optimization:** Added new `Optimize internal PNG layers (Smaller file size)` toggle and wired it end-to-end through shared types, global format settings, custom format editor, single/batch setup stores, and ICO conversion pipeline.
 - **ICO Web Toolkit Pro Output:** Upgraded generated toolkit ZIP to include `site.webmanifest`, `browserconfig.xml`, and `html_code.html` (paste-ready head tags), plus updated tooltip guidance in the ICO selector.
+- **Smart Concurrency Advisor (Opt-in):** Added new hardware-aware recommendation system in settings and export workflows:
+  - New Performance settings flow with advisor toggle, privacy explanation, hardware auto-detect, and manual CPU/RAM budget override.
+  - New dynamic recommendation panel at the bottom of `Export Settings` (Batch + Splicing), including risk state (`Optimal`, `Pushing limits`, `High crash risk`), recommended range, and one-click `Apply Recommended` action.
+  - Heuristic engine now evaluates format-specific advanced options (AVIF speed/lossless/chroma/alpha, JXL effort, PNG Tiny/OxiPNG/dithering/interlaced, WebP lossless/effort/alpha, MozJPEG chroma/progressive, BMP depth+dither, TIFF mode, ICO layer/toolkit/internal optimization).
 - **Universal Image Pipeline (Decode/Render Split):** Added new shared feature modules under `src/features/image-pipeline/` to separate image decoding and rendering concerns:
   - `decode-image-data.ts`: Unified Blob/File -> `ImageData` decoding with native `createImageBitmap` path and TIFF fallback via `UTIF.decode`/`UTIF.toRGBA8`.
   - `render-image-data.ts`: Unified `ImageData` -> preview Blob/Object URL rendering with MIME fallback chain and quality/max-dimension controls.
@@ -144,6 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **TIFF Encoding (UTIF):** TIFF encode path now supports visual grayscale rendering and writes DPI metadata tags (`t282`, `t283`, `t296`) from resize DPI settings so print-size exports preserve resolution information in downstream design/print tools.
+- **Concurrency Policy:** Removed format-class upper-cap enforcement from selector logic. Concurrency is now intentionally open to `1-90` for all formats, while Smart Concurrency Advisor provides contextual safety guidance instead of hard limits.
 - **Config Contracts (Breaking):** Removed all legacy flat codec props from conversion and options payloads (`jxlEffort`, `avif*`, `pngTinyMode`, `icoOptions`, etc.) and standardized on grouped `formatOptions` only across core types, converter worker/main pipeline, batch/single processors, splicing export, and custom format flows (no compatibility migration path retained).
 - **PNG Encoding Pipeline:** PNG now uses an option-aware adapter route:
   - Default PNG still uses browser `canvas.convertToBlob(...)` for lightweight path.

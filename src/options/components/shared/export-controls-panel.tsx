@@ -2,7 +2,6 @@ import { FileEdit } from "lucide-react"
 import type { ReactNode } from "react"
 import { ConcurrencySelector } from "@/options/components/shared/concurrency-selector"
 import SidebarCard from "@/options/components/ui/sidebar-card"
-import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type { ImageFormat } from "@/core/types"
 
 interface ExportControlsPanelProps {
@@ -16,12 +15,12 @@ interface ExportControlsPanelProps {
   onConcurrencyChange: (value: number) => void
   /** Callback when file renaming is opened */
   onFileRenamingClick: () => void
-  /** Performance preferences for concurrency limits */
-  performancePreferences: PerformancePreferences
   /** Whether inputs are disabled */
   disabled?: boolean
   /** Additional children to render before file renaming card */
   beforeFileRenaming?: ReactNode
+  /** Additional children to render after file renaming card */
+  afterFileRenaming?: ReactNode
 }
 
 /**
@@ -34,9 +33,9 @@ export function ExportControlsPanel({
   fileNamePattern,
   onConcurrencyChange,
   onFileRenamingClick,
-  performancePreferences,
   disabled = false,
-  beforeFileRenaming
+  beforeFileRenaming,
+  afterFileRenaming
 }: ExportControlsPanelProps) {
   return (
     <>
@@ -45,7 +44,6 @@ export function ExportControlsPanel({
         value={concurrency}
         onChange={onConcurrencyChange}
         disabled={disabled}
-        limits={performancePreferences}
       />
       {beforeFileRenaming}
       <SidebarCard
@@ -56,6 +54,7 @@ export function ExportControlsPanel({
         disabled={disabled}
         theme="amber"
       />
+      {afterFileRenaming}
     </>
   )
 }
