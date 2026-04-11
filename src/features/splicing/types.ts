@@ -58,7 +58,7 @@ export interface SplicingImageStyle {
 export interface SplicingExportConfig {
   format: SplicingExportFormat
   quality: number
-  formatOptions?: Pick<FormatCodecOptions, "png" | "jxl" | "avif" | "mozjpeg" | "webp">
+  formatOptions?: Pick<FormatCodecOptions, "png" | "jxl" | "avif" | "mozjpeg" | "tiff" | "webp">
   exportMode: SplicingExportMode
   trimBackground: boolean
 }

@@ -3,6 +3,7 @@ import type {
   JxlCodecOptions,
   MozJpegCodecOptions,
   PngCodecOptions,
+  TiffCodecOptions,
   WebpCodecOptions
 } from "@/core/types"
 import type {
@@ -20,8 +21,10 @@ export interface RasterEncodeInput {
     jxl?: JxlCodecOptions
     mozjpeg?: MozJpegCodecOptions
     png?: PngCodecOptions
+    tiff?: TiffCodecOptions
     webp?: WebpCodecOptions
   }
+  tiffTargetDpi?: number
 }
 
 export interface RasterEncodeResult {
@@ -31,7 +34,13 @@ export interface RasterEncodeResult {
 
 export interface RasterEncodeDependencies {
   encodeBmp: (imageData: ImageData) => Blob
-  encodeTiff: (imageData: ImageData) => Blob
+  encodeTiff: (
+    imageData: ImageData,
+    options?: {
+      tiff?: TiffCodecOptions
+      targetDpi?: number
+    }
+  ) => Blob
   encodeAvif: (
     imageData: ImageData,
     options: {
@@ -111,7 +120,10 @@ function createBuiltInRasterEncoderAdapters(): RasterEncoderAdapter[] {
       supports: (format) => format === "tiff",
       encode: async ({ input, deps }) => {
         return {
-          blob: deps.encodeTiff(input.imageData),
+          blob: deps.encodeTiff(input.imageData, {
+            tiff: input.formatOptions?.tiff,
+            targetDpi: input.tiffTargetDpi
+          }),
           mimeType: "image/tiff"
         }
       }

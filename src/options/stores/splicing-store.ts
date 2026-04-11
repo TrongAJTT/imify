@@ -14,6 +14,7 @@ import type {
   SplicingLayoutConfig,
   SplicingPreset
 } from "@/features/splicing/types"
+import type { TiffColorMode } from "@/core/types"
 
 const storage = new Storage({ area: "local" })
 
@@ -95,6 +96,7 @@ export interface SplicingStoreState {
   exportPngDitheringLevel: number
   exportPngProgressiveInterlaced: boolean
   exportPngOxiPngCompression: boolean
+  exportTiffColorMode: TiffColorMode
   exportMode: SplicingExportMode
   exportTrimBackground: boolean
   exportConcurrency: number
@@ -159,6 +161,7 @@ export interface SplicingStoreState {
   setExportPngDitheringLevel: (v: number) => void
   setExportPngProgressiveInterlaced: (v: boolean) => void
   setExportPngOxiPngCompression: (v: boolean) => void
+  setExportTiffColorMode: (v: TiffColorMode) => void
   setExportMode: (v: SplicingExportMode) => void
   setExportTrimBackground: (v: boolean) => void
   setExportConcurrency: (v: number) => void
@@ -226,6 +229,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportPngDitheringLevel: 0,
       exportPngProgressiveInterlaced: false,
       exportPngOxiPngCompression: false,
+      exportTiffColorMode: "color",
       exportMode: "single",
       exportTrimBackground: false,
       exportConcurrency: 2,
@@ -296,6 +300,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       },
       setExportPngProgressiveInterlaced: (v) => set({ exportPngProgressiveInterlaced: v }),
       setExportPngOxiPngCompression: (v) => set({ exportPngOxiPngCompression: v }),
+      setExportTiffColorMode: (v) => set({ exportTiffColorMode: v }),
       setExportMode: (v) => set({ exportMode: v }),
       setExportTrimBackground: (v) => set({ exportTrimBackground: v }),
       setExportConcurrency: (v) => set({ exportConcurrency: v }),
@@ -336,6 +341,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
           next.exportMozJpegChromaSubsampling === 0 || next.exportMozJpegChromaSubsampling === 1
             ? next.exportMozJpegChromaSubsampling
             : 2
+        next.exportTiffColorMode =
+          next.exportTiffColorMode === "grayscale" ? "grayscale" : "color"
         const rawPreset = (persistedState as { preset?: string }).preset
         if (rawPreset === "custom") {
           next.preset = "bento"
@@ -362,7 +369,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setExportMozJpegProgressive, setExportMozJpegChromaSubsampling,
           setExportPngTinyMode, setExportPngCleanTransparentPixels, setExportPngAutoGrayscale,
           setExportPngDitheringLevel, setExportPngProgressiveInterlaced,
-          setExportPngOxiPngCompression, setExportMode,
+          setExportPngOxiPngCompression, setExportTiffColorMode, setExportMode,
           setExportTrimBackground, setExportConcurrency, setExportFileNamePattern,
           setPreviewContainerHeight, setPreviewZoom, setPreviewQualityPercent, setPreviewShowImageNumber,
           setPreviewBentoFlowGroupCount,

@@ -1,5 +1,5 @@
 import { BATCH_TARGET_FORMATS, HIGH_CONCURRENCY_FORMATS as BASE_HIGH_CONCURRENCY_FORMATS } from "@/core/format-config"
-import type { ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
+import type { ImageFormat, PaperSize, SupportedDPI, TiffColorMode } from "@/core/types"
 
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
 export type BatchRunMode = "all" | "failed"
@@ -99,6 +99,9 @@ export interface BatchFormatOptions {
     progressiveInterlaced: boolean
     oxipngCompression: boolean
   }
+  tiff: {
+    colorMode: TiffColorMode
+  }
   ico: {
     sizes: number[]
     generateWebIconKit: boolean
@@ -162,6 +165,7 @@ export interface BatchSetupHandlers {
   onPngDitheringLevelChange: (value: number) => void
   onPngProgressiveInterlacedChange: (value: boolean) => void
   onPngOxiPngCompressionChange: (value: boolean) => void
+  onTiffColorModeChange: (value: TiffColorMode) => void
   onFileNamePatternChange: (value: string) => void
   onWatermarkChange: (value: BatchWatermarkConfig) => void
 }

@@ -34,6 +34,9 @@ export type TargetFormatQualityCardProps = {
       progressiveInterlaced?: boolean
       oxipngCompression?: boolean
     }
+    tiff?: {
+      colorMode?: "color" | "grayscale"
+    }
     jxl?: {
       effort?: number
     }
@@ -61,6 +64,8 @@ export type TargetFormatQualityCardProps = {
   onPngDitheringLevelChange?: (level: number) => void
   /** Callback when JXL effort level changes */
   onJxlEffortChange?: (effort: number) => void
+  /** Callback when TIFF color mode changes */
+  onTiffColorModeChange?: (mode: "color" | "grayscale") => void
   /** Callback when WebP lossless mode changes */
   onWebpLosslessChange?: (enabled: boolean) => void
   /** Callback when WebP near-lossless level changes */
@@ -103,6 +108,7 @@ export function TargetFormatQualityCard({
   onPngTinyModeChange,
   onPngDitheringLevelChange,
   onJxlEffortChange,
+  onTiffColorModeChange,
   onWebpLosslessChange,
   onWebpNearLosslessChange,
   onWebpEffortChange,
@@ -135,6 +141,7 @@ export function TargetFormatQualityCard({
   const mozJpegOptions = formatConfig?.mozjpeg
   const icoSizeOptions = formatConfig?.ico?.sizes
   const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit
+  const tiffColorMode = formatConfig?.tiff?.colorMode === "grayscale" ? "grayscale" : "color"
 
   const formatLabel = targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat.toUpperCase()
   const qualityLabel = isIcoTarget
@@ -162,6 +169,9 @@ export function TargetFormatQualityCard({
     extraFlags.push(mozJpegOptions?.progressive ?? true ? "Progressive" : "Baseline")
     const chroma = mozJpegOptions?.chromaSubsampling ?? 2
     extraFlags.push(`Chroma ${chroma === 1 ? "4:2:2" : "4:2:0"}`)
+  }
+  if (targetFormat === "tiff" && tiffColorMode === "grayscale") {
+    extraFlags.push("Grayscale")
   }
 
   const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
@@ -304,6 +314,24 @@ export function TargetFormatQualityCard({
               ]}
               onChange={(v) => onAvifSpeedChange(parseInt(v, 10))}
               value={String(avifSpeedOption ?? 6)}
+            />
+          </div>
+        )}
+
+        {targetFormat === "tiff" && onTiffColorModeChange && (
+          <div>
+            <SelectInput
+              label="Color Mode"
+              tooltip={`TIFF output remains uncompressed in UTIF, but you can choose visual color rendering.
+- RGB keeps full color.
+- Grayscale converts the output image to black & white.`}
+              disabled={disabled}
+              options={[
+                { value: "color", label: "RGB (Full Color)" },
+                { value: "grayscale", label: "Grayscale (Black & White)" }
+              ]}
+              onChange={(value) => onTiffColorModeChange(value as "color" | "grayscale")}
+              value={tiffColorMode}
             />
           </div>
         )}

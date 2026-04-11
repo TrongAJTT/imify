@@ -100,6 +100,12 @@ export function normalizeFormatOptionsForCustomFormat(
             sharpYuv: Boolean(options?.webp?.sharpYuv),
             preserveExactAlpha: Boolean(options?.webp?.preserveExactAlpha)
           }
+        : undefined,
+    tiff:
+      format === "tiff"
+        ? {
+            colorMode: options?.tiff?.colorMode === "grayscale" ? "grayscale" : "color"
+          }
         : undefined
   }
 }

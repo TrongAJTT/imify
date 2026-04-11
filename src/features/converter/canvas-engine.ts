@@ -26,7 +26,7 @@ export interface RasterConvertParams extends RasterConversionParams {
   targetFormat: Exclude<ImageFormat, "pdf" | "ico">
   resize: ResizeConfig
   quality?: number
-  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "mozjpeg" | "png" | "webp">
+  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "mozjpeg" | "png" | "tiff" | "webp">
 }
 
 export interface RasterConvertResult extends RasterConversionResult {

@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
-import type { PaperSize, SupportedDPI } from "@/core/types"
+import type { PaperSize, SupportedDPI, TiffColorMode } from "@/core/types"
 import type { BatchResizeMode, BatchSetupState, BatchTargetFormat, BatchWatermarkConfig } from "@/options/components/batch/types"
 import { DEFAULT_BATCH_WATERMARK } from "@/options/components/batch/watermark"
 import { watermarkStorage } from "@/core/indexed-db"
@@ -97,6 +97,9 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
       ditheringLevel: 0,
       progressiveInterlaced: false,
       oxipngCompression: false
+    },
+    tiff: {
+      colorMode: "color"
     }
   },
   resizeMode: "inherit",
@@ -172,6 +175,13 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
     ...formatOptions.ico,
     sizes: [...(formatOptions.ico?.sizes ?? DEFAULT_BATCH_STATE.formatOptions.ico.sizes)]
   }
+  const rawTiffOptions = {
+    ...DEFAULT_BATCH_STATE.formatOptions.tiff,
+    ...formatOptions.tiff
+  }
+  const tiffOptions: BatchSetupState["formatOptions"]["tiff"] = {
+    colorMode: rawTiffOptions.colorMode === "grayscale" ? "grayscale" : "color"
+  }
 
   return {
     ...state,
@@ -188,6 +198,7 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
       jxl: jxlOptions,
       webp: webpOptions,
       png: pngOptions,
+      tiff: tiffOptions,
       ico: icoOptions
     },
     watermark: {
@@ -291,6 +302,7 @@ interface BatchStoreState extends BatchSetupState {
   setPngDitheringLevel: (value: number) => void
   setPngProgressiveInterlaced: (value: boolean) => void
   setPngOxiPngCompression: (value: boolean) => void
+  setTiffColorMode: (value: TiffColorMode) => void
   setFileNamePattern: (value: string) => void
   setWatermark: (value: BatchWatermarkConfig) => void
   skipDownloadConfirm: boolean
@@ -1211,6 +1223,31 @@ export const useBatchStore = create<BatchStoreState>()(
             }
           } as Partial<BatchStoreState>
         }),
+      setTiffColorMode: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            tiff: {
+              ...currentConfig.formatOptions.tiff,
+              colorMode: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
       setFileNamePattern: (value) =>
         set((state) => {
           const setupContext = state.setupContext
@@ -1307,6 +1344,9 @@ export const useBatchStore = create<BatchStoreState>()(
               },
               png: {
                 ...state.formatOptions.png
+              },
+              tiff: {
+                ...state.formatOptions.tiff
               },
               ico: {
                 ...state.formatOptions.ico,

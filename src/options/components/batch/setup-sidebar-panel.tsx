@@ -107,6 +107,7 @@ export function BatchSetupSidebarPanel({
   const onPngDitheringLevelChange = useBatchStore((state) => state.setPngDitheringLevel)
   const onPngProgressiveInterlacedChange = useBatchStore((state) => state.setPngProgressiveInterlaced)
   const onPngOxiPngCompressionChange = useBatchStore((state) => state.setPngOxiPngCompression)
+  const onTiffColorModeChange = useBatchStore((state) => state.setTiffColorMode)
   const onFileNamePatternChange = useBatchStore((state) => state.setFileNamePattern)
   const onWatermarkChange = useBatchStore((state) => state.setWatermark)
   const presets = useBatchStore((state) => state.presets)
@@ -242,6 +243,9 @@ export function BatchSetupSidebarPanel({
             progressiveInterlaced: formatOptions.png.progressiveInterlaced,
             oxipngCompression: formatOptions.png.oxipngCompression
           },
+          tiff: {
+            colorMode: formatOptions.tiff.colorMode
+          },
           mozjpeg: {
             progressive: formatOptions.mozjpeg.progressive,
             chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling
@@ -268,6 +272,7 @@ export function BatchSetupSidebarPanel({
         onWebpEffortChange={onWebpEffortChange}
         onPngTinyModeChange={onPngTinyModeChange}
         onPngDitheringLevelChange={onPngDitheringLevelChange}
+        onTiffColorModeChange={onTiffColorModeChange}
         disabled={isRunning}
         isOpen={isTargetFormatQualityOpen}
         onOpenChange={setIsTargetFormatQualityOpen}

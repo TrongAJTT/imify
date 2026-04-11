@@ -41,6 +41,12 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
               oxipngCompression: false
             }
           : undefined,
+      tiff:
+        format === "tiff"
+          ? {
+              colorMode: "color"
+            }
+          : undefined,
       ico:
         format === "ico"
           ? {

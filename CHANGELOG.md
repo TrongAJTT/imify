@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **TIFF Workflow:** Added TIFF-specific `Color Mode` control (`RGB` / `Grayscale`) in shared `TargetFormatQualityCard`, now available across Single Processor, Batch Processor, Image Splicing, and Custom Format editor flows.
+- **TIFF Option Wiring:** Wired TIFF codec options end-to-end through shared format types, batch/splicing stores, custom-format normalization, main-thread converter, conversion worker, raster adapter pipeline, and splicing export mapping.
 - **UI:** Added new `ColoredSliderCard` reusable wrapper component for theme-customizable slider inputs with subtitle support (placed in `/ui` folder for general composition).
 - **Export Standardization:** Created reusable export control components to standardize export settings across Batch Processor and Image Splicing:
   - `ExportControlsPanel` (shared): Reusable base component combining Concurrency Selector and File Renaming controls.
@@ -108,6 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
 ### Changed
+- **TIFF Encoding (UTIF):** TIFF encode path now supports visual grayscale rendering and writes DPI metadata tags (`t282`, `t283`, `t296`) from resize DPI settings so print-size exports preserve resolution information in downstream design/print tools.
 - **Config Contracts (Breaking):** Removed all legacy flat codec props from conversion and options payloads (`jxlEffort`, `avif*`, `pngTinyMode`, `icoOptions`, etc.) and standardized on grouped `formatOptions` only across core types, converter worker/main pipeline, batch/single processors, splicing export, and custom format flows (no compatibility migration path retained).
 - **PNG Encoding Pipeline:** PNG now uses an option-aware adapter route:
   - Default PNG still uses browser `canvas.convertToBlob(...)` for lightweight path.

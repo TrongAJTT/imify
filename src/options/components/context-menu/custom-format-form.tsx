@@ -56,6 +56,9 @@ export function CustomFormatForm({
     sharpYuv: Boolean(value.formatOptions?.webp?.sharpYuv),
     preserveExactAlpha: Boolean(value.formatOptions?.webp?.preserveExactAlpha)
   }
+  const tiffOptions: { colorMode: "color" | "grayscale" } = {
+    colorMode: value.formatOptions?.tiff?.colorMode === "grayscale" ? "grayscale" : "color"
+  }
 
   return (
     <div className="space-y-4">
@@ -88,6 +91,7 @@ export function CustomFormatForm({
               jxl: {
                 effort: value.formatOptions?.jxl?.effort ?? 7
               },
+              tiff: tiffOptions,
               ico: {
                 sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
                 generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false
@@ -160,7 +164,13 @@ export function CustomFormatForm({
                       ? {
                           ...pngOptions
                         }
-                      : value.formatOptions?.png
+                      : value.formatOptions?.png,
+                  tiff:
+                    nextFormat === "tiff"
+                      ? {
+                          colorMode: tiffOptions.colorMode
+                        }
+                      : value.formatOptions?.tiff
                 },
                 resize:
                   value.resize.mode === "page_size"
@@ -237,6 +247,17 @@ export function CustomFormatForm({
                     ...pngOptions,
                     ditheringLevel: next,
                     dithering: next > 0
+                  }
+                }
+              })
+            }
+            onTiffColorModeChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  tiff: {
+                    colorMode: next
                   }
                 }
               })

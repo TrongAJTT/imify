@@ -68,6 +68,7 @@ export async function convertImage(
         jxl: config.formatOptions?.jxl,
         mozjpeg: config.formatOptions?.mozjpeg,
         png: config.formatOptions?.png,
+        tiff: config.formatOptions?.tiff,
         webp: config.formatOptions?.webp
       }
     })
@@ -91,6 +92,7 @@ export async function convertImage(
         jxl: config.formatOptions?.jxl,
         mozjpeg: config.formatOptions?.mozjpeg,
         png: config.formatOptions?.png,
+        tiff: config.formatOptions?.tiff,
         webp: config.formatOptions?.webp
       }
     })

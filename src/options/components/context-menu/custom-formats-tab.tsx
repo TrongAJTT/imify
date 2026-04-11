@@ -56,6 +56,9 @@ export function CustomFormatsTab({
         sharpYuv: false,
         preserveExactAlpha: false
       },
+      tiff: {
+        colorMode: "color"
+      },
       ico: {
         sizes: [...DEFAULT_ICO_SIZES],
         generateWebIconKit: false
@@ -188,6 +191,9 @@ export function CustomFormatsTab({
           effort: 5,
           sharpYuv: false,
           preserveExactAlpha: false
+        },
+        tiff: {
+          colorMode: "color"
         },
         ico: {
           sizes: [...DEFAULT_ICO_SIZES],
@@ -496,6 +502,9 @@ export function CustomFormatsTab({
                                     effort: 5,
                                     sharpYuv: false,
                                     preserveExactAlpha: false
+                                  },
+                                  tiff: item.formatOptions?.tiff ?? {
+                                    colorMode: "color"
                                   },
                                   ico: item.formatOptions?.ico ?? {
                                     sizes: [...DEFAULT_ICO_SIZES],

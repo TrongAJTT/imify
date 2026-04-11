@@ -88,6 +88,7 @@ export function SplicingSidebarPanel({
   const exportPngDitheringLevel = useSplicingStore((s) => s.exportPngDitheringLevel)
   const exportPngProgressiveInterlaced = useSplicingStore((s) => s.exportPngProgressiveInterlaced)
   const exportPngOxiPngCompression = useSplicingStore((s) => s.exportPngOxiPngCompression)
+  const exportTiffColorMode = useSplicingStore((s) => s.exportTiffColorMode)
   const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
   const exportFileNamePattern = useSplicingStore((s) => s.exportFileNamePattern)
   const isExportFormatQualityOpen = useSplicingStore((s) => s.isExportFormatQualityOpen)
@@ -140,6 +141,7 @@ export function SplicingSidebarPanel({
   const setExportPngDitheringLevel = useSplicingStore((s) => s.setExportPngDitheringLevel)
   const setExportPngProgressiveInterlaced = useSplicingStore((s) => s.setExportPngProgressiveInterlaced)
   const setExportPngOxiPngCompression = useSplicingStore((s) => s.setExportPngOxiPngCompression)
+  const setExportTiffColorMode = useSplicingStore((s) => s.setExportTiffColorMode)
   const setExportMode = useSplicingStore((s) => s.setExportMode)
   const setExportTrimBackground = useSplicingStore((s) => s.setExportTrimBackground)
   const setExportConcurrency = useSplicingStore((s) => s.setExportConcurrency)
@@ -269,6 +271,9 @@ export function SplicingSidebarPanel({
               ditheringLevel: exportPngDitheringLevel,
               progressiveInterlaced: exportPngProgressiveInterlaced,
               oxipngCompression: exportPngOxiPngCompression
+            },
+            tiff: {
+              colorMode: exportTiffColorMode
             }
           }}
           formatOptions={EXPORT_FORMAT_OPTIONS}
@@ -283,6 +288,7 @@ export function SplicingSidebarPanel({
           onWebpEffortChange={setExportWebpEffort}
           onPngTinyModeChange={setExportPngTinyMode}
           onPngDitheringLevelChange={setExportPngDitheringLevel}
+          onTiffColorModeChange={setExportTiffColorMode}
           disabled={false}
           isOpen={isExportFormatQualityOpen}
           onOpenChange={setIsExportFormatQualityOpen}

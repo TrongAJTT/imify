@@ -17,7 +17,7 @@ export interface RasterConversionParams {
   targetFormat: RasterPipelineFormat
   resize: ResizeConfig
   quality?: number
-  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "mozjpeg" | "png" | "webp">
+  formatOptions?: Pick<FormatCodecOptions, "avif" | "jxl" | "mozjpeg" | "png" | "tiff" | "webp">
 }
 
 export interface RasterConversionResult {
@@ -67,7 +67,9 @@ export function createRasterConversionFacade(
           imageData: frame.imageData,
           targetFormat: params.targetFormat,
           quality: params.quality,
-          formatOptions: params.formatOptions
+          formatOptions: params.formatOptions,
+          tiffTargetDpi:
+            typeof params.resize.dpi === "number" ? params.resize.dpi : undefined
         },
         dependencies.adapterDependencies,
         dependencies.adapterRegistry

@@ -82,12 +82,19 @@ export interface MozJpegCodecOptions {
   chromaSubsampling?: MozJpegChromaSubsampling
 }
 
+export type TiffColorMode = "color" | "grayscale"
+
+export interface TiffCodecOptions {
+  colorMode?: TiffColorMode
+}
+
 export interface FormatCodecOptions {
   png?: PngCodecOptions
   jxl?: JxlCodecOptions
   avif?: AvifCodecOptions
   webp?: WebpCodecOptions
   mozjpeg?: MozJpegCodecOptions
+  tiff?: TiffCodecOptions
   ico?: IcoOptions
 }
 

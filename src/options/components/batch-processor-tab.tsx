@@ -117,6 +117,12 @@ export function BatchProcessorTab() {
                 progressiveInterlaced: formatOptions.png.progressiveInterlaced,
                 oxipngCompression: formatOptions.png.oxipngCompression
               }
+            : undefined,
+        tiff:
+          targetFormat === "tiff"
+            ? {
+                colorMode: formatOptions.tiff.colorMode
+              }
             : undefined
       },
       resize: { mode: "none" }

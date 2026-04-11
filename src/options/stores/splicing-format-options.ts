@@ -27,6 +27,7 @@ export type SplicingFormatOptionSource = Pick<
   | "exportPngDitheringLevel"
   | "exportPngProgressiveInterlaced"
   | "exportPngOxiPngCompression"
+  | "exportTiffColorMode"
 >
 
 function buildSplicingFormatOptions(source: SplicingFormatOptionSource): SplicingFormatOptions {
@@ -62,6 +63,9 @@ function buildSplicingFormatOptions(source: SplicingFormatOptionSource): Splicin
       ditheringLevel: source.exportPngDitheringLevel,
       progressiveInterlaced: source.exportPngProgressiveInterlaced,
       oxipngCompression: source.exportPngOxiPngCompression
+    },
+    tiff: {
+      colorMode: source.exportTiffColorMode
     }
   }
 }
@@ -76,6 +80,7 @@ export function buildActiveSplicingFormatOptions(
     webp: source.exportFormat === "webp" ? options.webp : undefined,
     avif: source.exportFormat === "avif" ? options.avif : undefined,
     mozjpeg: source.exportFormat === "mozjpeg" ? options.mozjpeg : undefined,
-    png: source.exportFormat === "png" ? options.png : undefined
+    png: source.exportFormat === "png" ? options.png : undefined,
+    tiff: source.exportFormat === "tiff" ? options.tiff : undefined
   }
 }

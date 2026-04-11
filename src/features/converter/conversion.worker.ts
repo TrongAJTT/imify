@@ -222,6 +222,7 @@ async function convertRasterInWorker(sourceBlob: Blob, config: RasterWorkerConfi
         jxl: config.formatOptions?.jxl,
         mozjpeg: config.formatOptions?.mozjpeg,
         png: config.formatOptions?.png,
+        tiff: config.formatOptions?.tiff,
         webp: config.formatOptions?.webp
       }
     }

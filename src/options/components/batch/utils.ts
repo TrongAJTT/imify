@@ -151,6 +151,7 @@ export function withBatchResize(
   const isPngTarget = config.format === "png"
   const isWebpTarget = config.format === "webp"
   const isJxlTarget = config.format === "jxl"
+  const isTiffTarget = config.format === "tiff"
   const isIcoTarget = config.format === "ico"
   const normalizedQuality = Math.max(1, Math.min(100, Math.round(quality)))
   const normalizedAvifSpeed = Math.max(0, Math.min(10, Math.round(formatOptions.avif.speed)))
@@ -167,11 +168,13 @@ export function withBatchResize(
       : formatOptions.png.dithering
       ? 100
       : 0
+  const normalizedTiffColorMode: "color" | "grayscale" =
+    formatOptions.tiff.colorMode === "grayscale" ? "grayscale" : "color"
   const normalizedIcoSizes = Array.from(
     new Set((formatOptions.ico.sizes ?? []).filter((size) => Number.isInteger(size) && size > 0))
   ).sort((a, b) => a - b)
 
-  const mergedFormatOptions = {
+  const mergedFormatOptions: FormatConfig["formatOptions"] = {
     ...config.formatOptions,
     jxl: isJxlTarget
       ? {
@@ -216,6 +219,11 @@ export function withBatchResize(
           ditheringLevel: normalizedPngDitheringLevel,
           progressiveInterlaced: Boolean(formatOptions.png.progressiveInterlaced),
           oxipngCompression: Boolean(formatOptions.png.oxipngCompression)
+        }
+      : undefined,
+    tiff: isTiffTarget
+      ? {
+          colorMode: normalizedTiffColorMode
         }
       : undefined
   }
