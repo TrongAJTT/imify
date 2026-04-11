@@ -3,9 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { drawSplicingCanvas } from "@/features/splicing/canvas-renderer"
 import { calculateLayout } from "@/features/splicing/layout-engine"
 import { usePanDrag } from "@/options/hooks/use-pan-drag"
-import { useValueScrubbing } from "@/options/hooks/use-value-scrubbing"
 import { useSplicingStore } from "@/options/stores/splicing-store"
-import { PreviewZoomControl } from "@/options/components/splicing/preview-zoom-control"
+import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
 import type {
   LayoutResult,
   SplicingCanvasStyle,
@@ -54,7 +53,6 @@ export function CanvasPreview({
   const containerRef = useRef<HTMLDivElement>(null)
   const resizeHandleRef = useRef<HTMLDivElement>(null)
   const canvasWrapperRef = useRef<HTMLDivElement>(null)
-  const zoomInputRef = useRef<HTMLInputElement>(null)
   const previewUrlsRef = useRef<string[]>([])
   const [previewSources, setPreviewSources] = useState<Map<string, HTMLImageElement>>(new Map())
   const containerHeight = useSplicingStore((s) => s.previewContainerHeight)
@@ -67,8 +65,6 @@ export function CanvasPreview({
   const [canvasHeight, setCanvasHeight] = useState(0)
   const [isResizing, setIsResizing] = useState(false)
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
-  const [editingZoom, setEditingZoom] = useState(false)
-  const [zoomDraft, setZoomDraft] = useState("")
   const [numberingReady, setNumberingReady] = useState(false)
   const numberingTaskRef = useRef(0)
   const onLayoutComputedRef = useRef(onLayoutComputed)
@@ -86,13 +82,6 @@ export function CanvasPreview({
   }, [])
 
   useEffect(() => {
-    if (editingZoom) {
-      zoomInputRef.current?.focus()
-      zoomInputRef.current?.select()
-    }
-  }, [editingZoom])
-
-  useEffect(() => {
     onLayoutComputedRef.current = onLayoutComputed
   }, [onLayoutComputed])
 
@@ -107,22 +96,6 @@ export function CanvasPreview({
   useEffect(() => {
     onNumberingProgressRef.current = onNumberingProgress
   }, [onNumberingProgress])
-
-  const commitZoomDraft = useCallback(() => {
-    const n = parseInt(zoomDraft.replace(/\D/g, ""), 10)
-    if (!Number.isFinite(n)) {
-      setZoomDraft(String(zoom))
-      setEditingZoom(false)
-      return
-    }
-    setPreviewZoom(clampPreviewZoom(n))
-    setEditingZoom(false)
-  }, [zoomDraft, zoom, setPreviewZoom, clampPreviewZoom])
-
-  const cancelZoomEdit = useCallback(() => {
-    setZoomDraft(String(zoom))
-    setEditingZoom(false)
-  }, [zoom])
 
   useEffect(() => {
     let cancelled = false
@@ -456,34 +429,11 @@ export function CanvasPreview({
   }, [isScrollPan, setPan, setPreviewZoom, clampPreviewZoom])
 
   const resetZoom = useCallback(() => {
-    setEditingZoom(false)
-    setZoomDraft("100")
     setPreviewZoom(100)
     resetPan()
   }, [resetPan, setPreviewZoom])
 
-  const zoomScrub = useValueScrubbing({
-    enabled: !editingZoom,
-    value: zoom,
-    clamp: clampPreviewZoom,
-    onChange: setPreviewZoom,
-    // Faster than wheel default step: 0.25%/px + modest acceleration.
-    percentPerPx: 0.25,
-    maxAccelMultiplier: 2.5,
-    clickThresholdPx: 3,
-    onScrubClick: () => {
-      // Click without dragging => switch to input mode.
-      setZoomDraft(String(zoom))
-      setEditingZoom(true)
-    }
-  })
-
   if (images.length === 0) return null
-
-  const showPreviewReset =
-    zoom !== 100 ||
-    Math.abs(pan.x) > PREVIEW_PAN_RESET_THRESHOLD_PX ||
-    Math.abs(pan.y) > PREVIEW_PAN_RESET_THRESHOLD_PX
 
   return (
     <div
@@ -510,17 +460,15 @@ export function CanvasPreview({
           onPointerCancel={handlePointerCancel}
         />
 
-        <PreviewZoomControl
-          editingZoom={editingZoom}
+        <ZoomPanControl
           zoom={zoom}
-          zoomDraft={zoomDraft}
-          showPreviewReset={showPreviewReset}
-          zoomInputRef={zoomInputRef}
-          onZoomDraftChange={setZoomDraft}
-          onCommitZoomDraft={commitZoomDraft}
-          onCancelZoomEdit={cancelZoomEdit}
-          onResetZoom={resetZoom}
-          scrubHandlers={zoomScrub.handlers}
+          panX={pan.x}
+          panY={pan.y}
+          onZoomChange={setPreviewZoom}
+          onPanChange={(x, y) => setPan({ x, y })}
+          minZoom={50}
+          maxZoom={10000}
+          resetPanThreshold={PREVIEW_PAN_RESET_THRESHOLD_PX}
         />
       </div>
 

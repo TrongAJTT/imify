@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Download, ImagePlus, Move, RefreshCcw,
-  ZoomIn, ZoomOut } from "lucide-react"
+import { Download, ImagePlus, Move } from "lucide-react"
 
 import { toUserFacingConversionError } from "@/core/error-utils"
 import type { FormatConfig } from "@/core/types"
@@ -21,7 +20,6 @@ import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
 import { Heading, MutedText } from "@/options/components/ui/typography"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { ImageUrlImportControl } from "@/options/components/image-url-import-control"
-import { Tooltip } from "./tooltip"
 
 const PREVIEW_DEBOUNCE_MS = 420
 const PREVIEW_MAX_DIMENSION = 3072
@@ -629,47 +627,13 @@ export function SingleProcessorTab() {
                   </Button>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mr-2">
+                  <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                     <Move size={12} />
                     Drag to pan
                   </span>
-                  <Tooltip content="Zoom Out (Scroll wheel down)" variant="nowrap">
-                    <Button
-                      size="icon"
-                      type="button"
-                      variant="secondary"
-                      className="h-8 w-8"
-                      onClick={() => {
-                        setZoom((current) => clamp(current - ZOOM_STEP, MIN_ZOOM, MAX_ZOOM))
-                      }}>
-                      <ZoomOut size={15} />
-                    </Button>
-                  </Tooltip>
-                  <span className="w-14 text-center text-xs font-semibold text-slate-700 dark:text-slate-200">
-                    {Math.round(zoom)}%
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    • Scroll to zoom
                   </span>
-                  <Tooltip content="Zoom In (Scroll wheel up)" variant="nowrap">
-                    <Button
-                      size="icon"
-                      type="button"
-                      variant="secondary"
-                      className="h-8 w-8"
-                      onClick={() => {
-                        setZoom((current) => clamp(current + ZOOM_STEP, MIN_ZOOM, MAX_ZOOM))
-                      }}>
-                      <ZoomIn size={15} />
-                    </Button>
-                  </Tooltip>
-                  <Tooltip content="Reset View (Zoom & Pan)" variant="nowrap">
-                    <Button
-                      size="icon"
-                      type="button"
-                      variant="secondary"
-                      className="h-8 w-8"
-                      onClick={resetViewport}>
-                      <RefreshCcw size={15} />
-                    </Button>
-                  </Tooltip>
                 </div>
               </div>
 

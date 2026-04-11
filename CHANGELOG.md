@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `render-image-data.ts`: Unified `ImageData` -> preview Blob/Object URL rendering with MIME fallback chain and quality/max-dimension controls.
 - **Shared Compare Frame for Raw Pixels:** Added `PixelCompareWorkspace` in DiffChecker components so comparison views now accept raw `ImageData` + mode (`split` / `side_by_side` / `overlay`) instead of duplicating URL-based viewer wiring.
 - **DiffChecker TIFF Input Support:** DiffChecker now decodes TIFF input files through the shared decode pipeline and can render previews through the shared render pipeline, allowing TIFF files to participate in split/side-by-side/overlay workflows.
+- **Shared Zoom/Pan Control Component:** Extracted zoom and pan control UI into a reusable `ZoomPanControl` component in `/ui` folder:
+  - Provides unified zoom display with value scrubbing (hold and drag left/right to adjust), click-to-edit exact zoom percentage, and intelligent reset button.
+  - Shows pan reset button only when zoom deviates from 100% or pan exceeds threshold in X/Y axes.
+  - Now used in Image Splicing (for canvas preview), DiffChecker (for all comparison modes), and can be reused by other features.
+  - DiffChecker's `ViewerShell` now includes full zoom/pan controls matching Image Splicing's UX instead of read-only zoom display.
+  - Single Processor preview now displays "Drag to pan • Scroll to zoom" helper text instead of manual zoom buttons (zoom/pan controls delegated to `PixelCompareWorkspace`).
+- **UI:** Added new `ZoomPanControl` reusable component in `/ui` folder for zoom/pan visualization and interaction across preview viewers.
 - **UI:** Added new `ColoredSliderCard` reusable wrapper component for theme-customizable slider inputs with subtitle support (placed in `/ui` folder for general composition).
 - **Export Standardization:** Created reusable export control components to standardize export settings across Batch Processor and Image Splicing:
   - `ExportControlsPanel` (shared): Reusable base component combining Concurrency Selector and File Renaming controls.

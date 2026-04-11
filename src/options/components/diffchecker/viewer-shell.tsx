@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Expand, Shrink } from "lucide-react"
 import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
 import { Tooltip } from "@/options/components/tooltip"
+import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
 
 interface ViewerShellProps {
   children: ReactNode
@@ -44,6 +45,11 @@ export function ViewerShell({
     if (!el) return
 
     const onWheel = (e: WheelEvent) => {
+      // Don't zoom if the scroll is from ZoomPanControl or other interactive elements
+      const target = e.target as HTMLElement
+      if (target.closest('[class*="pointer-events-auto"]')) {
+        return
+      }
       e.preventDefault()
       const dir = e.deltaY > 0 ? -1 : 1
       const next = Math.round(
@@ -98,6 +104,11 @@ export function ViewerShell({
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (e.button !== 0) return
+      // Don't start pan drag if clicking on ZoomPanControl or its descendants
+      const target = e.target as HTMLElement
+      if (target.closest('[class*="pointer-events-auto"]')) {
+        return
+      }
       ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
       panRef.current = { sx: e.clientX, sy: e.clientY, px: panX, py: panY }
       setDragging(true)
@@ -178,6 +189,15 @@ export function ViewerShell({
           </button>
         </Tooltip>
       </div>
+      <ZoomPanControl
+        zoom={zoom}
+        panX={panX}
+        panY={panY}
+        onZoomChange={onZoomChange}
+        onPanChange={(x, y) => onPanChange(x, y)}
+        minZoom={10}
+        maxZoom={800}
+      />
       <div
         onMouseDown={handleResizeStart}
         className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors ${
@@ -185,9 +205,6 @@ export function ViewerShell({
         } ${isFullscreen ? "hidden" : ""}`}
         style={{ cursor: "ns-resize" }}
       />
-      <div className="absolute bottom-2 right-2 z-20 rounded-md bg-slate-900/70 px-2 py-0.5 text-[10px] font-mono text-white pointer-events-none select-none">
-        {zoom}%
-      </div>
     </div>
   )
 }
