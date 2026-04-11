@@ -1,5 +1,5 @@
 import type { CustomFormatInput } from "@/features/custom-formats"
-import type { ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
+import type { BmpColorDepth, ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
 import { CUSTOM_FORMATS, DEFAULT_ICO_SIZES, FORMAT_LABELS, QUALITY_FORMATS } from "@/core/format-config"
 import { TextInput } from "@/options/components/ui/text-input"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
@@ -59,6 +59,22 @@ export function CustomFormatForm({
   const tiffOptions: { colorMode: "color" | "grayscale" } = {
     colorMode: value.formatOptions?.tiff?.colorMode === "grayscale" ? "grayscale" : "color"
   }
+  const rawBmpColorDepth = value.formatOptions?.bmp?.colorDepth
+  const bmpColorDepth: BmpColorDepth =
+    rawBmpColorDepth === 1 || rawBmpColorDepth === 8 || rawBmpColorDepth === 32
+      ? rawBmpColorDepth
+      : 24
+  const normalizedBmpDitheringLevel =
+    typeof value.formatOptions?.bmp?.ditheringLevel === "number"
+      ? Math.max(0, Math.min(100, Math.round(value.formatOptions.bmp.ditheringLevel)))
+      : value.formatOptions?.bmp?.dithering
+      ? 100
+      : 0
+  const bmpOptions = {
+    colorDepth: bmpColorDepth,
+    dithering: bmpColorDepth === 1 && normalizedBmpDitheringLevel > 0,
+    ditheringLevel: bmpColorDepth === 1 ? normalizedBmpDitheringLevel : 0
+  }
 
   return (
     <div className="space-y-4">
@@ -91,6 +107,7 @@ export function CustomFormatForm({
               jxl: {
                 effort: value.formatOptions?.jxl?.effort ?? 7
               },
+              bmp: bmpOptions,
               tiff: tiffOptions,
               ico: {
                 sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
@@ -165,6 +182,12 @@ export function CustomFormatForm({
                           ...pngOptions
                         }
                       : value.formatOptions?.png,
+                  bmp:
+                    nextFormat === "bmp"
+                      ? {
+                          ...bmpOptions
+                        }
+                      : value.formatOptions?.bmp,
                   tiff:
                     nextFormat === "tiff"
                       ? {
@@ -245,6 +268,33 @@ export function CustomFormatForm({
                   ...(value.formatOptions ?? {}),
                   png: {
                     ...pngOptions,
+                    ditheringLevel: next,
+                    dithering: next > 0
+                  }
+                }
+              })
+            }
+            onBmpColorDepthChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  bmp: {
+                    ...bmpOptions,
+                    colorDepth: next,
+                    dithering: next === 1 ? bmpOptions.dithering : false,
+                    ditheringLevel: next === 1 ? bmpOptions.ditheringLevel : 0
+                  }
+                }
+              })
+            }
+            onBmpDitheringLevelChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  bmp: {
+                    ...bmpOptions,
                     ditheringLevel: next,
                     dithering: next > 0
                   }

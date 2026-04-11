@@ -53,6 +53,14 @@ export interface PngCodecOptions {
   oxipngCompression?: boolean
 }
 
+export type BmpColorDepth = 1 | 8 | 24 | 32
+
+export interface BmpCodecOptions {
+  colorDepth?: BmpColorDepth
+  dithering?: boolean
+  ditheringLevel?: number
+}
+
 export interface JxlCodecOptions {
   effort?: number
 }
@@ -89,6 +97,7 @@ export interface TiffCodecOptions {
 }
 
 export interface FormatCodecOptions {
+  bmp?: BmpCodecOptions
   png?: PngCodecOptions
   jxl?: JxlCodecOptions
   avif?: AvifCodecOptions

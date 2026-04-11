@@ -14,7 +14,7 @@ import type {
   SplicingLayoutConfig,
   SplicingPreset
 } from "@/features/splicing/types"
-import type { TiffColorMode } from "@/core/types"
+import type { BmpColorDepth, TiffColorMode } from "@/core/types"
 
 const storage = new Storage({ area: "local" })
 
@@ -96,6 +96,9 @@ export interface SplicingStoreState {
   exportPngDitheringLevel: number
   exportPngProgressiveInterlaced: boolean
   exportPngOxiPngCompression: boolean
+  exportBmpColorDepth: BmpColorDepth
+  exportBmpDithering: boolean
+  exportBmpDitheringLevel: number
   exportTiffColorMode: TiffColorMode
   exportMode: SplicingExportMode
   exportTrimBackground: boolean
@@ -161,6 +164,8 @@ export interface SplicingStoreState {
   setExportPngDitheringLevel: (v: number) => void
   setExportPngProgressiveInterlaced: (v: boolean) => void
   setExportPngOxiPngCompression: (v: boolean) => void
+  setExportBmpColorDepth: (v: BmpColorDepth) => void
+  setExportBmpDitheringLevel: (v: number) => void
   setExportTiffColorMode: (v: TiffColorMode) => void
   setExportMode: (v: SplicingExportMode) => void
   setExportTrimBackground: (v: boolean) => void
@@ -229,6 +234,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportPngDitheringLevel: 0,
       exportPngProgressiveInterlaced: false,
       exportPngOxiPngCompression: false,
+      exportBmpColorDepth: 24,
+      exportBmpDithering: false,
+      exportBmpDitheringLevel: 0,
       exportTiffColorMode: "color",
       exportMode: "single",
       exportTrimBackground: false,
@@ -300,6 +308,21 @@ export const useSplicingStore = create<SplicingStoreState>()(
       },
       setExportPngProgressiveInterlaced: (v) => set({ exportPngProgressiveInterlaced: v }),
       setExportPngOxiPngCompression: (v) => set({ exportPngOxiPngCompression: v }),
+      setExportBmpColorDepth: (v) => {
+        const normalizedDepth: BmpColorDepth = v === 1 || v === 8 || v === 32 ? v : 24
+        set((state) => ({
+          exportBmpColorDepth: normalizedDepth,
+          exportBmpDithering: normalizedDepth === 1 && state.exportBmpDitheringLevel > 0,
+          exportBmpDitheringLevel: normalizedDepth === 1 ? state.exportBmpDitheringLevel : 0
+        }))
+      },
+      setExportBmpDitheringLevel: (v) => {
+        const normalized = Math.max(0, Math.min(100, Math.round(v)))
+        set((state) => ({
+          exportBmpDitheringLevel: state.exportBmpColorDepth === 1 ? normalized : 0,
+          exportBmpDithering: state.exportBmpColorDepth === 1 && normalized > 0
+        }))
+      },
       setExportTiffColorMode: (v) => set({ exportTiffColorMode: v }),
       setExportMode: (v) => set({ exportMode: v }),
       setExportTrimBackground: (v) => set({ exportTrimBackground: v }),
@@ -325,6 +348,18 @@ export const useSplicingStore = create<SplicingStoreState>()(
         next.exportPngDitheringLevel = Math.max(0, Math.min(100, Math.round(next.exportPngDitheringLevel)))
         next.exportPngDithering = next.exportPngDitheringLevel > 0
         next.exportPngProgressiveInterlaced = Boolean(next.exportPngProgressiveInterlaced)
+        next.exportBmpColorDepth =
+          next.exportBmpColorDepth === 1 || next.exportBmpColorDepth === 8 || next.exportBmpColorDepth === 32
+            ? next.exportBmpColorDepth
+            : 24
+        if (typeof next.exportBmpDitheringLevel !== "number") {
+          next.exportBmpDitheringLevel = next.exportBmpDithering ? 100 : 0
+        }
+        next.exportBmpDitheringLevel = Math.max(0, Math.min(100, Math.round(next.exportBmpDitheringLevel)))
+        if (next.exportBmpColorDepth !== 1) {
+          next.exportBmpDitheringLevel = 0
+        }
+        next.exportBmpDithering = next.exportBmpColorDepth === 1 && next.exportBmpDitheringLevel > 0
         next.exportWebpLossless = Boolean(next.exportWebpLossless)
         next.exportWebpNearLossless =
           typeof next.exportWebpNearLossless === "number"
@@ -369,7 +404,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setExportMozJpegProgressive, setExportMozJpegChromaSubsampling,
           setExportPngTinyMode, setExportPngCleanTransparentPixels, setExportPngAutoGrayscale,
           setExportPngDitheringLevel, setExportPngProgressiveInterlaced,
-          setExportPngOxiPngCompression, setExportTiffColorMode, setExportMode,
+          setExportPngOxiPngCompression, setExportBmpColorDepth, setExportBmpDitheringLevel,
+          setExportTiffColorMode, setExportMode,
           setExportTrimBackground, setExportConcurrency, setExportFileNamePattern,
           setPreviewContainerHeight, setPreviewZoom, setPreviewQualityPercent, setPreviewShowImageNumber,
           setPreviewBentoFlowGroupCount,

@@ -219,7 +219,7 @@ async function canvasToBlob(
     }
     case "bmp": {
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      return encodeImageDataToBmp(data)
+      return encodeImageDataToBmp(data, formatOptions?.bmp)
     }
     case "tiff": {
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)

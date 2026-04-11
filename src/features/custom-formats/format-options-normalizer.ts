@@ -1,5 +1,18 @@
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
-import type { FormatCodecOptions, FormatConfig } from "@/core/types"
+import type { BmpColorDepth, FormatCodecOptions, FormatConfig } from "@/core/types"
+
+function normalizeBmpColorDepth(options: FormatCodecOptions | undefined): BmpColorDepth {
+  const colorDepth = options?.bmp?.colorDepth
+  return colorDepth === 1 || colorDepth === 8 || colorDepth === 32 ? colorDepth : 24
+}
+
+function normalizeBmpDitheringLevel(options: FormatCodecOptions | undefined): number {
+  if (typeof options?.bmp?.ditheringLevel === "number") {
+    return Math.max(0, Math.min(100, Math.round(options.bmp.ditheringLevel)))
+  }
+
+  return options?.bmp?.dithering ? 100 : 0
+}
 
 function normalizePngDitheringLevel(options: FormatCodecOptions | undefined): number {
   if (typeof options?.png?.ditheringLevel === "number") {
@@ -38,11 +51,21 @@ export function normalizeFormatOptionsForCustomFormat(
   format: FormatConfig["format"],
   options: FormatCodecOptions | undefined
 ): FormatCodecOptions {
+  const normalizedBmpColorDepth = normalizeBmpColorDepth(options)
+  const normalizedBmpDitheringLevel = normalizeBmpDitheringLevel(options)
   const normalizedPngDitheringLevel = normalizePngDitheringLevel(options)
   const normalizedWebpNearLossless = normalizeWebpNearLossless(options)
   const normalizedWebpEffort = normalizeWebpEffort(options)
 
   return {
+    bmp:
+      format === "bmp"
+        ? {
+            colorDepth: normalizedBmpColorDepth,
+            dithering: normalizedBmpColorDepth === 1 && normalizedBmpDitheringLevel > 0,
+            ditheringLevel: normalizedBmpColorDepth === 1 ? normalizedBmpDitheringLevel : 0
+          }
+        : undefined,
     jxl:
       format === "jxl"
         ? {

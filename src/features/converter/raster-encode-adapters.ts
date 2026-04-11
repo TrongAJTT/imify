@@ -1,4 +1,5 @@
 import type {
+  BmpCodecOptions,
   AvifCodecOptions,
   JxlCodecOptions,
   MozJpegCodecOptions,
@@ -17,6 +18,7 @@ export interface RasterEncodeInput {
   targetFormat: RasterPipelineFormat
   quality?: number
   formatOptions?: {
+    bmp?: BmpCodecOptions
     avif?: AvifCodecOptions
     jxl?: JxlCodecOptions
     mozjpeg?: MozJpegCodecOptions
@@ -33,7 +35,7 @@ export interface RasterEncodeResult {
 }
 
 export interface RasterEncodeDependencies {
-  encodeBmp: (imageData: ImageData) => Blob
+  encodeBmp: (imageData: ImageData, options?: BmpCodecOptions) => Blob
   encodeTiff: (
     imageData: ImageData,
     options?: {
@@ -110,7 +112,7 @@ function createBuiltInRasterEncoderAdapters(): RasterEncoderAdapter[] {
       supports: (format) => format === "bmp",
       encode: async ({ input, deps }) => {
         return {
-          blob: deps.encodeBmp(input.imageData),
+          blob: deps.encodeBmp(input.imageData, input.formatOptions?.bmp),
           mimeType: "image/bmp"
         }
       }

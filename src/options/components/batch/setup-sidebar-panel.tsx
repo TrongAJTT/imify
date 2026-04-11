@@ -107,6 +107,8 @@ export function BatchSetupSidebarPanel({
   const onPngDitheringLevelChange = useBatchStore((state) => state.setPngDitheringLevel)
   const onPngProgressiveInterlacedChange = useBatchStore((state) => state.setPngProgressiveInterlaced)
   const onPngOxiPngCompressionChange = useBatchStore((state) => state.setPngOxiPngCompression)
+  const onBmpColorDepthChange = useBatchStore((state) => state.setBmpColorDepth)
+  const onBmpDitheringLevelChange = useBatchStore((state) => state.setBmpDitheringLevel)
   const onTiffColorModeChange = useBatchStore((state) => state.setTiffColorMode)
   const onFileNamePatternChange = useBatchStore((state) => state.setFileNamePattern)
   const onWatermarkChange = useBatchStore((state) => state.setWatermark)
@@ -243,6 +245,11 @@ export function BatchSetupSidebarPanel({
             progressiveInterlaced: formatOptions.png.progressiveInterlaced,
             oxipngCompression: formatOptions.png.oxipngCompression
           },
+          bmp: {
+            colorDepth: formatOptions.bmp.colorDepth,
+            dithering: formatOptions.bmp.dithering,
+            ditheringLevel: formatOptions.bmp.ditheringLevel
+          },
           tiff: {
             colorMode: formatOptions.tiff.colorMode
           },
@@ -272,6 +279,8 @@ export function BatchSetupSidebarPanel({
         onWebpEffortChange={onWebpEffortChange}
         onPngTinyModeChange={onPngTinyModeChange}
         onPngDitheringLevelChange={onPngDitheringLevelChange}
+        onBmpColorDepthChange={onBmpColorDepthChange}
+        onBmpDitheringLevelChange={onBmpDitheringLevelChange}
         onTiffColorModeChange={onTiffColorModeChange}
         disabled={isRunning}
         isOpen={isTargetFormatQualityOpen}

@@ -4,6 +4,7 @@ import { ColoredSliderCard } from "@/options/components/ui/colored-slider-card"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
+import type { BmpColorDepth } from "@/core/types"
 import { FileJson, Zap } from "lucide-react"
 
 export type TargetFormatQualityCardProps = {
@@ -13,6 +14,11 @@ export type TargetFormatQualityCardProps = {
   quality: number
   /** Grouped format-specific codec config */
   formatConfig?: {
+    bmp?: {
+      colorDepth?: BmpColorDepth
+      dithering?: boolean
+      ditheringLevel?: number
+    }
     avif?: {
       speed?: number
     }
@@ -66,6 +72,10 @@ export type TargetFormatQualityCardProps = {
   onJxlEffortChange?: (effort: number) => void
   /** Callback when TIFF color mode changes */
   onTiffColorModeChange?: (mode: "color" | "grayscale") => void
+  /** Callback when BMP color depth changes */
+  onBmpColorDepthChange?: (depth: BmpColorDepth) => void
+  /** Callback when BMP dithering level changes (0-100, for 1-bit mode) */
+  onBmpDitheringLevelChange?: (level: number) => void
   /** Callback when WebP lossless mode changes */
   onWebpLosslessChange?: (enabled: boolean) => void
   /** Callback when WebP near-lossless level changes */
@@ -109,6 +119,8 @@ export function TargetFormatQualityCard({
   onPngDitheringLevelChange,
   onJxlEffortChange,
   onTiffColorModeChange,
+  onBmpColorDepthChange,
+  onBmpDitheringLevelChange,
   onWebpLosslessChange,
   onWebpNearLosslessChange,
   onWebpEffortChange,
@@ -127,6 +139,15 @@ export function TargetFormatQualityCard({
     formatConfig?.png?.dithering
   )
   const pngDithering = pngDitheringLevel > 0
+  const rawBmpColorDepth = formatConfig?.bmp?.colorDepth
+  const bmpColorDepth: BmpColorDepth =
+    rawBmpColorDepth === 1 || rawBmpColorDepth === 8 || rawBmpColorDepth === 32
+      ? rawBmpColorDepth
+      : 24
+  const bmpDitheringLevel = bmpColorDepth === 1
+    ? normalizeDitheringLevel(formatConfig?.bmp?.ditheringLevel, formatConfig?.bmp?.dithering)
+    : 0
+  const bmpDitheringEnabled = bmpDitheringLevel > 0
   const jxlEffortOption = formatConfig?.jxl?.effort
   const webpOptions = formatConfig?.webp
   const webpLosslessEnabled = Boolean(webpOptions?.lossless)
@@ -172,6 +193,12 @@ export function TargetFormatQualityCard({
   }
   if (targetFormat === "tiff" && tiffColorMode === "grayscale") {
     extraFlags.push("Grayscale")
+  }
+  if (targetFormat === "bmp") {
+    extraFlags.push(`${bmpColorDepth}-bit`)
+    if (bmpColorDepth === 1 && bmpDitheringEnabled) {
+      extraFlags.push(`Dither ${bmpDitheringLevel}%`)
+    }
   }
 
   const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
@@ -315,6 +342,43 @@ export function TargetFormatQualityCard({
               onChange={(v) => onAvifSpeedChange(parseInt(v, 10))}
               value={String(avifSpeedOption ?? 6)}
             />
+          </div>
+        )}
+
+        {targetFormat === "bmp" && onBmpColorDepthChange && (
+          <div className="space-y-2">
+            <SelectInput
+              label="Color Depth"
+              tooltip={`BMP has no quality slider. File size and visual mode are controlled by bits per pixel.
+- 24-bit RGB: standard, full color.
+- 32-bit RGBA: keeps alpha channel.
+- 8-bit Grayscale: lightweight monochrome range.
+- 1-bit Monochrome: black/white for printers and embedded devices.`}
+              disabled={disabled}
+              options={[
+                { value: "24", label: "24-bit RGB (Standard)" },
+                { value: "32", label: "32-bit RGBA (With Transparency)" },
+                { value: "8", label: "8-bit Grayscale" },
+                { value: "1", label: "1-bit Monochrome (Printers/IoT)" }
+              ]}
+              onChange={(value) => onBmpColorDepthChange(parseInt(value, 10) as BmpColorDepth)}
+              value={String(bmpColorDepth)}
+            />
+
+            {bmpColorDepth === 1 && onBmpDitheringLevelChange && (
+              <ColoredSliderCard
+                label="Dithering Level"
+                value={bmpDitheringLevel}
+                min={0}
+                max={100}
+                step={1}
+                suffix="%"
+                theme="sky"
+                disabled={disabled}
+                onChange={onBmpDitheringLevelChange}
+                subtitle="0% disables dithering. Higher values improve monochrome gradients for 1-bit output."
+              />
+            )}
           </div>
         )}
 

@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **TIFF Workflow:** Added TIFF-specific `Color Mode` control (`RGB` / `Grayscale`) in shared `TargetFormatQualityCard`, now available across Single Processor, Batch Processor, Image Splicing, and Custom Format editor flows.
 - **TIFF Option Wiring:** Wired TIFF codec options end-to-end through shared format types, batch/splicing stores, custom-format normalization, main-thread converter, conversion worker, raster adapter pipeline, and splicing export mapping.
+- **BMP Color Depth Controls:** Added BMP-specific `Color Depth` selection in shared `TargetFormatQualityCard` with 4 modes:
+  - `24-bit RGB (Standard)`
+  - `32-bit RGBA (With Transparency)`
+  - `8-bit Grayscale`
+  - `1-bit Monochrome (Printers/IoT)`
+  These controls are now available in Single Processor, Batch Processor, Image Splicing, and Custom Format editor flows.
+- **BMP Dithering (1-bit):** Added `Dithering Level` slider (0-100) that appears only in BMP `1-bit Monochrome` mode. Dithering is wired through UI/store/config/pipeline and ignored automatically for non-1-bit BMP modes.
+- **BMP Encoder Upgrade:** Upgraded `encodeImageDataToBmp` to support real multi-depth BMP output (`1-bit`, `8-bit`, `24-bit`, `32-bit`) with proper headers, palettes, row stride alignment, and alpha-preserving 32-bit export (`BITMAPV4HEADER`).
+- **BMP Option Wiring:** Wired BMP codec options end-to-end through shared type contracts, custom-format normalization, batch/splicing stores, splicing export option mapping, raster conversion facade, worker/main conversion pipelines, and adapter-based BMP encode path.
 - **Universal Image Pipeline (Decode/Render Split):** Added new shared feature modules under `src/features/image-pipeline/` to separate image decoding and rendering concerns:
   - `decode-image-data.ts`: Unified Blob/File -> `ImageData` decoding with native `createImageBitmap` path and TIFF fallback via `UTIF.decode`/`UTIF.toRGBA8`.
   - `render-image-data.ts`: Unified `ImageData` -> preview Blob/Object URL rendering with MIME fallback chain and quality/max-dimension controls.

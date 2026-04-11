@@ -19,6 +19,14 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
     enabled: true,
     quality,
     formatOptions: {
+      bmp:
+        format === "bmp"
+          ? {
+              colorDepth: 24,
+              dithering: false,
+              ditheringLevel: 0
+            }
+          : undefined,
       webp:
         format === "webp"
           ? {

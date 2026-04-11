@@ -118,6 +118,14 @@ export function BatchProcessorTab() {
                 oxipngCompression: formatOptions.png.oxipngCompression
               }
             : undefined,
+        bmp:
+          targetFormat === "bmp"
+            ? {
+                colorDepth: formatOptions.bmp.colorDepth,
+                dithering: formatOptions.bmp.dithering,
+                ditheringLevel: formatOptions.bmp.ditheringLevel
+              }
+            : undefined,
         tiff:
           targetFormat === "tiff"
             ? {

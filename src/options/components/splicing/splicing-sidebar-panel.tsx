@@ -88,6 +88,9 @@ export function SplicingSidebarPanel({
   const exportPngDitheringLevel = useSplicingStore((s) => s.exportPngDitheringLevel)
   const exportPngProgressiveInterlaced = useSplicingStore((s) => s.exportPngProgressiveInterlaced)
   const exportPngOxiPngCompression = useSplicingStore((s) => s.exportPngOxiPngCompression)
+  const exportBmpColorDepth = useSplicingStore((s) => s.exportBmpColorDepth)
+  const exportBmpDithering = useSplicingStore((s) => s.exportBmpDithering)
+  const exportBmpDitheringLevel = useSplicingStore((s) => s.exportBmpDitheringLevel)
   const exportTiffColorMode = useSplicingStore((s) => s.exportTiffColorMode)
   const exportConcurrency = useSplicingStore((s) => s.exportConcurrency)
   const exportFileNamePattern = useSplicingStore((s) => s.exportFileNamePattern)
@@ -141,6 +144,8 @@ export function SplicingSidebarPanel({
   const setExportPngDitheringLevel = useSplicingStore((s) => s.setExportPngDitheringLevel)
   const setExportPngProgressiveInterlaced = useSplicingStore((s) => s.setExportPngProgressiveInterlaced)
   const setExportPngOxiPngCompression = useSplicingStore((s) => s.setExportPngOxiPngCompression)
+  const setExportBmpColorDepth = useSplicingStore((s) => s.setExportBmpColorDepth)
+  const setExportBmpDitheringLevel = useSplicingStore((s) => s.setExportBmpDitheringLevel)
   const setExportTiffColorMode = useSplicingStore((s) => s.setExportTiffColorMode)
   const setExportMode = useSplicingStore((s) => s.setExportMode)
   const setExportTrimBackground = useSplicingStore((s) => s.setExportTrimBackground)
@@ -272,6 +277,11 @@ export function SplicingSidebarPanel({
               progressiveInterlaced: exportPngProgressiveInterlaced,
               oxipngCompression: exportPngOxiPngCompression
             },
+            bmp: {
+              colorDepth: exportBmpColorDepth,
+              dithering: exportBmpDithering,
+              ditheringLevel: exportBmpDitheringLevel
+            },
             tiff: {
               colorMode: exportTiffColorMode
             }
@@ -288,6 +298,8 @@ export function SplicingSidebarPanel({
           onWebpEffortChange={setExportWebpEffort}
           onPngTinyModeChange={setExportPngTinyMode}
           onPngDitheringLevelChange={setExportPngDitheringLevel}
+          onBmpColorDepthChange={setExportBmpColorDepth}
+          onBmpDitheringLevelChange={setExportBmpDitheringLevel}
           onTiffColorModeChange={setExportTiffColorMode}
           disabled={false}
           isOpen={isExportFormatQualityOpen}

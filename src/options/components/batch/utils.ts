@@ -149,6 +149,7 @@ export function withBatchResize(
   const supportsQuality = QUALITY_FORMATS.includes(config.format)
   const isAvifTarget = config.format === "avif"
   const isPngTarget = config.format === "png"
+  const isBmpTarget = config.format === "bmp"
   const isWebpTarget = config.format === "webp"
   const isJxlTarget = config.format === "jxl"
   const isTiffTarget = config.format === "tiff"
@@ -168,6 +169,16 @@ export function withBatchResize(
       : formatOptions.png.dithering
       ? 100
       : 0
+  const normalizedBmpColorDepth =
+    formatOptions.bmp.colorDepth === 1 || formatOptions.bmp.colorDepth === 8 || formatOptions.bmp.colorDepth === 32
+      ? formatOptions.bmp.colorDepth
+      : 24
+  const normalizedBmpDitheringLevel =
+    typeof formatOptions.bmp.ditheringLevel === "number"
+      ? Math.max(0, Math.min(100, Math.round(formatOptions.bmp.ditheringLevel)))
+      : formatOptions.bmp.dithering
+      ? 100
+      : 0
   const normalizedTiffColorMode: "color" | "grayscale" =
     formatOptions.tiff.colorMode === "grayscale" ? "grayscale" : "color"
   const normalizedIcoSizes = Array.from(
@@ -176,6 +187,13 @@ export function withBatchResize(
 
   const mergedFormatOptions: FormatConfig["formatOptions"] = {
     ...config.formatOptions,
+    bmp: isBmpTarget
+      ? {
+          colorDepth: normalizedBmpColorDepth,
+          dithering: normalizedBmpColorDepth === 1 && normalizedBmpDitheringLevel > 0,
+          ditheringLevel: normalizedBmpColorDepth === 1 ? normalizedBmpDitheringLevel : 0
+        }
+      : undefined,
     jxl: isJxlTarget
       ? {
           ...config.formatOptions?.jxl,

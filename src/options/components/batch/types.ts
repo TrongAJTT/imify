@@ -1,5 +1,5 @@
 import { BATCH_TARGET_FORMATS, HIGH_CONCURRENCY_FORMATS as BASE_HIGH_CONCURRENCY_FORMATS } from "@/core/format-config"
-import type { ImageFormat, PaperSize, SupportedDPI, TiffColorMode } from "@/core/types"
+import type { BmpColorDepth, ImageFormat, PaperSize, SupportedDPI, TiffColorMode } from "@/core/types"
 
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
 export type BatchRunMode = "all" | "failed"
@@ -68,6 +68,11 @@ export interface BatchSummary {
 }
 
 export interface BatchFormatOptions {
+  bmp: {
+    colorDepth: BmpColorDepth
+    dithering: boolean
+    ditheringLevel: number
+  }
   jxl: {
     effort: number
   }
@@ -165,6 +170,8 @@ export interface BatchSetupHandlers {
   onPngDitheringLevelChange: (value: number) => void
   onPngProgressiveInterlacedChange: (value: boolean) => void
   onPngOxiPngCompressionChange: (value: boolean) => void
+  onBmpColorDepthChange: (value: BmpColorDepth) => void
+  onBmpDitheringLevelChange: (value: number) => void
   onTiffColorModeChange: (value: TiffColorMode) => void
   onFileNamePatternChange: (value: string) => void
   onWatermarkChange: (value: BatchWatermarkConfig) => void

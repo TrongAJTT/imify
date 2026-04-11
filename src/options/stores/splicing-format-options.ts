@@ -6,6 +6,9 @@ type SplicingFormatOptions = NonNullable<SplicingExportConfig["formatOptions"]>
 export type SplicingFormatOptionSource = Pick<
   SplicingStoreState,
   | "exportFormat"
+  | "exportBmpColorDepth"
+  | "exportBmpDithering"
+  | "exportBmpDitheringLevel"
   | "exportJxlEffort"
   | "exportWebpLossless"
   | "exportWebpNearLossless"
@@ -32,6 +35,11 @@ export type SplicingFormatOptionSource = Pick<
 
 function buildSplicingFormatOptions(source: SplicingFormatOptionSource): SplicingFormatOptions {
   return {
+    bmp: {
+      colorDepth: source.exportBmpColorDepth,
+      dithering: source.exportBmpColorDepth === 1 && source.exportBmpDithering,
+      ditheringLevel: source.exportBmpColorDepth === 1 ? source.exportBmpDitheringLevel : 0
+    },
     jxl: {
       effort: source.exportJxlEffort
     },
@@ -76,6 +84,7 @@ export function buildActiveSplicingFormatOptions(
   const options = buildSplicingFormatOptions(source)
 
   return {
+    bmp: source.exportFormat === "bmp" ? options.bmp : undefined,
     jxl: source.exportFormat === "jxl" ? options.jxl : undefined,
     webp: source.exportFormat === "webp" ? options.webp : undefined,
     avif: source.exportFormat === "avif" ? options.avif : undefined,

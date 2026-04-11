@@ -49,6 +49,11 @@ export function CustomFormatsTab({
     enabled: true,
     quality: 90,
     formatOptions: {
+      bmp: {
+        colorDepth: 24,
+        dithering: false,
+        ditheringLevel: 0
+      },
       webp: {
         lossless: false,
         nearLossless: 100,
@@ -185,6 +190,11 @@ export function CustomFormatsTab({
       enabled: true,
       quality: 90,
       formatOptions: {
+        bmp: {
+          colorDepth: 24,
+          dithering: false,
+          ditheringLevel: 0
+        },
         webp: {
           lossless: false,
           nearLossless: 100,

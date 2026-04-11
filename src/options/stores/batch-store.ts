@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
-import type { PaperSize, SupportedDPI, TiffColorMode } from "@/core/types"
+import type { BmpColorDepth, PaperSize, SupportedDPI, TiffColorMode } from "@/core/types"
 import type { BatchResizeMode, BatchSetupState, BatchTargetFormat, BatchWatermarkConfig } from "@/options/components/batch/types"
 import { DEFAULT_BATCH_WATERMARK } from "@/options/components/batch/watermark"
 import { watermarkStorage } from "@/core/indexed-db"
@@ -63,6 +63,11 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   concurrency: 3,
   quality: 90,
   formatOptions: {
+    bmp: {
+      colorDepth: 24,
+      dithering: false,
+      ditheringLevel: 0
+    },
     jxl: {
       effort: 7
     },
@@ -125,6 +130,25 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
   }
 
   const formatOptions = state.formatOptions ?? DEFAULT_BATCH_STATE.formatOptions
+  const rawBmpOptions = {
+    ...DEFAULT_BATCH_STATE.formatOptions.bmp,
+    ...formatOptions.bmp
+  }
+  const bmpColorDepth: BmpColorDepth =
+    rawBmpOptions.colorDepth === 1 || rawBmpOptions.colorDepth === 8 || rawBmpOptions.colorDepth === 32
+      ? rawBmpOptions.colorDepth
+      : 24
+  const bmpDitheringLevel =
+    typeof rawBmpOptions.ditheringLevel === "number"
+      ? Math.max(0, Math.min(100, Math.round(rawBmpOptions.ditheringLevel)))
+      : rawBmpOptions.dithering
+      ? 100
+      : 0
+  const bmpOptions = {
+    colorDepth: bmpColorDepth,
+    dithering: bmpColorDepth === 1 && bmpDitheringLevel > 0,
+    ditheringLevel: bmpColorDepth === 1 ? bmpDitheringLevel : 0
+  }
   const avifOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.avif,
     ...formatOptions.avif
@@ -187,6 +211,7 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
     ...state,
     formatOptions: {
       ...formatOptions,
+      bmp: bmpOptions,
       avif: avifOptions,
       mozjpeg: {
         progressive: Boolean(mozjpegOptions.progressive),
@@ -302,6 +327,8 @@ interface BatchStoreState extends BatchSetupState {
   setPngDitheringLevel: (value: number) => void
   setPngProgressiveInterlaced: (value: boolean) => void
   setPngOxiPngCompression: (value: boolean) => void
+  setBmpColorDepth: (value: BmpColorDepth) => void
+  setBmpDitheringLevel: (value: number) => void
   setTiffColorMode: (value: TiffColorMode) => void
   setFileNamePattern: (value: string) => void
   setWatermark: (value: BatchWatermarkConfig) => void
@@ -1223,6 +1250,67 @@ export const useBatchStore = create<BatchStoreState>()(
             }
           } as Partial<BatchStoreState>
         }),
+      setBmpColorDepth: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const normalizedDepth: BmpColorDepth =
+            value === 1 || value === 8 || value === 32 ? value : 24
+          const currentDitheringLevel =
+            typeof currentConfig.formatOptions.bmp.ditheringLevel === "number"
+              ? Math.max(0, Math.min(100, Math.round(currentConfig.formatOptions.bmp.ditheringLevel)))
+              : 0
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            bmp: {
+              ...currentConfig.formatOptions.bmp,
+              colorDepth: normalizedDepth,
+              dithering: normalizedDepth === 1 && currentDitheringLevel > 0,
+              ditheringLevel: normalizedDepth === 1 ? currentDitheringLevel : 0
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setBmpDitheringLevel: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const normalizedValue = Math.max(0, Math.min(100, Math.round(value)))
+          const colorDepth = currentConfig.formatOptions.bmp.colorDepth
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            bmp: {
+              ...currentConfig.formatOptions.bmp,
+              dithering: colorDepth === 1 && normalizedValue > 0,
+              ditheringLevel: colorDepth === 1 ? normalizedValue : 0
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
       setTiffColorMode: (value) =>
         set((state) => {
           const setupContext = state.setupContext
@@ -1330,6 +1418,9 @@ export const useBatchStore = create<BatchStoreState>()(
             concurrency: state.concurrency,
             quality: state.quality,
             formatOptions: {
+              bmp: {
+                ...state.formatOptions.bmp
+              },
               jxl: {
                 ...state.formatOptions.jxl
               },
