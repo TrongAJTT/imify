@@ -2,13 +2,15 @@ import type { FormatCodecOptions, ImageFormat } from "@/core/types"
 
 export const PERFORMANCE_PREFERENCES_KEY = "imify_performance_preferences"
 export const MAX_CONCURRENCY = 90
+export const POTATO_CPU_CORES = 4
+export const POTATO_RAM_BUDGET_GB = 4
 
 const MIN_CPU_CORES = 1
 const MAX_CPU_CORES = 64
 const MIN_RAM_BUDGET_GB = 0.5
 const MAX_RAM_BUDGET_GB = 64
-const DEFAULT_CPU_CORES = 4
-const DEFAULT_RAM_BUDGET_GB = 2
+const DEFAULT_CPU_CORES = POTATO_CPU_CORES
+const DEFAULT_RAM_BUDGET_GB = POTATO_RAM_BUDGET_GB
 const DEFAULT_ESTIMATED_MEGAPIXELS = 12
 
 type HardwareProfileSource = "manual" | "detected" | "fallback"
@@ -25,11 +27,14 @@ export interface SmartHardwareProfile {
 
 export interface PerformancePreferences {
   smartAdvisorEnabled: boolean
+  allowConcurrencyOverclock: boolean
   hardwareProfile: SmartHardwareProfile
 }
 
 export interface ConcurrencyAdvisorResult {
-  enabled: boolean
+  enabled: true
+  advisorName: "Smart Concurrency Advisor" | "Concurrency Advisor"
+  usingFallbackProfile: boolean
   recommended: number
   recommendedMin: number
   recommendedMax: number
@@ -45,6 +50,7 @@ export interface ConcurrencyAdvisorResult {
 
 export const DEFAULT_PERFORMANCE_PREFERENCES: PerformancePreferences = {
   smartAdvisorEnabled: false,
+  allowConcurrencyOverclock: false,
   hardwareProfile: {
     cpuCores: DEFAULT_CPU_CORES,
     ramBudgetGb: DEFAULT_RAM_BUDGET_GB,
@@ -131,24 +137,9 @@ export function normalizePerformancePreferences(value: unknown): PerformancePref
 
   return {
     smartAdvisorEnabled: Boolean(input.smartAdvisorEnabled),
+    allowConcurrencyOverclock: Boolean(input.allowConcurrencyOverclock),
     hardwareProfile: normalizeHardwareProfile(input.hardwareProfile)
   }
-}
-
-function resolveRamBudgetFromDeviceMemory(deviceMemoryGb: number): number {
-  if (deviceMemoryGb >= 16) {
-    return 4
-  }
-
-  if (deviceMemoryGb >= 8) {
-    return 2
-  }
-
-  if (deviceMemoryGb > 4) {
-    return 1.5
-  }
-
-  return 1
 }
 
 export function detectHardwareProfile(): SmartHardwareProfile {
@@ -169,10 +160,32 @@ export function detectHardwareProfile(): SmartHardwareProfile {
 
   return {
     cpuCores,
-    ramBudgetGb: resolveRamBudgetFromDeviceMemory(detectedDeviceMemoryGb),
+    // Auto-detect should reflect detected RAM directly to avoid confusing mismatch in UI.
+    ramBudgetGb: detectedDeviceMemoryGb,
     detectedLogicalCores: cpuCores,
     detectedDeviceMemoryGb,
     source: hasNavigator ? "detected" : "fallback"
+  }
+}
+
+function getAdvisorHardwareProfile(preferences: PerformancePreferences): {
+  profile: SmartHardwareProfile
+  usingFallbackProfile: boolean
+} {
+  if (preferences.smartAdvisorEnabled) {
+    return {
+      profile: preferences.hardwareProfile,
+      usingFallbackProfile: false
+    }
+  }
+
+  return {
+    profile: {
+      cpuCores: POTATO_CPU_CORES,
+      ramBudgetGb: POTATO_RAM_BUDGET_GB,
+      source: "fallback"
+    },
+    usingFallbackProfile: true
   }
 }
 
@@ -446,25 +459,7 @@ export function calculateConcurrencyAdvisor(input: {
 }): ConcurrencyAdvisorResult {
   const preferences = normalizePerformancePreferences(input.preferences)
   const selectedConcurrency = clampConcurrencyValue(input.selectedConcurrency)
-
-  if (!preferences.smartAdvisorEnabled) {
-    return {
-      enabled: false,
-      recommended: selectedConcurrency,
-      recommendedMin: selectedConcurrency,
-      recommendedMax: selectedConcurrency,
-      cpuLimit: MAX_CONCURRENCY,
-      memoryLimit: MAX_CONCURRENCY,
-      memoryPerWorkerMB: 0,
-      riskLevel: "optimal",
-      statusText: "Smart Concurrency Advisor is disabled.",
-      detailText: "Enable it in Settings to receive hardware-aware recommendations.",
-      summaryText: "Using manual concurrency selection (1-90).",
-      reasons: []
-    }
-  }
-
-  const profile = preferences.hardwareProfile
+  const { profile, usingFallbackProfile } = getAdvisorHardwareProfile(preferences)
   const cost = estimateFormatCost(
     input.targetFormat,
     input.formatOptions,
@@ -499,6 +494,8 @@ export function calculateConcurrencyAdvisor(input: {
 
   return {
     enabled: true,
+    advisorName: usingFallbackProfile ? "Concurrency Advisor" : "Smart Concurrency Advisor",
+    usingFallbackProfile,
     recommended,
     recommendedMin,
     recommendedMax,
@@ -514,7 +511,27 @@ export function calculateConcurrencyAdvisor(input: {
       recommendedMax
     ),
     detailText: `CPU limit ${cpuLimit}, RAM limit ${memoryLimit}, estimated ${cost.memoryMB}MB per worker.`,
-    summaryText: `${sourceLabel} profile: ${profile.cpuCores} threads, ${profile.ramBudgetGb}GB RAM budget.`,
+    summaryText: usingFallbackProfile
+      ? `Default profile: ${profile.cpuCores} threads, ${profile.ramBudgetGb}GB RAM budget.`
+      : `${sourceLabel} profile: ${profile.cpuCores} threads, ${profile.ramBudgetGb}GB RAM budget.`,
     reasons: cost.reasons
+  }
+}
+
+export function resolveConcurrencyLockState(input: {
+  preferences: PerformancePreferences
+  advisor: ConcurrencyAdvisorResult
+}): {
+  isLocked: boolean
+  maxAllowedConcurrency: number
+} {
+  const preferences = normalizePerformancePreferences(input.preferences)
+  const isLocked = !preferences.allowConcurrencyOverclock
+
+  return {
+    isLocked,
+    maxAllowedConcurrency: isLocked
+      ? clampConcurrencyValue(input.advisor.recommendedMax)
+      : MAX_CONCURRENCY
   }
 }

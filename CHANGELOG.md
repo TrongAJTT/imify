@@ -149,8 +149,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **TIFF Encoding (UTIF):** TIFF encode path now supports visual grayscale rendering and writes DPI metadata tags (`t282`, `t283`, `t296`) from resize DPI settings so print-size exports preserve resolution information in downstream design/print tools.
-- **Concurrency Policy:** Removed format-class upper-cap enforcement from selector logic. Concurrency is now intentionally open to `1-90` for all formats, while Smart Concurrency Advisor provides contextual safety guidance instead of hard limits.
+- **Concurrency Policy:** Switched to Advisor lock-by-default behavior. Concurrency max is now hard-locked to Advisor-calculated safe range unless users explicitly enable `Unlock max concurrency (Overclock)` in Performance settings.
+- **Concurrency Advisor Fallback:** When Smart Concurrency Advisor is disabled, system now automatically falls back to `Concurrency Advisor` using static Potato PC profile (`4` CPU threads / `4GB` RAM budget) to keep safety guardrails active by default.
 - **Concurrency Input UI:** Converted concurrency selector from `SelectInput` dropdown to `NumberInput` with direct numeric entry (1-90). Repositioned Smart Concurrency Advisor panel to appear immediately below concurrency option for tighter visual grouping.
+- **Concurrency Lock UX:** Added lock indicator on concurrency control with hover popover describing active guardrail cap and quick `Unlock In Performance Settings` action.
+- **Hardware Auto-Detect:** Fixed RAM auto-detect mapping so detected memory now fills `RAM Budget (GB)` directly, aligning the form value with detected hardware baseline text.
 - **Settings Dialog:** Improved layout density and increased dialog height (`640px` → `720px`) for better content visibility. Reduced internal spacing between section headers and content, and lowered border radius (`rounded-2xl` → `rounded-xl`) for refined visual appearance.
 - **Config Contracts (Breaking):** Removed all legacy flat codec props from conversion and options payloads (`jxlEffort`, `avif*`, `pngTinyMode`, `icoOptions`, etc.) and standardized on grouped `formatOptions` only across core types, converter worker/main pipeline, batch/single processors, splicing export, and custom format flows (no compatibility migration path retained).
 - **PNG Encoding Pipeline:** PNG now uses an option-aware adapter route:

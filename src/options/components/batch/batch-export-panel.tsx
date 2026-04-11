@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import { Lock, Stamp } from "lucide-react"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import SidebarCard from "@/options/components/ui/sidebar-card"
@@ -5,7 +6,11 @@ import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { ExportControlsPanel } from "@/options/components/shared/export-controls-panel"
 import { SmartConcurrencyAdvisorCard } from "@/options/components/shared/smart-concurrency-advisor-card"
 import { WATERMARK_POSITION_OPTIONS } from "@/options/components/batch/watermark"
-import type { PerformancePreferences } from "@/options/shared/performance-preferences"
+import {
+  calculateConcurrencyAdvisor,
+  resolveConcurrencyLockState,
+  type PerformancePreferences
+} from "@/options/shared/performance-preferences"
 import type { BatchFormatOptions, BatchTargetFormat } from "@/options/components/batch/types"
 
 interface BatchWatermarkConfig {
@@ -70,6 +75,37 @@ export function BatchExportPanel({
       ? "None"
       : `${watermark.type === "text" ? "Text" : "Logo"} - ${WATERMARK_POSITION_OPTIONS.find((option) => option.value === watermark.position)?.label || "Bottom-Right"}`
   const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat
+  const advisorFormatOptions = useMemo(
+    () => ({
+      bmp: { ...formatOptions.bmp },
+      jxl: { ...formatOptions.jxl },
+      webp: { ...formatOptions.webp },
+      avif: { ...formatOptions.avif },
+      mozjpeg: { ...formatOptions.mozjpeg },
+      png: { ...formatOptions.png },
+      tiff: { ...formatOptions.tiff },
+      ico: { ...formatOptions.ico }
+    }),
+    [formatOptions]
+  )
+  const advisor = useMemo(
+    () =>
+      calculateConcurrencyAdvisor({
+        targetFormat,
+        selectedConcurrency: concurrency,
+        formatOptions: advisorFormatOptions,
+        preferences: performancePreferences
+      }),
+    [targetFormat, concurrency, advisorFormatOptions, performancePreferences]
+  )
+  const concurrencyLockState = useMemo(
+    () =>
+      resolveConcurrencyLockState({
+        preferences: performancePreferences,
+        advisor
+      }),
+    [performancePreferences, advisor]
+  )
 
   return (
     <AccordionCard
@@ -85,22 +121,17 @@ export function BatchExportPanel({
           concurrency={concurrency}
           fileNamePattern={fileNamePattern}
           onConcurrencyChange={onConcurrencyChange}
+          concurrencyMax={concurrencyLockState.maxAllowedConcurrency}
+          isConcurrencyLocked={concurrencyLockState.isLocked}
+          onUnlockConcurrency={onOpenSettings}
           onFileRenamingClick={onFileRenamingClick}
           disabled={disabled}
           afterConcurrency={
             <SmartConcurrencyAdvisorCard
+              advisor={advisor}
               targetFormat={targetFormat}
               selectedConcurrency={concurrency}
-              formatOptions={{
-                bmp: { ...formatOptions.bmp },
-                jxl: { ...formatOptions.jxl },
-                webp: { ...formatOptions.webp },
-                avif: { ...formatOptions.avif },
-                mozjpeg: { ...formatOptions.mozjpeg },
-                png: { ...formatOptions.png },
-                tiff: { ...formatOptions.tiff },
-                ico: { ...formatOptions.ico }
-              }}
+              formatOptions={advisorFormatOptions}
               performancePreferences={performancePreferences}
               onApplyRecommended={onConcurrencyChange}
               onOpenSettings={onOpenSettings}

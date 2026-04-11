@@ -113,6 +113,7 @@ export function SettingsDialog({
 
   const safePerformancePreferences = normalizePerformancePreferences(performancePreferences)
   const advisorEnabled = safePerformancePreferences.smartAdvisorEnabled
+  const overclockEnabled = safePerformancePreferences.allowConcurrencyOverclock
   const hardwareProfile = safePerformancePreferences.hardwareProfile
 
   const updatePerformancePreferences = (next: PerformancePreferences) => {
@@ -320,6 +321,40 @@ export function SettingsDialog({
                   </div>
                 </label>
 
+                <label className="flex items-center justify-between gap-4 py-2 rounded-lg transition-colors cursor-pointer select-none group">
+                  <div className="flex-1 pr-6">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-900 transition-colors">
+                      Unlock max concurrency (Overclock)
+                    </p>
+                    <MutedText className="text-sm mt-0.5 leading-relaxed">
+                      Allow values up to 90 and bypass Advisor hard lock. This can increase crash risk on heavy formats.
+                    </MutedText>
+                  </div>
+                  <div className="flex items-center">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={overclockEnabled}
+                      onClick={() =>
+                        updatePerformancePreferences({
+                          ...safePerformancePreferences,
+                          allowConcurrencyOverclock: !overclockEnabled
+                        })
+                      }
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 ${
+                        overclockEnabled ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          overclockEnabled ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </label>
+
                 {advisorEnabled && (
                   <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
                     <div className="flex items-center justify-between gap-3">
@@ -373,14 +408,26 @@ export function SettingsDialog({
                     </div>
 
                     <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
-                      Recommended baseline detected: {hardwareProfile.detectedLogicalCores ?? hardwareProfile.cpuCores} threads, ~{hardwareProfile.detectedDeviceMemoryGb ?? "unknown"}GB device memory.
+                      Detected hardware: {hardwareProfile.detectedLogicalCores ?? hardwareProfile.cpuCores} threads, ~{hardwareProfile.detectedDeviceMemoryGb ?? "unknown"}GB device memory.
                     </div>
                   </div>
                 )}
 
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
-                  Concurrency selector remains fully open (1-90). Advisor only provides guidance and does not enforce limits.
-                </div>
+                {!advisorEnabled && (
+                  <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-relaxed text-sky-800 dark:border-sky-900/50 dark:bg-sky-950/30 dark:text-sky-300">
+                    Smart mode is off. Concurrency Advisor is running in static fallback mode using default profile (4 threads, 4GB RAM budget).
+                  </div>
+                )}
+
+                {overclockEnabled ? (
+                  <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
+                    Danger mode: overclock is enabled. Heavy formats (AVIF/JXL/PNG tiny+OxiPNG) can hit OOM if you push concurrency too high.
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
+                    Safe mode: concurrency max is hard-locked by Advisor calculations to reduce crash risk.
+                  </div>
+                )}
               </section>
             </div>
           )}

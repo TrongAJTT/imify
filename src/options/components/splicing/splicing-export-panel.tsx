@@ -1,10 +1,15 @@
+import { useMemo } from "react"
 import { Crop, FileEdit, Stamp } from "lucide-react"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import SidebarCard from "@/options/components/ui/sidebar-card"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { ConcurrencySelector } from "@/options/components/shared/concurrency-selector"
 import { SmartConcurrencyAdvisorCard } from "@/options/components/shared/smart-concurrency-advisor-card"
-import type { PerformancePreferences } from "@/options/shared/performance-preferences"
+import {
+  calculateConcurrencyAdvisor,
+  resolveConcurrencyLockState,
+  type PerformancePreferences
+} from "@/options/shared/performance-preferences"
 import {
   EXPORT_MODE_OPTIONS,
   SelectField
@@ -79,6 +84,24 @@ export function SplicingExportPanel({
   const modeOptions = availableExportModes
     ? EXPORT_MODE_OPTIONS.filter((opt) => availableExportModes.includes(opt.value as any))
     : EXPORT_MODE_OPTIONS
+  const advisor = useMemo(
+    () =>
+      calculateConcurrencyAdvisor({
+        targetFormat,
+        selectedConcurrency: concurrency,
+        formatOptions: advisorFormatOptions,
+        preferences: performancePreferences
+      }),
+    [targetFormat, concurrency, advisorFormatOptions, performancePreferences]
+  )
+  const concurrencyLockState = useMemo(
+    () =>
+      resolveConcurrencyLockState({
+        preferences: performancePreferences,
+        advisor
+      }),
+    [performancePreferences, advisor]
+  )
 
   return (
     <AccordionCard
@@ -101,6 +124,9 @@ export function SplicingExportPanel({
               format={concurrencyFormat}
               value={concurrency}
               onChange={onConcurrencyChange}
+              maxValue={concurrencyLockState.maxAllowedConcurrency}
+              isLocked={concurrencyLockState.isLocked}
+              onUnlockInSettings={onOpenSettings}
               disabled={disabled}
             />
           )}
@@ -108,6 +134,7 @@ export function SplicingExportPanel({
         {exportMode !== "single" && (
           <>
             <SmartConcurrencyAdvisorCard
+              advisor={advisor}
               targetFormat={targetFormat}
               selectedConcurrency={concurrency}
               formatOptions={advisorFormatOptions}

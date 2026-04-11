@@ -13,6 +13,12 @@ interface ExportControlsPanelProps {
   fileNamePattern: string
   /** Callback when concurrency changes */
   onConcurrencyChange: (value: number) => void
+  /** Max allowed concurrency for current export context */
+  concurrencyMax?: number
+  /** Whether concurrency is lock-guarded by advisor */
+  isConcurrencyLocked?: boolean
+  /** Open settings to unlock overclock */
+  onUnlockConcurrency?: () => void
   /** Callback when file renaming is opened */
   onFileRenamingClick: () => void
   /** Whether inputs are disabled */
@@ -34,6 +40,9 @@ export function ExportControlsPanel({
   concurrency,
   fileNamePattern,
   onConcurrencyChange,
+  concurrencyMax,
+  isConcurrencyLocked,
+  onUnlockConcurrency,
   onFileRenamingClick,
   disabled = false,
   afterConcurrency,
@@ -46,6 +55,9 @@ export function ExportControlsPanel({
         format={targetFormat}
         value={concurrency}
         onChange={onConcurrencyChange}
+        maxValue={concurrencyMax}
+        isLocked={isConcurrencyLocked}
+        onUnlockInSettings={onUnlockConcurrency}
         disabled={disabled}
       />
       {afterConcurrency}

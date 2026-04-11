@@ -7,10 +7,12 @@ import { AccordionCard } from "@/options/components/ui/accordion-card"
 import {
   calculateConcurrencyAdvisor,
   type AdvisorTargetFormat,
+  type ConcurrencyAdvisorResult,
   type PerformancePreferences
 } from "@/options/shared/performance-preferences"
 
 interface SmartConcurrencyAdvisorCardProps {
+  advisor?: ConcurrencyAdvisorResult
   targetFormat: AdvisorTargetFormat
   selectedConcurrency: number
   formatOptions?: FormatCodecOptions
@@ -39,6 +41,7 @@ const TONE_MAP = {
 } as const
 
 export function SmartConcurrencyAdvisorCard({
+  advisor: advisorOverride,
   targetFormat,
   selectedConcurrency,
   formatOptions,
@@ -49,44 +52,21 @@ export function SmartConcurrencyAdvisorCard({
 }: SmartConcurrencyAdvisorCardProps) {
   const advisor = useMemo(
     () =>
+      advisorOverride ??
       calculateConcurrencyAdvisor({
         targetFormat,
         selectedConcurrency,
         formatOptions,
         preferences: performancePreferences
       }),
-    [targetFormat, selectedConcurrency, formatOptions, performancePreferences]
+    [
+      advisorOverride,
+      targetFormat,
+      selectedConcurrency,
+      formatOptions,
+      performancePreferences
+    ]
   )
-
-  if (!advisor.enabled) {
-    return (
-      <AccordionCard
-        icon={<Gauge size={16} />}
-        label="Smart Concurrency Advisor"
-        sublabel="Disabled - click to enable"
-        colorTheme="sky"
-        defaultOpen={false}
-      >
-        <div className="space-y-2 text-sm">
-          <p className="text-slate-700 dark:text-slate-300">
-            Enable advisor in Settings to get hardware-aware recommendations for current export format and advanced encoder options.
-          </p>
-          {onOpenSettings && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={onOpenSettings}
-              disabled={disabled}
-              className="w-full"
-            >
-              Open Settings
-            </Button>
-          )}
-        </div>
-      </AccordionCard>
-    )
-  }
 
   const colorThemeMap = {
     optimal: "blue" as const,
@@ -97,9 +77,9 @@ export function SmartConcurrencyAdvisorCard({
 
   return (
     <AccordionCard
-      icon={<ToneIcon size={16} />}
-      label="Smart Concurrency Advisor"
-      sublabel={`${advisor.riskLevel === "optimal" ? "Optimal" : advisor.riskLevel === "caution" ? "Pushing limits" : "High crash risk"}: ${advisor.recommended} (${advisor.recommendedMin}-${advisor.recommendedMax})`}
+      icon={advisor.usingFallbackProfile ? <Gauge size={16} /> : <ToneIcon size={16} />}
+      label={advisor.advisorName}
+      sublabel={`${advisor.riskLevel === "optimal" ? "Optimal" : advisor.riskLevel === "caution" ? "Pushing limits" : "High crash risk"}: ${advisor.recommended} (${advisor.recommendedMin}-${advisor.recommendedMax})${advisor.usingFallbackProfile ? " • Default" : "Custom"}`}
       colorTheme={colorThemeMap[advisor.riskLevel]}
       defaultOpen={advisor.riskLevel !== "optimal"}
     >
@@ -115,6 +95,18 @@ export function SmartConcurrencyAdvisorCard({
             Heavy factors: {advisor.reasons.slice(0, 3).join(", ")}
             {advisor.reasons.length > 3 ? ", ..." : ""}
           </p>
+        )}
+        {advisor.usingFallbackProfile && onOpenSettings && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onOpenSettings}
+            disabled={disabled}
+            className="w-full"
+          >
+            Enable Smart Advisor
+          </Button>
         )}
         {onApplyRecommended && selectedConcurrency !== advisor.recommended && (
           <Button
