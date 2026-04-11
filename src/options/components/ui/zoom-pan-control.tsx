@@ -1,5 +1,4 @@
 import { RotateCcw } from "lucide-react"
-import type { RefObject } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useValueScrubbing } from "@/options/hooks/use-value-scrubbing"
 import { Tooltip } from "@/options/components/tooltip"

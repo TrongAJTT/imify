@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { drawSplicingCanvas } from "@/features/splicing/canvas-renderer"
 import { calculateLayout } from "@/features/splicing/layout-engine"
 import { usePanDrag } from "@/options/hooks/use-pan-drag"
+import { usePointerZoom } from "@/options/hooks/use-pointer-zoom"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
 import type {
@@ -75,6 +76,22 @@ export function CanvasPreview({
   const { pan, setPan, resetPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
     onlyWhenZoomed: false,
     currentZoom: zoom
+  })
+
+  const wheelThrottleRef = useRef<NodeJS.Timeout | null>(null)
+  const pendingWheelRef = useRef<WheelEvent | null>(null)
+
+  const { zoomTowardPointer } = usePointerZoom({
+    zoom,
+    panX: pan.x,
+    panY: pan.y,
+    minZoom: 50,
+    maxZoom: 800,
+    zoomStep: 10,
+    onZoomChange: setPreviewZoom,
+    onPanChange: (x, y) => setPan({ x, y }),
+    getCanvasElement: () => canvasRef.current,
+    getContainerElement: () => canvasWrapperRef.current
   })
 
   const clampPreviewZoom = useCallback((v: number) => {
@@ -359,74 +376,69 @@ export function CanvasPreview({
 
     const handleWheelCapture = (e: WheelEvent) => {
       if (e.target && container.contains(e.target as Node)) {
+        // Check if target is interactive element (ZoomPanControl)
+        const target = e.target as HTMLElement
+        if (target.closest('[class*="pointer-events-auto"]')) {
+          return
+        }
+
         e.preventDefault()
+
+        // Store pending event and throttle to avoid frame lag
+        pendingWheelRef.current = e
         
-        if (isScrollPan) {
-          // Scroll to pan
-          const isPanVertical = !e.shiftKey
-          const delta = e.deltaY > 0 ? 50 : -50
-          
-          if (isPanVertical) {
-            setPan((current) => ({
-              ...current,
-              y: current.y - delta
-            }))
-          } else {
-            setPan((current) => ({
-              ...current,
-              x: current.x - delta
-            }))
-          }
-        } else {
-          // Scroll to zoom toward pointer (keep point under cursor fixed)
-          const canvas = canvasRef.current
-          const wrapper = canvasWrapperRef.current
-          if (!canvas || !wrapper) return
+        if (wheelThrottleRef.current) {
+          // Already scheduled, pending event will be processed
+          return
+        }
 
-          const delta = e.deltaY > 0 ? -10 : 10
-          const oldZoom = useSplicingStore.getState().previewZoom
-          const newZoom = clampPreviewZoom(oldZoom + delta)
-          if (newZoom === oldZoom) return
-
-          const oldFw = canvas.width
-          const oldFh = canvas.height
-          if (oldFw < 1 || oldFh < 1) {
-            setPreviewZoom(newZoom)
+        // Process immediately first time, then throttle
+        wheelThrottleRef.current = setTimeout(() => {
+          const pending = pendingWheelRef.current
+          if (!pending) {
+            wheelThrottleRef.current = null
             return
           }
+          pendingWheelRef.current = null
 
-          const ratio = newZoom / oldZoom
-          const newFw = Math.round(oldFw * ratio)
-          const newFh = Math.round(oldFh * ratio)
+          const isPanMode = isScrollPan
+          const isPanVertical = !pending.shiftKey
 
-          const canvasRect = canvas.getBoundingClientRect()
-          const oldLeft = canvasRect.left
-          const oldTop = canvasRect.top
-          const px = e.clientX - oldLeft
-          const py = e.clientY - oldTop
+          if (isPanMode) {
+            // Scroll to pan
+            const delta = pending.deltaY > 0 ? 50 : -50
 
-          const newLeft = e.clientX - px * ratio
-          const newTop = e.clientY - py * ratio
+            if (isPanVertical) {
+              setPan((current) => ({
+                ...current,
+                y: current.y - delta
+              }))
+            } else {
+              setPan((current) => ({
+                ...current,
+                x: current.x - delta
+              }))
+            }
+          } else {
+            // Scroll to zoom toward pointer
+            zoomTowardPointer(pending)
+          }
 
-          const wrapperRect = wrapper.getBoundingClientRect()
-          const cx = wrapperRect.left + wrapperRect.width / 2
-          const cy = wrapperRect.top + wrapperRect.height / 2
-
-          const newPanX = newLeft + newFw / 2 - cx
-          const newPanY = newTop + newFh / 2 - cy
-
-          setPan({ x: newPanX, y: newPanY })
-          setPreviewZoom(newZoom)
-        }
+          wheelThrottleRef.current = null
+        }, 16) // ~60fps throttle
       }
     }
 
     document.addEventListener("wheel", handleWheelCapture, { capture: true, passive: false })
-    
+
     return () => {
       document.removeEventListener("wheel", handleWheelCapture, { capture: true })
+      if (wheelThrottleRef.current) {
+        clearTimeout(wheelThrottleRef.current)
+        wheelThrottleRef.current = null
+      }
     }
-  }, [isScrollPan, setPan, setPreviewZoom, clampPreviewZoom])
+  }, [isScrollPan, setPan, zoomTowardPointer])
 
   const resetZoom = useCallback(() => {
     setPreviewZoom(100)

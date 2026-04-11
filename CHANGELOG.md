@@ -22,6 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - DiffChecker's `ViewerShell` now includes full zoom/pan controls matching Image Splicing's UX instead of read-only zoom display.
   - Single Processor preview now displays "Drag to pan • Scroll to zoom" helper text instead of manual zoom buttons (zoom/pan controls delegated to `PixelCompareWorkspace`).
 - **UI:** Added new `ZoomPanControl` reusable component in `/ui` folder for zoom/pan visualization and interaction across preview viewers.
+- **Pointer-Aware Zoom (Custom Hook):** Created `usePointerZoom` custom hook for zoom-to-pointer functionality:
+  - Ensures that when zooming, the point under the cursor stays fixed (consistent UX with professional image editors).
+  - Used in Image Splicing canvas preview for pointer-zoom behavior.
+  - DiffChecker's ViewerShell now uses pointer-zoom math for all modes (split, side-by-side, overlay, difference) instead of center-based zoom.
+  - Hooks can be shared across features that need zoom-to-pointer UX.
+- **Performance Optimization (Wheel Event Throttling):** Added throttling to Image Splicing's wheel event handler:
+  - Wheel events are now throttled to ~60fps (16ms) to prevent frame lag during rapid zoom operations.
+  - Uses a pending event queue to ensure the last wheel delta is always processed.
+  - Significantly reduces frame stuttering when rapidly scrolling to zoom on large/complex layouts.
 - **UI:** Added new `ColoredSliderCard` reusable wrapper component for theme-customizable slider inputs with subtitle support (placed in `/ui` folder for general composition).
 - **Export Standardization:** Created reusable export control components to standardize export settings across Batch Processor and Image Splicing:
   - `ExportControlsPanel` (shared): Reusable base component combining Concurrency Selector and File Renaming controls.

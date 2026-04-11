@@ -51,16 +51,43 @@ export function ViewerShell({
         return
       }
       e.preventDefault()
+
+      // Calculate zoom-to-pointer for consistent UX with Image Splicing
       const dir = e.deltaY > 0 ? -1 : 1
-      const next = Math.round(
-        Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * (1 + ZOOM_FACTOR * dir)))
-      )
+      const oldZoom = zoom
+      const next = Math.round(Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom * (1 + ZOOM_FACTOR * dir))))
+      
+      if (next === oldZoom) return
+
+      // Get container dimensions and pointer position
+      const container = ref.current
+      if (!container) return
+
+      const containerRect = container.getBoundingClientRect()
+      const containerCenterX = containerRect.left + containerRect.width / 2
+      const containerCenterY = containerRect.top + containerRect.height / 2
+
+      // Pointer position relative to container center
+      const pointerOffsetX = e.clientX - containerCenterX
+      const pointerOffsetY = e.clientY - containerCenterY
+
+      // Scale factors for old and new zoom
+      const oldScale = oldZoom / 100
+      const newScale = next / 100
+      const scaleRatio = newScale / oldScale
+
+      // Calculate new pan to keep pointer point fixed
+      // Formula: newPan = pointerOffset * (1 - scaleRatio) + oldPan * scaleRatio
+      const newPanX = pointerOffsetX * (1 - scaleRatio) + panX * scaleRatio
+      const newPanY = pointerOffsetY * (1 - scaleRatio) + panY * scaleRatio
+
       onZoomChange(next)
+      onPanChange(newPanX, newPanY)
     }
 
     el.addEventListener("wheel", onWheel, { passive: false })
     return () => el.removeEventListener("wheel", onWheel)
-  }, [zoom, onZoomChange])
+  }, [zoom, panX, panY, onZoomChange, onPanChange])
 
   useEffect(() => {
     const onFullscreenChange = () => {
