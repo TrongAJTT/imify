@@ -57,7 +57,7 @@ import {
 } from "lucide-react"
 import { AboutDialog } from "./components/about-dialog"
 import { AttributionDialog } from "./components/attribution-dialog"
-import { SettingsDialog } from "@/options/components/settings-dialog"
+import { SettingsDialog, type SettingsDialogTab } from "@/options/components/settings-dialog"
 import { DonateDialog } from "./components/donate-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
@@ -211,6 +211,7 @@ export default function OptionsPage() {
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false)
+  const [settingsDialogInitialTab, setSettingsDialogInitialTab] = useState<SettingsDialogTab>("general")
   const setSetupContext = useBatchStore((store) => store.setSetupContext)
   const setPreviewQualityPercent = useSplicingStore((store) => store.setPreviewQualityPercent)
   const isBatchStoreRehydrated = useBatchStore((store) => (store as any)._hasHydrated)
@@ -259,6 +260,11 @@ export default function OptionsPage() {
     }
     setPreviewQualityPercent(next)
   }, [setPreviewQualityPercent])
+
+  const openSettingsDialog = useCallback((tab: SettingsDialogTab = "general") => {
+    setSettingsDialogInitialTab(tab)
+    setIsSettingsDialogOpen(true)
+  }, [])
 
   useEffect(() => {
     if (didInitDefaultTabRef.current) {
@@ -371,7 +377,7 @@ export default function OptionsPage() {
         isDark={isDark}
         isLoading={isLoading}
         onOpenAbout={() => setIsAboutDialogOpen(true)}
-        onOpenSettings={() => setIsSettingsDialogOpen(true)}
+        onOpenSettings={() => openSettingsDialog("general")}
         onOpenDonate={() => setIsDonateDialogOpen(true)}
         onToggleDark={() => setIsDark(!isDark)}
       />
@@ -386,6 +392,7 @@ export default function OptionsPage() {
       <SettingsDialog
         isOpen={isSettingsDialogOpen}
         onClose={() => setIsSettingsDialogOpen(false)}
+        initialTab={settingsDialogInitialTab}
         defaultOptionsTab={safeDefaultOptionsTab}
         onChangeDefaultOptionsTab={(tab: OptionsTab) => {
           const nextTab = sanitizeOptionsTab(tab)
@@ -470,7 +477,7 @@ export default function OptionsPage() {
             {(activeTab === "batch" || activeTab === "single") && (
               <BatchSetupSidebarPanel
                 performancePreferences={safePerformancePreferences}
-                onOpenSettings={() => setIsSettingsDialogOpen(true)}
+                onOpenSettings={() => openSettingsDialog("performance")}
               />
             )}
 
@@ -478,7 +485,7 @@ export default function OptionsPage() {
               <SplicingSidebarPanel
                 performancePreferences={safePerformancePreferences}
                 onPreviewQualityChange={handleSidebarPreviewQualityChange}
-                onOpenSettings={() => setIsSettingsDialogOpen(true)}
+                onOpenSettings={() => openSettingsDialog("performance")}
               />
             )}
 
@@ -530,7 +537,7 @@ export default function OptionsPage() {
           {(activeTab === "batch" || activeTab === "single") && (
             <BatchSetupSidebarPanel
               performancePreferences={safePerformancePreferences}
-              onOpenSettings={() => setIsSettingsDialogOpen(true)}
+              onOpenSettings={() => openSettingsDialog("performance")}
             />
           )}
 
@@ -538,7 +545,7 @@ export default function OptionsPage() {
             <SplicingSidebarPanel
               performancePreferences={safePerformancePreferences}
               onPreviewQualityChange={handleSidebarPreviewQualityChange}
-              onOpenSettings={() => setIsSettingsDialogOpen(true)}
+              onOpenSettings={() => openSettingsDialog("performance")}
             />
           )}
 

@@ -1,10 +1,10 @@
-import { useEffect, useMemo } from "react"
+import { useEffect } from "react"
 
 import type { ImageFormat } from "@/core/types"
-import { SelectInput } from "@/options/components/ui/select-input"
+import { NumberInput } from "@/options/components/ui/number-input"
 import {
-  buildConcurrencyOptions,
-  clampConcurrencyValue
+  clampConcurrencyValue,
+  MAX_CONCURRENCY
 } from "@/options/shared/performance-preferences"
 import { getConcurrencyTooltip } from "@/options/shared/concurrency-messages"
 
@@ -23,7 +23,6 @@ export function ConcurrencySelector({
   disabled,
   className = ""
 }: ConcurrencySelectorProps) {
-  const options = useMemo(() => buildConcurrencyOptions(), [])
   const safeValue = clampConcurrencyValue(value)
 
   useEffect(() => {
@@ -35,17 +34,16 @@ export function ConcurrencySelector({
   const tooltip = getConcurrencyTooltip(format)
 
   return (
-    <SelectInput
+    <NumberInput
       className={className}
       label="Concurrency"
-      value={String(safeValue)}
+      value={safeValue}
       disabled={disabled}
       tooltip={tooltip}
-      options={options.map((option) => ({
-        value: String(option),
-        label: String(option)
-      }))}
-      onChange={(nextValue) => onChange(Number(nextValue))}
+      min={1}
+      max={MAX_CONCURRENCY}
+      step={1}
+      onChangeValue={onChange}
     />
   )
 }

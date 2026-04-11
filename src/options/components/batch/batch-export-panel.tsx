@@ -87,6 +87,26 @@ export function BatchExportPanel({
           onConcurrencyChange={onConcurrencyChange}
           onFileRenamingClick={onFileRenamingClick}
           disabled={disabled}
+          afterConcurrency={
+            <SmartConcurrencyAdvisorCard
+              targetFormat={targetFormat}
+              selectedConcurrency={concurrency}
+              formatOptions={{
+                bmp: { ...formatOptions.bmp },
+                jxl: { ...formatOptions.jxl },
+                webp: { ...formatOptions.webp },
+                avif: { ...formatOptions.avif },
+                mozjpeg: { ...formatOptions.mozjpeg },
+                png: { ...formatOptions.png },
+                tiff: { ...formatOptions.tiff },
+                ico: { ...formatOptions.ico }
+              }}
+              performancePreferences={performancePreferences}
+              onApplyRecommended={onConcurrencyChange}
+              onOpenSettings={onOpenSettings}
+              disabled={disabled}
+            />
+          }
           beforeFileRenaming={
             <>
               <CheckboxCard
@@ -115,26 +135,6 @@ export function BatchExportPanel({
                 theme="amber"
               />
             </>
-          }
-          afterFileRenaming={
-            <SmartConcurrencyAdvisorCard
-              targetFormat={targetFormat}
-              selectedConcurrency={concurrency}
-              formatOptions={{
-                bmp: { ...formatOptions.bmp },
-                jxl: { ...formatOptions.jxl },
-                webp: { ...formatOptions.webp },
-                avif: { ...formatOptions.avif },
-                mozjpeg: { ...formatOptions.mozjpeg },
-                png: { ...formatOptions.png },
-                tiff: { ...formatOptions.tiff },
-                ico: { ...formatOptions.ico }
-              }}
-              performancePreferences={performancePreferences}
-              onApplyRecommended={onConcurrencyChange}
-              onOpenSettings={onOpenSettings}
-              disabled={disabled}
-            />
           }
         />
       </div>

@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New Performance settings flow with advisor toggle, privacy explanation, hardware auto-detect, and manual CPU/RAM budget override.
   - New dynamic recommendation panel at the bottom of `Export Settings` (Batch + Splicing), including risk state (`Optimal`, `Pushing limits`, `High crash risk`), recommended range, and one-click `Apply Recommended` action.
   - Heuristic engine now evaluates format-specific advanced options (AVIF speed/lossless/chroma/alpha, JXL effort, PNG Tiny/OxiPNG/dithering/interlaced, WebP lossless/effort/alpha, MozJPEG chroma/progressive, BMP depth+dither, TIFF mode, ICO layer/toolkit/internal optimization).
+- **Smart Concurrency Advisor UI (Accordion Card):** Redesigned Smart Concurrency Advisor in export panels to use accordion card component for better discoverability and compact layout when recommendations are not needed.
 - **Universal Image Pipeline (Decode/Render Split):** Added new shared feature modules under `src/features/image-pipeline/` to separate image decoding and rendering concerns:
   - `decode-image-data.ts`: Unified Blob/File -> `ImageData` decoding with native `createImageBitmap` path and TIFF fallback via `UTIF.decode`/`UTIF.toRGBA8`.
   - `render-image-data.ts`: Unified `ImageData` -> preview Blob/Object URL rendering with MIME fallback chain and quality/max-dimension controls.
@@ -149,6 +150,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **TIFF Encoding (UTIF):** TIFF encode path now supports visual grayscale rendering and writes DPI metadata tags (`t282`, `t283`, `t296`) from resize DPI settings so print-size exports preserve resolution information in downstream design/print tools.
 - **Concurrency Policy:** Removed format-class upper-cap enforcement from selector logic. Concurrency is now intentionally open to `1-90` for all formats, while Smart Concurrency Advisor provides contextual safety guidance instead of hard limits.
+- **Concurrency Input UI:** Converted concurrency selector from `SelectInput` dropdown to `NumberInput` with direct numeric entry (1-90). Repositioned Smart Concurrency Advisor panel to appear immediately below concurrency option for tighter visual grouping.
+- **Settings Dialog:** Improved layout density and increased dialog height (`640px` → `720px`) for better content visibility. Reduced internal spacing between section headers and content, and lowered border radius (`rounded-2xl` → `rounded-xl`) for refined visual appearance.
 - **Config Contracts (Breaking):** Removed all legacy flat codec props from conversion and options payloads (`jxlEffort`, `avif*`, `pngTinyMode`, `icoOptions`, etc.) and standardized on grouped `formatOptions` only across core types, converter worker/main pipeline, batch/single processors, splicing export, and custom format flows (no compatibility migration path retained).
 - **PNG Encoding Pipeline:** PNG now uses an option-aware adapter route:
   - Default PNG still uses browser `canvas.convertToBlob(...)` for lightweight path.

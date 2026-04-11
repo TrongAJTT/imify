@@ -106,34 +106,36 @@ export function SplicingExportPanel({
           )}
         </div>
         {exportMode !== "single" && (
-          <CheckboxCard
-            icon={<Crop size={16} />}
-            title="Trim background"
-            subtitle={
-              exportMode === "per_col"
-                ? "Remove top and bottom padding"
-                : "Remove left and right padding"
-            }
-            checked={exportTrimBackground}
-            onChange={onExportTrimBackgroundChange}
-            disabled={disabled}
-            theme="amber"
-          />
+          <>
+            <SmartConcurrencyAdvisorCard
+              targetFormat={targetFormat}
+              selectedConcurrency={concurrency}
+              formatOptions={advisorFormatOptions}
+              performancePreferences={performancePreferences}
+              onApplyRecommended={onConcurrencyChange}
+              onOpenSettings={onOpenSettings}
+              disabled={disabled}
+            />
+          </>
         )}
+        <CheckboxCard
+          icon={<Crop size={16} />}
+          title="Trim background"
+          subtitle={
+            exportMode === "per_col"
+              ? "Remove top and bottom padding"
+              : "Remove left and right padding"
+          }
+          checked={exportTrimBackground}
+          onChange={onExportTrimBackgroundChange}
+          disabled={disabled}
+          theme="amber"
+        />
         <SidebarCard
           icon={<FileEdit size={14} />}
           label="File renaming"
           sublabel={fileNamePattern}
           onClick={onFileRenamingClick}
-          disabled={disabled}
-        />
-        <SmartConcurrencyAdvisorCard
-          targetFormat={targetFormat}
-          selectedConcurrency={concurrency}
-          formatOptions={advisorFormatOptions}
-          performancePreferences={performancePreferences}
-          onApplyRecommended={exportMode === "single" ? undefined : onConcurrencyChange}
-          onOpenSettings={onOpenSettings}
           disabled={disabled}
         />
       </div>

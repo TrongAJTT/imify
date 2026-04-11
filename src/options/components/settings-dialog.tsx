@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { APP_CONFIG } from "@/core/config"
 import { Button } from "@/options/components/ui/button"
@@ -34,6 +34,7 @@ import {
 interface SettingsDialogProps {
   isOpen: boolean
   onClose: () => void
+  initialTab?: SettingsDialogTab
   defaultOptionsTab: OptionsTab
   onChangeDefaultOptionsTab: (tab: OptionsTab) => void
   usageEntries: Array<{ id: string; name: string; count: number }>
@@ -45,9 +46,12 @@ interface SettingsDialogProps {
   onChangePerformancePreferences: (value: PerformancePreferences) => void
 }
 
+export type SettingsDialogTab = "general" | "performance" | "warnings" | "usage"
+
 export function SettingsDialog({
   isOpen,
   onClose,
+  initialTab = "general",
   defaultOptionsTab,
   onChangeDefaultOptionsTab,
   usageEntries,
@@ -69,9 +73,15 @@ export function SettingsDialog({
     (state) => state.setSkipSplicingHeavyPreviewQualityWarning
   )
 
-  const [activeTab, setActiveTab] = useState<
-    "general" | "performance" | "warnings" | "usage"
-  >("general")
+  const [activeTab, setActiveTab] = useState<SettingsDialogTab>(initialTab)
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    setActiveTab(initialTab)
+  }, [isOpen, initialTab])
 
   const navigationWidthSliderOptions = useMemo<DiscreteSliderOption[]>(
     () =>
@@ -124,7 +134,7 @@ export function SettingsDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="relative w-full max-w-3xl rounded-2xl overflow-hidden h-[640px] max-h-[calc(100vh-4rem)] flex"
+      contentClassName="relative w-full max-w-3xl rounded-xl overflow-hidden h-[720px] max-h-[calc(100vh-4rem)] flex"
     >
       <div className="w-56 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4 shrink-0">
         <div className="px-5 mb-6">
@@ -197,9 +207,9 @@ export function SettingsDialog({
 
         <div className="flex-1 overflow-y-auto p-8 pt-12">
           {activeTab === "general" && (
-            <div className="animate-in fade-in duration-300 space-y-8">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-5">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-2">
+            <div className="animate-in fade-in duration-300 space-y-5">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-1">
                   General
                 </h2>
                 <MutedText>
@@ -226,7 +236,7 @@ export function SettingsDialog({
                 />
               </section>
 
-              <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-6">
+              <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                 <div>
                   <Kicker className="mb-1">WORKSPACE SIDEBAR WIDTHS</Kicker>
                   <MutedText className="text-sm">
@@ -254,9 +264,9 @@ export function SettingsDialog({
           )}
 
           {activeTab === "performance" && (
-            <div className="animate-in fade-in duration-300 space-y-8">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-5">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-2">
+            <div className="animate-in fade-in duration-300 space-y-5">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-1">
                   Performance
                 </h2>
                 <MutedText>
@@ -377,8 +387,8 @@ export function SettingsDialog({
 
           {activeTab === "warnings" && (
             <div className="animate-in fade-in duration-300">
-              <div className="mb-8 border-b border-slate-200 dark:border-slate-800 pb-5">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-2">
+              <div className="mb-5 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-1">
                   Warning Dialogs
                 </h2>
                 <MutedText>
@@ -500,8 +510,8 @@ export function SettingsDialog({
 
           {activeTab === "usage" && (
             <div className="animate-in fade-in duration-300">
-              <div className="mb-8 border-b border-slate-200 dark:border-slate-800 pb-5">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-2">
+              <div className="mb-5 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-1">
                   Usage Stats
                 </h2>
                 <MutedText>

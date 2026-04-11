@@ -17,6 +17,8 @@ interface ExportControlsPanelProps {
   onFileRenamingClick: () => void
   /** Whether inputs are disabled */
   disabled?: boolean
+  /** Additional children to render after concurrency selector */
+  afterConcurrency?: ReactNode
   /** Additional children to render before file renaming card */
   beforeFileRenaming?: ReactNode
   /** Additional children to render after file renaming card */
@@ -34,6 +36,7 @@ export function ExportControlsPanel({
   onConcurrencyChange,
   onFileRenamingClick,
   disabled = false,
+  afterConcurrency,
   beforeFileRenaming,
   afterFileRenaming
 }: ExportControlsPanelProps) {
@@ -45,6 +48,7 @@ export function ExportControlsPanel({
         onChange={onConcurrencyChange}
         disabled={disabled}
       />
+      {afterConcurrency}
       {beforeFileRenaming}
       <SidebarCard
         icon={<FileEdit size={14} />}

@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Gauge, Zap } from "lucide-react"
 
 import type { FormatCodecOptions } from "@/core/types"
 import { Button } from "@/options/components/ui/button"
+import { AccordionCard } from "@/options/components/ui/accordion-card"
 import {
   calculateConcurrencyAdvisor,
   type AdvisorTargetFormat,
@@ -59,67 +60,75 @@ export function SmartConcurrencyAdvisorCard({
 
   if (!advisor.enabled) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300">
-        <div className="flex items-start gap-2">
-          <Gauge size={14} className="mt-0.5 shrink-0 text-slate-500" />
-          <div className="min-w-0 flex-1 space-y-1">
-            <p className="font-semibold text-slate-800 dark:text-slate-200">Smart Concurrency Advisor is off</p>
-            <p className="leading-relaxed text-slate-600 dark:text-slate-400">Enable advisor in Settings to get hardware-aware recommendations for current export format and advanced encoder options.</p>
-            {onOpenSettings && (
-              <div className="pt-1">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={onOpenSettings}
-                  disabled={disabled}
-                >
-                  Open Settings
-                </Button>
-              </div>
-            )}
-          </div>
+      <AccordionCard
+        icon={<Gauge size={16} />}
+        label="Smart Concurrency Advisor"
+        sublabel="Disabled - click to enable"
+        colorTheme="sky"
+        defaultOpen={false}
+      >
+        <div className="space-y-2 text-sm">
+          <p className="text-slate-700 dark:text-slate-300">
+            Enable advisor in Settings to get hardware-aware recommendations for current export format and advanced encoder options.
+          </p>
+          {onOpenSettings && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onOpenSettings}
+              disabled={disabled}
+              className="w-full"
+            >
+              Open Settings
+            </Button>
+          )}
         </div>
-      </div>
+      </AccordionCard>
     )
   }
 
-  const tone = TONE_MAP[advisor.riskLevel]
-  const ToneIcon = tone.icon
+  const colorThemeMap = {
+    optimal: "blue" as const,
+    caution: "amber" as const,
+    danger: "orange" as const
+  }
+  const ToneIcon = TONE_MAP[advisor.riskLevel].icon
 
   return (
-    <div className={`rounded-lg border px-3 py-2 text-xs ${tone.wrapper}`}>
-      <div className="flex items-start gap-2">
-        <ToneIcon size={14} className="mt-0.5 shrink-0" />
-        <div className="min-w-0 flex-1 space-y-1">
-          <p className="font-semibold">Smart Concurrency Advisor</p>
-          <p className={tone.subtle}>{advisor.summaryText}</p>
-          <p className="text-[11px] font-semibold">
-            Recommended: {advisor.recommended} ({advisor.recommendedMin}-{advisor.recommendedMax})
+    <AccordionCard
+      icon={<ToneIcon size={16} />}
+      label="Smart Concurrency Advisor"
+      sublabel={`${advisor.riskLevel === "optimal" ? "Optimal" : advisor.riskLevel === "caution" ? "Pushing limits" : "High crash risk"}: ${advisor.recommended} (${advisor.recommendedMin}-${advisor.recommendedMax})`}
+      colorTheme={colorThemeMap[advisor.riskLevel]}
+      defaultOpen={advisor.riskLevel !== "optimal"}
+    >
+      <div className="space-y-2 text-xs">
+        <p className="text-slate-600 dark:text-slate-400">{advisor.summaryText}</p>
+        <p className="font-semibold">
+          Recommended: {advisor.recommended} ({advisor.recommendedMin}-{advisor.recommendedMax})
+        </p>
+        <p className="leading-relaxed">{advisor.statusText}</p>
+        <p className="text-slate-600 dark:text-slate-400">{advisor.detailText}</p>
+        {advisor.reasons.length > 0 && (
+          <p className="leading-relaxed">
+            Heavy factors: {advisor.reasons.slice(0, 3).join(", ")}
+            {advisor.reasons.length > 3 ? ", ..." : ""}
           </p>
-          <p className="leading-relaxed">{advisor.statusText}</p>
-          <p className={tone.subtle}>{advisor.detailText}</p>
-          {advisor.reasons.length > 0 && (
-            <p className="leading-relaxed">
-              Heavy factors: {advisor.reasons.slice(0, 3).join(", ")}
-              {advisor.reasons.length > 3 ? ", ..." : ""}
-            </p>
-          )}
-          {onApplyRecommended && selectedConcurrency !== advisor.recommended && (
-            <div className="pt-1">
-              <Button
-                type="button"
-                size="sm"
-                variant={advisor.riskLevel === "danger" ? "warning" : "outline"}
-                onClick={() => onApplyRecommended(advisor.recommended)}
-                disabled={disabled}
-              >
-                Apply Recommended ({advisor.recommended})
-              </Button>
-            </div>
-          )}
-        </div>
+        )}
+        {onApplyRecommended && selectedConcurrency !== advisor.recommended && (
+          <Button
+            type="button"
+            size="sm"
+            variant={advisor.riskLevel === "danger" ? "warning" : "outline"}
+            onClick={() => onApplyRecommended(advisor.recommended)}
+            disabled={disabled}
+            className="w-full mt-2"
+          >
+            Apply Recommended ({advisor.recommended})
+          </Button>
+        )}
       </div>
-    </div>
+    </AccordionCard>
   )
 }
