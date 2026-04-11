@@ -111,7 +111,8 @@ export function CustomFormatForm({
               tiff: tiffOptions,
               ico: {
                 sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
-                generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false
+                generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false,
+                optimizeInternalPngLayers: value.formatOptions?.ico?.optimizeInternalPngLayers ?? false
               }
             }}
             formatOptions={CUSTOM_FORMATS.map((formatOption) => ({
@@ -127,7 +128,22 @@ export function CustomFormatForm({
                   ...(value.formatOptions ?? {}),
                   ico: {
                     sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
-                    generateWebIconKit: next
+                    generateWebIconKit: next,
+                    optimizeInternalPngLayers:
+                      value.formatOptions?.ico?.optimizeInternalPngLayers ?? false
+                  }
+                }
+              })
+            }
+            onIcoOptimizeInternalPngLayersChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  ico: {
+                    sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
+                    generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false,
+                    optimizeInternalPngLayers: next
                   }
                 }
               })
@@ -139,7 +155,9 @@ export function CustomFormatForm({
                   ...(value.formatOptions ?? {}),
                   ico: {
                     sizes: next,
-                    generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false
+                    generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false,
+                    optimizeInternalPngLayers:
+                      value.formatOptions?.ico?.optimizeInternalPngLayers ?? false
                   }
                 }
               })
@@ -173,7 +191,8 @@ export function CustomFormatForm({
                     nextFormat === "ico"
                       ? value.formatOptions?.ico ?? {
                           sizes: [...DEFAULT_ICO_SIZES],
-                          generateWebIconKit: false
+                          generateWebIconKit: false,
+                          optimizeInternalPngLayers: false
                         }
                       : value.formatOptions?.ico,
                   png:

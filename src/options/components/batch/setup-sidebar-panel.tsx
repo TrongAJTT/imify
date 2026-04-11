@@ -89,6 +89,7 @@ export function BatchSetupSidebarPanel({
   const onMozJpegChromaSubsamplingChange = useBatchStore((state) => state.setMozJpegChromaSubsampling)
   const onIcoSizesChange = useBatchStore((state) => state.setIcoSizes)
   const onIcoGenerateWebIconKitChange = useBatchStore((state) => state.setIcoGenerateWebIconKit)
+  const onIcoOptimizeInternalPngLayersChange = useBatchStore((state) => state.setIcoOptimizeInternalPngLayers)
   const onResizeModeChange = useBatchStore((state) => state.setResizeMode)
   const onResizeValueChange = useBatchStore((state) => state.setResizeValue)
   const onResizeWidthChange = useBatchStore((state) => state.setResizeWidth)
@@ -259,7 +260,8 @@ export function BatchSetupSidebarPanel({
           },
           ico: {
             sizes: formatOptions.ico.sizes,
-            generateWebIconKit: formatOptions.ico.generateWebIconKit
+            generateWebIconKit: formatOptions.ico.generateWebIconKit,
+            optimizeInternalPngLayers: formatOptions.ico.optimizeInternalPngLayers
           }
         }}
         formatOptions={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
@@ -269,6 +271,7 @@ export function BatchSetupSidebarPanel({
         supportsQuality={supportsQuality}
         supportsTinyMode={supportsTinyMode}
         onToggleWebIconKit={(v: boolean) => onIcoGenerateWebIconKitChange(v)}
+        onIcoOptimizeInternalPngLayersChange={onIcoOptimizeInternalPngLayersChange}
         onIcoSizesChange={onIcoSizesChange}
         onTargetFormatChange={(nextValue: string) => onTargetFormatChange(nextValue as BatchTargetFormat)}
         onQualityChange={onQualityChange}

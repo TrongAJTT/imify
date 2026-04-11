@@ -41,6 +41,7 @@ export interface ResizeConfig {
 export interface IcoOptions {
   sizes: number[]
   generateWebIconKit?: boolean
+  optimizeInternalPngLayers?: boolean
 }
 
 export interface PngCodecOptions {

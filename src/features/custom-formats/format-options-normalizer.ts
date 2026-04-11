@@ -76,7 +76,8 @@ export function normalizeFormatOptionsForCustomFormat(
       format === "ico"
         ? {
             sizes: normalizeIcoSizes(options),
-            generateWebIconKit: Boolean(options?.ico?.generateWebIconKit)
+            generateWebIconKit: Boolean(options?.ico?.generateWebIconKit),
+            optimizeInternalPngLayers: Boolean(options?.ico?.optimizeInternalPngLayers)
           }
         : undefined,
     png:

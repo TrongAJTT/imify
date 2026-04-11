@@ -49,6 +49,7 @@ export type TargetFormatQualityCardProps = {
     ico?: {
       sizes?: number[]
       generateWebIconKit?: boolean
+      optimizeInternalPngLayers?: boolean
     }
   }
   /** Available format options for dropdown */
@@ -84,6 +85,8 @@ export type TargetFormatQualityCardProps = {
   onWebpEffortChange?: (effort: number) => void
   /** Callback when ICO sizes change (optional for ICO handling) */
   onIcoSizesChange?: (sizes: number[]) => void
+  /** Callback when ICO internal PNG optimization toggle changes */
+  onIcoOptimizeInternalPngLayersChange?: (enabled: boolean) => void
   /** Disable all inputs */
   disabled?: boolean
   /** Whether accordion is open */
@@ -125,6 +128,7 @@ export function TargetFormatQualityCard({
   onWebpNearLosslessChange,
   onWebpEffortChange,
   onIcoSizesChange,
+  onIcoOptimizeInternalPngLayersChange,
   disabled,
   isOpen,
   onOpenChange,
@@ -162,6 +166,7 @@ export function TargetFormatQualityCard({
   const mozJpegOptions = formatConfig?.mozjpeg
   const icoSizeOptions = formatConfig?.ico?.sizes
   const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit
+  const icoOptimizeInternalPngLayers = formatConfig?.ico?.optimizeInternalPngLayers
   const tiffColorMode = formatConfig?.tiff?.colorMode === "grayscale" ? "grayscale" : "color"
 
   const formatLabel = targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat.toUpperCase()
@@ -176,6 +181,7 @@ export function TargetFormatQualityCard({
   // Add small badges into sublabel for ICO web toolkit or PNG tiny mode
   const extraFlags: string[] = []
   if (isIcoTarget && icoWebToolkitEnabled) extraFlags.push("Web Toolkit")
+  if (isIcoTarget && icoOptimizeInternalPngLayers) extraFlags.push("Optimized")
   if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled) extraFlags.push("Tiny")
   if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled && pngDithering) {
     extraFlags.push(`Dither ${pngDitheringLevel}%`)
@@ -405,6 +411,7 @@ export function TargetFormatQualityCard({
             <IcoSizeSelector
               disabled={disabled}
               generateWebIconKit={icoWebToolkitEnabled ?? false}
+              optimizeInternalPngLayers={icoOptimizeInternalPngLayers ?? false}
               onToggleSize={(size) => {
                 if (!onIcoSizesChange) return
                 const exists = icoSizeOptions?.includes(size)
@@ -414,6 +421,9 @@ export function TargetFormatQualityCard({
                 onIcoSizesChange(next.length ? next : [16])
               }}
               onToggleWebKit={(v) => onToggleWebIconKit?.(v)}
+              onToggleOptimizeInternalPngLayers={(v) =>
+                onIcoOptimizeInternalPngLayersChange?.(v)
+              }
               sizes={icoSizeOptions || [16]}
             />
           </div>

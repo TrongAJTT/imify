@@ -59,7 +59,8 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
         format === "ico"
           ? {
               sizes: [...DEFAULT_ICO_SIZES],
-              generateWebIconKit: false
+              generateWebIconKit: false,
+              optimizeInternalPngLayers: false
             }
           : undefined
     },

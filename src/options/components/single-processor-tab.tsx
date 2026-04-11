@@ -189,7 +189,8 @@ export function SingleProcessorTab() {
           targetFormat === "ico"
             ? {
                 sizes: [...formatOptions.ico.sizes],
-                generateWebIconKit: formatOptions.ico.generateWebIconKit
+                generateWebIconKit: formatOptions.ico.generateWebIconKit,
+                optimizeInternalPngLayers: formatOptions.ico.optimizeInternalPngLayers
               }
             : undefined,
         png:

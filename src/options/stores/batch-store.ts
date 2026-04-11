@@ -92,7 +92,8 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
     },
     ico: {
       sizes: [...DEFAULT_ICO_SIZES],
-      generateWebIconKit: false
+      generateWebIconKit: false,
+      optimizeInternalPngLayers: false
     },
     png: {
       tinyMode: false,
@@ -197,7 +198,9 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
   const icoOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.ico,
     ...formatOptions.ico,
-    sizes: [...(formatOptions.ico?.sizes ?? DEFAULT_BATCH_STATE.formatOptions.ico.sizes)]
+    sizes: [...(formatOptions.ico?.sizes ?? DEFAULT_BATCH_STATE.formatOptions.ico.sizes)],
+    generateWebIconKit: Boolean(formatOptions.ico?.generateWebIconKit),
+    optimizeInternalPngLayers: Boolean(formatOptions.ico?.optimizeInternalPngLayers)
   }
   const rawTiffOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.tiff,
@@ -308,6 +311,7 @@ interface BatchStoreState extends BatchSetupState {
   setMozJpegChromaSubsampling: (value: 0 | 1 | 2) => void
   setIcoSizes: (value: number[]) => void
   setIcoGenerateWebIconKit: (value: boolean) => void
+  setIcoOptimizeInternalPngLayers: (value: boolean) => void
   setResizeMode: (value: BatchResizeMode) => void
   setResizeValue: (value: number) => void
   setResizeWidth: (value: number) => void
@@ -839,6 +843,31 @@ export const useBatchStore = create<BatchStoreState>()(
             ico: {
               ...currentConfig.formatOptions.ico,
               generateWebIconKit: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setIcoOptimizeInternalPngLayers: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            ico: {
+              ...currentConfig.formatOptions.ico,
+              optimizeInternalPngLayers: value
             }
           }
           const nextConfig = {

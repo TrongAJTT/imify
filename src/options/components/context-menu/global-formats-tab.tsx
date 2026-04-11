@@ -122,7 +122,9 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
     }))
   }
 
-  const updateIcoOptions = (updates: Partial<{ sizes: number[]; generateWebIconKit: boolean }>) => {
+  const updateIcoOptions = (
+    updates: Partial<{ sizes: number[]; generateWebIconKit: boolean; optimizeInternalPngLayers: boolean }>
+  ) => {
     setDraftMap((previous) => ({
       ...previous,
       ico: {
@@ -134,7 +136,11 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
             generateWebIconKit:
               updates.generateWebIconKit !== undefined
                 ? updates.generateWebIconKit
-                : Boolean(previous.ico.formatOptions?.ico?.generateWebIconKit)
+                : Boolean(previous.ico.formatOptions?.ico?.generateWebIconKit),
+            optimizeInternalPngLayers:
+              updates.optimizeInternalPngLayers !== undefined
+                ? updates.optimizeInternalPngLayers
+                : Boolean(previous.ico.formatOptions?.ico?.optimizeInternalPngLayers)
           }
         }
       }
@@ -301,6 +307,9 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
                           <IcoSizeSelector
                             disabled={false}
                             generateWebIconKit={Boolean(config.formatOptions?.ico?.generateWebIconKit)}
+                            optimizeInternalPngLayers={Boolean(
+                              config.formatOptions?.ico?.optimizeInternalPngLayers
+                            )}
                             onToggleSize={(size) => {
                               const current = config.formatOptions?.ico?.sizes ?? [...DEFAULT_ICO_SIZES]
                               const exists = current.includes(size)
@@ -311,6 +320,9 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
                             }}
                             onToggleWebKit={(checked) => {
                               updateIcoOptions({ generateWebIconKit: checked })
+                            }}
+                            onToggleOptimizeInternalPngLayers={(checked) => {
+                              updateIcoOptions({ optimizeInternalPngLayers: checked })
                             }}
                             sizes={config.formatOptions?.ico?.sizes ?? [...DEFAULT_ICO_SIZES]}
                             title="ICO output size"

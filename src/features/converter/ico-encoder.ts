@@ -3,6 +3,7 @@ import { zipSync } from "fflate"
 import { DEFAULT_ICO_SIZES, ICO_SIZE_OPTIONS } from "@/core/format-config"
 import type { IcoOptions } from "@/core/types"
 import { decodeImageBitmapForEncoding } from "@/features/converter/color-managed-pipeline"
+import { encodePngFromImageData } from "@/features/converter/png-tiny"
 
 interface IcoImageEntry {
   size: number
@@ -17,6 +18,9 @@ interface ZipEntry {
 type ZipLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 const ALLOWED_ICO_SIZES = new Set(ICO_SIZE_OPTIONS.map((e) => e.value))
+const WEB_TOOLKIT_ICON_SIZES = [16, 32, 48, 180, 192, 512] as const
+const WEB_TOOLKIT_FAVICON_SIZES = [16, 32, 48] as const
+const textEncoder = new TextEncoder()
 
 function normalizeIcoSizes(input?: number[]): number[] {
   const source =
@@ -32,31 +36,161 @@ function normalizeIcoSizes(input?: number[]): number[] {
 }
 
 // Cache PNG per size (avoid re-render)
-async function createPngRenderer(source: ImageBitmap) {
+function drawImageWithStepDown(
+  source: ImageBitmap,
+  context: OffscreenCanvasRenderingContext2D,
+  targetSize: number
+): void {
+  const square = Math.min(source.width, source.height)
+  const sx = (source.width - square) >> 1
+  const sy = (source.height - square) >> 1
+
+  let currentSource: CanvasImageSource = source
+  let currentSx = sx
+  let currentSy = sy
+  let currentSw = square
+  let currentSh = square
+  let currentSize = square
+
+  while (currentSize > targetSize * 2) {
+    const nextSize = Math.max(targetSize, Math.floor(currentSize / 2))
+    const stepCanvas = new OffscreenCanvas(nextSize, nextSize)
+    const stepContext = stepCanvas.getContext("2d")
+
+    if (!stepContext) {
+      throw new Error("Cannot acquire 2D context")
+    }
+
+    stepContext.imageSmoothingEnabled = true
+    stepContext.imageSmoothingQuality = "high"
+    stepContext.drawImage(
+      currentSource,
+      currentSx,
+      currentSy,
+      currentSw,
+      currentSh,
+      0,
+      0,
+      nextSize,
+      nextSize
+    )
+
+    currentSource = stepCanvas
+    currentSx = 0
+    currentSy = 0
+    currentSw = nextSize
+    currentSh = nextSize
+    currentSize = nextSize
+  }
+
+  context.clearRect(0, 0, targetSize, targetSize)
+  context.drawImage(
+    currentSource,
+    currentSx,
+    currentSy,
+    currentSw,
+    currentSh,
+    0,
+    0,
+    targetSize,
+    targetSize
+  )
+}
+
+async function createPngRenderer(
+  source: ImageBitmap,
+  optimizeInternalPngLayers: boolean
+) {
   const cache = new Map<number, Promise<Blob>>()
 
   return async function render(size: number): Promise<Blob> {
     if (cache.has(size)) return cache.get(size)!
 
     const promise = (async () => {
-      const square = Math.min(source.width, source.height)
-      const sx = (source.width - square) >> 1
-      const sy = (source.height - square) >> 1
-
       // Use one canvas per size to reduce memory usage (instead of rendering all sizes in one big canvas)
       const canvas = new OffscreenCanvas(size, size)
       const ctx = canvas.getContext("2d")
 
       if (!ctx) throw new Error("Cannot acquire 2D context")
 
-      ctx.drawImage(source, sx, sy, square, square, 0, 0, size, size)
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = "high"
+      drawImageWithStepDown(source, ctx, size)
 
-      return canvas.convertToBlob({ type: "image/png" })
+      if (!optimizeInternalPngLayers) {
+        return canvas.convertToBlob({ type: "image/png" })
+      }
+
+      const imageData = ctx.getImageData(0, 0, size, size)
+      return encodePngFromImageData(imageData, {
+        tinyMode: size >= 64,
+        cleanTransparentPixels: true,
+        dithering: size >= 128,
+        ditheringLevel: size >= 128 ? 35 : 0
+      })
     })()
 
     cache.set(size, promise)
     return promise
   }
+}
+
+function toTextBytes(content: string): Uint8Array {
+  return textEncoder.encode(content)
+}
+
+function buildSiteWebManifest(): string {
+  const manifest = {
+    name: "Web App",
+    short_name: "WebApp",
+    icons: [
+      {
+        src: "/android-chrome-192x192.png",
+        sizes: "192x192",
+        type: "image/png"
+      },
+      {
+        src: "/android-chrome-512x512.png",
+        sizes: "512x512",
+        type: "image/png"
+      }
+    ],
+    theme_color: "#ffffff",
+    background_color: "#ffffff",
+    display: "standalone"
+  }
+
+  return `${JSON.stringify(manifest, null, 2)}\n`
+}
+
+function buildBrowserConfigXml(): string {
+  return [
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?>",
+    "<browserconfig>",
+    "  <msapplication>",
+    "    <tile>",
+    "      <square150x150logo src=\"/android-chrome-192x192.png\" />",
+    "      <square310x310logo src=\"/android-chrome-512x512.png\" />",
+    "      <TileColor>#ffffff</TileColor>",
+    "    </tile>",
+    "  </msapplication>",
+    "</browserconfig>",
+    ""
+  ].join("\n")
+}
+
+function buildHtmlCodeSnippet(): string {
+  return [
+    "<!-- Place these tags inside your <head> -->",
+    "<link rel=\"icon\" href=\"/favicon.ico\" sizes=\"any\" />",
+    "<link rel=\"icon\" type=\"image/png\" sizes=\"192x192\" href=\"/android-chrome-192x192.png\" />",
+    "<link rel=\"icon\" type=\"image/png\" sizes=\"512x512\" href=\"/android-chrome-512x512.png\" />",
+    "<link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\" />",
+    "<link rel=\"manifest\" href=\"/site.webmanifest\" />",
+    "<meta name=\"msapplication-config\" content=\"/browserconfig.xml\" />",
+    "<meta name=\"theme-color\" content=\"#ffffff\" />",
+    ""
+  ].join("\n")
 }
 
 // build ICO
@@ -132,13 +266,16 @@ export async function convertSourceToIcoOutput(
   const sourceImage = await decodeImageBitmapForEncoding(sourceBlob)
 
   try {
-    const render = await createPngRenderer(sourceImage)
+    const render = await createPngRenderer(
+      sourceImage,
+      Boolean(options?.optimizeInternalPngLayers)
+    )
 
     // Cache PNG per size (avoid re-render)
     const uniqueSizes = Array.from(
       new Set([
         ...sizes,
-        ...(options?.generateWebIconKit ? [16, 32, 48, 180, 192, 512] : [])
+        ...(options?.generateWebIconKit ? WEB_TOOLKIT_ICON_SIZES : [])
       ])
     )
 
@@ -161,8 +298,8 @@ export async function convertSourceToIcoOutput(
       return { blob: icoBlob, outputExtension: "ico" }
     }
 
-    // ===== WebKit kit =====
-    const faviconEntries = [16, 32, 48].map((size) => ({
+    // ===== Web Toolkit =====
+    const faviconEntries = WEB_TOOLKIT_FAVICON_SIZES.map((size) => ({
       size,
       blob: pngMap.get(size)!
     }))
@@ -173,7 +310,10 @@ export async function convertSourceToIcoOutput(
       { name: "favicon.ico", data: await blobToBytes(faviconIco) },
       { name: "apple-touch-icon.png", data: await blobToBytes(pngMap.get(180)!) },
       { name: "android-chrome-192x192.png", data: await blobToBytes(pngMap.get(192)!) },
-      { name: "android-chrome-512x512.png", data: await blobToBytes(pngMap.get(512)!) }
+      { name: "android-chrome-512x512.png", data: await blobToBytes(pngMap.get(512)!) },
+      { name: "site.webmanifest", data: toTextBytes(buildSiteWebManifest()) },
+      { name: "browserconfig.xml", data: toTextBytes(buildBrowserConfigXml()) },
+      { name: "html_code.html", data: toTextBytes(buildHtmlCodeSnippet()) }
     ])
 
     return {

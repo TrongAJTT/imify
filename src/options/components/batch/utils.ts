@@ -224,7 +224,8 @@ export function withBatchResize(
     ico: isIcoTarget
       ? {
           sizes: normalizedIcoSizes.length ? normalizedIcoSizes : [16],
-          generateWebIconKit: formatOptions.ico.generateWebIconKit
+          generateWebIconKit: formatOptions.ico.generateWebIconKit,
+          optimizeInternalPngLayers: Boolean(formatOptions.ico.optimizeInternalPngLayers)
         }
       : undefined,
     png: isPngTarget

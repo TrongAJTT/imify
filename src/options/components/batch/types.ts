@@ -110,6 +110,7 @@ export interface BatchFormatOptions {
   ico: {
     sizes: number[]
     generateWebIconKit: boolean
+    optimizeInternalPngLayers: boolean
   }
 }
 
@@ -152,6 +153,7 @@ export interface BatchSetupHandlers {
   onAvifHighAlphaQualityChange: (value: boolean) => void
   onIcoSizesChange: (value: number[]) => void
   onIcoGenerateWebIconKitChange: (value: boolean) => void
+  onIcoOptimizeInternalPngLayersChange: (value: boolean) => void
   onResizeModeChange: (value: BatchResizeMode) => void
   onResizeValueChange: (value: number) => void
   onResizeWidthChange: (value: number) => void

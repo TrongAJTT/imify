@@ -66,7 +66,8 @@ export function CustomFormatsTab({
       },
       ico: {
         sizes: [...DEFAULT_ICO_SIZES],
-        generateWebIconKit: false
+        generateWebIconKit: false,
+        optimizeInternalPngLayers: false
       }
     },
     resize: { mode: "none" }
@@ -207,7 +208,8 @@ export function CustomFormatsTab({
         },
         ico: {
           sizes: [...DEFAULT_ICO_SIZES],
-          generateWebIconKit: false
+          generateWebIconKit: false,
+          optimizeInternalPngLayers: false
         }
       },
       resize: { mode: "none" }
@@ -301,8 +303,17 @@ export function CustomFormatsTab({
       .slice()
       .sort((a, b) => a - b)
     const baseLabel = sizes.length === 1 ? `${sizes[0]}x${sizes[0]}` : "Multiple"
+    const tags: string[] = []
 
-    return item.formatOptions?.ico?.generateWebIconKit ? `${baseLabel}, Toolkit` : baseLabel
+    if (item.formatOptions?.ico?.generateWebIconKit) {
+      tags.push("Toolkit")
+    }
+
+    if (item.formatOptions?.ico?.optimizeInternalPngLayers) {
+      tags.push("Optimized")
+    }
+
+    return tags.length ? `${baseLabel}, ${tags.join(" + ")}` : baseLabel
   }
 
   const allEnabled = draftFormats.length > 0 && draftFormats.every((f) => f.enabled)
@@ -518,7 +529,8 @@ export function CustomFormatsTab({
                                   },
                                   ico: item.formatOptions?.ico ?? {
                                     sizes: [...DEFAULT_ICO_SIZES],
-                                    generateWebIconKit: false
+                                    generateWebIconKit: false,
+                                    optimizeInternalPngLayers: false
                                   }
                                 }
                               },
