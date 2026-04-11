@@ -7,32 +7,50 @@ import {
   computeFullDiff,
   exportCompositeView
 } from "@/features/diffchecker/diff-engine"
+import { decodeFileToImageData } from "@/features/image-pipeline/decode-image-data"
+import { renderImageDataPreview } from "@/features/image-pipeline/render-image-data"
 import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
 import { DiffcheckerWorkspace } from "@/options/components/diffchecker/diffchecker-workspace"
 import { Button } from "@/options/components/ui/button"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 
-async function createImageItemWithBitmap(file: File): Promise<{ item: DiffImageItem; bitmap: ImageBitmap }> {
-  const bitmap = await createImageBitmap(file)
-  const url = URL.createObjectURL(file)
+function isImageLikeFile(file: File): boolean {
+  if (file.type.startsWith("image/")) {
+    return true
+  }
+
+  return /\.(png|jpe?g|webp|avif|bmp|gif|tiff?|jxl|ico)$/i.test(file.name)
+}
+
+async function createImageItemWithDecodedData(
+  file: File
+): Promise<{ item: DiffImageItem; imageData: ImageData }> {
+  const decoded = await decodeFileToImageData(file)
+  const rendered = await renderImageDataPreview(decoded.imageData, {
+    preferredMimeType: file.type,
+    maxDimension: 320
+  })
 
   const item: DiffImageItem = {
     id: `diff_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     file,
-    url,
-    width: bitmap.width,
-    height: bitmap.height,
+    url: rendered.objectUrl,
+    width: decoded.width,
+    height: decoded.height,
     name: file.name
   }
 
-  return { item, bitmap }
+  return {
+    item,
+    imageData: decoded.imageData
+  }
 }
 
 export function DiffcheckerTab() {
   const [imageA, setImageA] = useState<DiffImageItem | null>(null)
   const [imageB, setImageB] = useState<DiffImageItem | null>(null)
-  const [bitmapA, setBitmapA] = useState<ImageBitmap | null>(null)
-  const [bitmapB, setBitmapB] = useState<ImageBitmap | null>(null)
+  const [imageDataA, setImageDataA] = useState<ImageData | null>(null)
+  const [imageDataB, setImageDataB] = useState<ImageData | null>(null)
   const [diffResult, setDiffResult] = useState<DiffComputeResult | null>(null)
   const [isComputing, setIsComputing] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
@@ -53,26 +71,24 @@ export function DiffcheckerTab() {
 
   const handleLoadFromSide = useCallback(
     async (side: "A" | "B", files: File[]) => {
-      const validFiles = files.filter((f) => f.type.startsWith("image/"))
+      const validFiles = files.filter(isImageLikeFile)
       if (validFiles.length === 0) return
 
       setDiffResult(null)
 
       const oldImageA = imageA
       const oldImageB = imageB
-      const oldBitmapA = bitmapA
-      const oldBitmapB = bitmapB
 
       const mainFile = validFiles[0]
       // "Overflow" strategy: first file goes to the drop side,
       // and all remaining files are collapsed into the opposite side (the last one wins).
       const overflowFile = validFiles.length > 1 ? validFiles[validFiles.length - 1] : null
 
-      let nextA: { item: DiffImageItem; bitmap: ImageBitmap } | null = null
-      let nextB: { item: DiffImageItem; bitmap: ImageBitmap } | null = null
+      let nextA: { item: DiffImageItem; imageData: ImageData } | null = null
+      let nextB: { item: DiffImageItem; imageData: ImageData } | null = null
 
       try {
-        const created = await createImageItemWithBitmap(mainFile)
+        const created = await createImageItemWithDecodedData(mainFile)
         if (side === "A") nextA = created
         else nextB = created
       } catch {
@@ -81,7 +97,7 @@ export function DiffcheckerTab() {
 
       if (overflowFile) {
         try {
-          const created = await createImageItemWithBitmap(overflowFile)
+          const created = await createImageItemWithDecodedData(overflowFile)
           if (side === "A") nextB = created
           else nextA = created
         } catch {
@@ -91,19 +107,17 @@ export function DiffcheckerTab() {
 
       if (nextA) {
         if (oldImageA) URL.revokeObjectURL(oldImageA.url)
-        if (oldBitmapA) oldBitmapA.close()
         setImageA(nextA.item)
-        setBitmapA(nextA.bitmap)
+        setImageDataA(nextA.imageData)
       }
 
       if (nextB) {
         if (oldImageB) URL.revokeObjectURL(oldImageB.url)
-        if (oldBitmapB) oldBitmapB.close()
         setImageB(nextB.item)
-        setBitmapB(nextB.bitmap)
+        setImageDataB(nextB.imageData)
       }
     },
-    [imageA, imageB, bitmapA, bitmapB]
+    [imageA, imageB]
   )
 
   const handleLoadA = useCallback(
@@ -122,19 +136,17 @@ export function DiffcheckerTab() {
 
   const handleClearA = useCallback(() => {
     if (imageA) URL.revokeObjectURL(imageA.url)
-    if (bitmapA) bitmapA.close()
     setImageA(null)
-    setBitmapA(null)
+    setImageDataA(null)
     setDiffResult(null)
-  }, [imageA, bitmapA])
+  }, [imageA])
 
   const handleClearB = useCallback(() => {
     if (imageB) URL.revokeObjectURL(imageB.url)
-    if (bitmapB) bitmapB.close()
     setImageB(null)
-    setBitmapB(null)
+    setImageDataB(null)
     setDiffResult(null)
-  }, [imageB, bitmapB])
+  }, [imageB])
 
   const handleClearAll = useCallback(() => {
     handleClearA()
@@ -145,7 +157,7 @@ export function DiffcheckerTab() {
   }, [handleClearA, handleClearB])
 
   useEffect(() => {
-    if (!bitmapA || !bitmapB) {
+    if (!imageDataA || !imageDataB) {
       setDiffResult(null)
       return
     }
@@ -156,8 +168,8 @@ export function DiffcheckerTab() {
     const timer = setTimeout(async () => {
       try {
         const result = await computeFullDiff(
-          bitmapA,
-          bitmapB,
+          imageDataA,
+          imageDataB,
           algorithm,
           diffThreshold,
           alignMode,
@@ -187,7 +199,7 @@ export function DiffcheckerTab() {
       cancelled = true
       clearTimeout(timer)
     }
-  }, [bitmapA, bitmapB, algorithm, diffThreshold, alignMode, alignAnchor])
+  }, [imageDataA, imageDataB, algorithm, diffThreshold, alignMode, alignAnchor])
 
   useEffect(() => {
     return () => {
@@ -196,7 +208,7 @@ export function DiffcheckerTab() {
   }, [])
 
   const handleExport = useCallback(async () => {
-    if (!bitmapA || !bitmapB || isExporting) return
+    if (!imageDataA || !imageDataB || isExporting) return
     setIsExporting(true)
 
     try {
@@ -207,8 +219,8 @@ export function DiffcheckerTab() {
         blob = await resp.blob()
       } else if (viewMode === "split" || viewMode === "overlay" || viewMode === "side_by_side") {
         blob = await exportCompositeView(
-          bitmapA,
-          bitmapB,
+          imageDataA,
+          imageDataB,
           viewMode,
           splitPosition,
           overlayOpacity,
@@ -231,8 +243,8 @@ export function DiffcheckerTab() {
       setIsExporting(false)
     }
   }, [
-    bitmapA,
-    bitmapB,
+    imageDataA,
+    imageDataB,
     viewMode,
     diffResult,
     splitPosition,
@@ -307,6 +319,8 @@ export function DiffcheckerTab() {
       <DiffcheckerWorkspace
         imageA={imageA}
         imageB={imageB}
+        imageDataA={imageDataA}
+        imageDataB={imageDataB}
         diffResult={diffResult}
         viewMode={viewMode}
         splitPosition={splitPosition}

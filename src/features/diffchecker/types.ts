@@ -32,6 +32,9 @@ export interface AlignedPair {
 }
 
 export interface DiffComputeResult {
+  alignedDataA: ImageData
+  alignedDataB: ImageData
+  diffImageData: ImageData
   alignedUrlA: string
   alignedUrlB: string
   diffImageUrl: string

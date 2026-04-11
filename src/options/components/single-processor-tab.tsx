@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Download, ImagePlus, Loader2, Move, RefreshCcw,
+import { Download, ImagePlus, Move, RefreshCcw,
   ZoomIn, ZoomOut } from "lucide-react"
 
 import { toUserFacingConversionError } from "@/core/error-utils"
@@ -7,25 +7,21 @@ import type { FormatConfig } from "@/core/types"
 import { convertImage } from "@/features/converter"
 import { applyExifPolicy } from "@/features/converter/exif"
 import { fetchRemoteImageAsFile } from "@/features/converter/remote-image-import"
-import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import {
-  createImagePreviewInWorker,
-  isImagePreviewWorkerSupported,
-  terminateImagePreviewWorker
-} from "@/features/converter/preview-worker-client"
+  decodeBlobToImageData,
+  decodeFileToImageData
+} from "@/features/image-pipeline/decode-image-data"
+import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
 import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
 import { downloadWithFilename, formatBytes, withBatchResize } from "@/options/components/batch/utils"
-import { ViewerShell } from "@/options/components/diffchecker/viewer-shell"
-import { ViewerSideBySide } from "@/options/components/diffchecker/viewer-side-by-side"
-import { ViewerSplit } from "@/options/components/diffchecker/viewer-split"
+import { PixelCompareWorkspace } from "@/options/components/diffchecker/pixel-compare-workspace"
 import { Button } from "@/options/components/ui/button"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
 import { Heading, MutedText } from "@/options/components/ui/typography"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { ImageUrlImportControl } from "@/options/components/image-url-import-control"
 import { Tooltip } from "./tooltip"
-import { LoadingSpinner } from "./loading-spinner"
 
 const PREVIEW_DEBOUNCE_MS = 420
 const PREVIEW_MAX_DIMENSION = 3072
@@ -36,6 +32,14 @@ const ZOOM_STEP = 10
 function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
   const base = nameOrBase.replace(/\.[^.]+$/, "") || "image"
   return `${base}.${extension}`
+}
+
+function isImageLikeFile(file: File): boolean {
+  if (file.type.startsWith("image/")) {
+    return true
+  }
+
+  return /\.(png|jpe?g|webp|avif|bmp|gif|tiff?|jxl|ico)$/i.test(file.name)
 }
 
 function describeDeltaRatio(originalSize: number, outputSize: number): { label: string; className: string } {
@@ -108,51 +112,6 @@ function toImageMeta(width: number, height: number): ImageMeta {
   }
 }
 
-async function readImageMetaOnMain(blob: Blob): Promise<ImageMeta | null> {
-  if (!blob.type.startsWith("image/")) {
-    return null
-  }
-
-  const imageBitmap = await createImageBitmap(blob)
-
-  try {
-    return toImageMeta(imageBitmap.width, imageBitmap.height)
-  } finally {
-    imageBitmap.close()
-  }
-}
-
-async function createPreviewAsset(
-  blob: Blob,
-  maxDimension: number
-): Promise<{ previewBlob: Blob; meta: ImageMeta } | null> {
-  if (!blob.type.startsWith("image/")) {
-    return null
-  }
-
-  if (isImagePreviewWorkerSupported()) {
-    try {
-      const preview = await createImagePreviewInWorker(blob, maxDimension)
-      return {
-        previewBlob: preview.previewBlob,
-        meta: toImageMeta(preview.width, preview.height)
-      }
-    } catch {
-      // Fallback to main-thread decode when worker initialization fails.
-    }
-  }
-
-  const meta = await readImageMetaOnMain(blob)
-  if (!meta) {
-    return null
-  }
-
-  return {
-    previewBlob: blob,
-    meta
-  }
-}
-
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
@@ -178,10 +137,10 @@ export function SingleProcessorTab() {
   const syncResizeToSource = useBatchStore((state) => state.syncResizeToSource)
 
   const [sourceFile, setSourceFile] = useState<File | null>(null)
-  const [sourcePreviewUrl, setSourcePreviewUrl] = useState<string | null>(null)
+  const [sourceImageData, setSourceImageData] = useState<ImageData | null>(null)
   const [sourceMeta, setSourceMeta] = useState<ImageMeta | null>(null)
   const [resultBlob, setResultBlob] = useState<Blob | null>(null)
-  const [resultPreviewUrl, setResultPreviewUrl] = useState<string | null>(null)
+  const [resultImageData, setResultImageData] = useState<ImageData | null>(null)
   const [resultMeta, setResultMeta] = useState<ImageMeta | null>(null)
   const [resultOutputExtension, setResultOutputExtension] = useState<string | null>(null)
   const [resultNameDimensions, setResultNameDimensions] = useState<NameDimensions | null>(null)
@@ -197,14 +156,6 @@ export function SingleProcessorTab() {
 
   const requestSequenceRef = useRef(0)
   const attachSequenceRef = useRef(0)
-  const sourcePreviewUrlRef = useRef<string | null>(null)
-  const resultPreviewUrlRef = useRef<string | null>(null)
-
-  useEffect(() => {
-    return () => {
-      terminateImagePreviewWorker()
-    }
-  }, [])
 
   const effectiveConfig = useMemo(() => {
     const isMozJpegTarget = targetFormat === "mozjpeg"
@@ -298,37 +249,6 @@ export function SingleProcessorTab() {
     dpi
   ])
 
-  useEffect(() => {
-    return () => {
-      if (sourcePreviewUrlRef.current) {
-        URL.revokeObjectURL(sourcePreviewUrlRef.current)
-      }
-      if (resultPreviewUrlRef.current) {
-        URL.revokeObjectURL(resultPreviewUrlRef.current)
-      }
-    }
-  }, [])
-
-  const updateSourcePreview = (next: string | null) => {
-    setSourcePreviewUrl((previous) => {
-      if (previous) {
-        URL.revokeObjectURL(previous)
-      }
-      sourcePreviewUrlRef.current = next
-      return next
-    })
-  }
-
-  const updateResultPreview = (next: string | null) => {
-    setResultPreviewUrl((previous) => {
-      if (previous) {
-        URL.revokeObjectURL(previous)
-      }
-      resultPreviewUrlRef.current = next
-      return next
-    })
-  }
-
   const resetViewport = () => {
     setZoom(100)
     setPanX(0)
@@ -338,39 +258,45 @@ export function SingleProcessorTab() {
   const attachSingleFile = async (file: File) => {
     const attachSequence = ++attachSequenceRef.current
 
-    if (!file.type.startsWith("image/")) {
+    if (!isImageLikeFile(file)) {
       setErrorText("Please choose an image file.")
       return
     }
 
     setSourceFile(file)
     setErrorText(null)
+    setSourceImageData(null)
+    setSourceMeta(null)
     setResultBlob(null)
+    setResultImageData(null)
     setResultMeta(null)
     setResultOutputExtension(null)
     setResultNameDimensions(null)
-    setSourceMeta(null)
     setResultFileName("")
     resetViewport()
 
-    updateResultPreview(null)
-    updateSourcePreview(null)
+    try {
+      const decodedSource = await decodeFileToImageData(file)
 
-    const previewAsset = await createPreviewAsset(file, PREVIEW_MAX_DIMENSION)
+      if (attachSequenceRef.current !== attachSequence) {
+        return
+      }
 
-    if (attachSequenceRef.current !== attachSequence) {
-      return
-    }
+      setSourceImageData(decodedSource.imageData)
 
-    if (!previewAsset) {
+      const meta = toImageMeta(decodedSource.width, decodedSource.height)
+      setSourceMeta(meta)
+      syncResizeToSource(meta.width, meta.height)
+    } catch (error) {
+      if (attachSequenceRef.current !== attachSequence) {
+        return
+      }
+
+      setSourceFile(null)
+      setSourceImageData(null)
       setSourceMeta(null)
-      return
+      setErrorText(toUserFacingConversionError(error, "Unable to decode source image"))
     }
-
-    setSourceMeta(previewAsset.meta)
-    updateSourcePreview(URL.createObjectURL(previewAsset.previewBlob))
-
-    syncResizeToSource(previewAsset.meta.width, previewAsset.meta.height)
   }
 
   const onAppendFiles = (files: FileList | null) => {
@@ -486,22 +412,29 @@ export function SingleProcessorTab() {
           )
 
           if (normalizedBlob.type.startsWith("image/")) {
-            const previewAsset = await createPreviewAsset(normalizedBlob, PREVIEW_MAX_DIMENSION)
+            try {
+              const decodedResult = await decodeBlobToImageData(normalizedBlob, {
+                fileNameHint: `${sourceFile.name}.${outputExtension}`
+              })
 
-            if (requestSequenceRef.current !== currentSequence) {
-              return
-            }
+              if (requestSequenceRef.current !== currentSequence) {
+                return
+              }
 
-            if (previewAsset) {
-              setResultMeta(previewAsset.meta)
-              updateResultPreview(URL.createObjectURL(previewAsset.previewBlob))
-            } else {
+              setResultImageData(decodedResult.imageData)
+              setResultMeta(toImageMeta(decodedResult.width, decodedResult.height))
+            } catch (error) {
+              if (requestSequenceRef.current !== currentSequence) {
+                return
+              }
+
+              setResultImageData(null)
               setResultMeta(null)
-              updateResultPreview(null)
+              console.warn("Result preview decode failed, keeping download output:", error)
             }
           } else {
+            setResultImageData(null)
             setResultMeta(null)
-            updateResultPreview(null)
           }
         } catch (error) {
           if (requestSequenceRef.current !== currentSequence) {
@@ -509,11 +442,11 @@ export function SingleProcessorTab() {
           }
 
           setResultBlob(null)
+          setResultImageData(null)
           setResultMeta(null)
           setResultOutputExtension(null)
           setResultNameDimensions(null)
           setResultFileName("")
-          updateResultPreview(null)
           setErrorText(toUserFacingConversionError(error, "Unable to process image"))
         } finally {
           if (requestSequenceRef.current === currentSequence) {
@@ -577,15 +510,15 @@ export function SingleProcessorTab() {
                   variant="secondary"
                   onClick={() => {
                     setSourceFile(null)
+                    setSourceImageData(null)
                     setSourceMeta(null)
                     setErrorText(null)
                     setResultBlob(null)
+                    setResultImageData(null)
                     setResultMeta(null)
                     setResultOutputExtension(null)
                     setResultNameDimensions(null)
                     setResultFileName("")
-                    updateSourcePreview(null)
-                    updateResultPreview(null)
                     resetViewport()
                   }}
                   type="button">
@@ -740,8 +673,15 @@ export function SingleProcessorTab() {
                 </div>
               </div>
 
-              <ViewerShell
+              <PixelCompareWorkspace
                 className="h-[480px]"
+                mode={compareViewMode}
+                imageDataA={sourceImageData}
+                imageDataB={resultImageData}
+                labelA="Original"
+                labelB="Result"
+                splitPosition={splitPosition}
+                onSplitChange={setSplitPosition}
                 zoom={zoom}
                 panX={panX}
                 panY={panY}
@@ -750,54 +690,16 @@ export function SingleProcessorTab() {
                   setPanX(x)
                   setPanY(y)
                 }}
-              >
-                {sourcePreviewUrl && resultPreviewUrl && compareViewMode === "split" && (
-                  <ViewerSplit
-                    urlA={sourcePreviewUrl}
-                    urlB={resultPreviewUrl}
-                    labelA="Original"
-                    labelB="Result"
-                    splitPosition={splitPosition}
-                    onSplitChange={setSplitPosition}
-                    zoom={zoom}
-                    panX={panX}
-                    panY={panY}
-                  />
+                preferredMimeTypeA={sourceFile?.type}
+                preferredMimeTypeB={resultBlob?.type}
+                maxPreviewDimension={PREVIEW_MAX_DIMENSION}
+                isProcessing={isProcessing}
+                emptyFallback={(
+                  <MutedText>
+                    Result preview is unavailable for this output type. You can still download the processed file.
+                  </MutedText>
                 )}
-
-                {sourcePreviewUrl && resultPreviewUrl && compareViewMode === "side_by_side" && (
-                  <ViewerSideBySide
-                    urlA={sourcePreviewUrl}
-                    urlB={resultPreviewUrl}
-                    labelA="Original"
-                    labelB="Result"
-                    zoom={zoom}
-                    panX={panX}
-                    panY={panY}
-                  />
-                )}
-
-                {!resultPreviewUrl && !isProcessing ? (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center px-6 text-center">
-                    <MutedText>
-                      Result preview is unavailable for this output type. You can still download the processed file.
-                    </MutedText>
-                  </div>
-                ) : null}
-
-                {isProcessing ? (
-                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-900/10 backdrop-blur-[1px]">
-                    <LoadingSpinner className="h-8 w-8 text-blue-500" />
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400 animate-pulse">
-                      Generating preview...
-                    </span>
-                    <div className="inline-flex items-center gap-1 rounded bg-sky-600/90 px-2 py-1 text-xs text-white">
-                      <Loader2 size={13} className="animate-spin" />
-                      Rendering preview...
-                    </div>
-                  </div>
-                ) : null}
-              </ViewerShell>
+              />
             </div>
           </div>
         </>

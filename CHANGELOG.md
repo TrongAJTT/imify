@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **TIFF Workflow:** Added TIFF-specific `Color Mode` control (`RGB` / `Grayscale`) in shared `TargetFormatQualityCard`, now available across Single Processor, Batch Processor, Image Splicing, and Custom Format editor flows.
 - **TIFF Option Wiring:** Wired TIFF codec options end-to-end through shared format types, batch/splicing stores, custom-format normalization, main-thread converter, conversion worker, raster adapter pipeline, and splicing export mapping.
+- **Universal Image Pipeline (Decode/Render Split):** Added new shared feature modules under `src/features/image-pipeline/` to separate image decoding and rendering concerns:
+  - `decode-image-data.ts`: Unified Blob/File -> `ImageData` decoding with native `createImageBitmap` path and TIFF fallback via `UTIF.decode`/`UTIF.toRGBA8`.
+  - `render-image-data.ts`: Unified `ImageData` -> preview Blob/Object URL rendering with MIME fallback chain and quality/max-dimension controls.
+- **Shared Compare Frame for Raw Pixels:** Added `PixelCompareWorkspace` in DiffChecker components so comparison views now accept raw `ImageData` + mode (`split` / `side_by_side` / `overlay`) instead of duplicating URL-based viewer wiring.
+- **DiffChecker TIFF Input Support:** DiffChecker now decodes TIFF input files through the shared decode pipeline and can render previews through the shared render pipeline, allowing TIFF files to participate in split/side-by-side/overlay workflows.
 - **UI:** Added new `ColoredSliderCard` reusable wrapper component for theme-customizable slider inputs with subtitle support (placed in `/ui` folder for general composition).
 - **Export Standardization:** Created reusable export control components to standardize export settings across Batch Processor and Image Splicing:
   - `ExportControlsPanel` (shared): Reusable base component combining Concurrency Selector and File Renaming controls.
@@ -150,6 +155,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI:** Refactored `ColorPickerPopover` from manual absolute positioning with `useState` to Radix UI Popover component with Portal, automatic viewport collision detection (`sideOffset: 8`, `collisionPadding: 12`), and native Escape key handling.
 
 ### Fixed
+- **TIFF Encoding (Single Processor):** Fixed error "The source image could not be decoded" in Single Processor TIFF export by:
+  - Adding null-check in TIFF encoder to validate `UTIF.encodeImage()` result and throw meaningful error if encoding fails.
+  - Adding error handling in `readImageMetaOnMain` to gracefully fallback when `createImageBitmap` fails for unsupported image formats (TIFF preview unavailable in some browsers).
+  - Adding try-catch wrapper in `createPreviewAsset` to gracefully skip preview generation for formats not supported by browser's image decoding (allows TIFF download without preview).
+  - Adding graceful fallback in `applyWatermarkToImageBlob` to skip watermark processing if source image cannot be decoded, returning original unmodified blob.
+- **Preview Fallback Rendering (Single Processor):** Added intelligent preview fallback mechanism that encodes result output to JPEG when the original output format cannot be previewed:
+  - When TIFF, BMP, ICO, or other formats fail to preview, automatically generates JPEG fallback preview from the encoded output data.
+  - Displays amber warning icon + tooltip "Preview: JPEG fallback (format not supported)" to inform user that preview is using fallback encoding.
+  - Preserved original file format for download—fallback only affects preview rendering, not the output file itself.
+  - Graceful degrade to "preview unavailable" if even JPEG fallback encoding fails.
 - **JXL / Wide-Gamut Input:** Fixed washed-out color output in JXL-heavy workflows by standardizing decode-to-encode color handling through browser-managed color conversion before extracting RGBA for WASM encoders.
 - **DX / TypeScript:** Restored optional `hover` token in `ThemeClasses` to keep legacy backup files type-safe during full-repo `tsc --noEmit` checks.
 - **UI:** Fixed `ColorPickerPopover` clipping inside accordion cards by refactoring from manual absolute positioning to Radix UI Popover component with Portal and automatic viewport collision detection.

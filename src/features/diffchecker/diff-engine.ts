@@ -7,6 +7,7 @@ import type {
   DiffViewMode,
   DiffStats
 } from "@/features/diffchecker/types"
+import { renderImageDataPreview } from "@/features/image-pipeline/render-image-data"
 
 const SSIM_BLOCK = 8
 const SSIM_C1 = (0.01 * 255) ** 2
@@ -14,8 +15,8 @@ const SSIM_C2 = (0.03 * 255) ** 2
 const MAX_CANVAS_DIM = 8192
 
 export function alignImages(
-  imgA: ImageBitmap,
-  imgB: ImageBitmap,
+  imgA: ImageData,
+  imgB: ImageData,
   mode: DiffAlignMode,
   anchor: DiffAlignAnchor
 ): AlignedPair {
@@ -54,6 +55,14 @@ export function alignImages(
   tw = Math.max(1, tw)
   th = Math.max(1, th)
 
+  const sourceA = new OffscreenCanvas(imgA.width, imgA.height)
+  const sourceCtxA = sourceA.getContext("2d")!
+  sourceCtxA.putImageData(imgA, 0, 0)
+
+  const sourceB = new OffscreenCanvas(imgB.width, imgB.height)
+  const sourceCtxB = sourceB.getContext("2d")!
+  sourceCtxB.putImageData(imgB, 0, 0)
+
   const cA = new OffscreenCanvas(tw, th)
   const ctxA = cA.getContext("2d")!
   const cB = new OffscreenCanvas(tw, th)
@@ -67,8 +76,8 @@ export function alignImages(
     yB = Math.round((th - dhB) / 2)
   }
 
-  ctxA.drawImage(imgA, xA, yA, dwA, dhA)
-  ctxB.drawImage(imgB, xB, yB, dwB, dhB)
+  ctxA.drawImage(sourceA, xA, yA, dwA, dhA)
+  ctxB.drawImage(sourceB, xB, yB, dwB, dhB)
 
   return {
     dataA: ctxA.getImageData(0, 0, tw, th),
@@ -345,16 +354,18 @@ export function computeDiffStats(
 }
 
 async function imageDataToUrl(data: ImageData): Promise<string> {
-  const c = new OffscreenCanvas(data.width, data.height)
-  const ctx = c.getContext("2d")!
-  ctx.putImageData(data, 0, 0)
-  const blob = await c.convertToBlob({ type: "image/png" })
-  return URL.createObjectURL(blob)
+  const rendered = await renderImageDataPreview(data, {
+    preferredMimeType: "image/png",
+    maxDimension: Math.max(data.width, data.height),
+    fallbackMimeTypes: ["image/png"]
+  })
+
+  return rendered.objectUrl
 }
 
 export async function computeFullDiff(
-  imgA: ImageBitmap,
-  imgB: ImageBitmap,
+  imgA: ImageData,
+  imgB: ImageData,
   algorithm: DiffAlgorithm,
   threshold: number,
   alignMode: DiffAlignMode,
@@ -378,6 +389,9 @@ export async function computeFullDiff(
   ])
 
   return {
+    alignedDataA: pair.dataA,
+    alignedDataB: pair.dataB,
+    diffImageData: diffData,
     alignedUrlA,
     alignedUrlB,
     diffImageUrl,
@@ -388,8 +402,8 @@ export async function computeFullDiff(
 }
 
 export async function exportCompositeView(
-  imgA: ImageBitmap,
-  imgB: ImageBitmap,
+  imgA: ImageData,
+  imgB: ImageData,
   viewMode: DiffViewMode,
   splitPosition: number,
   overlayOpacity: number,

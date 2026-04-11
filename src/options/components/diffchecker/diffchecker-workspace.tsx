@@ -5,15 +5,15 @@ import type {
 } from "@/features/diffchecker/types"
 import { DiffStatsBar } from "@/options/components/diffchecker/diff-stats-bar"
 import { ImageDropPair } from "@/options/components/diffchecker/image-drop-pair"
+import { PixelCompareWorkspace } from "@/options/components/diffchecker/pixel-compare-workspace"
 import { ViewerDiff } from "@/options/components/diffchecker/viewer-diff"
-import { ViewerOverlay } from "@/options/components/diffchecker/viewer-overlay"
-import { ViewerSideBySide } from "@/options/components/diffchecker/viewer-side-by-side"
 import { ViewerShell } from "@/options/components/diffchecker/viewer-shell"
-import { ViewerSplit } from "@/options/components/diffchecker/viewer-split"
 
 interface DiffcheckerWorkspaceProps {
   imageA: DiffImageItem | null
   imageB: DiffImageItem | null
+  imageDataA: ImageData | null
+  imageDataB: ImageData | null
   diffResult: DiffComputeResult | null
   viewMode: DiffViewMode
   splitPosition: number
@@ -34,6 +34,8 @@ interface DiffcheckerWorkspaceProps {
 export function DiffcheckerWorkspace({
   imageA,
   imageB,
+  imageDataA,
+  imageDataB,
   diffResult,
   viewMode,
   splitPosition,
@@ -50,9 +52,9 @@ export function DiffcheckerWorkspace({
   onZoomChange,
   onPanChange
 }: DiffcheckerWorkspaceProps) {
-  const hasBoth = imageA !== null && imageB !== null
-  const displayUrlA = diffResult?.alignedUrlA ?? imageA?.url ?? ""
-  const displayUrlB = diffResult?.alignedUrlB ?? imageB?.url ?? ""
+  const hasBoth = imageA !== null && imageB !== null && imageDataA !== null && imageDataB !== null
+  const displayDataA = diffResult?.alignedDataA ?? imageDataA
+  const displayDataB = diffResult?.alignedDataB ?? imageDataB
 
   return (
     <div className="space-y-3">
@@ -67,66 +69,52 @@ export function DiffcheckerWorkspace({
 
       {hasBoth && (
         <>
-          <ViewerShell
-            zoom={zoom}
-            panX={panX}
-            panY={panY}
-            onZoomChange={onZoomChange}
-            onPanChange={onPanChange}
-          >
-            {viewMode === "split" && (
-              <ViewerSplit
-                urlA={displayUrlA}
-                urlB={displayUrlB}
-                splitPosition={splitPosition}
-                onSplitChange={onSplitChange}
-                zoom={zoom}
-                panX={panX}
-                panY={panY}
-              />
-            )}
+          {(viewMode === "split" || viewMode === "side_by_side" || viewMode === "overlay") && (
+            <PixelCompareWorkspace
+              mode={viewMode}
+              imageDataA={displayDataA}
+              imageDataB={displayDataB}
+              splitPosition={splitPosition}
+              onSplitChange={onSplitChange}
+              overlayOpacity={overlayOpacity}
+              zoom={zoom}
+              panX={panX}
+              panY={panY}
+              onZoomChange={onZoomChange}
+              onPanChange={onPanChange}
+              preferredMimeTypeA={imageA?.file.type}
+              preferredMimeTypeB={imageB?.file.type}
+              isProcessing={isComputing}
+            />
+          )}
 
-            {viewMode === "side_by_side" && (
-              <ViewerSideBySide
-                urlA={displayUrlA}
-                urlB={displayUrlB}
-                zoom={zoom}
-                panX={panX}
-                panY={panY}
-              />
-            )}
-
-            {viewMode === "overlay" && (
-              <ViewerOverlay
-                urlA={displayUrlA}
-                urlB={displayUrlB}
-                opacity={overlayOpacity}
-                zoom={zoom}
-                panX={panX}
-                panY={panY}
-              />
-            )}
-
-            {viewMode === "difference" && diffResult && (
-              <ViewerDiff
-                diffImageUrl={diffResult.diffImageUrl}
-                zoom={zoom}
-                panX={panX}
-                panY={panY}
-              />
-            )}
-
-            {viewMode === "difference" && !diffResult && isComputing && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="flex items-center gap-2 rounded-lg bg-white/90 dark:bg-slate-900/90 px-4 py-2 shadow">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
-                  <span className="text-sm text-slate-600 dark:text-slate-300">
-                    Computing differences...
-                  </span>
+          {viewMode === "difference" && (
+            <ViewerShell
+              zoom={zoom}
+              panX={panX}
+              panY={panY}
+              onZoomChange={onZoomChange}
+              onPanChange={onPanChange}
+            >
+              {diffResult ? (
+                <ViewerDiff
+                  diffImageUrl={diffResult.diffImageUrl}
+                  zoom={zoom}
+                  panX={panX}
+                  panY={panY}
+                />
+              ) : isComputing ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex items-center gap-2 rounded-lg bg-white/90 dark:bg-slate-900/90 px-4 py-2 shadow">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                      Computing differences...
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
-          </ViewerShell>
+              ) : null}
+            </ViewerShell>
+          )}
 
           <DiffStatsBar
             stats={diffResult?.stats ?? null}
