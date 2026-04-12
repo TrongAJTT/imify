@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 import { Lock, Stamp } from "lucide-react"
+import type { ResizeConfig } from "@/core/types"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import SidebarCard from "@/options/components/ui/sidebar-card"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
@@ -34,6 +35,8 @@ interface BatchExportPanelProps {
   watermark: BatchWatermarkConfig
   /** Active format options for advisor simulation */
   formatOptions: BatchFormatOptions
+  /** Active resize config for advisor simulation */
+  resizeConfigForAdvisor: ResizeConfig
   /** Callback when concurrency changes */
   onConcurrencyChange: (value: number) => void
   /** Callback when file renaming is opened */
@@ -62,6 +65,7 @@ export function BatchExportPanel({
   supportsExif,
   watermark,
   formatOptions,
+  resizeConfigForAdvisor,
   onConcurrencyChange,
   onFileRenamingClick,
   onStripExifChange,
@@ -94,9 +98,16 @@ export function BatchExportPanel({
         targetFormat,
         selectedConcurrency: concurrency,
         formatOptions: advisorFormatOptions,
+        resizeConfig: resizeConfigForAdvisor,
         preferences: performancePreferences
       }),
-    [targetFormat, concurrency, advisorFormatOptions, performancePreferences]
+    [
+      targetFormat,
+      concurrency,
+      advisorFormatOptions,
+      resizeConfigForAdvisor,
+      performancePreferences
+    ]
   )
   const concurrencyLockState = useMemo(
     () =>

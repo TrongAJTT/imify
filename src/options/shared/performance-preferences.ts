@@ -1,4 +1,5 @@
-import type { FormatCodecOptions, ImageFormat } from "@/core/types"
+import { normalizeResizeResamplingAlgorithm } from "@/core/resize-resampling"
+import type { FormatCodecOptions, ImageFormat, ResizeConfig } from "@/core/types"
 
 export const PERFORMANCE_PREFERENCES_KEY = "imify_performance_preferences"
 export const MAX_CONCURRENCY = 90
@@ -204,10 +205,88 @@ function normalizeTargetFormat(format: AdvisorTargetFormat): ImageFormat {
   return format === "mozjpeg" ? "jpg" : format
 }
 
+function estimateResizeCost(
+  resizeConfig: ResizeConfig | undefined
+): { memoryMultiplier: number; cpuMultiplier: number; reasons: string[] } {
+  if (!resizeConfig || resizeConfig.mode === "none") {
+    return {
+      memoryMultiplier: 1,
+      cpuMultiplier: 1,
+      reasons: []
+    }
+  }
+
+  let memoryMultiplier = 1.08
+  let cpuMultiplier = 1.14
+  const reasons: string[] = []
+
+  switch (resizeConfig.mode) {
+    case "set_size": {
+      memoryMultiplier *= 1.08
+      cpuMultiplier *= 1.14
+      reasons.push("Custom resize")
+
+      if (resizeConfig.fitMode === "cover") {
+        cpuMultiplier *= 1.06
+        reasons.push("Resize cover crop")
+      } else if (resizeConfig.fitMode === "contain") {
+        memoryMultiplier *= 1.04
+        reasons.push("Resize contain")
+      }
+      break
+    }
+    case "page_size": {
+      memoryMultiplier *= 1.12
+      cpuMultiplier *= 1.18
+      reasons.push("Paper-size resize")
+      break
+    }
+    case "scale": {
+      const scaleValue =
+        typeof resizeConfig.value === "number"
+          ? Math.max(1, Math.min(300, Math.round(resizeConfig.value)))
+          : 100
+      const scaleFactor = Math.max(0.35, scaleValue / 100)
+      memoryMultiplier *= Math.max(0.85, Math.min(1.35, 0.85 + scaleFactor * 0.5))
+      cpuMultiplier *= Math.max(0.8, Math.min(1.45, 0.75 + scaleFactor * 0.65))
+      reasons.push(`Resize scale ${scaleValue}%`)
+      break
+    }
+    default:
+      reasons.push("Resize enabled")
+      break
+  }
+
+  const resamplingAlgorithm = normalizeResizeResamplingAlgorithm(
+    resizeConfig.resamplingAlgorithm
+  )
+
+  if (resamplingAlgorithm === "lanczos3") {
+    memoryMultiplier *= 1.06
+    cpuMultiplier *= 1.28
+    reasons.push("Lanczos3 resampling")
+  } else if (resamplingAlgorithm === "magic-kernel") {
+    memoryMultiplier *= 1.12
+    cpuMultiplier *= 1.45
+    reasons.push("Magic Kernel resampling")
+  } else if (resamplingAlgorithm === "hqx") {
+    memoryMultiplier *= 1.22
+    cpuMultiplier *= 1.78
+    reasons.push("HQX resampling")
+  }
+
+  return {
+    memoryMultiplier,
+    cpuMultiplier,
+    reasons
+  }
+}
+
 function estimateFormatCost(
   targetFormat: AdvisorTargetFormat,
   options: FormatCodecOptions | undefined,
-  estimatedMegapixels: number
+  estimatedMegapixels: number,
+  resizeConfig?: ResizeConfig
 ): { memoryMB: number; cpuScore: number; reasons: string[] } {
   const format = normalizeTargetFormat(targetFormat)
   const reasons: string[] = []
@@ -425,6 +504,11 @@ function estimateFormatCost(
     }
   }
 
+  const resizeCost = estimateResizeCost(resizeConfig)
+  memoryMB *= resizeCost.memoryMultiplier
+  cpuScore *= resizeCost.cpuMultiplier
+  reasons.push(...resizeCost.reasons)
+
   return {
     memoryMB: Math.max(40, Math.round(memoryMB)),
     cpuScore: Math.max(0.55, Number(cpuScore.toFixed(2))),
@@ -454,6 +538,7 @@ export function calculateConcurrencyAdvisor(input: {
   targetFormat: AdvisorTargetFormat
   selectedConcurrency: number
   formatOptions?: FormatCodecOptions
+  resizeConfig?: ResizeConfig
   preferences: PerformancePreferences
   estimatedMegapixels?: number
 }): ConcurrencyAdvisorResult {
@@ -463,7 +548,8 @@ export function calculateConcurrencyAdvisor(input: {
   const cost = estimateFormatCost(
     input.targetFormat,
     input.formatOptions,
-    input.estimatedMegapixels ?? DEFAULT_ESTIMATED_MEGAPIXELS
+    input.estimatedMegapixels ?? DEFAULT_ESTIMATED_MEGAPIXELS,
+    input.resizeConfig
   )
 
   const availableCpuThreads = Math.max(1, profile.cpuCores - 1)

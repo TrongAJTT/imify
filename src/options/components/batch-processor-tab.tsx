@@ -38,6 +38,7 @@ export function BatchProcessorTab() {
   const resizeAnchor = useBatchStore((state) => state.resizeAnchor)
   const resizeFitMode = useBatchStore((state) => state.resizeFitMode)
   const resizeContainBackground = useBatchStore((state) => state.resizeContainBackground)
+  const resizeResamplingAlgorithm = useBatchStore((state) => state.resizeResamplingAlgorithm)
   const paperSize = useBatchStore((state) => state.paperSize)
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
@@ -150,6 +151,7 @@ export function BatchProcessorTab() {
       resizeAnchor,
       resizeFitMode,
       resizeContainBackground,
+      resizeResamplingAlgorithm,
       paperSize,
       dpi
     )
@@ -166,6 +168,7 @@ export function BatchProcessorTab() {
     resizeAnchor,
     resizeFitMode,
     resizeContainBackground,
+    resizeResamplingAlgorithm,
     paperSize,
     dpi
   ])

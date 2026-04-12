@@ -8,6 +8,10 @@ import type {
   ResizeMode,
   SupportedDPI
 } from "@/core/types"
+import {
+  DEFAULT_RESAMPLING_ALGORITHM,
+  normalizeResizeResamplingAlgorithm
+} from "@/core/resize-resampling"
 import { QUALITY_FORMATS } from "@/core/format-config"
 import { normalizeFormatOptionsForCustomFormat } from "@/features/custom-formats/format-options-normalizer"
 import type { CustomFormatInput } from "@/features/custom-formats"
@@ -70,13 +74,22 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
     aspectRatio: input.resize.aspectRatio,
     sizeAnchor: input.resize.sizeAnchor,
     fitMode: input.resize.fitMode,
-    containBackground: input.resize.containBackground
+    containBackground: input.resize.containBackground,
+    resamplingAlgorithm: input.resize.resamplingAlgorithm
   }
+
+  const normalizedResamplingAlgorithm = normalizeResizeResamplingAlgorithm(
+    baseResize.resamplingAlgorithm
+  )
+
+  baseResize.resamplingAlgorithm =
+    baseResize.mode === "none" ? undefined : normalizedResamplingAlgorithm
 
   if (input.format === "ico") {
     baseResize.mode = "none"
     baseResize.value = undefined
     baseResize.dpi = undefined
+    baseResize.resamplingAlgorithm = undefined
   }
 
   if (baseResize.mode === "none") {
@@ -89,6 +102,7 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
     baseResize.sizeAnchor = undefined
     baseResize.fitMode = undefined
     baseResize.containBackground = undefined
+    baseResize.resamplingAlgorithm = undefined
   }
 
   if (baseResize.mode === "set_size") {
@@ -101,6 +115,7 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
     baseResize.sizeAnchor = baseResize.sizeAnchor ?? "width"
     baseResize.fitMode = baseResize.fitMode ?? "fill"
     baseResize.containBackground = baseResize.containBackground ?? "#000000"
+    baseResize.resamplingAlgorithm = normalizedResamplingAlgorithm
   }
 
   if (baseResize.mode === "page_size") {
@@ -115,6 +130,7 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
     baseResize.sizeAnchor = undefined
     baseResize.fitMode = undefined
     baseResize.containBackground = undefined
+    baseResize.resamplingAlgorithm = normalizedResamplingAlgorithm
   }
 
   if (
@@ -129,6 +145,18 @@ export function normalizeCustomInput(input: CustomFormatInput): CustomFormatInpu
     baseResize.sizeAnchor = undefined
     baseResize.fitMode = undefined
     baseResize.containBackground = undefined
+    baseResize.resamplingAlgorithm = normalizedResamplingAlgorithm
+  }
+
+  if (
+    baseResize.mode !== "none" &&
+    baseResize.mode !== "set_size" &&
+    baseResize.mode !== "page_size" &&
+    baseResize.mode !== "change_width" &&
+    baseResize.mode !== "change_height" &&
+    baseResize.mode !== "scale"
+  ) {
+    baseResize.resamplingAlgorithm = DEFAULT_RESAMPLING_ALGORITHM
   }
 
   const normalizedFormatOptions = normalizeFormatOptionsForCustomFormat(

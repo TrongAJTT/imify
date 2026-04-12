@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Resize Advanced Resampling:** Added `Resampling Algorithm` selector to shared `ResizeCard` (Custom Format + Single/Batch setup flows) with options: `Browser Default`, `Lanczos3`, `Magic Kernel`, and `HQX`.
+- **Resize Local WASM Workflow:** Added local-only resize WASM asset sync pipeline for `@jsquash/resize`:
+  - New `scripts/sync-resize-wasm.mjs` script and `sync:resize-wasm` package command.
+  - Included in aggregate `sync:wasm` workflow.
+  - Synced assets: `squoosh_resize_bg.wasm`, `squooshhqx_bg.wasm`, `jsquash_magic_kernel_bg.wasm`.
 - **TIFF Workflow:** Added TIFF-specific `Color Mode` control (`RGB` / `Grayscale`) in shared `TargetFormatQualityCard`, now available across Single Processor, Batch Processor, Image Splicing, and Custom Format editor flows.
 - **TIFF Option Wiring:** Wired TIFF codec options end-to-end through shared format types, batch/splicing stores, custom-format normalization, main-thread converter, conversion worker, raster adapter pipeline, and splicing export mapping.
 - **BMP Color Depth Controls:** Added BMP-specific `Color Depth` selection in shared `TargetFormatQualityCard` with 4 modes:
@@ -148,6 +153,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
 ### Changed
+- **Resize Conversion Pipeline:** Upgraded shared raster processing pipeline to support advanced WASM resampling execution (`Lanczos3`, `Magic Kernel`, `HQX`) with automatic fallback to browser canvas resize when advanced path is unavailable.
+- **Smart Concurrency Advisor:** Advisor cost model now accounts for active resize mode and selected resampling algorithm so recommended concurrency better reflects real compute/memory pressure.
 - **TIFF Encoding (UTIF):** TIFF encode path now supports visual grayscale rendering and writes DPI metadata tags (`t282`, `t283`, `t296`) from resize DPI settings so print-size exports preserve resolution information in downstream design/print tools.
 - **Concurrency Policy:** Switched to Advisor lock-by-default behavior. Concurrency max is now hard-locked to Advisor-calculated safe range unless users explicitly enable `Unlock max concurrency (Overclock)` in Performance settings.
 - **Concurrency Advisor Fallback:** When Smart Concurrency Advisor is disabled, system now automatically falls back to `Concurrency Advisor` using static Potato PC profile (`4` CPU threads / `4GB` RAM budget) to keep safety guardrails active by default.

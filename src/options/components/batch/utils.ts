@@ -6,9 +6,11 @@ import type {
   FormatConfig,
   ResizeConfig,
   ResizeMode,
+  ResizeResamplingAlgorithm,
   SupportedDPI
 } from "@/core/types"
 import type { BatchFormatOptions, BatchResizeMode } from "@/options/components/batch/types"
+import { normalizeResizeResamplingAlgorithm } from "@/core/resize-resampling"
 
 export const MAX_FILE_SIZE_BYTES = APP_CONFIG.BATCH.MAX_FILE_SIZE_MB * 1024 * 1024
 export const MAX_TOTAL_QUEUE_BYTES = APP_CONFIG.BATCH.OOM_WARNING_MB * 1024 * 1024
@@ -62,7 +64,15 @@ export function cloneResize(config: ResizeConfig): ResizeConfig {
   return {
     mode: config.mode,
     value: config.value,
-    dpi: config.dpi
+    dpi: config.dpi,
+    width: config.width,
+    height: config.height,
+    aspectMode: config.aspectMode,
+    aspectRatio: config.aspectRatio,
+    sizeAnchor: config.sizeAnchor,
+    fitMode: config.fitMode,
+    containBackground: config.containBackground,
+    resamplingAlgorithm: config.resamplingAlgorithm
   }
 }
 
@@ -76,6 +86,7 @@ export function buildResizeOverride(
   anchor: "width" | "height",
   fitMode: "fill" | "cover" | "contain",
   containBackground: string,
+  resamplingAlgorithm: ResizeResamplingAlgorithm,
   paperSize: string,
   dpi: SupportedDPI
 ): ResizeConfig | null {
@@ -85,16 +96,20 @@ export function buildResizeOverride(
 
   if (mode === "none") {
     return {
-      mode: "none"
+      mode: "none",
+      resamplingAlgorithm: undefined
     }
   }
+
+  const normalizedResamplingAlgorithm = normalizeResizeResamplingAlgorithm(resamplingAlgorithm)
 
   if (mode === "page_size") {
     const paper = PAPER_OPTIONS.includes(paperSize as any) ? paperSize : PAPER_OPTIONS[0]
     return {
       mode: "page_size",
       dpi,
-      value: paper
+      value: paper,
+      resamplingAlgorithm: normalizedResamplingAlgorithm
     } as ResizeConfig
   }
 
@@ -107,13 +122,15 @@ export function buildResizeOverride(
       aspectRatio,
       sizeAnchor: anchor,
       fitMode,
-      containBackground
+      containBackground,
+      resamplingAlgorithm: normalizedResamplingAlgorithm
     }
   }
 
   return {
     mode: mode as Exclude<ResizeMode, "none" | "page_size">,
-    value: Math.max(1, Math.round(value))
+    value: Math.max(1, Math.round(value)),
+    resamplingAlgorithm: normalizedResamplingAlgorithm
   }
 }
 
@@ -130,6 +147,7 @@ export function withBatchResize(
   anchor: "width" | "height",
   fitMode: "fill" | "cover" | "contain",
   containBackground: string,
+  resamplingAlgorithm: ResizeResamplingAlgorithm,
   paperSize: string,
   dpi: SupportedDPI
 ): FormatConfig {
@@ -143,6 +161,7 @@ export function withBatchResize(
     anchor,
     fitMode,
     containBackground,
+    resamplingAlgorithm,
     paperSize,
     dpi
   )

@@ -24,6 +24,11 @@ export type ResizeMode =
 export type ResizeAspectMode = "free" | "original" | "fixed"
 export type ResizeFitMode = "fill" | "cover" | "contain"
 export type ResizeSizeAnchor = "width" | "height"
+export type ResizeResamplingAlgorithm =
+  | "browser-default"
+  | "lanczos3"
+  | "magic-kernel"
+  | "hqx"
 
 export interface ResizeConfig {
   mode: ResizeMode
@@ -36,6 +41,7 @@ export interface ResizeConfig {
   sizeAnchor?: ResizeSizeAnchor
   fitMode?: ResizeFitMode
   containBackground?: string
+  resamplingAlgorithm?: ResizeResamplingAlgorithm
 }
 
 export interface IcoOptions {

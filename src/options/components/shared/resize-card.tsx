@@ -1,12 +1,17 @@
 import { Maximize2 } from "lucide-react"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { SelectInput } from "@/options/components/ui/select-input"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
+import {
+  DEFAULT_RESAMPLING_ALGORITHM,
+  RESAMPLING_ALGORITHM_OPTIONS,
+  normalizeResizeResamplingAlgorithm
+} from "@/core/resize-resampling"
+import type { ResizeResamplingAlgorithm } from "@/core/types"
 import { SmartResizeModule } from "@/options/components/smart-resize-module"
 import { PaperConfig } from "@/options/components/paper-config"
+import { AccordionCard } from "@/options/components/ui/accordion-card"
+import { NumberInput } from "@/options/components/ui/number-input"
+import { SelectInput } from "@/options/components/ui/select-input"
 
 export type ResizeCardProps = {
-  // Input values (flexible types to match various stores)
   resizeMode: string
   resizeValue: number
   resizeWidth: number
@@ -15,13 +20,12 @@ export type ResizeCardProps = {
   resizeAspectRatio: number | string
   resizeFitMode: string
   resizeContainBackground: string
+  resamplingAlgorithm?: ResizeResamplingAlgorithm
   resizeSourceWidth: number
   resizeSourceHeight: number
   resizeSyncVersion: number
   paperSize: string
   dpi: number
-
-  // Callbacks
   onResizeModeChange: (mode: string) => void
   onResizeValueChange: (value: number) => void
   onResizeWidthChange: (value: number) => void
@@ -30,39 +34,15 @@ export type ResizeCardProps = {
   onResizeAspectRatioChange: (ratio: string | number) => void
   onResizeFitModeChange: (mode: string) => void
   onResizeContainBackgroundChange: (color: string) => void
+  onResamplingAlgorithmChange?: (algorithm: ResizeResamplingAlgorithm) => void
   onPaperSizeChange: (size: string) => void
   onDpiChange: (dpi: number) => void
-
   disabled?: boolean
   availableModes?: string[]
   isOpen?: boolean
   onOpenChange?: (open: boolean) => void
-  /** If true, accordion is always open, chevron is hidden, and cannot be collapsed */
   alwaysOpen?: boolean
-  /** Unique ID for mutually exclusive accordion group */
   groupId?: string
-}
-
-const getModeLabel = (mode: string): string => {
-  switch (mode) {
-    case "none":
-    case "inherit":
-      return "No resize"
-    case "change_width":
-    case "fit_width":
-      return "Fit width"
-    case "change_height":
-    case "fit_height":
-      return "Fit height"
-    case "set_size":
-      return "Set size"
-    case "scale":
-      return "Scale"
-    case "page_size":
-      return "Paper size"
-    default:
-      return mode
-  }
 }
 
 function generateSublabel(
@@ -71,27 +51,39 @@ function generateSublabel(
   resizeWidth: number,
   resizeHeight: number,
   paperSize: string,
-  dpi: number
+  dpi: number,
+  resamplingAlgorithm: ResizeResamplingAlgorithm
 ): string {
-  switch (mode) {
-    case "none":
-    case "inherit":
-      return "No resize"
-    case "change_width":
-    case "fit_width":
-      return `Fit width • ${resizeValue}px`
-    case "change_height":
-    case "fit_height":
-      return `Fit height • ${resizeValue}px`
-    case "set_size":
-      return `Set size • ${resizeWidth}×${resizeHeight}`
-    case "scale":
-      return `Scale • ${resizeValue}%`
-    case "page_size":
-      return `${paperSize} @ ${dpi}dpi`
-    default:
-      return "No resize"
+  const baseLabel = (() => {
+    switch (mode) {
+      case "none":
+      case "inherit":
+        return "No resize"
+      case "change_width":
+      case "fit_width":
+        return `Fit width • ${resizeValue}px`
+      case "change_height":
+      case "fit_height":
+        return `Fit height • ${resizeValue}px`
+      case "set_size":
+        return `Set size • ${resizeWidth}×${resizeHeight}`
+      case "scale":
+        return `Scale • ${resizeValue}%`
+      case "page_size":
+        return `${paperSize} @ ${dpi}dpi`
+      default:
+        return "No resize"
+    }
+  })()
+
+  if (mode === "none" || mode === "inherit" || resamplingAlgorithm === DEFAULT_RESAMPLING_ALGORITHM) {
+    return baseLabel
   }
+
+  const algorithmLabel =
+    RESAMPLING_ALGORITHM_OPTIONS.find((option) => option.value === resamplingAlgorithm)?.label ??
+    resamplingAlgorithm
+  return `${baseLabel} • ${algorithmLabel}`
 }
 
 export function ResizeCard({
@@ -103,6 +95,7 @@ export function ResizeCard({
   resizeAspectRatio,
   resizeFitMode,
   resizeContainBackground,
+  resamplingAlgorithm = DEFAULT_RESAMPLING_ALGORITHM,
   resizeSourceWidth,
   resizeSourceHeight,
   resizeSyncVersion,
@@ -116,6 +109,7 @@ export function ResizeCard({
   onResizeAspectRatioChange,
   onResizeFitModeChange,
   onResizeContainBackgroundChange,
+  onResamplingAlgorithmChange,
   onPaperSizeChange,
   onDpiChange,
   disabled,
@@ -125,41 +119,36 @@ export function ResizeCard({
   alwaysOpen,
   groupId,
 }: ResizeCardProps) {
-  // Build mode options: batch modes by default, replace with availableModes if provided
-  const getModeOptions = () => {
-    const batchModeMap: Record<string, string> = {
-      none: "No resize",
-      change_width: "Fit width",
-      change_height: "Fit height",
-      set_size: "Set size",
-      scale: "Scale",
-      page_size: "Paper size"
-    }
-
-    if (availableModes) {
-      const splicingModeMap: Record<string, string> = {
-        none: "No resize",
-        fit_width: "Fit width",
-        fit_height: "Fit height"
-      }
-      return availableModes.map((mode) => ({
-        value: mode,
-        label: splicingModeMap[mode] || mode
-      }))
-    }
-
-    return Object.entries(batchModeMap).map(([value, label]) => ({
-      value,
-      label
-    }))
+  const batchModeMap: Record<string, string> = {
+    none: "No resize",
+    change_width: "Fit width",
+    change_height: "Fit height",
+    set_size: "Set size",
+    scale: "Scale",
+    page_size: "Paper size"
+  }
+  const splicingModeMap: Record<string, string> = {
+    none: "No resize",
+    fit_width: "Fit width",
+    fit_height: "Fit height"
   }
 
-  const modeOptions = getModeOptions()
-  const modeLabel = modeOptions.find((m) => m.value === resizeMode)?.label || getModeLabel(resizeMode)
-  const sublabel = generateSublabel(resizeMode, resizeValue, resizeWidth, resizeHeight, paperSize, dpi)
-  const isSimpleMode = resizeMode === "change_width" || resizeMode === "fit_width" || resizeMode === "change_height" || resizeMode === "fit_height" || resizeMode === "scale"
-  const isSetSize = resizeMode === "set_size"
-  const isPageSize = resizeMode === "page_size"
+  const modeOptions =
+    availableModes
+      ? availableModes.map((mode) => ({ value: mode, label: splicingModeMap[mode] || mode }))
+      : Object.entries(batchModeMap).map(([value, label]) => ({ value, label }))
+
+  const safeResamplingAlgorithm = normalizeResizeResamplingAlgorithm(resamplingAlgorithm)
+  const sublabel = generateSublabel(
+    resizeMode,
+    resizeValue,
+    resizeWidth,
+    resizeHeight,
+    paperSize,
+    dpi,
+    safeResamplingAlgorithm
+  )
+  const showResamplingAlgorithm = Boolean(onResamplingAlgorithmChange) && resizeMode !== "none" && resizeMode !== "inherit"
 
   return (
     <AccordionCard
@@ -174,19 +163,19 @@ export function ResizeCard({
       colorTheme="purple"
     >
       <div className="space-y-3">
-        {/* Resize Mode Selector */}
-        <div>
-          <SelectInput
-            label="Resize type"
-            value={resizeMode}
-            disabled={disabled}
-            options={modeOptions}
-            onChange={onResizeModeChange}
-          />
-        </div>
+        <SelectInput
+          label="Resize type"
+          value={resizeMode}
+          disabled={disabled}
+          options={modeOptions}
+          onChange={onResizeModeChange}
+        />
 
-        {/* Resize Value for: change_width, change_height, scale */}
-        {(resizeMode === "change_width" || resizeMode === "fit_width" || resizeMode === "change_height" || resizeMode === "fit_height" || resizeMode === "scale") && (
+        {(resizeMode === "change_width" ||
+          resizeMode === "fit_width" ||
+          resizeMode === "change_height" ||
+          resizeMode === "fit_height" ||
+          resizeMode === "scale") && (
           <NumberInput
             label={resizeMode === "scale" ? "Scale (%)" : "Value (px)"}
             disabled={disabled}
@@ -196,7 +185,6 @@ export function ResizeCard({
           />
         )}
 
-        {/* SmartResizeModule for: set_size */}
         {resizeMode === "set_size" && (
           <SmartResizeModule
             containBackground={resizeContainBackground}
@@ -219,7 +207,6 @@ export function ResizeCard({
           />
         )}
 
-        {/* PaperConfig for: page_size */}
         {resizeMode === "page_size" && (
           <PaperConfig
             disabled={disabled}
@@ -227,6 +214,18 @@ export function ResizeCard({
             onDpiChange={onDpiChange}
             onPaperSizeChange={onPaperSizeChange}
             paperSize={paperSize as any}
+          />
+        )}
+
+        {showResamplingAlgorithm && (
+          <SelectInput
+            label="Resampling Algorithm"
+            value={safeResamplingAlgorithm}
+            disabled={disabled}
+            options={RESAMPLING_ALGORITHM_OPTIONS}
+            onChange={(nextValue) =>
+              onResamplingAlgorithmChange?.(normalizeResizeResamplingAlgorithm(nextValue))
+            }
           />
         )}
       </div>

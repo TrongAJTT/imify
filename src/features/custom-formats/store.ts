@@ -7,6 +7,7 @@ import type {
   ResizeMode,
   SupportedDPI
 } from "@/core/types"
+import { normalizeResizeResamplingAlgorithm } from "@/core/resize-resampling"
 import { CUSTOM_FORMATS, QUALITY_FORMATS } from "@/core/format-config"
 import { normalizeFormatOptionsForCustomFormat } from "@/features/custom-formats/format-options-normalizer"
 import { patchStorageState } from "@/features/settings"
@@ -60,6 +61,7 @@ function normalizeResizeValue(mode: ResizeMode, value: ResizeConfig["value"]): R
 function normalizeResizeConfig(config: ResizeConfig, format: FormatConfig["format"]): ResizeConfig {
   const mode = config.mode
   const value = normalizeResizeValue(mode, config.value)
+  const resamplingAlgorithm = normalizeResizeResamplingAlgorithm(config.resamplingAlgorithm)
 
   if (mode === "set_size") {
     return {
@@ -70,14 +72,16 @@ function normalizeResizeConfig(config: ResizeConfig, format: FormatConfig["forma
       aspectRatio: config.aspectRatio ?? "16:9",
       sizeAnchor: config.sizeAnchor ?? "width",
       fitMode: config.fitMode ?? "fill",
-      containBackground: config.containBackground ?? "#000000"
+      containBackground: config.containBackground ?? "#000000",
+      resamplingAlgorithm
     }
   }
 
   if (mode !== "page_size") {
     return {
       mode,
-      value
+      value,
+      resamplingAlgorithm: mode === "none" ? undefined : resamplingAlgorithm
     }
   }
 
@@ -88,7 +92,8 @@ function normalizeResizeConfig(config: ResizeConfig, format: FormatConfig["forma
   return {
     mode,
     value,
-    dpi
+    dpi,
+    resamplingAlgorithm
   }
 }
 

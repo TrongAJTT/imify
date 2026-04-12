@@ -14,6 +14,7 @@ import {
   type BatchResizeMode,
   type BatchTargetFormat
 } from "@/options/components/batch/types"
+import { buildResizeOverride } from "@/options/components/batch/utils"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { Tooltip } from "@/options/components/tooltip"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
@@ -61,8 +62,10 @@ export function BatchSetupSidebarPanel({
   const resizeHeight = useBatchStore((state) => state.resizeHeight)
   const resizeAspectMode = useBatchStore((state) => state.resizeAspectMode)
   const resizeAspectRatio = useBatchStore((state) => state.resizeAspectRatio)
+  const resizeAnchor = useBatchStore((state) => state.resizeAnchor)
   const resizeFitMode = useBatchStore((state) => state.resizeFitMode)
   const resizeContainBackground = useBatchStore((state) => state.resizeContainBackground)
+  const resizeResamplingAlgorithm = useBatchStore((state) => state.resizeResamplingAlgorithm)
   const resizeSourceWidth = useBatchStore((state) => state.resizeSourceWidth)
   const resizeSourceHeight = useBatchStore((state) => state.resizeSourceHeight)
   const resizeSyncVersion = useBatchStore((state) => state.resizeSyncVersion)
@@ -101,6 +104,7 @@ export function BatchSetupSidebarPanel({
   const onResizeAnchorChange = useBatchStore((state) => state.setResizeAnchor)
   const onResizeFitModeChange = useBatchStore((state) => state.setResizeFitMode)
   const onResizeContainBackgroundChange = useBatchStore((state) => state.setResizeContainBackground)
+  const onResizeResamplingAlgorithmChange = useBatchStore((state) => state.setResizeResamplingAlgorithm)
   const onPaperSizeChange = useBatchStore((state) => state.setPaperSize)
   const onDpiChange = useBatchStore((state) => state.setDpi)
   const onStripExifChange = useBatchStore((state) => state.setStripExif)
@@ -131,6 +135,38 @@ export function BatchSetupSidebarPanel({
   const supportsTinyMode = targetFormat === "png"
   const supportsExif = ["jpg", "webp", "avif", "mozjpeg"].includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
+
+  const advisorResizeConfig = useMemo(
+    () =>
+      buildResizeOverride(
+        resizeMode,
+        resizeValue,
+        resizeWidth,
+        resizeHeight,
+        resizeAspectMode,
+        resizeAspectRatio,
+        resizeAnchor,
+        resizeFitMode,
+        resizeContainBackground,
+        resizeResamplingAlgorithm,
+        paperSize,
+        dpi
+      ) ?? ({ mode: "none" } as const),
+    [
+      resizeMode,
+      resizeValue,
+      resizeWidth,
+      resizeHeight,
+      resizeAspectMode,
+      resizeAspectRatio,
+      resizeAnchor,
+      resizeFitMode,
+      resizeContainBackground,
+      resizeResamplingAlgorithm,
+      paperSize,
+      dpi
+    ]
+  )
 
   const scopedPresets = useMemo(
     () => presets
@@ -341,6 +377,7 @@ export function BatchSetupSidebarPanel({
         resizeAspectRatio={resizeAspectRatio}
         resizeFitMode={resizeFitMode}
         resizeContainBackground={resizeContainBackground}
+        resamplingAlgorithm={resizeResamplingAlgorithm}
         resizeSourceWidth={resizeSourceWidth}
         resizeSourceHeight={resizeSourceHeight}
         resizeSyncVersion={resizeSyncVersion}
@@ -365,6 +402,7 @@ export function BatchSetupSidebarPanel({
         onResizeAspectRatioChange={(ratio) => onResizeAspectRatioChange(String(ratio))}
         onResizeFitModeChange={(mode) => onResizeFitModeChange(mode as any)}
         onResizeContainBackgroundChange={onResizeContainBackgroundChange}
+        onResamplingAlgorithmChange={onResizeResamplingAlgorithmChange}
         onPaperSizeChange={(size) => onPaperSizeChange(size as any)}
         onDpiChange={(d) => onDpiChange(d as any)}
         disabled={isRunning || isIcoTarget}
@@ -385,6 +423,7 @@ export function BatchSetupSidebarPanel({
         onStripExifChange={onStripExifChange}
         onWatermarkingClick={() => setIsWatermarkDialogOpen(true)}
         performancePreferences={performancePreferences}
+        resizeConfigForAdvisor={advisorResizeConfig}
         onOpenSettings={onOpenSettings}
         disabled={isRunning}
       />

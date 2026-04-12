@@ -421,137 +421,153 @@ export function CustomFormatForm({
         {!isIcoFormat && (
           <div className="mt-5">
             <ResizeCard
-            resizeMode={value.resize.mode}
-            resizeValue={typeof value.resize.value === "number" ? value.resize.value : 1280}
-            resizeWidth={typeof value.resize.width === "number" ? value.resize.width : 1280}
-            resizeHeight={typeof value.resize.height === "number" ? value.resize.height : 960}
-            resizeAspectMode={value.resize.aspectMode ?? "free"}
-            resizeAspectRatio={value.resize.aspectRatio ?? "16:9"}
-            resizeFitMode={value.resize.fitMode ?? "fill"}
-            resizeContainBackground={value.resize.containBackground ?? "#000000"}
-            resizeSourceWidth={1280}
-            resizeSourceHeight={960}
-            resizeSyncVersion={0}
-            paperSize={(typeof value.resize.value === "string" ? value.resize.value : "A4") as PaperSize}
-            dpi={(value.resize.dpi ?? 72) as number}
-            onResizeModeChange={(next) => {
-              if (next === "set_size") {
+              resizeMode={value.resize.mode}
+              resizeValue={typeof value.resize.value === "number" ? value.resize.value : 1280}
+              resizeWidth={typeof value.resize.width === "number" ? value.resize.width : 1280}
+              resizeHeight={typeof value.resize.height === "number" ? value.resize.height : 960}
+              resizeAspectMode={value.resize.aspectMode ?? "free"}
+              resizeAspectRatio={value.resize.aspectRatio ?? "16:9"}
+              resizeFitMode={value.resize.fitMode ?? "fill"}
+              resizeContainBackground={value.resize.containBackground ?? "#000000"}
+              resamplingAlgorithm={value.resize.resamplingAlgorithm}
+              resizeSourceWidth={1280}
+              resizeSourceHeight={960}
+              resizeSyncVersion={0}
+              paperSize={(typeof value.resize.value === "string" ? value.resize.value : "A4") as PaperSize}
+              dpi={(value.resize.dpi ?? 72) as number}
+              onResizeModeChange={(next) => {
+                if (next === "set_size") {
+                  onChange({
+                    ...value,
+                    resize: {
+                      mode: next,
+                      width: typeof value.resize.width === "number" ? value.resize.width : 1280,
+                      height: typeof value.resize.height === "number" ? value.resize.height : 960,
+                      aspectMode: "free",
+                      aspectRatio: value.resize.aspectRatio ?? "16:9",
+                      sizeAnchor: value.resize.sizeAnchor ?? "width",
+                      fitMode: value.resize.fitMode ?? "fill",
+                      containBackground: value.resize.containBackground ?? "#000000",
+                      resamplingAlgorithm:
+                        value.resize.resamplingAlgorithm ?? "browser-default"
+                    }
+                  })
+                  return
+                }
+
                 onChange({
                   ...value,
                   resize: {
-                    mode: next,
-                    width: typeof value.resize.width === "number" ? value.resize.width : 1280,
-                    height: typeof value.resize.height === "number" ? value.resize.height : 960,
-                    aspectMode: "free",
-                    aspectRatio: value.resize.aspectRatio ?? "16:9",
-                    sizeAnchor: value.resize.sizeAnchor ?? "width",
-                    fitMode: value.resize.fitMode ?? "fill",
-                    containBackground: value.resize.containBackground ?? "#000000"
+                    mode: next as any,
+                    value:
+                      next === "page_size"
+                        ? "A4"
+                        : next === "none"
+                          ? undefined
+                          : next === "scale"
+                            ? 100
+                            : 1280,
+                    dpi: next === "page_size" ? 72 : undefined,
+                    resamplingAlgorithm:
+                      next === "none"
+                        ? undefined
+                        : value.resize.resamplingAlgorithm ?? "browser-default"
                   }
                 })
-                return
+              }}
+              onResizeValueChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    value: Math.max(1, next || 1)
+                  }
+                })
               }
-
-              onChange({
-                ...value,
-                resize: {
-                  mode: next as any,
-                  value:
-                    next === "page_size"
-                      ? "A4"
-                      : next === "none"
-                        ? undefined
-                        : next === "scale"
-                          ? 100
-                          : 1280,
-                  dpi: next === "page_size" ? 72 : undefined
-                }
-              })
-            }}
-            onResizeValueChange={(next) =>
-              onChange({
-                ...value,
-                resize: {
-                  ...value.resize,
-                  value: Math.max(1, next || 1)
-                }
-              })
-            }
-            onResizeWidthChange={(next) =>
-              onChange({
-                ...value,
-                resize: {
-                  ...value.resize,
-                  width: next
-                }
-              })
-            }
-            onResizeHeightChange={(next) =>
-              onChange({
-                ...value,
-                resize: {
-                  ...value.resize,
-                  height: next
-                }
-              })
-            }
-            onResizeAspectModeChange={(next) =>
-              onChange({
-                ...value,
-                resize: {
-                  ...value.resize,
-                  aspectMode: next as any
-                }
-              })
-            }
-            onResizeAspectRatioChange={(next) =>
-              onChange({
-                ...value,
-                resize: {
-                  ...value.resize,
-                  aspectRatio: String(next)
-                }
-              })
-            }
-            onResizeFitModeChange={(next) =>
-              onChange({
-                ...value,
-                resize: {
-                  ...value.resize,
-                  fitMode: next as any
-                }
-              })
-            }
-            onResizeContainBackgroundChange={(next) =>
-              onChange({
-                ...value,
-                resize: {
-                  ...value.resize,
-                  containBackground: next
-                }
-              })
-            }
-            onPaperSizeChange={(next) =>
-              onChange({
-                ...value,
-                resize: {
-                  ...value.resize,
-                  value: next as PaperSize
-                }
-              })
-            }
-            onDpiChange={(next) =>
-              onChange({
-                ...value,
-                resize: {
-                  ...value.resize,
-                  dpi: next as SupportedDPI
-                }
-              })
-            }
-            disabled={false}
-            alwaysOpen
-          />
+              onResizeWidthChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    width: next
+                  }
+                })
+              }
+              onResizeHeightChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    height: next
+                  }
+                })
+              }
+              onResizeAspectModeChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    aspectMode: next as any
+                  }
+                })
+              }
+              onResizeAspectRatioChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    aspectRatio: String(next)
+                  }
+                })
+              }
+              onResizeFitModeChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    fitMode: next as any
+                  }
+                })
+              }
+              onResizeContainBackgroundChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    containBackground: next
+                  }
+                })
+              }
+              onResamplingAlgorithmChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    resamplingAlgorithm: next
+                  }
+                })
+              }
+              onPaperSizeChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    value: next as PaperSize
+                  }
+                })
+              }
+              onDpiChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    dpi: next as SupportedDPI
+                  }
+                })
+              }
+              disabled={false}
+              alwaysOpen
+            />
           </div>
         )}
       </div>

@@ -1,5 +1,12 @@
 import { BATCH_TARGET_FORMATS, HIGH_CONCURRENCY_FORMATS as BASE_HIGH_CONCURRENCY_FORMATS } from "@/core/format-config"
-import type { BmpColorDepth, ImageFormat, PaperSize, SupportedDPI, TiffColorMode } from "@/core/types"
+import type {
+  BmpColorDepth,
+  ImageFormat,
+  PaperSize,
+  ResizeResamplingAlgorithm,
+  SupportedDPI,
+  TiffColorMode
+} from "@/core/types"
 
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
 export type BatchRunMode = "all" | "failed"
@@ -128,6 +135,7 @@ export interface BatchSetupState {
   resizeAnchor: BatchResizeAnchor
   resizeFitMode: BatchResizeFitMode
   resizeContainBackground: string
+  resizeResamplingAlgorithm: ResizeResamplingAlgorithm
   paperSize: PaperSize
   dpi: SupportedDPI
   stripExif: boolean
@@ -163,6 +171,7 @@ export interface BatchSetupHandlers {
   onResizeAnchorChange: (value: BatchResizeAnchor) => void
   onResizeFitModeChange: (value: BatchResizeFitMode) => void
   onResizeContainBackgroundChange: (value: string) => void
+  onResizeResamplingAlgorithmChange: (value: ResizeResamplingAlgorithm) => void
   onPaperSizeChange: (value: PaperSize) => void
   onDpiChange: (value: SupportedDPI) => void
   onStripExifChange: (value: boolean) => void

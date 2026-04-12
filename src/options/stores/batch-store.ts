@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
+import { normalizeResizeResamplingAlgorithm } from "@/core/resize-resampling"
 import type { BmpColorDepth, PaperSize, SupportedDPI, TiffColorMode } from "@/core/types"
 import type { BatchResizeMode, BatchSetupState, BatchTargetFormat, BatchWatermarkConfig } from "@/options/components/batch/types"
 import { DEFAULT_BATCH_WATERMARK } from "@/options/components/batch/watermark"
@@ -117,6 +118,7 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   resizeAnchor: "width",
   resizeFitMode: "fill",
   resizeContainBackground: "#000000",
+  resizeResamplingAlgorithm: "browser-default",
   paperSize: "A4",
   dpi: 300,
   stripExif: false,
@@ -229,6 +231,7 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
       tiff: tiffOptions,
       ico: icoOptions
     },
+    resizeResamplingAlgorithm: normalizeResizeResamplingAlgorithm(state.resizeResamplingAlgorithm),
     watermark: {
       ...state.watermark
     }
@@ -321,6 +324,7 @@ interface BatchStoreState extends BatchSetupState {
   setResizeAnchor: (value: BatchSetupState["resizeAnchor"]) => void
   setResizeFitMode: (value: BatchSetupState["resizeFitMode"]) => void
   setResizeContainBackground: (value: string) => void
+  setResizeResamplingAlgorithm: (value: BatchSetupState["resizeResamplingAlgorithm"]) => void
   syncResizeToSource: (width: number, height: number) => void
   setPaperSize: (value: PaperSize) => void
   setDpi: (value: SupportedDPI) => void
@@ -1036,6 +1040,23 @@ export const useBatchStore = create<BatchStoreState>()(
             }
           } as Partial<BatchStoreState>
         }),
+      setResizeResamplingAlgorithm: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const nextConfig = {
+            ...contextConfigs[setupContext],
+            resizeResamplingAlgorithm: value
+          }
+
+          return {
+            resizeResamplingAlgorithm: value,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
       syncResizeToSource: (width, height) =>
         set((state) => {
           const setupContext = state.setupContext
@@ -1482,6 +1503,7 @@ export const useBatchStore = create<BatchStoreState>()(
             resizeAnchor: state.resizeAnchor,
             resizeFitMode: state.resizeFitMode,
             resizeContainBackground: state.resizeContainBackground,
+            resizeResamplingAlgorithm: state.resizeResamplingAlgorithm,
             paperSize: state.paperSize,
             dpi: state.dpi,
             stripExif: state.stripExif,
