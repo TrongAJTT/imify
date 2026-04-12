@@ -8,7 +8,10 @@ import {
 } from "@/options/components/ui/discrete-slider"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { NumberInput } from "@/options/components/ui/number-input"
-import { Kicker, MutedText, Subheading } from "@/options/components/ui/typography"
+import { ToggleSwitchLabel } from "@/options/components/ui/toggle-switch-label"
+import { SettingsSectionHeader } from "@/options/components/ui/settings-section-header"
+import { SettingsItemHeader } from "@/options/components/ui/settings-item-header"
+import { MutedText, Subheading } from "@/options/components/ui/typography"
 import {
   BarChart3,
   Gauge,
@@ -209,22 +212,16 @@ export function SettingsDialog({
         <div className="flex-1 overflow-y-auto p-8 pt-12">
           {activeTab === "general" && (
             <div className="animate-in fade-in duration-300 space-y-5">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-1">
-                  General
-                </h2>
-                <MutedText>
-                  Control default behavior and workspace layout preferences.
-                </MutedText>
-              </div>
+              <SettingsSectionHeader
+                title="General"
+                description="Control default behavior and workspace layout preferences."
+              />
 
               <section className="space-y-4">
-                <div>
-                  <Kicker className="mb-1">DEFAULT OPEN SCREEN</Kicker>
-                  <MutedText className="text-sm">
-                    Choose which feature tab opens by default when you click the extension and navigate to this page.
-                  </MutedText>
-                </div>
+                <SettingsItemHeader
+                  title="DEFAULT OPEN SCREEN"
+                  description="Choose which feature tab opens by default when you click the extension and navigate to this page."
+                />
 
                 <SelectInput
                   label="Default feature"
@@ -238,12 +235,10 @@ export function SettingsDialog({
               </section>
 
               <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
-                <div>
-                  <Kicker className="mb-1">WORKSPACE SIDEBAR WIDTHS</Kicker>
-                  <MutedText className="text-sm">
-                    Tune left and right sidebar width with preset steps.
-                  </MutedText>
-                </div>
+                <SettingsItemHeader
+                  title="WORKSPACE SIDEBAR WIDTHS"
+                  description="Tune left and right sidebar width with preset steps."
+                />
 
                 <DiscreteSlider
                   label="Navigation sidebar width"
@@ -266,94 +261,45 @@ export function SettingsDialog({
 
           {activeTab === "performance" && (
             <div className="animate-in fade-in duration-300 space-y-5">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-1">
-                  Performance
-                </h2>
-                <MutedText>
-                  Smart Concurrency Advisor helps simulate safe worker counts using your hardware profile and active format settings.
-                </MutedText>
-              </div>
+              <SettingsSectionHeader
+                title="Performance"
+                description="Smart Concurrency Advisor helps simulate safe worker counts using your hardware profile and active format settings."
+              />
 
               <section className="space-y-4">
-                <div>
-                  <Kicker className="mb-1">SMART CONCURRENCY ADVISOR</Kicker>
-                  <MutedText className="text-sm">
-                    Modern encoders like AVIF and JXL can consume high CPU and memory in browser workers. Enable advisor to get dynamic recommendations based on machine profile and current format options.
-                  </MutedText>
-                </div>
+                <SettingsItemHeader
+                  title="SMART CONCURRENCY ADVISOR"
+                  description="Modern encoders like AVIF and JXL can consume high CPU and memory in browser workers. Enable advisor to get dynamic recommendations based on machine profile and current format options."
+                />
 
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
                   Privacy note: hardware data is only read and processed locally in your browser. No telemetry or external upload.
                 </div>
 
-                <label className="flex items-center justify-between gap-4 py-2 rounded-lg transition-colors cursor-pointer select-none group">
-                  <div className="flex-1 pr-6">
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-900 transition-colors">
-                      Enable Smart Concurrency Advisor
-                    </p>
-                    <MutedText className="text-sm mt-0.5 leading-relaxed">
-                      Keep manual concurrency free (1-90), but show contextual safe recommendations under Export Settings.
-                    </MutedText>
-                  </div>
-                  <div className="flex items-center">
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={advisorEnabled}
-                      onClick={() =>
-                        updatePerformancePreferences({
-                          ...safePerformancePreferences,
-                          smartAdvisorEnabled: !advisorEnabled
-                        })
-                      }
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 ${
-                        advisorEnabled ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
-                      }`}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          advisorEnabled ? "translate-x-5" : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </label>
+                <ToggleSwitchLabel
+                  label="Enable Smart Concurrency Advisor"
+                  description="Keep manual concurrency free (1-90), but show contextual safe recommendations under Export Settings."
+                  checked={advisorEnabled}
+                  onChange={(checked) =>
+                    updatePerformancePreferences({
+                      ...safePerformancePreferences,
+                      smartAdvisorEnabled: checked
+                    })
+                  }
+                />
 
-                <label className="flex items-center justify-between gap-4 py-2 rounded-lg transition-colors cursor-pointer select-none group">
-                  <div className="flex-1 pr-6">
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-900 transition-colors">
-                      Unlock max concurrency (Overclock)
-                    </p>
-                    <MutedText className="text-sm mt-0.5 leading-relaxed">
-                      Allow values up to 90 and bypass Advisor hard lock. This can increase crash risk on heavy formats.
-                    </MutedText>
-                  </div>
-                  <div className="flex items-center">
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={overclockEnabled}
-                      onClick={() =>
-                        updatePerformancePreferences({
-                          ...safePerformancePreferences,
-                          allowConcurrencyOverclock: !overclockEnabled
-                        })
-                      }
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 ${
-                        overclockEnabled ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"
-                      }`}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          overclockEnabled ? "translate-x-5" : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </label>
+                <ToggleSwitchLabel
+                  label="Unlock max concurrency (Overclock)"
+                  description="Allow values up to 90 and bypass Advisor hard lock. This can increase crash risk on heavy formats."
+                  checked={overclockEnabled}
+                  onChange={(checked) =>
+                    updatePerformancePreferences({
+                      ...safePerformancePreferences,
+                      allowConcurrencyOverclock: checked
+                    })
+                  }
+                  colorWhenEnabled="amber"
+                />
 
                 {advisorEnabled && (
                   <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
@@ -434,122 +380,40 @@ export function SettingsDialog({
 
           {activeTab === "warnings" && (
             <div className="animate-in fade-in duration-300">
-              <div className="mb-5 border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-1">
-                  Warning Dialogs
-                </h2>
-                <MutedText>
-                  Control how warning dialogs appear during batch processing.
-                </MutedText>
-              </div>
+              <SettingsSectionHeader
+                title="Warning Dialogs"
+                description="Control how warning dialogs appear during batch processing."
+              />
 
               <section className="space-y-4">
-                <div>
-                  <Kicker className="mb-1">PREFERENCES</Kicker>
-                  <MutedText className="text-sm">
-                    These preferences are saved automatically. Batch options apply across Single/Batch setup; Image Splicing uses the preview-quality warning here as well.
-                  </MutedText>
-                </div>
+                <SettingsItemHeader
+                  title="PREFERENCES"
+                  description="These preferences are saved automatically. Batch options apply across Single/Batch setup; Image Splicing uses the preview-quality warning here as well."
+                />
 
                 <div className="space-y-2">
-                  <label className="flex items-center justify-between gap-4 py-3 rounded-lg transition-colors cursor-pointer select-none group">
-                    <div className="flex-1 pr-6">
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-900 transition-colors">
-                        Show download confirmation dialog
-                      </p>
-                      <MutedText className="text-sm mt-0.5 leading-relaxed">
-                        Warn before downloading more than {APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD} images one by one to avoid overwhelming your browser.
-                      </MutedText>
-                    </div>
-                    <div className="flex items-center">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={!skipDownloadConfirm}
-                        onClick={() => setSkipDownloadConfirm(!skipDownloadConfirm)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 ${
-                          !skipDownloadConfirm
-                            ? "bg-sky-500"
-                            : "bg-slate-300 dark:bg-slate-600"
-                        }`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            !skipDownloadConfirm ? "translate-x-5" : "translate-x-0"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </label>
+                  <ToggleSwitchLabel
+                    label="Show download confirmation dialog"
+                    description={`Warn before downloading more than ${APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD} images one by one to avoid overwhelming your browser.`}
+                    checked={!skipDownloadConfirm}
+                    onChange={(checked) => setSkipDownloadConfirm(!checked)}
+                  />
 
-                  <label className="flex items-center justify-between gap-4 py-3 rounded-lg transition-colors cursor-pointer select-none group">
-                    <div className="flex-1 pr-6">
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-900 transition-colors">
-                        Show memory (OOM) warning dialog
-                      </p>
-                      <MutedText className="text-sm mt-0.5 leading-relaxed">
-                        Warn when selected batch size exceeds ~{APP_CONFIG.BATCH.OOM_WARNING_MB} MB to prevent out-of-memory crashes.
-                      </MutedText>
-                    </div>
-                    <div className="flex items-center">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={!skipOomWarning}
-                        onClick={() => setSkipOomWarning(!skipOomWarning)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 ${
-                          !skipOomWarning
-                            ? "bg-sky-500"
-                            : "bg-slate-300 dark:bg-slate-600"
-                        }`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            !skipOomWarning ? "translate-x-5" : "translate-x-0"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </label>
+                  <ToggleSwitchLabel
+                    label="Show memory (OOM) warning dialog"
+                    description={`Warn when selected batch size exceeds ~${APP_CONFIG.BATCH.OOM_WARNING_MB} MB to prevent out-of-memory crashes.`}
+                    checked={!skipOomWarning}
+                    onChange={(checked) => setSkipOomWarning(!checked)}
+                  />
 
-                  <label className="flex items-center justify-between gap-4 py-3 rounded-lg transition-colors cursor-pointer select-none group">
-                    <div className="flex-1 pr-6">
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-900 transition-colors">
-                        Show Image Splicing high preview quality warning
-                      </p>
-                      <MutedText className="text-sm mt-0.5 leading-relaxed">
-                        When choosing preview quality 50% or higher, warn if there are more than {" "}
-                        {APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT} images or total area exceeds
-                        ~{APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS / 1_000_000}M px².
-                      </MutedText>
-                    </div>
-                    <div className="flex items-center">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={!skipSplicingHeavyPreviewQualityWarning}
-                        onClick={() =>
-                          setSkipSplicingHeavyPreviewQualityWarning(!skipSplicingHeavyPreviewQualityWarning)
-                        }
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 ${
-                          !skipSplicingHeavyPreviewQualityWarning
-                            ? "bg-sky-500"
-                            : "bg-slate-300 dark:bg-slate-600"
-                        }`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            !skipSplicingHeavyPreviewQualityWarning
-                              ? "translate-x-5"
-                              : "translate-x-0"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </label>
+                  <ToggleSwitchLabel
+                    label="Show Image Splicing high preview quality warning"
+                    description={`When choosing preview quality 50% or higher, warn if there are more than ${APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT} images or total area exceeds ~${APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS / 1_000_000}M px².`}
+                    checked={!skipSplicingHeavyPreviewQualityWarning}
+                    onChange={(checked) =>
+                      setSkipSplicingHeavyPreviewQualityWarning(!checked)
+                    }
+                  />
                 </div>
               </section>
             </div>
@@ -557,23 +421,17 @@ export function SettingsDialog({
 
           {activeTab === "usage" && (
             <div className="animate-in fade-in duration-300">
-              <div className="mb-5 border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 mb-1">
-                  Usage Stats
-                </h2>
-                <MutedText>
-                  Review how often each format/preset is used in the right-click context menu.
-                </MutedText>
-              </div>
+              <SettingsSectionHeader
+                title="Usage Stats"
+                description="Review how often each format/preset is used in the right-click context menu."
+              />
 
               <section className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <Kicker className="mb-1">FREQUENCY DATA</Kicker>
-                    <MutedText className="text-sm">
-                      These counters drive the "Most used (stable)" sorting mode.
-                    </MutedText>
-                  </div>
+                  <SettingsItemHeader
+                    title="FREQUENCY DATA"
+                    description='These counters drive the "Most used (stable)" sorting mode.'
+                  />
 
                   <Button
                     variant="outline"
