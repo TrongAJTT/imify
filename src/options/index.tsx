@@ -365,7 +365,7 @@ export default function OptionsPage() {
         )
       case "inspector":
         return (
-          <InspectorTab />
+          <InspectorTab onOpenSingleProcessor={() => void setActiveTab("single")} />
         )
       default:
         return null

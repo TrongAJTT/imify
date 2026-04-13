@@ -31,6 +31,70 @@ function levelBadge(level: string) {
   return <span className={`text-[10px] font-bold ${color}`}>{level}</span>
 }
 
+function relativeLuminance(r: number, g: number, b: number): number {
+  const linearize = (value: number): number => {
+    const normalized = value / 255
+    return normalized <= 0.04045
+      ? normalized / 12.92
+      : Math.pow((normalized + 0.055) / 1.055, 2.4)
+  }
+
+  return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)
+}
+
+function pairContrastRatio(foreground: PaletteColor, background: PaletteColor): number {
+  const lumA = relativeLuminance(foreground.rgb[0], foreground.rgb[1], foreground.rgb[2])
+  const lumB = relativeLuminance(background.rgb[0], background.rgb[1], background.rgb[2])
+  const lighter = Math.max(lumA, lumB)
+  const darker = Math.min(lumA, lumB)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+function bestPaletteWcagPair(palette: PaletteColor[]): {
+  foreground: PaletteColor
+  background: PaletteColor
+  ratio: number
+  level: "AAA" | "AA" | "AA Large" | "Fail"
+} | null {
+  if (palette.length < 2) {
+    return null
+  }
+
+  let best: {
+    foreground: PaletteColor
+    background: PaletteColor
+    ratio: number
+  } | null = null
+
+  for (let i = 0; i < palette.length; i += 1) {
+    for (let j = i + 1; j < palette.length; j += 1) {
+      const ratio = pairContrastRatio(palette[i], palette[j])
+      if (!best || ratio > best.ratio) {
+        const fore = palette[i].hsl[2] > palette[j].hsl[2] ? palette[i] : palette[j]
+        const back = fore === palette[i] ? palette[j] : palette[i]
+        best = {
+          foreground: fore,
+          background: back,
+          ratio
+        }
+      }
+    }
+  }
+
+  if (!best) {
+    return null
+  }
+
+  const level = best.ratio >= 7 ? "AAA" : best.ratio >= 4.5 ? "AA" : best.ratio >= 3 ? "AA Large" : "Fail"
+
+  return {
+    foreground: best.foreground,
+    background: best.background,
+    ratio: best.ratio,
+    level
+  }
+}
+
 function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplayFormat }) {
   const [copied, setCopied] = useState(false)
   const formatted = formatColor(c, format)
@@ -215,6 +279,8 @@ export function ColorInspectorCard({ color, palette }: { color: ColorInfo; palet
 
   if (palette.length === 0 && !color) return null
 
+  const wcagPair = bestPaletteWcagPair(palette)
+
   const formatToggle = palette.length > 0 && isOpen ? (
     <div className="flex items-center gap-1">
       {(["hex", "rgb", "hsl"] as const).map((fmt) => (
@@ -266,6 +332,29 @@ export function ColorInspectorCard({ color, palette }: { color: ColorInfo; palet
             </div>
 
             <GradientPreview palette={palette} />
+
+            {wcagPair && (
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  WCAG Auto Pair
+                </span>
+                <div className="rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden">
+                  <div
+                    className="px-3 py-2 text-xs font-semibold"
+                    style={{
+                      backgroundColor: wcagPair.background.hex,
+                      color: wcagPair.foreground.hex
+                    }}
+                  >
+                    Sample Text Aa • {wcagPair.foreground.hex} on {wcagPair.background.hex}
+                  </div>
+                  <div className="px-3 py-1.5 text-[10px] flex items-center justify-between bg-white dark:bg-slate-900/40">
+                    <span className="text-slate-500 dark:text-slate-400">Contrast {wcagPair.ratio.toFixed(2)}:1</span>
+                    {levelBadge(wcagPair.level)}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="pt-1 border-t border-slate-100 dark:border-slate-700/50">
               <ExportDropdown palette={palette} />

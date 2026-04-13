@@ -3,6 +3,7 @@ import { parseExifData } from "./exif-parser"
 import { extractPalette } from "./color-extractor"
 import { generateThumbHash } from "./thumbhash"
 import { detectFormat, computeDimensions, detectPrivacyAlerts } from "./format-utils"
+import { buildWebPerformanceReport, computeHistogramFromBitmap } from "./visual-analysis"
 
 export async function inspectImage(
   file: File,
@@ -58,6 +59,13 @@ export async function inspectImage(
   const privacyAlerts = detectPrivacyAlerts(exifEntries, gps, parsed?.software ?? null)
 
   const palette = extractPalette(bitmap, options?.paletteCount ?? 8)
+  const histogram = computeHistogramFromBitmap(bitmap)
+  const webPerformance = buildWebPerformanceReport({
+    basic,
+    color,
+    dimensions,
+    histogram
+  })
 
   const thumbHash = generateThumbHash(bitmap)
 
@@ -72,6 +80,7 @@ export async function inspectImage(
     exifEntries,
     privacyAlerts,
     softwareTags,
-    thumbHash
+    thumbHash,
+    webPerformance
   }
 }

@@ -17,6 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Image Fill [C]:** Konva workspace with per-layer image upload, clipping masks, and direct manipulation of image position/scale/rotation within each shape. Supports per-layer border (width, color) and corner radius (bezier-approximated). Canvas background options: transparent, solid color, gradient, image. Global border and corner radius overrides.
   - **Export [D]:** Raster export using `OffscreenCanvas` with `Path2D` + `clip()` for clipping masks. Supports PNG, JPEG, WebP, AVIF, JPEG XL, MozJPEG, BMP, TIFF formats with quality control. PSD export via `ag-psd` with each template layer mapped to a PSD layer.
   - **New dependencies:** `konva` + `react-konva` (MIT) for canvas scene graph, `ag-psd` (MIT) for PSD export.
+- **Image Inspector Interactive Preview:** Upgraded preview to support advanced visual diagnostics:
+  - Pixel-level eyedropper with live HEX/RGB/Alpha readout and coordinates.
+  - Loupe magnifier overlay with adjustable zoom level.
+  - Preview channel modes (`All/R/G/B/Alpha`) and color-blind simulation (`Protanopia`, `Deuteranopia`, `Tritanopia`) for accessibility-oriented QA.
+- **Image Inspector Web Performance Advisor:** Added smart optimization diagnostics with:
+  - Automatic risk scoring (`Good`, `Needs Work`, `Poor`) and actionable payload suggestions.
+  - In-preview histogram analysis (luminance + RGB curves) with shadow/highlight clipping indicators.
+  - Format-aware recommendations (e.g., PNG-without-alpha -> WebP/MozJPEG).
+- **Image Inspector -> Single Processor Bridge:** Added `Optimize Now` flow from Inspector advice panel:
+  - Transfers current inspected file into Single Processor.
+  - Applies recommended target format before navigation for faster optimization workflow.
+- **Image Inspector WCAG Auto Pair:** Added automatic best-contrast palette pairing preview with WCAG level badge (`AAA`, `AA`, `AA Large`, `Fail`) and contrast ratio summary.
 - **Resize Advanced Resampling:** Added `Resampling Algorithm` selector to shared `ResizeCard` (Custom Format + Single/Batch setup flows) with options: `Browser Default`, `Lanczos3`, `Magic Kernel`, and `HQX`.
 - **Resize Local WASM Workflow:** Added local-only resize WASM asset sync pipeline for `@jsquash/resize`:
   - New `scripts/sync-resize-wasm.mjs` script and `sync:resize-wasm` package command.
@@ -210,7 +222,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI:** Refactored `ColorPickerPopover` from manual absolute positioning with `useState` to Radix UI Popover component with Portal, automatic viewport collision detection (`sideOffset: 8`, `collisionPadding: 12`), and native Escape key handling.
 
 ### Fixed
-- **TIFF Encoding (Single Processor):** Fixed error "The source image could not be decoded" in Single Processor TIFF export by:
   - Adding null-check in TIFF encoder to validate `UTIF.encodeImage()` result and throw meaningful error if encoding fails.
   - Adding error handling in `readImageMetaOnMain` to gracefully fallback when `createImageBitmap` fails for unsupported image formats (TIFF preview unavailable in some browsers).
   - Adding try-catch wrapper in `createPreviewAsset` to gracefully skip preview generation for formats not supported by browser's image decoding (allows TIFF download without preview).
@@ -219,7 +230,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - When TIFF, BMP, ICO, or other formats fail to preview, automatically generates JPEG fallback preview from the encoded output data.
   - Displays amber warning icon + tooltip "Preview: JPEG fallback (format not supported)" to inform user that preview is using fallback encoding.
   - Preserved original file format for download—fallback only affects preview rendering, not the output file itself.
-  - Graceful degrade to "preview unavailable" if even JPEG fallback encoding fails.
+- **Image Inspector Interactive Preview:** Upgraded preview to support advanced visual diagnostics:
+  - Pixel-level eyedropper with live HEX/RGB/Alpha readout and coordinates.
+  - Loupe magnifier overlay with adjustable zoom level.
+  - Preview channel modes (`All/R/G/B/Alpha`) and color-blind simulation (`Protanopia`, `Deuteranopia`, `Tritanopia`) for accessibility-oriented QA.
+- **Image Inspector Web Performance Advisor:** Added smart optimization diagnostics with:
+  - Automatic risk scoring (`Good`, `Needs Work`, `Poor`) and actionable payload suggestions.
+  - In-preview histogram analysis (luminance + RGB curves) with shadow/highlight clipping indicators.
+  - Format-aware recommendations (e.g., PNG-without-alpha -> WebP/MozJPEG).
+- **Image Inspector -> Single Processor Bridge:** Added `Optimize Now` flow from Inspector advice panel:
+  - Transfers current inspected file into Single Processor.
+  - Applies recommended target format before navigation for faster optimization workflow.
+- **Image Inspector WCAG Auto Pair:** Added automatic best-contrast palette pairing preview with WCAG level badge (`AAA`, `AA`, `AA Large`, `Fail`) and contrast ratio summary.
 - **JXL / Wide-Gamut Input:** Fixed washed-out color output in JXL-heavy workflows by standardizing decode-to-encode color handling through browser-managed color conversion before extracting RGBA for WASM encoders.
 - **DX / TypeScript:** Restored optional `hover` token in `ThemeClasses` to keep legacy backup files type-safe during full-repo `tsc --noEmit` checks.
 - **UI:** Fixed `ColorPickerPopover` clipping inside accordion cards by refactoring from manual absolute positioning to Radix UI Popover component with Portal and automatic viewport collision detection.

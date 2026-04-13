@@ -14,6 +14,7 @@ import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
 import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
 import { downloadWithFilename, formatBytes, withBatchResize } from "@/options/components/batch/utils"
+import { consumePendingInspectorOptimizeFile } from "@/options/shared/inspector-optimize-bridge"
 import { PixelCompareWorkspace } from "@/options/components/diffchecker/pixel-compare-workspace"
 import { Button } from "@/options/components/ui/button"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
@@ -336,6 +337,13 @@ export function SingleProcessorTab() {
     onUrls: importFromImageUrls,
     enabled: !sourceFile
   })
+
+  useEffect(() => {
+    const pendingInspectorFile = consumePendingInspectorOptimizeFile()
+    if (pendingInspectorFile) {
+      void attachSingleFile(pendingInspectorFile)
+    }
+  }, [])
 
   useEffect(() => {
     if (!sourceFile || !resultBlob || !resultOutputExtension) {

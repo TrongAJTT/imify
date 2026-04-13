@@ -61,6 +61,34 @@ export interface PaletteColor {
   percentage: number
 }
 
+export type PreviewChannelMode = "all" | "red" | "green" | "blue" | "alpha"
+export type ColorBlindMode = "none" | "protanopia" | "deuteranopia" | "tritanopia"
+
+export interface HistogramData {
+  luminance: number[]
+  red: number[]
+  green: number[]
+  blue: number[]
+  peak: number
+  shadowClipPercent: number
+  highlightClipPercent: number
+}
+
+export interface WebPerformanceSuggestion {
+  severity: "critical" | "warning" | "info"
+  title: string
+  description: string
+  estimatedSavingsPercent?: number
+  recommendedFormat?: "mozjpeg" | "webp" | "avif"
+}
+
+export interface WebPerformanceReport {
+  score: "good" | "needs-work" | "poor"
+  summary: string
+  suggestions: WebPerformanceSuggestion[]
+  histogram: HistogramData
+}
+
 export interface PrivacyAlert {
   severity: "critical" | "warning" | "info"
   title: string
@@ -89,6 +117,7 @@ export interface InspectorResult {
   privacyAlerts: PrivacyAlert[]
   softwareTags: string[]
   thumbHash: string | null
+  webPerformance: WebPerformanceReport
 }
 
 export type ColorDisplayFormat = "hex" | "rgb" | "hsl"

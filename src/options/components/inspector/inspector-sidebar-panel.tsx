@@ -8,17 +8,33 @@ export function InspectorSidebarPanel() {
   const exifSortMode = useInspectorStore((s) => s.exifSortMode)
   const showSensitiveOnly = useInspectorStore((s) => s.showSensitiveOnly)
   const paletteCount = useInspectorStore((s) => s.paletteCount)
+  const previewChannelMode = useInspectorStore((s) => s.previewChannelMode)
+  const colorBlindMode = useInspectorStore((s) => s.colorBlindMode)
+  const loupeEnabled = useInspectorStore((s) => s.loupeEnabled)
+  const loupeZoom = useInspectorStore((s) => s.loupeZoom)
 
   const setExifSortMode = useInspectorStore((s) => s.setExifSortMode)
   const setShowSensitiveOnly = useInspectorStore((s) => s.setShowSensitiveOnly)
   const setPaletteCount = useInspectorStore((s) => s.setPaletteCount)
+  const setPreviewChannelMode = useInspectorStore((s) => s.setPreviewChannelMode)
+  const setColorBlindMode = useInspectorStore((s) => s.setColorBlindMode)
+  const setLoupeEnabled = useInspectorStore((s) => s.setLoupeEnabled)
+  const setLoupeZoom = useInspectorStore((s) => s.setLoupeZoom)
 
   return (
     <SidebarPanel title="INSPECTOR SETTINGS" childrenClassName="flex flex-col gap-3">
       {/* Display Accordion */}
       <DisplayAccordion
         paletteCount={paletteCount}
+        previewChannelMode={previewChannelMode}
+        colorBlindMode={colorBlindMode}
+        loupeEnabled={loupeEnabled}
+        loupeZoom={loupeZoom}
         onPaletteCountChange={setPaletteCount}
+        onPreviewChannelModeChange={setPreviewChannelMode}
+        onColorBlindModeChange={setColorBlindMode}
+        onLoupeEnabledChange={setLoupeEnabled}
+        onLoupeZoomChange={setLoupeZoom}
       />
 
       {/* Metadata Accordion */}

@@ -1,6 +1,8 @@
-import { FileImage, Ruler, Clock } from "lucide-react"
+import { FileImage, Ruler, Clock, Pipette } from "lucide-react"
 import type { BasicInfo, DimensionInfo, ResolutionInfo, TimeInfo } from "@/features/inspector"
 import { formatFileSize } from "@/features/inspector"
+import { useInspectorStore } from "@/options/stores/inspector-store"
+import { Button } from "@/options/components/ui/button"
 import { InfoSection, InfoRow } from "./info-section"
 
 interface BasicInfoCardProps {
@@ -12,17 +14,32 @@ interface BasicInfoCardProps {
 }
 
 export function BasicInfoCard({ basic, dimensions, resolution, time, imageUrl }: BasicInfoCardProps) {
+  const setVisualAnalysisDialogOpen = useInspectorStore((s) => s.setVisualAnalysisDialogOpen)
+
   return (
     <div className="flex flex-col gap-3">
       <InfoSection title="FILE INFORMATION" icon={<FileImage size={13} />} collapsible={false}>
-        <div className="relative flex items-center justify-center mb-3" style={{ maxHeight: 280 }}>
-          <img
-            src={imageUrl}
-            alt={basic.fileName}
-            className="max-w-full max-h-[260px] object-contain rounded"
-          />
+        <div className="relative mb-3 pt-4" style={{ maxHeight: 280 }}>
+          <div className="w-full h-48 rounded border border-slate-200/80 dark:border-slate-700/70 bg-slate-100/80 dark:bg-slate-900/60 flex items-center justify-center text-slate-400 dark:text-slate-500">
+            <img
+              src={imageUrl}
+              alt={basic.fileName}
+              className="max-w-full max-h-full w-auto h-auto rounded"
+              style={{ maxHeight: 240, maxWidth: "100%" }}
+            />
+          </div>
+
+          {/* Color Picker button at bottom-right */}
+          <button
+            onClick={() => setVisualAnalysisDialogOpen(true)}
+            className="absolute bottom-2 right-2 inline-flex items-center justify-center w-9 h-9 rounded-lg bg-slate-900/70 hover:bg-slate-900/85 text-white backdrop-blur-sm transition-colors"
+            title="Open Visual Analysis Dialog"
+            aria-label="Color Picker"
+          >
+            <Pipette size={18} />
+          </button>
         </div>
-        <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
+        <div className="divide-y divide-slate-100 dark:divide-slate-700/50 mt-5">
           <InfoRow label="File Name" value={basic.fileName} />
           <InfoRow label="Format" value={basic.format} />
           <InfoRow label="MIME Type" value={basic.mimeType} mono />

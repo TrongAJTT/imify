@@ -6,15 +6,18 @@ import { ExifTableCard } from "./exif-table-card"
 import { GpsCard } from "./gps-card"
 import { PrivacyAlertsCard } from "./privacy-alerts-card"
 import { DeveloperActionsCard } from "./developer-actions-card"
+import { WebPerformanceCard } from "./web-performance-card"
+import { VisualAnalysisDialog } from "./visual-analysis-dialog"
 
 interface InspectorWorkspaceProps {
   result: InspectorResult
   bitmap: ImageBitmap
   imageUrl: string
   file: File
+  onOptimizeNow?: (recommendedFormat?: "mozjpeg" | "webp" | "avif") => void
 }
 
-export function InspectorWorkspace({ result, bitmap, imageUrl, file }: InspectorWorkspaceProps) {
+export function InspectorWorkspace({ result, bitmap, imageUrl, file, onOptimizeNow }: InspectorWorkspaceProps) {
   const [isNuking, setIsNuking] = useState(false)
 
   const handleNukeExif = useCallback(async () => {
@@ -53,6 +56,11 @@ export function InspectorWorkspace({ result, bitmap, imageUrl, file }: Inspector
           imageUrl={imageUrl}
         />
 
+        <WebPerformanceCard
+          report={result.webPerformance}
+          onOptimizeNow={onOptimizeNow}
+        />
+
         <DeveloperActionsCard
           bitmap={bitmap}
           mimeType={result.basic.mimeType}
@@ -78,6 +86,8 @@ export function InspectorWorkspace({ result, bitmap, imageUrl, file }: Inspector
 
         <ExifTableCard entries={result.exifEntries} />
       </div>
+
+      <VisualAnalysisDialog imageUrl={imageUrl} alt={result.basic.fileName} />
     </div>
   )
 }

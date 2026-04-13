@@ -4,6 +4,8 @@ import { Trash2 } from "lucide-react"
 import { inspectImage } from "@/features/inspector"
 import type { InspectorResult } from "@/features/inspector"
 import { useInspectorStore } from "@/options/stores/inspector-store"
+import { useBatchStore } from "@/options/stores/batch-store"
+import { setPendingInspectorOptimizeFile } from "@/options/shared/inspector-optimize-bridge"
 import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import { Button } from "@/options/components/ui/button"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
@@ -11,7 +13,11 @@ import { InspectorDropZone } from "./inspector-drop-zone"
 import { InspectorWorkspace } from "./inspector-workspace"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 
-export function InspectorTab() {
+interface InspectorTabProps {
+  onOpenSingleProcessor?: () => void
+}
+
+export function InspectorTab({ onOpenSingleProcessor }: InspectorTabProps) {
   const [file, setFile] = useState<File | null>(null)
   const [bitmap, setBitmap] = useState<ImageBitmap | null>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
@@ -20,6 +26,7 @@ export function InspectorTab() {
   const [error, setError] = useState<string | null>(null)
 
   const paletteCount = useInspectorStore((s) => s.paletteCount)
+  const setTargetFormat = useBatchStore((s) => s.setTargetFormat)
   const prevUrlRef = useRef<string | null>(null)
 
   const cleanup = useCallback(() => {
@@ -104,6 +111,20 @@ export function InspectorTab() {
     }
   }, [paletteCount])
 
+  const handleOptimizeNow = useCallback((recommendedFormat?: "mozjpeg" | "webp" | "avif") => {
+    if (!file) {
+      return
+    }
+
+    setPendingInspectorOptimizeFile(file)
+
+    if (recommendedFormat) {
+      setTargetFormat(recommendedFormat)
+    }
+
+    onOpenSingleProcessor?.()
+  }, [file, onOpenSingleProcessor, setTargetFormat])
+
   return (
     <div className="p-6">
       {file ? (
@@ -151,6 +172,7 @@ export function InspectorTab() {
           bitmap={bitmap}
           imageUrl={imageUrl}
           file={file}
+          onOptimizeNow={handleOptimizeNow}
         />
       )}
     </div>

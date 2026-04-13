@@ -12,6 +12,12 @@ export { extractPalette, generateCssVariables } from "./color-extractor"
 export { generateThumbHash, imageToBase64 } from "./thumbhash"
 export { formatFileSize } from "./format-utils"
 export {
+  buildWebPerformanceReport,
+  computeHistogramFromBitmap,
+  rgbToHex,
+  transformPixelForPreview
+} from "./visual-analysis"
+export {
   getMagicNumber,
   getSha256,
   getMd5,
@@ -34,5 +40,10 @@ export type {
   PrivacyAlert,
   ExifEntry,
   ExifGroup,
-  ColorDisplayFormat
+  ColorDisplayFormat,
+  ColorBlindMode,
+  PreviewChannelMode,
+  HistogramData,
+  WebPerformanceSuggestion,
+  WebPerformanceReport
 } from "./types"
