@@ -1,3 +1,3 @@
-import ProgressToast from "./src/contents/progress-toast"
+import ProgressToast from "@/contents/progress-toast"
 
 export default ProgressToast

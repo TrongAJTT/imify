@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Extension Command Center Popup:** Replaced the default toolbar click behavior with a dedicated popup workspace (English UI, dark/light friendly) exposing quick extension actions:
+  - `Page Scanner / SEO Audit`
+  - `Side Panel Lite Inspector`
+  - `Feature List / Settings`
+- **SEO Auditor (Policy-safe DOM Scanner):** Added a new `src/features/seo-audit/` slice that scans active page `img` and CSS `background-image` assets and returns audit-only diagnostics:
+  - Accessibility and SEO signals (missing alt, lazy-load opportunities, oversized assets, insecure URLs).
+  - Lightweight transfer-size and potential-savings estimation for optimization planning.
+  - Risk score (`Healthy`, `Needs Work`, `Critical`) and actionable recommendation list.
+  - Explicit policy note positioning Imify as a diagnostic tool (no bulk download workflow).
+- **Side Panel Lite Inspector:** Added lightweight side panel app (served via options view mode) with:
+  - On-demand SEO scan summary while browsing.
+  - Quick local image metadata preview (size, dimensions, MIME) without opening full options workspace.
+- **Content Script SEO Listener:** Added dedicated content listener to handle popup scan requests and return typed audit reports.
+
 - **Image Filling Feature:** Full implementation of the Image Filling pipeline accessible via the new "Image Filling" tab in the sidebar navigation.
   - **Template Selection [B]:** Grid view of saved templates with sort (by usage, date, name), pin-to-top, edit, and delete actions. Templates are persisted in a dedicated IndexedDB database (`imify-filling-storage`).
   - **Template Creation [E] - Canvas Size Dialog:** Presets for paper sizes (A3-Legal), social media (YouTube, Facebook, Instagram, Twitter), and screen resolutions (720p-4K) with custom dimensions and unit conversion (px, in, cm, mm).
@@ -174,6 +188,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
 ### Changed
+- **Toolbar Click Behavior:** Removed `chrome.action.onClicked -> openOptionsPage()` redirect in background script so extension icon opens popup command center instead of forcing options navigation.
+- **Manifest Permissions:** Added `sidePanel` permission to support Side Panel Lite Inspector action from popup.
+
 - **Resize Conversion Pipeline:** Upgraded shared raster processing pipeline to support advanced WASM resampling execution (`Lanczos3`, `Magic Kernel`, `HQX`) with automatic fallback to browser canvas resize when advanced path is unavailable.
 - **Smart Concurrency Advisor:** Advisor cost model now accounts for active resize mode and selected resampling algorithm so recommended concurrency better reflects real compute/memory pressure.
 - **TIFF Encoding (UTIF):** TIFF encode path now supports visual grayscale rendering and writes DPI metadata tags (`t282`, `t283`, `t296`) from resize DPI settings so print-size exports preserve resolution information in downstream design/print tools.

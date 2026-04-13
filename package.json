@@ -88,8 +88,15 @@
       "contextMenus",
       "downloads",
       "offscreen",
+      "sidePanel",
       "storage"
     ],
+    "action": {
+      "default_popup": "options.html?view=popup"
+    },
+    "side_panel": {
+      "default_path": "options.html?view=sidepanel"
+    },
     "host_permissions": [
       "http://*/*",
       "https://*/*"

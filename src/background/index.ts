@@ -283,10 +283,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   void handleImageMenuClick(info, tab)
 })
 
-chrome.action.onClicked.addListener(() => {
-  void chrome.runtime.openOptionsPage()
-})
-
 chrome.runtime.onMessage.addListener((message) => {
   if (message?.type !== "IMIFY_STATE_UPDATED" || !message.payload) {
     return

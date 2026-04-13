@@ -3,6 +3,8 @@ import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import { Button } from "@/options/components/ui/button"
+import { PopupApp } from "@/popup/popup-app"
+import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
 
 import { toUserFacingConversionError } from "@/core/error-utils"
 import { type ExtensionStorageState,
@@ -91,6 +93,33 @@ const DEFAULT_PERSISTED_STATE: PersistedStorageState = {
 }
 const IS_OFFSCREEN_OPTIONS_DOCUMENT =
   typeof window !== "undefined" && new URLSearchParams(window.location.search).get("offscreen") === "1"
+function resolveEmbeddedOptionsView(): "popup" | "sidepanel" | null {
+  if (typeof window === "undefined") {
+    return null
+  }
+
+  const queryMode = new URLSearchParams(window.location.search).get("view")
+  if (queryMode === "popup" || queryMode === "sidepanel") {
+    return queryMode
+  }
+
+  const currentPath = window.location.pathname.replace(/^\//, "")
+  const manifest = chrome.runtime.getManifest()
+
+  if (manifest.action?.default_popup === currentPath) {
+    return "popup"
+  }
+
+  if (manifest.side_panel?.default_path === currentPath) {
+    return "sidepanel"
+  }
+
+  return null
+}
+
+const EMBEDDED_OPTIONS_VIEW = resolveEmbeddedOptionsView()
+const IS_POPUP_OPTIONS_VIEW = EMBEDDED_OPTIONS_VIEW === "popup"
+const IS_SIDEPANEL_OPTIONS_VIEW = EMBEDDED_OPTIONS_VIEW === "sidepanel"
 
 let offscreenListenerAttached = false
 const VALID_TAB_IDS = new Set<OptionsTab>(TAB_ITEMS.map((tab) => tab.id))
@@ -197,6 +226,14 @@ function TabInfoPanel({ activeTab }: { activeTab: OptionsTab }) {
 export default function OptionsPage() {
   if (IS_OFFSCREEN_OPTIONS_DOCUMENT) {
     return null
+  }
+
+  if (IS_POPUP_OPTIONS_VIEW) {
+    return <PopupApp />
+  }
+
+  if (IS_SIDEPANEL_OPTIONS_VIEW) {
+    return <SidePanelLiteApp />
   }
 
   const [defaultOptionsTab, setDefaultOptionsTab, { isLoading: isDefaultTabLoading }] = useStorage<OptionsTab>(
