@@ -18,7 +18,7 @@ import type { CustomFormatInput } from "@/features/custom-formats"
 
 export { QUALITY_FORMATS }
 
-export type OptionsTab = "single" | "batch" | "splicing" | "diffchecker" | "inspector" | "context-menu"
+export type OptionsTab = "single" | "batch" | "splicing" | "filling" | "diffchecker" | "inspector" | "context-menu"
 export interface PersistedStorageState {
   version: number
   state: ExtensionStorageState
@@ -29,8 +29,10 @@ export const TAB_ITEMS: Array<{ id: OptionsTab; label: string }> = [
   { id: "single", label: "Single Processor" },
   { id: "batch", label: "Batch Processor" },
   { id: "splicing", label: "Image Splicing" },
+  // { id: "filling", label: "Image Filling" },
   { id: "diffchecker", label: "Difference Checker" },
   { id: "inspector", label: "Image Inspector" },
+  { id: "filling", label: "Image Filling (Beta)" },
 ]
 
 export const CONTEXT_MENU_SORT_OPTIONS: Array<{ value: MenuSortMode; label: string }> = [

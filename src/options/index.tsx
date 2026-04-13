@@ -16,6 +16,9 @@ import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
 import { SplicingTab } from "@/options/components/splicing/splicing-tab"
 import { SplicingSidebarPanel } from "@/options/components/splicing/splicing-sidebar-panel"
+import { FillingTab } from "@/options/components/filling/filling-tab"
+import { FillingSidebarPanel } from "@/options/components/filling/filling-sidebar-panel"
+import { EditorProvider } from "@/options/components/filling/editor-context"
 import { DiffcheckerTab } from "@/options/components/diffchecker/diffchecker-tab"
 import { DiffcheckerSidebarPanel } from "@/options/components/diffchecker/diffchecker-sidebar-panel"
 import { InspectorTab } from "@/options/components/inspector/inspector-tab"
@@ -47,6 +50,7 @@ import {
   ArrowLeftRight,
   Heart,
   Image,
+  Layers,
   LayoutGrid,
   ListTree,
   PanelLeftClose,
@@ -146,6 +150,7 @@ const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
   single: <Image size={18} />,
   batch: <Workflow size={18} />,
   splicing: <LayoutGrid size={18} />,
+  filling: <Layers size={18} />,
   diffchecker: <ArrowLeftRight size={18} />,
   inspector: <ScanSearch size={18} />,
   "context-menu": <ListTree size={18} />
@@ -350,6 +355,10 @@ export default function OptionsPage() {
         return (
           <SplicingTab onRegisterPreviewQualityChangeHandler={registerPreviewQualityChangeHandler} />
         )
+      case "filling":
+        return (
+          <FillingTab />
+        )
       case "diffchecker":
         return (
           <DiffcheckerTab />
@@ -429,6 +438,7 @@ export default function OptionsPage() {
       />
 
       {/* Main workspace */}
+      <EditorProvider>
       <div className="flex-1 flex overflow-hidden min-h-0">
 
         {/* Left sidebar nav */}
@@ -487,6 +497,10 @@ export default function OptionsPage() {
                 onPreviewQualityChange={handleSidebarPreviewQualityChange}
                 onOpenSettings={() => openSettingsDialog("performance")}
               />
+            )}
+
+            {activeTab === "filling" && (
+              <FillingSidebarPanel />
             )}
 
             {activeTab === "diffchecker" && (
@@ -549,6 +563,10 @@ export default function OptionsPage() {
             />
           )}
 
+          {activeTab === "filling" && (
+            <FillingSidebarPanel />
+          )}
+
           {activeTab === "diffchecker" && (
             <DiffcheckerSidebarPanel />
           )}
@@ -560,6 +578,7 @@ export default function OptionsPage() {
           <TabInfoPanel activeTab={activeTab} />
         </aside>
       </div>
+      </EditorProvider>
     </div>
   )
 }

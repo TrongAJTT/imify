@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Image Filling Feature:** Full implementation of the Image Filling pipeline accessible via the new "Image Filling" tab in the sidebar navigation.
+  - **Template Selection [B]:** Grid view of saved templates with sort (by usage, date, name), pin-to-top, edit, and delete actions. Templates are persisted in a dedicated IndexedDB database (`imify-filling-storage`).
+  - **Template Creation [E] - Canvas Size Dialog:** Presets for paper sizes (A3-Legal), social media (YouTube, Facebook, Instagram, Twitter), and screen resolutions (720p-4K) with custom dimensions and unit conversion (px, in, cm, mm).
+  - **Template Creation [E] - Manual Editor:** Konva-based interactive canvas with shape layers (rectangle, square, circle, triangles, parallelogram, rhombus, pentagon, hexagon, star). Supports drag, resize, rotate via Transformer, layer list with lock/visibility/delete/reorder, and per-layer property controls (position, size, rotation).
+  - **Template Creation [E] - Layer Groups:** Group multiple layers with boolean operations: close loop (connect last layer to first) and fill interior (treat enclosed area as solid).
+  - **Template Creation [E] - Symmetric Generator:** 13-parameter parallelogram layout engine for generating grid patterns with configurable axis direction, count, spacing, angles, and offsets. Includes bounding box culling to remove off-canvas shapes.
+  - **Image Fill [C]:** Konva workspace with per-layer image upload, clipping masks, and direct manipulation of image position/scale/rotation within each shape. Supports per-layer border (width, color) and corner radius (bezier-approximated). Canvas background options: transparent, solid color, gradient, image. Global border and corner radius overrides.
+  - **Export [D]:** Raster export using `OffscreenCanvas` with `Path2D` + `clip()` for clipping masks. Supports PNG, JPEG, WebP, AVIF, JPEG XL, MozJPEG, BMP, TIFF formats with quality control. PSD export via `ag-psd` with each template layer mapped to a PSD layer.
+  - **New dependencies:** `konva` + `react-konva` (MIT) for canvas scene graph, `ag-psd` (MIT) for PSD export.
 - **Resize Advanced Resampling:** Added `Resampling Algorithm` selector to shared `ResizeCard` (Custom Format + Single/Batch setup flows) with options: `Browser Default`, `Lanczos3`, `Magic Kernel`, and `HQX`.
 - **Resize Local WASM Workflow:** Added local-only resize WASM asset sync pipeline for `@jsquash/resize`:
   - New `scripts/sync-resize-wasm.mjs` script and `sync:resize-wasm` package command.
