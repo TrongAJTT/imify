@@ -1,233 +1,165 @@
 import "@/style.css"
 
-import { useEffect, useMemo, useState } from "react"
-import { ClipboardList, Image as ImageIcon, Settings2 } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { Loader2 } from "lucide-react"
 
-import { Button } from "@/options/components/ui/button"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
-import { Kicker, MutedText, Subheading } from "@/options/components/ui/typography"
-import { runSeoAuditOnActiveTab, type SeoAuditReport } from "@/features/seo-audit"
+import { inspectImage, type InspectorResult } from "@/features/inspector"
+import { BasicInfoCard } from "@/options/components/inspector/basic-info-card"
+import { ColorInspectorCard } from "@/options/components/inspector/color-inspector-card"
+import { ExifTableCard } from "@/options/components/inspector/exif-table-card"
+import { VisualAnalysisDialog } from "@/options/components/inspector/visual-analysis-dialog"
+import { BodyText } from "@/options/components/ui/typography"
+import { useInspectorStore } from "@/options/stores/inspector-store"
+import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
+import { SidepanelDropInputCard } from "@/sidepanel/components/sidepanel-drop-input-card"
+import { SidepanelSharedAppbar } from "@/sidepanel/components/sidepanel-shared-appbar"
 
-interface LocalImagePreview {
-  name: string
-  size: number
-  width: number
-  height: number
-  mimeType: string
-  previewUrl: string
-}
-
-function formatBytes(value: number): string {
-  if (value < 1024) {
-    return `${value} B`
+async function switchSidepanel(view: "inspector" | "audit"): Promise<void> {
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })
+  if (!activeTab?.id || !chrome.sidePanel?.setOptions || !chrome.sidePanel?.open) {
+    return
   }
 
-  const kb = value / 1024
-  if (kb < 1024) {
-    return `${kb.toFixed(1)} KB`
-  }
-
-  return `${(kb / 1024).toFixed(2)} MB`
-}
-
-function useDarkModeFromSettings(): void {
-  useEffect(() => {
-    let disposed = false
-
-    void chrome.storage.sync
-      .get("imify_dark_mode")
-      .then((state) => {
-        if (disposed) {
-          return
-        }
-
-        const isDark = Boolean(state?.imify_dark_mode)
-        document.documentElement.classList.toggle("dark", isDark)
-      })
-      .catch(() => {})
-
-    return () => {
-      disposed = true
-    }
-  }, [])
+  await chrome.sidePanel.setOptions({
+    tabId: activeTab.id,
+    path: `options.html?view=sidepanel&panel=${view}`,
+    enabled: true
+  })
+  await chrome.sidePanel.open({ tabId: activeTab.id })
 }
 
 export default function SidePanelLiteApp() {
-  useDarkModeFromSettings()
+  const { isDark, toggleDarkMode } = useImifyDarkMode()
+  const paletteCount = useInspectorStore((state) => state.paletteCount)
 
-  const [report, setReport] = useState<SeoAuditReport | null>(null)
-  const [scanError, setScanError] = useState<string | null>(null)
-  const [isScanning, setIsScanning] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [result, setResult] = useState<InspectorResult | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const [localPreview, setLocalPreview] = useState<LocalImagePreview | null>(null)
-  const [localError, setLocalError] = useState<string | null>(null)
+  const urlRef = useRef<string | null>(null)
+  const bitmapRef = useRef<ImageBitmap | null>(null)
+
+  const cleanupResources = useCallback(() => {
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current)
+      urlRef.current = null
+    }
+
+    if (bitmapRef.current) {
+      bitmapRef.current.close()
+      bitmapRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     return () => {
-      if (localPreview?.previewUrl) {
-        URL.revokeObjectURL(localPreview.previewUrl)
-      }
+      cleanupResources()
     }
-  }, [localPreview])
+  }, [cleanupResources])
 
-  const summaryLabel = useMemo(() => {
-    if (!report) {
-      return "No scan yet"
-    }
+  const handlePickFile = useCallback(async (file: File | undefined) => {
+    cleanupResources()
 
-    return `Score ${report.summary.score} • ${report.summary.totalAssets} assets`
-  }, [report])
-
-  const handleRunAudit = async () => {
-    setIsScanning(true)
-    setScanError(null)
-
-    try {
-      const nextReport = await runSeoAuditOnActiveTab()
-      setReport(nextReport)
-    } catch (error) {
-      setScanError(error instanceof Error ? error.message : "Audit failed.")
-    } finally {
-      setIsScanning(false)
-    }
-  }
-
-  const handlePickImage = async (file: File | undefined) => {
     if (!file) {
+      setSelectedFile(null)
+      setPreviewUrl(null)
+      setResult(null)
+      setError(null)
       return
     }
 
     if (!file.type.startsWith("image/")) {
-      setLocalError("Please select an image file.")
+      setSelectedFile(null)
+      setPreviewUrl(null)
+      setResult(null)
+      setError("Please select a valid image file.")
       return
     }
 
-    setLocalError(null)
+    setIsAnalyzing(true)
+    setError(null)
 
     const nextUrl = URL.createObjectURL(file)
 
     try {
       const bitmap = await createImageBitmap(file)
+      const buffer = await file.arrayBuffer()
+      const nextResult = await inspectImage(file, bitmap, buffer, { paletteCount })
 
-      setLocalPreview((current) => {
-        if (current?.previewUrl) {
-          URL.revokeObjectURL(current.previewUrl)
-        }
+      urlRef.current = nextUrl
+      bitmapRef.current = bitmap
 
-        return {
-          name: file.name,
-          size: file.size,
-          width: bitmap.width,
-          height: bitmap.height,
-          mimeType: file.type,
-          previewUrl: nextUrl
-        }
-      })
-
-      bitmap.close()
+      setSelectedFile(file)
+      setPreviewUrl(nextUrl)
+      setResult(nextResult)
     } catch {
       URL.revokeObjectURL(nextUrl)
-      setLocalError("Failed to decode the selected image.")
+      setSelectedFile(null)
+      setPreviewUrl(null)
+      setResult(null)
+      setError("Failed to inspect the selected image.")
+    } finally {
+      setIsAnalyzing(false)
     }
-  }
+  }, [cleanupResources, paletteCount])
 
-  const handleOpenSettings = async () => {
+  const handleOpenSettings = useCallback(async () => {
     await chrome.runtime.openOptionsPage()
-  }
+  }, [])
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
       <div className="space-y-3">
-        <SurfaceCard className="space-y-1.5 p-4" tone="soft">
-          <Kicker>Side Panel Lite Inspector</Kicker>
-          <Subheading className="text-base">On-page diagnostics while browsing</Subheading>
-          <MutedText className="text-xs">
-            Lightweight assistant for SEO audit checks and quick local image metadata.
-          </MutedText>
-        </SurfaceCard>
+        <SidepanelSharedAppbar
+          isDark={isDark}
+          onToggleDarkMode={toggleDarkMode}
+          onOpenOptions={() => void handleOpenSettings()}
+          activeView="inspector"
+          onSwitchView={(view) => void switchSidepanel(view)}
+          title="Imify Lite Inspector"
+          subtitle="Drag, inspect, optimize"
+        />
 
-        <SurfaceCard className="space-y-3 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">Page Scanner / SEO Audit</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">{summaryLabel}</div>
-            </div>
-            <ClipboardList size={16} className="text-slate-400" />
+        <SidepanelDropInputCard
+          selectedFileName={selectedFile?.name ?? null}
+          isAnalyzing={isAnalyzing}
+          onPickFile={(file) => void handlePickFile(file)}
+        />
+
+        {error ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
+            <BodyText className="text-xs text-red-700 dark:text-red-300">{error}</BodyText>
           </div>
+        ) : null}
 
-          <Button variant="primary" className="w-full" disabled={isScanning} onClick={handleRunAudit}>
-            {isScanning ? "Scanning..." : "Scan Current Page"}
-          </Button>
-
-          {scanError ? (
-            <p className="rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
-              {scanError}
-            </p>
-          ) : null}
-
-          {report ? (
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900/40">
-                <div className="text-[10px] uppercase text-slate-400">Payload</div>
-                <div className="font-semibold">{formatBytes(report.summary.estimatedTransferBytes)}</div>
-              </div>
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900/40">
-                <div className="text-[10px] uppercase text-slate-400">Potential Save</div>
-                <div className="font-semibold">{formatBytes(report.summary.estimatedSavingsBytes)}</div>
-              </div>
-            </div>
-          ) : null}
-        </SurfaceCard>
-
-        <SurfaceCard className="space-y-3 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">Local Image Lite Inspector</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">Quick metadata without opening full workspace</div>
-            </div>
-            <ImageIcon size={16} className="text-slate-400" />
+        {isAnalyzing ? (
+          <div className="flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-700 dark:border-sky-900/50 dark:bg-sky-900/20 dark:text-sky-300">
+            <Loader2 size={14} className="animate-spin" />
+            <BodyText className="text-xs text-sky-700 dark:text-sky-300">
+              Processing image metadata and color profile...
+            </BodyText>
           </div>
+        ) : null}
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(event) => void handlePickImage(event.target.files?.[0])}
-            className="block w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-          />
+        {result && selectedFile && previewUrl ? (
+          <>
+            <BasicInfoCard
+              basic={result.basic}
+              dimensions={result.dimensions}
+              resolution={result.resolution}
+              time={result.time}
+              imageUrl={previewUrl}
+            />
 
-          {localError ? (
-            <p className="rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
-              {localError}
-            </p>
-          ) : null}
+            <ColorInspectorCard color={result.color} palette={result.palette} />
 
-          {localPreview ? (
-            <div className="space-y-2">
-              <img
-                src={localPreview.previewUrl}
-                alt={localPreview.name}
-                className="h-36 w-full rounded-md border border-slate-200 object-cover dark:border-slate-700"
-              />
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900/40">
-                  <div className="text-[10px] uppercase text-slate-400">File size</div>
-                  <div className="font-medium">{formatBytes(localPreview.size)}</div>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900/40">
-                  <div className="text-[10px] uppercase text-slate-400">Dimensions</div>
-                  <div className="font-medium">
-                    {localPreview.width} x {localPreview.height}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
-        </SurfaceCard>
+            <ExifTableCard entries={result.exifEntries} />
 
-        <Button variant="secondary" className="w-full" onClick={() => void handleOpenSettings()}>
-          <Settings2 size={15} />
-          Open Full Feature List
-        </Button>
+            <VisualAnalysisDialog imageUrl={previewUrl} alt={selectedFile.name} />
+          </>
+        ) : null}
       </div>
     </div>
   )

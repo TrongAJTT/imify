@@ -5,6 +5,7 @@ import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import { Button } from "@/options/components/ui/button"
 import { PopupApp } from "@/popup/popup-app"
 import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
+import SidepanelAuditSnapshotApp from "@/sidepanel/sidepanel-audit-snapshot-app"
 
 import { toUserFacingConversionError } from "@/core/error-utils"
 import { type ExtensionStorageState,
@@ -121,6 +122,15 @@ const EMBEDDED_OPTIONS_VIEW = resolveEmbeddedOptionsView()
 const IS_POPUP_OPTIONS_VIEW = EMBEDDED_OPTIONS_VIEW === "popup"
 const IS_SIDEPANEL_OPTIONS_VIEW = EMBEDDED_OPTIONS_VIEW === "sidepanel"
 
+function resolveSidepanelPanel(): "inspector" | "audit" {
+  if (typeof window === "undefined") {
+    return "inspector"
+  }
+
+  const panel = new URLSearchParams(window.location.search).get("panel")
+  return panel === "audit" ? "audit" : "inspector"
+}
+
 let offscreenListenerAttached = false
 const VALID_TAB_IDS = new Set<OptionsTab>(TAB_ITEMS.map((tab) => tab.id))
 
@@ -233,7 +243,8 @@ export default function OptionsPage() {
   }
 
   if (IS_SIDEPANEL_OPTIONS_VIEW) {
-    return <SidePanelLiteApp />
+    const panel = resolveSidepanelPanel()
+    return panel === "audit" ? <SidepanelAuditSnapshotApp /> : <SidePanelLiteApp />
   }
 
   const [defaultOptionsTab, setDefaultOptionsTab, { isLoading: isDefaultTabLoading }] = useStorage<OptionsTab>(

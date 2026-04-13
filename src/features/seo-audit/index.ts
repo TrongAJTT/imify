@@ -1,6 +1,12 @@
 export { runSeoAuditOnActiveTab } from "@/features/seo-audit/run-active-tab-audit"
 export { scanCurrentPageForSeoAudit } from "@/features/seo-audit/dom-scan"
 export {
+  clearSeoAuditSnapshot,
+  getSeoAuditSnapshotStorageKey,
+  loadSeoAuditSnapshot,
+  saveSeoAuditSnapshot
+} from "@/features/seo-audit/snapshot-store"
+export {
   SEO_AUDIT_REQUEST_TYPE,
   type SeoAuditAltStatus,
   type SeoAuditAssetItem,

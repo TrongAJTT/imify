@@ -1,13 +1,15 @@
 import "@/style.css"
 
-import { useEffect, useMemo, useState } from "react"
-import { Sparkles } from "lucide-react"
+import { useState } from "react"
 
+import { saveSeoAuditSnapshot } from "@/features/seo-audit"
 import { PopupActionGrid } from "@/popup/components/popup-action-grid"
-import { SeoAuditResults } from "@/popup/components/seo-audit-results"
 import { useSeoAudit } from "@/popup/hooks/use-seo-audit"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
-import { Kicker, MutedText, Subheading } from "@/options/components/ui/typography"
+import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
+import { Expand, Moon, Sun, X } from "lucide-react"
+import { Button } from "@/options/components/ui/button"
+
+import iconImage from "url:@assets/icon.png"
 
 function toErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message.trim().length > 0) {
@@ -16,32 +18,7 @@ function toErrorMessage(error: unknown, fallback: string): string {
 
   return fallback
 }
-
-function useDarkModeFromSettings(): void {
-  useEffect(() => {
-    let disposed = false
-
-    void chrome.storage.sync
-      .get("imify_dark_mode")
-      .then((state) => {
-        if (disposed) {
-          return
-        }
-
-        const isDark = Boolean(state?.imify_dark_mode)
-        document.documentElement.classList.toggle("dark", isDark)
-      })
-      .catch(() => {
-        // Popup keeps default theme when storage cannot be read.
-      })
-
-    return () => {
-      disposed = true
-    }
-  }, [])
-}
-
-async function openSidePanelLite(): Promise<void> {
+async function openSidePanelLite(panel: "inspector" | "audit"): Promise<void> {
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })
 
   if (!activeTab?.id) {
@@ -54,7 +31,7 @@ async function openSidePanelLite(): Promise<void> {
 
   await chrome.sidePanel.setOptions({
     tabId: activeTab.id,
-    path: "options.html?view=sidepanel",
+    path: `options.html?view=sidepanel&panel=${encodeURIComponent(panel)}`,
     enabled: true
   })
 
@@ -62,23 +39,28 @@ async function openSidePanelLite(): Promise<void> {
 }
 
 export function PopupApp() {
-  useDarkModeFromSettings()
-
-  const { report, isRunning, error, runAudit } = useSeoAudit()
+  const { isDark, toggleDarkMode } = useImifyDarkMode()
+  const { isRunning, error, runAudit } = useSeoAudit()
   const [actionError, setActionError] = useState<string | null>(null)
-
-  const manifestVersion = useMemo(() => chrome.runtime.getManifest().version, [])
 
   const handleRunScan = async () => {
     setActionError(null)
-    await runAudit()
+
+    try {
+      const report = await runAudit()
+      await saveSeoAuditSnapshot(report)
+      await openSidePanelLite("audit")
+      window.close()
+    } catch (error) {
+      setActionError(toErrorMessage(error, "Failed to scan current page for SEO audit."))
+    }
   }
 
   const handleOpenSidePanel = async () => {
     setActionError(null)
 
     try {
-      await openSidePanelLite()
+      await openSidePanelLite("inspector")
       window.close()
     } catch (error) {
       setActionError(toErrorMessage(error, "Failed to open Side Panel Lite Inspector."))
@@ -97,23 +79,62 @@ export function PopupApp() {
   }
 
   return (
-    <div className="w-[430px] bg-slate-100 p-3 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
-      <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <SurfaceCard className="p-4" tone="soft">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <Kicker>Imify Extension</Kicker>
-              <Subheading className="text-base">SEO + Image Workflow Command Center</Subheading>
-              <MutedText className="text-xs">
-                Privacy-first diagnostics and inspector shortcuts without scraping features.
-              </MutedText>
-            </div>
-            <div className="rounded-lg bg-sky-100 p-2 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
-              <Sparkles size={16} />
+    <div className="w-[410px] bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <header className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-800">
+          <div className="flex min-w-0 items-center gap-2">
+            <img
+              src={iconImage}
+              alt="Imify"
+              className="h-8 w-8 rounded-lg shadow-sm"
+            />
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">Imify</div>
+              <div className="truncate text-[11px] text-slate-500 dark:text-slate-400">Image Toolkit</div>
             </div>
           </div>
-          <p className="mt-2 text-[10px] text-slate-500 dark:text-slate-400">Version {manifestVersion}</p>
-        </SurfaceCard>
+
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={toggleDarkMode}
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {isDark ? <Sun size={15} /> : <Moon size={15} />}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => void handleOpenSettings()}
+              title="Open full feature list"
+              aria-label="Open full feature list"
+            >
+              <Expand size={15} />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => window.close()}
+              title="Close popup"
+              aria-label="Close popup"
+            >
+              <X size={15} />
+            </Button>
+          </div>
+        </header>
+
+        <div className="p-2.5">
+          <p className="px-1 text-[11px] text-slate-500 dark:text-slate-400">
+            Choose an action for this page.
+          </p>
+        </div>
 
         <PopupActionGrid
           isScanRunning={isRunning}
@@ -122,7 +143,11 @@ export function PopupApp() {
           onOpenSettings={handleOpenSettings}
         />
 
-        <SeoAuditResults report={report} isRunning={isRunning} error={error ?? actionError} />
+        {error || actionError ? (
+          <div className="mx-3 mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
+            {error ?? actionError}
+          </div>
+        ) : null}
       </div>
     </div>
   )

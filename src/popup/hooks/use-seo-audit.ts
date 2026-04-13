@@ -21,12 +21,17 @@ export function useSeoAudit() {
     try {
       const report = await runSeoAuditOnActiveTab()
       setState({ report, isRunning: false, error: null })
+      return report
     } catch (error) {
+      const message = error instanceof Error ? error.message : "SEO audit request failed."
+
       setState((current) => ({
         ...current,
         isRunning: false,
-        error: error instanceof Error ? error.message : "SEO audit request failed."
+        error: message
       }))
+
+      throw new Error(message)
     }
   }, [])
 

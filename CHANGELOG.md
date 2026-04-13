@@ -18,8 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Risk score (`Healthy`, `Needs Work`, `Critical`) and actionable recommendation list.
   - Explicit policy note positioning Imify as a diagnostic tool (no bulk download workflow).
 - **Side Panel Lite Inspector:** Added lightweight side panel app (served via options view mode) with:
-  - On-demand SEO scan summary while browsing.
-  - Quick local image metadata preview (size, dimensions, MIME) without opening full options workspace.
+  - Drag-and-drop image intake as primary entry interaction.
+  - Embedded inspection cards aligned with core Image Inspector sections (File Information, Dimensions, Date & Time, Color, Metadata).
+  - Inline SEO Audit Snapshot display populated by popup scan action.
 - **Content Script SEO Listener:** Added dedicated content listener to handle popup scan requests and return typed audit reports.
 
 - **Image Filling Feature:** Full implementation of the Image Filling pipeline accessible via the new "Image Filling" tab in the sidebar navigation.
@@ -190,6 +191,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Toolbar Click Behavior:** Removed `chrome.action.onClicked -> openOptionsPage()` redirect in background script so extension icon opens popup command center instead of forcing options navigation.
 - **Manifest Permissions:** Added `sidePanel` permission to support Side Panel Lite Inspector action from popup.
+- **Popup UI Simplification:** Refactored popup into a compact appbar-driven layout (logo, dark-mode toggle, expand to options, close) and removed in-popup SEO snapshot rendering.
+- **Popup Scanner Flow:** `Page Scanner / SEO Audit` action now runs audit and immediately hands off snapshot data to Side Panel Lite Inspector.
+- **Action Item Text Wrapping:** Updated popup action row typography/container constraints to prevent description overflow.
+- **Side Panel Scope Tightening:** Removed in-panel scan trigger to keep Lite Inspector focused on image inspection responsibilities.
 
 - **Resize Conversion Pipeline:** Upgraded shared raster processing pipeline to support advanced WASM resampling execution (`Lanczos3`, `Magic Kernel`, `HQX`) with automatic fallback to browser canvas resize when advanced path is unavailable.
 - **Smart Concurrency Advisor:** Advisor cost model now accounts for active resize mode and selected resampling algorithm so recommended concurrency better reflects real compute/memory pressure.

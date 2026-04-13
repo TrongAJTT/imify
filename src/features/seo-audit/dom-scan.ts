@@ -292,15 +292,42 @@ function buildPageRecommendations(summary: SeoAuditSummary): string[] {
   return recommendations
 }
 
+function hasProtectionMarker(node: Element): boolean {
+  return Boolean(
+    node.closest(
+      "[data-protected='true'], [data-imify-protected='true'], [data-nosave='true'], [data-disable-save='true']"
+    )
+  )
+}
+
+function hasContextMenuBlock(node: Element): boolean {
+  let current: Element | null = node
+  while (current) {
+    const inlineContextMenu =
+      current instanceof HTMLElement ? current.getAttribute("oncontextmenu") ?? "" : ""
+    if (inlineContextMenu.toLowerCase().includes("preventdefault")) {
+      return true
+    }
+    current = current.parentElement
+  }
+  return false
+}
+
 export function scanCurrentPageForSeoAudit(): SeoAuditReport {
   const sizeByUrl = collectResourceSizes()
   const isHttpsPage = window.location.protocol === "https:"
   const assetsByKey = new Map<string, SeoAuditAssetItem>()
   let assetCounter = 0
+  let protectedSkippedCount = 0
 
   const imageElements = Array.from(document.querySelectorAll<HTMLImageElement>("img"))
 
   for (const image of imageElements) {
+    if (hasProtectionMarker(image) || hasContextMenuBlock(image)) {
+      protectedSkippedCount += 1
+      continue
+    }
+
     const url = toAbsoluteUrl(image.currentSrc || image.src)
     if (!url) {
       continue
@@ -346,6 +373,11 @@ export function scanCurrentPageForSeoAudit(): SeoAuditReport {
   const candidates = Array.from(document.querySelectorAll<HTMLElement>("body *")).slice(0, MAX_BACKGROUND_NODES)
 
   for (const node of candidates) {
+    if (node.tagName === "CANVAS" || hasProtectionMarker(node) || hasContextMenuBlock(node)) {
+      protectedSkippedCount += 1
+      continue
+    }
+
     const computedStyle = window.getComputedStyle(node)
     const backgroundImage = computedStyle.backgroundImage
 
@@ -407,15 +439,22 @@ export function scanCurrentPageForSeoAudit(): SeoAuditReport {
   })
 
   const summary = buildSummary(allAssets)
+  const recommendations = buildPageRecommendations(summary)
+
+  if (protectedSkippedCount > 0) {
+    recommendations.push(
+      `Skipped ${protectedSkippedCount} protected element(s) due to website protection markers/context-menu blocking.`
+    )
+  }
 
   return {
     pageUrl: window.location.href,
     pageTitle: document.title,
     scannedAtIso: new Date().toISOString(),
     summary,
-    recommendations: buildPageRecommendations(summary),
+    recommendations,
     assets: allAssets.slice(0, MAX_REPORT_ITEMS),
     policyNote:
-      "Imify SEO Audit is a diagnostic report only. Review website rights before downloading or modifying assets."
+      "Imify SEO Audit is a diagnostic report only. It serves as a tool to help you understand the SEO impact of your images and how to improve them. It is not a tool for image download or modification."
   }
 }
