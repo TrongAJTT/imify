@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
+import type { ConversionProgressPayload } from "@/core/types"
 import type { ColorBlindMode, PreviewChannelMode } from "@/features/inspector"
 import { rgbToHex, transformPixelForPreview } from "@/features/inspector"
 
@@ -23,6 +25,7 @@ interface InteractivePreviewProps {
   isReady?: boolean
   onReadyChange?: (ready: boolean) => void
   hideOverlays?: boolean
+  maxDisplayHeight?: number
 }
 
 const MAX_PREVIEW_EDGE = 1600
@@ -33,6 +36,10 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
 
+type CanvasPointingEvent =
+  | React.PointerEvent<HTMLCanvasElement>
+  | React.MouseEvent<HTMLCanvasElement>
+
 export function InteractivePreview({
   imageUrl,
   alt,
@@ -42,13 +49,16 @@ export function InteractivePreview({
   loupeZoom,
   onSampleChange,
   onReadyChange,
-  hideOverlays = false
+  hideOverlays = false,
+  maxDisplayHeight = 260
 }: InteractivePreviewProps) {
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const loupeCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const transformedDataRef = useRef<Uint8ClampedArray | null>(null)
+  const copiedToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [sample, setSampleState] = useState<PixelSample | null>(null)
   const [isReady, setIsReady] = useState(false)
+  const [copyToastPayload, setCopyToastPayload] = useState<ConversionProgressPayload | null>(null)
 
   const setSample = (s: PixelSample | null) => {
     setSampleState(s)
@@ -58,6 +68,14 @@ export function InteractivePreview({
   useEffect(() => {
     onReadyChange?.(isReady)
   }, [isReady, onReadyChange])
+
+  useEffect(() => {
+    return () => {
+      if (copiedToastTimerRef.current) {
+        clearTimeout(copiedToastTimerRef.current)
+      }
+    }
+  }, [])
 
   const modeLabel = useMemo(() => {
     const channelText =
@@ -201,17 +219,17 @@ export function InteractivePreview({
     loupeCtx.stroke()
   }, [sample, loupeEnabled, loupeZoom])
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  const readSampleFromPointer = (event: CanvasPointingEvent): PixelSample | null => {
     const canvas = previewCanvasRef.current
     const transformed = transformedDataRef.current
 
     if (!canvas || !transformed) {
-      return
+      return null
     }
 
     const rect = canvas.getBoundingClientRect()
     if (rect.width <= 0 || rect.height <= 0) {
-      return
+      return null
     }
 
     const x = clamp(
@@ -231,7 +249,7 @@ export function InteractivePreview({
     const b = transformed[index + 2]
     const a = transformed[index + 3]
 
-    setSample({
+    return {
       x,
       y,
       r,
@@ -239,17 +257,68 @@ export function InteractivePreview({
       b,
       a,
       hex: rgbToHex(r, g, b)
-    })
+    }
+  }
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    setSample(readSampleFromPointer(event))
+  }
+
+  const handleCanvasClick = async (event: React.MouseEvent<HTMLCanvasElement>) => {
+    const clickedSample = readSampleFromPointer(event)
+    if (!clickedSample) {
+      return
+    }
+
+    setSample(clickedSample)
+    try {
+      await navigator.clipboard.writeText(clickedSample.hex)
+      const toastId = `pixel_copy_${Date.now()}`
+      setCopyToastPayload({
+        id: toastId,
+        fileName: "Pixel color copied",
+        targetFormat: "png",
+        status: "success",
+        percent: 100,
+        message: clickedSample.hex
+      })
+      if (copiedToastTimerRef.current) {
+        clearTimeout(copiedToastTimerRef.current)
+      }
+      copiedToastTimerRef.current = setTimeout(() => {
+        setCopyToastPayload((current) => (current?.id === toastId ? null : current))
+      }, 2000)
+    } catch {
+      const toastId = `pixel_copy_error_${Date.now()}`
+      setCopyToastPayload({
+        id: toastId,
+        fileName: "Pixel copy failed",
+        targetFormat: "png",
+        status: "error",
+        percent: 100,
+        message: "Clipboard access was denied."
+      })
+      if (copiedToastTimerRef.current) {
+        clearTimeout(copiedToastTimerRef.current)
+      }
+      copiedToastTimerRef.current = setTimeout(() => {
+        setCopyToastPayload((current) => (current?.id === toastId ? null : current))
+      }, 2000)
+    }
   }
 
   return (
-    <div className="relative flex items-center justify-center mb-3" style={{ maxHeight: 280 }}>
+    <div
+      className="relative mb-3 flex h-full w-full min-w-0 items-center justify-center overflow-hidden"
+      style={{ maxHeight: maxDisplayHeight }}
+    >
       <canvas
         ref={previewCanvasRef}
         aria-label={alt}
-        className="max-w-full max-h-[260px] w-auto h-auto rounded border border-slate-200/80 dark:border-slate-700/70 bg-slate-100/80 dark:bg-slate-900/60"
+        className="block h-auto w-auto max-h-full max-w-full rounded border border-slate-200/80 bg-slate-100/80 dark:border-slate-700/70 dark:bg-slate-900/60"
         onPointerMove={handlePointerMove}
         onPointerLeave={() => setSample(null)}
+        onClick={(event) => void handleCanvasClick(event)}
       />
 
       {!hideOverlays && (
@@ -280,6 +349,8 @@ export function InteractivePreview({
           </div>
         </div>
       )}
+
+      <ConversionProgressToastCard payload={copyToastPayload} />
     </div>
   )
 }
