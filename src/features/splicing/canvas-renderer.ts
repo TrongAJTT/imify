@@ -22,6 +22,85 @@ import type {
 
 type AnyContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 
+interface ParsedLinearGradientBackground {
+  angleDeg: number
+  stops: Array<{
+    color: string
+    offset: number
+  }>
+}
+
+function parseLinearGradientBackground(value: string): ParsedLinearGradientBackground | null {
+  const match = value.trim().match(/^linear-gradient\(\s*([+-]?\d*\.?\d+)deg\s*,\s*(.+)\s*\)$/i)
+
+  if (!match) {
+    return null
+  }
+
+  const angleDeg = Number(match[1])
+  if (!Number.isFinite(angleDeg)) {
+    return null
+  }
+
+  const rawStops = match[2]
+    .split(/,(?![^(]*\))/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  if (rawStops.length < 2) {
+    return null
+  }
+
+  const stops = rawStops.map((entry, index) => {
+    const stopMatch = entry.match(/^(.*?)(?:\s+([+-]?\d*\.?\d+)%?)?$/)
+    const color = stopMatch?.[1]?.trim() || entry
+    const parsedOffset = Number(stopMatch?.[2])
+    const fallbackOffset = (index / Math.max(1, rawStops.length - 1)) * 100
+
+    return {
+      color,
+      offset:
+        stopMatch?.[2] && Number.isFinite(parsedOffset)
+          ? Math.max(0, Math.min(100, parsedOffset))
+          : fallbackOffset
+    }
+  })
+
+  return {
+    angleDeg,
+    stops: stops.sort((a, b) => a.offset - b.offset)
+  }
+}
+
+function fillCanvasBackground(
+  ctx: AnyContext,
+  canvasWidth: number,
+  canvasHeight: number,
+  background: string
+): void {
+  const parsedGradient = parseLinearGradientBackground(background)
+  if (!parsedGradient) {
+    ctx.fillStyle = background
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+    return
+  }
+
+  const radians = ((parsedGradient.angleDeg - 90) * Math.PI) / 180
+  const cx = canvasWidth / 2
+  const cy = canvasHeight / 2
+  const halfDiagonal = Math.sqrt(canvasWidth * canvasWidth + canvasHeight * canvasHeight) / 2
+  const dx = Math.cos(radians) * halfDiagonal
+  const dy = Math.sin(radians) * halfDiagonal
+  const gradient = ctx.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy)
+
+  for (const stop of parsedGradient.stops) {
+    gradient.addColorStop(stop.offset / 100, stop.color)
+  }
+
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+}
+
 function drawRoundedRect(
   ctx: AnyContext,
   x: number,
@@ -64,8 +143,7 @@ export function drawSplicingCanvas(
   ctx.save()
   drawRoundedRect(ctx, 0, 0, cw, ch, canvasStyle.borderRadius * scale)
   ctx.clip()
-  ctx.fillStyle = canvasStyle.backgroundColor
-  ctx.fillRect(0, 0, cw, ch)
+  fillCanvasBackground(ctx, cw, ch, canvasStyle.backgroundColor)
   ctx.restore()
 
   for (const group of layout.groups) {

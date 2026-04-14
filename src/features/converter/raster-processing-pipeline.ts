@@ -35,6 +35,84 @@ interface ExtractRasterFrameParams {
   resize: ResizeConfig
 }
 
+interface ParsedLinearGradientBackground {
+  angleDeg: number
+  stops: Array<{
+    color: string
+    offset: number
+  }>
+}
+
+function parseLinearGradientBackground(value: string): ParsedLinearGradientBackground | null {
+  const match = value.trim().match(/^linear-gradient\(\s*([+-]?\d*\.?\d+)deg\s*,\s*(.+)\s*\)$/i)
+
+  if (!match) {
+    return null
+  }
+
+  const angleDeg = Number(match[1])
+  if (!Number.isFinite(angleDeg)) {
+    return null
+  }
+
+  const rawStops = match[2]
+    .split(/,(?![^(]*\))/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  if (rawStops.length < 2) {
+    return null
+  }
+
+  const stops = rawStops.map((entry, index) => {
+    const stopMatch = entry.match(/^(.*?)(?:\s+([+-]?\d*\.?\d+)%?)?$/)
+    const color = stopMatch?.[1]?.trim() || entry
+    const parsedOffset = Number(stopMatch?.[2])
+    const fallbackOffset = (index / Math.max(1, rawStops.length - 1)) * 100
+
+    return {
+      color,
+      offset:
+        stopMatch?.[2] && Number.isFinite(parsedOffset)
+          ? Math.max(0, Math.min(100, parsedOffset))
+          : fallbackOffset
+    }
+  })
+
+  return {
+    angleDeg,
+    stops: stops.sort((a, b) => a.offset - b.offset)
+  }
+}
+
+function fillContainBackground(
+  ctx: OffscreenCanvasRenderingContext2D,
+  targetWidth: number,
+  targetHeight: number,
+  background: string
+): void {
+  const parsedGradient = parseLinearGradientBackground(background)
+
+  if (!parsedGradient) {
+    ctx.fillStyle = background
+    ctx.fillRect(0, 0, targetWidth, targetHeight)
+    return
+  }
+
+  const radians = ((parsedGradient.angleDeg - 90) * Math.PI) / 180
+  const cx = targetWidth / 2
+  const cy = targetHeight / 2
+  const halfDiagonal = Math.sqrt(targetWidth * targetWidth + targetHeight * targetHeight) / 2
+  const dx = Math.cos(radians) * halfDiagonal
+  const dy = Math.sin(radians) * halfDiagonal
+  const gradient = ctx.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy)
+  for (const stop of parsedGradient.stops) {
+    gradient.addColorStop(stop.offset / 100, stop.color)
+  }
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, targetWidth, targetHeight)
+}
+
 function extractBitmapRegion(
   imageBitmap: ImageBitmap,
   sourceX: number,
@@ -186,12 +264,11 @@ async function drawSourceImage(
 
   const fitMode = resize.fitMode ?? "fill"
   if (resize.mode === "set_size" && fitMode === "contain") {
+    const background = resize.containBackground || "#FFFFFF"
     if (targetFormat === "jpg") {
-      ctx.fillStyle = resize.containBackground || "#FFFFFF"
-      ctx.fillRect(0, 0, targetWidth, targetHeight)
+      fillContainBackground(ctx, targetWidth, targetHeight, background)
     } else if (resize.containBackground) {
-      ctx.fillStyle = resize.containBackground
-      ctx.fillRect(0, 0, targetWidth, targetHeight)
+      fillContainBackground(ctx, targetWidth, targetHeight, resize.containBackground)
     }
   }
 
@@ -251,12 +328,11 @@ async function drawSourceImage(
     }
 
     if (fitMode === "contain") {
+      const background = resize.containBackground || "#FFFFFF"
       if (targetFormat === "jpg") {
-        ctx.fillStyle = resize.containBackground || "#FFFFFF"
-        ctx.fillRect(0, 0, targetWidth, targetHeight)
+        fillContainBackground(ctx, targetWidth, targetHeight, background)
       } else if (resize.containBackground) {
-        ctx.fillStyle = resize.containBackground
-        ctx.fillRect(0, 0, targetWidth, targetHeight)
+        fillContainBackground(ctx, targetWidth, targetHeight, resize.containBackground)
       }
 
       const contain = calculateContainPlacement(
