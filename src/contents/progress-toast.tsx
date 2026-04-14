@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
-import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
+import { ToastContainer } from "@/core/components/toast-container"
+import { useConversionToasts } from "@/core/hooks/use-toast"
 import type { ConversionProgressPayload } from "@/core/types"
 
 interface DownloadViaAnchorPayload {
@@ -26,6 +27,8 @@ function isConvertProgressMessage(
 
 export default function ProgressToast() {
   const [payload, setPayload] = useState<ConversionProgressPayload | null>(null)
+  const conversionToasts = useConversionToasts([payload])
+  const handleRemoveToast = useCallback(() => {}, [])
 
   useEffect(() => {
     let hideTimer: ReturnType<typeof setTimeout> | null = null
@@ -93,5 +96,5 @@ export default function ProgressToast() {
     }
   }, [])
 
-  return <ConversionProgressToastCard payload={payload} />
+  return <ToastContainer toasts={conversionToasts} onRemove={handleRemoveToast} />
 }

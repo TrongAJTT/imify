@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Download, Trash2 } from "lucide-react"
 
 import { APP_CONFIG } from "@/core/config"
-import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
+import { ToastContainer } from "@/core/components/toast-container"
+import { useConversionToasts } from "@/core/hooks/use-toast"
 import type { ConversionProgressPayload } from "@/core/types"
 import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@/features/converter/wasm-worker-pool"
 import { useSplicingExport } from "@/options/components/splicing/use-splicing-export"
@@ -150,6 +151,8 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   const [isScrollPan, setIsScrollPan] = useState(false)
   const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [previewQualityToastPayload, setPreviewQualityToastPayload] = useState<ConversionProgressPayload | null>(null)
+  const conversionToasts = useConversionToasts([importToastPayload, previewQualityToastPayload])
+  const handleRemoveToast = useCallback(() => {}, [])
   const [heavyPreviewQualityDialogOpen, setHeavyPreviewQualityDialogOpen] = useState(false)
   const [pendingPreviewQualityPercent, setPendingPreviewQualityPercent] = useState<number | null>(null)
   const [pendingExportModeForConfirm, setPendingExportModeForConfirm] = useState<SplicingExportMode | null>(null)
@@ -744,8 +747,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
         onPreviewQualityChange={handlePreviewQualitySelectChange}
         onPreviewShowImageNumberChange={setPreviewShowImageNumber}
       />
-      <ConversionProgressToastCard payload={importToastPayload} />
-      <ConversionProgressToastCard payload={previewQualityToastPayload} />
+      <ToastContainer toasts={conversionToasts} onRemove={handleRemoveToast} />
       <SplicingExportDialog
         isOpen={exportDialogOpen}
         totalImages={exportTargetCount}

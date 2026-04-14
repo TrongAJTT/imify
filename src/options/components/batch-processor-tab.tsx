@@ -3,7 +3,8 @@ import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor,
   useSensors, type DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 
-import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
+import { ToastContainer } from "@/core/components/toast-container"
+import { useConversionToasts, useToast } from "@/core/hooks/use-toast"
 import type { ConversionProgressPayload, FormatConfig } from "@/core/types"
 import { fetchRemoteImagesFromUrls } from "@/features/converter/remote-image-import"
 import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
@@ -17,7 +18,6 @@ import { MAX_FILE_SIZE_BYTES, MAX_TOTAL_QUEUE_BYTES,
   formatBytes, toMb, withBatchResize } from "@/options/components/batch/utils"
 import { readImageDimensions } from "@/options/components/batch/pipeline"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
-import { HeavyFormatToast } from "@/options/components/batch/heavy-format-toast"
 import { OOMWarningDialog } from "@/options/components/batch/oom-warning-dialog"
 import { useBatchExecution } from "@/options/components/batch/hooks/use-batch-execution"
 import { useBatchExportActions } from "@/options/components/batch/hooks/use-batch-export-actions"
@@ -58,6 +58,7 @@ export function BatchProcessorTab() {
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false)
   const pdfSplitRef = useRef<HTMLDivElement>(null)
   const firstQueueItem = queue[0]
+  const { toasts: systemToasts, hide, warning } = useToast()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -219,10 +220,25 @@ export function BatchProcessorTab() {
       setIsPdfSplitOpen(false)
     }
   })
+  const conversionToasts = useConversionToasts([urlImportToast, exportToastPayload, batchToastPayload])
+  const mergedToasts = useMemo(() => [...conversionToasts, ...systemToasts], [conversionToasts, systemToasts])
 
   useEffect(() => {
     setBatchIsRunning(isRunning)
   }, [isRunning, setBatchIsRunning])
+
+  useEffect(() => {
+    if (!heavyFormatToast) {
+      return
+    }
+
+    warning(
+      `${heavyFormatToast.format} encoding is heavy`,
+      "If your PC is low-spec, consider lowering Concurrency to 1 or 2 to avoid lags.",
+      6000
+    )
+    setHeavyFormatToast(null)
+  }, [heavyFormatToast, setHeavyFormatToast, warning])
 
   useEffect(() => {
     if (!isPdfSplitOpen) {
@@ -543,15 +559,7 @@ export function BatchProcessorTab() {
         }}
       />
 
-      <ConversionProgressToastCard payload={urlImportToast} />
-      <ConversionProgressToastCard payload={exportToastPayload} />
-      <ConversionProgressToastCard payload={batchToastPayload} />
-      {heavyFormatToast && (
-        <HeavyFormatToast 
-          format={heavyFormatToast.format}
-          onClose={() => setHeavyFormatToast(null)}
-        />
-      )}
+      <ToastContainer toasts={mergedToasts} onRemove={hide} />
     </div>
   )
 }

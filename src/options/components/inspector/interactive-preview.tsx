@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ConversionProgressToastCard } from "@/core/components/conversion-progress-toast-card"
-import type { ConversionProgressPayload } from "@/core/types"
+import { useToast } from "@/core/hooks/use-toast"
+import { ToastContainer } from "@/core/components/toast-container"
 import type { ColorBlindMode, PreviewChannelMode } from "@/features/inspector"
 import { rgbToHex, transformPixelForPreview } from "@/features/inspector"
 
@@ -55,10 +55,9 @@ export function InteractivePreview({
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const loupeCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const transformedDataRef = useRef<Uint8ClampedArray | null>(null)
-  const copiedToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [sample, setSampleState] = useState<PixelSample | null>(null)
   const [isReady, setIsReady] = useState(false)
-  const [copyToastPayload, setCopyToastPayload] = useState<ConversionProgressPayload | null>(null)
+  const { toasts, hide, colorCopied, copyFailed } = useToast()
 
   const setSample = (s: PixelSample | null) => {
     setSampleState(s)
@@ -68,14 +67,6 @@ export function InteractivePreview({
   useEffect(() => {
     onReadyChange?.(isReady)
   }, [isReady, onReadyChange])
-
-  useEffect(() => {
-    return () => {
-      if (copiedToastTimerRef.current) {
-        clearTimeout(copiedToastTimerRef.current)
-      }
-    }
-  }, [])
 
   const modeLabel = useMemo(() => {
     const channelText =
@@ -273,37 +264,9 @@ export function InteractivePreview({
     setSample(clickedSample)
     try {
       await navigator.clipboard.writeText(clickedSample.hex)
-      const toastId = `pixel_copy_${Date.now()}`
-      setCopyToastPayload({
-        id: toastId,
-        fileName: "Pixel color copied",
-        targetFormat: "png",
-        status: "success",
-        percent: 100,
-        message: clickedSample.hex
-      })
-      if (copiedToastTimerRef.current) {
-        clearTimeout(copiedToastTimerRef.current)
-      }
-      copiedToastTimerRef.current = setTimeout(() => {
-        setCopyToastPayload((current) => (current?.id === toastId ? null : current))
-      }, 2000)
+      colorCopied(clickedSample.hex, 2000)
     } catch {
-      const toastId = `pixel_copy_error_${Date.now()}`
-      setCopyToastPayload({
-        id: toastId,
-        fileName: "Pixel copy failed",
-        targetFormat: "png",
-        status: "error",
-        percent: 100,
-        message: "Clipboard access was denied."
-      })
-      if (copiedToastTimerRef.current) {
-        clearTimeout(copiedToastTimerRef.current)
-      }
-      copiedToastTimerRef.current = setTimeout(() => {
-        setCopyToastPayload((current) => (current?.id === toastId ? null : current))
-      }, 2000)
+      copyFailed("Clipboard access was denied.", 2000)
     }
   }
 
@@ -350,7 +313,7 @@ export function InteractivePreview({
         </div>
       )}
 
-      <ConversionProgressToastCard payload={copyToastPayload} />
+      <ToastContainer toasts={toasts} onRemove={hide} />
     </div>
   )
 }
