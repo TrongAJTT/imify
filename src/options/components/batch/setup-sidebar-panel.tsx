@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react"
 import { FolderOpen, History, Save } from "lucide-react"
 
-import { QUALITY_FORMATS } from "@/options/shared"
-
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker } from "@/options/components/ui/typography"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
@@ -21,6 +19,11 @@ import { BatchWatermarkDialog } from "./watermark-dialog"
 import { SavePresetDialog } from "./save-preset-dialog"
 import { OpenPresetDialog } from "./open-preset-dialog"
 import { BatchExportPanel } from "./batch-export-panel"
+import {
+  buildTargetFormatQualityCardConfig,
+  supportsTargetFormatQuality,
+  supportsTargetFormatTinyMode
+} from "@/options/shared/target-format-state"
 
 const HIGHLIGHT_COLORS = [
   "#0ea5e9", // Sky
@@ -129,8 +132,8 @@ export function BatchSetupSidebarPanel({
   const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false)
   const [isOpenPresetDialogOpen, setIsOpenPresetDialogOpen] = useState(false)
   const [editingPreset, setEditingPreset] = useState<any | null>(null)
-  const supportsQuality = targetFormat === "mozjpeg" || QUALITY_FORMATS.includes(targetFormat as any)
-  const supportsTinyMode = targetFormat === "png"
+  const supportsQuality = supportsTargetFormatQuality(targetFormat)
+  const supportsTinyMode = supportsTargetFormatTinyMode(targetFormat)
   const supportsExif = ["jpg", "webp", "avif", "mozjpeg"].includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
 
@@ -261,45 +264,7 @@ export function BatchSetupSidebarPanel({
       <TargetFormatQualityCard
         targetFormat={targetFormat}
         quality={quality}
-        formatConfig={{
-          avif: {
-            speed: formatOptions.avif.speed
-          },
-          jxl: {
-            effort: formatOptions.jxl.effort
-          },
-          webp: {
-            lossless: formatOptions.webp.lossless,
-            nearLossless: formatOptions.webp.nearLossless,
-            effort: formatOptions.webp.effort
-          },
-          png: {
-            tinyMode: formatOptions.png.tinyMode,
-            cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
-            autoGrayscale: formatOptions.png.autoGrayscale,
-            dithering: formatOptions.png.dithering,
-            ditheringLevel: formatOptions.png.ditheringLevel,
-            progressiveInterlaced: formatOptions.png.progressiveInterlaced,
-            oxipngCompression: formatOptions.png.oxipngCompression
-          },
-          bmp: {
-            colorDepth: formatOptions.bmp.colorDepth,
-            dithering: formatOptions.bmp.dithering,
-            ditheringLevel: formatOptions.bmp.ditheringLevel
-          },
-          tiff: {
-            colorMode: formatOptions.tiff.colorMode
-          },
-          mozjpeg: {
-            progressive: formatOptions.mozjpeg.progressive,
-            chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling
-          },
-          ico: {
-            sizes: formatOptions.ico.sizes,
-            generateWebIconKit: formatOptions.ico.generateWebIconKit,
-            optimizeInternalPngLayers: formatOptions.ico.optimizeInternalPngLayers
-          }
-        }}
+        formatConfig={buildTargetFormatQualityCardConfig(formatOptions)}
         supportsQuality={supportsQuality}
         supportsTinyMode={supportsTinyMode}
         onToggleWebIconKit={(v: boolean) => onIcoGenerateWebIconKitChange(v)}

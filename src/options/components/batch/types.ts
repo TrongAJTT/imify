@@ -1,4 +1,5 @@
 import { BATCH_TARGET_FORMATS, HIGH_CONCURRENCY_FORMATS as BASE_HIGH_CONCURRENCY_FORMATS } from "@/core/format-config"
+import { buildTargetFormatOptions } from "@/options/shared/target-format-options"
 import type {
   BmpColorDepth,
   ImageFormat,
@@ -48,10 +49,11 @@ export interface BatchWatermarkConfig {
   logoScalePercent: number
 }
 
-export const TARGET_FORMAT_OPTIONS: Array<{ value: BatchTargetFormat; label: string }> = [
-  ...BATCH_TARGET_FORMATS.map((format) => ({ value: format, label: format.toUpperCase() })),
-  { value: "mozjpeg", label: "MozJPEG" }
-]
+export const TARGET_FORMAT_OPTIONS: Array<{ value: BatchTargetFormat; label: string }> =
+  buildTargetFormatOptions([...BATCH_TARGET_FORMATS, "mozjpeg"] as BatchTargetFormat[]).map((option) => ({
+    value: option.value as BatchTargetFormat,
+    label: option.label
+  }))
 
 export const HIGH_CONCURRENCY_FORMATS: ImageFormat[] = BASE_HIGH_CONCURRENCY_FORMATS
 

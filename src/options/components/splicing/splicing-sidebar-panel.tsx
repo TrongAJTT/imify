@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { QUALITY_FORMATS } from "@/core/format-config"
 import { getCanonicalExtension } from "@/core/download-utils"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type {
@@ -9,7 +8,7 @@ import type {
 } from "@/features/splicing/types"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
-import { TargetFormatQualityCard } from "../shared/target-format-quality-card"
+import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import {
   RenamePatternDialog,
   SPLICING_EXPORT_RENAME_PRESETS,
@@ -26,7 +25,12 @@ import { LayoutSettingsAccordion } from "@/options/components/splicing/layout-se
 import { CanvasSettingsAccordion } from "@/options/components/splicing/canvas-settings-accordion"
 import { ImageSettingsAccordion } from "@/options/components/splicing/image-settings-accordion"
 import { PreviewSettingsAccordion } from "@/options/components/splicing/preview-settings-accordion"
-import { SidebarPanel } from "../ui/sidebar-panel"
+import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
+import {
+  buildTargetFormatQualityCardConfig,
+  supportsTargetFormatQuality,
+  supportsTargetFormatTinyMode
+} from "@/options/shared/target-format-state"
 
 interface SplicingSidebarPanelProps {
   performancePreferences: PerformancePreferences
@@ -188,8 +192,49 @@ export function SplicingSidebarPanel({
   }, [alignment, bentoAlignmentLimited, setAlignment])
 
   const availableExportModes = getAvailableExportModes(preset, preset === "bento" ? bentoLayoutMode : undefined)
-  const showQuality = exportFormat === "mozjpeg" || QUALITY_FORMATS.includes(exportFormat as any)
-  const showTinyMode = exportFormat === "png"
+  const showQuality = supportsTargetFormatQuality(exportFormat)
+  const showTinyMode = supportsTargetFormatTinyMode(exportFormat)
+  const splicingCodecOptions = {
+    bmp: {
+      colorDepth: exportBmpColorDepth,
+      dithering: exportBmpDithering,
+      ditheringLevel: exportBmpDitheringLevel
+    },
+    jxl: {
+      effort: exportJxlEffort
+    },
+    webp: {
+      lossless: exportWebpLossless,
+      nearLossless: exportWebpNearLossless,
+      effort: exportWebpEffort,
+      sharpYuv: exportWebpSharpYuv,
+      preserveExactAlpha: exportWebpPreserveExactAlpha
+    },
+    avif: {
+      speed: exportAvifSpeed,
+      qualityAlpha: exportAvifQualityAlpha,
+      lossless: exportAvifLossless,
+      subsample: exportAvifSubsample,
+      tune: exportAvifTune,
+      highAlphaQuality: exportAvifHighAlphaQuality
+    },
+    mozjpeg: {
+      progressive: exportMozJpegProgressive,
+      chromaSubsampling: exportMozJpegChromaSubsampling
+    },
+    png: {
+      tinyMode: exportPngTinyMode,
+      cleanTransparentPixels: exportPngCleanTransparentPixels,
+      autoGrayscale: exportPngAutoGrayscale,
+      dithering: exportPngDithering,
+      ditheringLevel: exportPngDitheringLevel,
+      progressiveInterlaced: exportPngProgressiveInterlaced,
+      oxipngCompression: exportPngOxiPngCompression
+    },
+    tiff: {
+      colorMode: exportTiffColorMode
+    }
+  }
 
   return (
     <div className="flex flex-col gap-1">
@@ -258,36 +303,7 @@ export function SplicingSidebarPanel({
         <TargetFormatQualityCard
           targetFormat={exportFormat}
           quality={exportQuality}
-          formatConfig={{
-            avif: { speed: exportAvifSpeed },
-            jxl: { effort: exportJxlEffort },
-            webp: {
-              lossless: exportWebpLossless,
-              nearLossless: exportWebpNearLossless,
-              effort: exportWebpEffort
-            },
-            mozjpeg: {
-              progressive: exportMozJpegProgressive,
-              chromaSubsampling: exportMozJpegChromaSubsampling
-            },
-            png: {
-              tinyMode: exportPngTinyMode,
-              cleanTransparentPixels: exportPngCleanTransparentPixels,
-              autoGrayscale: exportPngAutoGrayscale,
-              dithering: exportPngDithering,
-              ditheringLevel: exportPngDitheringLevel,
-              progressiveInterlaced: exportPngProgressiveInterlaced,
-              oxipngCompression: exportPngOxiPngCompression
-            },
-            bmp: {
-              colorDepth: exportBmpColorDepth,
-              dithering: exportBmpDithering,
-              ditheringLevel: exportBmpDitheringLevel
-            },
-            tiff: {
-              colorMode: exportTiffColorMode
-            }
-          }}
+          formatConfig={buildTargetFormatQualityCardConfig(splicingCodecOptions)}
           formatOptions={EXPORT_FORMAT_OPTIONS}
           supportsQuality={showQuality}
           supportsTinyMode={showTinyMode}
@@ -355,47 +371,7 @@ export function SplicingSidebarPanel({
           exportMode={exportMode}
           exportTrimBackground={exportTrimBackground}
           availableExportModes={availableExportModes}
-          advisorFormatOptions={{
-            bmp: {
-              colorDepth: exportBmpColorDepth,
-              dithering: exportBmpDithering,
-              ditheringLevel: exportBmpDitheringLevel
-            },
-            jxl: {
-              effort: exportJxlEffort
-            },
-            webp: {
-              lossless: exportWebpLossless,
-              nearLossless: exportWebpNearLossless,
-              effort: exportWebpEffort,
-              sharpYuv: exportWebpSharpYuv,
-              preserveExactAlpha: exportWebpPreserveExactAlpha
-            },
-            avif: {
-              speed: exportAvifSpeed,
-              qualityAlpha: exportAvifQualityAlpha,
-              lossless: exportAvifLossless,
-              subsample: exportAvifSubsample,
-              tune: exportAvifTune,
-              highAlphaQuality: exportAvifHighAlphaQuality
-            },
-            mozjpeg: {
-              progressive: exportMozJpegProgressive,
-              chromaSubsampling: exportMozJpegChromaSubsampling
-            },
-            png: {
-              tinyMode: exportPngTinyMode,
-              cleanTransparentPixels: exportPngCleanTransparentPixels,
-              autoGrayscale: exportPngAutoGrayscale,
-              dithering: exportPngDithering,
-              ditheringLevel: exportPngDitheringLevel,
-              progressiveInterlaced: exportPngProgressiveInterlaced,
-              oxipngCompression: exportPngOxiPngCompression
-            },
-            tiff: {
-              colorMode: exportTiffColorMode
-            }
-          }}
+          advisorFormatOptions={splicingCodecOptions}
           onConcurrencyChange={setExportConcurrency}
           onFileRenamingClick={() => setIsRenameDialogOpen(true)}
           onExportModeChange={(mode) => {

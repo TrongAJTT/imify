@@ -1,4 +1,5 @@
 import { SelectInput } from "@/options/components/ui/select-input"
+import { buildTargetFormatOptions } from "@/options/shared/target-format-options"
 import { Rows, Columns, Grid3x3, LayoutGrid } from "lucide-react"
 import type {
   SplicingAlignment,
@@ -68,16 +69,22 @@ export const RESIZE_OPTIONS: Array<{ value: SplicingImageResize; label: string }
   { value: "fit_height", label: "Fit Height" }
 ]
 
-export const EXPORT_FORMAT_OPTIONS: Array<{ value: SplicingExportFormat; label: string }> = [
-  { value: "jpg", label: "JPG" },
-  { value: "mozjpeg", label: "MozJPEG (.jpg)" },
-  { value: "png", label: "PNG" },
-  { value: "webp", label: "WebP" },
-  { value: "avif", label: "AVIF" },
-  { value: "jxl", label: "JXL" },
-  { value: "bmp", label: "BMP" },
-  { value: "tiff", label: "TIFF" }
+const SPLICING_TARGET_FORMATS: SplicingExportFormat[] = [
+  "jpg",
+  "mozjpeg",
+  "png",
+  "webp",
+  "avif",
+  "jxl",
+  "bmp",
+  "tiff"
 ]
+
+export const EXPORT_FORMAT_OPTIONS: Array<{ value: SplicingExportFormat; label: string }> =
+  buildTargetFormatOptions(SPLICING_TARGET_FORMATS).map((option) => ({
+    value: option.value as SplicingExportFormat,
+    label: option.label
+  }))
 
 export const EXPORT_MODE_OPTIONS: Array<{ value: SplicingExportMode; label: string }> = [
   { value: "single", label: "Single Image" },

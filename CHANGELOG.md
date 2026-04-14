@@ -203,6 +203,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Custom Preset Advanced group now includes full AVIF and MozJPEG advanced cards in addition to PNG/WebP.
   - Batch setup sidebar now reuses shared Target Format defaults instead of manually re-building full format option lists.
 
+- **Target Format State Standardization (Cross-Feature):** Reduced duplicated target-state and codec-option wiring across Context Menu Global Formats, Context Menu Custom Presets, Single Processor, Batch Processor, and Image Splicing:
+  - Added shared `src/options/shared/target-format-state.ts` helpers for codec normalization, active-codec extraction, card config projection, and support flags (`supportsQuality`, `supportsTinyMode`).
+  - Single and Batch processing config builders now reuse the same `buildActiveCodecOptionsForTarget(...)` path instead of inline per-format mapping blocks.
+  - Global formats, Batch setup sidebar, and Splicing sidebar now reuse shared target-card config builders to avoid repeated `formatConfig` object boilerplate.
+  - Splicing and Batch target format option labels now reuse the same shared option builder used by other flows for consistent text/extension display.
+
+- **Custom Preset Form Modularization:** Extracted advanced settings wiring into `src/options/components/context-menu/custom-preset-advanced-settings.tsx` and refactored `custom-format-form.tsx` to use shared target-state helpers; this cuts duplicate option-update logic and keeps the form file well below the 600-line guideline.
+
 - **Context Menu Progress Routing:** Background progress publisher now prioritizes the clicked context-menu tab before falling back to active tab, improving delivery reliability for conversion progress events.
 
 - **Target Format & Quality Card:** When only one format option is provided, the `Target format` selector is now automatically hidden to reduce redundant inputs.

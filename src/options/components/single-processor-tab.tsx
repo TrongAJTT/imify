@@ -15,6 +15,7 @@ import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
 import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
 import { downloadWithFilename, formatBytes, withBatchResize } from "@/options/components/batch/utils"
 import { consumePendingInspectorOptimizeFile } from "@/options/shared/inspector-optimize-bridge"
+import { buildActiveCodecOptionsForTarget } from "@/options/shared/target-format-state"
 import { PixelCompareWorkspace } from "@/options/components/diffchecker/pixel-compare-workspace"
 import { Button } from "@/options/components/ui/button"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
@@ -166,54 +167,7 @@ export function SingleProcessorTab() {
       format: isMozJpegTarget ? "jpg" : targetFormat,
       enabled: true,
       quality,
-      formatOptions: {
-        jxl: targetFormat === "jxl" ? { effort: formatOptions.jxl.effort } : undefined,
-        webp:
-          targetFormat === "webp"
-            ? {
-                lossless: formatOptions.webp.lossless,
-                nearLossless: formatOptions.webp.nearLossless,
-                effort: formatOptions.webp.effort,
-                sharpYuv: formatOptions.webp.sharpYuv,
-                preserveExactAlpha: formatOptions.webp.preserveExactAlpha
-              }
-            : undefined,
-        avif: targetFormat === "avif" ? { ...formatOptions.avif } : undefined,
-        mozjpeg:
-          targetFormat === "mozjpeg"
-            ? {
-                enabled: true,
-                progressive: formatOptions.mozjpeg.progressive,
-                chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling
-              }
-            : undefined,
-        ico:
-          targetFormat === "ico"
-            ? {
-                sizes: [...formatOptions.ico.sizes],
-                generateWebIconKit: formatOptions.ico.generateWebIconKit,
-                optimizeInternalPngLayers: formatOptions.ico.optimizeInternalPngLayers
-              }
-            : undefined,
-        png:
-          targetFormat === "png"
-            ? {
-                tinyMode: formatOptions.png.tinyMode,
-                cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
-                autoGrayscale: formatOptions.png.autoGrayscale,
-                dithering: formatOptions.png.dithering,
-                ditheringLevel: formatOptions.png.ditheringLevel,
-                progressiveInterlaced: formatOptions.png.progressiveInterlaced,
-                oxipngCompression: formatOptions.png.oxipngCompression
-              }
-            : undefined,
-        tiff:
-          targetFormat === "tiff"
-            ? {
-                colorMode: formatOptions.tiff.colorMode
-              }
-            : undefined
-      },
+      formatOptions: buildActiveCodecOptionsForTarget(targetFormat, formatOptions),
       resize: { mode: "none" }
     }
 

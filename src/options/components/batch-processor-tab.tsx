@@ -22,6 +22,7 @@ import { OOMWarningDialog } from "@/options/components/batch/oom-warning-dialog"
 import { useBatchExecution } from "@/options/components/batch/hooks/use-batch-execution"
 import { useBatchExportActions } from "@/options/components/batch/hooks/use-batch-export-actions"
 import { ImageUrlImportControl } from "@/options/components/image-url-import-control"
+import { buildActiveCodecOptionsForTarget } from "@/options/shared/target-format-state"
 import { useBatchStore } from "@/options/stores/batch-store"
 
 export function BatchProcessorTab() {
@@ -80,62 +81,7 @@ export function BatchProcessorTab() {
       format: isMozJpegTarget ? "jpg" : targetFormat,
       enabled: true,
       quality,
-      formatOptions: {
-        jxl: targetFormat === "jxl" ? { effort: formatOptions.jxl.effort } : undefined,
-        webp:
-          targetFormat === "webp"
-            ? {
-                lossless: formatOptions.webp.lossless,
-                nearLossless: formatOptions.webp.nearLossless,
-                effort: formatOptions.webp.effort,
-                sharpYuv: formatOptions.webp.sharpYuv,
-                preserveExactAlpha: formatOptions.webp.preserveExactAlpha
-              }
-            : undefined,
-        avif: targetFormat === "avif" ? { ...formatOptions.avif } : undefined,
-        mozjpeg:
-          targetFormat === "mozjpeg"
-            ? {
-                enabled: true,
-                progressive: formatOptions.mozjpeg.progressive,
-                chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling
-              }
-            : undefined,
-        ico:
-          targetFormat === "ico"
-            ? {
-                sizes: [...formatOptions.ico.sizes],
-                generateWebIconKit: formatOptions.ico.generateWebIconKit,
-                optimizeInternalPngLayers: formatOptions.ico.optimizeInternalPngLayers
-              }
-            : undefined,
-        png:
-          targetFormat === "png"
-            ? {
-                tinyMode: formatOptions.png.tinyMode,
-                cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
-                autoGrayscale: formatOptions.png.autoGrayscale,
-                dithering: formatOptions.png.dithering,
-                ditheringLevel: formatOptions.png.ditheringLevel,
-                progressiveInterlaced: formatOptions.png.progressiveInterlaced,
-                oxipngCompression: formatOptions.png.oxipngCompression
-              }
-            : undefined,
-        bmp:
-          targetFormat === "bmp"
-            ? {
-                colorDepth: formatOptions.bmp.colorDepth,
-                dithering: formatOptions.bmp.dithering,
-                ditheringLevel: formatOptions.bmp.ditheringLevel
-              }
-            : undefined,
-        tiff:
-          targetFormat === "tiff"
-            ? {
-                colorMode: formatOptions.tiff.colorMode
-              }
-            : undefined
-      },
+      formatOptions: buildActiveCodecOptionsForTarget(targetFormat, formatOptions),
       resize: { mode: "none" }
     }
 

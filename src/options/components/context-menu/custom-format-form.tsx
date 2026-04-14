@@ -1,14 +1,21 @@
 import type { CustomFormatInput } from "@/features/custom-formats"
-import type { BmpColorDepth, ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
-import { DEFAULT_ICO_SIZES, QUALITY_FORMATS } from "@/core/format-config"
+import type { FormatCodecOptions, ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
+import { QUALITY_FORMATS } from "@/core/format-config"
 import { TextInput } from "@/options/components/ui/text-input"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { Button } from "@/options/components/ui/button"
 import { BodyText } from "@/options/components/ui/typography"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
-import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { ResizeCard } from "@/options/components/shared/resize-card"
+import { CustomPresetAdvancedSettings } from "@/options/components/context-menu/custom-preset-advanced-settings"
 import { resolveEffectiveTargetFormat } from "@/options/shared/target-format-options"
+import {
+  buildTargetFormatQualityCardConfig,
+  mergeCodecOptions,
+  normalizeTargetCodecOptions,
+  supportsTargetFormatQuality,
+  supportsTargetFormatTinyMode
+} from "@/options/shared/target-format-state"
 import { Check } from "lucide-react"
 
 export function CustomFormatForm({
@@ -30,81 +37,54 @@ export function CustomFormatForm({
     value.format as Exclude<ImageFormat, "pdf">,
     value.formatOptions
   )
-  const canSetQuality =
-    effectiveTargetFormat === "mozjpeg" || QUALITY_FORMATS.includes(effectiveTargetFormat as ImageFormat)
+  const normalizedOptions = normalizeTargetCodecOptions(value.formatOptions)
+  const canSetQuality = supportsTargetFormatQuality(effectiveTargetFormat)
   const isIcoFormat = value.format === "ico"
-  const supportsTinyMode = effectiveTargetFormat === "png"
-  const normalizedPngDitheringLevel =
-    typeof value.formatOptions?.png?.ditheringLevel === "number"
-      ? Math.max(0, Math.min(100, Math.round(value.formatOptions.png.ditheringLevel)))
-      : value.formatOptions?.png?.dithering
-      ? 100
-      : 0
-  const pngOptions = {
-    tinyMode: Boolean(value.formatOptions?.png?.tinyMode),
-    cleanTransparentPixels: Boolean(value.formatOptions?.png?.cleanTransparentPixels),
-    autoGrayscale: Boolean(value.formatOptions?.png?.autoGrayscale),
-    dithering: normalizedPngDitheringLevel > 0,
-    ditheringLevel: normalizedPngDitheringLevel,
-    progressiveInterlaced: Boolean(value.formatOptions?.png?.progressiveInterlaced),
-    oxipngCompression: Boolean(value.formatOptions?.png?.oxipngCompression)
+  const supportsTinyMode = supportsTargetFormatTinyMode(effectiveTargetFormat)
+  const targetCardConfig = buildTargetFormatQualityCardConfig(value.formatOptions)
+
+  const updateCodecOptions = <K extends keyof FormatCodecOptions>(
+    key: K,
+    codecOptions: FormatCodecOptions[K]
+  ) => {
+    onChange({
+      ...value,
+      formatOptions: mergeCodecOptions(value.formatOptions, {
+        [key]: codecOptions
+      })
+    })
   }
-  const webpOptions = {
-    lossless: Boolean(value.formatOptions?.webp?.lossless),
-    nearLossless:
-      typeof value.formatOptions?.webp?.nearLossless === "number"
-        ? Math.max(0, Math.min(100, Math.round(value.formatOptions.webp.nearLossless)))
-        : 100,
-    effort:
-      typeof value.formatOptions?.webp?.effort === "number"
-        ? Math.max(1, Math.min(9, Math.round(value.formatOptions.webp.effort)))
-        : 5,
-    sharpYuv: Boolean(value.formatOptions?.webp?.sharpYuv),
-    preserveExactAlpha: Boolean(value.formatOptions?.webp?.preserveExactAlpha)
-  }
-  const avifOptions = {
-    speed:
-      typeof value.formatOptions?.avif?.speed === "number"
-        ? Math.max(0, Math.min(10, Math.round(value.formatOptions.avif.speed)))
-        : 6,
-    qualityAlpha:
-      typeof value.formatOptions?.avif?.qualityAlpha === "number"
-        ? Math.max(0, Math.min(100, Math.round(value.formatOptions.avif.qualityAlpha)))
-        : undefined,
-    lossless: Boolean(value.formatOptions?.avif?.lossless),
-    subsample:
-      value.formatOptions?.avif?.subsample === 2 || value.formatOptions?.avif?.subsample === 3
-        ? value.formatOptions.avif.subsample
-        : 1,
-    tune:
-      value.formatOptions?.avif?.tune === "ssim" || value.formatOptions?.avif?.tune === "psnr"
-        ? value.formatOptions.avif.tune
-        : "auto",
-    highAlphaQuality: Boolean(value.formatOptions?.avif?.highAlphaQuality)
-  } as const
-  const tiffOptions: { colorMode: "color" | "grayscale" } = {
-    colorMode: value.formatOptions?.tiff?.colorMode === "grayscale" ? "grayscale" : "color"
-  }
-  const mozjpegOptions = {
-    enabled: Boolean(value.formatOptions?.mozjpeg?.enabled),
-    progressive: value.formatOptions?.mozjpeg?.progressive ?? true,
-    chromaSubsampling: value.formatOptions?.mozjpeg?.chromaSubsampling ?? 2
-  } as const
-  const rawBmpColorDepth = value.formatOptions?.bmp?.colorDepth
-  const bmpColorDepth: BmpColorDepth =
-    rawBmpColorDepth === 1 || rawBmpColorDepth === 8 || rawBmpColorDepth === 32
-      ? rawBmpColorDepth
-      : 24
-  const normalizedBmpDitheringLevel =
-    typeof value.formatOptions?.bmp?.ditheringLevel === "number"
-      ? Math.max(0, Math.min(100, Math.round(value.formatOptions.bmp.ditheringLevel)))
-      : value.formatOptions?.bmp?.dithering
-      ? 100
-      : 0
-  const bmpOptions = {
-    colorDepth: bmpColorDepth,
-    dithering: bmpColorDepth === 1 && normalizedBmpDitheringLevel > 0,
-    ditheringLevel: bmpColorDepth === 1 ? normalizedBmpDitheringLevel : 0
+
+  const buildFormatOptionsForTargetChange = (
+    nextFormat: ImageFormat,
+    nextTargetFormat: string
+  ): FormatCodecOptions => {
+    const current = value.formatOptions ?? {}
+
+    return {
+      ...current,
+      avif: nextFormat === "avif" ? normalizedOptions.avif : current.avif,
+      jxl: nextFormat === "jxl" ? normalizedOptions.jxl : current.jxl,
+      webp: nextFormat === "webp" ? normalizedOptions.webp : current.webp,
+      mozjpeg:
+        nextFormat === "jpg"
+          ? {
+              enabled: nextTargetFormat === "mozjpeg",
+              progressive: normalizedOptions.mozjpeg.progressive,
+              chromaSubsampling: normalizedOptions.mozjpeg.chromaSubsampling
+            }
+          : current.mozjpeg,
+      ico:
+        nextFormat === "ico"
+          ? {
+              ...normalizedOptions.ico,
+              sizes: [...normalizedOptions.ico.sizes]
+            }
+          : current.ico,
+      png: nextFormat === "png" ? normalizedOptions.png : current.png,
+      bmp: nextFormat === "bmp" ? normalizedOptions.bmp : current.bmp,
+      tiff: nextFormat === "tiff" ? normalizedOptions.tiff : current.tiff
+    }
   }
 
   return (
@@ -125,70 +105,25 @@ export function CustomFormatForm({
           <TargetFormatQualityCard
             targetFormat={effectiveTargetFormat}
             quality={value.quality ?? 90}
-            formatConfig={{
-              avif: avifOptions,
-              webp: {
-                lossless: webpOptions.lossless,
-                nearLossless: webpOptions.nearLossless,
-                effort: webpOptions.effort
-              },
-              png: pngOptions,
-              jxl: {
-                effort: value.formatOptions?.jxl?.effort ?? 7
-              },
-              bmp: bmpOptions,
-              tiff: tiffOptions,
-              mozjpeg: {
-                progressive: mozjpegOptions.progressive,
-                chromaSubsampling: mozjpegOptions.chromaSubsampling
-              },
-              ico: {
-                sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
-                generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false,
-                optimizeInternalPngLayers: value.formatOptions?.ico?.optimizeInternalPngLayers ?? false
-              }
-            }}
+            formatConfig={targetCardConfig}
             supportsQuality={canSetQuality}
             supportsTinyMode={supportsTinyMode}
             onToggleWebIconKit={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  ico: {
-                    sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
-                    generateWebIconKit: next,
-                    optimizeInternalPngLayers:
-                      value.formatOptions?.ico?.optimizeInternalPngLayers ?? false
-                  }
-                }
+              updateCodecOptions("ico", {
+                ...normalizedOptions.ico,
+                generateWebIconKit: next
               })
             }
             onIcoOptimizeInternalPngLayersChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  ico: {
-                    sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
-                    generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false,
-                    optimizeInternalPngLayers: next
-                  }
-                }
+              updateCodecOptions("ico", {
+                ...normalizedOptions.ico,
+                optimizeInternalPngLayers: next
               })
             }
             onIcoSizesChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  ico: {
-                    sizes: next,
-                    generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false,
-                    optimizeInternalPngLayers:
-                      value.formatOptions?.ico?.optimizeInternalPngLayers ?? false
-                  }
-                }
+              updateCodecOptions("ico", {
+                ...normalizedOptions.ico,
+                sizes: next
               })
             }
             onTargetFormatChange={(nextTargetFormat) => {
@@ -201,65 +136,7 @@ export function CustomFormatForm({
                 ...value,
                 format: nextFormat,
                 quality: QUALITY_FORMATS.includes(nextFormat) ? value.quality ?? 90 : value.quality,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  avif:
-                    nextFormat === "avif"
-                      ? {
-                          ...avifOptions
-                        }
-                      : value.formatOptions?.avif,
-                  jxl:
-                    nextFormat === "jxl"
-                      ? {
-                          effort: value.formatOptions?.jxl?.effort ?? 7
-                        }
-                      : value.formatOptions?.jxl,
-                  webp:
-                    nextFormat === "webp"
-                      ? {
-                          lossless: webpOptions.lossless,
-                          nearLossless: webpOptions.nearLossless,
-                          effort: webpOptions.effort,
-                          sharpYuv: webpOptions.sharpYuv,
-                          preserveExactAlpha: webpOptions.preserveExactAlpha
-                        }
-                      : value.formatOptions?.webp,
-                  mozjpeg:
-                    nextFormat === "jpg"
-                      ? {
-                          enabled: nextTargetFormat === "mozjpeg",
-                          progressive: mozjpegOptions.progressive,
-                          chromaSubsampling: mozjpegOptions.chromaSubsampling
-                        }
-                      : value.formatOptions?.mozjpeg,
-                  ico:
-                    nextFormat === "ico"
-                      ? value.formatOptions?.ico ?? {
-                          sizes: [...DEFAULT_ICO_SIZES],
-                          generateWebIconKit: false,
-                          optimizeInternalPngLayers: false
-                        }
-                      : value.formatOptions?.ico,
-                  png:
-                    nextFormat === "png"
-                      ? {
-                          ...pngOptions
-                        }
-                      : value.formatOptions?.png,
-                  bmp:
-                    nextFormat === "bmp"
-                      ? {
-                          ...bmpOptions
-                        }
-                      : value.formatOptions?.bmp,
-                  tiff:
-                    nextFormat === "tiff"
-                      ? {
-                          colorMode: tiffOptions.colorMode
-                        }
-                      : value.formatOptions?.tiff
-                },
+                formatOptions: buildFormatOptionsForTargetChange(nextFormat, nextTargetFormat),
                 resize:
                   value.resize.mode === "page_size"
                     ? { ...value.resize, dpi: value.resize.dpi ?? 72 }
@@ -267,301 +144,64 @@ export function CustomFormatForm({
               })
             }}
             onQualityChange={(next) => onChange({ ...value, quality: next })}
-            onAvifSpeedChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  avif: {
-                    ...avifOptions,
-                    speed: next
-                  }
-                }
-              })
-            }
-            onJxlEffortChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  jxl: {
-                    effort: next
-                  }
-                }
-              })
-            }
+            onAvifSpeedChange={(next) => updateCodecOptions("avif", { ...normalizedOptions.avif, speed: next })}
+            onJxlEffortChange={(next) => updateCodecOptions("jxl", { effort: next })}
             onWebpLosslessChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  webp: {
-                    ...webpOptions,
-                    lossless: next
-                  }
-                }
+              updateCodecOptions("webp", {
+                ...normalizedOptions.webp,
+                lossless: next
               })
             }
             onWebpNearLosslessChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  webp: {
-                    ...webpOptions,
-                    nearLossless: next
-                  }
-                }
+              updateCodecOptions("webp", {
+                ...normalizedOptions.webp,
+                nearLossless: next
               })
             }
             onWebpEffortChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  webp: {
-                    ...webpOptions,
-                    effort: next
-                  }
-                }
+              updateCodecOptions("webp", {
+                ...normalizedOptions.webp,
+                effort: next
               })
             }
             onPngTinyModeChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  png: {
-                    ...pngOptions,
-                    tinyMode: next
-                  }
-                }
+              updateCodecOptions("png", {
+                ...normalizedOptions.png,
+                tinyMode: next
               })
             }
             onPngDitheringLevelChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  png: {
-                    ...pngOptions,
-                    ditheringLevel: next,
-                    dithering: next > 0
-                  }
-                }
+              updateCodecOptions("png", {
+                ...normalizedOptions.png,
+                ditheringLevel: next,
+                dithering: next > 0
               })
             }
             onBmpColorDepthChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  bmp: {
-                    ...bmpOptions,
-                    colorDepth: next,
-                    dithering: next === 1 ? bmpOptions.dithering : false,
-                    ditheringLevel: next === 1 ? bmpOptions.ditheringLevel : 0
-                  }
-                }
+              updateCodecOptions("bmp", {
+                ...normalizedOptions.bmp,
+                colorDepth: next,
+                dithering: next === 1 ? normalizedOptions.bmp.dithering : false,
+                ditheringLevel: next === 1 ? normalizedOptions.bmp.ditheringLevel : 0
               })
             }
             onBmpDitheringLevelChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  bmp: {
-                    ...bmpOptions,
-                    ditheringLevel: next,
-                    dithering: next > 0
-                  }
-                }
+              updateCodecOptions("bmp", {
+                ...normalizedOptions.bmp,
+                ditheringLevel: next,
+                dithering: next > 0
               })
             }
-            onTiffColorModeChange={(next) =>
-              onChange({
-                ...value,
-                formatOptions: {
-                  ...(value.formatOptions ?? {}),
-                  tiff: {
-                    colorMode: next
-                  }
-                }
-              })
-            }
+            onTiffColorModeChange={(next) => updateCodecOptions("tiff", { colorMode: next })}
             disabled={false}
             alwaysOpen
           />
 
-          <FormatAdvancedSettingsCard
+          <CustomPresetAdvancedSettings
+            value={value}
             targetFormat={effectiveTargetFormat}
-            avif={{
-              qualityAlpha: avifOptions.qualityAlpha,
-              lossless: avifOptions.lossless,
-              subsample: avifOptions.subsample,
-              tune: avifOptions.tune,
-              highAlphaQuality: avifOptions.highAlphaQuality,
-              onQualityAlphaChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    avif: {
-                      ...avifOptions,
-                      qualityAlpha: next
-                    }
-                  }
-                }),
-              onLosslessChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    avif: {
-                      ...avifOptions,
-                      lossless: next
-                    }
-                  }
-                }),
-              onSubsampleChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    avif: {
-                      ...avifOptions,
-                      subsample: next
-                    }
-                  }
-                }),
-              onTuneChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    avif: {
-                      ...avifOptions,
-                      tune: next
-                    }
-                  }
-                }),
-              onHighAlphaQualityChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    avif: {
-                      ...avifOptions,
-                      highAlphaQuality: next
-                    }
-                  }
-                })
-            }}
-            mozjpeg={{
-              progressive: mozjpegOptions.progressive,
-              chromaSubsampling: mozjpegOptions.chromaSubsampling,
-              onProgressiveChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    mozjpeg: {
-                      enabled: Boolean(value.formatOptions?.mozjpeg?.enabled),
-                      progressive: next,
-                      chromaSubsampling: mozjpegOptions.chromaSubsampling
-                    }
-                  }
-                }),
-              onChromaSubsamplingChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    mozjpeg: {
-                      enabled: Boolean(value.formatOptions?.mozjpeg?.enabled),
-                      progressive: mozjpegOptions.progressive,
-                      chromaSubsampling: next
-                    }
-                  }
-                })
-            }}
-            png={{
-              cleanTransparentPixels: pngOptions.cleanTransparentPixels,
-              autoGrayscale: pngOptions.autoGrayscale,
-              oxipngCompression: pngOptions.oxipngCompression,
-              progressiveInterlaced: pngOptions.progressiveInterlaced,
-              onCleanTransparentPixelsChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    png: {
-                      ...pngOptions,
-                      cleanTransparentPixels: next
-                    }
-                  }
-                }),
-              onAutoGrayscaleChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    png: {
-                      ...pngOptions,
-                      autoGrayscale: next
-                    }
-                  }
-                }),
-              onOxiPngCompressionChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    png: {
-                      ...pngOptions,
-                      oxipngCompression: next
-                    }
-                  }
-                }),
-              onProgressiveInterlacedChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    png: {
-                      ...pngOptions,
-                      progressiveInterlaced: next
-                    }
-                  }
-                })
-            }}
-            webp={{
-              sharpYuv: webpOptions.sharpYuv,
-              preserveExactAlpha: webpOptions.preserveExactAlpha,
-              onSharpYuvChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    webp: {
-                      ...webpOptions,
-                      sharpYuv: next
-                    }
-                  }
-                }),
-              onPreserveExactAlphaChange: (next) =>
-                onChange({
-                  ...value,
-                  formatOptions: {
-                    ...(value.formatOptions ?? {}),
-                    webp: {
-                      ...webpOptions,
-                      preserveExactAlpha: next
-                    }
-                  }
-                })
-            }}
-            alwaysOpen
+            normalizedOptions={normalizedOptions}
+            onChange={onChange}
           />
         </div>
 
