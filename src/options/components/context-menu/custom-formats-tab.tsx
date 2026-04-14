@@ -26,6 +26,7 @@ import { Button } from "@/options/components/ui/button"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
+import { DialogWrapper } from "@/options/components/ui/dialog-wrapper"
 
 interface PendingDelete {
   item: FormatConfig
@@ -391,29 +392,20 @@ export function CustomFormatsTab({
       </div>
 
       {isCreateDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
-            <div className="mb-3 flex items-center justify-between">
-              <Heading className="text-base font-semibold">Create Custom Preset</Heading>
-              <button
-                aria-label="Close dialog"
-                className="rounded border border-slate-300 dark:border-slate-600 p-1.5 text-slate-700 dark:text-slate-200"
-                onClick={closeCreateDialog}
-                type="button">
-                <X size={16} />
-              </button>
-            </div>
-
-            <CustomFormatForm
-              errorMessage={createError}
-              onCancel={closeCreateDialog}
-              onChange={setCreateForm}
-              onSubmit={submitCreate}
-              submitLabel="Add custom preset"
-              value={createForm}
-            />
-          </div>
-        </div>
+        <DialogWrapper
+          title="Create Custom Preset"
+          onClose={closeCreateDialog}
+          maxWidthClassName="max-w-3xl"
+        >
+          <CustomFormatForm
+            errorMessage={createError}
+            onCancel={closeCreateDialog}
+            onChange={setCreateForm}
+            onSubmit={submitCreate}
+            submitLabel="Add custom preset"
+            value={createForm}
+          />
+        </DialogWrapper>
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -575,68 +567,59 @@ export function CustomFormatsTab({
       ) : null}
 
       {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
-            <div className="mb-3 flex items-center justify-between">
-              <Heading className="text-base font-semibold">Edit Custom Preset</Heading>
-              <button
-                aria-label="Close dialog"
-                className="rounded border border-slate-300 dark:border-slate-600 p-1.5 text-slate-700 dark:text-slate-200"
-                onClick={() => setEditing(null)}
-                type="button">
-                <X size={16} />
-              </button>
-            </div>
+        <DialogWrapper
+          title="Edit Custom Preset"
+          onClose={() => setEditing(null)}
+          maxWidthClassName="max-w-3xl"
+        >
+          <CustomFormatForm
+            errorMessage={editing.error}
+            onCancel={() => setEditing(null)}
+            onChange={(next) => setEditing({ ...editing, form: next, error: null })}
+            onSubmit={async () => {
+              const current = editing
+              if (!current) return
 
-            <CustomFormatForm
-              errorMessage={editing.error}
-              onCancel={() => setEditing(null)}
-              onChange={(next) => setEditing({ ...editing, form: next, error: null })}
-              onSubmit={async () => {
-                const current = editing
-                if (!current) return
+              setEditing(null)
 
-                setEditing(null)
+              const normalized = normalizeCustomInput(current.form)
+              const validationError = validateCustomFormatInput(normalized)
 
-                const normalized = normalizeCustomInput(current.form)
-                const validationError = validateCustomFormatInput(normalized)
+              if (validationError) {
+                setEditing({ id: current.id, form: current.form, error: validationError })
+                return
+              }
 
-                if (validationError) {
-                  setEditing({ id: current.id, form: current.form, error: validationError })
-                  return
-                }
+              const duplicate = draftFormats.some((entry) =>
+                entry.id !== current.id &&
+                entry.name.trim().toLowerCase() === normalized.name.trim().toLowerCase()
+              )
 
-                const duplicate = draftFormats.some((entry) =>
-                  entry.id !== current.id &&
-                  entry.name.trim().toLowerCase() === normalized.name.trim().toLowerCase()
+              if (duplicate) {
+                setEditing({ id: current.id, form: current.form, error: "Name already exists" })
+                return
+              }
+
+              setDraftFormats((previous) =>
+                previous.map((entry) =>
+                  entry.id === current.id
+                    ? {
+                        ...entry,
+                        name: normalized.name.trim(),
+                        format: normalized.format,
+                        enabled: normalized.enabled,
+                        quality: normalized.quality,
+                        formatOptions: normalized.formatOptions,
+                        resize: normalized.resize
+                      }
+                    : entry
                 )
-
-                if (duplicate) {
-                  setEditing({ id: current.id, form: current.form, error: "Name already exists" })
-                  return
-                }
-
-                setDraftFormats((previous) =>
-                  previous.map((entry) =>
-                    entry.id === current.id
-                      ? {
-                          ...entry,
-                          name: normalized.name.trim(),
-                          format: normalized.format,
-                          enabled: normalized.enabled,
-                          quality: normalized.quality,
-                          formatOptions: normalized.formatOptions,
-                          resize: normalized.resize
-                        }
-                      : entry
-                  )
-                )
-              }}
-              submitLabel="Save changes"
-              value={editing.form}
-            />
-          </div>
-        </div>
+              )
+            }}
+            submitLabel="Save changes"
+            value={editing.form}
+          />
+        </DialogWrapper>
       )}
 
       {pendingDelete && (

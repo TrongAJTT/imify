@@ -89,11 +89,8 @@ export function CustomFormatForm({
 
   return (
     <div className="space-y-4">
-      {/* 2-Column Layout: Name + Format/Quality (left) | Resize (right) */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* Left Column: Name + Target Format & Quality */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="space-y-3">
-          {/* Name Input */}
           <TextInput
             label="Name"
             placeholder="e.g. My Custom Preset"
@@ -101,7 +98,6 @@ export function CustomFormatForm({
             onChange={(next) => onChange({ ...value, name: next })}
           />
 
-          {/* Format & Quality Card - Always Open */}
           <TargetFormatQualityCard
             targetFormat={effectiveTargetFormat}
             quality={value.quality ?? 90}
@@ -196,18 +192,20 @@ export function CustomFormatForm({
             disabled={false}
             alwaysOpen
           />
+        </div>
 
+        <div className="space-y-3">
           <CustomPresetAdvancedSettings
             value={value}
             targetFormat={effectiveTargetFormat}
             normalizedOptions={normalizedOptions}
             onChange={onChange}
+            showEmptyState
           />
         </div>
 
-        {/* Right Column: Resize (if not ICO format) */}
         {!isIcoFormat && (
-          <div className="mt-5">
+          <div className="space-y-3">
             <ResizeCard
               resizeMode={value.resize.mode}
               resizeValue={typeof value.resize.value === "number" ? value.resize.value : 1280}

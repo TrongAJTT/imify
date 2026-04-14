@@ -14,7 +14,7 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy
 } from "@dnd-kit/sortable"
-import { CheckCircle2, Circle, SlidersHorizontal } from "lucide-react"
+import { CheckCircle2, Circle } from "lucide-react"
 
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
@@ -23,19 +23,7 @@ import { Button } from "@/options/components/ui/button"
 import { BodyText, Subheading } from "@/options/components/ui/typography"
 import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
 import { GlobalFormatTargetQuality } from "@/options/components/context-menu/global-format-target-quality"
-
-function FormatOptionsEmptyState() {
-  return (
-    <div className="mt-4 flex-1 flex flex-col items-center justify-center text-center">
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 mb-2">
-        <SlidersHorizontal size={14} />
-      </div>
-      <BodyText className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-        No extra options
-      </BodyText>
-    </div>
-  )
-}
+import { FormatOptionsEmptyState } from "@/options/components/shared/format-options-empty-state"
 
 interface GlobalFormatsTabProps {
   state: ExtensionStorageState

@@ -90,7 +90,7 @@ export function PopupApp() {
             />
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">Imify</div>
-              <div className="truncate text-[11px] text-slate-500 dark:text-slate-400">Image Toolkit</div>
+              <div className="truncate text-[11px] text-slate-500 dark:text-slate-400">Powerful Image Toolkit</div>
             </div>
           </div>
 
@@ -130,8 +130,8 @@ export function PopupApp() {
           </div>
         </header>
 
-        <div className="p-2.5">
-          <p className="px-1 text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="px-2.5 pt-2.5">
+          <p className="px-1 text-[18px] text-slate-500 dark:text-slate-400">
             Choose an action for this page.
           </p>
         </div>

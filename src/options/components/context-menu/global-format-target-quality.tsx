@@ -64,7 +64,7 @@ export function GlobalFormatTargetQuality({
 
   return (
     <TargetFormatQualityCard
-      cardLabel="Format & Quality Settings"
+      cardLabel={cardFormat.toUpperCase() + " Options"}
       targetFormat={targetFormat}
       quality={quality}
       formatConfig={buildTargetFormatQualityCardConfig(sourceOptions)}
