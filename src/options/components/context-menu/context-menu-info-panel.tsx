@@ -22,7 +22,7 @@ export function ContextMenuInfoPanel() {
                 Global Formats
               </div>
               <MutedText className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                Enable built-in formats, tweak default quality / ICO options, and reorder their positions.
+                Enable each built-in card, then configure its dedicated Target Format & Quality accordion. JPG can switch between JPG and MozJPEG while other cards keep a focused single-target flow.
               </MutedText>
             </div>
           </div>

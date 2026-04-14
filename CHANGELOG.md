@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Context Menu Global Formats (Target Card Integration):** Added per-format `Target Format & Quality` accordion controls directly inside active global format cards.
+  - Applies to built-in global cards from `JPG` through `TIFF` (with `PDF` remaining informational/no extra target controls).
+  - `JPG` card now supports switching target behavior between standard JPG and MozJPEG mode in the same card.
+  - Reuses the same codec-option wiring model used in Single/Batch processor flows (quality, AVIF speed, WebP lossless tuning, PNG tiny+dithering, BMP depth+dithering, TIFF mode, ICO sizes/toolkit options).
+
 - **Extension Command Center Popup:** Replaced the default toolbar click behavior with a dedicated popup workspace (English UI, dark/light friendly) exposing quick extension actions:
   - `Page Scanner / SEO Audit`
   - `Side Panel Lite Inspector`
@@ -189,6 +194,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
 ### Changed
+- **Target Format & Quality Card:** When only one format option is provided, the `Target format` selector is now automatically hidden to reduce redundant inputs.
+- **Context Menu Background Conversion Flow:** Added effective target-format resolution for global JPG cards configured as MozJPEG so progress state and download MIME routing follow the same adaptive conversion pipeline behavior as Single/Batch processing.
+- **Context Menu Side Information:** Updated `Global Formats` guidance text to match the new per-card target/quality accordion workflow.
+
 - **Toolbar Click Behavior:** Removed `chrome.action.onClicked -> openOptionsPage()` redirect in background script so extension icon opens popup command center instead of forcing options navigation.
 - **Manifest Permissions:** Added `sidePanel` permission to support Side Panel Lite Inspector action from popup.
 - **Popup UI Simplification:** Refactored popup into a compact appbar-driven layout (logo, dark-mode toggle, expand to options, close) and removed in-popup SEO snapshot rendering.

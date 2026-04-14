@@ -1,4 +1,4 @@
-import { blobToDownloadDataUrl, toOutputFilename } from "@/core/download-utils"
+import { blobToDownloadDataUrl, toOutputFilename, type OutputFormat } from "@/core/download-utils"
 import { toUserFacingConversionError } from "@/core/error-utils"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
 import { convertImage } from "@/features/converter"
@@ -71,6 +71,14 @@ function replaceFilenameExtension(fileName: string, extension: string): string {
   return `${base}.${extension}`
 }
 
+function resolveEffectiveTargetFormat(config: FormatConfig): ImageFormat | "mozjpeg" {
+  if (config.format === "jpg" && config.formatOptions?.mozjpeg?.enabled) {
+    return "mozjpeg"
+  }
+
+  return config.format
+}
+
 function trackConfigUsageSilently(configId: string): void {
   void patchStorageState((current) => {
     const currentCount = current.context_menu?.usage_counts?.[configId] ?? 0
@@ -91,7 +99,7 @@ function trackConfigUsageSilently(configId: string): void {
 async function downloadBlob(
   blob: Blob,
   filename: string,
-  format: ImageFormat,
+  format: OutputFormat,
   tabId?: number
 ): Promise<void> {
   const dataUrl = await blobToDownloadDataUrl(blob, format)
@@ -149,11 +157,12 @@ async function handleImageMenuClick(
 
   const progressId = `${Date.now()}_${config.id}`
   let fileName = buildOutputFilename(info.srcUrl, config)
+  const effectiveTargetFormat = resolveEffectiveTargetFormat(config)
 
   await publishConvertProgress({
     id: progressId,
     fileName,
-    targetFormat: config.format,
+    targetFormat: effectiveTargetFormat,
     status: "processing",
     percent: 5
   })
@@ -176,7 +185,7 @@ async function handleImageMenuClick(
     await publishConvertProgress({
       id: progressId,
       fileName,
-      targetFormat: config.format,
+      targetFormat: effectiveTargetFormat,
       status: "processing",
       percent: 35
     })
@@ -200,7 +209,7 @@ async function handleImageMenuClick(
     await publishConvertProgress({
       id: progressId,
       fileName,
-      targetFormat: config.format,
+      targetFormat: effectiveTargetFormat,
       status: "processing",
       percent: 72,
       message: "Converting image..."
@@ -209,7 +218,7 @@ async function handleImageMenuClick(
     await publishConvertProgress({
       id: progressId,
       fileName,
-      targetFormat: config.format,
+      targetFormat: effectiveTargetFormat,
       status: "processing",
       percent: 92,
       message: "Preparing data for download..."
@@ -218,7 +227,7 @@ async function handleImageMenuClick(
     await publishConvertProgress({
       id: progressId,
       fileName,
-      targetFormat: config.format,
+      targetFormat: effectiveTargetFormat,
       status: "success",
       percent: 100,
       message: "Opening download dialog..."
@@ -230,14 +239,14 @@ async function handleImageMenuClick(
       ? replaceFilenameExtension(fileName, converted.outputExtension)
       : fileName
 
-    await downloadBlob(converted.blob, outputFilename, config.format, tab?.id)
+    await downloadBlob(converted.blob, outputFilename, effectiveTargetFormat, tab?.id)
   } catch (error) {
     const message = toUserFacingConversionError(error, "Unexpected conversion error")
 
     await publishConvertProgress({
       id: progressId,
       fileName,
-      targetFormat: config.format,
+      targetFormat: effectiveTargetFormat,
       status: "error",
       percent: 100,
       message

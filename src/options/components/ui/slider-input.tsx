@@ -1,9 +1,12 @@
+import { HelpCircle } from "lucide-react"
+import { Tooltip } from "@/options/components/tooltip"
 import { LabelText } from "@/options/components/ui/typography"
 
 export interface SliderInputProps {
   label: string
   value: number
   onChange: (value: number) => void
+  tooltip?: string
   min?: number
   max?: number
   step?: number
@@ -20,6 +23,7 @@ export function SliderInput({
   label,
   value,
   onChange,
+  tooltip,
   min = 0,
   max = 100,
   step = 1,
@@ -29,11 +33,26 @@ export function SliderInput({
 }: SliderInputProps) {
   const denom = max - min
   const percent = denom > 0 ? clampPercent(((value - min) / denom) * 100) : 0
+  const stopDragSignal: React.EventHandler<
+    React.PointerEvent<HTMLInputElement> | React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>
+  > = (event) => {
+    event.stopPropagation()
+  }
 
   return (
     <div className={`space-y-1.5 ${className}`}>
       <div className="flex items-baseline justify-between gap-2">
-        <LabelText className="text-xs">{label}</LabelText>
+        <div className="flex items-center gap-1">
+          <LabelText className="text-xs">{label}</LabelText>
+          {tooltip ? (
+            <Tooltip content={tooltip}>
+              <HelpCircle
+                size={12}
+                className="cursor-help text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              />
+            </Tooltip>
+          ) : null}
+        </div>
         <span className="text-xs tabular-nums font-semibold text-slate-700 dark:text-slate-200">
           {value}
           {suffix}
@@ -54,6 +73,9 @@ export function SliderInput({
           max={max}
           step={step}
           disabled={disabled}
+          onPointerDown={stopDragSignal}
+          onMouseDown={stopDragSignal}
+          onTouchStart={stopDragSignal}
           onChange={(e) => onChange(Number(e.target.value))}
           className={[
             "absolute left-0 right-0 top-0 h-6 w-full bg-transparent appearance-none pointer-events-auto",

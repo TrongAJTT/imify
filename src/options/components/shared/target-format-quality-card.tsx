@@ -1,13 +1,16 @@
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
+import { TARGET_FORMAT_TOOLTIPS } from "@/options/constants/target-format-tooltips"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { ColoredSliderCard } from "@/options/components/ui/colored-slider-card"
-import { NumberInput } from "@/options/components/ui/number-input"
+import { SliderInput } from "@/options/components/ui/slider-input"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import type { BmpColorDepth } from "@/core/types"
 import { FileJson, Zap } from "lucide-react"
 
 export type TargetFormatQualityCardProps = {
+  // Optional label for the card, defaults to "Target Format & Quality" if not provided
+  cardLabel?: string
   /** Selected target format value */
   targetFormat: string
   /** Quality value (1-100) */
@@ -108,6 +111,7 @@ function normalizeDitheringLevel(level: number | undefined, legacyDithering: boo
 }
 
 export function TargetFormatQualityCard({
+  cardLabel = "Target Format & Quality",
   targetFormat,
   quality,
   formatConfig,
@@ -208,11 +212,12 @@ export function TargetFormatQualityCard({
   }
 
   const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
+  const shouldShowTargetFormatSelector = formatOptions.length > 1
 
   return (
     <AccordionCard
       icon={<FileJson size={14} />}
-      label="Target Format & Quality"
+      label={cardLabel || "Target Format & Quality"}
       sublabel={sublabel}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
@@ -222,40 +227,42 @@ export function TargetFormatQualityCard({
       colorTheme="blue"
     >
       <div className="space-y-3">
-        <div>
-          <SelectInput
-            label="Target format"
-            disabled={disabled}
-            options={formatOptions}
-            onChange={(v) => onTargetFormatChange(v)}
-            value={targetFormat}
-          />
-        </div>
+        {shouldShowTargetFormatSelector && (
+          <div>
+            <SelectInput
+              label="Target format"
+              disabled={disabled}
+              options={formatOptions}
+              onChange={(v) => onTargetFormatChange(v)}
+              value={targetFormat}
+            />
+          </div>
+        )}
 
         {supportsQuality && (
           <>
             {targetFormat === "webp" && onWebpNearLosslessChange && webpLosslessEnabled ? (
-              <NumberInput
+              <SliderInput
                 label="Near-Lossless"
+                tooltip={TARGET_FORMAT_TOOLTIPS.nearLossless}
                 disabled={disabled || !webpLosslessEnabled}
                 min={0}
                 max={100}
                 step={1}
                 value={webpNearLossless}
-                onChangeValue={onWebpNearLosslessChange}
-                tooltip="Subtly adjusts pixels to significantly reduce file size while maintaining near-perfect quality. Use 100 for true lossless."
+                onChange={onWebpNearLosslessChange}
               />
             ): (
 
               
-              <NumberInput
-              label="Quality"
-              disabled={disabled || !supportsQuality}
-              min={1}
-              max={100}
-              step={1}
-              value={quality}
-              onChangeValue={onQualityChange}
+              <SliderInput
+                label="Quality"
+                disabled={disabled || !supportsQuality}
+                min={1}
+                max={100}
+                step={1}
+                value={quality}
+                onChange={onQualityChange}
               />
             )}
 
@@ -283,7 +290,7 @@ export function TargetFormatQualityCard({
             {onWebpEffortChange && (
               <SelectInput
                 label="Effort Level"
-                tooltip={`Higher effort uses slower but stronger compression search.\n- 1 is fastest\n- 5 is balanced\n- 9 is best compression (slowest)`}
+                tooltip={TARGET_FORMAT_TOOLTIPS.webpEffort}
                 disabled={disabled}
                 options={[
                   { value: "1", label: "1 - Lightning (fastest)" },
@@ -307,7 +314,7 @@ export function TargetFormatQualityCard({
           <div>
             <SelectInput
               label="Effort Level"
-              tooltip={`Effort controls compression algorithm complexity.\n- Higher values (7-9) produce smaller files but are slower.\n- Lower values (1-3) are faster but files are larger.\n- Default (5) is balanced.`}
+              tooltip={TARGET_FORMAT_TOOLTIPS.jxlEffort}
               disabled={disabled}
               options={[
                 { value: "1", label: "1 - Lightning (fastest)" },
@@ -330,7 +337,7 @@ export function TargetFormatQualityCard({
           <div>
             <SelectInput
               label="Speed"
-              tooltip={`AVIF speed is inverse effort:\n- 0 = smallest file, best quality, slowest\n- 10 = fastest encode, larger file\nDefault 6 is balanced.`}
+              tooltip={TARGET_FORMAT_TOOLTIPS.avifSpeed}
               disabled={disabled}
               options={[
                 { value: "0", label: "0 - Maximum quality (slowest)" },
@@ -355,11 +362,7 @@ export function TargetFormatQualityCard({
           <div className="space-y-2">
             <SelectInput
               label="Color Depth"
-              tooltip={`BMP has no quality slider. File size and visual mode are controlled by bits per pixel.
-- 24-bit RGB: standard, full color.
-- 32-bit RGBA: keeps alpha channel.
-- 8-bit Grayscale: lightweight monochrome range.
-- 1-bit Monochrome: black/white for printers and embedded devices.`}
+              tooltip={TARGET_FORMAT_TOOLTIPS.bmpColorDepth}
               disabled={disabled}
               options={[
                 { value: "24", label: "24-bit RGB (Standard)" },
@@ -372,17 +375,16 @@ export function TargetFormatQualityCard({
             />
 
             {bmpColorDepth === 1 && onBmpDitheringLevelChange && (
-              <ColoredSliderCard
+              <SliderInput
                 label="Dithering Level"
+                tooltip={TARGET_FORMAT_TOOLTIPS.bmpDithering}
                 value={bmpDitheringLevel}
                 min={0}
                 max={100}
                 step={1}
                 suffix="%"
-                theme="sky"
                 disabled={disabled}
                 onChange={onBmpDitheringLevelChange}
-                subtitle="0% disables dithering. Higher values improve monochrome gradients for 1-bit output."
               />
             )}
           </div>
@@ -392,9 +394,7 @@ export function TargetFormatQualityCard({
           <div>
             <SelectInput
               label="Color Mode"
-              tooltip={`TIFF output remains uncompressed in UTIF, but you can choose visual color rendering.
-- RGB keeps full color.
-- Grayscale converts the output image to black & white.`}
+              tooltip={TARGET_FORMAT_TOOLTIPS.tiffColorMode}
               disabled={disabled}
               options={[
                 { value: "color", label: "RGB (Full Color)" },
@@ -435,7 +435,7 @@ export function TargetFormatQualityCard({
               icon={<Zap size={16} />}
               title="Tiny Mode"
               subtitle="Quantize to reduce PNG size"
-              tooltipContent="Use 8-bit quantization to reduce PNG size by up to 70% (TinyPNG-like). Best for web graphics and UI assets, not recommended for portrait photos."
+              tooltipContent={TARGET_FORMAT_TOOLTIPS.tinyMode}
               checked={pngTinyModeEnabled}
               onChange={onPngTinyModeChange}
               disabled={disabled || !supportsTinyMode}
@@ -443,17 +443,16 @@ export function TargetFormatQualityCard({
             />
 
             {pngTinyModeEnabled && onPngDitheringLevelChange && (
-              <ColoredSliderCard
+              <SliderInput
                 label="Dithering Level"
+                tooltip={TARGET_FORMAT_TOOLTIPS.pngDithering}
                 value={pngDitheringLevel}
                 min={0}
                 max={100}
                 step={1}
                 suffix="%"
-                theme="sky"
                 disabled={disabled}
                 onChange={onPngDitheringLevelChange}
-                subtitle="0% disables dithering. Higher values improve gradient smoothness with stronger diffusion."
               />
             )}
           </div>

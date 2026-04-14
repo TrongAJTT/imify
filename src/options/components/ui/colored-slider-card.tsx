@@ -19,6 +19,8 @@ interface ColoredSliderCardProps {
   step?: number
   /** Suffix to display after value (e.g., '%') */
   suffix?: string
+  /** Optional tooltip shown next to the slider label */
+  tooltip?: string
   /** Optional subtitle/description text shown below slider */
   subtitle?: string
   /** Color theme for the container (default: 'sky') */
@@ -65,6 +67,7 @@ export function ColoredSliderCard({
   max = 100,
   step = 1,
   suffix = "",
+  tooltip,
   subtitle,
   theme = "sky",
   disabled = false,
@@ -78,6 +81,7 @@ export function ColoredSliderCard({
     >
       <SliderInput
         label={label}
+        tooltip={tooltip}
         value={value}
         onChange={onChange}
         min={min}

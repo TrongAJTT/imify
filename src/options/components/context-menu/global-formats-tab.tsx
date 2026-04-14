@@ -16,15 +16,13 @@ import {
 } from "@dnd-kit/sortable"
 import { CheckCircle2, Circle, SlidersHorizontal } from "lucide-react"
 
-import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
-import { QUALITY_FORMATS } from "@/options/shared"
-import { IcoSizeSelector } from "@/options/components/ico-size-selector"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { Button } from "@/options/components/ui/button"
-import { BodyText, LabelText, Subheading } from "@/options/components/ui/typography"
+import { BodyText, Subheading } from "@/options/components/ui/typography"
 import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
+import { GlobalFormatTargetQuality } from "@/options/components/context-menu/global-format-target-quality"
 
 function FormatOptionsEmptyState() {
   return (
@@ -112,37 +110,12 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
     }))
   }
 
-  const updateQuality = (format: ImageFormat, quality: number) => {
+  const updateFormatConfig = (format: ImageFormat, nextConfig: FormatConfig) => {
     setDraftMap((previous) => ({
       ...previous,
       [format]: {
-        ...previous[format],
-        quality
-      }
-    }))
-  }
-
-  const updateIcoOptions = (
-    updates: Partial<{ sizes: number[]; generateWebIconKit: boolean; optimizeInternalPngLayers: boolean }>
-  ) => {
-    setDraftMap((previous) => ({
-      ...previous,
-      ico: {
-        ...previous.ico,
-        formatOptions: {
-          ...(previous.ico.formatOptions ?? {}),
-          ico: {
-            sizes: updates.sizes ?? previous.ico.formatOptions?.ico?.sizes ?? [...DEFAULT_ICO_SIZES],
-            generateWebIconKit:
-              updates.generateWebIconKit !== undefined
-                ? updates.generateWebIconKit
-                : Boolean(previous.ico.formatOptions?.ico?.generateWebIconKit),
-            optimizeInternalPngLayers:
-              updates.optimizeInternalPngLayers !== undefined
-                ? updates.optimizeInternalPngLayers
-                : Boolean(previous.ico.formatOptions?.ico?.optimizeInternalPngLayers)
-          }
-        }
+        ...nextConfig,
+        format
       }
     }))
   }
@@ -240,7 +213,10 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
         <SortableContext items={orderedIds} strategy={rectSortingStrategy}>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
             {orderedConfigs.map((config) => {
-              const supportsQuality = QUALITY_FORMATS.includes(config.format)
+              const cardFormat = config.format
+              const isPdfFormat = cardFormat === "pdf"
+              const isMozJpegSelected =
+                cardFormat === "jpg" && Boolean(config.formatOptions?.mozjpeg?.enabled)
 
               return (
                 <SortableQueueItem key={config.id} id={config.id}>
@@ -260,6 +236,11 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
                           >
                             {config.enabled ? "Active" : "Disabled"}
                           </span>
+                          {isMozJpegSelected && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+                              MozJPEG
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -282,52 +263,14 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
                       </button>
                     </div>
 
-                    {config.enabled && (supportsQuality || config.format === "ico") ? (
-                      <div className="mt-4 space-y-4 flex-1">
-                        {supportsQuality && (
-                          <div className="group">
-                            <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-                              <span className="group-hover:text-sky-500 transition-colors uppercase tracking-tight">Quality</span>
-                              <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded transition-colors group-hover:bg-sky-500 group-hover:text-white">
-                                {config.quality ?? 90}%
-                              </span>
-                            </div>
-                            <input
-                              className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500 transition-all hover:h-2"
-                              max={100}
-                              min={1}
-                              onChange={(event) => updateQuality(config.format, Number(event.target.value))}
-                              type="range"
-                              value={config.quality ?? 90}
-                            />
-                          </div>
-                        )}
-
-                        {config.format === "ico" && (
-                          <IcoSizeSelector
-                            disabled={false}
-                            generateWebIconKit={Boolean(config.formatOptions?.ico?.generateWebIconKit)}
-                            optimizeInternalPngLayers={Boolean(
-                              config.formatOptions?.ico?.optimizeInternalPngLayers
-                            )}
-                            onToggleSize={(size) => {
-                              const current = config.formatOptions?.ico?.sizes ?? [...DEFAULT_ICO_SIZES]
-                              const exists = current.includes(size)
-                              const next = exists
-                                ? current.filter((entry) => entry !== size)
-                                : [...current, size].sort((a, b) => a - b)
-                              updateIcoOptions({ sizes: next.length ? next : [16] })
-                            }}
-                            onToggleWebKit={(checked) => {
-                              updateIcoOptions({ generateWebIconKit: checked })
-                            }}
-                            onToggleOptimizeInternalPngLayers={(checked) => {
-                              updateIcoOptions({ optimizeInternalPngLayers: checked })
-                            }}
-                            sizes={config.formatOptions?.ico?.sizes ?? [...DEFAULT_ICO_SIZES]}
-                            title="ICO output size"
-                          />
-                        )}
+                    {config.enabled && !isPdfFormat ? (
+                      <div className="mt-4 flex-1">
+                        <GlobalFormatTargetQuality
+                          config={config}
+                          cardFormat={cardFormat}
+                          disabled={isSaving}
+                          onChange={(nextConfig) => updateFormatConfig(cardFormat, nextConfig)}
+                        />
                       </div>
                     ) : config.enabled ? (
                       <FormatOptionsEmptyState />
