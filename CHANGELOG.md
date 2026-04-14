@@ -206,6 +206,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Target Format State Standardization (Cross-Feature):** Reduced duplicated target-state and codec-option wiring across Context Menu Global Formats, Context Menu Custom Presets, Single Processor, Batch Processor, and Image Splicing:
   - Added shared `src/options/shared/target-format-state.ts` helpers for codec normalization, active-codec extraction, card config projection, and support flags (`supportsQuality`, `supportsTinyMode`).
   - Single and Batch processing config builders now reuse the same `buildActiveCodecOptionsForTarget(...)` path instead of inline per-format mapping blocks.
+  - Batch resize merge path (`withBatchResize`) now reuses shared codec normalization/effective-target helpers instead of maintaining an additional per-codec normalization block.
   - Global formats, Batch setup sidebar, and Splicing sidebar now reuse shared target-card config builders to avoid repeated `formatConfig` object boilerplate.
   - Splicing and Batch target format option labels now reuse the same shared option builder used by other flows for consistent text/extension display.
 

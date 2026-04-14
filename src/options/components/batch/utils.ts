@@ -1,15 +1,22 @@
-import { QUALITY_FORMATS } from "@/options/shared"
 import { toOutputFilename } from "@/core/download-utils"
 import { APP_CONFIG } from "@/core/config"
 import type {
   ConversionProgressPayload,
+  FormatCodecOptions,
   FormatConfig,
+  ImageFormat,
   ResizeConfig,
   ResizeResamplingAlgorithm,
   SupportedDPI
 } from "@/core/types"
 import type { BatchFormatOptions, BatchResizeMode } from "@/options/components/batch/types"
 import { buildResizeOverrideFromState } from "@/options/shared/resize-state"
+import { resolveEffectiveTargetFormat } from "@/options/shared/target-format-options"
+import {
+  buildActiveCodecOptionsForTarget,
+  normalizeTargetCodecOptions,
+  supportsTargetFormatQuality
+} from "@/options/shared/target-format-state"
 
 export const MAX_FILE_SIZE_BYTES = APP_CONFIG.BATCH.MAX_FILE_SIZE_MB * 1024 * 1024
 export const MAX_TOTAL_QUEUE_BYTES = APP_CONFIG.BATCH.OOM_WARNING_MB * 1024 * 1024
@@ -136,105 +143,28 @@ export function withBatchResize(
     paperSize,
     dpi
   )
-  const supportsQuality = QUALITY_FORMATS.includes(config.format)
-  const isAvifTarget = config.format === "avif"
-  const isPngTarget = config.format === "png"
-  const isBmpTarget = config.format === "bmp"
-  const isWebpTarget = config.format === "webp"
-  const isJxlTarget = config.format === "jxl"
-  const isTiffTarget = config.format === "tiff"
-  const isIcoTarget = config.format === "ico"
+  const effectiveTargetFormat = resolveEffectiveTargetFormat(
+    config.format as Exclude<ImageFormat, "pdf">,
+    config.formatOptions
+  )
+  const supportsQuality = supportsTargetFormatQuality(effectiveTargetFormat)
   const normalizedQuality = Math.max(1, Math.min(100, Math.round(quality)))
-  const normalizedAvifSpeed = Math.max(0, Math.min(10, Math.round(formatOptions.avif.speed)))
-  const normalizedAvifQualityAlpha =
-    typeof formatOptions.avif.qualityAlpha === "number"
-      ? Math.max(0, Math.min(100, Math.round(formatOptions.avif.qualityAlpha)))
-      : undefined
-  const normalizedJxlEffort = Math.max(1, Math.min(9, Math.round(formatOptions.jxl.effort)))
-  const normalizedWebpEffort = Math.max(1, Math.min(9, Math.round(formatOptions.webp.effort)))
-  const normalizedWebpNearLossless = Math.max(0, Math.min(100, Math.round(formatOptions.webp.nearLossless)))
-  const normalizedPngDitheringLevel =
-    typeof formatOptions.png.ditheringLevel === "number"
-      ? Math.max(0, Math.min(100, Math.round(formatOptions.png.ditheringLevel)))
-      : formatOptions.png.dithering
-      ? 100
-      : 0
-  const normalizedBmpColorDepth =
-    formatOptions.bmp.colorDepth === 1 || formatOptions.bmp.colorDepth === 8 || formatOptions.bmp.colorDepth === 32
-      ? formatOptions.bmp.colorDepth
-      : 24
-  const normalizedBmpDitheringLevel =
-    typeof formatOptions.bmp.ditheringLevel === "number"
-      ? Math.max(0, Math.min(100, Math.round(formatOptions.bmp.ditheringLevel)))
-      : formatOptions.bmp.dithering
-      ? 100
-      : 0
-  const normalizedTiffColorMode: "color" | "grayscale" =
-    formatOptions.tiff.colorMode === "grayscale" ? "grayscale" : "color"
-  const normalizedIcoSizes = Array.from(
-    new Set((formatOptions.ico.sizes ?? []).filter((size) => Number.isInteger(size) && size > 0))
-  ).sort((a, b) => a - b)
+  const normalizedCodecOptions = normalizeTargetCodecOptions(formatOptions as unknown as FormatCodecOptions)
+  const activeCodecOptions = buildActiveCodecOptionsForTarget(
+    effectiveTargetFormat,
+    normalizedCodecOptions
+  )
 
   const mergedFormatOptions: FormatConfig["formatOptions"] = {
     ...config.formatOptions,
-    bmp: isBmpTarget
-      ? {
-          colorDepth: normalizedBmpColorDepth,
-          dithering: normalizedBmpColorDepth === 1 && normalizedBmpDitheringLevel > 0,
-          ditheringLevel: normalizedBmpColorDepth === 1 ? normalizedBmpDitheringLevel : 0
-        }
-      : undefined,
-    jxl: isJxlTarget
-      ? {
-          ...config.formatOptions?.jxl,
-          effort: normalizedJxlEffort
-        }
-      : undefined,
-    webp: isWebpTarget
-      ? {
-          ...config.formatOptions?.webp,
-          lossless: Boolean(formatOptions.webp.lossless),
-          nearLossless: normalizedWebpNearLossless,
-          effort: normalizedWebpEffort,
-          sharpYuv: Boolean(formatOptions.webp.sharpYuv),
-          preserveExactAlpha: Boolean(formatOptions.webp.preserveExactAlpha)
-        }
-      : undefined,
-    avif: isAvifTarget
-      ? {
-          ...config.formatOptions?.avif,
-          speed: normalizedAvifSpeed,
-          qualityAlpha: normalizedAvifQualityAlpha,
-          lossless: formatOptions.avif.lossless,
-          subsample: formatOptions.avif.subsample,
-          tune: formatOptions.avif.tune,
-          highAlphaQuality: formatOptions.avif.highAlphaQuality
-        }
-      : undefined,
-    ico: isIcoTarget
-      ? {
-          sizes: normalizedIcoSizes.length ? normalizedIcoSizes : [16],
-          generateWebIconKit: formatOptions.ico.generateWebIconKit,
-          optimizeInternalPngLayers: Boolean(formatOptions.ico.optimizeInternalPngLayers)
-        }
-      : undefined,
-    png: isPngTarget
-      ? {
-          ...config.formatOptions?.png,
-          tinyMode: Boolean(formatOptions.png.tinyMode),
-          cleanTransparentPixels: Boolean(formatOptions.png.cleanTransparentPixels),
-          autoGrayscale: Boolean(formatOptions.png.autoGrayscale),
-          dithering: normalizedPngDitheringLevel > 0,
-          ditheringLevel: normalizedPngDitheringLevel,
-          progressiveInterlaced: Boolean(formatOptions.png.progressiveInterlaced),
-          oxipngCompression: Boolean(formatOptions.png.oxipngCompression)
-        }
-      : undefined,
-    tiff: isTiffTarget
-      ? {
-          colorMode: normalizedTiffColorMode
-        }
-      : undefined
+    bmp: activeCodecOptions.bmp,
+    jxl: activeCodecOptions.jxl,
+    webp: activeCodecOptions.webp,
+    avif: activeCodecOptions.avif,
+    ico: activeCodecOptions.ico,
+    png: activeCodecOptions.png,
+    tiff: activeCodecOptions.tiff,
+    mozjpeg: activeCodecOptions.mozjpeg ?? config.formatOptions?.mozjpeg
   }
 
   if (!override) {
