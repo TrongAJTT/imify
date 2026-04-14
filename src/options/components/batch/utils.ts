@@ -1,16 +1,15 @@
-import { PAPER_OPTIONS, QUALITY_FORMATS } from "@/options/shared"
+import { QUALITY_FORMATS } from "@/options/shared"
 import { toOutputFilename } from "@/core/download-utils"
 import { APP_CONFIG } from "@/core/config"
 import type {
   ConversionProgressPayload,
   FormatConfig,
   ResizeConfig,
-  ResizeMode,
   ResizeResamplingAlgorithm,
   SupportedDPI
 } from "@/core/types"
 import type { BatchFormatOptions, BatchResizeMode } from "@/options/components/batch/types"
-import { normalizeResizeResamplingAlgorithm } from "@/core/resize-resampling"
+import { buildResizeOverrideFromState } from "@/options/shared/resize-state"
 
 export const MAX_FILE_SIZE_BYTES = APP_CONFIG.BATCH.MAX_FILE_SIZE_MB * 1024 * 1024
 export const MAX_TOTAL_QUEUE_BYTES = APP_CONFIG.BATCH.OOM_WARNING_MB * 1024 * 1024
@@ -90,48 +89,20 @@ export function buildResizeOverride(
   paperSize: string,
   dpi: SupportedDPI
 ): ResizeConfig | null {
-  if (mode === "inherit") {
-    return null
-  }
-
-  if (mode === "none") {
-    return {
-      mode: "none",
-      resamplingAlgorithm: undefined
-    }
-  }
-
-  const normalizedResamplingAlgorithm = normalizeResizeResamplingAlgorithm(resamplingAlgorithm)
-
-  if (mode === "page_size") {
-    const paper = PAPER_OPTIONS.includes(paperSize as any) ? paperSize : PAPER_OPTIONS[0]
-    return {
-      mode: "page_size",
-      dpi,
-      value: paper,
-      resamplingAlgorithm: normalizedResamplingAlgorithm
-    } as ResizeConfig
-  }
-
-  if (mode === "set_size") {
-    return {
-      mode: "set_size",
-      width: Math.max(1, Math.round(width)),
-      height: Math.max(1, Math.round(height)),
-      aspectMode,
-      aspectRatio,
-      sizeAnchor: anchor,
-      fitMode,
-      containBackground,
-      resamplingAlgorithm: normalizedResamplingAlgorithm
-    }
-  }
-
-  return {
-    mode: mode as Exclude<ResizeMode, "none" | "page_size">,
-    value: Math.max(1, Math.round(value)),
-    resamplingAlgorithm: normalizedResamplingAlgorithm
-  }
+  return buildResizeOverrideFromState({
+    mode,
+    value,
+    width,
+    height,
+    aspectMode,
+    aspectRatio,
+    anchor,
+    fitMode,
+    containBackground,
+    resamplingAlgorithm,
+    paperSize,
+    dpi
+  })
 }
 
 export function withBatchResize(

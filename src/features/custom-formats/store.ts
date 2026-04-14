@@ -2,15 +2,12 @@ import type {
   ExtensionStorageState,
   FormatCodecOptions,
   FormatConfig,
-  PaperSize,
-  ResizeConfig,
-  ResizeMode,
-  SupportedDPI
+  ResizeConfig
 } from "@/core/types"
-import { normalizeResizeResamplingAlgorithm } from "@/core/resize-resampling"
 import { CUSTOM_FORMATS, QUALITY_FORMATS } from "@/core/format-config"
 import { normalizeFormatOptionsForCustomFormat } from "@/features/custom-formats/format-options-normalizer"
 import { patchStorageState } from "@/features/settings"
+import { normalizeCustomResizeConfig } from "@/options/shared/resize-state"
 
 export interface CustomFormatInput {
   name: string
@@ -20,9 +17,6 @@ export interface CustomFormatInput {
   formatOptions?: FormatCodecOptions
   resize: ResizeConfig
 }
-
-const PAPER_SIZE_VALUES: PaperSize[] = ["A3", "A4", "A5", "B5", "Letter", "Legal"]
-const DPI_VALUES: SupportedDPI[] = [72, 150, 300]
 
 function clampQuality(quality: number | undefined): number | undefined {
   if (typeof quality !== "number" || Number.isNaN(quality)) {
@@ -34,67 +28,6 @@ function clampQuality(quality: number | undefined): number | undefined {
 
 function createCustomFormatId(): string {
   return `custom_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
-}
-
-function normalizeResizeValue(mode: ResizeMode, value: ResizeConfig["value"]): ResizeConfig["value"] {
-  if (mode === "none") {
-    return undefined
-  }
-
-  if (mode === "set_size") {
-    return undefined
-  }
-
-  if (mode === "page_size") {
-    return typeof value === "string" && PAPER_SIZE_VALUES.includes(value as PaperSize)
-      ? value
-      : "A4"
-  }
-
-  if (typeof value !== "number" || Number.isNaN(value)) {
-    return 100
-  }
-
-  return Math.max(1, Math.round(value))
-}
-
-function normalizeResizeConfig(config: ResizeConfig, format: FormatConfig["format"]): ResizeConfig {
-  const mode = config.mode
-  const value = normalizeResizeValue(mode, config.value)
-  const resamplingAlgorithm = normalizeResizeResamplingAlgorithm(config.resamplingAlgorithm)
-
-  if (mode === "set_size") {
-    return {
-      mode,
-      width: typeof config.width === "number" ? Math.max(1, Math.round(config.width)) : 1280,
-      height: typeof config.height === "number" ? Math.max(1, Math.round(config.height)) : 960,
-      aspectMode: config.aspectMode ?? "free",
-      aspectRatio: config.aspectRatio ?? "16:9",
-      sizeAnchor: config.sizeAnchor ?? "width",
-      fitMode: config.fitMode ?? "fill",
-      containBackground: config.containBackground ?? "#000000",
-      resamplingAlgorithm
-    }
-  }
-
-  if (mode !== "page_size") {
-    return {
-      mode,
-      value,
-      resamplingAlgorithm: mode === "none" ? undefined : resamplingAlgorithm
-    }
-  }
-
-  const dpi = DPI_VALUES.includes(config.dpi as SupportedDPI)
-    ? (config.dpi as SupportedDPI)
-    : 72
-
-  return {
-    mode,
-    value,
-    dpi,
-    resamplingAlgorithm
-  }
 }
 
 function normalizeCustomFormat(input: CustomFormatInput, id: string): FormatConfig {
@@ -110,7 +43,7 @@ function normalizeCustomFormat(input: CustomFormatInput, id: string): FormatConf
     enabled: input.enabled,
     quality: clampQuality(input.quality),
     formatOptions,
-    resize: normalizeResizeConfig(input.resize, input.format)
+    resize: normalizeCustomResizeConfig(input.resize, input.format)
   }
 }
 

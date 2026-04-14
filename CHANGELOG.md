@@ -211,6 +211,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Custom Preset Form Modularization:** Extracted advanced settings wiring into `src/options/components/context-menu/custom-preset-advanced-settings.tsx` and refactored `custom-format-form.tsx` to use shared target-state helpers; this cuts duplicate option-update logic and keeps the form file well below the 600-line guideline.
 
+- **Resize State Normalization (Shared Helper):** Standardized resize-state normalization into `src/options/shared/resize-state.ts` and reused it across custom preset normalization and batch resize override building:
+  - Added shared `normalizeCustomResizeConfig(...)` for custom preset resize state persistence and validation flow.
+  - Added shared `buildResizeOverrideFromState(...)` to centralize Batch/Single resize override construction.
+  - Moved `PAPER_OPTIONS` and `DPI_OPTIONS` to shared resize-state module and re-exported them from `src/options/shared.ts` to preserve existing imports.
+
 - **Context Menu Progress Routing:** Background progress publisher now prioritizes the clicked context-menu tab before falling back to active tab, improving delivery reliability for conversion progress events.
 
 - **Target Format & Quality Card:** When only one format option is provided, the `Target format` selector is now automatically hidden to reduce redundant inputs.
