@@ -2,10 +2,31 @@ import type { ConversionProgressPayload } from "@/core/types"
 
 const MESSAGE_TYPE = "CONVERT_PROGRESS"
 
+async function trySendToTab(tabId: number, payload: ConversionProgressPayload): Promise<boolean> {
+  try {
+    await chrome.tabs.sendMessage(tabId, {
+      type: MESSAGE_TYPE,
+      payload
+    })
+
+    return true
+  } catch {
+    return false
+  }
+}
+
 export async function publishConvertProgress(
-  payload: ConversionProgressPayload
+  payload: ConversionProgressPayload,
+  preferredTabId?: number
 ): Promise<void> {
   try {
+    if (typeof preferredTabId === "number") {
+      const deliveredToPreferredTab = await trySendToTab(preferredTabId, payload)
+      if (deliveredToPreferredTab) {
+        return
+      }
+    }
+
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
     const activeTabId = tabs[0]?.id
 
@@ -13,10 +34,7 @@ export async function publishConvertProgress(
       return
     }
 
-    await chrome.tabs.sendMessage(activeTabId, {
-      type: MESSAGE_TYPE,
-      payload
-    })
+    await trySendToTab(activeTabId, payload)
   } catch {
     // Content script can be missing on many pages. This should not block conversion.
   }

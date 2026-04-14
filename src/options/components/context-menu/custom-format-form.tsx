@@ -1,6 +1,6 @@
 import type { CustomFormatInput } from "@/features/custom-formats"
 import type { BmpColorDepth, ImageFormat, PaperSize, SupportedDPI } from "@/core/types"
-import { CUSTOM_FORMATS, DEFAULT_ICO_SIZES, FORMAT_LABELS, QUALITY_FORMATS } from "@/core/format-config"
+import { DEFAULT_ICO_SIZES, QUALITY_FORMATS } from "@/core/format-config"
 import { TextInput } from "@/options/components/ui/text-input"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { Button } from "@/options/components/ui/button"
@@ -8,6 +8,7 @@ import { BodyText } from "@/options/components/ui/typography"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { ResizeCard } from "@/options/components/shared/resize-card"
+import { resolveEffectiveTargetFormat } from "@/options/shared/target-format-options"
 import { Check } from "lucide-react"
 
 export function CustomFormatForm({
@@ -25,9 +26,14 @@ export function CustomFormatForm({
   onCancel?: () => void
   errorMessage: string | null
 }) {
-  const canSetQuality = QUALITY_FORMATS.includes(value.format)
+  const effectiveTargetFormat = resolveEffectiveTargetFormat(
+    value.format as Exclude<ImageFormat, "pdf">,
+    value.formatOptions
+  )
+  const canSetQuality =
+    effectiveTargetFormat === "mozjpeg" || QUALITY_FORMATS.includes(effectiveTargetFormat as ImageFormat)
   const isIcoFormat = value.format === "ico"
-  const supportsTinyMode = value.format === "png"
+  const supportsTinyMode = effectiveTargetFormat === "png"
   const normalizedPngDitheringLevel =
     typeof value.formatOptions?.png?.ditheringLevel === "number"
       ? Math.max(0, Math.min(100, Math.round(value.formatOptions.png.ditheringLevel)))
@@ -56,9 +62,34 @@ export function CustomFormatForm({
     sharpYuv: Boolean(value.formatOptions?.webp?.sharpYuv),
     preserveExactAlpha: Boolean(value.formatOptions?.webp?.preserveExactAlpha)
   }
+  const avifOptions = {
+    speed:
+      typeof value.formatOptions?.avif?.speed === "number"
+        ? Math.max(0, Math.min(10, Math.round(value.formatOptions.avif.speed)))
+        : 6,
+    qualityAlpha:
+      typeof value.formatOptions?.avif?.qualityAlpha === "number"
+        ? Math.max(0, Math.min(100, Math.round(value.formatOptions.avif.qualityAlpha)))
+        : undefined,
+    lossless: Boolean(value.formatOptions?.avif?.lossless),
+    subsample:
+      value.formatOptions?.avif?.subsample === 2 || value.formatOptions?.avif?.subsample === 3
+        ? value.formatOptions.avif.subsample
+        : 1,
+    tune:
+      value.formatOptions?.avif?.tune === "ssim" || value.formatOptions?.avif?.tune === "psnr"
+        ? value.formatOptions.avif.tune
+        : "auto",
+    highAlphaQuality: Boolean(value.formatOptions?.avif?.highAlphaQuality)
+  } as const
   const tiffOptions: { colorMode: "color" | "grayscale" } = {
     colorMode: value.formatOptions?.tiff?.colorMode === "grayscale" ? "grayscale" : "color"
   }
+  const mozjpegOptions = {
+    enabled: Boolean(value.formatOptions?.mozjpeg?.enabled),
+    progressive: value.formatOptions?.mozjpeg?.progressive ?? true,
+    chromaSubsampling: value.formatOptions?.mozjpeg?.chromaSubsampling ?? 2
+  } as const
   const rawBmpColorDepth = value.formatOptions?.bmp?.colorDepth
   const bmpColorDepth: BmpColorDepth =
     rawBmpColorDepth === 1 || rawBmpColorDepth === 8 || rawBmpColorDepth === 32
@@ -85,19 +116,17 @@ export function CustomFormatForm({
           {/* Name Input */}
           <TextInput
             label="Name"
-            placeholder="e.g. My Custom JPG"
+            placeholder="e.g. My Custom Preset"
             value={value.name}
             onChange={(next) => onChange({ ...value, name: next })}
           />
 
           {/* Format & Quality Card - Always Open */}
           <TargetFormatQualityCard
-            targetFormat={value.format}
+            targetFormat={effectiveTargetFormat}
             quality={value.quality ?? 90}
             formatConfig={{
-              avif: {
-                speed: value.formatOptions?.avif?.speed
-              },
+              avif: avifOptions,
               webp: {
                 lossless: webpOptions.lossless,
                 nearLossless: webpOptions.nearLossless,
@@ -109,16 +138,16 @@ export function CustomFormatForm({
               },
               bmp: bmpOptions,
               tiff: tiffOptions,
+              mozjpeg: {
+                progressive: mozjpegOptions.progressive,
+                chromaSubsampling: mozjpegOptions.chromaSubsampling
+              },
               ico: {
                 sizes: value.formatOptions?.ico?.sizes ?? Array.from(DEFAULT_ICO_SIZES),
                 generateWebIconKit: value.formatOptions?.ico?.generateWebIconKit ?? false,
                 optimizeInternalPngLayers: value.formatOptions?.ico?.optimizeInternalPngLayers ?? false
               }
             }}
-            formatOptions={CUSTOM_FORMATS.map((formatOption) => ({
-              value: formatOption,
-              label: FORMAT_LABELS[formatOption]
-            }))}
             supportsQuality={canSetQuality}
             supportsTinyMode={supportsTinyMode}
             onToggleWebIconKit={(next) =>
@@ -162,15 +191,24 @@ export function CustomFormatForm({
                 }
               })
             }
-            onTargetFormatChange={(nextFormat) =>
+            onTargetFormatChange={(nextTargetFormat) => {
+              const nextFormat =
+                nextTargetFormat === "mozjpeg"
+                  ? "jpg"
+                  : (nextTargetFormat as ImageFormat)
+
               onChange({
                 ...value,
-                format: nextFormat as ImageFormat,
-                quality: QUALITY_FORMATS.includes(nextFormat as ImageFormat)
-                  ? value.quality ?? 90
-                  : value.quality,
+                format: nextFormat,
+                quality: QUALITY_FORMATS.includes(nextFormat) ? value.quality ?? 90 : value.quality,
                 formatOptions: {
                   ...(value.formatOptions ?? {}),
+                  avif:
+                    nextFormat === "avif"
+                      ? {
+                          ...avifOptions
+                        }
+                      : value.formatOptions?.avif,
                   jxl:
                     nextFormat === "jxl"
                       ? {
@@ -187,6 +225,14 @@ export function CustomFormatForm({
                           preserveExactAlpha: webpOptions.preserveExactAlpha
                         }
                       : value.formatOptions?.webp,
+                  mozjpeg:
+                    nextFormat === "jpg"
+                      ? {
+                          enabled: nextTargetFormat === "mozjpeg",
+                          progressive: mozjpegOptions.progressive,
+                          chromaSubsampling: mozjpegOptions.chromaSubsampling
+                        }
+                      : value.formatOptions?.mozjpeg,
                   ico:
                     nextFormat === "ico"
                       ? value.formatOptions?.ico ?? {
@@ -219,8 +265,20 @@ export function CustomFormatForm({
                     ? { ...value.resize, dpi: value.resize.dpi ?? 72 }
                     : value.resize
               })
-            }
+            }}
             onQualityChange={(next) => onChange({ ...value, quality: next })}
+            onAvifSpeedChange={(next) =>
+              onChange({
+                ...value,
+                formatOptions: {
+                  ...(value.formatOptions ?? {}),
+                  avif: {
+                    ...avifOptions,
+                    speed: next
+                  }
+                }
+              })
+            }
             onJxlEffortChange={(next) =>
               onChange({
                 ...value,
@@ -336,7 +394,97 @@ export function CustomFormatForm({
           />
 
           <FormatAdvancedSettingsCard
-            targetFormat={value.format}
+            targetFormat={effectiveTargetFormat}
+            avif={{
+              qualityAlpha: avifOptions.qualityAlpha,
+              lossless: avifOptions.lossless,
+              subsample: avifOptions.subsample,
+              tune: avifOptions.tune,
+              highAlphaQuality: avifOptions.highAlphaQuality,
+              onQualityAlphaChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    avif: {
+                      ...avifOptions,
+                      qualityAlpha: next
+                    }
+                  }
+                }),
+              onLosslessChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    avif: {
+                      ...avifOptions,
+                      lossless: next
+                    }
+                  }
+                }),
+              onSubsampleChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    avif: {
+                      ...avifOptions,
+                      subsample: next
+                    }
+                  }
+                }),
+              onTuneChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    avif: {
+                      ...avifOptions,
+                      tune: next
+                    }
+                  }
+                }),
+              onHighAlphaQualityChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    avif: {
+                      ...avifOptions,
+                      highAlphaQuality: next
+                    }
+                  }
+                })
+            }}
+            mozjpeg={{
+              progressive: mozjpegOptions.progressive,
+              chromaSubsampling: mozjpegOptions.chromaSubsampling,
+              onProgressiveChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    mozjpeg: {
+                      enabled: Boolean(value.formatOptions?.mozjpeg?.enabled),
+                      progressive: next,
+                      chromaSubsampling: mozjpegOptions.chromaSubsampling
+                    }
+                  }
+                }),
+              onChromaSubsamplingChange: (next) =>
+                onChange({
+                  ...value,
+                  formatOptions: {
+                    ...(value.formatOptions ?? {}),
+                    mozjpeg: {
+                      enabled: Boolean(value.formatOptions?.mozjpeg?.enabled),
+                      progressive: mozjpegOptions.progressive,
+                      chromaSubsampling: next
+                    }
+                  }
+                })
+            }}
             png={{
               cleanTransparentPixels: pngOptions.cleanTransparentPixels,
               autoGrayscale: pngOptions.autoGrayscale,
@@ -349,7 +497,7 @@ export function CustomFormatForm({
                     ...(value.formatOptions ?? {}),
                     png: {
                       ...pngOptions,
-                      cleanTransparentPixels: next,
+                      cleanTransparentPixels: next
                     }
                   }
                 }),
@@ -360,7 +508,7 @@ export function CustomFormatForm({
                     ...(value.formatOptions ?? {}),
                     png: {
                       ...pngOptions,
-                      autoGrayscale: next,
+                      autoGrayscale: next
                     }
                   }
                 }),

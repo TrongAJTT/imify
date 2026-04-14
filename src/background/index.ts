@@ -165,7 +165,7 @@ async function handleImageMenuClick(
     targetFormat: effectiveTargetFormat,
     status: "processing",
     percent: 5
-  })
+  }, tab?.id)
 
   try {
     const response = await fetch(info.srcUrl)
@@ -188,7 +188,7 @@ async function handleImageMenuClick(
       targetFormat: effectiveTargetFormat,
       status: "processing",
       percent: 35
-    })
+    }, tab?.id)
 
     const shouldUseOffscreenWorker =
       OFFSCREEN_PERMISSION_ENABLED &&
@@ -213,7 +213,7 @@ async function handleImageMenuClick(
       status: "processing",
       percent: 72,
       message: "Converting image..."
-    })
+    }, tab?.id)
 
     await publishConvertProgress({
       id: progressId,
@@ -222,7 +222,7 @@ async function handleImageMenuClick(
       status: "processing",
       percent: 92,
       message: "Preparing data for download..."
-    })
+    }, tab?.id)
 
     await publishConvertProgress({
       id: progressId,
@@ -231,7 +231,7 @@ async function handleImageMenuClick(
       status: "success",
       percent: 100,
       message: "Opening download dialog..."
-    })
+    }, tab?.id)
 
     await sleep(220)
 
@@ -250,7 +250,7 @@ async function handleImageMenuClick(
       status: "error",
       percent: 100,
       message
-    })
+    }, tab?.id)
 
     console.error("[imify] Conversion failed", {
       error,

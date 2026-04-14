@@ -2,7 +2,6 @@ import { useMemo, useState } from "react"
 import { FolderOpen, History, Save } from "lucide-react"
 
 import { QUALITY_FORMATS } from "@/options/shared"
-import { getCanonicalExtension } from "@/core/download-utils"
 
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
 import { Kicker } from "@/options/components/ui/typography"
@@ -10,7 +9,6 @@ import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-a
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import { ResizeCard } from "@/options/components/shared/resize-card"
 import {
-  TARGET_FORMAT_OPTIONS,
   type BatchResizeMode,
   type BatchTargetFormat
 } from "@/options/components/batch/types"
@@ -302,10 +300,6 @@ export function BatchSetupSidebarPanel({
             optimizeInternalPngLayers: formatOptions.ico.optimizeInternalPngLayers
           }
         }}
-        formatOptions={TARGET_FORMAT_OPTIONS.map((formatOption) => ({
-          value: formatOption.value,
-          label: `${formatOption.label} (.${getCanonicalExtension(formatOption.value)})`
-        }))}
         supportsQuality={supportsQuality}
         supportsTinyMode={supportsTinyMode}
         onToggleWebIconKit={(v: boolean) => onIcoGenerateWebIconKitChange(v)}

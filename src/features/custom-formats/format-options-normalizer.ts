@@ -115,6 +115,17 @@ export function normalizeFormatOptionsForCustomFormat(
             highAlphaQuality: Boolean(options?.avif?.highAlphaQuality)
           }
         : undefined,
+    mozjpeg:
+      format === "jpg"
+        ? {
+            enabled: Boolean(options?.mozjpeg?.enabled),
+            progressive: options?.mozjpeg?.progressive ?? true,
+            chromaSubsampling:
+              options?.mozjpeg?.chromaSubsampling === 0 || options?.mozjpeg?.chromaSubsampling === 1
+                ? options.mozjpeg.chromaSubsampling
+                : 2
+          }
+        : undefined,
     webp:
       format === "webp"
         ? {

@@ -37,7 +37,7 @@ export function ContextMenuInfoPanel() {
                 Custom Presets
               </div>
               <MutedText className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                Create your own presets with resize, quality, and paper settings for faster access.
+                Build reusable presets with standardized Target Format and Advanced controls, including AVIF and MozJPEG tuning aligned with Single and Batch processors.
               </MutedText>
             </div>
           </div>

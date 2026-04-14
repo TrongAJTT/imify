@@ -1,5 +1,4 @@
-import { DEFAULT_ICO_SIZES, FORMAT_LABELS, QUALITY_FORMATS } from "@/core/format-config"
-import { getCanonicalExtension } from "@/core/download-utils"
+import { DEFAULT_ICO_SIZES, QUALITY_FORMATS } from "@/core/format-config"
 import type {
   BmpColorDepth,
   FormatCodecOptions,
@@ -8,13 +7,11 @@ import type {
   TiffColorMode
 } from "@/core/types"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
-
-type GlobalTargetFormat = ImageFormat | "mozjpeg"
-
-const JPG_TARGET_OPTIONS: Array<{ value: GlobalTargetFormat; label: string }> = [
-  { value: "jpg", label: "JPG (.jpg)" },
-  { value: "mozjpeg", label: "MozJPEG (.jpg)" }
-]
+import {
+  buildTargetFormatOptions,
+  resolveEffectiveTargetFormat,
+  type TargetFormatOptionValue
+} from "@/options/shared/target-format-options"
 
 function normalizeQuality(value: number | undefined): number {
   if (typeof value !== "number" || Number.isNaN(value)) {
@@ -26,7 +23,7 @@ function normalizeQuality(value: number | undefined): number {
 
 interface GlobalFormatTargetQualityProps {
   config: FormatConfig
-  cardFormat: ImageFormat
+  cardFormat: Exclude<ImageFormat, "pdf">
   disabled?: boolean
   onChange: (next: FormatConfig) => void
 }
@@ -106,18 +103,12 @@ export function GlobalFormatTargetQuality({
     optimizeInternalPngLayers: Boolean(sourceOptions.ico?.optimizeInternalPngLayers)
   }
 
-  const targetFormat: GlobalTargetFormat =
-    cardFormat === "jpg" && mozjpegOptions.enabled ? "mozjpeg" : cardFormat
+  const targetFormat = resolveEffectiveTargetFormat(cardFormat, sourceOptions)
 
-  const formatOptions: Array<{ value: string; label: string }> =
+  const formatOptions: Array<{ value: TargetFormatOptionValue; label: string }> =
     cardFormat === "jpg"
-      ? JPG_TARGET_OPTIONS
-      : [
-          {
-            value: cardFormat,
-            label: `${FORMAT_LABELS[cardFormat]} (.${getCanonicalExtension(cardFormat)})`
-          }
-        ]
+      ? buildTargetFormatOptions(["jpg", "mozjpeg"])
+      : buildTargetFormatOptions([cardFormat])
 
   const supportsQuality = targetFormat === "mozjpeg" || QUALITY_FORMATS.includes(targetFormat as ImageFormat)
   const supportsTinyMode = targetFormat === "png"

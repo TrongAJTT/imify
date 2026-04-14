@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Target Format Options (Single Source of Truth):** Added `src/options/shared/target-format-options.ts` to centralize selectable target formats, labels, and canonical extension display used by context-menu and shared setup cards.
+
 - **Context Menu Global Formats (Target Card Integration):** Added per-format `Target Format & Quality` accordion controls directly inside active global format cards.
   - Applies to built-in global cards from `JPG` through `TIFF` (with `PDF` remaining informational/no extra target controls).
   - `JPG` card now supports switching target behavior between standard JPG and MozJPEG mode in the same card.
@@ -194,6 +196,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
 ### Changed
+- **Context Menu Custom Presets (Dialog + Workflow):** Standardized Custom Presets flow to match Global/Single/Batch behavior:
+  - Renamed dialog labels from `Custom Format` to `Custom Preset` (`Create`, `Edit`, and `Add custom preset` actions).
+  - `TargetFormatQualityCard` now supports default all-target options when `formatOptions` is omitted, reducing repeated full option wiring.
+  - Custom Preset Target Format selector now supports MozJPEG mode via JPG codec option (`jpg + mozjpeg.enabled`) with normalized labels.
+  - Custom Preset Advanced group now includes full AVIF and MozJPEG advanced cards in addition to PNG/WebP.
+  - Batch setup sidebar now reuses shared Target Format defaults instead of manually re-building full format option lists.
+
+- **Context Menu Progress Routing:** Background progress publisher now prioritizes the clicked context-menu tab before falling back to active tab, improving delivery reliability for conversion progress events.
+
 - **Target Format & Quality Card:** When only one format option is provided, the `Target format` selector is now automatically hidden to reduce redundant inputs.
 - **Context Menu Background Conversion Flow:** Added effective target-format resolution for global JPG cards configured as MozJPEG so progress state and download MIME routing follow the same adaptive conversion pipeline behavior as Single/Batch processing.
 - **Context Menu Side Information:** Updated `Global Formats` guidance text to match the new per-card target/quality accordion workflow.
@@ -253,6 +264,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI:** Refactored `ColorPickerPopover` from manual absolute positioning with `useState` to Radix UI Popover component with Portal, automatic viewport collision detection (`sideOffset: 8`, `collisionPadding: 12`), and native Escape key handling.
 
 ### Fixed
+- **Custom Preset Toast Reliability:** `src/contents/progress-toast.tsx` now tracks conversion progress per task id (not a single payload), preventing intermittent missing/overwritten toasts when multiple progress updates overlap.
+- **Custom Preset MozJPEG Persistence:** `normalizeFormatOptionsForCustomFormat(...)` now preserves and normalizes JPG MozJPEG options (`enabled`, `progressive`, `chromaSubsampling`) so custom preset conversion behavior matches Single/Batch pipelines.
+
   - Adding null-check in TIFF encoder to validate `UTIF.encodeImage()` result and throw meaningful error if encoding fails.
   - Adding error handling in `readImageMetaOnMain` to gracefully fallback when `createImageBitmap` fails for unsupported image formats (TIFF preview unavailable in some browsers).
   - Adding try-catch wrapper in `createPreviewAsset` to gracefully skip preview generation for formats not supported by browser's image decoding (allows TIFF download without preview).

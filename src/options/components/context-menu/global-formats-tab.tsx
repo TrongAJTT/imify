@@ -267,7 +267,7 @@ export function GlobalFormatsTab({ state, onCommit }: GlobalFormatsTabProps) {
                       <div className="mt-4 flex-1">
                         <GlobalFormatTargetQuality
                           config={config}
-                          cardFormat={cardFormat}
+                          cardFormat={cardFormat as Exclude<ImageFormat, "pdf">}
                           disabled={isSaving}
                           onChange={(nextConfig) => updateFormatConfig(cardFormat, nextConfig)}
                         />

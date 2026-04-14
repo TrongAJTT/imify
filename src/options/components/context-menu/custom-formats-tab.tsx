@@ -33,17 +33,8 @@ interface PendingDelete {
   expiresAt: number
 }
 
-export function CustomFormatsTab({
-  state,
-  onCommit
-}: {
-  state: ExtensionStorageState
-  onCommit: (customFormats: FormatConfig[]) => Promise<void>
-}) {
-  const [draftFormats, setDraftFormats] = useState<FormatConfig[]>(state.custom_formats)
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [createForm, setCreateForm] = useState<CustomFormatInput>({
+function createDefaultCustomPresetForm(): CustomFormatInput {
+  return {
     name: "",
     format: "jpg",
     enabled: true,
@@ -61,6 +52,19 @@ export function CustomFormatsTab({
         sharpYuv: false,
         preserveExactAlpha: false
       },
+      avif: {
+        speed: 6,
+        qualityAlpha: undefined,
+        lossless: false,
+        subsample: 1,
+        tune: "auto",
+        highAlphaQuality: false
+      },
+      mozjpeg: {
+        enabled: false,
+        progressive: true,
+        chromaSubsampling: 2
+      },
       tiff: {
         colorMode: "color"
       },
@@ -71,7 +75,20 @@ export function CustomFormatsTab({
       }
     },
     resize: { mode: "none" }
-  })
+  }
+}
+
+export function CustomFormatsTab({
+  state,
+  onCommit
+}: {
+  state: ExtensionStorageState
+  onCommit: (customFormats: FormatConfig[]) => Promise<void>
+}) {
+  const [draftFormats, setDraftFormats] = useState<FormatConfig[]>(state.custom_formats)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [createForm, setCreateForm] = useState<CustomFormatInput>(createDefaultCustomPresetForm())
   const [createError, setCreateError] = useState<string | null>(null)
   const [editing, setEditing] = useState<{ id: string; form: CustomFormatInput; error: string | null } | null>(
     null
@@ -185,35 +202,7 @@ export function CustomFormatsTab({
     }
 
     setDraftFormats((previous) => [...previous, nextFormat])
-    setCreateForm({
-      name: "",
-      format: "jpg",
-      enabled: true,
-      quality: 90,
-      formatOptions: {
-        bmp: {
-          colorDepth: 24,
-          dithering: false,
-          ditheringLevel: 0
-        },
-        webp: {
-          lossless: false,
-          nearLossless: 100,
-          effort: 5,
-          sharpYuv: false,
-          preserveExactAlpha: false
-        },
-        tiff: {
-          colorMode: "color"
-        },
-        ico: {
-          sizes: [...DEFAULT_ICO_SIZES],
-          generateWebIconKit: false,
-          optimizeInternalPngLayers: false
-        }
-      },
-      resize: { mode: "none" }
-    })
+    setCreateForm(createDefaultCustomPresetForm())
     setCreateError(null)
     setIsCreateDialogOpen(false)
   }
@@ -405,7 +394,7 @@ export function CustomFormatsTab({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
-              <Heading className="text-base font-semibold">Create Custom Format</Heading>
+              <Heading className="text-base font-semibold">Create Custom Preset</Heading>
               <button
                 aria-label="Close dialog"
                 className="rounded border border-slate-300 dark:border-slate-600 p-1.5 text-slate-700 dark:text-slate-200"
@@ -420,7 +409,7 @@ export function CustomFormatsTab({
               onCancel={closeCreateDialog}
               onChange={setCreateForm}
               onSubmit={submitCreate}
-              submitLabel="Add custom format"
+              submitLabel="Add custom preset"
               value={createForm}
             />
           </div>
@@ -517,6 +506,19 @@ export function CustomFormatsTab({
                                 resize: normalizedResize,
                                 formatOptions: {
                                   ...(item.formatOptions ?? {}),
+                                  avif: item.formatOptions?.avif ?? {
+                                    speed: 6,
+                                    qualityAlpha: undefined,
+                                    lossless: false,
+                                    subsample: 1,
+                                    tune: "auto",
+                                    highAlphaQuality: false
+                                  },
+                                  mozjpeg: item.formatOptions?.mozjpeg ?? {
+                                    enabled: false,
+                                    progressive: true,
+                                    chromaSubsampling: 2
+                                  },
                                   webp: item.formatOptions?.webp ?? {
                                     lossless: false,
                                     nearLossless: 100,
@@ -565,7 +567,7 @@ export function CustomFormatsTab({
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700">
             <Edit className="h-8 w-8 text-slate-400" />
           </div>
-          <Heading className="text-base font-semibold">No custom formats yet</Heading>
+          <Heading className="text-base font-semibold">No custom presets yet</Heading>
           <MutedText className="mt-1 max-w-[280px]">
             Create your own presets for frequent conversion tasks and resize modes.
           </MutedText>
@@ -576,7 +578,7 @@ export function CustomFormatsTab({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
-              <Heading className="text-base font-semibold">Edit Custom Format</Heading>
+              <Heading className="text-base font-semibold">Edit Custom Preset</Heading>
               <button
                 aria-label="Close dialog"
                 className="rounded border border-slate-300 dark:border-slate-600 p-1.5 text-slate-700 dark:text-slate-200"
@@ -642,7 +644,7 @@ export function CustomFormatsTab({
           <div className="px-4 py-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <Subheading className="text-sm font-semibold">Custom format deleted</Subheading>
+                <Subheading className="text-sm font-semibold">Custom preset deleted</Subheading>
                 <MutedText className="mt-1 text-xs">
                   {pendingDelete.item.name} will be removed permanently in {Math.max(1, Math.ceil(timeLeftMs / 1000))}s.
                 </MutedText>

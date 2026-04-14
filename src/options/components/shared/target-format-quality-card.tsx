@@ -5,6 +5,7 @@ import { ColoredSliderCard } from "@/options/components/ui/colored-slider-card"
 import { SliderInput } from "@/options/components/ui/slider-input"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
+import { ALL_TARGET_FORMAT_OPTIONS } from "@/options/shared/target-format-options"
 import type { BmpColorDepth } from "@/core/types"
 import { FileJson, Zap } from "lucide-react"
 
@@ -56,7 +57,7 @@ export type TargetFormatQualityCardProps = {
     }
   }
   /** Available format options for dropdown */
-  formatOptions: Array<{ value: string; label: string }>
+  formatOptions?: Array<{ value: string; label: string }>
   /** Whether quality is supported for current format */
   supportsQuality: boolean
   /** Whether tiny mode is supported (PNG only) */
@@ -212,7 +213,8 @@ export function TargetFormatQualityCard({
   }
 
   const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
-  const shouldShowTargetFormatSelector = formatOptions.length > 1
+  const resolvedFormatOptions = formatOptions?.length ? formatOptions : ALL_TARGET_FORMAT_OPTIONS
+  const shouldShowTargetFormatSelector = resolvedFormatOptions.length > 1
 
   return (
     <AccordionCard
@@ -232,7 +234,7 @@ export function TargetFormatQualityCard({
             <SelectInput
               label="Target format"
               disabled={disabled}
-              options={formatOptions}
+              options={resolvedFormatOptions}
               onChange={(v) => onTargetFormatChange(v)}
               value={targetFormat}
             />
@@ -252,9 +254,7 @@ export function TargetFormatQualityCard({
                 value={webpNearLossless}
                 onChange={onWebpNearLosslessChange}
               />
-            ): (
-
-              
+            ) : (
               <SliderInput
                 label="Quality"
                 disabled={disabled || !supportsQuality}
@@ -265,7 +265,6 @@ export function TargetFormatQualityCard({
                 onChange={onQualityChange}
               />
             )}
-
           </>
         )}
 

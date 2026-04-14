@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { ToastContainer } from "@/core/components/toast-container"
 import { useConversionToasts } from "@/core/hooks/use-toast"
@@ -26,13 +26,59 @@ function isConvertProgressMessage(
 }
 
 export default function ProgressToast() {
-  const [payload, setPayload] = useState<ConversionProgressPayload | null>(null)
-  const conversionToasts = useConversionToasts([payload])
-  const handleRemoveToast = useCallback(() => {}, [])
+  const [payloadById, setPayloadById] = useState<Record<string, ConversionProgressPayload>>({})
+  const hideTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+
+  const clearHideTimer = useCallback((id: string) => {
+    const timer = hideTimersRef.current.get(id)
+    if (!timer) {
+      return
+    }
+
+    clearTimeout(timer)
+    hideTimersRef.current.delete(id)
+  }, [])
+
+  const removePayload = useCallback((id: string) => {
+    setPayloadById((previous) => {
+      if (!(id in previous)) {
+        return previous
+      }
+
+      const next = { ...previous }
+      delete next[id]
+      return next
+    })
+  }, [])
+
+  const scheduleHidePayload = useCallback((payload: ConversionProgressPayload) => {
+    clearHideTimer(payload.id)
+
+    const quickHide =
+      payload.status === "success" &&
+      typeof payload.message === "string" &&
+      payload.message.toLowerCase().includes("opening download")
+
+    const delayMs = quickHide ? 180 : 3000
+
+    const timer = setTimeout(() => {
+      removePayload(payload.id)
+      hideTimersRef.current.delete(payload.id)
+    }, delayMs)
+
+    hideTimersRef.current.set(payload.id, timer)
+  }, [clearHideTimer, removePayload])
+
+  const conversionToasts = useConversionToasts(
+    useMemo(() => Object.values(payloadById), [payloadById])
+  )
+
+  const handleRemoveToast = useCallback((toastId: string) => {
+    clearHideTimer(toastId)
+    removePayload(toastId)
+  }, [clearHideTimer, removePayload])
 
   useEffect(() => {
-    let hideTimer: ReturnType<typeof setTimeout> | null = null
-
     const listener: Parameters<typeof chrome.runtime.onMessage.addListener>[0] = (
       message: unknown,
       _sender,
@@ -68,33 +114,30 @@ export default function ProgressToast() {
         return
       }
 
-      setPayload(message.payload)
+      const progressPayload = message.payload
 
-      if (message.payload.status === "success" || message.payload.status === "error") {
-        if (hideTimer) {
-          clearTimeout(hideTimer)
-        }
+      setPayloadById((previous) => ({
+        ...previous,
+        [progressPayload.id]: progressPayload
+      }))
 
-        const quickHide =
-          message.payload.status === "success" &&
-          typeof message.payload.message === "string" &&
-          message.payload.message.toLowerCase().includes("opening download")
-
-        hideTimer = setTimeout(() => {
-          setPayload(null)
-        }, quickHide ? 180 : 3000)
+      if (progressPayload.status === "success" || progressPayload.status === "error") {
+        scheduleHidePayload(progressPayload)
+      } else {
+        clearHideTimer(progressPayload.id)
       }
     }
 
     chrome.runtime.onMessage.addListener(listener)
 
     return () => {
-      if (hideTimer) {
-        clearTimeout(hideTimer)
+      for (const timer of hideTimersRef.current.values()) {
+        clearTimeout(timer)
       }
+      hideTimersRef.current.clear()
       chrome.runtime.onMessage.removeListener(listener)
     }
-  }, [])
+  }, [clearHideTimer, scheduleHidePayload])
 
   return <ToastContainer toasts={conversionToasts} onRemove={handleRemoveToast} />
 }
