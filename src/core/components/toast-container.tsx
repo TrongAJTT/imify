@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Check, AlertTriangle } from "lucide-react"
+import { Check, AlertTriangle, X } from "lucide-react"
 import { AnimatingSpinner } from "@/core/components/animating-spinner"
 import type { ToastPayload } from "@/core/hooks/use-toast"
 
@@ -142,15 +142,18 @@ function ToastItem({ toast, onRemove, index }: ToastItemProps) {
               marginBottom: "4px",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              flexWrap: "wrap"
+              gap: "8px"
             }}
           >
-            {toast.title}
+            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {toast.title}
+            </span>
             {/* Color chip for color-copied toast */}
             {toast.chipText && (
               <span
                 style={{
+                  marginLeft: "auto",
+                  flexShrink: 0,
                   padding: "2px 8px",
                   borderRadius: "4px",
                   background: "rgba(255, 255, 255, 0.1)",
@@ -178,6 +181,30 @@ function ToastItem({ toast, onRemove, index }: ToastItemProps) {
             </p>
           )}
         </div>
+        {toast.type === "error" ? (
+          <button
+            type="button"
+            aria-label="Dismiss toast"
+            onClick={() => onRemove(toast.id)}
+            style={{
+              marginLeft: "6px",
+              marginTop: "-1px",
+              flexShrink: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "18px",
+              height: "18px",
+              borderRadius: "4px",
+              border: "1px solid rgba(255, 255, 255, 0.16)",
+              background: "rgba(255, 255, 255, 0.06)",
+              color: "#cbd5e1",
+              cursor: "pointer"
+            }}
+          >
+            <X size={12} />
+          </button>
+        ) : null}
       </div>
 
       {/* Progress bar */}

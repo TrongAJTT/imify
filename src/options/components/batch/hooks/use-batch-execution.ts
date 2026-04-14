@@ -61,6 +61,7 @@ interface UseBatchExecutionResult {
   cancelRequested: boolean
   summary: BatchSummary | null
   batchToastPayload: ConversionProgressPayload | null
+  clearBatchToast: (toastId?: string) => void
   oomWarning: OomWarningState | null
   runBatch: (mode?: BatchRunMode) => Promise<void>
   requestCancel: () => void
@@ -303,7 +304,7 @@ export function useBatchExecution({
           if (current?.id === batchToastId) return null
           return current
         })
-      }, 4000)
+      }, 5000)
 
       setSummary({
         mode,
@@ -396,12 +397,21 @@ export function useBatchExecution({
     setSummary(null)
   }
 
+  const clearBatchToast = (toastId?: string) => {
+    setBatchToastPayload((current) => {
+      if (!current) return current
+      if (toastId && current.id !== toastId) return current
+      return null
+    })
+  }
+
   return {
     isRunning,
     paused,
     cancelRequested,
     summary,
     batchToastPayload,
+    clearBatchToast,
     oomWarning,
     runBatch,
     requestCancel,

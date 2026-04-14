@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor,
   useSensors, type DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
@@ -126,6 +126,7 @@ export function BatchProcessorTab() {
     cancelRequested,
     summary,
     batchToastPayload,
+    clearBatchToast,
     oomWarning,
     runBatch,
     requestCancel,
@@ -151,6 +152,7 @@ export function BatchProcessorTab() {
     isExporting,
     activeExportAction,
     exportToastPayload,
+    clearExportToast,
     showDownloadConfirm,
     closeDownloadConfirm,
     confirmDownloadIndividually,
@@ -168,6 +170,12 @@ export function BatchProcessorTab() {
   })
   const conversionToasts = useConversionToasts([urlImportToast, exportToastPayload, batchToastPayload])
   const mergedToasts = useMemo(() => [...conversionToasts, ...systemToasts], [conversionToasts, systemToasts])
+  const handleRemoveToast = useCallback((toastId: string) => {
+    hide(toastId)
+    setUrlImportToast((current) => (current?.id === toastId ? null : current))
+    clearExportToast(toastId)
+    clearBatchToast(toastId)
+  }, [clearBatchToast, clearExportToast, hide])
 
   useEffect(() => {
     setBatchIsRunning(isRunning)
@@ -505,7 +513,7 @@ export function BatchProcessorTab() {
         }}
       />
 
-      <ToastContainer toasts={mergedToasts} onRemove={hide} />
+      <ToastContainer toasts={mergedToasts} onRemove={handleRemoveToast} />
     </div>
   )
 }

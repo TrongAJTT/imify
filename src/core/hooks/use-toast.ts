@@ -16,6 +16,7 @@ export interface ToastPayload {
 
 export function mapConversionPayloadToToast(payload: ConversionProgressPayload): ToastPayload {
   const isDone = payload.status === "success" || payload.status === "error"
+  const doneDuration = payload.status === "error" ? 15000 : 3000
 
   return {
     id: payload.id,
@@ -28,7 +29,7 @@ export function mapConversionPayloadToToast(payload: ConversionProgressPayload):
         : payload.status === "success"
           ? "Saved successfully"
           : "Failed to convert"),
-    duration: isDone ? 3000 : undefined,
+    duration: isDone ? doneDuration : undefined,
     chipText: payload.targetFormat.toUpperCase(),
     status: payload.status,
     percent: Math.max(0, Math.min(100, payload.percent))
@@ -94,7 +95,7 @@ export function useToast() {
   )
 
   const copyFailed = useCallback(
-    (reason?: string, duration = 2000) => {
+    (reason?: string, duration = 15000) => {
       return show({
         type: "error",
         title: "Copy failed",
@@ -118,7 +119,7 @@ export function useToast() {
   )
 
   const error = useCallback(
-    (title: string, message?: string, duration = 3000) => {
+    (title: string, message?: string, duration = 15000) => {
       return show({
         type: "error",
         title,

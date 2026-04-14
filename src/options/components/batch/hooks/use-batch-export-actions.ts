@@ -22,6 +22,7 @@ interface UseBatchExportActionsResult {
   isExporting: boolean
   activeExportAction: BatchExportAction | null
   exportToastPayload: ConversionProgressPayload | null
+  clearExportToast: (toastId?: string) => void
   showDownloadConfirm: boolean
   closeDownloadConfirm: () => void
   confirmDownloadIndividually: () => Promise<void>
@@ -90,6 +91,15 @@ export function useBatchExportActions({
 
   const closeDownloadConfirm = () => {
     setShowDownloadConfirm(false)
+  }
+
+  const clearExportToast = (toastId?: string) => {
+    clearExportToastHideTimer()
+    setExportToastPayload((current) => {
+      if (!current) return current
+      if (toastId && current.id !== toastId) return current
+      return null
+    })
   }
 
   const downloadIndividually = async (force: boolean = false) => {
@@ -305,6 +315,7 @@ export function useBatchExportActions({
     isExporting,
     activeExportAction,
     exportToastPayload,
+    clearExportToast,
     showDownloadConfirm,
     closeDownloadConfirm,
     confirmDownloadIndividually,

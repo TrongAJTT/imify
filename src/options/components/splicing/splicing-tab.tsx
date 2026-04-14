@@ -33,7 +33,6 @@ import { useKeyPress } from "@/options/hooks/use-key-press"
 import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 
 const THUMB_MAX = 256
-const LARGE_IMPORT_THRESHOLD = 20
 
 async function generateThumbnail(
   file: File
@@ -152,7 +151,18 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [previewQualityToastPayload, setPreviewQualityToastPayload] = useState<ConversionProgressPayload | null>(null)
   const conversionToasts = useConversionToasts([importToastPayload, previewQualityToastPayload])
-  const handleRemoveToast = useCallback(() => {}, [])
+  const handleRemoveToast = useCallback((toastId: string) => {
+    if (importToastHideTimerRef.current) {
+      clearTimeout(importToastHideTimerRef.current)
+      importToastHideTimerRef.current = null
+    }
+    if (previewQualityToastHideTimerRef.current) {
+      clearTimeout(previewQualityToastHideTimerRef.current)
+      previewQualityToastHideTimerRef.current = null
+    }
+    setImportToastPayload((current) => (current?.id === toastId ? null : current))
+    setPreviewQualityToastPayload((current) => (current?.id === toastId ? null : current))
+  }, [])
   const [heavyPreviewQualityDialogOpen, setHeavyPreviewQualityDialogOpen] = useState(false)
   const [pendingPreviewQualityPercent, setPendingPreviewQualityPercent] = useState<number | null>(null)
   const [pendingExportModeForConfirm, setPendingExportModeForConfirm] = useState<SplicingExportMode | null>(null)
@@ -369,7 +379,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
     const imageFiles = files.filter((f) => f.type.startsWith("image/"))
     if (imageFiles.length === 0) return
 
-    const shouldShowProgress = imageFiles.length >= LARGE_IMPORT_THRESHOLD
+    const shouldShowProgress = true
     const toastId = `splicing_import_${Date.now()}`
     if (shouldShowProgress) {
       pushImportToast({
