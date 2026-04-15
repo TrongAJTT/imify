@@ -173,7 +173,13 @@ export async function applyWatermarkToImageBlob(sourceBlob: Blob, watermark: Bat
     }
   }
 
-  const sourceBitmap = await createImageBitmap(sourceBlob)
+  let sourceBitmap: ImageBitmap
+  try {
+    sourceBitmap = await createImageBitmap(sourceBlob)
+  } catch (err) {
+    console.warn("Failed to decode source image for watermark processing, returning original", err)
+    return sourceBlob
+  }
 
   try {
     const canvas = new OffscreenCanvas(sourceBitmap.width, sourceBitmap.height)

@@ -21,6 +21,7 @@ import { Button } from "@/options/components/ui/button"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
 import { Heading, MutedText } from "@/options/components/ui/typography"
 import { useBatchStore } from "@/options/stores/batch-store"
+import { useWatermarkStore } from "@/options/stores/watermark-store"
 import { ImageUrlImportControl } from "@/options/components/image-url-import-control"
 
 const PREVIEW_DEBOUNCE_MS = 420
@@ -134,7 +135,7 @@ export function SingleProcessorTab() {
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
-  const watermark = useBatchStore((state) => state.watermark)
+  const watermark = useWatermarkStore((state) => state.contextWatermarks.single)
   const syncResizeToSource = useBatchStore((state) => state.syncResizeToSource)
 
   const [sourceFile, setSourceFile] = useState<File | null>(null)

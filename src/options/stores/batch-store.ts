@@ -5,9 +5,7 @@ import { Storage } from "@plasmohq/storage"
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import { normalizeResizeResamplingAlgorithm } from "@/core/resize-resampling"
 import type { BmpColorDepth, PaperSize, SupportedDPI, TiffColorMode } from "@/core/types"
-import type { BatchResizeMode, BatchSetupState, BatchTargetFormat, BatchWatermarkConfig } from "@/options/components/batch/types"
-import { DEFAULT_BATCH_WATERMARK } from "@/options/components/batch/watermark"
-import { watermarkStorage } from "@/core/indexed-db"
+import type { BatchResizeMode, BatchSetupState, BatchTargetFormat } from "@/options/components/batch/types"
 
 const storage = new Storage({
   area: "local"
@@ -122,14 +120,17 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   paperSize: "A4",
   dpi: 300,
   stripExif: false,
-  fileNamePattern: "[OriginalName]",
-  watermark: DEFAULT_BATCH_WATERMARK
+  fileNamePattern: "[OriginalName]"
 }
 
 function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
   if (!state) {
     // Fallback to default if state is undefined
     return cloneSetupState(DEFAULT_BATCH_STATE)
+  }
+
+  const { watermark: _legacyWatermark, ...stateWithoutLegacyWatermark } = state as BatchSetupState & {
+    watermark?: unknown
   }
 
   const formatOptions = state.formatOptions ?? DEFAULT_BATCH_STATE.formatOptions
@@ -213,7 +214,7 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
   }
 
   return {
-    ...state,
+    ...stateWithoutLegacyWatermark,
     formatOptions: {
       ...formatOptions,
       bmp: bmpOptions,
@@ -231,10 +232,7 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
       tiff: tiffOptions,
       ico: icoOptions
     },
-    resizeResamplingAlgorithm: normalizeResizeResamplingAlgorithm(state.resizeResamplingAlgorithm),
-    watermark: {
-      ...state.watermark
-    }
+    resizeResamplingAlgorithm: normalizeResizeResamplingAlgorithm(state.resizeResamplingAlgorithm)
   }
 }
 
@@ -339,7 +337,6 @@ interface BatchStoreState extends BatchSetupState {
   setBmpDitheringLevel: (value: number) => void
   setTiffColorMode: (value: TiffColorMode) => void
   setFileNamePattern: (value: string) => void
-  setWatermark: (value: BatchWatermarkConfig) => void
   skipDownloadConfirm: boolean
   setSkipDownloadConfirm: (value: boolean) => void
   skipOomWarning: boolean
@@ -1403,23 +1400,6 @@ export const useBatchStore = create<BatchStoreState>()(
             }
           } as Partial<BatchStoreState>
         }),
-      setWatermark: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            watermark: value
-          }
-
-          return {
-            watermark: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
       setSkipDownloadConfirm: (value) => set({ skipDownloadConfirm: value }),
       setSkipSplicingHeavyPreviewQualityWarning: (value) =>
         set({ skipSplicingHeavyPreviewQualityWarning: value }),
@@ -1507,10 +1487,7 @@ export const useBatchStore = create<BatchStoreState>()(
             paperSize: state.paperSize,
             dpi: state.dpi,
             stripExif: state.stripExif,
-            fileNamePattern: state.fileNamePattern,
-            watermark: {
-              ...state.watermark
-            }
+            fileNamePattern: state.fileNamePattern
           }
 
           const presetId = `preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
@@ -1566,26 +1543,6 @@ export const useBatchStore = create<BatchStoreState>()(
         })),
       deletePreset: (presetId) =>
         set((state) => {
-          const presetToRemove = state.presets.find(p => p.id === presetId)
-          
-          // Cleanup IndexedDB if this preset had a unique logo
-          if (presetToRemove?.config.watermark.logoBlobId) {
-            const logoId = presetToRemove.config.watermark.logoBlobId
-            
-            // Only delete if no other preset OR current context is using this logo
-            const isLogoInUseByOtherPresets = state.presets.some(p => 
-              p.id !== presetId && p.config.watermark.logoBlobId === logoId
-            )
-            const isLogoInUseByCurrentContexts = (["single", "batch"] as SetupContext[]).some(ctx => {
-              const contextConfigs = (state as any).contextConfigs
-              return contextConfigs?.[ctx]?.watermark?.logoBlobId === logoId
-            })
-
-            if (!isLogoInUseByOtherPresets && !isLogoInUseByCurrentContexts) {
-              void watermarkStorage.remove(logoId)
-            }
-          }
-
           const nextPresets = state.presets.filter((preset) => preset.id !== presetId)
           const nextRecentPresetIds = {
             ...state.recentPresetIds
@@ -1617,24 +1574,21 @@ export const useBatchStore = create<BatchStoreState>()(
         // Only persist the non-runtime state
         const { isRunning, heavyFormatToast, isTargetFormatQualityOpen, isResizeOpen, ...rest } = state
 
-        // Deep clean watermark to remove logoDataUrl from permanent storage
-        // IndexedDB handles the actual image data via logoBlobId
-        const cleanContextConfig = (config: BatchSetupState): BatchSetupState => ({
-          ...config,
-          watermark: {
-            ...config.watermark,
-            logoDataUrl: undefined
-          }
-        })
+        const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+        const normalizedContextConfigs = {
+          single: cloneSetupState(contextConfigs.single),
+          batch: cloneSetupState(contextConfigs.batch)
+        }
 
-        const presets = state.presets.map(p => ({
-          ...p,
-          config: cleanContextConfig(p.config)
+        const presets = state.presets.map((preset) => ({
+          ...preset,
+          config: cloneSetupState(preset.config)
         }))
 
         return {
           ...rest,
-          ...cleanContextConfig(rest as unknown as BatchSetupState),
+          ...cloneSetupState(rest as unknown as BatchSetupState),
+          contextConfigs: normalizedContextConfigs,
           presets
         }
       },

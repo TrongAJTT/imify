@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Target Format Options (Single Source of Truth):** Added `src/options/shared/target-format-options.ts` to centralize selectable target formats, labels, and canonical extension display used by context-menu and shared setup cards.
 
+- **Watermark Library (Save/Open in Watermark Dialog):** Added dedicated watermark pattern management in the Watermarking dialog:
+  - New `Save` and `Open Saved` actions next to `Reset`.
+  - New BaseDialog-powered `Open Saved Watermark` flow with grid cards (name, saved date, preview), selection, open, and delete actions.
+  - New BaseDialog-powered `Save Watermark` flow with `Save as new` and `Overwrite existing` actions.
+  - Overwrite flow now supports selecting a saved watermark target first, then auto-filling editable name before saving.
+  - Watermark dialog sublabel now appends `Saved` when current watermark matches a saved pattern.
+
 - **Context Menu Global Formats (Target Card Integration):** Added per-format `Target Format & Quality` accordion controls directly inside active global format cards.
   - Applies to built-in global cards from `JPG` through `TIFF` (with `PDF` remaining informational/no extra target controls).
   - `JPG` card now supports switching target behavior between standard JPG and MozJPEG mode in the same card.
@@ -196,6 +203,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
 ### Changed
+- **Watermark Storage Ownership (Single/Batch Decoupling):** Watermark data is now managed by a dedicated watermark store instead of being embedded in Single/Batch setup presets and context config persistence.
+  - Single Processor and Batch Processor now consume watermark config from watermark store context (`single`/`batch`) only.
+  - Batch setup preset save/apply/delete flows no longer persist watermark payloads.
+  - Export Settings watermark sublabel now appends `Saved` when current context watermark matches a saved watermark entry.
+
 - **Context Menu Custom Presets (Dialog + Workflow):** Standardized Custom Presets flow to match Global/Single/Batch behavior:
   - Renamed dialog labels from `Custom Format` to `Custom Preset` (`Create`, `Edit`, and `Add custom preset` actions).
   - `TargetFormatQualityCard` now supports default all-target options when `formatOptions` is omitted, reducing repeated full option wiring.

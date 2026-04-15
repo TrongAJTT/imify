@@ -6,19 +6,17 @@ import SidebarCard from "@/options/components/ui/sidebar-card"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { ExportControlsPanel } from "@/options/components/shared/export-controls-panel"
 import { SmartConcurrencyAdvisorCard } from "@/options/components/shared/smart-concurrency-advisor-card"
-import { WATERMARK_POSITION_OPTIONS } from "@/options/components/batch/watermark"
+import { buildWatermarkSummary } from "@/options/components/batch/watermark-config"
 import {
   calculateConcurrencyAdvisor,
   resolveConcurrencyLockState,
   type PerformancePreferences
 } from "@/options/shared/performance-preferences"
-import type { BatchFormatOptions, BatchTargetFormat } from "@/options/components/batch/types"
-
-interface BatchWatermarkConfig {
-  type: "none" | "text" | "logo"
-  position: string
-  [key: string]: any
-}
+import type {
+  BatchFormatOptions,
+  BatchTargetFormat,
+  BatchWatermarkConfig
+} from "@/options/components/batch/types"
 
 interface BatchExportPanelProps {
   /** Format being exported (for concurrency limits) */
@@ -33,6 +31,8 @@ interface BatchExportPanelProps {
   supportsExif: boolean
   /** Watermark configuration */
   watermark: BatchWatermarkConfig
+  /** Whether current watermark matches a saved watermark card */
+  watermarkSaved: boolean
   /** Active format options for advisor simulation */
   formatOptions: BatchFormatOptions
   /** Active resize config for advisor simulation */
@@ -64,6 +64,7 @@ export function BatchExportPanel({
   stripExif,
   supportsExif,
   watermark,
+  watermarkSaved,
   formatOptions,
   resizeConfigForAdvisor,
   onConcurrencyChange,
@@ -74,10 +75,8 @@ export function BatchExportPanel({
   onOpenSettings,
   disabled = false
 }: BatchExportPanelProps) {
-  const watermarkSummary =
-    watermark.type === "none"
-      ? "None"
-      : `${watermark.type === "text" ? "Text" : "Logo"} - ${WATERMARK_POSITION_OPTIONS.find((option) => option.value === watermark.position)?.label || "Bottom-Right"}`
+  const watermarkSummaryBase = buildWatermarkSummary(watermark)
+  const watermarkSummary = watermarkSaved ? `${watermarkSummaryBase} · Saved` : watermarkSummaryBase
   const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat
   const advisorFormatOptions = useMemo(
     () => ({

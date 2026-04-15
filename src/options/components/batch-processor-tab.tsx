@@ -24,6 +24,7 @@ import { useBatchExportActions } from "@/options/components/batch/hooks/use-batc
 import { ImageUrlImportControl } from "@/options/components/image-url-import-control"
 import { buildActiveCodecOptionsForTarget } from "@/options/shared/target-format-state"
 import { useBatchStore } from "@/options/stores/batch-store"
+import { useWatermarkStore } from "@/options/stores/watermark-store"
 
 export function BatchProcessorTab() {
   const targetFormat = useBatchStore((state) => state.targetFormat)
@@ -44,7 +45,7 @@ export function BatchProcessorTab() {
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
-  const watermark = useBatchStore((state) => state.watermark)
+  const watermark = useWatermarkStore((state) => state.contextWatermarks.batch)
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const skipOomWarning = useBatchStore((state) => state.skipOomWarning)
   const setSkipOomWarning = useBatchStore((state) => state.setSkipOomWarning)

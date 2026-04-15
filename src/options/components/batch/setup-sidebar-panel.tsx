@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { FolderOpen, History, Save } from "lucide-react"
 
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
@@ -7,11 +7,13 @@ import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-a
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import { ResizeCard } from "@/options/components/shared/resize-card"
 import {
+  type BatchWatermarkConfig,
   type BatchResizeMode,
   type BatchTargetFormat
 } from "@/options/components/batch/types"
 import { buildResizeOverride } from "@/options/components/batch/utils"
 import { useBatchStore } from "@/options/stores/batch-store"
+import { useWatermarkStore } from "@/options/stores/watermark-store"
 import { Tooltip } from "@/options/components/tooltip"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import { BatchRenameDialog } from "./rename-dialog"
@@ -74,7 +76,8 @@ export function BatchSetupSidebarPanel({
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
   const fileNamePattern = useBatchStore((state) => state.fileNamePattern)
-  const watermark = useBatchStore((state) => state.watermark)
+  const watermark = useWatermarkStore((state) => state.contextWatermarks[setupContext])
+  const watermarkSavedId = useWatermarkStore((state) => state.contextSavedIds[setupContext] ?? null)
 
   const onTargetFormatChange = useBatchStore((state) => state.setTargetFormat)
   const onConcurrencyChange = useBatchStore((state) => state.setConcurrency)
@@ -119,7 +122,7 @@ export function BatchSetupSidebarPanel({
   const onBmpDitheringLevelChange = useBatchStore((state) => state.setBmpDitheringLevel)
   const onTiffColorModeChange = useBatchStore((state) => state.setTiffColorMode)
   const onFileNamePatternChange = useBatchStore((state) => state.setFileNamePattern)
-  const onWatermarkChange = useBatchStore((state) => state.setWatermark)
+  const setContextWatermark = useWatermarkStore((state) => state.setContextWatermark)
   const presets = useBatchStore((state) => state.presets)
   const recentPresetIds = useBatchStore((state) => state.recentPresetIds)
   const saveCurrentPreset = useBatchStore((state) => state.saveCurrentPreset)
@@ -132,6 +135,14 @@ export function BatchSetupSidebarPanel({
   const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false)
   const [isOpenPresetDialogOpen, setIsOpenPresetDialogOpen] = useState(false)
   const [editingPreset, setEditingPreset] = useState<any | null>(null)
+  const watermarkIsSaved = Boolean(watermarkSavedId)
+
+  const onWatermarkChange = useCallback(
+    (value: BatchWatermarkConfig) => {
+      setContextWatermark(setupContext, value)
+    },
+    [setContextWatermark, setupContext]
+  )
   const supportsQuality = supportsTargetFormatQuality(targetFormat)
   const supportsTinyMode = supportsTargetFormatTinyMode(targetFormat)
   const supportsExif = ["jpg", "webp", "avif", "mozjpeg"].includes(targetFormat)
@@ -376,6 +387,7 @@ export function BatchSetupSidebarPanel({
         stripExif={stripExif}
         supportsExif={supportsExif}
         watermark={watermark}
+        watermarkSaved={watermarkIsSaved}
         formatOptions={formatOptions}
         onConcurrencyChange={onConcurrencyChange}
         onFileRenamingClick={() => setIsRenameDialogOpen(true)}
@@ -396,6 +408,7 @@ export function BatchSetupSidebarPanel({
 
       <BatchWatermarkDialog
         isOpen={isWatermarkDialogOpen}
+        setupContext={setupContext}
         onClose={() => setIsWatermarkDialogOpen(false)}
         onSave={onWatermarkChange}
         initialConfig={watermark}

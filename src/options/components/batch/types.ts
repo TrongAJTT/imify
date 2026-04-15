@@ -144,7 +144,6 @@ export interface BatchSetupState {
   dpi: SupportedDPI
   stripExif: boolean
   fileNamePattern: string
-  watermark: BatchWatermarkConfig
 }
 
 export interface BatchSetupHandlers {
@@ -189,7 +188,6 @@ export interface BatchSetupHandlers {
   onBmpDitheringLevelChange: (value: number) => void
   onTiffColorModeChange: (value: TiffColorMode) => void
   onFileNamePatternChange: (value: string) => void
-  onWatermarkChange: (value: BatchWatermarkConfig) => void
 }
 
 export interface BatchSetupPanelProps extends BatchSetupState, BatchSetupHandlers {
