@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import * as Popover from "@radix-ui/react-popover"
 import { HexAlphaColorPicker, HexColorInput, HexColorPicker } from "react-colorful"
 
+import { ControlledPopover } from "@/options/components/ui/controlled-popover"
 import { LabelText } from "@/options/components/ui/typography"
 
 type ColorOutputMode = "rgba" | "hex"
@@ -175,7 +175,6 @@ export function ColorPickerPopover({
   outputMode = "hex",
   className
 }: ColorPickerPopoverProps) {
-  const triggerRef = useRef<HTMLButtonElement>(null)
   const gradientParsed = useMemo(() => parseGradient(value), [value])
   const [activeTab, setActiveTab] = useState<PickerTab>(
     enableGradient && gradientParsed ? "gradient" : "solid"
@@ -303,13 +302,12 @@ export function ColorPickerPopover({
   }
 
   return (
-    <Popover.Root>
-      <div className={`relative ${className ?? ""}`.trim()}>
-        <div className="flex items-center justify-between gap-2">
-          <LabelText className="text-xs">{label}</LabelText>
-          <Popover.Trigger asChild>
+    <div className={`relative ${className ?? ""}`.trim()}>
+      <div className="flex items-center justify-between gap-2">
+        <LabelText className="text-xs">{label}</LabelText>
+        <ControlledPopover
+          trigger={
             <button
-              ref={triggerRef}
               type="button"
               className="h-7 w-7 rounded border border-slate-200 dark:border-slate-700 bg-transparent p-0.5 transition-all hover:shadow-sm"
               aria-label={`Pick ${label} color`}
@@ -323,18 +321,11 @@ export function ColorPickerPopover({
                 }
               />
             </button>
-          </Popover.Trigger>
-        </div>
-
-        <Popover.Portal>
-          <Popover.Content
-            className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xl p-3 z-[9999]"
-            sideOffset={8}
-            side="bottom"
-            align="center"
-            collisionPadding={12}
-          >
-            <div className="w-[200px]">
+          }
+          preset="dropdown"
+          contentClassName="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xl p-3 z-[9999]"
+        >
+          <div className="w-[200px]">
               {enableGradient ? (
                 <div className="mb-2 grid grid-cols-2 rounded-md border border-slate-200 p-0.5 dark:border-slate-700">
                   <button
@@ -458,10 +449,9 @@ export function ColorPickerPopover({
                   </div>
                 </>
               )}
-            </div>
-          </Popover.Content>
-        </Popover.Portal>
+          </div>
+        </ControlledPopover>
       </div>
-    </Popover.Root>
+    </div>
   )
 }

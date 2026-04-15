@@ -1,6 +1,4 @@
-import * as Popover from "@radix-ui/react-popover"
-import { useRef } from "react"
-import { useDelayedHoverOpen } from "@/options/hooks/use-delayed-hover-open"
+import { ControlledPopover } from "@/options/components/ui/controlled-popover"
 
 type TooltipProps = {
   content: React.ReactNode
@@ -24,33 +22,14 @@ export function Tooltip({
   label,
   variant = "normal"
 }: TooltipProps) {
-  const triggerRef = useRef<HTMLDivElement | null>(null)
-  const { open, setOpen, handlers } = useDelayedHoverOpen({ delayMs: 300, openOnFocus: true })
-
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger asChild>
-        <div
-          ref={triggerRef}
-          className="relative"
-          {...handlers}
-        >
-          {children}
-        </div>
-      </Popover.Trigger>
-
-      <Popover.Portal>
-        <Popover.Content
-          className={`bg-black/90 text-white text-[11px] px-2 py-1 rounded shadow-xl z-[9999] pointer-events-none ${variants[variant]}`}
-          sideOffset={8}
-          side="top"
-          align="center"
-          collisionPadding={8}
-        >
-          {label ? <div className="text-[12px] font-bold mb-0.5">{label}</div> : null}
-          <div>{content}</div>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+    <ControlledPopover
+      trigger={<div className="relative">{children}</div>}
+      preset="tooltip"
+      contentClassName={`bg-black/90 text-white text-[11px] px-2 py-1 rounded shadow-xl z-[9999] pointer-events-none ${variants[variant]}`}
+    >
+      {label ? <div className="text-[12px] font-bold mb-0.5">{label}</div> : null}
+      <div>{content}</div>
+    </ControlledPopover>
   )
 }
