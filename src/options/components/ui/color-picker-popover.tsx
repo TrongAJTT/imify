@@ -20,6 +20,7 @@ export interface ColorPickerPopoverProps {
   enableAlpha?: boolean
   enableGradient?: boolean
   outputMode?: ColorOutputMode
+  appearance?: "inline" | "stacked"
   className?: string
 }
 
@@ -173,6 +174,7 @@ export function ColorPickerPopover({
   enableAlpha = false,
   enableGradient = true,
   outputMode = "hex",
+  appearance = "inline",
   className
 }: ColorPickerPopoverProps) {
   const gradientParsed = useMemo(() => parseGradient(value), [value])
@@ -303,13 +305,13 @@ export function ColorPickerPopover({
 
   return (
     <div className={`relative ${className ?? ""}`.trim()}>
-      <div className="flex items-center justify-between gap-2">
+      <div className={appearance === "stacked" ? "space-y-1" : "flex items-center justify-between gap-2"}>
         <LabelText className="text-xs">{label}</LabelText>
         <ControlledPopover
           trigger={
             <button
               type="button"
-              className="h-7 w-7 rounded border border-slate-200 dark:border-slate-700 bg-transparent p-0.5 transition-all hover:shadow-sm"
+              className={`h-7 w-7 rounded border border-slate-200 dark:border-slate-700 bg-transparent p-0.5 transition-all hover:shadow-sm ${appearance === "stacked" ? "" : ""}`}
               aria-label={`Pick ${label} color`}
             >
               <span

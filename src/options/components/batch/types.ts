@@ -44,9 +44,11 @@ export interface BatchWatermarkConfig {
   text: string
   textColor: string
   textScalePercent: number
+  textRotationDeg?: number
   logoDataUrl?: string
   logoBlobId?: string
   logoScalePercent: number
+  logoRotationDeg?: number
 }
 
 export const TARGET_FORMAT_OPTIONS: Array<{ value: BatchTargetFormat; label: string }> =

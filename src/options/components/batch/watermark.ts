@@ -36,7 +36,55 @@ export const DEFAULT_BATCH_WATERMARK: BatchWatermarkConfig = {
   text: "imify",
   textColor: "#FFFFFF",
   textScalePercent: 5,
-  logoScalePercent: 16
+  textRotationDeg: 0,
+  logoScalePercent: 16,
+  logoRotationDeg: 0
+}
+
+interface ParsedGradientStop {
+  color: string
+  offset: number
+}
+
+interface ParsedLinearGradient {
+  angleDeg: number
+  stops: ParsedGradientStop[]
+}
+
+function parseLinearGradientColor(value: string): ParsedLinearGradient | null {
+  const trimmed = value.trim()
+  const match = trimmed.match(/^linear-gradient\(\s*([+-]?\d*\.?\d+)deg\s*,\s*(.+)\s*\)$/i)
+  if (!match) return null
+
+  const angleDeg = Number(match[1])
+  if (!Number.isFinite(angleDeg)) return null
+
+  const parts = match[2]
+    .split(/,(?![^(]*\))/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  if (parts.length < 2) return null
+
+  const stops = parts.map((part, index) => {
+    const stopMatch = part.match(/^(.*?)(?:\s+([+-]?\d*\.?\d+)%?)?$/)
+    const color = stopMatch?.[1]?.trim() || part
+    const parsedOffset = Number(stopMatch?.[2])
+    const offsetFallback = (index / Math.max(1, parts.length - 1)) * 100
+
+    return {
+      color,
+      offset:
+        stopMatch?.[2] && Number.isFinite(parsedOffset)
+          ? Math.max(0, Math.min(100, parsedOffset))
+          : offsetFallback
+    }
+  })
+
+  return {
+    angleDeg,
+    stops: stops.sort((a, b) => a.offset - b.offset)
+  }
 }
 
 function resolvePosition(
@@ -136,21 +184,18 @@ export async function applyWatermarkToImageBlob(sourceBlob: Blob, watermark: Bat
     }
 
     ctx.drawImage(sourceBitmap, 0, 0)
-    ctx.globalAlpha = Math.max(0.05, Math.min(1, watermark.opacity / 100))
 
     if (watermark.type === "text") {
       const shortestEdge = Math.min(sourceBitmap.width, sourceBitmap.height)
       const fontSize = Math.max(14, Math.round(shortestEdge * (watermark.textScalePercent / 100)))
-      const lineHeight = Math.round(fontSize * 1.15)
       const text = watermark.text.trim()
+      const textRotationDeg = Number.isFinite(watermark.textRotationDeg) ? Number(watermark.textRotationDeg) : 0
 
       ctx.font = `700 ${fontSize}px ${parseFontFamily()}`
-      ctx.fillStyle = watermark.textColor || "#FFFFFF"
       ctx.textBaseline = "top"
 
       const textMetrics = ctx.measureText(text)
       const drawWidth = Math.ceil(textMetrics.width)
-      // Use higher descent to avoid cutting off letters like g, j, y
       const drawHeight = fontSize
       const padding = Math.max(0, Math.round(watermark.paddingPx))
       const point = resolvePosition(
@@ -161,8 +206,33 @@ export async function applyWatermarkToImageBlob(sourceBlob: Blob, watermark: Bat
         drawHeight,
         padding
       )
+      const centerX = point.x + drawWidth / 2
+      const centerY = point.y + drawHeight / 2
+      const gradient = parseLinearGradientColor(watermark.textColor || "")
 
-      ctx.fillText(text, point.x, point.y)
+      ctx.save()
+      ctx.globalAlpha = 1
+      ctx.translate(centerX, centerY)
+      ctx.rotate((textRotationDeg * Math.PI) / 180)
+
+      if (gradient) {
+        const radians = ((gradient.angleDeg - 90) * Math.PI) / 180
+        const halfLength = Math.max(1, Math.hypot(drawWidth, drawHeight) / 2)
+        const dx = Math.cos(radians) * halfLength
+        const dy = Math.sin(radians) * halfLength
+        const canvasGradient = ctx.createLinearGradient(-dx, -dy, dx, dy)
+
+        for (const stop of gradient.stops) {
+          canvasGradient.addColorStop(stop.offset / 100, stop.color)
+        }
+
+        ctx.fillStyle = canvasGradient
+      } else {
+        ctx.fillStyle = watermark.textColor || "#FFFFFF"
+      }
+
+      ctx.fillText(text, -drawWidth / 2, -drawHeight / 2)
+      ctx.restore()
     }
 
     if (watermark.type === "logo" && logoBlob) {
@@ -184,8 +254,14 @@ export async function applyWatermarkToImageBlob(sourceBlob: Blob, watermark: Bat
           targetHeight,
           padding
         )
+        const logoRotationDeg = Number.isFinite(watermark.logoRotationDeg) ? Number(watermark.logoRotationDeg) : 0
 
-        ctx.drawImage(logoBitmap, point.x, point.y, targetWidth, targetHeight)
+        ctx.globalAlpha = Math.max(0.05, Math.min(1, watermark.opacity / 100))
+        ctx.save()
+        ctx.translate(point.x + targetWidth / 2, point.y + targetHeight / 2)
+        ctx.rotate((logoRotationDeg * Math.PI) / 180)
+        ctx.drawImage(logoBitmap, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight)
+        ctx.restore()
       } finally {
         logoBitmap.close()
       }

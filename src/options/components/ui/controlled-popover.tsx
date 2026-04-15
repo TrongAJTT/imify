@@ -95,6 +95,8 @@ export function ControlledPopover({
   const resolvedCloseDelayMs = closeDelayMs ?? presetValues.closeDelayMs
 
   const [open, setOpen] = useState(false)
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
+  const triggerWrapperRef = useRef<HTMLSpanElement | null>(null)
   const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const triggerHoveredRef = useRef(false)
@@ -149,13 +151,27 @@ export function ControlledPopover({
 
   useEffect(() => () => clearTimers(), [])
 
+  useEffect(() => {
+    const wrapper = triggerWrapperRef.current
+    if (!wrapper || typeof document === "undefined") {
+      setPortalContainer(null)
+      return
+    }
+
+    // Native <dialog>.showModal() creates top-layer stacking context.
+    // Portaling into the nearest dialog keeps popover above dialog content.
+    const closestDialog = wrapper.closest("dialog")
+    setPortalContainer((closestDialog as HTMLElement | null) ?? document.body)
+  }, [])
+
   const supportsHover = resolvedBehavior === "hover" || resolvedBehavior === "hybrid"
   const supportsClick = resolvedBehavior === "click" || resolvedBehavior === "hybrid"
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen} modal={resolvedModal}>
-      <Popover.Anchor asChild>
+      <Popover.Trigger asChild>
         <span
+          ref={triggerWrapperRef}
           className={triggerWrapperClassName}
           onMouseEnter={() => {
             if (!supportsHover || disabled) return
@@ -177,17 +193,21 @@ export function ControlledPopover({
             triggerHoveredRef.current = false
             closePopover()
           }}
-          onClick={() => {
+          onClick={(event) => {
+            if (disabled || supportsClick) return
+            // In hover-only mode, prevent Radix click toggle behavior.
+            event.preventDefault()
+          }}
+          onPointerDown={() => {
             if (!supportsClick || disabled) return
             clearTimers()
-            setOpen((current) => !current)
           }}
         >
           {trigger}
         </span>
-      </Popover.Anchor>
+      </Popover.Trigger>
 
-      <Popover.Portal>
+      <Popover.Portal container={portalContainer ?? undefined}>
         <Popover.Content
           side={resolvedSide}
           align={resolvedAlign}

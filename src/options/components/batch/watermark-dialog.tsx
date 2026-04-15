@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react"
-import { ImagePlus, Save, Stamp, Type, X, UploadCloud, CheckCircle2 } from "lucide-react"
+import { ImagePlus, RotateCcw, Save, Sparkles, Stamp, Type, X, UploadCloud, CheckCircle2 } from "lucide-react"
 
 import { Button } from "@/options/components/ui/button"
 import { SecondaryButton } from "@/options/components/ui/secondary-button"
 import { NumberInput } from "@/options/components/ui/number-input"
+import { TextInput } from "@/options/components/ui/text-input"
 import { BaseDialog } from "@/options/components/ui/base-dialog"
+import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
+import { Tooltip } from "@/options/components/tooltip"
+import { LabelText } from "@/options/components/ui/typography"
 import type { BatchWatermarkConfig } from "@/options/components/batch/types"
 import {
   DEFAULT_BATCH_WATERMARK,
@@ -28,8 +32,14 @@ function toBlobFromDataUrl(dataUrl: string): Promise<Blob> {
 }
 
 function cloneWatermarkConfig(config: BatchWatermarkConfig): BatchWatermarkConfig {
+  const textRotationDeg = Number.isFinite(config.textRotationDeg) ? Number(config.textRotationDeg) : 0
+  const logoRotationDeg = Number.isFinite(config.logoRotationDeg) ? Number(config.logoRotationDeg) : 0
+
   return {
-    ...config
+    ...DEFAULT_BATCH_WATERMARK,
+    ...config,
+    textRotationDeg,
+    logoRotationDeg
   }
 }
 
@@ -42,6 +52,7 @@ export function BatchWatermarkDialog({
   const [draft, setDraft] = useState<BatchWatermarkConfig>(cloneWatermarkConfig(initialConfig))
   const [previewUrl, setPreviewUrl] = useState<string>(WATERMARK_PREVIEW_DATA_URL)
   const [isLogoLoading, setIsLogoLoading] = useState(false)
+  const [isFilePickerInteracting, setIsFilePickerInteracting] = useState(false)
 
   // Track if there are unsaved changes
   const isDirty = useMemo(() => {
@@ -53,6 +64,24 @@ export function BatchWatermarkDialog({
       setDraft(cloneWatermarkConfig(initialConfig))
     }
   }, [isOpen, initialConfig])
+
+  useEffect(() => {
+    if (!isFilePickerInteracting) {
+      return
+    }
+
+    const releaseInteraction = () => {
+      window.setTimeout(() => {
+        setIsFilePickerInteracting(false)
+      }, 250)
+    }
+
+    window.addEventListener("focus", releaseInteraction)
+
+    return () => {
+      window.removeEventListener("focus", releaseInteraction)
+    }
+  }, [isFilePickerInteracting])
 
   const summary = useMemo(() => {
     if (draft.type === "none") {
@@ -152,6 +181,7 @@ export function BatchWatermarkDialog({
   }, [previewUrl])
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsFilePickerInteracting(false)
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -173,6 +203,10 @@ export function BatchWatermarkDialog({
     }
   }
 
+  const markFilePickerInteraction = () => {
+    setIsFilePickerInteracting(true)
+  }
+
   if (!isOpen) {
     return null
   }
@@ -186,6 +220,7 @@ export function BatchWatermarkDialog({
       isOpen={isOpen}
       onClose={onClose}
       isDirty={isDirty}
+      shouldBlockCloseAttempt={(eventType) => eventType === "cancel" && isFilePickerInteracting}
       contentClassName="w-full max-w-3xl rounded-xl overflow-hidden flex flex-col"
     >
       <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
@@ -287,7 +322,19 @@ export function BatchWatermarkDialog({
             </button>
           </div>
 
-          {draft.type !== "none" && (
+          {draft.type === "none" ? (
+            <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/40 px-4 py-6 text-center">
+              <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
+                <Sparkles size={16} />
+              </div>
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">No watermark applied</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Select Text or Logo tab to configure your watermark placeholder.
+              </p>
+            </div>
+          ) : null}
+
+          {draft.type === "logo" && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <NumberInput
@@ -307,91 +354,111 @@ export function BatchWatermarkDialog({
                   onChangeValue={(value) => setDraft((current) => ({ ...current, paddingPx: Math.max(0, value || 0) }))}
                 />
               </div>
-
-              {draft.type === "text" && (
-                <div className="grid grid-cols-2 gap-3 items-end">
-                  <label className="block text-xs font-medium">
-                    <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Watermark text</span>
-                    <input
-                      type="text"
-                      value={draft.text}
-                      onChange={(event) => setDraft((current) => ({ ...current, text: event.target.value }))}
-                      className="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-2 text-xs text-slate-700 dark:text-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 outline-none transition-all"
-                      placeholder="Your brand name"
-                    />
-                  </label>
-                  <label className="block text-xs font-medium">
-                    <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Text color</span>
-                    <input
-                      type="color"
-                      value={draft.textColor}
-                      onChange={(event) => setDraft((current) => ({ ...current, textColor: event.target.value }))}
-                      className="mt-1 h-[38px] w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 transition-all focus:ring-2 focus:ring-sky-500/20"
-                    />
-                  </label>
-                </div>
-              )}
             </div>
           )}
 
-          {draft.type === "text" ? (
-            <div className="pt-2">
-              <NumberInput
-                label="Text scale (%)"
-                min={2}
-                max={20}
-                value={draft.textScalePercent}
-                onChangeValue={(value) =>
-                  setDraft((current) => ({ ...current, textScalePercent: Math.max(2, Math.min(20, value || 2)) }))
-                }
-              />
+          {draft.type === "text" && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <TextInput
+                  label="Watermark text"
+                  value={draft.text}
+                  onChange={(nextText) => setDraft((current) => ({ ...current, text: nextText }))}
+                  placeholder="Your brand name"
+                />
+                <NumberInput
+                  label="Padding (px)"
+                  min={0}
+                  value={draft.paddingPx}
+                  onChangeValue={(value) => setDraft((current) => ({ ...current, paddingPx: Math.max(0, value || 0) }))}
+                />
+                <NumberInput
+                  label="Text scale (%)"
+                  min={2}
+                  max={20}
+                  value={draft.textScalePercent}
+                  onChangeValue={(value) =>
+                    setDraft((current) => ({ ...current, textScalePercent: Math.max(2, Math.min(20, value || 2)) }))
+                  }
+                />
+                <NumberInput
+                  label="Text rotation (deg)"
+                  min={-180}
+                  max={180}
+                  value={draft.textRotationDeg ?? 0}
+                  onChangeValue={(value) =>
+                    setDraft((current) => ({ ...current, textRotationDeg: Math.max(-180, Math.min(180, value || 0)) }))
+                  }
+                />
+              </div>
+                <ColorPickerPopover
+                  label="Text color"
+                  value={draft.textColor}
+                  onChange={(nextColor) => setDraft((current) => ({ ...current, textColor: nextColor }))}
+                  enableAlpha
+                  enableGradient
+                />
             </div>
-          ) : null}
+          )}
 
           {draft.type === "logo" ? (
             <div className="pt-2 animate-in fade-in duration-200">
-              <label className="block text-xs font-medium">
-                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Logo Image (PNG)</span>
-                <div className="mt-1 flex items-center gap-2 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-                  <input
-                    type="file"
-                    id="watermark-logo-upload"
-                    accept="image/png"
-                    onChange={handleLogoUpload}
-                    className="hidden"
-                  />
-                  <label 
-                    htmlFor="watermark-logo-upload"
-                    className={`cursor-pointer px-3 py-1.5 rounded text-[11px] font-bold transition-all flex items-center gap-2
-                      ${isLogoLoading 
-                        ? "bg-slate-100 text-slate-400" 
-                        : "bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:hover:bg-sky-500/20"}`}
-                  >
-                    {isLogoLoading ? (
-                      <div className="w-3 h-3 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <UploadCloud size={14} />
+              <div className="space-y-4">
+                <div>
+                  <LabelText className="text-xs">Logo image (PNG)</LabelText>
+                  <div className="mt-1 flex items-center gap-2 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                    <input
+                      type="file"
+                      id="watermark-logo-upload"
+                      accept="image/png"
+                      onChange={handleLogoUpload}
+                      onClick={markFilePickerInteraction}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="watermark-logo-upload"
+                      onClick={markFilePickerInteraction}
+                      className={`cursor-pointer px-3 py-1.5 rounded text-[11px] font-bold transition-all flex items-center gap-2
+                        ${isLogoLoading
+                          ? "bg-slate-100 text-slate-400"
+                          : "bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:hover:bg-sky-500/20"}`}
+                    >
+                      {isLogoLoading ? (
+                        <div className="w-3 h-3 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <UploadCloud size={14} />
+                      )}
+                      {draft.logoDataUrl ? "Change logo" : "Upload logo"}
+                    </label>
+                    {draft.logoDataUrl && !isLogoLoading && (
+                      <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 size={12} />
+                        READY
+                      </div>
                     )}
-                    {draft.logoDataUrl ? "Change logo" : "Upload logo"}
-                  </label>
-                  {draft.logoDataUrl && !isLogoLoading && (
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 size={12} />
-                      READY
-                    </div>
-                  )}
+                  </div>
                 </div>
-              </label>
-              <div className="mt-4">
-                <NumberInput
-                  label="Logo width (%)"
-                  min={2}
-                  max={40}
-                  value={draft.logoScalePercent}
-                  onChangeValue={(value) =>
-                    setDraft((current) => ({ ...current, logoScalePercent: Math.max(2, Math.min(40, value || 2)) }))
-                  }
-                />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <NumberInput
+                    label="Logo width (%)"
+                    min={2}
+                    max={40}
+                    value={draft.logoScalePercent}
+                    onChangeValue={(value) =>
+                      setDraft((current) => ({ ...current, logoScalePercent: Math.max(2, Math.min(40, value || 2)) }))
+                    }
+                  />
+                  <NumberInput
+                    label="Logo rotation (deg)"
+                    min={-180}
+                    max={180}
+                    value={draft.logoRotationDeg ?? 0}
+                    onChangeValue={(value) =>
+                      setDraft((current) => ({ ...current, logoRotationDeg: Math.max(-180, Math.min(180, value || 0)) }))
+                    }
+                  />
+                </div>
               </div>
             </div>
           ) : null}
@@ -399,13 +466,16 @@ export function BatchWatermarkDialog({
       </div>
 
       <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setDraft(DEFAULT_BATCH_WATERMARK)}
-          className="rounded-md border border-slate-200 dark:border-slate-700 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-50 transition-all dark:text-slate-400 dark:hover:bg-red-500/10"
-        >
-          Reset to defaults
-        </button>
+        <Tooltip content="Reset watermark settings to defaults">
+          <button
+            type="button"
+            onClick={() => setDraft(cloneWatermarkConfig(DEFAULT_BATCH_WATERMARK))}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-50 transition-all dark:text-slate-400 dark:hover:bg-red-500/10"
+            aria-label="Reset watermark settings"
+          >
+            <RotateCcw size={15} />
+          </button>
+        </Tooltip>
 
         <div className="flex gap-3">
           <SecondaryButton onClick={onClose} className="px-6 font-semibold">Cancel</SecondaryButton>

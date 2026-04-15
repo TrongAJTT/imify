@@ -6,6 +6,8 @@ interface BaseDialogProps {
   isOpen: boolean
   onClose: () => void
   isDirty?: boolean
+  /** Optional guard to block a close attempt for specific event types */
+  shouldBlockCloseAttempt?: (eventType: string) => boolean
   children: React.ReactNode
   className?: string
   /** The container class for the inner content wrapper */
@@ -24,6 +26,7 @@ export const BaseDialog: React.FC<BaseDialogProps> = ({
   isOpen,
   onClose,
   isDirty = false,
+  shouldBlockCloseAttempt,
   children,
   className = "",
   contentClassName = ""
@@ -57,10 +60,19 @@ export const BaseDialog: React.FC<BaseDialogProps> = ({
   }, [])
 
   const handleCloseAttempt = (e?: React.SyntheticEvent) => {
+    const eventType = e?.type ?? "manual"
+
+    if (shouldBlockCloseAttempt?.(eventType)) {
+      if (eventType === "cancel") {
+        e?.preventDefault()
+      }
+      return
+    }
+
     // If it's a native cancel (Esc key), prevent the default behavior 
     // to let our React state handle the closing (so we can check isDirty)
-    if (e && e.type === "cancel") {
-      e.preventDefault()
+    if (eventType === "cancel") {
+      e?.preventDefault()
     }
 
     if (isDirty) {
