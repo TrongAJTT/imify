@@ -35,6 +35,7 @@ export interface PerformancePreferences {
 export interface ConcurrencyAdvisorResult {
   enabled: true
   advisorName: "Smart Concurrency Advisor" | "Concurrency Advisor"
+  advisorNameShort: "SCA" | "CA"
   usingFallbackProfile: boolean
   recommended: number
   recommendedMin: number
@@ -581,6 +582,7 @@ export function calculateConcurrencyAdvisor(input: {
   return {
     enabled: true,
     advisorName: usingFallbackProfile ? "Concurrency Advisor" : "Smart Concurrency Advisor",
+    advisorNameShort: usingFallbackProfile ? "CA" : "SCA",
     usingFallbackProfile,
     recommended,
     recommendedMin,

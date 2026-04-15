@@ -406,13 +406,17 @@ export function BatchProcessorTab() {
   }, [sourceTotalAfterRun, outputTotalAfterRun])
 
   const canRetryFailed = queueStats.error > 0 && !isRunning
-  const canStartBatch = Boolean(effectiveConfig) && !isRunning && queue.length > 0
+  const canRunAll = Boolean(effectiveConfig) && !isRunning && queueStats.queued > 0
+  const runAllLabel: "Start Batch" | "Continue Batch" =
+    queueStats.processing > 0 || queueStats.success > 0 || queueStats.error > 0
+      ? "Continue Batch"
+      : "Start Batch"
 
   return (
     <div className="p-6">
       <BatchActionBar
         canRetryFailed={canRetryFailed}
-        canStartBatch={canStartBatch}
+        canRunAll={canRunAll}
         cancelRequested={cancelRequested}
         isRunning={isRunning}
         onCancel={requestCancel}
@@ -430,6 +434,7 @@ export function BatchProcessorTab() {
         paused={paused}
         queueHasItems={queue.length > 0}
         queueStats={queueStats}
+        runAllLabel={runAllLabel}
       />
 
       {cancelRequested ? (

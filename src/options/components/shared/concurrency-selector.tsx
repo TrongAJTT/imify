@@ -1,6 +1,6 @@
 import * as Popover from "@radix-ui/react-popover"
 import { HelpCircle, Lock } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 
 import type { ImageFormat } from "@/core/types"
 import { NumberInput } from "@/options/components/ui/number-input"
@@ -22,6 +22,7 @@ interface ConcurrencySelectorProps {
   onUnlockInSettings?: () => void
   disabled?: boolean
   className?: string
+  headerChip?: ReactNode
 }
 
 export function ConcurrencySelector({
@@ -32,7 +33,8 @@ export function ConcurrencySelector({
   isLocked = false,
   onUnlockInSettings,
   disabled,
-  className = ""
+  className = "",
+  headerChip
 }: ConcurrencySelectorProps) {
   const safeMaxValue = clampConcurrencyValue(maxValue)
   const safeValue = clampConcurrencyValue(value, safeMaxValue)
@@ -90,55 +92,58 @@ export function ConcurrencySelector({
           </div>
         </LabelText>
 
-        {isLocked && (
-          <Popover.Root open={lockPopoverOpen} onOpenChange={setLockPopoverOpen}>
-            <Popover.Trigger asChild>
-              <button
-                type="button"
-                aria-label="Concurrency lock is enabled"
-                className="h-6 w-6 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-sky-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
-                onMouseEnter={openLockPopover}
-                onMouseLeave={scheduleCloseLockPopover}
-                onFocus={openLockPopover}
-                onBlur={scheduleCloseLockPopover}
-              >
-                <Lock size={12} />
-              </button>
-            </Popover.Trigger>
+        <div className="flex items-center gap-2">
+          {headerChip}
+          {isLocked && (
+            <Popover.Root open={lockPopoverOpen} onOpenChange={setLockPopoverOpen}>
+              <Popover.Trigger asChild>
+                <button
+                  type="button"
+                  aria-label="Concurrency lock is enabled"
+                  className="h-6 w-6 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-sky-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
+                  onMouseEnter={openLockPopover}
+                  onMouseLeave={scheduleCloseLockPopover}
+                  onFocus={openLockPopover}
+                  onBlur={scheduleCloseLockPopover}
+                >
+                  <Lock size={12} />
+                </button>
+              </Popover.Trigger>
 
-            <Popover.Portal>
-              <Popover.Content
-                side="top"
-                align="end"
-                sideOffset={8}
-                collisionPadding={10}
-                className="z-[9999] w-64 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-2.5"
-                onMouseEnter={openLockPopover}
-                onMouseLeave={scheduleCloseLockPopover}
-              >
-                <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
-                  Concurrency is locked by Advisor safety guardrails.
-                  Current safe max is <span className="font-semibold">{safeMaxValue}</span>.
-                </p>
-                {onUnlockInSettings && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 w-full"
-                    onClick={() => {
-                      onUnlockInSettings()
-                      clearCloseTimer()
-                      setLockPopoverOpen(false)
-                    }}
-                  >
-                    Unlock In Performance Settings
-                  </Button>
-                )}
-              </Popover.Content>
-            </Popover.Portal>
-          </Popover.Root>
-        )}
+              <Popover.Portal>
+                <Popover.Content
+                  side="top"
+                  align="end"
+                  sideOffset={8}
+                  collisionPadding={10}
+                  className="z-[9999] w-64 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-2.5"
+                  onMouseEnter={openLockPopover}
+                  onMouseLeave={scheduleCloseLockPopover}
+                >
+                  <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                    Concurrency is locked by Advisor safety guardrails.
+                    Current safe max is <span className="font-semibold">{safeMaxValue}</span>.
+                  </p>
+                  {onUnlockInSettings && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-2 w-full"
+                      onClick={() => {
+                        onUnlockInSettings()
+                        clearCloseTimer()
+                        setLockPopoverOpen(false)
+                      }}
+                    >
+                      Unlock In Performance Settings
+                    </Button>
+                  )}
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          )}
+        </div>
       </div>
 
       <NumberInput

@@ -19,6 +19,8 @@ interface ExportControlsPanelProps {
   isConcurrencyLocked?: boolean
   /** Open settings to unlock overclock */
   onUnlockConcurrency?: () => void
+  /** Chip/indicator displayed on the top-right of concurrency selector */
+  concurrencyHeaderChip?: ReactNode
   /** Callback when file renaming is opened */
   onFileRenamingClick: () => void
   /** Whether inputs are disabled */
@@ -43,6 +45,7 @@ export function ExportControlsPanel({
   concurrencyMax,
   isConcurrencyLocked,
   onUnlockConcurrency,
+  concurrencyHeaderChip,
   onFileRenamingClick,
   disabled = false,
   afterConcurrency,
@@ -58,6 +61,7 @@ export function ExportControlsPanel({
         maxValue={concurrencyMax}
         isLocked={isConcurrencyLocked}
         onUnlockInSettings={onUnlockConcurrency}
+        headerChip={concurrencyHeaderChip}
         disabled={disabled}
       />
       {afterConcurrency}

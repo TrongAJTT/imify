@@ -112,38 +112,34 @@ export function SplicingExportPanel({
       defaultOpen={false}
     >
       <div className="space-y-3 pt-1">
-        <div className="grid grid-cols-2 gap-2">
-          <SelectField
-            label="Export mode"
-            value={exportMode}
-            options={modeOptions}
-            onChange={(v) => handleExportModeChange(v as SplicingExportMode)}
-          />
-          {exportMode !== "single" && (
-            <ConcurrencySelector
-              format={concurrencyFormat}
-              value={concurrency}
-              onChange={onConcurrencyChange}
-              maxValue={concurrencyLockState.maxAllowedConcurrency}
-              isLocked={concurrencyLockState.isLocked}
-              onUnlockInSettings={onOpenSettings}
-              disabled={disabled}
-            />
-          )}
-        </div>
+        <SelectField
+          label="Export mode"
+          value={exportMode}
+          options={modeOptions}
+          onChange={(v) => handleExportModeChange(v as SplicingExportMode)}
+        />
         {exportMode !== "single" && (
-          <>
-            <SmartConcurrencyAdvisorCard
-              advisor={advisor}
-              targetFormat={targetFormat}
-              selectedConcurrency={concurrency}
-              formatOptions={advisorFormatOptions}
-              performancePreferences={performancePreferences}
-              onApplyRecommended={onConcurrencyChange}
-              onOpenSettings={onOpenSettings}
-              disabled={disabled}
-            />
-          </>
+          <ConcurrencySelector
+            format={concurrencyFormat}
+            value={concurrency}
+            onChange={onConcurrencyChange}
+            maxValue={concurrencyLockState.maxAllowedConcurrency}
+            isLocked={concurrencyLockState.isLocked}
+            onUnlockInSettings={onOpenSettings}
+            headerChip={
+              <SmartConcurrencyAdvisorCard
+                advisor={advisor}
+                targetFormat={targetFormat}
+                selectedConcurrency={concurrency}
+                formatOptions={advisorFormatOptions}
+                performancePreferences={performancePreferences}
+                onApplyRecommended={onConcurrencyChange}
+                onOpenSettings={onOpenSettings}
+                disabled={disabled}
+              />
+            }
+            disabled={disabled}
+          />
         )}
         <CheckboxCard
           icon={<Crop size={16} />}

@@ -137,7 +137,7 @@ export function BatchExportPanel({
           onUnlockConcurrency={onOpenSettings}
           onFileRenamingClick={onFileRenamingClick}
           disabled={disabled}
-          afterConcurrency={
+          concurrencyHeaderChip={
             <SmartConcurrencyAdvisorCard
               advisor={advisor}
               targetFormat={targetFormat}

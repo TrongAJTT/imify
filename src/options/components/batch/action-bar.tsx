@@ -10,7 +10,8 @@ export interface QueueStats {
 }
 
 export function BatchActionBar({
-  canStartBatch,
+  canRunAll,
+  runAllLabel,
   canRetryFailed,
   isRunning,
   cancelRequested,
@@ -23,7 +24,8 @@ export function BatchActionBar({
   onTogglePause,
   onClear
 }: {
-  canStartBatch: boolean
+  canRunAll: boolean
+  runAllLabel: "Start Batch" | "Continue Batch"
   canRetryFailed: boolean
   isRunning: boolean
   cancelRequested: boolean
@@ -45,11 +47,11 @@ export function BatchActionBar({
   return (
     <div className="flex flex-wrap mb-4 items-center justify-between gap-4 rounded-lg">
       <div className="flex flex-wrap items-center gap-2">
-        {canStartBatch ? (
+        {canRunAll ? (
           <Button variant="default" onClick={onRunAll}>
             <span className="flex items-center gap-2">
               <Play size={16} />
-              Start Batch
+              {runAllLabel}
             </span>
           </Button>
         ) : null}
