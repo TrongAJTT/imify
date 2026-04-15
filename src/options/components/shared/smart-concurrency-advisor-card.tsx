@@ -121,7 +121,7 @@ export function SmartConcurrencyAdvisorCard({
             variant="outline"
             onClick={onOpenSettings}
             disabled={disabled}
-            className="w-full"
+            className="w-full border-2"
           >
             <Settings2 size={14} />
             Enable Smart Advisor
@@ -134,7 +134,7 @@ export function SmartConcurrencyAdvisorCard({
             variant={advisor.riskLevel === "danger" ? "warning" : "outline"}
             onClick={() => onApplyRecommended(advisor.recommended)}
             disabled={disabled}
-            className="w-full mt-2"
+            className="w-full mt-2 border-2"
           >
             <Wand2 size={14} />
             Apply Recommended ({advisor.recommended})

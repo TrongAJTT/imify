@@ -151,13 +151,11 @@ export function BatchExportPanel({
           }
           beforeFileRenaming={
             <>
-              <CheckboxCard
+              {supportsExif && (<CheckboxCard
                 icon={<Lock size={16} />}
                 title="Privacy mode"
                 subtitle={
-                  !supportsExif
-                    ? "JPEG, WebP, and AVIF only"
-                    : stripExif
+                  stripExif
                       ? "Strip EXIF data from output images"
                       : "Keep EXIF data when possible"
                 }
@@ -168,6 +166,7 @@ export function BatchExportPanel({
                 className={!supportsExif ? "opacity-70" : ""}
                 theme="amber"
               />
+              )}
               <SidebarCard
                 icon={<Stamp size={16} />}
                 label="Watermarking"
