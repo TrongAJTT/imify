@@ -17,6 +17,8 @@ import type {
 import { SplicingHeavyPreviewQualityDialog } from "@/options/components/splicing/splicing-heavy-preview-quality-dialog"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { SplicingWorkspace } from "@/options/components/splicing/splicing-workspace"
+import { SplicingWorkspaceShell } from "@/options/components/splicing/splicing-workspace-shell"
+import { SplicingSidebarShell } from "@/options/components/splicing/splicing-sidebar-shell"
 import { SplicingExportDialog, type SplicingExportMode } from "@/options/components/splicing/splicing-export-dialog"
 import { Button } from "@/options/components/ui/button"
 import { ScrollModeToggle } from "@/options/components/ui/scroll-mode-toggle"
@@ -698,7 +700,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
         gridStatsLabel ? ` · ${gridStatsLabel}` : ""
       }`
     : null
-  return (
+  const workspaceContent = (
     <div className="p-6">
       {hasImages ? (
         <div className="flex items-center justify-between mb-4">
@@ -787,5 +789,9 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
         onConfirm={confirmHeavyPreviewQuality}
       />
     </div>
+  )
+
+  return (
+    <SplicingWorkspaceShell workspace={workspaceContent} />
   )
 }
