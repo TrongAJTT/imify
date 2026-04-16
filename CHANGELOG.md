@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Preset Detail Cards & Info Panel Redesign:**
+  - New preset detail cards in select view showing format, quality, resize settings (Single/Batch) and layout, spacing, export format (Splicing).
+  - Info panel redesign across Single Processor, Batch Processor, and Image Splicing with Context Menu-style layout: icon + title + description sections for visual consistency.
+  - Detail cards display key preset configuration in compact, readable format with light background separation.
+
 - **Image Splicing Preset Workflow:** Expanded Image Filling-style preset system to Image Splicing processor:
   - New `SplicingPresetStore` (Zustand + persist) for managing saved splicing presets with full layout/export config snapshots.
   - New splicing preset select view with card-based UI (create/edit/delete actions, highlight color indicator, updated date display).

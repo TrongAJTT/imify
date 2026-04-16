@@ -17,7 +17,7 @@ import { CUSTOM_FORMATS } from "@/core/format-config"
 import { DEFAULT_STORAGE_STATE } from "@/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { SplicingTab } from "@/options/components/splicing/splicing-tab"
-import { SplicingSidebarPanel } from "@/options/components/splicing/splicing-sidebar-panel"
+import { SplicingSidebarShell } from "@/options/components/splicing/splicing-sidebar-shell"
 import { FillingTab } from "@/options/components/filling/filling-tab"
 import { FillingSidebarPanel } from "@/options/components/filling/filling-sidebar-panel"
 import { ProcessorWorkspaceShell } from "@/options/components/processor/processor-workspace-shell"
@@ -556,7 +556,7 @@ export default function OptionsPage() {
             )}
 
             {activeTab === "splicing" && (
-              <SplicingSidebarPanel
+              <SplicingSidebarShell
                 performancePreferences={safePerformancePreferences}
                 onPreviewQualityChange={handleSidebarPreviewQualityChange}
                 onOpenSettings={() => openSettingsDialog("performance")}
@@ -629,7 +629,7 @@ export default function OptionsPage() {
           )}
 
           {activeTab === "splicing" && (
-            <SplicingSidebarPanel
+            <SplicingSidebarShell
               performancePreferences={safePerformancePreferences}
               onPreviewQualityChange={handleSidebarPreviewQualityChange}
               onOpenSettings={() => openSettingsDialog("performance")}
