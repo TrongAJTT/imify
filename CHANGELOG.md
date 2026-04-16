@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Image Splicing Preset Workflow:** Expanded Image Filling-style preset system to Image Splicing processor:
+  - New `SplicingPresetStore` (Zustand + persist) for managing saved splicing presets with full layout/export config snapshots.
+  - New splicing preset select view with card-based UI (create/edit/delete actions, highlight color indicator, updated date display).
+  - New splicing sidebar shell with mode-aware info panel (INFORMATION title) for both select and workspace modes.
+  - New splicing workspace shell with breadcrumb integration (`Image Splicing > {PresetName}`), default preset auto-bootstrap, and async config sync.
+  - Reuses shared UI components (FeatureBreadcrumb, WorkspaceSelectHeader, SavePresetDialog) for consistent cross-feature UX.
+
 - **Target Format Options (Single Source of Truth):** Added `src/options/shared/target-format-options.ts` to centralize selectable target formats, labels, and canonical extension display used by context-menu and shared setup cards.
 
 - **Watermark Library (Save/Open in Watermark Dialog):** Added dedicated watermark pattern management in the Watermarking dialog:
