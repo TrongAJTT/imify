@@ -6,6 +6,7 @@ import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import { normalizeResizeResamplingAlgorithm } from "@/core/resize-resampling"
 import type { BmpColorDepth, PaperSize, SupportedDPI, TiffColorMode } from "@/core/types"
 import type { BatchResizeMode, BatchSetupState, BatchTargetFormat } from "@/options/components/batch/types"
+import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "@/options/shared/preset-colors"
 
 const storage = new Storage({
   area: "local"
@@ -26,6 +27,7 @@ const plasmoStorage = {
 }
 
 export type SetupContext = "single" | "batch"
+export type ProcessorPresetViewMode = "select" | "workspace"
 
 export interface SavedSetupPreset {
   id: string
@@ -265,6 +267,20 @@ function createDefaultUIState(): Record<SetupContext, { isTargetFormatQualityOpe
   }
 }
 
+function createDefaultPresetViewByContext(): Record<SetupContext, ProcessorPresetViewMode> {
+  return {
+    single: "select",
+    batch: "select"
+  }
+}
+
+function createDefaultPresetBootstrapState(): Record<SetupContext, boolean> {
+  return {
+    single: false,
+    batch: false
+  }
+}
+
 function getRecentPresetIdForContext(
   context: SetupContext,
   recentPresetIds: Partial<Record<SetupContext, string>>,
@@ -285,6 +301,12 @@ function getRecentPresetIdForContext(
 
 interface BatchStoreState extends BatchSetupState {
   setupContext: SetupContext
+  contextConfigs: Record<SetupContext, BatchSetupState>
+  sourceStateByContext: Record<SetupContext, { width: number; height: number; syncVersion: number }>
+  uiStates: Record<SetupContext, { isTargetFormatQualityOpen: boolean; isResizeOpen: boolean }>
+  presetViewByContext: Record<SetupContext, ProcessorPresetViewMode>
+  defaultPresetBootstrappedByContext: Record<SetupContext, boolean>
+  activePresetIds: Partial<Record<SetupContext, string>>
   resizeSourceWidth: number
   resizeSourceHeight: number
   resizeSyncVersion: number
@@ -352,10 +374,21 @@ interface BatchStoreState extends BatchSetupState {
   /** Accordion open/close state for Resize - per context */
   isResizeOpen: boolean
   setIsResizeOpen: (value: boolean) => void
-  saveCurrentPreset: (payload: { name: string; highlightColor: string }) => void
+  setPresetViewMode: (context: SetupContext, mode: ProcessorPresetViewMode) => void
+  saveCurrentPreset: (payload: { name: string; highlightColor: string }) => string
   applyPresetToCurrentContext: (presetId: string) => void
+  ensureDefaultPresetForContext: (context: SetupContext) => string | null
+  syncActivePresetConfig: (context: SetupContext) => void
   updatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
   deletePreset: (presetId: string) => void
+}
+
+function cloneContextConfig(state: BatchStoreState, context: SetupContext): BatchSetupState {
+  return cloneSetupState(state.contextConfigs[context] ?? DEFAULT_BATCH_STATE)
+}
+
+function isSetupConfigEqual(a: BatchSetupState, b: BatchSetupState): boolean {
+  return JSON.stringify(cloneSetupState(a)) === JSON.stringify(cloneSetupState(b))
 }
 
 export const useBatchStore = create<BatchStoreState>()(
@@ -369,6 +402,9 @@ export const useBatchStore = create<BatchStoreState>()(
       isRunning: false,
       presets: [],
       recentPresetIds: {},
+      presetViewByContext: createDefaultPresetViewByContext(),
+      defaultPresetBootstrappedByContext: createDefaultPresetBootstrapState(),
+      activePresetIds: {},
       skipDownloadConfirm: false,
       skipOomWarning: false,
       skipSplicingHeavyPreviewQualityWarning: false,
@@ -384,13 +420,45 @@ export const useBatchStore = create<BatchStoreState>()(
             return state
           }
 
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const sourceStateByContext = (state as any).sourceStateByContext ?? createDefaultSourceState()
-          const uiStates = (state as any).uiStates ?? createDefaultUIState()
+          const contextConfigs = state.contextConfigs ?? createDefaultContextConfigs()
+          const sourceStateByContext = state.sourceStateByContext ?? createDefaultSourceState()
+          const uiStates = state.uiStates ?? createDefaultUIState()
+          const presetViewByContext = state.presetViewByContext ?? createDefaultPresetViewByContext()
+          const activePresetIds = { ...state.activePresetIds }
 
-          const nextConfig = contextConfigs[context]
+          let nextConfig = contextConfigs[context]
           const nextSourceState = sourceStateByContext[context]
           const nextUIState = uiStates[context]
+
+          if (presetViewByContext[context] === "workspace") {
+            const activePresetId = activePresetIds[context]
+            const resolvedPreset = state.presets.find(
+              (preset) => preset.id === activePresetId && preset.context === context
+            )
+
+            if (resolvedPreset) {
+              nextConfig = cloneSetupState(resolvedPreset.config)
+            } else {
+              const fallbackPresetId = getRecentPresetIdForContext(context, state.recentPresetIds, state.presets)
+              if (fallbackPresetId) {
+                const fallbackPreset = state.presets.find(
+                  (preset) => preset.id === fallbackPresetId && preset.context === context
+                )
+                if (fallbackPreset) {
+                  activePresetIds[context] = fallbackPreset.id
+                  nextConfig = cloneSetupState(fallbackPreset.config)
+                }
+              } else {
+                delete activePresetIds[context]
+                presetViewByContext[context] = "select"
+              }
+            }
+          }
+
+          const nextContextConfigs = {
+            ...contextConfigs,
+            [context]: cloneSetupState(nextConfig)
+          }
 
           return {
             setupContext: context,
@@ -400,9 +468,11 @@ export const useBatchStore = create<BatchStoreState>()(
             resizeSyncVersion: nextSourceState.syncVersion,
             isTargetFormatQualityOpen: nextUIState.isTargetFormatQualityOpen,
             isResizeOpen: nextUIState.isResizeOpen,
-            contextConfigs,
+            contextConfigs: nextContextConfigs,
             sourceStateByContext,
-            uiStates
+            uiStates,
+            activePresetIds,
+            presetViewByContext
           } as Partial<BatchStoreState>
         }),
       setIsRunning: (value) => set({ isRunning: value }),
@@ -1425,7 +1495,7 @@ export const useBatchStore = create<BatchStoreState>()(
       setIsResizeOpen: (value) =>
         set((state) => {
           const setupContext = state.setupContext
-          const uiStates = (state as any).uiStates ?? createDefaultUIState()
+          const uiStates = state.uiStates ?? createDefaultUIState()
           const nextUIState = {
             ...uiStates[setupContext],
             isResizeOpen: value
@@ -1439,64 +1509,130 @@ export const useBatchStore = create<BatchStoreState>()(
             }
           }
         }),
-      saveCurrentPreset: ({ name, highlightColor }) =>
+      setPresetViewMode: (context, mode) =>
         set((state) => {
-          const timestamp = Date.now()
-          const setupContext = state.setupContext
-          const currentConfig: BatchSetupState = {
-            targetFormat: state.targetFormat,
-            concurrency: state.concurrency,
-            quality: state.quality,
-            formatOptions: {
-              bmp: {
-                ...state.formatOptions.bmp
-              },
-              jxl: {
-                ...state.formatOptions.jxl
-              },
-              webp: {
-                ...state.formatOptions.webp
-              },
-              avif: {
-                ...state.formatOptions.avif
-              },
-              mozjpeg: {
-                ...state.formatOptions.mozjpeg
-              },
-              png: {
-                ...state.formatOptions.png
-              },
-              tiff: {
-                ...state.formatOptions.tiff
-              },
-              ico: {
-                ...state.formatOptions.ico,
-                sizes: [...state.formatOptions.ico.sizes]
-              }
-            },
-            resizeMode: state.resizeMode,
-            resizeValue: state.resizeValue,
-            resizeWidth: state.resizeWidth,
-            resizeHeight: state.resizeHeight,
-            resizeAspectMode: state.resizeAspectMode,
-            resizeAspectRatio: state.resizeAspectRatio,
-            resizeAnchor: state.resizeAnchor,
-            resizeFitMode: state.resizeFitMode,
-            resizeContainBackground: state.resizeContainBackground,
-            resizeResamplingAlgorithm: state.resizeResamplingAlgorithm,
-            paperSize: state.paperSize,
-            dpi: state.dpi,
-            stripExif: state.stripExif,
-            fileNamePattern: state.fileNamePattern
+          const nextPresetViewByContext = {
+            ...(state.presetViewByContext ?? createDefaultPresetViewByContext()),
+            [context]: mode
+          }
+          const nextActivePresetIds = {
+            ...state.activePresetIds
           }
 
-          const presetId = `preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
+          if (mode === "select") {
+            delete nextActivePresetIds[context]
+          }
+
+          return {
+            presetViewByContext: nextPresetViewByContext,
+            activePresetIds: nextActivePresetIds
+          }
+        }),
+      saveCurrentPreset: ({ name, highlightColor }) => {
+        const timestamp = Date.now()
+        const presetId = `preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
+
+        set((state) => {
+          const setupContext = state.setupContext
+          const currentConfig = cloneContextConfig(state, setupContext)
+
           const nextPreset: SavedSetupPreset = {
             id: presetId,
             context: setupContext,
-            name: name.trim(),
+            name: name.trim() || "Untitled preset",
             highlightColor,
             config: currentConfig,
+            createdAt: timestamp,
+            updatedAt: timestamp
+          }
+
+          const nextPresetViewByContext = {
+            ...(state.presetViewByContext ?? createDefaultPresetViewByContext()),
+            [setupContext]: "workspace" as ProcessorPresetViewMode
+          }
+
+          return {
+            presets: [nextPreset, ...state.presets],
+            recentPresetIds: {
+              ...state.recentPresetIds,
+              [setupContext]: nextPreset.id
+            },
+            activePresetIds: {
+              ...state.activePresetIds,
+              [setupContext]: nextPreset.id
+            },
+            presetViewByContext: nextPresetViewByContext
+          }
+        })
+
+        return presetId
+      },
+      applyPresetToCurrentContext: (presetId) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const preset = state.presets.find((entry) => entry.id === presetId)
+          if (!preset || preset.context !== setupContext) {
+            return state
+          }
+
+          const config = cloneSetupState(preset.config)
+          const contextConfigs = state.contextConfigs ?? createDefaultContextConfigs()
+          const nextPresetViewByContext = {
+            ...(state.presetViewByContext ?? createDefaultPresetViewByContext()),
+            [setupContext]: "workspace" as ProcessorPresetViewMode
+          }
+
+          return {
+            ...config,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: config
+            },
+            recentPresetIds: {
+              ...state.recentPresetIds,
+              [setupContext]: preset.id
+            },
+            activePresetIds: {
+              ...state.activePresetIds,
+              [setupContext]: preset.id
+            },
+            presetViewByContext: nextPresetViewByContext
+          }
+        }),
+      ensureDefaultPresetForContext: (context) => {
+        let ensuredPresetId: string | null = null
+
+        set((state) => {
+          const scopedPresets = state.presets.filter((preset) => preset.context === context)
+          if (scopedPresets.length > 0) {
+            ensuredPresetId = getRecentPresetIdForContext(context, state.recentPresetIds, state.presets)
+            if (state.defaultPresetBootstrappedByContext[context]) {
+              return state
+            }
+
+            return {
+              defaultPresetBootstrappedByContext: {
+                ...state.defaultPresetBootstrappedByContext,
+                [context]: true
+              }
+            }
+          }
+
+          if (state.defaultPresetBootstrappedByContext[context]) {
+            return state
+          }
+
+          const timestamp = Date.now()
+          const presetId = `preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
+          ensuredPresetId = presetId
+          const defaultConfig = cloneContextConfig(state, context)
+
+          const nextPreset: SavedSetupPreset = {
+            id: presetId,
+            context,
+            name: "Default Preset",
+            highlightColor: DEFAULT_PRESET_HIGHLIGHT_COLOR,
+            config: defaultConfig,
             createdAt: timestamp,
             updatedAt: timestamp
           }
@@ -1505,26 +1641,53 @@ export const useBatchStore = create<BatchStoreState>()(
             presets: [nextPreset, ...state.presets],
             recentPresetIds: {
               ...state.recentPresetIds,
-              [setupContext]: nextPreset.id
+              [context]: presetId
+            },
+            defaultPresetBootstrappedByContext: {
+              ...state.defaultPresetBootstrappedByContext,
+              [context]: true
             }
           }
-        }),
-      applyPresetToCurrentContext: (presetId) =>
+        })
+
+        return ensuredPresetId
+      },
+      syncActivePresetConfig: (context) =>
         set((state) => {
-          const preset = state.presets.find((entry) => entry.id === presetId)
-          if (!preset || preset.context !== state.setupContext) {
+          const activePresetId = state.activePresetIds[context]
+          if (!activePresetId) {
             return state
           }
 
-          const config = cloneSetupState(preset.config)
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = cloneContextConfig(state, context)
+          let didUpdate = false
+
+          const nextPresets = state.presets.map((preset) => {
+            if (preset.id !== activePresetId || preset.context !== context) {
+              return preset
+            }
+
+            if (isSetupConfigEqual(preset.config, currentConfig)) {
+              return preset
+            }
+
+            didUpdate = true
+            return {
+              ...preset,
+              config: currentConfig,
+              updatedAt: Date.now()
+            }
+          })
+
+          if (!didUpdate) {
+            return state
+          }
 
           return {
-            ...config,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: config
+            presets: nextPresets,
+            recentPresetIds: {
+              ...state.recentPresetIds,
+              [context]: activePresetId
             }
           }
         }),
@@ -1534,7 +1697,7 @@ export const useBatchStore = create<BatchStoreState>()(
             preset.id === id
               ? {
                   ...preset,
-                  name: name.trim(),
+                  name: name.trim() || "Untitled preset",
                   highlightColor,
                   updatedAt: Date.now()
                 }
@@ -1547,6 +1710,15 @@ export const useBatchStore = create<BatchStoreState>()(
           const nextRecentPresetIds = {
             ...state.recentPresetIds
           }
+          const nextPresetViewByContext = {
+            ...(state.presetViewByContext ?? createDefaultPresetViewByContext())
+          }
+          const nextActivePresetIds = {
+            ...state.activePresetIds
+          }
+          const contextConfigs = state.contextConfigs ?? createDefaultContextConfigs()
+          let nextContextConfigs = contextConfigs
+          let activeConfigPatch: BatchSetupState | null = null
 
           ;(["single", "batch"] as SetupContext[]).forEach((context) => {
             const recentId = state.recentPresetIds[context]
@@ -1559,11 +1731,41 @@ export const useBatchStore = create<BatchStoreState>()(
                 delete nextRecentPresetIds[context]
               }
             }
+
+            if (nextActivePresetIds[context] === presetId) {
+              const fallbackId = getRecentPresetIdForContext(context, nextRecentPresetIds, nextPresets)
+
+              if (fallbackId) {
+                nextActivePresetIds[context] = fallbackId
+
+                const fallbackPreset = nextPresets.find(
+                  (preset) => preset.id === fallbackId && preset.context === context
+                )
+                if (fallbackPreset) {
+                  const fallbackConfig = cloneSetupState(fallbackPreset.config)
+                  nextContextConfigs = {
+                    ...nextContextConfigs,
+                    [context]: fallbackConfig
+                  }
+
+                  if (context === state.setupContext) {
+                    activeConfigPatch = fallbackConfig
+                  }
+                }
+              } else {
+                delete nextActivePresetIds[context]
+                nextPresetViewByContext[context] = "select"
+              }
+            }
           })
 
           return {
+            ...(activeConfigPatch ? activeConfigPatch : {}),
             presets: nextPresets,
-            recentPresetIds: nextRecentPresetIds
+            recentPresetIds: nextRecentPresetIds,
+            activePresetIds: nextActivePresetIds,
+            presetViewByContext: nextPresetViewByContext,
+            contextConfigs: nextContextConfigs
           }
         })
     }),
@@ -1573,23 +1775,57 @@ export const useBatchStore = create<BatchStoreState>()(
       partialize: (state) => {
         // Only persist the non-runtime state
         const { isRunning, heavyFormatToast, isTargetFormatQualityOpen, isResizeOpen, ...rest } = state
+        const presets = state.presets.map((preset) => ({
+          ...preset,
+          config: cloneSetupState(preset.config)
+        }))
 
         const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
         const normalizedContextConfigs = {
           single: cloneSetupState(contextConfigs.single),
           batch: cloneSetupState(contextConfigs.batch)
         }
+        const presetViewByContext = state.presetViewByContext ?? createDefaultPresetViewByContext()
+        const normalizedPresetViewByContext = {
+          single: presetViewByContext.single === "workspace" ? "workspace" : "select",
+          batch: presetViewByContext.batch === "workspace" ? "workspace" : "select"
+        } as Record<SetupContext, ProcessorPresetViewMode>
 
-        const presets = state.presets.map((preset) => ({
-          ...preset,
-          config: cloneSetupState(preset.config)
-        }))
+        const activePresetIds = {
+          ...state.activePresetIds
+        }
+        const defaultPresetBootstrappedByContext = {
+          ...(state.defaultPresetBootstrappedByContext ?? createDefaultPresetBootstrapState())
+        }
+        const hasSinglePreset = presets.some((preset) => preset.context === "single")
+        const hasBatchPreset = presets.some((preset) => preset.context === "batch")
+
+        if (hasSinglePreset) {
+          defaultPresetBootstrappedByContext.single = true
+        }
+
+        if (hasBatchPreset) {
+          defaultPresetBootstrappedByContext.batch = true
+        }
+
+        ;(["single", "batch"] as SetupContext[]).forEach((context) => {
+          const activePresetId = activePresetIds[context]
+          if (!activePresetId || !presets.some((preset) => preset.id === activePresetId && preset.context === context)) {
+            delete activePresetIds[context]
+            if (normalizedPresetViewByContext[context] === "workspace") {
+              normalizedPresetViewByContext[context] = "select"
+            }
+          }
+        })
 
         return {
           ...rest,
           ...cloneSetupState(rest as unknown as BatchSetupState),
           contextConfigs: normalizedContextConfigs,
-          presets
+          presets,
+          activePresetIds,
+          defaultPresetBootstrappedByContext,
+          presetViewByContext: normalizedPresetViewByContext
         }
       },
       onRehydrateStorage: (state) => {
@@ -1604,14 +1840,69 @@ export const useBatchStore = create<BatchStoreState>()(
 
           useBatchStore.setState((state) => {
             const setupContext = state.setupContext ?? "single"
-            const contextConfigs = (state as any).contextConfigs
+            const contextConfigs = state.contextConfigs
+            const presets = state.presets.map((preset) => ({
+              ...preset,
+              config: cloneSetupState(preset.config)
+            }))
+            const presetViewByContext = {
+              ...(state.presetViewByContext ?? createDefaultPresetViewByContext())
+            }
+            const defaultPresetBootstrappedByContext = {
+              ...(state.defaultPresetBootstrappedByContext ?? createDefaultPresetBootstrapState())
+            }
+            const hasSinglePreset = presets.some((preset) => preset.context === "single")
+            const hasBatchPreset = presets.some((preset) => preset.context === "batch")
+
+            if (hasSinglePreset) {
+              defaultPresetBootstrappedByContext.single = true
+            }
+
+            if (hasBatchPreset) {
+              defaultPresetBootstrappedByContext.batch = true
+            }
+            const activePresetIds = {
+              ...state.activePresetIds
+            }
+
+            ;(["single", "batch"] as SetupContext[]).forEach((context) => {
+              const activePresetId = activePresetIds[context]
+              if (!activePresetId || !presets.some((preset) => preset.id === activePresetId && preset.context === context)) {
+                delete activePresetIds[context]
+              }
+
+              if (presetViewByContext[context] === "workspace" && !activePresetIds[context]) {
+                const fallbackId = getRecentPresetIdForContext(context, state.recentPresetIds, presets)
+                if (fallbackId) {
+                  activePresetIds[context] = fallbackId
+                } else {
+                  presetViewByContext[context] = "select"
+                }
+              }
+            })
+
             if (contextConfigs?.single && contextConfigs?.batch) {
               const migratedContextConfigs = migrateContextConfigs(contextConfigs)
-              const activeConfig = cloneSetupState(migratedContextConfigs[setupContext])
+              const activePresetId = activePresetIds[setupContext]
+              const activePreset = activePresetId
+                ? presets.find((preset) => preset.id === activePresetId && preset.context === setupContext)
+                : null
+              const activeConfig = activePreset
+                ? cloneSetupState(activePreset.config)
+                : cloneSetupState(migratedContextConfigs[setupContext])
+
+              const nextContextConfigs = {
+                ...migratedContextConfigs,
+                [setupContext]: activeConfig
+              }
 
               return {
                 ...activeConfig,
-                contextConfigs: migratedContextConfigs,
+                contextConfigs: nextContextConfigs,
+                presets,
+                activePresetIds,
+                defaultPresetBootstrappedByContext,
+                presetViewByContext,
                 _hasHydrated: true
               } as any
             }
@@ -1620,6 +1911,10 @@ export const useBatchStore = create<BatchStoreState>()(
 
             return {
               ...normalizedRootConfig,
+              presets,
+              activePresetIds,
+              defaultPresetBootstrappedByContext,
+              presetViewByContext,
               _hasHydrated: true
             } as any
           })

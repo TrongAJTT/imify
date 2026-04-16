@@ -16,11 +16,12 @@ import { OFFSCREEN_CONVERT_REQUEST,
 import { CUSTOM_FORMATS } from "@/core/format-config"
 import { DEFAULT_STORAGE_STATE } from "@/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
-import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
 import { SplicingTab } from "@/options/components/splicing/splicing-tab"
 import { SplicingSidebarPanel } from "@/options/components/splicing/splicing-sidebar-panel"
 import { FillingTab } from "@/options/components/filling/filling-tab"
 import { FillingSidebarPanel } from "@/options/components/filling/filling-sidebar-panel"
+import { ProcessorWorkspaceShell } from "@/options/components/processor/processor-workspace-shell"
+import { ProcessorSidebarShell } from "@/options/components/processor/processor-sidebar-shell"
 import { EditorProvider } from "@/options/components/filling/editor-context"
 import { DiffcheckerTab } from "@/options/components/diffchecker/diffchecker-tab"
 import { DiffcheckerSidebarPanel } from "@/options/components/diffchecker/diffchecker-sidebar-panel"
@@ -383,7 +384,10 @@ export default function OptionsPage() {
     switch (activeTab) {
       case "single":
         return (
-          <SingleProcessorTab />
+          <ProcessorWorkspaceShell
+            context="single"
+            workspace={<SingleProcessorTab />}
+          />
         )
       case "context-menu":
         return (
@@ -397,7 +401,10 @@ export default function OptionsPage() {
         )
       case "batch":
         return (
-          <BatchProcessorTab />
+          <ProcessorWorkspaceShell
+            context="batch"
+            workspace={<BatchProcessorTab />}
+          />
         )
       case "splicing":
         return (
@@ -532,8 +539,17 @@ export default function OptionsPage() {
 
           {/* Right panel content collapsed into left sidebar on smaller screens */}
           <div className={`xl:hidden border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col ${isNavCollapsed ? "hidden" : ""}`}>
-            {(activeTab === "batch" || activeTab === "single") && (
-              <BatchSetupSidebarPanel
+            {activeTab === "single" && (
+              <ProcessorSidebarShell
+                context="single"
+                performancePreferences={safePerformancePreferences}
+                onOpenSettings={() => openSettingsDialog("performance")}
+              />
+            )}
+
+            {activeTab === "batch" && (
+              <ProcessorSidebarShell
+                context="batch"
                 performancePreferences={safePerformancePreferences}
                 onOpenSettings={() => openSettingsDialog("performance")}
               />
@@ -596,8 +612,17 @@ export default function OptionsPage() {
         <aside
           className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hidden xl:flex flex-col overflow-y-auto"
           style={{ width: configurationSidebarWidth }}>
-          {(activeTab === "batch" || activeTab === "single") && (
-            <BatchSetupSidebarPanel
+          {activeTab === "single" && (
+            <ProcessorSidebarShell
+              context="single"
+              performancePreferences={safePerformancePreferences}
+              onOpenSettings={() => openSettingsDialog("performance")}
+            />
+          )}
+
+          {activeTab === "batch" && (
+            <ProcessorSidebarShell
+              context="batch"
               performancePreferences={safePerformancePreferences}
               onOpenSettings={() => openSettingsDialog("performance")}
             />

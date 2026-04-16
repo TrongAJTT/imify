@@ -17,6 +17,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Overwrite flow now supports selecting a saved watermark target first, then auto-filling editable name before saving.
   - Watermark dialog sublabel now appends `Saved` when current watermark matches a saved pattern.
 
+- **Processor Preset Workspace Shell (Single/Batch):** Added Image Filling-style preset workflow shell for `Single Processor` and `Batch Processor`:
+  - New preset selection screen with card-based open/edit/delete and `New Preset` flow.
+  - New select-mode sidebar info accordion; workspace sidebar switches back to full processor configuration once a preset is active.
+  - New global header breadcrumb integration using `Single Processor > {PresetName}` / `Batch Processor > {PresetName}`.
+  - New per-context persisted workspace state (`workspace` vs `select`) and active preset id tracking.
+  - First-time bootstrap now auto-creates a `Default Preset` (blue highlight) and enters workspace mode.
+
+- **Shared Workspace UI Primitives:** Extracted reusable components for cross-feature workflow consistency:
+  - `FeatureBreadcrumb` for root + active entity breadcrumb rendering.
+  - `WorkspaceSelectHeader` for selection-page title/create action rows.
+  - `WorkflowInfoAccordion` for feature info cards in select-mode sidebars.
+  - Image Filling now reuses these shared primitives (breadcrumb, select header, info accordion) to align behavior with Single/Batch flows.
+
 - **Context Menu Global Formats (Target Card Integration):** Added per-format `Target Format & Quality` accordion controls directly inside active global format cards.
   - Applies to built-in global cards from `JPG` through `TIFF` (with `PDF` remaining informational/no extra target controls).
   - `JPG` card now supports switching target behavior between standard JPG and MozJPEG mode in the same card.
@@ -207,6 +220,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Single Processor and Batch Processor now consume watermark config from watermark store context (`single`/`batch`) only.
   - Batch setup preset save/apply/delete flows no longer persist watermark payloads.
   - Export Settings watermark sublabel now appends `Saved` when current context watermark matches a saved watermark entry.
+
+- **Single/Batch Preset Persistence Semantics:** Preset lifecycle now mirrors template-style workspace behavior:
+  - Active preset configuration is auto-synced back to the active preset asynchronously (debounced) while editing in workspace mode.
+  - Exiting to selection mode stores `None` (no active preset) for that context.
+  - Session restore now reopens the last active preset workspace when one is selected; otherwise it restores to selection mode.
 
 - **Context Menu Custom Presets (Dialog + Workflow):** Standardized Custom Presets flow to match Global/Single/Batch behavior:
   - Renamed dialog labels from `Custom Format` to `Custom Preset` (`Create`, `Edit`, and `Add custom preset` actions).

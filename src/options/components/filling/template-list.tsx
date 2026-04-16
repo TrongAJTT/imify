@@ -3,12 +3,11 @@ import { useState } from "react"
 
 import { useFillingStore } from "@/options/stores/filling-store"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
-import { Subheading } from "@/options/components/ui/typography"
-import { Button } from "@/options/components/ui/button"
 import { TemplateSortBar } from "@/options/components/filling/template-sort-bar"
 import { TemplateCard } from "@/options/components/filling/template-card"
 import { CanvasSizeDialog } from "@/options/components/filling/canvas-size-dialog"
 import { TemplateMethodDialog } from "@/options/components/filling/template-method-dialog"
+import { WorkspaceSelectHeader } from "@/options/components/shared/workspace-select-header"
 
 interface TemplateListProps {
   onRefresh: () => Promise<void>
@@ -64,13 +63,12 @@ export function TemplateList({ onRefresh }: TemplateListProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <Subheading>Templates</Subheading>
-        <Button variant="primary" size="sm" onClick={handleCreateNew}>
-          <Plus size={14} />
-          New Template
-        </Button>
-      </div>
+      <WorkspaceSelectHeader
+        title="Templates"
+        createLabel="New Template"
+        onCreate={handleCreateNew}
+        createIcon={<Plus size={14} />}
+      />
 
       <TemplateSortBar />
 

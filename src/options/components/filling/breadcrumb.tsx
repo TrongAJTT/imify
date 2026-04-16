@@ -1,15 +1,14 @@
-import { ChevronRight } from "lucide-react"
-
 import { useFillingStore } from "@/options/stores/filling-store"
+import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrumb"
 
 function stepLabel(step: string): string | null {
   switch (step) {
     case "create_manual":
-      return "Manual Editor"
+      return "Add (Manual)"
     case "create_symmetric":
-      return "Symmetric Generator"
+      return "Add (Symmetric)"
     case "fill":
-      return "Fill Images"
+      return "Fill"
     default:
       return null
   }
@@ -28,31 +27,16 @@ export function FillingBreadcrumb({ compact = false }: { compact?: boolean }) {
 
   if (fillingStep === "select" && !compact) return null
 
+  const middleLabel = template ? template.name : null
+  const activeLabel = currentStepLabel
+
   return (
-    <nav className={`flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 ${compact ? "" : "mb-4"}`}>
-      <button
-        type="button"
-        onClick={navigateToSelect}
-        className={`hover:text-sky-600 dark:hover:text-sky-400 transition-colors font-medium ${compact ? "max-w-[120px] truncate" : ""}`}
-      >
-        Image Filling
-      </button>
-
-      {template && (
-        <>
-          <ChevronRight size={12} className="shrink-0 text-slate-400" />
-          <span className={`font-medium text-slate-700 dark:text-slate-300 truncate ${compact ? "max-w-[120px]" : "max-w-[180px]"}`}>
-            {template.name}
-          </span>
-        </>
-      )}
-
-      {currentStepLabel && (
-        <>
-          <ChevronRight size={12} className="shrink-0 text-slate-400" />
-          <span className="text-slate-600 dark:text-slate-300">{currentStepLabel}</span>
-        </>
-      )}
-    </nav>
+    <FeatureBreadcrumb
+      compact={compact}
+      rootLabel="Image Filling"
+      middleLabel={middleLabel}
+      activeLabel={activeLabel}
+      onRootClick={navigateToSelect}
+    />
   )
 }
