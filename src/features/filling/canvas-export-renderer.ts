@@ -15,6 +15,69 @@ interface RenderOptions {
   backgroundImage?: ImageBitmap | null
 }
 
+interface ParsedLinearGradient {
+  angle: number
+  stops: Array<{ offset: number; color: string }>
+}
+
+function parseLinearGradient(value: string): ParsedLinearGradient | null {
+  const trimmed = value.trim()
+  const match = trimmed.match(/^linear-gradient\(\s*([+-]?\d*\.?\d+)deg\s*,\s*(.+)\)$/i)
+  if (!match) return null
+
+  const angle = Number(match[1])
+  if (!Number.isFinite(angle)) return null
+
+  const rawStops = match[2]
+    .split(/,(?![^()]*\))/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  if (rawStops.length < 2) return null
+
+  const stops = rawStops
+    .map((entry, index) => {
+      const stopMatch = entry.match(/^(.*?)(?:\s+([+-]?\d*\.?\d+)%?)?$/)
+      const color = stopMatch?.[1]?.trim() || entry
+      const parsedOffset = Number(stopMatch?.[2])
+      const fallbackOffset = index / Math.max(1, rawStops.length - 1)
+      const offset = stopMatch?.[2] && Number.isFinite(parsedOffset)
+        ? Math.max(0, Math.min(1, parsedOffset / 100))
+        : fallbackOffset
+      return { offset, color }
+    })
+    .sort((a, b) => a.offset - b.offset)
+
+  return { angle, stops }
+}
+
+function createLayerLinearGradient(
+  ctx: OffscreenCanvasRenderingContext2D,
+  gradient: ParsedLinearGradient,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): CanvasGradient {
+  const angleRad = (gradient.angle * Math.PI) / 180
+  const cx = x + width / 2
+  const cy = y + height / 2
+  const len = Math.max(width, height)
+
+  const linearGradient = ctx.createLinearGradient(
+    cx - (Math.cos(angleRad) * len) / 2,
+    cy - (Math.sin(angleRad) * len) / 2,
+    cx + (Math.cos(angleRad) * len) / 2,
+    cy + (Math.sin(angleRad) * len) / 2
+  )
+
+  for (const stop of gradient.stops) {
+    linearGradient.addColorStop(stop.offset, stop.color)
+  }
+
+  return linearGradient
+}
+
 /**
  * Render the filled template to an OffscreenCanvas and return ImageData.
  * Uses Path2D + clip() for clipping masks, arcTo/bezierCurveTo for corners.
@@ -91,7 +154,17 @@ export async function renderFilledCanvas(options: RenderOptions): Promise<ImageD
         ctx.translate(-cx, -cy)
       }
 
-      ctx.strokeStyle = effectiveBorderColor
+      const parsedBorderGradient = parseLinearGradient(effectiveBorderColor)
+      ctx.strokeStyle = parsedBorderGradient
+        ? createLayerLinearGradient(
+            ctx,
+            parsedBorderGradient,
+            canvasFillState.borderGradientScope === "unified" ? 0 : layer.x,
+            canvasFillState.borderGradientScope === "unified" ? 0 : layer.y,
+            canvasFillState.borderGradientScope === "unified" ? canvasWidth : layer.width,
+            canvasFillState.borderGradientScope === "unified" ? canvasHeight : layer.height
+          )
+        : effectiveBorderColor
       ctx.lineWidth = effectiveBorderWidth
       ctx.stroke(path)
       ctx.restore()
@@ -112,8 +185,7 @@ function drawBackground(
     case "transparent":
       break
     case "solid":
-      ctx.fillStyle = state.backgroundColor
-      ctx.fillRect(0, 0, w, h)
+      fillCustomizedBackground(ctx, state.backgroundColor, w, h)
       break
     case "gradient":
       if (state.backgroundGradient) {
@@ -122,6 +194,7 @@ function drawBackground(
       }
       break
     case "image":
+      fillCustomizedBackground(ctx, state.backgroundColor, w, h)
       if (bgImage) {
         const t = state.backgroundImageTransform
         ctx.save()
@@ -133,6 +206,23 @@ function drawBackground(
       }
       break
   }
+}
+
+function fillCustomizedBackground(
+  ctx: OffscreenCanvasRenderingContext2D,
+  value: string,
+  w: number,
+  h: number
+) {
+  const parsed = parseLinearGradient(value)
+  if (parsed) {
+    ctx.fillStyle = createLayerLinearGradient(ctx, parsed, 0, 0, w, h)
+    ctx.fillRect(0, 0, w, h)
+    return
+  }
+
+  ctx.fillStyle = value
+  ctx.fillRect(0, 0, w, h)
 }
 
 function createCanvasGradient(

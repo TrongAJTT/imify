@@ -12,10 +12,14 @@ import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { Button } from "@/options/components/ui/button"
 
 const BG_TYPE_OPTIONS: Array<{ value: CanvasBackgroundType; label: string }> = [
-  { value: "solid", label: "Solid Color" },
+  { value: "solid", label: "Customized Color" },
   { value: "transparent", label: "Transparent" },
-  { value: "gradient", label: "Gradient" },
   { value: "image", label: "Image" },
+]
+
+const BORDER_GRADIENT_SCOPE_OPTIONS: Array<{ value: "per-layer" | "unified"; label: string }> = [
+  { value: "per-layer", label: "Per Layer" },
+  { value: "unified", label: "Unified" },
 ]
 
 export function FillCanvasAccordion() {
@@ -55,7 +59,7 @@ export function FillCanvasAccordion() {
   }, [state.backgroundImageUrl, update])
 
   const sublabel = state.backgroundType === "solid"
-    ? `Solid: ${state.backgroundColor}`
+    ? `Customized: ${state.backgroundColor}`
     : state.backgroundType === "transparent"
       ? "Transparent"
       : state.backgroundType === "gradient"
@@ -63,6 +67,11 @@ export function FillCanvasAccordion() {
         : state.backgroundImageUrl
           ? "Image"
           : "No background"
+
+  const backgroundTypeForSelect: CanvasBackgroundType =
+    state.backgroundType === "gradient" ? "solid" : state.backgroundType
+  const shouldShowCustomizedColor =
+    backgroundTypeForSelect === "solid" || backgroundTypeForSelect === "image"
 
   return (
     <AccordionCard
@@ -83,14 +92,14 @@ export function FillCanvasAccordion() {
 
         <SelectInput
           label="Background"
-          value={state.backgroundType}
+          value={backgroundTypeForSelect}
           options={BG_TYPE_OPTIONS}
           onChange={(v) => update({ backgroundType: v as CanvasBackgroundType })}
         />
 
-        {state.backgroundType === "solid" && (
+        {shouldShowCustomizedColor && (
           <ColorPickerPopover
-            label="Background Color"
+            label="Customized Color"
             value={state.backgroundColor}
             onChange={(v) => update({ backgroundColor: v })}
             enableAlpha
@@ -138,13 +147,22 @@ export function FillCanvasAccordion() {
 
           {state.borderOverrideEnabled && (
             <div className="mt-2 space-y-2">
-              <NumberInput
-                label="Border Width"
-                value={state.borderOverrideWidth}
-                onChangeValue={(v) => update({ borderOverrideWidth: v })}
-                min={0}
-                max={50}
-              />
+              <div className="grid grid-cols-2 gap-2 items-end">
+                <NumberInput
+                  label="Border Width"
+                  value={state.borderOverrideWidth}
+                  onChangeValue={(v) => update({ borderOverrideWidth: v })}
+                  min={0}
+                  max={50}
+                />
+                <SelectInput
+                  label="Gradient Mode"
+                  value={state.borderGradientScope ?? "per-layer"}
+                  options={BORDER_GRADIENT_SCOPE_OPTIONS}
+                  onChange={(v) => update({ borderGradientScope: v as "per-layer" | "unified" })}
+                  tooltip="For gradient border color: Per Layer = separate gradient per shape, Unified = one shared gradient across whole canvas."
+                />
+              </div>
               <ColorPickerPopover
                 label="Border Color"
                 value={state.borderOverrideColor}

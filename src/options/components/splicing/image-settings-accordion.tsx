@@ -86,7 +86,7 @@ export function ImageSettingsAccordion({
           onPaperSizeChange={() => {}}
           onDpiChange={() => {}}
           availableModes={["none", "fit_width", "fit_height"]}
-          isOpen={isImageResizeOpen}
+          alwaysOpen
           onOpenChange={onImageResizeOpenChange}
         />
 

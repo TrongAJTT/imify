@@ -108,6 +108,7 @@ export interface CanvasFillState {
   borderOverrideWidth: number
   borderOverrideColor: string
   borderOverrideGradient: GradientConfig | null
+  borderGradientScope: "per-layer" | "unified"
   cornerRadiusOverrideEnabled: boolean
   cornerRadiusOverride: number
 }
@@ -206,6 +207,7 @@ export const DEFAULT_CANVAS_FILL_STATE: CanvasFillState = {
   borderOverrideWidth: 0,
   borderOverrideColor: "#000000",
   borderOverrideGradient: null,
+  borderGradientScope: "per-layer",
   cornerRadiusOverrideEnabled: false,
   cornerRadiusOverride: 0,
 }
