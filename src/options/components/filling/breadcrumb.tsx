@@ -15,7 +15,7 @@ function stepLabel(step: string): string | null {
   }
 }
 
-export function FillingBreadcrumb() {
+export function FillingBreadcrumb({ compact = false }: { compact?: boolean }) {
   const fillingStep = useFillingStore((s) => s.fillingStep)
   const activeTemplateId = useFillingStore((s) => s.activeTemplateId)
   const editingTemplateId = useFillingStore((s) => s.editingTemplateId)
@@ -26,14 +26,14 @@ export function FillingBreadcrumb() {
   const templateId = activeTemplateId ?? editingTemplateId
   const template = templateId ? templates.find((t) => t.id === templateId) : null
 
-  if (fillingStep === "select") return null
+  if (fillingStep === "select" && !compact) return null
 
   return (
-    <nav className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mb-4">
+    <nav className={`flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 ${compact ? "" : "mb-4"}`}>
       <button
         type="button"
         onClick={navigateToSelect}
-        className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors font-medium"
+        className={`hover:text-sky-600 dark:hover:text-sky-400 transition-colors font-medium ${compact ? "max-w-[120px] truncate" : ""}`}
       >
         Image Filling
       </button>
@@ -41,7 +41,7 @@ export function FillingBreadcrumb() {
       {template && (
         <>
           <ChevronRight size={12} className="shrink-0 text-slate-400" />
-          <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[180px]">
+          <span className={`font-medium text-slate-700 dark:text-slate-300 truncate ${compact ? "max-w-[120px]" : "max-w-[180px]"}`}>
             {template.name}
           </span>
         </>

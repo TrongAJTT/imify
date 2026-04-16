@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from "react"
 
 import { useFillingStore } from "@/options/stores/filling-store"
+import { useWorkspaceHeaderStore } from "@/options/stores/workspace-header-store"
 import { templateStorage } from "@/features/filling/template-storage"
 import { useEditorContext } from "@/options/components/filling/editor-context"
 import { FillingBreadcrumb } from "@/options/components/filling/breadcrumb"
@@ -16,6 +17,10 @@ export function FillingTab() {
   const activeTemplateId = useFillingStore((s) => s.activeTemplateId)
   const editingTemplateId = useFillingStore((s) => s.editingTemplateId)
   const setTemplates = useFillingStore((s) => s.setTemplates)
+  const setHeaderSection = useWorkspaceHeaderStore((s) => s.setSection)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((s) => s.setBreadcrumb)
+  const setHeaderActions = useWorkspaceHeaderStore((s) => s.setActions)
+  const resetHeader = useWorkspaceHeaderStore((s) => s.resetHeader)
   const { editorLayers, setEditorLayers, selectedLayerId, setSelectedLayerId, updateLayer } =
     useEditorContext()
 
@@ -42,10 +47,18 @@ export function FillingTab() {
     }
   }, [activeTemplate?.id, fillingStep])
 
+  useEffect(() => {
+    setHeaderSection("Image Filling")
+    setHeaderBreadcrumb(<FillingBreadcrumb compact />)
+    setHeaderActions(null)
+
+    return () => {
+      resetHeader()
+    }
+  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
+
   return (
     <div className="p-6">
-      <FillingBreadcrumb />
-
       {fillingStep === "select" && (
         <TemplateList onRefresh={loadTemplates} />
       )}

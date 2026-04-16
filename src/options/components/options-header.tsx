@@ -1,5 +1,6 @@
 import { Moon, Sun, Info, Heart, Settings } from "lucide-react"
 import { Tooltip } from "./tooltip"
+import { useWorkspaceHeaderStore } from "@/options/stores/workspace-header-store"
 
 interface HeaderProps {
   isLoading: boolean
@@ -48,6 +49,8 @@ export function OptionsHeader({
   onOpenSettings,
   onOpenDonate
 }: HeaderProps) {
+  const breadcrumb = useWorkspaceHeaderStore((s) => s.breadcrumb)
+
   return (
     <header className="h-12 flex items-center justify-between px-4 gap-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
       <div className="flex items-center gap-2.5 min-w-0">
@@ -59,6 +62,12 @@ export function OptionsHeader({
         <span className="text-sm font-bold text-slate-900 dark:text-slate-100 shrink-0">Imify</span>
         <span className="text-slate-300 dark:text-slate-700 shrink-0 select-none">|</span>
         <span className="text-sm text-slate-500 dark:text-slate-400 truncate hidden sm:block">Save and Process Images</span>
+        {breadcrumb ? (
+          <>
+            <span className="text-slate-300 dark:text-slate-700 shrink-0 select-none">|</span>
+            <div className="min-w-0 hidden lg:flex items-center">{breadcrumb}</div>
+          </>
+        ) : null}
         {isLoading && (
           <span className="text-[11px] text-slate-400 dark:text-slate-500 animate-pulse shrink-0">Loading…</span>
         )}
