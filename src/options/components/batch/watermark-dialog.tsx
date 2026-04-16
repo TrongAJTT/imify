@@ -545,8 +545,8 @@ export function BatchWatermarkDialog({
           </div>
         </div>
 
-        <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center gap-3">
-          <div className="flex items-center gap-2">
+        <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="grid w-full grid-cols-[auto_1fr_1fr] gap-2 sm:flex sm:w-auto sm:items-center">
             <Tooltip content="Reset watermark settings to defaults">
               <button
                 type="button"
@@ -562,27 +562,27 @@ export function BatchWatermarkDialog({
               variant="secondary"
               size="sm"
               onClick={() => setIsOpenSavedDialogOpen(true)}
-              className="px-3"
+              className="px-3 w-full sm:w-auto"
             >
               <FolderOpen size={14} />
               Open Saved
             </Button>
 
-            <Button variant="secondary" size="sm" onClick={openSaveDialog} className="px-3">
+            <Button variant="secondary" size="sm" onClick={openSaveDialog} className="px-3 w-full sm:w-auto">
               <Save size={14} />
               Save
             </Button>
           </div>
 
-          <div className="flex gap-3">
-            <SecondaryButton onClick={handleCloseMainDialog} className="px-6 font-semibold">Cancel</SecondaryButton>
+          <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
+            <SecondaryButton onClick={handleCloseMainDialog} className="px-6 font-semibold w-full sm:w-auto">Cancel</SecondaryButton>
             <Button
               onClick={() => {
                 onSave(cloneWatermarkConfig(draft))
                 handleCloseMainDialog()
               }}
               disabled={!isDirty}
-              className="px-6 flex items-center gap-2 shadow-lg shadow-sky-500/10 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 w-full sm:w-auto flex items-center gap-2 shadow-lg shadow-sky-500/10 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4" />
               Apply Pattern

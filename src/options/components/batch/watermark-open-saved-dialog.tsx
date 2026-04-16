@@ -707,7 +707,7 @@ export function WatermarkOpenSavedDialog({
         {items.length === 0 ? (
           <EmptySavedWatermarkState />
         ) : (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
             {items.map((item) => (
               <WatermarkPreviewCard
                 key={item.id}

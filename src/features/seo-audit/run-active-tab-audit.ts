@@ -21,7 +21,7 @@ export async function runSeoAuditOnActiveTab(): Promise<SeoAuditReport> {
   }
 
   if (!isScannableUrl(activeTab.url)) {
-    throw new Error("This page cannot be scanned. Open an http/https page and try again.")
+    throw new Error(`Certain pages like browser extensions, browser settings pages, asset pages, etc. cannot be scanned. Open an http/https page and try again.`)
   }
 
   const request: SeoAuditRequestMessage = { type: SEO_AUDIT_REQUEST_TYPE }

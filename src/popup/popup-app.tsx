@@ -2,7 +2,6 @@ import "@/style.css"
 
 import { useState } from "react"
 
-import { saveSeoAuditSnapshot } from "@/features/seo-audit"
 import { PopupActionGrid } from "@/popup/components/popup-action-grid"
 import { useSeoAudit } from "@/popup/hooks/use-seo-audit"
 import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
@@ -48,6 +47,7 @@ export function PopupApp() {
 
     try {
       const report = await runAudit()
+      const { saveSeoAuditSnapshot } = await import("@/features/seo-audit")
       await saveSeoAuditSnapshot(report)
       await openSidePanelLite("audit")
       window.close()
@@ -79,7 +79,7 @@ export function PopupApp() {
   }
 
   return (
-    <div className="w-[410px] bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
+    <div className="w-[410px] p-1 bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <header className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-800">
           <div className="flex min-w-0 items-center gap-2">

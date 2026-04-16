@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react"
-
-import { runSeoAuditOnActiveTab, type SeoAuditReport } from "@/features/seo-audit"
+import type { SeoAuditReport } from "@/features/seo-audit"
 
 interface SeoAuditState {
   report: SeoAuditReport | null
@@ -19,6 +18,7 @@ export function useSeoAudit() {
     setState((current) => ({ ...current, isRunning: true, error: null }))
 
     try {
+      const { runSeoAuditOnActiveTab } = await import("@/features/seo-audit")
       const report = await runSeoAuditOnActiveTab()
       setState({ report, isRunning: false, error: null })
       return report
