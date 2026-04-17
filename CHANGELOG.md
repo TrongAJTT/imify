@@ -23,6 +23,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed PSD from active Fill export UI for now (kept deferred for a later dedicated implementation pass).
   - Filling raster export pipeline now routes through shared raster adapter encoding, so AVIF/JXL/MozJPEG/WebP/PNG/BMP/TIFF options are honored consistently (including PNG tiny/oxi and format-specific advanced settings).
 
+- **Image Filling Template Creation UX Refresh:** Reworked the Filling template creation flow into a single, more visual dialog.
+  - Unified flow now follows: Template Name -> Canvas Size -> Creation Method (no step-switching between dialogs).
+  - Canvas Size section now focuses on manual input controls only (width, height, unit, DPI) with a dedicated "Popular Sizes" trigger.
+  - Added a reusable popular-size picker dialog grouped by Paper, Social, and Screen categories for future reuse.
+  - Creation Method now uses compact `RadioCard` selection with icon + title + subtitle for clearer scanability.
+
+- **Image Filling Manual Editor Parity Update:** Manual Add/Edit workspace is now aligned with Fill interaction patterns.
+  - Added Fill-style preview controls in Manual Editor: resizable preview height, Zoom/Pan/Idle interaction modes, and shared shortcut bindings (`fill.preview.*`).
+  - Manual layer list now uses DnD toolkit reordering (same pattern as Fill), replacing move up/down controls.
+  - Added a new Canvas accordion in Manual sidebar with direct size editing (width/height/unit/DPI) and integrated Popular Sizes dialog.
+  - Corner resize now supports temporary ratio unlock when holding `Ctrl`, enabling stretch behavior during manual transform.
+
 - **Preset Detail Cards & Info Panel Redesign:**
   - New preset detail cards in select view showing format, quality, resize settings (Single/Batch) and layout, spacing, export format (Splicing).
   - Info panel redesign across Single Processor, Batch Processor, and Image Splicing with Context Menu-style layout: icon + title + description sections for visual consistency.
@@ -335,6 +347,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI:** Refactored `ColorPickerPopover` from manual absolute positioning with `useState` to Radix UI Popover component with Portal, automatic viewport collision detection (`sideOffset: 8`, `collisionPadding: 12`), and native Escape key handling.
 
 ### Fixed
+- **Image Filling Wheel Event Error:** Fixed repeated browser warning `Unable to preventDefault inside passive event listener invocation` in Fill workspace when using mouse wheel for Zoom/Pan mode interactions.
+  - Wheel handling now uses a non-passive native listener on the preview container so `preventDefault` remains valid in interactive modes.
+
+- **Image Filling Manual Drag Position Jump:** Fixed layer position drift after drag/transform in Manual Editor when preview is centered/panned/scaled.
+  - Manual layer coordinate updates now correctly subtract preview canvas offsets and normalize by render scale, preventing post-drag X/Y jumps.
+
 - **Custom Preset Toast Reliability:** `src/contents/progress-toast.tsx` now tracks conversion progress per task id (not a single payload), preventing intermittent missing/overwritten toasts when multiple progress updates overlap.
 - **Custom Preset MozJPEG Persistence:** `normalizeFormatOptionsForCustomFormat(...)` now preserves and normalizes JPG MozJPEG options (`enabled`, `progressive`, `chromaSubsampling`) so custom preset conversion behavior matches Single/Batch pipelines.
 

@@ -1,123 +1,96 @@
-import { useCallback, useMemo, useState } from "react"
-import { Ruler, X } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { FileText, Monitor, Ruler, Share2, X } from "lucide-react"
 
-import { CANVAS_SIZE_PRESETS, type CanvasSizeUnit } from "@/features/filling/types"
+import { CANVAS_SIZE_PRESETS, type CanvasSizePreset } from "@/features/filling/types"
 import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { SelectInput } from "@/options/components/ui/select-input"
 import { Button } from "@/options/components/ui/button"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 
 interface CanvasSizeDialogProps {
   isOpen: boolean
   onClose: () => void
-  onConfirm: (width: number, height: number) => void
-  initialWidth?: number
-  initialHeight?: number
+  currentWidth: number
+  currentHeight: number
+  onConfirm: (preset: CanvasSizePreset) => void
 }
 
-const UNIT_OPTIONS: Array<{ value: CanvasSizeUnit; label: string }> = [
-  { value: "px", label: "Pixels" },
-  { value: "in", label: "Inches" },
-  { value: "cm", label: "Centimeters" },
-  { value: "mm", label: "Millimeters" },
-]
+type PresetCategory = "Paper" | "Social" | "Screen"
 
-const DPI_DEFAULT = 300
+const CATEGORY_ORDER: PresetCategory[] = ["Paper", "Social", "Screen"]
 
-function toPixels(value: number, unit: CanvasSizeUnit, dpi: number): number {
-  switch (unit) {
-    case "in":
-      return Math.round(value * dpi)
-    case "cm":
-      return Math.round((value / 2.54) * dpi)
-    case "mm":
-      return Math.round((value / 25.4) * dpi)
-    default:
-      return Math.round(value)
-  }
+const CATEGORY_META: Record<PresetCategory, { icon: React.ReactNode; subtitle: string }> = {
+  Paper: {
+    icon: <FileText size={14} className="text-sky-500" />,
+    subtitle: "Print-friendly paper sizes",
+  },
+  Social: {
+    icon: <Share2 size={14} className="text-sky-500" />,
+    subtitle: "Popular social-media formats",
+  },
+  Screen: {
+    icon: <Monitor size={14} className="text-sky-500" />,
+    subtitle: "Display and presentation resolutions",
+  },
 }
 
-function fromPixels(px: number, unit: CanvasSizeUnit, dpi: number): number {
-  switch (unit) {
-    case "in":
-      return Math.round((px / dpi) * 100) / 100
-    case "cm":
-      return Math.round(((px / dpi) * 2.54) * 100) / 100
-    case "mm":
-      return Math.round(((px / dpi) * 25.4) * 10) / 10
-    default:
-      return px
-  }
+function findPresetBySize(width: number, height: number): CanvasSizePreset | null {
+  return CANVAS_SIZE_PRESETS.find((preset) => preset.width === width && preset.height === height) ?? null
 }
 
 export function CanvasSizeDialog({
   isOpen,
   onClose,
+  currentWidth,
+  currentHeight,
   onConfirm,
-  initialWidth = 1920,
-  initialHeight = 1080,
 }: CanvasSizeDialogProps) {
-  const [widthPx, setWidthPx] = useState(initialWidth)
-  const [heightPx, setHeightPx] = useState(initialHeight)
-  const [unit, setUnit] = useState<CanvasSizeUnit>("px")
-  const [dpi, setDpi] = useState(DPI_DEFAULT)
-  const [selectedPreset, setSelectedPreset] = useState<string | null>(null)
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null)
 
-  const displayWidth = fromPixels(widthPx, unit, dpi)
-  const displayHeight = fromPixels(heightPx, unit, dpi)
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
 
-  const handleWidthChange = useCallback(
-    (val: number) => {
-      setWidthPx(toPixels(val, unit, dpi))
-      setSelectedPreset(null)
-    },
-    [unit, dpi]
-  )
+    const matchingPreset = findPresetBySize(currentWidth, currentHeight)
+    setSelectedLabel(matchingPreset?.label ?? null)
+  }, [currentHeight, currentWidth, isOpen])
 
-  const handleHeightChange = useCallback(
-    (val: number) => {
-      setHeightPx(toPixels(val, unit, dpi))
-      setSelectedPreset(null)
-    },
-    [unit, dpi]
-  )
-
-  const handleUnitChange = useCallback((u: string) => {
-    setUnit(u as CanvasSizeUnit)
-  }, [])
-
-  const handlePresetClick = useCallback(
-    (preset: (typeof CANVAS_SIZE_PRESETS)[number]) => {
-      setWidthPx(preset.width)
-      setHeightPx(preset.height)
-      setSelectedPreset(preset.label)
-    },
-    []
-  )
-
-  const handleConfirm = useCallback(() => {
-    if (widthPx < 1 || heightPx < 1) return
-    onConfirm(widthPx, heightPx)
-  }, [widthPx, heightPx, onConfirm])
+  const selectedPreset = useMemo(() => {
+    return CANVAS_SIZE_PRESETS.find((preset) => preset.label === selectedLabel) ?? null
+  }, [selectedLabel])
 
   const presetsByCategory = useMemo(() => {
-    const map = new Map<string, typeof CANVAS_SIZE_PRESETS>()
-    for (const p of CANVAS_SIZE_PRESETS) {
-      const list = map.get(p.category) ?? []
-      list.push(p)
-      map.set(p.category, list)
+    const map = new Map<PresetCategory, CanvasSizePreset[]>()
+
+    for (const preset of CANVAS_SIZE_PRESETS) {
+      if (!(preset.category in CATEGORY_META)) {
+        continue
+      }
+
+      const category = preset.category as PresetCategory
+      const current = map.get(category) ?? []
+      current.push(preset)
+      map.set(category, current)
     }
+
     return map
   }, [])
 
+  const handleApply = () => {
+    if (!selectedPreset) {
+      return
+    }
+
+    onConfirm(selectedPreset)
+  }
+
   return (
-    <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="rounded-xl w-[520px] max-w-[95vw]">
-      <div className="p-5">
+    <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="rounded-xl w-[680px] max-w-[96vw]">
+      <div className="p-5 md:p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Ruler size={18} className="text-sky-500" />
-            <Subheading>Canvas Size</Subheading>
+            <Subheading>Popular Canvas Sizes</Subheading>
           </div>
           <button
             type="button"
@@ -128,89 +101,86 @@ export function CanvasSizeDialog({
           </button>
         </div>
 
-        <MutedText className="mb-4 text-xs">
-          Choose the canvas dimensions for your template. You can select a preset or enter custom values.
+        <MutedText className="text-xs mb-4">
+          Pick from common paper, social, and screen sizes. You can continue fine-tuning width and height manually.
         </MutedText>
 
-        {/* Custom size inputs */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <NumberInput
-            label="Width"
-            value={displayWidth}
-            onChangeValue={handleWidthChange}
-            min={1}
-            max={unit === "px" ? 16384 : 9999}
-            step={unit === "px" ? 1 : 0.1}
-          />
-          <NumberInput
-            label="Height"
-            value={displayHeight}
-            onChangeValue={handleHeightChange}
-            min={1}
-            max={unit === "px" ? 16384 : 9999}
-            step={unit === "px" ? 1 : 0.1}
-          />
-          <SelectInput
-            label="Unit"
-            value={unit}
-            options={UNIT_OPTIONS}
-            onChange={handleUnitChange}
-          />
-        </div>
-
-        {unit !== "px" && (
-          <div className="mb-4 w-32">
-            <NumberInput
-              label="DPI"
-              value={dpi}
-              onChangeValue={setDpi}
-              min={72}
-              max={600}
-            />
-          </div>
-        )}
-
-        <div className="text-[11px] text-slate-400 dark:text-slate-500 mb-4">
-          Final size: {widthPx} x {heightPx} px
-        </div>
-
-        {/* Presets */}
-        <div className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
-          {Array.from(presetsByCategory.entries()).map(([category, presets]) => (
-            <div key={category}>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600 mb-1.5">
-                {category}
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {presets.map((preset) => (
-                  <button
-                    key={preset.label}
-                    type="button"
-                    onClick={() => handlePresetClick(preset)}
-                    className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
-                      selectedPreset === preset.label
-                        ? "border-sky-400 bg-sky-50 text-sky-700 dark:border-sky-600 dark:bg-sky-500/10 dark:text-sky-300"
-                        : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    }`}
-                  >
-                    {preset.label}
-                    <span className="ml-1 text-[10px] text-slate-400 dark:text-slate-500">
-                      {preset.width}x{preset.height}
-                    </span>
-                  </button>
-                ))}
-              </div>
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/30 px-3 py-2 mb-4">
+          {selectedPreset ? (
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedPreset.label}</span>
+              <span className="text-slate-500 dark:text-slate-400">
+                {selectedPreset.width} x {selectedPreset.height} px
+              </span>
             </div>
-          ))}
+          ) : (
+            <div className="text-xs text-slate-500 dark:text-slate-400">No preset selected yet</div>
+          )}
         </div>
 
-        {/* Actions */}
+        <div className="space-y-4 max-h-[52vh] overflow-y-auto pr-1">
+          {CATEGORY_ORDER.map((category) => {
+            const presets = presetsByCategory.get(category) ?? []
+            if (presets.length === 0) {
+              return null
+            }
+
+            return (
+              <section key={category}>
+                <div className="flex items-center gap-2 mb-2">
+                  {CATEGORY_META[category].icon}
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {category}
+                    </div>
+                    <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                      {CATEGORY_META[category].subtitle}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {presets.map((preset) => {
+                    const selected = selectedLabel === preset.label
+
+                    return (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setSelectedLabel(preset.label)}
+                        className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                          selected
+                            ? "border-sky-400 bg-sky-50 dark:border-sky-600 dark:bg-sky-500/10"
+                            : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900/30 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                        }`}
+                      >
+                        <div
+                          className={`text-xs font-semibold ${
+                            selected
+                              ? "text-sky-700 dark:text-sky-300"
+                              : "text-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          {preset.label}
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          {preset.width} x {preset.height} px
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })}
+        </div>
+
         <div className="flex justify-end gap-2 mt-5 pt-4 border-t border-slate-200 dark:border-slate-800">
           <Button variant="secondary" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" size="sm" onClick={handleConfirm}>
-            Next
+          <Button variant="primary" size="sm" onClick={handleApply} disabled={!selectedPreset}>
+            Apply Size
           </Button>
         </div>
       </div>

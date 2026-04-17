@@ -243,9 +243,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   }, [fillVisibleLayers, hiddenLayerIdSet, selectedLayerId, setSelectedLayerId])
 
   const handlePreviewWheel = useCallback(
-    (e: React.WheelEvent<HTMLDivElement>) => {
-      const target = e.target as HTMLElement
-      if (target.closest('[class*="pointer-events-auto"]')) {
+    (event: WheelEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.closest('[class*="pointer-events-auto"]')) {
         return
       }
 
@@ -253,11 +253,13 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         return
       }
 
-      e.preventDefault()
+      if (event.cancelable) {
+        event.preventDefault()
+      }
 
       if (previewInteractionMode === "pan") {
-        const delta = e.deltaY > 0 ? 50 : -50
-        if (e.shiftKey) {
+        const delta = event.deltaY > 0 ? 50 : -50
+        if (event.shiftKey) {
           setPreviewPan((current) => ({ ...current, x: current.x - delta }))
         } else {
           setPreviewPan((current) => ({ ...current, y: current.y - delta }))
@@ -266,7 +268,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       }
 
       const oldZoom = previewZoom
-      const nextZoom = clampPreviewZoom(oldZoom + (e.deltaY > 0 ? -PREVIEW_ZOOM_STEP : PREVIEW_ZOOM_STEP))
+      const nextZoom = clampPreviewZoom(oldZoom + (event.deltaY > 0 ? -PREVIEW_ZOOM_STEP : PREVIEW_ZOOM_STEP))
       if (nextZoom === oldZoom) return
 
       const oldRenderScale = fitScale * (oldZoom / 100)
@@ -276,9 +278,14 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         return
       }
 
-      const rect = e.currentTarget.getBoundingClientRect()
-      const pointerX = e.clientX - rect.left
-      const pointerY = e.clientY - rect.top
+      const container = containerRef.current
+      if (!container) {
+        return
+      }
+
+      const rect = container.getBoundingClientRect()
+      const pointerX = event.clientX - rect.left
+      const pointerY = event.clientY - rect.top
 
       const baseOffsetOldX = (stageSize.width - template.canvasWidth * oldRenderScale) / 2
       const baseOffsetOldY = (stageSize.height - template.canvasHeight * oldRenderScale) / 2
@@ -309,6 +316,23 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       template.canvasWidth,
     ]
   )
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) {
+      return
+    }
+
+    const handleNativeWheel = (event: WheelEvent) => {
+      handlePreviewWheel(event)
+    }
+
+    container.addEventListener("wheel", handleNativeWheel, { passive: false })
+
+    return () => {
+      container.removeEventListener("wheel", handleNativeWheel)
+    }
+  }, [handlePreviewWheel])
 
   const updateSelectedLayerFromNode = useCallback(
     (node: Konva.Node) => {
@@ -637,7 +661,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         ref={containerRef}
         className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
         style={{ height: `${previewContainerHeight}px`, cursor }}
-        onWheel={handlePreviewWheel}
       >
         <Stage
           ref={stageRef}

@@ -21,7 +21,16 @@ export function FillingTab() {
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((s) => s.setBreadcrumb)
   const setHeaderActions = useWorkspaceHeaderStore((s) => s.setActions)
   const resetHeader = useWorkspaceHeaderStore((s) => s.resetHeader)
-  const { editorLayers, setEditorLayers, selectedLayerId, setSelectedLayerId, updateLayer } =
+  const {
+    editorLayers,
+    setEditorLayers,
+    selectedLayerId,
+    setSelectedLayerId,
+    updateLayer,
+    canvasWidth,
+    canvasHeight,
+    setCanvasSize,
+  } =
     useEditorContext()
 
   const loadTemplates = useCallback(async () => {
@@ -44,8 +53,15 @@ export function FillingTab() {
     if (activeTemplate && (fillingStep === "create_manual" || fillingStep === "create_symmetric")) {
       setEditorLayers(activeTemplate.layers)
       setSelectedLayerId(null)
+      setCanvasSize(activeTemplate.canvasWidth, activeTemplate.canvasHeight)
     }
-  }, [activeTemplate?.id, fillingStep])
+  }, [
+    activeTemplate?.id,
+    fillingStep,
+    setCanvasSize,
+    setEditorLayers,
+    setSelectedLayerId,
+  ])
 
   useEffect(() => {
     setHeaderSection("Image Filling")
@@ -65,7 +81,8 @@ export function FillingTab() {
 
       {fillingStep === "create_manual" && activeTemplate && (
         <ManualEditorWorkspace
-          template={activeTemplate}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
           layers={editorLayers}
           selectedLayerId={selectedLayerId}
           onSelectLayer={setSelectedLayerId}

@@ -2,12 +2,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage, Layer, Line, Rect, Transformer } from "react-konva"
 import type Konva from "konva"
 
-import type { VectorLayer, FillingTemplate } from "@/features/filling/types"
+import type { VectorLayer } from "@/features/filling/types"
 import { generateShapePoints } from "@/features/filling/shape-generators"
-import { flattenPoints, getBoundingBox } from "@/features/filling/vector-math"
+import { flattenPoints } from "@/features/filling/vector-math"
+import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { Subheading, MutedText } from "@/options/components/ui/typography"
+import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
+import {
+  PreviewInteractionModeToggle,
+  type PreviewInteractionMode,
+} from "@/options/components/ui/preview-interaction-mode-toggle"
 
 interface ManualEditorWorkspaceProps {
-  template: FillingTemplate
+  canvasWidth: number
+  canvasHeight: number
   layers: VectorLayer[]
   selectedLayerId: string | null
   onSelectLayer: (id: string | null) => void
@@ -15,9 +24,13 @@ interface ManualEditorWorkspaceProps {
 }
 
 const CANVAS_PADDING = 40
+const PREVIEW_MIN_ZOOM = 50
+const PREVIEW_MAX_ZOOM = 800
+const PREVIEW_ZOOM_STEP = 10
 
 export function ManualEditorWorkspace({
-  template,
+  canvasWidth,
+  canvasHeight,
   layers,
   selectedLayerId,
   onSelectLayer,
@@ -27,15 +40,45 @@ export function ManualEditorWorkspace({
   const stageRef = useRef<Konva.Stage>(null)
   const transformerRef = useRef<Konva.Transformer>(null)
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 })
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(520)
+  const [previewZoom, setPreviewZoom] = useState(100)
+  const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 })
+  const [previewInteractionMode, setPreviewInteractionMode] =
+    useState<PreviewInteractionMode>("zoom")
+  const [isResizingPreview, setIsResizingPreview] = useState(false)
+  const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false)
+  const [cursor, setCursor] = useState("default")
+  const { getShortcutLabel } = useShortcutPreferences()
 
-  const scale = useMemo(() => {
+  const clampPreviewZoom = useCallback((value: number) => {
+    return Math.max(PREVIEW_MIN_ZOOM, Math.min(PREVIEW_MAX_ZOOM, Math.round(value)))
+  }, [])
+
+  useShortcutActions([
+    {
+      actionId: "fill.preview.zoom_mode",
+      handler: () => setPreviewInteractionMode("zoom"),
+    },
+    {
+      actionId: "fill.preview.pan_mode",
+      handler: () => setPreviewInteractionMode("pan"),
+    },
+    {
+      actionId: "fill.preview.idle_mode",
+      handler: () => setPreviewInteractionMode("idle"),
+    },
+  ])
+
+  const fitScale = useMemo(() => {
     const availW = stageSize.width - CANVAS_PADDING * 2
     const availH = stageSize.height - CANVAS_PADDING * 2
-    return Math.min(1, availW / template.canvasWidth, availH / template.canvasHeight)
-  }, [stageSize, template.canvasWidth, template.canvasHeight])
+    return Math.min(1, availW / canvasWidth, availH / canvasHeight)
+  }, [canvasHeight, canvasWidth, stageSize])
 
-  const offsetX = (stageSize.width - template.canvasWidth * scale) / 2
-  const offsetY = (stageSize.height - template.canvasHeight * scale) / 2
+  const renderScale = fitScale * (previewZoom / 100)
+
+  const offsetX = (stageSize.width - canvasWidth * renderScale) / 2 + previewPan.x
+  const offsetY = (stageSize.height - canvasHeight * renderScale) / 2 + previewPan.y
 
   useEffect(() => {
     const container = containerRef.current
@@ -45,13 +88,164 @@ export function ManualEditorWorkspace({
       if (entry) {
         setStageSize({
           width: Math.floor(entry.contentRect.width),
-          height: Math.max(400, Math.floor(entry.contentRect.height)),
+          height: Math.max(320, Math.floor(entry.contentRect.height)),
         })
       }
     })
     ro.observe(container)
     return () => ro.disconnect()
   }, [])
+
+  const handlePreviewResizeStart = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsResizingPreview(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isResizingPreview) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = containerRef.current
+      if (!container) return
+
+      const rect = container.getBoundingClientRect()
+      const nextHeight = e.clientY - rect.top
+      setPreviewContainerHeight(Math.max(320, Math.round(nextHeight)))
+    }
+
+    const handleMouseUp = () => {
+      setIsResizingPreview(false)
+    }
+
+    document.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseup", handleMouseUp)
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [isResizingPreview])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey) {
+        setIsFreeAspectRatio(true)
+        if (transformerRef.current) {
+          transformerRef.current.keepRatio(false)
+        }
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (!e.ctrlKey) {
+        setIsFreeAspectRatio(false)
+        if (transformerRef.current) {
+          transformerRef.current.keepRatio(true)
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    window.addEventListener("keyup", handleKeyUp)
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+      window.removeEventListener("keyup", handleKeyUp)
+    }
+  }, [])
+
+  const handlePreviewWheel = useCallback(
+    (event: WheelEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.closest('[class*="pointer-events-auto"]')) {
+        return
+      }
+
+      if (previewInteractionMode === "idle") {
+        return
+      }
+
+      if (event.cancelable) {
+        event.preventDefault()
+      }
+
+      if (previewInteractionMode === "pan") {
+        const delta = event.deltaY > 0 ? 50 : -50
+        if (event.shiftKey) {
+          setPreviewPan((current) => ({ ...current, x: current.x - delta }))
+        } else {
+          setPreviewPan((current) => ({ ...current, y: current.y - delta }))
+        }
+        return
+      }
+
+      const oldZoom = previewZoom
+      const nextZoom = clampPreviewZoom(oldZoom + (event.deltaY > 0 ? -PREVIEW_ZOOM_STEP : PREVIEW_ZOOM_STEP))
+      if (nextZoom === oldZoom) return
+
+      const oldRenderScale = fitScale * (oldZoom / 100)
+      const newRenderScale = fitScale * (nextZoom / 100)
+      if (oldRenderScale <= 0 || newRenderScale <= 0) {
+        setPreviewZoom(nextZoom)
+        return
+      }
+
+      const container = containerRef.current
+      if (!container) {
+        return
+      }
+
+      const rect = container.getBoundingClientRect()
+      const pointerX = event.clientX - rect.left
+      const pointerY = event.clientY - rect.top
+
+      const baseOffsetOldX = (stageSize.width - canvasWidth * oldRenderScale) / 2
+      const baseOffsetOldY = (stageSize.height - canvasHeight * oldRenderScale) / 2
+      const worldX = (pointerX - baseOffsetOldX - previewPan.x) / oldRenderScale
+      const worldY = (pointerY - baseOffsetOldY - previewPan.y) / oldRenderScale
+
+      const baseOffsetNewX = (stageSize.width - canvasWidth * newRenderScale) / 2
+      const baseOffsetNewY = (stageSize.height - canvasHeight * newRenderScale) / 2
+      const nextPanX = pointerX - baseOffsetNewX - worldX * newRenderScale
+      const nextPanY = pointerY - baseOffsetNewY - worldY * newRenderScale
+
+      setPreviewZoom(nextZoom)
+      setPreviewPan({
+        x: Math.round(nextPanX * 100) / 100,
+        y: Math.round(nextPanY * 100) / 100,
+      })
+    },
+    [
+      canvasHeight,
+      canvasWidth,
+      clampPreviewZoom,
+      fitScale,
+      previewInteractionMode,
+      previewPan.x,
+      previewPan.y,
+      previewZoom,
+      stageSize.height,
+      stageSize.width,
+    ]
+  )
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) {
+      return
+    }
+
+    const handleNativeWheel = (event: WheelEvent) => {
+      handlePreviewWheel(event)
+    }
+
+    container.addEventListener("wheel", handleNativeWheel, { passive: false })
+
+    return () => {
+      container.removeEventListener("wheel", handleNativeWheel)
+    }
+  }, [handlePreviewWheel])
 
   useEffect(() => {
     const tr = transformerRef.current
@@ -83,11 +277,12 @@ export function ManualEditorWorkspace({
     (layerId: string, e: Konva.KonvaEventObject<DragEvent>) => {
       const node = e.target
       onUpdateLayer(layerId, {
-        x: Math.round(node.x() / scale),
-        y: Math.round(node.y() / scale),
+        x: Math.round(((node.x() - offsetX) / renderScale) * 100) / 100,
+        y: Math.round(((node.y() - offsetY) / renderScale) * 100) / 100,
       })
+      setCursor("grab")
     },
-    [onUpdateLayer, scale]
+    [offsetX, offsetY, onUpdateLayer, renderScale]
   )
 
   const handleTransformEnd = useCallback(
@@ -100,97 +295,147 @@ export function ManualEditorWorkspace({
       if (!layer) return
 
       onUpdateLayer(layerId, {
-        x: Math.round(node.x() / scale),
-        y: Math.round(node.y() / scale),
+        x: Math.round(((node.x() - offsetX) / renderScale) * 100) / 100,
+        y: Math.round(((node.y() - offsetY) / renderScale) * 100) / 100,
         width: Math.round(Math.abs(layer.width * scaleXNode)),
         height: Math.round(Math.abs(layer.height * scaleYNode)),
-        rotation: Math.round(node.rotation()),
+        rotation: Math.round(node.rotation() * 100) / 100,
       })
 
       node.scaleX(1)
       node.scaleY(1)
+      setCursor("default")
     },
-    [layers, onUpdateLayer, scale]
+    [layers, offsetX, offsetY, onUpdateLayer, renderScale]
   )
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
-      style={{ minHeight: 400 }}
-    >
-      <Stage
-        ref={stageRef}
-        width={stageSize.width}
-        height={stageSize.height}
-        onClick={handleStageClick}
-        onTap={handleStageClick}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <Subheading>Manual Editor</Subheading>
+          <MutedText className="text-xs mt-0.5">
+            {canvasWidth} x {canvasHeight} px &middot; {layers.length} layer{layers.length !== 1 ? "s" : ""}
+          </MutedText>
+        </div>
+
+        <PreviewInteractionModeToggle
+          mode={previewInteractionMode}
+          onChange={setPreviewInteractionMode}
+          zoomKeyHint={getShortcutLabel("fill.preview.zoom_mode")}
+          panKeyHint={getShortcutLabel("fill.preview.pan_mode")}
+          idleKeyHint={getShortcutLabel("fill.preview.idle_mode")}
+        />
+      </div>
+
+      <div
+        ref={containerRef}
+        className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
+        style={{ height: `${previewContainerHeight}px`, cursor }}
       >
-        <Layer>
-          {/* Canvas background */}
-          <Rect
-            x={offsetX}
-            y={offsetY}
-            width={template.canvasWidth * scale}
-            height={template.canvasHeight * scale}
-            fill="#ffffff"
-            stroke="#cbd5e1"
-            strokeWidth={1}
-            listening={false}
-          />
+        <Stage
+          ref={stageRef}
+          width={stageSize.width}
+          height={stageSize.height}
+          onClick={handleStageClick}
+          onTap={handleStageClick}
+          onMouseMove={(e) => {
+            const targetName = e.target.name()
+            if (targetName.includes("rotater")) {
+              setCursor("crosshair")
+              return
+            }
 
-          {/* Shape layers */}
-          {layers.map((layer) => {
-            if (!layer.visible) return null
+            if (targetName.includes("manual-layer-shape")) {
+              const isPointerDown = (e.evt as MouseEvent).buttons === 1
+              setCursor(isPointerDown ? "grabbing" : "grab")
+              return
+            }
 
-            const shapePoints = generateShapePoints(layer.shapeType, layer.width, layer.height)
-            const flat = flattenPoints(shapePoints)
-            const scaledFlat = flat.map((v, i) => v * scale)
+            setCursor("default")
+          }}
+          onMouseLeave={() => setCursor("default")}
+        >
+          <Layer>
+            <Rect
+              x={offsetX}
+              y={offsetY}
+              width={canvasWidth * renderScale}
+              height={canvasHeight * renderScale}
+              fill="#ffffff"
+              stroke="#cbd5e1"
+              strokeWidth={1}
+              listening={false}
+            />
 
-            return (
-              <Line
-                key={layer.id}
-                id={`layer-${layer.id}`}
-                points={scaledFlat}
-                x={offsetX + layer.x * scale}
-                y={offsetY + layer.y * scale}
-                rotation={layer.rotation}
-                closed
-                fill="rgba(59, 130, 246, 0.15)"
-                stroke={selectedLayerId === layer.id ? "#3b82f6" : "#94a3b8"}
-                strokeWidth={selectedLayerId === layer.id ? 2 : 1}
-                draggable={!layer.locked}
-                onClick={() => onSelectLayer(layer.id)}
-                onTap={() => onSelectLayer(layer.id)}
-                onDragEnd={(e) => handleDragEnd(layer.id, e)}
-                onTransformEnd={(e) => handleTransformEnd(layer.id, e)}
-              />
-            )
-          })}
+            {layers.map((layer) => {
+              if (!layer.visible) return null
 
-          {/* Transformer for selected layer */}
-          <Transformer
-            ref={transformerRef}
-            rotateEnabled
-            enabledAnchors={[
-              "top-left",
-              "top-right",
-              "bottom-left",
-              "bottom-right",
-              "middle-left",
-              "middle-right",
-              "top-center",
-              "bottom-center",
-            ]}
-            boundBoxFunc={(oldBox, newBox) => {
-              if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) {
-                return oldBox
-              }
-              return newBox
-            }}
-          />
-        </Layer>
-      </Stage>
+              const shapePoints = generateShapePoints(layer.shapeType, layer.width, layer.height)
+              const flat = flattenPoints(shapePoints)
+              const scaledFlat = flat.map((value) => value * renderScale)
+
+              return (
+                <Line
+                  key={layer.id}
+                  id={`layer-${layer.id}`}
+                  name="manual-layer-shape"
+                  points={scaledFlat}
+                  x={offsetX + layer.x * renderScale}
+                  y={offsetY + layer.y * renderScale}
+                  rotation={layer.rotation}
+                  closed
+                  fill="rgba(59, 130, 246, 0.15)"
+                  stroke={selectedLayerId === layer.id ? "#3b82f6" : "#94a3b8"}
+                  strokeWidth={selectedLayerId === layer.id ? 2 : 1}
+                  draggable={!layer.locked}
+                  onClick={() => onSelectLayer(layer.id)}
+                  onTap={() => onSelectLayer(layer.id)}
+                  onMouseEnter={() => setCursor(layer.locked ? "not-allowed" : "grab")}
+                  onMouseLeave={() => setCursor("default")}
+                  onDragStart={() => setCursor("grabbing")}
+                  onDragEnd={(e) => handleDragEnd(layer.id, e)}
+                  onTransformStart={() => setCursor("grabbing")}
+                  onTransformEnd={(e) => handleTransformEnd(layer.id, e)}
+                />
+              )
+            })}
+
+            <Transformer
+              ref={transformerRef}
+              rotateEnabled
+              keepRatio={!isFreeAspectRatio}
+              enabledAnchors={["top-left", "top-right", "bottom-left", "bottom-right"]}
+              boundBoxFunc={(oldBox, newBox) => {
+                if (Math.abs(newBox.width) < 10 || Math.abs(newBox.height) < 10) {
+                  return oldBox
+                }
+                return newBox
+              }}
+            />
+          </Layer>
+        </Stage>
+
+        <ZoomPanControl
+          zoom={previewZoom}
+          panX={previewPan.x}
+          panY={previewPan.y}
+          onZoomChange={setPreviewZoom}
+          onPanChange={(x, y) => setPreviewPan({ x, y })}
+          minZoom={PREVIEW_MIN_ZOOM}
+          maxZoom={PREVIEW_MAX_ZOOM}
+        />
+
+        <div
+          onMouseDown={handlePreviewResizeStart}
+          className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors ${
+            isResizingPreview ? "bg-sky-400 dark:bg-sky-500" : ""
+          }`}
+          style={{ cursor: "ns-resize" }}
+          role="separator"
+          aria-label="Resize manual preview height"
+        />
+      </div>
     </div>
   )
 }

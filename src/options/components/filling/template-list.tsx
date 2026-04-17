@@ -5,7 +5,6 @@ import { useFillingStore } from "@/options/stores/filling-store"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
 import { TemplateSortBar } from "@/options/components/filling/template-sort-bar"
 import { TemplateCard } from "@/options/components/filling/template-card"
-import { CanvasSizeDialog } from "@/options/components/filling/canvas-size-dialog"
 import { TemplateMethodDialog } from "@/options/components/filling/template-method-dialog"
 import { WorkspaceSelectHeader } from "@/options/components/shared/workspace-select-header"
 
@@ -17,22 +16,12 @@ export function TemplateList({ onRefresh }: TemplateListProps) {
   const templates = useFillingStore((s) => s.templates)
   const sortMode = useFillingStore((s) => s.sortMode)
 
-  const [canvasSizeDialogOpen, setCanvasSizeDialogOpen] = useState(false)
-  const [methodDialogOpen, setMethodDialogOpen] = useState(false)
-  const [pendingCanvasWidth, setPendingCanvasWidth] = useState(1920)
-  const [pendingCanvasHeight, setPendingCanvasHeight] = useState(1080)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   const sorted = sortTemplates(templates, sortMode)
 
   const handleCreateNew = () => {
-    setCanvasSizeDialogOpen(true)
-  }
-
-  const handleCanvasSizeConfirm = (width: number, height: number) => {
-    setPendingCanvasWidth(width)
-    setPendingCanvasHeight(height)
-    setCanvasSizeDialogOpen(false)
-    setMethodDialogOpen(true)
+    setCreateDialogOpen(true)
   }
 
   if (templates.length === 0) {
@@ -45,16 +34,9 @@ export function TemplateList({ onRefresh }: TemplateListProps) {
           subtitle="Create your first template to get started"
           onClick={handleCreateNew}
         />
-        <CanvasSizeDialog
-          isOpen={canvasSizeDialogOpen}
-          onClose={() => setCanvasSizeDialogOpen(false)}
-          onConfirm={handleCanvasSizeConfirm}
-        />
         <TemplateMethodDialog
-          isOpen={methodDialogOpen}
-          onClose={() => setMethodDialogOpen(false)}
-          canvasWidth={pendingCanvasWidth}
-          canvasHeight={pendingCanvasHeight}
+          isOpen={createDialogOpen}
+          onClose={() => setCreateDialogOpen(false)}
           onRefresh={onRefresh}
         />
       </>
@@ -82,16 +64,9 @@ export function TemplateList({ onRefresh }: TemplateListProps) {
         ))}
       </div>
 
-      <CanvasSizeDialog
-        isOpen={canvasSizeDialogOpen}
-        onClose={() => setCanvasSizeDialogOpen(false)}
-        onConfirm={handleCanvasSizeConfirm}
-      />
       <TemplateMethodDialog
-        isOpen={methodDialogOpen}
-        onClose={() => setMethodDialogOpen(false)}
-        canvasWidth={pendingCanvasWidth}
-        canvasHeight={pendingCanvasHeight}
+        isOpen={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
         onRefresh={onRefresh}
       />
     </>

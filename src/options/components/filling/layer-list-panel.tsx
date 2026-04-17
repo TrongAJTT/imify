@@ -8,10 +8,25 @@ import {
   GripVertical,
   Plus,
 } from "lucide-react"
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
 
 import type { VectorLayer } from "@/features/filling/types"
 import { SHAPE_LABELS } from "@/features/filling/shape-generators"
 import { Button } from "@/options/components/ui/button"
+import { SortableFillLayerItem } from "@/options/components/filling/sortable-fill-layer-item"
 
 interface LayerListPanelProps {
   layers: VectorLayer[]
@@ -34,20 +49,27 @@ export function LayerListPanel({
   onReorder,
   onAddShape,
 }: LayerListPanelProps) {
-  const handleMoveUp = useCallback(
-    (index: number) => {
-      if (index <= 0) return
-      onReorder(index, index - 1)
-    },
-    [onReorder]
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
   )
 
-  const handleMoveDown = useCallback(
-    (index: number) => {
-      if (index >= layers.length - 1) return
-      onReorder(index, index + 1)
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+
+      const fromIndex = layers.findIndex((layer) => layer.id === active.id)
+      const toIndex = layers.findIndex((layer) => layer.id === over.id)
+      if (fromIndex < 0 || toIndex < 0) return
+
+      onReorder(fromIndex, toIndex)
     },
-    [layers.length, onReorder]
+    [layers, onReorder]
   )
 
   return (
@@ -67,24 +89,32 @@ export function LayerListPanel({
           No layers. Click &ldquo;Add&rdquo; to create a shape.
         </div>
       ) : (
-        <div className="space-y-0.5 max-h-[320px] overflow-y-auto">
-          {layers.map((layer, index) => (
-            <LayerRow
-              key={layer.id}
-              layer={layer}
-              index={index}
-              isSelected={layer.id === selectedLayerId}
-              onSelect={() => onSelectLayer(layer.id)}
-              onToggleLock={() => onToggleLock(layer.id)}
-              onToggleVisibility={() => onToggleVisibility(layer.id)}
-              onDelete={() => onDeleteLayer(layer.id)}
-              onMoveUp={() => handleMoveUp(index)}
-              onMoveDown={() => handleMoveDown(index)}
-              isFirst={index === 0}
-              isLast={index === layers.length - 1}
-            />
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={layers.map((layer) => layer.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-0.5 max-h-[320px] overflow-y-auto">
+              {layers.map((layer, index) => (
+                <SortableFillLayerItem key={layer.id} id={layer.id}>
+                  <LayerRow
+                    layer={layer}
+                    index={index}
+                    isSelected={layer.id === selectedLayerId}
+                    onSelect={() => onSelectLayer(layer.id)}
+                    onToggleLock={() => onToggleLock(layer.id)}
+                    onToggleVisibility={() => onToggleVisibility(layer.id)}
+                    onDelete={() => onDeleteLayer(layer.id)}
+                  />
+                </SortableFillLayerItem>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   )
@@ -98,10 +128,6 @@ function LayerRow({
   onToggleLock,
   onToggleVisibility,
   onDelete,
-  onMoveUp,
-  onMoveDown,
-  isFirst,
-  isLast,
 }: {
   layer: VectorLayer
   index: number
@@ -110,10 +136,6 @@ function LayerRow({
   onToggleLock: () => void
   onToggleVisibility: () => void
   onDelete: () => void
-  onMoveUp: () => void
-  onMoveDown: () => void
-  isFirst: boolean
-  isLast: boolean
 }) {
   return (
     <div
@@ -124,25 +146,8 @@ function LayerRow({
       } ${!layer.visible ? "opacity-50" : ""}`}
       onClick={onSelect}
     >
-      <div className="flex flex-col gap-0.5">
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onMoveUp() }}
-          disabled={isFirst}
-          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-30"
-          title="Move up"
-        >
-          <GripVertical size={10} />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onMoveDown() }}
-          disabled={isLast}
-          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-30"
-          title="Move down"
-        >
-          <GripVertical size={10} />
-        </button>
+      <div className="text-slate-400 dark:text-slate-500">
+        <GripVertical size={12} />
       </div>
 
       <div className="flex-1 min-w-0">
