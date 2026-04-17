@@ -10,6 +10,7 @@ type AccordionCardProps = {
   sublabel?: string
   disabled?: boolean
   className?: string
+  childrenClassName?: string
   defaultOpen?: boolean
   isOpen?: boolean
   onOpenChange?: (open: boolean) => void
@@ -32,6 +33,7 @@ export function AccordionCard({
   sublabel,
   disabled,
   className,
+  childrenClassName,
   defaultOpen,
   isOpen: controlledOpen,
   onOpenChange,
@@ -116,7 +118,7 @@ export function AccordionCard({
             ? `${theme.accordionContentBorder}`
             : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/20"
         }`}>
-          <div className="p-3">
+          <div className={`${childrenClassName || "p-3"}`}>
             {children}
           </div>
         </Collapsible.Content>

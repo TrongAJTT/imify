@@ -4,9 +4,15 @@ import type Konva from "konva"
 import { Download, Loader2 } from "lucide-react"
 
 import type { CanvasFillState, FillingTemplate, VectorLayer } from "@/features/filling/types"
+import { templateStorage } from "@/features/filling/template-storage"
 import { useFillingStore } from "@/options/stores/filling-store"
+import { useFillUiStore } from "@/options/stores/fill-ui-store"
 import { generateShapePoints } from "@/features/filling/shape-generators"
 import { flattenPoints, roundedPolygonPoints } from "@/features/filling/vector-math"
+import {
+  resolveLayerContainerHighlightMode,
+  type LayerContainerHighlightMode,
+} from "@/options/components/filling/layer-visual-highlight"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 import { Button } from "@/options/components/ui/button"
 import { exportFilledTemplate } from "./filling-export-utils"
@@ -22,11 +28,15 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const transformerRef = useRef<Konva.Transformer>(null)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 })
 
   const canvasFillState = useFillingStore((s) => s.canvasFillState)
   const layerFillStates = useFillingStore((s) => s.layerFillStates)
   const selectedLayerId = useFillingStore((s) => s.selectedLayerId)
+  const updateTemplate = useFillingStore((s) => s.updateTemplate)
+  const activeCustomizationTab = useFillUiStore((s) => s.activeCustomizationTab)
+  const hiddenLayerIds = useFillUiStore((s) => s.hiddenLayerIds)
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId)
   const setCanvasFillState = useFillingStore((s) => s.setCanvasFillState)
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState)
@@ -46,6 +56,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     const availH = stageSize.height - CANVAS_PADDING * 2
     return Math.min(1, availW / template.canvasWidth, availH / template.canvasHeight)
   }, [stageSize, template.canvasWidth, template.canvasHeight])
+
+  const hiddenLayerIdSet = useMemo(() => new Set(hiddenLayerIds), [hiddenLayerIds])
+  const fillVisibleLayers = useMemo(
+    () => template.layers.filter((layer) => layer.visible && !hiddenLayerIdSet.has(layer.id)),
+    [hiddenLayerIdSet, template.layers]
+  )
 
   const offsetX = (stageSize.width - template.canvasWidth * scale) / 2
   const offsetY = (stageSize.height - template.canvasHeight * scale) / 2
@@ -135,14 +151,97 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     }
   }, [selectedLayerId])
 
+  useEffect(
+    () => () => {
+      if (saveTimerRef.current !== null) {
+        clearTimeout(saveTimerRef.current)
+      }
+    },
+    []
+  )
+
+  useEffect(() => {
+    if (!selectedLayerId) return
+    if (hiddenLayerIdSet.has(selectedLayerId)) {
+      setSelectedLayerId(fillVisibleLayers[0]?.id ?? null)
+    }
+  }, [fillVisibleLayers, hiddenLayerIdSet, selectedLayerId, setSelectedLayerId])
+
+  const queueTemplateSave = useCallback((nextTemplate: FillingTemplate) => {
+    if (saveTimerRef.current !== null) {
+      clearTimeout(saveTimerRef.current)
+    }
+
+    saveTimerRef.current = setTimeout(() => {
+      void templateStorage.save(nextTemplate)
+    }, 180)
+  }, [])
+
+  const updateSelectedLayerFromNode = useCallback(
+    (node: Konva.Node) => {
+      if (!selectedLayerId) return
+      const selectedLayer = template.layers.find((layer) => layer.id === selectedLayerId)
+      if (!selectedLayer || hiddenLayerIdSet.has(selectedLayer.id)) return
+
+      const nextScaleX = Math.max(0.01, Math.abs(node.scaleX()))
+      const nextScaleY = Math.max(0.01, Math.abs(node.scaleY()))
+      const nextLayer: VectorLayer = {
+        ...selectedLayer,
+        x: Math.round(((node.x() - offsetX) / scale) * 100) / 100,
+        y: Math.round(((node.y() - offsetY) / scale) * 100) / 100,
+        rotation: Math.round(node.rotation() * 100) / 100,
+        width: Math.max(1, Math.round(selectedLayer.width * nextScaleX)),
+        height: Math.max(1, Math.round(selectedLayer.height * nextScaleY)),
+      }
+
+      node.scaleX(1)
+      node.scaleY(1)
+
+      const nextLayerWithPoints: VectorLayer = {
+        ...nextLayer,
+        points: generateShapePoints(nextLayer.shapeType, nextLayer.width, nextLayer.height),
+      }
+
+      const nextTemplate: FillingTemplate = {
+        ...template,
+        layers: template.layers.map((layer) =>
+          layer.id === nextLayerWithPoints.id ? nextLayerWithPoints : layer
+        ),
+        updatedAt: Date.now(),
+      }
+
+      updateTemplate(nextTemplate)
+      queueTemplateSave(nextTemplate)
+    },
+    [
+      hiddenLayerIdSet,
+      offsetX,
+      offsetY,
+      queueTemplateSave,
+      scale,
+      selectedLayerId,
+      template,
+      updateTemplate,
+    ]
+  )
+
   useEffect(() => {
     const tr = transformerRef.current
     const stage = stageRef.current
     if (!tr || !stage) return
 
     const timeoutId = setTimeout(() => {
-      if (selectedLayerId) {
+      if (selectedLayerId && activeCustomizationTab === "image") {
         const layerNode = stage.findOne(`#fill-img-${selectedLayerId}`)
+        if (layerNode) {
+          tr.nodes([layerNode])
+          tr.getLayer()?.batchDraw()
+          return
+        }
+      }
+
+      if (selectedLayerId && activeCustomizationTab === "layer") {
+        const layerNode = stage.findOne(`#fill-layer-transform-${selectedLayerId}`)
         if (layerNode) {
           tr.nodes([layerNode])
           tr.getLayer()?.batchDraw()
@@ -164,7 +263,15 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     }, 0)
 
     return () => clearTimeout(timeoutId)
-  }, [selectedLayerId, selectedCanvasNode, layerFillStates, backgroundImage, loadedImages])
+  }, [
+    selectedLayerId,
+    selectedCanvasNode,
+    layerFillStates,
+    fillVisibleLayers,
+    backgroundImage,
+    loadedImages,
+    activeCustomizationTab,
+  ])
 
   const handleStageClick = useCallback(
     (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -179,6 +286,19 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const handleTransformStart = useCallback(() => {
     setIsTransforming(true)
   }, [])
+
+  const handleLayerTransformDragStart = useCallback(() => {
+    setCursor("grabbing")
+  }, [])
+
+  const handleLayerTransformDragEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => {
+      if (!selectedLayerId || activeCustomizationTab !== "layer") return
+      updateSelectedLayerFromNode(e.target)
+      setCursor("grab")
+    },
+    [activeCustomizationTab, selectedLayerId, updateSelectedLayerFromNode]
+  )
 
   const handleTransformEnd = useCallback(
     (e: Konva.KonvaEventObject<Event>) => {
@@ -227,7 +347,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         return
       }
 
-      if (selectedLayerId) {
+      if (selectedLayerId && activeCustomizationTab === "layer") {
+        updateSelectedLayerFromNode(node)
+        return
+      }
+
+      if (selectedLayerId && activeCustomizationTab === "image") {
         const renderedScaleX = node.scaleX()
         const renderedScaleY = node.scaleY()
         const renderedX = node.x()
@@ -264,15 +389,36 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         }
       }
     },
-    [selectedLayerId, selectedCanvasNode, scale, updateLayerFillState, canvasFillState, setCanvasFillState]
+    [
+      selectedLayerId,
+      selectedCanvasNode,
+      scale,
+      updateLayerFillState,
+      canvasFillState,
+      setCanvasFillState,
+      activeCustomizationTab,
+      updateSelectedLayerFromNode,
+    ]
   )
 
   const handleExport = useCallback(async () => {
     setIsExporting(true)
     try {
+      const fillVisibleLayerIdSet = new Set(fillVisibleLayers.map((layer) => layer.id))
+      const exportTemplate: FillingTemplate = {
+        ...template,
+        layers: fillVisibleLayers,
+        groups: (template.groups ?? [])
+          .map((group) => ({
+            ...group,
+            layerIds: group.layerIds.filter((layerId) => fillVisibleLayerIdSet.has(layerId)),
+          }))
+          .filter((group) => group.layerIds.length > 0),
+      }
+
       await exportFilledTemplate({
-        template,
-        layerFillStates,
+        template: exportTemplate,
+        layerFillStates: layerFillStates.filter((state) => fillVisibleLayerIdSet.has(state.layerId)),
         canvasFillState,
         exportFormat,
         exportQuality,
@@ -282,7 +428,14 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     } finally {
       setIsExporting(false)
     }
-  }, [template, layerFillStates, canvasFillState, exportFormat, exportQuality])
+  }, [
+    canvasFillState,
+    exportFormat,
+    exportQuality,
+    fillVisibleLayers,
+    layerFillStates,
+    template,
+  ])
 
   const backgroundMode = canvasFillState.backgroundType === "gradient"
     ? "solid"
@@ -371,6 +524,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                 const isPointerDown = (e.evt as MouseEvent).buttons === 1
                 setCursor(isPointerDown ? "grabbing" : "grab")
               }
+              return
+            }
+
+            if (targetName.includes("fill-layer-transform-node")) {
+              const isPointerDown = (e.evt as MouseEvent).buttons === 1
+              setCursor(isPointerDown ? "grabbing" : "grab")
               return
             }
 
@@ -469,12 +628,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
               listening={false}
             />
 
-            {selectedLayerId && (
+            {selectedLayerId && !hiddenLayerIdSet.has(selectedLayerId) && activeCustomizationTab === "image" && (
               <>
                 {layerFillStates
                   .filter((fillState) => fillState.layerId === selectedLayerId)
                   .map((fillState) => {
-                    const layer = template.layers.find((candidate) => candidate.id === fillState.layerId)
+                    const layer = fillVisibleLayers.find((candidate) => candidate.id === fillState.layerId)
                     if (!layer || !layerFillStates.find((state) => state.layerId === layer.id)?.imageUrl) {
                       return null
                     }
@@ -526,10 +685,14 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
               </>
             )}
 
-            {template.layers.map((layer) => {
-              if (!layer.visible) return null
+            {fillVisibleLayers.map((layer) => {
               const fillState = layerFillStates.find((lf) => lf.layerId === layer.id)
               const loadedImg = loadedImages.get(layer.id)
+              const containerHighlightMode = resolveLayerContainerHighlightMode(
+                selectedLayerId === layer.id,
+                Boolean(fillState?.imageUrl),
+                activeCustomizationTab
+              )
 
               return (
                 <FilledLayerShape
@@ -544,6 +707,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                   offsetX={offsetX}
                   offsetY={offsetY}
                   isSelected={selectedLayerId === layer.id}
+                  containerHighlightMode={containerHighlightMode}
+                  isLayerTransformInteractive={
+                    selectedLayerId === layer.id && activeCustomizationTab === "layer"
+                  }
+                  onLayerTransformDragStart={handleLayerTransformDragStart}
+                  onLayerTransformDragEnd={handleLayerTransformDragEnd}
                   onSelect={() => {
                     setSelectedCanvasNode(null)
                     setSelectedLayerId(layer.id)
@@ -584,6 +753,10 @@ function FilledLayerShape({
   offsetX,
   offsetY,
   isSelected,
+  containerHighlightMode,
+  isLayerTransformInteractive,
+  onLayerTransformDragStart,
+  onLayerTransformDragEnd,
   onSelect,
 }: {
   layer: VectorLayer
@@ -596,6 +769,10 @@ function FilledLayerShape({
   offsetX: number
   offsetY: number
   isSelected: boolean
+  containerHighlightMode: LayerContainerHighlightMode
+  isLayerTransformInteractive: boolean
+  onLayerTransformDragStart: () => void
+  onLayerTransformDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void
   onSelect: () => void
 }) {
   const effectiveCornerRadius = canvasFillState.cornerRadiusOverrideEnabled
@@ -705,6 +882,16 @@ function FilledLayerShape({
           ctx.closePath()
         }}
       >
+        <Line
+          points={flat}
+          closed
+          fill="rgba(15, 23, 42, 0.001)"
+          strokeEnabled={false}
+          onClick={onSelect}
+          onTap={onSelect}
+          perfectDrawEnabled={false}
+        />
+
         {!loadedImg && (
           <Line
             points={flat}
@@ -729,18 +916,38 @@ function FilledLayerShape({
         )}
       </Group>
 
-      {isSelected && !loadedImg && (
+      {containerHighlightMode !== "none" && (
         <Line
           x={x}
           y={y}
           rotation={layer.rotation}
           points={flat}
           closed
-          stroke="#f59e0b"
+          stroke={containerHighlightMode === "missing" ? "#f59e0b" : "#3b82f6"}
           strokeWidth={2}
-          dash={[6, 4]}
+          dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
           lineJoin="round"
           listening={false}
+        />
+      )}
+
+      {isLayerTransformInteractive && (
+        <Line
+          id={`fill-layer-transform-${layer.id}`}
+          name="fill-layer-transform-node"
+          x={x}
+          y={y}
+          rotation={layer.rotation}
+          points={flat}
+          closed
+          fill="rgba(59, 130, 246, 0.001)"
+          stroke="rgba(59, 130, 246, 0.001)"
+          strokeWidth={8}
+          draggable
+          onClick={onSelect}
+          onTap={onSelect}
+          onDragStart={onLayerTransformDragStart}
+          onDragEnd={onLayerTransformDragEnd}
         />
       )}
 

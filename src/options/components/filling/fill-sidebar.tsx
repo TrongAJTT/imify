@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useState } from "react"
+
 import type { FillingTemplate } from "@/features/filling/types"
 import {
   closestCenter,
@@ -12,11 +14,13 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 
 import { templateStorage } from "@/features/filling/template-storage"
 import { useFillingStore } from "@/options/stores/filling-store"
+import { useFillUiStore } from "@/options/stores/fill-ui-store"
 import { FillLayerCard } from "@/options/components/filling/fill-layer-card"
+import { FillLayerCustomizationAccordion } from "@/options/components/filling/fill-layer-customization-accordion"
 import { FillCanvasAccordion } from "@/options/components/filling/fill-canvas-accordion"
 import { FillingExportAccordion } from "@/options/components/filling/filling-export-accordion"
 import { SortableFillLayerItem } from "@/options/components/filling/sortable-fill-layer-item"
-import AccordionCard from "~backups/accordion-card"
+import { ResizableAccordionCard } from "@/options/components/ui/resizable-accordion-card"
 import { ImagePlus } from "lucide-react"
 
 interface FillSidebarProps {
@@ -26,8 +30,20 @@ interface FillSidebarProps {
 export function FillSidebar({ template }: FillSidebarProps) {
   const layerFillStates = useFillingStore((s) => s.layerFillStates)
   const updateTemplate = useFillingStore((s) => s.updateTemplate)
+  const hiddenLayerIds = useFillUiStore((s) => s.hiddenLayerIds)
+  const resetFillSessionState = useFillUiStore((s) => s.resetFillSessionState)
+  const [layersAccordionHeight, setLayersAccordionHeight] = useState(320)
 
-  const visibleLayers = template.layers.filter((l) => l.visible)
+  const hiddenLayerIdSet = useMemo(() => new Set(hiddenLayerIds), [hiddenLayerIds])
+
+  useEffect(() => {
+    resetFillSessionState()
+  }, [resetFillSessionState, template.id])
+
+  const visibleLayers = useMemo(
+    () => template.layers.filter((l) => l.visible && !hiddenLayerIdSet.has(l.id)),
+    [hiddenLayerIdSet, template.layers]
+  )
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -50,7 +66,7 @@ export function FillSidebar({ template }: FillSidebarProps) {
 
     let visibleCursor = 0
     const reorderedLayers = template.layers.map((layer) => {
-      if (!layer.visible) return layer
+      if (!layer.visible || hiddenLayerIdSet.has(layer.id)) return layer
       const nextLayer = reorderedVisibleLayers[visibleCursor]
       visibleCursor += 1
       return nextLayer
@@ -69,27 +85,35 @@ export function FillSidebar({ template }: FillSidebarProps) {
   return (
     <div className="space-y-3">
       {/* Layer fill controls */}
-      <AccordionCard
+      <ResizableAccordionCard
         icon={<ImagePlus size={16} />}
         label="Layers"
         sublabel={`${visibleLayers.length} visible`}
         colorTheme="sky"
         defaultOpen={true}
-        childrenClassName="space-y-2"
+        height={layersAccordionHeight}
+        initialHeight={320}
+        onHeightChange={setLayersAccordionHeight}
+        minHeight={180}
+        maxHeight={640}
       >
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={visibleLayers.map((layer) => layer.id)} strategy={verticalListSortingStrategy}>
-            {visibleLayers.map((layer) => {
-              const fillState = layerFillStates.find((lf) => lf.layerId === layer.id)
-              return (
-                <SortableFillLayerItem key={layer.id} id={layer.id}>
-                  <FillLayerCard layer={layer} fillState={fillState} />
-                </SortableFillLayerItem>
-              )
-            })}
-          </SortableContext>
-        </DndContext>
-      </AccordionCard>
+        <div className="space-y-2">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+            <SortableContext items={visibleLayers.map((layer) => layer.id)} strategy={verticalListSortingStrategy}>
+              {visibleLayers.map((layer) => {
+                const fillState = layerFillStates.find((lf) => lf.layerId === layer.id)
+                return (
+                  <SortableFillLayerItem key={layer.id} id={layer.id}>
+                    <FillLayerCard layer={layer} fillState={fillState} />
+                  </SortableFillLayerItem>
+                )
+              })}
+            </SortableContext>
+          </DndContext>
+        </div>
+      </ResizableAccordionCard>
+
+      <FillLayerCustomizationAccordion template={template} />
 
       {/* Canvas controls */}
       <FillCanvasAccordion />
