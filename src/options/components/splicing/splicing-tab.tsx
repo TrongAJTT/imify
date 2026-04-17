@@ -31,7 +31,8 @@ import {
   resolveImageStyle
 } from "@/options/stores/splicing-store"
 import { useBatchStore } from "@/options/stores/batch-store"
-import { useKeyPress } from "@/options/hooks/use-key-press"
+import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 
 const THUMB_MAX = 256
@@ -101,14 +102,6 @@ function buildGridStatsLabel(
   return null
 }
 
-function isActiveElementEditable(): boolean {
-  const el = document.activeElement
-  if (!el || !(el instanceof HTMLElement)) return false
-  const tag = el.tagName
-  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true
-  return el.isContentEditable
-}
-
 function shouldWarnHeavySplicingPreviewQuality(
   nextPercent: number,
   imageList: SplicingImageItem[],
@@ -168,23 +161,24 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   const [heavyPreviewQualityDialogOpen, setHeavyPreviewQualityDialogOpen] = useState(false)
   const [pendingPreviewQualityPercent, setPendingPreviewQualityPercent] = useState<number | null>(null)
   const [pendingExportModeForConfirm, setPendingExportModeForConfirm] = useState<SplicingExportMode | null>(null)
-
-  const onSplicingPanModeShortcut = useCallback(() => {
-    if (isActiveElementEditable()) return
-    setIsScrollPan(true)
-  }, [])
-
-  const onSplicingZoomModeShortcut = useCallback(() => {
-    if (isActiveElementEditable()) return
-    setIsScrollPan(false)
-  }, [])
+  const { getShortcutLabel } = useShortcutPreferences()
 
   const splicingPreviewShortcutsEnabled =
     images.length > 0 && !exportDialogOpen && !showDownloadConfirm && !heavyPreviewQualityDialogOpen
-  useKeyPress("v", onSplicingPanModeShortcut, splicingPreviewShortcutsEnabled)
-  useKeyPress("V", onSplicingPanModeShortcut, splicingPreviewShortcutsEnabled)
-  useKeyPress("z", onSplicingZoomModeShortcut, splicingPreviewShortcutsEnabled)
-  useKeyPress("Z", onSplicingZoomModeShortcut, splicingPreviewShortcutsEnabled)
+
+  useShortcutActions([
+    {
+      actionId: "splicing.preview.pan_mode",
+      enabled: splicingPreviewShortcutsEnabled,
+      handler: () => setIsScrollPan(true),
+    },
+    {
+      actionId: "splicing.preview.zoom_mode",
+      enabled: splicingPreviewShortcutsEnabled,
+      handler: () => setIsScrollPan(false),
+    },
+  ])
+
   useClipboardPaste({ onFiles: (files) => void addFiles(files) })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imagesCountRef = useRef(0)
@@ -711,7 +705,12 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
             )}
           </div>
           <div className="flex gap-3 items-center">
-            <ScrollModeToggle isScrollPan={isScrollPan} onToggle={setIsScrollPan} />
+            <ScrollModeToggle
+              isScrollPan={isScrollPan}
+              onToggle={setIsScrollPan}
+              zoomKeyHint={getShortcutLabel("splicing.preview.zoom_mode")}
+              panKeyHint={getShortcutLabel("splicing.preview.pan_mode")}
+            />
             <Button
               variant="secondary"
               size="sm"

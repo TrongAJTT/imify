@@ -4,12 +4,22 @@ import { Tooltip } from "@/options/components/tooltip"
 interface ScrollModeToggleProps {
   isScrollPan: boolean
   onToggle: (value: boolean) => void
+  zoomKeyHint?: string
+  panKeyHint?: string
 }
 
-export function ScrollModeToggle({ isScrollPan, onToggle }: ScrollModeToggleProps) {
+export function ScrollModeToggle({
+  isScrollPan,
+  onToggle,
+  zoomKeyHint = "Z",
+  panKeyHint = "V",
+}: ScrollModeToggleProps) {
+  const zoomLabel = zoomKeyHint === "Unassigned" ? "Zoom Mode" : `Zoom Mode (${zoomKeyHint})`
+  const panLabel = panKeyHint === "Unassigned" ? "Pan Mode" : `Pan Mode (${panKeyHint})`
+
   return (
     <div className="inline-flex rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-1 gap-1">
-      <Tooltip label="Zoom Mode (Z)" content="Scroll wheel to zoom" variant="nowrap">
+      <Tooltip label={zoomLabel} content="Scroll wheel to zoom" variant="nowrap">
         <button
           type="button"
           onClick={() => onToggle(false)}
@@ -24,7 +34,7 @@ export function ScrollModeToggle({ isScrollPan, onToggle }: ScrollModeToggleProp
         </button>
       </Tooltip>
 
-      <Tooltip label="Pan Mode (V)" content="Scroll wheel to pan (Shift+Scroll for horizontal)" variant="nowrap">
+      <Tooltip label={panLabel} content="Scroll wheel to pan (Shift+Scroll for horizontal)" variant="nowrap">
         <button
           type="button"
           onClick={() => onToggle(true)}

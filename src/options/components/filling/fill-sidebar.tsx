@@ -12,7 +12,6 @@ import {
 } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
-import { templateStorage } from "@/features/filling/template-storage"
 import { useFillingStore } from "@/options/stores/filling-store"
 import { useFillUiStore } from "@/options/stores/fill-ui-store"
 import { FillLayerCard } from "@/options/components/filling/fill-layer-card"
@@ -29,20 +28,34 @@ interface FillSidebarProps {
 
 export function FillSidebar({ template }: FillSidebarProps) {
   const layerFillStates = useFillingStore((s) => s.layerFillStates)
-  const updateTemplate = useFillingStore((s) => s.updateTemplate)
+  const sessionTemplate = useFillUiStore((s) => s.sessionTemplate)
+  const initializeFillSession = useFillUiStore((s) => s.initializeFillSession)
+  const updateSessionTemplate = useFillUiStore((s) => s.updateSessionTemplate)
   const hiddenLayerIds = useFillUiStore((s) => s.hiddenLayerIds)
   const resetFillSessionState = useFillUiStore((s) => s.resetFillSessionState)
   const [layersAccordionHeight, setLayersAccordionHeight] = useState(320)
 
+  const activeTemplate = useMemo(() => {
+    if (sessionTemplate && sessionTemplate.id === template.id) {
+      return sessionTemplate
+    }
+
+    return template
+  }, [sessionTemplate, template])
+
   const hiddenLayerIdSet = useMemo(() => new Set(hiddenLayerIds), [hiddenLayerIds])
 
   useEffect(() => {
-    resetFillSessionState()
-  }, [resetFillSessionState, template.id])
+    initializeFillSession(template)
+
+    return () => {
+      resetFillSessionState()
+    }
+  }, [initializeFillSession, resetFillSessionState, template.id])
 
   const visibleLayers = useMemo(
-    () => template.layers.filter((l) => l.visible && !hiddenLayerIdSet.has(l.id)),
-    [hiddenLayerIdSet, template.layers]
+    () => activeTemplate.layers.filter((l) => l.visible && !hiddenLayerIdSet.has(l.id)),
+    [activeTemplate.layers, hiddenLayerIdSet]
   )
 
   const sensors = useSensors(
@@ -65,7 +78,7 @@ export function FillSidebar({ template }: FillSidebarProps) {
     const reorderedVisibleLayers = arrayMove(visibleLayers, oldIndex, newIndex)
 
     let visibleCursor = 0
-    const reorderedLayers = template.layers.map((layer) => {
+    const reorderedLayers = activeTemplate.layers.map((layer) => {
       if (!layer.visible || hiddenLayerIdSet.has(layer.id)) return layer
       const nextLayer = reorderedVisibleLayers[visibleCursor]
       visibleCursor += 1
@@ -73,13 +86,12 @@ export function FillSidebar({ template }: FillSidebarProps) {
     })
 
     const nextTemplate: FillingTemplate = {
-      ...template,
+      ...activeTemplate,
       layers: reorderedLayers,
       updatedAt: Date.now(),
     }
 
-    updateTemplate(nextTemplate)
-    void templateStorage.save(nextTemplate)
+    updateSessionTemplate(() => nextTemplate)
   }
 
   return (
@@ -113,7 +125,7 @@ export function FillSidebar({ template }: FillSidebarProps) {
         </div>
       </ResizableAccordionCard>
 
-      <FillLayerCustomizationAccordion template={template} />
+      <FillLayerCustomizationAccordion template={activeTemplate} />
 
       {/* Canvas controls */}
       <FillCanvasAccordion />

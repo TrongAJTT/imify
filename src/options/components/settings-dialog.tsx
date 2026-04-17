@@ -12,9 +12,11 @@ import { ToggleSwitchLabel } from "@/options/components/ui/toggle-switch-label"
 import { SettingsSectionHeader } from "@/options/components/ui/settings-section-header"
 import { SettingsItemHeader } from "@/options/components/ui/settings-item-header"
 import { MutedText, Subheading } from "@/options/components/ui/typography"
+import { SettingsShortcutsPanel } from "@/options/components/settings-shortcuts-panel"
 import {
   BarChart3,
   Gauge,
+  Keyboard,
   ListTree,
   RotateCcw,
   ShieldAlert,
@@ -49,7 +51,7 @@ interface SettingsDialogProps {
   onChangePerformancePreferences: (value: PerformancePreferences) => void
 }
 
-export type SettingsDialogTab = "general" | "performance" | "warnings" | "usage"
+export type SettingsDialogTab = "general" | "shortcuts" | "performance" | "warnings" | "usage"
 
 export function SettingsDialog({
   isOpen,
@@ -161,6 +163,18 @@ export function SettingsDialog({
           </button>
 
           <button
+            onClick={() => setActiveTab("shortcuts")}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === "shortcuts"
+                ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+            }`}
+          >
+            <Keyboard size={16} />
+            Shortkeys
+          </button>
+
+          <button
             onClick={() => setActiveTab("performance")}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeTab === "performance"
@@ -258,6 +272,8 @@ export function SettingsDialog({
               </section>
             </div>
           )}
+
+          {activeTab === "shortcuts" && <SettingsShortcutsPanel />}
 
           {activeTab === "performance" && (
             <div className="animate-in fade-in duration-300 space-y-5">

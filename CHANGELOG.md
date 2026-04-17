@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Fill Session Template Isolation:** Fill Mode now works against a session-only cloned template instead of mutating the original template reference.
+  - Layer reorder, move, rotate, stretch, and Fill-delete/hide actions are now applied to the Fill session copy only.
+  - Fill export now renders from the active session copy (including hidden layer filtering), while the original template remains unchanged.
+
+- **Customizable Shortkeys System:** Added configurable keyboard shortcuts with reusable shortcut infrastructure and settings UI.
+  - New **Shortkeys** tab in Settings with grouped action list, live rebinding, clear/reset per action, reset-all, and conflict hints (scoped by workspace).
+  - New shared shortcut modules for definitions, normalization, matching, formatting, storage, and runtime registration hooks.
+  - Fill and Image Splicing preview mode shortcuts now use configurable bindings; Fill customization tab switching shortcuts are also configurable.
+  - Preview mode toggles now display dynamic key hints from current shortcut preferences.
+
+- **Image Filling Export Standardization:** Filling Export now reuses the same shared Target Format & Quality card + Advanced Settings group pattern used in Single/Batch workflows.
+  - Replaced custom/basic Fill export controls with shared `TargetFormatQualityCard` and `FormatAdvancedSettingsCard` wiring.
+  - Removed PSD from active Fill export UI for now (kept deferred for a later dedicated implementation pass).
+  - Filling raster export pipeline now routes through shared raster adapter encoding, so AVIF/JXL/MozJPEG/WebP/PNG/BMP/TIFF options are honored consistently (including PNG tiny/oxi and format-specific advanced settings).
+
 - **Preset Detail Cards & Info Panel Redesign:**
   - New preset detail cards in select view showing format, quality, resize settings (Single/Batch) and layout, spacing, export format (Splicing).
   - Info panel redesign across Single Processor, Batch Processor, and Image Splicing with Context Menu-style layout: icon + title + description sections for visual consistency.

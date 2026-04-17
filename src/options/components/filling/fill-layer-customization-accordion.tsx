@@ -1,17 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useCallback, useMemo, useRef } from "react"
 import { ImagePlus, Layers, Palette, SlidersHorizontal, X } from "lucide-react"
 
 import type { FillingTemplate, ImageTransform, LayerFillState, VectorLayer } from "@/features/filling/types"
 import { DEFAULT_IMAGE_TRANSFORM } from "@/features/filling/types"
 import { generateShapePoints } from "@/features/filling/shape-generators"
-import { templateStorage } from "@/features/filling/template-storage"
 import { FillTransformControls } from "@/options/components/filling/fill-transform-controls"
+import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import { useFillingStore } from "@/options/stores/filling-store"
 import { useFillUiStore, type FillCustomizationTab } from "@/options/stores/fill-ui-store"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { Button } from "@/options/components/ui/button"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { NumberInput } from "@/options/components/ui/number-input"
+import { Tooltip } from "@/options/components/tooltip"
+import { SHORTCUT_DEFINITION_MAP, type ShortcutActionId } from "@/options/shared/shortcuts"
 
 interface FillLayerCustomizationAccordionProps {
   template: FillingTemplate
@@ -31,6 +34,18 @@ const TAB_ITEMS: Array<{ id: FillCustomizationTab; label: string; icon: React.Re
   { id: "layer", label: "Layer", icon: <Layers size={14} /> },
 ]
 
+const TAB_SHORTCUT_ACTION: Record<FillCustomizationTab, ShortcutActionId> = {
+  image: "fill.customization.tab_image",
+  border: "fill.customization.tab_border",
+  layer: "fill.customization.tab_layer",
+}
+
+const TAB_INFO_TEXT: Record<FillCustomizationTab, string> = {
+  image: "Upload, replace, clear, and transform the image inside the selected layer.",
+  border: "Adjust border width, corner radius, and border color for the selected layer.",
+  layer: "Move, scale, rotate, or hide the selected layer in the Fill workspace.",
+}
+
 function safeRevokeObjectUrl(value: string | null | undefined) {
   if (!value || !value.startsWith("blob:")) return
   URL.revokeObjectURL(value)
@@ -46,21 +61,30 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
   const layerFillStates = useFillingStore((s) => s.layerFillStates)
   const canvasFillState = useFillingStore((s) => s.canvasFillState)
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState)
-  const updateTemplate = useFillingStore((s) => s.updateTemplate)
 
   const activeCustomizationTab = useFillUiStore((s) => s.activeCustomizationTab)
   const setActiveCustomizationTab = useFillUiStore((s) => s.setActiveCustomizationTab)
+  const { getShortcutLabel } = useShortcutPreferences()
+  const sessionTemplate = useFillUiStore((s) => s.sessionTemplate)
+  const updateSessionTemplate = useFillUiStore((s) => s.updateSessionTemplate)
   const hiddenLayerIds = useFillUiStore((s) => s.hiddenLayerIds)
   const hideLayerInFill = useFillUiStore((s) => s.hideLayerInFill)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const layerTransformBaseRef = useRef<Map<string, LayerTransformBase>>(new Map())
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const activeTemplate = useMemo(() => {
+    if (sessionTemplate && sessionTemplate.id === template.id) {
+      return sessionTemplate
+    }
+
+    return template
+  }, [sessionTemplate, template])
 
   const hiddenLayerIdSet = useMemo(() => new Set(hiddenLayerIds), [hiddenLayerIds])
   const fillVisibleLayers = useMemo(
-    () => template.layers.filter((layer) => layer.visible && !hiddenLayerIdSet.has(layer.id)),
-    [hiddenLayerIdSet, template.layers]
+    () => activeTemplate.layers.filter((layer) => layer.visible && !hiddenLayerIdSet.has(layer.id)),
+    [activeTemplate.layers, hiddenLayerIdSet]
   )
   const selectedLayer = useMemo(
     () => fillVisibleLayers.find((layer) => layer.id === selectedLayerId) ?? null,
@@ -71,19 +95,20 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
     [layerFillStates, selectedLayer?.id]
   )
 
-  useEffect(() => {
-    if (!selectedLayerId) return
-    setActiveCustomizationTab("image")
-  }, [selectedLayerId, setActiveCustomizationTab])
-
-  useEffect(
-    () => () => {
-      if (saveTimerRef.current !== null) {
-        clearTimeout(saveTimerRef.current)
-      }
+  useShortcutActions([
+    {
+      actionId: "fill.customization.tab_image",
+      handler: () => setActiveCustomizationTab("image"),
     },
-    []
-  )
+    {
+      actionId: "fill.customization.tab_border",
+      handler: () => setActiveCustomizationTab("border"),
+    },
+    {
+      actionId: "fill.customization.tab_layer",
+      handler: () => setActiveCustomizationTab("layer"),
+    },
+  ])
 
   const getLayerTransformBase = useCallback((layer: VectorLayer): LayerTransformBase => {
     const existing = layerTransformBaseRef.current.get(layer.id)
@@ -115,34 +140,6 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
     }
   }, [selectedLayer, getLayerTransformBase])
 
-  const queueTemplateSave = useCallback((nextTemplate: FillingTemplate) => {
-    if (saveTimerRef.current !== null) {
-      clearTimeout(saveTimerRef.current)
-    }
-
-    saveTimerRef.current = setTimeout(() => {
-      void templateStorage.save(nextTemplate)
-    }, 180)
-  }, [])
-
-  const applyTemplateUpdate = useCallback(
-    (nextTemplate: FillingTemplate, persistMode: "debounced" | "immediate" = "debounced") => {
-      updateTemplate(nextTemplate)
-
-      if (persistMode === "immediate") {
-        if (saveTimerRef.current !== null) {
-          clearTimeout(saveTimerRef.current)
-          saveTimerRef.current = null
-        }
-        void templateStorage.save(nextTemplate)
-        return
-      }
-
-      queueTemplateSave(nextTemplate)
-    },
-    [queueTemplateSave, updateTemplate]
-  )
-
   const updateSelectedLayerState = useCallback(
     (partial: Partial<LayerFillState>) => {
       if (!selectedLayerId) return
@@ -173,16 +170,16 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
       }
 
       const nextTemplate: FillingTemplate = {
-        ...template,
-        layers: template.layers.map((layer) =>
+        ...activeTemplate,
+        layers: activeTemplate.layers.map((layer) =>
           layer.id === selectedLayer.id ? nextSelectedLayer : layer
         ),
         updatedAt: Date.now(),
       }
 
-      applyTemplateUpdate(nextTemplate)
+      updateSessionTemplate(() => nextTemplate)
     },
-    [applyTemplateUpdate, selectedLayer, template]
+    [activeTemplate, selectedLayer, updateSessionTemplate]
   )
 
   const handleImageTransformChange = useCallback(
@@ -307,13 +304,11 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
     const nextSelectedLayerId = nextSelectableLayers[0]?.id ?? null
 
     setSelectedLayerId(nextSelectedLayerId)
-    setActiveCustomizationTab("image")
   }, [
     fillVisibleLayers,
     hideLayerInFill,
     selectedLayer,
     setSelectedLayerId,
-    setActiveCustomizationTab,
   ])
 
   const borderOverridden = canvasFillState.borderOverrideEnabled
@@ -345,20 +340,29 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
             <div className="grid grid-cols-3 gap-1 rounded-md border border-slate-200 dark:border-slate-700 p-1 bg-slate-50 dark:bg-slate-900/40">
               {TAB_ITEMS.map((tab) => {
                 const isActive = activeCustomizationTab === tab.id
+                const actionId = TAB_SHORTCUT_ACTION[tab.id]
+                const definition = SHORTCUT_DEFINITION_MAP[actionId]
+                const shortcutLabel = getShortcutLabel(actionId)
                 return (
-                  <button
+                  <Tooltip
                     key={tab.id}
-                    type="button"
-                    onClick={() => setActiveCustomizationTab(tab.id)}
-                    className={`inline-flex items-center justify-center gap-1 rounded px-2 py-1.5 text-[11px] font-medium transition-colors ${
-                      isActive
-                        ? "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300"
-                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                    }`}
+                    variant="wide1"
+                    label={`${definition.label} (${shortcutLabel})`}
+                    content={TAB_INFO_TEXT[tab.id]}
                   >
-                    {tab.icon}
-                    <span>{tab.label}</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveCustomizationTab(tab.id)}
+                      className={`w-full inline-flex items-center justify-center gap-1 rounded px-2 py-1.5 text-[11px] font-medium transition-colors ${
+                        isActive
+                          ? "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300"
+                          : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      {tab.icon}
+                      <span>{tab.label}</span>
+                    </button>
+                  </Tooltip>
                 )
               })}
             </div>

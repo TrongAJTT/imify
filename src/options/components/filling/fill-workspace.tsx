@@ -4,9 +4,11 @@ import type Konva from "konva"
 import { Download, Loader2 } from "lucide-react"
 
 import type { CanvasFillState, FillingTemplate, VectorLayer } from "@/features/filling/types"
-import { templateStorage } from "@/features/filling/template-storage"
 import { useFillingStore } from "@/options/stores/filling-store"
 import { useFillUiStore } from "@/options/stores/fill-ui-store"
+import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { buildActiveFillingFormatOptions } from "@/options/stores/filling-format-options"
 import { generateShapePoints } from "@/features/filling/shape-generators"
 import { flattenPoints, roundedPolygonPoints } from "@/features/filling/vector-math"
 import {
@@ -15,10 +17,18 @@ import {
 } from "@/options/components/filling/layer-visual-highlight"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 import { Button } from "@/options/components/ui/button"
+import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
+import {
+  PreviewInteractionModeToggle,
+  type PreviewInteractionMode,
+} from "@/options/components/ui/preview-interaction-mode-toggle"
 import { exportFilledTemplate } from "./filling-export-utils"
 
 const CANVAS_PADDING = 40
 const ROTATE_CURSOR = "crosshair"
+const PREVIEW_MIN_ZOOM = 50
+const PREVIEW_MAX_ZOOM = 800
+const PREVIEW_ZOOM_STEP = 10
 
 interface FillWorkspaceProps {
   template: FillingTemplate
@@ -28,20 +38,28 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const transformerRef = useRef<Konva.Transformer>(null)
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 })
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(520)
+  const [previewZoom, setPreviewZoom] = useState(100)
+  const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 })
+  const [previewInteractionMode, setPreviewInteractionMode] =
+    useState<PreviewInteractionMode>("zoom")
+  const [isResizingPreview, setIsResizingPreview] = useState(false)
 
   const canvasFillState = useFillingStore((s) => s.canvasFillState)
   const layerFillStates = useFillingStore((s) => s.layerFillStates)
   const selectedLayerId = useFillingStore((s) => s.selectedLayerId)
-  const updateTemplate = useFillingStore((s) => s.updateTemplate)
   const activeCustomizationTab = useFillUiStore((s) => s.activeCustomizationTab)
+  const initializeFillSession = useFillUiStore((s) => s.initializeFillSession)
+  const sessionTemplate = useFillUiStore((s) => s.sessionTemplate)
+  const updateSessionTemplate = useFillUiStore((s) => s.updateSessionTemplate)
   const hiddenLayerIds = useFillUiStore((s) => s.hiddenLayerIds)
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId)
   const setCanvasFillState = useFillingStore((s) => s.setCanvasFillState)
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState)
   const exportFormat = useFillingStore((s) => s.exportFormat)
   const exportQuality = useFillingStore((s) => s.exportQuality)
+  const { getShortcutLabel } = useShortcutPreferences()
 
   const [loadedImages, setLoadedImages] = useState<Map<string, HTMLImageElement>>(new Map())
   const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(null)
@@ -51,20 +69,55 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false)
   const [cursor, setCursor] = useState("default")
 
-  const scale = useMemo(() => {
+  const activeTemplate = useMemo(() => {
+    if (sessionTemplate && sessionTemplate.id === template.id) {
+      return sessionTemplate
+    }
+
+    return template
+  }, [sessionTemplate, template])
+
+  useEffect(() => {
+    if (!sessionTemplate || sessionTemplate.id !== template.id) {
+      initializeFillSession(template)
+    }
+  }, [initializeFillSession, sessionTemplate, template])
+
+  const fitScale = useMemo(() => {
     const availW = stageSize.width - CANVAS_PADDING * 2
     const availH = stageSize.height - CANVAS_PADDING * 2
     return Math.min(1, availW / template.canvasWidth, availH / template.canvasHeight)
   }, [stageSize, template.canvasWidth, template.canvasHeight])
 
+  const renderScale = fitScale * (previewZoom / 100)
+
   const hiddenLayerIdSet = useMemo(() => new Set(hiddenLayerIds), [hiddenLayerIds])
   const fillVisibleLayers = useMemo(
-    () => template.layers.filter((layer) => layer.visible && !hiddenLayerIdSet.has(layer.id)),
-    [hiddenLayerIdSet, template.layers]
+    () => activeTemplate.layers.filter((layer) => layer.visible && !hiddenLayerIdSet.has(layer.id)),
+    [activeTemplate.layers, hiddenLayerIdSet]
   )
 
-  const offsetX = (stageSize.width - template.canvasWidth * scale) / 2
-  const offsetY = (stageSize.height - template.canvasHeight * scale) / 2
+  const offsetX = (stageSize.width - template.canvasWidth * renderScale) / 2 + previewPan.x
+  const offsetY = (stageSize.height - template.canvasHeight * renderScale) / 2 + previewPan.y
+
+  const clampPreviewZoom = useCallback((value: number) => {
+    return Math.max(PREVIEW_MIN_ZOOM, Math.min(PREVIEW_MAX_ZOOM, Math.round(value)))
+  }, [])
+
+  useShortcutActions([
+    {
+      actionId: "fill.preview.zoom_mode",
+      handler: () => setPreviewInteractionMode("zoom"),
+    },
+    {
+      actionId: "fill.preview.pan_mode",
+      handler: () => setPreviewInteractionMode("pan"),
+    },
+    {
+      actionId: "fill.preview.idle_mode",
+      handler: () => setPreviewInteractionMode("idle"),
+    },
+  ])
 
   useEffect(() => {
     const container = containerRef.current
@@ -75,7 +128,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       if (entry) {
         setStageSize({
           width: Math.floor(entry.contentRect.width),
-          height: Math.max(400, Math.floor(entry.contentRect.height)),
+          height: Math.max(320, Math.floor(entry.contentRect.height)),
         })
       }
     })
@@ -83,6 +136,37 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     ro.observe(container)
     return () => ro.disconnect()
   }, [])
+
+  const handlePreviewResizeStart = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsResizingPreview(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isResizingPreview) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = containerRef.current
+      if (!container) return
+
+      const rect = container.getBoundingClientRect()
+      const nextHeight = e.clientY - rect.top
+      setPreviewContainerHeight(Math.max(320, Math.round(nextHeight)))
+    }
+
+    const handleMouseUp = () => {
+      setIsResizingPreview(false)
+    }
+
+    document.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseup", handleMouseUp)
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [isResizingPreview])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -151,15 +235,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     }
   }, [selectedLayerId])
 
-  useEffect(
-    () => () => {
-      if (saveTimerRef.current !== null) {
-        clearTimeout(saveTimerRef.current)
-      }
-    },
-    []
-  )
-
   useEffect(() => {
     if (!selectedLayerId) return
     if (hiddenLayerIdSet.has(selectedLayerId)) {
@@ -167,28 +242,86 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     }
   }, [fillVisibleLayers, hiddenLayerIdSet, selectedLayerId, setSelectedLayerId])
 
-  const queueTemplateSave = useCallback((nextTemplate: FillingTemplate) => {
-    if (saveTimerRef.current !== null) {
-      clearTimeout(saveTimerRef.current)
-    }
+  const handlePreviewWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLElement
+      if (target.closest('[class*="pointer-events-auto"]')) {
+        return
+      }
 
-    saveTimerRef.current = setTimeout(() => {
-      void templateStorage.save(nextTemplate)
-    }, 180)
-  }, [])
+      if (previewInteractionMode === "idle") {
+        return
+      }
+
+      e.preventDefault()
+
+      if (previewInteractionMode === "pan") {
+        const delta = e.deltaY > 0 ? 50 : -50
+        if (e.shiftKey) {
+          setPreviewPan((current) => ({ ...current, x: current.x - delta }))
+        } else {
+          setPreviewPan((current) => ({ ...current, y: current.y - delta }))
+        }
+        return
+      }
+
+      const oldZoom = previewZoom
+      const nextZoom = clampPreviewZoom(oldZoom + (e.deltaY > 0 ? -PREVIEW_ZOOM_STEP : PREVIEW_ZOOM_STEP))
+      if (nextZoom === oldZoom) return
+
+      const oldRenderScale = fitScale * (oldZoom / 100)
+      const newRenderScale = fitScale * (nextZoom / 100)
+      if (oldRenderScale <= 0 || newRenderScale <= 0) {
+        setPreviewZoom(nextZoom)
+        return
+      }
+
+      const rect = e.currentTarget.getBoundingClientRect()
+      const pointerX = e.clientX - rect.left
+      const pointerY = e.clientY - rect.top
+
+      const baseOffsetOldX = (stageSize.width - template.canvasWidth * oldRenderScale) / 2
+      const baseOffsetOldY = (stageSize.height - template.canvasHeight * oldRenderScale) / 2
+      const worldX = (pointerX - baseOffsetOldX - previewPan.x) / oldRenderScale
+      const worldY = (pointerY - baseOffsetOldY - previewPan.y) / oldRenderScale
+
+      const baseOffsetNewX = (stageSize.width - template.canvasWidth * newRenderScale) / 2
+      const baseOffsetNewY = (stageSize.height - template.canvasHeight * newRenderScale) / 2
+      const nextPanX = pointerX - baseOffsetNewX - worldX * newRenderScale
+      const nextPanY = pointerY - baseOffsetNewY - worldY * newRenderScale
+
+      setPreviewZoom(nextZoom)
+      setPreviewPan({
+        x: Math.round(nextPanX * 100) / 100,
+        y: Math.round(nextPanY * 100) / 100,
+      })
+    },
+    [
+      clampPreviewZoom,
+      fitScale,
+      previewInteractionMode,
+      previewPan.x,
+      previewPan.y,
+      previewZoom,
+      stageSize.height,
+      stageSize.width,
+      template.canvasHeight,
+      template.canvasWidth,
+    ]
+  )
 
   const updateSelectedLayerFromNode = useCallback(
     (node: Konva.Node) => {
       if (!selectedLayerId) return
-      const selectedLayer = template.layers.find((layer) => layer.id === selectedLayerId)
+      const selectedLayer = activeTemplate.layers.find((layer) => layer.id === selectedLayerId)
       if (!selectedLayer || hiddenLayerIdSet.has(selectedLayer.id)) return
 
       const nextScaleX = Math.max(0.01, Math.abs(node.scaleX()))
       const nextScaleY = Math.max(0.01, Math.abs(node.scaleY()))
       const nextLayer: VectorLayer = {
         ...selectedLayer,
-        x: Math.round(((node.x() - offsetX) / scale) * 100) / 100,
-        y: Math.round(((node.y() - offsetY) / scale) * 100) / 100,
+        x: Math.round(((node.x() - offsetX) / renderScale) * 100) / 100,
+        y: Math.round(((node.y() - offsetY) / renderScale) * 100) / 100,
         rotation: Math.round(node.rotation() * 100) / 100,
         width: Math.max(1, Math.round(selectedLayer.width * nextScaleX)),
         height: Math.max(1, Math.round(selectedLayer.height * nextScaleY)),
@@ -203,25 +336,23 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       }
 
       const nextTemplate: FillingTemplate = {
-        ...template,
-        layers: template.layers.map((layer) =>
+        ...activeTemplate,
+        layers: activeTemplate.layers.map((layer) =>
           layer.id === nextLayerWithPoints.id ? nextLayerWithPoints : layer
         ),
         updatedAt: Date.now(),
       }
 
-      updateTemplate(nextTemplate)
-      queueTemplateSave(nextTemplate)
+      updateSessionTemplate(() => nextTemplate)
     },
     [
+      activeTemplate,
       hiddenLayerIdSet,
       offsetX,
       offsetY,
-      queueTemplateSave,
-      scale,
+      renderScale,
       selectedLayerId,
-      template,
-      updateTemplate,
+      updateSessionTemplate,
     ]
   )
 
@@ -313,10 +444,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         const renderedY = node.y()
         const rotation = node.rotation()
 
-        const unscaledScaleX = renderedScaleX / scale
-        const unscaledScaleY = renderedScaleY / scale
-        const unscaledX = renderedX / scale
-        const unscaledY = renderedY / scale
+        const unscaledScaleX = renderedScaleX / renderScale
+        const unscaledScaleY = renderedScaleY / renderScale
+        const unscaledX = renderedX / renderScale
+        const unscaledY = renderedY / renderScale
 
         setCanvasFillState({
           ...canvasFillState,
@@ -335,10 +466,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           setTimeout(() => {
             const updatedNode = stage.findOne("#fill-bg-image")
             if (updatedNode) {
-              updatedNode.scaleX(unscaledScaleX * scale)
-              updatedNode.scaleY(unscaledScaleY * scale)
-              updatedNode.x(unscaledX * scale)
-              updatedNode.y(unscaledY * scale)
+              updatedNode.scaleX(unscaledScaleX * renderScale)
+              updatedNode.scaleY(unscaledScaleY * renderScale)
+              updatedNode.x(unscaledX * renderScale)
+              updatedNode.y(unscaledY * renderScale)
               updatedNode.rotation(rotation)
             }
           }, 0)
@@ -359,10 +490,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         const renderedY = node.y()
         const rotation = node.rotation()
 
-        const unscaledScaleX = renderedScaleX / scale
-        const unscaledScaleY = renderedScaleY / scale
-        const unscaledX = renderedX / scale
-        const unscaledY = renderedY / scale
+        const unscaledScaleX = renderedScaleX / renderScale
+        const unscaledScaleY = renderedScaleY / renderScale
+        const unscaledX = renderedX / renderScale
+        const unscaledY = renderedY / renderScale
 
         updateLayerFillState(selectedLayerId, {
           imageTransform: {
@@ -379,10 +510,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           setTimeout(() => {
             const updatedNode = stage.findOne(`#fill-img-${selectedLayerId}`)
             if (updatedNode) {
-              updatedNode.scaleX(unscaledScaleX * scale)
-              updatedNode.scaleY(unscaledScaleY * scale)
-              updatedNode.x(unscaledX * scale)
-              updatedNode.y(unscaledY * scale)
+              updatedNode.scaleX(unscaledScaleX * renderScale)
+              updatedNode.scaleY(unscaledScaleY * renderScale)
+              updatedNode.x(unscaledX * renderScale)
+              updatedNode.y(unscaledY * renderScale)
               updatedNode.rotation(rotation)
             }
           }, 0)
@@ -392,7 +523,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     [
       selectedLayerId,
       selectedCanvasNode,
-      scale,
+      renderScale,
       updateLayerFillState,
       canvasFillState,
       setCanvasFillState,
@@ -406,9 +537,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     try {
       const fillVisibleLayerIdSet = new Set(fillVisibleLayers.map((layer) => layer.id))
       const exportTemplate: FillingTemplate = {
-        ...template,
+        ...activeTemplate,
         layers: fillVisibleLayers,
-        groups: (template.groups ?? [])
+        groups: (activeTemplate.groups ?? [])
           .map((group) => ({
             ...group,
             layerIds: group.layerIds.filter((layerId) => fillVisibleLayerIdSet.has(layerId)),
@@ -422,6 +553,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         canvasFillState,
         exportFormat,
         exportQuality,
+        formatOptions: buildActiveFillingFormatOptions(useFillingStore.getState()),
       })
     } catch (err) {
       console.error("Export failed:", err)
@@ -432,9 +564,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     canvasFillState,
     exportFormat,
     exportQuality,
+    activeTemplate,
     fillVisibleLayers,
     layerFillStates,
-    template,
   ])
 
   const backgroundMode = canvasFillState.backgroundType === "gradient"
@@ -444,8 +576,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const backgroundGradientGeometry = useMemo(() => {
     if (!parsedBackgroundGradient) return null
     const angleRad = (parsedBackgroundGradient.angle * Math.PI) / 180
-    const width = template.canvasWidth * scale
-    const height = template.canvasHeight * scale
+    const width = template.canvasWidth * renderScale
+    const height = template.canvasHeight * renderScale
     const cx = width / 2
     const cy = height / 2
     const len = Math.max(width, height)
@@ -459,7 +591,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         y: cy + (Math.sin(angleRad) * len) / 2,
       },
     }
-  }, [parsedBackgroundGradient, scale, template.canvasHeight, template.canvasWidth])
+  }, [parsedBackgroundGradient, renderScale, template.canvasHeight, template.canvasWidth])
 
   return (
     <div className="space-y-4">
@@ -470,31 +602,42 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
             {template.canvasWidth} x {template.canvasHeight} px &middot; {template.layers.length} layer{template.layers.length !== 1 ? "s" : ""}
           </MutedText>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleExport}
-          disabled={isExporting}
-          className="min-w-[150px]"
-        >
-          {isExporting ? (
-            <>
-              <Loader2 size={14} className="animate-spin" />
-              Exporting...
-            </>
-          ) : (
-            <>
-              <Download size={14} />
-              Export {exportFormat.toUpperCase()}
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-3">
+          <PreviewInteractionModeToggle
+            mode={previewInteractionMode}
+            onChange={setPreviewInteractionMode}
+            zoomKeyHint={getShortcutLabel("fill.preview.zoom_mode")}
+            panKeyHint={getShortcutLabel("fill.preview.pan_mode")}
+            idleKeyHint={getShortcutLabel("fill.preview.idle_mode")}
+          />
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleExport}
+            disabled={isExporting}
+            className="min-w-[150px]"
+          >
+            {isExporting ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Download size={14} />
+                Export {exportFormat.toUpperCase()}
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div
         ref={containerRef}
-        className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
-        style={{ minHeight: 400, cursor }}
+        className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
+        style={{ height: `${previewContainerHeight}px`, cursor }}
+        onWheel={handlePreviewWheel}
       >
         <Stage
           ref={stageRef}
@@ -542,8 +685,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
               <CheckerboardPattern
                 x={offsetX}
                 y={offsetY}
-                width={template.canvasWidth * scale}
-                height={template.canvasHeight * scale}
+                width={template.canvasWidth * renderScale}
+                height={template.canvasHeight * renderScale}
               />
             )}
 
@@ -552,15 +695,15 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
               y={offsetY}
               clipX={0}
               clipY={0}
-              clipWidth={template.canvasWidth * scale}
-              clipHeight={template.canvasHeight * scale}
+              clipWidth={template.canvasWidth * renderScale}
+              clipHeight={template.canvasHeight * renderScale}
             >
               {backgroundMode !== "transparent" && (
                 <Rect
                   x={0}
                   y={0}
-                  width={template.canvasWidth * scale}
-                  height={template.canvasHeight * scale}
+                  width={template.canvasWidth * renderScale}
+                  height={template.canvasHeight * renderScale}
                   fill={parsedBackgroundGradient ? undefined : canvasFillState.backgroundColor}
                   fillLinearGradientStartPoint={parsedBackgroundGradient ? backgroundGradientGeometry?.start : undefined}
                   fillLinearGradientEndPoint={parsedBackgroundGradient ? backgroundGradientGeometry?.end : undefined}
@@ -578,10 +721,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                   id="fill-bg-image"
                   name="fill-bg-image"
                   image={backgroundImage}
-                  x={canvasFillState.backgroundImageTransform.x * scale}
-                  y={canvasFillState.backgroundImageTransform.y * scale}
-                  scaleX={canvasFillState.backgroundImageTransform.scaleX * scale}
-                  scaleY={canvasFillState.backgroundImageTransform.scaleY * scale}
+                  x={canvasFillState.backgroundImageTransform.x * renderScale}
+                  y={canvasFillState.backgroundImageTransform.y * renderScale}
+                  scaleX={canvasFillState.backgroundImageTransform.scaleX * renderScale}
+                  scaleY={canvasFillState.backgroundImageTransform.scaleY * renderScale}
                   rotation={canvasFillState.backgroundImageTransform.rotation}
                   draggable={selectedCanvasNode === "background"}
                   onClick={(e) => {
@@ -597,8 +740,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                   onDragStart={() => setCursor("grabbing")}
                   onDragEnd={(e) => {
                     const node = e.target
-                    const unscaledX = node.x() / scale
-                    const unscaledY = node.y() / scale
+                    const unscaledX = node.x() / renderScale
+                    const unscaledY = node.y() / renderScale
 
                     setCanvasFillState({
                       ...canvasFillState,
@@ -612,7 +755,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                     setCursor("grab")
                   }}
                   stroke={selectedCanvasNode === "background" ? "#22c55e" : undefined}
-                  strokeWidth={selectedCanvasNode === "background" ? 2 / scale : 0}
+                  strokeWidth={selectedCanvasNode === "background" ? 2 / renderScale : 0}
                 />
               )}
             </Group>
@@ -620,8 +763,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
             <Rect
               x={offsetX}
               y={offsetY}
-              width={template.canvasWidth * scale}
-              height={template.canvasHeight * scale}
+              width={template.canvasWidth * renderScale}
+              height={template.canvasHeight * renderScale}
               fill={undefined}
               stroke="#cbd5e1"
               strokeWidth={1}
@@ -638,10 +781,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                       return null
                     }
 
-                    const layerX = offsetX + layer.x * scale
-                    const layerY = offsetY + layer.y * scale
-                    const imgX = layerX + fillState.imageTransform.x * scale
-                    const imgY = layerY + fillState.imageTransform.y * scale
+                    const layerX = offsetX + layer.x * renderScale
+                    const layerY = offsetY + layer.y * renderScale
+                    const imgX = layerX + fillState.imageTransform.x * renderScale
+                    const imgY = layerY + fillState.imageTransform.y * renderScale
 
                     return (
                       <Rect
@@ -649,8 +792,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                         name="fill-drag-hitbox"
                         x={imgX - 50}
                         y={imgY - 50}
-                        width={(loadedImages.get(layer.id)?.width ?? 100) * fillState.imageTransform.scaleX * scale + 100}
-                        height={(loadedImages.get(layer.id)?.height ?? 100) * fillState.imageTransform.scaleY * scale + 100}
+                        width={(loadedImages.get(layer.id)?.width ?? 100) * fillState.imageTransform.scaleX * renderScale + 100}
+                        height={(loadedImages.get(layer.id)?.height ?? 100) * fillState.imageTransform.scaleY * renderScale + 100}
                         fill="transparent"
                         draggable
                         onMouseEnter={() => setCursor("grab")}
@@ -661,8 +804,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                           updateLayerFillState(layer.id, {
                             imageTransform: {
                               ...fillState.imageTransform,
-                              x: (node.x() - layerX + 50) / scale,
-                              y: (node.y() - layerY + 50) / scale,
+                              x: (node.x() - layerX + 50) / renderScale,
+                              y: (node.y() - layerY + 50) / renderScale,
                             },
                           })
                         }}
@@ -671,8 +814,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                           updateLayerFillState(layer.id, {
                             imageTransform: {
                               ...fillState.imageTransform,
-                              x: Math.round(((node.x() - layerX + 50) / scale) * 100) / 100,
-                              y: Math.round(((node.y() - layerY + 50) / scale) * 100) / 100,
+                              x: Math.round(((node.x() - layerX + 50) / renderScale) * 100) / 100,
+                              y: Math.round(((node.y() - layerY + 50) / renderScale) * 100) / 100,
                             },
                           })
                           setCursor("grab")
@@ -703,7 +846,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                   canvasWidth={template.canvasWidth}
                   canvasHeight={template.canvasHeight}
                   loadedImg={loadedImg?.complete ? loadedImg : undefined}
-                  scale={scale}
+                  scale={renderScale}
                   offsetX={offsetX}
                   offsetY={offsetY}
                   isSelected={selectedLayerId === layer.id}
@@ -737,6 +880,26 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
             />
           </Layer>
         </Stage>
+
+        <ZoomPanControl
+          zoom={previewZoom}
+          panX={previewPan.x}
+          panY={previewPan.y}
+          onZoomChange={setPreviewZoom}
+          onPanChange={(x, y) => setPreviewPan({ x, y })}
+          minZoom={PREVIEW_MIN_ZOOM}
+          maxZoom={PREVIEW_MAX_ZOOM}
+        />
+
+        <div
+          onMouseDown={handlePreviewResizeStart}
+          className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors ${
+            isResizingPreview ? "bg-sky-400 dark:bg-sky-500" : ""
+          }`}
+          style={{ cursor: "ns-resize" }}
+          role="separator"
+          aria-label="Resize fill preview height"
+        />
       </div>
     </div>
   )
