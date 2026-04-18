@@ -20,6 +20,8 @@ import { SplicingTab } from "@/options/components/splicing/splicing-tab"
 import { SplicingSidebarShell } from "@/options/components/splicing/splicing-sidebar-shell"
 import { FillingTab } from "@/options/components/filling/filling-tab"
 import { FillingSidebarPanel } from "@/options/components/filling/filling-sidebar-panel"
+import { PatternTab } from "@/options/components/pattern/pattern-tab"
+import { PatternSidebarPanel } from "@/options/components/pattern/pattern-sidebar-panel"
 import { ProcessorWorkspaceShell } from "@/options/components/processor/processor-workspace-shell"
 import { ProcessorSidebarShell } from "@/options/components/processor/processor-sidebar-shell"
 import { EditorProvider } from "@/options/components/filling/editor-context"
@@ -60,6 +62,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ScanSearch,
+  Stamp,
   Workflow,
   X
 } from "lucide-react"
@@ -191,6 +194,7 @@ const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
   batch: <Workflow size={18} />,
   splicing: <LayoutGrid size={18} />,
   filling: <Layers size={18} />,
+  pattern: <Stamp size={18} />,
   diffchecker: <ArrowLeftRight size={18} />,
   inspector: <ScanSearch size={18} />,
   "context-menu": <ListTree size={18} />
@@ -414,6 +418,10 @@ export default function OptionsPage() {
         return (
           <FillingTab />
         )
+      case "pattern":
+        return (
+          <PatternTab />
+        )
       case "diffchecker":
         return (
           <DiffcheckerTab />
@@ -567,6 +575,10 @@ export default function OptionsPage() {
               <FillingSidebarPanel />
             )}
 
+            {activeTab === "pattern" && (
+              <PatternSidebarPanel />
+            )}
+
             {activeTab === "diffchecker" && (
               <DiffcheckerSidebarPanel />
             )}
@@ -638,6 +650,10 @@ export default function OptionsPage() {
 
           {activeTab === "filling" && (
             <FillingSidebarPanel />
+          )}
+
+          {activeTab === "pattern" && (
+            <PatternSidebarPanel />
           )}
 
           {activeTab === "diffchecker" && (

@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Pattern Generator Workspace:** Added a dedicated `Pattern Generator` tab directly below `Image Filling` in the Options navigation with a full, independent pattern design workflow.
+  - New live preview workspace with canvas-safe rendering and boundary guide overlays.
+  - New Canvas card for width/height control, preset size picker integration, and background modes (`Transparent`, `Customized Color`, `Image`).
+  - New Assets card with:
+    - Upload support for bitmap/vector image files (including SVG)
+    - Built-in drawing dialog (`Draw Asset`) to create transparent PNG assets directly in-browser
+    - Layer-style ordering with drag-and-drop (`dnd-kit`), visibility toggles, and per-asset opacity control.
+  - New Pattern card with full distribution controls (density, spacing, jitter, scale variance, random rotation, seed) plus `Edge Behavior` modes:
+    - `Clip`
+    - `Strict Inside`
+    - `Center Inside`
+  - Added configurable Inbound/Outbound boundary controls (rectangle/ellipse with position, size, rotation) for pattern placement masking/culling behavior.
+  - Added full export stack for Pattern Generator using shared codec pipeline (JPG/MozJPEG/PNG/WebP/AVIF/JXL/BMP/TIFF), including:
+    - Shared Target Format & Quality + Advanced codec settings cards
+    - Dedicated worker-based export renderer/encoder with progress updates and inline fallback path.
+
 - **Fill Session Template Isolation:** Fill Mode now works against a session-only cloned template instead of mutating the original template reference.
   - Layer reorder, move, rotate, stretch, and Fill-delete/hide actions are now applied to the Fill session copy only.
   - Fill export now renders from the active session copy (including hidden layer filtering), while the original template remains unchanged.
