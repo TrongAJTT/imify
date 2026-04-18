@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import {
   Eye,
   EyeOff,
@@ -7,6 +7,8 @@ import {
   Trash2,
   GripVertical,
   Plus,
+  Link2,
+  Unlink2,
 } from "lucide-react"
 import {
   closestCenter,
@@ -35,8 +37,18 @@ interface LayerListPanelProps {
   onToggleLock: (id: string) => void
   onToggleVisibility: (id: string) => void
   onDeleteLayer: (id: string) => void
-  onReorder: (fromIndex: number, toIndex: number) => void
+  onDragLayer: (
+    fromIndex: number,
+    toIndex: number,
+    activeLayerId: string,
+    mergeTargetGroupId: string | null,
+    forceUngroupByLeftDrag: boolean
+  ) => void
   onAddShape: () => void
+  onToggleGroupForSelected: () => void
+  canToggleGroupForSelected: boolean
+  isSelectedLayerGrouped: boolean
+  groupNamesById: Record<string, string>
 }
 
 export function LayerListPanel({
@@ -46,9 +58,15 @@ export function LayerListPanel({
   onToggleLock,
   onToggleVisibility,
   onDeleteLayer,
-  onReorder,
+  onDragLayer,
   onAddShape,
+  onToggleGroupForSelected,
+  canToggleGroupForSelected,
+  isSelectedLayerGrouped,
+  groupNamesById,
 }: LayerListPanelProps) {
+  const UNGROUP_DRAG_LEFT_THRESHOLD = -24
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -63,14 +81,51 @@ export function LayerListPanel({
       const { active, over } = event
       if (!over || active.id === over.id) return
 
-      const fromIndex = layers.findIndex((layer) => layer.id === active.id)
-      const toIndex = layers.findIndex((layer) => layer.id === over.id)
+      const activeLayerId = String(active.id)
+      const overLayerId = String(over.id)
+      const fromIndex = layers.findIndex((layer) => layer.id === activeLayerId)
+      const toIndex = layers.findIndex((layer) => layer.id === overLayerId)
       if (fromIndex < 0 || toIndex < 0) return
 
-      onReorder(fromIndex, toIndex)
+      const activeLayer = layers[fromIndex]
+      const overLayer = layers[toIndex]
+      const mergeTargetGroupId = overLayer?.groupId ?? null
+      const forceUngroupByLeftDrag =
+        Boolean(activeLayer?.groupId) && event.delta.x < UNGROUP_DRAG_LEFT_THRESHOLD
+
+      onDragLayer(fromIndex, toIndex, activeLayerId, mergeTargetGroupId, forceUngroupByLeftDrag)
     },
-    [layers, onReorder]
+    [layers, onDragLayer]
   )
+
+  const renderSegments = useMemo(() => {
+    const segments: Array<
+      { type: "single"; layers: VectorLayer[] } | { type: "group"; groupId: string; layers: VectorLayer[] }
+    > = []
+
+    let index = 0
+    while (index < layers.length) {
+      const layer = layers[index]
+      if (!layer.groupId) {
+        segments.push({ type: "single", layers: [layer] })
+        index += 1
+        continue
+      }
+
+      const groupId = layer.groupId
+      const groupedLayers: VectorLayer[] = [layer]
+      index += 1
+
+      while (index < layers.length && layers[index].groupId === groupId) {
+        groupedLayers.push(layers[index])
+        index += 1
+      }
+
+      segments.push({ type: "group", groupId, layers: groupedLayers })
+    }
+
+    return segments
+  }, [layers])
 
   return (
     <div className="space-y-2">
@@ -78,10 +133,24 @@ export function LayerListPanel({
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
           Layers ({layers.length})
         </span>
-        <Button variant="secondary" size="sm" onClick={onAddShape}>
-          <Plus size={12} />
-          Add
-        </Button>
+
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onToggleGroupForSelected}
+            disabled={!canToggleGroupForSelected}
+            title={isSelectedLayerGrouped ? "Ungroup selected layer" : "Group selected layer"}
+            className="px-2.5"
+          >
+            {isSelectedLayerGrouped ? <Unlink2 size={12} /> : <Link2 size={12} />}
+          </Button>
+
+          <Button variant="secondary" size="sm" onClick={onAddShape}>
+            <Plus size={12} />
+            Add
+          </Button>
+        </div>
       </div>
 
       {layers.length === 0 ? (
@@ -99,19 +168,55 @@ export function LayerListPanel({
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-0.5 max-h-[320px] overflow-y-auto">
-              {layers.map((layer, index) => (
-                <SortableFillLayerItem key={layer.id} id={layer.id}>
-                  <LayerRow
-                    layer={layer}
-                    index={index}
-                    isSelected={layer.id === selectedLayerId}
-                    onSelect={() => onSelectLayer(layer.id)}
-                    onToggleLock={() => onToggleLock(layer.id)}
-                    onToggleVisibility={() => onToggleVisibility(layer.id)}
-                    onDelete={() => onDeleteLayer(layer.id)}
-                  />
-                </SortableFillLayerItem>
-              ))}
+              {renderSegments.map((segment, segmentIndex) => {
+                if (segment.type === "single") {
+                  const layer = segment.layers[0]
+                  const layerIndex = layers.findIndex((candidate) => candidate.id === layer.id)
+
+                  return (
+                    <SortableFillLayerItem key={layer.id} id={layer.id}>
+                      <LayerRow
+                        layer={layer}
+                        index={layerIndex}
+                        isSelected={layer.id === selectedLayerId}
+                        onSelect={() => onSelectLayer(layer.id)}
+                        onToggleLock={() => onToggleLock(layer.id)}
+                        onToggleVisibility={() => onToggleVisibility(layer.id)}
+                        onDelete={() => onDeleteLayer(layer.id)}
+                      />
+                    </SortableFillLayerItem>
+                  )
+                }
+
+                return (
+                  <div
+                    key={`${segment.groupId}-${segmentIndex}`}
+                    className="ml-2 pl-2 border-l border-slate-300/80 dark:border-slate-600/80 space-y-0.5"
+                  >
+                    <div className="rounded-md border border-blue-200/70 bg-blue-50/70 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                      {groupNamesById[segment.groupId] || "Group"}
+                    </div>
+
+                    {segment.layers.map((layer) => {
+                      const layerIndex = layers.findIndex((candidate) => candidate.id === layer.id)
+
+                      return (
+                        <SortableFillLayerItem key={layer.id} id={layer.id}>
+                          <LayerRow
+                            layer={layer}
+                            index={layerIndex}
+                            isSelected={layer.id === selectedLayerId}
+                            onSelect={() => onSelectLayer(layer.id)}
+                            onToggleLock={() => onToggleLock(layer.id)}
+                            onToggleVisibility={() => onToggleVisibility(layer.id)}
+                            onDelete={() => onDeleteLayer(layer.id)}
+                          />
+                        </SortableFillLayerItem>
+                      )
+                    })}
+                  </div>
+                )
+              })}
             </div>
           </SortableContext>
         </DndContext>

@@ -1,9 +1,10 @@
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Layers, Settings2, Save, Ruler } from "lucide-react"
 
 import type {
   CanvasSizePreset,
   CanvasSizeUnit,
+  LayerGroup,
   VectorLayer,
   FillingTemplate,
   ShapeType,
@@ -26,10 +27,12 @@ import { GroupLayerPanel } from "@/options/components/filling/group-layer-panel"
 interface ManualEditorSidebarProps {
   template: FillingTemplate
   layers: VectorLayer[]
+  groups: LayerGroup[]
   canvasWidth: number
   canvasHeight: number
   selectedLayerId: string | null
   onLayersChange: (layers: VectorLayer[]) => void
+  onGroupsChange: (groups: LayerGroup[]) => void
   onCanvasSizeChange: (width: number, height: number) => void
   onSelectLayer: (id: string | null) => void
 }
@@ -69,13 +72,37 @@ function fromPixels(px: number, unit: CanvasSizeUnit, dpi: number): number {
   }
 }
 
+function synchronizeGroupsWithLayers(groups: LayerGroup[], layers: VectorLayer[]): LayerGroup[] {
+  const layerIdsByGroup = new Map<string, string[]>()
+
+  for (const layer of layers) {
+    if (!layer.groupId) {
+      continue
+    }
+
+    const current = layerIdsByGroup.get(layer.groupId) ?? []
+    current.push(layer.id)
+    layerIdsByGroup.set(layer.groupId, current)
+  }
+
+  return groups
+    .map((group) => ({
+      ...group,
+      layerIds: layerIdsByGroup.get(group.id) ?? [],
+      combineAsConvexHull: Boolean(group.combineAsConvexHull),
+    }))
+    .filter((group) => group.layerIds.length > 0)
+}
+
 export function ManualEditorSidebar({
   template,
   layers,
+  groups,
   canvasWidth,
   canvasHeight,
   selectedLayerId,
   onLayersChange,
+  onGroupsChange,
   onCanvasSizeChange,
   onSelectLayer,
 }: ManualEditorSidebarProps) {
@@ -92,6 +119,36 @@ export function ManualEditorSidebar({
   const selectedLayer = selectedLayerId
     ? layers.find((l) => l.id === selectedLayerId) ?? null
     : null
+
+  const normalizedGroups = useMemo(
+    () => synchronizeGroupsWithLayers(groups, layers),
+    [groups, layers]
+  )
+
+  const selectedGroup = useMemo(() => {
+    if (!selectedLayer?.groupId) {
+      return null
+    }
+
+    return normalizedGroups.find((group) => group.id === selectedLayer.groupId) ?? null
+  }, [normalizedGroups, selectedLayer?.groupId])
+
+  const selectedGroupMembers = useMemo(() => {
+    if (!selectedGroup) {
+      return []
+    }
+
+    const memberIdSet = new Set(selectedGroup.layerIds)
+    return layers.filter((layer) => memberIdSet.has(layer.id))
+  }, [layers, selectedGroup])
+
+  const groupNamesById = useMemo(
+    () => normalizedGroups.reduce<Record<string, string>>((acc, group) => {
+      acc[group.id] = group.name
+      return acc
+    }, {}),
+    [normalizedGroups]
+  )
 
   const handleAddShape = useCallback(
     (type: ShapeType) => {
@@ -146,22 +203,242 @@ export function ManualEditorSidebar({
 
   const handleDeleteLayer = useCallback(
     (id: string) => {
-      onLayersChange(layers.filter((l) => l.id !== id))
+      const nextLayers = layers.filter((layer) => layer.id !== id)
+      onLayersChange(nextLayers)
+      onGroupsChange(synchronizeGroupsWithLayers(groups, nextLayers))
+
       if (selectedLayerId === id) {
         onSelectLayer(null)
       }
     },
-    [layers, selectedLayerId, onLayersChange, onSelectLayer]
+    [groups, layers, selectedLayerId, onGroupsChange, onLayersChange, onSelectLayer]
   )
 
-  const handleReorder = useCallback(
-    (from: number, to: number) => {
+  const handleDragLayer = useCallback(
+    (
+      from: number,
+      to: number,
+      activeLayerId: string,
+      mergeTargetGroupId: string | null,
+      forceUngroupByLeftDrag: boolean
+    ) => {
       const copy = [...layers]
+      const activeLayerBeforeDrag = layers.find((layer) => layer.id === activeLayerId)
       const [moved] = copy.splice(from, 1)
+
+      if (!moved) {
+        return
+      }
+
       copy.splice(to, 0, moved)
-      onLayersChange(copy)
+
+      const activeGroupId = activeLayerBeforeDrag?.groupId ?? null
+      const shouldUngroup = forceUngroupByLeftDrag || (!mergeTargetGroupId && Boolean(activeGroupId))
+      const nextGroupId = shouldUngroup
+        ? null
+        : (mergeTargetGroupId ?? activeGroupId)
+
+      if (forceUngroupByLeftDrag && activeGroupId) {
+        const movedIndex = copy.findIndex((layer) => layer.id === activeLayerId)
+        const otherGroupIndexes = copy
+          .map((layer, index) => ({ layer, index }))
+          .filter((entry) => entry.layer.groupId === activeGroupId && entry.layer.id !== activeLayerId)
+          .map((entry) => entry.index)
+
+        if (movedIndex >= 0 && otherGroupIndexes.length > 0) {
+          const groupFirstIndex = Math.min(...otherGroupIndexes)
+          const groupLastIndex = Math.max(...otherGroupIndexes)
+          const groupCenterIndex = (groupFirstIndex + groupLastIndex) / 2
+          const insertAboveGroup = movedIndex <= groupCenterIndex
+          const targetIndex = insertAboveGroup ? groupFirstIndex : groupLastIndex + 1
+
+          const [extracted] = copy.splice(movedIndex, 1)
+          const adjustedTargetIndex = movedIndex < targetIndex ? targetIndex - 1 : targetIndex
+          copy.splice(adjustedTargetIndex, 0, extracted)
+        }
+      }
+
+      const nextLayers = copy.map((layer) => {
+        if (layer.id !== activeLayerId) {
+          return layer
+        }
+
+        if (shouldUngroup) {
+          const nextLayer = { ...layer }
+          delete nextLayer.groupId
+          return nextLayer
+        }
+
+        if (!nextGroupId) {
+          return layer
+        }
+
+        return {
+          ...layer,
+          groupId: nextGroupId,
+        }
+      })
+
+      onLayersChange(nextLayers)
+      onGroupsChange(synchronizeGroupsWithLayers(groups, nextLayers))
     },
-    [layers, onLayersChange]
+    [groups, layers, onGroupsChange, onLayersChange]
+  )
+
+  const handleUngroupSelectedLayer = useCallback(() => {
+    if (!selectedLayerId) {
+      return
+    }
+
+    const currentLayer = layers.find((layer) => layer.id === selectedLayerId)
+    if (!currentLayer?.groupId) {
+      return
+    }
+
+    const nextLayers = layers.map((layer) =>
+      layer.id === selectedLayerId
+        ? {
+            ...layer,
+            groupId: undefined,
+          }
+        : layer
+    )
+
+    onLayersChange(nextLayers)
+    onGroupsChange(synchronizeGroupsWithLayers(groups, nextLayers))
+  }, [groups, layers, selectedLayerId, onGroupsChange, onLayersChange])
+
+  const handleToggleGroupForSelectedLayer = useCallback(() => {
+    if (!selectedLayerId) {
+      return
+    }
+
+    const currentLayer = layers.find((layer) => layer.id === selectedLayerId)
+    if (!currentLayer) {
+      return
+    }
+
+    if (currentLayer.groupId) {
+      handleUngroupSelectedLayer()
+      return
+    }
+
+    const newGroupId = generateId("grp")
+    const nextLayers = layers.map((layer) =>
+      layer.id === selectedLayerId
+        ? {
+            ...layer,
+            groupId: newGroupId,
+          }
+        : layer
+    )
+
+    const nextGroups = synchronizeGroupsWithLayers(
+      [
+        ...normalizedGroups,
+        {
+          id: newGroupId,
+          name: `Group ${normalizedGroups.length + 1}`,
+          layerIds: [selectedLayerId],
+          closeLoop: false,
+          fillInterior: false,
+          combineAsConvexHull: false,
+        },
+      ],
+      nextLayers
+    )
+
+    onLayersChange(nextLayers)
+    onGroupsChange(nextGroups)
+  }, [
+    handleUngroupSelectedLayer,
+    layers,
+    normalizedGroups,
+    onGroupsChange,
+    onLayersChange,
+    selectedLayerId,
+  ])
+
+  const handleToggleCloseLoop = useCallback(
+    (checked: boolean) => {
+      if (!selectedGroup || selectedGroup.combineAsConvexHull) {
+        return
+      }
+
+      const nextGroups = normalizedGroups.map((group) =>
+        group.id === selectedGroup.id
+          ? {
+              ...group,
+              closeLoop: checked,
+            }
+          : group
+      )
+
+      onGroupsChange(nextGroups)
+    },
+    [normalizedGroups, onGroupsChange, selectedGroup]
+  )
+
+  const handleToggleFillInterior = useCallback(
+    (checked: boolean) => {
+      if (!selectedGroup || selectedGroup.combineAsConvexHull) {
+        return
+      }
+
+      const nextGroups = normalizedGroups.map((group) =>
+        group.id === selectedGroup.id
+          ? {
+              ...group,
+              fillInterior: checked,
+            }
+          : group
+      )
+
+      onGroupsChange(nextGroups)
+    },
+    [normalizedGroups, onGroupsChange, selectedGroup]
+  )
+
+  const handleRenameGroup = useCallback(
+    (name: string) => {
+      if (!selectedGroup) {
+        return
+      }
+
+      const nextGroups = normalizedGroups.map((group) =>
+        group.id === selectedGroup.id
+          ? {
+              ...group,
+              name,
+            }
+          : group
+      )
+
+      onGroupsChange(nextGroups)
+    },
+    [normalizedGroups, onGroupsChange, selectedGroup]
+  )
+
+  const handleToggleCombineAsConvexHull = useCallback(
+    (checked: boolean) => {
+      if (!selectedGroup) {
+        return
+      }
+
+      const nextGroups = normalizedGroups.map((group) =>
+        group.id === selectedGroup.id
+          ? {
+              ...group,
+              combineAsConvexHull: checked,
+              closeLoop: checked ? false : group.closeLoop,
+              fillInterior: checked ? false : group.fillInterior,
+            }
+          : group
+      )
+
+      onGroupsChange(nextGroups)
+    },
+    [normalizedGroups, onGroupsChange, selectedGroup]
   )
 
   const handleUpdateLayer = useCallback(
@@ -197,12 +474,21 @@ export function ManualEditorSidebar({
       canvasWidth,
       canvasHeight,
       layers,
+      groups: normalizedGroups,
       updatedAt: Date.now(),
     }
     await templateStorage.save(updated)
     updateTemplate(updated)
     navigateToSelect()
-  }, [canvasHeight, canvasWidth, template, layers, updateTemplate, navigateToSelect])
+  }, [
+    canvasHeight,
+    canvasWidth,
+    layers,
+    navigateToSelect,
+    normalizedGroups,
+    template,
+    updateTemplate,
+  ])
 
   const handleCanvasWidthChange = useCallback(
     (value: number) => {
@@ -305,8 +591,12 @@ export function ManualEditorSidebar({
             onToggleLock={handleToggleLock}
             onToggleVisibility={handleToggleVisibility}
             onDeleteLayer={handleDeleteLayer}
-            onReorder={handleReorder}
+            onDragLayer={handleDragLayer}
             onAddShape={() => setShapePickerOpen(true)}
+            onToggleGroupForSelected={handleToggleGroupForSelectedLayer}
+            canToggleGroupForSelected={Boolean(selectedLayerId)}
+            isSelectedLayerGrouped={Boolean(selectedLayer?.groupId)}
+            groupNamesById={groupNamesById}
           />
         </AccordionCard>
 
@@ -325,11 +615,17 @@ export function ManualEditorSidebar({
           </AccordionCard>
         )}
 
-        <GroupLayerPanel
-          layers={layers}
-          template={template}
-          onLayersChange={onLayersChange}
-        />
+        {selectedGroup && (
+          <GroupLayerPanel
+            group={selectedGroup}
+            members={selectedGroupMembers}
+            onUngroupSelectedLayer={handleUngroupSelectedLayer}
+            onRenameGroup={handleRenameGroup}
+            onToggleCombineAsConvexHull={handleToggleCombineAsConvexHull}
+            onToggleCloseLoop={handleToggleCloseLoop}
+            onToggleFillInterior={handleToggleFillInterior}
+          />
+        )}
 
         <div className="pt-2">
           <Button variant="primary" size="sm" onClick={handleSave} className="w-full">

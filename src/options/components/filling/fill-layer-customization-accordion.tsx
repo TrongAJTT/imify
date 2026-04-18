@@ -4,6 +4,7 @@ import { ImagePlus, Layers, Palette, SlidersHorizontal, X } from "lucide-react"
 import type { FillingTemplate, ImageTransform, LayerFillState, VectorLayer } from "@/features/filling/types"
 import { DEFAULT_IMAGE_TRANSFORM } from "@/features/filling/types"
 import { generateShapePoints } from "@/features/filling/shape-generators"
+import { buildFillRuntimeItems, type FillRuntimeItem } from "@/features/filling/fill-runtime-items"
 import { FillTransformControls } from "@/options/components/filling/fill-transform-controls"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
 import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
@@ -64,6 +65,9 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
 
   const activeCustomizationTab = useFillUiStore((s) => s.activeCustomizationTab)
   const setActiveCustomizationTab = useFillUiStore((s) => s.setActiveCustomizationTab)
+  const groupRuntimeTransforms = useFillUiStore((s) => s.groupRuntimeTransforms)
+  const updateGroupRuntimeTransform = useFillUiStore((s) => s.updateGroupRuntimeTransform)
+  const removeGroupRuntimeTransform = useFillUiStore((s) => s.removeGroupRuntimeTransform)
   const { getShortcutLabel } = useShortcutPreferences()
   const sessionTemplate = useFillUiStore((s) => s.sessionTemplate)
   const updateSessionTemplate = useFillUiStore((s) => s.updateSessionTemplate)
@@ -82,17 +86,27 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
   }, [sessionTemplate, template])
 
   const hiddenLayerIdSet = useMemo(() => new Set(hiddenLayerIds), [hiddenLayerIds])
-  const fillVisibleLayers = useMemo(
-    () => activeTemplate.layers.filter((layer) => layer.visible && !hiddenLayerIdSet.has(layer.id)),
-    [activeTemplate.layers, hiddenLayerIdSet]
+  const runtimeItems = useMemo(
+    () => buildFillRuntimeItems(activeTemplate, hiddenLayerIdSet),
+    [activeTemplate.layers, activeTemplate.groups, hiddenLayerIdSet]
   )
-  const selectedLayer = useMemo(
-    () => fillVisibleLayers.find((layer) => layer.id === selectedLayerId) ?? null,
-    [fillVisibleLayers, selectedLayerId]
+  const selectedRuntimeItem = useMemo<FillRuntimeItem | null>(
+    () => runtimeItems.find((item) => item.id === selectedLayerId) ?? null,
+    [runtimeItems, selectedLayerId]
   )
+  const selectedLayer = selectedRuntimeItem?.kind === "layer" ? selectedRuntimeItem.layer : null
+  const selectedGroupItem = selectedRuntimeItem?.kind === "group" ? selectedRuntimeItem : null
+  const selectedGroupTransform = useMemo<ImageTransform | null>(() => {
+    if (!selectedGroupItem) {
+      return null
+    }
+
+    return groupRuntimeTransforms[selectedGroupItem.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }
+  }, [groupRuntimeTransforms, selectedGroupItem])
+
   const selectedFillState = useMemo(
-    () => layerFillStates.find((state) => state.layerId === selectedLayer?.id),
-    [layerFillStates, selectedLayer?.id]
+    () => layerFillStates.find((state) => state.layerId === selectedRuntimeItem?.id),
+    [layerFillStates, selectedRuntimeItem?.id]
   )
 
   useShortcutActions([
@@ -194,6 +208,17 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
 
   const handleLayerTransformChange = useCallback(
     (partial: Partial<ImageTransform>) => {
+      if (selectedGroupItem && selectedGroupTransform) {
+        updateGroupRuntimeTransform(selectedGroupItem.id, {
+          x: partial.x ?? selectedGroupTransform.x,
+          y: partial.y ?? selectedGroupTransform.y,
+          rotation: partial.rotation ?? selectedGroupTransform.rotation,
+          scaleX: partial.scaleX ?? selectedGroupTransform.scaleX,
+          scaleY: partial.scaleY ?? selectedGroupTransform.scaleY,
+        })
+        return
+      }
+
       if (!selectedLayer || !selectedLayerTransform) return
 
       const base = getLayerTransformBase(selectedLayer)
@@ -215,6 +240,9 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
       getLayerTransformBase,
       selectedLayer,
       selectedLayerTransform,
+      selectedGroupItem,
+      selectedGroupTransform,
+      updateGroupRuntimeTransform,
       updateSelectedTemplateLayer,
     ]
   )
@@ -226,7 +254,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
   const handleImageUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
-      if (!file || !selectedLayer) return
+      if (!file || !selectedRuntimeItem) return
 
       const nextUrl = URL.createObjectURL(file)
       const previousUrl = selectedFillState?.imageUrl ?? null
@@ -234,8 +262,8 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
       const img = new Image()
       img.onload = () => {
         const scaleToFit = Math.max(
-          selectedLayer.width / img.naturalWidth,
-          selectedLayer.height / img.naturalHeight
+          Math.max(1, selectedRuntimeItem.bounds.width) / img.naturalWidth,
+          Math.max(1, selectedRuntimeItem.bounds.height) / img.naturalHeight
         )
 
         updateSelectedLayerState({
@@ -262,7 +290,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
         fileInputRef.current.value = ""
       }
     },
-    [selectedLayer, selectedFillState?.imageUrl, updateSelectedLayerState]
+    [selectedFillState?.imageUrl, selectedRuntimeItem, updateSelectedLayerState]
   )
 
   const handleClearImage = useCallback(() => {
@@ -282,6 +310,11 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
   }, [updateSelectedLayerState])
 
   const handleResetLayerTransform = useCallback(() => {
+    if (selectedGroupItem) {
+      updateGroupRuntimeTransform(selectedGroupItem.id, { ...DEFAULT_IMAGE_TRANSFORM })
+      return
+    }
+
     if (!selectedLayer) return
 
     const base = getLayerTransformBase(selectedLayer)
@@ -292,22 +325,35 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
       width: base.width,
       height: base.height,
     })
-  }, [getLayerTransformBase, selectedLayer, updateSelectedTemplateLayer])
+  }, [
+    getLayerTransformBase,
+    selectedGroupItem,
+    selectedLayer,
+    updateGroupRuntimeTransform,
+    updateSelectedTemplateLayer,
+  ])
 
   const handleDeleteLayer = useCallback(() => {
-    if (!selectedLayer) return
+    if (!selectedRuntimeItem) return
 
-    hideLayerInFill(selectedLayer.id)
-    layerTransformBaseRef.current.delete(selectedLayer.id)
+    selectedRuntimeItem.memberLayerIds.forEach((layerId) => {
+      hideLayerInFill(layerId)
+      layerTransformBaseRef.current.delete(layerId)
+    })
 
-    const nextSelectableLayers = fillVisibleLayers.filter((layer) => layer.id !== selectedLayer.id)
-    const nextSelectedLayerId = nextSelectableLayers[0]?.id ?? null
+    if (selectedRuntimeItem.kind === "group") {
+      removeGroupRuntimeTransform(selectedRuntimeItem.id)
+    }
+
+    const nextRuntimeItems = runtimeItems.filter((item) => item.id !== selectedRuntimeItem.id)
+    const nextSelectedLayerId = nextRuntimeItems[0]?.id ?? null
 
     setSelectedLayerId(nextSelectedLayerId)
   }, [
-    fillVisibleLayers,
     hideLayerInFill,
-    selectedLayer,
+    removeGroupRuntimeTransform,
+    runtimeItems,
+    selectedRuntimeItem,
     setSelectedLayerId,
   ])
 
@@ -318,12 +364,12 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
     <AccordionCard
       icon={<SlidersHorizontal size={16} />}
       label="Layer Customization"
-      sublabel={selectedLayer ? `Selected: ${selectedLayer.name || "Layer"}` : "No layer selected"}
+      sublabel={selectedRuntimeItem ? `Selected: ${selectedRuntimeItem.name || "Layer"}` : "No layer selected"}
       colorTheme="sky"
       defaultOpen={true}
     >
-      <div className="space-y-3">
-        {!selectedLayer ? (
+      <div>
+        {!selectedRuntimeItem ? (
           <p className="text-[12px] text-slate-500 dark:text-slate-400">
             Please select a layer to customize.
           </p>
@@ -368,7 +414,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
             </div>
 
             {activeCustomizationTab === "image" && (
-              <div className="space-y-3">
+              <div className="space-y-3 mt-3">
                 {!selectedFillState?.imageUrl ? (
                   <div className="rounded-md border border-dashed border-slate-300 dark:border-slate-600 p-3 bg-slate-50/70 dark:bg-slate-900/30">
                     <p className="text-[12px] text-slate-500 dark:text-slate-400 mb-2">
@@ -386,12 +432,16 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     onReset={handleResetImageTransform}
                     actions={
                       <>
-                        <Button type="button" variant="secondary" size="sm" onClick={handleClearImage}>
-                          <X size={14} />
-                        </Button>
-                        <Button type="button" variant="secondary" size="sm" onClick={triggerImageSelect}>
-                          <ImagePlus size={14} />
-                        </Button>
+                        <Tooltip content="Clear image">
+                            <Button type="button" variant="secondary" size="sm" onClick={handleClearImage}>
+                            <X size={14} />
+                          </Button>
+                        </Tooltip>
+                        <Tooltip content="Replace image">
+                          <Button type="button" variant="secondary" size="sm" onClick={triggerImageSelect}>
+                            <ImagePlus size={14} />
+                          </Button>
+                        </Tooltip>
                       </>
                     }
                   />
@@ -400,7 +450,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
             )}
 
             {activeCustomizationTab === "border" && (
-              <div className="space-y-3">
+              <div className="space-y-3 mt-3">
                 <div className="grid grid-cols-2 gap-2">
                   <NumberInput
                     label="Border"
@@ -422,7 +472,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                   />
                 </div>
 
-                <div className={borderOverridden ? "pointer-events-none opacity-50" : ""}>
+                <div className={`mt-3 ${borderOverridden ? "pointer-events-none opacity-50" : ""}`}>
                   <ColorPickerPopover
                     label="Border Color"
                     value={selectedFillState?.borderColor ?? "#000000"}
@@ -441,9 +491,9 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
               </div>
             )}
 
-            {activeCustomizationTab === "layer" && selectedLayerTransform && (
+            {activeCustomizationTab === "layer" && (selectedLayerTransform || selectedGroupTransform) && (
               <FillTransformControls
-                transform={selectedLayerTransform}
+                transform={selectedLayerTransform ?? selectedGroupTransform ?? { ...DEFAULT_IMAGE_TRANSFORM }}
                 onChange={handleLayerTransformChange}
                 onReset={handleResetLayerTransform}
                 actions={

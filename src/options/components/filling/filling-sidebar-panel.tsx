@@ -29,10 +29,12 @@ export function FillingSidebarPanel() {
           <ManualEditorSidebar
             template={activeTemplate}
             layers={editorCtx.editorLayers}
+            groups={editorCtx.editorGroups}
             canvasWidth={editorCtx.canvasWidth}
             canvasHeight={editorCtx.canvasHeight}
             selectedLayerId={editorCtx.selectedLayerId}
             onLayersChange={editorCtx.setEditorLayers}
+            onGroupsChange={editorCtx.setEditorGroups}
             onCanvasSizeChange={editorCtx.setCanvasSize}
             onSelectLayer={editorCtx.setSelectedLayerId}
           />

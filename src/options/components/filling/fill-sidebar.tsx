@@ -21,6 +21,11 @@ import { FillingExportAccordion } from "@/options/components/filling/filling-exp
 import { SortableFillLayerItem } from "@/options/components/filling/sortable-fill-layer-item"
 import { ResizableAccordionCard } from "@/options/components/ui/resizable-accordion-card"
 import { ImagePlus } from "lucide-react"
+import {
+  buildFillRuntimeItems,
+  expandRuntimeOrderToVisibleLayerIds,
+  type FillRuntimeItem,
+} from "@/features/filling/fill-runtime-items"
 
 interface FillSidebarProps {
   template: FillingTemplate
@@ -53,9 +58,9 @@ export function FillSidebar({ template }: FillSidebarProps) {
     }
   }, [initializeFillSession, resetFillSessionState, template.id])
 
-  const visibleLayers = useMemo(
-    () => activeTemplate.layers.filter((l) => l.visible && !hiddenLayerIdSet.has(l.id)),
-    [activeTemplate.layers, hiddenLayerIdSet]
+  const runtimeItems = useMemo(
+    () => buildFillRuntimeItems(activeTemplate, hiddenLayerIdSet),
+    [activeTemplate.layers, activeTemplate.groups, hiddenLayerIdSet]
   )
 
   const sensors = useSensors(
@@ -71,18 +76,28 @@ export function FillSidebar({ template }: FillSidebarProps) {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const oldIndex = visibleLayers.findIndex((layer) => layer.id === active.id)
-    const newIndex = visibleLayers.findIndex((layer) => layer.id === over.id)
+    const oldIndex = runtimeItems.findIndex((item) => item.id === active.id)
+    const newIndex = runtimeItems.findIndex((item) => item.id === over.id)
     if (oldIndex < 0 || newIndex < 0) return
 
-    const reorderedVisibleLayers = arrayMove(visibleLayers, oldIndex, newIndex)
+    const reorderedRuntimeItems = arrayMove(runtimeItems, oldIndex, newIndex)
+    const expandedLayerOrder = expandRuntimeOrderToVisibleLayerIds(
+      reorderedRuntimeItems.map((item) => item.id),
+      runtimeItems
+    )
+    const visibleLayerById = new Map(
+      activeTemplate.layers
+        .filter((layer) => layer.visible && !hiddenLayerIdSet.has(layer.id))
+        .map((layer) => [layer.id, layer])
+    )
 
     let visibleCursor = 0
     const reorderedLayers = activeTemplate.layers.map((layer) => {
       if (!layer.visible || hiddenLayerIdSet.has(layer.id)) return layer
-      const nextLayer = reorderedVisibleLayers[visibleCursor]
+      const nextLayerId = expandedLayerOrder[visibleCursor]
+      const nextLayer = nextLayerId ? visibleLayerById.get(nextLayerId) : null
       visibleCursor += 1
-      return nextLayer
+      return nextLayer ?? layer
     })
 
     const nextTemplate: FillingTemplate = {
@@ -100,7 +115,7 @@ export function FillSidebar({ template }: FillSidebarProps) {
       <ResizableAccordionCard
         icon={<ImagePlus size={16} />}
         label="Layers"
-        sublabel={`${visibleLayers.length} visible`}
+        sublabel={`${runtimeItems.length} visible`}
         colorTheme="sky"
         defaultOpen={true}
         height={layersAccordionHeight}
@@ -111,12 +126,12 @@ export function FillSidebar({ template }: FillSidebarProps) {
       >
         <div className="space-y-2">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-            <SortableContext items={visibleLayers.map((layer) => layer.id)} strategy={verticalListSortingStrategy}>
-              {visibleLayers.map((layer) => {
-                const fillState = layerFillStates.find((lf) => lf.layerId === layer.id)
+            <SortableContext items={runtimeItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+              {runtimeItems.map((item: FillRuntimeItem) => {
+                const fillState = layerFillStates.find((state) => state.layerId === item.id)
                 return (
-                  <SortableFillLayerItem key={layer.id} id={layer.id}>
-                    <FillLayerCard layer={layer} fillState={fillState} />
+                  <SortableFillLayerItem key={item.id} id={item.id}>
+                    <FillLayerCard item={item} fillState={fillState} />
                   </SortableFillLayerItem>
                 )
               })}

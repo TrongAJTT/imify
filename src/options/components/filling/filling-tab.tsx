@@ -27,6 +27,8 @@ export function FillingTab() {
     selectedLayerId,
     setSelectedLayerId,
     updateLayer,
+    editorGroups,
+    setEditorGroups,
     canvasWidth,
     canvasHeight,
     setCanvasSize,
@@ -52,6 +54,7 @@ export function FillingTab() {
   useEffect(() => {
     if (activeTemplate && (fillingStep === "create_manual" || fillingStep === "create_symmetric")) {
       setEditorLayers(activeTemplate.layers)
+      setEditorGroups(activeTemplate.groups ?? [])
       setSelectedLayerId(null)
       setCanvasSize(activeTemplate.canvasWidth, activeTemplate.canvasHeight)
     }
@@ -59,6 +62,7 @@ export function FillingTab() {
     activeTemplate?.id,
     fillingStep,
     setCanvasSize,
+    setEditorGroups,
     setEditorLayers,
     setSelectedLayerId,
   ])
@@ -83,6 +87,7 @@ export function FillingTab() {
         <ManualEditorWorkspace
           canvasWidth={canvasWidth}
           canvasHeight={canvasHeight}
+          groups={editorGroups}
           layers={editorLayers}
           selectedLayerId={selectedLayerId}
           onSelectLayer={setSelectedLayerId}

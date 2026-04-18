@@ -14,6 +14,7 @@ import {
   DEFAULT_CANVAS_FILL_STATE,
   createLayerFillState,
 } from "@/features/filling/types"
+import { buildRuntimeFillStateIds } from "@/features/filling/fill-runtime-items"
 import type { BmpColorDepth, TiffColorMode } from "@/core/types"
 
 const storage = new Storage({ area: "local" })
@@ -185,12 +186,13 @@ export const useFillingStore = create<FillingStoreState>()(
         })),
       setSelectedLayerId: (id) => set({ selectedLayerId: id }),
       initFillStatesForTemplate: (template) =>
-        set({
-          layerFillStates: template.layers
-            .filter((l) => l.visible)
-            .map((l) => createLayerFillState(l.id)),
-          canvasFillState: { ...DEFAULT_CANVAS_FILL_STATE },
-          selectedLayerId: template.layers.length > 0 ? template.layers[0].id : null,
+        set(() => {
+          const runtimeIds = buildRuntimeFillStateIds(template)
+          return {
+            layerFillStates: runtimeIds.map((runtimeId) => createLayerFillState(runtimeId)),
+            canvasFillState: { ...DEFAULT_CANVAS_FILL_STATE },
+            selectedLayerId: runtimeIds[0] ?? null,
+          }
         }),
       setExportFormat: (format) => set({ exportFormat: format }),
       setExportQuality: (quality) => set({ exportQuality: quality }),

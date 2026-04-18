@@ -56,6 +56,7 @@ export interface LayerGroup {
   layerIds: string[]
   closeLoop: boolean
   fillInterior: boolean
+  combineAsConvexHull?: boolean
 }
 
 // ── Template ──

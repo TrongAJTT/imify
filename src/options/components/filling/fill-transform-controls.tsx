@@ -2,6 +2,7 @@ import type { ImageTransform } from "@/features/filling/types"
 import { Button } from "@/options/components/ui/button"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { RotateCcw } from "lucide-react"
+import { Tooltip } from "../tooltip"
 
 interface FillTransformControlsProps {
   transform: ImageTransform
@@ -17,7 +18,7 @@ export function FillTransformControls({
   actions,
 }: FillTransformControlsProps) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 mt-3">
       <div className="flex items-end gap-2">
         <NumberInput
           label="Rotation"
@@ -26,9 +27,11 @@ export function FillTransformControls({
           min={-360}
           max={360}
         />
-        <Button type="button" variant="secondary" size="sm" onClick={onReset}>
-          <RotateCcw size={14} />
-        </Button>
+        <Tooltip content="Reset rotation">
+          <Button type="button" variant="secondary" size="sm" onClick={onReset}>
+            <RotateCcw size={14} />
+          </Button>
+        </Tooltip>
         {actions}
       </div>
 

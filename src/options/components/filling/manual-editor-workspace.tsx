@@ -2,11 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage, Layer, Line, Rect, Transformer } from "react-konva"
 import type Konva from "konva"
 
-import type { VectorLayer } from "@/features/filling/types"
+import type { LayerGroup, VectorLayer } from "@/features/filling/types"
 import { generateShapePoints } from "@/features/filling/shape-generators"
+import {
+  buildGroupOverlayPolygons,
+  getBoundsFromPoints,
+  toWorldLayerPoints,
+} from "@/features/filling/group-geometry"
 import { flattenPoints } from "@/features/filling/vector-math"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
 import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { useTransformGuides, type RectBounds } from "@/options/hooks/use-transform-guides"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
 import {
@@ -17,6 +23,7 @@ import {
 interface ManualEditorWorkspaceProps {
   canvasWidth: number
   canvasHeight: number
+  groups: LayerGroup[]
   layers: VectorLayer[]
   selectedLayerId: string | null
   onSelectLayer: (id: string | null) => void
@@ -31,6 +38,7 @@ const PREVIEW_ZOOM_STEP = 10
 export function ManualEditorWorkspace({
   canvasWidth,
   canvasHeight,
+  groups,
   layers,
   selectedLayerId,
   onSelectLayer,
@@ -48,7 +56,19 @@ export function ManualEditorWorkspace({
   const [isResizingPreview, setIsResizingPreview] = useState(false)
   const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false)
   const [cursor, setCursor] = useState("default")
+  const [rotationGuideLine, setRotationGuideLine] = useState<number[] | null>(null)
+  const [positionGuideLines, setPositionGuideLines] = useState<number[][]>([])
   const { getShortcutLabel } = useShortcutPreferences()
+  const {
+    rotationSnapAngles,
+    getSnappedRotation,
+    buildRotationGuideLine,
+    snapRectPosition,
+  } = useTransformGuides({
+    rotationStep: 45,
+    rotationTolerance: 4,
+    positionTolerance: 8,
+  })
 
   const clampPreviewZoom = useCallback((value: number) => {
     return Math.max(PREVIEW_MIN_ZOOM, Math.min(PREVIEW_MAX_ZOOM, Math.round(value)))
@@ -268,6 +288,8 @@ export function ManualEditorWorkspace({
     (e: Konva.KonvaEventObject<MouseEvent>) => {
       if (e.target === e.target.getStage()) {
         onSelectLayer(null)
+        setRotationGuideLine(null)
+        setPositionGuideLines([])
       }
     },
     [onSelectLayer]
@@ -280,9 +302,104 @@ export function ManualEditorWorkspace({
         x: Math.round(((node.x() - offsetX) / renderScale) * 100) / 100,
         y: Math.round(((node.y() - offsetY) / renderScale) * 100) / 100,
       })
+      setPositionGuideLines([])
       setCursor("grab")
     },
     [offsetX, offsetY, onUpdateLayer, renderScale]
+  )
+
+  const handleDragMove = useCallback(
+    (layerId: string, e: Konva.KonvaEventObject<DragEvent>) => {
+      const node = e.target
+      const layer = layers.find((candidate) => candidate.id === layerId)
+      if (!layer) {
+        return
+      }
+
+      const draftLayer: VectorLayer = {
+        ...layer,
+        x: (node.x() - offsetX) / renderScale,
+        y: (node.y() - offsetY) / renderScale,
+      }
+
+      const movingBounds = getBoundsFromPoints(toWorldLayerPoints(draftLayer))
+      const candidateBounds = layers
+        .filter((candidate) => candidate.id !== layerId && candidate.visible)
+        .map((candidate) => getBoundsFromPoints(toWorldLayerPoints(candidate)))
+
+      const { snappedRect, guides } = snapRectPosition({
+        movingRect: movingBounds,
+        candidateRects: candidateBounds,
+        canvasRect: { x: 0, y: 0, width: canvasWidth, height: canvasHeight },
+      })
+
+      const deltaX = snappedRect.x - movingBounds.x
+      const deltaY = snappedRect.y - movingBounds.y
+      if (Math.abs(deltaX) > 0.001 || Math.abs(deltaY) > 0.001) {
+        node.x(node.x() + deltaX * renderScale)
+        node.y(node.y() + deltaY * renderScale)
+      }
+
+      const stageGuides = guides.map((guide) => {
+        if (guide.orientation === "vertical") {
+          const x = offsetX + guide.value * renderScale
+          return [
+            x,
+            offsetY,
+            x,
+            offsetY + canvasHeight * renderScale,
+          ]
+        }
+
+        const y = offsetY + guide.value * renderScale
+        return [
+          offsetX,
+          y,
+          offsetX + canvasWidth * renderScale,
+          y,
+        ]
+      })
+
+      setPositionGuideLines(stageGuides)
+    },
+    [
+      canvasHeight,
+      canvasWidth,
+      layers,
+      offsetX,
+      offsetY,
+      renderScale,
+      snapRectPosition,
+    ]
+  )
+
+  const handleTransform = useCallback(
+    (e: Konva.KonvaEventObject<Event>) => {
+      const node = e.target
+      const snappedRotation = getSnappedRotation(node.rotation())
+
+      if (!snappedRotation.snapped) {
+        setRotationGuideLine(null)
+        return
+      }
+
+      node.rotation(snappedRotation.rotation)
+
+      const clientRect = node.getClientRect()
+      const centerX = clientRect.x + clientRect.width / 2
+      const centerY = clientRect.y + clientRect.height / 2
+      const guideLength = Math.max(canvasWidth, canvasHeight) * renderScale
+
+      setRotationGuideLine(
+        buildRotationGuideLine(
+          centerX,
+          centerY,
+          snappedRotation.snapAngle ?? snappedRotation.rotation,
+          guideLength
+        )
+      )
+    },
+    [buildRotationGuideLine, canvasHeight, canvasWidth, getSnappedRotation, renderScale]
   )
 
   const handleTransformEnd = useCallback(
@@ -304,9 +421,16 @@ export function ManualEditorWorkspace({
 
       node.scaleX(1)
       node.scaleY(1)
+      setRotationGuideLine(null)
+      setPositionGuideLines([])
       setCursor("default")
     },
     [layers, offsetX, offsetY, onUpdateLayer, renderScale]
+  )
+
+  const groupConnectionOverlays = useMemo(
+    () => groups.flatMap((group) => buildGroupOverlayPolygons(group, layers)),
+    [groups, layers]
   )
 
   return (
@@ -368,6 +492,66 @@ export function ManualEditorWorkspace({
               listening={false}
             />
 
+            {positionGuideLines.map((points, index) => (
+              <Line
+                key={`manual-position-guide-${index}`}
+                points={points}
+                stroke="rgba(14, 165, 233, 0.9)"
+                strokeWidth={1.2}
+                dash={[6, 6]}
+                listening={false}
+                perfectDrawEnabled={false}
+              />
+            ))}
+
+            {rotationGuideLine && (
+              <Line
+                key="manual-rotation-guide"
+                points={rotationGuideLine}
+                stroke="rgba(14, 165, 233, 0.9)"
+                strokeWidth={1.5}
+                dash={[10, 6]}
+                listening={false}
+                perfectDrawEnabled={false}
+              />
+            )}
+
+            {groupConnectionOverlays.map((overlay) => {
+              const scaledPoints = flattenPoints(overlay.points).map((value, index) =>
+                value * renderScale + (index % 2 === 0 ? offsetX : offsetY)
+              )
+
+              const isInterior = overlay.type === "interior"
+              const isCombinedHull = overlay.type === "combined-hull"
+
+              return (
+                <Line
+                  key={overlay.id}
+                  name="manual-group-overlay"
+                  points={scaledPoints}
+                  closed
+                  fill={
+                    isCombinedHull
+                      ? "rgba(245, 158, 11, 0.18)"
+                      : isInterior
+                        ? "rgba(250, 204, 21, 0.28)"
+                        : "rgba(250, 204, 21, 0.06)"
+                  }
+                  stroke={
+                    isCombinedHull
+                      ? "rgba(194, 65, 12, 0.95)"
+                      : isInterior
+                        ? "rgba(217, 119, 6, 0.95)"
+                        : "rgba(217, 119, 6, 0.82)"
+                  }
+                  strokeWidth={isCombinedHull ? 2 : isInterior ? 1.8 : 1.4}
+                  dash={isInterior || isCombinedHull ? undefined : [6, 4]}
+                  listening={false}
+                  perfectDrawEnabled={false}
+                />
+              )
+            })}
+
             {layers.map((layer) => {
               if (!layer.visible) return null
 
@@ -393,9 +577,19 @@ export function ManualEditorWorkspace({
                   onTap={() => onSelectLayer(layer.id)}
                   onMouseEnter={() => setCursor(layer.locked ? "not-allowed" : "grab")}
                   onMouseLeave={() => setCursor("default")}
-                  onDragStart={() => setCursor("grabbing")}
+                  onDragStart={() => {
+                    setPositionGuideLines([])
+                    setRotationGuideLine(null)
+                    setCursor("grabbing")
+                  }}
+                  onDragMove={(e) => handleDragMove(layer.id, e)}
                   onDragEnd={(e) => handleDragEnd(layer.id, e)}
-                  onTransformStart={() => setCursor("grabbing")}
+                  onTransformStart={() => {
+                    setPositionGuideLines([])
+                    setRotationGuideLine(null)
+                    setCursor("grabbing")
+                  }}
+                  onTransform={handleTransform}
                   onTransformEnd={(e) => handleTransformEnd(layer.id, e)}
                 />
               )
@@ -405,6 +599,8 @@ export function ManualEditorWorkspace({
               ref={transformerRef}
               rotateEnabled
               keepRatio={!isFreeAspectRatio}
+              rotationSnaps={rotationSnapAngles}
+              rotationSnapTolerance={4}
               enabledAnchors={["top-left", "top-right", "bottom-left", "bottom-right"]}
               boundBoxFunc={(oldBox, newBox) => {
                 if (Math.abs(newBox.width) < 10 || Math.abs(newBox.height) < 10) {

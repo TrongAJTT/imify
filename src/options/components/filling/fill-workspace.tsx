@@ -3,11 +3,26 @@ import { Stage, Layer, Line, Rect, Group, Image as KonvaImage, Transformer } fro
 import type Konva from "konva"
 import { Download, Loader2 } from "lucide-react"
 
+import {
+  buildFillRuntimeItems,
+  type FillRuntimeGroupItem,
+  type FillRuntimeItem,
+  type FillRuntimeLayerItem,
+} from "@/features/filling/fill-runtime-items"
+import {
+  applyRuntimeTransformToPoint,
+  applyRuntimeTransformToPolygons,
+  computeConvexHull,
+  getBoundsFromPoints,
+  toWorldLayerPoints,
+} from "@/features/filling/group-geometry"
 import type { CanvasFillState, FillingTemplate, VectorLayer } from "@/features/filling/types"
+import { DEFAULT_IMAGE_TRANSFORM } from "@/features/filling/types"
 import { useFillingStore } from "@/options/stores/filling-store"
 import { useFillUiStore } from "@/options/stores/fill-ui-store"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
 import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { useTransformGuides, type RectBounds } from "@/options/hooks/use-transform-guides"
 import { buildActiveFillingFormatOptions } from "@/options/stores/filling-format-options"
 import { generateShapePoints } from "@/features/filling/shape-generators"
 import { flattenPoints, roundedPolygonPoints } from "@/features/filling/vector-math"
@@ -29,6 +44,7 @@ const ROTATE_CURSOR = "crosshair"
 const PREVIEW_MIN_ZOOM = 50
 const PREVIEW_MAX_ZOOM = 800
 const PREVIEW_ZOOM_STEP = 10
+const IMAGE_HITBOX_PADDING = 50
 
 interface FillWorkspaceProps {
   template: FillingTemplate
@@ -54,6 +70,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const sessionTemplate = useFillUiStore((s) => s.sessionTemplate)
   const updateSessionTemplate = useFillUiStore((s) => s.updateSessionTemplate)
   const hiddenLayerIds = useFillUiStore((s) => s.hiddenLayerIds)
+  const groupRuntimeTransforms = useFillUiStore((s) => s.groupRuntimeTransforms)
+  const updateGroupRuntimeTransform = useFillUiStore((s) => s.updateGroupRuntimeTransform)
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId)
   const setCanvasFillState = useFillingStore((s) => s.setCanvasFillState)
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState)
@@ -68,6 +86,18 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const [isTransforming, setIsTransforming] = useState(false)
   const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false)
   const [cursor, setCursor] = useState("default")
+  const [rotationGuideLine, setRotationGuideLine] = useState<number[] | null>(null)
+  const [positionGuideLines, setPositionGuideLines] = useState<number[][]>([])
+  const {
+    rotationSnapAngles,
+    getSnappedRotation,
+    buildRotationGuideLine,
+    snapRectPosition,
+  } = useTransformGuides({
+    rotationStep: 45,
+    rotationTolerance: 4,
+    positionTolerance: 8,
+  })
 
   const activeTemplate = useMemo(() => {
     if (sessionTemplate && sessionTemplate.id === template.id) {
@@ -92,9 +122,22 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const renderScale = fitScale * (previewZoom / 100)
 
   const hiddenLayerIdSet = useMemo(() => new Set(hiddenLayerIds), [hiddenLayerIds])
+
+  const fillRuntimeItems = useMemo(
+    () => buildFillRuntimeItems(activeTemplate, hiddenLayerIdSet),
+    [activeTemplate, hiddenLayerIdSet]
+  )
+
+  const selectedRuntimeItem = useMemo(
+    () => fillRuntimeItems.find((item) => item.id === selectedLayerId),
+    [fillRuntimeItems, selectedLayerId]
+  )
+
   const fillVisibleLayers = useMemo(
-    () => activeTemplate.layers.filter((layer) => layer.visible && !hiddenLayerIdSet.has(layer.id)),
-    [activeTemplate.layers, hiddenLayerIdSet]
+    () => fillRuntimeItems
+      .filter((item) => item.kind === "layer")
+      .map((item) => (item as FillRuntimeLayerItem).layer),
+    [fillRuntimeItems]
   )
 
   const offsetX = (stageSize.width - template.canvasWidth * renderScale) / 2 + previewPan.x
@@ -237,10 +280,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
   useEffect(() => {
     if (!selectedLayerId) return
-    if (hiddenLayerIdSet.has(selectedLayerId)) {
-      setSelectedLayerId(fillVisibleLayers[0]?.id ?? null)
+    const exists = fillRuntimeItems.some((item) => item.id === selectedLayerId)
+    if (!exists) {
+      setSelectedLayerId(fillRuntimeItems[0]?.id ?? null)
     }
-  }, [fillVisibleLayers, hiddenLayerIdSet, selectedLayerId, setSelectedLayerId])
+  }, [fillRuntimeItems, selectedLayerId, setSelectedLayerId])
 
   const handlePreviewWheel = useCallback(
     (event: WheelEvent) => {
@@ -336,9 +380,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
   const updateSelectedLayerFromNode = useCallback(
     (node: Konva.Node) => {
-      if (!selectedLayerId) return
-      const selectedLayer = activeTemplate.layers.find((layer) => layer.id === selectedLayerId)
-      if (!selectedLayer || hiddenLayerIdSet.has(selectedLayer.id)) return
+      if (!selectedLayerId || selectedRuntimeItem?.kind !== "layer") return
+      const selectedLayer = selectedRuntimeItem.layer
 
       const nextScaleX = Math.max(0.01, Math.abs(node.scaleX()))
       const nextScaleY = Math.max(0.01, Math.abs(node.scaleY()))
@@ -371,13 +414,65 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     },
     [
       activeTemplate,
-      hiddenLayerIdSet,
       offsetX,
       offsetY,
       renderScale,
       selectedLayerId,
+      selectedRuntimeItem,
       updateSessionTemplate,
     ]
+  )
+
+  const canvasRect = useMemo<RectBounds>(
+    () => ({ x: 0, y: 0, width: template.canvasWidth, height: template.canvasHeight }),
+    [template.canvasHeight, template.canvasWidth]
+  )
+
+  const toStageGuideLines = useCallback(
+    (guides: Array<{ orientation: "vertical" | "horizontal"; value: number }>) => {
+      return guides.map((guide) => {
+        if (guide.orientation === "vertical") {
+          const x = offsetX + guide.value * renderScale
+          return [x, offsetY, x, offsetY + template.canvasHeight * renderScale]
+        }
+
+        const y = offsetY + guide.value * renderScale
+        return [offsetX, y, offsetX + template.canvasWidth * renderScale, y]
+      })
+    },
+    [
+      offsetX,
+      offsetY,
+      renderScale,
+      template.canvasHeight,
+      template.canvasWidth,
+    ]
+  )
+
+  const getRuntimeItemBounds = useCallback(
+    (item: FillRuntimeItem): RectBounds => {
+      if (item.kind === "layer") {
+        return getBoundsFromPoints(toWorldLayerPoints(item.layer))
+      }
+
+      const runtimeTransform = groupRuntimeTransforms[item.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }
+      const transformedPoints = applyRuntimeTransformToPolygons(item.polygons, runtimeTransform).flat()
+      if (transformedPoints.length === 0) {
+        return item.bounds
+      }
+
+      return getBoundsFromPoints(transformedPoints)
+    },
+    [groupRuntimeTransforms]
+  )
+
+  const getLayerSnapCandidateRects = useCallback(
+    (excludedRuntimeItemId?: string) => {
+      return fillRuntimeItems
+        .filter((item) => item.id !== excludedRuntimeItemId)
+        .map((item) => getRuntimeItemBounds(item))
+    },
+    [fillRuntimeItems, getRuntimeItemBounds]
   )
 
   useEffect(() => {
@@ -420,9 +515,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     return () => clearTimeout(timeoutId)
   }, [
     selectedLayerId,
+    selectedRuntimeItem,
     selectedCanvasNode,
     layerFillStates,
-    fillVisibleLayers,
+    fillRuntimeItems,
+    groupRuntimeTransforms,
     backgroundImage,
     loadedImages,
     activeCustomizationTab,
@@ -433,6 +530,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       if (e.target === e.target.getStage()) {
         setSelectedLayerId(null)
         setSelectedCanvasNode(null)
+        setRotationGuideLine(null)
+        setPositionGuideLines([])
       }
     },
     [setSelectedLayerId]
@@ -440,24 +539,182 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
   const handleTransformStart = useCallback(() => {
     setIsTransforming(true)
+    setPositionGuideLines([])
+    setRotationGuideLine(null)
   }, [])
 
+  const handleTransform = useCallback(
+    (e: Konva.KonvaEventObject<Event>) => {
+      const node = e.target
+      const snappedRotation = getSnappedRotation(node.rotation())
+
+      if (!snappedRotation.snapped) {
+        setRotationGuideLine(null)
+        return
+      }
+
+      node.rotation(snappedRotation.rotation)
+
+      const rect = node.getClientRect()
+      const centerX = rect.x + rect.width / 2
+      const centerY = rect.y + rect.height / 2
+      const guideLength = Math.max(template.canvasWidth, template.canvasHeight) * renderScale
+
+      setRotationGuideLine(
+        buildRotationGuideLine(
+          centerX,
+          centerY,
+          snappedRotation.snapAngle ?? snappedRotation.rotation,
+          guideLength
+        )
+      )
+    },
+    [
+      buildRotationGuideLine,
+      getSnappedRotation,
+      renderScale,
+      template.canvasHeight,
+      template.canvasWidth,
+    ]
+  )
+
   const handleLayerTransformDragStart = useCallback(() => {
+    setPositionGuideLines([])
     setCursor("grabbing")
   }, [])
+
+  const handleLayerTransformDragMove = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => {
+      if (!selectedLayerId || activeCustomizationTab !== "layer") {
+        return
+      }
+
+      if (selectedRuntimeItem?.kind === "group") {
+        const node = e.target
+        const currentTransform = groupRuntimeTransforms[selectedRuntimeItem.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }
+        const groupPivot = {
+          x: selectedRuntimeItem.bounds.x + selectedRuntimeItem.bounds.width / 2,
+          y: selectedRuntimeItem.bounds.y + selectedRuntimeItem.bounds.height / 2,
+        }
+        const groupStageX = offsetX + (groupPivot.x + currentTransform.x) * renderScale
+        const groupStageY = offsetY + (groupPivot.y + currentTransform.y) * renderScale
+        const baseBounds = getRuntimeItemBounds(selectedRuntimeItem)
+
+        const movingRect: RectBounds = {
+          ...baseBounds,
+          x: baseBounds.x + (node.x() - groupStageX) / renderScale,
+          y: baseBounds.y + (node.y() - groupStageY) / renderScale,
+        }
+
+        const { snappedRect, guides } = snapRectPosition({
+          movingRect,
+          candidateRects: getLayerSnapCandidateRects(selectedRuntimeItem.id),
+          canvasRect,
+        })
+
+        const snappedDeltaX = snappedRect.x - baseBounds.x
+        const snappedDeltaY = snappedRect.y - baseBounds.y
+
+        node.x(groupStageX + snappedDeltaX * renderScale)
+        node.y(groupStageY + snappedDeltaY * renderScale)
+        setPositionGuideLines(toStageGuideLines(guides))
+        return
+      }
+
+      const layer = fillVisibleLayers.find((candidate) => candidate.id === selectedLayerId)
+      if (!layer) {
+        return
+      }
+
+      const node = e.target
+      const draftLayer: VectorLayer = {
+        ...layer,
+        x: (node.x() - offsetX) / renderScale,
+        y: (node.y() - offsetY) / renderScale,
+      }
+
+      const movingRect = getBoundsFromPoints(toWorldLayerPoints(draftLayer))
+      const { snappedRect, guides } = snapRectPosition({
+        movingRect,
+        candidateRects: getLayerSnapCandidateRects(layer.id),
+        canvasRect,
+      })
+
+      const deltaX = snappedRect.x - movingRect.x
+      const deltaY = snappedRect.y - movingRect.y
+      if (Math.abs(deltaX) > 0.001 || Math.abs(deltaY) > 0.001) {
+        node.x(node.x() + deltaX * renderScale)
+        node.y(node.y() + deltaY * renderScale)
+      }
+
+      setPositionGuideLines(toStageGuideLines(guides))
+    },
+    [
+      activeCustomizationTab,
+      canvasRect,
+      fillVisibleLayers,
+      getRuntimeItemBounds,
+      getLayerSnapCandidateRects,
+      groupRuntimeTransforms,
+      offsetX,
+      offsetY,
+      renderScale,
+      selectedLayerId,
+      selectedRuntimeItem,
+      snapRectPosition,
+      toStageGuideLines,
+    ]
+  )
 
   const handleLayerTransformDragEnd = useCallback(
     (e: Konva.KonvaEventObject<DragEvent>) => {
       if (!selectedLayerId || activeCustomizationTab !== "layer") return
+
+      if (selectedRuntimeItem?.kind === "group") {
+        const currentTransform = groupRuntimeTransforms[selectedRuntimeItem.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }
+        const groupPivot = {
+          x: selectedRuntimeItem.bounds.x + selectedRuntimeItem.bounds.width / 2,
+          y: selectedRuntimeItem.bounds.y + selectedRuntimeItem.bounds.height / 2,
+        }
+        const groupStageX = offsetX + (groupPivot.x + currentTransform.x) * renderScale
+        const groupStageY = offsetY + (groupPivot.y + currentTransform.y) * renderScale
+        const deltaX = (e.target.x() - groupStageX) / renderScale
+        const deltaY = (e.target.y() - groupStageY) / renderScale
+
+        updateGroupRuntimeTransform(selectedRuntimeItem.id, {
+          x: Math.round((currentTransform.x + deltaX) * 100) / 100,
+          y: Math.round((currentTransform.y + deltaY) * 100) / 100,
+        })
+
+        e.target.x(groupStageX)
+        e.target.y(groupStageY)
+        setPositionGuideLines([])
+        setCursor("grab")
+        return
+      }
+
       updateSelectedLayerFromNode(e.target)
+      setPositionGuideLines([])
       setCursor("grab")
     },
-    [activeCustomizationTab, selectedLayerId, updateSelectedLayerFromNode]
+    [
+      activeCustomizationTab,
+      groupRuntimeTransforms,
+      offsetX,
+      offsetY,
+      renderScale,
+      selectedLayerId,
+      selectedRuntimeItem,
+      updateGroupRuntimeTransform,
+      updateSelectedLayerFromNode,
+    ]
   )
 
   const handleTransformEnd = useCallback(
     (e: Konva.KonvaEventObject<Event>) => {
       setIsTransforming(false)
+      setRotationGuideLine(null)
+      setPositionGuideLines([])
       const node = e.target
       if (!node) return
 
@@ -502,12 +759,72 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         return
       }
 
+      if (selectedLayerId && activeCustomizationTab === "layer" && selectedRuntimeItem?.kind === "group") {
+        const groupPivot = {
+          x: selectedRuntimeItem.bounds.x + selectedRuntimeItem.bounds.width / 2,
+          y: selectedRuntimeItem.bounds.y + selectedRuntimeItem.bounds.height / 2,
+        }
+
+        const nextScaleX = Math.max(0.01, Math.abs(node.scaleX() / renderScale))
+        const nextScaleY = Math.max(0.01, Math.abs(node.scaleY() / renderScale))
+        const nextWorldX = (node.x() - offsetX) / renderScale
+        const nextWorldY = (node.y() - offsetY) / renderScale
+
+        updateGroupRuntimeTransform(selectedLayerId, {
+          x: Math.round((nextWorldX - groupPivot.x) * 100) / 100,
+          y: Math.round((nextWorldY - groupPivot.y) * 100) / 100,
+          rotation: Math.round(node.rotation() * 100) / 100,
+          scaleX: Math.round(nextScaleX * 100) / 100,
+          scaleY: Math.round(nextScaleY * 100) / 100,
+        })
+
+        return
+      }
+
       if (selectedLayerId && activeCustomizationTab === "layer") {
         updateSelectedLayerFromNode(node)
         return
       }
 
-      if (selectedLayerId && activeCustomizationTab === "image") {
+      if (selectedLayerId && activeCustomizationTab === "image" && selectedRuntimeItem?.kind === "group") {
+        const fillState = layerFillStates.find((state) => state.layerId === selectedLayerId)
+        if (!fillState) {
+          return
+        }
+
+        const runtimeTransform = groupRuntimeTransforms[selectedLayerId] ?? { ...DEFAULT_IMAGE_TRANSFORM }
+        const groupPivot = {
+          x: selectedRuntimeItem.bounds.x + selectedRuntimeItem.bounds.width / 2,
+          y: selectedRuntimeItem.bounds.y + selectedRuntimeItem.bounds.height / 2,
+        }
+
+        const nextWorldX = (node.x() - offsetX) / renderScale
+        const nextWorldY = (node.y() - offsetY) / renderScale
+        const nextWorldScaleX = Math.max(0.01, Math.abs(node.scaleX() / renderScale))
+        const nextWorldScaleY = Math.max(0.01, Math.abs(node.scaleY() / renderScale))
+        const nextWorldRotation = node.rotation()
+
+        const baseAnchor = applyInverseRuntimeTransformToPoint(
+          { x: nextWorldX, y: nextWorldY },
+          groupPivot,
+          runtimeTransform
+        )
+
+        updateLayerFillState(selectedLayerId, {
+          imageTransform: {
+            ...fillState.imageTransform,
+            x: Math.round((baseAnchor.x - selectedRuntimeItem.bounds.x) * 100) / 100,
+            y: Math.round((baseAnchor.y - selectedRuntimeItem.bounds.y) * 100) / 100,
+            scaleX: Math.round((nextWorldScaleX / Math.max(0.0001, Math.abs(runtimeTransform.scaleX))) * 100) / 100,
+            scaleY: Math.round((nextWorldScaleY / Math.max(0.0001, Math.abs(runtimeTransform.scaleY))) * 100) / 100,
+            rotation: Math.round((nextWorldRotation - runtimeTransform.rotation) * 100) / 100,
+          },
+        })
+
+        return
+      }
+
+      if (selectedLayerId && activeCustomizationTab === "image" && selectedRuntimeItem?.kind === "layer") {
         const renderedScaleX = node.scaleX()
         const renderedScaleY = node.scaleY()
         const renderedX = node.x()
@@ -546,9 +863,15 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     },
     [
       selectedLayerId,
+      selectedRuntimeItem,
       selectedCanvasNode,
+      offsetX,
+      offsetY,
       renderScale,
+      layerFillStates,
       updateLayerFillState,
+      groupRuntimeTransforms,
+      updateGroupRuntimeTransform,
       canvasFillState,
       setCanvasFillState,
       activeCustomizationTab,
@@ -760,7 +1083,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                     setSelectedLayerId(null)
                     setSelectedCanvasNode("background")
                   }}
-                  onDragStart={() => setCursor("grabbing")}
+                  onDragStart={() => {
+                    setPositionGuideLines([])
+                    setRotationGuideLine(null)
+                    setCursor("grabbing")
+                  }}
                   onDragEnd={(e) => {
                     const node = e.target
                     const unscaledX = node.x() / renderScale
@@ -775,6 +1102,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                       },
                     })
 
+                    setPositionGuideLines([])
                     setCursor("grab")
                   }}
                   stroke={selectedCanvasNode === "background" ? "#22c55e" : undefined}
@@ -794,76 +1122,305 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
               listening={false}
             />
 
-            {selectedLayerId && !hiddenLayerIdSet.has(selectedLayerId) && activeCustomizationTab === "image" && (
-              <>
-                {layerFillStates
-                  .filter((fillState) => fillState.layerId === selectedLayerId)
-                  .map((fillState) => {
-                    const layer = fillVisibleLayers.find((candidate) => candidate.id === fillState.layerId)
-                    if (!layer || !layerFillStates.find((state) => state.layerId === layer.id)?.imageUrl) {
-                      return null
-                    }
+            {positionGuideLines.map((points, index) => (
+              <Line
+                key={`fill-position-guide-${index}`}
+                points={points}
+                stroke="rgba(14, 165, 233, 0.9)"
+                strokeWidth={1.2}
+                dash={[6, 6]}
+                listening={false}
+                perfectDrawEnabled={false}
+              />
+            ))}
 
-                    const layerX = offsetX + layer.x * renderScale
-                    const layerY = offsetY + layer.y * renderScale
-                    const imgX = layerX + fillState.imageTransform.x * renderScale
-                    const imgY = layerY + fillState.imageTransform.y * renderScale
-
-                    return (
-                      <Rect
-                        key={`hitbox-${layer.id}`}
-                        name="fill-drag-hitbox"
-                        x={imgX - 50}
-                        y={imgY - 50}
-                        width={(loadedImages.get(layer.id)?.width ?? 100) * fillState.imageTransform.scaleX * renderScale + 100}
-                        height={(loadedImages.get(layer.id)?.height ?? 100) * fillState.imageTransform.scaleY * renderScale + 100}
-                        fill="transparent"
-                        draggable
-                        onMouseEnter={() => setCursor("grab")}
-                        onMouseLeave={() => setCursor("default")}
-                        onDragStart={() => setCursor("grabbing")}
-                        onDragMove={(e) => {
-                          const node = e.target
-                          updateLayerFillState(layer.id, {
-                            imageTransform: {
-                              ...fillState.imageTransform,
-                              x: (node.x() - layerX + 50) / renderScale,
-                              y: (node.y() - layerY + 50) / renderScale,
-                            },
-                          })
-                        }}
-                        onDragEnd={(e) => {
-                          const node = e.target
-                          updateLayerFillState(layer.id, {
-                            imageTransform: {
-                              ...fillState.imageTransform,
-                              x: Math.round(((node.x() - layerX + 50) / renderScale) * 100) / 100,
-                              y: Math.round(((node.y() - layerY + 50) / renderScale) * 100) / 100,
-                            },
-                          })
-                          setCursor("grab")
-                        }}
-                        listening
-                        perfectDrawEnabled={false}
-                      />
-                    )
-                  })}
-              </>
+            {rotationGuideLine && (
+              <Line
+                key="fill-rotation-guide"
+                points={rotationGuideLine}
+                stroke="rgba(14, 165, 233, 0.9)"
+                strokeWidth={1.5}
+                dash={[10, 6]}
+                listening={false}
+                perfectDrawEnabled={false}
+              />
             )}
 
-            {fillVisibleLayers.map((layer) => {
-              const fillState = layerFillStates.find((lf) => lf.layerId === layer.id)
-              const loadedImg = loadedImages.get(layer.id)
+            {selectedRuntimeItem && activeCustomizationTab === "image" && (() => {
+              const fillState = layerFillStates.find((state) => state.layerId === selectedRuntimeItem.id)
+              if (!fillState?.imageUrl) {
+                return null
+              }
+
+              if (selectedRuntimeItem.kind === "layer") {
+                const layer = selectedRuntimeItem.layer
+                const layerX = offsetX + layer.x * renderScale
+                const layerY = offsetY + layer.y * renderScale
+                const imgX = layerX + fillState.imageTransform.x * renderScale
+                const imgY = layerY + fillState.imageTransform.y * renderScale
+                const imageWidth = (loadedImages.get(layer.id)?.width ?? 100) * fillState.imageTransform.scaleX
+                const imageHeight = (loadedImages.get(layer.id)?.height ?? 100) * fillState.imageTransform.scaleY
+
+                return (
+                  <Rect
+                    key={`hitbox-${layer.id}`}
+                    name="fill-drag-hitbox"
+                    x={imgX - IMAGE_HITBOX_PADDING}
+                    y={imgY - IMAGE_HITBOX_PADDING}
+                    width={imageWidth * renderScale + IMAGE_HITBOX_PADDING * 2}
+                    height={imageHeight * renderScale + IMAGE_HITBOX_PADDING * 2}
+                    fill="transparent"
+                    draggable
+                    onMouseEnter={() => setCursor("grab")}
+                    onMouseLeave={() => setCursor("default")}
+                    onDragStart={() => {
+                      setPositionGuideLines([])
+                      setRotationGuideLine(null)
+                      setCursor("grabbing")
+                    }}
+                    onDragMove={(e) => {
+                      const node = e.target
+                      const nextTransformX = (node.x() - layerX + IMAGE_HITBOX_PADDING) / renderScale
+                      const nextTransformY = (node.y() - layerY + IMAGE_HITBOX_PADDING) / renderScale
+
+                      const movingRect: RectBounds = {
+                        x: layer.x + nextTransformX,
+                        y: layer.y + nextTransformY,
+                        width: imageWidth,
+                        height: imageHeight,
+                      }
+
+                      const { snappedRect, guides } = snapRectPosition({
+                        movingRect,
+                        candidateRects: getLayerSnapCandidateRects(layer.id),
+                        canvasRect,
+                      })
+
+                      const snappedTransformX = snappedRect.x - layer.x
+                      const snappedTransformY = snappedRect.y - layer.y
+
+                      if (
+                        Math.abs(snappedTransformX - nextTransformX) > 0.001 ||
+                        Math.abs(snappedTransformY - nextTransformY) > 0.001
+                      ) {
+                        node.x(layerX + snappedTransformX * renderScale - IMAGE_HITBOX_PADDING)
+                        node.y(layerY + snappedTransformY * renderScale - IMAGE_HITBOX_PADDING)
+                      }
+
+                      updateLayerFillState(layer.id, {
+                        imageTransform: {
+                          ...fillState.imageTransform,
+                          x: snappedTransformX,
+                          y: snappedTransformY,
+                        },
+                      })
+
+                      setPositionGuideLines(toStageGuideLines(guides))
+                    }}
+                    onDragEnd={(e) => {
+                      const node = e.target
+                      const nextTransformX = (node.x() - layerX + IMAGE_HITBOX_PADDING) / renderScale
+                      const nextTransformY = (node.y() - layerY + IMAGE_HITBOX_PADDING) / renderScale
+
+                      const movingRect: RectBounds = {
+                        x: layer.x + nextTransformX,
+                        y: layer.y + nextTransformY,
+                        width: imageWidth,
+                        height: imageHeight,
+                      }
+
+                      const { snappedRect } = snapRectPosition({
+                        movingRect,
+                        candidateRects: getLayerSnapCandidateRects(layer.id),
+                        canvasRect,
+                      })
+
+                      const snappedTransformX = snappedRect.x - layer.x
+                      const snappedTransformY = snappedRect.y - layer.y
+
+                      node.x(layerX + snappedTransformX * renderScale - IMAGE_HITBOX_PADDING)
+                      node.y(layerY + snappedTransformY * renderScale - IMAGE_HITBOX_PADDING)
+
+                      updateLayerFillState(layer.id, {
+                        imageTransform: {
+                          ...fillState.imageTransform,
+                          x: Math.round(snappedTransformX * 100) / 100,
+                          y: Math.round(snappedTransformY * 100) / 100,
+                        },
+                      })
+                      setPositionGuideLines([])
+                      setCursor("grab")
+                    }}
+                    listening
+                    perfectDrawEnabled={false}
+                  />
+                )
+              }
+
+              const groupRuntimeTransform =
+                groupRuntimeTransforms[selectedRuntimeItem.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }
+              const groupPivot = {
+                x: selectedRuntimeItem.bounds.x + selectedRuntimeItem.bounds.width / 2,
+                y: selectedRuntimeItem.bounds.y + selectedRuntimeItem.bounds.height / 2,
+              }
+              const imageAnchor = {
+                x: selectedRuntimeItem.bounds.x + fillState.imageTransform.x,
+                y: selectedRuntimeItem.bounds.y + fillState.imageTransform.y,
+              }
+              const transformedAnchor = applyRuntimeTransformToPoint(
+                imageAnchor,
+                groupPivot,
+                groupRuntimeTransform
+              )
+              const effectiveScaleX = fillState.imageTransform.scaleX * groupRuntimeTransform.scaleX
+              const effectiveScaleY = fillState.imageTransform.scaleY * groupRuntimeTransform.scaleY
+              const imageWidth = (loadedImages.get(selectedRuntimeItem.id)?.width ?? 100) * Math.max(0.01, Math.abs(effectiveScaleX))
+              const imageHeight = (loadedImages.get(selectedRuntimeItem.id)?.height ?? 100) * Math.max(0.01, Math.abs(effectiveScaleY))
+              const imageStageX = offsetX + transformedAnchor.x * renderScale
+              const imageStageY = offsetY + transformedAnchor.y * renderScale
+
+              return (
+                <Rect
+                  key={`hitbox-${selectedRuntimeItem.id}`}
+                  name="fill-drag-hitbox"
+                  x={imageStageX - IMAGE_HITBOX_PADDING}
+                  y={imageStageY - IMAGE_HITBOX_PADDING}
+                  width={imageWidth * renderScale + IMAGE_HITBOX_PADDING * 2}
+                  height={imageHeight * renderScale + IMAGE_HITBOX_PADDING * 2}
+                  fill="transparent"
+                  draggable
+                  onMouseEnter={() => setCursor("grab")}
+                  onMouseLeave={() => setCursor("default")}
+                  onDragStart={() => {
+                    setPositionGuideLines([])
+                    setRotationGuideLine(null)
+                    setCursor("grabbing")
+                  }}
+                  onDragMove={(e) => {
+                    const node = e.target
+                    const nextWorldX = (node.x() + IMAGE_HITBOX_PADDING - offsetX) / renderScale
+                    const nextWorldY = (node.y() + IMAGE_HITBOX_PADDING - offsetY) / renderScale
+
+                    const movingRect: RectBounds = {
+                      x: nextWorldX,
+                      y: nextWorldY,
+                      width: imageWidth,
+                      height: imageHeight,
+                    }
+
+                    const { snappedRect, guides } = snapRectPosition({
+                      movingRect,
+                      candidateRects: getLayerSnapCandidateRects(selectedRuntimeItem.id),
+                      canvasRect,
+                    })
+
+                    if (
+                      Math.abs(snappedRect.x - nextWorldX) > 0.001 ||
+                      Math.abs(snappedRect.y - nextWorldY) > 0.001
+                    ) {
+                      node.x(offsetX + snappedRect.x * renderScale - IMAGE_HITBOX_PADDING)
+                      node.y(offsetY + snappedRect.y * renderScale - IMAGE_HITBOX_PADDING)
+                    }
+
+                    const baseAnchor = applyInverseRuntimeTransformToPoint(
+                      { x: snappedRect.x, y: snappedRect.y },
+                      groupPivot,
+                      groupRuntimeTransform
+                    )
+
+                    updateLayerFillState(selectedRuntimeItem.id, {
+                      imageTransform: {
+                        ...fillState.imageTransform,
+                        x: baseAnchor.x - selectedRuntimeItem.bounds.x,
+                        y: baseAnchor.y - selectedRuntimeItem.bounds.y,
+                      },
+                    })
+
+                    setPositionGuideLines(toStageGuideLines(guides))
+                  }}
+                  onDragEnd={(e) => {
+                    const node = e.target
+                    const nextWorldX = (node.x() + IMAGE_HITBOX_PADDING - offsetX) / renderScale
+                    const nextWorldY = (node.y() + IMAGE_HITBOX_PADDING - offsetY) / renderScale
+
+                    const movingRect: RectBounds = {
+                      x: nextWorldX,
+                      y: nextWorldY,
+                      width: imageWidth,
+                      height: imageHeight,
+                    }
+
+                    const { snappedRect } = snapRectPosition({
+                      movingRect,
+                      candidateRects: getLayerSnapCandidateRects(selectedRuntimeItem.id),
+                      canvasRect,
+                    })
+
+                    node.x(offsetX + snappedRect.x * renderScale - IMAGE_HITBOX_PADDING)
+                    node.y(offsetY + snappedRect.y * renderScale - IMAGE_HITBOX_PADDING)
+
+                    const baseAnchor = applyInverseRuntimeTransformToPoint(
+                      { x: snappedRect.x, y: snappedRect.y },
+                      groupPivot,
+                      groupRuntimeTransform
+                    )
+
+                    updateLayerFillState(selectedRuntimeItem.id, {
+                      imageTransform: {
+                        ...fillState.imageTransform,
+                        x: Math.round((baseAnchor.x - selectedRuntimeItem.bounds.x) * 100) / 100,
+                        y: Math.round((baseAnchor.y - selectedRuntimeItem.bounds.y) * 100) / 100,
+                      },
+                    })
+
+                    setPositionGuideLines([])
+                    setCursor("grab")
+                  }}
+                  listening
+                  perfectDrawEnabled={false}
+                />
+              )
+            })()}
+
+            {fillRuntimeItems.map((item) => {
+              const fillState = layerFillStates.find((state) => state.layerId === item.id)
+              const loadedImg = loadedImages.get(item.id)
               const containerHighlightMode = resolveLayerContainerHighlightMode(
-                selectedLayerId === layer.id,
+                selectedLayerId === item.id,
                 Boolean(fillState?.imageUrl),
                 activeCustomizationTab
               )
 
+              if (item.kind === "group") {
+                return (
+                  <FilledGroupShape
+                    key={item.id}
+                    item={item}
+                    fillState={fillState}
+                    canvasFillState={canvasFillState}
+                    loadedImg={loadedImg?.complete ? loadedImg : undefined}
+                    runtimeTransform={groupRuntimeTransforms[item.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }}
+                    scale={renderScale}
+                    offsetX={offsetX}
+                    offsetY={offsetY}
+                    isSelected={selectedLayerId === item.id}
+                    containerHighlightMode={containerHighlightMode}
+                    isLayerTransformInteractive={selectedLayerId === item.id && activeCustomizationTab === "layer"}
+                    onLayerTransformDragStart={handleLayerTransformDragStart}
+                    onLayerTransformDragMove={handleLayerTransformDragMove}
+                    onLayerTransformDragEnd={handleLayerTransformDragEnd}
+                    onSelect={() => {
+                      setSelectedCanvasNode(null)
+                      setSelectedLayerId(item.id)
+                    }}
+                  />
+                )
+              }
+
               return (
                 <FilledLayerShape
-                  key={layer.id}
-                  layer={layer}
+                  key={item.layer.id}
+                  layer={item.layer}
                   fillState={fillState}
                   canvasFillState={canvasFillState}
                   canvasWidth={template.canvasWidth}
@@ -872,16 +1429,17 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                   scale={renderScale}
                   offsetX={offsetX}
                   offsetY={offsetY}
-                  isSelected={selectedLayerId === layer.id}
+                  isSelected={selectedLayerId === item.layer.id}
                   containerHighlightMode={containerHighlightMode}
                   isLayerTransformInteractive={
-                    selectedLayerId === layer.id && activeCustomizationTab === "layer"
+                    selectedLayerId === item.layer.id && activeCustomizationTab === "layer"
                   }
                   onLayerTransformDragStart={handleLayerTransformDragStart}
+                  onLayerTransformDragMove={handleLayerTransformDragMove}
                   onLayerTransformDragEnd={handleLayerTransformDragEnd}
                   onSelect={() => {
                     setSelectedCanvasNode(null)
-                    setSelectedLayerId(layer.id)
+                    setSelectedLayerId(item.layer.id)
                   }}
                 />
               )
@@ -891,8 +1449,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
               ref={transformerRef}
               rotateEnabled
               keepRatio={!isFreeAspectRatio}
+              rotationSnaps={rotationSnapAngles}
+              rotationSnapTolerance={4}
               enabledAnchors={["top-left", "top-right", "bottom-left", "bottom-right"]}
               onTransformStart={handleTransformStart}
+              onTransform={handleTransform}
               onTransformEnd={handleTransformEnd}
               boundBoxFunc={(oldBox, newBox) => {
                 if (newBox.width < 20 || newBox.height < 20) {
@@ -942,6 +1503,7 @@ function FilledLayerShape({
   containerHighlightMode,
   isLayerTransformInteractive,
   onLayerTransformDragStart,
+  onLayerTransformDragMove,
   onLayerTransformDragEnd,
   onSelect,
 }: {
@@ -958,6 +1520,7 @@ function FilledLayerShape({
   containerHighlightMode: LayerContainerHighlightMode
   isLayerTransformInteractive: boolean
   onLayerTransformDragStart: () => void
+  onLayerTransformDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void
   onLayerTransformDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void
   onSelect: () => void
 }) {
@@ -1133,6 +1696,7 @@ function FilledLayerShape({
           onClick={onSelect}
           onTap={onSelect}
           onDragStart={onLayerTransformDragStart}
+          onDragMove={onLayerTransformDragMove}
           onDragEnd={onLayerTransformDragEnd}
         />
       )}
@@ -1160,6 +1724,243 @@ function FilledLayerShape({
       )}
     </>
   )
+}
+
+function FilledGroupShape({
+  item,
+  fillState,
+  canvasFillState,
+  loadedImg,
+  runtimeTransform,
+  scale,
+  offsetX,
+  offsetY,
+  isSelected,
+  containerHighlightMode,
+  isLayerTransformInteractive,
+  onLayerTransformDragStart,
+  onLayerTransformDragMove,
+  onLayerTransformDragEnd,
+  onSelect,
+}: {
+  item: FillRuntimeGroupItem
+  fillState: ReturnType<typeof useFillingStore.getState>["layerFillStates"][number] | undefined
+  canvasFillState: CanvasFillState
+  loadedImg: HTMLImageElement | undefined
+  runtimeTransform: { x: number; y: number; scaleX: number; scaleY: number; rotation: number }
+  scale: number
+  offsetX: number
+  offsetY: number
+  isSelected: boolean
+  containerHighlightMode: LayerContainerHighlightMode
+  isLayerTransformInteractive: boolean
+  onLayerTransformDragStart: () => void
+  onLayerTransformDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void
+  onLayerTransformDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void
+  onSelect: () => void
+}) {
+  const effectiveBorderWidth = canvasFillState.borderOverrideEnabled
+    ? canvasFillState.borderOverrideWidth
+    : (fillState?.borderWidth ?? 0)
+  const effectiveBorderColor = canvasFillState.borderOverrideEnabled
+    ? canvasFillState.borderOverrideColor
+    : (fillState?.borderColor ?? "#000000")
+
+  const transformedPolygons = useMemo(
+    () => applyRuntimeTransformToPolygons(item.polygons, runtimeTransform),
+    [item.polygons, runtimeTransform]
+  )
+
+  const stagePolygons = useMemo(
+    () => transformedPolygons.map((polygon) =>
+      flattenPoints(polygon).map((value, index) =>
+        value * scale + (index % 2 === 0 ? offsetX : offsetY)
+      )
+    ),
+    [offsetX, offsetY, scale, transformedPolygons]
+  )
+
+  const combinedHull = useMemo(
+    () => computeConvexHull(transformedPolygons.flat()),
+    [transformedPolygons]
+  )
+
+  const baseHull = useMemo(
+    () => computeConvexHull(item.polygons.flat()),
+    [item.polygons]
+  )
+
+  const groupPivot = useMemo(
+    () => ({
+      x: item.bounds.x + item.bounds.width / 2,
+      y: item.bounds.y + item.bounds.height / 2,
+    }),
+    [item.bounds]
+  )
+
+  const localHull = useMemo(
+    () => baseHull.map((point) => ({ x: point.x - groupPivot.x, y: point.y - groupPivot.y })),
+    [baseHull, groupPivot.x, groupPivot.y]
+  )
+
+  const localHullFlat = useMemo(
+    () => flattenPoints(localHull),
+    [localHull]
+  )
+
+  const transformNodeX = offsetX + (groupPivot.x + runtimeTransform.x) * scale
+  const transformNodeY = offsetY + (groupPivot.y + runtimeTransform.y) * scale
+  const transformNodeScaleX = runtimeTransform.scaleX * scale
+  const transformNodeScaleY = runtimeTransform.scaleY * scale
+
+  const stageHull = useMemo(
+    () => flattenPoints(combinedHull).map((value, index) =>
+      value * scale + (index % 2 === 0 ? offsetX : offsetY)
+    ),
+    [combinedHull, offsetX, offsetY, scale]
+  )
+
+  const imageRenderState = useMemo(() => {
+    if (!fillState) {
+      return null
+    }
+
+    const imageAnchor = {
+      x: item.bounds.x + fillState.imageTransform.x,
+      y: item.bounds.y + fillState.imageTransform.y,
+    }
+    const transformedAnchor = applyRuntimeTransformToPoint(imageAnchor, groupPivot, runtimeTransform)
+
+    return {
+      x: transformedAnchor.x,
+      y: transformedAnchor.y,
+      scaleX: fillState.imageTransform.scaleX * runtimeTransform.scaleX,
+      scaleY: fillState.imageTransform.scaleY * runtimeTransform.scaleY,
+      rotation: fillState.imageTransform.rotation + runtimeTransform.rotation,
+    }
+  }, [fillState, groupPivot, item.bounds, runtimeTransform])
+
+  return (
+    <>
+      {stagePolygons.map((stagePolygon, index) => (
+        <Line
+          key={`fill-group-shape-${item.id}-${index}`}
+          points={stagePolygon}
+          closed
+          fill={loadedImg && fillState?.imageUrl ? "rgba(148, 163, 184, 0.05)" : "rgba(148, 163, 184, 0.18)"}
+          stroke="rgba(148, 163, 184, 0.35)"
+          strokeWidth={1}
+          onClick={onSelect}
+          onTap={onSelect}
+          perfectDrawEnabled={false}
+        />
+      ))}
+
+      {loadedImg && fillState?.imageUrl && imageRenderState && stagePolygons.map((stagePolygon, index) => (
+        <Group
+          key={`fill-group-clip-${item.id}-${index}`}
+          clipFunc={(ctx: any) => {
+            ctx.beginPath()
+            for (let pointIndex = 0; pointIndex < stagePolygon.length; pointIndex += 2) {
+              const x = stagePolygon[pointIndex]
+              const y = stagePolygon[pointIndex + 1]
+              if (pointIndex === 0) {
+                ctx.moveTo(x, y)
+              } else {
+                ctx.lineTo(x, y)
+              }
+            }
+            ctx.closePath()
+          }}
+        >
+          <KonvaImage
+            id={index === 0 ? `fill-img-${item.id}` : undefined}
+            image={loadedImg}
+            x={offsetX + imageRenderState.x * scale}
+            y={offsetY + imageRenderState.y * scale}
+            scaleX={imageRenderState.scaleX * scale}
+            scaleY={imageRenderState.scaleY * scale}
+            rotation={imageRenderState.rotation}
+            stroke={index === 0 && isSelected ? "#3b82f6" : undefined}
+            strokeWidth={index === 0 && isSelected ? 2 / scale : 0}
+            onClick={onSelect}
+            onTap={onSelect}
+          />
+        </Group>
+      ))}
+
+      {containerHighlightMode !== "none" && stageHull.length >= 6 && (
+        <Line
+          points={stageHull}
+          closed
+          stroke={containerHighlightMode === "missing" ? "#f59e0b" : "#3b82f6"}
+          strokeWidth={2}
+          dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
+          lineJoin="round"
+          listening={false}
+        />
+      )}
+
+      {isLayerTransformInteractive && localHullFlat.length >= 6 && (
+        <Line
+          id={`fill-layer-transform-${item.id}`}
+          name="fill-layer-transform-node"
+          x={transformNodeX}
+          y={transformNodeY}
+          rotation={runtimeTransform.rotation}
+          scaleX={transformNodeScaleX}
+          scaleY={transformNodeScaleY}
+          points={localHullFlat}
+          closed
+          fill="rgba(59, 130, 246, 0.001)"
+          stroke="rgba(59, 130, 246, 0.001)"
+          strokeWidth={8}
+          draggable
+          onClick={onSelect}
+          onTap={onSelect}
+          onDragStart={onLayerTransformDragStart}
+          onDragMove={onLayerTransformDragMove}
+          onDragEnd={onLayerTransformDragEnd}
+        />
+      )}
+
+      {effectiveBorderWidth > 0 && stagePolygons.map((stagePolygon, index) => (
+        <Line
+          key={`fill-group-border-${item.id}-${index}`}
+          points={stagePolygon}
+          closed
+          stroke={effectiveBorderColor}
+          strokeWidth={effectiveBorderWidth * scale}
+          lineJoin="round"
+          onClick={onSelect}
+          onTap={onSelect}
+        />
+      ))}
+    </>
+  )
+}
+
+function applyInverseRuntimeTransformToPoint(
+  point: { x: number; y: number },
+  pivot: { x: number; y: number },
+  transform: { x: number; y: number; scaleX: number; scaleY: number; rotation: number }
+): { x: number; y: number } {
+  const safeScaleX = Math.max(0.0001, Math.abs(transform.scaleX))
+  const safeScaleY = Math.max(0.0001, Math.abs(transform.scaleY))
+  const radian = (transform.rotation * Math.PI) / 180
+  const cos = Math.cos(radian)
+  const sin = Math.sin(radian)
+
+  const dx = point.x - pivot.x - transform.x
+  const dy = point.y - pivot.y - transform.y
+
+  const unrotatedX = dx * cos + dy * sin
+  const unrotatedY = -dx * sin + dy * cos
+
+  return {
+    x: pivot.x + unrotatedX / safeScaleX,
+    y: pivot.y + unrotatedY / safeScaleY,
+  }
 }
 
 interface ParsedLinearGradient {

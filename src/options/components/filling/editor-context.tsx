@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
-import type { VectorLayer } from "@/features/filling/types"
+import type { LayerGroup, VectorLayer } from "@/features/filling/types"
 import { generateShapePoints } from "@/features/filling/shape-generators"
 
 interface EditorContextValue {
@@ -8,6 +8,8 @@ interface EditorContextValue {
   selectedLayerId: string | null
   setSelectedLayerId: (id: string | null) => void
   updateLayer: (id: string, partial: Partial<VectorLayer>) => void
+  editorGroups: LayerGroup[]
+  setEditorGroups: (groups: LayerGroup[] | ((prev: LayerGroup[]) => LayerGroup[])) => void
   canvasWidth: number
   canvasHeight: number
   setCanvasSize: (width: number, height: number) => void
@@ -17,6 +19,7 @@ const EditorContext = createContext<EditorContextValue | null>(null)
 
 export function EditorProvider({ children }: { children: ReactNode }) {
   const [editorLayers, setEditorLayers] = useState<VectorLayer[]>([])
+  const [editorGroups, setEditorGroups] = useState<LayerGroup[]>([])
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null)
   const [canvasWidth, setCanvasWidth] = useState(1920)
   const [canvasHeight, setCanvasHeight] = useState(1080)
@@ -60,6 +63,8 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         selectedLayerId,
         setSelectedLayerId,
         updateLayer,
+        editorGroups,
+        setEditorGroups,
         canvasWidth,
         canvasHeight,
         setCanvasSize,
@@ -76,6 +81,8 @@ const NOOP_CONTEXT: EditorContextValue = {
   selectedLayerId: null,
   setSelectedLayerId: () => {},
   updateLayer: () => {},
+  editorGroups: [],
+  setEditorGroups: () => {},
   canvasWidth: 1920,
   canvasHeight: 1080,
   setCanvasSize: () => {},

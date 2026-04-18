@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react"
-import { ImageOff } from "lucide-react"
+import { ImageOff, Layers } from "lucide-react"
 
-import type { LayerFillState, VectorLayer } from "@/features/filling/types"
+import type { LayerFillState } from "@/features/filling/types"
+import type { FillRuntimeItem } from "@/features/filling/fill-runtime-items"
 import { SHAPE_LABELS } from "@/features/filling/shape-generators"
 import { useFillingStore } from "@/options/stores/filling-store"
 
 interface FillLayerCardProps {
-  layer: VectorLayer
+  item: FillRuntimeItem
   fillState: LayerFillState | undefined
 }
 
@@ -53,13 +54,13 @@ async function generateLayerPreview(imageUrl: string): Promise<string | null> {
   }
 }
 
-export function FillLayerCard({ layer, fillState }: FillLayerCardProps) {
+export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
   const selectedLayerId = useFillingStore((s) => s.selectedLayerId)
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId)
 
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
 
-  const selected = selectedLayerId === layer.id
+  const selected = selectedLayerId === item.id
   const hasImage = Boolean(fillState?.imageUrl)
 
   useEffect(() => {
@@ -85,11 +86,16 @@ export function FillLayerCard({ layer, fillState }: FillLayerCardProps) {
   }, [fillState?.imageUrl])
 
   const sublabel = useMemo(() => {
+    const baseTypeLabel =
+      item.kind === "group"
+        ? item.typeLabel
+        : SHAPE_LABELS[item.layer.shapeType]
+
     if (hasImage && fillState) {
-      return `Filled, ${Math.round(layer.width)}x${Math.round(layer.height)}`
+      return `Filled, ${baseTypeLabel}`
     }
-    return `Empty, ${SHAPE_LABELS[layer.shapeType]}`
-  }, [hasImage, fillState, layer.height, layer.shapeType, layer.width])
+    return `Empty, ${baseTypeLabel}`
+  }, [fillState, hasImage, item])
 
   return (
     <div
@@ -103,16 +109,16 @@ export function FillLayerCard({ layer, fillState }: FillLayerCardProps) {
             : "border-amber-300 bg-amber-50/40 ring-1 ring-amber-200/70"
           : "border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30",
       ].join(" ")}
-      onClick={() => setSelectedLayerId(layer.id)}
+      onClick={() => setSelectedLayerId(item.id)}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
-          setSelectedLayerId(layer.id)
+          setSelectedLayerId(item.id)
           return
         }
 
         if (e.key === " ") {
           e.preventDefault()
-          setSelectedLayerId(layer.id)
+          setSelectedLayerId(item.id)
         }
       }}
     >
@@ -121,19 +127,20 @@ export function FillLayerCard({ layer, fillState }: FillLayerCardProps) {
           {fillState?.imageUrl ? (
             <img
               src={previewImageUrl ?? fillState.imageUrl}
-              alt={`${layer.name || "Layer"} preview`}
+              alt={`${item.name || "Layer"} preview`}
               className="w-full h-full object-cover"
             />
           ) : (
             <div className="flex items-center justify-center w-full h-full text-slate-400 dark:text-slate-500">
-              <ImageOff size={14} />
+              {item.kind === "group" ? <Layers size={14} /> : <ImageOff size={14} />}
             </div>
           )}
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[12px] font-bold text-slate-800 dark:text-slate-100">
-            {layer.name || `Layer ${layer.id.slice(-5)}`}
+          <div className="truncate text-[12px] font-bold text-slate-800 dark:text-slate-100 inline-flex items-center gap-1.5">
+            {item.kind === "group" && <Layers size={12} className="text-amber-500 shrink-0" />}
+            <span className="truncate">{item.name || `Layer ${item.id.slice(-5)}`}</span>
           </div>
           <div className="truncate text-[10px] text-slate-400 mt-0.5">{sublabel}</div>
         </div>
