@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { Edit, MoreVertical, Pin, PinOff, Trash2 } from "lucide-react"
+import { Edit, Pin, PinOff, Trash2 } from "lucide-react"
 
 import type { FillingTemplate } from "@/features/filling/types"
 import { templateStorage } from "@/features/filling/template-storage"
@@ -15,8 +15,6 @@ export function TemplateCard({ template, onRefresh }: TemplateCardProps) {
   const setActiveTemplateId = useFillingStore((s) => s.setActiveTemplateId)
   const setEditingTemplateId = useFillingStore((s) => s.setEditingTemplateId)
   const initFillStatesForTemplate = useFillingStore((s) => s.initFillStatesForTemplate)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -41,22 +39,23 @@ export function TemplateCard({ template, onRefresh }: TemplateCardProps) {
   const handleEdit = useCallback(() => {
     setEditingTemplateId(template.id)
     setFillingStep("create_manual")
-    setMenuOpen(false)
   }, [template.id, setEditingTemplateId, setFillingStep])
 
   const handleTogglePin = useCallback(async () => {
     await templateStorage.togglePin(template.id)
     await onRefresh()
-    setMenuOpen(false)
   }, [template.id, onRefresh])
 
   const handleDelete = useCallback(async () => {
+    const confirmed = window.confirm(`Delete template "${template.name}"? This action cannot be undone.`)
+    if (!confirmed) {
+      return
+    }
+
     await templateStorage.remove(template.id)
     useFillingStore.getState().removeTemplate(template.id)
     await onRefresh()
-    setConfirmDelete(false)
-    setMenuOpen(false)
-  }, [template.id, onRefresh])
+  }, [template.id, template.name, onRefresh])
 
   const usageText = template.usageCount === 1 ? "1 export" : `${template.usageCount} exports`
   const lastUsedText = template.lastUsedAt
@@ -100,72 +99,58 @@ export function TemplateCard({ template, onRefresh }: TemplateCardProps) {
         </div>
       </button>
 
-      {/* Action menu */}
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen) }}
-          className="p-1.5 rounded-md bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-        >
-          <MoreVertical size={14} className="text-slate-600 dark:text-slate-300" />
-        </button>
-      </div>
+      <div className="absolute top-2 right-2 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all">
+        <div className="flex items-center gap-1 rounded-md bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-sm px-1 py-1 backdrop-blur-sm">
+          <ActionIconButton
+            title="Edit template"
+            onClick={handleEdit}
+            icon={<Edit size={13} />}
+          />
 
-      {menuOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => { setMenuOpen(false); setConfirmDelete(false) }} />
-          <div className="absolute top-10 right-2 z-50 w-40 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg py-1">
-            <MenuButton icon={<Edit size={13} />} label="Edit template" onClick={handleEdit} />
-            <MenuButton
-              icon={template.isPinned ? <PinOff size={13} /> : <Pin size={13} />}
-              label={template.isPinned ? "Unpin" : "Pin to top"}
-              onClick={handleTogglePin}
-            />
-            {!confirmDelete ? (
-              <MenuButton
-                icon={<Trash2 size={13} />}
-                label="Delete"
-                onClick={() => setConfirmDelete(true)}
-                destructive
-              />
-            ) : (
-              <MenuButton
-                icon={<Trash2 size={13} />}
-                label="Confirm delete?"
-                onClick={handleDelete}
-                destructive
-              />
-            )}
-          </div>
-        </>
-      )}
+          <ActionIconButton
+            title={template.isPinned ? "Unpin template" : "Pin template"}
+            onClick={handleTogglePin}
+            icon={template.isPinned ? <PinOff size={13} /> : <Pin size={13} />}
+          />
+
+          <ActionIconButton
+            title="Delete template"
+            onClick={handleDelete}
+            icon={<Trash2 size={13} />}
+            destructive
+          />
+        </div>
+      </div>
     </div>
   )
 }
 
-function MenuButton({
+function ActionIconButton({
   icon,
-  label,
+  title,
   onClick,
   destructive = false,
 }: {
   icon: React.ReactNode
-  label: string
+  title: string
   onClick: () => void
   destructive?: boolean
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors ${
+      title={title}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick()
+      }}
+      className={`p-1.5 rounded transition-colors ${
         destructive
-          ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+          ? "text-red-600 dark:text-red-400 hover:bg-red-50/90 dark:hover:bg-red-500/20"
           : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
       }`}
     >
       {icon}
-      {label}
     </button>
   )
 }

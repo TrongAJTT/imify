@@ -167,7 +167,7 @@ export function LayerListPanel({
             items={layers.map((layer) => layer.id)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="space-y-0.5 max-h-[320px] overflow-y-auto">
+            <div className="space-y-0.5 h-full overflow-y-auto pr-1">
               {renderSegments.map((segment, segmentIndex) => {
                 if (segment.type === "single") {
                   const layer = segment.layers[0]

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Stage, Layer, Line, Rect, Group, Image as KonvaImage, Transformer } from "react-konva"
+import { Stage, Layer, Line, Rect, Group, Text, Image as KonvaImage, Transformer } from "react-konva"
 import type Konva from "konva"
 import { Download, Loader2 } from "lucide-react"
 
+import { ToastContainer } from "@/core/components/toast-container"
+import { useConversionToasts } from "@/core/hooks/use-toast"
+import type { ConversionProgressPayload } from "@/core/types"
 import {
   buildFillRuntimeItems,
   type FillRuntimeGroupItem,
@@ -46,6 +49,24 @@ const PREVIEW_MAX_ZOOM = 800
 const PREVIEW_ZOOM_STEP = 10
 const IMAGE_HITBOX_PADDING = 50
 
+function safeRevokeObjectUrl(value: string | null | undefined) {
+  if (!value || !value.startsWith("blob:")) {
+    return
+  }
+
+  URL.revokeObjectURL(value)
+}
+
+function resolveToastTargetFormat(
+  exportFormat: ReturnType<typeof useFillingStore.getState>["exportFormat"]
+): ConversionProgressPayload["targetFormat"] {
+  if (exportFormat === "psd") {
+    return "png"
+  }
+
+  return exportFormat
+}
+
 interface FillWorkspaceProps {
   template: FillingTemplate
 }
@@ -54,6 +75,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const transformerRef = useRef<Konva.Transformer>(null)
+  const emptyImageUploadInputRef = useRef<HTMLInputElement>(null)
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 })
   const [previewContainerHeight, setPreviewContainerHeight] = useState(520)
   const [previewZoom, setPreviewZoom] = useState(100)
@@ -88,6 +110,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const [cursor, setCursor] = useState("default")
   const [rotationGuideLine, setRotationGuideLine] = useState<number[] | null>(null)
   const [positionGuideLines, setPositionGuideLines] = useState<number[][]>([])
+  const [exportToastPayload, setExportToastPayload] = useState<ConversionProgressPayload | null>(null)
+  const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const {
     rotationSnapAngles,
     getSnappedRotation,
@@ -98,6 +122,34 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     rotationTolerance: 4,
     positionTolerance: 8,
   })
+  const conversionToasts = useConversionToasts([exportToastPayload])
+
+  const clearExportToastHideTimer = useCallback(() => {
+    if (!exportToastHideTimerRef.current) {
+      return
+    }
+
+    clearTimeout(exportToastHideTimerRef.current)
+    exportToastHideTimerRef.current = null
+  }, [])
+
+  const pushExportToast = useCallback((payload: ConversionProgressPayload) => {
+    clearExportToastHideTimer()
+    setExportToastPayload(payload)
+  }, [clearExportToastHideTimer])
+
+  const scheduleExportToastHide = useCallback((toastId: string, delayMs: number) => {
+    clearExportToastHideTimer()
+    exportToastHideTimerRef.current = setTimeout(() => {
+      setExportToastPayload((current) => (current?.id === toastId ? null : current))
+      exportToastHideTimerRef.current = null
+    }, delayMs)
+  }, [clearExportToastHideTimer])
+
+  const handleRemoveExportToast = useCallback((toastId: string) => {
+    clearExportToastHideTimer()
+    setExportToastPayload((current) => (current?.id === toastId ? null : current))
+  }, [clearExportToastHideTimer])
 
   const activeTemplate = useMemo(() => {
     if (sessionTemplate && sessionTemplate.id === template.id) {
@@ -133,11 +185,71 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     [fillRuntimeItems, selectedLayerId]
   )
 
+  const selectedFillState = useMemo(
+    () => layerFillStates.find((state) => state.layerId === selectedRuntimeItem?.id),
+    [layerFillStates, selectedRuntimeItem?.id]
+  )
+
   const fillVisibleLayers = useMemo(
     () => fillRuntimeItems
       .filter((item) => item.kind === "layer")
       .map((item) => (item as FillRuntimeLayerItem).layer),
     [fillRuntimeItems]
+  )
+
+  const triggerEmptyLayerImageSelect = useCallback(() => {
+    if (!selectedRuntimeItem) {
+      return
+    }
+
+    emptyImageUploadInputRef.current?.click()
+  }, [selectedRuntimeItem])
+
+  const handleEmptyLayerImageUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (!file || !selectedRuntimeItem) {
+        if (emptyImageUploadInputRef.current) {
+          emptyImageUploadInputRef.current.value = ""
+        }
+        return
+      }
+
+      const nextUrl = URL.createObjectURL(file)
+      const previousUrl = selectedFillState?.imageUrl ?? null
+
+      const image = new window.Image()
+      image.onload = () => {
+        const scaleToFit = Math.max(
+          Math.max(1, selectedRuntimeItem.bounds.width) / image.naturalWidth,
+          Math.max(1, selectedRuntimeItem.bounds.height) / image.naturalHeight
+        )
+
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageUrl: nextUrl,
+          imageTransform: {
+            x: 0,
+            y: 0,
+            scaleX: scaleToFit,
+            scaleY: scaleToFit,
+            rotation: 0,
+          },
+        })
+
+        safeRevokeObjectUrl(previousUrl)
+      }
+
+      image.onerror = () => {
+        safeRevokeObjectUrl(nextUrl)
+      }
+
+      image.src = nextUrl
+
+      if (emptyImageUploadInputRef.current) {
+        emptyImageUploadInputRef.current.value = ""
+      }
+    },
+    [selectedFillState?.imageUrl, selectedRuntimeItem, updateLayerFillState]
   )
 
   const offsetX = (stageSize.width - template.canvasWidth * renderScale) / 2 + previewPan.x
@@ -285,6 +397,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       setSelectedLayerId(fillRuntimeItems[0]?.id ?? null)
     }
   }, [fillRuntimeItems, selectedLayerId, setSelectedLayerId])
+
+  useEffect(() => {
+    return () => {
+      clearExportToastHideTimer()
+    }
+  }, [clearExportToastHideTimer])
 
   const handlePreviewWheel = useCallback(
     (event: WheelEvent) => {
@@ -880,40 +998,141 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   )
 
   const handleExport = useCallback(async () => {
+    if (isExporting) {
+      return
+    }
+
     setIsExporting(true)
+    const toastId = `fill_export_${Date.now()}`
+    const toastTargetFormat = resolveToastTargetFormat(exportFormat)
+
+    pushExportToast({
+      id: toastId,
+      fileName: `Export ${exportFormat.toUpperCase()}`,
+      targetFormat: toastTargetFormat,
+      status: "processing",
+      percent: 2,
+      message: "Preparing export...",
+    })
+
     try {
-      const fillVisibleLayerIdSet = new Set(fillVisibleLayers.map((layer) => layer.id))
-      const exportTemplate: FillingTemplate = {
-        ...activeTemplate,
-        layers: fillVisibleLayers,
-        groups: (activeTemplate.groups ?? [])
-          .map((group) => ({
-            ...group,
-            layerIds: group.layerIds.filter((layerId) => fillVisibleLayerIdSet.has(layerId)),
-          }))
-          .filter((group) => group.layerIds.length > 0),
-      }
+      const visibleRuntimeItemIdSet = new Set(fillRuntimeItems.map((runtimeItem) => runtimeItem.id))
 
       await exportFilledTemplate({
-        template: exportTemplate,
-        layerFillStates: layerFillStates.filter((state) => fillVisibleLayerIdSet.has(state.layerId)),
+        template: activeTemplate,
+        layerFillStates: layerFillStates.filter((state) => visibleRuntimeItemIdSet.has(state.layerId)),
         canvasFillState,
+        runtimeItems: fillRuntimeItems,
+        groupRuntimeTransforms,
         exportFormat,
         exportQuality,
         formatOptions: buildActiveFillingFormatOptions(useFillingStore.getState()),
+        onProgress: ({ percent, message }) => {
+          pushExportToast({
+            id: toastId,
+            fileName: `Export ${exportFormat.toUpperCase()}`,
+            targetFormat: toastTargetFormat,
+            status: "processing",
+            percent,
+            message,
+          })
+        },
       })
+
+      pushExportToast({
+        id: toastId,
+        fileName: `Export ${exportFormat.toUpperCase()}`,
+        targetFormat: toastTargetFormat,
+        status: "success",
+        percent: 100,
+        message: "Export completed",
+      })
+      scheduleExportToastHide(toastId, 2500)
     } catch (err) {
       console.error("Export failed:", err)
+
+      pushExportToast({
+        id: toastId,
+        fileName: `Export ${exportFormat.toUpperCase()}`,
+        targetFormat: toastTargetFormat,
+        status: "error",
+        percent: 100,
+        message: "Unable to export filled template",
+      })
+      scheduleExportToastHide(toastId, 6000)
     } finally {
       setIsExporting(false)
     }
   }, [
+    activeTemplate,
     canvasFillState,
     exportFormat,
     exportQuality,
-    activeTemplate,
-    fillVisibleLayers,
+    fillRuntimeItems,
+    groupRuntimeTransforms,
+    isExporting,
     layerFillStates,
+    pushExportToast,
+    scheduleExportToastHide,
+  ])
+
+  const selectedEmptyImageOverlay = useMemo(() => {
+    if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
+      return null
+    }
+
+    const clipPolygons = selectedRuntimeItem.kind === "group"
+      ? applyRuntimeTransformToPolygons(
+          selectedRuntimeItem.polygons,
+          groupRuntimeTransforms[selectedRuntimeItem.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }
+        )
+      : [toWorldLayerPoints(selectedRuntimeItem.layer)]
+
+    const clipPoints = clipPolygons.flat()
+    if (clipPoints.length === 0) {
+      return null
+    }
+
+    const bounds = getBoundsFromPoints(clipPoints)
+    const stageBoundsX = offsetX + bounds.x * renderScale
+    const stageBoundsY = offsetY + bounds.y * renderScale
+    const stageBoundsWidth = Math.max(0, bounds.width * renderScale)
+    const stageBoundsHeight = Math.max(0, bounds.height * renderScale)
+
+    const inset = Math.min(8, Math.max(3, Math.min(stageBoundsWidth, stageBoundsHeight) * 0.12))
+    const availableWidth = Math.max(0, stageBoundsWidth - inset * 2)
+    const availableHeight = Math.max(0, stageBoundsHeight - inset * 2)
+
+    if (availableWidth <= 0 || availableHeight <= 0) {
+      return null
+    }
+
+    const width = Math.min(120, availableWidth)
+    const height = Math.min(30, availableHeight)
+    const compact = width < 112 || height < 30
+    const fontSize = compact ? Math.max(10, Math.min(14, height * 0.58)) : 12
+
+    return {
+      x: stageBoundsX + (stageBoundsWidth - width) / 2,
+      y: stageBoundsY + (stageBoundsHeight - height) / 2,
+      width,
+      height,
+      compact,
+      fontSize,
+      text: compact ? "+" : "+ Select image",
+      clipPolygons: clipPolygons.map((polygon) =>
+        flattenPoints(polygon).map((value, index) =>
+          value * renderScale + (index % 2 === 0 ? offsetX : offsetY)
+        )
+      ),
+    }
+  }, [
+    groupRuntimeTransforms,
+    offsetX,
+    offsetY,
+    renderScale,
+    selectedFillState?.imageUrl,
+    selectedRuntimeItem,
   ])
 
   const backgroundMode = canvasFillState.backgroundType === "gradient"
@@ -985,6 +1204,14 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
         style={{ height: `${previewContainerHeight}px`, cursor }}
       >
+        <input
+          ref={emptyImageUploadInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleEmptyLayerImageUpload}
+        />
+
         <Stage
           ref={stageRef}
           width={stageSize.width}
@@ -1019,6 +1246,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
             if (targetName.includes("fill-layer-transform-node")) {
               const isPointerDown = (e.evt as MouseEvent).buttons === 1
               setCursor(isPointerDown ? "grabbing" : "grab")
+              return
+            }
+
+            if (targetName.includes("fill-empty-upload-overlay")) {
+              setCursor("pointer")
               return
             }
 
@@ -1445,6 +1677,69 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
               )
             })}
 
+            {selectedEmptyImageOverlay && (
+              <Group
+                clipFunc={(ctx: any) => {
+                  ctx.beginPath()
+
+                  for (const polygon of selectedEmptyImageOverlay.clipPolygons) {
+                    for (let pointIndex = 0; pointIndex < polygon.length; pointIndex += 2) {
+                      const pointX = polygon[pointIndex]
+                      const pointY = polygon[pointIndex + 1]
+
+                      if (pointIndex === 0) {
+                        ctx.moveTo(pointX, pointY)
+                      } else {
+                        ctx.lineTo(pointX, pointY)
+                      }
+                    }
+
+                    ctx.closePath()
+                  }
+                }}
+              >
+                <Group
+                  name="fill-empty-upload-overlay"
+                  onClick={(event) => {
+                    event.cancelBubble = true
+                    triggerEmptyLayerImageSelect()
+                  }}
+                  onTap={(event) => {
+                    event.cancelBubble = true
+                    triggerEmptyLayerImageSelect()
+                  }}
+                >
+                  <Rect
+                    name="fill-empty-upload-overlay"
+                    x={selectedEmptyImageOverlay.x}
+                    y={selectedEmptyImageOverlay.y}
+                    width={selectedEmptyImageOverlay.width}
+                    height={selectedEmptyImageOverlay.height}
+                    fill="rgba(15, 23, 42, 0.84)"
+                    stroke="rgba(255, 255, 255, 0.45)"
+                    strokeWidth={1}
+                    cornerRadius={Math.min(10, Math.max(5, selectedEmptyImageOverlay.height / 2 - 2))}
+                    shadowBlur={7}
+                    shadowColor="rgba(15, 23, 42, 0.38)"
+                    shadowOpacity={0.7}
+                  />
+                  <Text
+                    x={selectedEmptyImageOverlay.x}
+                    y={selectedEmptyImageOverlay.y}
+                    width={selectedEmptyImageOverlay.width}
+                    height={selectedEmptyImageOverlay.height}
+                    text={selectedEmptyImageOverlay.text}
+                    align="center"
+                    verticalAlign="middle"
+                    fill="#f8fafc"
+                    fontSize={selectedEmptyImageOverlay.fontSize}
+                    fontStyle="bold"
+                    listening={false}
+                  />
+                </Group>
+              </Group>
+            )}
+
             <Transformer
               ref={transformerRef}
               rotateEnabled
@@ -1485,6 +1780,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           aria-label="Resize fill preview height"
         />
       </div>
+
+      <ToastContainer toasts={conversionToasts} onRemove={handleRemoveExportToast} />
     </div>
   )
 }

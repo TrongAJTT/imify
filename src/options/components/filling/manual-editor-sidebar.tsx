@@ -1,21 +1,19 @@
 import { useCallback, useMemo, useState } from "react"
-import { Layers, Settings2, Save, Ruler } from "lucide-react"
+import { Layers, Settings2, Ruler } from "lucide-react"
 
 import type {
   CanvasSizePreset,
   CanvasSizeUnit,
   LayerGroup,
   VectorLayer,
-  FillingTemplate,
   ShapeType,
 } from "@/features/filling/types"
 import { generateId } from "@/features/filling/types"
 import { generateShapePoints } from "@/features/filling/shape-generators"
 import { getBoundingBox } from "@/features/filling/vector-math"
-import { templateStorage } from "@/features/filling/template-storage"
-import { useFillingStore } from "@/options/stores/filling-store"
 import { CanvasSizeDialog } from "@/options/components/filling/canvas-size-dialog"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
+import { ResizableAccordionCard } from "@/options/components/ui/resizable-accordion-card"
 import { Button } from "@/options/components/ui/button"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectInput } from "@/options/components/ui/select-input"
@@ -25,7 +23,6 @@ import { ShapePickerDialog } from "@/options/components/filling/shape-picker-dia
 import { GroupLayerPanel } from "@/options/components/filling/group-layer-panel"
 
 interface ManualEditorSidebarProps {
-  template: FillingTemplate
   layers: VectorLayer[]
   groups: LayerGroup[]
   canvasWidth: number
@@ -95,7 +92,6 @@ function synchronizeGroupsWithLayers(groups: LayerGroup[], layers: VectorLayer[]
 }
 
 export function ManualEditorSidebar({
-  template,
   layers,
   groups,
   canvasWidth,
@@ -110,8 +106,7 @@ export function ManualEditorSidebar({
   const [canvasSizeDialogOpen, setCanvasSizeDialogOpen] = useState(false)
   const [canvasUnit, setCanvasUnit] = useState<CanvasSizeUnit>("px")
   const [canvasDpi, setCanvasDpi] = useState(DPI_DEFAULT)
-  const navigateToSelect = useFillingStore((s) => s.navigateToSelect)
-  const updateTemplate = useFillingStore((s) => s.updateTemplate)
+  const [layersAccordionHeight, setLayersAccordionHeight] = useState(320)
 
   const displayCanvasWidth = fromPixels(canvasWidth, canvasUnit, canvasDpi)
   const displayCanvasHeight = fromPixels(canvasHeight, canvasUnit, canvasDpi)
@@ -468,28 +463,6 @@ export function ManualEditorSidebar({
     [selectedLayerId, layers, onLayersChange]
   )
 
-  const handleSave = useCallback(async () => {
-    const updated: FillingTemplate = {
-      ...template,
-      canvasWidth,
-      canvasHeight,
-      layers,
-      groups: normalizedGroups,
-      updatedAt: Date.now(),
-    }
-    await templateStorage.save(updated)
-    updateTemplate(updated)
-    navigateToSelect()
-  }, [
-    canvasHeight,
-    canvasWidth,
-    layers,
-    navigateToSelect,
-    normalizedGroups,
-    template,
-    updateTemplate,
-  ])
-
   const handleCanvasWidthChange = useCallback(
     (value: number) => {
       onCanvasSizeChange(toPixels(value, canvasUnit, canvasDpi), canvasHeight)
@@ -577,11 +550,16 @@ export function ManualEditorSidebar({
           </div>
         </AccordionCard>
 
-        <AccordionCard
+        <ResizableAccordionCard
           icon={<Layers size={16} />}
           label="Layers"
           sublabel={`${layers.length} layer${layers.length !== 1 ? "s" : ""}`}
           colorTheme="sky"
+          height={layersAccordionHeight}
+          initialHeight={320}
+          onHeightChange={setLayersAccordionHeight}
+          minHeight={220}
+          maxHeight={640}
           defaultOpen={true}
         >
           <LayerListPanel
@@ -598,7 +576,7 @@ export function ManualEditorSidebar({
             isSelectedLayerGrouped={Boolean(selectedLayer?.groupId)}
             groupNamesById={groupNamesById}
           />
-        </AccordionCard>
+        </ResizableAccordionCard>
 
         {selectedLayer && (
           <AccordionCard
@@ -626,13 +604,6 @@ export function ManualEditorSidebar({
             onToggleFillInterior={handleToggleFillInterior}
           />
         )}
-
-        <div className="pt-2">
-          <Button variant="primary" size="sm" onClick={handleSave} className="w-full">
-            <Save size={14} />
-            Save Template
-          </Button>
-        </div>
 
         <ShapePickerDialog
           isOpen={shapePickerOpen}

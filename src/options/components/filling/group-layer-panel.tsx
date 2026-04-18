@@ -42,17 +42,20 @@ export function GroupLayerPanel({
       defaultOpen={true}
     >
       <div className="space-y-3">
-        <TextInput
-          label="Group Name"
-          value={group.name}
-          onChange={onRenameGroup}
-          placeholder="Group name"
-        />
+        <div className="flex gap-2 items-end">
+          <TextInput
+            label="Group Name"
+            value={group.name}
+            onChange={onRenameGroup}
+            placeholder="Group name"
+            className="flex-1"
+          />
 
-        <Button variant="secondary" size="sm" onClick={onUngroupSelectedLayer} className="w-full">
-          <Unlink2 size={12} />
-          Ungroup Selected Layer
-        </Button>
+          <Button variant="secondary" size="sm" onClick={onUngroupSelectedLayer} className="w-full flex-1">
+            <Unlink2 size={12} />
+            Ungroup
+          </Button>
+        </div>
 
         {/* List of layer members of group, hide for now */}
 

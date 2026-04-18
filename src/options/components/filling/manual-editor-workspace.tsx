@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage, Layer, Line, Rect, Transformer } from "react-konva"
 import type Konva from "konva"
+import { Loader2, Save } from "lucide-react"
 
 import type { LayerGroup, VectorLayer } from "@/features/filling/types"
 import { generateShapePoints } from "@/features/filling/shape-generators"
@@ -14,6 +15,7 @@ import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
 import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import { useTransformGuides, type RectBounds } from "@/options/hooks/use-transform-guides"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
+import { Button } from "@/options/components/ui/button"
 import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
 import {
   PreviewInteractionModeToggle,
@@ -28,6 +30,8 @@ interface ManualEditorWorkspaceProps {
   selectedLayerId: string | null
   onSelectLayer: (id: string | null) => void
   onUpdateLayer: (id: string, partial: Partial<VectorLayer>) => void
+  onSaveTemplate: () => Promise<void>
+  isSavingTemplate: boolean
 }
 
 const CANVAS_PADDING = 40
@@ -43,6 +47,8 @@ export function ManualEditorWorkspace({
   selectedLayerId,
   onSelectLayer,
   onUpdateLayer,
+  onSaveTemplate,
+  isSavingTemplate,
 }: ManualEditorWorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
@@ -443,13 +449,38 @@ export function ManualEditorWorkspace({
           </MutedText>
         </div>
 
-        <PreviewInteractionModeToggle
-          mode={previewInteractionMode}
-          onChange={setPreviewInteractionMode}
-          zoomKeyHint={getShortcutLabel("fill.preview.zoom_mode")}
-          panKeyHint={getShortcutLabel("fill.preview.pan_mode")}
-          idleKeyHint={getShortcutLabel("fill.preview.idle_mode")}
-        />
+        <div className="flex items-center gap-3">
+          <PreviewInteractionModeToggle
+            mode={previewInteractionMode}
+            onChange={setPreviewInteractionMode}
+            zoomKeyHint={getShortcutLabel("fill.preview.zoom_mode")}
+            panKeyHint={getShortcutLabel("fill.preview.pan_mode")}
+            idleKeyHint={getShortcutLabel("fill.preview.idle_mode")}
+          />
+
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              void onSaveTemplate()
+            }}
+            disabled={isSavingTemplate}
+            className="min-w-[150px]"
+          >
+            {isSavingTemplate ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save size={14} />
+                Save Template
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div

@@ -3,7 +3,7 @@ import { useMemo } from "react"
 import { useFillingStore } from "@/options/stores/filling-store"
 import { useEditorContextSafe } from "@/options/components/filling/editor-context"
 import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { TemplateInfoAccordion } from "@/options/components/filling/template-info-accordion"
+import { FillingInfoPanel } from "@/options/components/filling/template-info-accordion"
 import { ManualEditorSidebar } from "@/options/components/filling/manual-editor-sidebar"
 import { SymmetricSidebar } from "@/options/components/filling/symmetric-sidebar"
 import { FillSidebar } from "@/options/components/filling/fill-sidebar"
@@ -20,14 +20,21 @@ export function FillingSidebarPanel() {
     [templates, editingTemplateId, activeTemplateId]
   )
 
+  if (fillingStep === "select") {
+    return (
+      <div className="flex flex-col gap-1">
+        <SidebarPanel title="INFORMATION" childrenClassName="flex flex-col gap-3">
+          <FillingInfoPanel />
+        </SidebarPanel>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <SidebarPanel title="CONFIGURATION" childrenClassName="flex flex-col gap-3">
-        {fillingStep === "select" && <TemplateInfoAccordion />}
-
         {fillingStep === "create_manual" && activeTemplate && editorCtx && (
           <ManualEditorSidebar
-            template={activeTemplate}
             layers={editorCtx.editorLayers}
             groups={editorCtx.editorGroups}
             canvasWidth={editorCtx.canvasWidth}
