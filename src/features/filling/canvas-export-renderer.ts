@@ -14,7 +14,7 @@ import {
   type Point2D,
   type VectorLayer,
 } from "@/features/filling/types"
-import { generateShapePoints } from "@/features/filling/shape-generators"
+import { resolveLayerShapePoints } from "@/features/filling/shape-generators"
 import { roundedPolygonPoints, flattenPoints } from "@/features/filling/vector-math"
 
 interface RenderOptions {
@@ -207,7 +207,7 @@ function drawLayerItem(
     ? canvasFillState.cornerRadiusOverride
     : fillState.cornerRadius
 
-  const rawPoints = generateShapePoints(layer.shapeType, layer.width, layer.height)
+  const rawPoints = resolveLayerShapePoints(layer)
   const displayPoints = effectiveCornerRadius > 0
     ? roundedPolygonPoints(rawPoints, effectiveCornerRadius)
     : rawPoints

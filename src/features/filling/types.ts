@@ -127,12 +127,13 @@ export interface SymmetricParams {
   shapeAppearanceOrder: ShapeAppearanceOrder
   sideLength: number
   baseLength: number
-  sideAngle: number
-  baseAngle: number
+  oppositeBaseLength: number
+  oppositeBaseOffset: number
   axisSpacing: number
   shapeSpacing: number
   firstShapePosition: number
   oddEvenOffset: number
+  oddEvenShapeReverse: boolean
   firstAxisPosition: number
 }
 
@@ -181,12 +182,13 @@ export const DEFAULT_SYMMETRIC_PARAMS: SymmetricParams = {
   shapeAppearanceOrder: "left_to_right",
   sideLength: 120,
   baseLength: 100,
-  sideAngle: 90,
-  baseAngle: 90,
+  oppositeBaseLength: 100,
+  oppositeBaseOffset: 0,
   axisSpacing: 20,
   shapeSpacing: 10,
   firstShapePosition: 0,
   oddEvenOffset: 0,
+  oddEvenShapeReverse: false,
   firstAxisPosition: 0,
 }
 

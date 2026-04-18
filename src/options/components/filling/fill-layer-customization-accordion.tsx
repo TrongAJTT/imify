@@ -3,7 +3,7 @@ import { ImagePlus, Layers, Palette, SlidersHorizontal, X } from "lucide-react"
 
 import type { FillingTemplate, ImageTransform, LayerFillState, VectorLayer } from "@/features/filling/types"
 import { DEFAULT_IMAGE_TRANSFORM } from "@/features/filling/types"
-import { generateShapePoints } from "@/features/filling/shape-generators"
+import { regenerateLayerShapePoints } from "@/features/filling/shape-generators"
 import { buildFillRuntimeItems, type FillRuntimeItem } from "@/features/filling/fill-runtime-items"
 import { FillTransformControls } from "@/options/components/filling/fill-transform-controls"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
@@ -175,8 +175,8 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
       ) {
         nextSelectedLayer = {
           ...nextSelectedLayer,
-          points: generateShapePoints(
-            nextSelectedLayer.shapeType,
+          points: regenerateLayerShapePoints(
+            nextSelectedLayer,
             nextSelectedLayer.width,
             nextSelectedLayer.height
           ),

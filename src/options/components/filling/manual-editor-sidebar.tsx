@@ -9,7 +9,7 @@ import type {
   ShapeType,
 } from "@/features/filling/types"
 import { generateId } from "@/features/filling/types"
-import { generateShapePoints } from "@/features/filling/shape-generators"
+import { generateShapePoints, regenerateLayerShapePoints } from "@/features/filling/shape-generators"
 import { getBoundingBox } from "@/features/filling/vector-math"
 import { CanvasSizeDialog } from "@/options/components/filling/canvas-size-dialog"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
@@ -449,8 +449,8 @@ export function ManualEditorSidebar({
       let updatedLayer = { ...layer, ...partial }
 
       if (needsRegenerate) {
-        updatedLayer.points = generateShapePoints(
-          updatedLayer.shapeType,
+        updatedLayer.points = regenerateLayerShapePoints(
+          updatedLayer,
           updatedLayer.width,
           updatedLayer.height
         )

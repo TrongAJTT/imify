@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
 import type { LayerGroup, VectorLayer } from "@/features/filling/types"
-import { generateShapePoints } from "@/features/filling/shape-generators"
+import { regenerateLayerShapePoints } from "@/features/filling/shape-generators"
 
 interface EditorContextValue {
   editorLayers: VectorLayer[]
@@ -42,7 +42,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
           partial.shapeType !== undefined
 
         if (needsRegeneratePoints) {
-          nextLayer.points = generateShapePoints(nextLayer.shapeType, nextLayer.width, nextLayer.height)
+          nextLayer.points = regenerateLayerShapePoints(nextLayer, nextLayer.width, nextLayer.height)
         }
 
         return nextLayer

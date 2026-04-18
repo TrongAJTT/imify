@@ -1,5 +1,5 @@
 import type { ImageTransform, LayerGroup, Point2D, VectorLayer } from "@/features/filling/types"
-import { generateShapePoints } from "@/features/filling/shape-generators"
+import { resolveLayerShapePoints } from "@/features/filling/shape-generators"
 
 export type GroupOverlayType = "pair" | "interior" | "combined-hull"
 
@@ -24,7 +24,7 @@ interface GraphEdge {
 const EPSILON = 1e-6
 
 export function toWorldLayerPoints(layer: VectorLayer): Point2D[] {
-  const points = generateShapePoints(layer.shapeType, layer.width, layer.height)
+  const points = resolveLayerShapePoints(layer)
 
   if (layer.rotation === 0) {
     return points.map((point) => ({

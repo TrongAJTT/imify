@@ -27,7 +27,10 @@ import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
 import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import { useTransformGuides, type RectBounds } from "@/options/hooks/use-transform-guides"
 import { buildActiveFillingFormatOptions } from "@/options/stores/filling-format-options"
-import { generateShapePoints } from "@/features/filling/shape-generators"
+import {
+  regenerateLayerShapePoints,
+  resolveLayerShapePoints,
+} from "@/features/filling/shape-generators"
 import { flattenPoints, roundedPolygonPoints } from "@/features/filling/vector-math"
 import {
   resolveLayerContainerHighlightMode,
@@ -517,7 +520,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
       const nextLayerWithPoints: VectorLayer = {
         ...nextLayer,
-        points: generateShapePoints(nextLayer.shapeType, nextLayer.width, nextLayer.height),
+        points: regenerateLayerShapePoints(nextLayer, nextLayer.width, nextLayer.height),
       }
 
       const nextTemplate: FillingTemplate = {
@@ -1831,7 +1834,7 @@ function FilledLayerShape({
     ? canvasFillState.borderOverrideColor
     : (fillState?.borderColor ?? "#000000")
 
-  const rawPoints = generateShapePoints(layer.shapeType, layer.width, layer.height)
+  const rawPoints = resolveLayerShapePoints(layer)
   const displayPoints = effectiveCornerRadius > 0
     ? roundedPolygonPoints(rawPoints, effectiveCornerRadius)
     : rawPoints

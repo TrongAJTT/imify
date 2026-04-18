@@ -1,4 +1,6 @@
-import type { Point2D, ShapeType } from "@/features/filling/types"
+import type { Point2D, ShapeType, VectorLayer } from "@/features/filling/types"
+
+type LayerPointSource = Pick<VectorLayer, "shapeType" | "width" | "height" | "points">
 
 /**
  * Generate normalized vertices for a shape within a bounding box.
@@ -35,6 +37,74 @@ export function generateShapePoints(
       return rectanglePoints(width, height)
     default:
       return rectanglePoints(width, height)
+  }
+}
+
+/**
+ * Resolve display points for a layer. Custom layers use their stored points.
+ */
+export function resolveLayerShapePoints(layer: LayerPointSource): Point2D[] {
+  if (layer.shapeType === "custom" && Array.isArray(layer.points) && layer.points.length >= 3) {
+    return layer.points
+  }
+
+  return generateShapePoints(layer.shapeType, layer.width, layer.height)
+}
+
+/**
+ * Regenerate layer points after width/height updates while preserving custom shapes.
+ */
+export function regenerateLayerShapePoints(
+  layer: LayerPointSource,
+  nextWidth: number,
+  nextHeight: number
+): Point2D[] {
+  if (layer.shapeType !== "custom" || !Array.isArray(layer.points) || layer.points.length < 3) {
+    return generateShapePoints(layer.shapeType, nextWidth, nextHeight)
+  }
+
+  const bounds = getPointBounds(layer.points)
+  if (bounds.width <= 0 && bounds.height <= 0) {
+    return layer.points
+  }
+
+  const safeNextWidth = Math.max(1, nextWidth)
+  const safeNextHeight = Math.max(1, nextHeight)
+
+  return layer.points.map((point) => {
+    const ratioX = bounds.width > 0 ? (point.x - bounds.minX) / bounds.width : 0
+    const ratioY = bounds.height > 0 ? (point.y - bounds.minY) / bounds.height : 0
+
+    return {
+      x: ratioX * safeNextWidth,
+      y: ratioY * safeNextHeight,
+    }
+  })
+}
+
+function getPointBounds(points: Point2D[]): {
+  minX: number
+  minY: number
+  width: number
+  height: number
+} {
+  let minX = Number.POSITIVE_INFINITY
+  let minY = Number.POSITIVE_INFINITY
+  let maxX = Number.NEGATIVE_INFINITY
+  let maxY = Number.NEGATIVE_INFINITY
+
+  for (const point of points) {
+    minX = Math.min(minX, point.x)
+    minY = Math.min(minY, point.y)
+    maxX = Math.max(maxX, point.x)
+    maxY = Math.max(maxY, point.y)
+  }
+
+  return {
+    minX,
+    minY,
+    width: Math.max(0, maxX - minX),
+    height: Math.max(0, maxY - minY),
   }
 }
 

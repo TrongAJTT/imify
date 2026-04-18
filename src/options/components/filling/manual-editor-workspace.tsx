@@ -4,7 +4,7 @@ import type Konva from "konva"
 import { Loader2, Save } from "lucide-react"
 
 import type { LayerGroup, VectorLayer } from "@/features/filling/types"
-import { generateShapePoints } from "@/features/filling/shape-generators"
+import { resolveLayerShapePoints } from "@/features/filling/shape-generators"
 import {
   buildGroupOverlayPolygons,
   getBoundsFromPoints,
@@ -586,7 +586,7 @@ export function ManualEditorWorkspace({
             {layers.map((layer) => {
               if (!layer.visible) return null
 
-              const shapePoints = generateShapePoints(layer.shapeType, layer.width, layer.height)
+              const shapePoints = resolveLayerShapePoints(layer)
               const flat = flattenPoints(shapePoints)
               const scaledFlat = flat.map((value) => value * renderScale)
 

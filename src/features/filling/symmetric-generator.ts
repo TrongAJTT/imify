@@ -2,8 +2,94 @@ import type { Point2D, SymmetricParams, VectorLayer } from "@/features/filling/t
 import { generateId } from "@/features/filling/types"
 import { polygonIntersectsRect } from "@/features/filling/vector-math"
 
+export interface SymmetricLayoutMetrics {
+  isHorizontal: boolean
+  axisCount: number
+  sideLength: number
+  baseLength: number
+  oppositeBaseLength: number
+  oppositeBaseOffset: number
+  axisSpacing: number
+  shapeSpacing: number
+  firstShapePosition: number
+  oddEvenOffset: number
+  oddEvenShapeReverse: boolean
+  firstAxisPosition: number
+  parallelSpan: number
+  parallelMinAdjust: number
+  axisStride: number
+  shapeStride: number
+  axisOrderSign: 1 | -1
+  shapeOrderSign: 1 | -1
+}
+
+function resolveOrderSign(order: string): 1 | -1 {
+  if (order === "right_to_left" || order === "bottom_to_top") {
+    return -1
+  }
+
+  return 1
+}
+
+export function deriveSymmetricLayoutMetrics(params: SymmetricParams): SymmetricLayoutMetrics {
+  const isHorizontal = params.axisDirection === "horizontal"
+  const sideLength = Math.max(1, Math.round(params.sideLength))
+  const baseLength = Math.max(0, Math.round(params.baseLength))
+  const oppositeBaseLength = Math.max(0, Math.round(params.oppositeBaseLength))
+  const oppositeBaseOffset = Math.round(params.oppositeBaseOffset)
+  const axisSpacing = Math.max(0, Math.round(params.axisSpacing))
+  const shapeSpacing = Math.max(0, Math.round(params.shapeSpacing))
+
+  const parallelSpan = getParallelSpan(baseLength, oppositeBaseLength, oppositeBaseOffset)
+  const parallelMinAdjust = Math.min(0, oppositeBaseOffset)
+
+  return {
+    isHorizontal,
+    axisCount: Math.max(1, Math.round(params.axisCount)),
+    sideLength,
+    baseLength,
+    oppositeBaseLength,
+    oppositeBaseOffset,
+    axisSpacing,
+    shapeSpacing,
+    firstShapePosition: Math.round(params.firstShapePosition),
+    oddEvenOffset: Math.round(params.oddEvenOffset),
+    oddEvenShapeReverse: Boolean(params.oddEvenShapeReverse),
+    firstAxisPosition: Math.round(params.firstAxisPosition),
+    parallelSpan,
+    parallelMinAdjust,
+    axisStride: sideLength + axisSpacing,
+    shapeStride: parallelSpan + shapeSpacing,
+    axisOrderSign: resolveOrderSign(params.axisAppearanceOrder),
+    shapeOrderSign: resolveOrderSign(params.shapeAppearanceOrder),
+  }
+}
+
+export function buildSymmetricShapePolygon(
+  metrics: SymmetricLayoutMetrics,
+  axisIndex: number,
+  shapeIndex: number
+): Point2D[] {
+  const axisOffset = metrics.firstAxisPosition + metrics.axisOrderSign * axisIndex * metrics.axisStride
+  const shapeStartOffset =
+    metrics.firstShapePosition + (axisIndex % 2 === 1 ? metrics.oddEvenOffset : 0)
+  const shapeOffset = shapeStartOffset + metrics.shapeOrderSign * shapeIndex * metrics.shapeStride
+  const reverseShape = metrics.oddEvenShapeReverse && shapeIndex % 2 === 1
+
+  return computeSymmetricQuadrilateralPoints(
+    metrics.isHorizontal,
+    axisOffset,
+    shapeOffset,
+    metrics.sideLength,
+    metrics.baseLength,
+    metrics.oppositeBaseLength,
+    metrics.oppositeBaseOffset,
+    reverseShape
+  )
+}
+
 /**
- * Generate parallelogram vertices from the symmetric parameters.
+ * Generate symmetric quadrilateral vertices from the symmetric parameters.
  * Returns an array of VectorLayer objects with locked=true.
  */
 export function generateSymmetricLayers(
@@ -11,61 +97,17 @@ export function generateSymmetricLayers(
   canvasWidth: number,
   canvasHeight: number
 ): VectorLayer[] {
-  const {
-    axisDirection,
-    axisCount,
-    axisAppearanceOrder,
-    shapeAppearanceOrder,
-    sideLength,
-    baseLength,
-    sideAngle,
-    baseAngle,
-    axisSpacing,
-    shapeSpacing,
-    firstShapePosition,
-    oddEvenOffset,
-    firstAxisPosition,
-  } = params
-
-  const isHorizontal = axisDirection === "horizontal"
-  const sideAngleRad = (sideAngle * Math.PI) / 180
-  const baseAngleRad = (baseAngle * Math.PI) / 180
-
-  const parallelogramWidth = isHorizontal ? baseLength : sideLength
-  const parallelogramHeight = isHorizontal ? sideLength : baseLength
-
-  const sideSkew = isHorizontal
-    ? Math.cos(sideAngleRad) * sideLength
-    : Math.cos(baseAngleRad) * baseLength
-  const axisStride = (isHorizontal ? parallelogramHeight : parallelogramWidth) + axisSpacing
-  const shapeStride = (isHorizontal ? parallelogramWidth : parallelogramHeight) + shapeSpacing
+  const metrics = deriveSymmetricLayoutMetrics(params)
 
   const maxShapesOnAxis = Math.ceil(
-    (isHorizontal ? canvasWidth : canvasHeight) / Math.max(1, shapeStride)
+    (metrics.isHorizontal ? canvasWidth : canvasHeight) / Math.max(1, metrics.shapeStride)
   ) + 4
 
   const rawLayers: VectorLayer[] = []
 
-  for (let axisIdx = 0; axisIdx < axisCount; axisIdx++) {
-    const axisOrder = resolveAxisOrder(axisIdx, axisCount, axisAppearanceOrder)
-    const axisOffset = firstAxisPosition + axisOrder * axisStride
-    const isOddAxis = axisIdx % 2 === 1
-    const shapeStartOffset = firstShapePosition + (isOddAxis ? oddEvenOffset : 0)
-
-    for (let shapeIdx = -2; shapeIdx < maxShapesOnAxis; shapeIdx++) {
-      const shapeOrder = resolveShapeOrder(shapeIdx, maxShapesOnAxis, shapeAppearanceOrder)
-      const shapeOffset = shapeStartOffset + shapeOrder * shapeStride
-
-      const points = computeParallelogramPoints(
-        isHorizontal,
-        axisOffset,
-        shapeOffset,
-        parallelogramWidth,
-        parallelogramHeight,
-        sideSkew,
-        sideAngleRad,
-        baseAngleRad
-      )
+  for (let axisIdx = 0; axisIdx < metrics.axisCount; axisIdx++) {
+    for (let shapeIdx = 0; shapeIdx < maxShapesOnAxis; shapeIdx++) {
+      const points = buildSymmetricShapePolygon(metrics, axisIdx, shapeIdx)
 
       if (!polygonIntersectsRect(points, 0, 0, canvasWidth, canvasHeight)) {
         continue
@@ -83,8 +125,8 @@ export function generateSymmetricLayers(
 
       rawLayers.push({
         id: generateId("sym"),
-        name: `Axis ${axisIdx + 1} - Shape ${shapeIdx + 3}`,
-        shapeType: "parallelogram",
+        name: `Axis ${axisIdx + 1} - Shape ${shapeIdx + 1}`,
+        shapeType: "custom",
         points: normalizedPoints,
         x: minX,
         y: minY,
@@ -100,57 +142,66 @@ export function generateSymmetricLayers(
   return rawLayers
 }
 
-function computeParallelogramPoints(
+function computeSymmetricQuadrilateralPoints(
   isHorizontal: boolean,
   axisOffset: number,
   shapeOffset: number,
-  width: number,
-  height: number,
-  sideSkew: number,
-  sideAngleRad: number,
-  baseAngleRad: number
+  sideLength: number,
+  baseLength: number,
+  oppositeBaseLength: number,
+  oppositeBaseOffset: number,
+  reverseShape: boolean
 ): Point2D[] {
   if (isHorizontal) {
-    const skewX = Math.cos(sideAngleRad) * height
-    const x = shapeOffset
-    const y = axisOffset
-    return [
-      { x: x + skewX, y },
-      { x: x + width + skewX, y },
-      { x: x + width, y: y + height },
-      { x: x, y: y + height },
+    const yTop = axisOffset
+    const yBottom = axisOffset + sideLength
+    const topStart = reverseShape ? shapeOffset + oppositeBaseOffset : shapeOffset
+    const topLength = reverseShape ? oppositeBaseLength : baseLength
+    const bottomStart = reverseShape ? shapeOffset : shapeOffset + oppositeBaseOffset
+    const bottomLength = reverseShape ? baseLength : oppositeBaseLength
+
+    const points = [
+      { x: topStart, y: yTop },
+      { x: topStart + topLength, y: yTop },
+      { x: bottomStart + bottomLength, y: yBottom },
+      { x: bottomStart, y: yBottom },
     ]
+
+    return reverseShape ? rotatePointOrder(points) : points
   }
 
-  const skewY = Math.cos(baseAngleRad) * width
-  const x = axisOffset
-  const y = shapeOffset
-  return [
-    { x, y: y + skewY },
-    { x: x + width, y },
-    { x: x + width, y: y + height },
-    { x, y: y + height + skewY },
+  const xLeft = axisOffset
+  const xRight = axisOffset + sideLength
+  const leftStart = reverseShape ? shapeOffset + oppositeBaseOffset : shapeOffset
+  const leftLength = reverseShape ? oppositeBaseLength : baseLength
+  const rightStart = reverseShape ? shapeOffset : shapeOffset + oppositeBaseOffset
+  const rightLength = reverseShape ? baseLength : oppositeBaseLength
+
+  const points = [
+    { x: xLeft, y: leftStart },
+    { x: xRight, y: rightStart },
+    { x: xRight, y: rightStart + rightLength },
+    { x: xLeft, y: leftStart + leftLength },
   ]
+
+  return reverseShape ? rotatePointOrder(points) : points
 }
 
-function resolveAxisOrder(
-  index: number,
-  _total: number,
-  order: string
-): number {
-  if (order === "right_to_left" || order === "bottom_to_top") {
-    return -index
+function rotatePointOrder(points: Point2D[]): Point2D[] {
+  if (points.length < 4) {
+    return points
   }
-  return index
+
+  return [points[2], points[3], points[0], points[1]]
 }
 
-function resolveShapeOrder(
-  index: number,
-  _total: number,
-  order: string
+function getParallelSpan(
+  baseLength: number,
+  oppositeBaseLength: number,
+  oppositeBaseOffset: number
 ): number {
-  if (order === "right_to_left" || order === "bottom_to_top") {
-    return -index
-  }
-  return index
+  const minValue = Math.min(0, oppositeBaseOffset)
+  const maxValue = Math.max(baseLength, oppositeBaseOffset + oppositeBaseLength)
+
+  return Math.max(1, maxValue - minValue)
 }
