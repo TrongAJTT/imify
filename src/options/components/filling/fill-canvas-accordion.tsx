@@ -1,5 +1,5 @@
 import { useCallback, useRef } from "react"
-import { Palette, ImagePlus, X } from "lucide-react"
+import { Circle, Palette, ImagePlus, Square, X } from "lucide-react"
 
 import type { CanvasFillState, CanvasBackgroundType } from "@/features/filling/types"
 import { DEFAULT_IMAGE_TRANSFORM } from "@/features/filling/types"
@@ -140,6 +140,7 @@ export function FillCanvasAccordion() {
         {/* Border override */}
         <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
           <CheckboxCard
+            icon={<Square size={14} />}
             title="Override Layer Borders"
             checked={state.borderOverrideEnabled}
             onChange={(v) => update({ borderOverrideEnabled: v })}
@@ -177,6 +178,7 @@ export function FillCanvasAccordion() {
         {/* Corner radius override */}
         <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
           <CheckboxCard
+            icon={<Circle size={14} />}
             title="Override Corner Radius"
             checked={state.cornerRadiusOverrideEnabled}
             onChange={(v) => update({ cornerRadiusOverrideEnabled: v })}

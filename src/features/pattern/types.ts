@@ -6,6 +6,7 @@ export type PatternAssetSource = "upload" | "draw"
 export type PatternEdgeBehavior = "clip" | "strict_inside" | "center_inside"
 export type PatternBoundaryShape = "rectangle" | "ellipse"
 export type PatternExportFormat = RasterPipelineFormat | "mozjpeg"
+export type PatternLayerColorOverrideMode = "per-asset" | "unified"
 
 export interface PatternAsset {
   id: string
@@ -17,6 +18,36 @@ export interface PatternAsset {
   height: number
   enabled: boolean
   opacity: number
+  monochrome: PatternAssetMonochromeSettings
+  border: PatternAssetBorderSettings
+  cornerRadius: number
+}
+
+export interface PatternAssetMonochromeSettings {
+  enabled: boolean
+  color: string
+}
+
+export interface PatternAssetBorderSettings {
+  width: number
+  color: string
+}
+
+export interface PatternLayerColorOverrideSettings {
+  enabled: boolean
+  color: string
+  mode: PatternLayerColorOverrideMode
+}
+
+export interface PatternLayerBorderOverrideSettings {
+  enabled: boolean
+  width: number
+  color: string
+}
+
+export interface PatternLayerCornerRadiusOverrideSettings {
+  enabled: boolean
+  radius: number
 }
 
 export interface PatternBoundarySettings {
@@ -63,6 +94,9 @@ export interface PatternAssetResizeSettings {
 export interface PatternSettings {
   distribution: PatternDistributionSettings
   assetResize: PatternAssetResizeSettings
+  layerColorOverride: PatternLayerColorOverrideSettings
+  layerBorderOverride: PatternLayerBorderOverrideSettings
+  layerCornerRadiusOverride: PatternLayerCornerRadiusOverrideSettings
   inboundBoundary: PatternBoundarySettings
   outboundBoundary: PatternBoundarySettings
 }
@@ -128,6 +162,33 @@ export const DEFAULT_PATTERN_ASSET_RESIZE_SETTINGS: PatternAssetResizeSettings =
   height: 40,
 }
 
+export const DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS: PatternAssetMonochromeSettings = {
+  enabled: false,
+  color: "#000000",
+}
+
+export const DEFAULT_PATTERN_ASSET_BORDER_SETTINGS: PatternAssetBorderSettings = {
+  width: 0,
+  color: "rgba(0, 0, 0, 1)",
+}
+
+export const DEFAULT_PATTERN_LAYER_COLOR_OVERRIDE_SETTINGS: PatternLayerColorOverrideSettings = {
+  enabled: false,
+  color: "#0f172a",
+  mode: "per-asset",
+}
+
+export const DEFAULT_PATTERN_LAYER_BORDER_OVERRIDE_SETTINGS: PatternLayerBorderOverrideSettings = {
+  enabled: false,
+  width: 0,
+  color: "rgba(0, 0, 0, 1)",
+}
+
+export const DEFAULT_PATTERN_LAYER_CORNER_RADIUS_OVERRIDE_SETTINGS: PatternLayerCornerRadiusOverrideSettings = {
+  enabled: false,
+  radius: 0,
+}
+
 export const DEFAULT_PATTERN_INBOUND_BOUNDARY: PatternBoundarySettings = {
   enabled: true,
   shape: "rectangle",
@@ -151,6 +212,9 @@ export const DEFAULT_PATTERN_OUTBOUND_BOUNDARY: PatternBoundarySettings = {
 export const DEFAULT_PATTERN_SETTINGS: PatternSettings = {
   distribution: { ...DEFAULT_PATTERN_DISTRIBUTION_SETTINGS },
   assetResize: { ...DEFAULT_PATTERN_ASSET_RESIZE_SETTINGS },
+  layerColorOverride: { ...DEFAULT_PATTERN_LAYER_COLOR_OVERRIDE_SETTINGS },
+  layerBorderOverride: { ...DEFAULT_PATTERN_LAYER_BORDER_OVERRIDE_SETTINGS },
+  layerCornerRadiusOverride: { ...DEFAULT_PATTERN_LAYER_CORNER_RADIUS_OVERRIDE_SETTINGS },
   inboundBoundary: { ...DEFAULT_PATTERN_INBOUND_BOUNDARY },
   outboundBoundary: { ...DEFAULT_PATTERN_OUTBOUND_BOUNDARY },
 }

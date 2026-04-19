@@ -311,6 +311,8 @@ export function ColorPickerPopover({
           trigger={
             <button
               type="button"
+              onPointerDown={(event) => event.stopPropagation()}
+              onMouseDown={(event) => event.stopPropagation()}
               className={`h-7 w-7 rounded border border-slate-200 dark:border-slate-700 bg-transparent p-0.5 transition-all hover:shadow-sm ${appearance === "stacked" ? "" : ""}`}
               aria-label={`Pick ${label} color`}
             >
@@ -326,6 +328,8 @@ export function ColorPickerPopover({
           }
           preset="dropdown"
           contentClassName="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xl p-3 z-[9999]"
+          contentOnMouseDown={(event) => event.stopPropagation()}
+          contentOnPointerDown={(event) => event.stopPropagation()}
         >
           <div className="w-[200px]">
               {enableGradient ? (

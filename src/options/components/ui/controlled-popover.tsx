@@ -1,5 +1,12 @@
 import * as Popover from "@radix-ui/react-popover"
-import { useEffect, useRef, useState, type MouseEventHandler, type ReactNode } from "react"
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEventHandler,
+  type PointerEventHandler,
+  type ReactNode
+} from "react"
 
 type PopoverBehavior = "click" | "hover" | "hybrid"
 type PopoverPreset = "tooltip" | "dropdown" | "inspector"
@@ -20,6 +27,7 @@ interface ControlledPopoverProps {
   triggerWrapperClassName?: string
   contentClassName?: string
   contentOnMouseDown?: MouseEventHandler<HTMLDivElement>
+  contentOnPointerDown?: PointerEventHandler<HTMLDivElement>
 }
 
 const PRESET_MAP: Record<
@@ -82,7 +90,8 @@ export function ControlledPopover({
   closeDelayMs,
   triggerWrapperClassName,
   contentClassName,
-  contentOnMouseDown
+  contentOnMouseDown,
+  contentOnPointerDown
 }: ControlledPopoverProps) {
   const presetValues = PRESET_MAP[preset]
   const resolvedBehavior = behavior ?? presetValues.behavior
@@ -235,6 +244,7 @@ export function ControlledPopover({
             closePopover(true)
           }}
           onMouseDown={contentOnMouseDown}
+          onPointerDown={contentOnPointerDown}
         >
           {children}
         </Popover.Content>

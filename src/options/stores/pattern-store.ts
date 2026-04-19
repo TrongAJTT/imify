@@ -4,17 +4,28 @@ import { Storage } from "@plasmohq/storage"
 
 import type {
   PatternAsset,
+  PatternAssetBorderSettings,
+  PatternAssetMonochromeSettings,
   PatternAssetResizeSettings,
   PatternBoundarySettings,
   PatternCanvasSettings,
   PatternDistributionSettings,
   PatternExportFormat,
+  PatternLayerBorderOverrideSettings,
+  PatternLayerColorOverrideMode,
+  PatternLayerColorOverrideSettings,
+  PatternLayerCornerRadiusOverrideSettings,
   PatternSettings,
 } from "@/features/pattern/types"
 import {
+  DEFAULT_PATTERN_ASSET_BORDER_SETTINGS,
+  DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS,
   DEFAULT_PATTERN_ASSET_RESIZE_SETTINGS,
   DEFAULT_PATTERN_CANVAS_SETTINGS,
   DEFAULT_PATTERN_EXPORT_SETTINGS,
+  DEFAULT_PATTERN_LAYER_BORDER_OVERRIDE_SETTINGS,
+  DEFAULT_PATTERN_LAYER_COLOR_OVERRIDE_SETTINGS,
+  DEFAULT_PATTERN_LAYER_CORNER_RADIUS_OVERRIDE_SETTINGS,
   DEFAULT_PATTERN_SETTINGS,
 } from "@/features/pattern/types"
 import type { BmpColorDepth, TiffColorMode } from "@/core/types"
@@ -36,6 +47,14 @@ const plasmoStorage = {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
+}
+
+function clampNonNegative(value: number, fallback: number, max = 2000): number {
+  if (!Number.isFinite(value)) {
+    return fallback
+  }
+
+  return Math.max(0, Math.min(max, value))
 }
 
 function clampPositiveDimension(value: number, fallback: number): number {
@@ -97,10 +116,79 @@ function normalizeAssetResizeSettings(
   }
 }
 
+function normalizeAssetMonochromeSettings(
+  monochrome: PatternAssetMonochromeSettings | undefined
+): PatternAssetMonochromeSettings {
+  const source = monochrome ?? DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS
+
+  return {
+    enabled: Boolean(source.enabled),
+    color: typeof source.color === "string" && source.color.trim().length > 0
+      ? source.color
+      : DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS.color,
+  }
+}
+
+function normalizeAssetBorderSettings(
+  border: PatternAssetBorderSettings | undefined
+): PatternAssetBorderSettings {
+  const source = border ?? DEFAULT_PATTERN_ASSET_BORDER_SETTINGS
+
+  return {
+    width: clampNonNegative(source.width, DEFAULT_PATTERN_ASSET_BORDER_SETTINGS.width, 512),
+    color: typeof source.color === "string" && source.color.trim().length > 0
+      ? source.color
+      : DEFAULT_PATTERN_ASSET_BORDER_SETTINGS.color,
+  }
+}
+
+function normalizeLayerColorOverrideSettings(
+  settings: PatternLayerColorOverrideSettings | undefined
+): PatternLayerColorOverrideSettings {
+  const source = settings ?? DEFAULT_PATTERN_LAYER_COLOR_OVERRIDE_SETTINGS
+  const mode: PatternLayerColorOverrideMode = source.mode === "unified" ? "unified" : "per-asset"
+
+  return {
+    enabled: Boolean(source.enabled),
+    color: typeof source.color === "string" && source.color.trim().length > 0
+      ? source.color
+      : DEFAULT_PATTERN_LAYER_COLOR_OVERRIDE_SETTINGS.color,
+    mode,
+  }
+}
+
+function normalizeLayerBorderOverrideSettings(
+  settings: PatternLayerBorderOverrideSettings | undefined
+): PatternLayerBorderOverrideSettings {
+  const source = settings ?? DEFAULT_PATTERN_LAYER_BORDER_OVERRIDE_SETTINGS
+
+  return {
+    enabled: Boolean(source.enabled),
+    width: clampNonNegative(source.width, DEFAULT_PATTERN_LAYER_BORDER_OVERRIDE_SETTINGS.width, 512),
+    color: typeof source.color === "string" && source.color.trim().length > 0
+      ? source.color
+      : DEFAULT_PATTERN_LAYER_BORDER_OVERRIDE_SETTINGS.color,
+  }
+}
+
+function normalizeLayerCornerRadiusOverrideSettings(
+  settings: PatternLayerCornerRadiusOverrideSettings | undefined
+): PatternLayerCornerRadiusOverrideSettings {
+  const source = settings ?? DEFAULT_PATTERN_LAYER_CORNER_RADIUS_OVERRIDE_SETTINGS
+
+  return {
+    enabled: Boolean(source.enabled),
+    radius: clampNonNegative(source.radius, DEFAULT_PATTERN_LAYER_CORNER_RADIUS_OVERRIDE_SETTINGS.radius, 2048),
+  }
+}
+
 function cloneSettings(settings: PatternSettings, canvas: PatternCanvasSettings): PatternSettings {
   return {
     distribution: normalizeDistributionSettings(settings.distribution),
     assetResize: normalizeAssetResizeSettings(settings.assetResize),
+    layerColorOverride: normalizeLayerColorOverrideSettings(settings.layerColorOverride),
+    layerBorderOverride: normalizeLayerBorderOverrideSettings(settings.layerBorderOverride),
+    layerCornerRadiusOverride: normalizeLayerCornerRadiusOverrideSettings(settings.layerCornerRadiusOverride),
     inboundBoundary: normalizeBoundarySettings(settings.inboundBoundary, canvas),
     outboundBoundary: normalizeBoundarySettings(settings.outboundBoundary, canvas),
   }
@@ -152,6 +240,9 @@ export interface PatternStoreState {
   setCanvasSize: (width: number, height: number) => void
   setDistribution: (partial: Partial<PatternDistributionSettings>) => void
   setAssetResize: (partial: Partial<PatternAssetResizeSettings>) => void
+  setLayerColorOverride: (partial: Partial<PatternLayerColorOverrideSettings>) => void
+  setLayerBorderOverride: (partial: Partial<PatternLayerBorderOverrideSettings>) => void
+  setLayerCornerRadiusOverride: (partial: Partial<PatternLayerCornerRadiusOverrideSettings>) => void
   setBoundary: (target: "inbound" | "outbound", partial: Partial<PatternBoundarySettings>) => void
   resetBoundariesToCanvas: () => void
   setVisualBoundaryVisibility: (target: PatternVisualBoundaryTarget, visible: boolean) => void
@@ -281,6 +372,36 @@ export const usePatternStore = create<PatternStoreState>()(
             ...state.settings,
             assetResize: normalizeAssetResizeSettings({
               ...state.settings.assetResize,
+              ...partial,
+            }),
+          },
+        })),
+      setLayerColorOverride: (partial) =>
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            layerColorOverride: normalizeLayerColorOverrideSettings({
+              ...state.settings.layerColorOverride,
+              ...partial,
+            }),
+          },
+        })),
+      setLayerBorderOverride: (partial) =>
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            layerBorderOverride: normalizeLayerBorderOverrideSettings({
+              ...state.settings.layerBorderOverride,
+              ...partial,
+            }),
+          },
+        })),
+      setLayerCornerRadiusOverride: (partial) =>
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            layerCornerRadiusOverride: normalizeLayerCornerRadiusOverrideSettings({
+              ...state.settings.layerCornerRadiusOverride,
               ...partial,
             }),
           },
@@ -433,6 +554,19 @@ export const usePatternStore = create<PatternStoreState>()(
                   opacity: clamp(partial.opacity ?? asset.opacity, 0, 1),
                   width: clampPositiveDimension(partial.width ?? asset.width, asset.width),
                   height: clampPositiveDimension(partial.height ?? asset.height, asset.height),
+                  monochrome: normalizeAssetMonochromeSettings({
+                    ...normalizeAssetMonochromeSettings(asset.monochrome),
+                    ...(partial.monochrome ?? {}),
+                  }),
+                  border: normalizeAssetBorderSettings({
+                    ...normalizeAssetBorderSettings(asset.border),
+                    ...(partial.border ?? {}),
+                  }),
+                  cornerRadius: clampNonNegative(
+                    partial.cornerRadius ?? asset.cornerRadius ?? 0,
+                    asset.cornerRadius ?? 0,
+                    2048
+                  ),
                 }
               : asset
           ),
@@ -499,6 +633,9 @@ export const usePatternStore = create<PatternStoreState>()(
         settings: {
           distribution: state.settings.distribution,
           assetResize: state.settings.assetResize,
+          layerColorOverride: state.settings.layerColorOverride,
+          layerBorderOverride: state.settings.layerBorderOverride,
+          layerCornerRadiusOverride: state.settings.layerCornerRadiusOverride,
           inboundBoundary: state.settings.inboundBoundary,
           outboundBoundary: state.settings.outboundBoundary,
         },

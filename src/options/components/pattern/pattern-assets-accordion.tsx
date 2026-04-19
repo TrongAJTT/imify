@@ -11,7 +11,11 @@ import {
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { Brush, ImagePlus, Trash2 } from "lucide-react"
 
-import type { PatternAsset } from "@/features/pattern/types"
+import {
+  DEFAULT_PATTERN_ASSET_BORDER_SETTINGS,
+  DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS,
+  type PatternAsset,
+} from "@/features/pattern/types"
 import { PatternAssetDrawingDialog } from "@/options/components/pattern/pattern-asset-drawing-dialog"
 import { PatternAssetListItem } from "@/options/components/pattern/pattern-asset-list-item"
 import { Button } from "@/options/components/ui/button"
@@ -65,6 +69,9 @@ function buildAssetFromBlob(params: {
     height: params.size.height,
     enabled: true,
     opacity: 1,
+    monochrome: { ...DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS },
+    border: { ...DEFAULT_PATTERN_ASSET_BORDER_SETTINGS },
+    cornerRadius: 0,
   }
 }
 
@@ -240,6 +247,9 @@ export function PatternAssetsAccordion() {
                       asset={asset}
                       onToggleEnabled={(assetId, enabled) => updateAsset(assetId, { enabled })}
                       onOpacityChange={(assetId, opacity) => updateAsset(assetId, { opacity })}
+                      onMonochromeChange={(assetId, monochrome) => updateAsset(assetId, { monochrome })}
+                      onBorderChange={(assetId, border) => updateAsset(assetId, { border })}
+                      onCornerRadiusChange={(assetId, cornerRadius) => updateAsset(assetId, { cornerRadius })}
                       onRemove={handleRemoveAsset}
                     />
                   ))}

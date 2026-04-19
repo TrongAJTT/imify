@@ -2,13 +2,25 @@ import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Eye, EyeOff, SlidersHorizontal, Trash2 } from "lucide-react"
 
-import type { PatternAsset } from "@/features/pattern/types"
+import {
+  DEFAULT_PATTERN_ASSET_BORDER_SETTINGS,
+  DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS,
+  type PatternAsset,
+  type PatternAssetBorderSettings,
+  type PatternAssetMonochromeSettings,
+} from "@/features/pattern/types"
+import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
+import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { ControlledPopover } from "@/options/components/ui/controlled-popover"
+import { NumberInput } from "@/options/components/ui/number-input"
 
 interface PatternAssetListItemProps {
   asset: PatternAsset
   onToggleEnabled: (assetId: string, enabled: boolean) => void
   onOpacityChange: (assetId: string, opacity: number) => void
+  onMonochromeChange: (assetId: string, monochrome: PatternAssetMonochromeSettings) => void
+  onBorderChange: (assetId: string, border: PatternAssetBorderSettings) => void
+  onCornerRadiusChange: (assetId: string, cornerRadius: number) => void
   onRemove: (assetId: string) => void
 }
 
@@ -20,6 +32,9 @@ export function PatternAssetListItem({
   asset,
   onToggleEnabled,
   onOpacityChange,
+  onMonochromeChange,
+  onBorderChange,
+  onCornerRadiusChange,
   onRemove,
 }: PatternAssetListItemProps) {
   const {
@@ -37,6 +52,9 @@ export function PatternAssetListItem({
     zIndex: isDragging ? 40 : undefined,
     opacity: isDragging ? 0.85 : 1,
   }
+  const monochrome = asset.monochrome ?? DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS
+  const border = asset.border ?? DEFAULT_PATTERN_ASSET_BORDER_SETTINGS
+  const cornerRadius = Math.max(0, asset.cornerRadius ?? 0)
 
   return (
     <div
@@ -82,6 +100,7 @@ export function PatternAssetListItem({
           openDelayMs={120}
           closeDelayMs={100}
           contentOnMouseDown={(event) => event.stopPropagation()}
+          contentOnPointerDown={(event) => event.stopPropagation()}
           trigger={
             <button
               type="button"
@@ -92,9 +111,9 @@ export function PatternAssetListItem({
               <SlidersHorizontal size={14} />
             </button>
           }
-          contentClassName="z-[120] w-48 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 shadow-xl"
+          contentClassName="z-[120] w-72 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 shadow-xl"
         >
-          <div className="space-y-2 pointer-events-auto">
+          <div className="space-y-3 pointer-events-auto">
             <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Opacity
             </div>
@@ -112,6 +131,78 @@ export function PatternAssetListItem({
               <span className="w-10 text-right text-[10px] text-slate-500 dark:text-slate-400">
                 {Math.round(clamp(asset.opacity, 0, 1) * 100)}%
               </span>
+            </div>
+
+            <CheckboxCard
+              title="Monochrome"
+              subtitle={monochrome.enabled ? `Enabled (${monochrome.color})` : "Disabled"}
+              checked={monochrome.enabled}
+              onChange={(checked) =>
+                onMonochromeChange(asset.id, {
+                  ...monochrome,
+                  enabled: checked,
+                })
+              }
+              className="px-2 py-1.5"
+            />
+
+            <div className={monochrome.enabled ? "" : "pointer-events-none opacity-60"}>
+              <ColorPickerPopover
+                label="Monochrome Color"
+                value={monochrome.color}
+                onChange={(value) =>
+                  onMonochromeChange(asset.id, {
+                    ...monochrome,
+                    color: value,
+                  })
+                }
+                enableGradient={false}
+                enableAlpha={false}
+                outputMode="hex"
+              />
+            </div>
+
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Border
+              </div>
+              <NumberInput
+                label="Border Width"
+                value={Math.round(border.width * 10) / 10}
+                min={0}
+                max={200}
+                step={0.5}
+                onChangeValue={(value) =>
+                  onBorderChange(asset.id, {
+                    ...border,
+                    width: Math.max(0, value),
+                  })
+                }
+              />
+              <ColorPickerPopover
+                label="Border Color"
+                value={border.color}
+                onChange={(value) =>
+                  onBorderChange(asset.id, {
+                    ...border,
+                    color: value,
+                  })
+                }
+                enableGradient={false}
+                enableAlpha={true}
+                outputMode="rgba"
+              />
+            </div>
+
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+              <NumberInput
+                label="Corner Radius"
+                value={Math.round(cornerRadius * 10) / 10}
+                min={0}
+                max={1024}
+                step={0.5}
+                onChangeValue={(value) => onCornerRadiusChange(asset.id, Math.max(0, value))}
+              />
             </div>
           </div>
         </ControlledPopover>

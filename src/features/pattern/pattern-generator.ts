@@ -1,8 +1,14 @@
 import type {
+  PatternAssetBorderSettings,
+  PatternAssetMonochromeSettings,
   PatternAsset,
   PatternBoundarySettings,
   PatternDistributionSettings,
   PatternSettings,
+} from "@/features/pattern/types"
+import {
+  DEFAULT_PATTERN_ASSET_BORDER_SETTINGS,
+  DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS,
 } from "@/features/pattern/types"
 
 type BoundaryEvaluationSettings = Pick<
@@ -15,6 +21,9 @@ export interface PatternRenderableAsset {
   width: number
   height: number
   opacity: number
+  monochrome: PatternAssetMonochromeSettings
+  border: PatternAssetBorderSettings
+  cornerRadius: number
 }
 
 export interface PatternPlacement {
@@ -288,5 +297,14 @@ export function toRenderableAssets(assets: PatternAsset[]): PatternRenderableAss
       width: clampPositive(asset.width, 1),
       height: clampPositive(asset.height, 1),
       opacity: clamp(asset.opacity, 0, 1),
+      monochrome: {
+        ...DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS,
+        ...(asset.monochrome ?? {}),
+      },
+      border: {
+        ...DEFAULT_PATTERN_ASSET_BORDER_SETTINGS,
+        ...(asset.border ?? {}),
+      },
+      cornerRadius: Math.max(0, asset.cornerRadius ?? 0),
     }))
 }
