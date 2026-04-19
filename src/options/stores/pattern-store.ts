@@ -4,6 +4,7 @@ import { Storage } from "@plasmohq/storage"
 
 import type {
   PatternAsset,
+  PatternAssetResizeSettings,
   PatternBoundarySettings,
   PatternCanvasSettings,
   PatternDistributionSettings,
@@ -11,6 +12,7 @@ import type {
   PatternSettings,
 } from "@/features/pattern/types"
 import {
+  DEFAULT_PATTERN_ASSET_RESIZE_SETTINGS,
   DEFAULT_PATTERN_CANVAS_SETTINGS,
   DEFAULT_PATTERN_EXPORT_SETTINGS,
   DEFAULT_PATTERN_SETTINGS,
@@ -83,18 +85,40 @@ function normalizeBoundarySettings(
   }
 }
 
+function normalizeAssetResizeSettings(
+  assetResize: PatternAssetResizeSettings | undefined
+): PatternAssetResizeSettings {
+  const source = assetResize ?? DEFAULT_PATTERN_ASSET_RESIZE_SETTINGS
+
+  return {
+    enabled: Boolean(source.enabled),
+    width: clampPositiveDimension(source.width, DEFAULT_PATTERN_ASSET_RESIZE_SETTINGS.width),
+    height: clampPositiveDimension(source.height, DEFAULT_PATTERN_ASSET_RESIZE_SETTINGS.height),
+  }
+}
+
 function cloneSettings(settings: PatternSettings, canvas: PatternCanvasSettings): PatternSettings {
   return {
     distribution: normalizeDistributionSettings(settings.distribution),
+    assetResize: normalizeAssetResizeSettings(settings.assetResize),
     inboundBoundary: normalizeBoundarySettings(settings.inboundBoundary, canvas),
     outboundBoundary: normalizeBoundarySettings(settings.outboundBoundary, canvas),
   }
+}
+
+export type PatternVisualBoundaryTarget = "inbound" | "outbound"
+
+export interface PatternVisualBoundaryVisibility {
+  inbound: boolean
+  outbound: boolean
 }
 
 export interface PatternStoreState {
   canvas: PatternCanvasSettings
   settings: PatternSettings
   assets: PatternAsset[]
+  visualBoundaryVisibility: PatternVisualBoundaryVisibility
+  activeVisualBoundary: PatternVisualBoundaryTarget | null
 
   exportFormat: PatternExportFormat
   exportQuality: number
@@ -127,8 +151,14 @@ export interface PatternStoreState {
   setCanvas: (partial: Partial<PatternCanvasSettings>) => void
   setCanvasSize: (width: number, height: number) => void
   setDistribution: (partial: Partial<PatternDistributionSettings>) => void
+  setAssetResize: (partial: Partial<PatternAssetResizeSettings>) => void
   setBoundary: (target: "inbound" | "outbound", partial: Partial<PatternBoundarySettings>) => void
   resetBoundariesToCanvas: () => void
+  setVisualBoundaryVisibility: (target: PatternVisualBoundaryTarget, visible: boolean) => void
+  toggleVisualBoundaryVisibility: (target: PatternVisualBoundaryTarget) => void
+  setActiveVisualBoundary: (target: PatternVisualBoundaryTarget | null) => void
+  triggerVisualBoundary: (target: PatternVisualBoundaryTarget) => void
+  hideVisualBoundary: () => void
 
   addAsset: (asset: PatternAsset) => void
   updateAsset: (assetId: string, partial: Partial<PatternAsset>) => void
@@ -169,6 +199,11 @@ export const usePatternStore = create<PatternStoreState>()(
       canvas: { ...DEFAULT_PATTERN_CANVAS_SETTINGS },
       settings: cloneSettings(DEFAULT_PATTERN_SETTINGS, DEFAULT_PATTERN_CANVAS_SETTINGS),
       assets: [],
+      visualBoundaryVisibility: {
+        inbound: false,
+        outbound: false,
+      },
+      activeVisualBoundary: null,
 
       exportFormat: DEFAULT_PATTERN_EXPORT_SETTINGS.exportFormat,
       exportQuality: DEFAULT_PATTERN_EXPORT_SETTINGS.exportQuality,
@@ -240,6 +275,16 @@ export const usePatternStore = create<PatternStoreState>()(
             }),
           },
         })),
+      setAssetResize: (partial) =>
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            assetResize: normalizeAssetResizeSettings({
+              ...state.settings.assetResize,
+              ...partial,
+            }),
+          },
+        })),
       setBoundary: (target, partial) =>
         set((state) => {
           const current = target === "inbound" ? state.settings.inboundBoundary : state.settings.outboundBoundary
@@ -289,6 +334,91 @@ export const usePatternStore = create<PatternStoreState>()(
             },
           },
         })),
+      setVisualBoundaryVisibility: (target, visible) =>
+        set((state) => {
+          const nextVisibility = {
+            ...state.visualBoundaryVisibility,
+            [target]: visible,
+          }
+
+          let nextActive = state.activeVisualBoundary
+          if (visible) {
+            nextActive = target
+          } else if (state.activeVisualBoundary === target) {
+            nextActive = target === "inbound"
+              ? nextVisibility.outbound
+                ? "outbound"
+                : null
+              : nextVisibility.inbound
+                ? "inbound"
+                : null
+          }
+
+          return {
+            visualBoundaryVisibility: nextVisibility,
+            activeVisualBoundary: nextActive,
+          }
+        }),
+      toggleVisualBoundaryVisibility: (target) =>
+        set((state) => {
+          const nextVisible = !state.visualBoundaryVisibility[target]
+          const nextVisibility = {
+            ...state.visualBoundaryVisibility,
+            [target]: nextVisible,
+          }
+
+          let nextActive = state.activeVisualBoundary
+          if (nextVisible) {
+            nextActive = target
+          } else if (state.activeVisualBoundary === target) {
+            nextActive = target === "inbound"
+              ? nextVisibility.outbound
+                ? "outbound"
+                : null
+              : nextVisibility.inbound
+                ? "inbound"
+                : null
+          }
+
+          return {
+            visualBoundaryVisibility: nextVisibility,
+            activeVisualBoundary: nextActive,
+          }
+        }),
+      setActiveVisualBoundary: (target) =>
+        set((state) => {
+          if (!target) {
+            return { activeVisualBoundary: null }
+          }
+
+          if (!state.visualBoundaryVisibility[target]) {
+            return {
+              visualBoundaryVisibility: {
+                ...state.visualBoundaryVisibility,
+                [target]: true,
+              },
+              activeVisualBoundary: target,
+            }
+          }
+
+          return { activeVisualBoundary: target }
+        }),
+      triggerVisualBoundary: (target) =>
+        set({
+          visualBoundaryVisibility: {
+            inbound: target === "inbound",
+            outbound: target === "outbound",
+          },
+          activeVisualBoundary: target,
+        }),
+      hideVisualBoundary: () =>
+        set({
+          visualBoundaryVisibility: {
+            inbound: false,
+            outbound: false,
+          },
+          activeVisualBoundary: null,
+        }),
       addAsset: (asset) =>
         set((state) => ({
           assets: [...state.assets, asset],
@@ -368,6 +498,7 @@ export const usePatternStore = create<PatternStoreState>()(
         },
         settings: {
           distribution: state.settings.distribution,
+          assetResize: state.settings.assetResize,
           inboundBoundary: state.settings.inboundBoundary,
           outboundBoundary: state.settings.outboundBoundary,
         },
@@ -421,6 +552,11 @@ export const usePatternStore = create<PatternStoreState>()(
           canvas: nextCanvas,
           settings: persistedSettings,
           assets: [],
+          visualBoundaryVisibility: {
+            inbound: false,
+            outbound: false,
+          },
+          activeVisualBoundary: null,
         }
       },
     }

@@ -5,6 +5,11 @@ import type {
   PatternSettings,
 } from "@/features/pattern/types"
 
+type BoundaryEvaluationSettings = Pick<
+  PatternSettings,
+  "distribution" | "inboundBoundary" | "outboundBoundary"
+>
+
 export interface PatternRenderableAsset {
   id: string
   width: number
@@ -135,7 +140,7 @@ function getPlacementCorners(placement: PatternPlacement): Point[] {
 
 function isPlacementAcceptedByStrictBoundaryMode(
   placement: PatternPlacement,
-  settings: PatternSettings
+  settings: BoundaryEvaluationSettings
 ): boolean {
   const corners = getPlacementCorners(placement)
 
@@ -164,7 +169,7 @@ function isPlacementAcceptedByStrictBoundaryMode(
 
 function isPlacementAcceptedByCenterBoundaryMode(
   placement: PatternPlacement,
-  settings: PatternSettings
+  settings: BoundaryEvaluationSettings
 ): boolean {
   const center = { x: placement.x, y: placement.y }
 
@@ -181,7 +186,7 @@ function isPlacementAcceptedByCenterBoundaryMode(
 
 export function shouldRenderPlacement(
   placement: PatternPlacement,
-  settings: PatternSettings
+  settings: BoundaryEvaluationSettings
 ): boolean {
   const edgeBehavior = settings.distribution.edgeBehavior
 

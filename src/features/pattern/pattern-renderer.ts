@@ -33,6 +33,14 @@ export interface RenderPatternImageDataOptions {
 
 const DEG_TO_RAD = Math.PI / 180
 
+interface ParsedLinearGradientBackground {
+  angleDeg: number
+  stops: Array<{
+    color: string
+    offset: number
+  }>
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
@@ -43,6 +51,84 @@ function safeDimension(value: number): number {
   }
 
   return Math.round(value)
+}
+
+function parseLinearGradientBackground(value: string): ParsedLinearGradientBackground | null {
+  const match = value.trim().match(/^linear-gradient\(\s*([+-]?\d*\.?\d+)deg\s*,\s*(.+)\s*\)$/i)
+
+  if (!match) {
+    return null
+  }
+
+  const angleDeg = Number(match[1])
+  if (!Number.isFinite(angleDeg)) {
+    return null
+  }
+
+  const rawStops = match[2]
+    .split(/,(?![^(]*\))/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  if (rawStops.length < 2) {
+    return null
+  }
+
+  const stops = rawStops.map((entry, index) => {
+    const stopMatch = entry.match(/^(.*?)(?:\s+([+-]?\d*\.?\d+)%?)?$/)
+    const color = stopMatch?.[1]?.trim() || entry
+    const parsedOffset = Number(stopMatch?.[2])
+    const fallbackOffset = (index / Math.max(1, rawStops.length - 1)) * 100
+
+    return {
+      color,
+      offset:
+        stopMatch?.[2] && Number.isFinite(parsedOffset)
+          ? Math.max(0, Math.min(100, parsedOffset))
+          : fallbackOffset,
+    }
+  })
+
+  return {
+    angleDeg,
+    stops: stops.sort((a, b) => a.offset - b.offset),
+  }
+}
+
+function fillCanvasBackground(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  width: number,
+  height: number,
+  background: string
+): void {
+  const parsedGradient = parseLinearGradientBackground(background)
+
+  if (!parsedGradient) {
+    ctx.fillStyle = background
+    ctx.fillRect(0, 0, width, height)
+    return
+  }
+
+  const radians = ((parsedGradient.angleDeg - 90) * Math.PI) / 180
+  const centerX = width / 2
+  const centerY = height / 2
+  const halfDiagonal = Math.sqrt(width * width + height * height) / 2
+  const deltaX = Math.cos(radians) * halfDiagonal
+  const deltaY = Math.sin(radians) * halfDiagonal
+
+  const gradient = ctx.createLinearGradient(
+    centerX - deltaX,
+    centerY - deltaY,
+    centerX + deltaX,
+    centerY + deltaY
+  )
+
+  for (const stop of parsedGradient.stops) {
+    gradient.addColorStop(stop.offset / 100, stop.color)
+  }
+
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, width, height)
 }
 
 function withBoundaryPath(
@@ -86,16 +172,9 @@ function drawBackground(
     return
   }
 
-  if (canvas.backgroundType === "solid") {
-    ctx.fillStyle = canvas.backgroundColor
-    ctx.fillRect(0, 0, width, height)
-    return
-  }
+  fillCanvasBackground(ctx, width, height, canvas.backgroundColor)
 
-  ctx.fillStyle = canvas.backgroundColor
-  ctx.fillRect(0, 0, width, height)
-
-  if (!backgroundBitmap) {
+  if (canvas.backgroundType !== "image" || !backgroundBitmap) {
     return
   }
 
@@ -125,8 +204,13 @@ function drawBackground(
 
 function buildRenderableAssets(
   assets: PatternAsset[],
+  settings: PatternSettings,
   loadedAssetBitmaps: Map<string, ImageBitmap>
 ): PatternRenderableAsset[] {
+  const resizeEnabled = settings.assetResize.enabled
+  const resizeWidth = Math.max(1, Math.round(settings.assetResize.width))
+  const resizeHeight = Math.max(1, Math.round(settings.assetResize.height))
+
   return toRenderableAssets(assets)
     .map((asset) => {
       const bitmap = loadedAssetBitmaps.get(asset.id)
@@ -136,8 +220,8 @@ function buildRenderableAssets(
 
       return {
         ...asset,
-        width: Math.max(1, bitmap.width),
-        height: Math.max(1, bitmap.height),
+        width: resizeEnabled ? resizeWidth : Math.max(1, bitmap.width),
+        height: resizeEnabled ? resizeHeight : Math.max(1, bitmap.height),
       }
     })
     .filter((entry): entry is PatternRenderableAsset => Boolean(entry))
@@ -213,7 +297,7 @@ export function renderPatternToContext(options: RenderPatternToContextOptions): 
 
   drawBackground(ctx, canvas, backgroundBitmap)
 
-  const renderableAssets = buildRenderableAssets(assets, loadedAssetBitmaps)
+  const renderableAssets = buildRenderableAssets(assets, settings, loadedAssetBitmaps)
   if (renderableAssets.length === 0) {
     if (drawGuides) {
       drawBoundaryGuide(ctx, settings.inboundBoundary, "#0ea5e9")

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Eraser, Pencil, RotateCcw, Trash2, X } from "lucide-react"
-
 import { BaseDialog } from "@/options/components/ui/base-dialog"
 import { Button } from "@/options/components/ui/button"
+import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { NumberInput } from "@/options/components/ui/number-input"
+import { TextInput } from "@/options/components/ui/text-input"
+import { Eraser, Pencil, RotateCcw, Trash2, X } from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 interface PatternAssetDrawingDialogProps {
   isOpen: boolean
@@ -27,6 +28,12 @@ interface Stroke {
 
 const DRAWING_WIDTH = 1024
 const DRAWING_HEIGHT = 640
+
+interface BrushPreview {
+  x: number
+  y: number
+  radius: number
+}
 
 function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke): void {
   if (stroke.points.length < 2) {
@@ -58,18 +65,42 @@ function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke): void {
   ctx.restore()
 }
 
-function toLocalCanvasPoint(canvas: HTMLCanvasElement, event: React.PointerEvent<HTMLCanvasElement>): Point {
+function toLocalCanvasPoint(
+  canvas: HTMLCanvasElement,
+  event: React.PointerEvent<HTMLCanvasElement>
+): Point {
   const rect = canvas.getBoundingClientRect()
-  const x = ((event.clientX - rect.left) / Math.max(rect.width, 1)) * canvas.width
-  const y = ((event.clientY - rect.top) / Math.max(rect.height, 1)) * canvas.height
+  const x =
+    ((event.clientX - rect.left) / Math.max(rect.width, 1)) * canvas.width
+  const y =
+    ((event.clientY - rect.top) / Math.max(rect.height, 1)) * canvas.height
 
   return {
     x: Math.max(0, Math.min(canvas.width, x)),
-    y: Math.max(0, Math.min(canvas.height, y)),
+    y: Math.max(0, Math.min(canvas.height, y))
   }
 }
 
-export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAssetDrawingDialogProps) {
+function toBrushPreview(
+  canvas: HTMLCanvasElement,
+  event: React.PointerEvent<HTMLCanvasElement>,
+  brushSize: number
+): BrushPreview {
+  const rect = canvas.getBoundingClientRect()
+  const scale = Math.max(rect.width / Math.max(canvas.width, 1), 0.0001)
+
+  return {
+    x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
+    y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)),
+    radius: Math.max(1, (brushSize * scale) / 2)
+  }
+}
+
+export function PatternAssetDrawingDialog({
+  isOpen,
+  onClose,
+  onSave
+}: PatternAssetDrawingDialogProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [tool, setTool] = useState<DrawingTool>("pen")
   const [brushSize, setBrushSize] = useState(10)
@@ -78,8 +109,14 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
   const [strokes, setStrokes] = useState<Stroke[]>([])
   const [activeStroke, setActiveStroke] = useState<Stroke | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
+  const [brushPreview, setBrushPreview] = useState<BrushPreview | null>(null)
+  const [isHovering, setIsHovering] = useState(false)
 
-  const hasContent = useMemo(() => strokes.length > 0 || activeStroke?.points.length, [strokes.length, activeStroke?.points.length])
+  const hasContent = useMemo(
+    () => strokes.length > 0 || activeStroke?.points.length,
+    [strokes.length, activeStroke?.points.length]
+  )
+  const hasUndoHistory = strokes.length > 0
 
   const redrawCanvas = useCallback(() => {
     const canvas = canvasRef.current
@@ -114,6 +151,7 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
     setStrokes([])
     setActiveStroke(null)
     setIsDrawing(false)
+    setBrushPreview(null)
     setSuggestedName("drawn-asset")
   }, [isOpen])
 
@@ -127,12 +165,15 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
       return
     }
 
+    setIsHovering(true)
+    setBrushPreview(toBrushPreview(canvas, event, brushSize))
+
     const point = toLocalCanvasPoint(canvas, event)
     const stroke: Stroke = {
       tool,
       color,
       size: brushSize,
-      points: [point],
+      points: [point]
     }
 
     setActiveStroke(stroke)
@@ -141,12 +182,14 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
   }
 
   const continueStroke = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) {
+    const canvas = canvasRef.current
+    if (!canvas) {
       return
     }
 
-    const canvas = canvasRef.current
-    if (!canvas) {
+    setBrushPreview(toBrushPreview(canvas, event, brushSize))
+
+    if (!isDrawing) {
       return
     }
 
@@ -158,7 +201,7 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
 
       return {
         ...current,
-        points: [...current.points, point],
+        points: [...current.points, point]
       }
     })
   }
@@ -174,7 +217,10 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
     }
 
     canvas.releasePointerCapture(event.pointerId)
+    setBrushPreview(toBrushPreview(canvas, event, brushSize))
     setIsDrawing(false)
+
+    // keep hover state as-is; pointer may still be over canvas
 
     setActiveStroke((current) => {
       if (!current || current.points.length < 2) {
@@ -210,25 +256,44 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
       return
     }
 
-    const normalizedName = suggestedName.trim().length > 0 ? suggestedName.trim() : "drawn-asset"
+    const normalizedName =
+      suggestedName.trim().length > 0 ? suggestedName.trim() : "drawn-asset"
     onSave({ blob, suggestedName: normalizedName })
   }
 
+  const handleManualClose = () => {
+    if (hasUndoHistory) {
+      const confirmed = window.confirm(
+        "You have unsaved drawing progress. Close without saving?"
+      )
+      if (!confirmed) {
+        return
+      }
+    }
+
+    onClose()
+  }
+
   return (
-    <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="w-[980px] max-w-[96vw] rounded-2xl overflow-hidden">
+    <BaseDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      isDirty={hasUndoHistory}
+      contentClassName="w-[980px] max-w-[96vw] rounded-2xl overflow-hidden">
       <div className="border-b border-slate-200 dark:border-slate-800 px-5 py-4 flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Draw Asset</h2>
+          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+            Draw Asset
+          </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Sketch directly in-browser. Saved output is transparent PNG.
           </p>
         </div>
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleManualClose}
           className="h-8 w-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-          aria-label="Close drawing dialog"
-        >
+          aria-label="Close drawing dialog">
           <X size={16} />
         </button>
       </div>
@@ -236,19 +301,48 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
       <div className="p-4 space-y-3">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
           <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/20 p-3">
-            <div
-              className="rounded-lg border border-slate-200 dark:border-slate-700 bg-[linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc),linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc)] dark:bg-[linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a),linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a)] bg-[length:20px_20px] bg-[position:0_0,10px_10px]"
-            >
+            <div className="relative rounded-lg border border-slate-200 dark:border-slate-700 bg-[linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc),linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc)] dark:bg-[linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a),linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a)] bg-[length:20px_20px] bg-[position:0_0,10px_10px]">
               <canvas
                 ref={canvasRef}
                 width={DRAWING_WIDTH}
                 height={DRAWING_HEIGHT}
-                className="w-full h-auto rounded-lg touch-none cursor-crosshair"
+                className={`w-full h-auto rounded-lg touch-none cursor-none`}
                 onPointerDown={beginStroke}
                 onPointerMove={continueStroke}
                 onPointerUp={finishStroke}
                 onPointerCancel={finishStroke}
+                onPointerEnter={(event) => {
+                  const canvas = canvasRef.current
+                  if (!canvas) {
+                    return
+                  }
+
+                  setIsHovering(true)
+                  setBrushPreview(toBrushPreview(canvas, event, brushSize))
+                }}
+                onPointerLeave={() => {
+                  setIsHovering(false)
+                  if (!isDrawing) {
+                    setBrushPreview(null)
+                  }
+                }}
               />
+
+              {brushPreview && (
+                <div
+                  className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border ${
+                    tool === "eraser"
+                      ? "border-rose-400/90 bg-rose-300/10"
+                      : "border-sky-500/90 bg-sky-300/10"
+                  }`}
+                  style={{
+                    left: `${brushPreview.x}px`,
+                    top: `${brushPreview.y}px`,
+                    width: `${brushPreview.radius * 2}px`,
+                    height: `${brushPreview.radius * 2}px`
+                  }}
+                />
+              )}
             </div>
           </div>
 
@@ -258,8 +352,7 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
                 variant={tool === "pen" ? "primary" : "secondary"}
                 size="sm"
                 onClick={() => setTool("pen")}
-                className="w-full"
-              >
+                className="w-full">
                 <Pencil size={14} />
                 Pen
               </Button>
@@ -267,55 +360,61 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
                 variant={tool === "eraser" ? "primary" : "secondary"}
                 size="sm"
                 onClick={() => setTool("eraser")}
-                className="w-full"
-              >
+                className="w-full">
                 <Eraser size={14} />
                 Eraser
               </Button>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Brush Color
-              </label>
-              <input
-                type="color"
+            <div
+              className={
+                tool === "eraser" ? "opacity-60 pointer-events-none" : ""
+              }>
+              <ColorPickerPopover
+                label="Brush Color"
                 value={color}
-                onChange={(event) => setColor(event.target.value)}
-                disabled={tool === "eraser"}
-                className="h-9 w-full rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                onChange={setColor}
+                enableGradient={false}
+                enableAlpha={false}
+                outputMode="hex"
               />
             </div>
 
-            <NumberInput
-              label="Brush Size"
-              value={brushSize}
-              min={1}
-              max={120}
-              step={1}
-              onChangeValue={setBrushSize}
-            />
+            <div className="flex gap-3">
+              <NumberInput
+                label="Brush Size"
+                value={brushSize}
+                min={1}
+                max={120}
+                step={1}
+                onChangeValue={setBrushSize}
+                className="flex-1"
+              />
 
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Asset Name
-              </label>
-              <input
-                type="text"
+              <TextInput
+                label="Asset Name"
                 value={suggestedName}
-                onChange={(event) => setSuggestedName(event.target.value)}
-                className="w-full h-8 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 px-3 text-xs"
+                onChange={setSuggestedName}
                 placeholder="drawn-asset"
                 maxLength={80}
+                className="flex-1"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-1">
-              <Button variant="secondary" size="sm" onClick={handleUndo} disabled={strokes.length === 0}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleUndo}
+                disabled={strokes.length === 0}>
                 <RotateCcw size={14} />
                 Undo
               </Button>
-              <Button variant="secondary" size="sm" onClick={handleClear} disabled={!hasContent}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleClear}
+                disabled={!hasContent}>
                 <Trash2 size={14} />
                 Clear
               </Button>
@@ -324,10 +423,14 @@ export function PatternAssetDrawingDialog({ isOpen, onClose, onSave }: PatternAs
         </div>
 
         <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-          <Button variant="secondary" size="sm" onClick={onClose}>
+          <Button variant="secondary" size="sm" onClick={handleManualClose}>
             Cancel
           </Button>
-          <Button variant="primary" size="sm" onClick={() => void handleSave()} disabled={!hasContent}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => void handleSave()}
+            disabled={!hasContent}>
             Save As Asset
           </Button>
         </div>

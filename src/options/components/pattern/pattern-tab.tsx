@@ -12,6 +12,7 @@ import { useWorkspaceHeaderStore } from "@/options/stores/workspace-header-store
 import { Button } from "@/options/components/ui/button"
 import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrumb"
 import { exportPatternComposition } from "@/options/components/pattern/pattern-export-utils"
+import { PatternBoundaryVisualOverlay } from "@/options/components/pattern/pattern-boundary-visual-overlay"
 
 const PREVIEW_PADDING = 16
 
@@ -31,6 +32,11 @@ export function PatternTab() {
   const canvas = usePatternStore((state) => state.canvas)
   const settings = usePatternStore((state) => state.settings)
   const assets = usePatternStore((state) => state.assets)
+  const visualBoundaryVisibility = usePatternStore((state) => state.visualBoundaryVisibility)
+  const activeVisualBoundary = usePatternStore((state) => state.activeVisualBoundary)
+  const setBoundary = usePatternStore((state) => state.setBoundary)
+  const setActiveVisualBoundary = usePatternStore((state) => state.setActiveVisualBoundary)
+  const hideVisualBoundary = usePatternStore((state) => state.hideVisualBoundary)
 
   const exportFormat = usePatternStore((state) => state.exportFormat)
   const exportQuality = usePatternStore((state) => state.exportQuality)
@@ -81,6 +87,23 @@ export function PatternTab() {
   const conversionToasts = useConversionToasts([exportToastPayload])
 
   const activeAssets = useMemo(() => assets.filter((asset) => asset.enabled), [assets])
+  const hasVisualBoundaryOverlay = useMemo(() => {
+    if (activeVisualBoundary === "inbound") {
+      return visualBoundaryVisibility.inbound && settings.inboundBoundary.enabled
+    }
+
+    if (activeVisualBoundary === "outbound") {
+      return visualBoundaryVisibility.outbound && settings.outboundBoundary.enabled
+    }
+
+    return false
+  }, [
+    activeVisualBoundary,
+    settings.inboundBoundary.enabled,
+    settings.outboundBoundary.enabled,
+    visualBoundaryVisibility.inbound,
+    visualBoundaryVisibility.outbound,
+  ])
 
   const formatOptions = useMemo(
     () =>
@@ -304,6 +327,30 @@ export function PatternTab() {
   }, [clearExportToastHideTimer])
 
   useEffect(() => {
+    if (activeVisualBoundary === "inbound") {
+      const inboundVisible = visualBoundaryVisibility.inbound && settings.inboundBoundary.enabled
+      if (!inboundVisible) {
+        hideVisualBoundary()
+      }
+      return
+    }
+
+    if (activeVisualBoundary === "outbound") {
+      const outboundVisible = visualBoundaryVisibility.outbound && settings.outboundBoundary.enabled
+      if (!outboundVisible) {
+        hideVisualBoundary()
+      }
+    }
+  }, [
+    activeVisualBoundary,
+    hideVisualBoundary,
+    settings.inboundBoundary.enabled,
+    settings.outboundBoundary.enabled,
+    visualBoundaryVisibility.inbound,
+    visualBoundaryVisibility.outbound,
+  ])
+
+  useEffect(() => {
     const canvasElement = previewCanvasRef.current
 
     if (!canvasElement) {
@@ -326,13 +373,13 @@ export function PatternTab() {
         assets,
         loadedAssetBitmaps: assetBitmapMap,
         backgroundBitmap,
-        drawGuides: true,
+        drawGuides: !hasVisualBoundaryOverlay,
         maxPlacements: 30000,
       })
     } finally {
       setIsRenderingPreview(false)
     }
-  }, [assetBitmapMap, assets, backgroundBitmap, canvas, settings])
+  }, [assetBitmapMap, assets, backgroundBitmap, canvas, hasVisualBoundaryOverlay, settings])
 
   const renderScale = useMemo(() => {
     const availableWidth = Math.max(1, previewHostSize.width - PREVIEW_PADDING * 2)
@@ -448,6 +495,28 @@ export function PatternTab() {
                 height={Math.max(1, Math.round(canvas.height))}
                 style={{ width: `${displayWidth}px`, height: `${displayHeight}px`, display: "block" }}
               />
+
+              {hasVisualBoundaryOverlay && (
+                <div className="absolute inset-0" data-pattern-boundary-overlay-root="true">
+                  <PatternBoundaryVisualOverlay
+                    renderScale={renderScale}
+                    displayWidth={displayWidth}
+                    displayHeight={displayHeight}
+                    inboundBoundary={settings.inboundBoundary}
+                    outboundBoundary={settings.outboundBoundary}
+                    activeTarget={activeVisualBoundary}
+                    onBoundaryChange={setBoundary}
+                    onActiveTargetChange={(target) => {
+                      if (!target) {
+                        hideVisualBoundary()
+                        return
+                      }
+
+                      setActiveVisualBoundary(target)
+                    }}
+                  />
+                </div>
+              )}
 
               {isRenderingPreview && (
                 <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/50 backdrop-blur-[1px] flex items-center justify-center">

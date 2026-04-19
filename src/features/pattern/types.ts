@@ -54,8 +54,15 @@ export interface PatternDistributionSettings {
   edgeBehavior: PatternEdgeBehavior
 }
 
+export interface PatternAssetResizeSettings {
+  enabled: boolean
+  width: number
+  height: number
+}
+
 export interface PatternSettings {
   distribution: PatternDistributionSettings
+  assetResize: PatternAssetResizeSettings
   inboundBoundary: PatternBoundarySettings
   outboundBoundary: PatternBoundarySettings
 }
@@ -115,6 +122,12 @@ export const DEFAULT_PATTERN_DISTRIBUTION_SETTINGS: PatternDistributionSettings 
   edgeBehavior: "clip",
 }
 
+export const DEFAULT_PATTERN_ASSET_RESIZE_SETTINGS: PatternAssetResizeSettings = {
+  enabled: true,
+  width: 40,
+  height: 40,
+}
+
 export const DEFAULT_PATTERN_INBOUND_BOUNDARY: PatternBoundarySettings = {
   enabled: true,
   shape: "rectangle",
@@ -137,6 +150,7 @@ export const DEFAULT_PATTERN_OUTBOUND_BOUNDARY: PatternBoundarySettings = {
 
 export const DEFAULT_PATTERN_SETTINGS: PatternSettings = {
   distribution: { ...DEFAULT_PATTERN_DISTRIBUTION_SETTINGS },
+  assetResize: { ...DEFAULT_PATTERN_ASSET_RESIZE_SETTINGS },
   inboundBoundary: { ...DEFAULT_PATTERN_INBOUND_BOUNDARY },
   outboundBoundary: { ...DEFAULT_PATTERN_OUTBOUND_BOUNDARY },
 }
