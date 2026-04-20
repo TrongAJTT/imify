@@ -6,6 +6,7 @@ import { usePanDrag } from "@/options/hooks/use-pan-drag"
 import { usePointerZoom } from "@/options/hooks/use-pointer-zoom"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
+import type { PreviewInteractionMode } from "@/options/components/ui/preview-interaction-mode-toggle"
 import type {
   LayoutResult,
   SplicingCanvasStyle,
@@ -25,7 +26,7 @@ interface CanvasPreviewProps {
   imageStyle: SplicingImageStyle
   imageResize: SplicingImageResize
   fitValue: number
-  isScrollPan?: boolean
+  previewInteractionMode?: PreviewInteractionMode
   onLayoutComputed?: (result: LayoutResult) => void
   onPreviewRendered?: (imageCount: number) => void
   /** Fired while scaled preview bitmaps are rebuilt (e.g. after quality change). */
@@ -44,7 +45,7 @@ export function CanvasPreview({
   imageStyle,
   imageResize,
   fitValue,
-  isScrollPan = false,
+  previewInteractionMode = "zoom",
   onLayoutComputed,
   onPreviewRendered,
   onPreviewSourcesProgress,
@@ -382,6 +383,10 @@ export function CanvasPreview({
           return
         }
 
+        if (previewInteractionMode === "idle") {
+          return
+        }
+
         e.preventDefault()
 
         // Store pending event and throttle to avoid frame lag
@@ -401,7 +406,7 @@ export function CanvasPreview({
           }
           pendingWheelRef.current = null
 
-          const isPanMode = isScrollPan
+          const isPanMode = previewInteractionMode === "pan"
           const isPanVertical = !pending.shiftKey
 
           if (isPanMode) {
@@ -438,7 +443,7 @@ export function CanvasPreview({
         wheelThrottleRef.current = null
       }
     }
-  }, [isScrollPan, setPan, zoomTowardPointer])
+  }, [previewInteractionMode, setPan, zoomTowardPointer])
 
   const resetZoom = useCallback(() => {
     setPreviewZoom(100)
@@ -462,7 +467,12 @@ export function CanvasPreview({
           className="rounded shadow-sm"
           style={{
             imageRendering: "auto",
-            cursor: isScrollPan ? "auto" : "grab",
+            cursor:
+              previewInteractionMode === "pan"
+                ? "auto"
+                : previewInteractionMode === "idle"
+                  ? "default"
+                  : "grab",
             transform: `translate(${pan.x}px, ${pan.y}px)`,
             touchAction: "none"
           }}

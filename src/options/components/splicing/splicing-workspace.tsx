@@ -9,6 +9,7 @@ import type {
   SplicingImageStyle,
   SplicingLayoutConfig
 } from "@/features/splicing/types"
+import type { PreviewInteractionMode } from "@/options/components/ui/preview-interaction-mode-toggle"
 import { CanvasPreview } from "@/options/components/splicing/canvas-preview"
 import { ImageStrip } from "@/options/components/splicing/image-strip"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
@@ -22,7 +23,7 @@ interface SplicingWorkspaceProps {
   imageStyle: SplicingImageStyle
   imageResize: SplicingImageResize
   imageFitValue: number
-  isScrollPan: boolean
+  previewInteractionMode: PreviewInteractionMode
   previewQualityPercent: number
   previewShowImageNumber: boolean
   onLayoutComputed: (layout: LayoutResult | null) => void
@@ -48,7 +49,7 @@ export function SplicingWorkspace({
   imageStyle,
   imageResize,
   imageFitValue,
-  isScrollPan,
+  previewInteractionMode,
   previewQualityPercent,
   previewShowImageNumber,
   onLayoutComputed,
@@ -100,7 +101,7 @@ export function SplicingWorkspace({
               imageStyle={imageStyle}
               imageResize={imageResize}
               fitValue={imageFitValue}
-              isScrollPan={isScrollPan}
+              previewInteractionMode={previewInteractionMode}
               onLayoutComputed={(layout) => onLayoutComputed(layout)}
               onPreviewRendered={onPreviewRendered}
               onPreviewSourcesProgress={onPreviewSourcesProgress}

@@ -1,14 +1,16 @@
 import { Storage } from "@plasmohq/storage"
 
 export type ShortcutActionId =
-  | "fill.preview.zoom_mode"
-  | "fill.preview.pan_mode"
-  | "fill.preview.idle_mode"
+  | "global.preview.zoom_mode"
+  | "global.preview.pan_mode"
+  | "global.preview.idle_mode"
   | "fill.customization.tab_image"
   | "fill.customization.tab_border"
   | "fill.customization.tab_layer"
-  | "splicing.preview.zoom_mode"
-  | "splicing.preview.pan_mode"
+  | "pattern.draw.decrease_brush_size"
+  | "pattern.draw.increase_brush_size"
+  | "pattern.draw.undo"
+  | "pattern.draw.clear"
 
 export interface ShortcutBinding {
   key: string
@@ -22,8 +24,8 @@ export type ShortcutPreferences = Record<ShortcutActionId, ShortcutBinding | nul
 
 export interface ShortcutDefinition {
   id: ShortcutActionId
-  scope: "fill" | "splicing"
-  category: "Fill Preview" | "Fill Customization" | "Splicing Preview"
+  scope: "global" | "fill"
+  category: "Canvas Preview Mode" | "Fill Customization" | "Pattern Generator"
   label: string
   description: string
 }
@@ -34,25 +36,25 @@ export const shortcutStorage = new Storage({ area: "sync" })
 
 export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
   {
-    id: "fill.preview.zoom_mode",
-    scope: "fill",
-    category: "Fill Preview",
+    id: "global.preview.zoom_mode",
+    scope: "global",
+    category: "Canvas Preview Mode",
     label: "Switch to Zoom mode",
-    description: "Set Fill preview interaction mode to Zoom."
+    description: "Set preview interaction mode to Zoom across supported workspaces."
   },
   {
-    id: "fill.preview.pan_mode",
-    scope: "fill",
-    category: "Fill Preview",
+    id: "global.preview.pan_mode",
+    scope: "global",
+    category: "Canvas Preview Mode",
     label: "Switch to Pan mode",
-    description: "Set Fill preview interaction mode to Pan."
+    description: "Set preview interaction mode to Pan across supported workspaces."
   },
   {
-    id: "fill.preview.idle_mode",
-    scope: "fill",
-    category: "Fill Preview",
+    id: "global.preview.idle_mode",
+    scope: "global",
+    category: "Canvas Preview Mode",
     label: "Switch to Idle mode",
-    description: "Disable Fill preview wheel interaction."
+    description: "Disable preview wheel interaction in supported workspaces."
   },
   {
     id: "fill.customization.tab_image",
@@ -76,18 +78,32 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     description: "Show layer transform controls in Fill customization."
   },
   {
-    id: "splicing.preview.zoom_mode",
-    scope: "splicing",
-    category: "Splicing Preview",
-    label: "Switch to Zoom mode",
-    description: "Set Splicing preview scroll behavior to Zoom."
+    id: "pattern.draw.decrease_brush_size",
+    scope: "global",
+    category: "Pattern Generator",
+    label: "Draw Asset: Decrease brush size",
+    description: "Decrease brush size in Draw Asset dialog."
   },
   {
-    id: "splicing.preview.pan_mode",
-    scope: "splicing",
-    category: "Splicing Preview",
-    label: "Switch to Pan mode",
-    description: "Set Splicing preview scroll behavior to Pan."
+    id: "pattern.draw.increase_brush_size",
+    scope: "global",
+    category: "Pattern Generator",
+    label: "Draw Asset: Increase brush size",
+    description: "Increase brush size in Draw Asset dialog."
+  },
+  {
+    id: "pattern.draw.undo",
+    scope: "global",
+    category: "Pattern Generator",
+    label: "Draw Asset: Undo",
+    description: "Undo the latest stroke in Draw Asset dialog."
+  },
+  {
+    id: "pattern.draw.clear",
+    scope: "global",
+    category: "Pattern Generator",
+    label: "Draw Asset: Clear canvas",
+    description: "Clear all strokes in Draw Asset dialog."
   }
 ]
 
@@ -98,14 +114,22 @@ export const SHORTCUT_DEFINITION_MAP: Record<ShortcutActionId, ShortcutDefinitio
   }, {} as Record<ShortcutActionId, ShortcutDefinition>)
 
 export const DEFAULT_SHORTCUT_PREFERENCES: ShortcutPreferences = {
-  "fill.preview.zoom_mode": { key: "z" },
-  "fill.preview.pan_mode": { key: "v" },
-  "fill.preview.idle_mode": { key: "n" },
+  "global.preview.zoom_mode": { key: "z" },
+  "global.preview.pan_mode": { key: "v" },
+  "global.preview.idle_mode": { key: "n" },
   "fill.customization.tab_image": { key: "1" },
   "fill.customization.tab_border": { key: "2" },
   "fill.customization.tab_layer": { key: "3" },
-  "splicing.preview.zoom_mode": { key: "z" },
-  "splicing.preview.pan_mode": { key: "v" }
+  "pattern.draw.decrease_brush_size": { key: "[" },
+  "pattern.draw.increase_brush_size": { key: "]" },
+  "pattern.draw.undo": { key: "z", ctrlKey: true },
+  "pattern.draw.clear": { key: "d", ctrlKey: true }
+}
+
+const LEGACY_SHORTCUT_ACTION_ALIASES: Partial<Record<ShortcutActionId, readonly string[]>> = {
+  "global.preview.zoom_mode": ["fill.preview.zoom_mode", "splicing.preview.zoom_mode"],
+  "global.preview.pan_mode": ["fill.preview.pan_mode", "splicing.preview.pan_mode"],
+  "global.preview.idle_mode": ["fill.preview.idle_mode"]
 }
 
 const MODIFIER_KEYS = new Set(["Control", "Shift", "Alt", "Meta"])
@@ -144,9 +168,21 @@ export function normalizeShortcutPreferences(
   input: Partial<Record<ShortcutActionId, ShortcutBinding | null>> | null | undefined
 ): ShortcutPreferences {
   const normalized = { ...DEFAULT_SHORTCUT_PREFERENCES }
+  const unsafeInput = input as Record<string, ShortcutBinding | null | undefined> | null | undefined
 
   for (const definition of SHORTCUT_DEFINITIONS) {
-    const customBinding = input?.[definition.id]
+    let customBinding = input?.[definition.id]
+
+    if (typeof customBinding === "undefined") {
+      const aliases = LEGACY_SHORTCUT_ACTION_ALIASES[definition.id] ?? []
+      for (const alias of aliases) {
+        if (unsafeInput && Object.prototype.hasOwnProperty.call(unsafeInput, alias)) {
+          customBinding = unsafeInput[alias]
+          break
+        }
+      }
+    }
+
     if (customBinding === null) {
       normalized[definition.id] = null
       continue

@@ -84,7 +84,7 @@ export function SettingsShortcutsPanel() {
     <div className="animate-in fade-in duration-300 space-y-5">
       <SettingsSectionHeader
         title="Shortkeys"
-        description="Review and rebind keyboard shortcuts used in Fill and Splicing workspaces."
+        description="Review and rebind keyboard shortcuts used across preview workspaces and Pattern Generator tools."
       />
 
       <section className="space-y-4">

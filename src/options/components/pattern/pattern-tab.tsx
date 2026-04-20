@@ -9,12 +9,22 @@ import { renderPatternToContext } from "@/features/pattern/pattern-renderer"
 import { buildActivePatternFormatOptions } from "@/options/stores/pattern-format-options"
 import { usePatternStore } from "@/options/stores/pattern-store"
 import { useWorkspaceHeaderStore } from "@/options/stores/workspace-header-store"
+import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import { Button } from "@/options/components/ui/button"
+import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
 import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrumb"
 import { exportPatternComposition } from "@/options/components/pattern/pattern-export-utils"
 import { PatternBoundaryVisualOverlay } from "@/options/components/pattern/pattern-boundary-visual-overlay"
+import {
+  PreviewInteractionModeToggle,
+  type PreviewInteractionMode,
+} from "@/options/components/ui/preview-interaction-mode-toggle"
 
 const PREVIEW_PADDING = 16
+const PREVIEW_MIN_ZOOM = 50
+const PREVIEW_MAX_ZOOM = 2000
+const PREVIEW_ZOOM_STEP = 10
 
 function closeBitmapMap(map: Map<string, ImageBitmap>): void {
   for (const bitmap of map.values()) {
@@ -70,10 +80,14 @@ export function PatternTab() {
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
+  const { getShortcutLabel } = useShortcutPreferences()
 
   const previewHostRef = useRef<HTMLDivElement>(null)
   const previewCanvasRef = useRef<HTMLCanvasElement>(null)
   const [previewHostSize, setPreviewHostSize] = useState({ width: 960, height: 560 })
+  const [previewZoom, setPreviewZoom] = useState(100)
+  const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 })
+  const [previewInteractionMode, setPreviewInteractionMode] = useState<PreviewInteractionMode>("zoom")
   const [assetBitmapMap, setAssetBitmapMap] = useState<Map<string, ImageBitmap>>(new Map())
   const [backgroundBitmap, setBackgroundBitmap] = useState<ImageBitmap | null>(null)
   const [isRenderingPreview, setIsRenderingPreview] = useState(false)
@@ -87,6 +101,29 @@ export function PatternTab() {
   const conversionToasts = useConversionToasts([exportToastPayload])
 
   const activeAssets = useMemo(() => assets.filter((asset) => asset.enabled), [assets])
+  const clampPreviewZoom = useCallback((value: number) => {
+    return Math.max(PREVIEW_MIN_ZOOM, Math.min(PREVIEW_MAX_ZOOM, Math.round(value)))
+  }, [])
+
+  const previewShortcutsEnabled = activeAssets.length > 0
+
+  useShortcutActions([
+    {
+      actionId: "global.preview.zoom_mode",
+      enabled: previewShortcutsEnabled,
+      handler: () => setPreviewInteractionMode("zoom"),
+    },
+    {
+      actionId: "global.preview.pan_mode",
+      enabled: previewShortcutsEnabled,
+      handler: () => setPreviewInteractionMode("pan"),
+    },
+    {
+      actionId: "global.preview.idle_mode",
+      enabled: previewShortcutsEnabled,
+      handler: () => setPreviewInteractionMode("idle"),
+    },
+  ])
   const hasVisualBoundaryOverlay = useMemo(() => {
     if (activeVisualBoundary === "inbound") {
       return visualBoundaryVisibility.inbound && settings.inboundBoundary.enabled
@@ -390,6 +427,102 @@ export function PatternTab() {
 
   const displayWidth = Math.max(1, Math.round(canvas.width * renderScale))
   const displayHeight = Math.max(1, Math.round(canvas.height * renderScale))
+  const previewBaseOffset = useMemo(
+    () => ({
+      x: (previewHostSize.width - displayWidth) / 2,
+      y: (previewHostSize.height - displayHeight) / 2,
+    }),
+    [displayHeight, displayWidth, previewHostSize.height, previewHostSize.width]
+  )
+
+  const handlePreviewWheel = useCallback(
+    (event: WheelEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.closest('[class*="pointer-events-auto"]')) {
+        return
+      }
+
+      if (previewInteractionMode === "idle") {
+        return
+      }
+
+      if (event.cancelable) {
+        event.preventDefault()
+      }
+
+      if (previewInteractionMode === "pan") {
+        const delta = event.deltaY > 0 ? 50 : -50
+        if (event.shiftKey) {
+          setPreviewPan((current) => ({ ...current, x: current.x - delta }))
+        } else {
+          setPreviewPan((current) => ({ ...current, y: current.y - delta }))
+        }
+        return
+      }
+
+      const oldZoom = previewZoom
+      const nextZoom = clampPreviewZoom(oldZoom + (event.deltaY > 0 ? -PREVIEW_ZOOM_STEP : PREVIEW_ZOOM_STEP))
+
+      if (nextZoom === oldZoom) {
+        return
+      }
+
+      const host = previewHostRef.current
+      if (!host) {
+        setPreviewZoom(nextZoom)
+        return
+      }
+
+      const rect = host.getBoundingClientRect()
+      const pointerX = event.clientX - rect.left
+      const pointerY = event.clientY - rect.top
+
+      const oldScale = oldZoom / 100
+      const newScale = nextZoom / 100
+      if (oldScale <= 0 || newScale <= 0) {
+        setPreviewZoom(nextZoom)
+        return
+      }
+
+      const worldX = (pointerX - previewBaseOffset.x - previewPan.x) / oldScale
+      const worldY = (pointerY - previewBaseOffset.y - previewPan.y) / oldScale
+
+      const nextPanX = pointerX - previewBaseOffset.x - worldX * newScale
+      const nextPanY = pointerY - previewBaseOffset.y - worldY * newScale
+
+      setPreviewZoom(nextZoom)
+      setPreviewPan({
+        x: Math.round(nextPanX * 100) / 100,
+        y: Math.round(nextPanY * 100) / 100,
+      })
+    },
+    [
+      clampPreviewZoom,
+      previewBaseOffset.x,
+      previewBaseOffset.y,
+      previewInteractionMode,
+      previewPan.x,
+      previewPan.y,
+      previewZoom,
+    ]
+  )
+
+  useEffect(() => {
+    const host = previewHostRef.current
+    if (!host) {
+      return
+    }
+
+    const handleNativeWheel = (event: WheelEvent) => {
+      handlePreviewWheel(event)
+    }
+
+    host.addEventListener("wheel", handleNativeWheel, { passive: false })
+
+    return () => {
+      host.removeEventListener("wheel", handleNativeWheel)
+    }
+  }, [handlePreviewWheel])
 
   const handleExportPattern = async () => {
     if (isExporting) {
@@ -465,20 +598,30 @@ export function PatternTab() {
           </p>
         </div>
 
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => void handleExportPattern()}
-          disabled={isExporting || activeAssets.length === 0}
-        >
-          {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-          {isExporting ? "Exporting..." : "Export Pattern"}
-        </Button>
+        <div className="flex items-center gap-3">
+          <PreviewInteractionModeToggle
+            mode={previewInteractionMode}
+            onChange={setPreviewInteractionMode}
+            zoomKeyHint={getShortcutLabel("global.preview.zoom_mode")}
+            panKeyHint={getShortcutLabel("global.preview.pan_mode")}
+            idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
+          />
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => void handleExportPattern()}
+            disabled={isExporting || activeAssets.length === 0}
+          >
+            {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+            {isExporting ? "Exporting..." : "Export Pattern"}
+          </Button>
+        </div>
       </div>
 
       <div
         ref={previewHostRef}
-        className="min-h-[460px] h-[calc(100vh-230px)] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 p-4 overflow-auto"
+        className="min-h-[460px] h-[calc(100vh-230px)] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 p-4 overflow-hidden"
       >
         {activeAssets.length === 0 ? (
           <div className="h-full rounded-lg border border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-center px-4">
@@ -487,13 +630,21 @@ export function PatternTab() {
             </p>
           </div>
         ) : (
-          <div className="h-full flex items-center justify-center">
-            <div className="relative rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%,transparent_75%,#e2e8f0_75%,#e2e8f0),linear-gradient(45deg,#e2e8f0_25%,transparent_25%,transparent_75%,#e2e8f0_75%,#e2e8f0)] dark:bg-[linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a),linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a)] bg-[length:20px_20px] bg-[position:0_0,10px_10px]">
+          <div className="relative h-full overflow-hidden">
+            <div
+              className="absolute left-0 top-0 rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%,transparent_75%,#e2e8f0_75%,#e2e8f0),linear-gradient(45deg,#e2e8f0_25%,transparent_25%,transparent_75%,#e2e8f0_75%,#e2e8f0)] dark:bg-[linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a),linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a)] bg-[length:20px_20px] bg-[position:0_0,10px_10px]"
+              style={{
+                width: `${displayWidth}px`,
+                height: `${displayHeight}px`,
+                transform: `translate(${previewBaseOffset.x + previewPan.x}px, ${previewBaseOffset.y + previewPan.y}px) scale(${previewZoom / 100})`,
+                transformOrigin: "top left",
+              }}
+            >
               <canvas
                 ref={previewCanvasRef}
                 width={Math.max(1, Math.round(canvas.width))}
                 height={Math.max(1, Math.round(canvas.height))}
-                style={{ width: `${displayWidth}px`, height: `${displayHeight}px`, display: "block" }}
+                style={{ width: "100%", height: "100%", display: "block" }}
               />
 
               {hasVisualBoundaryOverlay && (
@@ -527,6 +678,16 @@ export function PatternTab() {
                 </div>
               )}
             </div>
+
+            <ZoomPanControl
+              zoom={previewZoom}
+              panX={previewPan.x}
+              panY={previewPan.y}
+              onZoomChange={(value) => setPreviewZoom(clampPreviewZoom(value))}
+              onPanChange={(x, y) => setPreviewPan({ x, y })}
+              minZoom={PREVIEW_MIN_ZOOM}
+              maxZoom={PREVIEW_MAX_ZOOM}
+            />
           </div>
         )}
       </div>

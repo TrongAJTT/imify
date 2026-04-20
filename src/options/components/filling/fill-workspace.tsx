@@ -264,15 +264,15 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
   useShortcutActions([
     {
-      actionId: "fill.preview.zoom_mode",
+      actionId: "global.preview.zoom_mode",
       handler: () => setPreviewInteractionMode("zoom"),
     },
     {
-      actionId: "fill.preview.pan_mode",
+      actionId: "global.preview.pan_mode",
       handler: () => setPreviewInteractionMode("pan"),
     },
     {
-      actionId: "fill.preview.idle_mode",
+      actionId: "global.preview.idle_mode",
       handler: () => setPreviewInteractionMode("idle"),
     },
   ])
@@ -1175,9 +1175,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           <PreviewInteractionModeToggle
             mode={previewInteractionMode}
             onChange={setPreviewInteractionMode}
-            zoomKeyHint={getShortcutLabel("fill.preview.zoom_mode")}
-            panKeyHint={getShortcutLabel("fill.preview.pan_mode")}
-            idleKeyHint={getShortcutLabel("fill.preview.idle_mode")}
+            zoomKeyHint={getShortcutLabel("global.preview.zoom_mode")}
+            panKeyHint={getShortcutLabel("global.preview.pan_mode")}
+            idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
           />
 
           <Button

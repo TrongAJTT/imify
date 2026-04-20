@@ -1,6 +1,8 @@
 import { BaseDialog } from "@/options/components/ui/base-dialog"
 import { Button } from "@/options/components/ui/button"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
+import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { TextInput } from "@/options/components/ui/text-input"
 import { Eraser, Pencil, RotateCcw, Trash2, X } from "lucide-react"
@@ -28,11 +30,21 @@ interface Stroke {
 
 const DRAWING_WIDTH = 1024
 const DRAWING_HEIGHT = 640
+const MIN_BRUSH_SIZE = 1
+const MAX_BRUSH_SIZE = 120
+const BRUSH_SIZE_STEP = 1
 
 interface BrushPreview {
   x: number
   y: number
   radius: number
+}
+
+interface PixelBounds {
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke): void {
@@ -96,11 +108,99 @@ function toBrushPreview(
   }
 }
 
+function findOpaqueBounds(ctx: CanvasRenderingContext2D, width: number, height: number): PixelBounds | null {
+  const { data } = ctx.getImageData(0, 0, width, height)
+
+  let minX = width
+  let minY = height
+  let maxX = -1
+  let maxY = -1
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const alpha = data[(y * width + x) * 4 + 3]
+      if (alpha === 0) {
+        continue
+      }
+
+      if (x < minX) minX = x
+      if (x > maxX) maxX = x
+      if (y < minY) minY = y
+      if (y > maxY) maxY = y
+    }
+  }
+
+  if (maxX < minX || maxY < minY) {
+    return null
+  }
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX + 1,
+    height: maxY - minY + 1,
+  }
+}
+
+async function createOpaqueTrimmedBlob(strokes: Stroke[]): Promise<Blob | null> {
+  if (strokes.length === 0) {
+    return null
+  }
+
+  const sourceCanvas = document.createElement("canvas")
+  sourceCanvas.width = DRAWING_WIDTH
+  sourceCanvas.height = DRAWING_HEIGHT
+
+  const sourceCtx = sourceCanvas.getContext("2d")
+  if (!sourceCtx) {
+    return null
+  }
+
+  sourceCtx.clearRect(0, 0, DRAWING_WIDTH, DRAWING_HEIGHT)
+  for (const stroke of strokes) {
+    drawStroke(sourceCtx, stroke)
+  }
+
+  const bounds = findOpaqueBounds(sourceCtx, DRAWING_WIDTH, DRAWING_HEIGHT)
+  if (!bounds) {
+    return null
+  }
+
+  const exportCanvas = document.createElement("canvas")
+  exportCanvas.width = bounds.width
+  exportCanvas.height = bounds.height
+
+  const exportCtx = exportCanvas.getContext("2d")
+  if (!exportCtx) {
+    return null
+  }
+
+  // Output should be opaque and contain only drawn content bounds.
+  exportCtx.fillStyle = "#ffffff"
+  exportCtx.fillRect(0, 0, bounds.width, bounds.height)
+  exportCtx.drawImage(
+    sourceCanvas,
+    bounds.x,
+    bounds.y,
+    bounds.width,
+    bounds.height,
+    0,
+    0,
+    bounds.width,
+    bounds.height
+  )
+
+  return new Promise<Blob | null>((resolve) => {
+    exportCanvas.toBlob((value) => resolve(value), "image/png")
+  })
+}
+
 export function PatternAssetDrawingDialog({
   isOpen,
   onClose,
   onSave
 }: PatternAssetDrawingDialogProps) {
+  const { getShortcutLabel } = useShortcutPreferences()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [tool, setTool] = useState<DrawingTool>("pen")
   const [brushSize, setBrushSize] = useState(10)
@@ -113,7 +213,7 @@ export function PatternAssetDrawingDialog({
   const [isHovering, setIsHovering] = useState(false)
 
   const hasContent = useMemo(
-    () => strokes.length > 0 || activeStroke?.points.length,
+    () => strokes.length > 0 || (activeStroke?.points.length ?? 0) >= 2,
     [strokes.length, activeStroke?.points.length]
   )
   const hasUndoHistory = strokes.length > 0
@@ -242,15 +342,46 @@ export function PatternAssetDrawingDialog({
     setStrokes([])
   }
 
-  const handleSave = async () => {
-    const canvas = canvasRef.current
-    if (!canvas) {
-      return
-    }
+  const increaseBrushSize = useCallback(() => {
+    setBrushSize((current) => Math.min(MAX_BRUSH_SIZE, current + BRUSH_SIZE_STEP))
+  }, [])
 
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob((value) => resolve(value), "image/png")
-    })
+  const decreaseBrushSize = useCallback(() => {
+    setBrushSize((current) => Math.max(MIN_BRUSH_SIZE, current - BRUSH_SIZE_STEP))
+  }, [])
+
+  useShortcutActions(
+    [
+      {
+        actionId: "pattern.draw.decrease_brush_size",
+        enabled: isOpen,
+        handler: () => decreaseBrushSize(),
+      },
+      {
+        actionId: "pattern.draw.increase_brush_size",
+        enabled: isOpen,
+        handler: () => increaseBrushSize(),
+      },
+      {
+        actionId: "pattern.draw.undo",
+        enabled: isOpen,
+        handler: () => handleUndo(),
+      },
+      {
+        actionId: "pattern.draw.clear",
+        enabled: isOpen,
+        handler: () => handleClear(),
+      },
+    ],
+    isOpen
+  )
+
+  const handleSave = async () => {
+    const strokesForExport = activeStroke && activeStroke.points.length >= 2
+      ? [...strokes, activeStroke]
+      : [...strokes]
+
+    const blob = await createOpaqueTrimmedBlob(strokesForExport)
 
     if (!blob) {
       return
@@ -286,7 +417,7 @@ export function PatternAssetDrawingDialog({
             Draw Asset
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Sketch directly in-browser. Saved output is transparent PNG.
+            Sketch directly in-browser. Saved output is auto-trimmed and exported as opaque PNG.
           </p>
         </div>
         <button
@@ -384,9 +515,9 @@ export function PatternAssetDrawingDialog({
               <NumberInput
                 label="Brush Size"
                 value={brushSize}
-                min={1}
-                max={120}
-                step={1}
+                min={MIN_BRUSH_SIZE}
+                max={MAX_BRUSH_SIZE}
+                step={BRUSH_SIZE_STEP}
                 onChangeValue={setBrushSize}
                 className="flex-1"
               />
@@ -408,7 +539,7 @@ export function PatternAssetDrawingDialog({
                 onClick={handleUndo}
                 disabled={strokes.length === 0}>
                 <RotateCcw size={14} />
-                Undo
+                Undo ({getShortcutLabel("pattern.draw.undo")})
               </Button>
               <Button
                 variant="secondary"
@@ -416,9 +547,13 @@ export function PatternAssetDrawingDialog({
                 onClick={handleClear}
                 disabled={!hasContent}>
                 <Trash2 size={14} />
-                Clear
+                Clear ({getShortcutLabel("pattern.draw.clear")})
               </Button>
             </div>
+
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Brush: {getShortcutLabel("pattern.draw.decrease_brush_size")} / {getShortcutLabel("pattern.draw.increase_brush_size")}
+            </p>
           </div>
         </div>
 

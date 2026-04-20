@@ -21,7 +21,10 @@ import { SplicingWorkspaceShell } from "@/options/components/splicing/splicing-w
 import { SplicingSidebarShell } from "@/options/components/splicing/splicing-sidebar-shell"
 import { SplicingExportDialog, type SplicingExportMode } from "@/options/components/splicing/splicing-export-dialog"
 import { Button } from "@/options/components/ui/button"
-import { ScrollModeToggle } from "@/options/components/ui/scroll-mode-toggle"
+import {
+  PreviewInteractionModeToggle,
+  type PreviewInteractionMode,
+} from "@/options/components/ui/preview-interaction-mode-toggle"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 import {
   useSplicingStore,
@@ -142,7 +145,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
     }
   }, [images.length, setPreviewBentoFlowGroupCount])
 
-  const [isScrollPan, setIsScrollPan] = useState(false)
+  const [previewInteractionMode, setPreviewInteractionMode] = useState<PreviewInteractionMode>("zoom")
   const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [previewQualityToastPayload, setPreviewQualityToastPayload] = useState<ConversionProgressPayload | null>(null)
   const conversionToasts = useConversionToasts([importToastPayload, previewQualityToastPayload])
@@ -168,14 +171,19 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
 
   useShortcutActions([
     {
-      actionId: "splicing.preview.pan_mode",
+      actionId: "global.preview.pan_mode",
       enabled: splicingPreviewShortcutsEnabled,
-      handler: () => setIsScrollPan(true),
+      handler: () => setPreviewInteractionMode("pan"),
     },
     {
-      actionId: "splicing.preview.zoom_mode",
+      actionId: "global.preview.zoom_mode",
       enabled: splicingPreviewShortcutsEnabled,
-      handler: () => setIsScrollPan(false),
+      handler: () => setPreviewInteractionMode("zoom"),
+    },
+    {
+      actionId: "global.preview.idle_mode",
+      enabled: splicingPreviewShortcutsEnabled,
+      handler: () => setPreviewInteractionMode("idle"),
     },
   ])
 
@@ -705,11 +713,12 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
             )}
           </div>
           <div className="flex gap-3 items-center">
-            <ScrollModeToggle
-              isScrollPan={isScrollPan}
-              onToggle={setIsScrollPan}
-              zoomKeyHint={getShortcutLabel("splicing.preview.zoom_mode")}
-              panKeyHint={getShortcutLabel("splicing.preview.pan_mode")}
+            <PreviewInteractionModeToggle
+              mode={previewInteractionMode}
+              onChange={setPreviewInteractionMode}
+              zoomKeyHint={getShortcutLabel("global.preview.zoom_mode")}
+              panKeyHint={getShortcutLabel("global.preview.pan_mode")}
+              idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
             />
             <Button
               variant="secondary"
@@ -742,7 +751,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
         imageStyle={imageStyle}
         imageResize={imageResize}
         imageFitValue={imageFitValue}
-        isScrollPan={isScrollPan}
+        previewInteractionMode={previewInteractionMode}
         previewQualityPercent={previewQualityPercent}
         previewShowImageNumber={previewShowImageNumber}
         onLayoutComputed={handleLayoutComputed}
