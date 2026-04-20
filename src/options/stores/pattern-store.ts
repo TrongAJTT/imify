@@ -207,6 +207,7 @@ export interface PatternStoreState {
   assets: PatternAsset[]
   visualBoundaryVisibility: PatternVisualBoundaryVisibility
   activeVisualBoundary: PatternVisualBoundaryTarget | null
+  previewContainerHeight: number
 
   exportFormat: PatternExportFormat
   exportQuality: number
@@ -249,8 +250,8 @@ export interface PatternStoreState {
   toggleVisualBoundaryVisibility: (target: PatternVisualBoundaryTarget) => void
   setActiveVisualBoundary: (target: PatternVisualBoundaryTarget | null) => void
   triggerVisualBoundary: (target: PatternVisualBoundaryTarget) => void
-  hideVisualBoundary: () => void
-
+  hideVisualBoundary: () => void  
+  setPreviewContainerHeight: (v: number) => void
   addAsset: (asset: PatternAsset) => void
   updateAsset: (assetId: string, partial: Partial<PatternAsset>) => void
   removeAsset: (assetId: string) => void
@@ -295,6 +296,7 @@ export const usePatternStore = create<PatternStoreState>()(
         outbound: false,
       },
       activeVisualBoundary: null,
+      previewContainerHeight: 560,
 
       exportFormat: DEFAULT_PATTERN_EXPORT_SETTINGS.exportFormat,
       exportQuality: DEFAULT_PATTERN_EXPORT_SETTINGS.exportQuality,
@@ -621,6 +623,7 @@ export const usePatternStore = create<PatternStoreState>()(
       setExportBmpColorDepth: (v) => set({ exportBmpColorDepth: v }),
       setExportBmpDitheringLevel: (v) => set({ exportBmpDitheringLevel: v, exportBmpDithering: v > 0 }),
       setExportTiffColorMode: (v) => set({ exportTiffColorMode: v }),
+      setPreviewContainerHeight: (v) => set({ previewContainerHeight: Math.max(200, v) }),
     }),
     {
       name: "imify_pattern_generator",

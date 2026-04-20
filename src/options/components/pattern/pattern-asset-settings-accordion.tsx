@@ -84,7 +84,14 @@ export function PatternAssetSettingsAccordion() {
           />
 
           {layerColorOverride.enabled && (
-            <div className="pb-3 border-b-2 border-slate-200 dark:border-slate-700 space-y-2">
+            <div className="pb-3 border-b-2 border-slate-200 dark:border-slate-700 space-y-2 grid grid-cols-2 gap-3 items-end">
+              <SelectInput
+              label="Override Mode"
+              value={layerColorOverride.mode}
+              options={COLOR_OVERRIDE_MODE_OPTIONS}
+              onChange={(value) => setLayerColorOverride({ mode: value as "per-asset" | "unified" })}
+              tooltip="Per Asset: apply gradient/paint per layer tile. Unified: one shared color field across the full canvas."
+              />
               <ColorPickerPopover
               label="Override Color"
               value={layerColorOverride.color}
@@ -92,13 +99,7 @@ export function PatternAssetSettingsAccordion() {
               enableGradient={true}
               enableAlpha={true}
               outputMode="rgba"
-              />
-              <SelectInput
-              label="Override Mode"
-              value={layerColorOverride.mode}
-              options={COLOR_OVERRIDE_MODE_OPTIONS}
-              onChange={(value) => setLayerColorOverride({ mode: value as "per-asset" | "unified" })}
-              tooltip="Per Asset: apply gradient/paint per layer tile. Unified: one shared color field across the full canvas."
+              appearance="stacked"
               />
             </div>
           )}
@@ -114,7 +115,7 @@ export function PatternAssetSettingsAccordion() {
           />
 
           { layerBorderOverride.enabled && (
-          <div className="pb-3 border-b-2 border-slate-200 dark:border-slate-700 space-y-2">
+          <div className="pb-3 border-b-2 border-slate-200 dark:border-slate-700 space-y-2 grid grid-cols-2 gap-3 items-end">
             <NumberInput
               label="Border Width"
               value={Math.round(layerBorderOverride.width * 10) / 10}
@@ -130,6 +131,7 @@ export function PatternAssetSettingsAccordion() {
               enableGradient={true}
               enableAlpha={true}
               outputMode="rgba"
+              appearance="stacked"
             />
           </div>
           )}

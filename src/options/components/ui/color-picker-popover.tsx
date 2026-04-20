@@ -313,7 +313,7 @@ export function ColorPickerPopover({
               type="button"
               onPointerDown={(event) => event.stopPropagation()}
               onMouseDown={(event) => event.stopPropagation()}
-              className={`h-7 w-7 rounded border border-slate-200 dark:border-slate-700 bg-transparent p-0.5 transition-all hover:shadow-sm ${appearance === "stacked" ? "" : ""}`}
+              className={`h-7 w-7 rounded border border-slate-200 dark:border-slate-700 bg-transparent p-0.5 transition-all hover:shadow-sm ${appearance === "stacked" ? "mt-1" : ""}`}
               aria-label={`Pick ${label} color`}
             >
               <span

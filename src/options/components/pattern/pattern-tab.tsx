@@ -47,6 +47,8 @@ export function PatternTab() {
   const setBoundary = usePatternStore((state) => state.setBoundary)
   const setActiveVisualBoundary = usePatternStore((state) => state.setActiveVisualBoundary)
   const hideVisualBoundary = usePatternStore((state) => state.hideVisualBoundary)
+  const previewContainerHeight = usePatternStore((state) => state.previewContainerHeight)
+  const setPreviewContainerHeight = usePatternStore((state) => state.setPreviewContainerHeight)
 
   const exportFormat = usePatternStore((state) => state.exportFormat)
   const exportQuality = usePatternStore((state) => state.exportQuality)
@@ -84,10 +86,12 @@ export function PatternTab() {
 
   const previewHostRef = useRef<HTMLDivElement>(null)
   const previewCanvasRef = useRef<HTMLCanvasElement>(null)
+  const resizeHandleRef = useRef<HTMLDivElement>(null)
   const [previewHostSize, setPreviewHostSize] = useState({ width: 960, height: 560 })
   const [previewZoom, setPreviewZoom] = useState(100)
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 })
   const [previewInteractionMode, setPreviewInteractionMode] = useState<PreviewInteractionMode>("zoom")
+  const [isResizing, setIsResizing] = useState(false)
   const [assetBitmapMap, setAssetBitmapMap] = useState<Map<string, ImageBitmap>>(new Map())
   const [backgroundBitmap, setBackgroundBitmap] = useState<ImageBitmap | null>(null)
   const [isRenderingPreview, setIsRenderingPreview] = useState(false)
@@ -587,6 +591,37 @@ export function PatternTab() {
     }
   }
 
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = previewHostRef.current
+      if (!container) return
+
+      const rect = container.getBoundingClientRect()
+      const newHeight = e.clientY - rect.top
+
+      setPreviewContainerHeight(Math.max(200, newHeight))
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    document.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseup", handleMouseUp)
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [isResizing, setPreviewContainerHeight])
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -621,7 +656,8 @@ export function PatternTab() {
 
       <div
         ref={previewHostRef}
-        className="min-h-[460px] h-[calc(100vh-230px)] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 p-4 overflow-hidden"
+        className="relative min-h-[460px] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 overflow-hidden"
+        style={{ height: `${previewContainerHeight}px` }}
       >
         {activeAssets.length === 0 ? (
           <div className="h-full rounded-lg border border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-center px-4">
@@ -690,6 +726,15 @@ export function PatternTab() {
             />
           </div>
         )}
+
+        <div
+          ref={resizeHandleRef}
+          onMouseDown={handleResizeStart}
+          className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors ${
+            isResizing ? "bg-sky-400 dark:bg-sky-500" : ""
+          }`}
+          style={{ cursor: "ns-resize" }}
+        />
       </div>
 
       <ToastContainer toasts={conversionToasts} onRemove={handleRemoveExportToast} />
