@@ -86,7 +86,13 @@ export function GlobalFormatTargetQuality({
       }}
       onQualityChange={(next) => onChange({ ...config, quality: next, format: cardFormat })}
       onAvifSpeedChange={(next) => updateCodecOptions("avif", { ...normalizedOptions.avif, speed: next })}
-      onJxlEffortChange={(next) => updateCodecOptions("jxl", { effort: next })}
+      onJxlEffortChange={(next) => updateCodecOptions("jxl", { ...normalizedOptions.jxl, effort: next })}
+      onJxlLosslessChange={(next) =>
+        updateCodecOptions("jxl", {
+          ...normalizedOptions.jxl,
+          lossless: next
+        })
+      }
       onWebpLosslessChange={(next) =>
         updateCodecOptions("webp", { ...normalizedOptions.webp, lossless: next })
       }

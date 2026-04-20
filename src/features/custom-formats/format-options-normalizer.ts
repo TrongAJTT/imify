@@ -38,6 +38,16 @@ function normalizeWebpEffort(options: FormatCodecOptions | undefined): number {
   return 5
 }
 
+function normalizeJxlEpf(options: FormatCodecOptions | undefined): 0 | 1 | 2 | 3 {
+  const epf = options?.jxl?.epf
+
+  if (epf === 0 || epf === 1 || epf === 2 || epf === 3) {
+    return epf
+  }
+
+  return 1
+}
+
 function normalizeIcoSizes(options: FormatCodecOptions | undefined): number[] {
   const rawSizes = options?.ico?.sizes ?? [...DEFAULT_ICO_SIZES]
   const normalized = Array.from(
@@ -56,6 +66,7 @@ export function normalizeFormatOptionsForCustomFormat(
   const normalizedPngDitheringLevel = normalizePngDitheringLevel(options)
   const normalizedWebpNearLossless = normalizeWebpNearLossless(options)
   const normalizedWebpEffort = normalizeWebpEffort(options)
+  const normalizedJxlEpf = normalizeJxlEpf(options)
 
   return {
     bmp:
@@ -69,7 +80,10 @@ export function normalizeFormatOptionsForCustomFormat(
     jxl:
       format === "jxl"
         ? {
-            effort: Math.max(1, Math.min(9, Math.round(options?.jxl?.effort ?? 7)))
+            effort: Math.max(1, Math.min(9, Math.round(options?.jxl?.effort ?? 7))),
+            lossless: Boolean(options?.jxl?.lossless),
+            progressive: Boolean(options?.jxl?.progressive),
+            epf: normalizedJxlEpf
           }
         : undefined,
     ico:

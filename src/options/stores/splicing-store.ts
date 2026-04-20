@@ -76,6 +76,9 @@ export interface SplicingStoreState {
   exportFormat: SplicingExportFormat
   exportQuality: number
   exportJxlEffort: number
+  exportJxlLossless: boolean
+  exportJxlProgressive: boolean
+  exportJxlEpf: 0 | 1 | 2 | 3
   exportWebpLossless: boolean
   exportWebpNearLossless: number
   exportWebpEffort: number
@@ -145,6 +148,9 @@ export interface SplicingStoreState {
   setExportFormat: (v: SplicingExportFormat) => void
   setExportQuality: (v: number) => void
   setExportJxlEffort: (v: number) => void
+  setExportJxlLossless: (v: boolean) => void
+  setExportJxlProgressive: (v: boolean) => void
+  setExportJxlEpf: (v: 0 | 1 | 2 | 3) => void
   setExportWebpLossless: (v: boolean) => void
   setExportWebpNearLossless: (v: number) => void
   setExportWebpEffort: (v: number) => void
@@ -214,6 +220,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
       exportFormat: "png",
       exportQuality: 92,
       exportJxlEffort: 7,
+      exportJxlLossless: false,
+      exportJxlProgressive: false,
+      exportJxlEpf: 1,
       exportWebpLossless: false,
       exportWebpNearLossless: 100,
       exportWebpEffort: 5,
@@ -274,7 +283,13 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setImageBorderColor: (v) => set({ imageBorderColor: v }),
       setExportFormat: (v) => set({ exportFormat: v }),
       setExportQuality: (v) => set({ exportQuality: v }),
-      setExportJxlEffort: (v) => set({ exportJxlEffort: v }),
+      setExportJxlEffort: (v) => set({ exportJxlEffort: Math.max(1, Math.min(9, Math.round(v))) }),
+      setExportJxlLossless: (v) => set({ exportJxlLossless: v }),
+      setExportJxlProgressive: (v) => set({ exportJxlProgressive: v }),
+      setExportJxlEpf: (v) =>
+        set({
+          exportJxlEpf: v === 0 || v === 1 || v === 2 || v === 3 ? v : 1
+        }),
       setExportWebpLossless: (v) => set({ exportWebpLossless: v }),
       setExportWebpNearLossless: (v) =>
         set({ exportWebpNearLossless: Math.max(0, Math.min(100, Math.round(v))) }),
@@ -361,6 +376,16 @@ export const useSplicingStore = create<SplicingStoreState>()(
         }
         next.exportBmpDithering = next.exportBmpColorDepth === 1 && next.exportBmpDitheringLevel > 0
         next.exportWebpLossless = Boolean(next.exportWebpLossless)
+        next.exportJxlEffort =
+          typeof next.exportJxlEffort === "number"
+            ? Math.max(1, Math.min(9, Math.round(next.exportJxlEffort)))
+            : 7
+        next.exportJxlLossless = Boolean(next.exportJxlLossless)
+        next.exportJxlProgressive = Boolean(next.exportJxlProgressive)
+        next.exportJxlEpf =
+          next.exportJxlEpf === 0 || next.exportJxlEpf === 1 || next.exportJxlEpf === 2 || next.exportJxlEpf === 3
+            ? next.exportJxlEpf
+            : 1
         next.exportWebpNearLossless =
           typeof next.exportWebpNearLossless === "number"
             ? Math.max(0, Math.min(100, Math.round(next.exportWebpNearLossless)))
@@ -397,6 +422,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setImageResize, setImageFitValue, setImagePadding, setImagePaddingColor,
           setImageBorderRadius, setImageBorderWidth, setImageBorderColor,
           setExportFormat, setExportQuality, setExportJxlEffort,
+          setExportJxlLossless, setExportJxlProgressive, setExportJxlEpf,
           setExportWebpLossless, setExportWebpNearLossless, setExportWebpEffort,
           setExportWebpSharpYuv, setExportWebpPreserveExactAlpha,
           setExportAvifSpeed, setExportAvifQualityAlpha, setExportAvifLossless,

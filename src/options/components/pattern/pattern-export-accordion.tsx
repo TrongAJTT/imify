@@ -26,6 +26,9 @@ export function PatternExportAccordion() {
   const exportFormat = usePatternStore((s) => s.exportFormat)
   const exportQuality = usePatternStore((s) => s.exportQuality)
   const exportJxlEffort = usePatternStore((s) => s.exportJxlEffort)
+  const exportJxlLossless = usePatternStore((s) => s.exportJxlLossless)
+  const exportJxlProgressive = usePatternStore((s) => s.exportJxlProgressive)
+  const exportJxlEpf = usePatternStore((s) => s.exportJxlEpf)
   const exportAvifSpeed = usePatternStore((s) => s.exportAvifSpeed)
   const exportAvifQualityAlpha = usePatternStore((s) => s.exportAvifQualityAlpha)
   const exportAvifLossless = usePatternStore((s) => s.exportAvifLossless)
@@ -54,6 +57,9 @@ export function PatternExportAccordion() {
   const setExportFormat = usePatternStore((s) => s.setExportFormat)
   const setExportQuality = usePatternStore((s) => s.setExportQuality)
   const setExportJxlEffort = usePatternStore((s) => s.setExportJxlEffort)
+  const setExportJxlLossless = usePatternStore((s) => s.setExportJxlLossless)
+  const setExportJxlProgressive = usePatternStore((s) => s.setExportJxlProgressive)
+  const setExportJxlEpf = usePatternStore((s) => s.setExportJxlEpf)
   const setExportAvifSpeed = usePatternStore((s) => s.setExportAvifSpeed)
   const setExportAvifQualityAlpha = usePatternStore((s) => s.setExportAvifQualityAlpha)
   const setExportAvifLossless = usePatternStore((s) => s.setExportAvifLossless)
@@ -85,6 +91,9 @@ export function PatternExportAccordion() {
         exportBmpDithering,
         exportBmpDitheringLevel,
         exportJxlEffort,
+        exportJxlLossless,
+        exportJxlProgressive,
+        exportJxlEpf,
         exportWebpLossless,
         exportWebpNearLossless,
         exportWebpEffort,
@@ -113,6 +122,9 @@ export function PatternExportAccordion() {
       exportBmpDithering,
       exportBmpDitheringLevel,
       exportJxlEffort,
+      exportJxlLossless,
+      exportJxlProgressive,
+      exportJxlEpf,
       exportWebpLossless,
       exportWebpNearLossless,
       exportWebpEffort,
@@ -153,6 +165,7 @@ export function PatternExportAccordion() {
         onQualityChange={setExportQuality}
         onAvifSpeedChange={setExportAvifSpeed}
         onJxlEffortChange={setExportJxlEffort}
+        onJxlLosslessChange={setExportJxlLossless}
         onWebpLosslessChange={setExportWebpLossless}
         onWebpNearLosslessChange={setExportWebpNearLossless}
         onWebpEffortChange={setExportWebpEffort}
@@ -176,6 +189,12 @@ export function PatternExportAccordion() {
           onSubsampleChange: (value) => setExportAvifSubsample(String(value)),
           onTuneChange: setExportAvifTune,
           onHighAlphaQualityChange: setExportAvifHighAlphaQuality,
+        }}
+        jxl={{
+          progressive: sourceFormatOptions.jxl.progressive,
+          epf: sourceFormatOptions.jxl.epf,
+          onProgressiveChange: setExportJxlProgressive,
+          onEpfChange: setExportJxlEpf,
         }}
         mozjpeg={{
           progressive: sourceFormatOptions.mozjpeg.progressive,

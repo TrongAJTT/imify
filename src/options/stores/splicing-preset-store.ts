@@ -53,6 +53,9 @@ export interface SplicingPresetConfig {
   exportFormat: SplicingExportFormat
   exportQuality: number
   exportJxlEffort: number
+  exportJxlLossless: boolean
+  exportJxlProgressive: boolean
+  exportJxlEpf: 0 | 1 | 2 | 3
   exportWebpLossless: boolean
   exportWebpNearLossless: number
   exportBmpColorDepth: BmpColorDepth
@@ -117,6 +120,9 @@ function createDefaultConfig(): SplicingPresetConfig {
     exportFormat: "png",
     exportQuality: 90,
     exportJxlEffort: 7,
+    exportJxlLossless: false,
+    exportJxlProgressive: false,
+    exportJxlEpf: 1,
     exportWebpLossless: false,
     exportWebpNearLossless: 0,
     exportBmpColorDepth: 24,

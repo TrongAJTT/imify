@@ -10,6 +10,9 @@ export type SplicingFormatOptionSource = Pick<
   | "exportBmpDithering"
   | "exportBmpDitheringLevel"
   | "exportJxlEffort"
+  | "exportJxlLossless"
+  | "exportJxlProgressive"
+  | "exportJxlEpf"
   | "exportWebpLossless"
   | "exportWebpNearLossless"
   | "exportWebpEffort"
@@ -34,6 +37,11 @@ export type SplicingFormatOptionSource = Pick<
 >
 
 function buildSplicingFormatOptions(source: SplicingFormatOptionSource): SplicingFormatOptions {
+  const normalizedJxlEpf: 0 | 1 | 2 | 3 =
+    source.exportJxlEpf === 0 || source.exportJxlEpf === 1 || source.exportJxlEpf === 2 || source.exportJxlEpf === 3
+      ? source.exportJxlEpf
+      : 1
+
   return {
     bmp: {
       colorDepth: source.exportBmpColorDepth,
@@ -41,7 +49,10 @@ function buildSplicingFormatOptions(source: SplicingFormatOptionSource): Splicin
       ditheringLevel: source.exportBmpColorDepth === 1 ? source.exportBmpDitheringLevel : 0
     },
     jxl: {
-      effort: source.exportJxlEffort
+      effort: Math.max(1, Math.min(9, Math.round(source.exportJxlEffort))),
+      lossless: source.exportJxlLossless,
+      progressive: source.exportJxlProgressive,
+      epf: normalizedJxlEpf
     },
     webp: {
       lossless: source.exportWebpLossless,

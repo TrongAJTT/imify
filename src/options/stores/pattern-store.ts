@@ -212,6 +212,9 @@ export interface PatternStoreState {
   exportFormat: PatternExportFormat
   exportQuality: number
   exportJxlEffort: number
+  exportJxlLossless: boolean
+  exportJxlProgressive: boolean
+  exportJxlEpf: 0 | 1 | 2 | 3
   exportAvifSpeed: number
   exportAvifQualityAlpha: number
   exportAvifLossless: boolean
@@ -261,6 +264,9 @@ export interface PatternStoreState {
   setExportFormat: (format: PatternExportFormat) => void
   setExportQuality: (quality: number) => void
   setExportJxlEffort: (effort: number) => void
+  setExportJxlLossless: (enabled: boolean) => void
+  setExportJxlProgressive: (enabled: boolean) => void
+  setExportJxlEpf: (value: 0 | 1 | 2 | 3) => void
   setExportAvifSpeed: (speed: number) => void
   setExportAvifQualityAlpha: (v: number) => void
   setExportAvifLossless: (v: boolean) => void
@@ -301,6 +307,9 @@ export const usePatternStore = create<PatternStoreState>()(
       exportFormat: DEFAULT_PATTERN_EXPORT_SETTINGS.exportFormat,
       exportQuality: DEFAULT_PATTERN_EXPORT_SETTINGS.exportQuality,
       exportJxlEffort: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlEffort,
+      exportJxlLossless: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlLossless,
+      exportJxlProgressive: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlProgressive,
+      exportJxlEpf: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlEpf,
       exportAvifSpeed: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifSpeed,
       exportAvifQualityAlpha: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifQualityAlpha,
       exportAvifLossless: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifLossless,
@@ -600,7 +609,13 @@ export const usePatternStore = create<PatternStoreState>()(
 
       setExportFormat: (v) => set({ exportFormat: v }),
       setExportQuality: (v) => set({ exportQuality: v }),
-      setExportJxlEffort: (v) => set({ exportJxlEffort: v }),
+      setExportJxlEffort: (v) => set({ exportJxlEffort: Math.max(1, Math.min(9, Math.round(v))) }),
+      setExportJxlLossless: (v) => set({ exportJxlLossless: v }),
+      setExportJxlProgressive: (v) => set({ exportJxlProgressive: v }),
+      setExportJxlEpf: (v) =>
+        set({
+          exportJxlEpf: v === 0 || v === 1 || v === 2 || v === 3 ? v : 1
+        }),
       setExportAvifSpeed: (v) => set({ exportAvifSpeed: v }),
       setExportAvifQualityAlpha: (v) => set({ exportAvifQualityAlpha: v }),
       setExportAvifLossless: (v) => set({ exportAvifLossless: v }),
@@ -645,6 +660,9 @@ export const usePatternStore = create<PatternStoreState>()(
         exportFormat: state.exportFormat,
         exportQuality: state.exportQuality,
         exportJxlEffort: state.exportJxlEffort,
+        exportJxlLossless: state.exportJxlLossless,
+        exportJxlProgressive: state.exportJxlProgressive,
+        exportJxlEpf: state.exportJxlEpf,
         exportAvifSpeed: state.exportAvifSpeed,
         exportAvifQualityAlpha: state.exportAvifQualityAlpha,
         exportAvifLossless: state.exportAvifLossless,

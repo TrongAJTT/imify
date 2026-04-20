@@ -4,6 +4,7 @@ import initAvifFactory from "@assets/wasm/avif_enc.js"
 import initJxlFactory from "@assets/wasm/jxl_enc.js"
 
 import { clampQuality } from "@/core/image-utils"
+import type { JxlEpf } from "@/core/types"
 
 interface WasmModule {
   encode: (
@@ -40,6 +41,14 @@ const JXL_DEFAULT_OPTIONS = {
   photonNoiseIso: 0,
   lossyModular: false,
   lossless: false
+}
+
+interface JxlDirectEncodeOptions {
+  quality?: number
+  effort?: number
+  progressive?: boolean
+  epf?: JxlEpf
+  lossless?: boolean
 }
 
 let avifModulePromise: Promise<WasmModule> | null = null
@@ -111,7 +120,19 @@ export async function encodeAvifDirect(
   return encoded
 }
 
-export async function encodeJxlDirect(imageData: ImageData, quality?: number, effort?: number): Promise<Uint8Array> {
+function normalizeJxlEpf(epf: number | undefined): JxlEpf {
+  if (epf === 0 || epf === 1 || epf === 2 || epf === 3) {
+    return epf
+  }
+
+  return 1
+}
+
+export async function encodeJxlDirect(
+  imageData: ImageData,
+  options?: JxlDirectEncodeOptions
+): Promise<Uint8Array> {
+  const lossless = Boolean(options?.lossless)
   const module = await getJxlModule()
   const encoded = module.encode(
     imageData.data as unknown as Uint8Array,
@@ -119,8 +140,14 @@ export async function encodeJxlDirect(imageData: ImageData, quality?: number, ef
     imageData.height,
     {
       ...JXL_DEFAULT_OPTIONS,
-      quality: clampQuality(quality),
-      effort: effort ?? JXL_DEFAULT_OPTIONS.effort
+      quality: lossless ? 100 : clampQuality(options?.quality),
+      effort:
+        typeof options?.effort === "number"
+          ? Math.max(1, Math.min(9, Math.round(options.effort)))
+          : JXL_DEFAULT_OPTIONS.effort,
+      progressive: Boolean(options?.progressive),
+      epf: normalizeJxlEpf(options?.epf),
+      lossless
     }
   )
 

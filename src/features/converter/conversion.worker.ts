@@ -7,7 +7,7 @@ import {
   clampQuality
 } from "@/core/image-utils"
 import { buildNormalizedAvifOptions } from "@/core/avif-options"
-import type { AvifCodecOptions, FormatConfig, ImageFormat, ResizeConfig } from "@/core/types"
+import type { AvifCodecOptions, FormatConfig, ImageFormat, JxlCodecOptions, ResizeConfig } from "@/core/types"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { convertSourceToIcoOutput } from "@/features/converter/ico-encoder"
 import { encodeMozJpeg } from "@/features/converter/mozjpeg-encoder"
@@ -170,11 +170,19 @@ async function encodeJxlInWorker(
   imageData: ImageData,
   options?: {
     quality?: number
-    jxl?: {
-      effort?: number
-    }
+    jxl?: JxlCodecOptions
   }
 ): Promise<Blob> {
+  const normalizeJxlEpf = (epf: number | undefined): 0 | 1 | 2 | 3 => {
+    if (epf === 0 || epf === 1 || epf === 2 || epf === 3) {
+      return epf
+    }
+
+    return 1
+  }
+
+  const jxlOptions = options?.jxl
+  const lossless = Boolean(jxlOptions?.lossless)
   const jxlModule = await getJxlModule()
   const encoded = jxlModule.encode(
     imageData.data as unknown as Uint8Array,
@@ -182,8 +190,14 @@ async function encodeJxlInWorker(
     imageData.height,
     {
       ...JXL_DEFAULT_OPTIONS,
-      quality: clampQuality(options?.quality),
-      effort: options?.jxl?.effort ?? JXL_DEFAULT_OPTIONS.effort
+      quality: lossless ? 100 : clampQuality(options?.quality),
+      effort:
+        typeof jxlOptions?.effort === "number"
+          ? Math.max(1, Math.min(9, Math.round(jxlOptions.effort)))
+          : JXL_DEFAULT_OPTIONS.effort,
+      progressive: Boolean(jxlOptions?.progressive),
+      epf: normalizeJxlEpf(jxlOptions?.epf),
+      lossless
     }
   )
 

@@ -86,6 +86,9 @@ export interface BatchFormatOptions {
   }
   jxl: {
     effort: number
+    lossless: boolean
+    progressive: boolean
+    epf: 0 | 1 | 2 | 3
   }
   webp: {
     lossless: boolean
@@ -151,6 +154,9 @@ export interface BatchSetupHandlers {
   onConcurrencyChange: (value: number) => void
   onQualityChange: (value: number) => void
   onJxlEffortChange: (value: number) => void
+  onJxlLosslessChange: (value: boolean) => void
+  onJxlProgressiveChange: (value: boolean) => void
+  onJxlEpfChange: (value: 0 | 1 | 2 | 3) => void
   onWebpLosslessChange: (value: boolean) => void
   onWebpNearLosslessChange: (value: number) => void
   onWebpEffortChange: (value: number) => void

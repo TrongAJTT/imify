@@ -70,7 +70,10 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
       ditheringLevel: 0
     },
     jxl: {
-      effort: 7
+      effort: 7,
+      lossless: false,
+      progressive: false,
+      epf: 1
     },
     webp: {
       lossless: false,
@@ -163,9 +166,24 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
     ...DEFAULT_BATCH_STATE.formatOptions.mozjpeg,
     ...formatOptions.mozjpeg
   }
-  const jxlOptions = {
+  const rawJxlOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.jxl,
     ...formatOptions.jxl
+  }
+  const jxlOptions = {
+    effort:
+      typeof rawJxlOptions.effort === "number"
+        ? Math.max(1, Math.min(9, Math.round(rawJxlOptions.effort)))
+        : 7,
+    lossless: Boolean(rawJxlOptions.lossless),
+    progressive: Boolean(rawJxlOptions.progressive),
+    epf:
+      rawJxlOptions.epf === 0 ||
+      rawJxlOptions.epf === 1 ||
+      rawJxlOptions.epf === 2 ||
+      rawJxlOptions.epf === 3
+        ? rawJxlOptions.epf
+        : 1
   }
   const rawWebpOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.webp,
@@ -319,6 +337,9 @@ interface BatchStoreState extends BatchSetupState {
   setConcurrency: (value: number) => void
   setQuality: (value: number) => void
   setJxlEffort: (value: number) => void
+  setJxlLossless: (value: boolean) => void
+  setJxlProgressive: (value: boolean) => void
+  setJxlEpf: (value: 0 | 1 | 2 | 3) => void
   setWebpLossless: (value: boolean) => void
   setWebpNearLossless: (value: number) => void
   setWebpEffort: (value: number) => void
@@ -532,11 +553,89 @@ export const useBatchStore = create<BatchStoreState>()(
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
           const currentConfig = contextConfigs[setupContext]
+          const normalizedValue = Math.max(1, Math.min(9, Math.round(value)))
           const nextFormatOptions = {
             ...currentConfig.formatOptions,
             jxl: {
               ...currentConfig.formatOptions.jxl,
-              effort: value
+              effort: normalizedValue
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setJxlLossless: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            jxl: {
+              ...currentConfig.formatOptions.jxl,
+              lossless: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setJxlProgressive: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            jxl: {
+              ...currentConfig.formatOptions.jxl,
+              progressive: value
+            }
+          }
+          const nextConfig = {
+            ...currentConfig,
+            formatOptions: nextFormatOptions
+          }
+
+          return {
+            formatOptions: nextFormatOptions,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setJxlEpf: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const currentConfig = contextConfigs[setupContext]
+          const normalizedValue: 0 | 1 | 2 | 3 =
+            value === 0 || value === 1 || value === 2 || value === 3 ? value : 1
+          const nextFormatOptions = {
+            ...currentConfig.formatOptions,
+            jxl: {
+              ...currentConfig.formatOptions.jxl,
+              epf: normalizedValue
             }
           }
           const nextConfig = {

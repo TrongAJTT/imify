@@ -389,11 +389,29 @@ function estimateFormatCost(
   }
 
   if (format === "jxl") {
-    const effort = clampInteger(options?.jxl?.effort, 1, 9, 7)
+    const jxl = options?.jxl
+    const effort = clampInteger(jxl?.effort, 1, 9, 7)
     cpuScore *= 0.8 + effort * 0.2
     memoryMB *= 0.9 + effort * 0.08
     if (effort >= 7) {
       reasons.push(`JXL effort ${effort}`)
+    }
+
+    if (jxl?.lossless) {
+      memoryMB *= 1.25
+      cpuScore *= 1.35
+      reasons.push("JXL lossless")
+    }
+
+    if (jxl?.progressive) {
+      cpuScore *= 1.08
+      reasons.push("JXL progressive")
+    }
+
+    const epf = clampInteger(jxl?.epf, 0, 3, 1)
+    if (epf >= 2) {
+      cpuScore *= 1 + (epf - 1) * 0.06
+      reasons.push(`JXL EPF ${epf}`)
     }
   }
 

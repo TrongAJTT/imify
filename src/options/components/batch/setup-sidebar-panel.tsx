@@ -70,6 +70,9 @@ export function BatchSetupSidebarPanel({
   const onConcurrencyChange = useBatchStore((state) => state.setConcurrency)
   const onQualityChange = useBatchStore((state) => state.setQuality)
   const onJxlEffortChange = useBatchStore((state) => state.setJxlEffort)
+  const onJxlLosslessChange = useBatchStore((state) => state.setJxlLossless)
+  const onJxlProgressiveChange = useBatchStore((state) => state.setJxlProgressive)
+  const onJxlEpfChange = useBatchStore((state) => state.setJxlEpf)
   const onWebpLosslessChange = useBatchStore((state) => state.setWebpLossless)
   const onWebpNearLosslessChange = useBatchStore((state) => state.setWebpNearLossless)
   const onWebpEffortChange = useBatchStore((state) => state.setWebpEffort)
@@ -175,6 +178,7 @@ export function BatchSetupSidebarPanel({
           onQualityChange={onQualityChange}
           onAvifSpeedChange={onAvifSpeedChange}
           onJxlEffortChange={onJxlEffortChange}
+          onJxlLosslessChange={onJxlLosslessChange}
           onWebpLosslessChange={onWebpLosslessChange}
           onWebpNearLosslessChange={onWebpNearLosslessChange}
           onWebpEffortChange={onWebpEffortChange}
@@ -206,6 +210,12 @@ export function BatchSetupSidebarPanel({
             onSubsampleChange: onAvifSubsampleChange,
             onTuneChange: onAvifTuneChange,
             onHighAlphaQualityChange: onAvifHighAlphaQualityChange,
+          }}
+          jxl={{
+            progressive: formatOptions.jxl.progressive,
+            epf: formatOptions.jxl.epf,
+            onProgressiveChange: onJxlProgressiveChange,
+            onEpfChange: onJxlEpfChange,
           }}
           mozjpeg={{
             progressive: formatOptions.mozjpeg.progressive,

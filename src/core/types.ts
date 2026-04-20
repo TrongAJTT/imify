@@ -68,8 +68,13 @@ export interface BmpCodecOptions {
   ditheringLevel?: number
 }
 
+export type JxlEpf = 0 | 1 | 2 | 3
+
 export interface JxlCodecOptions {
   effort?: number
+  lossless?: boolean
+  progressive?: boolean
+  epf?: JxlEpf
 }
 
 export interface AvifCodecOptions {

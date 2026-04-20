@@ -79,6 +79,9 @@ export function SplicingSidebarPanel({
   const exportFormat = useSplicingStore((s) => s.exportFormat)
   const exportQuality = useSplicingStore((s) => s.exportQuality)
   const exportJxlEffort = useSplicingStore((s) => s.exportJxlEffort)
+  const exportJxlLossless = useSplicingStore((s) => s.exportJxlLossless)
+  const exportJxlProgressive = useSplicingStore((s) => s.exportJxlProgressive)
+  const exportJxlEpf = useSplicingStore((s) => s.exportJxlEpf)
   const exportWebpLossless = useSplicingStore((s) => s.exportWebpLossless)
   const exportWebpNearLossless = useSplicingStore((s) => s.exportWebpNearLossless)
   const exportWebpEffort = useSplicingStore((s) => s.exportWebpEffort)
@@ -136,6 +139,9 @@ export function SplicingSidebarPanel({
   const setExportFormat = useSplicingStore((s) => s.setExportFormat)
   const setExportQuality = useSplicingStore((s) => s.setExportQuality)
   const setExportJxlEffort = useSplicingStore((s) => s.setExportJxlEffort)
+  const setExportJxlLossless = useSplicingStore((s) => s.setExportJxlLossless)
+  const setExportJxlProgressive = useSplicingStore((s) => s.setExportJxlProgressive)
+  const setExportJxlEpf = useSplicingStore((s) => s.setExportJxlEpf)
   const setExportWebpLossless = useSplicingStore((s) => s.setExportWebpLossless)
   const setExportWebpNearLossless = useSplicingStore((s) => s.setExportWebpNearLossless)
   const setExportWebpEffort = useSplicingStore((s) => s.setExportWebpEffort)
@@ -206,7 +212,10 @@ export function SplicingSidebarPanel({
       ditheringLevel: exportBmpDitheringLevel
     },
     jxl: {
-      effort: exportJxlEffort
+      effort: exportJxlEffort,
+      lossless: exportJxlLossless,
+      progressive: exportJxlProgressive,
+      epf: exportJxlEpf
     },
     webp: {
       lossless: exportWebpLossless,
@@ -327,6 +336,7 @@ export function SplicingSidebarPanel({
           onQualityChange={setExportQuality}
           onAvifSpeedChange={setExportAvifSpeed}
           onJxlEffortChange={setExportJxlEffort}
+          onJxlLosslessChange={setExportJxlLossless}
           onWebpLosslessChange={setExportWebpLossless}
           onWebpNearLosslessChange={setExportWebpNearLossless}
           onWebpEffortChange={setExportWebpEffort}
@@ -358,6 +368,12 @@ export function SplicingSidebarPanel({
             onSubsampleChange: setExportAvifSubsample,
             onTuneChange: setExportAvifTune,
             onHighAlphaQualityChange: setExportAvifHighAlphaQuality,
+          }}
+          jxl={{
+            progressive: exportJxlProgressive,
+            epf: exportJxlEpf,
+            onProgressiveChange: setExportJxlProgressive,
+            onEpfChange: setExportJxlEpf,
           }}
           mozjpeg={{
             progressive: exportMozJpegProgressive,

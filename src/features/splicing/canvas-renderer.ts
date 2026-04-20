@@ -285,7 +285,10 @@ async function canvasToBlob(
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
       return encodeJxl(data, {
         quality: clampQuality(quality),
-        effort: formatOptions?.jxl?.effort
+        effort: formatOptions?.jxl?.effort,
+        lossless: formatOptions?.jxl?.lossless,
+        progressive: formatOptions?.jxl?.progressive,
+        epf: formatOptions?.jxl?.epf
       })
     }
     case "mozjpeg": {

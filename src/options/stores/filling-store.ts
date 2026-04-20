@@ -52,6 +52,9 @@ export interface FillingStoreState {
   exportFormat: FillingExportFormat
   exportQuality: number
   exportJxlEffort: number
+  exportJxlLossless: boolean
+  exportJxlProgressive: boolean
+  exportJxlEpf: 0 | 1 | 2 | 3
   exportAvifSpeed: number
   exportAvifQualityAlpha: number
   exportAvifLossless: boolean
@@ -94,6 +97,9 @@ export interface FillingStoreState {
   setExportFormat: (format: FillingExportFormat) => void
   setExportQuality: (quality: number) => void
   setExportJxlEffort: (effort: number) => void
+  setExportJxlLossless: (enabled: boolean) => void
+  setExportJxlProgressive: (enabled: boolean) => void
+  setExportJxlEpf: (value: 0 | 1 | 2 | 3) => void
   setExportAvifSpeed: (speed: number) => void
   setExportAvifQualityAlpha: (v: number) => void
   setExportAvifLossless: (v: boolean) => void
@@ -135,6 +141,9 @@ export const useFillingStore = create<FillingStoreState>()(
       exportFormat: "png",
       exportQuality: 90,
       exportJxlEffort: 7,
+      exportJxlLossless: false,
+      exportJxlProgressive: false,
+      exportJxlEpf: 1,
       exportAvifSpeed: 6,
       exportAvifQualityAlpha: 80,
       exportAvifLossless: false,
@@ -196,7 +205,14 @@ export const useFillingStore = create<FillingStoreState>()(
         }),
       setExportFormat: (format) => set({ exportFormat: format }),
       setExportQuality: (quality) => set({ exportQuality: quality }),
-      setExportJxlEffort: (effort) => set({ exportJxlEffort: effort }),
+      setExportJxlEffort: (effort) =>
+        set({ exportJxlEffort: Math.max(1, Math.min(9, Math.round(effort))) }),
+      setExportJxlLossless: (enabled) => set({ exportJxlLossless: enabled }),
+      setExportJxlProgressive: (enabled) => set({ exportJxlProgressive: enabled }),
+      setExportJxlEpf: (value) =>
+        set({
+          exportJxlEpf: value === 0 || value === 1 || value === 2 || value === 3 ? value : 1
+        }),
       setExportAvifSpeed: (v) => set({ exportAvifSpeed: v }),
       setExportAvifQualityAlpha: (v) => set({ exportAvifQualityAlpha: v }),
       setExportAvifLossless: (v) => set({ exportAvifLossless: v }),
@@ -235,6 +251,9 @@ export const useFillingStore = create<FillingStoreState>()(
         exportFormat: state.exportFormat,
         exportQuality: state.exportQuality,
         exportJxlEffort: state.exportJxlEffort,
+        exportJxlLossless: state.exportJxlLossless,
+        exportJxlProgressive: state.exportJxlProgressive,
+        exportJxlEpf: state.exportJxlEpf,
         exportAvifSpeed: state.exportAvifSpeed,
         exportAvifQualityAlpha: state.exportAvifQualityAlpha,
         exportAvifLossless: state.exportAvifLossless,

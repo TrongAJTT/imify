@@ -10,7 +10,16 @@ export const TARGET_FORMAT_TOOLTIPS = {
     `Effort controls compression algorithm complexity.
     - Higher values (7-9) produce smaller files but are slower.
     - Lower values (1-3) are faster but files are larger.
-    - Default (5) is balanced.`,
+    - Default (7) is optimal for most images.`,
+  jxlLossless:
+    "Stores exact pixels without quantization. Great for archival assets and graphics with text, but files are larger and quality slider is disabled.",
+  jxlProgressive:
+    "Writes progressive codestreams so large images can preview earlier over slow networks. Useful for web delivery, with slight encode overhead.",
+  jxlEpf:
+    `EPF (Edge Preserving Filter) smooths encoding artifacts.
+    - 0 disables smoothing for maximum detail
+    - 1 is balanced (default)
+    - 2-3 increase smoothing for noisy or photo-heavy content`,
   avifSpeed:
     `AVIF speed is inverse effort:
     - 0 = smallest file, best quality, slowest

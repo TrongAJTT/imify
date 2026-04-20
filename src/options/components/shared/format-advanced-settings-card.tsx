@@ -1,4 +1,5 @@
 import { AvifAdvancedSettingsCard } from "@/options/components/shared/avif-advanced-settings-card"
+import { JxlAdvancedSettingsCard } from "@/options/components/shared/jxl-advanced-settings-card"
 import { MozJpegAdvancedSettingsCard } from "@/options/components/shared/mozjpeg-advanced-settings-card"
 import { PngAdvancedSettingsCard } from "@/options/components/shared/png-advanced-settings-card"
 import { WebpAdvancedSettingsCard } from "@/options/components/shared/webp-advanced-settings-card"
@@ -41,6 +42,13 @@ type WebpAdvancedProps = {
   onPreserveExactAlphaChange: (value: boolean) => void
 }
 
+type JxlAdvancedProps = {
+  progressive: boolean
+  epf: 0 | 1 | 2 | 3
+  onProgressiveChange: (value: boolean) => void
+  onEpfChange: (value: 0 | 1 | 2 | 3) => void
+}
+
 export interface FormatAdvancedSettingsCardProps {
   targetFormat: string
   disabled?: boolean
@@ -49,6 +57,7 @@ export interface FormatAdvancedSettingsCardProps {
   alwaysOpen?: boolean
   groupId?: string
   avif?: AvifAdvancedProps
+  jxl?: JxlAdvancedProps
   mozjpeg?: MozJpegAdvancedProps
   png?: PngAdvancedProps
   webp?: WebpAdvancedProps
@@ -62,6 +71,7 @@ export function FormatAdvancedSettingsCard({
   alwaysOpen,
   groupId,
   avif,
+  jxl,
   mozjpeg,
   png,
   webp
@@ -79,6 +89,22 @@ export function FormatAdvancedSettingsCard({
         onSubsampleChange={avif.onSubsampleChange}
         onTuneChange={avif.onTuneChange}
         onHighAlphaQualityChange={avif.onHighAlphaQualityChange}
+        disabled={disabled}
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        alwaysOpen={alwaysOpen}
+        groupId={groupId}
+      />
+    )
+  }
+
+  if (targetFormat === "jxl" && jxl) {
+    return (
+      <JxlAdvancedSettingsCard
+        progressive={jxl.progressive}
+        epf={jxl.epf}
+        onProgressiveChange={jxl.onProgressiveChange}
+        onEpfChange={jxl.onEpfChange}
         disabled={disabled}
         isOpen={isOpen}
         onOpenChange={onOpenChange}

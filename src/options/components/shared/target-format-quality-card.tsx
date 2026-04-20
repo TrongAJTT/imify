@@ -49,6 +49,9 @@ export type TargetFormatQualityCardProps = {
     }
     jxl?: {
       effort?: number
+      lossless?: boolean
+      progressive?: boolean
+      epf?: 0 | 1 | 2 | 3
     }
     ico?: {
       sizes?: number[]
@@ -75,6 +78,8 @@ export type TargetFormatQualityCardProps = {
   onPngDitheringLevelChange?: (level: number) => void
   /** Callback when JXL effort level changes */
   onJxlEffortChange?: (effort: number) => void
+  /** Callback when JXL lossless mode changes */
+  onJxlLosslessChange?: (enabled: boolean) => void
   /** Callback when TIFF color mode changes */
   onTiffColorModeChange?: (mode: "color" | "grayscale") => void
   /** Callback when BMP color depth changes */
@@ -126,6 +131,7 @@ export function TargetFormatQualityCard({
   onPngTinyModeChange,
   onPngDitheringLevelChange,
   onJxlEffortChange,
+  onJxlLosslessChange,
   onTiffColorModeChange,
   onBmpColorDepthChange,
   onBmpDitheringLevelChange,
@@ -158,6 +164,15 @@ export function TargetFormatQualityCard({
     : 0
   const bmpDitheringEnabled = bmpDitheringLevel > 0
   const jxlEffortOption = formatConfig?.jxl?.effort
+  const jxlLosslessEnabled = Boolean(formatConfig?.jxl?.lossless)
+  const jxlProgressiveEnabled = Boolean(formatConfig?.jxl?.progressive)
+  const jxlEpf =
+    formatConfig?.jxl?.epf === 0 ||
+    formatConfig?.jxl?.epf === 1 ||
+    formatConfig?.jxl?.epf === 2 ||
+    formatConfig?.jxl?.epf === 3
+      ? formatConfig.jxl.epf
+      : 1
   const webpOptions = formatConfig?.webp
   const webpLosslessEnabled = Boolean(webpOptions?.lossless)
   const webpNearLossless =
@@ -177,11 +192,14 @@ export function TargetFormatQualityCard({
   const formatLabel = targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat.toUpperCase()
   const qualityLabel = isIcoTarget
     ? `${icoSizeOptions?.length ?? 0} size${(icoSizeOptions?.length ?? 0) !== 1 ? "s" : ""}`
+    : targetFormat === "jxl" && jxlLosslessEnabled
+    ? "Lossless"
     : targetFormat === "webp" && webpLosslessEnabled
     ? `Near-Lossless ${webpNearLossless}`
     : supportsQuality
     ? `Quality ${quality}`
     : "Default"
+  const showQualityControl = supportsQuality && !(targetFormat === "jxl" && jxlLosslessEnabled)
 
   // Add small badges into sublabel for ICO web toolkit or PNG tiny mode
   const extraFlags: string[] = []
@@ -191,7 +209,12 @@ export function TargetFormatQualityCard({
   if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled && pngDithering) {
     extraFlags.push(`Dither ${pngDitheringLevel}%`)
   }
-  if (targetFormat === "jxl" && jxlEffortOption) extraFlags.push(`Effort ${jxlEffortOption}`)
+  if (targetFormat === "jxl") {
+    if (jxlLosslessEnabled) extraFlags.push("Lossless")
+    extraFlags.push(`Effort ${jxlEffortOption ?? 7}`)
+    if (jxlProgressiveEnabled) extraFlags.push("Progressive")
+    if (jxlEpf !== 1) extraFlags.push(`EPF ${jxlEpf}`)
+  }
   if (targetFormat === "avif" && typeof avifSpeedOption === "number") extraFlags.push(`Speed ${avifSpeedOption}`)
   if (targetFormat === "webp") {
     if (webpLosslessEnabled) extraFlags.push("Lossless")
@@ -241,7 +264,7 @@ export function TargetFormatQualityCard({
           </div>
         )}
 
-        {supportsQuality && (
+        {showQualityControl && (
           <>
             {targetFormat === "webp" && onWebpNearLosslessChange && webpLosslessEnabled ? (
               <SliderInput
@@ -257,7 +280,7 @@ export function TargetFormatQualityCard({
             ) : (
               <SliderInput
                 label="Quality"
-                disabled={disabled || !supportsQuality}
+                disabled={disabled || !showQualityControl}
                 min={1}
                 max={100}
                 step={1}
@@ -310,7 +333,24 @@ export function TargetFormatQualityCard({
         )}
 
         {targetFormat === "jxl" && (
-          <div>
+          <div className="space-y-2">
+            {onJxlLosslessChange && (
+              <CheckboxCard
+                icon={<Zap size={16} />}
+                title="Lossless Mode"
+                subtitle={
+                  jxlLosslessEnabled
+                    ? "Enabled: exact pixels, larger files, quality slider hidden"
+                    : "Disabled: lossy mode with quality slider control"
+                }
+                tooltipContent={TARGET_FORMAT_TOOLTIPS.jxlLossless}
+                checked={jxlLosslessEnabled}
+                onChange={onJxlLosslessChange}
+                disabled={disabled}
+                theme="blue"
+              />
+            )}
+
             <SelectInput
               label="Effort Level"
               tooltip={TARGET_FORMAT_TOOLTIPS.jxlEffort}
@@ -320,14 +360,14 @@ export function TargetFormatQualityCard({
                 { value: "2", label: "2 - Very Fast" },
                 { value: "3", label: "3 - Fast" },
                 { value: "4", label: "4 - Fast-Balanced" },
-                { value: "5", label: "5 - Balanced (default)" },
+                { value: "5", label: "5 - Balanced" },
                 { value: "6", label: "6 - Balanced - Optimal" },
-                { value: "7", label: "7 - Optimal" },
+                { value: "7", label: "7 - Optimal (default)" },
                 { value: "8", label: "8 - Very Optimal" },
                 { value: "9", label: "9 - Maximum (slowest)" }
               ]}
               onChange={(v) => onJxlEffortChange?.(parseInt(v, 10))}
-              value={String(jxlEffortOption ?? 5)}
+              value={String(jxlEffortOption ?? 7)}
             />
           </div>
         )}

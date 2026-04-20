@@ -9,6 +9,9 @@ export type FillingFormatOptionSource = Pick<
   | "exportBmpDithering"
   | "exportBmpDitheringLevel"
   | "exportJxlEffort"
+  | "exportJxlLossless"
+  | "exportJxlProgressive"
+  | "exportJxlEpf"
   | "exportWebpLossless"
   | "exportWebpNearLossless"
   | "exportWebpEffort"
@@ -40,6 +43,9 @@ export interface FillingNormalizedFormatOptions {
   }
   jxl: {
     effort: number
+    lossless: boolean
+    progressive: boolean
+    epf: 0 | 1 | 2 | 3
   }
   webp: {
     lossless: boolean
@@ -136,6 +142,10 @@ export function buildFillingFormatOptions(
   const pngDitheringLevel = clampInt(source.exportPngDitheringLevel, 0, 100)
   const bmpDitheringLevel =
     source.exportBmpColorDepth === 1 ? clampInt(source.exportBmpDitheringLevel, 0, 100) : 0
+  const normalizedJxlEpf: 0 | 1 | 2 | 3 =
+    source.exportJxlEpf === 0 || source.exportJxlEpf === 1 || source.exportJxlEpf === 2 || source.exportJxlEpf === 3
+      ? source.exportJxlEpf
+      : 1
 
   return {
     bmp: {
@@ -144,7 +154,10 @@ export function buildFillingFormatOptions(
       ditheringLevel: bmpDitheringLevel
     },
     jxl: {
-      effort: clampInt(source.exportJxlEffort, 1, 9)
+      effort: clampInt(source.exportJxlEffort, 1, 9),
+      lossless: source.exportJxlLossless,
+      progressive: source.exportJxlProgressive,
+      epf: normalizedJxlEpf
     },
     webp: {
       lossless: source.exportWebpLossless,

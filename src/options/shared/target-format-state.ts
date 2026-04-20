@@ -12,6 +12,9 @@ export interface NormalizedTargetCodecOptions {
   }
   jxl: {
     effort: number
+    lossless: boolean
+    progressive: boolean
+    epf: 0 | 1 | 2 | 3
   }
   webp: {
     lossless: boolean
@@ -60,6 +63,9 @@ export type TargetFormatCardConfig = {
   }
   jxl: {
     effort: number
+    lossless: boolean
+    progressive: boolean
+    epf: 0 | 1 | 2 | 3
   }
   webp: {
     lossless: boolean
@@ -120,6 +126,14 @@ function normalizeIcoSizes(rawSizes: number[] | undefined): number[] {
   return nextSizes.length ? nextSizes : [...DEFAULT_ICO_SIZES]
 }
 
+function normalizeJxlEpf(epf: number | undefined): 0 | 1 | 2 | 3 {
+  if (epf === 0 || epf === 1 || epf === 2 || epf === 3) {
+    return epf
+  }
+
+  return 1
+}
+
 export function normalizeTargetCodecOptions(
   options: FormatCodecOptions | undefined
 ): NormalizedTargetCodecOptions {
@@ -129,6 +143,7 @@ export function normalizeTargetCodecOptions(
       ? normalizeDitheringLevel(options?.bmp?.ditheringLevel, options?.bmp?.dithering)
       : 0
   const pngDitheringLevel = normalizeDitheringLevel(options?.png?.ditheringLevel, options?.png?.dithering)
+  const jxlEpf = normalizeJxlEpf(options?.jxl?.epf)
 
   return {
     bmp: {
@@ -137,7 +152,10 @@ export function normalizeTargetCodecOptions(
       ditheringLevel: bmpDitheringLevel
     },
     jxl: {
-      effort: typeof options?.jxl?.effort === "number" ? clamp(options.jxl.effort, 1, 9) : 7
+      effort: typeof options?.jxl?.effort === "number" ? clamp(options.jxl.effort, 1, 9) : 7,
+      lossless: Boolean(options?.jxl?.lossless),
+      progressive: Boolean(options?.jxl?.progressive),
+      epf: jxlEpf
     },
     webp: {
       lossless: Boolean(options?.webp?.lossless),

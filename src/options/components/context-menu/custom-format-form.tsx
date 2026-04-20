@@ -141,7 +141,18 @@ export function CustomFormatForm({
             }}
             onQualityChange={(next) => onChange({ ...value, quality: next })}
             onAvifSpeedChange={(next) => updateCodecOptions("avif", { ...normalizedOptions.avif, speed: next })}
-            onJxlEffortChange={(next) => updateCodecOptions("jxl", { effort: next })}
+            onJxlEffortChange={(next) =>
+              updateCodecOptions("jxl", {
+                ...normalizedOptions.jxl,
+                effort: next
+              })
+            }
+            onJxlLosslessChange={(next) =>
+              updateCodecOptions("jxl", {
+                ...normalizedOptions.jxl,
+                lossless: next
+              })
+            }
             onWebpLosslessChange={(next) =>
               updateCodecOptions("webp", {
                 ...normalizedOptions.webp,

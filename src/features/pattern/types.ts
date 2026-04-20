@@ -106,6 +106,9 @@ export interface PatternExportSettings {
   exportFormat: PatternExportFormat
   exportQuality: number
   exportJxlEffort: number
+  exportJxlLossless: boolean
+  exportJxlProgressive: boolean
+  exportJxlEpf: 0 | 1 | 2 | 3
   exportAvifSpeed: number
   exportAvifQualityAlpha: number
   exportAvifLossless: boolean
@@ -226,6 +229,9 @@ export const DEFAULT_PATTERN_EXPORT_SETTINGS: PatternExportSettings = {
   exportFormat: "png",
   exportQuality: 90,
   exportJxlEffort: 7,
+  exportJxlLossless: false,
+  exportJxlProgressive: false,
+  exportJxlEpf: 1,
   exportAvifSpeed: 6,
   exportAvifQualityAlpha: 80,
   exportAvifLossless: false,

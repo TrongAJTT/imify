@@ -51,6 +51,9 @@ export function PatternTab() {
   const exportFormat = usePatternStore((state) => state.exportFormat)
   const exportQuality = usePatternStore((state) => state.exportQuality)
   const exportJxlEffort = usePatternStore((state) => state.exportJxlEffort)
+  const exportJxlLossless = usePatternStore((state) => state.exportJxlLossless)
+  const exportJxlProgressive = usePatternStore((state) => state.exportJxlProgressive)
+  const exportJxlEpf = usePatternStore((state) => state.exportJxlEpf)
   const exportAvifSpeed = usePatternStore((state) => state.exportAvifSpeed)
   const exportAvifQualityAlpha = usePatternStore((state) => state.exportAvifQualityAlpha)
   const exportAvifLossless = usePatternStore((state) => state.exportAvifLossless)
@@ -147,6 +150,9 @@ export function PatternTab() {
         exportBmpDithering,
         exportBmpDitheringLevel,
         exportJxlEffort,
+        exportJxlLossless,
+        exportJxlProgressive,
+        exportJxlEpf,
         exportWebpLossless,
         exportWebpNearLossless,
         exportWebpEffort,
@@ -175,6 +181,9 @@ export function PatternTab() {
       exportBmpDithering,
       exportBmpDitheringLevel,
       exportJxlEffort,
+      exportJxlLossless,
+      exportJxlProgressive,
+      exportJxlEpf,
       exportWebpLossless,
       exportWebpNearLossless,
       exportWebpEffort,

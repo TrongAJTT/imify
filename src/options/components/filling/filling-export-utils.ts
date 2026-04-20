@@ -56,6 +56,9 @@ const fillingRasterEncodeDependencies: RasterEncodeDependencies = {
     encodeJxl(imageData, {
       quality: clampQuality(options.quality),
       effort: options.jxl?.effort,
+      lossless: options.jxl?.lossless,
+      progressive: options.jxl?.progressive,
+      epf: options.jxl?.epf,
     }),
   encodeMozJpeg,
   encodeWebp,

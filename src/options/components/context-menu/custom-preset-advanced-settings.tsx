@@ -25,6 +25,7 @@ export function CustomPresetAdvancedSettings({
 }: CustomPresetAdvancedSettingsProps) {
   const hasAdvancedSettings =
     targetFormat === "avif" ||
+    targetFormat === "jxl" ||
     targetFormat === "png" ||
     targetFormat === "mozjpeg" ||
     targetFormat === "webp"
@@ -75,6 +76,20 @@ export function CustomPresetAdvancedSettings({
             updateCodecOptions("avif", {
               ...normalizedOptions.avif,
               highAlphaQuality: next
+            })
+        }}
+        jxl={{
+          progressive: normalizedOptions.jxl.progressive,
+          epf: normalizedOptions.jxl.epf,
+          onProgressiveChange: (next) =>
+            updateCodecOptions("jxl", {
+              ...normalizedOptions.jxl,
+              progressive: next
+            }),
+          onEpfChange: (next) =>
+            updateCodecOptions("jxl", {
+              ...normalizedOptions.jxl,
+              epf: next
             })
         }}
         mozjpeg={{
