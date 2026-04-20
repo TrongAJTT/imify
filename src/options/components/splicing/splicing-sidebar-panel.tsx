@@ -301,7 +301,6 @@ export function SplicingSidebarPanel({
 
         {/* Export Format & Quality Card with padding */}
         <TargetFormatQualityCard
-          cardLabel="Export Format & Quality"
           targetFormat={exportFormat}
           quality={exportQuality}
           formatConfig={buildTargetFormatQualityCardConfig(splicingCodecOptions)}

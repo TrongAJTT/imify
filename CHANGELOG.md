@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `Center Inside`
   - Added configurable Inbound/Outbound boundary controls (rectangle/ellipse with position, size, rotation) for pattern placement masking/culling behavior.
   - Added full export stack for Pattern Generator using shared codec pipeline (JPG/MozJPEG/PNG/WebP/AVIF/JXL/BMP/TIFF), including:
-    - Shared Target Format & Quality + Advanced codec settings cards
+    - Shared Export Format & Quality + Advanced codec settings cards
     - Dedicated worker-based export renderer/encoder with progress updates and inline fallback path.
 
 - **Fill Session Template Isolation:** Fill Mode now works against a session-only cloned template instead of mutating the original template reference.
@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fill and Image Splicing preview mode shortcuts now use configurable bindings; Fill customization tab switching shortcuts are also configurable.
   - Preview mode toggles now display dynamic key hints from current shortcut preferences.
 
-- **Image Filling Export Standardization:** Filling Export now reuses the same shared Target Format & Quality card + Advanced Settings group pattern used in Single/Batch workflows.
+- **Image Filling Export Standardization:** Filling Export now reuses the same shared Export Format & Quality card + Advanced Settings group pattern used in Single/Batch workflows.
   - Replaced custom/basic Fill export controls with shared `TargetFormatQualityCard` and `FormatAdvancedSettingsCard` wiring.
   - Removed PSD from active Fill export UI for now (kept deferred for a later dedicated implementation pass).
   - Filling raster export pipeline now routes through shared raster adapter encoding, so AVIF/JXL/MozJPEG/WebP/PNG/BMP/TIFF options are honored consistently (including PNG tiny/oxi and format-specific advanced settings).
@@ -85,7 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `WorkflowInfoAccordion` for feature info cards in select-mode sidebars.
   - Image Filling now reuses these shared primitives (breadcrumb, select header, info accordion) to align behavior with Single/Batch flows.
 
-- **Context Menu Global Formats (Target Card Integration):** Added per-format `Target Format & Quality` accordion controls directly inside active global format cards.
+- **Context Menu Global Formats (Target Card Integration):** Added per-format `Export Format & Quality` accordion controls directly inside active global format cards.
   - Applies to built-in global cards from `JPG` through `TIFF` (with `PDF` remaining informational/no extra target controls).
   - `JPG` card now supports switching target behavior between standard JPG and MozJPEG mode in the same card.
   - Reuses the same codec-option wiring model used in Single/Batch processor flows (quality, AVIF speed, WebP lossless tuning, PNG tiny+dithering, BMP depth+dithering, TIFF mode, ICO sizes/toolkit options).
@@ -212,16 +212,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Diffchecker:** Added icons for Split (Columns), Side by Side (Columns), Overlay (Layers), Difference (Zap).
   - **Splicing Presets:** Added icons for Stitch V (Rows), Stitch H (Columns), Grid (Grid3x3), Bento (LayoutGrid).
 - **AVIF Advanced Controls:** Added AVIF-specific controls across Single/Batch Processor and Image Splicing:
-  - **Speed (0-10)** in `Target Format & Quality` with guidance about AVIF's inverse speed/effort behavior.
+  - **Speed (0-10)** in `Export Format & Quality` with guidance about AVIF's inverse speed/effort behavior.
   - New advanced AVIF options: transparent-edge preservation (high alpha quality), alpha quality override, lossless mode, chroma subsampling (4:2:0 / 4:2:2 / 4:4:4), and tune mode (Auto / SSIM / PSNR).
   - All AVIF options are wired end-to-end through direct encoder, worker encoder, batch pipeline, and splicing export pipeline.
 - **UI:** Added reusable `FormatAdvancedSettingsCard` wrapper for format-specific advanced options (currently AVIF mapping).
 - **UI:** Added reusable `AvifAdvancedSettingsCard` accordion for AVIF expert controls with light/dark friendly styling.
 - **PNG Advanced Controls:** Added PNG-specific optimization controls across Batch Processor, Image Splicing, and Custom Format editor:
-  - Kept **Tiny Mode** in `Target Format & Quality` for fast access.
+  - Kept **Tiny Mode** in `Export Format & Quality` for fast access.
   - Added new **PNG Advanced** accordion with `Clean Transparent Pixels`, `Auto Grayscale Detection`, `Dithering (Tiny Mode)`, and `OxiPNG Compression (WASM)`.
   - Wired PNG advanced options through shared `FormatAdvancedSettingsCard` using the new reusable `PngAdvancedSettingsCard`.
-- **JXL Effort Control:** Added `Effort Level` selector in **Target Format & Quality** card for JXL format, allowing users to control compression algorithm complexity (1-9 scale):
+- **JXL Effort Control:** Added `Effort Level` selector in **Export Format & Quality** card for JXL format, allowing users to control compression algorithm complexity (1-9 scale):
   - **1-3:** Lightning/Fast modes - faster encoding, larger file sizes (recommended for Batch processing)
   - **4-6:** Fast-Balanced/Balanced modes - balanced performance and compression
   - **7-9:** Optimal/Maximum modes - maximum compression, slower encoding (default: 7, recommended for Single processing)
@@ -231,7 +231,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Wired MozJPEG options through shared format settings, conversion worker/main raster adapter pipeline, and splicing export pipeline.
   - Added local-only WASM asset sync flow via `scripts/sync-mozjpeg-wasm.mjs` and `sync:mozjpeg-wasm` (no remote encoder fetch).
 - **WebP Advanced + Lossless Controls:** Added WebP-specific controls across Single/Batch Processor, Image Splicing, and Custom Format editor:
-  - Added `Lossless Mode`, `Near-Lossless` slider, and `Effort Level (1-9)` in `Target Format & Quality`.
+  - Added `Lossless Mode`, `Near-Lossless` slider, and `Effort Level (1-9)` in `Export Format & Quality`.
   - Added new `WebP Advanced` accordion with `Sharp YUV` and `Preserve Exact Alpha`.
   - Wired WebP options end-to-end through shared format cards, stores, batch/single config builders, splicing export config, and custom-format normalization.
 - **WebP Local WASM Workflow:** Added local-only WebP WASM sync support:
@@ -266,7 +266,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Left border highlight on active accordion cards with subtle background wash based on theme color.
   - Icon coloring and hover states automatically synchronized across all theme-aware components.
 - **Single/Batch Processor:** Replaced grid-based Resize UI with new `ResizePopover` component for improved layout flexibility and cleaner control hierarchy.
-- **Single/Batch Processor:** Persisted accordion open/close state for Target Format & Quality and Resize controls per-context (Single vs Batch).
+- **Single/Batch Processor:** Persisted accordion open/close state for Export Format & Quality and Resize controls per-context (Single vs Batch).
 - **Image Splicing:** Migrated resize and export format controls from popovers to accordion cards for better UX continuity.
 - **Image Splicing:** Added `ResizePopover` integration for image resize controls with 3-mode variant (No resize, Fit width, Fit height).
 
@@ -304,7 +304,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Context Menu Progress Routing:** Background progress publisher now prioritizes the clicked context-menu tab before falling back to active tab, improving delivery reliability for conversion progress events.
 
-- **Target Format & Quality Card:** When only one format option is provided, the `Target format` selector is now automatically hidden to reduce redundant inputs.
+- **Export Format & Quality Card:** When only one format option is provided, the `Target format` selector is now automatically hidden to reduce redundant inputs.
 - **Context Menu Background Conversion Flow:** Added effective target-format resolution for global JPG cards configured as MozJPEG so progress state and download MIME routing follow the same adaptive conversion pipeline behavior as Single/Batch processing.
 - **Context Menu Side Information:** Updated `Global Formats` guidance text to match the new per-card target/quality accordion workflow.
 

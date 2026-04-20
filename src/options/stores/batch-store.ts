@@ -368,7 +368,7 @@ interface BatchStoreState extends BatchSetupState {
   setSkipSplicingHeavyPreviewQualityWarning: (value: boolean) => void
   heavyFormatToast: { id: string; format: string } | null
   setHeavyFormatToast: (value: { id: string; format: string } | null) => void
-  /** Accordion open/close state for Target Format & Quality - per context */
+  /** Accordion open/close state for Export Format & Quality - per context */
   isTargetFormatQualityOpen: boolean
   setIsTargetFormatQualityOpen: (value: boolean) => void
   /** Accordion open/close state for Resize - per context */

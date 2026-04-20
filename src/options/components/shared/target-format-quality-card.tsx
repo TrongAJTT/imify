@@ -10,7 +10,7 @@ import type { BmpColorDepth } from "@/core/types"
 import { FileJson, Zap } from "lucide-react"
 
 export type TargetFormatQualityCardProps = {
-  // Optional label for the card, defaults to "Target Format & Quality" if not provided
+  // Optional label for the card, defaults to "Export Format & Quality" if not provided
   cardLabel?: string
   /** Selected target format value */
   targetFormat: string
@@ -112,7 +112,7 @@ function normalizeDitheringLevel(level: number | undefined, legacyDithering: boo
 }
 
 export function TargetFormatQualityCard({
-  cardLabel = "Target Format & Quality",
+  cardLabel = "Export Format & Quality",
   targetFormat,
   quality,
   formatConfig,
@@ -219,7 +219,7 @@ export function TargetFormatQualityCard({
   return (
     <AccordionCard
       icon={<FileJson size={14} />}
-      label={cardLabel || "Target Format & Quality"}
+      label={cardLabel || "Export Format & Quality"}
       sublabel={sublabel}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
