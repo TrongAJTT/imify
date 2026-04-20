@@ -74,7 +74,7 @@ export function PatternAssetSettingsAccordion() {
           />
         </div>
 
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+        <div className="pt-2 space-y-2">
           <CheckboxCard
             icon={<Palette size={14} />}
             title="Override Layer Color"
@@ -83,26 +83,28 @@ export function PatternAssetSettingsAccordion() {
             onChange={(checked) => setLayerColorOverride({ enabled: checked })}
           />
 
-          <div className={layerColorOverride.enabled ? "space-y-2" : "space-y-2 pointer-events-none opacity-60"}>
-            <ColorPickerPopover
+          {layerColorOverride.enabled && (
+            <div className="pb-3 border-b-2 border-slate-200 dark:border-slate-700 space-y-2">
+              <ColorPickerPopover
               label="Override Color"
               value={layerColorOverride.color}
               onChange={(value) => setLayerColorOverride({ color: value })}
               enableGradient={true}
               enableAlpha={true}
               outputMode="rgba"
-            />
-            <SelectInput
+              />
+              <SelectInput
               label="Override Mode"
               value={layerColorOverride.mode}
               options={COLOR_OVERRIDE_MODE_OPTIONS}
               onChange={(value) => setLayerColorOverride({ mode: value as "per-asset" | "unified" })}
               tooltip="Per Asset: apply gradient/paint per layer tile. Unified: one shared color field across the full canvas."
-            />
-          </div>
+              />
+            </div>
+          )}
         </div>
 
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+        <div className="space-y-2">
           <CheckboxCard
             icon={<Square size={14} />}
             title="Override Layer Borders"
@@ -111,7 +113,8 @@ export function PatternAssetSettingsAccordion() {
             onChange={(checked) => setLayerBorderOverride({ enabled: checked })}
           />
 
-          <div className={layerBorderOverride.enabled ? "space-y-2" : "space-y-2 pointer-events-none opacity-60"}>
+          { layerBorderOverride.enabled && (
+          <div className="pb-3 border-b-2 border-slate-200 dark:border-slate-700 space-y-2">
             <NumberInput
               label="Border Width"
               value={Math.round(layerBorderOverride.width * 10) / 10}
@@ -129,9 +132,10 @@ export function PatternAssetSettingsAccordion() {
               outputMode="rgba"
             />
           </div>
+          )}
         </div>
 
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+        <div className="space-y-2">
           <CheckboxCard
             icon={<Circle size={14} />}
             title="Override Corner Radius"
@@ -140,7 +144,9 @@ export function PatternAssetSettingsAccordion() {
             onChange={(checked) => setLayerCornerRadiusOverride({ enabled: checked })}
           />
 
-          <div className={layerCornerRadiusOverride.enabled ? "" : "pointer-events-none opacity-60"}>
+          { layerCornerRadiusOverride.enabled && (
+
+          <div className="space-y-2">
             <NumberInput
               label="Corner Radius"
               value={Math.round(layerCornerRadiusOverride.radius * 10) / 10}
@@ -150,6 +156,7 @@ export function PatternAssetSettingsAccordion() {
               onChangeValue={(value) => setLayerCornerRadiusOverride({ radius: Math.max(0, value) })}
             />
           </div>
+          )}
         </div>
       </div>
     </AccordionCard>

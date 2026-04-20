@@ -35,6 +35,7 @@ interface DisplayBoundary {
   width: number
   height: number
   rotation: number
+  cornerRadius: number
 }
 
 function toDisplayBoundary(
@@ -44,6 +45,7 @@ function toDisplayBoundary(
 ): DisplayBoundary {
   const width = Math.max(MIN_BOUNDARY_SIZE * renderScale, boundary.width * renderScale)
   const height = Math.max(MIN_BOUNDARY_SIZE * renderScale, boundary.height * renderScale)
+  const cornerRadius = Math.max(0, (boundary.cornerRadius ?? 0) * renderScale)
 
   return {
     target,
@@ -52,6 +54,7 @@ function toDisplayBoundary(
     width,
     height,
     rotation: boundary.rotation,
+    cornerRadius: Math.min(cornerRadius, width / 2, height / 2),
   }
 }
 
@@ -236,6 +239,7 @@ export function PatternBoundaryVisualOverlay({
               {...commonProps}
               width={activeBoundary.width}
               height={activeBoundary.height}
+              cornerRadius={activeBoundary.cornerRadius}
               offsetX={activeBoundary.width / 2}
               offsetY={activeBoundary.height / 2}
             />

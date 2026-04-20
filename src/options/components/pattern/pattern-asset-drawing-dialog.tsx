@@ -97,7 +97,7 @@ export function PatternAssetDrawingDialog({
   const [canvasSize, setCanvasSize] = useState<CanvasSize>({
     ...DEFAULT_CANVAS_SIZE
   })
-  const [smoothBrushStroke, setSmoothBrushStroke] = useState(false)
+  const [smoothBrushStroke, setSmoothBrushStroke] = useState(true)
   const [streamlinePercent, setStreamlinePercent] = useState(
     DEFAULT_STREAMLINE_PERCENT
   )
@@ -121,6 +121,13 @@ export function PatternAssetDrawingDialog({
     return combinedStrokes.length > 0
   }, [combinedStrokes.length, sourceImage])
   const hasUndoHistory = strokes.length > 0 || hasClearedSource
+  const decreaseBrushShortcut = getShortcutLabel(
+    "pattern.draw.decrease_brush_size"
+  )
+  const increaseBrushShortcut = getShortcutLabel(
+    "pattern.draw.increase_brush_size"
+  )
+  const brushSizeTooltipContent = `Decrease: ${decreaseBrushShortcut}\nIncrease: ${increaseBrushShortcut}`
 
   const brushSmoothingSettings = useMemo<StrokeSmoothingSettings>(() => {
     return {
@@ -149,6 +156,32 @@ export function PatternAssetDrawingDialog({
     })
   }, [combinedStrokes, sourceImage])
 
+  const syncBrushPreviewRadius = useCallback((nextBrushSize: number) => {
+    const canvas = canvasRef.current
+    if (!canvas) {
+      return
+    }
+
+    const rect = canvas.getBoundingClientRect()
+    const scale = Math.max(rect.width / Math.max(canvas.width, 1), 0.0001)
+    const nextRadius = Math.max(1, (nextBrushSize * scale) / 2)
+
+    setBrushPreview((previous) => {
+      if (!previous) {
+        return previous
+      }
+
+      if (Math.abs(previous.radius - nextRadius) < 0.01) {
+        return previous
+      }
+
+      return {
+        ...previous,
+        radius: nextRadius
+      }
+    })
+  }, [])
+
   useEffect(() => {
     if (!isOpen) {
       return
@@ -164,7 +197,7 @@ export function PatternAssetDrawingDialog({
     setSourceImage(null)
     setHasClearedSource(false)
     setCanvasSize({ ...DEFAULT_CANVAS_SIZE })
-    setSmoothBrushStroke(false)
+    setSmoothBrushStroke(true)
     setStreamlinePercent(DEFAULT_STREAMLINE_PERCENT)
     setSmoothingPercent(DEFAULT_SMOOTHING_PERCENT)
     setSuggestedName(normalizeSuggestedName(initialSuggestedName))
@@ -229,8 +262,10 @@ export function PatternAssetDrawingDialog({
         ...current,
         [tool]: clamped
       }))
+
+      syncBrushPreviewRadius(clamped)
     },
-    [tool]
+    [syncBrushPreviewRadius, tool]
   )
 
   const beginStroke = useCallback(
@@ -335,6 +370,10 @@ export function PatternAssetDrawingDialog({
   const decreaseBrushSize = useCallback(() => {
     updateBrushSizeForActiveTool(activeBrushSize - BRUSH_SIZE_STEP)
   }, [activeBrushSize, updateBrushSizeForActiveTool])
+
+  useEffect(() => {
+    syncBrushPreviewRadius(activeBrushSize)
+  }, [activeBrushSize, syncBrushPreviewRadius])
 
   useShortcutActions(
     [
@@ -556,8 +595,8 @@ export function PatternAssetDrawingDialog({
             <div className="space-y-3">
               <NumberInput
                 label="Brush Size"
-                tooltipLabel={`Shortcuts: ${getShortcutLabel("pattern.draw.decrease_brush_size")} / ${getShortcutLabel("pattern.draw.increase_brush_size")}`}
-                tooltipContent="Use these shortcuts to decrease or increase active tool size quickly."
+                tooltipLabel="Brush Size Shortcuts"
+                tooltipContent={brushSizeTooltipContent}
                 value={activeBrushSize}
                 min={MIN_BRUSH_SIZE}
                 max={MAX_BRUSH_SIZE}

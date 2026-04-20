@@ -414,7 +414,27 @@ function withBoundaryPath(
   if (boundary.shape === "ellipse") {
     ctx.ellipse(0, 0, boundary.width / 2, boundary.height / 2, 0, 0, Math.PI * 2)
   } else {
-    ctx.rect(-boundary.width / 2, -boundary.height / 2, boundary.width, boundary.height)
+    const radius = Math.max(0, boundary.cornerRadius ?? 0)
+    const w = boundary.width
+    const h = boundary.height
+    const r = Math.min(radius, Math.min(w, h) / 2)
+
+    if (r <= 0) {
+      ctx.rect(-w / 2, -h / 2, w, h)
+    } else {
+      // Rounded rectangle path centered at 0,0
+      const x = -w / 2
+      const y = -h / 2
+      ctx.moveTo(x + r, y)
+      ctx.lineTo(x + w - r, y)
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+      ctx.lineTo(x + w, y + h - r)
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+      ctx.lineTo(x + r, y + h)
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+      ctx.lineTo(x, y + r)
+      ctx.quadraticCurveTo(x, y, x + r, y)
+    }
   }
 
   draw()

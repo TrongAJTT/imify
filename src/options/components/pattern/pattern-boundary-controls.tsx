@@ -11,6 +11,15 @@ const BOUNDARY_SHAPE_OPTIONS = [
   { value: "ellipse", label: "Ellipse" }
 ]
 
+function clampBoundaryCornerRadius(
+  value: number,
+  width: number,
+  height: number
+): number {
+  const maxRadius = Math.max(0, Math.min(width, height) / 2)
+  return Math.max(0, Math.min(value, maxRadius))
+}
+
 interface PatternBoundaryControlsProps {
   target: PatternVisualBoundaryTarget
   label: string
@@ -79,7 +88,16 @@ export function PatternBoundaryControls({
               min={1}
               max={12000}
               step={1}
-              onChangeValue={(value) => onChange({ width: value })}
+              onChangeValue={(value) =>
+                onChange({
+                  width: value,
+                  cornerRadius: clampBoundaryCornerRadius(
+                    boundary.cornerRadius ?? 0,
+                    value,
+                    boundary.height
+                  )
+                })
+              }
             />
             <NumberInput
               label="Height"
@@ -87,7 +105,16 @@ export function PatternBoundaryControls({
               min={1}
               max={12000}
               step={1}
-              onChangeValue={(value) => onChange({ height: value })}
+              onChangeValue={(value) =>
+                onChange({
+                  height: value,
+                  cornerRadius: clampBoundaryCornerRadius(
+                    boundary.cornerRadius ?? 0,
+                    boundary.width,
+                    value
+                  )
+                })
+              }
             />
             <NumberInput
               label="Rotation"
@@ -96,6 +123,22 @@ export function PatternBoundaryControls({
               max={360}
               step={0.5}
               onChangeValue={(value) => onChange({ rotation: value })}
+            />
+            <NumberInput
+              label="Corner Radius"
+              value={Math.round((boundary.cornerRadius ?? 0) * 10) / 10}
+              min={0}
+              max={Math.max(0, Math.min(boundary.width, boundary.height) / 2)}
+              step={0.5}
+              onChangeValue={(value) =>
+                onChange({
+                  cornerRadius: clampBoundaryCornerRadius(
+                    value,
+                    boundary.width,
+                    boundary.height
+                  )
+                })
+              }
             />
           </div>
 

@@ -102,6 +102,39 @@ function toBoundaryLocalPoint(boundary: PatternBoundarySettings, point: Point): 
   }
 }
 
+function isPointInsideRoundedRectangle(
+  localPoint: Point,
+  width: number,
+  height: number,
+  cornerRadius: number
+): boolean {
+  const halfWidth = width / 2
+  const halfHeight = height / 2
+
+  const absX = Math.abs(localPoint.x)
+  const absY = Math.abs(localPoint.y)
+
+  if (absX > halfWidth || absY > halfHeight) {
+    return false
+  }
+
+  if (cornerRadius <= 0) {
+    return true
+  }
+
+  const innerWidth = Math.max(0, halfWidth - cornerRadius)
+  const innerHeight = Math.max(0, halfHeight - cornerRadius)
+
+  if (absX <= innerWidth || absY <= innerHeight) {
+    return true
+  }
+
+  const dx = absX - innerWidth
+  const dy = absY - innerHeight
+
+  return dx * dx + dy * dy <= cornerRadius * cornerRadius
+}
+
 export function isPointInsideBoundary(point: Point, inputBoundary: PatternBoundarySettings): boolean {
   if (!inputBoundary.enabled) {
     return true
@@ -121,9 +154,17 @@ export function isPointInsideBoundary(point: Point, inputBoundary: PatternBounda
     return normalized <= 1
   }
 
-  return (
-    Math.abs(local.x) <= boundary.width / 2 &&
-    Math.abs(local.y) <= boundary.height / 2
+  const cornerRadius = clamp(
+    Number.isFinite(boundary.cornerRadius) ? (boundary.cornerRadius as number) : 0,
+    0,
+    Math.min(boundary.width, boundary.height) / 2
+  )
+
+  return isPointInsideRoundedRectangle(
+    local,
+    boundary.width,
+    boundary.height,
+    cornerRadius
   )
 }
 

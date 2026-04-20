@@ -58,6 +58,7 @@ export interface PatternBoundarySettings {
   width: number
   height: number
   rotation: number
+  cornerRadius?: number
 }
 
 export interface PatternCanvasSettings {
@@ -197,6 +198,7 @@ export const DEFAULT_PATTERN_INBOUND_BOUNDARY: PatternBoundarySettings = {
   width: DEFAULT_PATTERN_CANVAS_SETTINGS.width,
   height: DEFAULT_PATTERN_CANVAS_SETTINGS.height,
   rotation: 0,
+  cornerRadius: 0,
 }
 
 export const DEFAULT_PATTERN_OUTBOUND_BOUNDARY: PatternBoundarySettings = {
@@ -207,6 +209,7 @@ export const DEFAULT_PATTERN_OUTBOUND_BOUNDARY: PatternBoundarySettings = {
   width: DEFAULT_PATTERN_CANVAS_SETTINGS.width * 0.28,
   height: DEFAULT_PATTERN_CANVAS_SETTINGS.height * 0.42,
   rotation: 0,
+  cornerRadius: 0,
 }
 
 export const DEFAULT_PATTERN_SETTINGS: PatternSettings = {
