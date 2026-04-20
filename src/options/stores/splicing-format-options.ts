@@ -1,5 +1,13 @@
+import {
+  normalizeAvifCodecOptions,
+  normalizeBmpCodecOptions,
+  normalizeMozJpegChromaSubsampling,
+  normalizePngCodecOptions,
+  normalizeWebpCodecOptions
+} from "@/core/codec-options"
 import { normalizeJxlCodecOptionsFromExportSource } from "@/core/jxl-options"
 import type { SplicingExportConfig } from "@/features/splicing/types"
+import { buildActiveFormatOptions } from "@/options/shared/active-format-options"
 import type { SplicingStoreState } from "@/options/stores/splicing-store"
 
 type SplicingFormatOptions = NonNullable<SplicingExportConfig["formatOptions"]>
@@ -38,44 +46,56 @@ export type SplicingFormatOptionSource = Pick<
 >
 
 function buildSplicingFormatOptions(source: SplicingFormatOptionSource): SplicingFormatOptions {
+  const normalizedBmpOptions = normalizeBmpCodecOptions({
+    colorDepth: source.exportBmpColorDepth,
+    dithering: source.exportBmpDithering,
+    ditheringLevel: source.exportBmpDitheringLevel
+  })
   const normalizedJxlOptions = normalizeJxlCodecOptionsFromExportSource(source)
+  const normalizedWebpOptions = normalizeWebpCodecOptions({
+    lossless: source.exportWebpLossless,
+    nearLossless: source.exportWebpNearLossless,
+    effort: source.exportWebpEffort,
+    sharpYuv: source.exportWebpSharpYuv,
+    preserveExactAlpha: source.exportWebpPreserveExactAlpha
+  })
+  const normalizedAvifOptions = normalizeAvifCodecOptions({
+    speed: source.exportAvifSpeed,
+    qualityAlpha: source.exportAvifQualityAlpha,
+    lossless: source.exportAvifLossless,
+    subsample: source.exportAvifSubsample,
+    tune: source.exportAvifTune,
+    highAlphaQuality: source.exportAvifHighAlphaQuality
+  })
+  const normalizedPngOptions = normalizePngCodecOptions({
+    tinyMode: source.exportPngTinyMode,
+    cleanTransparentPixels: source.exportPngCleanTransparentPixels,
+    autoGrayscale: source.exportPngAutoGrayscale,
+    dithering: source.exportPngDithering,
+    ditheringLevel: source.exportPngDitheringLevel,
+    progressiveInterlaced: source.exportPngProgressiveInterlaced,
+    oxipngCompression: source.exportPngOxiPngCompression
+  })
+  const splicingBmpOptions = {
+    ...normalizedBmpOptions,
+    dithering: normalizedBmpOptions.colorDepth === 1 && source.exportBmpDithering
+  }
+  const splicingPngOptions = {
+    ...normalizedPngOptions,
+    dithering: Boolean(source.exportPngDithering)
+  }
 
   return {
-    bmp: {
-      colorDepth: source.exportBmpColorDepth,
-      dithering: source.exportBmpColorDepth === 1 && source.exportBmpDithering,
-      ditheringLevel: source.exportBmpColorDepth === 1 ? source.exportBmpDitheringLevel : 0
-    },
+    bmp: splicingBmpOptions,
     jxl: normalizedJxlOptions,
-    webp: {
-      lossless: source.exportWebpLossless,
-      nearLossless: source.exportWebpNearLossless,
-      effort: source.exportWebpEffort,
-      sharpYuv: source.exportWebpSharpYuv,
-      preserveExactAlpha: source.exportWebpPreserveExactAlpha
-    },
-    avif: {
-      speed: source.exportAvifSpeed,
-      qualityAlpha: source.exportAvifQualityAlpha,
-      lossless: source.exportAvifLossless,
-      subsample: source.exportAvifSubsample,
-      tune: source.exportAvifTune,
-      highAlphaQuality: source.exportAvifHighAlphaQuality
-    },
+    webp: normalizedWebpOptions,
+    avif: normalizedAvifOptions,
     mozjpeg: {
       enabled: true,
       progressive: source.exportMozJpegProgressive,
-      chromaSubsampling: source.exportMozJpegChromaSubsampling
+      chromaSubsampling: normalizeMozJpegChromaSubsampling(source.exportMozJpegChromaSubsampling)
     },
-    png: {
-      tinyMode: source.exportPngTinyMode,
-      cleanTransparentPixels: source.exportPngCleanTransparentPixels,
-      autoGrayscale: source.exportPngAutoGrayscale,
-      dithering: source.exportPngDithering,
-      ditheringLevel: source.exportPngDitheringLevel,
-      progressiveInterlaced: source.exportPngProgressiveInterlaced,
-      oxipngCompression: source.exportPngOxiPngCompression
-    },
+    png: splicingPngOptions,
     tiff: {
       colorMode: source.exportTiffColorMode
     }
@@ -87,13 +107,5 @@ export function buildActiveSplicingFormatOptions(
 ): SplicingExportConfig["formatOptions"] {
   const options = buildSplicingFormatOptions(source)
 
-  return {
-    bmp: source.exportFormat === "bmp" ? options.bmp : undefined,
-    jxl: source.exportFormat === "jxl" ? options.jxl : undefined,
-    webp: source.exportFormat === "webp" ? options.webp : undefined,
-    avif: source.exportFormat === "avif" ? options.avif : undefined,
-    mozjpeg: source.exportFormat === "mozjpeg" ? options.mozjpeg : undefined,
-    png: source.exportFormat === "png" ? options.png : undefined,
-    tiff: source.exportFormat === "tiff" ? options.tiff : undefined
-  }
+  return buildActiveFormatOptions(source.exportFormat, options)
 }

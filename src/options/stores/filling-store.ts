@@ -2,6 +2,11 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
+import {
+  mergeNormalizedAvifTextExportSource,
+  mergeNormalizedPngExportSource,
+  mergeNormalizedWebpExportSource
+} from "@/core/codec-options"
 import { mergeNormalizedJxlExportSource } from "@/core/jxl-options"
 import type {
   FillingStep,
@@ -138,6 +143,57 @@ function buildNormalizedFillingJxlPatch(
   return mergeNormalizedJxlExportSource(state, patch)
 }
 
+type FillingWebpExportState = Pick<
+  FillingStoreState,
+  | "exportWebpLossless"
+  | "exportWebpNearLossless"
+  | "exportWebpEffort"
+  | "exportWebpSharpYuv"
+  | "exportWebpPreserveExactAlpha"
+>
+
+function buildNormalizedFillingWebpPatch(
+  state: FillingWebpExportState,
+  patch: Partial<FillingWebpExportState>
+): FillingWebpExportState {
+  return mergeNormalizedWebpExportSource(state, patch)
+}
+
+type FillingAvifExportState = Pick<
+  FillingStoreState,
+  | "exportAvifSpeed"
+  | "exportAvifQualityAlpha"
+  | "exportAvifLossless"
+  | "exportAvifSubsample"
+  | "exportAvifTune"
+  | "exportAvifHighAlphaQuality"
+>
+
+function buildNormalizedFillingAvifPatch(
+  state: FillingAvifExportState,
+  patch: Partial<FillingAvifExportState>
+): FillingAvifExportState {
+  return mergeNormalizedAvifTextExportSource(state, patch)
+}
+
+type FillingPngExportState = Pick<
+  FillingStoreState,
+  | "exportPngTinyMode"
+  | "exportPngCleanTransparentPixels"
+  | "exportPngAutoGrayscale"
+  | "exportPngDithering"
+  | "exportPngDitheringLevel"
+  | "exportPngProgressiveInterlaced"
+  | "exportPngOxiPngCompression"
+>
+
+function buildNormalizedFillingPngPatch(
+  state: FillingPngExportState,
+  patch: Partial<FillingPngExportState>
+): FillingPngExportState {
+  return mergeNormalizedPngExportSource(state, patch)
+}
+
 export const useFillingStore = create<FillingStoreState>()(
   persist(
     (set) => ({
@@ -225,25 +281,39 @@ export const useFillingStore = create<FillingStoreState>()(
       setExportJxlProgressive: (enabled) =>
         set((state) => buildNormalizedFillingJxlPatch(state, { exportJxlProgressive: enabled })),
       setExportJxlEpf: (value) => set((state) => buildNormalizedFillingJxlPatch(state, { exportJxlEpf: value })),
-      setExportAvifSpeed: (v) => set({ exportAvifSpeed: v }),
-      setExportAvifQualityAlpha: (v) => set({ exportAvifQualityAlpha: v }),
-      setExportAvifLossless: (v) => set({ exportAvifLossless: v }),
-      setExportAvifSubsample: (v) => set({ exportAvifSubsample: v }),
-      setExportAvifTune: (v) => set({ exportAvifTune: v }),
-      setExportAvifHighAlphaQuality: (v) => set({ exportAvifHighAlphaQuality: v }),
+      setExportAvifSpeed: (v) => set((state) => buildNormalizedFillingAvifPatch(state, { exportAvifSpeed: v })),
+      setExportAvifQualityAlpha: (v) =>
+        set((state) => buildNormalizedFillingAvifPatch(state, { exportAvifQualityAlpha: v })),
+      setExportAvifLossless: (v) =>
+        set((state) => buildNormalizedFillingAvifPatch(state, { exportAvifLossless: v })),
+      setExportAvifSubsample: (v) =>
+        set((state) => buildNormalizedFillingAvifPatch(state, { exportAvifSubsample: v })),
+      setExportAvifTune: (v) => set((state) => buildNormalizedFillingAvifPatch(state, { exportAvifTune: v })),
+      setExportAvifHighAlphaQuality: (v) =>
+        set((state) => buildNormalizedFillingAvifPatch(state, { exportAvifHighAlphaQuality: v })),
       setExportMozJpegProgressive: (v) => set({ exportMozJpegProgressive: v }),
       setExportMozJpegChromaSubsampling: (v) => set({ exportMozJpegChromaSubsampling: v }),
-      setExportPngTinyMode: (v) => set({ exportPngTinyMode: v }),
-      setExportPngCleanTransparentPixels: (v) => set({ exportPngCleanTransparentPixels: v }),
-      setExportPngAutoGrayscale: (v) => set({ exportPngAutoGrayscale: v }),
-      setExportPngDitheringLevel: (v) => set({ exportPngDitheringLevel: v, exportPngDithering: v > 0 }),
-      setExportPngProgressiveInterlaced: (v) => set({ exportPngProgressiveInterlaced: v }),
-      setExportPngOxiPngCompression: (v) => set({ exportPngOxiPngCompression: v }),
-      setExportWebpLossless: (v) => set({ exportWebpLossless: v }),
-      setExportWebpNearLossless: (v) => set({ exportWebpNearLossless: v }),
-      setExportWebpEffort: (v) => set({ exportWebpEffort: v }),
-      setExportWebpSharpYuv: (v) => set({ exportWebpSharpYuv: v }),
-      setExportWebpPreserveExactAlpha: (v) => set({ exportWebpPreserveExactAlpha: v }),
+      setExportPngTinyMode: (v) => set((state) => buildNormalizedFillingPngPatch(state, { exportPngTinyMode: v })),
+      setExportPngCleanTransparentPixels: (v) =>
+        set((state) => buildNormalizedFillingPngPatch(state, { exportPngCleanTransparentPixels: v })),
+      setExportPngAutoGrayscale: (v) =>
+        set((state) => buildNormalizedFillingPngPatch(state, { exportPngAutoGrayscale: v })),
+      setExportPngDitheringLevel: (v) =>
+        set((state) => buildNormalizedFillingPngPatch(state, { exportPngDitheringLevel: v })),
+      setExportPngProgressiveInterlaced: (v) =>
+        set((state) => buildNormalizedFillingPngPatch(state, { exportPngProgressiveInterlaced: v })),
+      setExportPngOxiPngCompression: (v) =>
+        set((state) => buildNormalizedFillingPngPatch(state, { exportPngOxiPngCompression: v })),
+      setExportWebpLossless: (v) =>
+        set((state) => buildNormalizedFillingWebpPatch(state, { exportWebpLossless: v })),
+      setExportWebpNearLossless: (v) =>
+        set((state) => buildNormalizedFillingWebpPatch(state, { exportWebpNearLossless: v })),
+      setExportWebpEffort: (v) =>
+        set((state) => buildNormalizedFillingWebpPatch(state, { exportWebpEffort: v })),
+      setExportWebpSharpYuv: (v) =>
+        set((state) => buildNormalizedFillingWebpPatch(state, { exportWebpSharpYuv: v })),
+      setExportWebpPreserveExactAlpha: (v) =>
+        set((state) => buildNormalizedFillingWebpPatch(state, { exportWebpPreserveExactAlpha: v })),
       setExportBmpColorDepth: (v) => set({ exportBmpColorDepth: v }),
       setExportBmpDitheringLevel: (v) => set({ exportBmpDitheringLevel: v, exportBmpDithering: v > 0 }),
       setExportTiffColorMode: (v) => set({ exportTiffColorMode: v }),

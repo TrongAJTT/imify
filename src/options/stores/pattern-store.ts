@@ -2,6 +2,11 @@ import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
+import {
+  mergeNormalizedAvifTextExportSource,
+  mergeNormalizedPngExportSource,
+  mergeNormalizedWebpExportSource
+} from "@/core/codec-options"
 import { mergeNormalizedJxlExportSource } from "@/core/jxl-options"
 import type {
   PatternAsset,
@@ -302,6 +307,57 @@ function buildNormalizedPatternJxlPatch(
   patch: Partial<PatternJxlExportState>
 ): PatternJxlExportState {
   return mergeNormalizedJxlExportSource(state, patch)
+}
+
+type PatternWebpExportState = Pick<
+  PatternStoreState,
+  | "exportWebpLossless"
+  | "exportWebpNearLossless"
+  | "exportWebpEffort"
+  | "exportWebpSharpYuv"
+  | "exportWebpPreserveExactAlpha"
+>
+
+function buildNormalizedPatternWebpPatch(
+  state: PatternWebpExportState,
+  patch: Partial<PatternWebpExportState>
+): PatternWebpExportState {
+  return mergeNormalizedWebpExportSource(state, patch)
+}
+
+type PatternAvifExportState = Pick<
+  PatternStoreState,
+  | "exportAvifSpeed"
+  | "exportAvifQualityAlpha"
+  | "exportAvifLossless"
+  | "exportAvifSubsample"
+  | "exportAvifTune"
+  | "exportAvifHighAlphaQuality"
+>
+
+function buildNormalizedPatternAvifPatch(
+  state: PatternAvifExportState,
+  patch: Partial<PatternAvifExportState>
+): PatternAvifExportState {
+  return mergeNormalizedAvifTextExportSource(state, patch)
+}
+
+type PatternPngExportState = Pick<
+  PatternStoreState,
+  | "exportPngTinyMode"
+  | "exportPngCleanTransparentPixels"
+  | "exportPngAutoGrayscale"
+  | "exportPngDithering"
+  | "exportPngDitheringLevel"
+  | "exportPngProgressiveInterlaced"
+  | "exportPngOxiPngCompression"
+>
+
+function buildNormalizedPatternPngPatch(
+  state: PatternPngExportState,
+  patch: Partial<PatternPngExportState>
+): PatternPngExportState {
+  return mergeNormalizedPngExportSource(state, patch)
 }
 
 export const usePatternStore = create<PatternStoreState>()(
@@ -627,25 +683,39 @@ export const usePatternStore = create<PatternStoreState>()(
       setExportJxlProgressive: (v) =>
         set((state) => buildNormalizedPatternJxlPatch(state, { exportJxlProgressive: v })),
       setExportJxlEpf: (v) => set((state) => buildNormalizedPatternJxlPatch(state, { exportJxlEpf: v })),
-      setExportAvifSpeed: (v) => set({ exportAvifSpeed: v }),
-      setExportAvifQualityAlpha: (v) => set({ exportAvifQualityAlpha: v }),
-      setExportAvifLossless: (v) => set({ exportAvifLossless: v }),
-      setExportAvifSubsample: (v) => set({ exportAvifSubsample: v }),
-      setExportAvifTune: (v) => set({ exportAvifTune: v }),
-      setExportAvifHighAlphaQuality: (v) => set({ exportAvifHighAlphaQuality: v }),
+      setExportAvifSpeed: (v) => set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifSpeed: v })),
+      setExportAvifQualityAlpha: (v) =>
+        set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifQualityAlpha: v })),
+      setExportAvifLossless: (v) =>
+        set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifLossless: v })),
+      setExportAvifSubsample: (v) =>
+        set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifSubsample: v })),
+      setExportAvifTune: (v) => set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifTune: v })),
+      setExportAvifHighAlphaQuality: (v) =>
+        set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifHighAlphaQuality: v })),
       setExportMozJpegProgressive: (v) => set({ exportMozJpegProgressive: v }),
       setExportMozJpegChromaSubsampling: (v) => set({ exportMozJpegChromaSubsampling: v }),
-      setExportPngTinyMode: (v) => set({ exportPngTinyMode: v }),
-      setExportPngCleanTransparentPixels: (v) => set({ exportPngCleanTransparentPixels: v }),
-      setExportPngAutoGrayscale: (v) => set({ exportPngAutoGrayscale: v }),
-      setExportPngDitheringLevel: (v) => set({ exportPngDitheringLevel: v, exportPngDithering: v > 0 }),
-      setExportPngProgressiveInterlaced: (v) => set({ exportPngProgressiveInterlaced: v }),
-      setExportPngOxiPngCompression: (v) => set({ exportPngOxiPngCompression: v }),
-      setExportWebpLossless: (v) => set({ exportWebpLossless: v }),
-      setExportWebpNearLossless: (v) => set({ exportWebpNearLossless: v }),
-      setExportWebpEffort: (v) => set({ exportWebpEffort: v }),
-      setExportWebpSharpYuv: (v) => set({ exportWebpSharpYuv: v }),
-      setExportWebpPreserveExactAlpha: (v) => set({ exportWebpPreserveExactAlpha: v }),
+      setExportPngTinyMode: (v) => set((state) => buildNormalizedPatternPngPatch(state, { exportPngTinyMode: v })),
+      setExportPngCleanTransparentPixels: (v) =>
+        set((state) => buildNormalizedPatternPngPatch(state, { exportPngCleanTransparentPixels: v })),
+      setExportPngAutoGrayscale: (v) =>
+        set((state) => buildNormalizedPatternPngPatch(state, { exportPngAutoGrayscale: v })),
+      setExportPngDitheringLevel: (v) =>
+        set((state) => buildNormalizedPatternPngPatch(state, { exportPngDitheringLevel: v })),
+      setExportPngProgressiveInterlaced: (v) =>
+        set((state) => buildNormalizedPatternPngPatch(state, { exportPngProgressiveInterlaced: v })),
+      setExportPngOxiPngCompression: (v) =>
+        set((state) => buildNormalizedPatternPngPatch(state, { exportPngOxiPngCompression: v })),
+      setExportWebpLossless: (v) =>
+        set((state) => buildNormalizedPatternWebpPatch(state, { exportWebpLossless: v })),
+      setExportWebpNearLossless: (v) =>
+        set((state) => buildNormalizedPatternWebpPatch(state, { exportWebpNearLossless: v })),
+      setExportWebpEffort: (v) =>
+        set((state) => buildNormalizedPatternWebpPatch(state, { exportWebpEffort: v })),
+      setExportWebpSharpYuv: (v) =>
+        set((state) => buildNormalizedPatternWebpPatch(state, { exportWebpSharpYuv: v })),
+      setExportWebpPreserveExactAlpha: (v) =>
+        set((state) => buildNormalizedPatternWebpPatch(state, { exportWebpPreserveExactAlpha: v })),
       setExportBmpColorDepth: (v) => set({ exportBmpColorDepth: v }),
       setExportBmpDitheringLevel: (v) => set({ exportBmpDitheringLevel: v, exportBmpDithering: v > 0 }),
       setExportTiffColorMode: (v) => set({ exportTiffColorMode: v }),

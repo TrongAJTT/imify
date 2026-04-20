@@ -2,6 +2,19 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
+import {
+  mergeNormalizedAvifCodecOptions,
+  mergeNormalizedBmpCodecOptions,
+  mergeNormalizedIcoCodecOptions,
+  mergeNormalizedPngCodecOptions,
+  mergeNormalizedWebpCodecOptions,
+  normalizeAvifCodecOptions,
+  normalizeBmpCodecOptions,
+  normalizeIcoCodecOptions,
+  normalizeMozJpegChromaSubsampling,
+  normalizePngCodecOptions,
+  normalizeWebpCodecOptions
+} from "@/core/codec-options"
 import { mergeNormalizedJxlCodecOptions } from "@/core/jxl-options"
 import { DEFAULT_ICO_SIZES } from "@/core/format-config"
 import { normalizeResizeResamplingAlgorithm } from "@/core/resize-resampling"
@@ -140,29 +153,14 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
   }
 
   const formatOptions = state.formatOptions ?? DEFAULT_BATCH_STATE.formatOptions
-  const rawBmpOptions = {
+  const bmpOptions = normalizeBmpCodecOptions({
     ...DEFAULT_BATCH_STATE.formatOptions.bmp,
     ...formatOptions.bmp
-  }
-  const bmpColorDepth: BmpColorDepth =
-    rawBmpOptions.colorDepth === 1 || rawBmpOptions.colorDepth === 8 || rawBmpOptions.colorDepth === 32
-      ? rawBmpOptions.colorDepth
-      : 24
-  const bmpDitheringLevel =
-    typeof rawBmpOptions.ditheringLevel === "number"
-      ? Math.max(0, Math.min(100, Math.round(rawBmpOptions.ditheringLevel)))
-      : rawBmpOptions.dithering
-      ? 100
-      : 0
-  const bmpOptions = {
-    colorDepth: bmpColorDepth,
-    dithering: bmpColorDepth === 1 && bmpDitheringLevel > 0,
-    ditheringLevel: bmpColorDepth === 1 ? bmpDitheringLevel : 0
-  }
-  const avifOptions = {
+  })
+  const avifOptions = normalizeAvifCodecOptions({
     ...DEFAULT_BATCH_STATE.formatOptions.avif,
     ...formatOptions.avif
-  }
+  })
   const mozjpegOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.mozjpeg,
     ...formatOptions.mozjpeg
@@ -186,46 +184,24 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
         ? rawJxlOptions.epf
         : 1
   }
-  const rawWebpOptions = {
+  const webpOptions = normalizeWebpCodecOptions({
     ...DEFAULT_BATCH_STATE.formatOptions.webp,
     ...formatOptions.webp
-  }
-  const webpOptions = {
-    lossless: Boolean(rawWebpOptions.lossless),
-    nearLossless:
-      typeof rawWebpOptions.nearLossless === "number"
-        ? Math.max(0, Math.min(100, Math.round(rawWebpOptions.nearLossless)))
-        : 100,
-    effort:
-      typeof rawWebpOptions.effort === "number"
-        ? Math.max(1, Math.min(9, Math.round(rawWebpOptions.effort)))
-        : 5,
-    sharpYuv: Boolean(rawWebpOptions.sharpYuv),
-    preserveExactAlpha: Boolean(rawWebpOptions.preserveExactAlpha)
-  }
-  const rawPngOptions = {
+  })
+  const pngOptions = normalizePngCodecOptions({
     ...DEFAULT_BATCH_STATE.formatOptions.png,
     ...formatOptions.png
-  }
-  const normalizedPngDitheringLevel =
-    typeof rawPngOptions.ditheringLevel === "number"
-      ? Math.max(0, Math.min(100, Math.round(rawPngOptions.ditheringLevel)))
-      : rawPngOptions.dithering
-      ? 100
-      : 0
-  const pngOptions = {
-    ...rawPngOptions,
-    dithering: normalizedPngDitheringLevel > 0,
-    ditheringLevel: normalizedPngDitheringLevel,
-    progressiveInterlaced: Boolean(rawPngOptions.progressiveInterlaced)
-  }
-  const icoOptions = {
-    ...DEFAULT_BATCH_STATE.formatOptions.ico,
-    ...formatOptions.ico,
-    sizes: [...(formatOptions.ico?.sizes ?? DEFAULT_BATCH_STATE.formatOptions.ico.sizes)],
-    generateWebIconKit: Boolean(formatOptions.ico?.generateWebIconKit),
-    optimizeInternalPngLayers: Boolean(formatOptions.ico?.optimizeInternalPngLayers)
-  }
+  })
+  const icoOptions = normalizeIcoCodecOptions(
+    {
+      ...DEFAULT_BATCH_STATE.formatOptions.ico,
+      ...formatOptions.ico,
+      sizes: [...(formatOptions.ico?.sizes ?? DEFAULT_BATCH_STATE.formatOptions.ico.sizes)]
+    },
+    {
+      defaultSizes: DEFAULT_BATCH_STATE.formatOptions.ico.sizes
+    }
+  )
   const rawTiffOptions = {
     ...DEFAULT_BATCH_STATE.formatOptions.tiff,
     ...formatOptions.tiff
@@ -242,10 +218,7 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
       avif: avifOptions,
       mozjpeg: {
         progressive: Boolean(mozjpegOptions.progressive),
-        chromaSubsampling:
-          mozjpegOptions.chromaSubsampling === 0 || mozjpegOptions.chromaSubsampling === 1
-            ? mozjpegOptions.chromaSubsampling
-            : 2
+        chromaSubsampling: normalizeMozJpegChromaSubsampling(mozjpegOptions.chromaSubsampling)
       },
       jxl: jxlOptions,
       webp: webpOptions,
@@ -409,20 +382,13 @@ function cloneContextConfig(state: BatchStoreState, context: SetupContext): Batc
   return cloneSetupState(state.contextConfigs[context] ?? DEFAULT_BATCH_STATE)
 }
 
-type BatchJxlCodecPatch = Partial<BatchSetupState["formatOptions"]["jxl"]>
-
-function buildBatchContextJxlStatePatch(
+function buildBatchContextFormatOptionsStatePatch(
   state: BatchStoreState,
-  patch: BatchJxlCodecPatch
+  nextFormatOptions: BatchSetupState["formatOptions"]
 ): Partial<BatchStoreState> {
   const setupContext = state.setupContext
   const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
   const currentConfig = contextConfigs[setupContext]
-  const nextJxlOptions = mergeNormalizedJxlCodecOptions(currentConfig.formatOptions.jxl, patch)
-  const nextFormatOptions = {
-    ...currentConfig.formatOptions,
-    jxl: nextJxlOptions
-  }
   const nextConfig = {
     ...currentConfig,
     formatOptions: nextFormatOptions
@@ -435,6 +401,110 @@ function buildBatchContextJxlStatePatch(
       [setupContext]: nextConfig
     }
   } as Partial<BatchStoreState>
+}
+
+type BatchJxlCodecPatch = Partial<BatchSetupState["formatOptions"]["jxl"]>
+
+function buildBatchContextJxlStatePatch(
+  state: BatchStoreState,
+  patch: BatchJxlCodecPatch
+): Partial<BatchStoreState> {
+  const setupContext = state.setupContext
+  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+  const currentConfig = contextConfigs[setupContext]
+  const nextJxlOptions = mergeNormalizedJxlCodecOptions(currentConfig.formatOptions.jxl, patch)
+
+  return buildBatchContextFormatOptionsStatePatch(state, {
+    ...currentConfig.formatOptions,
+    jxl: nextJxlOptions
+  })
+}
+
+type BatchWebpCodecPatch = Partial<BatchSetupState["formatOptions"]["webp"]>
+
+function buildBatchContextWebpStatePatch(
+  state: BatchStoreState,
+  patch: BatchWebpCodecPatch
+): Partial<BatchStoreState> {
+  const setupContext = state.setupContext
+  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+  const currentConfig = contextConfigs[setupContext]
+  const nextWebpOptions = mergeNormalizedWebpCodecOptions(currentConfig.formatOptions.webp, patch)
+
+  return buildBatchContextFormatOptionsStatePatch(state, {
+    ...currentConfig.formatOptions,
+    webp: nextWebpOptions
+  })
+}
+
+type BatchAvifCodecPatch = Partial<BatchSetupState["formatOptions"]["avif"]>
+
+function buildBatchContextAvifStatePatch(
+  state: BatchStoreState,
+  patch: BatchAvifCodecPatch
+): Partial<BatchStoreState> {
+  const setupContext = state.setupContext
+  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+  const currentConfig = contextConfigs[setupContext]
+  const nextAvifOptions = mergeNormalizedAvifCodecOptions(currentConfig.formatOptions.avif, patch)
+
+  return buildBatchContextFormatOptionsStatePatch(state, {
+    ...currentConfig.formatOptions,
+    avif: nextAvifOptions
+  })
+}
+
+type BatchPngCodecPatch = Partial<BatchSetupState["formatOptions"]["png"]>
+
+function buildBatchContextPngStatePatch(
+  state: BatchStoreState,
+  patch: BatchPngCodecPatch
+): Partial<BatchStoreState> {
+  const setupContext = state.setupContext
+  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+  const currentConfig = contextConfigs[setupContext]
+  const nextPngOptions = mergeNormalizedPngCodecOptions(currentConfig.formatOptions.png, patch)
+
+  return buildBatchContextFormatOptionsStatePatch(state, {
+    ...currentConfig.formatOptions,
+    png: nextPngOptions
+  })
+}
+
+type BatchBmpCodecPatch = Partial<BatchSetupState["formatOptions"]["bmp"]>
+
+function buildBatchContextBmpStatePatch(
+  state: BatchStoreState,
+  patch: BatchBmpCodecPatch
+): Partial<BatchStoreState> {
+  const setupContext = state.setupContext
+  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+  const currentConfig = contextConfigs[setupContext]
+  const nextBmpOptions = mergeNormalizedBmpCodecOptions(currentConfig.formatOptions.bmp, patch)
+
+  return buildBatchContextFormatOptionsStatePatch(state, {
+    ...currentConfig.formatOptions,
+    bmp: nextBmpOptions
+  })
+}
+
+type BatchIcoCodecPatch = Partial<BatchSetupState["formatOptions"]["ico"]>
+
+function buildBatchContextIcoStatePatch(
+  state: BatchStoreState,
+  patch: BatchIcoCodecPatch
+): Partial<BatchStoreState> {
+  const setupContext = state.setupContext
+  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+  const currentConfig = contextConfigs[setupContext]
+  const nextIcoOptions = mergeNormalizedIcoCodecOptions(currentConfig.formatOptions.ico, patch, {
+    defaultSizes: DEFAULT_BATCH_STATE.formatOptions.ico.sizes
+  })
+
+  return buildBatchContextFormatOptionsStatePatch(state, {
+    ...currentConfig.formatOptions,
+    ico: nextIcoOptions
+  })
 }
 
 function isSetupConfigEqual(a: BatchSetupState, b: BatchSetupState): boolean {
@@ -581,283 +651,21 @@ export const useBatchStore = create<BatchStoreState>()(
       setJxlLossless: (value) => set((state) => buildBatchContextJxlStatePatch(state, { lossless: value })),
       setJxlProgressive: (value) => set((state) => buildBatchContextJxlStatePatch(state, { progressive: value })),
       setJxlEpf: (value) => set((state) => buildBatchContextJxlStatePatch(state, { epf: value })),
-      setWebpLossless: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            webp: {
-              ...currentConfig.formatOptions.webp,
-              lossless: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+      setWebpLossless: (value) => set((state) => buildBatchContextWebpStatePatch(state, { lossless: value })),
       setWebpNearLossless: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const normalizedValue = Math.max(0, Math.min(100, Math.round(value)))
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            webp: {
-              ...currentConfig.formatOptions.webp,
-              nearLossless: normalizedValue
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setWebpEffort: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const normalizedValue = Math.max(1, Math.min(9, Math.round(value)))
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            webp: {
-              ...currentConfig.formatOptions.webp,
-              effort: normalizedValue
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setWebpSharpYuv: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            webp: {
-              ...currentConfig.formatOptions.webp,
-              sharpYuv: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextWebpStatePatch(state, { nearLossless: value })),
+      setWebpEffort: (value) => set((state) => buildBatchContextWebpStatePatch(state, { effort: value })),
+      setWebpSharpYuv: (value) => set((state) => buildBatchContextWebpStatePatch(state, { sharpYuv: value })),
       setWebpPreserveExactAlpha: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            webp: {
-              ...currentConfig.formatOptions.webp,
-              preserveExactAlpha: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setAvifSpeed: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            avif: {
-              ...currentConfig.formatOptions.avif,
-              speed: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextWebpStatePatch(state, { preserveExactAlpha: value })),
+      setAvifSpeed: (value) => set((state) => buildBatchContextAvifStatePatch(state, { speed: value })),
       setAvifQualityAlpha: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            avif: {
-              ...currentConfig.formatOptions.avif,
-              qualityAlpha: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setAvifLossless: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            avif: {
-              ...currentConfig.formatOptions.avif,
-              lossless: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setAvifSubsample: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            avif: {
-              ...currentConfig.formatOptions.avif,
-              subsample: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setAvifTune: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            avif: {
-              ...currentConfig.formatOptions.avif,
-              tune: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextAvifStatePatch(state, { qualityAlpha: value })),
+      setAvifLossless: (value) => set((state) => buildBatchContextAvifStatePatch(state, { lossless: value })),
+      setAvifSubsample: (value) => set((state) => buildBatchContextAvifStatePatch(state, { subsample: value })),
+      setAvifTune: (value) => set((state) => buildBatchContextAvifStatePatch(state, { tune: value })),
       setAvifHighAlphaQuality: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            avif: {
-              ...currentConfig.formatOptions.avif,
-              highAlphaQuality: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextAvifStatePatch(state, { highAlphaQuality: value })),
       setMozJpegProgressive: (value) =>
         set((state) => {
           const setupContext = state.setupContext
@@ -908,81 +716,11 @@ export const useBatchStore = create<BatchStoreState>()(
             }
           } as Partial<BatchStoreState>
         }),
-      setIcoSizes: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            ico: {
-              ...currentConfig.formatOptions.ico,
-              sizes: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+      setIcoSizes: (value) => set((state) => buildBatchContextIcoStatePatch(state, { sizes: value })),
       setIcoGenerateWebIconKit: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            ico: {
-              ...currentConfig.formatOptions.ico,
-              generateWebIconKit: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextIcoStatePatch(state, { generateWebIconKit: value })),
       setIcoOptimizeInternalPngLayers: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            ico: {
-              ...currentConfig.formatOptions.ico,
-              optimizeInternalPngLayers: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextIcoStatePatch(state, { optimizeInternalPngLayers: value })),
       setResizeMode: (value) =>
         set((state) => {
           const setupContext = state.setupContext
@@ -1244,219 +982,20 @@ export const useBatchStore = create<BatchStoreState>()(
             }
           } as Partial<BatchStoreState>
         }),
-      setPngTinyMode: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            png: {
-              ...currentConfig.formatOptions.png,
-              tinyMode: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+      setPngTinyMode: (value) => set((state) => buildBatchContextPngStatePatch(state, { tinyMode: value })),
       setPngCleanTransparentPixels: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            png: {
-              ...currentConfig.formatOptions.png,
-              cleanTransparentPixels: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextPngStatePatch(state, { cleanTransparentPixels: value })),
       setPngAutoGrayscale: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            png: {
-              ...currentConfig.formatOptions.png,
-              autoGrayscale: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextPngStatePatch(state, { autoGrayscale: value })),
       setPngDitheringLevel: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const normalizedValue = Math.max(0, Math.min(100, Math.round(value)))
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            png: {
-              ...currentConfig.formatOptions.png,
-              dithering: normalizedValue > 0,
-              ditheringLevel: normalizedValue
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextPngStatePatch(state, { ditheringLevel: value })),
       setPngProgressiveInterlaced: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            png: {
-              ...currentConfig.formatOptions.png,
-              progressiveInterlaced: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextPngStatePatch(state, { progressiveInterlaced: value })),
       setPngOxiPngCompression: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            png: {
-              ...currentConfig.formatOptions.png,
-              oxipngCompression: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setBmpColorDepth: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const normalizedDepth: BmpColorDepth =
-            value === 1 || value === 8 || value === 32 ? value : 24
-          const currentDitheringLevel =
-            typeof currentConfig.formatOptions.bmp.ditheringLevel === "number"
-              ? Math.max(0, Math.min(100, Math.round(currentConfig.formatOptions.bmp.ditheringLevel)))
-              : 0
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            bmp: {
-              ...currentConfig.formatOptions.bmp,
-              colorDepth: normalizedDepth,
-              dithering: normalizedDepth === 1 && currentDitheringLevel > 0,
-              ditheringLevel: normalizedDepth === 1 ? currentDitheringLevel : 0
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextPngStatePatch(state, { oxipngCompression: value })),
+      setBmpColorDepth: (value) => set((state) => buildBatchContextBmpStatePatch(state, { colorDepth: value })),
       setBmpDitheringLevel: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const normalizedValue = Math.max(0, Math.min(100, Math.round(value)))
-          const colorDepth = currentConfig.formatOptions.bmp.colorDepth
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            bmp: {
-              ...currentConfig.formatOptions.bmp,
-              dithering: colorDepth === 1 && normalizedValue > 0,
-              ditheringLevel: colorDepth === 1 ? normalizedValue : 0
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+        set((state) => buildBatchContextBmpStatePatch(state, { ditheringLevel: value })),
       setTiffColorMode: (value) =>
         set((state) => {
           const setupContext = state.setupContext

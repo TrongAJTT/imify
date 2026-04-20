@@ -1,5 +1,9 @@
 import { applyPaletteSync, buildPaletteSync, utils } from "image-q"
-import type { BmpCodecOptions, BmpColorDepth } from "@/core/types"
+import {
+  normalizeBmpColorDepth,
+  normalizeDitheringLevel
+} from "@/core/codec-options"
+import type { BmpCodecOptions } from "@/core/types"
 
 function writeAscii(view: DataView, offset: number, value: string): void {
   for (let i = 0; i < value.length; i += 1) {
@@ -16,19 +20,6 @@ type DitheringAlgorithm = "nearest" | "sierra-lite" | "atkinson" | "floyd-steinb
 
 function toLuminance(r: number, g: number, b: number): number {
   return Math.round(0.299 * r + 0.587 * g + 0.114 * b)
-}
-
-function normalizeBmpColorDepth(options?: BmpCodecOptions): BmpColorDepth {
-  const depth = options?.colorDepth
-  return depth === 1 || depth === 8 || depth === 32 ? depth : 24
-}
-
-function normalizeDitheringLevel(options?: BmpCodecOptions): number {
-  if (typeof options?.ditheringLevel === "number") {
-    return Math.max(0, Math.min(100, Math.round(options.ditheringLevel)))
-  }
-
-  return options?.dithering ? 100 : 0
 }
 
 function resolveDitheringAlgorithm(level: number): DitheringAlgorithm {
@@ -322,11 +313,12 @@ function encodeBmp32Bit(imageData: ImageData): Blob {
 }
 
 export function encodeImageDataToBmp(imageData: ImageData, options?: BmpCodecOptions): Blob {
-  const colorDepth = normalizeBmpColorDepth(options)
+  const colorDepth = normalizeBmpColorDepth(options?.colorDepth)
+  const ditheringLevel = normalizeDitheringLevel(options?.ditheringLevel, options?.dithering)
 
   switch (colorDepth) {
     case 1:
-      return encodeBmp1Bit(imageData, normalizeDitheringLevel(options))
+      return encodeBmp1Bit(imageData, ditheringLevel)
     case 8:
       return encodeBmp8Bit(imageData)
     case 32:

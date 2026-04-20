@@ -1,5 +1,6 @@
 import { zipSync } from "fflate"
 
+import { normalizeIcoSizes } from "@/core/codec-options"
 import { DEFAULT_ICO_SIZES, ICO_SIZE_OPTIONS } from "@/core/format-config"
 import type { IcoOptions } from "@/core/types"
 import { decodeImageBitmapForEncoding } from "@/features/converter/color-managed-pipeline"
@@ -17,23 +18,10 @@ interface ZipEntry {
 
 type ZipLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
-const ALLOWED_ICO_SIZES = new Set(ICO_SIZE_OPTIONS.map((e) => e.value))
+const ALLOWED_ICO_SIZES = ICO_SIZE_OPTIONS.map((entry) => entry.value)
 const WEB_TOOLKIT_ICON_SIZES = [16, 32, 48, 180, 192, 512] as const
 const WEB_TOOLKIT_FAVICON_SIZES = [16, 32, 48] as const
 const textEncoder = new TextEncoder()
-
-function normalizeIcoSizes(input?: number[]): number[] {
-  const source =
-    Array.isArray(input) && input.length > 0
-      ? input
-      : [...DEFAULT_ICO_SIZES]
-
-  const normalized = Array.from(
-    new Set(source.filter((s) => ALLOWED_ICO_SIZES.has(s)))
-  ).sort((a, b) => a - b)
-
-  return normalized.length ? normalized : [16]
-}
 
 // Cache PNG per size (avoid re-render)
 function drawImageWithStepDown(
@@ -262,7 +250,10 @@ export async function convertSourceToIcoOutput(
   sourceBlob: Blob,
   options?: IcoOptions
 ): Promise<{ blob: Blob; outputExtension: "ico" | "zip" }> {
-  const sizes = normalizeIcoSizes(options?.sizes)
+  const sizes = normalizeIcoSizes(options?.sizes, {
+    defaultSizes: DEFAULT_ICO_SIZES,
+    allowedSizes: ALLOWED_ICO_SIZES
+  })
   const sourceImage = await decodeImageBitmapForEncoding(sourceBlob)
 
   try {

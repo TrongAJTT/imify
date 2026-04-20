@@ -1,4 +1,14 @@
-import { DEFAULT_ICO_SIZES, QUALITY_FORMATS } from "@/core/format-config"
+import { QUALITY_FORMATS } from "@/core/format-config"
+import {
+  normalizeAvifCodecOptions,
+  normalizeBmpColorDepth,
+  normalizeDitheringLevel,
+  normalizeIcoSizes,
+  normalizeMozJpegChromaSubsampling,
+  normalizePngDitheringLevel,
+  normalizeWebpEffort,
+  normalizeWebpNearLossless
+} from "@/core/codec-options"
 import { normalizeJxlCodecOptions } from "@/core/jxl-options"
 import type { BmpColorDepth, FormatCodecOptions, ImageFormat, TiffColorMode } from "@/core/types"
 import type { TargetFormatOptionValue } from "@/options/shared/target-format-options"
@@ -99,34 +109,6 @@ export type TargetFormatCardConfig = {
   }
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, Math.round(value)))
-}
-
-function normalizeDitheringLevel(level: number | undefined, legacyDithering: boolean | undefined): number {
-  if (typeof level === "number") {
-    return clamp(level, 0, 100)
-  }
-
-  return legacyDithering ? 100 : 0
-}
-
-function normalizeBmpColorDepth(colorDepth: number | undefined): BmpColorDepth {
-  if (colorDepth === 1 || colorDepth === 8 || colorDepth === 32) {
-    return colorDepth
-  }
-
-  return 24
-}
-
-function normalizeIcoSizes(rawSizes: number[] | undefined): number[] {
-  const nextSizes = Array.from(
-    new Set((rawSizes ?? DEFAULT_ICO_SIZES).filter((size) => Number.isInteger(size) && size > 0))
-  ).sort((a, b) => a - b)
-
-  return nextSizes.length ? nextSizes : [...DEFAULT_ICO_SIZES]
-}
-
 export function normalizeTargetCodecOptions(
   options: FormatCodecOptions | undefined
 ): NormalizedTargetCodecOptions {
@@ -135,8 +117,9 @@ export function normalizeTargetCodecOptions(
     bmpColorDepth === 1
       ? normalizeDitheringLevel(options?.bmp?.ditheringLevel, options?.bmp?.dithering)
       : 0
-  const pngDitheringLevel = normalizeDitheringLevel(options?.png?.ditheringLevel, options?.png?.dithering)
+  const pngDitheringLevel = normalizePngDitheringLevel(options?.png?.ditheringLevel, options?.png?.dithering)
   const normalizedJxlOptions = normalizeJxlCodecOptions(options?.jxl)
+  const normalizedAvifOptions = normalizeAvifCodecOptions(options?.avif)
 
   return {
     bmp: {
@@ -147,38 +130,16 @@ export function normalizeTargetCodecOptions(
     jxl: normalizedJxlOptions,
     webp: {
       lossless: Boolean(options?.webp?.lossless),
-      nearLossless:
-        typeof options?.webp?.nearLossless === "number"
-          ? clamp(options.webp.nearLossless, 0, 100)
-          : 100,
-      effort:
-        typeof options?.webp?.effort === "number"
-          ? clamp(options.webp.effort, 1, 9)
-          : 5,
+      nearLossless: normalizeWebpNearLossless(options?.webp?.nearLossless),
+      effort: normalizeWebpEffort(options?.webp?.effort),
       sharpYuv: Boolean(options?.webp?.sharpYuv),
       preserveExactAlpha: Boolean(options?.webp?.preserveExactAlpha)
     },
-    avif: {
-      speed: typeof options?.avif?.speed === "number" ? clamp(options.avif.speed, 0, 10) : 6,
-      qualityAlpha:
-        typeof options?.avif?.qualityAlpha === "number"
-          ? clamp(options.avif.qualityAlpha, 0, 100)
-          : undefined,
-      lossless: Boolean(options?.avif?.lossless),
-      subsample:
-        options?.avif?.subsample === 2 || options?.avif?.subsample === 3
-          ? options.avif.subsample
-          : 1,
-      tune: options?.avif?.tune === "ssim" || options?.avif?.tune === "psnr" ? options.avif.tune : "auto",
-      highAlphaQuality: Boolean(options?.avif?.highAlphaQuality)
-    },
+    avif: normalizedAvifOptions,
     mozjpeg: {
       enabled: Boolean(options?.mozjpeg?.enabled),
       progressive: options?.mozjpeg?.progressive ?? true,
-      chromaSubsampling:
-        options?.mozjpeg?.chromaSubsampling === 0 || options?.mozjpeg?.chromaSubsampling === 1
-          ? options.mozjpeg.chromaSubsampling
-          : 2
+      chromaSubsampling: normalizeMozJpegChromaSubsampling(options?.mozjpeg?.chromaSubsampling)
     },
     png: {
       tinyMode: Boolean(options?.png?.tinyMode),

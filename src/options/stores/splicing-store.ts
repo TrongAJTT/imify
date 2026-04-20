@@ -2,6 +2,11 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
+import {
+  mergeNormalizedAvifNumericExportSource,
+  mergeNormalizedPngExportSource,
+  mergeNormalizedWebpExportSource
+} from "@/core/codec-options"
 import { mergeNormalizedJxlExportSource } from "@/core/jxl-options"
 import type {
   SplicingAlignment,
@@ -203,6 +208,57 @@ function buildNormalizedSplicingJxlPatch(
   return mergeNormalizedJxlExportSource(state, patch)
 }
 
+type SplicingWebpExportState = Pick<
+  SplicingStoreState,
+  | "exportWebpLossless"
+  | "exportWebpNearLossless"
+  | "exportWebpEffort"
+  | "exportWebpSharpYuv"
+  | "exportWebpPreserveExactAlpha"
+>
+
+function buildNormalizedSplicingWebpPatch(
+  state: SplicingWebpExportState,
+  patch: Partial<SplicingWebpExportState>
+): SplicingWebpExportState {
+  return mergeNormalizedWebpExportSource(state, patch)
+}
+
+type SplicingAvifExportState = Pick<
+  SplicingStoreState,
+  | "exportAvifSpeed"
+  | "exportAvifQualityAlpha"
+  | "exportAvifLossless"
+  | "exportAvifSubsample"
+  | "exportAvifTune"
+  | "exportAvifHighAlphaQuality"
+>
+
+function buildNormalizedSplicingAvifPatch(
+  state: SplicingAvifExportState,
+  patch: Partial<SplicingAvifExportState>
+): SplicingAvifExportState {
+  return mergeNormalizedAvifNumericExportSource(state, patch)
+}
+
+type SplicingPngExportState = Pick<
+  SplicingStoreState,
+  | "exportPngTinyMode"
+  | "exportPngCleanTransparentPixels"
+  | "exportPngAutoGrayscale"
+  | "exportPngDithering"
+  | "exportPngDitheringLevel"
+  | "exportPngProgressiveInterlaced"
+  | "exportPngOxiPngCompression"
+>
+
+function buildNormalizedSplicingPngPatch(
+  state: SplicingPngExportState,
+  patch: Partial<SplicingPngExportState>
+): SplicingPngExportState {
+  return mergeNormalizedPngExportSource(state, patch)
+}
+
 export const useSplicingStore = create<SplicingStoreState>()(
   persist(
     (set) => ({
@@ -302,19 +358,26 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setExportJxlProgressive: (v) =>
         set((state) => buildNormalizedSplicingJxlPatch(state, { exportJxlProgressive: v })),
       setExportJxlEpf: (v) => set((state) => buildNormalizedSplicingJxlPatch(state, { exportJxlEpf: v })),
-      setExportWebpLossless: (v) => set({ exportWebpLossless: v }),
+      setExportWebpLossless: (v) =>
+        set((state) => buildNormalizedSplicingWebpPatch(state, { exportWebpLossless: v })),
       setExportWebpNearLossless: (v) =>
-        set({ exportWebpNearLossless: Math.max(0, Math.min(100, Math.round(v))) }),
+        set((state) => buildNormalizedSplicingWebpPatch(state, { exportWebpNearLossless: v })),
       setExportWebpEffort: (v) =>
-        set({ exportWebpEffort: Math.max(1, Math.min(9, Math.round(v))) }),
-      setExportWebpSharpYuv: (v) => set({ exportWebpSharpYuv: v }),
-      setExportWebpPreserveExactAlpha: (v) => set({ exportWebpPreserveExactAlpha: v }),
-      setExportAvifSpeed: (v) => set({ exportAvifSpeed: v }),
-      setExportAvifQualityAlpha: (v) => set({ exportAvifQualityAlpha: v }),
-      setExportAvifLossless: (v) => set({ exportAvifLossless: v }),
-      setExportAvifSubsample: (v) => set({ exportAvifSubsample: v }),
-      setExportAvifTune: (v) => set({ exportAvifTune: v }),
-      setExportAvifHighAlphaQuality: (v) => set({ exportAvifHighAlphaQuality: v }),
+        set((state) => buildNormalizedSplicingWebpPatch(state, { exportWebpEffort: v })),
+      setExportWebpSharpYuv: (v) =>
+        set((state) => buildNormalizedSplicingWebpPatch(state, { exportWebpSharpYuv: v })),
+      setExportWebpPreserveExactAlpha: (v) =>
+        set((state) => buildNormalizedSplicingWebpPatch(state, { exportWebpPreserveExactAlpha: v })),
+      setExportAvifSpeed: (v) => set((state) => buildNormalizedSplicingAvifPatch(state, { exportAvifSpeed: v })),
+      setExportAvifQualityAlpha: (v) =>
+        set((state) => buildNormalizedSplicingAvifPatch(state, { exportAvifQualityAlpha: v })),
+      setExportAvifLossless: (v) =>
+        set((state) => buildNormalizedSplicingAvifPatch(state, { exportAvifLossless: v })),
+      setExportAvifSubsample: (v) =>
+        set((state) => buildNormalizedSplicingAvifPatch(state, { exportAvifSubsample: v })),
+      setExportAvifTune: (v) => set((state) => buildNormalizedSplicingAvifPatch(state, { exportAvifTune: v })),
+      setExportAvifHighAlphaQuality: (v) =>
+        set((state) => buildNormalizedSplicingAvifPatch(state, { exportAvifHighAlphaQuality: v })),
       setExportMozJpegProgressive: (v) => set({ exportMozJpegProgressive: v }),
       setExportMozJpegChromaSubsampling: (v) =>
         set({
@@ -323,18 +386,18 @@ export const useSplicingStore = create<SplicingStoreState>()(
               ? v
               : 2
         }),
-      setExportPngTinyMode: (v) => set({ exportPngTinyMode: v }),
-      setExportPngCleanTransparentPixels: (v) => set({ exportPngCleanTransparentPixels: v }),
-      setExportPngAutoGrayscale: (v) => set({ exportPngAutoGrayscale: v }),
-      setExportPngDitheringLevel: (v) => {
-        const normalized = Math.max(0, Math.min(100, Math.round(v)))
-        set({
-          exportPngDitheringLevel: normalized,
-          exportPngDithering: normalized > 0
-        })
-      },
-      setExportPngProgressiveInterlaced: (v) => set({ exportPngProgressiveInterlaced: v }),
-      setExportPngOxiPngCompression: (v) => set({ exportPngOxiPngCompression: v }),
+      setExportPngTinyMode: (v) =>
+        set((state) => buildNormalizedSplicingPngPatch(state, { exportPngTinyMode: v })),
+      setExportPngCleanTransparentPixels: (v) =>
+        set((state) => buildNormalizedSplicingPngPatch(state, { exportPngCleanTransparentPixels: v })),
+      setExportPngAutoGrayscale: (v) =>
+        set((state) => buildNormalizedSplicingPngPatch(state, { exportPngAutoGrayscale: v })),
+      setExportPngDitheringLevel: (v) =>
+        set((state) => buildNormalizedSplicingPngPatch(state, { exportPngDitheringLevel: v })),
+      setExportPngProgressiveInterlaced: (v) =>
+        set((state) => buildNormalizedSplicingPngPatch(state, { exportPngProgressiveInterlaced: v })),
+      setExportPngOxiPngCompression: (v) =>
+        set((state) => buildNormalizedSplicingPngPatch(state, { exportPngOxiPngCompression: v })),
       setExportBmpColorDepth: (v) => {
         const normalizedDepth: BmpColorDepth = v === 1 || v === 8 || v === 32 ? v : 24
         set((state) => ({

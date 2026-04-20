@@ -6,6 +6,7 @@ import { SliderInput } from "@/options/components/ui/slider-input"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { ALL_TARGET_FORMAT_OPTIONS } from "@/options/shared/target-format-options"
+import { normalizeMozJpegChromaSubsampling } from "@/core/codec-options"
 import type { BmpColorDepth } from "@/core/types"
 import { FileJson, Zap } from "lucide-react"
 
@@ -222,7 +223,7 @@ export function TargetFormatQualityCard({
   }
   if (targetFormat === "mozjpeg") {
     extraFlags.push(mozJpegOptions?.progressive ?? true ? "Progressive" : "Baseline")
-    const chroma = mozJpegOptions?.chromaSubsampling ?? 2
+    const chroma = normalizeMozJpegChromaSubsampling(mozJpegOptions?.chromaSubsampling)
     extraFlags.push(`Chroma ${chroma === 1 ? "4:2:2" : "4:2:0"}`)
   }
   if (targetFormat === "tiff" && tiffColorMode === "grayscale") {

@@ -1,5 +1,16 @@
+import {
+  normalizeAvifQualityAlphaRequired,
+  normalizeAvifSpeed,
+  normalizeAvifSubsampleFromUnknown,
+  normalizeAvifTuneFromUnknown,
+  normalizeBmpCodecOptions,
+  normalizeMozJpegChromaSubsampling,
+  normalizePngCodecOptions,
+  normalizeWebpCodecOptions
+} from "@/core/codec-options"
 import { normalizeJxlCodecOptionsFromExportSource } from "@/core/jxl-options"
 import type { BmpColorDepth, FormatCodecOptions, MozJpegChromaSubsampling } from "@/core/types"
+import { buildActiveFormatOptions } from "@/options/shared/active-format-options"
 import type { PatternStoreState } from "@/options/stores/pattern-store"
 
 export type PatternFormatOptionSource = Pick<
@@ -81,89 +92,50 @@ export interface PatternNormalizedFormatOptions {
   }
 }
 
-function clampInt(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value)) return min
-  return Math.max(min, Math.min(max, Math.round(value)))
-}
-
-function normalizeAvifSubsample(value: string | number): 1 | 2 | 3 {
-  if (value === 1 || value === 2 || value === 3) {
-    return value
-  }
-
-  if (typeof value === "string") {
-    const normalized = value.trim()
-
-    if (normalized === "4:2:0") return 1
-    if (normalized === "4:2:2") return 2
-    if (normalized === "4:4:4") return 3
-
-    const numeric = Number(normalized)
-    if (numeric === 1 || numeric === 2 || numeric === 3) {
-      return numeric
-    }
-  }
-
-  return 1
-}
-
-function normalizeAvifTune(value: string): "auto" | "ssim" | "psnr" {
-  if (value === "ssim" || value === "psnr") {
-    return value
-  }
-
-  return "auto"
-}
-
-function normalizeMozJpegChromaSubsampling(value: string | number): 0 | 1 | 2 {
-  if (value === 0 || value === 1 || value === 2) {
-    return value
-  }
-
-  if (typeof value === "string") {
-    const normalized = value.trim()
-
-    if (normalized === "4:4:4") return 0
-    if (normalized === "4:2:2") return 1
-    if (normalized === "4:2:0") return 2
-
-    const numeric = Number(normalized)
-    if (numeric === 0 || numeric === 1 || numeric === 2) {
-      return numeric
-    }
-  }
-
-  return 2
-}
-
 export function buildPatternFormatOptions(
   source: PatternFormatOptionSource
 ): PatternNormalizedFormatOptions {
-  const pngDitheringLevel = clampInt(source.exportPngDitheringLevel, 0, 100)
-  const bmpDitheringLevel =
-    source.exportBmpColorDepth === 1 ? clampInt(source.exportBmpDitheringLevel, 0, 100) : 0
+  const normalizedBmpOptions = normalizeBmpCodecOptions({
+    colorDepth: source.exportBmpColorDepth,
+    dithering: source.exportBmpDithering,
+    ditheringLevel: source.exportBmpDitheringLevel
+  })
+  const normalizedPngOptions = normalizePngCodecOptions({
+    tinyMode: source.exportPngTinyMode,
+    cleanTransparentPixels: source.exportPngCleanTransparentPixels,
+    autoGrayscale: source.exportPngAutoGrayscale,
+    dithering: source.exportPngDithering,
+    ditheringLevel: source.exportPngDitheringLevel,
+    progressiveInterlaced: source.exportPngProgressiveInterlaced,
+    oxipngCompression: source.exportPngOxiPngCompression
+  })
+  const normalizedWebpOptions = normalizeWebpCodecOptions({
+    lossless: source.exportWebpLossless,
+    nearLossless: source.exportWebpNearLossless,
+    effort: source.exportWebpEffort,
+    sharpYuv: source.exportWebpSharpYuv,
+    preserveExactAlpha: source.exportWebpPreserveExactAlpha
+  })
   const normalizedJxlOptions = normalizeJxlCodecOptionsFromExportSource(source)
+  const normalizedBmpDithering =
+    normalizedBmpOptions.colorDepth === 1 &&
+    (source.exportBmpDithering || normalizedBmpOptions.ditheringLevel > 0)
+  const normalizedPngDithering = source.exportPngDithering || normalizedPngOptions.ditheringLevel > 0
 
   return {
     bmp: {
-      colorDepth: source.exportBmpColorDepth,
-      dithering: source.exportBmpColorDepth === 1 && (source.exportBmpDithering || bmpDitheringLevel > 0),
-      ditheringLevel: bmpDitheringLevel,
+      colorDepth: normalizedBmpOptions.colorDepth,
+      dithering: normalizedBmpDithering,
+      ditheringLevel: normalizedBmpOptions.ditheringLevel,
     },
     jxl: normalizedJxlOptions,
-    webp: {
-      lossless: source.exportWebpLossless,
-      nearLossless: clampInt(source.exportWebpNearLossless, 0, 100),
-      effort: clampInt(source.exportWebpEffort, 1, 9),
-      sharpYuv: source.exportWebpSharpYuv,
-      preserveExactAlpha: source.exportWebpPreserveExactAlpha,
-    },
+    webp: normalizedWebpOptions,
     avif: {
-      speed: clampInt(source.exportAvifSpeed, 0, 10),
-      qualityAlpha: clampInt(source.exportAvifQualityAlpha, 0, 100),
+      speed: normalizeAvifSpeed(source.exportAvifSpeed),
+      qualityAlpha: normalizeAvifQualityAlphaRequired(source.exportAvifQualityAlpha),
       lossless: source.exportAvifLossless,
-      subsample: normalizeAvifSubsample(source.exportAvifSubsample),
-      tune: normalizeAvifTune(source.exportAvifTune),
+      subsample: normalizeAvifSubsampleFromUnknown(source.exportAvifSubsample),
+      tune: normalizeAvifTuneFromUnknown(source.exportAvifTune),
       highAlphaQuality: source.exportAvifHighAlphaQuality,
     },
     mozjpeg: {
@@ -172,13 +144,8 @@ export function buildPatternFormatOptions(
       chromaSubsampling: normalizeMozJpegChromaSubsampling(source.exportMozJpegChromaSubsampling),
     },
     png: {
-      tinyMode: source.exportPngTinyMode,
-      cleanTransparentPixels: source.exportPngCleanTransparentPixels,
-      autoGrayscale: source.exportPngAutoGrayscale,
-      dithering: source.exportPngDithering || pngDitheringLevel > 0,
-      ditheringLevel: pngDitheringLevel,
-      progressiveInterlaced: source.exportPngProgressiveInterlaced,
-      oxipngCompression: source.exportPngOxiPngCompression,
+      ...normalizedPngOptions,
+      dithering: normalizedPngDithering,
     },
     tiff: {
       colorMode: source.exportTiffColorMode,
@@ -191,13 +158,5 @@ export function buildActivePatternFormatOptions(
 ): FormatCodecOptions {
   const options = buildPatternFormatOptions(source)
 
-  return {
-    bmp: source.exportFormat === "bmp" ? options.bmp : undefined,
-    jxl: source.exportFormat === "jxl" ? options.jxl : undefined,
-    webp: source.exportFormat === "webp" ? options.webp : undefined,
-    avif: source.exportFormat === "avif" ? options.avif : undefined,
-    mozjpeg: source.exportFormat === "mozjpeg" ? options.mozjpeg : undefined,
-    png: source.exportFormat === "png" ? options.png : undefined,
-    tiff: source.exportFormat === "tiff" ? options.tiff : undefined,
-  }
+  return buildActiveFormatOptions(source.exportFormat, options)
 }
