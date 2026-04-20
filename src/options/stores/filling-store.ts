@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
+import { mergeNormalizedJxlExportSource } from "@/core/jxl-options"
 import type {
   FillingStep,
   FillingTemplate,
@@ -125,6 +126,18 @@ export interface FillingStoreState {
   navigateToSelect: () => void
 }
 
+type FillingJxlExportState = Pick<
+  FillingStoreState,
+  "exportJxlEffort" | "exportJxlLossless" | "exportJxlProgressive" | "exportJxlEpf"
+>
+
+function buildNormalizedFillingJxlPatch(
+  state: FillingJxlExportState,
+  patch: Partial<FillingJxlExportState>
+): FillingJxlExportState {
+  return mergeNormalizedJxlExportSource(state, patch)
+}
+
 export const useFillingStore = create<FillingStoreState>()(
   persist(
     (set) => ({
@@ -206,13 +219,12 @@ export const useFillingStore = create<FillingStoreState>()(
       setExportFormat: (format) => set({ exportFormat: format }),
       setExportQuality: (quality) => set({ exportQuality: quality }),
       setExportJxlEffort: (effort) =>
-        set({ exportJxlEffort: Math.max(1, Math.min(9, Math.round(effort))) }),
-      setExportJxlLossless: (enabled) => set({ exportJxlLossless: enabled }),
-      setExportJxlProgressive: (enabled) => set({ exportJxlProgressive: enabled }),
-      setExportJxlEpf: (value) =>
-        set({
-          exportJxlEpf: value === 0 || value === 1 || value === 2 || value === 3 ? value : 1
-        }),
+        set((state) => buildNormalizedFillingJxlPatch(state, { exportJxlEffort: effort })),
+      setExportJxlLossless: (enabled) =>
+        set((state) => buildNormalizedFillingJxlPatch(state, { exportJxlLossless: enabled })),
+      setExportJxlProgressive: (enabled) =>
+        set((state) => buildNormalizedFillingJxlPatch(state, { exportJxlProgressive: enabled })),
+      setExportJxlEpf: (value) => set((state) => buildNormalizedFillingJxlPatch(state, { exportJxlEpf: value })),
       setExportAvifSpeed: (v) => set({ exportAvifSpeed: v }),
       setExportAvifQualityAlpha: (v) => set({ exportAvifQualityAlpha: v }),
       setExportAvifLossless: (v) => set({ exportAvifLossless: v }),

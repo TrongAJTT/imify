@@ -1,4 +1,5 @@
 import { clampQuality } from "@/core/image-utils"
+import { buildJxlEncodeOptions } from "@/core/jxl-options"
 import type { FillingExportConfig, LayerFillState } from "@/features/filling/types"
 import { renderFilledCanvas } from "@/features/filling/canvas-export-renderer"
 import { encodeAvif } from "@/features/converter/avif-encoder"
@@ -31,13 +32,7 @@ const fillingRasterEncodeDependencies: RasterEncodeDependencies = {
   encodeTiff: encodeImageDataToTiff,
   encodeAvif,
   encodeJxl: (imageData, options) =>
-    encodeJxl(imageData, {
-      quality: clampQuality(options.quality),
-      effort: options.jxl?.effort,
-      lossless: options.jxl?.lossless,
-      progressive: options.jxl?.progressive,
-      epf: options.jxl?.epf,
-    }),
+    encodeJxl(imageData, buildJxlEncodeOptions(clampQuality(options.quality), options.jxl)),
   encodeMozJpeg,
   encodeWebp,
   encodePng: encodePngFromImageData,

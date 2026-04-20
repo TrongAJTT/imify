@@ -1,3 +1,4 @@
+import { normalizeJxlCodecOptionsFromExportSource } from "@/core/jxl-options"
 import type { BmpColorDepth, FormatCodecOptions, MozJpegChromaSubsampling } from "@/core/types"
 import type { PatternStoreState } from "@/options/stores/pattern-store"
 
@@ -141,10 +142,7 @@ export function buildPatternFormatOptions(
   const pngDitheringLevel = clampInt(source.exportPngDitheringLevel, 0, 100)
   const bmpDitheringLevel =
     source.exportBmpColorDepth === 1 ? clampInt(source.exportBmpDitheringLevel, 0, 100) : 0
-  const normalizedJxlEpf: 0 | 1 | 2 | 3 =
-    source.exportJxlEpf === 0 || source.exportJxlEpf === 1 || source.exportJxlEpf === 2 || source.exportJxlEpf === 3
-      ? source.exportJxlEpf
-      : 1
+  const normalizedJxlOptions = normalizeJxlCodecOptionsFromExportSource(source)
 
   return {
     bmp: {
@@ -152,12 +150,7 @@ export function buildPatternFormatOptions(
       dithering: source.exportBmpColorDepth === 1 && (source.exportBmpDithering || bmpDitheringLevel > 0),
       ditheringLevel: bmpDitheringLevel,
     },
-    jxl: {
-      effort: clampInt(source.exportJxlEffort, 1, 9),
-      lossless: source.exportJxlLossless,
-      progressive: source.exportJxlProgressive,
-      epf: normalizedJxlEpf,
-    },
+    jxl: normalizedJxlOptions,
     webp: {
       lossless: source.exportWebpLossless,
       nearLossless: clampInt(source.exportWebpNearLossless, 0, 100),

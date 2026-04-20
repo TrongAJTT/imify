@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
+import { mergeNormalizedJxlExportSource } from "@/core/jxl-options"
 import type {
   PatternAsset,
   PatternAssetBorderSettings,
@@ -289,6 +290,18 @@ export interface PatternStoreState {
   setExportBmpColorDepth: (v: BmpColorDepth) => void
   setExportBmpDitheringLevel: (v: number) => void
   setExportTiffColorMode: (v: TiffColorMode) => void
+}
+
+type PatternJxlExportState = Pick<
+  PatternStoreState,
+  "exportJxlEffort" | "exportJxlLossless" | "exportJxlProgressive" | "exportJxlEpf"
+>
+
+function buildNormalizedPatternJxlPatch(
+  state: PatternJxlExportState,
+  patch: Partial<PatternJxlExportState>
+): PatternJxlExportState {
+  return mergeNormalizedJxlExportSource(state, patch)
 }
 
 export const usePatternStore = create<PatternStoreState>()(
@@ -609,13 +622,11 @@ export const usePatternStore = create<PatternStoreState>()(
 
       setExportFormat: (v) => set({ exportFormat: v }),
       setExportQuality: (v) => set({ exportQuality: v }),
-      setExportJxlEffort: (v) => set({ exportJxlEffort: Math.max(1, Math.min(9, Math.round(v))) }),
-      setExportJxlLossless: (v) => set({ exportJxlLossless: v }),
-      setExportJxlProgressive: (v) => set({ exportJxlProgressive: v }),
-      setExportJxlEpf: (v) =>
-        set({
-          exportJxlEpf: v === 0 || v === 1 || v === 2 || v === 3 ? v : 1
-        }),
+      setExportJxlEffort: (v) => set((state) => buildNormalizedPatternJxlPatch(state, { exportJxlEffort: v })),
+      setExportJxlLossless: (v) => set((state) => buildNormalizedPatternJxlPatch(state, { exportJxlLossless: v })),
+      setExportJxlProgressive: (v) =>
+        set((state) => buildNormalizedPatternJxlPatch(state, { exportJxlProgressive: v })),
+      setExportJxlEpf: (v) => set((state) => buildNormalizedPatternJxlPatch(state, { exportJxlEpf: v })),
       setExportAvifSpeed: (v) => set({ exportAvifSpeed: v }),
       setExportAvifQualityAlpha: (v) => set({ exportAvifQualityAlpha: v }),
       setExportAvifLossless: (v) => set({ exportAvifLossless: v }),

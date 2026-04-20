@@ -3,10 +3,8 @@ import initAvifFactory from "@assets/wasm/avif_enc.js"
 // @ts-ignore: This JS module is shipped as a static asset.
 import initJxlFactory from "@assets/wasm/jxl_enc.js"
 
-import {
-  clampQuality
-} from "@/core/image-utils"
 import { buildNormalizedAvifOptions } from "@/core/avif-options"
+import { buildJxlEncodeOptions, buildNormalizedJxlWasmOptions } from "@/core/jxl-options"
 import type { AvifCodecOptions, FormatConfig, ImageFormat, JxlCodecOptions, ResizeConfig } from "@/core/types"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { convertSourceToIcoOutput } from "@/features/converter/ico-encoder"
@@ -73,18 +71,6 @@ const AVIF_DEFAULT_OPTIONS = {
   tune: 0,
   enableSharpYUV: false,
   bitDepth: 8,
-  lossless: false
-}
-
-const JXL_DEFAULT_OPTIONS = {
-  quality: 75,
-  effort: 7,
-  progressive: false,
-  epf: 1,
-  lossyPalette: false,
-  decodingSpeedTier: 0,
-  photonNoiseIso: 0,
-  lossyModular: false,
   lossless: false
 }
 
@@ -173,32 +159,15 @@ async function encodeJxlInWorker(
     jxl?: JxlCodecOptions
   }
 ): Promise<Blob> {
-  const normalizeJxlEpf = (epf: number | undefined): 0 | 1 | 2 | 3 => {
-    if (epf === 0 || epf === 1 || epf === 2 || epf === 3) {
-      return epf
-    }
-
-    return 1
-  }
-
-  const jxlOptions = options?.jxl
-  const lossless = Boolean(jxlOptions?.lossless)
+  const encodeOptions = buildNormalizedJxlWasmOptions(
+    buildJxlEncodeOptions(options?.quality, options?.jxl)
+  )
   const jxlModule = await getJxlModule()
   const encoded = jxlModule.encode(
     imageData.data as unknown as Uint8Array,
     imageData.width,
     imageData.height,
-    {
-      ...JXL_DEFAULT_OPTIONS,
-      quality: lossless ? 100 : clampQuality(options?.quality),
-      effort:
-        typeof jxlOptions?.effort === "number"
-          ? Math.max(1, Math.min(9, Math.round(jxlOptions.effort)))
-          : JXL_DEFAULT_OPTIONS.effort,
-      progressive: Boolean(jxlOptions?.progressive),
-      epf: normalizeJxlEpf(jxlOptions?.epf),
-      lossless
-    }
+    encodeOptions
   )
 
   if (!encoded || encoded.byteLength === 0) {

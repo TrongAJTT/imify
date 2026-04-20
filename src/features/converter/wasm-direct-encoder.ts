@@ -3,8 +3,7 @@ import initAvifFactory from "@assets/wasm/avif_enc.js"
 // @ts-ignore: This JS module is shipped as a static asset.
 import initJxlFactory from "@assets/wasm/jxl_enc.js"
 
-import { clampQuality } from "@/core/image-utils"
-import type { JxlEpf } from "@/core/types"
+import { buildNormalizedJxlWasmOptions, type JxlEncodeOptions } from "@/core/jxl-options"
 
 interface WasmModule {
   encode: (
@@ -29,26 +28,6 @@ const AVIF_DEFAULT_OPTIONS = {
   enableSharpYUV: false,
   bitDepth: 8,
   lossless: false
-}
-
-const JXL_DEFAULT_OPTIONS = {
-  quality: 75,
-  effort: 7,
-  progressive: false,
-  epf: 1,
-  lossyPalette: false,
-  decodingSpeedTier: 0,
-  photonNoiseIso: 0,
-  lossyModular: false,
-  lossless: false
-}
-
-interface JxlDirectEncodeOptions {
-  quality?: number
-  effort?: number
-  progressive?: boolean
-  epf?: JxlEpf
-  lossless?: boolean
 }
 
 let avifModulePromise: Promise<WasmModule> | null = null
@@ -120,35 +99,17 @@ export async function encodeAvifDirect(
   return encoded
 }
 
-function normalizeJxlEpf(epf: number | undefined): JxlEpf {
-  if (epf === 0 || epf === 1 || epf === 2 || epf === 3) {
-    return epf
-  }
-
-  return 1
-}
-
 export async function encodeJxlDirect(
   imageData: ImageData,
-  options?: JxlDirectEncodeOptions
+  options?: JxlEncodeOptions
 ): Promise<Uint8Array> {
-  const lossless = Boolean(options?.lossless)
+  const encodeOptions = buildNormalizedJxlWasmOptions(options)
   const module = await getJxlModule()
   const encoded = module.encode(
     imageData.data as unknown as Uint8Array,
     imageData.width,
     imageData.height,
-    {
-      ...JXL_DEFAULT_OPTIONS,
-      quality: lossless ? 100 : clampQuality(options?.quality),
-      effort:
-        typeof options?.effort === "number"
-          ? Math.max(1, Math.min(9, Math.round(options.effort)))
-          : JXL_DEFAULT_OPTIONS.effort,
-      progressive: Boolean(options?.progressive),
-      epf: normalizeJxlEpf(options?.epf),
-      lossless
-    }
+    encodeOptions
   )
 
   if (!encoded || encoded.byteLength === 0) {

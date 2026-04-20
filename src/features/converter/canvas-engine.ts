@@ -1,6 +1,4 @@
-import {
-  clampQuality
-} from "@/core/image-utils"
+import { buildJxlEncodeOptions } from "@/core/jxl-options"
 import type { FormatCodecOptions, ImageFormat, ResizeConfig } from "@/core/types"
 import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
@@ -43,13 +41,7 @@ const mainThreadRasterConversionFacade = createRasterConversionFacade({
     encodeTiff: encodeImageDataToTiff,
     encodeAvif,
     encodeJxl: (imageData, options) =>
-      encodeJxl(imageData, {
-        quality: clampQuality(options.quality),
-        effort: options.jxl?.effort,
-        lossless: options.jxl?.lossless,
-        progressive: options.jxl?.progressive,
-        epf: options.jxl?.epf
-      }),
+      encodeJxl(imageData, buildJxlEncodeOptions(options.quality, options.jxl)),
     encodeMozJpeg,
     encodeWebp,
     encodePng: encodePngFromImageData,

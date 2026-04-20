@@ -1,4 +1,5 @@
 import { clampQuality } from "@/core/image-utils"
+import { buildJxlEncodeOptions } from "@/core/jxl-options"
 import { encodeAvif } from "@/features/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
 import { decodeImageBitmapForEncoding } from "@/features/converter/color-managed-pipeline"
@@ -283,13 +284,7 @@ async function canvasToBlob(
     }
     case "jxl": {
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      return encodeJxl(data, {
-        quality: clampQuality(quality),
-        effort: formatOptions?.jxl?.effort,
-        lossless: formatOptions?.jxl?.lossless,
-        progressive: formatOptions?.jxl?.progressive,
-        epf: formatOptions?.jxl?.epf
-      })
+      return encodeJxl(data, buildJxlEncodeOptions(clampQuality(quality), formatOptions?.jxl))
     }
     case "mozjpeg": {
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height)

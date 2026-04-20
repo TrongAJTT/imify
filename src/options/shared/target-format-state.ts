@@ -1,4 +1,5 @@
 import { DEFAULT_ICO_SIZES, QUALITY_FORMATS } from "@/core/format-config"
+import { normalizeJxlCodecOptions } from "@/core/jxl-options"
 import type { BmpColorDepth, FormatCodecOptions, ImageFormat, TiffColorMode } from "@/core/types"
 import type { TargetFormatOptionValue } from "@/options/shared/target-format-options"
 
@@ -126,14 +127,6 @@ function normalizeIcoSizes(rawSizes: number[] | undefined): number[] {
   return nextSizes.length ? nextSizes : [...DEFAULT_ICO_SIZES]
 }
 
-function normalizeJxlEpf(epf: number | undefined): 0 | 1 | 2 | 3 {
-  if (epf === 0 || epf === 1 || epf === 2 || epf === 3) {
-    return epf
-  }
-
-  return 1
-}
-
 export function normalizeTargetCodecOptions(
   options: FormatCodecOptions | undefined
 ): NormalizedTargetCodecOptions {
@@ -143,7 +136,7 @@ export function normalizeTargetCodecOptions(
       ? normalizeDitheringLevel(options?.bmp?.ditheringLevel, options?.bmp?.dithering)
       : 0
   const pngDitheringLevel = normalizeDitheringLevel(options?.png?.ditheringLevel, options?.png?.dithering)
-  const jxlEpf = normalizeJxlEpf(options?.jxl?.epf)
+  const normalizedJxlOptions = normalizeJxlCodecOptions(options?.jxl)
 
   return {
     bmp: {
@@ -151,12 +144,7 @@ export function normalizeTargetCodecOptions(
       dithering: bmpColorDepth === 1 && bmpDitheringLevel > 0,
       ditheringLevel: bmpDitheringLevel
     },
-    jxl: {
-      effort: typeof options?.jxl?.effort === "number" ? clamp(options.jxl.effort, 1, 9) : 7,
-      lossless: Boolean(options?.jxl?.lossless),
-      progressive: Boolean(options?.jxl?.progressive),
-      epf: jxlEpf
-    },
+    jxl: normalizedJxlOptions,
     webp: {
       lossless: Boolean(options?.webp?.lossless),
       nearLossless:

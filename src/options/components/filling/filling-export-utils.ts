@@ -1,4 +1,5 @@
 import { clampQuality } from "@/core/image-utils"
+import { buildJxlEncodeOptions } from "@/core/jxl-options"
 import type { FillRuntimeItem } from "@/features/filling/fill-runtime-items"
 import type {
   CanvasFillState,
@@ -53,13 +54,7 @@ const fillingRasterEncodeDependencies: RasterEncodeDependencies = {
   encodeTiff: encodeImageDataToTiff,
   encodeAvif,
   encodeJxl: (imageData, options) =>
-    encodeJxl(imageData, {
-      quality: clampQuality(options.quality),
-      effort: options.jxl?.effort,
-      lossless: options.jxl?.lossless,
-      progressive: options.jxl?.progressive,
-      epf: options.jxl?.epf,
-    }),
+    encodeJxl(imageData, buildJxlEncodeOptions(clampQuality(options.quality), options.jxl)),
   encodeMozJpeg,
   encodeWebp,
   encodePng: encodePngFromImageData,

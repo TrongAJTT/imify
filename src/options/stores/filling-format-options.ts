@@ -1,3 +1,4 @@
+import { normalizeJxlCodecOptionsFromExportSource } from "@/core/jxl-options"
 import type { FillingExportConfig } from "@/features/filling/types"
 import type { BmpColorDepth, MozJpegChromaSubsampling } from "@/core/types"
 import type { FillingStoreState } from "@/options/stores/filling-store"
@@ -142,10 +143,7 @@ export function buildFillingFormatOptions(
   const pngDitheringLevel = clampInt(source.exportPngDitheringLevel, 0, 100)
   const bmpDitheringLevel =
     source.exportBmpColorDepth === 1 ? clampInt(source.exportBmpDitheringLevel, 0, 100) : 0
-  const normalizedJxlEpf: 0 | 1 | 2 | 3 =
-    source.exportJxlEpf === 0 || source.exportJxlEpf === 1 || source.exportJxlEpf === 2 || source.exportJxlEpf === 3
-      ? source.exportJxlEpf
-      : 1
+  const normalizedJxlOptions = normalizeJxlCodecOptionsFromExportSource(source)
 
   return {
     bmp: {
@@ -153,12 +151,7 @@ export function buildFillingFormatOptions(
       dithering: source.exportBmpColorDepth === 1 && (source.exportBmpDithering || bmpDitheringLevel > 0),
       ditheringLevel: bmpDitheringLevel
     },
-    jxl: {
-      effort: clampInt(source.exportJxlEffort, 1, 9),
-      lossless: source.exportJxlLossless,
-      progressive: source.exportJxlProgressive,
-      epf: normalizedJxlEpf
-    },
+    jxl: normalizedJxlOptions,
     webp: {
       lossless: source.exportWebpLossless,
       nearLossless: clampInt(source.exportWebpNearLossless, 0, 100),

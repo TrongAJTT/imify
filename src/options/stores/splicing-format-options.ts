@@ -1,3 +1,4 @@
+import { normalizeJxlCodecOptionsFromExportSource } from "@/core/jxl-options"
 import type { SplicingExportConfig } from "@/features/splicing/types"
 import type { SplicingStoreState } from "@/options/stores/splicing-store"
 
@@ -37,10 +38,7 @@ export type SplicingFormatOptionSource = Pick<
 >
 
 function buildSplicingFormatOptions(source: SplicingFormatOptionSource): SplicingFormatOptions {
-  const normalizedJxlEpf: 0 | 1 | 2 | 3 =
-    source.exportJxlEpf === 0 || source.exportJxlEpf === 1 || source.exportJxlEpf === 2 || source.exportJxlEpf === 3
-      ? source.exportJxlEpf
-      : 1
+  const normalizedJxlOptions = normalizeJxlCodecOptionsFromExportSource(source)
 
   return {
     bmp: {
@@ -48,12 +46,7 @@ function buildSplicingFormatOptions(source: SplicingFormatOptionSource): Splicin
       dithering: source.exportBmpColorDepth === 1 && source.exportBmpDithering,
       ditheringLevel: source.exportBmpColorDepth === 1 ? source.exportBmpDitheringLevel : 0
     },
-    jxl: {
-      effort: Math.max(1, Math.min(9, Math.round(source.exportJxlEffort))),
-      lossless: source.exportJxlLossless,
-      progressive: source.exportJxlProgressive,
-      epf: normalizedJxlEpf
-    },
+    jxl: normalizedJxlOptions,
     webp: {
       lossless: source.exportWebpLossless,
       nearLossless: source.exportWebpNearLossless,

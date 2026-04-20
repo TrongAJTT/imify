@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
+import { mergeNormalizedJxlExportSource } from "@/core/jxl-options"
 import type {
   SplicingAlignment,
   SplicingCanvasStyle,
@@ -190,6 +191,18 @@ export interface SplicingStoreState {
   setIsExportFormatQualityOpen: (v: boolean) => void
 }
 
+type SplicingJxlExportState = Pick<
+  SplicingStoreState,
+  "exportJxlEffort" | "exportJxlLossless" | "exportJxlProgressive" | "exportJxlEpf"
+>
+
+function buildNormalizedSplicingJxlPatch(
+  state: SplicingJxlExportState,
+  patch: Partial<SplicingJxlExportState>
+): SplicingJxlExportState {
+  return mergeNormalizedJxlExportSource(state, patch)
+}
+
 export const useSplicingStore = create<SplicingStoreState>()(
   persist(
     (set) => ({
@@ -283,13 +296,12 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setImageBorderColor: (v) => set({ imageBorderColor: v }),
       setExportFormat: (v) => set({ exportFormat: v }),
       setExportQuality: (v) => set({ exportQuality: v }),
-      setExportJxlEffort: (v) => set({ exportJxlEffort: Math.max(1, Math.min(9, Math.round(v))) }),
-      setExportJxlLossless: (v) => set({ exportJxlLossless: v }),
-      setExportJxlProgressive: (v) => set({ exportJxlProgressive: v }),
-      setExportJxlEpf: (v) =>
-        set({
-          exportJxlEpf: v === 0 || v === 1 || v === 2 || v === 3 ? v : 1
-        }),
+      setExportJxlEffort: (v) => set((state) => buildNormalizedSplicingJxlPatch(state, { exportJxlEffort: v })),
+      setExportJxlLossless: (v) =>
+        set((state) => buildNormalizedSplicingJxlPatch(state, { exportJxlLossless: v })),
+      setExportJxlProgressive: (v) =>
+        set((state) => buildNormalizedSplicingJxlPatch(state, { exportJxlProgressive: v })),
+      setExportJxlEpf: (v) => set((state) => buildNormalizedSplicingJxlPatch(state, { exportJxlEpf: v })),
       setExportWebpLossless: (v) => set({ exportWebpLossless: v }),
       setExportWebpNearLossless: (v) =>
         set({ exportWebpNearLossless: Math.max(0, Math.min(100, Math.round(v))) }),

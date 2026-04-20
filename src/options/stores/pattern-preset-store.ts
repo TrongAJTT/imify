@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"
 
+import { normalizeJxlCodecOptionsFromExportSource } from "@/core/jxl-options"
 import type {
   PatternCanvasSettings,
   PatternExportFormat,
@@ -116,20 +117,17 @@ function clonePatternSettings(settings: PatternSettings): PatternSettings {
 }
 
 export function clonePatternPresetConfig(config: PatternPresetConfig): PatternPresetConfig {
-  const normalizedJxlEpf: 0 | 1 | 2 | 3 =
-    config.exportJxlEpf === 0 || config.exportJxlEpf === 1 || config.exportJxlEpf === 2 || config.exportJxlEpf === 3
-      ? config.exportJxlEpf
-      : DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlEpf
+  const normalizedJxlOptions = normalizeJxlCodecOptionsFromExportSource(config)
 
   return {
     canvas: clonePatternCanvas(config.canvas),
     settings: clonePatternSettings(config.settings),
     exportFormat: config.exportFormat,
     exportQuality: config.exportQuality,
-    exportJxlEffort: config.exportJxlEffort,
-    exportJxlLossless: Boolean(config.exportJxlLossless),
-    exportJxlProgressive: Boolean(config.exportJxlProgressive),
-    exportJxlEpf: normalizedJxlEpf,
+    exportJxlEffort: normalizedJxlOptions.effort,
+    exportJxlLossless: normalizedJxlOptions.lossless,
+    exportJxlProgressive: normalizedJxlOptions.progressive,
+    exportJxlEpf: normalizedJxlOptions.epf,
     exportAvifSpeed: config.exportAvifSpeed,
     exportAvifQualityAlpha: config.exportAvifQualityAlpha,
     exportAvifLossless: config.exportAvifLossless,

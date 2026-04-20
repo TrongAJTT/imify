@@ -1,4 +1,5 @@
 import { clampQuality } from "@/core/image-utils"
+import { buildJxlEncodeOptions } from "@/core/jxl-options"
 import type { FormatCodecOptions } from "@/core/types"
 import { renderPatternToImageData } from "@/features/pattern/pattern-renderer"
 import type { PatternAsset, PatternCanvasSettings, PatternExportFormat, PatternSettings } from "@/features/pattern/types"
@@ -44,13 +45,7 @@ const rasterEncodeDependencies: RasterEncodeDependencies = {
   encodeTiff: encodeImageDataToTiff,
   encodeAvif,
   encodeJxl: (imageData, options) =>
-    encodeJxl(imageData, {
-      quality: clampQuality(options.quality),
-      effort: options.jxl?.effort,
-      lossless: options.jxl?.lossless,
-      progressive: options.jxl?.progressive,
-      epf: options.jxl?.epf,
-    }),
+    encodeJxl(imageData, buildJxlEncodeOptions(clampQuality(options.quality), options.jxl)),
   encodeMozJpeg,
   encodeWebp,
   encodePng: encodePngFromImageData,
