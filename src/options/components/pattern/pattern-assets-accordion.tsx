@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import {
   closestCenter,
   DndContext,
@@ -27,8 +27,21 @@ const ASSET_CARD_MIN_HEIGHT = 220
 const ASSET_CARD_MAX_HEIGHT = 760
 const BLOB_URL_PREFIX = "blob:"
 
+type DrawingSession =
+  | { kind: "create" }
+  | { kind: "edit"; assetId: string }
+
 function createPatternAssetId(): string {
   return `pattern_asset_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+}
+
+function toSuggestedAssetName(name: string): string {
+  const trimmed = name.trim()
+  if (!trimmed) {
+    return "drawn-asset"
+  }
+
+  return trimmed.replace(/\.[^./\\]+$/, "")
 }
 
 function revokeObjectUrlIfNeeded(url: string | null | undefined): void {
@@ -84,8 +97,16 @@ export function PatternAssetsAccordion() {
   const reorderAssetsByIds = usePatternStore((state) => state.reorderAssetsByIds)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isDrawingDialogOpen, setIsDrawingDialogOpen] = useState(false)
+  const [drawingSession, setDrawingSession] = useState<DrawingSession | null>(null)
   const [cardHeight, setCardHeight] = useState(360)
+
+  const editingAsset = useMemo(() => {
+    if (!drawingSession || drawingSession.kind !== "edit") {
+      return null
+    }
+
+    return assets.find((asset) => asset.id === drawingSession.assetId) ?? null
+  }, [assets, drawingSession])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -143,22 +164,55 @@ export function PatternAssetsAccordion() {
 
   const handleDrawingSave = async ({ blob, suggestedName }: { blob: Blob; suggestedName: string }) => {
     const objectUrl = URL.createObjectURL(blob)
+    const normalizedName = `${toSuggestedAssetName(suggestedName)}.png`
 
     try {
       const size = await resolveBitmapSize(blob)
+
+      if (drawingSession?.kind === "edit") {
+        const currentAsset = assets.find((asset) => asset.id === drawingSession.assetId)
+
+        if (currentAsset) {
+          updateAsset(currentAsset.id, {
+            name: normalizedName,
+            source: "draw",
+            imageUrl: objectUrl,
+            mimeType: blob.type || "image/png",
+            width: size.width,
+            height: size.height,
+          })
+
+          revokeObjectUrlIfNeeded(currentAsset.imageUrl)
+          setDrawingSession(null)
+          return
+        }
+      }
+
       addAsset(
         buildAssetFromBlob({
           blob,
           objectUrl,
-          name: `${suggestedName}.png`,
+          name: normalizedName,
           source: "draw",
           size,
         })
       )
-      setIsDrawingDialogOpen(false)
+      setDrawingSession(null)
     } catch {
       revokeObjectUrlIfNeeded(objectUrl)
     }
+  }
+
+  const handleOpenDrawDialog = () => {
+    setDrawingSession({ kind: "create" })
+  }
+
+  const handleEditAsset = (assetId: string) => {
+    setDrawingSession({ kind: "edit", assetId })
+  }
+
+  const handleCloseDrawDialog = () => {
+    setDrawingSession(null)
   }
 
   const onDragEnd = (event: DragEndEvent) => {
@@ -210,31 +264,29 @@ export function PatternAssetsAccordion() {
               className="flex-1"
               onClick={() => fileInputRef.current?.click()}
             >
-              <ImagePlus size={14} />
               Upload
             </Button>
             <Button
               variant="secondary"
               size="sm"
               className="flex-1"
-              onClick={() => setIsDrawingDialogOpen(true)}
+              onClick={handleOpenDrawDialog}
             >
               <Brush size={14} />
               Draw
             </Button>
 
             {assets.length > 0 && (
-                <Tooltip content="Clear all assets">
-                    <Button className="flex" variant="secondary" size="sm" onClick={handleClearAssets}>
-                        <Trash2 size={13} color="red" />
-                    </Button>
-                </Tooltip>
+              <Tooltip content="Clear all assets">
+                <Button className="flex" variant="secondary" size="sm" onClick={handleClearAssets}>
+                  <Trash2 size={13} color="red" />
+                </Button>
+              </Tooltip>
             )}
           </div>
 
-
           {assets.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-700 px-3 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
+            <div className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
               Add images or draw your own icon asset, then reorder to set layer priority.
             </div>
           ) : (
@@ -250,6 +302,7 @@ export function PatternAssetsAccordion() {
                       onMonochromeChange={(assetId, monochrome) => updateAsset(assetId, { monochrome })}
                       onBorderChange={(assetId, border) => updateAsset(assetId, { border })}
                       onCornerRadiusChange={(assetId, cornerRadius) => updateAsset(assetId, { cornerRadius })}
+                      onEdit={handleEditAsset}
                       onRemove={handleRemoveAsset}
                     />
                   ))}
@@ -261,9 +314,12 @@ export function PatternAssetsAccordion() {
       </ResizableAccordionCard>
 
       <PatternAssetDrawingDialog
-        isOpen={isDrawingDialogOpen}
-        onClose={() => setIsDrawingDialogOpen(false)}
-        onSave={(payload) => void handleDrawingSave(payload)}
+        isOpen={drawingSession !== null}
+        mode={drawingSession?.kind === "edit" ? "edit" : "create"}
+        sourceImageUrl={editingAsset?.imageUrl ?? null}
+        initialSuggestedName={toSuggestedAssetName(editingAsset?.name ?? "drawn-asset")}
+        onClose={handleCloseDrawDialog}
+        onSave={handleDrawingSave}
       />
     </>
   )

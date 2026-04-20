@@ -1,15 +1,14 @@
-import { Eye } from "lucide-react"
-
 import type { PatternBoundarySettings } from "@/features/pattern/types"
-import type { PatternVisualBoundaryTarget } from "@/options/stores/pattern-store"
 import { Button } from "@/options/components/ui/button"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectInput } from "@/options/components/ui/select-input"
+import type { PatternVisualBoundaryTarget } from "@/options/stores/pattern-store"
+import { Eye } from "lucide-react"
 
 const BOUNDARY_SHAPE_OPTIONS = [
   { value: "rectangle", label: "Rectangle" },
-  { value: "ellipse", label: "Ellipse" },
+  { value: "ellipse", label: "Ellipse" }
 ]
 
 interface PatternBoundaryControlsProps {
@@ -27,10 +26,10 @@ export function PatternBoundaryControls({
   boundary,
   visualActive,
   onChange,
-  onShowVisual,
+  onShowVisual
 }: PatternBoundaryControlsProps) {
   return (
-    <div className="rounded-md border border-slate-200 dark:border-slate-700 p-2 space-y-2">
+    <div className="border-t-2 border-slate-200 dark:border-slate-700 pt-3 space-y-2">
       <CheckboxCard
         title={label}
         subtitle={boundary.enabled ? "Enabled" : "Disabled"}
@@ -40,14 +39,24 @@ export function PatternBoundaryControls({
 
       {boundary.enabled && (
         <div className="space-y-2">
-          <SelectInput
-            label="Boundary Shape"
-            value={boundary.shape}
-            options={BOUNDARY_SHAPE_OPTIONS}
-            onChange={(value) => onChange({ shape: value as PatternBoundarySettings["shape"] })}
-          />
-
           <div className="grid grid-cols-2 gap-2 items-end">
+            <SelectInput
+              label="Boundary Shape"
+              value={boundary.shape}
+              options={BOUNDARY_SHAPE_OPTIONS}
+              onChange={(value) =>
+                onChange({ shape: value as PatternBoundarySettings["shape"] })
+              }
+            />
+            <Button
+              type="button"
+              variant={visualActive ? "primary" : "secondary"}
+              size="sm"
+              onClick={() => onShowVisual(target)}
+              disabled={!boundary.enabled}>
+              <Eye size={13} />
+              Show Visual
+            </Button>
             <NumberInput
               label="X"
               value={Math.round(boundary.x)}
@@ -80,30 +89,20 @@ export function PatternBoundaryControls({
               step={1}
               onChangeValue={(value) => onChange({ height: value })}
             />
-          <NumberInput
-            label="Rotation"
-            value={Math.round(boundary.rotation * 10) / 10}
-            min={-360}
-            max={360}
-            step={0.5}
-            onChangeValue={(value) => onChange({ rotation: value })}
-          />
-          <Button
-          type="button"
-          variant={visualActive ? "primary" : "secondary"}
-          size="sm"
-          onClick={() => onShowVisual(target)}
-          disabled={!boundary.enabled}
-        >
-          <Eye size={13} />
-          Show Visual
-        </Button>
+            <NumberInput
+              label="Rotation"
+              value={Math.round(boundary.rotation * 10) / 10}
+              min={-360}
+              max={360}
+              step={0.5}
+              onChangeValue={(value) => onChange({ rotation: value })}
+            />
           </div>
-
 
           {visualActive && (
             <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              Visual is active. Drag to move, rotate, and resize. Hold Ctrl or Shift while dragging a corner to stretch freely.
+              Visual is active. Drag to move, rotate, and resize. Hold Ctrl or
+              Shift while dragging a corner to stretch freely.
             </p>
           )}
         </div>

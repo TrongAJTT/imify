@@ -23,5 +23,6 @@ export const ATTRIBUTIONS: AttributionItem[] = [
   { name: "fflate", author: "Arjun Barrett (101arrowz)", license: "MIT", url: "https://github.com/101arrowz/fflate" },
   { name: "@jsquash/avif, @jsquash/jxl, @jsquash/webp & @jsquash/oxipng", author: "Jamie Sinclair and jSquash contributors", license: "Apache-2.0", url: "https://github.com/jamsinclair/jSquash" },
   { name: "clsx", author: "Luke Edwards", license: "MIT", url: "https://github.com/lukeed/clsx" },
-  { name: "tailwind-merge", author: "Danylo and contributors", license: "MIT", url: "https://github.com/dcastil/tailwind-merge" }
+  { name: "tailwind-merge", author: "Danylo and contributors", license: "MIT", url: "https://github.com/dcastil/tailwind-merge" },
+  { name: "perfect-freehand", author: "Steveruizok", license: "MIT", url: "https://github.com/steveruizok/perfect-freehand" }
 ]

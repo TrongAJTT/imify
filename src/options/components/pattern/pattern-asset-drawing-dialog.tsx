@@ -1,222 +1,134 @@
+import {
+  createTransparentTrimmedBlob,
+  renderDrawingSurface,
+  toBrushPreview,
+  toLocalCanvasPoint,
+  type BrushPreview,
+  type DrawingTool,
+  type Stroke,
+  type StrokeSmoothingSettings
+} from "@/features/pattern/pattern-drawing-utils"
+import { Tooltip } from "@/options/components/tooltip"
 import { BaseDialog } from "@/options/components/ui/base-dialog"
 import { Button } from "@/options/components/ui/button"
+import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
-import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
-import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { TextInput } from "@/options/components/ui/text-input"
-import { Eraser, Pencil, RotateCcw, Trash2, X } from "lucide-react"
+import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { Brush, Eraser, RotateCcw, Trash2, X } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 interface PatternAssetDrawingDialogProps {
   isOpen: boolean
+  mode?: "create" | "edit"
+  sourceImageUrl?: string | null
+  initialSuggestedName?: string
   onClose: () => void
   onSave: (payload: { blob: Blob; suggestedName: string }) => void
 }
 
-type DrawingTool = "pen" | "eraser"
-
-interface Point {
-  x: number
-  y: number
-}
-
-interface Stroke {
-  tool: DrawingTool
-  color: string
-  size: number
-  points: Point[]
-}
-
-const DRAWING_WIDTH = 1024
-const DRAWING_HEIGHT = 640
-const MIN_BRUSH_SIZE = 1
-const MAX_BRUSH_SIZE = 120
-const BRUSH_SIZE_STEP = 1
-
-interface BrushPreview {
-  x: number
-  y: number
-  radius: number
-}
-
-interface PixelBounds {
-  x: number
-  y: number
+interface CanvasSize {
   width: number
   height: number
 }
 
-function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke): void {
-  if (stroke.points.length < 2) {
-    return
-  }
-
-  ctx.save()
-  ctx.lineCap = "round"
-  ctx.lineJoin = "round"
-  ctx.lineWidth = stroke.size
-
-  if (stroke.tool === "eraser") {
-    ctx.globalCompositeOperation = "destination-out"
-    ctx.strokeStyle = "rgba(0,0,0,1)"
-  } else {
-    ctx.globalCompositeOperation = "source-over"
-    ctx.strokeStyle = stroke.color
-  }
-
-  ctx.beginPath()
-  ctx.moveTo(stroke.points[0].x, stroke.points[0].y)
-
-  for (let index = 1; index < stroke.points.length; index += 1) {
-    const point = stroke.points[index]
-    ctx.lineTo(point.x, point.y)
-  }
-
-  ctx.stroke()
-  ctx.restore()
+const DEFAULT_CANVAS_SIZE: CanvasSize = {
+  width: 1024,
+  height: 640
 }
 
-function toLocalCanvasPoint(
-  canvas: HTMLCanvasElement,
-  event: React.PointerEvent<HTMLCanvasElement>
-): Point {
-  const rect = canvas.getBoundingClientRect()
-  const x =
-    ((event.clientX - rect.left) / Math.max(rect.width, 1)) * canvas.width
-  const y =
-    ((event.clientY - rect.top) / Math.max(rect.height, 1)) * canvas.height
-
-  return {
-    x: Math.max(0, Math.min(canvas.width, x)),
-    y: Math.max(0, Math.min(canvas.height, y))
-  }
+const DEFAULT_BRUSH_SIZE_BY_TOOL: Record<DrawingTool, number> = {
+  brush: 10,
+  eraser: 18
 }
 
-function toBrushPreview(
-  canvas: HTMLCanvasElement,
-  event: React.PointerEvent<HTMLCanvasElement>,
-  brushSize: number
-): BrushPreview {
-  const rect = canvas.getBoundingClientRect()
-  const scale = Math.max(rect.width / Math.max(canvas.width, 1), 0.0001)
+const MIN_BRUSH_SIZE = 1
+const MAX_BRUSH_SIZE = 120
+const BRUSH_SIZE_STEP = 1
 
-  return {
-    x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
-    y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)),
-    radius: Math.max(1, (brushSize * scale) / 2)
+const DEFAULT_STREAMLINE_PERCENT = 65
+const DEFAULT_SMOOTHING_PERCENT = 55
+
+function normalizeSuggestedName(input: string | null | undefined): string {
+  const trimmed = input?.trim()
+  if (!trimmed) {
+    return "drawn-asset"
   }
+
+  return trimmed
 }
 
-function findOpaqueBounds(ctx: CanvasRenderingContext2D, width: number, height: number): PixelBounds | null {
-  const { data } = ctx.getImageData(0, 0, width, height)
-
-  let minX = width
-  let minY = height
-  let maxX = -1
-  let maxY = -1
-
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const alpha = data[(y * width + x) * 4 + 3]
-      if (alpha === 0) {
-        continue
-      }
-
-      if (x < minX) minX = x
-      if (x > maxX) maxX = x
-      if (y < minY) minY = y
-      if (y > maxY) maxY = y
-    }
+function sanitizePercent(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0
   }
 
-  if (maxX < minX || maxY < minY) {
-    return null
-  }
-
-  return {
-    x: minX,
-    y: minY,
-    width: maxX - minX + 1,
-    height: maxY - minY + 1,
-  }
-}
-
-async function createOpaqueTrimmedBlob(strokes: Stroke[]): Promise<Blob | null> {
-  if (strokes.length === 0) {
-    return null
-  }
-
-  const sourceCanvas = document.createElement("canvas")
-  sourceCanvas.width = DRAWING_WIDTH
-  sourceCanvas.height = DRAWING_HEIGHT
-
-  const sourceCtx = sourceCanvas.getContext("2d")
-  if (!sourceCtx) {
-    return null
-  }
-
-  sourceCtx.clearRect(0, 0, DRAWING_WIDTH, DRAWING_HEIGHT)
-  for (const stroke of strokes) {
-    drawStroke(sourceCtx, stroke)
-  }
-
-  const bounds = findOpaqueBounds(sourceCtx, DRAWING_WIDTH, DRAWING_HEIGHT)
-  if (!bounds) {
-    return null
-  }
-
-  const exportCanvas = document.createElement("canvas")
-  exportCanvas.width = bounds.width
-  exportCanvas.height = bounds.height
-
-  const exportCtx = exportCanvas.getContext("2d")
-  if (!exportCtx) {
-    return null
-  }
-
-  // Output should be opaque and contain only drawn content bounds.
-  exportCtx.fillStyle = "#ffffff"
-  exportCtx.fillRect(0, 0, bounds.width, bounds.height)
-  exportCtx.drawImage(
-    sourceCanvas,
-    bounds.x,
-    bounds.y,
-    bounds.width,
-    bounds.height,
-    0,
-    0,
-    bounds.width,
-    bounds.height
-  )
-
-  return new Promise<Blob | null>((resolve) => {
-    exportCanvas.toBlob((value) => resolve(value), "image/png")
-  })
+  return Math.max(0, Math.min(100, Math.round(value)))
 }
 
 export function PatternAssetDrawingDialog({
   isOpen,
+  mode = "create",
+  sourceImageUrl,
+  initialSuggestedName,
   onClose,
   onSave
 }: PatternAssetDrawingDialogProps) {
   const { getShortcutLabel } = useShortcutPreferences()
+
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [tool, setTool] = useState<DrawingTool>("pen")
-  const [brushSize, setBrushSize] = useState(10)
+
+  const [tool, setTool] = useState<DrawingTool>("brush")
+  const [brushSizeByTool, setBrushSizeByTool] = useState<
+    Record<DrawingTool, number>
+  >({
+    ...DEFAULT_BRUSH_SIZE_BY_TOOL
+  })
   const [color, setColor] = useState("#0f172a")
   const [suggestedName, setSuggestedName] = useState("drawn-asset")
   const [strokes, setStrokes] = useState<Stroke[]>([])
   const [activeStroke, setActiveStroke] = useState<Stroke | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [brushPreview, setBrushPreview] = useState<BrushPreview | null>(null)
-  const [isHovering, setIsHovering] = useState(false)
-
-  const hasContent = useMemo(
-    () => strokes.length > 0 || (activeStroke?.points.length ?? 0) >= 2,
-    [strokes.length, activeStroke?.points.length]
+  const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null)
+  const [hasClearedSource, setHasClearedSource] = useState(false)
+  const [canvasSize, setCanvasSize] = useState<CanvasSize>({
+    ...DEFAULT_CANVAS_SIZE
+  })
+  const [smoothBrushStroke, setSmoothBrushStroke] = useState(false)
+  const [streamlinePercent, setStreamlinePercent] = useState(
+    DEFAULT_STREAMLINE_PERCENT
   )
-  const hasUndoHistory = strokes.length > 0
+  const [smoothingPercent, setSmoothingPercent] = useState(
+    DEFAULT_SMOOTHING_PERCENT
+  )
+
+  const activeBrushSize = brushSizeByTool[tool]
+  const combinedStrokes = useMemo(() => {
+    if (activeStroke && activeStroke.points.length >= 2) {
+      return [...strokes, activeStroke]
+    }
+
+    return strokes
+  }, [activeStroke, strokes])
+  const hasContent = useMemo(() => {
+    if (sourceImage) {
+      return true
+    }
+
+    return combinedStrokes.length > 0
+  }, [combinedStrokes.length, sourceImage])
+  const hasUndoHistory = strokes.length > 0 || hasClearedSource
+
+  const brushSmoothingSettings = useMemo<StrokeSmoothingSettings>(() => {
+    return {
+      enabled: smoothBrushStroke,
+      streamline: sanitizePercent(streamlinePercent) / 100,
+      smoothing: sanitizePercent(smoothingPercent) / 100
+    }
+  }, [smoothBrushStroke, streamlinePercent, smoothingPercent])
 
   const redrawCanvas = useCallback(() => {
     const canvas = canvasRef.current
@@ -229,170 +141,253 @@ export function PatternAssetDrawingDialog({
       return
     }
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    for (const stroke of strokes) {
-      drawStroke(ctx, stroke)
-    }
-
-    if (activeStroke) {
-      drawStroke(ctx, activeStroke)
-    }
-  }, [activeStroke, strokes])
+    renderDrawingSurface(ctx, {
+      width: canvas.width,
+      height: canvas.height,
+      sourceImage,
+      strokes: combinedStrokes
+    })
+  }, [combinedStrokes, sourceImage])
 
   useEffect(() => {
     if (!isOpen) {
       return
     }
 
-    setTool("pen")
-    setBrushSize(10)
+    setTool("brush")
+    setBrushSizeByTool({ ...DEFAULT_BRUSH_SIZE_BY_TOOL })
     setColor("#0f172a")
     setStrokes([])
     setActiveStroke(null)
     setIsDrawing(false)
     setBrushPreview(null)
-    setSuggestedName("drawn-asset")
-  }, [isOpen])
+    setSourceImage(null)
+    setHasClearedSource(false)
+    setCanvasSize({ ...DEFAULT_CANVAS_SIZE })
+    setSmoothBrushStroke(false)
+    setStreamlinePercent(DEFAULT_STREAMLINE_PERCENT)
+    setSmoothingPercent(DEFAULT_SMOOTHING_PERCENT)
+    setSuggestedName(normalizeSuggestedName(initialSuggestedName))
+  }, [initialSuggestedName, isOpen])
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    if (!sourceImageUrl) {
+      setSourceImage(null)
+      setHasClearedSource(false)
+      setCanvasSize({ ...DEFAULT_CANVAS_SIZE })
+      return
+    }
+
+    let cancelled = false
+    const image = new window.Image()
+
+    image.onload = () => {
+      if (cancelled) {
+        return
+      }
+
+      setSourceImage(image)
+      setHasClearedSource(false)
+      setCanvasSize({
+        width: Math.max(1, image.naturalWidth),
+        height: Math.max(1, image.naturalHeight)
+      })
+    }
+
+    image.onerror = () => {
+      if (cancelled) {
+        return
+      }
+
+      setSourceImage(null)
+      setCanvasSize({ ...DEFAULT_CANVAS_SIZE })
+    }
+
+    image.src = sourceImageUrl
+
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen, sourceImageUrl])
 
   useEffect(() => {
     redrawCanvas()
   }, [redrawCanvas])
 
-  const beginStroke = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    if (!canvas) {
-      return
-    }
+  const updateBrushSizeForActiveTool = useCallback(
+    (next: number) => {
+      const clamped = Math.max(
+        MIN_BRUSH_SIZE,
+        Math.min(MAX_BRUSH_SIZE, Math.round(next))
+      )
 
-    setIsHovering(true)
-    setBrushPreview(toBrushPreview(canvas, event, brushSize))
-
-    const point = toLocalCanvasPoint(canvas, event)
-    const stroke: Stroke = {
-      tool,
-      color,
-      size: brushSize,
-      points: [point]
-    }
-
-    setActiveStroke(stroke)
-    setIsDrawing(true)
-    canvas.setPointerCapture(event.pointerId)
-  }
-
-  const continueStroke = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    if (!canvas) {
-      return
-    }
-
-    setBrushPreview(toBrushPreview(canvas, event, brushSize))
-
-    if (!isDrawing) {
-      return
-    }
-
-    const point = toLocalCanvasPoint(canvas, event)
-    setActiveStroke((current) => {
-      if (!current) {
-        return current
-      }
-
-      return {
+      setBrushSizeByTool((current) => ({
         ...current,
-        points: [...current.points, point]
+        [tool]: clamped
+      }))
+    },
+    [tool]
+  )
+
+  const beginStroke = useCallback(
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current
+      if (!canvas) {
+        return
       }
-    })
-  }
 
-  const finishStroke = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) {
-      return
-    }
+      setBrushPreview(toBrushPreview(canvas, event, activeBrushSize))
 
-    const canvas = canvasRef.current
-    if (!canvas) {
-      return
-    }
+      const point = toLocalCanvasPoint(canvas, event)
+      const stroke: Stroke = {
+        tool,
+        color,
+        size: activeBrushSize,
+        points: [point],
+        smoothing: tool === "brush" ? brushSmoothingSettings : undefined
+      }
 
-    canvas.releasePointerCapture(event.pointerId)
-    setBrushPreview(toBrushPreview(canvas, event, brushSize))
-    setIsDrawing(false)
+      setActiveStroke(stroke)
+      setIsDrawing(true)
+      canvas.setPointerCapture(event.pointerId)
+    },
+    [activeBrushSize, brushSmoothingSettings, color, tool]
+  )
 
-    // keep hover state as-is; pointer may still be over canvas
+  const continueStroke = useCallback(
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current
+      if (!canvas) {
+        return
+      }
 
-    setActiveStroke((current) => {
-      if (!current || current.points.length < 2) {
+      setBrushPreview(toBrushPreview(canvas, event, activeBrushSize))
+
+      if (!isDrawing) {
+        return
+      }
+
+      const point = toLocalCanvasPoint(canvas, event)
+      setActiveStroke((current) => {
+        if (!current) {
+          return current
+        }
+
+        return {
+          ...current,
+          points: [...current.points, point]
+        }
+      })
+    },
+    [activeBrushSize, isDrawing]
+  )
+
+  const finishStroke = useCallback(
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      if (!isDrawing) {
+        return
+      }
+
+      const canvas = canvasRef.current
+      if (!canvas) {
+        return
+      }
+
+      canvas.releasePointerCapture(event.pointerId)
+      setBrushPreview(toBrushPreview(canvas, event, activeBrushSize))
+      setIsDrawing(false)
+
+      setActiveStroke((current) => {
+        if (!current || current.points.length < 2) {
+          return null
+        }
+
+        setStrokes((previous) => [...previous, current])
         return null
-      }
+      })
+    },
+    [activeBrushSize, isDrawing]
+  )
 
-      setStrokes((previous) => [...previous, current])
-      return null
-    })
-  }
-
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     setActiveStroke(null)
     setStrokes((previous) => previous.slice(0, -1))
-  }
+  }, [])
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setActiveStroke(null)
     setStrokes([])
-  }
+
+    if (sourceImage) {
+      setSourceImage(null)
+      setHasClearedSource(true)
+    }
+  }, [sourceImage])
 
   const increaseBrushSize = useCallback(() => {
-    setBrushSize((current) => Math.min(MAX_BRUSH_SIZE, current + BRUSH_SIZE_STEP))
-  }, [])
+    updateBrushSizeForActiveTool(activeBrushSize + BRUSH_SIZE_STEP)
+  }, [activeBrushSize, updateBrushSizeForActiveTool])
 
   const decreaseBrushSize = useCallback(() => {
-    setBrushSize((current) => Math.max(MIN_BRUSH_SIZE, current - BRUSH_SIZE_STEP))
-  }, [])
+    updateBrushSizeForActiveTool(activeBrushSize - BRUSH_SIZE_STEP)
+  }, [activeBrushSize, updateBrushSizeForActiveTool])
 
   useShortcutActions(
     [
       {
         actionId: "pattern.draw.decrease_brush_size",
         enabled: isOpen,
-        handler: () => decreaseBrushSize(),
+        handler: () => decreaseBrushSize()
       },
       {
         actionId: "pattern.draw.increase_brush_size",
         enabled: isOpen,
-        handler: () => increaseBrushSize(),
+        handler: () => increaseBrushSize()
       },
       {
         actionId: "pattern.draw.undo",
         enabled: isOpen,
-        handler: () => handleUndo(),
+        handler: () => handleUndo()
       },
       {
         actionId: "pattern.draw.clear",
         enabled: isOpen,
-        handler: () => handleClear(),
-      },
+        handler: () => handleClear()
+      }
     ],
     isOpen
   )
 
-  const handleSave = async () => {
-    const strokesForExport = activeStroke && activeStroke.points.length >= 2
-      ? [...strokes, activeStroke]
-      : [...strokes]
-
-    const blob = await createOpaqueTrimmedBlob(strokesForExport)
+  const handleSave = useCallback(async () => {
+    const blob = await createTransparentTrimmedBlob({
+      width: canvasSize.width,
+      height: canvasSize.height,
+      sourceImage,
+      strokes: combinedStrokes
+    })
 
     if (!blob) {
       return
     }
 
-    const normalizedName =
-      suggestedName.trim().length > 0 ? suggestedName.trim() : "drawn-asset"
-    onSave({ blob, suggestedName: normalizedName })
-  }
+    onSave({
+      blob,
+      suggestedName: normalizeSuggestedName(suggestedName)
+    })
+  }, [
+    canvasSize.height,
+    canvasSize.width,
+    combinedStrokes,
+    onSave,
+    sourceImage,
+    suggestedName
+  ])
 
-  const handleManualClose = () => {
+  const handleManualClose = useCallback(() => {
     if (hasUndoHistory) {
       const confirmed = window.confirm(
         "You have unsaved drawing progress. Close without saving?"
@@ -403,7 +398,9 @@ export function PatternAssetDrawingDialog({
     }
 
     onClose()
-  }
+  }, [hasUndoHistory, onClose])
+
+  const saveButtonLabel = mode === "edit" ? "Update Asset" : "Save As Asset"
 
   return (
     <BaseDialog
@@ -417,7 +414,8 @@ export function PatternAssetDrawingDialog({
             Draw Asset
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Sketch directly in-browser. Saved output is auto-trimmed and exported as opaque PNG.
+            Sketch directly in-browser. Saved output is auto-trimmed transparent
+            PNG.
           </p>
         </div>
         <button
@@ -430,14 +428,14 @@ export function PatternAssetDrawingDialog({
       </div>
 
       <div className="p-4 space-y-3">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
           <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/20 p-3">
             <div className="relative rounded-lg border border-slate-200 dark:border-slate-700 bg-[linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc),linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc)] dark:bg-[linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a),linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a)] bg-[length:20px_20px] bg-[position:0_0,10px_10px]">
               <canvas
                 ref={canvasRef}
-                width={DRAWING_WIDTH}
-                height={DRAWING_HEIGHT}
-                className={`w-full h-auto rounded-lg touch-none cursor-none`}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                className="w-full h-auto rounded-lg touch-none cursor-none"
                 onPointerDown={beginStroke}
                 onPointerMove={continueStroke}
                 onPointerUp={finishStroke}
@@ -448,11 +446,11 @@ export function PatternAssetDrawingDialog({
                     return
                   }
 
-                  setIsHovering(true)
-                  setBrushPreview(toBrushPreview(canvas, event, brushSize))
+                  setBrushPreview(
+                    toBrushPreview(canvas, event, activeBrushSize)
+                  )
                 }}
                 onPointerLeave={() => {
-                  setIsHovering(false)
                   if (!isDrawing) {
                     setBrushPreview(null)
                   }
@@ -478,14 +476,22 @@ export function PatternAssetDrawingDialog({
           </div>
 
           <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 space-y-3">
+            <TextInput
+              label="Asset Name"
+              value={suggestedName}
+              onChange={setSuggestedName}
+              placeholder="drawn-asset"
+              maxLength={80}
+            />
+
             <div className="grid grid-cols-2 gap-2">
               <Button
-                variant={tool === "pen" ? "primary" : "secondary"}
+                variant={tool === "brush" ? "primary" : "secondary"}
                 size="sm"
-                onClick={() => setTool("pen")}
+                onClick={() => setTool("brush")}
                 className="w-full">
-                <Pencil size={14} />
-                Pen
+                <Brush size={14} />
+                Brush
               </Button>
               <Button
                 variant={tool === "eraser" ? "primary" : "secondary"}
@@ -497,10 +503,46 @@ export function PatternAssetDrawingDialog({
               </Button>
             </div>
 
-            <div
-              className={
-                tool === "eraser" ? "opacity-60 pointer-events-none" : ""
-              }>
+            {tool === "brush" && (
+              <div className="space-y-2">
+                <CheckboxCard
+                  title="Smooth Brush Stroke"
+                  subtitle={smoothBrushStroke ? "Enabled" : "Disabled"}
+                  checked={smoothBrushStroke}
+                  onChange={setSmoothBrushStroke}
+                  tooltipLabel="Curve Smoothing"
+                  tooltipContent="Enable perfect-freehand smoothing for cleaner curves and less jitter."
+                  className="px-2 py-1.5"
+                />
+
+                {smoothBrushStroke && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <NumberInput
+                      label="Streamline"
+                      value={sanitizePercent(streamlinePercent)}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onChangeValue={(value) =>
+                        setStreamlinePercent(sanitizePercent(value))
+                      }
+                    />
+                    <NumberInput
+                      label="Smoothing"
+                      value={sanitizePercent(smoothingPercent)}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onChangeValue={(value) =>
+                        setSmoothingPercent(sanitizePercent(value))
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tool === "brush" && (
               <ColorPickerPopover
                 label="Brush Color"
                 value={color}
@@ -509,51 +551,56 @@ export function PatternAssetDrawingDialog({
                 enableAlpha={false}
                 outputMode="hex"
               />
-            </div>
+            )}
 
-            <div className="flex gap-3">
+            <div className="space-y-3">
               <NumberInput
                 label="Brush Size"
-                value={brushSize}
+                tooltipLabel={`Shortcuts: ${getShortcutLabel("pattern.draw.decrease_brush_size")} / ${getShortcutLabel("pattern.draw.increase_brush_size")}`}
+                tooltipContent="Use these shortcuts to decrease or increase active tool size quickly."
+                value={activeBrushSize}
                 min={MIN_BRUSH_SIZE}
                 max={MAX_BRUSH_SIZE}
                 step={BRUSH_SIZE_STEP}
-                onChangeValue={setBrushSize}
-                className="flex-1"
-              />
-
-              <TextInput
-                label="Asset Name"
-                value={suggestedName}
-                onChange={setSuggestedName}
-                placeholder="drawn-asset"
-                maxLength={80}
-                className="flex-1"
+                onChangeValue={updateBrushSizeForActiveTool}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-1">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleUndo}
-                disabled={strokes.length === 0}>
-                <RotateCcw size={14} />
-                Undo ({getShortcutLabel("pattern.draw.undo")})
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleClear}
-                disabled={!hasContent}>
-                <Trash2 size={14} />
-                Clear ({getShortcutLabel("pattern.draw.clear")})
-              </Button>
-            </div>
+              <Tooltip
+                label={`Undo (${getShortcutLabel("pattern.draw.undo")})`}
+                content="Revert the most recent stroke."
+                variant="nowrap">
+                <span className="block">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleUndo}
+                    disabled={strokes.length === 0}
+                    className="w-full">
+                    <RotateCcw size={14} />
+                    Undo
+                  </Button>
+                </span>
+              </Tooltip>
 
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Brush: {getShortcutLabel("pattern.draw.decrease_brush_size")} / {getShortcutLabel("pattern.draw.increase_brush_size")}
-            </p>
+              <Tooltip
+                label={`Clear (${getShortcutLabel("pattern.draw.clear")})`}
+                content="Clear the source layer and all drawn strokes."
+                variant="nowrap">
+                <span className="block">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleClear}
+                    disabled={!hasContent}
+                    className="w-full">
+                    <Trash2 size={14} />
+                    Clear
+                  </Button>
+                </span>
+              </Tooltip>
+            </div>
           </div>
         </div>
 
@@ -566,7 +613,7 @@ export function PatternAssetDrawingDialog({
             size="sm"
             onClick={() => void handleSave()}
             disabled={!hasContent}>
-            Save As Asset
+            {saveButtonLabel}
           </Button>
         </div>
       </div>

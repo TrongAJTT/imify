@@ -75,8 +75,8 @@ export function PatternBoundaryAccordion() {
         defaultOpen={false}
       >
         <div className="space-y-3">
-          <div className="flex justify-end">
-            <Button variant="ghost" size="sm" onClick={resetBoundariesToCanvas}>
+          <div className="flex justify-center">
+            <Button variant="outline" size="sm" onClick={resetBoundariesToCanvas}>
               <RefreshCcw size={13} />
               Reset Boundaries
             </Button>

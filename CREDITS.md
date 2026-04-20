@@ -59,3 +59,6 @@ This list is synchronized with `src/core/attributions.ts` (source of truth for t
 *   **[tailwind-merge](https://github.com/dcastil/tailwind-merge)**
     *   **Author(s):** Danylo and contributors
     *   **License:** MIT License
+*   **[perfect-freehand](https://github.com/steveruizok/perfect-freehand)**
+    *   **Author(s):** Steveruizok
+    *   **License:** MIT License
