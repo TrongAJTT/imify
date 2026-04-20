@@ -256,7 +256,13 @@ function LayerRow({
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="truncate font-medium text-slate-700 dark:text-slate-300">
+        <div
+          className={`truncate font-medium ${
+            layer.locked
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-slate-700 dark:text-slate-300"
+          }`}
+        >
           {layer.name || `Layer ${index + 1}`}
         </div>
         <div className="truncate text-[10px] text-slate-400">

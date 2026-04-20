@@ -31,7 +31,7 @@ import {
   regenerateLayerShapePoints,
   resolveLayerShapePoints,
 } from "@/features/filling/shape-generators"
-import { flattenPoints, roundedPolygonPoints } from "@/features/filling/vector-math"
+import { flattenPoints, pointInPolygon, roundedPolygonPoints } from "@/features/filling/vector-math"
 import {
   resolveLayerContainerHighlightMode,
   type LayerContainerHighlightMode,
@@ -58,6 +58,40 @@ function safeRevokeObjectUrl(value: string | null | undefined) {
   }
 
   URL.revokeObjectURL(value)
+}
+
+function hasFileDragPayload(dataTransfer: DataTransfer): boolean {
+  if (dataTransfer.files && dataTransfer.files.length > 0) {
+    return true
+  }
+
+  if (dataTransfer.items && dataTransfer.items.length > 0) {
+    return Array.from(dataTransfer.items).some((item) => item.kind === "file")
+  }
+
+  return Array.from(dataTransfer.types ?? []).includes("Files")
+}
+
+function getFirstImageFileFromDataTransfer(dataTransfer: DataTransfer): File | null {
+  const directFile = dataTransfer.files?.[0]
+  if (directFile?.type.startsWith("image/")) {
+    return directFile
+  }
+
+  if (dataTransfer.items) {
+    for (const item of Array.from(dataTransfer.items)) {
+      if (item.kind !== "file") {
+        continue
+      }
+
+      const file = item.getAsFile()
+      if (file?.type.startsWith("image/")) {
+        return file
+      }
+    }
+  }
+
+  return null
 }
 
 function resolveToastTargetFormat(
@@ -110,6 +144,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [isTransforming, setIsTransforming] = useState(false)
   const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false)
+  const [isDragOverSelectedEmptyTarget, setIsDragOverSelectedEmptyTarget] = useState(false)
   const [cursor, setCursor] = useState("default")
   const [rotationGuideLine, setRotationGuideLine] = useState<number[] | null>(null)
   const [positionGuideLines, setPositionGuideLines] = useState<number[][]>([])
@@ -193,6 +228,21 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     [layerFillStates, selectedRuntimeItem?.id]
   )
 
+  const selectedEmptyDropPolygons = useMemo(() => {
+    if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
+      return []
+    }
+
+    if (selectedRuntimeItem.kind === "group") {
+      return applyRuntimeTransformToPolygons(
+        selectedRuntimeItem.polygons,
+        groupRuntimeTransforms[selectedRuntimeItem.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }
+      )
+    }
+
+    return [toWorldLayerPoints(selectedRuntimeItem.layer)]
+  }, [groupRuntimeTransforms, selectedFillState?.imageUrl, selectedRuntimeItem])
+
   const fillVisibleLayers = useMemo(
     () => fillRuntimeItems
       .filter((item) => item.kind === "layer")
@@ -200,21 +250,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     [fillRuntimeItems]
   )
 
-  const triggerEmptyLayerImageSelect = useCallback(() => {
-    if (!selectedRuntimeItem) {
-      return
-    }
-
-    emptyImageUploadInputRef.current?.click()
-  }, [selectedRuntimeItem])
-
-  const handleEmptyLayerImageUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0]
-      if (!file || !selectedRuntimeItem) {
-        if (emptyImageUploadInputRef.current) {
-          emptyImageUploadInputRef.current.value = ""
-        }
+  const applyImageFileToSelectedRuntimeItem = useCallback(
+    (file: File) => {
+      if (!selectedRuntimeItem || selectedFillState?.imageUrl || !file.type.startsWith("image/")) {
         return
       }
 
@@ -247,16 +285,144 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       }
 
       image.src = nextUrl
+    },
+    [selectedFillState?.imageUrl, selectedRuntimeItem, updateLayerFillState]
+  )
+
+  const triggerEmptyLayerImageSelect = useCallback(() => {
+    if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
+      return
+    }
+
+    emptyImageUploadInputRef.current?.click()
+  }, [selectedFillState?.imageUrl, selectedRuntimeItem])
+
+  const handleEmptyLayerImageUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (file) {
+        applyImageFileToSelectedRuntimeItem(file)
+      }
 
       if (emptyImageUploadInputRef.current) {
         emptyImageUploadInputRef.current.value = ""
       }
     },
-    [selectedFillState?.imageUrl, selectedRuntimeItem, updateLayerFillState]
+    [applyImageFileToSelectedRuntimeItem]
   )
 
   const offsetX = (stageSize.width - template.canvasWidth * renderScale) / 2 + previewPan.x
   const offsetY = (stageSize.height - template.canvasHeight * renderScale) / 2 + previewPan.y
+
+  const toWorldPointFromClient = useCallback(
+    (clientX: number, clientY: number) => {
+      const container = containerRef.current
+      if (!container || renderScale <= 0) {
+        return null
+      }
+
+      const rect = container.getBoundingClientRect()
+
+      return {
+        x: (clientX - rect.left - offsetX) / renderScale,
+        y: (clientY - rect.top - offsetY) / renderScale,
+      }
+    },
+    [offsetX, offsetY, renderScale]
+  )
+
+  const isWorldPointInsideSelectedEmptyTarget = useCallback(
+    (worldPoint: { x: number; y: number } | null) => {
+      if (!worldPoint || selectedEmptyDropPolygons.length === 0) {
+        return false
+      }
+
+      return selectedEmptyDropPolygons.some((polygon) => pointInPolygon(worldPoint, polygon))
+    },
+    [selectedEmptyDropPolygons]
+  )
+
+  const handleStageContainerDragOver = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
+        return
+      }
+
+      if (!hasFileDragPayload(event.dataTransfer)) {
+        return
+      }
+
+      event.preventDefault()
+
+      const worldPoint = toWorldPointFromClient(event.clientX, event.clientY)
+      const canDrop = isWorldPointInsideSelectedEmptyTarget(worldPoint)
+
+      if (!canDrop) {
+        setIsDragOverSelectedEmptyTarget(false)
+        event.dataTransfer.dropEffect = "none"
+        return
+      }
+
+      event.dataTransfer.dropEffect = "copy"
+      setIsDragOverSelectedEmptyTarget(true)
+    },
+    [
+      isWorldPointInsideSelectedEmptyTarget,
+      selectedFillState?.imageUrl,
+      selectedRuntimeItem,
+      toWorldPointFromClient,
+    ]
+  )
+
+  const handleStageContainerDragLeave = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    const nextTarget = event.relatedTarget as Node | null
+    if (nextTarget && event.currentTarget.contains(nextTarget)) {
+      return
+    }
+
+    setIsDragOverSelectedEmptyTarget(false)
+  }, [])
+
+  const handleStageContainerDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
+        return
+      }
+
+      if (!hasFileDragPayload(event.dataTransfer)) {
+        setIsDragOverSelectedEmptyTarget(false)
+        return
+      }
+
+      event.preventDefault()
+
+      const file = getFirstImageFileFromDataTransfer(event.dataTransfer)
+      if (!file) {
+        setIsDragOverSelectedEmptyTarget(false)
+        return
+      }
+
+      const worldPoint = toWorldPointFromClient(event.clientX, event.clientY)
+      if (!isWorldPointInsideSelectedEmptyTarget(worldPoint)) {
+        setIsDragOverSelectedEmptyTarget(false)
+        return
+      }
+
+      setIsDragOverSelectedEmptyTarget(false)
+      applyImageFileToSelectedRuntimeItem(file)
+    },
+    [
+      applyImageFileToSelectedRuntimeItem,
+      isWorldPointInsideSelectedEmptyTarget,
+      selectedFillState?.imageUrl,
+      selectedRuntimeItem,
+      toWorldPointFromClient,
+    ]
+  )
+
+  useEffect(() => {
+    setIsDragOverSelectedEmptyTarget(false)
+  }, [selectedRuntimeItem?.id, selectedFillState?.imageUrl])
 
   const clampPreviewZoom = useCallback((value: number) => {
     return Math.max(PREVIEW_MIN_ZOOM, Math.min(PREVIEW_MAX_ZOOM, Math.round(value)))
@@ -1122,7 +1288,14 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       height,
       compact,
       fontSize,
-      text: compact ? "+" : "+ Select image",
+      text: isDragOverSelectedEmptyTarget
+        ? compact
+          ? "Drop"
+          : "Drop image"
+        : compact
+          ? "+"
+          : "+ Select image",
+      isDragOver: isDragOverSelectedEmptyTarget,
       clipPolygons: clipPolygons.map((polygon) =>
         flattenPoints(polygon).map((value, index) =>
           value * renderScale + (index % 2 === 0 ? offsetX : offsetY)
@@ -1134,6 +1307,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     offsetX,
     offsetY,
     renderScale,
+    isDragOverSelectedEmptyTarget,
     selectedFillState?.imageUrl,
     selectedRuntimeItem,
   ])
@@ -1206,6 +1380,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         ref={containerRef}
         className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
         style={{ height: `${previewContainerHeight}px`, cursor }}
+        onDragOver={handleStageContainerDragOver}
+        onDragLeave={handleStageContainerDragLeave}
+        onDrop={handleStageContainerDrop}
       >
         <input
           ref={emptyImageUploadInputRef}
@@ -1718,8 +1895,16 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                     y={selectedEmptyImageOverlay.y}
                     width={selectedEmptyImageOverlay.width}
                     height={selectedEmptyImageOverlay.height}
-                    fill="rgba(15, 23, 42, 0.84)"
-                    stroke="rgba(255, 255, 255, 0.45)"
+                    fill={
+                      selectedEmptyImageOverlay.isDragOver
+                        ? "rgba(14, 165, 233, 0.92)"
+                        : "rgba(15, 23, 42, 0.84)"
+                    }
+                    stroke={
+                      selectedEmptyImageOverlay.isDragOver
+                        ? "rgba(186, 230, 253, 0.95)"
+                        : "rgba(255, 255, 255, 0.45)"
+                    }
                     strokeWidth={1}
                     cornerRadius={Math.min(10, Math.max(5, selectedEmptyImageOverlay.height / 2 - 2))}
                     shadowBlur={7}

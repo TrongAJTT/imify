@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ImagePlus, Layers, Palette, SlidersHorizontal, X } from "lucide-react"
 
 import type { FillingTemplate, ImageTransform, LayerFillState, VectorLayer } from "@/features/filling/types"
@@ -52,6 +52,40 @@ function safeRevokeObjectUrl(value: string | null | undefined) {
   URL.revokeObjectURL(value)
 }
 
+function hasFileDragPayload(dataTransfer: DataTransfer): boolean {
+  if (dataTransfer.files && dataTransfer.files.length > 0) {
+    return true
+  }
+
+  if (dataTransfer.items && dataTransfer.items.length > 0) {
+    return Array.from(dataTransfer.items).some((item) => item.kind === "file")
+  }
+
+  return Array.from(dataTransfer.types ?? []).includes("Files")
+}
+
+function getFirstImageFileFromDataTransfer(dataTransfer: DataTransfer): File | null {
+  const directFile = dataTransfer.files?.[0]
+  if (directFile?.type.startsWith("image/")) {
+    return directFile
+  }
+
+  if (dataTransfer.items) {
+    for (const item of Array.from(dataTransfer.items)) {
+      if (item.kind !== "file") {
+        continue
+      }
+
+      const file = item.getAsFile()
+      if (file?.type.startsWith("image/")) {
+        return file
+      }
+    }
+  }
+
+  return null
+}
+
 function clampSize(value: number): number {
   return Math.max(1, Math.round(value))
 }
@@ -76,6 +110,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const layerTransformBaseRef = useRef<Map<string, LayerTransformBase>>(new Map())
+  const [isDragOverImageDropZone, setIsDragOverImageDropZone] = useState(false)
 
   const activeTemplate = useMemo(() => {
     if (sessionTemplate && sessionTemplate.id === template.id) {
@@ -251,10 +286,11 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
     fileInputRef.current?.click()
   }, [])
 
-  const handleImageUpload = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (!file || !selectedRuntimeItem) return
+  const applyImageFileToSelectedRuntimeItem = useCallback(
+    (file: File) => {
+      if (!selectedRuntimeItem || !file.type.startsWith("image/")) {
+        return
+      }
 
       const nextUrl = URL.createObjectURL(file)
       const previousUrl = selectedFillState?.imageUrl ?? null
@@ -285,13 +321,66 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
       }
 
       img.src = nextUrl
+    },
+    [selectedFillState?.imageUrl, selectedRuntimeItem, updateSelectedLayerState]
+  )
+
+  const handleImageUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (file) {
+        applyImageFileToSelectedRuntimeItem(file)
+      }
 
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
     },
-    [selectedFillState?.imageUrl, selectedRuntimeItem, updateSelectedLayerState]
+    [applyImageFileToSelectedRuntimeItem]
   )
+
+  const handleImageDropZoneDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    if (!hasFileDragPayload(event.dataTransfer)) {
+      return
+    }
+
+    event.preventDefault()
+    event.dataTransfer.dropEffect = "copy"
+    setIsDragOverImageDropZone(true)
+  }, [])
+
+  const handleImageDropZoneDragLeave = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    const nextTarget = event.relatedTarget as Node | null
+    if (nextTarget && event.currentTarget.contains(nextTarget)) {
+      return
+    }
+
+    setIsDragOverImageDropZone(false)
+  }, [])
+
+  const handleImageDropZoneDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!hasFileDragPayload(event.dataTransfer)) {
+        setIsDragOverImageDropZone(false)
+        return
+      }
+
+      event.preventDefault()
+      setIsDragOverImageDropZone(false)
+
+      const file = getFirstImageFileFromDataTransfer(event.dataTransfer)
+      if (!file) {
+        return
+      }
+
+      applyImageFileToSelectedRuntimeItem(file)
+    },
+    [applyImageFileToSelectedRuntimeItem]
+  )
+
+  useEffect(() => {
+    setIsDragOverImageDropZone(false)
+  }, [selectedRuntimeItem?.id, selectedFillState?.imageUrl])
 
   const handleClearImage = useCallback(() => {
     if (!selectedFillState?.imageUrl) return
@@ -416,9 +505,21 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
             {activeCustomizationTab === "image" && (
               <div className="space-y-3 mt-3">
                 {!selectedFillState?.imageUrl ? (
-                  <div className="rounded-md border border-dashed border-slate-300 dark:border-slate-600 p-3 bg-slate-50/70 dark:bg-slate-900/30">
+                  <div
+                    className={`rounded-md border border-dashed p-3 transition-colors ${
+                      isDragOverImageDropZone
+                        ? "border-sky-400 bg-sky-50/70 dark:border-sky-500 dark:bg-sky-500/10"
+                        : "border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-900/30"
+                    }`}
+                    onDragOver={handleImageDropZoneDragOver}
+                    onDragLeave={handleImageDropZoneDragLeave}
+                    onDrop={handleImageDropZoneDrop}
+                  >
                     <p className="text-[12px] text-slate-500 dark:text-slate-400 mb-2">
                       This layer has no image.
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
+                      Drag and drop an image here, or select one manually.
                     </p>
                     <Button type="button" variant="secondary" size="sm" onClick={triggerImageSelect}>
                       <ImagePlus size={14} />
@@ -451,7 +552,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
 
             {activeCustomizationTab === "border" && (
               <div className="space-y-3 mt-3">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <NumberInput
                     label="Border"
                     value={selectedFillState?.borderWidth ?? 0}
@@ -461,25 +562,23 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     disabled={borderOverridden}
                     tooltipContent={borderOverridden ? "Disabled because Canvas border override is enabled." : undefined}
                   />
+                  <ColorPickerPopover
+                    label="Color"
+                    value={selectedFillState?.borderColor ?? "#000000"}
+                    onChange={(value) => updateSelectedLayerState({ borderColor: value })}
+                    enableAlpha={false}
+                    enableGradient
+                    outputMode="hex"
+                    appearance="stacked"
+                  />
                   <NumberInput
-                    label="Corner Radius"
+                    label="Radius"
                     value={selectedFillState?.cornerRadius ?? 0}
                     onChangeValue={(value) => updateSelectedLayerState({ cornerRadius: value })}
                     min={0}
                     max={200}
                     disabled={cornerRadiusOverridden}
                     tooltipContent={cornerRadiusOverridden ? "Disabled because Canvas corner radius override is enabled." : undefined}
-                  />
-                </div>
-
-                <div className={`mt-3 ${borderOverridden ? "pointer-events-none opacity-50" : ""}`}>
-                  <ColorPickerPopover
-                    label="Border Color"
-                    value={selectedFillState?.borderColor ?? "#000000"}
-                    onChange={(value) => updateSelectedLayerState({ borderColor: value })}
-                    enableAlpha={false}
-                    enableGradient
-                    outputMode="hex"
                   />
                 </div>
 

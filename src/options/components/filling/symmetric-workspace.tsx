@@ -15,7 +15,9 @@ import { templateStorage } from "@/features/filling/template-storage"
 import { useFillingStore } from "@/options/stores/filling-store"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 import { Button } from "@/options/components/ui/button"
-import { Save } from "lucide-react"
+import { Tooltip } from "@/options/components/tooltip"
+import symmetricVisualEditorGif from "url:assets/images/feat-symmetric_generator-visual_editor.gif"
+import { Save, SquareMousePointer } from "lucide-react"
 
 const CANVAS_PADDING = 40
 const FIRST_CONTROL_ID = "first_axis_first_shape"
@@ -305,7 +307,34 @@ export function SymmetricWorkspace({ template, onRefresh }: SymmetricWorkspacePr
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <Subheading>Symmetric Generator</Subheading>
+          <div className="flex items-center gap-1.5">
+            <Subheading>Symmetric Generator</Subheading>
+            <Tooltip
+              variant="gif-preview"
+              label="Visual editing tips"
+              content={
+                <div className="space-y-2">
+                  <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                    You can adjust size and spacing visually using the first two components on the first main axis,
+                    and the first component on the second main axis.
+                  </p>
+                  <img
+                    src={symmetricVisualEditorGif}
+                    alt="Symmetric Generator visual editor"
+                    className="w-full h-auto rounded-md border border-slate-200 dark:border-white/10 shadow-sm"
+                  />
+                </div>
+              }
+            >
+              <button
+                type="button"
+                className="inline-flex items-center text-slate-400 hover:text-sky-500 dark:text-slate-500 dark:hover:text-sky-400 transition-colors"
+                aria-label="Symmetric Generator visual editor help"
+              >
+                <SquareMousePointer size={14} />
+              </button>
+            </Tooltip>
+          </div>
           <MutedText className="text-xs mt-0.5">
             {generatedLayers.length} shape{generatedLayers.length !== 1 ? "s" : ""} generated
             &middot; {template.canvasWidth} x {template.canvasHeight} px

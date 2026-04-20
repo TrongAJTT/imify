@@ -4,7 +4,7 @@ import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrum
 function stepLabel(step: string): string | null {
   switch (step) {
     case "create_manual":
-      return "Add (Manual)"
+      return "Edit (Manual)"
     case "create_symmetric":
       return "Add (Symmetric)"
     case "fill":
