@@ -459,7 +459,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     min={0}
                     max={50}
                     disabled={borderOverridden}
-                    tooltip={borderOverridden ? "Disabled because Canvas border override is enabled." : undefined}
+                    tooltipContent={borderOverridden ? "Disabled because Canvas border override is enabled." : undefined}
                   />
                   <NumberInput
                     label="Corner Radius"
@@ -468,7 +468,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     min={0}
                     max={200}
                     disabled={cornerRadiusOverridden}
-                    tooltip={cornerRadiusOverridden ? "Disabled because Canvas corner radius override is enabled." : undefined}
+                    tooltipContent={cornerRadiusOverridden ? "Disabled because Canvas corner radius override is enabled." : undefined}
                   />
                 </div>
 

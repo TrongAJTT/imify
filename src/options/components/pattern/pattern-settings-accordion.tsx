@@ -45,7 +45,7 @@ export function PatternSettingsAccordion() {
           <div className="grid grid-cols-2 gap-2">
             <NumberInput
               label="Density"
-              tooltip="Higher values pack more assets into the same area."
+              tooltipContent="Higher values pack more assets into the same area."
               value={Math.round(distribution.density * 100) / 100}
               min={0.2}
               max={5}
@@ -54,7 +54,7 @@ export function PatternSettingsAccordion() {
             />
             <NumberInput
               label="Base Scale"
-              tooltip="Asset size multiplier before random variance."
+              tooltipContent="Asset size multiplier before random variance."
               value={Math.round(distribution.baseScale * 100) / 100}
               min={0.05}
               max={8}
@@ -63,7 +63,7 @@ export function PatternSettingsAccordion() {
             />
             <NumberInput
               label="Scale Variance"
-              tooltip="Random scale deviation around base scale."
+              tooltipContent="Random scale deviation around base scale."
               value={Math.round(distribution.scaleVariance * 100) / 100}
               min={0}
               max={0.95}
@@ -72,7 +72,7 @@ export function PatternSettingsAccordion() {
             />
             <NumberInput
               label="Seed"
-              tooltip="Same seed + same settings = repeatable layout."
+              tooltipContent="Same seed + same settings = repeatable layout."
               value={distribution.randomSeed}
               min={0}
               max={99999999}

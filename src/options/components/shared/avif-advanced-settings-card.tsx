@@ -103,7 +103,7 @@ export function AvifAdvancedSettingsCard({
 
         <NumberInput
           label="Alpha Quality"
-          tooltip="Controls transparency channel quality. Leave unticked above to tune manually."
+          tooltipContent="Controls transparency channel quality. Leave unticked above to tune manually."
           value={typeof qualityAlpha === "number" ? qualityAlpha : 90}
           min={0}
           max={100}

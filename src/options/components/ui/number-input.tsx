@@ -10,7 +10,8 @@ interface NumberInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   max?: number
   step?: number
   label?: string
-  tooltip?: string
+  tooltipContent?: string
+  tooltipLabel?: string
 }
 
 export function NumberInput({
@@ -21,7 +22,8 @@ export function NumberInput({
   step = 1,
   label,
   disabled,
-  tooltip,
+  tooltipContent,
+  tooltipLabel,
   ...props
 }: NumberInputProps) {
   const [draft, setDraft] = useState(String(value))
@@ -93,8 +95,8 @@ export function NumberInput({
       {label && (
         <div className="flex items-center gap-1">
           <LabelText className="text-xs">{label}</LabelText>
-          {tooltip && (
-            <Tooltip content={tooltip}>
+          {(tooltipContent || tooltipLabel) && (
+            <Tooltip content={tooltipContent} label={tooltipLabel}>
               <HelpCircle size={12} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help" />
             </Tooltip>
           )}

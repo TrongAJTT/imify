@@ -61,7 +61,7 @@ export function LayerPropertiesPanel({ layer, onUpdate }: LayerPropertiesPanelPr
         onChangeValue={(v) => onUpdate({ rotation: v })}
         min={-360}
         max={360}
-        tooltip="Rotation in degrees"
+        tooltipContent="Rotation in degrees"
       />
     </div>
   )

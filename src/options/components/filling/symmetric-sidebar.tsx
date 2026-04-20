@@ -136,7 +136,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ axisCount: v })}
             min={1}
             max={50}
-            tooltip="How many parallel axes to generate"
+            tooltipContent="How many parallel axes to generate"
           />
         </div>
 
@@ -161,7 +161,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ baseLength: v })}
             min={10}
             max={2000}
-            tooltip="Length of the base edge on the primary side of each generated shape."
+            tooltipContent="Length of the base edge on the primary side of each generated shape."
           />
           <NumberInput
             label="Side Length"
@@ -169,7 +169,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ sideLength: v })}
             min={10}
             max={2000}
-            tooltip="Distance between the two parallel axes used by each generated shape."
+            tooltipContent="Distance between the two parallel axes used by each generated shape."
           />
         </div>
 
@@ -180,7 +180,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ oppositeBaseLength: v })}
             min={0}
             max={2000}
-            tooltip="Length of the edge opposite to Base Length. Set 0 to collapse into a triangle."
+            tooltipContent="Length of the edge opposite to Base Length. Set 0 to collapse into a triangle."
           />
           <NumberInput
             label="Opposite Offset"
@@ -188,7 +188,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ oppositeBaseOffset: v })}
             min={-2000}
             max={2000}
-            tooltip="Offset of the opposite base relative to the main base along the appearance axis."
+            tooltipContent="Offset of the opposite base relative to the main base along the appearance axis."
           />
         </div>
 
@@ -199,7 +199,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ axisSpacing: v })}
             min={0}
             max={500}
-            tooltip="Gap between main axes"
+            tooltipContent="Gap between main axes"
           />
           <NumberInput
             label="Shape Spacing"
@@ -207,7 +207,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ shapeSpacing: v })}
             min={0}
             max={500}
-            tooltip="Gap between shapes on same axis"
+            tooltipContent="Gap between shapes on same axis"
           />
         </div>
 
@@ -218,7 +218,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ firstShapePosition: v })}
             min={-2000}
             max={2000}
-            tooltip="Offset of the first shape on each axis"
+            tooltipContent="Offset of the first shape on each axis"
           />
           <NumberInput
             label="First Axis Position"
@@ -226,7 +226,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ firstAxisPosition: v })}
             min={-2000}
             max={2000}
-            tooltip="Position of the first axis on the perpendicular coordinate"
+            tooltipContent="Position of the first axis on the perpendicular coordinate"
           />
         </div>
 
@@ -237,7 +237,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
           onChangeValue={(v) => update({ oddEvenOffset: v })}
           min={-2000}
           max={2000}
-          tooltip="Offset applied to even-numbered axes for diagonal patterns"
+          tooltipContent="Offset applied to even-numbered axes for diagonal patterns"
         />
 
         <CheckboxCard

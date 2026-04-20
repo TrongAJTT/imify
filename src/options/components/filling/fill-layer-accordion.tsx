@@ -151,7 +151,7 @@ export function FillLayerAccordion({ layer, fillState }: FillLayerAccordionProps
                 onChangeValue={(v) => handleTransformChange({ scaleX: v / 100 })}
                 min={1}
                 max={1000}
-                tooltip="Scale in percentage"
+                tooltipContent="Scale in percentage"
               />
               <NumberInput
                 label="Scale Y"
@@ -159,7 +159,7 @@ export function FillLayerAccordion({ layer, fillState }: FillLayerAccordionProps
                 onChangeValue={(v) => handleTransformChange({ scaleY: v / 100 })}
                 min={1}
                 max={1000}
-                tooltip="Scale in percentage"
+                tooltipContent="Scale in percentage"
               />
             </div>
 
