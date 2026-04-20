@@ -3,7 +3,11 @@ import { PatternPresetInfoPanel } from "@/options/components/pattern/pattern-pre
 import { PatternSidebarPanel } from "@/options/components/pattern/pattern-sidebar-panel"
 import { usePatternPresetStore } from "@/options/stores/pattern-preset-store"
 
-export function PatternSidebarShell() {
+interface PatternSidebarShellProps {
+  enableWideSidebarGrid?: boolean
+}
+
+export function PatternSidebarShell({ enableWideSidebarGrid = false }: PatternSidebarShellProps) {
   const presetViewMode = usePatternPresetStore((state) => state.presetViewMode)
 
   if (presetViewMode === "select") {
@@ -14,5 +18,5 @@ export function PatternSidebarShell() {
     )
   }
 
-  return <PatternSidebarPanel />
+  return <PatternSidebarPanel enableWideSidebarGrid={enableWideSidebarGrid} />
 }

@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useState } from "react"
 
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { Kicker } from "@/options/components/ui/typography"
+import {
+  WorkspaceConfigSidebarPanel,
+  type WorkspaceConfigSidebarItem,
+} from "@/options/components/ui/workspace-config-sidebar-panel"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import { ResizeCard } from "@/options/components/shared/resize-card"
@@ -26,11 +28,13 @@ import {
 interface BatchSetupSidebarPanelProps {
   performancePreferences: PerformancePreferences
   onOpenSettings: () => void
+  enableWideSidebarGrid?: boolean
 }
 
 export function BatchSetupSidebarPanel({
   performancePreferences,
-  onOpenSettings
+  onOpenSettings,
+  enableWideSidebarGrid = false,
 }: BatchSetupSidebarPanelProps) {
   const setupContext = useBatchStore((state) => state.setupContext)
   const isRunning = useBatchStore((state) => state.isRunning)
@@ -153,133 +157,159 @@ export function BatchSetupSidebarPanel({
     ]
   )
 
+  const sidebarItems: WorkspaceConfigSidebarItem[] = [
+    {
+      id: "target-format-quality",
+      columnSpan: 2,
+      content: (
+        <TargetFormatQualityCard
+          targetFormat={targetFormat}
+          quality={quality}
+          formatConfig={buildTargetFormatQualityCardConfig(formatOptions)}
+          supportsQuality={supportsQuality}
+          supportsTinyMode={supportsTinyMode}
+          onToggleWebIconKit={(v: boolean) => onIcoGenerateWebIconKitChange(v)}
+          onIcoOptimizeInternalPngLayersChange={onIcoOptimizeInternalPngLayersChange}
+          onIcoSizesChange={onIcoSizesChange}
+          onTargetFormatChange={(nextValue: string) => onTargetFormatChange(nextValue as BatchTargetFormat)}
+          onQualityChange={onQualityChange}
+          onAvifSpeedChange={onAvifSpeedChange}
+          onJxlEffortChange={onJxlEffortChange}
+          onWebpLosslessChange={onWebpLosslessChange}
+          onWebpNearLosslessChange={onWebpNearLosslessChange}
+          onWebpEffortChange={onWebpEffortChange}
+          onPngTinyModeChange={onPngTinyModeChange}
+          onPngDitheringLevelChange={onPngDitheringLevelChange}
+          onBmpColorDepthChange={onBmpColorDepthChange}
+          onBmpDitheringLevelChange={onBmpDitheringLevelChange}
+          onTiffColorModeChange={onTiffColorModeChange}
+          disabled={isRunning}
+          isOpen={isTargetFormatQualityOpen}
+          onOpenChange={setIsTargetFormatQualityOpen}
+        />
+      ),
+    },
+    {
+      id: "format-advanced-settings",
+      content: (
+        <FormatAdvancedSettingsCard
+          targetFormat={targetFormat}
+          disabled={isRunning}
+          avif={{
+            qualityAlpha: formatOptions.avif.qualityAlpha,
+            lossless: formatOptions.avif.lossless,
+            subsample: formatOptions.avif.subsample,
+            tune: formatOptions.avif.tune,
+            highAlphaQuality: formatOptions.avif.highAlphaQuality,
+            onQualityAlphaChange: onAvifQualityAlphaChange,
+            onLosslessChange: onAvifLosslessChange,
+            onSubsampleChange: onAvifSubsampleChange,
+            onTuneChange: onAvifTuneChange,
+            onHighAlphaQualityChange: onAvifHighAlphaQualityChange,
+          }}
+          mozjpeg={{
+            progressive: formatOptions.mozjpeg.progressive,
+            chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling,
+            onProgressiveChange: onMozJpegProgressiveChange,
+            onChromaSubsamplingChange: onMozJpegChromaSubsamplingChange,
+          }}
+          png={{
+            cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
+            autoGrayscale: formatOptions.png.autoGrayscale,
+            oxipngCompression: formatOptions.png.oxipngCompression,
+            progressiveInterlaced: formatOptions.png.progressiveInterlaced,
+            onCleanTransparentPixelsChange: onPngCleanTransparentPixelsChange,
+            onAutoGrayscaleChange: onPngAutoGrayscaleChange,
+            onOxiPngCompressionChange: onPngOxiPngCompressionChange,
+            onProgressiveInterlacedChange: onPngProgressiveInterlacedChange,
+          }}
+          webp={{
+            sharpYuv: formatOptions.webp.sharpYuv,
+            preserveExactAlpha: formatOptions.webp.preserveExactAlpha,
+            onSharpYuvChange: onWebpSharpYuvChange,
+            onPreserveExactAlphaChange: onWebpPreserveExactAlphaChange,
+          }}
+        />
+      ),
+    },
+    {
+      id: "resize",
+      content: (
+        <ResizeCard
+          resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
+          resizeValue={resizeValue}
+          resizeWidth={resizeWidth}
+          resizeHeight={resizeHeight}
+          resizeAspectMode={resizeAspectMode}
+          resizeAspectRatio={resizeAspectRatio}
+          resizeFitMode={resizeFitMode}
+          resizeContainBackground={resizeContainBackground}
+          resamplingAlgorithm={resizeResamplingAlgorithm}
+          resizeSourceWidth={resizeSourceWidth}
+          resizeSourceHeight={resizeSourceHeight}
+          resizeSyncVersion={resizeSyncVersion}
+          paperSize={paperSize}
+          dpi={dpi}
+          onResizeModeChange={(mode) => {
+            onResizeModeChange(mode as BatchResizeMode)
+
+            if (mode === "change_width" || mode === "change_height") {
+              onResizeValueChange(1280)
+              return
+            }
+
+            if (mode === "scale") {
+              onResizeValueChange(100)
+            }
+          }}
+          onResizeValueChange={onResizeValueChange}
+          onResizeWidthChange={onResizeWidthChange}
+          onResizeHeightChange={onResizeHeightChange}
+          onResizeAspectModeChange={(mode) => onResizeAspectModeChange(mode as any)}
+          onResizeAspectRatioChange={(ratio) => onResizeAspectRatioChange(String(ratio))}
+          onResizeFitModeChange={(mode) => onResizeFitModeChange(mode as any)}
+          onResizeContainBackgroundChange={onResizeContainBackgroundChange}
+          onResamplingAlgorithmChange={onResizeResamplingAlgorithmChange}
+          onPaperSizeChange={(size) => onPaperSizeChange(size as any)}
+          onDpiChange={(d) => onDpiChange(d as any)}
+          disabled={isRunning || isIcoTarget}
+          isOpen={isResizeOpen}
+          onOpenChange={setIsResizeOpen}
+        />
+      ),
+    },
+    {
+      id: "export-settings",
+      columnSpan: 2,
+      content: (
+        <BatchExportPanel
+          targetFormat={targetFormat}
+          concurrency={concurrency}
+          fileNamePattern={fileNamePattern}
+          stripExif={stripExif}
+          supportsExif={supportsExif}
+          watermark={watermark}
+          watermarkSaved={watermarkIsSaved}
+          formatOptions={formatOptions}
+          onConcurrencyChange={onConcurrencyChange}
+          onFileRenamingClick={() => setIsRenameDialogOpen(true)}
+          onStripExifChange={onStripExifChange}
+          onWatermarkingClick={() => setIsWatermarkDialogOpen(true)}
+          performancePreferences={performancePreferences}
+          resizeConfigForAdvisor={advisorResizeConfig}
+          onOpenSettings={onOpenSettings}
+          disabled={isRunning}
+          hideConcurrency={setupContext === "single"}
+        />
+      ),
+    },
+  ]
+
   return (
-    <SidebarPanel title="CONFIGURATION" childrenClassName="flex flex-col gap-3">
-      <TargetFormatQualityCard
-        targetFormat={targetFormat}
-        quality={quality}
-        formatConfig={buildTargetFormatQualityCardConfig(formatOptions)}
-        supportsQuality={supportsQuality}
-        supportsTinyMode={supportsTinyMode}
-        onToggleWebIconKit={(v: boolean) => onIcoGenerateWebIconKitChange(v)}
-        onIcoOptimizeInternalPngLayersChange={onIcoOptimizeInternalPngLayersChange}
-        onIcoSizesChange={onIcoSizesChange}
-        onTargetFormatChange={(nextValue: string) => onTargetFormatChange(nextValue as BatchTargetFormat)}
-        onQualityChange={onQualityChange}
-        onAvifSpeedChange={onAvifSpeedChange}
-        onJxlEffortChange={onJxlEffortChange}
-        onWebpLosslessChange={onWebpLosslessChange}
-        onWebpNearLosslessChange={onWebpNearLosslessChange}
-        onWebpEffortChange={onWebpEffortChange}
-        onPngTinyModeChange={onPngTinyModeChange}
-        onPngDitheringLevelChange={onPngDitheringLevelChange}
-        onBmpColorDepthChange={onBmpColorDepthChange}
-        onBmpDitheringLevelChange={onBmpDitheringLevelChange}
-        onTiffColorModeChange={onTiffColorModeChange}
-        disabled={isRunning}
-        isOpen={isTargetFormatQualityOpen}
-        onOpenChange={setIsTargetFormatQualityOpen}
-      />
-
-      <FormatAdvancedSettingsCard
-        targetFormat={targetFormat}
-        disabled={isRunning}
-        avif={{
-          qualityAlpha: formatOptions.avif.qualityAlpha,
-          lossless: formatOptions.avif.lossless,
-          subsample: formatOptions.avif.subsample,
-          tune: formatOptions.avif.tune,
-          highAlphaQuality: formatOptions.avif.highAlphaQuality,
-          onQualityAlphaChange: onAvifQualityAlphaChange,
-          onLosslessChange: onAvifLosslessChange,
-          onSubsampleChange: onAvifSubsampleChange,
-          onTuneChange: onAvifTuneChange,
-          onHighAlphaQualityChange: onAvifHighAlphaQualityChange
-        }}
-        mozjpeg={{
-          progressive: formatOptions.mozjpeg.progressive,
-          chromaSubsampling: formatOptions.mozjpeg.chromaSubsampling,
-          onProgressiveChange: onMozJpegProgressiveChange,
-          onChromaSubsamplingChange: onMozJpegChromaSubsamplingChange
-        }}
-        png={{
-          cleanTransparentPixels: formatOptions.png.cleanTransparentPixels,
-          autoGrayscale: formatOptions.png.autoGrayscale,
-          oxipngCompression: formatOptions.png.oxipngCompression,
-          progressiveInterlaced: formatOptions.png.progressiveInterlaced,
-          onCleanTransparentPixelsChange: onPngCleanTransparentPixelsChange,
-          onAutoGrayscaleChange: onPngAutoGrayscaleChange,
-          onOxiPngCompressionChange: onPngOxiPngCompressionChange,
-          onProgressiveInterlacedChange: onPngProgressiveInterlacedChange
-        }}
-        webp={{
-          sharpYuv: formatOptions.webp.sharpYuv,
-          preserveExactAlpha: formatOptions.webp.preserveExactAlpha,
-          onSharpYuvChange: onWebpSharpYuvChange,
-          onPreserveExactAlphaChange: onWebpPreserveExactAlphaChange
-        }}
-      />
-
-            {/* Resize Card */}
-      <ResizeCard
-        resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
-        resizeValue={resizeValue}
-        resizeWidth={resizeWidth}
-        resizeHeight={resizeHeight}
-        resizeAspectMode={resizeAspectMode}
-        resizeAspectRatio={resizeAspectRatio}
-        resizeFitMode={resizeFitMode}
-        resizeContainBackground={resizeContainBackground}
-        resamplingAlgorithm={resizeResamplingAlgorithm}
-        resizeSourceWidth={resizeSourceWidth}
-        resizeSourceHeight={resizeSourceHeight}
-        resizeSyncVersion={resizeSyncVersion}
-        paperSize={paperSize}
-        dpi={dpi}
-        onResizeModeChange={(mode) => {
-          onResizeModeChange(mode as BatchResizeMode)
-
-          if (mode === "change_width" || mode === "change_height") {
-            onResizeValueChange(1280)
-            return
-          }
-
-          if (mode === "scale") {
-            onResizeValueChange(100)
-          }
-        }}
-        onResizeValueChange={onResizeValueChange}
-        onResizeWidthChange={onResizeWidthChange}
-        onResizeHeightChange={onResizeHeightChange}
-        onResizeAspectModeChange={(mode) => onResizeAspectModeChange(mode as any)}
-        onResizeAspectRatioChange={(ratio) => onResizeAspectRatioChange(String(ratio))}
-        onResizeFitModeChange={(mode) => onResizeFitModeChange(mode as any)}
-        onResizeContainBackgroundChange={onResizeContainBackgroundChange}
-        onResamplingAlgorithmChange={onResizeResamplingAlgorithmChange}
-        onPaperSizeChange={(size) => onPaperSizeChange(size as any)}
-        onDpiChange={(d) => onDpiChange(d as any)}
-        disabled={isRunning || isIcoTarget}
-        isOpen={isResizeOpen}
-        onOpenChange={setIsResizeOpen}
-      />
-
-      <BatchExportPanel
-        targetFormat={targetFormat}
-        concurrency={concurrency}
-        fileNamePattern={fileNamePattern}
-        stripExif={stripExif}
-        supportsExif={supportsExif}
-        watermark={watermark}
-        watermarkSaved={watermarkIsSaved}
-        formatOptions={formatOptions}
-        onConcurrencyChange={onConcurrencyChange}
-        onFileRenamingClick={() => setIsRenameDialogOpen(true)}
-        onStripExifChange={onStripExifChange}
-        onWatermarkingClick={() => setIsWatermarkDialogOpen(true)}
-        performancePreferences={performancePreferences}
-        resizeConfigForAdvisor={advisorResizeConfig}
-        onOpenSettings={onOpenSettings}
-        disabled={isRunning}
+    <>
+      <WorkspaceConfigSidebarPanel
+        items={sidebarItems}
+        twoColumn={enableWideSidebarGrid}
       />
 
       <BatchRenameDialog
@@ -296,9 +326,7 @@ export function BatchSetupSidebarPanel({
         onSave={onWatermarkChange}
         initialConfig={watermark}
       />
-
-
-    </SidebarPanel>
+    </>
   )
 }
 

@@ -9,12 +9,14 @@ interface ProcessorSidebarShellProps {
   context: SetupContext
   performancePreferences: PerformancePreferences
   onOpenSettings: () => void
+  enableWideSidebarGrid?: boolean
 }
 
 export function ProcessorSidebarShell({
   context,
   performancePreferences,
-  onOpenSettings
+  onOpenSettings,
+  enableWideSidebarGrid = false,
 }: ProcessorSidebarShellProps) {
   const viewMode = useBatchStore((state) => state.presetViewByContext[context] ?? "select")
 
@@ -28,8 +30,9 @@ export function ProcessorSidebarShell({
 
   return (
     <BatchSetupSidebarPanel
-        performancePreferences={performancePreferences}
-        onOpenSettings={onOpenSettings}
+      performancePreferences={performancePreferences}
+      onOpenSettings={onOpenSettings}
+      enableWideSidebarGrid={enableWideSidebarGrid}
     />
   )
 }

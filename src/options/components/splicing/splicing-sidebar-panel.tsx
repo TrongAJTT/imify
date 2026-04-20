@@ -25,7 +25,10 @@ import { LayoutSettingsAccordion } from "@/options/components/splicing/layout-se
 import { CanvasSettingsAccordion } from "@/options/components/splicing/canvas-settings-accordion"
 import { ImageSettingsAccordion } from "@/options/components/splicing/image-settings-accordion"
 import { PreviewSettingsAccordion } from "@/options/components/splicing/preview-settings-accordion"
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
+import {
+  WorkspaceConfigSidebarPanel,
+  type WorkspaceConfigSidebarItem,
+} from "@/options/components/ui/workspace-config-sidebar-panel"
 import {
   buildTargetFormatQualityCardConfig,
   supportsTargetFormatQuality,
@@ -36,12 +39,14 @@ interface SplicingSidebarPanelProps {
   performancePreferences: PerformancePreferences
   onPreviewQualityChange: (next: number) => void
   onOpenSettings: () => void
+  enableWideSidebarGrid?: boolean
 }
 
 export function SplicingSidebarPanel({
   performancePreferences,
   onPreviewQualityChange,
-  onOpenSettings
+  onOpenSettings,
+  enableWideSidebarGrid = false,
 }: SplicingSidebarPanelProps) {
   const preset = useSplicingStore((s) => s.preset)
   const primaryDirection = useSplicingStore((s) => s.primaryDirection)
@@ -236,10 +241,11 @@ export function SplicingSidebarPanel({
     }
   }
 
-  return (
-    <div className="flex flex-col gap-1">
-      <SidebarPanel title="CONFIGURATION" childrenClassName="flex flex-col gap-3">
-        {/* Layout Settings Accordion */}
+  const sidebarItems: WorkspaceConfigSidebarItem[] = [
+    {
+      id: "layout-settings",
+      columnSpan: 2,
+      content: (
         <LayoutSettingsAccordion
           preset={preset}
           primaryDirection={primaryDirection}
@@ -260,8 +266,11 @@ export function SplicingSidebarPanel({
           onImageAppearanceDirectionChange={setImageAppearanceDirection}
           onImageAppearanceDirectionChangeFromPreset={setImageAppearanceDirection}
         />
-
-        {/* Canvas Settings Accordion */}
+      ),
+    },
+    {
+      id: "canvas-settings",
+      content: (
         <CanvasSettingsAccordion
           canvasPadding={canvasPadding}
           mainSpacing={mainSpacing}
@@ -278,8 +287,11 @@ export function SplicingSidebarPanel({
           onCanvasBorderColorChange={setCanvasBorderColor}
           onBackgroundColorChange={setBackgroundColor}
         />
-
-        {/* Image Settings Accordion */}
+      ),
+    },
+    {
+      id: "image-settings",
+      content: (
         <ImageSettingsAccordion
           imageResize={imageResize}
           imageFitValue={imageFitValue}
@@ -298,8 +310,12 @@ export function SplicingSidebarPanel({
           onImageBorderColorChange={setImageBorderColor}
           onImageResizeOpenChange={setIsImageResizeOpen}
         />
-
-        {/* Export Format & Quality Card with padding */}
+      ),
+    },
+    {
+      id: "export-format-quality",
+      columnSpan: 2,
+      content: (
         <TargetFormatQualityCard
           targetFormat={exportFormat}
           quality={exportQuality}
@@ -323,8 +339,12 @@ export function SplicingSidebarPanel({
           isOpen={isExportFormatQualityOpen}
           onOpenChange={setIsExportFormatQualityOpen}
         />
-
-        {/* Format Advanced Settings Card with padding */}
+      ),
+    },
+    {
+      id: "format-advanced-settings",
+      columnSpan: 2,
+      content: (
         <FormatAdvancedSettingsCard
           targetFormat={exportFormat}
           avif={{
@@ -337,13 +357,13 @@ export function SplicingSidebarPanel({
             onLosslessChange: setExportAvifLossless,
             onSubsampleChange: setExportAvifSubsample,
             onTuneChange: setExportAvifTune,
-            onHighAlphaQualityChange: setExportAvifHighAlphaQuality
+            onHighAlphaQualityChange: setExportAvifHighAlphaQuality,
           }}
           mozjpeg={{
             progressive: exportMozJpegProgressive,
             chromaSubsampling: exportMozJpegChromaSubsampling,
             onProgressiveChange: setExportMozJpegProgressive,
-            onChromaSubsamplingChange: setExportMozJpegChromaSubsampling
+            onChromaSubsamplingChange: setExportMozJpegChromaSubsampling,
           }}
           png={{
             cleanTransparentPixels: exportPngCleanTransparentPixels,
@@ -353,17 +373,21 @@ export function SplicingSidebarPanel({
             onCleanTransparentPixelsChange: setExportPngCleanTransparentPixels,
             onAutoGrayscaleChange: setExportPngAutoGrayscale,
             onOxiPngCompressionChange: setExportPngOxiPngCompression,
-            onProgressiveInterlacedChange: setExportPngProgressiveInterlaced
+            onProgressiveInterlacedChange: setExportPngProgressiveInterlaced,
           }}
           webp={{
             sharpYuv: exportWebpSharpYuv,
             preserveExactAlpha: exportWebpPreserveExactAlpha,
             onSharpYuvChange: setExportWebpSharpYuv,
-            onPreserveExactAlphaChange: setExportWebpPreserveExactAlpha
+            onPreserveExactAlphaChange: setExportWebpPreserveExactAlpha,
           }}
         />
-
-        {/* Export Settings Accordion with padding */}
+      ),
+    },
+    {
+      id: "export-settings",
+      columnSpan: 2,
+      content: (
         <SplicingExportPanel
           targetFormat={exportFormat}
           concurrency={exportConcurrency}
@@ -385,30 +409,41 @@ export function SplicingSidebarPanel({
           onOpenSettings={onOpenSettings}
           disabled={false}
         />
-
-        {/* Rename Pattern Dialog */}
-        <RenamePatternDialog
-          isOpen={isRenameDialogOpen}
-          onClose={() => setIsRenameDialogOpen(false)}
-          onSave={setExportFileNamePattern}
-          initialPattern={exportFileNamePattern}
-          title="Export file naming"
-          presets={SPLICING_EXPORT_RENAME_PRESETS}
-          availableTags={SPLICING_EXPORT_RENAME_TAGS}
-          previewSample={splicingRenamePreviewSample}
-          emptyPatternFallback="spliced-[Index]"
-          patternPlaceholder="e.g. spliced-[Index] or [Date]-[PaddedIndex]"
-          previewInputHint="Splicing export (sample dimensions & index)"
-        />
-
-        {/* Preview Settings Accordion */}
+      ),
+    },
+    {
+      id: "preview-settings",
+      content: (
         <PreviewSettingsAccordion
           previewQualityPercent={previewQualityPercent}
           previewShowImageNumber={previewShowImageNumber}
           onPreviewQualityChange={onPreviewQualityChange}
           onPreviewShowImageNumberChange={setPreviewShowImageNumber}
         />
-      </SidebarPanel>
-    </div>
+      ),
+    },
+  ]
+
+  return (
+    <>
+      <WorkspaceConfigSidebarPanel
+        items={sidebarItems}
+        twoColumn={enableWideSidebarGrid}
+      />
+
+      <RenamePatternDialog
+        isOpen={isRenameDialogOpen}
+        onClose={() => setIsRenameDialogOpen(false)}
+        onSave={setExportFileNamePattern}
+        initialPattern={exportFileNamePattern}
+        title="Export file naming"
+        presets={SPLICING_EXPORT_RENAME_PRESETS}
+        availableTags={SPLICING_EXPORT_RENAME_TAGS}
+        previewSample={splicingRenamePreviewSample}
+        emptyPatternFallback="spliced-[Index]"
+        patternPlaceholder="e.g. spliced-[Index] or [Date]-[PaddedIndex]"
+        previewInputHint="Splicing export (sample dimensions & index)"
+      />
+    </>
   )
 }

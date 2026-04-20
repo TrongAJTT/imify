@@ -8,12 +8,14 @@ interface SplicingSidebarShellProps {
   performancePreferences: PerformancePreferences
   onPreviewQualityChange: (percent: number) => void
   onOpenSettings: () => void
+  enableWideSidebarGrid?: boolean
 }
 
 export function SplicingSidebarShell({
   performancePreferences,
   onPreviewQualityChange,
-  onOpenSettings
+  onOpenSettings,
+  enableWideSidebarGrid = false,
 }: SplicingSidebarShellProps) {
   const presetViewMode = useSplicingPresetStore((state) => state.presetViewMode)
 
@@ -30,6 +32,7 @@ export function SplicingSidebarShell({
       performancePreferences={performancePreferences}
       onPreviewQualityChange={onPreviewQualityChange}
       onOpenSettings={onOpenSettings}
+      enableWideSidebarGrid={enableWideSidebarGrid}
     />
   )
 }

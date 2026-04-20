@@ -6,6 +6,28 @@ function applyThemeClass(isDark: boolean): void {
   document.documentElement.classList.toggle("dark", isDark)
 }
 
+function parseDarkModeValue(value: unknown): boolean {
+  if (typeof value === "boolean") {
+    return value
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === "true") {
+      return true
+    }
+    if (normalized === "false") {
+      return false
+    }
+  }
+
+  if (typeof value === "number") {
+    return value === 1
+  }
+
+  return Boolean(value)
+}
+
 export function useImifyDarkMode() {
   const [isDark, setIsDark] = useState(false)
 
@@ -19,7 +41,7 @@ export function useImifyDarkMode() {
           return
         }
 
-        const initialMode = Boolean(state?.[IMIFY_DARK_MODE_KEY])
+        const initialMode = parseDarkModeValue(state?.[IMIFY_DARK_MODE_KEY])
         setIsDark(initialMode)
         applyThemeClass(initialMode)
       })
@@ -40,7 +62,7 @@ export function useImifyDarkMode() {
         return
       }
 
-      const nextIsDark = Boolean(nextMode.newValue)
+      const nextIsDark = parseDarkModeValue(nextMode.newValue)
       setIsDark(nextIsDark)
       applyThemeClass(nextIsDark)
     }

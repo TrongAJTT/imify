@@ -1,10 +1,11 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { RotateCcw, X } from "lucide-react"
 
 import { ShortcutBindingInput } from "@/options/components/ui/shortcut-binding-input"
 import { SettingsItemHeader } from "@/options/components/ui/settings-item-header"
 import { SettingsSectionHeader } from "@/options/components/ui/settings-section-header"
 import { Button } from "@/options/components/ui/button"
+import { TextInput } from "@/options/components/ui/text-input"
 import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import {
   DEFAULT_SHORTCUT_PREFERENCES,
@@ -15,6 +16,7 @@ import {
 } from "@/options/shared/shortcuts"
 
 export function SettingsShortcutsPanel() {
+  const [searchQuery, setSearchQuery] = useState("")
   const {
     isLoading,
     definitions,
@@ -80,6 +82,47 @@ export function SettingsShortcutsPanel() {
     }, {} as Record<ShortcutActionId, ShortcutDefinition>)
   }, [definitions])
 
+  const filteredGroupedDefinitions = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase()
+
+    if (!normalizedQuery) {
+      return groupedDefinitions
+    }
+
+    return groupedDefinitions
+      .map(([category, items]) => {
+        const filteredItems = items.filter((definition) => {
+          const currentBindingLabel = formatShortcutBinding(preferences[definition.id]).toLowerCase()
+          const defaultBindingLabel = formatShortcutBinding(
+            DEFAULT_SHORTCUT_PREFERENCES[definition.id]
+          ).toLowerCase()
+
+          const searchableText = [
+            definition.label,
+            definition.description,
+            definition.scope,
+            category,
+          ]
+            .join(" ")
+            .toLowerCase()
+
+          return (
+            searchableText.includes(normalizedQuery) ||
+            currentBindingLabel.includes(normalizedQuery) ||
+            defaultBindingLabel.includes(normalizedQuery)
+          )
+        })
+
+        return [category, filteredItems] as const
+      })
+      .filter(([, items]) => items.length > 0)
+  }, [groupedDefinitions, preferences, searchQuery])
+
+  const filteredDefinitionCount = useMemo(
+    () => filteredGroupedDefinitions.reduce((total, [, items]) => total + items.length, 0),
+    [filteredGroupedDefinitions]
+  )
+
   return (
     <div className="animate-in fade-in duration-300 space-y-5">
       <SettingsSectionHeader
@@ -105,13 +148,44 @@ export function SettingsShortcutsPanel() {
           </Button>
         </div>
 
+        <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <TextInput
+            label="Search shortcuts"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search by action name or key combination (e.g. Ctrl+Shift+E)"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-lg border-slate-200 dark:border-slate-700"
+            onClick={() => setSearchQuery("")}
+            disabled={!searchQuery.trim()}
+          >
+            Clear Search
+          </Button>
+        </div>
+
+        {!isLoading && searchQuery.trim() ? (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300">
+            Showing {filteredDefinitionCount} shortcut{filteredDefinitionCount === 1 ? "" : "s"} for "
+            {searchQuery.trim()}".
+          </div>
+        ) : null}
+
         {isLoading && (
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300">
             Loading shortcut preferences...
           </div>
         )}
 
-        {groupedDefinitions.map(([category, items]) => (
+        {!isLoading && filteredDefinitionCount === 0 ? (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300">
+            No shortcuts matched your search.
+          </div>
+        ) : null}
+
+        {filteredGroupedDefinitions.map(([category, items]) => (
           <div key={category} className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {category}

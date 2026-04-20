@@ -51,6 +51,8 @@ interface BatchExportPanelProps {
   onOpenSettings: () => void
   /** Whether inputs are disabled */
   disabled?: boolean
+  /** Hide concurrency selector for contexts that do not use it */
+  hideConcurrency?: boolean
 }
 
 /**
@@ -73,7 +75,8 @@ export function BatchExportPanel({
   onWatermarkingClick,
   performancePreferences,
   onOpenSettings,
-  disabled = false
+  disabled = false,
+  hideConcurrency = false
 }: BatchExportPanelProps) {
   const watermarkSummaryBase = buildWatermarkSummary(watermark)
   const watermarkSummary = watermarkSaved ? `${watermarkSummaryBase} · Saved` : watermarkSummaryBase
@@ -136,6 +139,7 @@ export function BatchExportPanel({
           onUnlockConcurrency={onOpenSettings}
           onFileRenamingClick={onFileRenamingClick}
           disabled={disabled}
+          hideConcurrency={hideConcurrency}
           concurrencyHeaderChip={
             <SmartConcurrencyAdvisorCard
               advisor={advisor}

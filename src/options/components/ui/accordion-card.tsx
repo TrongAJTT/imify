@@ -70,7 +70,13 @@ export function AccordionCard({
   const themeAccordionLeftBorder = isDisabled ? "" : theme.accordionLeftBorder
 
   return (
-    <Collapsible.Root open={isOpen} onOpenChange={handleOpenChange} disabled={isDisabled}>
+    <Collapsible.Root
+      open={isOpen}
+      onOpenChange={handleOpenChange}
+      disabled={isDisabled}
+      data-accordion-card-container=""
+      data-accordion-open={isOpen ? "true" : "false"}
+    >
       <div className={`rounded overflow-hidden transition-all duration-200 border border-l-2 ${
         isOpen
           ? `${theme.accordionOpenEdgeBorder} ${themeAccordionLeftBorder} shadow-sm`
@@ -80,6 +86,7 @@ export function AccordionCard({
           <button
             type="button"
             disabled={isDisabled}
+            data-accordion-card-header=""
             className={`w-full text-left flex items-center gap-2.5 px-2.5 py-1.5 transition-all ${
               isOpen
                 ? `${theme.activeBg} ${alwaysOpen ? "cursor-default" : "cursor-pointer"}`

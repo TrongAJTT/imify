@@ -80,6 +80,8 @@ export function SmartConcurrencyAdvisorCard({
         ? "Pushing limits"
         : "High crash risk"
 
+  const TriggerIcon = advisor.usingFallbackProfile ? Gauge : Sparkles
+
   return (
     <ControlledPopover
       trigger={
@@ -88,9 +90,7 @@ export function SmartConcurrencyAdvisorCard({
           className={`inline-flex h-6 items-center gap-1 rounded-md border px-2 text-[10px] font-semibold transition-colors ${TONE_MAP[advisor.riskLevel].chip}`}
           disabled={disabled}
         >
-          <Sparkles size={10} />
-          <span>{advisor.advisorNameShort}</span>
-          <span className="opacity-75">•</span>
+          <TriggerIcon size={10} />
           <span>{riskLabel}</span>
         </button>
       }

@@ -49,6 +49,7 @@ import {
   normalizePerformancePreferences,
   PERFORMANCE_PREFERENCES_KEY
 } from "@/options/shared/performance-preferences"
+import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
@@ -253,6 +254,8 @@ export default function OptionsPage() {
     return panel === "audit" ? <SidepanelAuditSnapshotApp /> : <SidePanelLiteApp />
   }
 
+  const { isDark, toggleDarkMode } = useImifyDarkMode()
+
   const [defaultOptionsTab, setDefaultOptionsTab, { isLoading: isDefaultTabLoading }] = useStorage<OptionsTab>(
     { key: "imify_options_default_tab", instance: syncStorage },
     "context-menu"
@@ -278,7 +281,6 @@ export default function OptionsPage() {
     { key: STORAGE_KEY, instance: syncStorage },
     DEFAULT_PERSISTED_STATE
   )
-  const [isDark, setIsDark] = useStorage<boolean>({ key: "imify_dark_mode", instance: syncStorage }, false)
   const [layoutPreferences, setLayoutPreferences, { isLoading: isLayoutPreferencesLoading }] = useStorage(
     { key: WORKSPACE_LAYOUT_PREFERENCES_KEY, instance: syncStorage },
     DEFAULT_WORKSPACE_LAYOUT_PREFERENCES
@@ -303,6 +305,7 @@ export default function OptionsPage() {
   const configurationSidebarWidth = getConfigurationSidebarWidthPx(
     safeLayoutPreferences.configurationSidebarLevel
   )
+  const enableWideWorkspaceSidebarGrid = safeLayoutPreferences.configurationSidebarLevel >= 5
 
   const previewQualityChangeHandlerRef = useRef<((next: number) => void) | null>(null)
   const didInitDefaultTabRef = useRef(false)
@@ -339,14 +342,6 @@ export default function OptionsPage() {
     setActiveTab(safeDefaultOptionsTab)
     didInitDefaultTabRef.current = true
   }, [isDefaultTabLoading, safeDefaultOptionsTab])
-
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }, [isDark])
 
   useEffect(() => {
     if (activeTab === "single" || activeTab === "batch") {
@@ -452,7 +447,7 @@ export default function OptionsPage() {
         onOpenAbout={() => setIsAboutDialogOpen(true)}
         onOpenSettings={() => openSettingsDialog("general")}
         onOpenDonate={() => setIsDonateDialogOpen(true)}
-        onToggleDark={() => setIsDark(!isDark)}
+        onToggleDark={toggleDarkMode}
       />
 
       {/* Dialogs */}
@@ -553,6 +548,7 @@ export default function OptionsPage() {
                 context="single"
                 performancePreferences={safePerformancePreferences}
                 onOpenSettings={() => openSettingsDialog("performance")}
+                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
               />
             )}
 
@@ -561,6 +557,7 @@ export default function OptionsPage() {
                 context="batch"
                 performancePreferences={safePerformancePreferences}
                 onOpenSettings={() => openSettingsDialog("performance")}
+                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
               />
             )}
 
@@ -569,6 +566,7 @@ export default function OptionsPage() {
                 performancePreferences={safePerformancePreferences}
                 onPreviewQualityChange={handleSidebarPreviewQualityChange}
                 onOpenSettings={() => openSettingsDialog("performance")}
+                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
               />
             )}
 
@@ -577,7 +575,7 @@ export default function OptionsPage() {
             )}
 
             {activeTab === "pattern" && (
-              <PatternSidebarShell />
+              <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
             )}
 
             {activeTab === "diffchecker" && (
@@ -630,6 +628,7 @@ export default function OptionsPage() {
               context="single"
               performancePreferences={safePerformancePreferences}
               onOpenSettings={() => openSettingsDialog("performance")}
+              enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
             />
           )}
 
@@ -638,6 +637,7 @@ export default function OptionsPage() {
               context="batch"
               performancePreferences={safePerformancePreferences}
               onOpenSettings={() => openSettingsDialog("performance")}
+              enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
             />
           )}
 
@@ -646,6 +646,7 @@ export default function OptionsPage() {
               performancePreferences={safePerformancePreferences}
               onPreviewQualityChange={handleSidebarPreviewQualityChange}
               onOpenSettings={() => openSettingsDialog("performance")}
+              enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
             />
           )}
 
@@ -654,7 +655,7 @@ export default function OptionsPage() {
           )}
 
           {activeTab === "pattern" && (
-            <PatternSidebarShell />
+            <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
           )}
 
           {activeTab === "diffchecker" && (

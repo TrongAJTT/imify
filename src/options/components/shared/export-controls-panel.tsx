@@ -25,6 +25,8 @@ interface ExportControlsPanelProps {
   onFileRenamingClick: () => void
   /** Whether inputs are disabled */
   disabled?: boolean
+  /** Hide concurrency selector when not needed for current workspace */
+  hideConcurrency?: boolean
   /** Additional children to render after concurrency selector */
   afterConcurrency?: ReactNode
   /** Additional children to render before file renaming card */
@@ -48,22 +50,25 @@ export function ExportControlsPanel({
   concurrencyHeaderChip,
   onFileRenamingClick,
   disabled = false,
+  hideConcurrency = false,
   afterConcurrency,
   beforeFileRenaming,
   afterFileRenaming
 }: ExportControlsPanelProps) {
   return (
     <>
-      <ConcurrencySelector
-        format={targetFormat}
-        value={concurrency}
-        onChange={onConcurrencyChange}
-        maxValue={concurrencyMax}
-        isLocked={isConcurrencyLocked}
-        onUnlockInSettings={onUnlockConcurrency}
-        headerChip={concurrencyHeaderChip}
-        disabled={disabled}
-      />
+      {!hideConcurrency ? (
+        <ConcurrencySelector
+          format={targetFormat}
+          value={concurrency}
+          onChange={onConcurrencyChange}
+          maxValue={concurrencyMax}
+          isLocked={isConcurrencyLocked}
+          onUnlockInSettings={onUnlockConcurrency}
+          headerChip={concurrencyHeaderChip}
+          disabled={disabled}
+        />
+      ) : null}
       {afterConcurrency}
       {beforeFileRenaming}
       <SidebarCard
