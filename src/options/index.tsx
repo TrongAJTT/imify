@@ -21,7 +21,8 @@ import { SplicingSidebarShell } from "@/options/components/splicing/splicing-sid
 import { FillingTab } from "@/options/components/filling/filling-tab"
 import { FillingSidebarPanel } from "@/options/components/filling/filling-sidebar-panel"
 import { PatternTab } from "@/options/components/pattern/pattern-tab"
-import { PatternSidebarPanel } from "@/options/components/pattern/pattern-sidebar-panel"
+import { PatternSidebarShell } from "@/options/components/pattern/pattern-sidebar-shell"
+import { PatternWorkspaceShell } from "@/options/components/pattern/pattern-workspace-shell"
 import { ProcessorWorkspaceShell } from "@/options/components/processor/processor-workspace-shell"
 import { ProcessorSidebarShell } from "@/options/components/processor/processor-sidebar-shell"
 import { EditorProvider } from "@/options/components/filling/editor-context"
@@ -420,7 +421,7 @@ export default function OptionsPage() {
         )
       case "pattern":
         return (
-          <PatternTab />
+          <PatternWorkspaceShell workspace={<PatternTab />} />
         )
       case "diffchecker":
         return (
@@ -576,7 +577,7 @@ export default function OptionsPage() {
             )}
 
             {activeTab === "pattern" && (
-              <PatternSidebarPanel />
+              <PatternSidebarShell />
             )}
 
             {activeTab === "diffchecker" && (
@@ -653,7 +654,7 @@ export default function OptionsPage() {
           )}
 
           {activeTab === "pattern" && (
-            <PatternSidebarPanel />
+            <PatternSidebarShell />
           )}
 
           {activeTab === "diffchecker" && (

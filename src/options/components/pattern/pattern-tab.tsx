@@ -8,12 +8,10 @@ import type { ConversionProgressPayload } from "@/core/types"
 import { renderPatternToContext } from "@/features/pattern/pattern-renderer"
 import { buildActivePatternFormatOptions } from "@/options/stores/pattern-format-options"
 import { usePatternStore } from "@/options/stores/pattern-store"
-import { useWorkspaceHeaderStore } from "@/options/stores/workspace-header-store"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
 import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import { Button } from "@/options/components/ui/button"
 import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
-import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrumb"
 import { exportPatternComposition } from "@/options/components/pattern/pattern-export-utils"
 import { PatternBoundaryVisualOverlay } from "@/options/components/pattern/pattern-boundary-visual-overlay"
 import {
@@ -77,11 +75,6 @@ export function PatternTab() {
   const exportBmpDithering = usePatternStore((state) => state.exportBmpDithering)
   const exportBmpDitheringLevel = usePatternStore((state) => state.exportBmpDitheringLevel)
   const exportTiffColorMode = usePatternStore((state) => state.exportTiffColorMode)
-
-  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
-  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
-  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
-  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const { getShortcutLabel } = useShortcutPreferences()
 
   const previewHostRef = useRef<HTMLDivElement>(null)
@@ -250,16 +243,6 @@ export function PatternTab() {
       previous.close()
     }
   }, [])
-
-  useEffect(() => {
-    setHeaderSection("Pattern Generator")
-    setHeaderActions(null)
-    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootLabel="Pattern Generator" />)
-
-    return () => {
-      resetHeader()
-    }
-  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   useEffect(() => {
     const element = previewHostRef.current
