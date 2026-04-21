@@ -233,3 +233,22 @@ export const SPLICING_EXPORT_RENAME_TAGS: Array<{ tag: string; label: string }> 
   { tag: "[PaddedIndex]", label: "Padded index (001, 002...)" },
   { tag: "[Ext]", label: "File extension" }
 ]
+
+/** Image Splitter: keep original filename tag plus split-aware presets */
+export const SPLITTER_EXPORT_RENAME_PRESETS: Array<{ label: string; pattern: string }> = [
+  { label: "Default", pattern: "split-[OriginalName]-[Index]" },
+  { label: "Padded", pattern: "split-[OriginalName]-[PaddedIndex]" },
+  { label: "Sized", pattern: "split-[OriginalName]-[Width]x[Height]" },
+  { label: "Stamped", pattern: "[Date]-[Time]-split-[OriginalName]-[Index]" }
+]
+
+export const SPLITTER_EXPORT_RENAME_TAGS: Array<{ tag: string; label: string }> = [
+  { tag: "[OriginalName]", label: "Original filename" },
+  { tag: "[Width]", label: "Exported image width (px)" },
+  { tag: "[Height]", label: "Exported image height (px)" },
+  { tag: "[Date]", label: "Current date (YYYYMMDD)" },
+  { tag: "[Time]", label: "Current time (HHMMSS)" },
+  { tag: "[Index]", label: "Split index (1, 2, 3...)" },
+  { tag: "[PaddedIndex]", label: "Padded split index (001, 002...)" },
+  { tag: "[Ext]", label: "File extension" }
+]
