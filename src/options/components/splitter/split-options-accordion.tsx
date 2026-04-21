@@ -32,6 +32,7 @@ const ADVANCED_METHOD_OPTIONS = [
   { value: "percent_pattern", label: "Percent Pattern" },
   { value: "custom_list", label: "Custom List" },
   { value: "social_carousel", label: "Social Carousel Slicer" },
+  { value: "gutter_margin_grid", label: "Gutter & Margin Grid" },
   { value: "color_match", label: "Color Match" }
 ]
 
@@ -56,6 +57,11 @@ const SAFE_ZONE_SELECTION_OPTIONS = [
   { value: "lowest_variance", label: "Lowest variance line" }
 ]
 
+const GRID_REMAINDER_OPTIONS = [
+  { value: "trim", label: "Trim remainder" },
+  { value: "distribute", label: "Distribute remainder" }
+]
+
 export function SplitOptionsAccordion({
   settings,
   isOpen,
@@ -68,6 +74,8 @@ export function SplitOptionsAccordion({
     settings.mode === "advanced" && settings.advancedMethod === "color_match"
   const isSocialCarousel =
     settings.mode === "advanced" && settings.advancedMethod === "social_carousel"
+  const isGutterMarginGrid =
+    settings.mode === "advanced" && settings.advancedMethod === "gutter_margin_grid"
   const isColorMatchGridFallback = isColorMatch && settings.direction === "grid"
 
   const showXAxisFields = settings.direction === "vertical" || usesGrid
@@ -95,7 +103,7 @@ export function SplitOptionsAccordion({
           />
         </div>
 
-        {!isSocialCarousel ? (
+        {!isSocialCarousel && !isGutterMarginGrid ? (
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-2">
               <LabelText className="text-xs">Direction</LabelText>
@@ -217,8 +225,8 @@ export function SplitOptionsAccordion({
               options={ADVANCED_METHOD_OPTIONS}
               onChange={(value) =>
                 onChange({
-                  advancedMethod:
-                    value as SplitterSplitSettings["advancedMethod"]
+                  advancedMethod: value as SplitterSplitSettings["advancedMethod"],
+                  ...(value === "gutter_margin_grid" ? { direction: "grid" } : {})
                 })
               }
             />
@@ -348,6 +356,61 @@ export function SplitOptionsAccordion({
                     outputMode="hex"
                   />
                 ) : null}
+              </div>
+            ) : null}
+
+            {isGutterMarginGrid ? (
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <NumberInput
+                    label="Columns"
+                    value={settings.gridColumns}
+                    min={1}
+                    max={256}
+                    onChangeValue={(value) => onChange({ gridColumns: value })}
+                  />
+                  <NumberInput
+                    label="Rows"
+                    value={settings.gridRows}
+                    min={1}
+                    max={256}
+                    onChangeValue={(value) => onChange({ gridRows: value })}
+                  />
+                  <NumberInput
+                    label="Margin X (px)"
+                    value={settings.gridMarginX}
+                    min={0}
+                    max={100000}
+                    onChangeValue={(value) => onChange({ gridMarginX: value })}
+                  />
+                  <NumberInput
+                    label="Margin Y (px)"
+                    value={settings.gridMarginY}
+                    min={0}
+                    max={100000}
+                    onChangeValue={(value) => onChange({ gridMarginY: value })}
+                  />
+                  <NumberInput
+                    label="Gutter X (px)"
+                    value={settings.gridGutterX}
+                    min={0}
+                    max={100000}
+                    onChangeValue={(value) => onChange({ gridGutterX: value })}
+                  />
+                  <NumberInput
+                    label="Gutter Y (px)"
+                    value={settings.gridGutterY}
+                    min={0}
+                    max={100000}
+                    onChangeValue={(value) => onChange({ gridGutterY: value })}
+                  />
+                </div>
+                <SelectInput
+                  label="Remainder Handling"
+                  value={settings.gridRemainderMode}
+                  options={GRID_REMAINDER_OPTIONS}
+                  onChange={(value) => onChange({ gridRemainderMode: value as SplitterSplitSettings["gridRemainderMode"] })}
+                />
               </div>
             ) : null}
           </>

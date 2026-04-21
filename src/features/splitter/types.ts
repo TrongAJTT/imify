@@ -9,6 +9,7 @@ export type SplitterAdvancedMethod =
   | "color_match"
   | "custom_list"
   | "social_carousel"
+  | "gutter_margin_grid"
 export type SplitterGuideUnit = "pixel" | "percent"
 export type SplitterGuideEdge = "left" | "right" | "top" | "bottom"
 export type SplitterSocialTargetRatio = "1:1" | "4:5" | "3:4" | "2:3" | "5:4" | "16:9" | "9:16"
@@ -71,6 +72,13 @@ export interface SplitterSplitSettings {
   socialTargetRatio: SplitterSocialTargetRatio
   socialOverflowMode: SplitterSocialOverflowMode
   socialPadColor: string
+  gridColumns: number
+  gridRows: number
+  gridMarginX: number
+  gridMarginY: number
+  gridGutterX: number
+  gridGutterY: number
+  gridRemainderMode: "trim" | "distribute"
 }
 
 export type SplitterExportFormat =
@@ -164,7 +172,14 @@ export const DEFAULT_SPLITTER_SPLIT_SETTINGS: SplitterSplitSettings = {
   customGuides: [createDefaultSplitterCustomGuide()],
   socialTargetRatio: "4:5",
   socialOverflowMode: "crop",
-  socialPadColor: "#ffffff"
+  socialPadColor: "#ffffff",
+  gridColumns: 3,
+  gridRows: 3,
+  gridMarginX: 0,
+  gridMarginY: 0,
+  gridGutterX: 0,
+  gridGutterY: 0,
+  gridRemainderMode: "trim"
 }
 
 export const DEFAULT_SPLITTER_EXPORT_SETTINGS: SplitterExportSettings = {

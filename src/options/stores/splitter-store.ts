@@ -149,7 +149,14 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
     socialPadColor:
       typeof settings.socialPadColor === "string" && settings.socialPadColor.trim()
         ? settings.socialPadColor.trim()
-        : "#ffffff"
+        : "#ffffff",
+    gridColumns: clampInt(settings.gridColumns, 1, 256, 3),
+    gridRows: clampInt(settings.gridRows, 1, 256, 3),
+    gridMarginX: clampInt(settings.gridMarginX, 0, 100000, 0),
+    gridMarginY: clampInt(settings.gridMarginY, 0, 100000, 0),
+    gridGutterX: clampInt(settings.gridGutterX, 0, 100000, 0),
+    gridGutterY: clampInt(settings.gridGutterY, 0, 100000, 0),
+    gridRemainderMode: settings.gridRemainderMode === "distribute" ? "distribute" : "trim"
   }
 }
 

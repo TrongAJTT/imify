@@ -465,6 +465,120 @@ function buildCustomListCuts(total: number, axis: "x" | "y", settings: SplitterS
   return normalizeCuts(cuts, total)
 }
 
+function buildGutterMarginGridPlan(args: {
+  width: number
+  height: number
+  settings: SplitterSplitSettings
+}): { xCuts: number[]; yCuts: number[]; rects: SplitterSplitRect[]; warnings: string[] } {
+  const { width, height, settings } = args
+  const warnings: string[] = []
+  const columns = clampInt(settings.gridColumns, 1, 256)
+  const rows = clampInt(settings.gridRows, 1, 256)
+  const marginX = clampInt(settings.gridMarginX, 0, Math.max(0, width - 1))
+  const marginY = clampInt(settings.gridMarginY, 0, Math.max(0, height - 1))
+  const gutterX = clampInt(settings.gridGutterX, 0, Math.max(0, width - 1))
+  const gutterY = clampInt(settings.gridGutterY, 0, Math.max(0, height - 1))
+  const availableWidth = width - marginX * 2 - gutterX * (columns - 1)
+  const availableHeight = height - marginY * 2 - gutterY * (rows - 1)
+
+  if (availableWidth <= 0 || availableHeight <= 0) {
+    warnings.push("Margin/Gutter values are too large for current image size.")
+    return {
+      xCuts: [0, width],
+      yCuts: [0, height],
+      rects: [{ index: 0, x: 0, y: 0, width, height }],
+      warnings
+    }
+  }
+
+  const buildSizes = (total: number, count: number, mode: "trim" | "distribute"): number[] => {
+    const base = Math.floor(total / count)
+    const remainder = total - base * count
+    if (base <= 0) {
+      return []
+    }
+    if (mode === "trim") {
+      return new Array(count).fill(base)
+    }
+    return new Array(count).fill(base).map((value, index) => (index < remainder ? value + 1 : value))
+  }
+
+  const widths = buildSizes(availableWidth, columns, settings.gridRemainderMode)
+  const heights = buildSizes(availableHeight, rows, settings.gridRemainderMode)
+  if (widths.length === 0 || heights.length === 0) {
+    warnings.push("Grid cell size became too small. Reduce columns/rows or gutters.")
+    return {
+      xCuts: [0, width],
+      yCuts: [0, height],
+      rects: [{ index: 0, x: 0, y: 0, width, height }],
+      warnings
+    }
+  }
+
+  const xIntervals: Array<{ start: number; end: number }> = []
+  let xCursor = marginX
+  for (const cellWidth of widths) {
+    xIntervals.push({ start: xCursor, end: xCursor + cellWidth })
+    xCursor += cellWidth + gutterX
+  }
+  const yIntervals: Array<{ start: number; end: number }> = []
+  let yCursor = marginY
+  for (const cellHeight of heights) {
+    yIntervals.push({ start: yCursor, end: yCursor + cellHeight })
+    yCursor += cellHeight + gutterY
+  }
+
+  const orderedX = orderIntervals(
+    xIntervals,
+    settings.horizontalOrder === "left_to_right" ? "forward" : "reverse"
+  )
+  const orderedY = orderIntervals(
+    yIntervals,
+    settings.verticalOrder === "top_to_bottom" ? "forward" : "reverse"
+  )
+
+  const rects: SplitterSplitRect[] = []
+  let nextIndex = 0
+  if (settings.gridTraversal === "column_first") {
+    orderedX.forEach((xSegment) => {
+      orderedY.forEach((ySegment) => {
+        rects.push({
+          index: nextIndex,
+          x: xSegment.start,
+          y: ySegment.start,
+          width: xSegment.end - xSegment.start,
+          height: ySegment.end - ySegment.start
+        })
+        nextIndex += 1
+      })
+    })
+  } else {
+    orderedY.forEach((ySegment) => {
+      orderedX.forEach((xSegment) => {
+        rects.push({
+          index: nextIndex,
+          x: xSegment.start,
+          y: ySegment.start,
+          width: xSegment.end - xSegment.start,
+          height: ySegment.end - ySegment.start
+        })
+        nextIndex += 1
+      })
+    })
+  }
+
+  const xCuts = normalizeCuts(
+    [0, width, ...xIntervals.flatMap((segment) => [segment.start, segment.end])],
+    width
+  )
+  const yCuts = normalizeCuts(
+    [0, height, ...yIntervals.flatMap((segment) => [segment.start, segment.end])],
+    height
+  )
+
+  return { xCuts, yCuts, rects, warnings }
+}
+
 function buildAxisCuts(
   settings: SplitterSplitSettings,
   axis: "x" | "y",
@@ -648,6 +762,19 @@ export function buildSplitterSplitPlan(args: {
     effectiveDirection = socialResult.direction
     xCuts = socialResult.xCuts
     yCuts = socialResult.yCuts
+  } else if (settings.mode === "advanced" && settings.advancedMethod === "gutter_margin_grid") {
+    effectiveDirection = "grid"
+    const gutterPlan = buildGutterMarginGridPlan({ width, height, settings })
+    xCuts = gutterPlan.xCuts
+    yCuts = gutterPlan.yCuts
+    warnings.push(...gutterPlan.warnings)
+    const rects = gutterPlan.rects
+    return {
+      xCuts,
+      yCuts,
+      rects,
+      warnings
+    }
   } else if (effectiveDirection === "vertical") {
     if (settings.mode === "advanced" && settings.advancedMethod === "color_match" && !imageData) {
       warnings.push("Color Match requires image data. Preview was simplified.")
