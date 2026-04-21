@@ -22,6 +22,7 @@ import type {
 } from "@/features/splicing/types"
 
 type AnyContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+type CornerRadii = { tl: number; tr: number; br: number; bl: number }
 
 interface ParsedLinearGradientBackground {
   angleDeg: number
@@ -124,6 +125,65 @@ function drawRoundedRect(
   ctx.closePath()
 }
 
+function drawRoundedRectWithCorners(
+  ctx: AnyContext,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  radii: CornerRadii
+): void {
+  const maxRadius = Math.max(0, Math.min(w / 2, h / 2))
+  const tl = Math.max(0, Math.min(radii.tl, maxRadius))
+  const tr = Math.max(0, Math.min(radii.tr, maxRadius))
+  const br = Math.max(0, Math.min(radii.br, maxRadius))
+  const bl = Math.max(0, Math.min(radii.bl, maxRadius))
+
+  ctx.beginPath()
+  ctx.moveTo(x + tl, y)
+  ctx.lineTo(x + w - tr, y)
+  if (tr > 0) ctx.arcTo(x + w, y, x + w, y + tr, tr)
+  else ctx.lineTo(x + w, y)
+  ctx.lineTo(x + w, y + h - br)
+  if (br > 0) ctx.arcTo(x + w, y + h, x + w - br, y + h, br)
+  else ctx.lineTo(x + w, y + h)
+  ctx.lineTo(x + bl, y + h)
+  if (bl > 0) ctx.arcTo(x, y + h, x, y + h - bl, bl)
+  else ctx.lineTo(x, y + h)
+  ctx.lineTo(x, y + tl)
+  if (tl > 0) ctx.arcTo(x, y, x + tl, y, tl)
+  else ctx.lineTo(x, y)
+  ctx.closePath()
+}
+
+function resolveSegmentCornerRadii(baseRadius: number, sourceCropUv?: { x: number; y: number; width: number; height: number }): CornerRadii {
+  if (!sourceCropUv) {
+    return { tl: baseRadius, tr: baseRadius, br: baseRadius, bl: baseRadius }
+  }
+
+  const eps = 1e-6
+  const touchesLeft = sourceCropUv.x <= eps
+  const touchesRight = sourceCropUv.x + sourceCropUv.width >= 1 - eps
+  const touchesTop = sourceCropUv.y <= eps
+  const touchesBottom = sourceCropUv.y + sourceCropUv.height >= 1 - eps
+
+  return {
+    tl: touchesLeft && touchesTop ? baseRadius : 0,
+    tr: touchesRight && touchesTop ? baseRadius : 0,
+    br: touchesRight && touchesBottom ? baseRadius : 0,
+    bl: touchesLeft && touchesBottom ? baseRadius : 0
+  }
+}
+
+function insetCornerRadii(radii: CornerRadii, inset: number): CornerRadii {
+  return {
+    tl: Math.max(0, radii.tl - inset),
+    tr: Math.max(0, radii.tr - inset),
+    br: Math.max(0, radii.br - inset),
+    bl: Math.max(0, radii.bl - inset)
+  }
+}
+
 export function drawSplicingCanvas(
   ctx: AnyContext,
   sources: CanvasImageSource[],
@@ -147,6 +207,11 @@ export function drawSplicingCanvas(
   fillCanvasBackground(ctx, cw, ch, canvasStyle.backgroundColor)
   ctx.restore()
 
+  // Clip all placements to canvas rounded bounds (not only background).
+  ctx.save()
+  drawRoundedRect(ctx, 0, 0, cw, ch, canvasStyle.borderRadius * scale)
+  ctx.clip()
+
   for (const group of layout.groups) {
     for (const placement of group.placements) {
       const source = sources[placement.imageIndex]
@@ -164,13 +229,14 @@ export function drawSplicingCanvas(
 
       const outerR = imageStyle.borderRadius * scale
       const bw = imageStyle.borderWidth * scale
-      const innerR = Math.max(0, outerR - bw)
-      const contentR = Math.max(0, innerR - imageStyle.padding * scale)
+      const outerRadii = resolveSegmentCornerRadii(outerR, placement.sourceCropUv)
+      const contentInset = bw + imageStyle.padding * scale
+      const contentRadii = insetCornerRadii(outerRadii, contentInset)
 
       // Padding / border background
       if (imageStyle.padding > 0 || imageStyle.borderWidth > 0) {
         ctx.save()
-        drawRoundedRect(ctx, ox, oy, ow, oh, outerR)
+        drawRoundedRectWithCorners(ctx, ox, oy, ow, oh, outerRadii)
         ctx.fillStyle = imageStyle.paddingColor
         ctx.fill()
         ctx.restore()
@@ -178,9 +244,20 @@ export function drawSplicingCanvas(
 
       // Image content with clip
       ctx.save()
-      drawRoundedRect(ctx, cx, cy, ccw, cch, contentR)
+      drawRoundedRectWithCorners(ctx, cx, cy, ccw, cch, contentRadii)
       ctx.clip()
-      ctx.drawImage(source, cx, cy, ccw, cch)
+      if (placement.sourceCropUv && ccw > 0 && cch > 0) {
+        const sourceSize = source as { width?: number; height?: number }
+        const sourceW = sourceSize.width ?? ccw
+        const sourceH = sourceSize.height ?? cch
+        const sx = placement.sourceCropUv.x * sourceW
+        const sy = placement.sourceCropUv.y * sourceH
+        const sw = placement.sourceCropUv.width * sourceW
+        const sh = placement.sourceCropUv.height * sourceH
+        ctx.drawImage(source, sx, sy, sw, sh, cx, cy, ccw, cch)
+      } else {
+        ctx.drawImage(source, cx, cy, ccw, cch)
+      }
       ctx.restore()
 
       // Border stroke
@@ -189,13 +266,13 @@ export function drawSplicingCanvas(
         ctx.lineWidth = bw
         ctx.strokeStyle = imageStyle.borderColor
         const half = bw / 2
-        drawRoundedRect(
+        drawRoundedRectWithCorners(
           ctx,
           ox + half,
           oy + half,
           ow - bw,
           oh - bw,
-          Math.max(0, outerR - half)
+          insetCornerRadii(outerRadii, half)
         )
         ctx.stroke()
         ctx.restore()
@@ -223,6 +300,7 @@ export function drawSplicingCanvas(
       }
     }
   }
+  ctx.restore()
 
   // Canvas border
   if (canvasStyle.borderWidth > 0) {

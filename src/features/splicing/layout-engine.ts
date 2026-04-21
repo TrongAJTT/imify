@@ -193,11 +193,17 @@ interface RawGroup {
   items: ProcessedImageWithIndex[]
 }
 
+interface FlowSegmentEntry extends ProcessedImageWithIndex {
+  sliceMainStart: number
+  sliceMainSize: number
+}
+
 function buildFlowGroups(
   processed: ProcessedImageWithIndex[],
   lineDir: SplicingDirection,
   maxSize: number,
-  spacing: number
+  spacing: number,
+  splitOverflow: boolean
 ): RawGroup[] {
   const groups: RawGroup[] = []
   let current: ProcessedImageWithIndex[] = []
@@ -208,15 +214,71 @@ function buildFlowGroups(
     const img = entry.item
     const imgMain = getMainDim({ width: img.outerWidth, height: img.outerHeight }, lineDir)
 
-    if (current.length > 0 && currentSize + spacing + imgMain > maxSize) {
-      groups.push({ items: [...current] })
-      current = [entry]
-      currentSize = imgMain
+    const lineLimit = Math.max(1, maxSize)
+    const wouldOverflowCurrentLine =
+      current.length > 0 && currentSize + spacing + imgMain > lineLimit
+
+    if (!splitOverflow) {
+      if (current.length > 0 && currentSize + spacing + imgMain > maxSize) {
+        groups.push({ items: [...current] })
+        current = [entry]
+        currentSize = imgMain
+        continue
+      }
+
+      current.push(entry)
+      currentSize += (current.length > 1 ? spacing : 0) + imgMain
       continue
     }
 
-    current.push(entry)
-    currentSize += (current.length > 1 ? spacing : 0) + imgMain
+    // If splitting is enabled and this image still fits in current line, keep the old behavior.
+    if (!wouldOverflowCurrentLine && imgMain <= lineLimit) {
+      current.push(entry)
+      currentSize += (current.length > 1 ? spacing : 0) + imgMain
+      continue
+    }
+
+    // If current line is empty and image fully fits, place it directly (avoids unnecessary slicing).
+    if (current.length === 0 && imgMain <= lineLimit) {
+      current.push(entry)
+      currentSize += imgMain
+      continue
+    }
+
+    let remaining = imgMain
+    let offset = 0
+
+    while (remaining > 0) {
+      const available =
+        current.length === 0 ? lineLimit : Math.max(0, lineLimit - (currentSize + spacing))
+
+      if (available <= 0) {
+        if (current.length > 0) {
+          groups.push({ items: [...current] })
+        }
+        current = []
+        currentSize = 0
+        continue
+      }
+
+      const sliceMainSize = Math.min(remaining, available)
+      const segment: FlowSegmentEntry = {
+        ...entry,
+        sliceMainStart: offset,
+        sliceMainSize
+      }
+      current.push(segment)
+      currentSize += (current.length > 1 ? spacing : 0) + sliceMainSize
+
+      remaining -= sliceMainSize
+      offset += sliceMainSize
+
+      if (remaining > 0) {
+        groups.push({ items: [...current] })
+        current = []
+        currentSize = 0
+      }
+    }
   }
 
   if (current.length > 0) {
@@ -224,6 +286,83 @@ function buildFlowGroups(
   }
 
   return groups
+}
+
+function resolvePlacementRects(
+  img: ProcessedImage,
+  lineDir: SplicingDirection,
+  x: number,
+  y: number,
+  bp: number,
+  sliceMainStart: number | null,
+  sliceMainSize: number | null
+): Pick<LayoutPlacement, "outerRect" | "contentRect" | "sourceCropUv"> {
+  if (sliceMainStart === null || sliceMainSize === null) {
+    return {
+      outerRect: { x, y, width: img.outerWidth, height: img.outerHeight },
+      contentRect: {
+        x: x + bp,
+        y: y + bp,
+        width: img.contentWidth,
+        height: img.contentHeight
+      },
+      sourceCropUv: undefined
+    }
+  }
+
+  const outerMainSize = lineDir === "vertical" ? img.outerHeight : img.outerWidth
+  const start = Math.max(0, Math.min(sliceMainStart, outerMainSize))
+  const size = Math.max(1, Math.min(sliceMainSize, outerMainSize - start))
+
+  if (lineDir === "vertical") {
+    const contentStart = Math.max(0, Math.min(img.contentHeight, start - bp))
+    const contentEnd = Math.max(0, Math.min(img.contentHeight, start + size - bp))
+    const contentHeight = Math.max(0, contentEnd - contentStart)
+    const contentTopInset = Math.max(0, bp - start)
+
+    return {
+      outerRect: { x, y, width: img.outerWidth, height: size },
+      contentRect: {
+        x: x + bp,
+        y: y + contentTopInset,
+        width: img.contentWidth,
+        height: contentHeight
+      },
+      sourceCropUv:
+        contentHeight > 0
+          ? {
+              x: 0,
+              y: contentStart / Math.max(1, img.contentHeight),
+              width: 1,
+              height: contentHeight / Math.max(1, img.contentHeight)
+            }
+          : undefined
+    }
+  }
+
+  const contentStart = Math.max(0, Math.min(img.contentWidth, start - bp))
+  const contentEnd = Math.max(0, Math.min(img.contentWidth, start + size - bp))
+  const contentWidth = Math.max(0, contentEnd - contentStart)
+  const contentLeftInset = Math.max(0, bp - start)
+
+  return {
+    outerRect: { x, y, width: size, height: img.outerHeight },
+    contentRect: {
+      x: x + contentLeftInset,
+      y: y + bp,
+      width: contentWidth,
+      height: img.contentHeight
+    },
+    sourceCropUv:
+      contentWidth > 0
+        ? {
+            x: contentStart / Math.max(1, img.contentWidth),
+            y: 0,
+            width: contentWidth / Math.max(1, img.contentWidth),
+            height: 1
+          }
+        : undefined
+  }
 }
 
 function applyAlignment(
@@ -299,8 +438,13 @@ function computeLayout(
     if (group.items.length === 0) return 0
     let total = 0
     for (let i = 0; i < group.items.length; i++) {
-      const img = group.items[i].item
-      const mainDim = getMainDim({ width: img.outerWidth, height: img.outerHeight }, lineDir)
+      const item = group.items[i]
+      const img = item.item
+      const segment = item as FlowSegmentEntry
+      const mainDim =
+        typeof segment.sliceMainSize === "number"
+          ? segment.sliceMainSize
+          : getMainDim({ width: img.outerWidth, height: img.outerHeight }, lineDir)
       total += mainDim
       if (i > 0) total += lineSpacing
     }
@@ -319,23 +463,32 @@ function computeLayout(
     const placements: LayoutPlacement[] = []
 
     for (let ii = 0; ii < items.length; ii++) {
-      const { item: img, originalIndex } = items[ii]
+      const entry = items[ii]
+      const { item: img, originalIndex } = entry
+      const segment = entry as FlowSegmentEntry
+      const hasSlice =
+        typeof segment.sliceMainStart === "number" && typeof segment.sliceMainSize === "number"
       const outerSize = { width: img.outerWidth, height: img.outerHeight }
-      const mainDim = getMainDim(outerSize, lineDir)
+      const mainDim = hasSlice ? segment.sliceMainSize : getMainDim(outerSize, lineDir)
       const crossDim = getCrossDim(outerSize, lineDir)
 
       const x = lineDir === "horizontal" ? lineCursor : stackCursor
       const y = lineDir === "horizontal" ? stackCursor : lineCursor
+      const rects = resolvePlacementRects(
+        img,
+        lineDir,
+        x,
+        y,
+        bp,
+        hasSlice ? segment.sliceMainStart : null,
+        hasSlice ? segment.sliceMainSize : null
+      )
 
       placements.push({
         imageIndex: originalIndex,
-        outerRect: { x, y, width: img.outerWidth, height: img.outerHeight },
-        contentRect: {
-          x: x + bp,
-          y: y + bp,
-          width: img.contentWidth,
-          height: img.contentHeight
-        }
+        outerRect: rects.outerRect,
+        contentRect: rects.contentRect,
+        sourceCropUv: rects.sourceCropUv
       })
 
       lineCursor += mainDim + lineSpacing
@@ -443,7 +596,8 @@ export function calculateLayout(
     orderedProcessed,
     lineDir,
     layout.flowMaxSize,
-    canvasStyle.mainSpacing
+    canvasStyle.mainSpacing,
+    Boolean(layout.flowSplitOverflow)
   )
 
   return computeLayout(

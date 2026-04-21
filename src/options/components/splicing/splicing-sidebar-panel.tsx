@@ -53,6 +53,7 @@ export function SplicingSidebarPanel({
   const secondaryDirection = useSplicingStore((s) => s.secondaryDirection)
   const gridCount = useSplicingStore((s) => s.gridCount)
   const flowMaxSize = useSplicingStore((s) => s.flowMaxSize)
+  const flowSplitOverflow = useSplicingStore((s) => s.flowSplitOverflow)
   const alignment = useSplicingStore((s) => s.alignment)
   const imageAppearanceDirection = useSplicingStore((s) => s.imageAppearanceDirection)
   const previewBentoFlowGroupCount = useSplicingStore((s) => s.previewBentoFlowGroupCount)
@@ -120,6 +121,7 @@ export function SplicingSidebarPanel({
   const setSecondaryDirection = useSplicingStore((s) => s.setSecondaryDirection)
   const setGridCount = useSplicingStore((s) => s.setGridCount)
   const setFlowMaxSize = useSplicingStore((s) => s.setFlowMaxSize)
+  const setFlowSplitOverflow = useSplicingStore((s) => s.setFlowSplitOverflow)
   const setAlignment = useSplicingStore((s) => s.setAlignment)
   const setImageAppearanceDirection = useSplicingStore((s) => s.setImageAppearanceDirection)
   const setCanvasPadding = useSplicingStore((s) => s.setCanvasPadding)
@@ -261,6 +263,7 @@ export function SplicingSidebarPanel({
           secondaryDirection={secondaryDirection}
           gridCount={gridCount}
           flowMaxSize={flowMaxSize}
+          flowSplitOverflow={flowSplitOverflow}
           alignment={alignment}
           imageAppearanceDirection={imageAppearanceDirection}
           previewBentoFlowGroupCount={previewBentoFlowGroupCount}
@@ -271,6 +274,7 @@ export function SplicingSidebarPanel({
           onSecondaryDirectionChange={setSecondaryDirection}
           onGridCountChange={setGridCount}
           onFlowMaxSizeChange={setFlowMaxSize}
+          onFlowSplitOverflowChange={setFlowSplitOverflow}
           onAlignmentChange={setAlignment}
           onImageAppearanceDirectionChange={setImageAppearanceDirection}
           onImageAppearanceDirectionChangeFromPreset={setImageAppearanceDirection}

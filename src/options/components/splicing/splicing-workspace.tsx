@@ -114,6 +114,7 @@ export function SplicingWorkspace({
             onRemove={onRemoveImage}
             onReorder={onReorderImage}
             onAddMore={onAddMore}
+            pinAddButtonRight
           />
         </div>
       )}

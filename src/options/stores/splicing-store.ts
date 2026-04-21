@@ -60,6 +60,7 @@ export interface SplicingStoreState {
   secondaryDirection: SplicingDirection
   gridCount: number
   flowMaxSize: number
+  flowSplitOverflow: boolean
   alignment: SplicingAlignment
   imageAppearanceDirection: SplicingImageAppearanceDirection
 
@@ -135,6 +136,7 @@ export interface SplicingStoreState {
   setSecondaryDirection: (v: SplicingDirection) => void
   setGridCount: (v: number) => void
   setFlowMaxSize: (v: number) => void
+  setFlowSplitOverflow: (v: boolean) => void
   setAlignment: (v: SplicingAlignment) => void
   setImageAppearanceDirection: (v: SplicingImageAppearanceDirection) => void
   setCanvasPadding: (v: number) => void
@@ -267,6 +269,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       secondaryDirection: "vertical",
       gridCount: 2,
       flowMaxSize: 2000,
+      flowSplitOverflow: false,
       alignment: "start",
       imageAppearanceDirection: "top_to_bottom",
 
@@ -334,6 +337,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setSecondaryDirection: (v) => set({ secondaryDirection: v }),
       setGridCount: (v) => set({ gridCount: v }),
       setFlowMaxSize: (v) => set({ flowMaxSize: v }),
+      setFlowSplitOverflow: (v) => set({ flowSplitOverflow: v }),
       setAlignment: (v) => set({ alignment: v }),
       setImageAppearanceDirection: (v) => set({ imageAppearanceDirection: v }),
       setCanvasPadding: (v) => set({ canvasPadding: v }),
@@ -493,6 +497,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       partialize: (state) => {
         const { setPreset, setPrimaryDirection, setSecondaryDirection, setGridCount,
           setFlowMaxSize, setAlignment, setImageAppearanceDirection, setCanvasPadding, setMainSpacing, setCrossSpacing,
+          setFlowSplitOverflow,
           setCanvasBorderRadius, setCanvasBorderWidth, setCanvasBorderColor, setBackgroundColor,
           setImageResize, setImageFitValue, setImagePadding, setImagePaddingColor,
           setImageBorderRadius, setImageBorderWidth, setImageBorderColor,
@@ -527,6 +532,7 @@ export function resolveLayoutConfig(state: SplicingStoreState): SplicingLayoutCo
         secondaryDirection: "vertical",
         gridCount: 1,
         flowMaxSize: 999999,
+        flowSplitOverflow: false,
         alignment: "start",
         imageAppearanceDirection: state.imageAppearanceDirection as any
       }
@@ -536,6 +542,7 @@ export function resolveLayoutConfig(state: SplicingStoreState): SplicingLayoutCo
         secondaryDirection: "horizontal",
         gridCount: 1,
         flowMaxSize: 999999,
+        flowSplitOverflow: false,
         alignment: "start",
         imageAppearanceDirection: state.imageAppearanceDirection as any
       }
@@ -545,6 +552,7 @@ export function resolveLayoutConfig(state: SplicingStoreState): SplicingLayoutCo
         secondaryDirection: "horizontal",
         gridCount: state.gridCount,
         flowMaxSize: state.flowMaxSize,
+        flowSplitOverflow: false,
         alignment: "start",
         imageAppearanceDirection: state.imageAppearanceDirection as any
       }
@@ -554,6 +562,7 @@ export function resolveLayoutConfig(state: SplicingStoreState): SplicingLayoutCo
         secondaryDirection: state.secondaryDirection,
         gridCount: state.gridCount,
         flowMaxSize: state.flowMaxSize,
+        flowSplitOverflow: state.flowSplitOverflow,
         alignment: state.alignment,
         imageAppearanceDirection: state.imageAppearanceDirection as any
       }

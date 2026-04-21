@@ -1,8 +1,11 @@
+import { Scissors } from "lucide-react"
 import type {
   SplicingAlignment,
   SplicingImageAppearanceDirection
 } from "@/features/splicing/types"
+import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { NumberInput } from "@/options/components/ui/number-input"
+import { SPLICING_TOOLTIPS } from "@/options/components/splicing/splicing-tooltips"
 import {
   BENTO_LAYOUT_OPTIONS,
   getBentoDirectionOptions,
@@ -15,12 +18,14 @@ import {
 interface BentoLayoutControlsProps {
   mode: BentoLayoutMode
   flowMaxSize: number
+  flowSplitOverflow: boolean
   count: number
   alignment: SplicingAlignment
   alignmentOptions: Array<{ value: SplicingAlignment; label: string }>
   imageAppearanceDirection: SplicingImageAppearanceDirection
   onLayoutModeChange: (mode: BentoLayoutMode) => void
   onFlowMaxSizeChange: (value: number) => void
+  onFlowSplitOverflowChange: (value: boolean) => void
   onCountChange: (value: number) => void
   onAlignmentChange: (value: SplicingAlignment) => void
   onImageAppearanceDirectionChange: (value: SplicingImageAppearanceDirection) => void
@@ -29,18 +34,20 @@ interface BentoLayoutControlsProps {
 export function BentoLayoutControls({
   mode,
   flowMaxSize,
+  flowSplitOverflow,
   count,
   alignment,
   alignmentOptions,
   imageAppearanceDirection,
   onLayoutModeChange,
   onFlowMaxSizeChange,
+  onFlowSplitOverflowChange,
   onCountChange,
   onAlignmentChange,
   onImageAppearanceDirectionChange
 }: BentoLayoutControlsProps) {
   const isFlow = isBentoFlowLayoutMode(mode)
-  const countLabel = mode === "fixed_horizontal" ? "Count (max/row)" : "Count (max/column)"
+  const countLabel = mode === "fixed_horizontal" ? "Max/row" : "Max/column"
 
   return (
     <>
@@ -85,6 +92,19 @@ export function BentoLayoutControls({
           onChange={(value) => onImageAppearanceDirectionChange(value as SplicingImageAppearanceDirection)}
         />
       </div>
+
+      {isFlow && (
+        <CheckboxCard
+          icon={<Scissors size={14} />}
+          title="Split Overflow Across Columns"
+          subtitle="Split overflow and continue in the next column/row."
+          checked={flowSplitOverflow}
+          onChange={onFlowSplitOverflowChange}
+          tooltipLabel={SPLICING_TOOLTIPS.layout.splitOverflow.label}
+          tooltipContent={SPLICING_TOOLTIPS.layout.splitOverflow.content}
+          variant="sky"
+        />
+      )}
     </>
   )
 }

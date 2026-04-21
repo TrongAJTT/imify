@@ -2,6 +2,7 @@ import { RotateCcw } from "lucide-react"
 import type { RefObject } from "react"
 import type { ValueScrubHandlers } from "@/options/hooks/use-value-scrubbing"
 import { Tooltip } from "@/options/components/tooltip"
+import { SPLICING_TOOLTIPS } from "@/options/components/splicing/splicing-tooltips"
 
 interface PreviewZoomControlProps {
   editingZoom: boolean
@@ -55,8 +56,8 @@ export function PreviewZoomControl({
       ) : (
         <Tooltip
           variant="wide1"
-          label="Zoom"
-          content={"Hold and drag left/right to scrub zoom.\nClick to type exact value (min 50%)."}
+          label={SPLICING_TOOLTIPS.previewZoom.label}
+          content={SPLICING_TOOLTIPS.previewZoom.controlsHelp}
         >
           <button
             type="button"

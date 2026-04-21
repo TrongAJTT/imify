@@ -212,6 +212,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   const secondaryDirection = useSplicingStore((s) => s.secondaryDirection)
   const gridCount = useSplicingStore((s) => s.gridCount)
   const flowMaxSize = useSplicingStore((s) => s.flowMaxSize)
+  const flowSplitOverflow = useSplicingStore((s) => s.flowSplitOverflow)
   const alignment = useSplicingStore((s) => s.alignment)
   const imageAppearanceDirection = useSplicingStore((s) => s.imageAppearanceDirection)
 
@@ -251,7 +252,16 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   const storeState = useSplicingStore.getState()
   const layoutConfig = useMemo(
     () => resolveLayoutConfig(storeState),
-    [preset, primaryDirection, secondaryDirection, gridCount, flowMaxSize, alignment, imageAppearanceDirection]
+    [
+      preset,
+      primaryDirection,
+      secondaryDirection,
+      gridCount,
+      flowMaxSize,
+      flowSplitOverflow,
+      alignment,
+      imageAppearanceDirection
+    ]
   )
   const canvasStyle = useMemo(
     () => resolveCanvasStyle(storeState),
