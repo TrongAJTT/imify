@@ -98,6 +98,15 @@ function clampFloat(value: number, min: number, max: number, fallback: number): 
   return Math.max(min, Math.min(max, value))
 }
 
+function getTrimmedString(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
 function normalizeColorRules(rules: SplitterColorRule[]): SplitterColorRule[] {
   const normalized = rules
     .filter((rule) => Boolean(rule?.id))
@@ -116,10 +125,7 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
   const validSocialRatios = new Set(["1:1", "4:5", "3:4", "2:3", "5:4", "16:9", "9:16"])
   return {
     ...settings,
-    guideColor:
-      typeof settings.guideColor === "string" && settings.guideColor.trim()
-        ? settings.guideColor.trim()
-        : "#06b6d4",
+    guideColor: getTrimmedString(settings.guideColor) ?? "#06b6d4",
     countX: clampInt(settings.countX, 1, 4096, 2),
     countY: clampInt(settings.countY, 1, 4096, 2),
     percentX: clampFloat(settings.percentX, 1, 100, 50),
@@ -136,10 +142,10 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
     colorMatchSafeSearchStep: clampInt(settings.colorMatchSafeSearchStep, 1, 128, 1),
     colorMatchSafeSelectionMode:
       settings.colorMatchSafeSelectionMode === "lowest_variance" ? "lowest_variance" : "nearest",
-    pixelPatternX: settings.pixelPatternX.trim() || "512",
-    pixelPatternY: settings.pixelPatternY.trim() || "512",
-    percentPatternX: settings.percentPatternX.trim() || "50",
-    percentPatternY: settings.percentPatternY.trim() || "50",
+    pixelPatternX: getTrimmedString(settings.pixelPatternX) ?? "512",
+    pixelPatternY: getTrimmedString(settings.pixelPatternY) ?? "512",
+    percentPatternX: getTrimmedString(settings.percentPatternX) ?? "50",
+    percentPatternY: getTrimmedString(settings.percentPatternY) ?? "50",
     colorRules: normalizeColorRules(settings.colorRules),
     customGuides: normalizeCustomGuides(settings.customGuides),
     socialTargetRatio: validSocialRatios.has(settings.socialTargetRatio) ? settings.socialTargetRatio : "4:5",
@@ -147,10 +153,7 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
       settings.socialOverflowMode === "stretch" || settings.socialOverflowMode === "pad"
         ? settings.socialOverflowMode
         : "crop",
-    socialPadColor:
-      typeof settings.socialPadColor === "string" && settings.socialPadColor.trim()
-        ? settings.socialPadColor.trim()
-        : "#ffffff",
+    socialPadColor: getTrimmedString(settings.socialPadColor) ?? "#ffffff",
     gridColumns: clampInt(settings.gridColumns, 1, 256, 3),
     gridRows: clampInt(settings.gridRows, 1, 256, 3),
     gridMarginX: clampInt(settings.gridMarginX, 0, 100000, 0),
@@ -208,7 +211,7 @@ function normalizeExportSettings(settings: SplitterExportSettings): SplitterExpo
   return {
     ...settings,
     quality: clampInt(settings.quality, 1, 100, 92),
-    fileNamePattern: settings.fileNamePattern.trim() || "split-[OriginalName]-[Index]",
+    fileNamePattern: getTrimmedString(settings.fileNamePattern) ?? "split-[OriginalName]-[Index]",
     codecOptions: mergeCodecOptions(DEFAULT_SPLITTER_EXPORT_SETTINGS.codecOptions, settings.codecOptions)
   }
 }
@@ -221,6 +224,42 @@ const DEFAULT_UI_STATE: SplitterUiState = {
   isExportFormatQualityOpen: true,
   isFormatAdvancedOpen: true,
   isExportSettingsOpen: true
+}
+
+function buildRehydratedSplitterState(
+  persistedState: Partial<SplitterStoreState> | undefined
+): Pick<SplitterStoreState, "splitSettings" | "exportSettings" | "uiState"> {
+  const persistedSplitSettings = persistedState?.splitSettings
+  const persistedExportSettings = persistedState?.exportSettings
+
+  const splitSettings = normalizeSplitSettings({
+    ...DEFAULT_SPLITTER_SPLIT_SETTINGS,
+    ...persistedSplitSettings,
+    colorRules: Array.isArray(persistedSplitSettings?.colorRules)
+      ? persistedSplitSettings.colorRules
+      : DEFAULT_SPLITTER_SPLIT_SETTINGS.colorRules,
+    customGuides: Array.isArray(persistedSplitSettings?.customGuides)
+      ? persistedSplitSettings.customGuides
+      : DEFAULT_SPLITTER_SPLIT_SETTINGS.customGuides
+  })
+
+  const exportSettings = normalizeExportSettings({
+    ...DEFAULT_SPLITTER_EXPORT_SETTINGS,
+    ...persistedExportSettings,
+    codecOptions: mergeCodecOptions(
+      DEFAULT_SPLITTER_EXPORT_SETTINGS.codecOptions,
+      persistedExportSettings?.codecOptions ?? {}
+    )
+  })
+
+  return {
+    splitSettings,
+    exportSettings,
+    uiState: {
+      ...DEFAULT_UI_STATE,
+      ...(persistedState?.uiState ?? {})
+    }
+  }
 }
 
 export const useSplitterStore = create<SplitterStoreState>()(
@@ -322,7 +361,18 @@ export const useSplitterStore = create<SplitterStoreState>()(
         splitSettings: state.splitSettings,
         exportSettings: state.exportSettings,
         uiState: state.uiState
-      })
+      }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<SplitterStoreState> | undefined
+        const rehydrated = buildRehydratedSplitterState(persisted)
+
+        return {
+          ...currentState,
+          splitSettings: rehydrated.splitSettings,
+          exportSettings: rehydrated.exportSettings,
+          uiState: rehydrated.uiState
+        }
+      }
     }
   )
 )

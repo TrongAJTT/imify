@@ -19,7 +19,7 @@ export function buildSplitterFormatOptions(source: SplitterExportSettings): Form
     webp: normalizeWebpCodecOptions(options.webp),
     avif: normalizeAvifCodecOptions(options.avif),
     mozjpeg: {
-      enabled: Boolean(options.mozjpeg?.enabled),
+      enabled: options.mozjpeg?.enabled ?? true,
       progressive: options.mozjpeg?.progressive ?? true,
       chromaSubsampling: normalizeMozJpegChromaSubsampling(options.mozjpeg?.chromaSubsampling)
     },

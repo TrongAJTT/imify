@@ -11,7 +11,7 @@ export function SplitterPresetInfoPanel({ compact = false }: SplitterPresetInfoP
   }
 
   return (
-    <div className={`space-y-${compact ? "4" : "6"}`}>
+    <div className={compact ? "space-y-4" : "space-y-6"}>
       <div className="flex gap-3">
         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${colors.bg} ${colors.text}`}>
           <Layers size={16} />

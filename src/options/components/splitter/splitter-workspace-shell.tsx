@@ -16,8 +16,13 @@ interface SplitterWorkspaceShellProps {
 
 const AUTO_SAVE_DELAY_MS = 420
 
+interface SplitterPresetSource {
+  splitSettings: ReturnType<typeof useSplitterStore.getState>["splitSettings"]
+  exportSettings: ReturnType<typeof useSplitterStore.getState>["exportSettings"]
+}
+
 function extractSplitterPresetConfig(
-  splitterState: ReturnType<typeof useSplitterStore.getState>
+  splitterState: SplitterPresetSource
 ): SplitterPresetConfig {
   return cloneSplitterPresetConfig({
     splitSettings: splitterState.splitSettings,
@@ -51,8 +56,6 @@ export function SplitterWorkspaceShell({ workspace }: SplitterWorkspaceShellProp
     () => presets.find((preset) => preset.id === activePresetId) ?? null,
     [presets, activePresetId]
   )
-
-  const splitterState = useSplitterStore()
 
   useEffect(() => {
     if (presets.length === 0 && !defaultPresetBootstrapped) {
@@ -121,7 +124,10 @@ export function SplitterWorkspaceShell({ workspace }: SplitterWorkspaceShellProp
         activePresetId={activePresetId}
         onOpenPreset={openPresetWorkspace}
         onCreatePreset={(name, color) => {
-          const config = extractSplitterPresetConfig(splitterState)
+          const config = extractSplitterPresetConfig({
+            splitSettings,
+            exportSettings
+          })
           saveCurrentPreset({ name, highlightColor: color, config })
         }}
         onUpdatePresetMeta={updatePresetMeta}

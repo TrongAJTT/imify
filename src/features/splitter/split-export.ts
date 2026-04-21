@@ -59,10 +59,29 @@ function resolveTargetFormat(format: SplitterExportFormat): ImageFormat {
 }
 
 function parseRatio(value: string): { width: number; height: number } {
-  if (value === "1:1") {
-    return { width: 1, height: 1 }
+  const ratioMap: Record<string, { width: number; height: number }> = {
+    "1:1": { width: 1, height: 1 },
+    "4:5": { width: 4, height: 5 },
+    "3:4": { width: 3, height: 4 },
+    "2:3": { width: 2, height: 3 },
+    "5:4": { width: 5, height: 4 },
+    "9:16": { width: 9, height: 16 },
+    "16:9": { width: 16, height: 9 }
   }
-  return { width: 4, height: 5 }
+
+  const mapped = ratioMap[value]
+  if (mapped) {
+    return mapped
+  }
+
+  const [rawWidth, rawHeight] = value.split(":")
+  const width = Number(rawWidth)
+  const height = Number(rawHeight)
+  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
+    return { width, height }
+  }
+
+  return ratioMap["4:5"]
 }
 
 function drawSocialOverflowAdjustedSegment(args: {
