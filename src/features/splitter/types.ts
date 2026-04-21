@@ -61,6 +61,11 @@ export interface SplitterSplitSettings {
   colorMatchSkipPixels: number
   colorMatchSkipBefore: number
   colorMatchTolerance: number
+  colorMatchSafeZoneEnabled: boolean
+  colorMatchSafeVarianceThreshold: number
+  colorMatchSafeSearchRadius: number
+  colorMatchSafeSearchStep: number
+  colorMatchSafeSelectionMode: "nearest" | "lowest_variance"
   colorRules: SplitterColorRule[]
   customGuides: SplitterCustomGuide[]
   socialTargetRatio: SplitterSocialTargetRatio
@@ -150,6 +155,11 @@ export const DEFAULT_SPLITTER_SPLIT_SETTINGS: SplitterSplitSettings = {
   colorMatchSkipPixels: 12,
   colorMatchSkipBefore: 0,
   colorMatchTolerance: 24,
+  colorMatchSafeZoneEnabled: false,
+  colorMatchSafeVarianceThreshold: 240,
+  colorMatchSafeSearchRadius: 24,
+  colorMatchSafeSearchStep: 1,
+  colorMatchSafeSelectionMode: "nearest",
   colorRules: [createDefaultSplitterColorRule(1)],
   customGuides: [createDefaultSplitterCustomGuide()],
   socialTargetRatio: "4:5",

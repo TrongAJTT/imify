@@ -129,6 +129,12 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
     colorMatchSkipPixels: clampInt(settings.colorMatchSkipPixels, 0, 10000, 12),
     colorMatchSkipBefore: clampInt(settings.colorMatchSkipBefore, 0, 10000, 0),
     colorMatchTolerance: clampInt(settings.colorMatchTolerance, 0, 255, 24),
+    colorMatchSafeZoneEnabled: Boolean(settings.colorMatchSafeZoneEnabled),
+    colorMatchSafeVarianceThreshold: clampFloat(settings.colorMatchSafeVarianceThreshold, 0, 10000, 240),
+    colorMatchSafeSearchRadius: clampInt(settings.colorMatchSafeSearchRadius, 0, 1000, 24),
+    colorMatchSafeSearchStep: clampInt(settings.colorMatchSafeSearchStep, 1, 128, 1),
+    colorMatchSafeSelectionMode:
+      settings.colorMatchSafeSelectionMode === "lowest_variance" ? "lowest_variance" : "nearest",
     pixelPatternX: settings.pixelPatternX.trim() || "512",
     pixelPatternY: settings.pixelPatternY.trim() || "512",
     percentPatternX: settings.percentPatternX.trim() || "50",

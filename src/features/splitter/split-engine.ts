@@ -249,6 +249,98 @@ function isRuleSatisfied(rule: SplitterColorRule, ratio: number): boolean {
   }
 }
 
+function getPixelIndexForLine(args: {
+  axis: "x" | "y"
+  width: number
+  lineIndex: number
+  perpendicularIndex: number
+}): number {
+  return args.axis === "x"
+    ? (args.perpendicularIndex * args.width + args.lineIndex) * 4
+    : (args.lineIndex * args.width + args.perpendicularIndex) * 4
+}
+
+function computeLineVariance(args: {
+  data: Uint8ClampedArray
+  axis: "x" | "y"
+  width: number
+  lineIndex: number
+  lineSize: number
+}): number {
+  const luminanceValues: number[] = []
+  let sum = 0
+  for (let i = 0; i < args.lineSize; i += 1) {
+    const pixelIndex = getPixelIndexForLine({
+      axis: args.axis,
+      width: args.width,
+      lineIndex: args.lineIndex,
+      perpendicularIndex: i
+    })
+    const r = args.data[pixelIndex]
+    const g = args.data[pixelIndex + 1]
+    const b = args.data[pixelIndex + 2]
+    const luma = 0.299 * r + 0.587 * g + 0.114 * b
+    luminanceValues.push(luma)
+    sum += luma
+  }
+
+  const mean = args.lineSize > 0 ? sum / args.lineSize : 0
+  let varianceSum = 0
+  for (const value of luminanceValues) {
+    const diff = value - mean
+    varianceSum += diff * diff
+  }
+  return args.lineSize > 0 ? varianceSum / args.lineSize : 0
+}
+
+function findSafeZoneCut(args: {
+  data: Uint8ClampedArray
+  axis: "x" | "y"
+  width: number
+  scanSize: number
+  lineSize: number
+  baseCut: number
+  threshold: number
+  radius: number
+  step: number
+  mode: "nearest" | "lowest_variance"
+}): number {
+  const safeBaseCut = clampInt(args.baseCut, 1, Math.max(1, args.scanSize - 1))
+  const candidates: Array<{ cut: number; variance: number; distance: number }> = []
+  const safeStep = Math.max(1, args.step)
+  for (let delta = -args.radius; delta <= args.radius; delta += safeStep) {
+    const candidateCut = clampInt(safeBaseCut + delta, 1, Math.max(1, args.scanSize - 1))
+    const variance = computeLineVariance({
+      data: args.data,
+      axis: args.axis,
+      width: args.width,
+      lineIndex: candidateCut,
+      lineSize: args.lineSize
+    })
+    if (variance <= args.threshold) {
+      candidates.push({
+        cut: candidateCut,
+        variance,
+        distance: Math.abs(delta)
+      })
+    }
+  }
+
+  if (candidates.length === 0) {
+    return safeBaseCut
+  }
+
+  candidates.sort((a, b) => {
+    if (args.mode === "lowest_variance") {
+      if (a.variance !== b.variance) return a.variance - b.variance
+      return a.distance - b.distance
+    }
+    if (a.distance !== b.distance) return a.distance - b.distance
+    return a.variance - b.variance
+  })
+  return candidates[0].cut
+}
+
 function buildColorMatchCuts(
   imageData: ImageData,
   axis: "x" | "y",
@@ -274,6 +366,11 @@ function buildColorMatchCuts(
   const skipPixels = clampInt(settings.colorMatchSkipPixels, 0, Math.max(0, scanSize - 1))
   const skipBefore = clampInt(settings.colorMatchSkipBefore, 0, Math.max(0, scanSize - 1))
   const offset = Math.round(settings.colorMatchOffset)
+  const safeZoneEnabled = settings.colorMatchSafeZoneEnabled
+  const safeVarianceThreshold = Math.max(0, settings.colorMatchSafeVarianceThreshold)
+  const safeSearchRadius = clampInt(settings.colorMatchSafeSearchRadius, 0, Math.max(0, scanSize - 1))
+  const safeSearchStep = clampInt(settings.colorMatchSafeSearchStep, 1, 128)
+  const safeSelectionMode = settings.colorMatchSafeSelectionMode
 
   const cuts: number[] = [0]
   let position = 0
@@ -308,7 +405,21 @@ function buildColorMatchCuts(
 
     if (isMatch) {
       consecutiveMatches += 1
-      const nextCut = clampInt(position + offset, 1, Math.max(1, scanSize - 1))
+      const baseCut = clampInt(position + offset, 1, Math.max(1, scanSize - 1))
+      const nextCut = safeZoneEnabled
+        ? findSafeZoneCut({
+            data,
+            axis,
+            width,
+            scanSize,
+            lineSize,
+            baseCut,
+            threshold: safeVarianceThreshold,
+            radius: safeSearchRadius,
+            step: safeSearchStep,
+            mode: safeSelectionMode
+          })
+        : baseCut
       const reachedRequiredStreak = consecutiveMatches >= skipBefore + 1
       if (reachedRequiredStreak && nextCut > cuts[cuts.length - 1] && nextCut < scanSize) {
         cuts.push(nextCut)

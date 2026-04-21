@@ -51,6 +51,11 @@ const SOCIAL_OVERFLOW_OPTIONS = [
   { value: "pad", label: "Pad last slice" }
 ]
 
+const SAFE_ZONE_SELECTION_OPTIONS = [
+  { value: "nearest", label: "Nearest safe line" },
+  { value: "lowest_variance", label: "Lowest variance line" }
+]
+
 export function SplitOptionsAccordion({
   settings,
   isOpen,
@@ -219,47 +224,96 @@ export function SplitOptionsAccordion({
             />
 
             {isColorMatch ? (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <NumberInput
-                  label="Offset (px)"
-                  tooltipContent="Moves the cut position away from the detected matching line/column. Positive values cut later, negative values cut earlier."
-                  value={settings.colorMatchOffset}
-                  min={-10000}
-                  max={10000}
-                  onChangeValue={(value) =>
-                    onChange({ colorMatchOffset: value })
-                  }
-                />
-                <NumberInput
-                  label="Tolerance"
-                  tooltipContent="How close a pixel color must be to your rule color to count as a match. Higher values are more lenient."
-                  value={settings.colorMatchTolerance}
-                  min={0}
-                  max={255}
-                  onChangeValue={(value) =>
-                    onChange({ colorMatchTolerance: value })
-                  }
-                />
-                <NumberInput
-                  label="Skip Before (px)"
-                  tooltipContent="Requires this many consecutive matching lines/columns before the current one before a cut is allowed."
-                  value={settings.colorMatchSkipBefore}
-                  min={0}
-                  max={10000}
-                  onChangeValue={(value) =>
-                    onChange({ colorMatchSkipBefore: value })
-                  }
-                />
-                <NumberInput
-                  label="Break After (px)"
-                  tooltipContent="After a cut is created, skip this many lines/columns before checking for the next cut."
-                  value={settings.colorMatchSkipPixels}
-                  min={0}
-                  max={10000}
-                  onChangeValue={(value) =>
-                    onChange({ colorMatchSkipPixels: value })
-                  }
-                />
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <NumberInput
+                    label="Offset (px)"
+                    tooltipContent="Moves the cut position away from the detected matching line/column. Positive values cut later, negative values cut earlier."
+                    value={settings.colorMatchOffset}
+                    min={-10000}
+                    max={10000}
+                    onChangeValue={(value) =>
+                      onChange({ colorMatchOffset: value })
+                    }
+                  />
+                  <NumberInput
+                    label="Tolerance"
+                    tooltipContent="How close a pixel color must be to your rule color to count as a match. Higher values are more lenient."
+                    value={settings.colorMatchTolerance}
+                    min={0}
+                    max={255}
+                    onChangeValue={(value) =>
+                      onChange({ colorMatchTolerance: value })
+                    }
+                  />
+                  <NumberInput
+                    label="Skip Before (px)"
+                    tooltipContent="Requires this many consecutive matching lines/columns before the current one before a cut is allowed."
+                    value={settings.colorMatchSkipBefore}
+                    min={0}
+                    max={10000}
+                    onChangeValue={(value) =>
+                      onChange({ colorMatchSkipBefore: value })
+                    }
+                  />
+                  <NumberInput
+                    label="Break After (px)"
+                    tooltipContent="After a cut is created, skip this many lines/columns before checking for the next cut."
+                    value={settings.colorMatchSkipPixels}
+                    min={0}
+                    max={10000}
+                    onChangeValue={(value) =>
+                      onChange({ colorMatchSkipPixels: value })
+                    }
+                  />
+                </div>
+
+                <label className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-200">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500/20"
+                    checked={settings.colorMatchSafeZoneEnabled}
+                    onChange={(event) => onChange({ colorMatchSafeZoneEnabled: event.target.checked })}
+                  />
+                  <span>Safe Zone (Low Variance)</span>
+                </label>
+
+                {settings.colorMatchSafeZoneEnabled ? (
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <NumberInput
+                      label="Variance Threshold"
+                      tooltipContent="Lower values are stricter and avoid busy lines. Higher values accept more detail."
+                      value={settings.colorMatchSafeVarianceThreshold}
+                      min={0}
+                      max={10000}
+                      onChangeValue={(value) => onChange({ colorMatchSafeVarianceThreshold: value })}
+                    />
+                    <NumberInput
+                      label="Search Radius (px)"
+                      tooltipContent="How far to slide up/down (or left/right) from the detected line to find a safer cut."
+                      value={settings.colorMatchSafeSearchRadius}
+                      min={0}
+                      max={1000}
+                      onChangeValue={(value) => onChange({ colorMatchSafeSearchRadius: value })}
+                    />
+                    <NumberInput
+                      label="Search Step (px)"
+                      tooltipContent="Distance between candidate lines while searching for a safe zone."
+                      value={settings.colorMatchSafeSearchStep}
+                      min={1}
+                      max={128}
+                      onChangeValue={(value) => onChange({ colorMatchSafeSearchStep: value })}
+                    />
+                    <SelectInput
+                      label="Selection Mode"
+                      value={settings.colorMatchSafeSelectionMode}
+                      options={SAFE_ZONE_SELECTION_OPTIONS}
+                      onChange={(value) =>
+                        onChange({ colorMatchSafeSelectionMode: value as SplitterSplitSettings["colorMatchSafeSelectionMode"] })
+                      }
+                    />
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
