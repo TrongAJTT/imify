@@ -10,10 +10,6 @@ interface LayerPropertiesPanelProps {
 export function LayerPropertiesPanel({ layer, onUpdate }: LayerPropertiesPanelProps) {
   return (
     <div className="space-y-3">
-      <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-        Layer Properties
-      </div>
-
       <TextInput
         label="Name"
         value={layer.name}

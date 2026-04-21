@@ -17,6 +17,8 @@ import { useTransformGuides, type RectBounds } from "@/options/hooks/use-transfo
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 import { Button } from "@/options/components/ui/button"
 import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
+import { VisualHelpTooltip } from "@/options/components/ui/visual-help-tooltip"
+import manualEditorMultiSelectVideo from "url:assets/features/image_filling_manual-visual_multi_select.webm"
 import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
@@ -28,7 +30,11 @@ interface ManualEditorWorkspaceProps {
   groups: LayerGroup[]
   layers: VectorLayer[]
   selectedLayerId: string | null
+  selectedLayerIds: string[]
   onSelectLayer: (id: string | null) => void
+  onToggleLayerSelection: (id: string) => void
+  onSetSelectedLayers: (ids: string[]) => void
+  onClearSelection: () => void
   onUpdateLayer: (id: string, partial: Partial<VectorLayer>) => void
   onSaveTemplate: () => Promise<void>
   isSavingTemplate: boolean
@@ -45,7 +51,11 @@ export function ManualEditorWorkspace({
   groups,
   layers,
   selectedLayerId,
+  selectedLayerIds,
   onSelectLayer,
+  onToggleLayerSelection,
+  onSetSelectedLayers,
+  onClearSelection,
   onUpdateLayer,
   onSaveTemplate,
   isSavingTemplate,
@@ -53,6 +63,7 @@ export function ManualEditorWorkspace({
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const transformerRef = useRef<Konva.Transformer>(null)
+  const ignoreNextStageClickRef = useRef(false)
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 })
   const [previewContainerHeight, setPreviewContainerHeight] = useState(520)
   const [previewZoom, setPreviewZoom] = useState(100)
@@ -64,6 +75,8 @@ export function ManualEditorWorkspace({
   const [cursor, setCursor] = useState("default")
   const [rotationGuideLine, setRotationGuideLine] = useState<number[] | null>(null)
   const [positionGuideLines, setPositionGuideLines] = useState<number[][]>([])
+  const [selectionBoxStart, setSelectionBoxStart] = useState<{ x: number; y: number } | null>(null)
+  const [selectionBoxRect, setSelectionBoxRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const { getShortcutLabel } = useShortcutPreferences()
   const {
     rotationSnapAngles,
@@ -290,16 +303,95 @@ export function ManualEditorWorkspace({
     tr.getLayer()?.batchDraw()
   }, [selectedLayerId, layers])
 
+  const toWorldPoint = useCallback((pointer: { x: number; y: number }) => ({
+    x: (pointer.x - offsetX) / renderScale,
+    y: (pointer.y - offsetY) / renderScale,
+  }), [offsetX, renderScale])
+
   const handleStageClick = useCallback(
     (e: Konva.KonvaEventObject<MouseEvent>) => {
+      if (ignoreNextStageClickRef.current) {
+        ignoreNextStageClickRef.current = false
+        return
+      }
+
       if (e.target === e.target.getStage()) {
-        onSelectLayer(null)
+        onClearSelection()
         setRotationGuideLine(null)
         setPositionGuideLines([])
       }
     },
-    [onSelectLayer]
+    [onClearSelection]
   )
+
+  const handleStageMouseDown = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (e.target !== e.target.getStage()) {
+      return
+    }
+
+    if (selectedLayerIds.length > 0) {
+      return
+    }
+
+    const pointer = e.target.getStage()?.getPointerPosition()
+    if (!pointer) {
+      return
+    }
+
+    const start = toWorldPoint(pointer)
+    setSelectionBoxStart(start)
+    setSelectionBoxRect({ x: start.x, y: start.y, width: 0, height: 0 })
+  }, [selectedLayerIds.length, toWorldPoint])
+
+  const handleStageMouseMove = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (!selectionBoxStart) {
+      return
+    }
+
+    const pointer = e.target.getStage()?.getPointerPosition()
+    if (!pointer) {
+      return
+    }
+
+    const current = toWorldPoint(pointer)
+    setSelectionBoxRect({
+      x: Math.min(selectionBoxStart.x, current.x),
+      y: Math.min(selectionBoxStart.y, current.y),
+      width: Math.abs(current.x - selectionBoxStart.x),
+      height: Math.abs(current.y - selectionBoxStart.y),
+    })
+  }, [selectionBoxStart, toWorldPoint])
+
+  const handleStageMouseUp = useCallback(() => {
+    if (!selectionBoxStart || !selectionBoxRect) {
+      return
+    }
+
+    const hasDraggedSelectionBox = selectionBoxRect.width > 2 || selectionBoxRect.height > 2
+    if (hasDraggedSelectionBox) {
+      const rectRight = selectionBoxRect.x + selectionBoxRect.width
+      const rectBottom = selectionBoxRect.y + selectionBoxRect.height
+      const selectedIds = layers
+        .filter((layer) => layer.visible)
+        .filter((layer) => {
+          const bounds = getBoundsFromPoints(toWorldLayerPoints(layer))
+          return (
+            bounds.x >= selectionBoxRect.x &&
+            bounds.y >= selectionBoxRect.y &&
+            bounds.x + bounds.width <= rectRight &&
+            bounds.y + bounds.height <= rectBottom
+          )
+        })
+        .map((layer) => layer.id)
+
+      onSetSelectedLayers(selectedIds)
+    }
+
+    ignoreNextStageClickRef.current = hasDraggedSelectionBox
+
+    setSelectionBoxStart(null)
+    setSelectionBoxRect(null)
+  }, [layers, onSetSelectedLayers, selectionBoxRect, selectionBoxStart])
 
   const handleDragEnd = useCallback(
     (layerId: string, e: Konva.KonvaEventObject<DragEvent>) => {
@@ -443,7 +535,16 @@ export function ManualEditorWorkspace({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <Subheading>Manual Editor</Subheading>
+          <div className="flex items-center gap-1.5">
+            <Subheading>Manual Editor</Subheading>
+            <VisualHelpTooltip
+              label="Selection and drag tips"
+              description="Drag layers from the canvas or Layers list to reorder. Hold Ctrl (or Cmd on Mac) and click layers to toggle multi-select. When nothing is selected, drag on empty canvas to box-select layers fully inside the selection area."
+              webmSrc={manualEditorMultiSelectVideo}
+              buttonAriaLabel="Manual Editor interaction help"
+              mediaAlt="Manual Editor interaction guide"
+            />
+          </div>
           <MutedText className="text-xs mt-0.5">
             {canvasWidth} x {canvasHeight} px &middot; {layers.length} layer{layers.length !== 1 ? "s" : ""}
           </MutedText>
@@ -494,7 +595,10 @@ export function ManualEditorWorkspace({
           height={stageSize.height}
           onClick={handleStageClick}
           onTap={handleStageClick}
+          onMouseDown={handleStageMouseDown}
+          onMouseUp={handleStageMouseUp}
           onMouseMove={(e) => {
+            handleStageMouseMove(e)
             const targetName = e.target.name()
             if (targetName.includes("rotater")) {
               setCursor("crosshair")
@@ -601,10 +705,16 @@ export function ManualEditorWorkspace({
                   rotation={layer.rotation}
                   closed
                   fill="rgba(59, 130, 246, 0.15)"
-                  stroke={selectedLayerId === layer.id ? "#3b82f6" : "#94a3b8"}
-                  strokeWidth={selectedLayerId === layer.id ? 2 : 1}
+                  stroke={selectedLayerIds.includes(layer.id) ? "#3b82f6" : "#94a3b8"}
+                  strokeWidth={selectedLayerIds.includes(layer.id) ? 2 : 1}
                   draggable={!layer.locked}
-                  onClick={() => onSelectLayer(layer.id)}
+                  onClick={(event) => {
+                    if (event.evt.ctrlKey || event.evt.metaKey) {
+                      onToggleLayerSelection(layer.id)
+                      return
+                    }
+                    onSelectLayer(layer.id)
+                  }}
                   onTap={() => onSelectLayer(layer.id)}
                   onMouseEnter={() => setCursor(layer.locked ? "not-allowed" : "grab")}
                   onMouseLeave={() => setCursor("default")}
@@ -625,6 +735,20 @@ export function ManualEditorWorkspace({
                 />
               )
             })}
+
+            {selectionBoxRect && (
+              <Rect
+                x={offsetX + selectionBoxRect.x * renderScale}
+                y={offsetY + selectionBoxRect.y * renderScale}
+                width={selectionBoxRect.width * renderScale}
+                height={selectionBoxRect.height * renderScale}
+                fill="rgba(14, 165, 233, 0.12)"
+                stroke="rgba(14, 165, 233, 0.85)"
+                strokeWidth={1}
+                dash={[6, 4]}
+                listening={false}
+              />
+            )}
 
             <Transformer
               ref={transformerRef}

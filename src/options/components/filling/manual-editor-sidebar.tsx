@@ -32,10 +32,13 @@ interface ManualEditorSidebarProps {
   canvasWidth: number
   canvasHeight: number
   selectedLayerId: string | null
+  selectedLayerIds: string[]
   onLayersChange: (layers: VectorLayer[]) => void
   onGroupsChange: (groups: LayerGroup[]) => void
   onCanvasSizeChange: (width: number, height: number) => void
   onSelectLayer: (id: string | null) => void
+  onToggleLayerSelection: (id: string) => void
+  onClearSelection: () => void
   enableWideSidebarGrid?: boolean
 }
 
@@ -102,10 +105,13 @@ export function ManualEditorSidebar({
   canvasWidth,
   canvasHeight,
   selectedLayerId,
+  selectedLayerIds,
   onLayersChange,
   onGroupsChange,
   onCanvasSizeChange,
   onSelectLayer,
+  onToggleLayerSelection,
+  onClearSelection,
   enableWideSidebarGrid = false
 }: ManualEditorSidebarProps) {
   const [shapePickerOpen, setShapePickerOpen] = useState(false)
@@ -150,6 +156,24 @@ export function ManualEditorSidebar({
     }, {}),
     [normalizedGroups]
   )
+
+  const selectedEditableLayers = useMemo(
+    () => layers.filter((layer) => selectedLayerIds.includes(layer.id)),
+    [layers, selectedLayerIds]
+  )
+
+  const selectedSharedGroupId = useMemo(() => {
+    if (selectedEditableLayers.length === 0) {
+      return null
+    }
+    const firstGroupId = selectedEditableLayers[0].groupId ?? null
+    if (!firstGroupId) {
+      return null
+    }
+    return selectedEditableLayers.every((layer) => layer.groupId === firstGroupId)
+      ? firstGroupId
+      : null
+  }, [selectedEditableLayers])
 
   const handleAddShape = useCallback(
     (type: ShapeType) => {
@@ -208,11 +232,16 @@ export function ManualEditorSidebar({
       onLayersChange(nextLayers)
       onGroupsChange(synchronizeGroupsWithLayers(groups, nextLayers))
 
-      if (selectedLayerId === id) {
-        onSelectLayer(null)
+      if (selectedLayerIds.includes(id)) {
+        const remainingSelectedIds = selectedLayerIds.filter((selectedId) => selectedId !== id)
+        if (remainingSelectedIds.length > 0) {
+          onSelectLayer(remainingSelectedIds[remainingSelectedIds.length - 1])
+        } else {
+          onClearSelection()
+        }
       }
     },
-    [groups, layers, selectedLayerId, onGroupsChange, onLayersChange, onSelectLayer]
+    [groups, layers, selectedLayerIds, onClearSelection, onGroupsChange, onLayersChange, onSelectLayer]
   )
 
   const handleDragLayer = useCallback(
@@ -287,52 +316,96 @@ export function ManualEditorSidebar({
   )
 
   const handleUngroupSelectedLayer = useCallback(() => {
-    if (!selectedLayerId) {
+    if (selectedLayerIds.length === 0) {
       return
     }
 
-    const currentLayer = layers.find((layer) => layer.id === selectedLayerId)
-    if (!currentLayer?.groupId) {
-      return
-    }
-
-    const nextLayers = layers.map((layer) =>
-      layer.id === selectedLayerId
-        ? {
-            ...layer,
-            groupId: undefined,
-          }
-        : layer
+    const selectedSet = new Set(selectedLayerIds)
+    let nextLayers = [...layers]
+    const groupIdsToProcess = Array.from(
+      new Set(
+        nextLayers
+          .filter((layer) => selectedSet.has(layer.id) && layer.groupId)
+          .map((layer) => layer.groupId as string)
+      )
     )
+
+    for (const groupId of groupIdsToProcess) {
+      const indexedGroupLayers = nextLayers
+        .map((layer, index) => ({ layer, index }))
+        .filter((entry) => entry.layer.groupId === groupId)
+      if (indexedGroupLayers.length === 0) {
+        continue
+      }
+
+      const originalGroupLastIndex = indexedGroupLayers[indexedGroupLayers.length - 1].index
+      const movingEntries = indexedGroupLayers.filter((entry) => selectedSet.has(entry.layer.id))
+      if (movingEntries.length === 0) {
+        continue
+      }
+
+      const movingIds = new Set(movingEntries.map((entry) => entry.layer.id))
+      const removedBeforeOrAtLast = movingEntries.filter((entry) => entry.index <= originalGroupLastIndex).length
+      const insertIndex = Math.max(
+        0,
+        Math.min(nextLayers.length, originalGroupLastIndex - removedBeforeOrAtLast + 1)
+      )
+
+      const movingUngroupedLayers = movingEntries.map(({ layer }) => {
+        const nextLayer = { ...layer }
+        delete nextLayer.groupId
+        return nextLayer
+      })
+
+      const remaining = nextLayers.filter((layer) => !movingIds.has(layer.id))
+      nextLayers = [
+        ...remaining.slice(0, insertIndex),
+        ...movingUngroupedLayers,
+        ...remaining.slice(insertIndex),
+      ]
+    }
 
     onLayersChange(nextLayers)
     onGroupsChange(synchronizeGroupsWithLayers(groups, nextLayers))
-  }, [groups, layers, selectedLayerId, onGroupsChange, onLayersChange])
+  }, [groups, layers, onGroupsChange, onLayersChange, selectedLayerIds])
 
   const handleToggleGroupForSelectedLayer = useCallback(() => {
-    if (!selectedLayerId) {
+    if (selectedLayerIds.length === 0) {
       return
     }
 
-    const currentLayer = layers.find((layer) => layer.id === selectedLayerId)
-    if (!currentLayer) {
-      return
-    }
-
-    if (currentLayer.groupId) {
+    if (selectedSharedGroupId) {
       handleUngroupSelectedLayer()
       return
     }
 
+    const selectedSet = new Set(selectedLayerIds)
+    const movingLayers = layers.filter((layer) => selectedSet.has(layer.id))
+    if (movingLayers.length === 0) {
+      return
+    }
+
+    const topSelectedIndex = layers.findIndex((layer) => selectedSet.has(layer.id))
+    if (topSelectedIndex < 0) {
+      return
+    }
+
+    const insertIndex = layers
+      .slice(0, topSelectedIndex)
+      .filter((layer) => !selectedSet.has(layer.id))
+      .length
+
     const newGroupId = generateId("grp")
-    const nextLayers = layers.map((layer) =>
-      layer.id === selectedLayerId
-        ? {
-            ...layer,
-            groupId: newGroupId,
-          }
-        : layer
-    )
+    const groupedLayers = movingLayers.map((layer) => ({
+      ...layer,
+      groupId: newGroupId,
+    }))
+    const remainingLayers = layers.filter((layer) => !selectedSet.has(layer.id))
+    const nextLayers = [
+      ...remainingLayers.slice(0, insertIndex),
+      ...groupedLayers,
+      ...remainingLayers.slice(insertIndex),
+    ]
 
     const nextGroups = synchronizeGroupsWithLayers(
       [
@@ -340,7 +413,7 @@ export function ManualEditorSidebar({
         {
           id: newGroupId,
           name: `Group ${normalizedGroups.length + 1}`,
-          layerIds: [selectedLayerId],
+          layerIds: groupedLayers.map((layer) => layer.id),
           closeLoop: false,
           fillInterior: false,
           combineAsConvexHull: false,
@@ -357,7 +430,8 @@ export function ManualEditorSidebar({
     normalizedGroups,
     onGroupsChange,
     onLayersChange,
-    selectedLayerId,
+    selectedLayerIds,
+    selectedSharedGroupId,
   ])
 
   const handleToggleCloseLoop = useCallback(
@@ -575,15 +649,17 @@ export function ManualEditorSidebar({
           <LayerListPanel
             layers={layers}
             selectedLayerId={selectedLayerId}
+            selectedLayerIds={selectedLayerIds}
             onSelectLayer={onSelectLayer}
+            onToggleLayerSelection={onToggleLayerSelection}
             onToggleLock={handleToggleLock}
             onToggleVisibility={handleToggleVisibility}
             onDeleteLayer={handleDeleteLayer}
             onDragLayer={handleDragLayer}
             onAddShape={() => setShapePickerOpen(true)}
             onToggleGroupForSelected={handleToggleGroupForSelectedLayer}
-            canToggleGroupForSelected={Boolean(selectedLayerId)}
-            isSelectedLayerGrouped={Boolean(selectedLayer?.groupId)}
+            canToggleGroupForSelected={selectedLayerIds.length > 0}
+            isSelectedLayerGrouped={Boolean(selectedSharedGroupId)}
             groupNamesById={groupNamesById}
           />
         </ResizableAccordionCard>

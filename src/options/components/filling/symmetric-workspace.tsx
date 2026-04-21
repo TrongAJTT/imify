@@ -16,7 +16,7 @@ import { useFillingStore } from "@/options/stores/filling-store"
 import { Subheading, MutedText } from "@/options/components/ui/typography"
 import { Button } from "@/options/components/ui/button"
 import { VisualHelpTooltip } from "@/options/components/ui/visual-help-tooltip"
-import symmetricVisualEditorVideo from "url:assets/features/symmetric_generator-visual_editor.mp4"
+import symmetricVisualEditorVideo from "url:assets/features/symmetric_generator-visual_editor.webm"
 import { Save } from "lucide-react"
 
 const CANVAS_PADDING = 40
@@ -312,7 +312,7 @@ export function SymmetricWorkspace({ template, onRefresh }: SymmetricWorkspacePr
             <VisualHelpTooltip
               label="Visual editing tips"
               description="You can adjust size and spacing visually using the first two components on the first main axis, and the first component on the second main axis."
-              mp4Src={symmetricVisualEditorVideo}
+              webmSrc={symmetricVisualEditorVideo}
               buttonAriaLabel="Symmetric Generator visual editor help"
               mediaAlt="Symmetric Generator visual editor"
             />

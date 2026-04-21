@@ -51,10 +51,13 @@ export function FillingSidebarPanel({ enableWideSidebarGrid = false }: FillingSi
           canvasWidth={editorCtx.canvasWidth}
           canvasHeight={editorCtx.canvasHeight}
           selectedLayerId={editorCtx.selectedLayerId}
+          selectedLayerIds={editorCtx.selectedLayerIds}
           onLayersChange={editorCtx.setEditorLayers}
           onGroupsChange={editorCtx.setEditorGroups}
           onCanvasSizeChange={editorCtx.setCanvasSize}
           onSelectLayer={editorCtx.setSelectedLayerId}
+          onToggleLayerSelection={editorCtx.toggleSelectedLayerId}
+          onClearSelection={editorCtx.clearSelectedLayers}
           enableWideSidebarGrid={enableWideSidebarGrid}
         />
       </div>
