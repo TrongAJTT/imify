@@ -62,40 +62,43 @@ export function ColorMatchRulesAccordion({
             </div>
 
             <div className="space-y-2">
-              <ColorPickerPopover
-                label="Color"
-                value={rule.color}
-                onChange={(value) => onUpdateRule(rule.id, { color: value })}
-                enableAlpha={false}
-                enableGradient={false}
-              />
-
+              <div className="grid grid-cols-2 gap-4">
               <SelectInput
                 label="Mode"
                 value={rule.mode}
                 options={RULE_MODE_OPTIONS}
                 onChange={(value) => onUpdateRule(rule.id, { mode: value as SplitterColorRule["mode"] })}
               />
+              <ColorPickerPopover
+                label="Color"
+                value={rule.color}
+                onChange={(value) => onUpdateRule(rule.id, { color: value })}
+                enableAlpha={false}
+                enableGradient={false}
+                appearance="stacked"
+              />
 
-              {shouldShowValueInput(rule.mode) ? (
+
+              {shouldShowValueInput(rule.mode) && (
                 <NumberInput
                   label="Target (%)"
                   value={rule.value}
                   min={0}
                   max={100}
                   onChangeValue={(value) => onUpdateRule(rule.id, { value })}
-                />
-              ) : null}
+                  />
+              )}
 
-              {rule.mode === "error" ? (
+              {rule.mode === "error" && (
                 <NumberInput
                   label="Error Margin (%)"
                   value={rule.errorMargin}
                   min={0}
                   max={100}
                   onChangeValue={(value) => onUpdateRule(rule.id, { errorMargin: value })}
-                />
-              ) : null}
+                  />
+                )}
+                </div>
             </div>
           </div>
         ))}

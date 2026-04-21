@@ -202,11 +202,13 @@ function buildColorMatchCuts(
   const tolerance = clampInt(settings.colorMatchTolerance, 0, 255)
   const toleranceSquared = tolerance * tolerance
   const skipPixels = clampInt(settings.colorMatchSkipPixels, 0, Math.max(0, scanSize - 1))
+  const skipBefore = clampInt(settings.colorMatchSkipBefore, 0, Math.max(0, scanSize - 1))
   const offset = Math.round(settings.colorMatchOffset)
 
   const cuts: number[] = [0]
   let position = 0
   let guard = 0
+  let consecutiveMatches = 0
 
   while (position < scanSize && guard < scanSize * 2) {
     const hitCounts = new Array(parsedRules.length).fill(0)
@@ -235,12 +237,18 @@ function buildColorMatchCuts(
     })
 
     if (isMatch) {
+      consecutiveMatches += 1
       const nextCut = clampInt(position + offset, 1, Math.max(1, scanSize - 1))
-      if (nextCut > cuts[cuts.length - 1] && nextCut < scanSize) {
+      const reachedRequiredStreak = consecutiveMatches >= skipBefore + 1
+      if (reachedRequiredStreak && nextCut > cuts[cuts.length - 1] && nextCut < scanSize) {
         cuts.push(nextCut)
+        consecutiveMatches = 0
+        position += Math.max(1, skipPixels)
+      } else {
+        position += 1
       }
-      position += Math.max(1, skipPixels)
     } else {
+      consecutiveMatches = 0
       position += 1
     }
 

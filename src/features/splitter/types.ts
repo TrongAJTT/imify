@@ -43,6 +43,7 @@ export interface SplitterSplitSettings {
 
   colorMatchOffset: number
   colorMatchSkipPixels: number
+  colorMatchSkipBefore: number
   colorMatchTolerance: number
   colorRules: SplitterColorRule[]
 }
@@ -118,6 +119,7 @@ export const DEFAULT_SPLITTER_SPLIT_SETTINGS: SplitterSplitSettings = {
   percentPatternY: "50",
   colorMatchOffset: 0,
   colorMatchSkipPixels: 12,
+  colorMatchSkipBefore: 0,
   colorMatchTolerance: 24,
   colorRules: [createDefaultSplitterColorRule(1)]
 }

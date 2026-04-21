@@ -12,6 +12,7 @@ import { SplitterPreview } from "@/options/components/splitter/splitter-preview"
 import { Button } from "@/options/components/ui/button"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
 import { PreviewInteractionModeToggle, type PreviewInteractionMode } from "@/options/components/ui/preview-interaction-mode-toggle"
+import { VisualHelpTooltip } from "@/options/components/ui/visual-help-tooltip"
 import { Tooltip } from "@/options/components/tooltip"
 import { MutedText, Subheading } from "@/options/components/ui/typography"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
@@ -22,6 +23,7 @@ import { decodeFileToImageData } from "@/features/image-pipeline/decode-image-da
 import { buildActiveSplitterFormatOptions } from "@/options/stores/splitter-format-options"
 import { useSplitterStore } from "@/options/stores/splitter-store"
 import { SplitterWorkspaceShell } from "@/options/components/splitter/splitter-workspace-shell"
+import splitterGuideHelpVideo from "url:assets/features/image-splitter_visual-guides-control.webm"
 
 interface SplitterImageItem {
   id: string
@@ -33,6 +35,8 @@ interface SplitterImageItem {
 }
 
 const THUMB_MAX = 256
+const COLOR_MATCH_GRID_FALLBACK_WARNING =
+  "Color Match supports vertical or horizontal direction only. Grid was mapped to vertical."
 
 function isImageLikeFile(file: File): boolean {
   if (file.type.startsWith("image/")) {
@@ -224,7 +228,10 @@ export function SplitterTab() {
         }
 
         setPreviewPlan(nextPlan)
-        setPreviewPlanWarningText(nextPlan.warnings.length > 0 ? nextPlan.warnings.join(" ") : null)
+        const visibleWarnings = nextPlan.warnings.filter(
+          (warning) => warning !== COLOR_MATCH_GRID_FALLBACK_WARNING
+        )
+        setPreviewPlanWarningText(visibleWarnings.length > 0 ? visibleWarnings.join(" ") : null)
       } catch (error) {
         if (cancelled || previewComputeSequenceRef.current !== requestId) {
           return
@@ -519,6 +526,15 @@ export function SplitterTab() {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <Subheading className="truncate">Image Splitter Workspace</Subheading>
+                {splitSettings.mode === "basic" ? (
+                  <VisualHelpTooltip
+                    label="Visual guide controls"
+                    description="In Basic mode, drag the first vertical and/or horizontal guide directly on the preview. The matching split values update automatically in Split Options."
+                    webmSrc={splitterGuideHelpVideo}
+                    buttonAriaLabel="Image Splitter visual guide controls help"
+                    mediaAlt="Image Splitter visual guide controls"
+                  />
+                ) : null}
                 {mismatchWarningText ? (
                   <Tooltip label="Dimension mismatch warning" content={mismatchWarningText} variant="wide2">
                     <span className="inline-flex items-center">

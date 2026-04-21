@@ -105,6 +105,7 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
     pixelY: clampInt(settings.pixelY, 1, 100000, 512),
     colorMatchOffset: clampInt(settings.colorMatchOffset, -10000, 10000, 0),
     colorMatchSkipPixels: clampInt(settings.colorMatchSkipPixels, 0, 10000, 12),
+    colorMatchSkipBefore: clampInt(settings.colorMatchSkipBefore, 0, 10000, 0),
     colorMatchTolerance: clampInt(settings.colorMatchTolerance, 0, 255, 24),
     pixelPatternX: settings.pixelPatternX.trim() || "512",
     pixelPatternY: settings.pixelPatternY.trim() || "512",
