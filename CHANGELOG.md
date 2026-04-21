@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Image Splitter Workspace:** Added a dedicated `Image Splitter` tab directly below `Image Splicing` with full preset workflow and batch split export.
+  - New splitter preset lifecycle (`select` / `workspace`) with default preset auto-bootstrap and breadcrumb path: `Image Splitter > {PresetName}`.
+  - New splitter workspace with multi-image queue, drag-and-drop reorder strip, dimension mismatch warnings, active-image preview switcher, and split-plan overlay preview.
+  - New split configuration card with `Basic` and `Advanced` modes:
+    - Basic: `Count`, `Percent`, `Pixel` split methods
+    - Advanced: `Pattern (px/%)` and `Color Match` boundary detection
+    - Direction and ordering controls for deterministic segment traversal.
+  - New `Color Match Rules` card (conditional, only shown when Advanced + Color Match) with per-rule color target, tolerance, offset, skip, and match mode configuration.
+  - New standardized sidebar wiring for splitter using `WorkspaceConfigSidebarPanel` (reorderable cards + responsive two-column layout on wide sidebars).
+  - New shared export controls in splitter sidebar:
+    - `Export Format & Quality`
+    - `Format Advanced Settings`
+    - Download mode (`One by one` / `ZIP`) and customizable filename pattern support.
+  - Added splitter processing pipeline under `src/features/splitter/`:
+    - split planner/engine (`count`, `percent`, `pixel`, `pattern`, `color match`)
+    - segment cropping + codec conversion integration
+    - ZIP packaging helper for batch downloads.
+
 - **Pattern Generator Workspace:** Added a dedicated `Pattern Generator` tab directly below `Image Filling` in the Options navigation with a full, independent pattern design workflow.
   - New live preview workspace with canvas-safe rendering and boundary guide overlays.
   - New Canvas card for width/height control, preset size picker integration, and background modes (`Transparent`, `Customized Color`, `Image`).

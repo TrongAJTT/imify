@@ -21,6 +21,7 @@ export type OptionsTab =
   | "single"
   | "batch"
   | "splicing"
+  | "splitter"
   | "filling"
   | "pattern"
   | "diffchecker"
@@ -36,6 +37,7 @@ export const TAB_ITEMS: Array<{ id: OptionsTab; label: string }> = [
   { id: "single", label: "Single Processor" },
   { id: "batch", label: "Batch Processor" },
   { id: "splicing", label: "Image Splicing" },
+  { id: "splitter", label: "Image Splitter" },
   { id: "filling", label: "Image Filling" },
   { id: "pattern", label: "Pattern Generator" },
   { id: "diffchecker", label: "Difference Checker" },

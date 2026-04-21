@@ -18,6 +18,8 @@ import { DEFAULT_STORAGE_STATE } from "@/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { SplicingTab } from "@/options/components/splicing/splicing-tab"
 import { SplicingSidebarShell } from "@/options/components/splicing/splicing-sidebar-shell"
+import { SplitterTab } from "@/options/components/splitter/splitter-tab"
+import { SplitterSidebarShell } from "@/options/components/splitter/splitter-sidebar-shell"
 import { FillingTab } from "@/options/components/filling/filling-tab"
 import { FillingSidebarPanel } from "@/options/components/filling/filling-sidebar-panel"
 import { PatternTab } from "@/options/components/pattern/pattern-tab"
@@ -60,6 +62,7 @@ import {
   Image,
   Layers,
   LayoutGrid,
+  Scissors,
   ListTree,
   PanelLeftClose,
   PanelLeftOpen,
@@ -195,6 +198,7 @@ const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
   single: <Image size={18} />,
   batch: <Workflow size={18} />,
   splicing: <LayoutGrid size={18} />,
+  splitter: <Scissors size={18} />,
   filling: <Layers size={18} />,
   pattern: <Stamp size={18} />,
   diffchecker: <ArrowLeftRight size={18} />,
@@ -410,6 +414,8 @@ export default function OptionsPage() {
         return (
           <SplicingTab onRegisterPreviewQualityChangeHandler={registerPreviewQualityChangeHandler} />
         )
+      case "splitter":
+        return <SplitterTab />
       case "filling":
         return (
           <FillingTab />
@@ -570,6 +576,10 @@ export default function OptionsPage() {
               />
             )}
 
+            {activeTab === "splitter" && (
+              <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+            )}
+
             {activeTab === "filling" && (
               <FillingSidebarPanel />
             )}
@@ -648,6 +658,10 @@ export default function OptionsPage() {
               onOpenSettings={() => openSettingsDialog("performance")}
               enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
             />
+          )}
+
+          {activeTab === "splitter" && (
+            <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
           )}
 
           {activeTab === "filling" && (
