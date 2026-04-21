@@ -5,7 +5,6 @@ import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SegmentedControl } from "@/options/components/ui/segmented-control"
 import { SelectInput } from "@/options/components/ui/select-input"
-import { TextInput } from "@/options/components/ui/text-input"
 import { LabelText } from "@/options/components/ui/typography"
 import { Scissors } from "lucide-react"
 
@@ -196,48 +195,6 @@ export function SplitOptionsAccordion({
                 })
               }
             />
-
-            {settings.advancedMethod === "pixel_pattern" ? (
-              <div className="space-y-2">
-                {showXAxisFields ? (
-                  <TextInput
-                    label="Column Pattern (px)"
-                    value={settings.pixelPatternX}
-                    onChange={(value) => onChange({ pixelPatternX: value })}
-                    placeholder="e.g. 300,500,100"
-                  />
-                ) : null}
-                {showYAxisFields ? (
-                  <TextInput
-                    label="Row Pattern (px)"
-                    value={settings.pixelPatternY}
-                    onChange={(value) => onChange({ pixelPatternY: value })}
-                    placeholder="e.g. 240,480"
-                  />
-                ) : null}
-              </div>
-            ) : null}
-
-            {settings.advancedMethod === "percent_pattern" ? (
-              <div className="space-y-2">
-                {showXAxisFields ? (
-                  <TextInput
-                    label="Column Pattern (%)"
-                    value={settings.percentPatternX}
-                    onChange={(value) => onChange({ percentPatternX: value })}
-                    placeholder="e.g. 20,30,50"
-                  />
-                ) : null}
-                {showYAxisFields ? (
-                  <TextInput
-                    label="Row Pattern (%)"
-                    value={settings.percentPatternY}
-                    onChange={(value) => onChange({ percentPatternY: value })}
-                    placeholder="e.g. 25,25,50"
-                  />
-                ) : null}
-              </div>
-            ) : null}
 
             {isColorMatch ? (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">

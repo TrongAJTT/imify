@@ -38,6 +38,7 @@ const plasmoStorage = {
 
 interface SplitterUiState {
   isSplitOptionsOpen: boolean
+  isPatternSequenceOpen: boolean
   isColorMatchRulesOpen: boolean
   isExportFormatQualityOpen: boolean
   isFormatAdvancedOpen: boolean
@@ -161,6 +162,7 @@ function normalizeExportSettings(settings: SplitterExportSettings): SplitterExpo
 
 const DEFAULT_UI_STATE: SplitterUiState = {
   isSplitOptionsOpen: true,
+  isPatternSequenceOpen: true,
   isColorMatchRulesOpen: true,
   isExportFormatQualityOpen: true,
   isFormatAdvancedOpen: true,

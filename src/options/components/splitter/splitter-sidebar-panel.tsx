@@ -5,6 +5,7 @@ import type { SplitterExportFormat } from "@/features/splitter/types"
 import { ColorMatchRulesAccordion } from "@/options/components/splitter/color-match-rules-accordion"
 import { SplitterExportPanel } from "@/options/components/splitter/splitter-export-panel"
 import { SplitterOrderDialog } from "@/options/components/splitter/splitter-order-dialog"
+import { SplitterPatternSequenceAccordion } from "@/options/components/splitter/splitter-pattern-sequence-accordion"
 import { SplitOptionsAccordion } from "@/options/components/splitter/split-options-accordion"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
@@ -59,6 +60,9 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
   const removeColorRule = useSplitterStore((state) => state.removeColorRule)
 
   const showColorRuleCard = splitSettings.mode === "advanced" && splitSettings.advancedMethod === "color_match"
+  const showPatternSequenceCard =
+    splitSettings.mode === "advanced" &&
+    (splitSettings.advancedMethod === "pixel_pattern" || splitSettings.advancedMethod === "percent_pattern")
 
   const showQuality = supportsTargetFormatQuality(exportSettings.targetFormat)
   const showTinyMode = supportsTargetFormatTinyMode(exportSettings.targetFormat)
@@ -116,6 +120,21 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
             onAddRule={addColorRule}
             onUpdateRule={updateColorRule}
             onRemoveRule={removeColorRule}
+          />
+        )
+      })
+    }
+
+    if (showPatternSequenceCard) {
+      items.push({
+        id: "pattern-sequence",
+        columnSpan: 2,
+        content: (
+          <SplitterPatternSequenceAccordion
+            settings={splitSettings}
+            isOpen={uiState.isPatternSequenceOpen}
+            onOpenChange={(open) => setUiState({ isPatternSequenceOpen: open })}
+            onChange={setSplitSettings}
           />
         )
       })
@@ -252,6 +271,7 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     setSplitSettings,
     setUiState,
     showColorRuleCard,
+    showPatternSequenceCard,
     showQuality,
     showTinyMode,
     splitOrderSummary,
