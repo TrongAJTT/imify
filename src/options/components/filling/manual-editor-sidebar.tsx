@@ -21,6 +21,10 @@ import { LayerListPanel } from "@/options/components/filling/layer-list-panel"
 import { LayerPropertiesPanel } from "@/options/components/filling/layer-properties-panel"
 import { ShapePickerDialog } from "@/options/components/filling/shape-picker-dialog"
 import { GroupLayerPanel } from "@/options/components/filling/group-layer-panel"
+import {
+  WorkspaceConfigSidebarPanel,
+  type WorkspaceConfigSidebarItem
+} from "@/options/components/ui/workspace-config-sidebar-panel"
 
 interface ManualEditorSidebarProps {
   layers: VectorLayer[]
@@ -32,6 +36,7 @@ interface ManualEditorSidebarProps {
   onGroupsChange: (groups: LayerGroup[]) => void
   onCanvasSizeChange: (width: number, height: number) => void
   onSelectLayer: (id: string | null) => void
+  enableWideSidebarGrid?: boolean
 }
 
 const UNIT_OPTIONS: Array<{ value: CanvasSizeUnit; label: string }> = [
@@ -101,6 +106,7 @@ export function ManualEditorSidebar({
   onGroupsChange,
   onCanvasSizeChange,
   onSelectLayer,
+  enableWideSidebarGrid = false
 }: ManualEditorSidebarProps) {
   const [shapePickerOpen, setShapePickerOpen] = useState(false)
   const [canvasSizeDialogOpen, setCanvasSizeDialogOpen] = useState(false)
@@ -485,11 +491,11 @@ export function ManualEditorSidebar({
     [onCanvasSizeChange]
   )
 
-  return (
-    <>
-      <div className="space-y-3">
-
-                <AccordionCard
+  const sidebarItems: WorkspaceConfigSidebarItem[] = [
+    {
+      id: "canvas",
+      content: (
+        <AccordionCard
           icon={<Ruler size={16} />}
           label="Canvas"
           sublabel={`${canvasWidth} x ${canvasHeight} px`}
@@ -549,7 +555,11 @@ export function ManualEditorSidebar({
             </Button>
           </div>
         </AccordionCard>
-
+      )
+    },
+    {
+      id: "layers",
+      content: (
         <ResizableAccordionCard
           icon={<Layers size={16} />}
           label="Layers"
@@ -577,40 +587,57 @@ export function ManualEditorSidebar({
             groupNamesById={groupNamesById}
           />
         </ResizableAccordionCard>
-
-        {selectedLayer && (
-          <AccordionCard
-            icon={<Settings2 size={16} />}
-            label="Properties"
-            sublabel={`${selectedLayer.name || "Layer"}`}
-            colorTheme="purple"
-            defaultOpen={true}
-          >
-            <LayerPropertiesPanel
-              layer={selectedLayer}
-              onUpdate={handleUpdateLayer}
+      )
+    },
+    ...(selectedLayer
+      ? [{
+          id: "properties",
+          content: (
+            <AccordionCard
+              icon={<Settings2 size={16} />}
+              label="Properties"
+              sublabel={`${selectedLayer.name || "Layer"}`}
+              colorTheme="purple"
+              defaultOpen={true}
+            >
+              <LayerPropertiesPanel
+                layer={selectedLayer}
+                onUpdate={handleUpdateLayer}
+              />
+            </AccordionCard>
+          )
+        } satisfies WorkspaceConfigSidebarItem]
+      : []),
+    ...(selectedGroup
+      ? [{
+          id: "group",
+          content: (
+            <GroupLayerPanel
+              group={selectedGroup}
+              members={selectedGroupMembers}
+              onUngroupSelectedLayer={handleUngroupSelectedLayer}
+              onRenameGroup={handleRenameGroup}
+              onToggleCombineAsConvexHull={handleToggleCombineAsConvexHull}
+              onToggleCloseLoop={handleToggleCloseLoop}
+              onToggleFillInterior={handleToggleFillInterior}
             />
-          </AccordionCard>
-        )}
+          )
+        } satisfies WorkspaceConfigSidebarItem]
+      : [])
+  ]
 
-        {selectedGroup && (
-          <GroupLayerPanel
-            group={selectedGroup}
-            members={selectedGroupMembers}
-            onUngroupSelectedLayer={handleUngroupSelectedLayer}
-            onRenameGroup={handleRenameGroup}
-            onToggleCombineAsConvexHull={handleToggleCombineAsConvexHull}
-            onToggleCloseLoop={handleToggleCloseLoop}
-            onToggleFillInterior={handleToggleFillInterior}
-          />
-        )}
+  return (
+    <>
+      <WorkspaceConfigSidebarPanel
+        items={sidebarItems}
+        twoColumn={enableWideSidebarGrid}
+      />
 
-        <ShapePickerDialog
-          isOpen={shapePickerOpen}
-          onClose={() => setShapePickerOpen(false)}
-          onSelect={handleAddShape}
-        />
-      </div>
+      <ShapePickerDialog
+        isOpen={shapePickerOpen}
+        onClose={() => setShapePickerOpen(false)}
+        onSelect={handleAddShape}
+      />
 
       <CanvasSizeDialog
         isOpen={canvasSizeDialogOpen}

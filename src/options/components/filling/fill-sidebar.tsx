@@ -26,12 +26,17 @@ import {
   expandRuntimeOrderToVisibleLayerIds,
   type FillRuntimeItem,
 } from "@/features/filling/fill-runtime-items"
+import {
+  WorkspaceConfigSidebarPanel,
+  type WorkspaceConfigSidebarItem
+} from "@/options/components/ui/workspace-config-sidebar-panel"
 
 interface FillSidebarProps {
   template: FillingTemplate
+  enableWideSidebarGrid?: boolean
 }
 
-export function FillSidebar({ template }: FillSidebarProps) {
+export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSidebarProps) {
   const layerFillStates = useFillingStore((s) => s.layerFillStates)
   const sessionTemplate = useFillUiStore((s) => s.sessionTemplate)
   const initializeFillSession = useFillUiStore((s) => s.initializeFillSession)
@@ -109,44 +114,52 @@ export function FillSidebar({ template }: FillSidebarProps) {
     updateSessionTemplate(() => nextTemplate)
   }
 
-  return (
-    <div className="space-y-3">
-      {/* Layer fill controls */}
-      <ResizableAccordionCard
-        icon={<ImagePlus size={16} />}
-        label="Layers"
-        sublabel={`${runtimeItems.length} visible`}
-        colorTheme="sky"
-        defaultOpen={true}
-        height={layersAccordionHeight}
-        initialHeight={320}
-        onHeightChange={setLayersAccordionHeight}
-        minHeight={180}
-        maxHeight={640}
-      >
-        <div className="space-y-2">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-            <SortableContext items={runtimeItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-              {runtimeItems.map((item: FillRuntimeItem) => {
-                const fillState = layerFillStates.find((state) => state.layerId === item.id)
-                return (
-                  <SortableFillLayerItem key={item.id} id={item.id}>
-                    <FillLayerCard item={item} fillState={fillState} />
-                  </SortableFillLayerItem>
-                )
-              })}
-            </SortableContext>
-          </DndContext>
-        </div>
-      </ResizableAccordionCard>
+  const sidebarItems: WorkspaceConfigSidebarItem[] = [
+    {
+      id: "layers",
+      content: (
+        <ResizableAccordionCard
+          icon={<ImagePlus size={16} />}
+          label="Layers"
+          sublabel={`${runtimeItems.length} visible`}
+          colorTheme="sky"
+          defaultOpen={true}
+          height={layersAccordionHeight}
+          initialHeight={320}
+          onHeightChange={setLayersAccordionHeight}
+          minHeight={180}
+          maxHeight={640}
+        >
+          <div className="space-y-2">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              <SortableContext items={runtimeItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+                {runtimeItems.map((item: FillRuntimeItem) => {
+                  const fillState = layerFillStates.find((state) => state.layerId === item.id)
+                  return (
+                    <SortableFillLayerItem key={item.id} id={item.id}>
+                      <FillLayerCard item={item} fillState={fillState} />
+                    </SortableFillLayerItem>
+                  )
+                })}
+              </SortableContext>
+            </DndContext>
+          </div>
+        </ResizableAccordionCard>
+      )
+    },
+    {
+      id: "layer-customization",
+      content: <FillLayerCustomizationAccordion template={activeTemplate} />
+    },
+    {
+      id: "canvas",
+      content: <FillCanvasAccordion />
+    },
+    {
+      id: "export",
+      content: <FillingExportAccordion />
+    }
+  ]
 
-      <FillLayerCustomizationAccordion template={activeTemplate} />
-
-      {/* Canvas controls */}
-      <FillCanvasAccordion />
-
-      {/* Export controls */}
-      <FillingExportAccordion />
-    </div>
-  )
+  return <WorkspaceConfigSidebarPanel items={sidebarItems} twoColumn={enableWideSidebarGrid} />
 }
