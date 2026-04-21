@@ -1,10 +1,17 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
+import { getCanonicalExtension } from "@/core/download-utils"
 import type { SplitterExportFormat } from "@/features/splitter/types"
 import { ColorMatchRulesAccordion } from "@/options/components/splitter/color-match-rules-accordion"
+import { SplitterExportPanel } from "@/options/components/splitter/splitter-export-panel"
 import { SplitOptionsAccordion } from "@/options/components/splitter/split-options-accordion"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
+import {
+  RenamePatternDialog,
+  SPLITTER_EXPORT_RENAME_PRESETS,
+  SPLITTER_EXPORT_RENAME_TAGS
+} from "@/options/components/ui/rename-pattern-dialog"
 import {
   buildTargetFormatQualityCardConfig,
   supportsTargetFormatQuality,
@@ -56,6 +63,18 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
   const showTinyMode = supportsTargetFormatTinyMode(exportSettings.targetFormat)
 
   const codecOptions = exportSettings.codecOptions
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
+
+  const splitterRenamePreviewSample = useMemo(
+    () => ({
+      originalFileName: "split-preview",
+      dimensions: { width: 1080, height: 1080 },
+      index: 3,
+      totalFiles: 24,
+      outputExtension: getCanonicalExtension(exportSettings.targetFormat)
+    }),
+    [exportSettings.targetFormat]
+  )
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = useMemo(() => {
     const items: WorkspaceConfigSidebarItem[] = [
@@ -65,13 +84,9 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
         content: (
           <SplitOptionsAccordion
             settings={splitSettings}
-            downloadMode={exportSettings.downloadMode}
-            fileNamePattern={exportSettings.fileNamePattern}
             isOpen={uiState.isSplitOptionsOpen}
             onOpenChange={(open) => setUiState({ isSplitOptionsOpen: open })}
             onChange={setSplitSettings}
-            onDownloadModeChange={(mode) => setExportSettings({ downloadMode: mode })}
-            onFileNamePatternChange={(value) => setExportSettings({ fileNamePattern: value })}
           />
         )
       }
@@ -120,6 +135,20 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
             onTiffColorModeChange={(value) => setCodecOptions({ tiff: { colorMode: value } })}
             isOpen={uiState.isExportFormatQualityOpen}
             onOpenChange={(open) => setUiState({ isExportFormatQualityOpen: open })}
+          />
+        )
+      },
+      {
+        id: "export-settings",
+        columnSpan: 2,
+        content: (
+          <SplitterExportPanel
+            downloadMode={exportSettings.downloadMode}
+            fileNamePattern={exportSettings.fileNamePattern}
+            isOpen={uiState.isExportSettingsOpen}
+            onOpenChange={(open) => setUiState({ isExportSettingsOpen: open })}
+            onDownloadModeChange={(mode) => setExportSettings({ downloadMode: mode })}
+            onFileRenamingClick={() => setIsRenameDialogOpen(true)}
           />
         )
       },
@@ -216,9 +245,25 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
   ])
 
   return (
-    <WorkspaceConfigSidebarPanel
-      items={sidebarItems}
-      twoColumn={enableWideSidebarGrid}
-    />
+    <>
+      <WorkspaceConfigSidebarPanel
+        items={sidebarItems}
+        twoColumn={enableWideSidebarGrid}
+      />
+
+      <RenamePatternDialog
+        isOpen={isRenameDialogOpen}
+        onClose={() => setIsRenameDialogOpen(false)}
+        onSave={(pattern) => setExportSettings({ fileNamePattern: pattern })}
+        initialPattern={exportSettings.fileNamePattern}
+        title="Splitter file naming"
+        presets={SPLITTER_EXPORT_RENAME_PRESETS}
+        availableTags={SPLITTER_EXPORT_RENAME_TAGS}
+        previewSample={splitterRenamePreviewSample}
+        emptyPatternFallback="split-[OriginalName]-[Index]"
+        patternPlaceholder="e.g. split-[OriginalName]-[PaddedIndex]"
+        previewInputHint="Splitter export (sample dimensions & index)"
+      />
+    </>
   )
 }

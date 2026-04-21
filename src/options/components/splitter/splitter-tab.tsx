@@ -2,6 +2,9 @@ import { arrayMove } from "@dnd-kit/sortable"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AlertTriangle, Download, ImagePlus, Trash2 } from "lucide-react"
 
+import { ToastContainer } from "@/core/components/toast-container"
+import { useConversionToasts } from "@/core/hooks/use-toast"
+import type { ConversionProgressPayload } from "@/core/types"
 import { buildSmartOutputFileName, reserveUniqueFileName } from "@/options/components/batch/pipeline"
 import { downloadWithFilename, sleep } from "@/options/components/batch/utils"
 import { ImageStrip } from "@/options/components/splicing/image-strip"
@@ -79,10 +82,13 @@ export function SplitterTab() {
   const [errorText, setErrorText] = useState<string | null>(null)
   const [previewPlanWarningText, setPreviewPlanWarningText] = useState<string | null>(null)
   const [previewPlan, setPreviewPlan] = useState<ReturnType<typeof buildSplitterSplitPlan> | null>(null)
+  const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
+  const conversionToasts = useConversionToasts([importToastPayload])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imagesRef = useRef<SplitterImageItem[]>([])
   const previewComputeSequenceRef = useRef(0)
+  const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const activeImage = useMemo(
     () => images.find((image) => image.id === activeImageId) ?? images[0] ?? null,
@@ -128,7 +134,26 @@ export function SplitterTab() {
   useEffect(() => {
     return () => {
       imagesRef.current.forEach(revokeImageItemUrls)
+      if (importToastHideTimerRef.current) {
+        clearTimeout(importToastHideTimerRef.current)
+      }
     }
+  }, [])
+
+  const handleRemoveToast = useCallback((toastId: string) => {
+    if (importToastHideTimerRef.current) {
+      clearTimeout(importToastHideTimerRef.current)
+      importToastHideTimerRef.current = null
+    }
+    setImportToastPayload((current) => (current?.id === toastId ? null : current))
+  }, [])
+
+  const pushImportToast = useCallback((payload: ConversionProgressPayload) => {
+    if (importToastHideTimerRef.current) {
+      clearTimeout(importToastHideTimerRef.current)
+      importToastHideTimerRef.current = null
+    }
+    setImportToastPayload(payload)
   }, [])
 
   useEffect(() => {
@@ -199,18 +224,59 @@ export function SplitterTab() {
       return
     }
 
+    const toastId = `splitter_import_${Date.now()}`
+    pushImportToast({
+      id: toastId,
+      fileName: `Importing ${imageFiles.length} images`,
+      targetFormat: exportSettings.targetFormat,
+      status: "processing",
+      percent: 5,
+      message: "Preparing image import..."
+    })
+
     const preparedItems: SplitterImageItem[] = []
 
-    for (const file of imageFiles) {
-      const thumbnail = await createThumbnail(file)
-      preparedItems.push({
-        id: `splitter_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-        thumbnailUrl: thumbnail.thumbnailUrl,
-        originalWidth: thumbnail.width,
-        originalHeight: thumbnail.height
+    for (let index = 0; index < imageFiles.length; index += 1) {
+      const file = imageFiles[index]
+      try {
+        const thumbnail = await createThumbnail(file)
+        preparedItems.push({
+          id: `splitter_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          file,
+          previewUrl: URL.createObjectURL(file),
+          thumbnailUrl: thumbnail.thumbnailUrl,
+          originalWidth: thumbnail.width,
+          originalHeight: thumbnail.height
+        })
+      } catch {
+        // Skip files that cannot be decoded into a preview.
+      }
+
+      const percent = Math.min(88, 5 + Math.round(((index + 1) / imageFiles.length) * 83))
+      pushImportToast({
+        id: toastId,
+        fileName: `Importing ${imageFiles.length} images`,
+        targetFormat: exportSettings.targetFormat,
+        status: "processing",
+        percent,
+        message: `Creating thumbnails ${index + 1}/${imageFiles.length}...`
       })
+    }
+
+    if (preparedItems.length === 0) {
+      pushImportToast({
+        id: toastId,
+        fileName: "Image import failed",
+        targetFormat: exportSettings.targetFormat,
+        status: "error",
+        percent: 100,
+        message: "No valid images were imported."
+      })
+      importToastHideTimerRef.current = setTimeout(() => {
+        setImportToastPayload((current) => (current?.id === toastId ? null : current))
+        importToastHideTimerRef.current = null
+      }, 3000)
+      return
     }
 
     setImages((current) => [...current, ...preparedItems])
@@ -218,7 +284,27 @@ export function SplitterTab() {
       setActiveImageId(preparedItems[0].id)
     }
     setErrorText(null)
-  }, [activeImageId])
+
+    pushImportToast({
+      id: toastId,
+      fileName: "Image import complete",
+      targetFormat: exportSettings.targetFormat,
+      status: "success",
+      percent: 100,
+      message: `Imported ${preparedItems.length} image${preparedItems.length === 1 ? "" : "s"}.`
+    })
+    importToastHideTimerRef.current = setTimeout(() => {
+      setImportToastPayload((current) => (current?.id === toastId ? null : current))
+      importToastHideTimerRef.current = null
+    }, 2500)
+  }, [activeImageId, exportSettings.targetFormat, pushImportToast])
+
+  const handleDropFiles = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) {
+      return
+    }
+    void appendFiles(Array.from(files))
+  }, [appendFiles])
 
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
@@ -346,7 +432,7 @@ export function SplitterTab() {
   }
 
   const workspaceContent = (
-    <div className="h-full p-6 space-y-4">
+    <div className="p-6">
       <input
         ref={fileInputRef}
         type="file"
@@ -363,9 +449,10 @@ export function SplitterTab() {
           title="Drop images to start splitting"
           subtitle="Supports batch splitting with preset-based settings"
           onClick={openFilePicker}
+          onDropFiles={handleDropFiles}
         />
       ) : (
-        <>
+        <div className="space-y-4">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <Subheading className="truncate">Image Splitter Workspace</Subheading>
@@ -410,36 +497,6 @@ export function SplitterTab() {
             </div>
           ) : null}
 
-          <ImageStrip
-            images={images.map((image) => ({
-              id: image.id,
-              file: image.file,
-              thumbnailUrl: image.thumbnailUrl,
-              originalWidth: image.originalWidth,
-              originalHeight: image.originalHeight
-            }))}
-            onRemove={handleRemoveImage}
-            onReorder={handleReorderImage}
-            onAddMore={openFilePicker}
-          />
-
-          <div className="flex flex-wrap gap-2">
-            {images.map((image) => (
-              <button
-                key={image.id}
-                type="button"
-                onClick={() => setActiveImageId(image.id)}
-                className={`rounded-md border px-2 py-1 text-xs transition-colors ${
-                  activeImage?.id === image.id
-                    ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-500 dark:bg-cyan-500/10 dark:text-cyan-300"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                }`}
-              >
-                {image.file.name}
-              </button>
-            ))}
-          </div>
-
           {isComputingPreview ? (
             <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
               Computing split preview...
@@ -459,11 +516,36 @@ export function SplitterTab() {
             }
             plan={previewPlan}
             warningText={previewPlanWarningText}
+            onDropFiles={handleDropFiles}
           />
-        </>
+
+          <ImageStrip
+            images={images.map((image) => ({
+              id: image.id,
+              file: image.file,
+              thumbnailUrl: image.thumbnailUrl,
+              originalWidth: image.originalWidth,
+              originalHeight: image.originalHeight
+            }))}
+            onRemove={handleRemoveImage}
+            onReorder={handleReorderImage}
+            onAddMore={openFilePicker}
+            selectedImageId={activeImage?.id ?? null}
+            onSelectImage={setActiveImageId}
+          />
+        </div>
       )}
     </div>
   )
 
-  return <SplitterWorkspaceShell workspace={workspaceContent} />
+  return (
+    <SplitterWorkspaceShell
+      workspace={
+        <>
+          {workspaceContent}
+          <ToastContainer toasts={conversionToasts} onRemove={handleRemoveToast} />
+        </>
+      }
+    />
+  )
 }

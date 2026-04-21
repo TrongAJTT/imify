@@ -41,6 +41,7 @@ interface SplitterUiState {
   isColorMatchRulesOpen: boolean
   isExportFormatQualityOpen: boolean
   isFormatAdvancedOpen: boolean
+  isExportSettingsOpen: boolean
 }
 
 export interface SplitterStoreState {
@@ -157,7 +158,8 @@ const DEFAULT_UI_STATE: SplitterUiState = {
   isSplitOptionsOpen: true,
   isColorMatchRulesOpen: true,
   isExportFormatQualityOpen: true,
-  isFormatAdvancedOpen: true
+  isFormatAdvancedOpen: true,
+  isExportSettingsOpen: true
 }
 
 export const useSplitterStore = create<SplitterStoreState>()(

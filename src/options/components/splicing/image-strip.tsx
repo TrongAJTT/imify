@@ -20,13 +20,17 @@ interface ImageStripProps {
   /** Indices from current `images` order (same semantics as batch queue `arrayMove`). */
   onReorder: (fromIndex: number, toIndex: number) => void
   onAddMore: () => void
+  selectedImageId?: string | null
+  onSelectImage?: (id: string) => void
 }
 
 export function ImageStrip({
   images,
   onRemove,
   onReorder,
-  onAddMore
+  onAddMore,
+  selectedImageId,
+  onSelectImage
 }: ImageStripProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -60,8 +64,20 @@ export function ImageStrip({
         <SortableContext items={sortableIds} strategy={horizontalListSortingStrategy}>
           {images.map((img, i) => (
             <SortableQueueItem key={img.id} id={img.id}>
-              <div className="group relative flex-shrink-0 h-[88px] w-20 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div
+                className={`group relative flex-shrink-0 h-[88px] w-20 rounded-lg border bg-white dark:bg-slate-800 overflow-hidden shadow-sm transition-all ${
+                  selectedImageId === img.id
+                    ? "border-cyan-500 ring-2 ring-cyan-300/70 dark:ring-cyan-700/70 shadow-md"
+                    : "border-slate-200 dark:border-slate-700 hover:shadow-md"
+                }`}
+              >
                 <div className="relative h-full w-full bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => onSelectImage?.(img.id)}
+                    className="absolute inset-0 z-10"
+                    aria-label={`Select image ${i + 1}`}
+                  />
                   <img
                     src={img.thumbnailUrl}
                     alt={`Image ${i + 1}`}
@@ -77,7 +93,7 @@ export function ImageStrip({
                   type="button"
                   onClick={() => onRemove(img.id)}
                   onPointerDown={(e) => e.stopPropagation()}
-                  className="absolute top-1 right-1 p-1 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-md opacity-0 group-hover:opacity-100 hover:scale-110"
+                  className="absolute z-20 top-1 right-1 p-1 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-md opacity-0 group-hover:opacity-100 hover:scale-110"
                   aria-label="Remove"
                 >
                   <X size={12} strokeWidth={3} />

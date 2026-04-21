@@ -1,29 +1,20 @@
 import { Scissors } from "lucide-react"
 
 import type {
-  SplitterDownloadMode,
   SplitterSplitSettings
 } from "@/features/splitter/types"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { NumberInput } from "@/options/components/ui/number-input"
+import { SegmentedControl } from "@/options/components/ui/segmented-control"
 import { SelectInput } from "@/options/components/ui/select-input"
 import { TextInput } from "@/options/components/ui/text-input"
 
 interface SplitOptionsAccordionProps {
   settings: SplitterSplitSettings
-  downloadMode: SplitterDownloadMode
-  fileNamePattern: string
   isOpen?: boolean
   onOpenChange?: (open: boolean) => void
   onChange: (patch: Partial<SplitterSplitSettings>) => void
-  onDownloadModeChange: (mode: SplitterDownloadMode) => void
-  onFileNamePatternChange: (value: string) => void
 }
-
-const MODE_OPTIONS = [
-  { value: "basic", label: "Basic" },
-  { value: "advanced", label: "Advanced" }
-]
 
 const DIRECTION_OPTIONS = [
   { value: "vertical", label: "Vertical Slices" },
@@ -58,20 +49,11 @@ const GRID_TRAVERSAL_OPTIONS = [
   { value: "column_first", label: "Columns first" }
 ]
 
-const DOWNLOAD_MODE_OPTIONS = [
-  { value: "zip", label: "ZIP package" },
-  { value: "one_by_one", label: "One by one" }
-]
-
 export function SplitOptionsAccordion({
   settings,
-  downloadMode,
-  fileNamePattern,
   isOpen,
   onOpenChange,
-  onChange,
-  onDownloadModeChange,
-  onFileNamePatternChange
+  onChange
 }: SplitOptionsAccordionProps) {
   const usesGrid = settings.direction === "grid"
   const isBasic = settings.mode === "basic"
@@ -90,12 +72,18 @@ export function SplitOptionsAccordion({
       onOpenChange={onOpenChange}
     >
       <div className="space-y-3">
-        <SelectInput
-          label="Mode"
-          value={settings.mode}
-          options={MODE_OPTIONS}
-          onChange={(value) => onChange({ mode: value as SplitterSplitSettings["mode"] })}
-        />
+        <div className="space-y-1.5">
+          <SegmentedControl
+            value={settings.mode}
+            options={[
+              { value: "basic", label: "Basic" },
+              { value: "advanced", label: "Advanced" }
+            ]}
+            onChange={(value) => onChange({ mode: value })}
+            ariaLabel="Split mode"
+            wrapperClassName="flex justify-center"
+          />
+        </div>
 
         <SelectInput
           label="Direction"
@@ -295,19 +283,6 @@ export function SplitOptionsAccordion({
           </>
         )}
 
-        <SelectInput
-          label="Download Mode"
-          value={downloadMode}
-          options={DOWNLOAD_MODE_OPTIONS}
-          onChange={(value) => onDownloadModeChange(value as SplitterDownloadMode)}
-        />
-
-        <TextInput
-          label="File Name Pattern"
-          value={fileNamePattern}
-          onChange={onFileNamePatternChange}
-          placeholder="e.g. split-[OriginalName]-[PaddedIndex]"
-        />
       </div>
     </AccordionCard>
   )

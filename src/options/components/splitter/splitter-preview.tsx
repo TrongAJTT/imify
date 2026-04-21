@@ -1,3 +1,4 @@
+import { useState } from "react"
 import type { SplitterSplitPlan } from "@/features/splitter/types"
 
 interface SplitterPreviewProps {
@@ -9,9 +10,12 @@ interface SplitterPreviewProps {
   } | null
   plan: SplitterSplitPlan | null
   warningText?: string | null
+  onDropFiles?: (files: FileList | null) => void
 }
 
-export function SplitterPreview({ image, plan, warningText }: SplitterPreviewProps) {
+export function SplitterPreview({ image, plan, warningText, onDropFiles }: SplitterPreviewProps) {
+  const [isDragOver, setIsDragOver] = useState(false)
+
   if (!image) {
     return null
   }
@@ -28,11 +32,36 @@ export function SplitterPreview({ image, plan, warningText }: SplitterPreviewPro
 
       <div className="rounded-xl border border-slate-200 bg-slate-100 p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
         <div
-          className="relative mx-auto overflow-hidden rounded-lg border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950"
+          className={`relative mx-auto overflow-hidden rounded-lg border bg-white dark:bg-slate-950 ${
+            isDragOver
+              ? "border-cyan-500 ring-2 ring-cyan-300/60 dark:ring-cyan-700/60"
+              : "border-slate-300 dark:border-slate-700"
+          }`}
           style={{
             width: "100%",
             maxHeight: "60vh",
             aspectRatio: `${Math.max(1, image.width)} / ${Math.max(1, image.height)}`
+          }}
+          onDragOver={(event) => {
+            if (!onDropFiles) {
+              return
+            }
+            event.preventDefault()
+            setIsDragOver(true)
+          }}
+          onDragLeave={() => {
+            if (!onDropFiles) {
+              return
+            }
+            setIsDragOver(false)
+          }}
+          onDrop={(event) => {
+            if (!onDropFiles) {
+              return
+            }
+            event.preventDefault()
+            setIsDragOver(false)
+            onDropFiles(event.dataTransfer.files)
           }}
         >
           <img
@@ -59,6 +88,12 @@ export function SplitterPreview({ image, plan, warningText }: SplitterPreviewPro
               />
             ))}
           </div>
+
+          {isDragOver ? (
+            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-cyan-500/15 text-sm font-semibold text-cyan-700 dark:text-cyan-300">
+              Drop images to import
+            </div>
+          ) : null}
         </div>
       </div>
 
