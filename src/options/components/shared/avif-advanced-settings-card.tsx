@@ -4,6 +4,7 @@ import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectInput } from "@/options/components/ui/select-input"
+import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 
 export interface AvifAdvancedSettingsCardProps {
   qualityAlpha?: number
@@ -94,7 +95,7 @@ export function AvifAdvancedSettingsCard({
               : "Use this when logos or soft shadows lose edge clarity"
           }
           tooltipLabel="Keep sharp edges for transparent images"
-          tooltipContent="When enabled, forces alpha quality to 100 to preserve sharp edges in logos and soft shadows. When disabled, you can manually adjust alpha quality for smaller file sizes at the cost of potential blurriness around edges."
+          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.keepSharpEdges}
           checked={highAlphaQuality}
           onChange={onHighAlphaQualityChange}
           disabled={disabled}
@@ -103,7 +104,7 @@ export function AvifAdvancedSettingsCard({
 
         <NumberInput
           label="Alpha Quality"
-          tooltipContent="Controls transparency channel quality. Leave unticked above to tune manually."
+          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.alphaQuality}
           value={typeof qualityAlpha === "number" ? qualityAlpha : 90}
           min={0}
           max={100}
@@ -114,7 +115,7 @@ export function AvifAdvancedSettingsCard({
 
         <SelectInput
           label="Chroma Subsampling"
-          tooltipContent={`4:2:0 is smallest and ideal for photos.\n4:4:4 keeps color edges sharp for text, UI, and pixel art.`}
+          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.chromaSubsampling}
           value={String(subsample)}
           onChange={(value) => onSubsampleChange(Number(value) as 1 | 2 | 3)}
           disabled={disabled}
@@ -127,7 +128,7 @@ export function AvifAdvancedSettingsCard({
 
         <SelectInput
           label="Tune"
-          tooltipContent={`Auto is balanced.\nSSIM usually looks more natural.\nPSNR may improve objective signal metrics.`}
+          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.tune}
           value={tune}
           onChange={(value) => onTuneChange(value as "auto" | "ssim" | "psnr")}
           disabled={disabled}

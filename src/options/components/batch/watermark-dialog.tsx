@@ -20,6 +20,7 @@ import {
 import { watermarkStorage } from "@/core/indexed-db"
 import { WatermarkOpenSavedDialog } from "@/options/components/batch/watermark-open-saved-dialog"
 import { WatermarkSaveDialog, type WatermarkSaveAction } from "@/options/components/batch/watermark-save-dialog"
+import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 import {
   buildWatermarkSummary,
   cloneWatermarkConfig,
@@ -547,7 +548,7 @@ export function BatchWatermarkDialog({
 
         <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="grid w-full grid-cols-[auto_1fr_1fr] gap-2 sm:flex sm:w-auto sm:items-center">
-            <Tooltip content="Reset watermark settings to defaults">
+            <Tooltip content={PROCESSOR_TOOLTIPS.batch.watermarkDialog.resetToDefaults}>
               <button
                 type="button"
                 onClick={() => setDraft(cloneWatermarkConfig(DEFAULT_BATCH_WATERMARK))}

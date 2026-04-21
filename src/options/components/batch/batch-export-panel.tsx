@@ -17,6 +17,7 @@ import type {
   BatchTargetFormat,
   BatchWatermarkConfig
 } from "@/options/components/batch/types"
+import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 
 interface BatchExportPanelProps {
   /** Format being exported (for concurrency limits) */
@@ -165,7 +166,7 @@ export function BatchExportPanel({
                 checked={stripExif && supportsExif}
                 onChange={onStripExifChange}
                 disabled={disabled || !supportsExif}
-                tooltipContent="Removes sensitive metadata (GPS, Camera info)."
+                tooltipContent={PROCESSOR_TOOLTIPS.batch.exportPanel.privacyMode}
                 className={!supportsExif ? "opacity-70" : ""}
                 theme="amber"
               />
