@@ -1810,6 +1810,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                     item={item}
                     fillState={fillState}
                     canvasFillState={canvasFillState}
+                  canvasWidth={template.canvasWidth}
+                  canvasHeight={template.canvasHeight}
                     loadedImg={loadedImg?.complete ? loadedImg : undefined}
                     runtimeTransform={groupRuntimeTransforms[item.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }}
                     scale={renderScale}
@@ -2215,6 +2217,8 @@ function FilledGroupShape({
   item,
   fillState,
   canvasFillState,
+  canvasWidth,
+  canvasHeight,
   loadedImg,
   runtimeTransform,
   scale,
@@ -2231,6 +2235,8 @@ function FilledGroupShape({
   item: FillRuntimeGroupItem
   fillState: ReturnType<typeof useFillingStore.getState>["layerFillStates"][number] | undefined
   canvasFillState: CanvasFillState
+  canvasWidth: number
+  canvasHeight: number
   loadedImg: HTMLImageElement | undefined
   runtimeTransform: { x: number; y: number; scaleX: number; scaleY: number; rotation: number }
   scale: number
@@ -2250,19 +2256,31 @@ function FilledGroupShape({
   const effectiveBorderColor = canvasFillState.borderOverrideEnabled
     ? canvasFillState.borderOverrideColor
     : (fillState?.borderColor ?? "#000000")
+  const effectiveCornerRadius = canvasFillState.cornerRadiusOverrideEnabled
+    ? canvasFillState.cornerRadiusOverride
+    : (fillState?.cornerRadius ?? 0)
+  const parsedBorderGradient = parseLinearGradient(effectiveBorderColor)
+  const borderGradientScope = canvasFillState.borderGradientScope ?? "per-layer"
 
   const transformedPolygons = useMemo(
     () => applyRuntimeTransformToPolygons(item.polygons, runtimeTransform),
     [item.polygons, runtimeTransform]
   )
 
-  const stagePolygons = useMemo(
+  const displayPolygons = useMemo(
     () => transformedPolygons.map((polygon) =>
+      effectiveCornerRadius > 0 ? roundedPolygonPoints(polygon, effectiveCornerRadius) : polygon
+    ),
+    [effectiveCornerRadius, transformedPolygons]
+  )
+
+  const stagePolygons = useMemo(
+    () => displayPolygons.map((polygon) =>
       flattenPoints(polygon).map((value, index) =>
         value * scale + (index % 2 === 0 ? offsetX : offsetY)
       )
     ),
-    [offsetX, offsetY, scale, transformedPolygons]
+    [displayPolygons, offsetX, offsetY, scale]
   )
 
   const combinedHull = useMemo(
@@ -2304,6 +2322,57 @@ function FilledGroupShape({
     ),
     [combinedHull, offsetX, offsetY, scale]
   )
+
+  const groupGradientGeometry = useMemo(() => {
+    if (!parsedBorderGradient) return null
+
+    const angleRad = (parsedBorderGradient.angle * Math.PI) / 180
+    if (borderGradientScope === "unified") {
+      const width = canvasWidth * scale
+      const height = canvasHeight * scale
+      const cx = offsetX + width / 2
+      const cy = offsetY + height / 2
+      const len = Math.max(width, height)
+      return {
+        start: {
+          x: cx - (Math.cos(angleRad) * len) / 2,
+          y: cy - (Math.sin(angleRad) * len) / 2,
+        },
+        end: {
+          x: cx + (Math.cos(angleRad) * len) / 2,
+          y: cy + (Math.sin(angleRad) * len) / 2,
+        },
+      }
+    }
+
+    const points = displayPolygons.flat()
+    if (points.length === 0) return null
+    const bounds = getBoundsFromPoints(points)
+    const width = bounds.width * scale
+    const height = bounds.height * scale
+    const cx = offsetX + bounds.x * scale + width / 2
+    const cy = offsetY + bounds.y * scale + height / 2
+    const len = Math.max(width, height)
+    return {
+      start: {
+        x: cx - (Math.cos(angleRad) * len) / 2,
+        y: cy - (Math.sin(angleRad) * len) / 2,
+      },
+      end: {
+        x: cx + (Math.cos(angleRad) * len) / 2,
+        y: cy + (Math.sin(angleRad) * len) / 2,
+      },
+    }
+  }, [
+    borderGradientScope,
+    canvasHeight,
+    canvasWidth,
+    displayPolygons,
+    offsetX,
+    offsetY,
+    parsedBorderGradient,
+    scale,
+  ])
 
   const imageRenderState = useMemo(() => {
     if (!fillState) {
@@ -2414,8 +2483,15 @@ function FilledGroupShape({
           key={`fill-group-border-${item.id}-${index}`}
           points={stagePolygon}
           closed
-          stroke={effectiveBorderColor}
+          stroke={parsedBorderGradient ? undefined : effectiveBorderColor}
           strokeWidth={effectiveBorderWidth * scale}
+          strokeLinearGradientStartPoint={parsedBorderGradient ? groupGradientGeometry?.start : undefined}
+          strokeLinearGradientEndPoint={parsedBorderGradient ? groupGradientGeometry?.end : undefined}
+          strokeLinearGradientColorStops={
+            parsedBorderGradient
+              ? parsedBorderGradient.stops.flatMap((stop) => [stop.offset, stop.color])
+              : undefined
+          }
           lineJoin="round"
           onClick={onSelect}
           onTap={onSelect}

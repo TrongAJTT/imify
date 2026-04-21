@@ -13,6 +13,7 @@ import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectInput } from "@/options/components/ui/select-input"
+import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 const AXIS_DIR_OPTIONS = [
   { value: "horizontal", label: "Horizontal" },
@@ -128,7 +129,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             value={params.axisDirection}
             options={AXIS_DIR_OPTIONS}
             onChange={(v) => update({ axisDirection: v as AxisDirection })}
-            tooltip="Direction of the main axes"
+            tooltip={FILLING_TOOLTIPS.symmetricSidebar.mainAxisDirection}
           />
           <NumberInput
             label="Number of Axes"
@@ -136,7 +137,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ axisCount: v })}
             min={1}
             max={50}
-            tooltipContent="How many parallel axes to generate"
+            tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.numberOfAxes}
           />
         </div>
 
@@ -161,7 +162,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ baseLength: v })}
             min={10}
             max={2000}
-            tooltipContent="Length of the base edge on the primary side of each generated shape."
+            tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.baseLength}
           />
           <NumberInput
             label="Side Length"
@@ -169,7 +170,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ sideLength: v })}
             min={10}
             max={2000}
-            tooltipContent="Distance between the two parallel axes used by each generated shape."
+            tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.sideLength}
           />
         </div>
 
@@ -180,7 +181,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ oppositeBaseLength: v })}
             min={0}
             max={2000}
-            tooltipContent="Length of the edge opposite to Base Length. Set 0 to collapse into a triangle."
+            tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.oppositeLength}
           />
           <NumberInput
             label="Opposite Offset"
@@ -188,7 +189,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ oppositeBaseOffset: v })}
             min={-2000}
             max={2000}
-            tooltipContent="Offset of the opposite base relative to the main base along the appearance axis."
+            tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.oppositeOffset}
           />
         </div>
 
@@ -199,7 +200,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ axisSpacing: v })}
             min={0}
             max={500}
-            tooltipContent="Gap between main axes"
+            tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.axisSpacing}
           />
           <NumberInput
             label="Shape Spacing"
@@ -207,7 +208,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ shapeSpacing: v })}
             min={0}
             max={500}
-            tooltipContent="Gap between shapes on same axis"
+            tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.shapeSpacing}
           />
         </div>
 
@@ -218,7 +219,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ firstShapePosition: v })}
             min={-2000}
             max={2000}
-            tooltipContent="Offset of the first shape on each axis"
+            tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.firstShapePosition}
           />
           <NumberInput
             label="First Axis Position"
@@ -226,7 +227,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             onChangeValue={(v) => update({ firstAxisPosition: v })}
             min={-2000}
             max={2000}
-            tooltipContent="Position of the first axis on the perpendicular coordinate"
+            tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.firstAxisPosition}
           />
         </div>
 
@@ -237,7 +238,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
           onChangeValue={(v) => update({ oddEvenOffset: v })}
           min={-2000}
           max={2000}
-          tooltipContent="Offset applied to even-numbered axes for diagonal patterns"
+          tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.oddEvenAxisOffset}
         />
 
         <CheckboxCard
@@ -245,7 +246,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
           subtitle="Alternate shape orientation and point appearance order on every other shape."
           checked={params.oddEvenShapeReverse}
           onChange={(checked) => update({ oddEvenShapeReverse: checked })}
-          tooltipContent="Creates interleaving symmetric patterns by reversing shape orientation on odd/even sequence."
+          tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.oddEvenShapeReverse}
         />
 
       </div>

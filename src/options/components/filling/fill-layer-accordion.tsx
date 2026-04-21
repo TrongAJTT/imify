@@ -9,6 +9,7 @@ import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { Button } from "@/options/components/ui/button"
+import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 interface FillLayerAccordionProps {
   layer: VectorLayer
@@ -151,7 +152,7 @@ export function FillLayerAccordion({ layer, fillState }: FillLayerAccordionProps
                 onChangeValue={(v) => handleTransformChange({ scaleX: v / 100 })}
                 min={1}
                 max={1000}
-                tooltipContent="Scale in percentage"
+                tooltipContent={FILLING_TOOLTIPS.fillLayerAccordion.scaleInPercentage}
               />
               <NumberInput
                 label="Scale Y"
@@ -159,7 +160,7 @@ export function FillLayerAccordion({ layer, fillState }: FillLayerAccordionProps
                 onChangeValue={(v) => handleTransformChange({ scaleY: v / 100 })}
                 min={1}
                 max={1000}
-                tooltipContent="Scale in percentage"
+                tooltipContent={FILLING_TOOLTIPS.fillLayerAccordion.scaleInPercentage}
               />
             </div>
 

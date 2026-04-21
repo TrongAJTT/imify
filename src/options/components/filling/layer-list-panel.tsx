@@ -29,6 +29,7 @@ import { SHAPE_LABELS } from "@/features/filling/shape-generators"
 import { Button } from "@/options/components/ui/button"
 import { SortableFillLayerItem } from "@/options/components/filling/sortable-fill-layer-item"
 import { Tooltip } from "@/options/components/tooltip"
+import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 interface LayerListPanelProps {
   layers: VectorLayer[]
@@ -197,8 +198,8 @@ export function LayerListPanel({
           <Tooltip
             content={
               isSelectedLayerGrouped
-                ? "Ungroup the selected layer from its current group."
-                : "Group the selected layer. If it is already grouped, this button will ungroup it."
+                ? FILLING_TOOLTIPS.manualLayerList.ungroupSelectedLayer
+                : FILLING_TOOLTIPS.manualLayerList.groupSelectedLayer
             }
             variant="wide1"
           >
@@ -208,7 +209,6 @@ export function LayerListPanel({
                 size="sm"
                 onClick={onToggleGroupForSelected}
                 disabled={!canToggleGroupForSelected}
-                title={isSelectedLayerGrouped ? "Ungroup selected layer" : "Group selected layer"}
                 className="h-7 min-w-[30px] px-2"
               >
                 {isSelectedLayerGrouped ? <Unlink2 size={12} /> : <Link2 size={12} />}
@@ -216,7 +216,7 @@ export function LayerListPanel({
             </span>
           </Tooltip>
 
-          <Tooltip content="Add a new shape layer." variant="wide1">
+          <Tooltip content={FILLING_TOOLTIPS.manualLayerList.addShapeLayer} variant="wide1">
             <span>
               <Button variant="secondary" size="sm" onClick={onAddShape} className="h-7 px-2 text-[11px]">
                 <Plus size={11} />

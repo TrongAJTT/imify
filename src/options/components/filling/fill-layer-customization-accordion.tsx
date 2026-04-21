@@ -16,6 +16,7 @@ import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover
 import { NumberInput } from "@/options/components/ui/number-input"
 import { Tooltip } from "@/options/components/tooltip"
 import { SHORTCUT_DEFINITION_MAP, type ShortcutActionId } from "@/options/shared/shortcuts"
+import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 interface FillLayerCustomizationAccordionProps {
   template: FillingTemplate
@@ -533,12 +534,12 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     onReset={handleResetImageTransform}
                     actions={
                       <>
-                        <Tooltip content="Clear image">
+                        <Tooltip content={FILLING_TOOLTIPS.fillLayerCustomization.clearImage}>
                             <Button type="button" variant="secondary" size="sm" onClick={handleClearImage}>
                             <X size={14} />
                           </Button>
                         </Tooltip>
-                        <Tooltip content="Replace image">
+                        <Tooltip content={FILLING_TOOLTIPS.fillLayerCustomization.replaceImage}>
                           <Button type="button" variant="secondary" size="sm" onClick={triggerImageSelect}>
                             <ImagePlus size={14} />
                           </Button>
@@ -560,7 +561,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     min={0}
                     max={50}
                     disabled={borderOverridden}
-                    tooltipContent={borderOverridden ? "Disabled because Canvas border override is enabled." : undefined}
+                    tooltipContent={borderOverridden ? FILLING_TOOLTIPS.fillLayerCustomization.borderDisabled : undefined}
                   />
                   <ColorPickerPopover
                     label="Color"
@@ -578,7 +579,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     min={0}
                     max={200}
                     disabled={cornerRadiusOverridden}
-                    tooltipContent={cornerRadiusOverridden ? "Disabled because Canvas corner radius override is enabled." : undefined}
+                    tooltipContent={cornerRadiusOverridden ? FILLING_TOOLTIPS.fillLayerCustomization.radiusDisabled : undefined}
                   />
                 </div>
 
