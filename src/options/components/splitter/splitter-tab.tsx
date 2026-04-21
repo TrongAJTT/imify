@@ -11,7 +11,11 @@ import { ImageStrip } from "@/options/components/splicing/image-strip"
 import { SplitterPreview } from "@/options/components/splitter/splitter-preview"
 import { Button } from "@/options/components/ui/button"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
+import { PreviewInteractionModeToggle, type PreviewInteractionMode } from "@/options/components/ui/preview-interaction-mode-toggle"
+import { Tooltip } from "@/options/components/tooltip"
 import { MutedText, Subheading } from "@/options/components/ui/typography"
+import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import { splitImageIntoRawSegments, convertSplitterSegments, createZipBlob } from "@/features/splitter/split-export"
 import { buildSplitterSplitPlan } from "@/features/splitter/split-engine"
 import { decodeFileToImageData } from "@/features/image-pipeline/decode-image-data"
@@ -80,10 +84,31 @@ export function SplitterTab() {
   const [isComputingPreview, setIsComputingPreview] = useState(false)
   const [statusText, setStatusText] = useState<string | null>(null)
   const [errorText, setErrorText] = useState<string | null>(null)
+  const [previewInteractionMode, setPreviewInteractionMode] = useState<PreviewInteractionMode>("idle")
   const [previewPlanWarningText, setPreviewPlanWarningText] = useState<string | null>(null)
   const [previewPlan, setPreviewPlan] = useState<ReturnType<typeof buildSplitterSplitPlan> | null>(null)
   const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const conversionToasts = useConversionToasts([importToastPayload])
+  const { getShortcutLabel } = useShortcutPreferences()
+
+  const splitterPreviewShortcutsEnabled = images.length > 0
+  useShortcutActions([
+    {
+      actionId: "global.preview.pan_mode",
+      enabled: splitterPreviewShortcutsEnabled,
+      handler: () => setPreviewInteractionMode("pan")
+    },
+    {
+      actionId: "global.preview.zoom_mode",
+      enabled: splitterPreviewShortcutsEnabled,
+      handler: () => setPreviewInteractionMode("zoom")
+    },
+    {
+      actionId: "global.preview.idle_mode",
+      enabled: splitterPreviewShortcutsEnabled,
+      handler: () => setPreviewInteractionMode("idle")
+    }
+  ])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imagesRef = useRef<SplitterImageItem[]>([])
@@ -455,16 +480,28 @@ export function SplitterTab() {
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <Subheading className="truncate">Image Splitter Workspace</Subheading>
+              <div className="flex items-center gap-2">
+                <Subheading className="truncate">Image Splitter Workspace</Subheading>
+                {mismatchWarningText ? (
+                  <Tooltip label="Dimension mismatch warning" content={mismatchWarningText} variant="wide2">
+                    <span className="inline-flex items-center">
+                      <AlertTriangle size={16} className="shrink-0 text-rose-500 dark:text-rose-400" />
+                    </span>
+                  </Tooltip>
+                ) : null}
+              </div>
               <MutedText className="text-xs">
                 {images.length} image{images.length === 1 ? "" : "s"} in queue
               </MutedText>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" onClick={openFilePicker} disabled={isExporting}>
-                <ImagePlus size={14} />
-                Add
-              </Button>
+              <PreviewInteractionModeToggle
+                mode={previewInteractionMode}
+                onChange={setPreviewInteractionMode}
+                zoomKeyHint={getShortcutLabel("global.preview.zoom_mode")}
+                panKeyHint={getShortcutLabel("global.preview.pan_mode")}
+                idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
+              />
               <Button variant="secondary" size="sm" onClick={handleClearAll} disabled={isExporting}>
                 <Trash2 size={14} />
                 Clear
@@ -476,15 +513,6 @@ export function SplitterTab() {
             </div>
           </div>
 
-          {mismatchWarningText ? (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-900/60 dark:bg-amber-900/20 dark:text-amber-300">
-              <div className="flex items-start gap-2">
-                <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                <span>{mismatchWarningText}</span>
-              </div>
-            </div>
-          ) : null}
-
           {statusText ? (
             <div className="rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-700 dark:border-cyan-900/60 dark:bg-cyan-900/20 dark:text-cyan-300">
               {statusText}
@@ -494,12 +522,6 @@ export function SplitterTab() {
           {errorText ? (
             <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900/60 dark:bg-rose-900/20 dark:text-rose-300">
               {errorText}
-            </div>
-          ) : null}
-
-          {isComputingPreview ? (
-            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-              Computing split preview...
             </div>
           ) : null}
 
@@ -517,6 +539,8 @@ export function SplitterTab() {
             plan={previewPlan}
             warningText={previewPlanWarningText}
             onDropFiles={handleDropFiles}
+            isComputing={isComputingPreview}
+            previewInteractionMode={previewInteractionMode}
           />
 
           <ImageStrip
@@ -532,6 +556,7 @@ export function SplitterTab() {
             onAddMore={openFilePicker}
             selectedImageId={activeImage?.id ?? null}
             onSelectImage={setActiveImageId}
+            pinAddButtonRight
           />
         </div>
       )}

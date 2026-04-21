@@ -4,6 +4,7 @@ import { getCanonicalExtension } from "@/core/download-utils"
 import type { SplitterExportFormat } from "@/features/splitter/types"
 import { ColorMatchRulesAccordion } from "@/options/components/splitter/color-match-rules-accordion"
 import { SplitterExportPanel } from "@/options/components/splitter/splitter-export-panel"
+import { SplitterOrderDialog } from "@/options/components/splitter/splitter-order-dialog"
 import { SplitOptionsAccordion } from "@/options/components/splitter/split-options-accordion"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
@@ -64,6 +65,7 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
 
   const codecOptions = exportSettings.codecOptions
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
+  const [isSplitOrderDialogOpen, setIsSplitOrderDialogOpen] = useState(false)
 
   const splitterRenamePreviewSample = useMemo(
     () => ({
@@ -75,6 +77,17 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     }),
     [exportSettings.targetFormat]
   )
+
+  const splitOrderSummary = useMemo(() => {
+    const horizontalLabel =
+      splitSettings.horizontalOrder === "left_to_right" ? "Left->Right" : "Right->Left"
+    const verticalLabel =
+      splitSettings.verticalOrder === "top_to_bottom" ? "Top->Bottom" : "Bottom->Top"
+
+    return splitSettings.gridTraversal === "column_first"
+      ? `(${verticalLabel}) -> (${horizontalLabel})`
+      : `(${horizontalLabel}) -> (${verticalLabel})`
+  }, [splitSettings.gridTraversal, splitSettings.horizontalOrder, splitSettings.verticalOrder])
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = useMemo(() => {
     const items: WorkspaceConfigSidebarItem[] = [
@@ -135,20 +148,6 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
             onTiffColorModeChange={(value) => setCodecOptions({ tiff: { colorMode: value } })}
             isOpen={uiState.isExportFormatQualityOpen}
             onOpenChange={(open) => setUiState({ isExportFormatQualityOpen: open })}
-          />
-        )
-      },
-      {
-        id: "export-settings",
-        columnSpan: 2,
-        content: (
-          <SplitterExportPanel
-            downloadMode={exportSettings.downloadMode}
-            fileNamePattern={exportSettings.fileNamePattern}
-            isOpen={uiState.isExportSettingsOpen}
-            onOpenChange={(open) => setUiState({ isExportSettingsOpen: open })}
-            onDownloadModeChange={(mode) => setExportSettings({ downloadMode: mode })}
-            onFileRenamingClick={() => setIsRenameDialogOpen(true)}
           />
         )
       },
@@ -223,6 +222,22 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
             }}
           />
         )
+      },
+      {
+        id: "export-settings",
+        columnSpan: 2,
+        content: (
+          <SplitterExportPanel
+            downloadMode={exportSettings.downloadMode}
+            fileNamePattern={exportSettings.fileNamePattern}
+            isOpen={uiState.isExportSettingsOpen}
+            onOpenChange={(open) => setUiState({ isExportSettingsOpen: open })}
+            onDownloadModeChange={(mode) => setExportSettings({ downloadMode: mode })}
+            splitOrderSummary={splitOrderSummary}
+            onSplitOrderClick={() => setIsSplitOrderDialogOpen(true)}
+            onFileRenamingClick={() => setIsRenameDialogOpen(true)}
+          />
+        )
       }
     )
 
@@ -239,6 +254,7 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     showColorRuleCard,
     showQuality,
     showTinyMode,
+    splitOrderSummary,
     splitSettings,
     uiState,
     updateColorRule
@@ -263,6 +279,17 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
         emptyPatternFallback="split-[OriginalName]-[Index]"
         patternPlaceholder="e.g. split-[OriginalName]-[PaddedIndex]"
         previewInputHint="Splitter export (sample dimensions & index)"
+      />
+
+      <SplitterOrderDialog
+        isOpen={isSplitOrderDialogOpen}
+        onClose={() => setIsSplitOrderDialogOpen(false)}
+        settings={{
+          horizontalOrder: splitSettings.horizontalOrder,
+          verticalOrder: splitSettings.verticalOrder,
+          gridTraversal: splitSettings.gridTraversal
+        }}
+        onChange={setSplitSettings}
       />
     </>
   )

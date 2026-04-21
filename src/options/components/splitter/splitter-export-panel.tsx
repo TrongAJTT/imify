@@ -1,4 +1,4 @@
-import { FileEdit, Stamp } from "lucide-react"
+import { ArrowUpDown, FileEdit, Stamp } from "lucide-react"
 
 import type { SplitterDownloadMode } from "@/features/splitter/types"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
@@ -11,6 +11,8 @@ interface SplitterExportPanelProps {
   isOpen?: boolean
   onOpenChange?: (open: boolean) => void
   onDownloadModeChange: (mode: SplitterDownloadMode) => void
+  splitOrderSummary: string
+  onSplitOrderClick: () => void
   onFileRenamingClick: () => void
 }
 
@@ -25,6 +27,8 @@ export function SplitterExportPanel({
   isOpen,
   onOpenChange,
   onDownloadModeChange,
+  splitOrderSummary,
+  onSplitOrderClick,
   onFileRenamingClick
 }: SplitterExportPanelProps) {
   const modeLabel = downloadMode === "zip" ? "ZIP package" : "One by one"
@@ -45,6 +49,13 @@ export function SplitterExportPanel({
           value={downloadMode}
           options={DOWNLOAD_MODE_OPTIONS}
           onChange={(value) => onDownloadModeChange(value as SplitterDownloadMode)}
+        />
+        <SidebarCard
+          icon={<ArrowUpDown size={14} />}
+          label="Split Order"
+          sublabel={splitOrderSummary}
+          onClick={onSplitOrderClick}
+          theme="amber"
         />
         <SidebarCard
           icon={<FileEdit size={14} />}

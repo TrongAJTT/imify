@@ -34,21 +34,6 @@ const ADVANCED_METHOD_OPTIONS = [
   { value: "color_match", label: "Color Match" }
 ]
 
-const ORDER_X_OPTIONS = [
-  { value: "left_to_right", label: "Left to right" },
-  { value: "right_to_left", label: "Right to left" }
-]
-
-const ORDER_Y_OPTIONS = [
-  { value: "top_to_bottom", label: "Top to bottom" },
-  { value: "bottom_to_top", label: "Bottom to top" }
-]
-
-const GRID_TRAVERSAL_OPTIONS = [
-  { value: "row_first", label: "Rows first" },
-  { value: "column_first", label: "Columns first" }
-]
-
 export function SplitOptionsAccordion({
   settings,
   isOpen,
@@ -91,36 +76,6 @@ export function SplitOptionsAccordion({
           options={DIRECTION_OPTIONS}
           onChange={(value) => onChange({ direction: value as SplitterSplitSettings["direction"] })}
         />
-
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <SelectInput
-            label="Horizontal Order"
-            value={settings.horizontalOrder}
-            options={ORDER_X_OPTIONS}
-            onChange={(value) =>
-              onChange({ horizontalOrder: value as SplitterSplitSettings["horizontalOrder"] })
-            }
-          />
-          <SelectInput
-            label="Vertical Order"
-            value={settings.verticalOrder}
-            options={ORDER_Y_OPTIONS}
-            onChange={(value) =>
-              onChange({ verticalOrder: value as SplitterSplitSettings["verticalOrder"] })
-            }
-          />
-        </div>
-
-        {usesGrid ? (
-          <SelectInput
-            label="Grid Traversal"
-            value={settings.gridTraversal}
-            options={GRID_TRAVERSAL_OPTIONS}
-            onChange={(value) =>
-              onChange({ gridTraversal: value as SplitterSplitSettings["gridTraversal"] })
-            }
-          />
-        ) : null}
 
         {isBasic ? (
           <>
