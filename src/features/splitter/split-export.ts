@@ -58,6 +58,35 @@ function resolveTargetFormat(format: SplitterExportFormat): ImageFormat {
   return format === "mozjpeg" ? "jpg" : format
 }
 
+function parseRatio(value: string): { width: number; height: number } {
+  if (value === "1:1") {
+    return { width: 1, height: 1 }
+  }
+  return { width: 4, height: 5 }
+}
+
+function drawSocialOverflowAdjustedSegment(args: {
+  context: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D
+  bitmap: ImageBitmap
+  rect: SplitterSplitRect
+  targetWidth: number
+  targetHeight: number
+  overflowMode: "crop" | "stretch" | "pad"
+  padColor: string
+}) {
+  const { context, bitmap, rect, targetWidth, targetHeight, overflowMode, padColor } = args
+  if (overflowMode === "stretch") {
+    context.drawImage(bitmap, rect.x, rect.y, rect.width, rect.height, 0, 0, targetWidth, targetHeight)
+    return
+  }
+
+  context.fillStyle = padColor
+  context.fillRect(0, 0, targetWidth, targetHeight)
+  const dx = Math.round((targetWidth - rect.width) / 2)
+  const dy = Math.round((targetHeight - rect.height) / 2)
+  context.drawImage(bitmap, rect.x, rect.y, rect.width, rect.height, dx, dy, rect.width, rect.height)
+}
+
 export async function splitImageIntoRawSegments(args: {
   file: File
   splitSettings: SplitterSplitSettings
@@ -77,9 +106,25 @@ export async function splitImageIntoRawSegments(args: {
   try {
     const segments: SplitterRawSegment[] = []
 
-    for (const rect of plan.rects) {
-      const width = Math.max(1, Math.round(rect.width))
-      const height = Math.max(1, Math.round(rect.height))
+    for (let rectIndex = 0; rectIndex < plan.rects.length; rectIndex += 1) {
+      const rect = plan.rects[rectIndex]
+      const isLastSegment = rectIndex === plan.rects.length - 1
+      let width = Math.max(1, Math.round(rect.width))
+      let height = Math.max(1, Math.round(rect.height))
+      const useSocialOverflowAdjust =
+        splitSettings.mode === "advanced" &&
+        splitSettings.advancedMethod === "social_carousel" &&
+        splitSettings.socialOverflowMode !== "crop" &&
+        isLastSegment
+
+      if (useSocialOverflowAdjust) {
+        const ratio = parseRatio(splitSettings.socialTargetRatio)
+        if (splitSettings.direction === "horizontal") {
+          height = Math.max(1, Math.round((width * ratio.height) / ratio.width))
+        } else {
+          width = Math.max(1, Math.round((height * ratio.width) / ratio.height))
+        }
+      }
       const canvas = createCanvas(width, height)
       const context = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null
 
@@ -87,17 +132,29 @@ export async function splitImageIntoRawSegments(args: {
         throw new Error("Unable to get canvas context for split segment.")
       }
 
-      context.drawImage(
-        bitmap,
-        rect.x,
-        rect.y,
-        rect.width,
-        rect.height,
-        0,
-        0,
-        width,
-        height
-      )
+      if (useSocialOverflowAdjust) {
+        drawSocialOverflowAdjustedSegment({
+          context,
+          bitmap,
+          rect,
+          targetWidth: width,
+          targetHeight: height,
+          overflowMode: splitSettings.socialOverflowMode,
+          padColor: splitSettings.socialPadColor
+        })
+      } else {
+        context.drawImage(
+          bitmap,
+          rect.x,
+          rect.y,
+          rect.width,
+          rect.height,
+          0,
+          0,
+          width,
+          height
+        )
+      }
 
       const blob = await toBlob(canvas, "image/png")
       segments.push({

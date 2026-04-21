@@ -183,7 +183,9 @@ export function SplitterPreview({
               return
             }
 
-            event.preventDefault()
+            if (event.cancelable) {
+              event.preventDefault()
+            }
 
             if (previewInteractionMode === "pan") {
               const delta = event.deltaY > 0 ? 50 : -50

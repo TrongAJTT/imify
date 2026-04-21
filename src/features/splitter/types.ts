@@ -3,9 +3,16 @@ import type { FormatCodecOptions } from "@/core/types"
 export type SplitterDirection = "vertical" | "horizontal" | "grid"
 export type SplitterMode = "basic" | "advanced"
 export type SplitterBasicMethod = "count" | "percent" | "pixel"
-export type SplitterAdvancedMethod = "pixel_pattern" | "percent_pattern" | "color_match" | "custom_list"
+export type SplitterAdvancedMethod =
+  | "pixel_pattern"
+  | "percent_pattern"
+  | "color_match"
+  | "custom_list"
+  | "social_carousel"
 export type SplitterGuideUnit = "pixel" | "percent"
 export type SplitterGuideEdge = "left" | "right" | "top" | "bottom"
+export type SplitterSocialTargetRatio = "1:1" | "4:5" | "3:4" | "2:3" | "5:4" | "16:9" | "9:16"
+export type SplitterSocialOverflowMode = "crop" | "stretch" | "pad"
 
 export type SplitterHorizontalOrder = "left_to_right" | "right_to_left"
 export type SplitterVerticalOrder = "top_to_bottom" | "bottom_to_top"
@@ -56,6 +63,9 @@ export interface SplitterSplitSettings {
   colorMatchTolerance: number
   colorRules: SplitterColorRule[]
   customGuides: SplitterCustomGuide[]
+  socialTargetRatio: SplitterSocialTargetRatio
+  socialOverflowMode: SplitterSocialOverflowMode
+  socialPadColor: string
 }
 
 export type SplitterExportFormat =
@@ -141,7 +151,10 @@ export const DEFAULT_SPLITTER_SPLIT_SETTINGS: SplitterSplitSettings = {
   colorMatchSkipBefore: 0,
   colorMatchTolerance: 24,
   colorRules: [createDefaultSplitterColorRule(1)],
-  customGuides: [createDefaultSplitterCustomGuide()]
+  customGuides: [createDefaultSplitterCustomGuide()],
+  socialTargetRatio: "4:5",
+  socialOverflowMode: "crop",
+  socialPadColor: "#ffffff"
 }
 
 export const DEFAULT_SPLITTER_EXPORT_SETTINGS: SplitterExportSettings = {

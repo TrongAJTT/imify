@@ -112,6 +112,7 @@ function normalizeColorRules(rules: SplitterColorRule[]): SplitterColorRule[] {
 }
 
 function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitSettings {
+  const validSocialRatios = new Set(["1:1", "4:5", "3:4", "2:3", "5:4", "16:9", "9:16"])
   return {
     ...settings,
     guideColor:
@@ -133,7 +134,16 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
     percentPatternX: settings.percentPatternX.trim() || "50",
     percentPatternY: settings.percentPatternY.trim() || "50",
     colorRules: normalizeColorRules(settings.colorRules),
-    customGuides: normalizeCustomGuides(settings.customGuides)
+    customGuides: normalizeCustomGuides(settings.customGuides),
+    socialTargetRatio: validSocialRatios.has(settings.socialTargetRatio) ? settings.socialTargetRatio : "4:5",
+    socialOverflowMode:
+      settings.socialOverflowMode === "stretch" || settings.socialOverflowMode === "pad"
+        ? settings.socialOverflowMode
+        : "crop",
+    socialPadColor:
+      typeof settings.socialPadColor === "string" && settings.socialPadColor.trim()
+        ? settings.socialPadColor.trim()
+        : "#ffffff"
   }
 }
 

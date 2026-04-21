@@ -34,7 +34,7 @@ function parsePattern(raw: string): number[] {
     .filter((entry) => Number.isFinite(entry) && entry > 0)
 }
 
-function normalizeCuts(rawCuts: number[], maxValue: number): number[] {
+function normalizeCuts(rawCuts: number[], maxValue: number, forceIncludeMax: boolean = true): number[] {
   const next = Array.from(
     new Set(
       rawCuts
@@ -47,7 +47,7 @@ function normalizeCuts(rawCuts: number[], maxValue: number): number[] {
     next.unshift(0)
   }
 
-  if (next[next.length - 1] !== maxValue) {
+  if (forceIncludeMax && next[next.length - 1] !== maxValue) {
     next.push(maxValue)
   }
 
@@ -132,6 +132,76 @@ function buildPatternCuts(total: number, pattern: number[], isPercentPattern: bo
 
   cuts.push(total)
   return normalizeCuts(cuts, total)
+}
+
+function parseRatio(value: string): { width: number; height: number } {
+  const map: Record<string, { width: number; height: number }> = {
+    "1:1": { width: 1, height: 1 },
+    "4:5": { width: 4, height: 5 },
+    "3:4": { width: 3, height: 4 },
+    "2:3": { width: 2, height: 3 },
+    "5:4": { width: 5, height: 4 },
+    "16:9": { width: 16, height: 9 },
+    "9:16": { width: 9, height: 16 }
+  }
+  return map[value] ?? map["4:5"]
+}
+
+function buildSocialCarouselCuts(args: {
+  width: number
+  height: number
+  targetRatio: string
+  overflowMode: "crop" | "stretch" | "pad"
+}): { xCuts: number[]; yCuts: number[]; direction: SplitterDirection } {
+  const direction: SplitterDirection = args.width >= args.height ? "vertical" : "horizontal"
+
+  const ratio = parseRatio(args.targetRatio)
+  let xCuts: number[] = [0, args.width]
+  let yCuts: number[] = [0, args.height]
+
+  if (direction === "vertical") {
+    const step = (args.height * ratio.width) / ratio.height
+    if (!Number.isFinite(step) || step <= 0) {
+      return { xCuts, yCuts, direction }
+    }
+
+    if (args.overflowMode === "crop") {
+      const fullCount = Math.floor(args.width / step)
+      if (fullCount >= 1) {
+        const cuts = [0]
+        for (let index = 1; index <= fullCount; index += 1) {
+          cuts.push(Math.round(index * step))
+        }
+        xCuts = normalizeCuts(cuts, args.width, false)
+      }
+    } else {
+      xCuts = buildUniformStepCuts(args.width, step)
+    }
+  } else {
+    const step = (args.width * ratio.height) / ratio.width
+    if (!Number.isFinite(step) || step <= 0) {
+      return { xCuts, yCuts, direction }
+    }
+
+    if (args.overflowMode === "crop") {
+      const fullCount = Math.floor(args.height / step)
+      if (fullCount >= 1) {
+        const cuts = [0]
+        for (let index = 1; index <= fullCount; index += 1) {
+          cuts.push(Math.round(index * step))
+        }
+        yCuts = normalizeCuts(cuts, args.height, false)
+      }
+    } else {
+      yCuts = buildUniformStepCuts(args.height, step)
+    }
+  }
+
+  return {
+    xCuts,
+    yCuts,
+    direction
+  }
 }
 
 function parseHexToRgb(color: string): RgbColor | null {
@@ -328,6 +398,10 @@ function buildAxisCuts(
     return buildCustomListCuts(total, axis, settings)
   }
 
+  if (settings.advancedMethod === "social_carousel") {
+    return [0, total]
+  }
+
   return [0, total]
 }
 
@@ -453,7 +527,17 @@ export function buildSplitterSplitPlan(args: {
   let xCuts: number[] = [0, width]
   let yCuts: number[] = [0, height]
 
-  if (effectiveDirection === "vertical") {
+  if (settings.mode === "advanced" && settings.advancedMethod === "social_carousel") {
+    const socialResult = buildSocialCarouselCuts({
+      width,
+      height,
+      targetRatio: settings.socialTargetRatio,
+      overflowMode: settings.socialOverflowMode
+    })
+    effectiveDirection = socialResult.direction
+    xCuts = socialResult.xCuts
+    yCuts = socialResult.yCuts
+  } else if (effectiveDirection === "vertical") {
     if (settings.mode === "advanced" && settings.advancedMethod === "color_match" && !imageData) {
       warnings.push("Color Match requires image data. Preview was simplified.")
     }
@@ -468,8 +552,12 @@ export function buildSplitterSplitPlan(args: {
     yCuts = buildAxisCuts(settings, "y", height, imageData)
   }
 
-  xCuts = normalizeCuts(xCuts, width)
-  yCuts = normalizeCuts(yCuts, height)
+  const isSocialCrop =
+    settings.mode === "advanced" &&
+    settings.advancedMethod === "social_carousel" &&
+    settings.socialOverflowMode === "crop"
+  xCuts = normalizeCuts(xCuts, width, !isSocialCrop)
+  yCuts = normalizeCuts(yCuts, height, !isSocialCrop)
 
   const rects = buildRects(effectiveDirection, xCuts, yCuts, settings, width, height)
 

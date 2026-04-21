@@ -31,7 +31,24 @@ const ADVANCED_METHOD_OPTIONS = [
   { value: "pixel_pattern", label: "Pixel Pattern" },
   { value: "percent_pattern", label: "Percent Pattern" },
   { value: "custom_list", label: "Custom List" },
+  { value: "social_carousel", label: "Social Carousel Slicer" },
   { value: "color_match", label: "Color Match" }
+]
+
+const SOCIAL_TARGET_RATIO_OPTIONS = [
+  { value: "1:1", label: "1:1 (Square)" },
+  { value: "4:5", label: "4:5 (Portrait)" },
+  { value: "3:4", label: "3:4 (Portrait)" },
+  { value: "2:3", label: "2:3 (Portrait)" },
+  { value: "5:4", label: "5:4 (Landscape)" },
+  { value: "16:9", label: "16:9 (Landscape)" },
+  { value: "9:16", label: "9:16 (Story/Reel)" }
+]
+
+const SOCIAL_OVERFLOW_OPTIONS = [
+  { value: "crop", label: "Crop remainder" },
+  { value: "stretch", label: "Stretch last slice" },
+  { value: "pad", label: "Pad last slice" }
 ]
 
 export function SplitOptionsAccordion({
@@ -44,6 +61,8 @@ export function SplitOptionsAccordion({
   const isBasic = settings.mode === "basic"
   const isColorMatch =
     settings.mode === "advanced" && settings.advancedMethod === "color_match"
+  const isSocialCarousel =
+    settings.mode === "advanced" && settings.advancedMethod === "social_carousel"
   const isColorMatchGridFallback = isColorMatch && settings.direction === "grid"
 
   const showXAxisFields = settings.direction === "vertical" || usesGrid
@@ -71,35 +90,37 @@ export function SplitOptionsAccordion({
           />
         </div>
 
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-2">
-            <LabelText className="text-xs">Direction</LabelText>
-            {isColorMatchGridFallback ? (
-              <Tooltip
-                content="Color Match only works with a single axis. Grid is currently treated as vertical splitting."
-                variant="wide1">
-                <span className="inline-flex h-6 items-center rounded-md border border-amber-300 bg-amber-50 px-2 text-[10px] font-semibold text-amber-700 dark:border-amber-700/70 dark:bg-amber-950/20 dark:text-amber-200">
-                  Fallback: Vertical
-                </span>
-              </Tooltip>
-            ) : null}
+        {!isSocialCarousel ? (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <LabelText className="text-xs">Direction</LabelText>
+              {isColorMatchGridFallback ? (
+                <Tooltip
+                  content="Color Match only works with a single axis. Grid is currently treated as vertical splitting."
+                  variant="wide1">
+                  <span className="inline-flex h-6 items-center rounded-md border border-amber-300 bg-amber-50 px-2 text-[10px] font-semibold text-amber-700 dark:border-amber-700/70 dark:bg-amber-950/20 dark:text-amber-200">
+                    Fallback: Vertical
+                  </span>
+                </Tooltip>
+              ) : null}
+            </div>
+            <select
+              value={settings.direction}
+              onChange={(event) =>
+                onChange({
+                  direction: event.target
+                    .value as SplitterSplitSettings["direction"]
+                })
+              }
+              className="w-full h-8 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 px-3 text-xs leading-5 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all shadow-sm">
+              {DIRECTION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <select
-            value={settings.direction}
-            onChange={(event) =>
-              onChange({
-                direction: event.target
-                  .value as SplitterSplitSettings["direction"]
-              })
-            }
-            className="w-full h-8 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 px-3 text-xs leading-5 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all shadow-sm">
-            {DIRECTION_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        ) : null}
 
         {isBasic ? (
           <>
@@ -239,6 +260,40 @@ export function SplitOptionsAccordion({
                     onChange({ colorMatchSkipPixels: value })
                   }
                 />
+              </div>
+            ) : null}
+
+            {isSocialCarousel ? (
+              <div className="space-y-2">
+                <SelectInput
+                  label="Target Ratio"
+                  value={settings.socialTargetRatio}
+                  options={SOCIAL_TARGET_RATIO_OPTIONS}
+                  onChange={(value) =>
+                    onChange({
+                      socialTargetRatio: value as SplitterSplitSettings["socialTargetRatio"]
+                    })
+                  }
+                />
+                <SelectInput
+                  label="Remainder Handling"
+                  value={settings.socialOverflowMode}
+                  options={SOCIAL_OVERFLOW_OPTIONS}
+                  onChange={(value) =>
+                    onChange({
+                      socialOverflowMode: value as SplitterSplitSettings["socialOverflowMode"]
+                    })
+                  }
+                />
+                {settings.socialOverflowMode === "pad" ? (
+                  <ColorPickerPopover
+                    label="Pad Color"
+                    value={settings.socialPadColor || "#ffffff"}
+                    onChange={(value) => onChange({ socialPadColor: value })}
+                    enableGradient={false}
+                    outputMode="hex"
+                  />
+                ) : null}
               </div>
             ) : null}
           </>
