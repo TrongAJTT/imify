@@ -114,7 +114,7 @@ export function AvifAdvancedSettingsCard({
 
         <SelectInput
           label="Chroma Subsampling"
-          tooltip={`4:2:0 is smallest and ideal for photos.\n4:4:4 keeps color edges sharp for text, UI, and pixel art.`}
+          tooltipContent={`4:2:0 is smallest and ideal for photos.\n4:4:4 keeps color edges sharp for text, UI, and pixel art.`}
           value={String(subsample)}
           onChange={(value) => onSubsampleChange(Number(value) as 1 | 2 | 3)}
           disabled={disabled}
@@ -127,7 +127,7 @@ export function AvifAdvancedSettingsCard({
 
         <SelectInput
           label="Tune"
-          tooltip={`Auto is balanced.\nSSIM usually looks more natural.\nPSNR may improve objective signal metrics.`}
+          tooltipContent={`Auto is balanced.\nSSIM usually looks more natural.\nPSNR may improve objective signal metrics.`}
           value={tune}
           onChange={(value) => onTuneChange(value as "auto" | "ssim" | "psnr")}
           disabled={disabled}

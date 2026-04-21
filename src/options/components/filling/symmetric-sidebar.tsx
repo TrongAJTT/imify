@@ -129,7 +129,7 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
             value={params.axisDirection}
             options={AXIS_DIR_OPTIONS}
             onChange={(v) => update({ axisDirection: v as AxisDirection })}
-            tooltip={FILLING_TOOLTIPS.symmetricSidebar.mainAxisDirection}
+            tooltipContent={FILLING_TOOLTIPS.symmetricSidebar.mainAxisDirection}
           />
           <NumberInput
             label="Number of Axes"

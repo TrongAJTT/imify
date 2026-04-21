@@ -67,7 +67,7 @@ export function MozJpegAdvancedSettingsCard({
 
         <SelectInput
           label="Color Resolution (Chroma)"
-          tooltip={`4:2:0 is smallest and ideal for photos.\n4:2:2 offers better color accuracy for web graphics.`}
+          tooltipContent={`4:2:0 is smallest and ideal for photos.\n4:2:2 offers better color accuracy for web graphics.`}
           value={String(chromaSubsampling)}
           onChange={(value) => onChromaSubsamplingChange(Number(value) as 0 | 1 | 2)}
           disabled={disabled}

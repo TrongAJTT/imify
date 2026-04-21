@@ -164,7 +164,7 @@ export function FillCanvasAccordion() {
                   value={state.borderGradientScope ?? "per-layer"}
                   options={BORDER_GRADIENT_SCOPE_OPTIONS}
                   onChange={(v) => update({ borderGradientScope: v as "per-layer" | "unified" })}
-                  tooltip={FILLING_TOOLTIPS.fillCanvas.gradientMode}
+                  tooltipContent={FILLING_TOOLTIPS.fillCanvas.gradientMode}
                 />
               </div>
               <ColorPickerPopover

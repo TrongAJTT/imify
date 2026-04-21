@@ -17,7 +17,7 @@ export function SelectInput({
   onChange,
   disabled,
   className = "",
-  tooltip,
+  tooltipLabel,
   tooltipContent
 }: {
   label: string
@@ -26,17 +26,14 @@ export function SelectInput({
   onChange: (v: string) => void
   disabled?: boolean
   className?: string
-  tooltip?: string
+  tooltipLabel?: string
   tooltipContent?: ReactNode
 }) {
   const labelElement = (
     <div className="flex items-center gap-1">
       <span>{label}</span>
-      {tooltipContent ? (
-        <InfoPopover label={label}>{tooltipContent}</InfoPopover>
-      ) : null}
-      {tooltip && !tooltipContent && (
-        <Tooltip content={tooltip}>
+      {(tooltipLabel || tooltipContent) && (
+        <Tooltip label={tooltipLabel} content={tooltipContent} variant="wide1">
           <HelpCircle size={12} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help" />
         </Tooltip>
       )}

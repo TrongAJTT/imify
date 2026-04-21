@@ -90,7 +90,7 @@ export function PatternAssetSettingsAccordion() {
               value={layerColorOverride.mode}
               options={COLOR_OVERRIDE_MODE_OPTIONS}
               onChange={(value) => setLayerColorOverride({ mode: value as "per-asset" | "unified" })}
-              tooltip="Per Asset: apply gradient/paint per layer tile. Unified: one shared color field across the full canvas."
+              tooltipContent="Per Asset: apply gradient/paint per layer tile. Unified: one shared color field across the full canvas."
               />
               <ColorPickerPopover
               label="Override Color"
