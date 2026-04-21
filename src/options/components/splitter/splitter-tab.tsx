@@ -235,7 +235,11 @@ export function SplitterTab() {
 
       try {
         let imageData: ImageData | undefined
-        if (splitSettings.mode === "advanced" && splitSettings.advancedMethod === "color_match") {
+        if (
+          splitSettings.mode === "advanced" &&
+          (splitSettings.advancedMethod === "color_match" ||
+            splitSettings.advancedMethod === "auto_sprite")
+        ) {
           const decoded = await decodeFileToImageData(activeImage.file)
           imageData = decoded.imageData
         }

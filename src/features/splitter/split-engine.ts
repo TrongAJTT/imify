@@ -579,6 +579,118 @@ function buildGutterMarginGridPlan(args: {
   return { xCuts, yCuts, rects, warnings }
 }
 
+function buildAutoSpritePlan(args: {
+  width: number
+  height: number
+  imageData: ImageData
+  settings: SplitterSplitSettings
+}): { xCuts: number[]; yCuts: number[]; rects: SplitterSplitRect[]; warnings: string[] } {
+  const { width, height, imageData, settings } = args
+  const data = imageData.data
+  const warnings: string[] = []
+  const alphaThreshold = clampInt(settings.spriteAlphaThreshold, 0, 255)
+  const minArea = clampInt(settings.spriteMinArea, 1, width * height)
+  const padding = clampInt(settings.spritePadding, 0, Math.max(width, height))
+  const useEightWay = settings.spriteConnectivity === 8
+  const visited = new Uint8Array(width * height)
+  const rects: SplitterSplitRect[] = []
+
+  const within = (x: number, y: number) => x >= 0 && y >= 0 && x < width && y < height
+  const isSolid = (x: number, y: number) => data[(y * width + x) * 4 + 3] > alphaThreshold
+  const neighbors: Array<[number, number]> = useEightWay
+    ? [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+        [1, 1],
+        [1, -1],
+        [-1, 1],
+        [-1, -1]
+      ]
+    : [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1]
+      ]
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const seedIndex = y * width + x
+      if (visited[seedIndex] || !isSolid(x, y)) {
+        continue
+      }
+
+      let minX = x
+      let maxX = x
+      let minY = y
+      let maxY = y
+      let area = 0
+      const queue: Array<{ x: number; y: number }> = [{ x, y }]
+      visited[seedIndex] = 1
+
+      while (queue.length > 0) {
+        const node = queue.pop()!
+        area += 1
+        if (node.x < minX) minX = node.x
+        if (node.x > maxX) maxX = node.x
+        if (node.y < minY) minY = node.y
+        if (node.y > maxY) maxY = node.y
+
+        for (const [dx, dy] of neighbors) {
+          const nextX = node.x + dx
+          const nextY = node.y + dy
+          if (!within(nextX, nextY)) continue
+          const nextIndex = nextY * width + nextX
+          if (visited[nextIndex] || !isSolid(nextX, nextY)) continue
+          visited[nextIndex] = 1
+          queue.push({ x: nextX, y: nextY })
+        }
+      }
+
+      if (area < minArea) continue
+
+      const left = clampInt(minX - padding, 0, width - 1)
+      const right = clampInt(maxX + padding, 0, width - 1)
+      const top = clampInt(minY - padding, 0, height - 1)
+      const bottom = clampInt(maxY + padding, 0, height - 1)
+
+      rects.push({
+        index: rects.length,
+        x: left,
+        y: top,
+        width: right - left + 1,
+        height: bottom - top + 1
+      })
+    }
+  }
+
+  if (settings.spriteSortMode === "size_desc") {
+    rects.sort((a, b) => b.width * b.height - a.width * a.height)
+  } else if (settings.spriteSortMode === "left_right") {
+    rects.sort((a, b) => (a.x === b.x ? a.y - b.y : a.x - b.x))
+  } else {
+    rects.sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y))
+  }
+
+  rects.forEach((rect, index) => {
+    rect.index = index
+  })
+
+  if (rects.length === 0) {
+    warnings.push("No sprite islands detected. Lower alpha threshold or min area.")
+    return {
+      xCuts: [0, width],
+      yCuts: [0, height],
+      rects: [{ index: 0, x: 0, y: 0, width, height }],
+      warnings
+    }
+  }
+
+  return { xCuts: [0, width], yCuts: [0, height], rects, warnings }
+}
+
 function buildAxisCuts(
   settings: SplitterSplitSettings,
   axis: "x" | "y",
@@ -624,6 +736,10 @@ function buildAxisCuts(
   }
 
   if (settings.advancedMethod === "social_carousel") {
+    return [0, total]
+  }
+
+  if (settings.advancedMethod === "auto_sprite") {
     return [0, total]
   }
 
@@ -773,6 +889,24 @@ export function buildSplitterSplitPlan(args: {
       xCuts,
       yCuts,
       rects,
+      warnings
+    }
+  } else if (settings.mode === "advanced" && settings.advancedMethod === "auto_sprite") {
+    if (!imageData) {
+      warnings.push("Auto Sprite Extractor requires image data. Preview was simplified.")
+      return {
+        xCuts: [0, width],
+        yCuts: [0, height],
+        rects: [{ index: 0, x: 0, y: 0, width, height }],
+        warnings
+      }
+    }
+    const spritePlan = buildAutoSpritePlan({ width, height, imageData, settings })
+    warnings.push(...spritePlan.warnings)
+    return {
+      xCuts: spritePlan.xCuts,
+      yCuts: spritePlan.yCuts,
+      rects: spritePlan.rects,
       warnings
     }
   } else if (effectiveDirection === "vertical") {

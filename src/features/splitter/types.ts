@@ -10,10 +10,13 @@ export type SplitterAdvancedMethod =
   | "custom_list"
   | "social_carousel"
   | "gutter_margin_grid"
+  | "auto_sprite"
 export type SplitterGuideUnit = "pixel" | "percent"
 export type SplitterGuideEdge = "left" | "right" | "top" | "bottom"
 export type SplitterSocialTargetRatio = "1:1" | "4:5" | "3:4" | "2:3" | "5:4" | "16:9" | "9:16"
 export type SplitterSocialOverflowMode = "crop" | "stretch" | "pad"
+export type SplitterSpriteConnectivity = 4 | 8
+export type SplitterSpriteSortMode = "top_left" | "left_right" | "size_desc"
 
 export type SplitterHorizontalOrder = "left_to_right" | "right_to_left"
 export type SplitterVerticalOrder = "top_to_bottom" | "bottom_to_top"
@@ -79,6 +82,11 @@ export interface SplitterSplitSettings {
   gridGutterX: number
   gridGutterY: number
   gridRemainderMode: "trim" | "distribute"
+  spriteAlphaThreshold: number
+  spriteConnectivity: SplitterSpriteConnectivity
+  spriteMinArea: number
+  spritePadding: number
+  spriteSortMode: SplitterSpriteSortMode
 }
 
 export type SplitterExportFormat =
@@ -179,7 +187,12 @@ export const DEFAULT_SPLITTER_SPLIT_SETTINGS: SplitterSplitSettings = {
   gridMarginY: 0,
   gridGutterX: 0,
   gridGutterY: 0,
-  gridRemainderMode: "trim"
+  gridRemainderMode: "trim",
+  spriteAlphaThreshold: 1,
+  spriteConnectivity: 8,
+  spriteMinArea: 16,
+  spritePadding: 0,
+  spriteSortMode: "top_left"
 }
 
 export const DEFAULT_SPLITTER_EXPORT_SETTINGS: SplitterExportSettings = {

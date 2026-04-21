@@ -33,6 +33,7 @@ const ADVANCED_METHOD_OPTIONS = [
   { value: "custom_list", label: "Custom List" },
   { value: "social_carousel", label: "Social Carousel Slicer" },
   { value: "gutter_margin_grid", label: "Gutter & Margin Grid" },
+  { value: "auto_sprite", label: "Auto Sprite Extractor" },
   { value: "color_match", label: "Color Match" }
 ]
 
@@ -62,6 +63,17 @@ const GRID_REMAINDER_OPTIONS = [
   { value: "distribute", label: "Distribute remainder" }
 ]
 
+const SPRITE_CONNECTIVITY_OPTIONS = [
+  { value: "8", label: "8-way" },
+  { value: "4", label: "4-way" }
+]
+
+const SPRITE_SORT_OPTIONS = [
+  { value: "top_left", label: "Top to bottom, then left" },
+  { value: "left_right", label: "Left to right, then top" },
+  { value: "size_desc", label: "Largest area first" }
+]
+
 export function SplitOptionsAccordion({
   settings,
   isOpen,
@@ -76,6 +88,8 @@ export function SplitOptionsAccordion({
     settings.mode === "advanced" && settings.advancedMethod === "social_carousel"
   const isGutterMarginGrid =
     settings.mode === "advanced" && settings.advancedMethod === "gutter_margin_grid"
+  const isAutoSprite =
+    settings.mode === "advanced" && settings.advancedMethod === "auto_sprite"
   const isColorMatchGridFallback = isColorMatch && settings.direction === "grid"
 
   const showXAxisFields = settings.direction === "vertical" || usesGrid
@@ -103,7 +117,7 @@ export function SplitOptionsAccordion({
           />
         </div>
 
-        {!isSocialCarousel && !isGutterMarginGrid ? (
+        {!isSocialCarousel && !isGutterMarginGrid && !isAutoSprite ? (
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-2">
               <LabelText className="text-xs">Direction</LabelText>
@@ -410,6 +424,49 @@ export function SplitOptionsAccordion({
                   value={settings.gridRemainderMode}
                   options={GRID_REMAINDER_OPTIONS}
                   onChange={(value) => onChange({ gridRemainderMode: value as SplitterSplitSettings["gridRemainderMode"] })}
+                />
+              </div>
+            ) : null}
+
+            {isAutoSprite ? (
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <NumberInput
+                    label="Alpha Threshold"
+                    tooltipContent="Pixels with alpha strictly greater than this value are treated as solid sprite pixels."
+                    value={settings.spriteAlphaThreshold}
+                    min={0}
+                    max={255}
+                    onChangeValue={(value) => onChange({ spriteAlphaThreshold: value })}
+                  />
+                  <NumberInput
+                    label="Min Area (px²)"
+                    tooltipContent="Ignore tiny islands smaller than this area to reduce noise."
+                    value={settings.spriteMinArea}
+                    min={1}
+                    max={10000000}
+                    onChangeValue={(value) => onChange({ spriteMinArea: value })}
+                  />
+                  <NumberInput
+                    label="Box Padding (px)"
+                    tooltipContent="Expand each detected sprite bounding box by this padding."
+                    value={settings.spritePadding}
+                    min={0}
+                    max={10000}
+                    onChangeValue={(value) => onChange({ spritePadding: value })}
+                  />
+                  <SelectInput
+                    label="Connectivity"
+                    value={String(settings.spriteConnectivity)}
+                    options={SPRITE_CONNECTIVITY_OPTIONS}
+                    onChange={(value) => onChange({ spriteConnectivity: value === "4" ? 4 : 8 })}
+                  />
+                </div>
+                <SelectInput
+                  label="Sort Order"
+                  value={settings.spriteSortMode}
+                  options={SPRITE_SORT_OPTIONS}
+                  onChange={(value) => onChange({ spriteSortMode: value as SplitterSplitSettings["spriteSortMode"] })}
                 />
               </div>
             ) : null}

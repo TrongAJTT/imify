@@ -45,11 +45,12 @@ function normalizeCustomGuides(guides: SplitterCustomGuide[] | undefined): Split
     .map((guide) => ({
       id: guide.id,
       value: clampFloat(guide.value, 1, 100000, 50),
-      unit: guide.unit === "pixel" ? "pixel" : "percent",
-      edge:
+      unit: (guide.unit === "pixel" ? "pixel" : "percent") as SplitterCustomGuide["unit"],
+      edge: (
         guide.edge === "right" || guide.edge === "top" || guide.edge === "bottom"
           ? guide.edge
           : "left"
+      ) as SplitterCustomGuide["edge"]
     }))
 
   return normalized.length > 0 ? normalized : [createDefaultSplitterCustomGuide()]
@@ -156,7 +157,15 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
     gridMarginY: clampInt(settings.gridMarginY, 0, 100000, 0),
     gridGutterX: clampInt(settings.gridGutterX, 0, 100000, 0),
     gridGutterY: clampInt(settings.gridGutterY, 0, 100000, 0),
-    gridRemainderMode: settings.gridRemainderMode === "distribute" ? "distribute" : "trim"
+    gridRemainderMode: settings.gridRemainderMode === "distribute" ? "distribute" : "trim",
+    spriteAlphaThreshold: clampInt(settings.spriteAlphaThreshold, 0, 255, 1),
+    spriteConnectivity: settings.spriteConnectivity === 4 ? 4 : 8,
+    spriteMinArea: clampInt(settings.spriteMinArea, 1, 10000000, 16),
+    spritePadding: clampInt(settings.spritePadding, 0, 10000, 0),
+    spriteSortMode:
+      settings.spriteSortMode === "left_right" || settings.spriteSortMode === "size_desc"
+        ? settings.spriteSortMode
+        : "top_left"
   }
 }
 
