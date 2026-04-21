@@ -259,6 +259,31 @@ function buildColorMatchCuts(
   return normalizeCuts(cuts, scanSize)
 }
 
+function buildCustomListCuts(total: number, axis: "x" | "y", settings: SplitterSplitSettings): number[] {
+  const relevantGuides = settings.customGuides.filter((guide) =>
+    axis === "x" ? guide.edge === "left" || guide.edge === "right" : guide.edge === "top" || guide.edge === "bottom"
+  )
+
+  if (relevantGuides.length === 0) {
+    return [0, total]
+  }
+
+  const cuts: number[] = [0]
+  for (const guide of relevantGuides) {
+    const distance =
+      guide.unit === "percent"
+        ? (clampInt(guide.value, 1, 100) / 100) * total
+        : clampInt(guide.value, 1, Math.max(1, total - 1))
+    const fromFarEdge = guide.edge === "right" || guide.edge === "bottom"
+    const rawCut = fromFarEdge ? total - distance : distance
+    const cut = clampInt(rawCut, 1, Math.max(1, total - 1))
+    cuts.push(cut)
+  }
+
+  cuts.push(total)
+  return normalizeCuts(cuts, total)
+}
+
 function buildAxisCuts(
   settings: SplitterSplitSettings,
   axis: "x" | "y",
@@ -297,6 +322,10 @@ function buildAxisCuts(
 
   if (settings.advancedMethod === "color_match" && imageData) {
     return buildColorMatchCuts(imageData, axis, settings)
+  }
+
+  if (settings.advancedMethod === "custom_list") {
+    return buildCustomListCuts(total, axis, settings)
   }
 
   return [0, total]

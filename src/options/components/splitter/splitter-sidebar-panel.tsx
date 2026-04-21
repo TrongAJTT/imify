@@ -3,6 +3,7 @@ import { useMemo, useState } from "react"
 import { getCanonicalExtension } from "@/core/download-utils"
 import type { SplitterExportFormat } from "@/features/splitter/types"
 import { ColorMatchRulesAccordion } from "@/options/components/splitter/color-match-rules-accordion"
+import { SplitterCustomGuidesAccordion } from "@/options/components/splitter/splitter-custom-guides-accordion"
 import { SplitterExportPanel } from "@/options/components/splitter/splitter-export-panel"
 import { SplitterOrderDialog } from "@/options/components/splitter/splitter-order-dialog"
 import { SplitterPatternSequenceAccordion } from "@/options/components/splitter/splitter-pattern-sequence-accordion"
@@ -63,6 +64,8 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
   const showPatternSequenceCard =
     splitSettings.mode === "advanced" &&
     (splitSettings.advancedMethod === "pixel_pattern" || splitSettings.advancedMethod === "percent_pattern")
+  const showCustomGuidesCard =
+    splitSettings.mode === "advanced" && splitSettings.advancedMethod === "custom_list"
 
   const showQuality = supportsTargetFormatQuality(exportSettings.targetFormat)
   const showTinyMode = supportsTargetFormatTinyMode(exportSettings.targetFormat)
@@ -134,6 +137,21 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
             settings={splitSettings}
             isOpen={uiState.isPatternSequenceOpen}
             onOpenChange={(open) => setUiState({ isPatternSequenceOpen: open })}
+            onChange={setSplitSettings}
+          />
+        )
+      })
+    }
+
+    if (showCustomGuidesCard) {
+      items.push({
+        id: "custom-guides",
+        columnSpan: 2,
+        content: (
+          <SplitterCustomGuidesAccordion
+            settings={splitSettings}
+            isOpen={uiState.isCustomGuidesOpen}
+            onOpenChange={(open) => setUiState({ isCustomGuidesOpen: open })}
             onChange={setSplitSettings}
           />
         )
@@ -271,6 +289,7 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     setSplitSettings,
     setUiState,
     showColorRuleCard,
+    showCustomGuidesCard,
     showPatternSequenceCard,
     showQuality,
     showTinyMode,

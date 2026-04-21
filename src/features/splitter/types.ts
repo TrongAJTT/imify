@@ -3,7 +3,9 @@ import type { FormatCodecOptions } from "@/core/types"
 export type SplitterDirection = "vertical" | "horizontal" | "grid"
 export type SplitterMode = "basic" | "advanced"
 export type SplitterBasicMethod = "count" | "percent" | "pixel"
-export type SplitterAdvancedMethod = "pixel_pattern" | "percent_pattern" | "color_match"
+export type SplitterAdvancedMethod = "pixel_pattern" | "percent_pattern" | "color_match" | "custom_list"
+export type SplitterGuideUnit = "pixel" | "percent"
+export type SplitterGuideEdge = "left" | "right" | "top" | "bottom"
 
 export type SplitterHorizontalOrder = "left_to_right" | "right_to_left"
 export type SplitterVerticalOrder = "top_to_bottom" | "bottom_to_top"
@@ -17,6 +19,13 @@ export interface SplitterColorRule {
   mode: SplitterColorRuleMode
   value: number
   errorMargin: number
+}
+
+export interface SplitterCustomGuide {
+  id: string
+  value: number
+  unit: SplitterGuideUnit
+  edge: SplitterGuideEdge
 }
 
 export interface SplitterSplitSettings {
@@ -46,6 +55,7 @@ export interface SplitterSplitSettings {
   colorMatchSkipBefore: number
   colorMatchTolerance: number
   colorRules: SplitterColorRule[]
+  customGuides: SplitterCustomGuide[]
 }
 
 export type SplitterExportFormat =
@@ -98,6 +108,15 @@ export function createDefaultSplitterColorRule(index: number = 1): SplitterColor
   }
 }
 
+export function createDefaultSplitterCustomGuide(): SplitterCustomGuide {
+  return {
+    id: `custom_guide_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    value: 50,
+    unit: "percent",
+    edge: "left"
+  }
+}
+
 export const DEFAULT_SPLITTER_SPLIT_SETTINGS: SplitterSplitSettings = {
   mode: "basic",
   direction: "vertical",
@@ -121,7 +140,8 @@ export const DEFAULT_SPLITTER_SPLIT_SETTINGS: SplitterSplitSettings = {
   colorMatchSkipPixels: 12,
   colorMatchSkipBefore: 0,
   colorMatchTolerance: 24,
-  colorRules: [createDefaultSplitterColorRule(1)]
+  colorRules: [createDefaultSplitterColorRule(1)],
+  customGuides: [createDefaultSplitterCustomGuide()]
 }
 
 export const DEFAULT_SPLITTER_EXPORT_SETTINGS: SplitterExportSettings = {

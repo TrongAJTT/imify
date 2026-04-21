@@ -30,6 +30,7 @@ const BASIC_METHOD_OPTIONS = [
 const ADVANCED_METHOD_OPTIONS = [
   { value: "pixel_pattern", label: "Pixel Pattern" },
   { value: "percent_pattern", label: "Percent Pattern" },
+  { value: "custom_list", label: "Custom List" },
   { value: "color_match", label: "Color Match" }
 ]
 

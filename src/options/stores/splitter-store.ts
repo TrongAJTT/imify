@@ -12,10 +12,12 @@ import {
 import { mergeNormalizedJxlCodecOptions } from "@/core/jxl-options"
 import type { FormatCodecOptions } from "@/core/types"
 import {
+  createDefaultSplitterCustomGuide,
   createDefaultSplitterColorRule,
   DEFAULT_SPLITTER_EXPORT_SETTINGS,
   DEFAULT_SPLITTER_SPLIT_SETTINGS,
   type SplitterColorRule,
+  type SplitterCustomGuide,
   type SplitterExportSettings,
   type SplitterPresetConfig,
   type SplitterSplitSettings
@@ -36,9 +38,27 @@ const plasmoStorage = {
   }
 }
 
+function normalizeCustomGuides(guides: SplitterCustomGuide[] | undefined): SplitterCustomGuide[] {
+  const safeGuides = Array.isArray(guides) ? guides : []
+  const normalized = safeGuides
+    .filter((guide) => Boolean(guide?.id))
+    .map((guide) => ({
+      id: guide.id,
+      value: clampFloat(guide.value, 1, 100000, 50),
+      unit: guide.unit === "pixel" ? "pixel" : "percent",
+      edge:
+        guide.edge === "right" || guide.edge === "top" || guide.edge === "bottom"
+          ? guide.edge
+          : "left"
+    }))
+
+  return normalized.length > 0 ? normalized : [createDefaultSplitterCustomGuide()]
+}
+
 interface SplitterUiState {
   isSplitOptionsOpen: boolean
   isPatternSequenceOpen: boolean
+  isCustomGuidesOpen: boolean
   isColorMatchRulesOpen: boolean
   isExportFormatQualityOpen: boolean
   isFormatAdvancedOpen: boolean
@@ -112,7 +132,8 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
     pixelPatternY: settings.pixelPatternY.trim() || "512",
     percentPatternX: settings.percentPatternX.trim() || "50",
     percentPatternY: settings.percentPatternY.trim() || "50",
-    colorRules: normalizeColorRules(settings.colorRules)
+    colorRules: normalizeColorRules(settings.colorRules),
+    customGuides: normalizeCustomGuides(settings.customGuides)
   }
 }
 
@@ -163,6 +184,7 @@ function normalizeExportSettings(settings: SplitterExportSettings): SplitterExpo
 const DEFAULT_UI_STATE: SplitterUiState = {
   isSplitOptionsOpen: true,
   isPatternSequenceOpen: true,
+  isCustomGuidesOpen: true,
   isColorMatchRulesOpen: true,
   isExportFormatQualityOpen: true,
   isFormatAdvancedOpen: true,
@@ -181,7 +203,8 @@ export const useSplitterStore = create<SplitterStoreState>()(
           splitSettings: normalizeSplitSettings({
             ...state.splitSettings,
             ...patch,
-            colorRules: patch.colorRules ?? state.splitSettings.colorRules
+            colorRules: patch.colorRules ?? state.splitSettings.colorRules,
+            customGuides: patch.customGuides ?? state.splitSettings.customGuides
           })
         })),
 
