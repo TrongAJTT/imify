@@ -24,6 +24,7 @@ export interface SplitterSplitSettings {
   direction: SplitterDirection
   basicMethod: SplitterBasicMethod
   advancedMethod: SplitterAdvancedMethod
+  guideColor: string
   horizontalOrder: SplitterHorizontalOrder
   verticalOrder: SplitterVerticalOrder
   gridTraversal: SplitterGridTraversal
@@ -101,6 +102,7 @@ export const DEFAULT_SPLITTER_SPLIT_SETTINGS: SplitterSplitSettings = {
   direction: "vertical",
   basicMethod: "count",
   advancedMethod: "pixel_pattern",
+  guideColor: "#06b6d4",
   horizontalOrder: "left_to_right",
   verticalOrder: "top_to_bottom",
   gridTraversal: "row_first",

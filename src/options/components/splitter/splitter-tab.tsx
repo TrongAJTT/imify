@@ -74,8 +74,13 @@ function revokeImageItemUrls(item: SplitterImageItem): void {
   URL.revokeObjectURL(item.thumbnailUrl)
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
 export function SplitterTab() {
   const splitSettings = useSplitterStore((state) => state.splitSettings)
+  const setSplitSettings = useSplitterStore((state) => state.setSplitSettings)
   const exportSettings = useSplitterStore((state) => state.exportSettings)
 
   const [images, setImages] = useState<SplitterImageItem[]>([])
@@ -193,6 +198,8 @@ export function SplitterTab() {
 
     const computePreview = async () => {
       setIsComputingPreview(true)
+      setPreviewPlan(null)
+      setPreviewPlanWarningText(null)
 
       try {
         let imageData: ImageData | undefined
@@ -330,6 +337,36 @@ export function SplitterTab() {
     }
     void appendFiles(Array.from(files))
   }, [appendFiles])
+
+  const handleBasicGuideChange = useCallback(
+    (axis: "x" | "y", sourceValue: number) => {
+      if (!activeImage || splitSettings.mode !== "basic") {
+        return
+      }
+
+      const axisSize = axis === "x" ? activeImage.originalWidth : activeImage.originalHeight
+      if (axisSize <= 1) {
+        return
+      }
+
+      const safeSourceValue = clamp(sourceValue, 1, axisSize - 1)
+      if (splitSettings.basicMethod === "count") {
+        const nextCount = clamp(Math.round(axisSize / safeSourceValue), 1, 4096)
+        setSplitSettings(axis === "x" ? { countX: nextCount } : { countY: nextCount })
+        return
+      }
+
+      if (splitSettings.basicMethod === "percent") {
+        const nextPercent = clamp(Math.round((safeSourceValue / axisSize) * 100), 1, 100)
+        setSplitSettings(axis === "x" ? { percentX: nextPercent } : { percentY: nextPercent })
+        return
+      }
+
+      const nextPixels = clamp(Math.round(safeSourceValue), 1, 100000)
+      setSplitSettings(axis === "x" ? { pixelX: nextPixels } : { pixelY: nextPixels })
+    },
+    [activeImage, setSplitSettings, splitSettings.basicMethod, splitSettings.mode]
+  )
 
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
@@ -526,6 +563,7 @@ export function SplitterTab() {
           ) : null}
 
           <SplitterPreview
+            key={activeImage?.id ?? "splitter_preview_empty"}
             image={
               activeImage
                 ? {
@@ -541,6 +579,8 @@ export function SplitterTab() {
             onDropFiles={handleDropFiles}
             isComputing={isComputingPreview}
             previewInteractionMode={previewInteractionMode}
+            splitSettings={splitSettings}
+            onBasicGuideChange={handleBasicGuideChange}
           />
 
           <ImageStrip

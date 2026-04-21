@@ -4,6 +4,7 @@ import type {
   SplitterSplitSettings
 } from "@/features/splitter/types"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
+import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SegmentedControl } from "@/options/components/ui/segmented-control"
 import { SelectInput } from "@/options/components/ui/select-input"
@@ -238,6 +239,13 @@ export function SplitOptionsAccordion({
           </>
         )}
 
+        <ColorPickerPopover
+          label="Guide Color"
+          value={settings.guideColor || "#06b6d4"}
+          onChange={(value) => onChange({ guideColor: value })}
+          enableGradient={false}
+          outputMode="hex"
+        />
       </div>
     </AccordionCard>
   )

@@ -93,6 +93,10 @@ function normalizeColorRules(rules: SplitterColorRule[]): SplitterColorRule[] {
 function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitSettings {
   return {
     ...settings,
+    guideColor:
+      typeof settings.guideColor === "string" && settings.guideColor.trim()
+        ? settings.guideColor.trim()
+        : "#06b6d4",
     countX: clampInt(settings.countX, 1, 4096, 2),
     countY: clampInt(settings.countY, 1, 4096, 2),
     percentX: clampFloat(settings.percentX, 1, 100, 50),

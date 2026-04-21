@@ -34,7 +34,11 @@ function clampAlpha(value: number): number {
   return Math.max(0, Math.min(1, value))
 }
 
-function parseHexColor(hex: string): ParsedRgba | null {
+function parseHexColor(hex: string | null | undefined): ParsedRgba | null {
+  if (typeof hex !== "string") {
+    return null
+  }
+
   const normalized = hex.trim().replace("#", "")
   if (normalized.length === 3) {
     return {
@@ -71,7 +75,11 @@ function parseHexColor(hex: string): ParsedRgba | null {
   return null
 }
 
-function parseRgbaColor(color: string): ParsedRgba | null {
+function parseRgbaColor(color: string | null | undefined): ParsedRgba | null {
+  if (typeof color !== "string") {
+    return null
+  }
+
   const match = color
     .trim()
     .match(/^rgba?\(\s*([+-]?\d+)\s*,\s*([+-]?\d+)\s*,\s*([+-]?\d+)(?:\s*,\s*([+-]?\d*\.?\d+))?\s*\)$/i)
@@ -84,7 +92,7 @@ function parseRgbaColor(color: string): ParsedRgba | null {
   }
 }
 
-function parseColor(value: string): ParsedRgba {
+function parseColor(value: string | null | undefined): ParsedRgba {
   return parseHexColor(value) || parseRgbaColor(value) || { r: 255, g: 255, b: 255, a: 1 }
 }
 
@@ -115,7 +123,11 @@ interface ParsedGradient {
   stops: GradientStop[]
 }
 
-function parseGradient(value: string): ParsedGradient | null {
+function parseGradient(value: string | null | undefined): ParsedGradient | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
   const trimmed = value.trim()
   const match = trimmed.match(/^linear-gradient\(\s*([+-]?\d*\.?\d+)deg\s*,\s*(.+)\s*\)$/i)
 
