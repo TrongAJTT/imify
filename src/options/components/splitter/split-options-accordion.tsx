@@ -1,4 +1,9 @@
 import type { SplitterSplitSettings } from "@/features/splitter/types"
+import {
+  SPLITTER_ADVANCED_METHOD_TABLE_ROWS,
+  SPLITTER_BASIC_METHOD_TABLE_ROWS,
+  SPLITTER_TOOLTIPS
+} from "@/options/components/splitter/splitter-tooltips"
 import { Tooltip } from "@/options/components/tooltip"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
@@ -74,6 +79,31 @@ const SPRITE_SORT_OPTIONS = [
   { value: "size_desc", label: "Largest area first" }
 ]
 
+function MethodTooltipTable({
+  rows
+}: {
+  rows: ReadonlyArray<{ method: string; description: string }>
+}) {
+  return (
+    <table className="w-full border-collapse text-[11px] text-slate-700 dark:text-slate-200">
+      <thead>
+        <tr className="border-b border-slate-200 dark:border-white/15">
+          <th className="w-36 px-2 py-1 text-left font-semibold">Method</th>
+          <th className="px-2 py-1 text-left font-semibold">What it does</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.method} className="border-b border-slate-100 last:border-b-0 dark:border-white/10">
+            <td className="px-2 py-1.5 align-top font-medium">{row.method}</td>
+            <td className="px-2 py-1.5 align-top">{row.description}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
 export function SplitOptionsAccordion({
   settings,
   isOpen,
@@ -123,7 +153,7 @@ export function SplitOptionsAccordion({
               <LabelText className="text-xs">Direction</LabelText>
               {isColorMatchGridFallback ? (
                 <Tooltip
-                  content="Color Match only works with a single axis. Grid is currently treated as vertical splitting."
+                  content={SPLITTER_TOOLTIPS.colorMatchGridFallback}
                   variant="wide1">
                   <span className="inline-flex h-6 items-center rounded-md border border-amber-300 bg-amber-50 px-2 text-[10px] font-semibold text-amber-700 dark:border-amber-700/70 dark:bg-amber-950/20 dark:text-amber-200">
                     Fallback: Vertical
@@ -153,6 +183,7 @@ export function SplitOptionsAccordion({
           <>
             <SelectInput
               label="Basic Method"
+              tooltipContent={<MethodTooltipTable rows={SPLITTER_BASIC_METHOD_TABLE_ROWS} />}
               value={settings.basicMethod}
               options={BASIC_METHOD_OPTIONS}
               onChange={(value) =>
@@ -235,6 +266,7 @@ export function SplitOptionsAccordion({
           <>
             <SelectInput
               label="Advanced Method"
+              tooltipContent={<MethodTooltipTable rows={SPLITTER_ADVANCED_METHOD_TABLE_ROWS} />}
               value={settings.advancedMethod}
               options={ADVANCED_METHOD_OPTIONS}
               onChange={(value) =>
@@ -250,7 +282,7 @@ export function SplitOptionsAccordion({
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <NumberInput
                     label="Offset (px)"
-                    tooltipContent="Moves the cut position away from the detected matching line/column. Positive values cut later, negative values cut earlier."
+                    tooltipContent={SPLITTER_TOOLTIPS.colorMatchOffset}
                     value={settings.colorMatchOffset}
                     min={-10000}
                     max={10000}
@@ -260,7 +292,7 @@ export function SplitOptionsAccordion({
                   />
                   <NumberInput
                     label="Tolerance"
-                    tooltipContent="How close a pixel color must be to your rule color to count as a match. Higher values are more lenient."
+                    tooltipContent={SPLITTER_TOOLTIPS.colorMatchTolerance}
                     value={settings.colorMatchTolerance}
                     min={0}
                     max={255}
@@ -270,7 +302,7 @@ export function SplitOptionsAccordion({
                   />
                   <NumberInput
                     label="Skip Before (px)"
-                    tooltipContent="Requires this many consecutive matching lines/columns before the current one before a cut is allowed."
+                    tooltipContent={SPLITTER_TOOLTIPS.colorMatchSkipBefore}
                     value={settings.colorMatchSkipBefore}
                     min={0}
                     max={10000}
@@ -280,7 +312,7 @@ export function SplitOptionsAccordion({
                   />
                   <NumberInput
                     label="Break After (px)"
-                    tooltipContent="After a cut is created, skip this many lines/columns before checking for the next cut."
+                    tooltipContent={SPLITTER_TOOLTIPS.colorMatchBreakAfter}
                     value={settings.colorMatchSkipPixels}
                     min={0}
                     max={10000}
@@ -304,7 +336,7 @@ export function SplitOptionsAccordion({
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <NumberInput
                       label="Variance Threshold"
-                      tooltipContent="Lower values are stricter and avoid busy lines. Higher values accept more detail."
+                      tooltipContent={SPLITTER_TOOLTIPS.safeZoneVarianceThreshold}
                       value={settings.colorMatchSafeVarianceThreshold}
                       min={0}
                       max={10000}
@@ -312,7 +344,7 @@ export function SplitOptionsAccordion({
                     />
                     <NumberInput
                       label="Search Radius (px)"
-                      tooltipContent="How far to slide up/down (or left/right) from the detected line to find a safer cut."
+                      tooltipContent={SPLITTER_TOOLTIPS.safeZoneSearchRadius}
                       value={settings.colorMatchSafeSearchRadius}
                       min={0}
                       max={1000}
@@ -320,7 +352,7 @@ export function SplitOptionsAccordion({
                     />
                     <NumberInput
                       label="Search Step (px)"
-                      tooltipContent="Distance between candidate lines while searching for a safe zone."
+                      tooltipContent={SPLITTER_TOOLTIPS.safeZoneSearchStep}
                       value={settings.colorMatchSafeSearchStep}
                       min={1}
                       max={128}
@@ -433,7 +465,7 @@ export function SplitOptionsAccordion({
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <NumberInput
                     label="Alpha Threshold"
-                    tooltipContent="Pixels with alpha strictly greater than this value are treated as solid sprite pixels."
+                    tooltipContent={SPLITTER_TOOLTIPS.spriteAlphaThreshold}
                     value={settings.spriteAlphaThreshold}
                     min={0}
                     max={255}
@@ -441,7 +473,7 @@ export function SplitOptionsAccordion({
                   />
                   <NumberInput
                     label="Min Area (px²)"
-                    tooltipContent="Ignore tiny islands smaller than this area to reduce noise."
+                    tooltipContent={SPLITTER_TOOLTIPS.spriteMinArea}
                     value={settings.spriteMinArea}
                     min={1}
                     max={10000000}
@@ -449,7 +481,7 @@ export function SplitOptionsAccordion({
                   />
                   <NumberInput
                     label="Box Padding (px)"
-                    tooltipContent="Expand each detected sprite bounding box by this padding."
+                    tooltipContent={SPLITTER_TOOLTIPS.spritePadding}
                     value={settings.spritePadding}
                     min={0}
                     max={10000}

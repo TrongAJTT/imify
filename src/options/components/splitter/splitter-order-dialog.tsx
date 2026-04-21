@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities"
 import { ArrowUpDown, GripVertical, MoveHorizontal, MoveVertical, X } from "lucide-react"
 
 import type { SplitterSplitSettings } from "@/features/splitter/types"
+import { SPLITTER_TOOLTIPS } from "@/options/components/splitter/splitter-tooltips"
 import { Tooltip } from "@/options/components/tooltip"
 import { BaseDialog } from "@/options/components/ui/base-dialog"
 import { SelectInput } from "@/options/components/ui/select-input"
@@ -174,7 +175,7 @@ export function SplitterOrderDialog({ isOpen, onClose, settings, onChange }: Spl
           </div>
           <Tooltip
             label="Live sequence"
-            content="This text reflects current horizontal/vertical direction and priority axis."
+            content={SPLITTER_TOOLTIPS.orderDialogLiveSequence}
             variant="wide1"
           >
             <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-900/20 dark:text-sky-300">
