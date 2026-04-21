@@ -1,6 +1,6 @@
 import { arrayMove } from "@dnd-kit/sortable"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { AlertTriangle, ChevronDown, Download, ImagePlus, Save, Trash2 } from "lucide-react"
+import { AlertTriangle, ImagePlus, Trash2 } from "lucide-react"
 
 import { APP_CONFIG } from "@/core/config"
 import { ToastContainer } from "@/core/components/toast-container"
@@ -9,10 +9,10 @@ import type { ConversionProgressPayload } from "@/core/types"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { buildSmartOutputFileName, reserveUniqueFileName } from "@/options/components/batch/pipeline"
 import { downloadWithFilename, sleep } from "@/options/components/batch/utils"
+import { ExportSplitButton, type ExportSplitMode } from "@/options/components/shared/export-split-button"
 import { ImageStrip } from "@/options/components/splicing/image-strip"
 import { SplitterPreview } from "@/options/components/splitter/splitter-preview"
 import { Button } from "@/options/components/ui/button"
-import { ControlledPopover } from "@/options/components/ui/controlled-popover"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
 import { PreviewInteractionModeToggle, type PreviewInteractionMode } from "@/options/components/ui/preview-interaction-mode-toggle"
 import { VisualHelpTooltip } from "@/options/components/ui/visual-help-tooltip"
@@ -607,6 +607,15 @@ export function SplitterTab() {
     }
   }
 
+  const handleExportAction = useCallback(
+    async (mode: ExportSplitMode) => {
+      if (mode === "zip" || mode === "one_by_one") {
+        await handleExport(mode)
+      }
+    },
+    [handleExport]
+  )
+
   const workspaceContent = (
     <div className="p-6">
       <input
@@ -666,47 +675,13 @@ export function SplitterTab() {
                 <Trash2 size={14} />
                 Clear
               </Button>
-              <div className="inline-flex">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => void handleExport("zip")}
-                  disabled={isExporting}
-                  className="rounded-r-none border-r border-sky-500/60"
-                >
-                  <Download size={14} />
-                  {isExporting ? "Exporting..." : "Export"}
-                </Button>
-                <ControlledPopover
-                  trigger={
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      disabled={isExporting}
-                      className="rounded-l-none px-2"
-                      aria-label="Open export options"
-                    >
-                      <ChevronDown size={14} />
-                    </Button>
-                  }
-                  preset="dropdown"
-                  align="end"
-                  contentClassName="z-[9999] min-w-[220px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1.5"
-                >
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                    onClick={() => void handleExport("one_by_one")}
-                    disabled={isExporting}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <Save size={14} />
-                      One by one
-                    </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{estimatedExportFileCount} files</span>
-                  </button>
-                </ControlledPopover>
-              </div>
+              <ExportSplitButton
+                onExport={handleExportAction}
+                isLoading={isExporting}
+                primaryMode="zip"
+                oneByOneCount={estimatedExportFileCount}
+                showPdfOptions={false}
+              />
             </div>
           </div>
 
