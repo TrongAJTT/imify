@@ -265,11 +265,9 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
         columnSpan: 2,
         content: (
           <SplitterExportPanel
-            downloadMode={exportSettings.downloadMode}
             fileNamePattern={exportSettings.fileNamePattern}
             isOpen={uiState.isExportSettingsOpen}
             onOpenChange={(open) => setUiState({ isExportSettingsOpen: open })}
-            onDownloadModeChange={(mode) => setExportSettings({ downloadMode: mode })}
             splitOrderSummary={splitOrderSummary}
             onSplitOrderClick={() => setIsSplitOrderDialogOpen(true)}
             onFileRenamingClick={() => setIsRenameDialogOpen(true)}

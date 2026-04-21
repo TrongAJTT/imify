@@ -1,15 +1,18 @@
 import { arrayMove } from "@dnd-kit/sortable"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { AlertTriangle, Download, ImagePlus, Trash2 } from "lucide-react"
+import { AlertTriangle, ChevronDown, Download, ImagePlus, Save, Trash2 } from "lucide-react"
 
+import { APP_CONFIG } from "@/core/config"
 import { ToastContainer } from "@/core/components/toast-container"
 import { useConversionToasts } from "@/core/hooks/use-toast"
 import type { ConversionProgressPayload } from "@/core/types"
+import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { buildSmartOutputFileName, reserveUniqueFileName } from "@/options/components/batch/pipeline"
 import { downloadWithFilename, sleep } from "@/options/components/batch/utils"
 import { ImageStrip } from "@/options/components/splicing/image-strip"
 import { SplitterPreview } from "@/options/components/splitter/splitter-preview"
 import { Button } from "@/options/components/ui/button"
+import { ControlledPopover } from "@/options/components/ui/controlled-popover"
 import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
 import { PreviewInteractionModeToggle, type PreviewInteractionMode } from "@/options/components/ui/preview-interaction-mode-toggle"
 import { VisualHelpTooltip } from "@/options/components/ui/visual-help-tooltip"
@@ -20,6 +23,7 @@ import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences
 import { splitImageIntoRawSegments, convertSplitterSegments, createZipBlob } from "@/features/splitter/split-export"
 import { buildSplitterSplitPlan } from "@/features/splitter/split-engine"
 import { decodeFileToImageData } from "@/features/image-pipeline/decode-image-data"
+import { useBatchStore } from "@/options/stores/batch-store"
 import { buildActiveSplitterFormatOptions } from "@/options/stores/splitter-format-options"
 import { useSplitterStore } from "@/options/stores/splitter-store"
 import { SplitterWorkspaceShell } from "@/options/components/splitter/splitter-workspace-shell"
@@ -86,18 +90,21 @@ export function SplitterTab() {
   const splitSettings = useSplitterStore((state) => state.splitSettings)
   const setSplitSettings = useSplitterStore((state) => state.setSplitSettings)
   const exportSettings = useSplitterStore((state) => state.exportSettings)
+  const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
 
   const [images, setImages] = useState<SplitterImageItem[]>([])
   const [activeImageId, setActiveImageId] = useState<string | null>(null)
   const [isExporting, setIsExporting] = useState(false)
   const [isComputingPreview, setIsComputingPreview] = useState(false)
-  const [statusText, setStatusText] = useState<string | null>(null)
   const [errorText, setErrorText] = useState<string | null>(null)
   const [previewInteractionMode, setPreviewInteractionMode] = useState<PreviewInteractionMode>("idle")
   const [previewPlanWarningText, setPreviewPlanWarningText] = useState<string | null>(null)
   const [previewPlan, setPreviewPlan] = useState<ReturnType<typeof buildSplitterSplitPlan> | null>(null)
   const [importToastPayload, setImportToastPayload] = useState<ConversionProgressPayload | null>(null)
-  const conversionToasts = useConversionToasts([importToastPayload])
+  const [exportToastPayload, setExportToastPayload] = useState<ConversionProgressPayload | null>(null)
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
+  const [pendingExportMode, setPendingExportMode] = useState<"one_by_one" | null>(null)
+  const conversionToasts = useConversionToasts([importToastPayload, exportToastPayload])
   const { getShortcutLabel } = useShortcutPreferences()
 
   const splitterPreviewShortcutsEnabled = images.length > 0
@@ -123,6 +130,7 @@ export function SplitterTab() {
   const imagesRef = useRef<SplitterImageItem[]>([])
   const previewComputeSequenceRef = useRef(0)
   const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const activeImage = useMemo(
     () => images.find((image) => image.id === activeImageId) ?? images[0] ?? null,
@@ -149,6 +157,10 @@ export function SplitterTab() {
 
     return `${mismatchCount} image(s) have dimensions different from the first image (${first.originalWidth}x${first.originalHeight}). Split results may vary across the batch.`
   }, [images])
+  const estimatedExportFileCount = useMemo(() => {
+    const slicesPerImage = Math.max(1, previewPlan?.rects.length ?? 1)
+    return Math.max(1, images.length * slicesPerImage)
+  }, [images.length, previewPlan?.rects.length])
 
   useEffect(() => {
     if (images.length === 0) {
@@ -171,6 +183,9 @@ export function SplitterTab() {
       if (importToastHideTimerRef.current) {
         clearTimeout(importToastHideTimerRef.current)
       }
+      if (exportToastHideTimerRef.current) {
+        clearTimeout(exportToastHideTimerRef.current)
+      }
     }
   }, [])
 
@@ -180,6 +195,11 @@ export function SplitterTab() {
       importToastHideTimerRef.current = null
     }
     setImportToastPayload((current) => (current?.id === toastId ? null : current))
+    if (exportToastHideTimerRef.current) {
+      clearTimeout(exportToastHideTimerRef.current)
+      exportToastHideTimerRef.current = null
+    }
+    setExportToastPayload((current) => (current?.id === toastId ? null : current))
   }, [])
 
   const pushImportToast = useCallback((payload: ConversionProgressPayload) => {
@@ -188,6 +208,14 @@ export function SplitterTab() {
       importToastHideTimerRef.current = null
     }
     setImportToastPayload(payload)
+  }, [])
+
+  const pushExportToast = useCallback((payload: ConversionProgressPayload) => {
+    if (exportToastHideTimerRef.current) {
+      clearTimeout(exportToastHideTimerRef.current)
+      exportToastHideTimerRef.current = null
+    }
+    setExportToastPayload(payload)
   }, [])
 
   useEffect(() => {
@@ -413,14 +441,35 @@ export function SplitterTab() {
     setImages((current) => arrayMove(current, fromIndex, toIndex))
   }
 
-  const handleExport = async () => {
+  const handleExport = async (
+    downloadMode: "zip" | "one_by_one" = "zip",
+    forceDownloadConfirm: boolean = false
+  ) => {
     if (images.length === 0 || isExporting) {
+      return
+    }
+    if (
+      downloadMode === "one_by_one" &&
+      !forceDownloadConfirm &&
+      estimatedExportFileCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD &&
+      !skipDownloadConfirm
+    ) {
+      setPendingExportMode("one_by_one")
+      setShowDownloadConfirm(true)
       return
     }
 
     setIsExporting(true)
-    setStatusText("Preparing split export...")
     setErrorText(null)
+    const toastId = `splitter_export_${Date.now()}`
+    pushExportToast({
+      id: toastId,
+      fileName: "Split export",
+      targetFormat: exportSettings.targetFormat,
+      status: "processing",
+      percent: 2,
+      message: "Preparing split export..."
+    })
 
     const usedNames = new Set<string>()
     const exportFiles: Array<{ name: string; blob: Blob }> = []
@@ -430,7 +479,14 @@ export function SplitterTab() {
     try {
       for (let imageIndex = 0; imageIndex < images.length; imageIndex += 1) {
         const image = images[imageIndex]
-        setStatusText(`Splitting ${image.file.name} (${imageIndex + 1}/${images.length})...`)
+        pushExportToast({
+          id: toastId,
+          fileName: "Split export",
+          targetFormat: exportSettings.targetFormat,
+          status: "processing",
+          percent: Math.min(70, 5 + Math.round(((imageIndex + 0.25) / images.length) * 60)),
+          message: `Splitting ${image.file.name} (${imageIndex + 1}/${images.length})...`
+        })
 
         const { segments, warnings } = await splitImageIntoRawSegments({
           file: image.file,
@@ -447,7 +503,17 @@ export function SplitterTab() {
           quality: exportSettings.quality,
           formatOptions,
           onProgress: ({ completed, total }) => {
-            setStatusText(`Encoding ${image.file.name}: ${completed}/${total}`)
+            const imageBase = (imageIndex / Math.max(1, images.length)) * 60
+            const imageStep = (Math.max(1, completed) / Math.max(1, total)) * (60 / Math.max(1, images.length))
+            const percent = Math.min(85, 10 + Math.round(imageBase + imageStep))
+            pushExportToast({
+              id: toastId,
+              fileName: "Split export",
+              targetFormat: exportSettings.targetFormat,
+              status: "processing",
+              percent,
+              message: `Encoding ${image.file.name}: ${completed}/${total}`
+            })
           }
         })
 
@@ -473,20 +539,46 @@ export function SplitterTab() {
         }
       }
 
-      if (exportSettings.downloadMode === "zip") {
-        setStatusText("Packaging ZIP...")
+      if (downloadMode === "zip") {
+        pushExportToast({
+          id: toastId,
+          fileName: "Split export",
+          targetFormat: exportSettings.targetFormat,
+          status: "processing",
+          percent: 90,
+          message: "Packaging ZIP..."
+        })
         const zipBlob = await createZipBlob(exportFiles)
         await downloadWithFilename(zipBlob, `splitter-${Date.now()}.zip`)
       } else {
         for (let index = 0; index < exportFiles.length; index += 1) {
           const file = exportFiles[index]
-          setStatusText(`Downloading ${index + 1}/${exportFiles.length}...`)
+          const percent = Math.min(98, 88 + Math.round(((index + 1) / Math.max(1, exportFiles.length)) * 10))
+          pushExportToast({
+            id: toastId,
+            fileName: "Split export",
+            targetFormat: exportSettings.targetFormat,
+            status: "processing",
+            percent,
+            message: `Downloading ${index + 1}/${exportFiles.length}...`
+          })
           await downloadWithFilename(file.blob, file.name)
           await sleep(80)
         }
       }
 
-      setStatusText(`Export finished: ${exportFiles.length} files.`)
+      pushExportToast({
+        id: toastId,
+        fileName: "Split export complete",
+        targetFormat: exportSettings.targetFormat,
+        status: "success",
+        percent: 100,
+        message: `Export finished: ${exportFiles.length} files.`
+      })
+      exportToastHideTimerRef.current = setTimeout(() => {
+        setExportToastPayload((current) => (current?.id === toastId ? null : current))
+        exportToastHideTimerRef.current = null
+      }, 2500)
     } catch (error) {
       const message =
         error instanceof Error && error.message.trim()
@@ -494,7 +586,18 @@ export function SplitterTab() {
           : "Unable to export split images."
 
       setErrorText(message)
-      setStatusText(null)
+      pushExportToast({
+        id: toastId,
+        fileName: "Split export failed",
+        targetFormat: exportSettings.targetFormat,
+        status: "error",
+        percent: 100,
+        message
+      })
+      exportToastHideTimerRef.current = setTimeout(() => {
+        setExportToastPayload((current) => (current?.id === toastId ? null : current))
+        exportToastHideTimerRef.current = null
+      }, 3500)
     } finally {
       setIsExporting(false)
     }
@@ -559,18 +662,49 @@ export function SplitterTab() {
                 <Trash2 size={14} />
                 Clear
               </Button>
-              <Button variant="primary" size="sm" onClick={() => void handleExport()} disabled={isExporting}>
-                <Download size={14} />
-                {isExporting ? "Exporting..." : "Export"}
-              </Button>
+              <div className="inline-flex">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => void handleExport("zip")}
+                  disabled={isExporting}
+                  className="rounded-r-none border-r border-sky-500/60"
+                >
+                  <Download size={14} />
+                  {isExporting ? "Exporting..." : "Export"}
+                </Button>
+                <ControlledPopover
+                  trigger={
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      disabled={isExporting}
+                      className="rounded-l-none px-2"
+                      aria-label="Open export options"
+                    >
+                      <ChevronDown size={14} />
+                    </Button>
+                  }
+                  preset="dropdown"
+                  align="end"
+                  contentClassName="z-[9999] min-w-[220px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1.5"
+                >
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                    onClick={() => void handleExport("one_by_one")}
+                    disabled={isExporting}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <Save size={14} />
+                      One by one
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{estimatedExportFileCount} files</span>
+                  </button>
+                </ControlledPopover>
+              </div>
             </div>
           </div>
-
-          {statusText ? (
-            <div className="rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-700 dark:border-cyan-900/60 dark:bg-cyan-900/20 dark:text-cyan-300">
-              {statusText}
-            </div>
-          ) : null}
 
           {errorText ? (
             <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900/60 dark:bg-rose-900/20 dark:text-rose-300">
@@ -579,7 +713,6 @@ export function SplitterTab() {
           ) : null}
 
           <SplitterPreview
-            key={activeImage?.id ?? "splitter_preview_empty"}
             image={
               activeImage
                 ? {
@@ -625,6 +758,21 @@ export function SplitterTab() {
         <>
           {workspaceContent}
           <ToastContainer toasts={conversionToasts} onRemove={handleRemoveToast} />
+          <BatchDownloadConfirmDialog
+            isOpen={showDownloadConfirm}
+            count={estimatedExportFileCount}
+            onClose={() => {
+              setShowDownloadConfirm(false)
+              setPendingExportMode(null)
+            }}
+            onConfirm={() => {
+              setShowDownloadConfirm(false)
+              if (pendingExportMode) {
+                void handleExport(pendingExportMode, true)
+              }
+              setPendingExportMode(null)
+            }}
+          />
         </>
       }
     />
