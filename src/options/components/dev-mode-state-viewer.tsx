@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
-import { Copy, Check, RefreshCw } from "lucide-react"
+import { Check, Copy, Download, RefreshCw } from "lucide-react"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { useSplitterStore } from "@/options/stores/splitter-store"
@@ -9,6 +9,7 @@ import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
 import { useInspectorStore } from "@/options/stores/inspector-store"
 import { Button } from "@/options/components/ui/button"
 import type { OptionsTab } from "@/options/shared"
+import { Tooltip } from "@/options/components/tooltip"
 
 /** Strip action functions (any property that is a function) from a store snapshot */
 function stripActions(state: Record<string, unknown>): Record<string, unknown> {
@@ -26,9 +27,11 @@ type StoreFilter = "all" | OptionsTab
 interface DevModeStateViewerProps {
   /** The currently active tab in the main workspace — used to pre-select the filter */
   activeTab: OptionsTab | null
+  /** Callback to trigger the debug log export */
+  onExport: () => void
 }
 
-export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
+export function DevModeStateViewer({ activeTab, onExport }: DevModeStateViewerProps) {
   const [filter, setFilter] = useState<StoreFilter>(activeTab ?? "all")
   const [copied, setCopied] = useState(false)
 
@@ -105,14 +108,14 @@ export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
   ]
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 pt-0.5 w-full max-w-full overflow-hidden">
       {/* Filter selector */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap min-w-0">
         <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">Show:</span>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value as StoreFilter)}
-          className="text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          className="text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500 max-w-[200px] sm:max-w-xs truncate"
         >
           {filterOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -120,21 +123,40 @@ export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
         </select>
 
         <div className="ml-auto flex items-center gap-1.5">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-7 px-2 text-xs gap-1 border-slate-200 dark:border-slate-700"
-            onClick={handleCopy}
+          <Tooltip
+            label="Export Debug Log"
+            content="Download sanitized JSON snapshot of your current configuration. File names, image data, and other sensitive content are masked."
+            variant="wide2"
           >
-            {copied ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
-            {copied ? "Copied!" : "Copy"}
-          </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 border-slate-200 dark:border-slate-700"
+              onClick={onExport}
+            >
+              <Download size={11} />
+              Export
+            </Button>
+          </Tooltip>
+
+          <Tooltip content="Copy current view to clipboard">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 border-slate-200 dark:border-slate-700"
+              onClick={handleCopy}
+            >
+              {copied ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
+              {copied ? "Copied!" : "Copy"}
+            </Button>
+          </Tooltip>
         </div>
       </div>
 
       {/* Live JSON viewer */}
-      <div className="relative rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-950 overflow-hidden">
+      <div className="relative rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-950 overflow-hidden w-full">
         <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-700/50">
           <div className="flex items-center gap-1.5">
             <RefreshCw size={10} className="text-emerald-500 animate-spin" style={{ animationDuration: "3s" }} />
@@ -145,7 +167,7 @@ export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
           </span>
         </div>
         <pre
-          className="text-[11px] font-mono text-slate-300 leading-relaxed overflow-auto p-3"
+          className="text-[11px] font-mono text-slate-300 leading-relaxed overflow-auto p-3 whitespace-pre-wrap break-all"
           style={{ maxHeight: "380px" }}
         >
           {jsonText}

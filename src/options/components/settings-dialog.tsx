@@ -259,7 +259,7 @@ export function SettingsDialog({
         </nav>
       </div>
 
-      <div className="flex-1 flex flex-col relative bg-white dark:bg-slate-900">
+      <div className="flex-1 min-w-0 flex flex-col relative bg-white dark:bg-slate-900">
         <Button
           variant="ghost"
           size="icon"
@@ -270,7 +270,7 @@ export function SettingsDialog({
           <X size={18} />
         </Button>
 
-        <div className="flex-1 overflow-y-auto p-8 pt-12">
+        <div className="flex-1 min-w-0 overflow-y-auto p-8 pt-12">
           {activeTab === "general" && (
             <div className="animate-in fade-in duration-300 space-y-5">
               <SettingsSectionHeader
@@ -542,22 +542,10 @@ export function SettingsDialog({
                   title="LIVE STATE MONITOR"
                   description="Inspect the current Zustand store state in real-time. Updates as you change settings."
                 />
-                <DevModeStateViewer activeTab={activeWorkspaceTab} />
-              </section>
-
-              <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
-                <SettingsItemHeader
-                  title="EXPORT DEBUG LOG"
-                  description="Downloads a sanitized JSON snapshot of your current configuration. File names, image data, and other sensitive content are masked."
+                <DevModeStateViewer 
+                  activeTab={activeWorkspaceTab} 
+                  onExport={handleExportDebugLog}
                 />
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-                  onClick={handleExportDebugLog}
-                >
-                  <Download size={14} />
-                  Export System Log
-                </Button>
               </section>
 
               <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
