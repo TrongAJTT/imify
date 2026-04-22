@@ -1,11 +1,5 @@
 import { getAppMetadata } from "@/core/app-metadata"
-import { useBatchStore } from "@/options/stores/batch-store"
-import { useSplicingStore } from "@/options/stores/splicing-store"
-import { useSplitterStore } from "@/options/stores/splitter-store"
-import { useFillingStore } from "@/options/stores/filling-store"
-import { usePatternStore } from "@/options/stores/pattern-store"
-import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
-import { useInspectorStore } from "@/options/stores/inspector-store"
+import { DEV_MODE_FEATURES } from "./dev-mode-registry"
 import type { ExtensionStorageState } from "@/core/types"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type { WorkspaceLayoutPreferences } from "@/options/shared/layout-preferences"
@@ -157,7 +151,7 @@ export async function buildDebugLog(params: BuildDebugLogParams): Promise<DebugL
     performancePreferences, 
     layoutPreferences,
     exportType = "normal",
-    exportedFeatures = ["batch", "splicing", "splitter", "filling", "pattern", "diffchecker", "inspector", "settings", "performance", "layout"]
+    exportedFeatures = DEV_MODE_FEATURES.map(f => f.id)
   } = params
   const appMetadata = getAppMetadata()
   const extensionStorageState = await getStorageState()
@@ -166,26 +160,12 @@ export async function buildDebugLog(params: BuildDebugLogParams): Promise<DebugL
 
   const stores: DebugLogPayload["stores"] = {}
   
-  if (hasFeature("batch")) {
-    stores.batch = sanitizeValue(extractStoreData(useBatchStore.getState() as unknown as Record<string, unknown>))
-  }
-  if (hasFeature("splicing")) {
-    stores.splicing = sanitizeValue(extractStoreData(useSplicingStore.getState() as unknown as Record<string, unknown>))
-  }
-  if (hasFeature("splitter")) {
-    stores.splitter = sanitizeValue(extractStoreData(useSplitterStore.getState() as unknown as Record<string, unknown>))
-  }
-  if (hasFeature("filling")) {
-    stores.filling = sanitizeValue(extractStoreData(useFillingStore.getState() as unknown as Record<string, unknown>))
-  }
-  if (hasFeature("pattern")) {
-    stores.pattern = sanitizeValue(extractStoreData(usePatternStore.getState() as unknown as Record<string, unknown>))
-  }
-  if (hasFeature("diffchecker")) {
-    stores.diffchecker = sanitizeValue(extractStoreData(useDiffcheckerStore.getState() as unknown as Record<string, unknown>))
-  }
-  if (hasFeature("inspector")) {
-    stores.inspector = sanitizeValue(extractStoreData(useInspectorStore.getState() as unknown as Record<string, unknown>))
+  for (const feature of DEV_MODE_FEATURES) {
+    if (hasFeature(feature.id) && feature.storeHook) {
+      stores[feature.id as keyof typeof stores] = sanitizeValue(
+        extractStoreData(feature.storeHook.getState() as unknown as Record<string, unknown>)
+      )
+    }
   }
 
   // Environment (browser info)
@@ -245,26 +225,13 @@ export function downloadDebugLog(payload: DebugLogPayload): void {
 export async function importDebugLog(payload: DebugLogPayload, importFeatures: string[]): Promise<void> {
   const hasFeature = (id: string) => importFeatures.includes(id)
 
-  if (hasFeature("batch") && payload.stores.batch) {
-    useBatchStore.setState(payload.stores.batch as any)
-  }
-  if (hasFeature("splicing") && payload.stores.splicing) {
-    useSplicingStore.setState(payload.stores.splicing as any)
-  }
-  if (hasFeature("splitter") && payload.stores.splitter) {
-    useSplitterStore.setState(payload.stores.splitter as any)
-  }
-  if (hasFeature("filling") && payload.stores.filling) {
-    useFillingStore.setState(payload.stores.filling as any)
-  }
-  if (hasFeature("pattern") && payload.stores.pattern) {
-    usePatternStore.setState(payload.stores.pattern as any)
-  }
-  if (hasFeature("diffchecker") && payload.stores.diffchecker) {
-    useDiffcheckerStore.setState(payload.stores.diffchecker as any)
-  }
-  if (hasFeature("inspector") && payload.stores.inspector) {
-    useInspectorStore.setState(payload.stores.inspector as any)
+  for (const feature of DEV_MODE_FEATURES) {
+    if (hasFeature(feature.id) && feature.storeHook) {
+      const stateToRestore = payload.stores[feature.id as keyof typeof payload.stores]
+      if (stateToRestore) {
+        feature.storeHook.setState(stateToRestore as any)
+      }
+    }
   }
 
   if (hasFeature("settings") && payload.settings) {

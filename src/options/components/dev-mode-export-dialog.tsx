@@ -7,18 +7,7 @@ import type { PerformancePreferences } from "@/options/shared/performance-prefer
 import type { WorkspaceLayoutPreferences } from "@/options/shared/layout-preferences"
 import type { OptionsTab } from "@/options/shared"
 
-export const EXPORTABLE_FEATURES = [
-  { id: "batch", label: "Processor (Single/Batch)" },
-  { id: "splicing", label: "Image Splicing" },
-  { id: "splitter", label: "Image Splitter" },
-  { id: "filling", label: "Image Filling" },
-  { id: "pattern", label: "Pattern Generator" },
-  { id: "diffchecker", label: "Difference Checker" },
-  { id: "inspector", label: "Image Inspector" },
-  { id: "settings", label: "Settings & Context Menu" },
-  { id: "performance", label: "Performance Preferences" },
-  { id: "layout", label: "Workspace Layout Preferences" },
-]
+import { DEV_MODE_FEATURES } from "@/features/dev-mode/dev-mode-registry"
 
 interface DevModeExportDialogProps {
   isOpen: boolean
@@ -35,7 +24,7 @@ export function DevModeExportDialog({
   performancePreferences,
   layoutPreferences
 }: DevModeExportDialogProps) {
-  const allFeatureIds = useMemo(() => EXPORTABLE_FEATURES.map(f => f.id), [])
+  const allFeatureIds = useMemo(() => DEV_MODE_FEATURES.map(f => f.id), [])
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>(allFeatureIds)
   const [isExporting, setIsExporting] = useState(false)
 
@@ -94,8 +83,8 @@ export function DevModeExportDialog({
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 max-h-[40vh] overflow-y-auto pr-2">
-            {EXPORTABLE_FEATURES.map(feature => (
+          <div className="grid grid-cols-2 gap-3 mb-6" onClick={(e) => e.stopPropagation()}>
+            {DEV_MODE_FEATURES.map((feature) => (
               <label 
                 key={feature.id} 
                 className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"

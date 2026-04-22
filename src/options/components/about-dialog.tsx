@@ -140,7 +140,7 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
           <button
             type="button"
             onClick={handleIconClick}
-            className="shrink-0 select-none cursor-default focus:outline-none"
+            className="shrink-0 select-none cursor-default focus:outline-none active:scale-90 transition-transform duration-100"
             aria-label="Imify logo"
             tabIndex={-1}
           >
@@ -162,7 +162,7 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
               <button
                 type="button"
                 onClick={handleVersionClick}
-                className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 select-none cursor-default focus:outline-none"
+                className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 select-none cursor-default focus:outline-none active:scale-90 transition-transform duration-100"
                 tabIndex={-1}
                 aria-label="App version"
               >

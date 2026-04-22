@@ -3,7 +3,7 @@ import { BaseDialog } from "@/options/components/ui/base-dialog"
 import { Button } from "@/options/components/ui/button"
 import { Check, Upload, AlertTriangle } from "lucide-react"
 import { buildDebugLog, downloadDebugLog, importDebugLog, type DebugLogPayload } from "@/features/dev-mode/debug-log-builder"
-import { EXPORTABLE_FEATURES } from "./dev-mode-export-dialog"
+import { DEV_MODE_FEATURES } from "@/features/dev-mode/dev-mode-registry"
 import { getAppMetadata } from "@/core/app-metadata"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type { WorkspaceLayoutPreferences } from "@/options/shared/layout-preferences"
@@ -83,7 +83,7 @@ export function DevModeImportDialog({
     try {
       if (payload.metadata.exportType === "normal") {
         // Force full backup
-        const allFeatureIds = EXPORTABLE_FEATURES.map(f => f.id)
+        const allFeatureIds = DEV_MODE_FEATURES.map(f => f.id)
         const backupPayload = await buildDebugLog({
           activeTab,
           performancePreferences,
@@ -162,7 +162,7 @@ export function DevModeImportDialog({
               </div>
               <div className="grid grid-cols-1 gap-2 max-h-[30vh] overflow-y-auto pr-2">
                 {payload.metadata.exportedFeatures.map(id => {
-                  const feature = EXPORTABLE_FEATURES.find(f => f.id === id)
+                  const feature = DEV_MODE_FEATURES.find(f => f.id === id)
                   const label = feature ? feature.label : id
                   return (
                     <label 
