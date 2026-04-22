@@ -9,6 +9,7 @@ import { BaseDialog } from "@/options/components/ui/base-dialog"
 import { useDevModeEnabled } from "@/features/dev-mode/dev-mode-storage"
 import { useToast } from "@/core/hooks/use-toast"
 import { ToastContainer } from "@/core/components/toast-container"
+import { BugReportDialog } from "./bug-report-dialog"
 
 const appMetadata = getAppMetadata()
 
@@ -106,6 +107,7 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
 }) => {
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled()
   const { toasts, hide, success, warning } = useToast()
+  const [isBugReportDialogOpen, setIsBugReportDialogOpen] = React.useState(false)
 
   const activateDevMode = useCallback(async () => {
     if (devModeEnabled) {
@@ -155,7 +157,7 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
               Imify
             </h3>
             <p className="text-sm text-sky-500 dark:text-sky-400 uppercase tracking-widest font-bold">
-              Save and Process images
+              The Powerful Image Toolkit
             </p>
             <div className="flex items-center gap-2 mt-2">
               {/* Easter Egg target #2: Version badge (7 clicks) */}
@@ -263,13 +265,16 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
                 More Apps
               </ActionLink>
             </div>
-            <ActionLink
-              href="https://github.com/TrongAJTT/imify/issues/new/choose"
-              tooltip={`Open GitHub issue form for bug reports.\n                ● You may need to login to GitHub to report bugs.`}
-            >
-              <Bug size={15} />
-              Found a bug? Report here
-            </ActionLink>
+            <Tooltip content="Learn how to report bugs effectively, including how to provide helpful logs while protecting your privacy." variant="wide1">
+              <button
+                type="button"
+                onClick={() => setIsBugReportDialogOpen(true)}
+                className="w-full px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center lg:justify-start gap-2"
+              >
+                <Bug size={15} />
+                Found a bug? Report here
+              </button>
+            </Tooltip>
             <div className="flex items-center justify-center lg:justify-end gap-3 text-xs font-medium text-slate-500 dark:text-slate-400">
               <a
                 href="https://www.trongajtt.com/apps/imify/terms/"
@@ -290,6 +295,11 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
           </div>
         </div>
       </div>
+
+      <BugReportDialog
+        isOpen={isBugReportDialogOpen}
+        onClose={() => setIsBugReportDialogOpen(false)}
+      />
 
       {/* Toast notifications for Easter Egg feedback */}
       <ToastContainer toasts={toasts} onRemove={hide} />
