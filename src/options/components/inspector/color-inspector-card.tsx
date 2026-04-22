@@ -13,6 +13,7 @@ import {
 import { InfoSection, InfoRow } from "./info-section"
 import { Tooltip } from "@/options/components/tooltip"
 import { useInspectorStore } from "@/options/stores/inspector-store"
+import { INSPECTOR_TOOLTIPS } from "@/options/components/inspector/inspector-tooltips"
 
 function formatColor(c: PaletteColor, format: ColorDisplayFormat): string {
   switch (format) {
@@ -103,7 +104,7 @@ function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplay
 
   const contrastTooltip = (
     <div className="space-y-1.5">
-      <div className="font-bold text-[11px]">Contrast (WCAG)</div>
+      <div className="font-bold text-[11px]">{INSPECTOR_TOOLTIPS.colorInspector.contrastTitle}</div>
       <div className="flex items-center gap-2">
         <span
           className="inline-flex items-center justify-center w-7 h-5 rounded text-[11px] font-bold text-white"
@@ -111,7 +112,7 @@ function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplay
         >
           Aa
         </span>
-        <span className="text-[11px]">on dark &rarr;</span>
+        <span className="text-[11px]">{INSPECTOR_TOOLTIPS.colorInspector.onDark} &rarr;</span>
         {levelBadge(contrast.onBlack.level)}
         <span className="text-slate-400 text-[10px]">({contrast.onBlack.ratio.toFixed(1)}:1)</span>
       </div>
@@ -122,7 +123,7 @@ function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplay
         >
           Aa
         </span>
-        <span className="text-[11px]">on light &rarr;</span>
+        <span className="text-[11px]">{INSPECTOR_TOOLTIPS.colorInspector.onLight} &rarr;</span>
         {levelBadge(contrast.onWhite.level)}
         <span className="text-slate-400 text-[10px]">({contrast.onWhite.ratio.toFixed(1)}:1)</span>
       </div>
@@ -151,12 +152,12 @@ function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplay
           <code className="text-xs font-mono text-slate-700 dark:text-slate-200 truncate">
             {formatted}
           </code>
-          <Tooltip content={`Copy ${formatted}`}>
+          <Tooltip content={INSPECTOR_TOOLTIPS.colorInspector.copyColor(formatted)}>
             <button
               type="button"
               onClick={handleCopy}
               className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
-              aria-label={`Copy ${formatted}`}
+              aria-label={INSPECTOR_TOOLTIPS.colorInspector.copyColor(formatted)}
             >
               {copied ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
             </button>

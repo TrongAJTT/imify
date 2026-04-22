@@ -278,7 +278,7 @@ export function InteractivePreview({
       <canvas
         ref={previewCanvasRef}
         aria-label={alt}
-        className="block h-auto w-auto max-h-full max-w-full rounded border border-slate-200/80 bg-slate-100/80 dark:border-slate-700/70 dark:bg-slate-900/60"
+        className="block h-auto w-auto max-h-full max-w-full rounded border border-slate-200/80 bg-slate-100/80 dark:border-slate-700/70 dark:bg-slate-900/60 cursor-zoom-in"
         onPointerMove={handlePointerMove}
         onPointerLeave={() => setSample(null)}
         onClick={(event) => void handleCanvasClick(event)}

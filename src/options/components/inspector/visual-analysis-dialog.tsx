@@ -121,7 +121,7 @@ export function VisualAnalysisDialog({ imageUrl, alt }: VisualAnalysisDialogProp
             <div>
             <Kicker>Move mouse over image to analyze. Adjust modes in Display Accordion. Click inside the image to copy the pixel color.</Kicker>
               {/* Standalone Loupe */}
-              <div className="mt-2 relative aspect-[16/9] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-slate-950 flex flex-col items-center justify-center overflow-hidden shadow-sm">
+              <div className="mt-2 relative aspect-[16/9] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-950 flex flex-col items-center justify-center overflow-hidden shadow-sm">
                 {loupeEnabled && isReady && sample ? (
                   <>
                     <canvas
@@ -134,7 +134,7 @@ export function VisualAnalysisDialog({ imageUrl, alt }: VisualAnalysisDialogProp
                   </>
                 ) : (
                   <div className="text-center p-4">
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
                       {loupeEnabled ? "Hover over image to inspect" : "Loupe is disabled"}
                     </p>
                   </div>
