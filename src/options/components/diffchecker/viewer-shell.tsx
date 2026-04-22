@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Expand, Shrink } from "lucide-react"
+import { DIFFCHECKER_TOOLTIPS } from "@/options/components/diffchecker/diffchecker-tooltips"
 import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
 import { Tooltip } from "@/options/components/tooltip"
 import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
@@ -203,14 +204,22 @@ export function ViewerShell({
       {children}
       <div className="absolute top-1/2 right-2 z-20 -translate-y-1/2">
         <Tooltip
-          content={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+          content={
+            isFullscreen
+              ? DIFFCHECKER_TOOLTIPS.viewerShell.exitFullscreen
+              : DIFFCHECKER_TOOLTIPS.viewerShell.fullscreen
+          }
         >
           <button
             type="button"
             onClick={handleToggleFullscreen}
             onPointerDown={(e) => e.stopPropagation()}
             className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300/90 bg-white/90 text-slate-700 shadow-sm transition-colors hover:bg-white dark:border-slate-600 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-900 opacity-60 hover:opacity-100"
-            aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            aria-label={
+              isFullscreen
+                ? DIFFCHECKER_TOOLTIPS.viewerShell.exitFullscreen
+                : DIFFCHECKER_TOOLTIPS.viewerShell.fullscreen
+            }
           >
             {isFullscreen ? <Shrink size={14} /> : <Expand size={14} />}
           </button>
