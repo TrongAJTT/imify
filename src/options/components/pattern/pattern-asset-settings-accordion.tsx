@@ -5,6 +5,7 @@ import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectInput } from "@/options/components/ui/select-input"
+import { PATTERN_TOOLTIPS } from "@/options/components/pattern/pattern-tooltips"
 import { usePatternStore } from "@/options/stores/pattern-store"
 
 const COLOR_OVERRIDE_MODE_OPTIONS = [
@@ -90,7 +91,7 @@ export function PatternAssetSettingsAccordion() {
               value={layerColorOverride.mode}
               options={COLOR_OVERRIDE_MODE_OPTIONS}
               onChange={(value) => setLayerColorOverride({ mode: value as "per-asset" | "unified" })}
-              tooltipContent="Per Asset: apply gradient/paint per layer tile. Unified: one shared color field across the full canvas."
+              tooltipContent={PATTERN_TOOLTIPS.assetSettings.overrideMode}
               />
               <ColorPickerPopover
               label="Override Color"

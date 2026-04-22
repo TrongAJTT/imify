@@ -2,6 +2,7 @@ import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { SelectInput } from "@/options/components/ui/select-input"
+import { PATTERN_TOOLTIPS } from "@/options/components/pattern/pattern-tooltips"
 import { usePatternStore } from "@/options/stores/pattern-store"
 import { Aperture } from "lucide-react"
 
@@ -45,7 +46,7 @@ export function PatternSettingsAccordion() {
           <div className="grid grid-cols-2 gap-2">
             <NumberInput
               label="Density"
-              tooltipContent="Higher values pack more assets into the same area."
+              tooltipContent={PATTERN_TOOLTIPS.settings.density}
               value={Math.round(distribution.density * 100) / 100}
               min={0.2}
               max={5}
@@ -54,7 +55,7 @@ export function PatternSettingsAccordion() {
             />
             <NumberInput
               label="Base Scale"
-              tooltipContent="Asset size multiplier before random variance."
+              tooltipContent={PATTERN_TOOLTIPS.settings.baseScale}
               value={Math.round(distribution.baseScale * 100) / 100}
               min={0.05}
               max={8}
@@ -63,7 +64,7 @@ export function PatternSettingsAccordion() {
             />
             <NumberInput
               label="Scale Variance"
-              tooltipContent="Random scale deviation around base scale."
+              tooltipContent={PATTERN_TOOLTIPS.settings.scaleVariance}
               value={Math.round(distribution.scaleVariance * 100) / 100}
               min={0}
               max={0.95}
@@ -72,7 +73,7 @@ export function PatternSettingsAccordion() {
             />
             <NumberInput
               label="Seed"
-              tooltipContent="Same seed + same settings = repeatable layout."
+              tooltipContent={PATTERN_TOOLTIPS.settings.seed}
               value={distribution.randomSeed}
               min={0}
               max={99999999}

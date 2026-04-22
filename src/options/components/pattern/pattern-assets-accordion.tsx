@@ -9,7 +9,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { Brush, ImagePlus, Trash2 } from "lucide-react"
+import { Brush, ImagePlus, Trash2, Upload } from "lucide-react"
 
 import {
   DEFAULT_PATTERN_ASSET_BORDER_SETTINGS,
@@ -20,6 +20,7 @@ import { PatternAssetDrawingDialog } from "@/options/components/pattern/pattern-
 import { PatternAssetListItem } from "@/options/components/pattern/pattern-asset-list-item"
 import { Button } from "@/options/components/ui/button"
 import { ResizableAccordionCard } from "@/options/components/ui/resizable-accordion-card"
+import { PATTERN_TOOLTIPS } from "@/options/components/pattern/pattern-tooltips"
 import { usePatternStore } from "@/options/stores/pattern-store"
 import { Tooltip } from "../tooltip"
 
@@ -264,6 +265,7 @@ export function PatternAssetsAccordion() {
               className="flex-1"
               onClick={() => fileInputRef.current?.click()}
             >
+              <Upload size={14} />
               Upload
             </Button>
             <Button
@@ -277,7 +279,7 @@ export function PatternAssetsAccordion() {
             </Button>
 
             {assets.length > 0 && (
-              <Tooltip content="Clear all assets">
+              <Tooltip content={PATTERN_TOOLTIPS.assets.clearAllAssets}>
                 <Button className="flex" variant="secondary" size="sm" onClick={handleClearAssets}>
                   <Trash2 size={13} color="red" />
                 </Button>
