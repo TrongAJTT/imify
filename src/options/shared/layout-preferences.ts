@@ -1,6 +1,6 @@
 export const WORKSPACE_LAYOUT_PREFERENCES_KEY = "imify_workspace_layout_preferences"
 
-export const SIDEBAR_LEVELS = [1, 2, 3, 4, 5, 6] as const
+export const SIDEBAR_LEVELS = [1, 2, 3, 4, 5, 6, 7] as const
 
 export type SidebarWidthLevel = (typeof SIDEBAR_LEVELS)[number]
 
@@ -28,9 +28,10 @@ export const CONFIGURATION_SIDEBAR_WIDTH_OPTIONS: readonly SidebarWidthOption[] 
   { level: 1, widthPx: 280, label: "Compact" },
   { level: 2, widthPx: 320, label: "Default" },
   { level: 3, widthPx: 360, label: "Comfortable" },
-  { level: 4, widthPx: 400, label: "Large" },
-  { level: 5, widthPx: 440, label: "Extra Large" },
-  { level: 6, widthPx: 480, label: "Max" }
+  { level: 4, widthPx: 400, label: "" },
+  { level: 5, widthPx: 440, label: "Large" },
+  { level: 6, widthPx: 480, label: "" },
+  { level: 7, widthPx: 520, label: "Max" }
 ]
 
 export const DEFAULT_WORKSPACE_LAYOUT_PREFERENCES: WorkspaceLayoutPreferences = {

@@ -267,8 +267,10 @@ function computeLineVariance(args: {
   lineIndex: number
   lineSize: number
 }): number {
-  const luminanceValues: number[] = []
-  let sum = 0
+  let mean = 0
+  let m2 = 0
+  let count = 0
+
   for (let i = 0; i < args.lineSize; i += 1) {
     const pixelIndex = getPixelIndexForLine({
       axis: args.axis,
@@ -280,17 +282,15 @@ function computeLineVariance(args: {
     const g = args.data[pixelIndex + 1]
     const b = args.data[pixelIndex + 2]
     const luma = 0.299 * r + 0.587 * g + 0.114 * b
-    luminanceValues.push(luma)
-    sum += luma
+
+    count += 1
+    const delta = luma - mean
+    mean += delta / count
+    const delta2 = luma - mean
+    m2 += delta * delta2
   }
 
-  const mean = args.lineSize > 0 ? sum / args.lineSize : 0
-  let varianceSum = 0
-  for (const value of luminanceValues) {
-    const diff = value - mean
-    varianceSum += diff * diff
-  }
-  return args.lineSize > 0 ? varianceSum / args.lineSize : 0
+  return count > 0 ? m2 / count : 0
 }
 
 function findSafeZoneCut(args: {

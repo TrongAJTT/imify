@@ -3,6 +3,7 @@ import { Sparkles, ScanLine, Palette } from "lucide-react"
 import { AccordionCard } from "@/options/components/ui/accordion-card"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { SelectInput } from "@/options/components/ui/select-input"
+import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 
 export interface MozJpegAdvancedSettingsCardProps {
   progressive: boolean
@@ -58,7 +59,7 @@ export function MozJpegAdvancedSettingsCard({
               ? "Enabled: loads blurry-to-sharp in multiple scans"
               : "Disabled: baseline JPEG scan"
           }
-          tooltipContent="Progressive JPEG often improves perceived load speed and can reduce file size slightly for web delivery."
+          tooltipContent={PROCESSOR_TOOLTIPS.shared.mozjpegAdvanced.progressiveLoading}
           checked={progressive}
           onChange={onProgressiveChange}
           disabled={disabled}
@@ -67,7 +68,7 @@ export function MozJpegAdvancedSettingsCard({
 
         <SelectInput
           label="Color Resolution (Chroma)"
-          tooltip={`4:2:0 is smallest and ideal for photos.\n4:2:2 offers better color accuracy for web graphics.`}
+          tooltipContent={PROCESSOR_TOOLTIPS.shared.mozjpegAdvanced.colorResolution}
           value={String(chromaSubsampling)}
           onChange={(value) => onChromaSubsamplingChange(Number(value) as 0 | 1 | 2)}
           disabled={disabled}

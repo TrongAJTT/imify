@@ -33,6 +33,7 @@ export interface SplicingLayoutConfig {
   secondaryDirection: SplicingDirection
   gridCount: number
   flowMaxSize: number
+  flowSplitOverflow?: boolean
   alignment: SplicingAlignment
   imageAppearanceDirection?: SplicingImageAppearanceDirection
 }
@@ -82,6 +83,7 @@ export interface LayoutPlacement {
   imageIndex: number
   outerRect: LayoutRect
   contentRect: LayoutRect
+  sourceCropUv?: LayoutRect
 }
 
 export interface LayoutGroup {

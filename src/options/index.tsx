@@ -581,7 +581,7 @@ export default function OptionsPage() {
             )}
 
             {activeTab === "filling" && (
-              <FillingSidebarPanel />
+              <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
             )}
 
             {activeTab === "pattern" && (
@@ -589,11 +589,11 @@ export default function OptionsPage() {
             )}
 
             {activeTab === "diffchecker" && (
-              <DiffcheckerSidebarPanel />
+              <DiffcheckerSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
             )}
 
             {activeTab === "inspector" && (
-              <InspectorSidebarPanel />
+              <InspectorSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
             )}
 
             <TabInfoPanel activeTab={activeTab} />
@@ -665,7 +665,7 @@ export default function OptionsPage() {
           )}
 
           {activeTab === "filling" && (
-            <FillingSidebarPanel />
+            <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
           )}
 
           {activeTab === "pattern" && (
@@ -673,11 +673,11 @@ export default function OptionsPage() {
           )}
 
           {activeTab === "diffchecker" && (
-            <DiffcheckerSidebarPanel />
+            <DiffcheckerSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
           )}
 
           {activeTab === "inspector" && (
-            <InspectorSidebarPanel />
+            <InspectorSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
           )}
 
           <TabInfoPanel activeTab={activeTab} />

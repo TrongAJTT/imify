@@ -10,6 +10,7 @@ import { NumberInput } from "@/options/components/ui/number-input"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { Button } from "@/options/components/ui/button"
+import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 const BG_TYPE_OPTIONS: Array<{ value: CanvasBackgroundType; label: string }> = [
   { value: "solid", label: "Customized Color" },
@@ -142,6 +143,8 @@ export function FillCanvasAccordion() {
           <CheckboxCard
             icon={<Square size={14} />}
             title="Override Layer Borders"
+            tooltipLabel={FILLING_TOOLTIPS.fillCanvas.overrideLayerBordersLabel}
+            tooltipContent={FILLING_TOOLTIPS.fillCanvas.overrideLayerBorders}
             checked={state.borderOverrideEnabled}
             onChange={(v) => update({ borderOverrideEnabled: v })}
           />
@@ -161,7 +164,7 @@ export function FillCanvasAccordion() {
                   value={state.borderGradientScope ?? "per-layer"}
                   options={BORDER_GRADIENT_SCOPE_OPTIONS}
                   onChange={(v) => update({ borderGradientScope: v as "per-layer" | "unified" })}
-                  tooltip="For gradient border color: Per Layer = separate gradient per shape, Unified = one shared gradient across whole canvas."
+                  tooltipContent={FILLING_TOOLTIPS.fillCanvas.gradientMode}
                 />
               </div>
               <ColorPickerPopover
@@ -180,6 +183,8 @@ export function FillCanvasAccordion() {
           <CheckboxCard
             icon={<Circle size={14} />}
             title="Override Corner Radius"
+            tooltipLabel={FILLING_TOOLTIPS.fillCanvas.overrideCornerRadiusLabel}
+            tooltipContent={FILLING_TOOLTIPS.fillCanvas.overrideCornerRadius}
             checked={state.cornerRadiusOverrideEnabled}
             onChange={(v) => update({ cornerRadiusOverrideEnabled: v })}
           />

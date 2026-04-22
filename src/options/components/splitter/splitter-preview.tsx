@@ -51,6 +51,8 @@ export function SplitterPreview({
 
   const xCuts = plan?.xCuts.slice(1, -1) ?? []
   const yCuts = plan?.yCuts.slice(1, -1) ?? []
+  const isAutoSpriteMode =
+    splitSettings?.mode === "advanced" && splitSettings.advancedMethod === "auto_sprite"
   const firstXCut = xCuts[0] ?? null
   const firstYCut = yCuts[0] ?? null
   const canDragXGuide =
@@ -258,27 +260,47 @@ export function SplitterPreview({
                 />
 
                 <div className="pointer-events-none absolute inset-0">
-                  {xCuts.map((cut) => (
-                    <div
-                      key={`x_${cut}`}
-                      className="absolute top-0 bottom-0 w-px"
-                      style={{
-                        left: `${(cut / image.width) * 100}%`,
-                        backgroundColor: guideColor
-                      }}
-                    />
-                  ))}
+                  {isAutoSpriteMode
+                    ? (plan?.rects ?? []).map((rect) => (
+                        <div
+                          key={`sprite_${rect.index}_${rect.x}_${rect.y}`}
+                          className="absolute border"
+                          style={{
+                            left: `${(rect.x / image.width) * 100}%`,
+                            top: `${(rect.y / image.height) * 100}%`,
+                            width: `${(rect.width / image.width) * 100}%`,
+                            height: `${(rect.height / image.height) * 100}%`,
+                            borderColor: guideColor
+                          }}
+                        />
+                      ))
+                    : null}
 
-                  {yCuts.map((cut) => (
-                    <div
-                      key={`y_${cut}`}
-                      className="absolute left-0 right-0 h-px"
-                      style={{
-                        top: `${(cut / image.height) * 100}%`,
-                        backgroundColor: guideColor
-                      }}
-                    />
-                  ))}
+                  {!isAutoSpriteMode
+                    ? xCuts.map((cut) => (
+                        <div
+                          key={`x_${cut}`}
+                          className="absolute top-0 bottom-0 w-px"
+                          style={{
+                            left: `${(cut / image.width) * 100}%`,
+                            backgroundColor: guideColor
+                          }}
+                        />
+                      ))
+                    : null}
+
+                  {!isAutoSpriteMode
+                    ? yCuts.map((cut) => (
+                        <div
+                          key={`y_${cut}`}
+                          className="absolute left-0 right-0 h-px"
+                          style={{
+                            top: `${(cut / image.height) * 100}%`,
+                            backgroundColor: guideColor
+                          }}
+                        />
+                      ))
+                    : null}
                 </div>
                 {canDragXGuide ? (
                   <button

@@ -204,6 +204,10 @@ export function ControlledPopover({
           }}
           onClick={(event) => {
             if (disabled || supportsClick) return
+            const target = event.target as HTMLElement | null
+            if (target?.closest("a, button, [role='button'], input, select, textarea")) {
+              return
+            }
             // In hover-only mode, prevent Radix click toggle behavior.
             event.preventDefault()
           }}

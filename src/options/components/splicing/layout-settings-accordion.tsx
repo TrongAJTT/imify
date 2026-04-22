@@ -27,6 +27,7 @@ interface LayoutSettingsAccordionProps {
   secondaryDirection: SplicingDirection
   gridCount: number
   flowMaxSize: number
+  flowSplitOverflow: boolean
   alignment: SplicingAlignment
   imageAppearanceDirection: SplicingImageAppearanceDirection
   previewBentoFlowGroupCount: number | null
@@ -38,6 +39,7 @@ interface LayoutSettingsAccordionProps {
   onSecondaryDirectionChange: (direction: SplicingDirection) => void
   onGridCountChange: (count: number) => void
   onFlowMaxSizeChange: (size: number) => void
+  onFlowSplitOverflowChange: (enabled: boolean) => void
   onAlignmentChange: (alignment: SplicingAlignment) => void
   onImageAppearanceDirectionChange: (direction: SplicingImageAppearanceDirection) => void
   onImageAppearanceDirectionChangeFromPreset: (direction: SplicingImageAppearanceDirection) => void
@@ -53,6 +55,7 @@ export function LayoutSettingsAccordion({
   secondaryDirection,
   gridCount,
   flowMaxSize,
+  flowSplitOverflow,
   alignment,
   imageAppearanceDirection,
   bentoLayoutMode,
@@ -62,6 +65,7 @@ export function LayoutSettingsAccordion({
   onSecondaryDirectionChange,
   onGridCountChange,
   onFlowMaxSizeChange,
+  onFlowSplitOverflowChange,
   onAlignmentChange,
   onImageAppearanceDirectionChange,
   onImageAppearanceDirectionChangeFromPreset
@@ -115,6 +119,7 @@ export function LayoutSettingsAccordion({
               <BentoLayoutControls
                 mode={bentoLayoutMode}
                 flowMaxSize={flowMaxSize}
+                flowSplitOverflow={flowSplitOverflow}
                 count={gridCount}
                 alignment={alignment}
                 alignmentOptions={bentoAlignmentOptions}
@@ -126,6 +131,7 @@ export function LayoutSettingsAccordion({
                   onImageAppearanceDirectionChange(getBentoDefaultImageDirection(mode))
                 }}
                 onFlowMaxSizeChange={onFlowMaxSizeChange}
+                onFlowSplitOverflowChange={onFlowSplitOverflowChange}
                 onCountChange={onGridCountChange}
                 onAlignmentChange={onAlignmentChange}
                 onImageAppearanceDirectionChange={onImageAppearanceDirectionChange}

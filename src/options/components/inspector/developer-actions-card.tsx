@@ -15,6 +15,7 @@ import {
 } from "@/features/inspector"
 import { InfoSection } from "./info-section"
 import { Tooltip } from "@/options/components/tooltip"
+import { INSPECTOR_TOOLTIPS } from "@/options/components/inspector/inspector-tooltips"
 
 interface DeveloperActionsCardProps {
   bitmap: ImageBitmap
@@ -120,13 +121,13 @@ export function DeveloperActionsCard({
             <ActionButton
               label="Copy as Base64 Data URI"
               icon={<Code size={14} />}
-              tooltip="Copy a raw Data URI string (data:image/...;base64,...) for direct inline usage in HTML or scripts."
+              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyBase64DataUri}
               getValue={() => imageToBase64(bitmap, mimeType)}
             />
             <ActionButton
               label="Copy as CSS Data URI"
               icon={<Code size={14} />}
-              tooltip={'Copy a CSS-ready value like url("data:image/...base64,...") so you can paste directly into background-image.'}
+              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyCssDataUri}
               getValue={() => {
                 const dataUri = imageToBase64(bitmap, mimeType)
                 return dataUri ? toCssDataUri(dataUri) : null
@@ -136,26 +137,26 @@ export function DeveloperActionsCard({
               <ActionButton
                 label="Copy ThumbHash"
                 icon={<Hash size={14} />}
-                tooltip="Copy ThumbHash placeholder text for lightweight blurred previews during lazy-loading."
+                tooltip={INSPECTOR_TOOLTIPS.developerActions.copyThumbHash}
                 getValue={() => thumbHash}
               />
             )}
             <ActionButton
               label={"Copy <picture> Tag"}
               icon={<Image size={14} />}
-              tooltip="Copy a responsive <picture> snippet with AVIF/WebP sources and JPG fallback image."
+              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyPictureTag}
               getValue={() => buildPictureTag(baseName, "Description")}
             />
             <ActionButton
               label="Copy CSS Aspect-Ratio"
               icon={<Code size={14} />}
-              tooltip="Copy aspect-ratio and object-fit CSS to reserve layout space and reduce CLS."
+              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyCssAspectRatio}
               getValue={() => buildAspectRatioCss(result.dimensions.width, result.dimensions.height)}
             />
             <ActionButton
               label="Copy Palette as CSS Variables"
               icon={<Code size={14} />}
-              tooltip="Convert extracted dominant colors into reusable CSS custom properties (:root variables)."
+              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyPaletteCssVariables}
               getValue={() => buildPaletteCssVariables(palette)}
             />
           </div>
@@ -169,7 +170,7 @@ export function DeveloperActionsCard({
             <ActionButton
               label="Copy SHA-256 Hash"
               icon={<Fingerprint size={14} />}
-              tooltip="Generate SHA-256 fingerprint locally for integrity checks, deduplication, or verification workflows."
+              tooltip={INSPECTOR_TOOLTIPS.developerActions.copySha256Hash}
               getValue={async () => {
                 const buffer = await file.arrayBuffer()
                 return getSha256(buffer)
@@ -178,7 +179,7 @@ export function DeveloperActionsCard({
             <ActionButton
               label="Copy MD5 Hash"
               icon={<Fingerprint size={14} />}
-              tooltip="Generate MD5 fingerprint locally for quick compatibility checks with legacy systems."
+              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyMd5Hash}
               getValue={async () => {
                 const buffer = await file.arrayBuffer()
                 return getMd5(buffer)
@@ -187,7 +188,7 @@ export function DeveloperActionsCard({
             <ActionButton
               label="Copy Magic Number Signature"
               icon={<Shield size={14} />}
-              tooltip="Copy first bytes (hex signature) to verify true file format regardless of extension."
+              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyMagicNumberSignature}
               getValue={async () => {
                 const buffer = await file.arrayBuffer()
                 return getMagicNumber(buffer)
@@ -196,7 +197,7 @@ export function DeveloperActionsCard({
             <ActionButton
               label="Copy Inspection JSON"
               icon={<Code size={14} />}
-              tooltip="Copy structured inspection output (dimensions, color, GPS, metadata counts) as formatted JSON."
+              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyInspectionJson}
               getValue={() => inspectionJson}
             />
           </div>
@@ -210,7 +211,7 @@ export function DeveloperActionsCard({
             <ActionButton
               label="Copy Base64 (Optimized / Minified)"
               icon={<Code size={14} />}
-              tooltip="Copy a tiny, low-quality data URI placeholder (downscaled and compressed) for lightweight previews."
+              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyOptimizedBase64}
               getValue={() => buildOptimizedDataUri(bitmap, mimeType)}
             />
           </div>

@@ -1,6 +1,6 @@
 import { arrayMove } from "@dnd-kit/sortable"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Download, Trash2 } from "lucide-react"
+import { Trash2 } from "lucide-react"
 
 import { APP_CONFIG } from "@/core/config"
 import { ToastContainer } from "@/core/components/toast-container"
@@ -16,10 +16,9 @@ import type {
 } from "@/features/splicing/types"
 import { SplicingHeavyPreviewQualityDialog } from "@/options/components/splicing/splicing-heavy-preview-quality-dialog"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
+import { ExportSplitButton, type ExportSplitMode } from "@/options/components/shared/export-split-button"
 import { SplicingWorkspace } from "@/options/components/splicing/splicing-workspace"
 import { SplicingWorkspaceShell } from "@/options/components/splicing/splicing-workspace-shell"
-import { SplicingSidebarShell } from "@/options/components/splicing/splicing-sidebar-shell"
-import { SplicingExportDialog, type SplicingExportMode } from "@/options/components/splicing/splicing-export-dialog"
 import { Button } from "@/options/components/ui/button"
 import {
   PreviewInteractionModeToggle,
@@ -37,6 +36,7 @@ import { useBatchStore } from "@/options/stores/batch-store"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
 import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
 import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
+import type { SplicingExportMode } from "@/options/components/splicing/use-splicing-export"
 
 const THUMB_MAX = 256
 
@@ -124,7 +124,6 @@ interface SplicingTabProps {
 export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingTabProps) {
   const [images, setImages] = useState<SplicingImageItem[]>([])
   const [isExporting, setIsExporting] = useState(false)
-  const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
   const setPreviewBentoFlowGroupCount = useSplicingStore((s) => s.setPreviewBentoFlowGroupCount)
@@ -167,7 +166,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   const { getShortcutLabel } = useShortcutPreferences()
 
   const splicingPreviewShortcutsEnabled =
-    images.length > 0 && !exportDialogOpen && !showDownloadConfirm && !heavyPreviewQualityDialogOpen
+    images.length > 0 && !showDownloadConfirm && !heavyPreviewQualityDialogOpen
 
   useShortcutActions([
     {
@@ -213,6 +212,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   const secondaryDirection = useSplicingStore((s) => s.secondaryDirection)
   const gridCount = useSplicingStore((s) => s.gridCount)
   const flowMaxSize = useSplicingStore((s) => s.flowMaxSize)
+  const flowSplitOverflow = useSplicingStore((s) => s.flowSplitOverflow)
   const alignment = useSplicingStore((s) => s.alignment)
   const imageAppearanceDirection = useSplicingStore((s) => s.imageAppearanceDirection)
 
@@ -246,12 +246,22 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   const skipSplicingHeavyPreviewQualityWarning = useBatchStore(
     (state) => state.skipSplicingHeavyPreviewQualityWarning
   )
-  const canExportPdf = exportFormat === "jpg" || exportFormat === "png" || exportFormat === "webp"
+  const canExportPdf =
+    exportFormat === "jpg" || exportFormat === "mozjpeg" || exportFormat === "png" || exportFormat === "webp"
 
   const storeState = useSplicingStore.getState()
   const layoutConfig = useMemo(
     () => resolveLayoutConfig(storeState),
-    [preset, primaryDirection, secondaryDirection, gridCount, flowMaxSize, alignment, imageAppearanceDirection]
+    [
+      preset,
+      primaryDirection,
+      secondaryDirection,
+      gridCount,
+      flowMaxSize,
+      flowSplitOverflow,
+      alignment,
+      imageAppearanceDirection
+    ]
   )
   const canvasStyle = useMemo(
     () => resolveCanvasStyle(storeState),
@@ -678,19 +688,17 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
     setImportToastPayload,
     importToastHideTimerRef,
     setIsExporting,
-    setExportDialogOpen,
     setShowDownloadConfirm,
     setPendingExportModeForConfirm
   })
 
-  const handleExport = useCallback(async () => {
-    if (images.length === 0 || isExporting) return
-    if (exportMode !== "single") {
-      setExportDialogOpen(true)
-    } else {
-      void performExport("one_by_one")
-    }
-  }, [images.length, isExporting, exportMode, performExport])
+  const primaryExportMode: "zip" | "one_by_one" = exportMode === "single" ? "one_by_one" : "zip"
+  const handleExportAction = useCallback(
+    async (mode: ExportSplitMode) => {
+      await performExport(mode as SplicingExportMode)
+    },
+    [performExport]
+  )
 
   const hasImages = images.length > 0
   const gridStatsLabel = useMemo(
@@ -729,15 +737,13 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
               <Trash2 size={14} />
               Clear
             </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleExport}
-              disabled={isExporting}
-            >
-              <Download size={14} />
-              {isExporting ? "Exporting..." : "Export"}
-            </Button>
+            <ExportSplitButton
+              onExport={handleExportAction}
+              isLoading={isExporting}
+              primaryMode={primaryExportMode}
+              oneByOneCount={exportTargetCount}
+              showPdfOptions={canExportPdf}
+            />
           </div>
         </div>
       ) : null}
@@ -768,14 +774,6 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
         onPreviewShowImageNumberChange={setPreviewShowImageNumber}
       />
       <ToastContainer toasts={conversionToasts} onRemove={handleRemoveToast} />
-      <SplicingExportDialog
-        isOpen={exportDialogOpen}
-        totalImages={exportTargetCount}
-        showPdfOptions={canExportPdf}
-        onExport={performExport}
-        onCancel={() => setExportDialogOpen(false)}
-        isLoading={isExporting}
-      />
       <BatchDownloadConfirmDialog
         isOpen={showDownloadConfirm}
         count={exportTargetCount}

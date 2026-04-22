@@ -6,7 +6,11 @@ interface EditorContextValue {
   editorLayers: VectorLayer[]
   setEditorLayers: (layers: VectorLayer[] | ((prev: VectorLayer[]) => VectorLayer[])) => void
   selectedLayerId: string | null
+  selectedLayerIds: string[]
   setSelectedLayerId: (id: string | null) => void
+  toggleSelectedLayerId: (id: string) => void
+  setSelectedLayerIds: (ids: string[]) => void
+  clearSelectedLayers: () => void
   updateLayer: (id: string, partial: Partial<VectorLayer>) => void
   editorGroups: LayerGroup[]
   setEditorGroups: (groups: LayerGroup[] | ((prev: LayerGroup[]) => LayerGroup[])) => void
@@ -21,8 +25,34 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const [editorLayers, setEditorLayers] = useState<VectorLayer[]>([])
   const [editorGroups, setEditorGroups] = useState<LayerGroup[]>([])
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null)
+  const [selectedLayerIds, setSelectedLayerIdsState] = useState<string[]>([])
   const [canvasWidth, setCanvasWidth] = useState(1920)
   const [canvasHeight, setCanvasHeight] = useState(1080)
+
+  const setSelectedLayerIds = useCallback((ids: string[]) => {
+    const uniqueIds = Array.from(new Set(ids))
+    setSelectedLayerIdsState(uniqueIds)
+    setSelectedLayerId(uniqueIds[uniqueIds.length - 1] ?? null)
+  }, [])
+
+  const clearSelectedLayers = useCallback(() => {
+    setSelectedLayerIdsState([])
+    setSelectedLayerId(null)
+  }, [])
+
+  const toggleSelectedLayerId = useCallback((id: string) => {
+    setSelectedLayerIdsState((prev) => {
+      const exists = prev.includes(id)
+      const next = exists ? prev.filter((item) => item !== id) : [...prev, id]
+      setSelectedLayerId(next[next.length - 1] ?? null)
+      return next
+    })
+  }, [])
+
+  const setSelectedLayerIdWithSync = useCallback((id: string | null) => {
+    setSelectedLayerId(id)
+    setSelectedLayerIdsState(id ? [id] : [])
+  }, [])
 
   const updateLayer = useCallback((id: string, partial: Partial<VectorLayer>) => {
     setEditorLayers((prev) =>
@@ -61,7 +91,11 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         editorLayers,
         setEditorLayers,
         selectedLayerId,
-        setSelectedLayerId,
+        selectedLayerIds,
+        setSelectedLayerId: setSelectedLayerIdWithSync,
+        toggleSelectedLayerId,
+        setSelectedLayerIds,
+        clearSelectedLayers,
         updateLayer,
         editorGroups,
         setEditorGroups,
@@ -79,7 +113,11 @@ const NOOP_CONTEXT: EditorContextValue = {
   editorLayers: [],
   setEditorLayers: () => {},
   selectedLayerId: null,
+  selectedLayerIds: [],
   setSelectedLayerId: () => {},
+  toggleSelectedLayerId: () => {},
+  setSelectedLayerIds: () => {},
+  clearSelectedLayers: () => {},
   updateLayer: () => {},
   editorGroups: [],
   setEditorGroups: () => {},

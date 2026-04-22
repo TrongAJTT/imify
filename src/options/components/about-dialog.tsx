@@ -1,10 +1,10 @@
 import { Button } from "@/options/components/ui/button"
 import { getAppMetadata } from "@/core/app-metadata"
-import { Heart, X } from "lucide-react"
+import { Bug, Github, LayoutGrid, Library, X } from "lucide-react"
 import React from "react"
 import iconImage from "url:@assets/icon.png"
 
-import { Tooltip } from "./tooltip"
+import { Tooltip } from "@/options/components/tooltip"
 import { BaseDialog } from "@/options/components/ui/base-dialog"
 
 const appMetadata = getAppMetadata()
@@ -13,6 +13,44 @@ interface AboutDialogProps {
   isOpen: boolean
   onClose: () => void
   onOpenAttribution: () => void
+}
+
+function TechListItem({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-center gap-2 text-sm">
+      <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+      <span>{children}</span>
+    </li>
+  )
+}
+
+function ActionLink({
+  href,
+  tooltip,
+  children,
+  emphasized = false
+}: {
+  href: string
+  tooltip: string
+  children: React.ReactNode
+  emphasized?: boolean
+}) {
+  return (
+    <Tooltip content={tooltip} variant="wide1">
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className={
+          emphasized
+            ? "px-5 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-bold shadow-lg shadow-slate-900/10 dark:shadow-none hover:-translate-y-0.5 transition-all flex items-center gap-2"
+            : "px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2"
+        }
+      >
+        {children}
+      </a>
+    </Tooltip>
+  )
 }
 
 export const AboutDialog: React.FC<AboutDialogProps> = ({
@@ -89,27 +127,15 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
               Key Technologies
             </h4>
             <ul className="grid grid-cols-1 gap-2">
-              <li className="flex items-center gap-2 text-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
-                <span>Plasmo Extension Framework</span>
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
-                <span>OffscreenCanvas API</span>
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
-                <span>Modern AVIF & PDF Engines</span>
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-sky-500"></div>
-                <span>React + Tailwind CSS</span>
-              </li>
+              <TechListItem>Plasmo Extension Framework</TechListItem>
+              <TechListItem>OffscreenCanvas API</TechListItem>
+              <TechListItem>Modern AVIF & PDF Engines</TechListItem>
+              <TechListItem>React + Tailwind CSS</TechListItem>
             </ul>
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400">
               <svg
@@ -132,36 +158,38 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
               </a>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex gap-2">
+          <div className="w-full lg:w-auto flex flex-col lg:items-end gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full lg:w-auto">
               <Tooltip content="Open Source Licenses" variant="nowrap">
                 <button
                   type="button"
                   onClick={() => onOpenAttribution()}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2">
+                  className="w-full px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                  <Library size={15} />
                   Attribution
                 </button>
               </Tooltip>
-              <Tooltip content="View Github repo of Imify" variant="nowrap">
-                <a
-                  href="https://github.com/TrongAJTT/imify"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-5 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-bold shadow-lg shadow-slate-900/10 dark:shadow-none hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                  Repository
-                </a>
-              </Tooltip>
-              <Tooltip content="View Author's Apps" variant="nowrap">
-                <a
-                  href="https://www.trongajtt.com/apps"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2">
-                  More Apps
-                </a>
-              </Tooltip>
+              <ActionLink
+                href="https://github.com/TrongAJTT/imify"
+                tooltip="View Github repo of Imify" emphasized
+              >
+                <Github size={15} />
+                Repository
+              </ActionLink>
+              <ActionLink href="https://www.trongajtt.com/apps" tooltip="View Author's Apps">
+                <LayoutGrid size={15} />
+                More Apps
+              </ActionLink>
             </div>
-            <div className="flex items-center gap-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+            <ActionLink
+              href="https://github.com/TrongAJTT/imify/issues/new/choose"
+              tooltip={`Open GitHub issue form for bug reports.
+                ● You may need to login to GitHub to report bugs.`}
+            >
+              <Bug size={15} />
+              Found a bug? Report here
+            </ActionLink>
+            <div className="flex items-center justify-center lg:justify-end gap-3 text-xs font-medium text-slate-500 dark:text-slate-400">
               <a
                 href="https://www.trongajtt.com/apps/imify/terms/"
                 target="_blank"

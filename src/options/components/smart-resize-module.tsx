@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Link2, RotateCcw, Unlink2, Maximize2, Crop, Minimize } from "lucide-react"
 
 import { Tooltip } from "@/options/components/tooltip"
+import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { RadioCard } from "@/options/components/ui/radio-card"
@@ -254,7 +255,14 @@ export function SmartResizeModule({
         />
 
         {!hideRatioControls ? (
-          <Tooltip content={isRatioLocked ? "Unlock ratio" : "Lock current ratio"} variant="nowrap">
+          <Tooltip
+            content={
+              isRatioLocked
+                ? PROCESSOR_TOOLTIPS.shared.smartResize.ratioLock.unlockRatio
+                : PROCESSOR_TOOLTIPS.shared.smartResize.ratioLock.lockCurrentRatio
+            }
+            variant="nowrap"
+          >
             <button
               type="button"
               disabled={disabled}
@@ -388,7 +396,7 @@ export function SmartResizeModule({
             selectedValue={fitMode}
             onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
             disabled={disabled || !isFitModeEnabled}
-            tooltipContent="May distort image when target ratio differs from source ratio."
+            tooltipContent={PROCESSOR_TOOLTIPS.shared.smartResize.fitMode.fill}
           />
           <RadioCard
             icon={<Crop size={14} />}
@@ -398,7 +406,7 @@ export function SmartResizeModule({
             selectedValue={fitMode}
             onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
             disabled={disabled || !isFitModeEnabled}
-            tooltipContent="Fills the target frame completely by center-cropping extra edges."
+            tooltipContent={PROCESSOR_TOOLTIPS.shared.smartResize.fitMode.cover}
           />
           <RadioCard
             icon={<Minimize size={14} />}
@@ -408,7 +416,7 @@ export function SmartResizeModule({
             selectedValue={fitMode}
             onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
             disabled={disabled || !isFitModeEnabled}
-            tooltipContent="Fits inside target frame and leaves letterboxing area when needed."
+            tooltipContent={PROCESSOR_TOOLTIPS.shared.smartResize.fitMode.contain}
             rightSlot={
               <ColorPickerPopover
                 label=""

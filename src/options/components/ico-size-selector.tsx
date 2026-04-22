@@ -2,6 +2,7 @@ import { ICO_SIZE_OPTIONS } from "@/core/format-config"
 import { LabelText } from "@/options/components/ui/typography"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { Gift, Sparkles } from "lucide-react"
+import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 
 export function IcoSizeSelector({
   sizes,
@@ -47,7 +48,7 @@ export function IcoSizeSelector({
           disabled={disabled}
           onChange={onToggleWebKit}
           title="Generate Web Toolkit"
-          tooltipContent="Generates favicon.ico, Apple/Android PNGs, webmanifest, and HTML tags ready to paste."
+          tooltipContent={PROCESSOR_TOOLTIPS.shared.icoSizeSelector.generateWebToolkit}
           theme="amber"
         />
 
@@ -59,7 +60,7 @@ export function IcoSizeSelector({
             onChange={onToggleOptimizeInternalPngLayers}
             title="Optimize internal PNG layers"
             subtitle="Smaller file size"
-            tooltipContent="Applies PNG optimization before ICO packaging to reduce output size."
+            tooltipContent={PROCESSOR_TOOLTIPS.shared.icoSizeSelector.optimizeInternalPngLayers}
             theme="blue"
           />
         </div>

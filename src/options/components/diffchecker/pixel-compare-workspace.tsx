@@ -6,6 +6,7 @@ import {
   renderImageDataPreview,
   type RenderImageDataPreviewResult
 } from "@/features/image-pipeline/render-image-data"
+import { DIFFCHECKER_TOOLTIPS } from "@/options/components/diffchecker/diffchecker-tooltips"
 import { Tooltip } from "@/options/components/tooltip"
 import { MutedText } from "@/options/components/ui/typography"
 import { ViewerOverlay } from "@/options/components/diffchecker/viewer-overlay"
@@ -229,7 +230,7 @@ export function PixelCompareWorkspace({
 
       {fallbackUsed && hasPreviews && (
         <div className="absolute bottom-4 left-3 z-30 bg-white dark:bg-slate-900 backdrop-blur-sm rounded-md p-1">
-          <Tooltip content="Render the origional image failed, so a fallback preview was used. This may not accurately reflect the true pixel differences.">
+          <Tooltip content={DIFFCHECKER_TOOLTIPS.pixelCompareWorkspace.fallbackPreviewWarning}>
             <div className="flex h-5 w-5 items-center justify-center rounded-full text-rose-500">
               <AlertCircle />
             </div>

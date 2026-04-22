@@ -1,5 +1,6 @@
 import { ImagePlus, X, Upload } from "lucide-react"
 import type { DiffImageItem } from "@/features/diffchecker/types"
+import { DIFFCHECKER_TOOLTIPS } from "@/options/components/diffchecker/diffchecker-tooltips"
 import { MutedText } from "@/options/components/ui/typography"
 import { Tooltip } from "@/options/components/tooltip"
 import { useThumbnail } from "@/options/hooks/use-thumbnail"
@@ -61,7 +62,7 @@ function DropZone({
           <X size={12} />
         </button>
         <div className="absolute top-9 right-2 z-10">
-          <Tooltip content={`Replace ${label}`} variant="nowrap">
+          <Tooltip content={DIFFCHECKER_TOOLTIPS.imageDropPair.replaceImage(label)} variant="nowrap">
             <button
               type="button"
               onClick={() => openFilePicker(onLoad)}

@@ -14,6 +14,7 @@ import { Button } from "@/options/components/ui/button"
 import { CheckboxCard } from "@/options/components/ui/checkbox-card"
 import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
 import { NumberInput } from "@/options/components/ui/number-input"
+import { PATTERN_TOOLTIPS } from "@/options/components/pattern/pattern-tooltips"
 import { TextInput } from "@/options/components/ui/text-input"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
 import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
@@ -429,7 +430,7 @@ export function PatternAssetDrawingDialog({
   const handleManualClose = useCallback(() => {
     if (hasUndoHistory) {
       const confirmed = window.confirm(
-        "You have unsaved drawing progress. Close without saving?"
+        PATTERN_TOOLTIPS.drawingDialog.unsavedChangesConfirm
       )
       if (!confirmed) {
         return
@@ -549,8 +550,8 @@ export function PatternAssetDrawingDialog({
                   subtitle={smoothBrushStroke ? "Enabled" : "Disabled"}
                   checked={smoothBrushStroke}
                   onChange={setSmoothBrushStroke}
-                  tooltipLabel="Curve Smoothing"
-                  tooltipContent="Enable perfect-freehand smoothing for cleaner curves and less jitter."
+                  tooltipLabel={PATTERN_TOOLTIPS.drawingDialog.curveSmoothingLabel}
+                  tooltipContent={PATTERN_TOOLTIPS.drawingDialog.curveSmoothingContent}
                   className="px-2 py-1.5"
                 />
 
@@ -595,7 +596,7 @@ export function PatternAssetDrawingDialog({
             <div className="space-y-3">
               <NumberInput
                 label="Brush Size"
-                tooltipLabel="Brush Size Shortcuts"
+                tooltipLabel={PATTERN_TOOLTIPS.drawingDialog.brushSizeShortcutsLabel}
                 tooltipContent={brushSizeTooltipContent}
                 value={activeBrushSize}
                 min={MIN_BRUSH_SIZE}
@@ -608,7 +609,7 @@ export function PatternAssetDrawingDialog({
             <div className="grid grid-cols-2 gap-2 pt-1">
               <Tooltip
                 label={`Undo (${getShortcutLabel("pattern.draw.undo")})`}
-                content="Revert the most recent stroke."
+                content={PATTERN_TOOLTIPS.drawingDialog.undoStroke}
                 variant="nowrap">
                 <span className="block">
                   <Button
@@ -625,7 +626,7 @@ export function PatternAssetDrawingDialog({
 
               <Tooltip
                 label={`Clear (${getShortcutLabel("pattern.draw.clear")})`}
-                content="Clear the source layer and all drawn strokes."
+                content={PATTERN_TOOLTIPS.drawingDialog.clearCanvas}
                 variant="nowrap">
                 <span className="block">
                   <Button

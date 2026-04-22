@@ -1,6 +1,7 @@
 import type { VectorLayer } from "@/features/filling/types"
 import { NumberInput } from "@/options/components/ui/number-input"
 import { TextInput } from "@/options/components/ui/text-input"
+import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 interface LayerPropertiesPanelProps {
   layer: VectorLayer
@@ -10,10 +11,6 @@ interface LayerPropertiesPanelProps {
 export function LayerPropertiesPanel({ layer, onUpdate }: LayerPropertiesPanelProps) {
   return (
     <div className="space-y-3">
-      <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-        Layer Properties
-      </div>
-
       <TextInput
         label="Name"
         value={layer.name}
@@ -61,7 +58,7 @@ export function LayerPropertiesPanel({ layer, onUpdate }: LayerPropertiesPanelPr
         onChangeValue={(v) => onUpdate({ rotation: v })}
         min={-360}
         max={360}
-        tooltipContent="Rotation in degrees"
+        tooltipContent={FILLING_TOOLTIPS.layerProperties.rotationInDegrees}
       />
     </div>
   )

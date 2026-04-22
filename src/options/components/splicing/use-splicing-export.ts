@@ -11,9 +11,11 @@ import { exportSplicedImage, computeSplicingExportCanvasDimensions } from "@/fea
 import { calculateLayout, calculateProcessedSize } from "@/features/splicing/layout-engine"
 import type { SplicingExportConfig, SplicingImageItem } from "@/features/splicing/types"
 import { buildSmartOutputFileName, reserveUniqueFileName } from "@/options/components/batch/pipeline"
+import type { ExportSplitMode } from "@/options/components/shared/export-split-button"
 import { buildActiveSplicingFormatOptions } from "@/options/stores/splicing-format-options"
 import { useSplicingStore, resolveCanvasStyle, resolveImageStyle, resolveLayoutConfig } from "@/options/stores/splicing-store"
-import type { SplicingExportMode } from "@/options/components/splicing/splicing-export-dialog"
+
+export type SplicingExportMode = ExportSplitMode
 
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
@@ -57,7 +59,6 @@ export interface UseSplicingExportArgs {
   importToastHideTimerRef: MutableRefObject<ReturnType<typeof setTimeout> | null>
 
   setIsExporting: (v: boolean) => void
-  setExportDialogOpen: (v: boolean) => void
   setShowDownloadConfirm: (v: boolean) => void
   setPendingExportModeForConfirm: (v: SplicingExportMode | null) => void
 }
@@ -71,7 +72,6 @@ export function useSplicingExport({
   setImportToastPayload,
   importToastHideTimerRef,
   setIsExporting,
-  setExportDialogOpen,
   setShowDownloadConfirm,
   setPendingExportModeForConfirm
 }: UseSplicingExportArgs) {
@@ -85,14 +85,12 @@ export function useSplicingExport({
         exportTargetCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD &&
         !skipDownloadConfirm
       ) {
-        setExportDialogOpen(false)
         setShowDownloadConfirm(true)
         setPendingExportModeForConfirm(downloadMode)
         return
       }
 
       setIsExporting(true)
-      setExportDialogOpen(false)
 
       try {
         const store = useSplicingStore.getState()
@@ -361,7 +359,6 @@ export function useSplicingExport({
       setImportToastPayload,
       importToastHideTimerRef,
       setIsExporting,
-      setExportDialogOpen,
       setShowDownloadConfirm,
       setPendingExportModeForConfirm
     ]

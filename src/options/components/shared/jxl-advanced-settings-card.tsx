@@ -68,7 +68,7 @@ export function JxlAdvancedSettingsCard({
 
         <SelectInput
           label="Artifact Smoothing (EPF)"
-          tooltip={TARGET_FORMAT_TOOLTIPS.jxlEpf}
+          tooltipContent={TARGET_FORMAT_TOOLTIPS.jxlEpf}
           value={String(epf)}
           onChange={(value) => onEpfChange(Number(value) as 0 | 1 | 2 | 3)}
           disabled={disabled}

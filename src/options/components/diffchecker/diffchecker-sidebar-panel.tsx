@@ -8,10 +8,16 @@ import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
 import { ViewModeAccordion } from "@/options/components/diffchecker/view-mode-accordion"
 import { ComparisonAccordion } from "@/options/components/diffchecker/comparison-accordion"
 import { AlignmentAccordion } from "@/options/components/diffchecker/alignment-accordion"
-import { Sidebar } from "~node_modules/lucide-react/dist/lucide-react"
-import { SidebarPanel } from "../ui/sidebar-panel"
+import {
+  WorkspaceConfigSidebarPanel,
+  type WorkspaceConfigSidebarItem
+} from "@/options/components/ui/workspace-config-sidebar-panel"
 
-export function DiffcheckerSidebarPanel() {
+interface DiffcheckerSidebarPanelProps {
+  enableWideSidebarGrid?: boolean
+}
+
+export function DiffcheckerSidebarPanel({ enableWideSidebarGrid = false }: DiffcheckerSidebarPanelProps) {
   const viewMode = useDiffcheckerStore((s) => s.viewMode)
   const algorithm = useDiffcheckerStore((s) => s.algorithm)
   const alignMode = useDiffcheckerStore((s) => s.alignMode)
@@ -26,32 +32,37 @@ export function DiffcheckerSidebarPanel() {
   const setOverlayOpacity = useDiffcheckerStore((s) => s.setOverlayOpacity)
   const setDiffThreshold = useDiffcheckerStore((s) => s.setDiffThreshold)
 
-  return (
-    <SidebarPanel title="Diffchecker Settings" childrenClassName="flex flex-col gap-3">
-      {/* View Mode Accordion */}
-      <ViewModeAccordion
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-      />
+  const sidebarItems: WorkspaceConfigSidebarItem[] = [
+    {
+      id: "view-mode",
+      content: <ViewModeAccordion viewMode={viewMode} onViewModeChange={setViewMode} />
+    },
+    {
+      id: "comparison",
+      content: (
+        <ComparisonAccordion
+          viewMode={viewMode}
+          algorithm={algorithm}
+          overlayOpacity={overlayOpacity}
+          diffThreshold={diffThreshold}
+          onAlgorithmChange={setAlgorithm}
+          onOverlayOpacityChange={setOverlayOpacity}
+          onDiffThresholdChange={setDiffThreshold}
+        />
+      )
+    },
+    {
+      id: "alignment",
+      content: (
+        <AlignmentAccordion
+          alignMode={alignMode}
+          alignAnchor={alignAnchor}
+          onAlignModeChange={setAlignMode}
+          onAlignAnchorChange={setAlignAnchor}
+        />
+      )
+    }
+  ]
 
-      {/* Comparison Accordion */}
-      <ComparisonAccordion
-        viewMode={viewMode}
-        algorithm={algorithm}
-        overlayOpacity={overlayOpacity}
-        diffThreshold={diffThreshold}
-        onAlgorithmChange={setAlgorithm}
-        onOverlayOpacityChange={setOverlayOpacity}
-        onDiffThresholdChange={setDiffThreshold}
-      />
-
-      {/* Alignment Accordion */}
-      <AlignmentAccordion
-        alignMode={alignMode}
-        alignAnchor={alignAnchor}
-        onAlignModeChange={setAlignMode}
-        onAlignAnchorChange={setAlignAnchor}
-      />
-    </SidebarPanel>
-  )
+  return <WorkspaceConfigSidebarPanel title="DIFFCHECKER SETTINGS" items={sidebarItems} twoColumn={enableWideSidebarGrid} />
 }

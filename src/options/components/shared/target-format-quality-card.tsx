@@ -313,7 +313,7 @@ export function TargetFormatQualityCard({
             {onWebpEffortChange && (
               <SelectInput
                 label="Effort Level"
-                tooltip={TARGET_FORMAT_TOOLTIPS.webpEffort}
+                tooltipContent={TARGET_FORMAT_TOOLTIPS.webpEffort}
                 disabled={disabled}
                 options={[
                   { value: "1", label: "1 - Lightning (fastest)" },
@@ -354,7 +354,7 @@ export function TargetFormatQualityCard({
 
             <SelectInput
               label="Effort Level"
-              tooltip={TARGET_FORMAT_TOOLTIPS.jxlEffort}
+              tooltipContent={TARGET_FORMAT_TOOLTIPS.jxlEffort}
               disabled={disabled}
               options={[
                 { value: "1", label: "1 - Lightning (fastest)" },
@@ -377,7 +377,7 @@ export function TargetFormatQualityCard({
           <div>
             <SelectInput
               label="Speed"
-              tooltip={TARGET_FORMAT_TOOLTIPS.avifSpeed}
+              tooltipContent={TARGET_FORMAT_TOOLTIPS.avifSpeed}
               disabled={disabled}
               options={[
                 { value: "0", label: "0 - Maximum quality (slowest)" },
@@ -402,7 +402,7 @@ export function TargetFormatQualityCard({
           <div className="space-y-2">
             <SelectInput
               label="Color Depth"
-              tooltip={TARGET_FORMAT_TOOLTIPS.bmpColorDepth}
+              tooltipContent={TARGET_FORMAT_TOOLTIPS.bmpColorDepth}
               disabled={disabled}
               options={[
                 { value: "24", label: "24-bit RGB (Standard)" },
@@ -434,7 +434,7 @@ export function TargetFormatQualityCard({
           <div>
             <SelectInput
               label="Color Mode"
-              tooltip={TARGET_FORMAT_TOOLTIPS.tiffColorMode}
+              tooltipContent={TARGET_FORMAT_TOOLTIPS.tiffColorMode}
               disabled={disabled}
               options={[
                 { value: "color", label: "RGB (Full Color)" },

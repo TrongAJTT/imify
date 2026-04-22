@@ -51,7 +51,11 @@ export function FillingTab() {
     editorLayers,
     setEditorLayers,
     selectedLayerId,
+    selectedLayerIds,
     setSelectedLayerId,
+    toggleSelectedLayerId,
+    setSelectedLayerIds,
+    clearSelectedLayers,
     updateLayer,
     editorGroups,
     setEditorGroups,
@@ -118,17 +122,31 @@ export function FillingTab() {
     if (activeTemplate && (fillingStep === "create_manual" || fillingStep === "create_symmetric")) {
       setEditorLayers(activeTemplate.layers)
       setEditorGroups(activeTemplate.groups ?? [])
-      setSelectedLayerId(null)
+      clearSelectedLayers()
       setCanvasSize(activeTemplate.canvasWidth, activeTemplate.canvasHeight)
     }
   }, [
     activeTemplate?.id,
     fillingStep,
+    clearSelectedLayers,
     setCanvasSize,
     setEditorGroups,
     setEditorLayers,
-    setSelectedLayerId,
   ])
+
+  useEffect(() => {
+    if (selectedLayerIds.length === 0) {
+      if (selectedLayerId !== null) {
+        setSelectedLayerId(null)
+      }
+      return
+    }
+
+    const validIds = selectedLayerIds.filter((id) => editorLayers.some((layer) => layer.id === id))
+    if (validIds.length !== selectedLayerIds.length) {
+      setSelectedLayerIds(validIds)
+    }
+  }, [editorLayers, selectedLayerId, selectedLayerIds, setSelectedLayerId, setSelectedLayerIds])
 
   useEffect(() => {
     setHeaderSection("Image Filling")
@@ -153,7 +171,11 @@ export function FillingTab() {
           groups={editorGroups}
           layers={editorLayers}
           selectedLayerId={selectedLayerId}
+          selectedLayerIds={selectedLayerIds}
           onSelectLayer={setSelectedLayerId}
+          onToggleLayerSelection={toggleSelectedLayerId}
+          onSetSelectedLayers={setSelectedLayerIds}
+          onClearSelection={clearSelectedLayers}
           onUpdateLayer={updateLayer}
           onSaveTemplate={handleSaveTemplate}
           isSavingTemplate={isSavingTemplate}

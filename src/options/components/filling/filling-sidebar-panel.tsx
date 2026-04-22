@@ -8,7 +8,11 @@ import { ManualEditorSidebar } from "@/options/components/filling/manual-editor-
 import { SymmetricSidebar } from "@/options/components/filling/symmetric-sidebar"
 import { FillSidebar } from "@/options/components/filling/fill-sidebar"
 
-export function FillingSidebarPanel() {
+interface FillingSidebarPanelProps {
+  enableWideSidebarGrid?: boolean
+}
+
+export function FillingSidebarPanel({ enableWideSidebarGrid = false }: FillingSidebarPanelProps) {
   const fillingStep = useFillingStore((s) => s.fillingStep)
   const templates = useFillingStore((s) => s.templates)
   const editingTemplateId = useFillingStore((s) => s.editingTemplateId)
@@ -30,29 +34,41 @@ export function FillingSidebarPanel() {
     )
   }
 
+  if (fillingStep === "fill" && activeTemplate) {
+    return (
+      <div className="flex flex-col gap-1">
+        <FillSidebar template={activeTemplate} enableWideSidebarGrid={enableWideSidebarGrid} />
+      </div>
+    )
+  }
+
+  if (fillingStep === "create_manual" && activeTemplate && editorCtx) {
+    return (
+      <div className="flex flex-col gap-1">
+        <ManualEditorSidebar
+          layers={editorCtx.editorLayers}
+          groups={editorCtx.editorGroups}
+          canvasWidth={editorCtx.canvasWidth}
+          canvasHeight={editorCtx.canvasHeight}
+          selectedLayerId={editorCtx.selectedLayerId}
+          selectedLayerIds={editorCtx.selectedLayerIds}
+          onLayersChange={editorCtx.setEditorLayers}
+          onGroupsChange={editorCtx.setEditorGroups}
+          onCanvasSizeChange={editorCtx.setCanvasSize}
+          onSelectLayer={editorCtx.setSelectedLayerId}
+          onToggleLayerSelection={editorCtx.toggleSelectedLayerId}
+          onClearSelection={editorCtx.clearSelectedLayers}
+          enableWideSidebarGrid={enableWideSidebarGrid}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <SidebarPanel title="CONFIGURATION" childrenClassName="flex flex-col gap-3">
-        {fillingStep === "create_manual" && activeTemplate && editorCtx && (
-          <ManualEditorSidebar
-            layers={editorCtx.editorLayers}
-            groups={editorCtx.editorGroups}
-            canvasWidth={editorCtx.canvasWidth}
-            canvasHeight={editorCtx.canvasHeight}
-            selectedLayerId={editorCtx.selectedLayerId}
-            onLayersChange={editorCtx.setEditorLayers}
-            onGroupsChange={editorCtx.setEditorGroups}
-            onCanvasSizeChange={editorCtx.setCanvasSize}
-            onSelectLayer={editorCtx.setSelectedLayerId}
-          />
-        )}
-
         {fillingStep === "create_symmetric" && activeTemplate && (
           <SymmetricSidebar template={activeTemplate} />
-        )}
-
-        {fillingStep === "fill" && activeTemplate && (
-          <FillSidebar template={activeTemplate} />
         )}
       </SidebarPanel>
     </div>

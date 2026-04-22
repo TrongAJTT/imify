@@ -108,18 +108,31 @@ export function DiscreteSlider({
           />
         </div>
 
-        <div
-          className="grid text-[10px] text-slate-500 dark:text-slate-400"
-          style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
-        >
-          {options.map((option, index) => (
-            <div
-              key={option.value}
-              className={`text-center truncate ${index === selectedIndex ? "font-semibold text-slate-700 dark:text-slate-200" : ""}`}
-            >
-              {option.label}
-            </div>
-          ))}
+        <div className="relative h-4 text-[10px] text-slate-500 dark:text-slate-400">
+          {options.map((option, index) => {
+            const maxIndex = Math.max(options.length - 1, 1)
+            const leftPercent = (index / maxIndex) * 100
+            const alignmentClass =
+              index === 0
+                ? "translate-x-0 text-left"
+                : index === options.length - 1
+                  ? "-translate-x-full text-right"
+                  : "-translate-x-1/2 text-center"
+
+            return (
+              <div
+                key={option.value}
+                className={[
+                  "absolute top-0 max-w-[68px] truncate",
+                  alignmentClass,
+                  index === selectedIndex ? "font-semibold text-slate-700 dark:text-slate-200" : ""
+                ].join(" ")}
+                style={{ left: `${leftPercent}%` }}
+              >
+                {option.label}
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
