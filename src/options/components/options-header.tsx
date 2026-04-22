@@ -16,21 +16,24 @@ function TitleBarButton({
   onClick,
   tooltipText,
   isDonate = false,
-  className = ""
+  className = "",
+  label
 }: {
   children: React.ReactNode
   onClick: () => void
   tooltipText: string
   isDonate?: boolean
   className?: string
+  label?: string
 }) {
   const button = (
     <button
       type="button"
       onClick={onClick}
-      className={`w-9 h-9 flex items-center justify-center rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors ${isDonate ? "text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300" : ""} ${className}`}
+      className={`${label ? "px-3" : "w-9"} h-9 flex items-center justify-center gap-2 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors ${isDonate ? "text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300" : ""} ${className}`}
     >
       {children}
+      {label && <span className="text-xs font-bold">{label}</span>}
     </button>
   )
 
@@ -86,8 +89,13 @@ export function OptionsHeader({
         <TitleBarButton onClick={onOpenSettings} tooltipText="Settings">
           <Settings size={18} />
         </TitleBarButton>
-        <TitleBarButton onClick={onOpenDonate} tooltipText="Support the dev" isDonate>
-          <Heart size={18} fill="red" stroke="red" />
+        <TitleBarButton 
+          onClick={onOpenDonate} 
+          tooltipText="Support the dev" 
+          isDonate 
+          label="Donate"
+        >
+          <Heart size={16} fill="red" stroke="red" />
         </TitleBarButton>
       </div>
     </header>

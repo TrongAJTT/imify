@@ -1,13 +1,22 @@
 import { Button } from "@/options/components/ui/button"
 import { getAppMetadata } from "@/core/app-metadata"
 import { Bug, Github, LayoutGrid, Library, X } from "lucide-react"
-import React from "react"
+import React, { useCallback, useEffect, useRef } from "react"
 import iconImage from "url:@assets/icon.png"
 
 import { Tooltip } from "@/options/components/tooltip"
 import { BaseDialog } from "@/options/components/ui/base-dialog"
+import { useDevModeEnabled } from "@/features/dev-mode/dev-mode-storage"
+import { useToast } from "@/core/hooks/use-toast"
+import { ToastContainer } from "@/core/components/toast-container"
+import { BugReportDialog } from "./bug-report-dialog"
 
 const appMetadata = getAppMetadata()
+
+/** Number of rapid clicks needed to activate Dev Mode */
+const DEV_MODE_CLICK_TARGET = 7
+/** Milliseconds before click counter resets due to inactivity */
+const DEV_MODE_CLICK_TIMEOUT_MS = 3000
 
 interface AboutDialogProps {
   isOpen: boolean
@@ -53,11 +62,65 @@ function ActionLink({
   )
 }
 
+/**
+ * Hook that manages a click counter for Easter Egg activation.
+ * Resets the counter after DEV_MODE_CLICK_TIMEOUT_MS of inactivity.
+ */
+function useEasterEggClicker(onActivate: () => void) {
+  const clickCountRef = useRef(0)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleClick = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+    }
+
+    clickCountRef.current += 1
+
+    if (clickCountRef.current >= DEV_MODE_CLICK_TARGET) {
+      clickCountRef.current = 0
+      onActivate()
+      return
+    }
+
+    timerRef.current = setTimeout(() => {
+      clickCountRef.current = 0
+      timerRef.current = null
+    }, DEV_MODE_CLICK_TIMEOUT_MS)
+  }, [onActivate])
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [])
+
+  return handleClick
+}
+
 export const AboutDialog: React.FC<AboutDialogProps> = ({
   isOpen,
   onClose,
   onOpenAttribution
 }) => {
+  const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled()
+  const { toasts, hide, success, warning } = useToast()
+  const [isBugReportDialogOpen, setIsBugReportDialogOpen] = React.useState(false)
+
+  const activateDevMode = useCallback(async () => {
+    if (devModeEnabled) {
+      warning("Developer Mode", "Already enabled. Go to Settings → Developer.")
+      return
+    }
+    await setDevModeEnabled(true)
+    success("Developer Mode enabled!", "Open Settings to access the Developer tab.", 4000)
+  }, [devModeEnabled, setDevModeEnabled, success, warning])
+
+  const handleIconClick = useEasterEggClicker(activateDevMode)
+  const handleVersionClick = useEasterEggClicker(activateDevMode)
+
   return (
     <BaseDialog
       isOpen={isOpen}
@@ -75,25 +138,46 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
 
       <div className="flex flex-col">
         <div className="flex items-center gap-5 mb-8">
-          <img
-            src={iconImage}
-            alt="Imify Logo"
-            className="w-20 h-20 rounded-2xl shadow-md rotate-3 bg-white p-1"
-          />
+          {/* Easter Egg target #1: App Icon (7 clicks) */}
+          <button
+            type="button"
+            onClick={handleIconClick}
+            className="shrink-0 select-none cursor-default focus:outline-none active:scale-90 transition-transform duration-100"
+            aria-label="Imify logo"
+            tabIndex={-1}
+          >
+            <img
+              src={iconImage}
+              alt="Imify Logo"
+              className="w-20 h-20 rounded-2xl shadow-md rotate-3 bg-white p-1 pointer-events-none"
+            />
+          </button>
           <div>
             <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Imify
             </h3>
             <p className="text-sm text-sky-500 dark:text-sky-400 uppercase tracking-widest font-bold">
-              Save and Process images
+              The Powerful Image Toolkit
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500">
+              {/* Easter Egg target #2: Version badge (7 clicks) */}
+              <button
+                type="button"
+                onClick={handleVersionClick}
+                className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 select-none cursor-default focus:outline-none active:scale-90 transition-transform duration-100"
+                tabIndex={-1}
+                aria-label="App version"
+              >
                 {`v${appMetadata.version}`}
-              </span>
+              </button>
               <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                 {appMetadata.versionType}
               </span>
+              {devModeEnabled && (
+                <span className="px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-[10px] font-bold text-violet-600 dark:text-violet-400">
+                  DEV MODE ON
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -181,14 +265,16 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
                 More Apps
               </ActionLink>
             </div>
-            <ActionLink
-              href="https://github.com/TrongAJTT/imify/issues/new/choose"
-              tooltip={`Open GitHub issue form for bug reports.
-                ● You may need to login to GitHub to report bugs.`}
-            >
-              <Bug size={15} />
-              Found a bug? Report here
-            </ActionLink>
+            <Tooltip content="Learn how to report bugs effectively, including how to provide helpful logs while protecting your privacy." variant="wide1">
+              <button
+                type="button"
+                onClick={() => setIsBugReportDialogOpen(true)}
+                className="w-full px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center lg:justify-start gap-2"
+              >
+                <Bug size={15} />
+                Found a bug? Report here
+              </button>
+            </Tooltip>
             <div className="flex items-center justify-center lg:justify-end gap-3 text-xs font-medium text-slate-500 dark:text-slate-400">
               <a
                 href="https://www.trongajtt.com/apps/imify/terms/"
@@ -209,6 +295,14 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
           </div>
         </div>
       </div>
+
+      <BugReportDialog
+        isOpen={isBugReportDialogOpen}
+        onClose={() => setIsBugReportDialogOpen(false)}
+      />
+
+      {/* Toast notifications for Easter Egg feedback */}
+      <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>
   )
 }

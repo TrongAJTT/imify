@@ -493,6 +493,7 @@ export default function OptionsPage() {
         onChangePerformancePreferences={(value) => {
           void setPerformancePreferences(value)
         }}
+        activeWorkspaceTab={activeTab}
       />
 
       <DonateDialog isOpen={isDonateDialogOpen} onClose={() => setIsDonateDialogOpen(false)} />
