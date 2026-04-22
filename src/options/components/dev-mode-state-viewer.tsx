@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from "react"
-import { Check, Copy, Download, RefreshCw } from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { Check, Copy, RefreshCw } from "lucide-react"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { useSplicingStore } from "@/options/stores/splicing-store"
 import { useSplitterStore } from "@/options/stores/splitter-store"
@@ -7,6 +7,8 @@ import { useFillingStore } from "@/options/stores/filling-store"
 import { usePatternStore } from "@/options/stores/pattern-store"
 import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
 import { useInspectorStore } from "@/options/stores/inspector-store"
+import { getStorageState, onStorageStateChanged } from "@/features/settings/storage"
+import type { ExtensionStorageState } from "@/core/types"
 import { Button } from "@/options/components/ui/button"
 import type { OptionsTab } from "@/options/shared"
 import { Tooltip } from "@/options/components/tooltip"
@@ -22,18 +24,31 @@ function stripActions(state: Record<string, unknown>): Record<string, unknown> {
   return out
 }
 
-type StoreFilter = "all" | OptionsTab
+type StoreFilter = "all" | OptionsTab | "batch_global"
 
 interface DevModeStateViewerProps {
   /** The currently active tab in the main workspace — used to pre-select the filter */
   activeTab: OptionsTab | null
-  /** Callback to trigger the debug log export */
-  onExport: () => void
 }
 
-export function DevModeStateViewer({ activeTab, onExport }: DevModeStateViewerProps) {
+export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
   const [filter, setFilter] = useState<StoreFilter>(activeTab ?? "all")
   const [copied, setCopied] = useState(false)
+  const [storageState, setStorageState] = useState<ExtensionStorageState | null>(null)
+
+  useEffect(() => {
+    let unmounted = false
+    getStorageState().then((state) => {
+      if (!unmounted) setStorageState(state)
+    })
+    const unsubscribe = onStorageStateChanged((state) => {
+      if (!unmounted) setStorageState(state)
+    })
+    return () => {
+      unmounted = true
+      unsubscribe()
+    }
+  }, [])
 
   // Subscribe to all stores. We get the full state object (which only changes reference on actual updates)
   // instead of mapping inline to avoid infinite re-render loops caused by returning a new object every time.
@@ -45,20 +60,32 @@ export function DevModeStateViewer({ activeTab, onExport }: DevModeStateViewerPr
   const diffcheckerState = useDiffcheckerStore()
   const inspectorState = useInspectorStore()
 
-  const allStores = useMemo<Record<string, Record<string, unknown>>>(() => ({
-    batch: stripActions(batchState as unknown as Record<string, unknown>),
-    splicing: stripActions(splicingState as unknown as Record<string, unknown>),
-    splitter: stripActions(splitterState as unknown as Record<string, unknown>),
-    filling: stripActions(fillingState as unknown as Record<string, unknown>),
-    pattern: stripActions(patternState as unknown as Record<string, unknown>),
-    diffchecker: stripActions(diffcheckerState as unknown as Record<string, unknown>),
-    inspector: stripActions(inspectorState as unknown as Record<string, unknown>),
-  }), [batchState, splicingState, splitterState, fillingState, patternState, diffcheckerState, inspectorState])
+  const allStores = useMemo<Record<string, Record<string, unknown>>>(() => {
+    const rootBatch = stripActions(batchState as unknown as Record<string, unknown>)
+    // Extract context configs to view them individually
+    const singleConfig = (batchState as any).contextConfigs?.single || {}
+    const batchConfig = (batchState as any).contextConfigs?.batch || {}
+
+    return {
+      batch_global: rootBatch,
+      single: stripActions(singleConfig),
+      batch: stripActions(batchConfig),
+      splicing: stripActions(splicingState as unknown as Record<string, unknown>),
+      splitter: stripActions(splitterState as unknown as Record<string, unknown>),
+      filling: stripActions(fillingState as unknown as Record<string, unknown>),
+      pattern: stripActions(patternState as unknown as Record<string, unknown>),
+      diffchecker: stripActions(diffcheckerState as unknown as Record<string, unknown>),
+      inspector: stripActions(inspectorState as unknown as Record<string, unknown>),
+      "context-menu": storageState?.context_menu as unknown as Record<string, unknown> || {},
+    }
+  }, [batchState, splicingState, splitterState, fillingState, patternState, diffcheckerState, inspectorState, storageState])
 
   /** Map a tab id to its corresponding store key */
-  const tabToStoreKey: Partial<Record<OptionsTab, keyof typeof allStores>> = {
-    single: "batch",
+  const tabToStoreKey: Partial<Record<StoreFilter, keyof typeof allStores>> = {
+    batch_global: "batch_global",
+    single: "single",
     batch: "batch",
+    "context-menu": "context-menu",
     splicing: "splicing",
     splitter: "splitter",
     filling: "filling",
@@ -71,7 +98,7 @@ export function DevModeStateViewer({ activeTab, onExport }: DevModeStateViewerPr
     if (filter === "all") {
       return allStores
     }
-    const key = tabToStoreKey[filter as OptionsTab]
+    const key = tabToStoreKey[filter]
     if (key) {
       return { [key]: allStores[key] }
     }
@@ -98,7 +125,10 @@ export function DevModeStateViewer({ activeTab, onExport }: DevModeStateViewerPr
 
   const filterOptions: Array<{ value: StoreFilter; label: string }> = [
     { value: "all", label: "All Stores" },
-    { value: "single", label: "Processor (Single/Batch)" },
+    { value: "batch_global", label: "Processor Core (Global)" },
+    { value: "single", label: "Single Processor" },
+    { value: "batch", label: "Batch Processor" },
+    { value: "context-menu", label: "Context Menu" },
     { value: "splicing", label: "Image Splicing" },
     { value: "splitter", label: "Image Splitter" },
     { value: "filling", label: "Image Filling" },
@@ -123,23 +153,6 @@ export function DevModeStateViewer({ activeTab, onExport }: DevModeStateViewerPr
         </select>
 
         <div className="ml-auto flex items-center gap-1.5">
-          <Tooltip
-            label="Export Debug Log"
-            content="Download sanitized JSON snapshot of your current configuration. File names, image data, and other sensitive content are masked."
-            variant="wide2"
-          >
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-xs gap-1 border-slate-200 dark:border-slate-700"
-              onClick={onExport}
-            >
-              <Download size={11} />
-              Export
-            </Button>
-          </Tooltip>
-
           <Tooltip content="Copy current view to clipboard">
             <Button
               type="button"

@@ -10,6 +10,10 @@ import type { ExtensionStorageState } from "@/core/types"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type { WorkspaceLayoutPreferences } from "@/options/shared/layout-preferences"
 import type { OptionsTab } from "@/options/shared"
+import { Storage } from "@plasmohq/storage"
+import { WORKSPACE_LAYOUT_PREFERENCES_KEY } from "@/options/shared/layout-preferences"
+import { PERFORMANCE_PREFERENCES_KEY } from "@/options/shared/performance-preferences"
+import { getStorageState, setStorageState } from "@/features/settings/storage"
 
 // ─── Privacy masking ────────────────────────────────────────────────────────
 
@@ -113,6 +117,10 @@ export interface DebugLogEnvironment {
 
 export interface DebugLogPayload {
   schema_version: 1
+  metadata: {
+    exportType: "normal" | "backup"
+    exportedFeatures: string[]
+  }
   imify_version: string
   imify_version_type: string
   timestamp: string
@@ -120,50 +128,64 @@ export interface DebugLogPayload {
   active_tab: OptionsTab | null
   environment: DebugLogEnvironment
   stores: {
-    batch: unknown
-    splicing: unknown
-    splitter: unknown
-    filling: unknown
-    pattern: unknown
-    diffchecker: unknown
-    inspector: unknown
+    batch?: unknown
+    splicing?: unknown
+    splitter?: unknown
+    filling?: unknown
+    pattern?: unknown
+    diffchecker?: unknown
+    inspector?: unknown
   }
-  settings: unknown
-  performance: unknown
-  layout: unknown
+  settings?: unknown
+  performance?: unknown
+  layout?: unknown
 }
 
 // ─── Main builder ────────────────────────────────────────────────────────────
 
 export interface BuildDebugLogParams {
   activeTab: OptionsTab | null
-  extensionStorageState: ExtensionStorageState | null
   performancePreferences: PerformancePreferences | null
   layoutPreferences: WorkspaceLayoutPreferences | null
+  exportType?: "normal" | "backup"
+  exportedFeatures?: string[]
 }
 
-export function buildDebugLog(params: BuildDebugLogParams): DebugLogPayload {
-  const { activeTab, extensionStorageState, performancePreferences, layoutPreferences } = params
+export async function buildDebugLog(params: BuildDebugLogParams): Promise<DebugLogPayload> {
+  const { 
+    activeTab, 
+    performancePreferences, 
+    layoutPreferences,
+    exportType = "normal",
+    exportedFeatures = ["batch", "splicing", "splitter", "filling", "pattern", "diffchecker", "inspector", "settings", "performance", "layout"]
+  } = params
   const appMetadata = getAppMetadata()
+  const extensionStorageState = await getStorageState()
 
-  // Collect store states (via .getState() — no React hook needed)
-  const batchRaw = extractStoreData(useBatchStore.getState() as unknown as Record<string, unknown>)
-  const splicingRaw = extractStoreData(useSplicingStore.getState() as unknown as Record<string, unknown>)
-  const splitterRaw = extractStoreData(useSplitterStore.getState() as unknown as Record<string, unknown>)
-  const fillingRaw = extractStoreData(useFillingStore.getState() as unknown as Record<string, unknown>)
-  const patternRaw = extractStoreData(usePatternStore.getState() as unknown as Record<string, unknown>)
-  const diffcheckerRaw = extractStoreData(useDiffcheckerStore.getState() as unknown as Record<string, unknown>)
-  const inspectorRaw = extractStoreData(useInspectorStore.getState() as unknown as Record<string, unknown>)
+  const hasFeature = (id: string) => exportedFeatures.includes(id)
 
-  // Sanitize all store snapshots
-  const stores = {
-    batch: sanitizeValue(batchRaw),
-    splicing: sanitizeValue(splicingRaw),
-    splitter: sanitizeValue(splitterRaw),
-    filling: sanitizeValue(fillingRaw),
-    pattern: sanitizeValue(patternRaw),
-    diffchecker: sanitizeValue(diffcheckerRaw),
-    inspector: sanitizeValue(inspectorRaw),
+  const stores: DebugLogPayload["stores"] = {}
+  
+  if (hasFeature("batch")) {
+    stores.batch = sanitizeValue(extractStoreData(useBatchStore.getState() as unknown as Record<string, unknown>))
+  }
+  if (hasFeature("splicing")) {
+    stores.splicing = sanitizeValue(extractStoreData(useSplicingStore.getState() as unknown as Record<string, unknown>))
+  }
+  if (hasFeature("splitter")) {
+    stores.splitter = sanitizeValue(extractStoreData(useSplitterStore.getState() as unknown as Record<string, unknown>))
+  }
+  if (hasFeature("filling")) {
+    stores.filling = sanitizeValue(extractStoreData(useFillingStore.getState() as unknown as Record<string, unknown>))
+  }
+  if (hasFeature("pattern")) {
+    stores.pattern = sanitizeValue(extractStoreData(usePatternStore.getState() as unknown as Record<string, unknown>))
+  }
+  if (hasFeature("diffchecker")) {
+    stores.diffchecker = sanitizeValue(extractStoreData(useDiffcheckerStore.getState() as unknown as Record<string, unknown>))
+  }
+  if (hasFeature("inspector")) {
+    stores.inspector = sanitizeValue(extractStoreData(useInspectorStore.getState() as unknown as Record<string, unknown>))
   }
 
   // Environment (browser info)
@@ -180,6 +202,10 @@ export function buildDebugLog(params: BuildDebugLogParams): DebugLogPayload {
 
   return {
     schema_version: 1,
+    metadata: {
+      exportType,
+      exportedFeatures
+    },
     imify_version: appMetadata.version,
     imify_version_type: appMetadata.versionType,
     timestamp: new Date().toISOString(),
@@ -187,9 +213,9 @@ export function buildDebugLog(params: BuildDebugLogParams): DebugLogPayload {
     active_tab: activeTab,
     environment,
     stores,
-    settings: extensionStorageState ? sanitizeValue(extensionStorageState as unknown as Record<string, unknown>) : null,
-    performance: performancePreferences ? sanitizeValue(performancePreferences as unknown as Record<string, unknown>) : null,
-    layout: layoutPreferences ? sanitizeValue(layoutPreferences as unknown as Record<string, unknown>) : null,
+    settings: hasFeature("settings") && extensionStorageState ? sanitizeValue(extensionStorageState as unknown as Record<string, unknown>) : undefined,
+    performance: hasFeature("performance") && performancePreferences ? sanitizeValue(performancePreferences as unknown as Record<string, unknown>) : undefined,
+    layout: hasFeature("layout") && layoutPreferences ? sanitizeValue(layoutPreferences as unknown as Record<string, unknown>) : undefined,
   }
 }
 
@@ -201,12 +227,57 @@ export function downloadDebugLog(payload: DebugLogPayload): void {
   const url = URL.createObjectURL(blob)
   const dateStr = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")
 
+  const isBackup = payload.metadata?.exportType === "backup"
+  const prefix = isBackup ? "export-backup" : "imify-debug"
+
   const anchor = document.createElement("a")
   anchor.href = url
-  anchor.download = `imify-debug-${dateStr}.json`
+  anchor.download = `${prefix}-${dateStr}.json`
   document.body.appendChild(anchor)
   anchor.click()
   document.body.removeChild(anchor)
 
   setTimeout(() => URL.revokeObjectURL(url), 5000)
+}
+
+// ─── Import helper ───────────────────────────────────────────────────────────
+
+export async function importDebugLog(payload: DebugLogPayload, importFeatures: string[]): Promise<void> {
+  const hasFeature = (id: string) => importFeatures.includes(id)
+
+  if (hasFeature("batch") && payload.stores.batch) {
+    useBatchStore.setState(payload.stores.batch as any)
+  }
+  if (hasFeature("splicing") && payload.stores.splicing) {
+    useSplicingStore.setState(payload.stores.splicing as any)
+  }
+  if (hasFeature("splitter") && payload.stores.splitter) {
+    useSplitterStore.setState(payload.stores.splitter as any)
+  }
+  if (hasFeature("filling") && payload.stores.filling) {
+    useFillingStore.setState(payload.stores.filling as any)
+  }
+  if (hasFeature("pattern") && payload.stores.pattern) {
+    usePatternStore.setState(payload.stores.pattern as any)
+  }
+  if (hasFeature("diffchecker") && payload.stores.diffchecker) {
+    useDiffcheckerStore.setState(payload.stores.diffchecker as any)
+  }
+  if (hasFeature("inspector") && payload.stores.inspector) {
+    useInspectorStore.setState(payload.stores.inspector as any)
+  }
+
+  if (hasFeature("settings") && payload.settings) {
+    await setStorageState(payload.settings as ExtensionStorageState)
+  }
+
+  const localStorage = new Storage({ area: "local" })
+  const syncStorage = new Storage({ area: "sync" })
+
+  if (hasFeature("performance") && payload.performance) {
+    await syncStorage.set(PERFORMANCE_PREFERENCES_KEY, payload.performance)
+  }
+  if (hasFeature("layout") && payload.layout) {
+    await localStorage.set(WORKSPACE_LAYOUT_PREFERENCES_KEY, payload.layout)
+  }
 }

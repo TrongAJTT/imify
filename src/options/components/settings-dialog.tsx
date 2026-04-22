@@ -26,8 +26,9 @@ import {
   X
 } from "lucide-react"
 import { useDevModeEnabled } from "@/features/dev-mode/dev-mode-storage"
-import { buildDebugLog, downloadDebugLog } from "@/features/dev-mode/debug-log-builder"
 import { DevModeStateViewer } from "@/options/components/dev-mode-state-viewer"
+import { DevModeExportDialog } from "@/options/components/dev-mode-export-dialog"
+import { DevModeImportDialog } from "@/options/components/dev-mode-import-dialog"
 import { useToast } from "@/core/hooks/use-toast"
 import { ToastContainer } from "@/core/components/toast-container"
 import { BaseDialog } from "@/options/components/ui/base-dialog"
@@ -92,17 +93,8 @@ export function SettingsDialog({
   )
 
   const [activeTab, setActiveTab] = useState<SettingsDialogTab>(initialTab)
-
-  const handleExportDebugLog = useCallback(() => {
-    const payload = buildDebugLog({
-      activeTab: activeWorkspaceTab,
-      extensionStorageState: null,
-      performancePreferences,
-      layoutPreferences,
-    })
-    downloadDebugLog(payload)
-    success("Debug log exported!", "Check your downloads folder.", 3000)
-  }, [activeWorkspaceTab, performancePreferences, layoutPreferences, success])
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
 
   const handleDisableDevMode = useCallback(async () => {
     await setDevModeEnabled(false)
@@ -166,8 +158,9 @@ export function SettingsDialog({
   }
 
   return (
-    <BaseDialog
-      isOpen={isOpen}
+    <>
+      <BaseDialog
+        isOpen={isOpen}
       onClose={onClose}
       contentClassName="relative w-full max-w-3xl rounded-xl overflow-hidden h-[720px] max-h-[calc(100vh-4rem)] flex"
     >
@@ -543,9 +536,38 @@ export function SettingsDialog({
                   description="Inspect the current Zustand store state in real-time. Updates as you change settings."
                 />
                 <DevModeStateViewer 
-                  activeTab={activeWorkspaceTab} 
-                  onExport={handleExportDebugLog}
+                  activeTab={activeWorkspaceTab ?? null} 
                 />
+              </section>
+
+              <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
+                <SettingsItemHeader
+                  title="EXPORT DEBUG LOG"
+                  description="Selectively export your configuration to a JSON file."
+                />
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start gap-2 rounded-lg"
+                  onClick={() => setIsExportDialogOpen(true)}
+                >
+                  <Download size={14} />
+                  Export System Log
+                </Button>
+              </section>
+
+              <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
+                <SettingsItemHeader
+                  title="IMPORT DEBUG LOG"
+                  description="Import a configuration JSON file to overwrite your current state."
+                />
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start gap-2 rounded-lg"
+                  onClick={() => setIsImportDialogOpen(true)}
+                >
+                  <Download size={14} className="rotate-180" />
+                  Import System Log
+                </Button>
               </section>
 
               <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
@@ -567,6 +589,23 @@ export function SettingsDialog({
         </div>
       </div>
       <ToastContainer toasts={toasts} onRemove={hide} />
-    </BaseDialog>
+      </BaseDialog>
+
+      <DevModeExportDialog 
+        isOpen={isExportDialogOpen} 
+        onClose={() => setIsExportDialogOpen(false)} 
+        activeTab={activeWorkspaceTab ?? null}
+        performancePreferences={safePerformancePreferences}
+        layoutPreferences={layoutPreferences}
+      />
+      <DevModeImportDialog 
+        isOpen={isImportDialogOpen} 
+        onClose={() => setIsImportDialogOpen(false)} 
+        activeTab={activeWorkspaceTab ?? null}
+        performancePreferences={safePerformancePreferences}
+        layoutPreferences={layoutPreferences}
+        onSuccess={() => success("Import successful", "State has been restored.", 3000)}
+      />
+    </>
   )
 }
