@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useBatchStore } from "@/options/stores/batch-store"
 import { APP_CONFIG } from "@/core/config"
 import { Button } from "@/options/components/ui/button"
@@ -15,13 +15,21 @@ import { MutedText, Subheading } from "@/options/components/ui/typography"
 import { SettingsShortcutsPanel } from "@/options/components/settings-shortcuts-panel"
 import {
   BarChart3,
+  Code2,
+  Download,
   Gauge,
   Keyboard,
   ListTree,
+  PowerOff,
   RotateCcw,
   ShieldAlert,
   X
 } from "lucide-react"
+import { useDevModeEnabled } from "@/features/dev-mode/dev-mode-storage"
+import { buildDebugLog, downloadDebugLog } from "@/features/dev-mode/debug-log-builder"
+import { DevModeStateViewer } from "@/options/components/dev-mode-state-viewer"
+import { useToast } from "@/core/hooks/use-toast"
+import { ToastContainer } from "@/core/components/toast-container"
 import { BaseDialog } from "@/options/components/ui/base-dialog"
 import { TAB_ITEMS, type OptionsTab } from "@/options/shared"
 import {
@@ -49,9 +57,11 @@ interface SettingsDialogProps {
   onChangeConfigurationSidebarLevel: (level: SidebarWidthLevel) => void
   performancePreferences: PerformancePreferences
   onChangePerformancePreferences: (value: PerformancePreferences) => void
+  /** Currently active main workspace tab — passed to Dev Mode state viewer for smart filter pre-select */
+  activeWorkspaceTab?: OptionsTab | null
 }
 
-export type SettingsDialogTab = "general" | "shortcuts" | "performance" | "warnings" | "usage"
+export type SettingsDialogTab = "general" | "shortcuts" | "performance" | "warnings" | "usage" | "developer"
 
 export function SettingsDialog({
   isOpen,
@@ -65,8 +75,11 @@ export function SettingsDialog({
   onChangeNavigationSidebarLevel,
   onChangeConfigurationSidebarLevel,
   performancePreferences,
-  onChangePerformancePreferences
+  onChangePerformancePreferences,
+  activeWorkspaceTab = null
 }: SettingsDialogProps) {
+  const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled()
+  const { toasts, hide, success } = useToast()
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
   const skipOomWarning = useBatchStore((state) => state.skipOomWarning)
@@ -79,6 +92,22 @@ export function SettingsDialog({
   )
 
   const [activeTab, setActiveTab] = useState<SettingsDialogTab>(initialTab)
+
+  const handleExportDebugLog = useCallback(() => {
+    const payload = buildDebugLog({
+      activeTab: activeWorkspaceTab,
+      extensionStorageState: null,
+      performancePreferences,
+      layoutPreferences,
+    })
+    downloadDebugLog(payload)
+    success("Debug log exported!", "Check your downloads folder.", 3000)
+  }, [activeWorkspaceTab, performancePreferences, layoutPreferences, success])
+
+  const handleDisableDevMode = useCallback(async () => {
+    await setDevModeEnabled(false)
+    setActiveTab("general")
+  }, [setDevModeEnabled])
 
   useEffect(() => {
     if (!isOpen) {
@@ -209,6 +238,24 @@ export function SettingsDialog({
             <BarChart3 size={16} />
             Usage Stats
           </button>
+
+          {/* Developer tab — only visible when Dev Mode is enabled */}
+          {devModeEnabled && (
+            <>
+              <div className="my-2 border-t border-slate-200 dark:border-slate-700" />
+              <button
+                onClick={() => setActiveTab("developer")}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === "developer"
+                    ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300"
+                    : "text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300"
+                }`}
+              >
+                <Code2 size={16} />
+                Developer
+              </button>
+            </>
+          )}
         </nav>
       </div>
 
@@ -482,8 +529,56 @@ export function SettingsDialog({
               </section>
             </div>
           )}
+
+          {activeTab === "developer" && devModeEnabled && (
+            <div className="animate-in fade-in duration-300 space-y-5">
+              <SettingsSectionHeader
+                title="Developer Tools"
+                description="Real-time state monitor and debug log export. Only visible when Developer Mode is active."
+              />
+
+              <section className="space-y-4">
+                <SettingsItemHeader
+                  title="LIVE STATE MONITOR"
+                  description="Inspect the current Zustand store state in real-time. Updates as you change settings."
+                />
+                <DevModeStateViewer activeTab={activeWorkspaceTab} />
+              </section>
+
+              <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
+                <SettingsItemHeader
+                  title="EXPORT DEBUG LOG"
+                  description="Downloads a sanitized JSON snapshot of your current configuration. File names, image data, and other sensitive content are masked."
+                />
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                  onClick={handleExportDebugLog}
+                >
+                  <Download size={14} />
+                  Export System Log
+                </Button>
+              </section>
+
+              <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
+                <SettingsItemHeader
+                  title="DISABLE DEVELOPER MODE"
+                  description="Hides the Developer tab and disables debug features. You can re-enable it via the Easter Egg in the About dialog."
+                />
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2 rounded-lg border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  onClick={handleDisableDevMode}
+                >
+                  <PowerOff size={14} />
+                  Disable Developer Mode
+                </Button>
+              </section>
+            </div>
+          )}
         </div>
       </div>
+      <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>
   )
 }
