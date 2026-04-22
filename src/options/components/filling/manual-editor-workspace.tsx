@@ -18,6 +18,7 @@ import { Subheading, MutedText } from "@/options/components/ui/typography"
 import { Button } from "@/options/components/ui/button"
 import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
 import { VisualHelpTooltip } from "@/options/components/ui/visual-help-tooltip"
+import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 import manualEditorMultiSelectVideo from "url:assets/features/image_filling_manual-visual_multi_select.webm"
 import {
   PreviewInteractionModeToggle,
@@ -538,11 +539,11 @@ export function ManualEditorWorkspace({
           <div className="flex items-center gap-1.5">
             <Subheading>Manual Editor</Subheading>
             <VisualHelpTooltip
-              label="Selection and drag tips"
-              description="Drag layers from the canvas or Layers list to reorder. Hold Ctrl (or Cmd on Mac) and click layers to toggle multi-select. When nothing is selected, drag on empty canvas to box-select layers fully inside the selection area."
+              label={FILLING_TOOLTIPS.visualHelp.manualEditor.label}
+              description={FILLING_TOOLTIPS.visualHelp.manualEditor.description}
               webmSrc={manualEditorMultiSelectVideo}
-              buttonAriaLabel="Manual Editor interaction help"
-              mediaAlt="Manual Editor interaction guide"
+              buttonAriaLabel={FILLING_TOOLTIPS.visualHelp.manualEditor.buttonAriaLabel}
+              mediaAlt={FILLING_TOOLTIPS.visualHelp.manualEditor.mediaAlt}
             />
           </div>
           <MutedText className="text-xs mt-0.5">

@@ -143,7 +143,7 @@ export function FillCanvasAccordion() {
           <CheckboxCard
             icon={<Square size={14} />}
             title="Override Layer Borders"
-            tooltipLabel="Override Layer Borders"
+            tooltipLabel={FILLING_TOOLTIPS.fillCanvas.overrideLayerBordersLabel}
             tooltipContent={FILLING_TOOLTIPS.fillCanvas.overrideLayerBorders}
             checked={state.borderOverrideEnabled}
             onChange={(v) => update({ borderOverrideEnabled: v })}
@@ -183,7 +183,7 @@ export function FillCanvasAccordion() {
           <CheckboxCard
             icon={<Circle size={14} />}
             title="Override Corner Radius"
-            tooltipLabel="Override Corner Radius"
+            tooltipLabel={FILLING_TOOLTIPS.fillCanvas.overrideCornerRadiusLabel}
             tooltipContent={FILLING_TOOLTIPS.fillCanvas.overrideCornerRadius}
             checked={state.cornerRadiusOverrideEnabled}
             onChange={(v) => update({ cornerRadiusOverrideEnabled: v })}
