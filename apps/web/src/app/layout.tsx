@@ -1,6 +1,9 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { AppProviders } from "./app-providers"
+import { WebFooter } from "@/components/layout/web-footer"
+import { WebHeader } from "@/components/layout/web-header"
+import { WorkspaceShell } from "@/components/layout/workspace-shell"
 
 export const metadata: Metadata = {
   title: "Imify Web",
@@ -15,7 +18,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <WebHeader />
+          <WorkspaceShell>{children}</WorkspaceShell>
+          <WebFooter />
+        </AppProviders>
       </body>
     </html>
   )
