@@ -1,6 +1,3 @@
-// @ts-ignore: This JS module is shipped as a static asset.
-import initWebpFactory from "@assets/wasm/webp_enc.js"
-
 import { clampQuality } from "@imify/core/image-utils"
 import type { WebpCodecOptions } from "@imify/core/types"
 
@@ -64,6 +61,10 @@ function resolveWasmUrl(fileName: string): string {
 async function getWebpModule(): Promise<WebpWasmModule> {
   if (!webpModulePromise) {
     const wasmUrl = resolveWasmUrl("webp_enc.wasm")
+    const factoryModule = await import(/* @vite-ignore */ resolveWasmUrl("webp_enc.js"))
+    const initWebpFactory = (factoryModule.default ?? factoryModule) as (
+      options: Record<string, unknown>
+    ) => Promise<WebpWasmModule>
 
     webpModulePromise = initWebpFactory({
       locateFile: (path: string) => {

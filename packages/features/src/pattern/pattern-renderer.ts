@@ -3,17 +3,17 @@ import {
   toRenderableAssets,
   type PatternPlacement,
   type PatternRenderableAsset,
-} from "@imify/features/pattern/pattern-generator"
+} from "./pattern-generator"
 import {
   DEFAULT_PATTERN_ASSET_BORDER_SETTINGS,
   DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS,
-} from "@imify/features/pattern/types"
+} from "./types"
 import type {
   PatternAsset,
   PatternBoundarySettings,
   PatternCanvasSettings,
   PatternSettings,
-} from "@imify/features/pattern/types"
+} from "./types"
 
 interface RenderPatternToContextOptions {
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D

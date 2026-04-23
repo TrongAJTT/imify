@@ -1,10 +1,3 @@
-// @ts-ignore: This JS module is shipped as a static asset.
-import initResizeWasm, { resize as wasmResize } from "@assets/wasm/squoosh_resize.js"
-// @ts-ignore: This JS module is shipped as a static asset.
-import initHqxWasm, { resize as wasmHqx } from "@assets/wasm/squooshhqx.js"
-// @ts-ignore: This JS module is shipped as a static asset.
-import initMagicKernelWasm, { resize as wasmMagicKernel } from "@assets/wasm/jsquash_magic_kernel.js"
-
 import { normalizeResizeResamplingAlgorithm } from "@imify/core/resize-resampling"
 import type { ResizeResamplingAlgorithm } from "@imify/core/types"
 
@@ -50,12 +43,12 @@ type MagicKernelWasmFn = (
   version: string
 ) => ImageData
 
-const initResize = initResizeWasm as ResizeWasmInit
-const resizeWithWasm = wasmResize as ResizeWasmFn
-const initHqx = initHqxWasm as ResizeWasmInit
-const hqxResize = wasmHqx as HqxWasmFn
-const initMagicKernel = initMagicKernelWasm as ResizeWasmInit
-const magicKernelResize = wasmMagicKernel as MagicKernelWasmFn
+let initResize: ResizeWasmInit | null = null
+let resizeWithWasm: ResizeWasmFn | null = null
+let initHqx: ResizeWasmInit | null = null
+let hqxResize: HqxWasmFn | null = null
+let initMagicKernel: ResizeWasmInit | null = null
+let magicKernelResize: MagicKernelWasmFn | null = null
 
 function clampFactor(value: number): number {
   return Math.max(HQX_MIN_FACTOR, Math.min(HQX_MAX_FACTOR, Math.round(value)))
@@ -76,9 +69,48 @@ function resolveWasmAssetUrl(fileName: string): string {
   return `${origin}/assets/wasm/${fileName}`
 }
 
+async function ensureResizeModuleLoaded(): Promise<void> {
+  if (initResize && resizeWithWasm) {
+    return
+  }
+  const module = await import(/* @vite-ignore */ resolveWasmAssetUrl("squoosh_resize.js"))
+  initResize = (module.default ?? module) as ResizeWasmInit
+  resizeWithWasm = (module as { resize?: ResizeWasmFn }).resize ?? null
+  if (!initResize || !resizeWithWasm) {
+    throw new Error("Resize WASM module did not expose expected functions")
+  }
+}
+
+async function ensureHqxModuleLoaded(): Promise<void> {
+  if (initHqx && hqxResize) {
+    return
+  }
+  const module = await import(/* @vite-ignore */ resolveWasmAssetUrl("squooshhqx.js"))
+  initHqx = (module.default ?? module) as ResizeWasmInit
+  hqxResize = (module as { resize?: HqxWasmFn }).resize ?? null
+  if (!initHqx || !hqxResize) {
+    throw new Error("HQX WASM module did not expose expected functions")
+  }
+}
+
+async function ensureMagicKernelModuleLoaded(): Promise<void> {
+  if (initMagicKernel && magicKernelResize) {
+    return
+  }
+  const module = await import(/* @vite-ignore */ resolveWasmAssetUrl("jsquash_magic_kernel.js"))
+  initMagicKernel = (module.default ?? module) as ResizeWasmInit
+  magicKernelResize = (module as { resize?: MagicKernelWasmFn }).resize ?? null
+  if (!initMagicKernel || !magicKernelResize) {
+    throw new Error("Magic Kernel WASM module did not expose expected functions")
+  }
+}
+
 function ensureResizeWasm(): Promise<unknown> {
   if (!resizeWasmReady) {
-    resizeWasmReady = initResize(resolveWasmAssetUrl(RESIZE_WASM_FILE))
+    resizeWasmReady = (async () => {
+      await ensureResizeModuleLoaded()
+      await (initResize as ResizeWasmInit)(resolveWasmAssetUrl(RESIZE_WASM_FILE))
+    })()
   }
 
   return resizeWasmReady
@@ -86,7 +118,10 @@ function ensureResizeWasm(): Promise<unknown> {
 
 function ensureHqxWasm(): Promise<unknown> {
   if (!hqxWasmReady) {
-    hqxWasmReady = initHqx(resolveWasmAssetUrl(HQX_WASM_FILE))
+    hqxWasmReady = (async () => {
+      await ensureHqxModuleLoaded()
+      await (initHqx as ResizeWasmInit)(resolveWasmAssetUrl(HQX_WASM_FILE))
+    })()
   }
 
   return hqxWasmReady
@@ -94,7 +129,10 @@ function ensureHqxWasm(): Promise<unknown> {
 
 function ensureMagicKernelWasm(): Promise<unknown> {
   if (!magicKernelWasmReady) {
-    magicKernelWasmReady = initMagicKernel(resolveWasmAssetUrl(MAGIC_KERNEL_WASM_FILE))
+    magicKernelWasmReady = (async () => {
+      await ensureMagicKernelModuleLoaded()
+      await (initMagicKernel as ResizeWasmInit)(resolveWasmAssetUrl(MAGIC_KERNEL_WASM_FILE))
+    })()
   }
 
   return magicKernelWasmReady
@@ -133,7 +171,7 @@ async function resizeWithLanczos3(
   targetWidth: number,
   targetHeight: number
 ): Promise<ImageData> {
-  const resizedRgba = resizeWithWasm(
+  const resizedRgba = (resizeWithWasm as ResizeWasmFn)(
     imageDataToUint8(sourceImageData),
     sourceImageData.width,
     sourceImageData.height,
@@ -160,7 +198,7 @@ async function resizeWithHqxAlgorithm(
     return resizeWithLanczos3(sourceImageData, targetWidth, targetHeight)
   }
 
-  const hqxPixels = hqxResize(
+  const hqxPixels = (hqxResize as HqxWasmFn)(
     new Uint32Array(sourceImageData.data.buffer.slice(0)),
     sourceImageData.width,
     sourceImageData.height,
@@ -177,7 +215,7 @@ async function resizeWithHqxAlgorithm(
     return hqxImageData
   }
 
-  const refinedRgba = resizeWithWasm(
+  const refinedRgba = (resizeWithWasm as ResizeWasmFn)(
     imageDataToUint8(hqxImageData),
     hqxImageData.width,
     hqxImageData.height,
@@ -196,7 +234,7 @@ async function resizeWithMagicKernelAlgorithm(
   targetWidth: number,
   targetHeight: number
 ): Promise<ImageData> {
-  const result = magicKernelResize(
+  const result = (magicKernelResize as MagicKernelWasmFn)(
     imageDataToUint8(sourceImageData),
     sourceImageData.width,
     sourceImageData.height,

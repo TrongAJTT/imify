@@ -1,5 +1,4 @@
-import { clampQuality } from "@imify/core/image-utils"
-import { buildJxlEncodeOptions } from "@imify/core/jxl-options"
+import { clampQuality, buildJxlEncodeOptions } from "@imify/core"
 import { encodeAvif } from "@imify/engine/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@imify/engine/converter/bmp-encoder"
 import { decodeImageBitmapForEncoding } from "@imify/engine/converter/color-managed-pipeline"
@@ -19,7 +18,7 @@ import type {
   SplicingImageResize,
   SplicingImageStyle,
   SplicingLayoutConfig
-} from "@imify/features/splicing/types"
+} from "./types"
 
 type AnyContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 type CornerRadii = { tl: number; tr: number; br: number; bl: number }

@@ -6,8 +6,8 @@ import type {
   DiffComputeResult,
   DiffViewMode,
   DiffStats
-} from "@imify/features/diffchecker/types"
-import { renderImageDataPreview } from "@imify/engine/image-pipeline/render-image-data"
+} from "./types"
+import { renderImageDataPreview } from "@imify/engine"
 
 const SSIM_BLOCK = 8
 const SSIM_C1 = (0.01 * 255) ** 2

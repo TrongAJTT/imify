@@ -5,11 +5,11 @@ import type {
   PatternBoundarySettings,
   PatternDistributionSettings,
   PatternSettings,
-} from "@imify/features/pattern/types"
+} from "./types"
 import {
   DEFAULT_PATTERN_ASSET_BORDER_SETTINGS,
   DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS,
-} from "@imify/features/pattern/types"
+} from "./types"
 
 type BoundaryEvaluationSettings = Pick<
   PatternSettings,

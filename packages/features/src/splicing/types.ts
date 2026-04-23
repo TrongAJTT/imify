@@ -1,4 +1,4 @@
-import type { FormatCodecOptions, ImageFormat } from "@imify/core/types"
+import type { FormatCodecOptions, ImageFormat } from "@imify/core"
 
 export type SplicingDirection = "vertical" | "horizontal"
 

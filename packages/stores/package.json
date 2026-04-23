@@ -11,6 +11,10 @@
   "exports": {
     ".": "./src/index.ts",
     "./*": "./src/*"
+    ,
+    "./stores/*": "./src/stores/*.ts",
+    "./shortcuts": "./src/shortcuts.ts",
+    "./use-shortcut-preferences": "./src/use-shortcut-preferences.ts"
   },
   "license": "Apache-2.0"
 }

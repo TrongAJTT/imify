@@ -1,4 +1,4 @@
-import type { BmpColorDepth, TiffColorMode } from "@imify/core/types"
+import type { BmpColorDepth, TiffColorMode } from "@imify/core"
 import type { RasterPipelineFormat } from "@imify/engine/converter/raster-processing-pipeline"
 
 export type PatternBackgroundType = "solid" | "transparent" | "image"

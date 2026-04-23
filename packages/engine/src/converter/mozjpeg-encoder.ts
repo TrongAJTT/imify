@@ -1,6 +1,3 @@
-// @ts-ignore: This JS module is shipped as a static asset.
-import initMozJpegFactory from "@assets/wasm/mozjpeg_enc.js"
-
 import { clampQuality } from "@imify/core/image-utils"
 import type { MozJpegCodecOptions } from "@imify/core/types"
 
@@ -53,6 +50,10 @@ function resolveWasmUrl(fileName: string): string {
 async function getMozJpegModule(): Promise<MozJpegWasmModule> {
   if (!mozJpegModulePromise) {
     const wasmUrl = resolveWasmUrl("mozjpeg_enc.wasm")
+    const factoryModule = await import(/* @vite-ignore */ resolveWasmUrl("mozjpeg_enc.js"))
+    const initMozJpegFactory = (factoryModule.default ?? factoryModule) as (
+      options: Record<string, unknown>
+    ) => Promise<MozJpegWasmModule>
 
     mozJpegModulePromise = initMozJpegFactory({
       locateFile: (path: string) => {

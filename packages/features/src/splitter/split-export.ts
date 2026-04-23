@@ -1,7 +1,7 @@
 import { zip } from "fflate"
 
-import { getCanonicalExtension } from "@imify/core/download-utils"
-import type { FormatCodecOptions, ImageFormat } from "@imify/core/types"
+import { getCanonicalExtension } from "@imify/core"
+import type { FormatCodecOptions, ImageFormat } from "@imify/core"
 import { convertImage } from "@imify/engine/converter"
 import { decodeFileToImageData } from "@imify/engine/image-pipeline/decode-image-data"
 import { buildSplitterSplitPlan } from "./split-engine"
@@ -9,7 +9,7 @@ import type {
   SplitterExportFormat,
   SplitterSplitRect,
   SplitterSplitSettings
-} from "@imify/features/splitter/types"
+} from "./types"
 
 type DrawCanvas = OffscreenCanvas | HTMLCanvasElement
 

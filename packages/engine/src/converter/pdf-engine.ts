@@ -1,6 +1,6 @@
 import { PDFDocument } from "pdf-lib"
 
-import { calculateContainPlacement } from "@imify/core/image-utils"
+import { calculateContainPlacement } from "@imify/core"
 import { PAPER_DIMENSIONS } from "@imify/core/paper-constants"
 import type { ResizeConfig } from "@imify/core/types"
 import { convertRasterImage } from "./canvas-engine"

@@ -5,12 +5,12 @@ import {
   type RasterEncodeDependencies,
   type RasterEncodeInput,
   type RasterEncodeResult
-} from "@imify/engine/converter/raster-encode-adapters"
+} from "./raster-encode-adapters"
 import {
   extractRasterFrame,
   type RasterFrame,
   type RasterPipelineFormat
-} from "@imify/engine/converter/raster-processing-pipeline"
+} from "./raster-processing-pipeline"
 
 export interface RasterConversionParams {
   sourceBlob: Blob

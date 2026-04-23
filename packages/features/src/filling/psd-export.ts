@@ -2,7 +2,7 @@ import type {
   FillingTemplate,
   LayerFillState,
   CanvasFillState,
-} from "@imify/features/filling/types"
+} from "./types"
 
 /**
  * Export a filled template to PSD format using ag-psd.

@@ -1,6 +1,6 @@
-import { getAppMetadata } from "@imify/core/app-metadata"
+import { getAppMetadata } from "@imify/core"
 import { DEV_MODE_FEATURES } from "./dev-mode-registry"
-import type { ExtensionStorageState } from "@imify/core/types"
+import type { ExtensionStorageState } from "@imify/core"
 import type {
   OptionsTab
 } from "./debug-shared"

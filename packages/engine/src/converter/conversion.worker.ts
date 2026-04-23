@@ -1,8 +1,3 @@
-// @ts-ignore: This JS module is shipped as a static asset.
-import initAvifFactory from "@assets/wasm/avif_enc.js"
-// @ts-ignore: This JS module is shipped as a static asset.
-import initJxlFactory from "@assets/wasm/jxl_enc.js"
-
 import { buildNormalizedAvifOptions } from "@imify/core/avif-options"
 import { buildJxlEncodeOptions, buildNormalizedJxlWasmOptions } from "@imify/core/jxl-options"
 import type { AvifCodecOptions, FormatConfig, ImageFormat, JxlCodecOptions, ResizeConfig } from "@imify/core/types"
@@ -16,7 +11,7 @@ import { createDefaultRasterAdapterRegistry } from "./raster-encode-adapters"
 import {
   CANVAS_MIME_BY_FORMAT,
   encodeCanvasFormatFromImageData
-} from "@imify/engine/converter/raster-processing-pipeline"
+} from "./raster-processing-pipeline"
 import { encodeImageDataToTiff } from "./tiff-encoder"
 import { encodeWebp } from "./webp-encoder"
 import { resolveEngineWasmUrl } from "./runtime-adapter"
@@ -86,9 +81,15 @@ function resolveWasmUrl(fileName: string): string {
   return resolveEngineWasmUrl(fileName)
 }
 
+async function loadWasmFactory(fileName: string): Promise<(options: Record<string, unknown>) => Promise<WasmModule>> {
+  const module = await import(/* @vite-ignore */ resolveWasmUrl(fileName))
+  return (module.default ?? module) as (options: Record<string, unknown>) => Promise<WasmModule>
+}
+
 async function getAvifModule(): Promise<WasmModule> {
   if (!avifModulePromise) {
     const wasmUrl = resolveWasmUrl("avif_enc.wasm")
+    const initAvifFactory = await loadWasmFactory("avif_enc.js")
 
     avifModulePromise = initAvifFactory({
       locateFile: (path: string) => {
@@ -107,6 +108,7 @@ async function getAvifModule(): Promise<WasmModule> {
 async function getJxlModule(): Promise<WasmModule> {
   if (!jxlModulePromise) {
     const wasmUrl = resolveWasmUrl("jxl_enc.wasm")
+    const initJxlFactory = await loadWasmFactory("jxl_enc.js")
 
     jxlModulePromise = initJxlFactory({
       locateFile: (path: string) => {

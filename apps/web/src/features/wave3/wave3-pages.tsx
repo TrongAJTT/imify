@@ -4,6 +4,7 @@ import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-sto
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
 import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
 import { PresetLandingPage, PresetWorkPage } from "@/features/presets/preset-flow-pages"
+import { SplicingWorkspacePage } from "@/features/splicing/splicing-workspace-page"
 
 export function SplicingLandingPage() {
   const presets = useSplicingPresetStore((state) => state.presets)
@@ -20,23 +21,7 @@ export function SplicingLandingPage() {
 }
 
 export function SplicingWorkPage({ presetId }: { presetId: string }) {
-  const presets = useSplicingPresetStore((state) => state.presets)
-  const activePresetId = useSplicingPresetStore((state) => state.activePresetId)
-  const applyPreset = useSplicingPresetStore((state) => state.applyPreset)
-  const setPresetViewMode = useSplicingPresetStore((state) => state.setPresetViewMode)
-  const workspaceState = { activePresetId, presetCount: presets.length }
-
-  return (
-    <PresetWorkPage
-      title="Image Splicing"
-      routeBase="/splicing"
-      presetId={presetId}
-      presets={presets}
-      workspaceState={workspaceState}
-      applyPreset={applyPreset}
-      setPresetViewMode={setPresetViewMode}
-    />
-  )
+  return <SplicingWorkspacePage presetId={presetId} />
 }
 
 export function SplitterLandingPage() {

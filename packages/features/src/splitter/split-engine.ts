@@ -4,7 +4,7 @@ import type {
   SplitterSplitPlan,
   SplitterSplitRect,
   SplitterSplitSettings
-} from "@imify/features/splitter/types"
+} from "./types"
 
 interface RgbColor {
   r: number

@@ -5,9 +5,9 @@ import {
   type FormatConfig,
   type ImageFormat,
   type MenuSortMode,
-  type ResizeConfig
-} from "@imify/core/types"
-import { CUSTOM_FORMATS } from "@imify/core/format-config"
+  type ResizeConfig,
+  CUSTOM_FORMATS
+} from "@imify/core"
 import { DEFAULT_STORAGE_STATE } from "./default-state"
 
 interface PersistedStorageState {

@@ -10,12 +10,12 @@ import {
   createRasterConversionFacade,
   type RasterConversionParams,
   type RasterConversionResult
-} from "@imify/engine/converter/raster-conversion-facade"
+} from "./raster-conversion-facade"
 import { createDefaultRasterAdapterRegistry } from "./raster-encode-adapters"
 import {
   CANVAS_MIME_BY_FORMAT,
   encodeCanvasFormatFromImageData
-} from "@imify/engine/converter/raster-processing-pipeline"
+} from "./raster-processing-pipeline"
 import { encodeImageDataToTiff } from "./tiff-encoder"
 import { encodeWebp } from "./webp-encoder"
 

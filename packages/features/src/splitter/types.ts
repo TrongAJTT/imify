@@ -1,4 +1,4 @@
-import type { FormatCodecOptions } from "@imify/core/types"
+import type { FormatCodecOptions } from "@imify/core"
 
 export type SplitterDirection = "vertical" | "horizontal" | "grid"
 export type SplitterMode = "basic" | "advanced"

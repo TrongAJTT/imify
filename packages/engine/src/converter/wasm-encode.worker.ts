@@ -1,7 +1,3 @@
-// @ts-ignore: This JS module is shipped as a static asset.
-import initAvifFactory from "@assets/wasm/avif_enc.js"
-// @ts-ignore: This JS module is shipped as a static asset.
-import initJxlFactory from "@assets/wasm/jxl_enc.js"
 import { resolveEngineWasmUrl } from "./runtime-adapter"
 
 interface WasmModule {
@@ -52,9 +48,15 @@ function resolveWasmUrl(fileName: string): string {
   return resolveEngineWasmUrl(fileName)
 }
 
+async function loadWasmFactory(fileName: string): Promise<(options: Record<string, unknown>) => Promise<WasmModule>> {
+  const module = await import(/* @vite-ignore */ resolveWasmUrl(fileName))
+  return (module.default ?? module) as (options: Record<string, unknown>) => Promise<WasmModule>
+}
+
 async function getAvifModule(): Promise<WasmModule> {
   if (!avifModulePromise) {
     const wasmUrl = resolveWasmUrl("avif_enc.wasm")
+    const initAvifFactory = await loadWasmFactory("avif_enc.js")
 
     avifModulePromise = initAvifFactory({
       locateFile: (path: string) => {
@@ -73,6 +75,7 @@ async function getAvifModule(): Promise<WasmModule> {
 async function getJxlModule(): Promise<WasmModule> {
   if (!jxlModulePromise) {
     const wasmUrl = resolveWasmUrl("jxl_enc.wasm")
+    const initJxlFactory = await loadWasmFactory("jxl_enc.js")
 
     jxlModulePromise = initJxlFactory({
       locateFile: (path: string) => {

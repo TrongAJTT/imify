@@ -3,7 +3,7 @@ import {
   applyRuntimeTransformToPoint,
   applyRuntimeTransformToPolygons,
   getBoundsFromPoints,
-} from "@imify/features/filling/group-geometry"
+} from "./group-geometry"
 import {
   DEFAULT_IMAGE_TRANSFORM,
   type CanvasFillState,
@@ -13,7 +13,7 @@ import {
   type LayerFillState,
   type Point2D,
   type VectorLayer,
-} from "@imify/features/filling/types"
+} from "./types"
 import { resolveLayerShapePoints } from "./shape-generators"
 import { roundedPolygonPoints, flattenPoints } from "./vector-math"
 

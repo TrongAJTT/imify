@@ -1,4 +1,4 @@
-import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@imify/core/types"
+import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@imify/core"
 import { DEFAULT_ICO_SIZES, GLOBAL_FORMATS } from "@imify/core"
 
 const DEFAULT_QUALITY_BY_FORMAT: Partial<Record<ImageFormat, number>> = {

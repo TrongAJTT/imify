@@ -10,7 +10,7 @@ import type {
   SplicingImageResize,
   SplicingImageStyle,
   SplicingLayoutConfig
-} from "@imify/features/splicing/types"
+} from "./types"
 
 interface ImageSize {
   width: number

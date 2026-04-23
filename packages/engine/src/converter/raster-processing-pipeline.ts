@@ -10,7 +10,7 @@ import { resizeImageDataWithAlgorithm } from "./advanced-resize"
 import {
   decodeImageBitmapForEncoding,
   getOffscreen2DContext
-} from "@imify/engine/converter/color-managed-pipeline"
+} from "./color-managed-pipeline"
 
 export type RasterPipelineFormat = Exclude<ImageFormat, "pdf" | "ico">
 export type CanvasConvertibleFormat = Exclude<ImageFormat, "bmp" | "pdf" | "ico" | "tiff">

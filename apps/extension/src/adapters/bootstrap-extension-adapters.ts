@@ -16,11 +16,11 @@ export function bootstrapExtensionAdapters(): void {
   registerEngineRuntimeAdapter({
     resolveWasmUrl: (fileName) => chrome.runtime.getURL(`assets/wasm/${fileName}`),
     createWasmWorker: () =>
-      new Worker(new URL("@imify/engine/converter/wasm-encode.worker.ts", import.meta.url), {
+      new Worker(new URL("@imify/engine/converter/wasm-encode.worker", import.meta.url), {
         type: "module"
       }),
     createConversionWorker: () =>
-      new Worker(new URL("@imify/engine/converter/conversion.worker.ts", import.meta.url), {
+      new Worker(new URL("@imify/engine/converter/conversion.worker", import.meta.url), {
         type: "module"
       })
   })

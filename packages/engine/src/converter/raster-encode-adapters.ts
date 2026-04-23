@@ -10,7 +10,7 @@ import type {
 import type {
   CanvasConvertibleFormat,
   RasterPipelineFormat
-} from "@imify/engine/converter/raster-processing-pipeline"
+} from "./raster-processing-pipeline"
 import { shouldUseWebpWasm } from "./webp-encoder"
 
 export interface RasterEncodeInput {
