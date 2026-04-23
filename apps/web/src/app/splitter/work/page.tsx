@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { FeaturePlaceholderPage } from "@/components/layout/feature-placeholder-page"
+import { SplitterWorkPage as SplitterWorkClientPage } from "@/features/wave3/wave3-pages"
 import { getRouteId } from "@/features/routing/route-id"
 
 interface WorkPageProps {
@@ -10,10 +10,5 @@ export default async function SplitterWorkPage({ searchParams }: WorkPageProps) 
   const id = getRouteId(await searchParams)
   if (!id) notFound()
 
-  return (
-    <FeaturePlaceholderPage
-      title="Splitter Workspace"
-      description={`Loaded preset id "${id}". Workspace migration continues in Wave 3.`}
-    />
-  )
+  return <SplitterWorkClientPage presetId={id} />
 }

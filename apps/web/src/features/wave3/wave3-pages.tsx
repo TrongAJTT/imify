@@ -1,0 +1,108 @@
+"use client"
+
+import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
+import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
+import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
+import { PresetLandingPage, PresetWorkPage } from "@/features/presets/preset-flow-pages"
+
+export function SplicingLandingPage() {
+  const presets = useSplicingPresetStore((state) => state.presets)
+  const ensureDefaultPreset = useSplicingPresetStore((state) => state.ensureDefaultPreset)
+
+  return (
+    <PresetLandingPage
+      title="Image Splicing"
+      routeBase="/splicing"
+      presets={presets}
+      ensureDefaultPreset={ensureDefaultPreset}
+    />
+  )
+}
+
+export function SplicingWorkPage({ presetId }: { presetId: string }) {
+  const presets = useSplicingPresetStore((state) => state.presets)
+  const activePresetId = useSplicingPresetStore((state) => state.activePresetId)
+  const applyPreset = useSplicingPresetStore((state) => state.applyPreset)
+  const setPresetViewMode = useSplicingPresetStore((state) => state.setPresetViewMode)
+  const workspaceState = { activePresetId, presetCount: presets.length }
+
+  return (
+    <PresetWorkPage
+      title="Image Splicing"
+      routeBase="/splicing"
+      presetId={presetId}
+      presets={presets}
+      workspaceState={workspaceState}
+      applyPreset={applyPreset}
+      setPresetViewMode={setPresetViewMode}
+    />
+  )
+}
+
+export function SplitterLandingPage() {
+  const presets = useSplitterPresetStore((state) => state.presets)
+  const ensureDefaultPreset = useSplitterPresetStore((state) => state.ensureDefaultPreset)
+
+  return (
+    <PresetLandingPage
+      title="Image Splitter"
+      routeBase="/splitter"
+      presets={presets}
+      ensureDefaultPreset={ensureDefaultPreset}
+    />
+  )
+}
+
+export function SplitterWorkPage({ presetId }: { presetId: string }) {
+  const presets = useSplitterPresetStore((state) => state.presets)
+  const activePresetId = useSplitterPresetStore((state) => state.activePresetId)
+  const applyPreset = useSplitterPresetStore((state) => state.applyPreset)
+  const setPresetViewMode = useSplitterPresetStore((state) => state.setPresetViewMode)
+  const workspaceState = { activePresetId, presetCount: presets.length }
+
+  return (
+    <PresetWorkPage
+      title="Image Splitter"
+      routeBase="/splitter"
+      presetId={presetId}
+      presets={presets}
+      workspaceState={workspaceState}
+      applyPreset={applyPreset}
+      setPresetViewMode={setPresetViewMode}
+    />
+  )
+}
+
+export function PatternLandingPage() {
+  const presets = usePatternPresetStore((state) => state.presets)
+  const ensureDefaultPreset = usePatternPresetStore((state) => state.ensureDefaultPreset)
+
+  return (
+    <PresetLandingPage
+      title="Pattern Generator"
+      routeBase="/pattern-generator"
+      presets={presets}
+      ensureDefaultPreset={ensureDefaultPreset}
+    />
+  )
+}
+
+export function PatternWorkPage({ presetId }: { presetId: string }) {
+  const presets = usePatternPresetStore((state) => state.presets)
+  const activePresetId = usePatternPresetStore((state) => state.activePresetId)
+  const applyPreset = usePatternPresetStore((state) => state.applyPreset)
+  const setPresetViewMode = usePatternPresetStore((state) => state.setPresetViewMode)
+  const workspaceState = { activePresetId, presetCount: presets.length }
+
+  return (
+    <PresetWorkPage
+      title="Pattern Generator"
+      routeBase="/pattern-generator"
+      presetId={presetId}
+      presets={presets}
+      workspaceState={workspaceState}
+      applyPreset={applyPreset}
+      setPresetViewMode={setPresetViewMode}
+    />
+  )
+}

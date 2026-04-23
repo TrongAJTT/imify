@@ -1,10 +1,5 @@
-import { FeaturePlaceholderPage } from "@/components/layout/feature-placeholder-page"
+import { SplicingLandingPage } from "@/features/wave3/wave3-pages"
 
 export default function SplicingPage() {
-  return (
-    <FeaturePlaceholderPage
-      title="Image Splicing"
-      description="Splicing preset and work routes will be integrated in Phase 4.4."
-    />
-  )
+  return <SplicingLandingPage />
 }

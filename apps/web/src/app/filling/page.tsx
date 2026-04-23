@@ -1,10 +1,5 @@
-import { FeaturePlaceholderPage } from "@/components/layout/feature-placeholder-page"
+import { FillingHomePage } from "@/features/filling/filling-pages"
 
 export default function FillingPage() {
-  return (
-    <FeaturePlaceholderPage
-      title="Image Filling"
-      description="Template selection and fill/edit workflows will be added in Phase 4.4."
-    />
-  )
+  return <FillingHomePage routeBase="/filling" />
 }

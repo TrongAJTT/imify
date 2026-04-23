@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { FeaturePlaceholderPage } from "@/components/layout/feature-placeholder-page"
+import { FillingFlowPage } from "@/features/filling/filling-pages"
 import { getRouteId } from "@/features/routing/route-id"
 
 interface FillPageProps {
@@ -10,10 +10,5 @@ export default async function FillingFillPage({ searchParams }: FillPageProps) {
   const id = getRouteId(await searchParams)
   if (!id) notFound()
 
-  return (
-    <FeaturePlaceholderPage
-      title="Filling Fill Workspace"
-      description={`Loaded template id "${id}". Filling route migration continues in Wave 4.`}
-    />
-  )
+  return <FillingFlowPage mode="fill" templateId={id} routeBase="/filling" />
 }

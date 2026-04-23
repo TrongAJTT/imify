@@ -1,10 +1,5 @@
-import { FeaturePlaceholderPage } from "@/components/layout/feature-placeholder-page"
+import { ProcessorLandingPage } from "@/features/processor/processor-pages"
 
 export default function BatchProcessorPage() {
-  return (
-    <FeaturePlaceholderPage
-      title="Batch Processor"
-      description="Batch preset flow and workspace pages will be ported in the next phase."
-    />
-  )
+  return <ProcessorLandingPage context="batch" />
 }

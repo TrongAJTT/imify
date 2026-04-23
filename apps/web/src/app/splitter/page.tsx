@@ -1,10 +1,5 @@
-import { FeaturePlaceholderPage } from "@/components/layout/feature-placeholder-page"
+import { SplitterLandingPage } from "@/features/wave3/wave3-pages"
 
 export default function SplitterPage() {
-  return (
-    <FeaturePlaceholderPage
-      title="Image Splitter"
-      description="Splitter presets and workspace routing are queued for Phase 4.4."
-    />
-  )
+  return <SplitterLandingPage />
 }

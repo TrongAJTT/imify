@@ -1,10 +1,5 @@
-import { FeaturePlaceholderPage } from "@/components/layout/feature-placeholder-page"
+import { PatternLandingPage } from "@/features/wave3/wave3-pages"
 
 export default function PatternGeneratorPage() {
-  return (
-    <FeaturePlaceholderPage
-      title="Pattern Generator"
-      description="Pattern preset selection and workspace pages are coming in Phase 4.4."
-    />
-  )
+  return <PatternLandingPage />
 }

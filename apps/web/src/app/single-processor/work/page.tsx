@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { FeaturePlaceholderPage } from "@/components/layout/feature-placeholder-page"
+import { ProcessorWorkPage } from "@/features/processor/processor-pages"
 import { getRouteId } from "@/features/routing/route-id"
 
 interface WorkPageProps {
@@ -10,10 +10,5 @@ export default async function SingleProcessorWorkPage({ searchParams }: WorkPage
   const id = getRouteId(await searchParams)
   if (!id) notFound()
 
-  return (
-    <FeaturePlaceholderPage
-      title="Single Processor Workspace"
-      description={`Loaded preset id "${id}". Full workspace port is in progress for Wave 2.`}
-    />
-  )
+  return <ProcessorWorkPage context="single" presetId={id} />
 }
