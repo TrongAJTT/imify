@@ -6,25 +6,25 @@
  */
 
 // Types & constants
-export * from "../../../src/core/types"
-export * from "../../../src/core/config"
-export * from "../../../src/core/format-config"
-export * from "../../../src/core/paper-constants"
+export * from "../../../apps/extension/src/core/types"
+export * from "../../../apps/extension/src/core/config"
+export * from "../../../apps/extension/src/core/format-config"
+export * from "../../../apps/extension/src/core/paper-constants"
 
 // Codec options
-export * from "../../../src/core/codec-options"
-export * from "../../../src/core/avif-options"
-export * from "../../../src/core/jxl-options"
+export * from "../../../apps/extension/src/core/codec-options"
+export * from "../../../apps/extension/src/core/avif-options"
+export * from "../../../apps/extension/src/core/jxl-options"
 
 // Utilities
-export * from "../../../src/core/app-metadata"
-export * from "../../../src/core/browser-detection"
-export * from "../../../src/core/image-utils"
-export * from "../../../src/core/download-utils"
-export * from "../../../src/core/error-utils"
-export * from "../../../src/core/resize-resampling"
-export * from "../../../src/core/indexed-db"
-export * from "../../../src/core/context-menu-order"
-export * from "../../../src/core/attributions"
-export * from "../../../src/core/storage-adapter"
+export * from "../../../apps/extension/src/core/app-metadata"
+export * from "../../../apps/extension/src/core/browser-detection"
+export * from "../../../apps/extension/src/core/image-utils"
+export * from "../../../apps/extension/src/core/download-utils"
+export * from "../../../apps/extension/src/core/error-utils"
+export * from "../../../apps/extension/src/core/resize-resampling"
+export * from "../../../apps/extension/src/core/indexed-db"
+export * from "../../../apps/extension/src/core/context-menu-order"
+export * from "../../../apps/extension/src/core/attributions"
+export * from "../../../apps/extension/src/core/storage-adapter"
 

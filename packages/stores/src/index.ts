@@ -6,18 +6,18 @@
  */
 
 // Shared stores
-export * from "../../../src/options/stores/batch-store"
-export * from "../../../src/options/stores/diffchecker-store"
-export * from "../../../src/options/stores/filling-store"
-export * from "../../../src/options/stores/inspector-store"
-export * from "../../../src/options/stores/pattern-preset-store"
-export * from "../../../src/options/stores/pattern-store"
-export * from "../../../src/options/stores/splicing-preset-store"
-export * from "../../../src/options/stores/splicing-store"
-export * from "../../../src/options/stores/splitter-preset-store"
-export * from "../../../src/options/stores/splitter-store"
-export * from "../../../src/options/stores/watermark-store"
+export * from "../../../apps/extension/src/options/stores/batch-store"
+export * from "../../../apps/extension/src/options/stores/diffchecker-store"
+export * from "../../../apps/extension/src/options/stores/filling-store"
+export * from "../../../apps/extension/src/options/stores/inspector-store"
+export * from "../../../apps/extension/src/options/stores/pattern-preset-store"
+export * from "../../../apps/extension/src/options/stores/pattern-store"
+export * from "../../../apps/extension/src/options/stores/splicing-preset-store"
+export * from "../../../apps/extension/src/options/stores/splicing-store"
+export * from "../../../apps/extension/src/options/stores/splitter-preset-store"
+export * from "../../../apps/extension/src/options/stores/splitter-store"
+export * from "../../../apps/extension/src/options/stores/watermark-store"
 
 // Shortcuts
-export * from "../../../src/options/hooks/use-shortcut-preferences"
-export * from "../../../src/options/shared/shortcuts"
+export * from "../../../apps/extension/src/options/hooks/use-shortcut-preferences"
+export * from "../../../apps/extension/src/options/shared/shortcuts"

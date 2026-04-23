@@ -6,8 +6,8 @@
  */
 
 // Main conversion pipeline
-export * from "../../../src/features/converter/index"
+export * from "../../../apps/extension/src/features/converter/index"
 
 // Image decode/render pipeline
-export * from "../../../src/features/image-pipeline/decode-image-data"
-export * from "../../../src/features/image-pipeline/render-image-data"
+export * from "../../../apps/extension/src/features/image-pipeline/decode-image-data"
+export * from "../../../apps/extension/src/features/image-pipeline/render-image-data"

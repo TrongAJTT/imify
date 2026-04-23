@@ -1,0 +1,121 @@
+{
+  "name": "@imify/extension",
+  "displayName": "Imify - Powerful Image Toolkit",
+  "version": "2.0.0",
+  "versionType": "Dev",
+  "description": "A privacy-first, powerful image toolkit. Save image directly from your context menu, and even more. Supports ICO, AVIF, JPEG XL.",
+  "author": "TrongAJTT <trong.ajtt.dev@gmail.com>",
+  "scripts": {
+    "sync:wasm": "node scripts/sync-wasm.mjs",
+    "predev": "pnpm sync:wasm",
+    "dev": "plasmo dev",
+    "dev:chrome": "plasmo dev --target=chrome-mv3",
+    "dev:firefox": "plasmo dev --target=firefox-mv3",
+    "prebuild": "pnpm sync:wasm",
+    "build": "plasmo build",
+    "build:ci": "pnpm build:chrome && pnpm build:firefox && pnpm verify:manifests",
+    "build:chrome": "plasmo build --target=chrome-mv3",
+    "build:firefox": "plasmo build --target=firefox-mv3 && node scripts/sanitize-firefox-manifest.mjs",
+    "prepackage": "pnpm sync:wasm",
+    "package": "plasmo package",
+    "package:chrome": "plasmo build --target=chrome-mv3 --zip",
+    "package:firefox": "pnpm build:firefox && node scripts/zip-firefox-build.mjs",
+    "verify:manifests": "node scripts/verify-target-manifests.mjs",
+    "sync:avif-wasm": "node scripts/sync-avif-wasm.mjs",
+    "sync:jxl-wasm": "node scripts/sync-jxl-wasm.mjs",
+    "sync:mozjpeg-wasm": "node scripts/sync-mozjpeg-wasm.mjs",
+    "sync:oxipng-wasm": "node scripts/sync-oxipng-wasm.mjs",
+    "sync:webp-wasm": "node scripts/sync-webp-wasm.mjs",
+    "sync:resize-wasm": "node scripts/sync-resize-wasm.mjs"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@jsquash/oxipng": "^2.3.0",
+    "@plasmohq/storage": "^1.15.0",
+    "@radix-ui/react-collapsible": "^1.1.12",
+    "@radix-ui/react-popover": "^1.1.15",
+    "ag-psd": "^30.1.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "fflate": "^0.8.2",
+    "idb": "^8.0.3",
+    "image-q": "^4.0.0",
+    "konva": "^10.2.5",
+    "lucide-react": "^0.577.0",
+    "pdf-lib": "^1.17.1",
+    "perfect-freehand": "^1.2.3",
+    "plasmo": "0.90.5",
+    "react": "18.2.0",
+    "react-colorful": "^5.6.1",
+    "react-dom": "18.2.0",
+    "react-konva": "^18.2.14",
+    "tailwind-merge": "^3.5.0",
+    "upng-js": "^2.1.0",
+    "utif": "^3.1.0",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@jsquash/avif": "^2.1.1",
+    "@jsquash/jpeg": "^1.6.0",
+    "@jsquash/jxl": "^1.3.0",
+    "@jsquash/resize": "^2.1.1",
+    "@jsquash/webp": "^1.5.0",
+    "@types/chrome": "0.0.258",
+    "@types/node": "20.11.5",
+    "@types/react": "18.2.48",
+    "@types/react-dom": "18.2.18",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "prettier": "3.2.4",
+    "tailwindcss": "^3.4.19",
+    "turbo": "latest",
+    "typescript": "5.3.3"
+  },
+  "manifest": {
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "imify@trongajtt.com",
+        "strict_min_version": "109.0",
+        "data_collection_permissions": {
+          "required": [
+            "none"
+          ]
+        }
+      }
+    },
+    "permissions": [
+      "contextMenus",
+      "downloads",
+      "offscreen",
+      "sidePanel",
+      "storage"
+    ],
+    "action": {
+      "default_popup": "options.html?view=popup"
+    },
+    "side_panel": {
+      "default_path": "options.html?view=sidepanel"
+    },
+    "host_permissions": [
+      "http://*/*",
+      "https://*/*"
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "assets/wasm/*"
+        ],
+        "matches": [
+          "http://*/*",
+          "https://*/*"
+        ]
+      }
+    ],
+    "content_security_policy": {
+      "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+    }
+  }
+}
