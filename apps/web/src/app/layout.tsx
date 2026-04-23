@@ -3,7 +3,7 @@ import "./globals.css"
 import { AppProviders } from "./app-providers"
 import { WebFooter } from "@/components/layout/web-footer"
 import { WebHeader } from "@/components/layout/web-header"
-import { WorkspaceShell } from "@/components/layout/workspace-shell"
+import { WorkspaceLayout } from "@/components/layout/workspace-layout"
 
 export const metadata: Metadata = {
   title: "Imify Web",
@@ -20,7 +20,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <AppProviders>
           <WebHeader />
-          <WorkspaceShell>{children}</WorkspaceShell>
+          <WorkspaceLayout>{children}</WorkspaceLayout>
           <WebFooter />
         </AppProviders>
       </body>

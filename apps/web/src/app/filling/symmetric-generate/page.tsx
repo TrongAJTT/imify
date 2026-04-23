@@ -1,3 +1,4 @@
+/**
 import { notFound } from "next/navigation"
 import { FillingFlowPage } from "@/features/filling/filling-pages"
 import { getRouteId } from "@/features/routing/route-id"
@@ -11,4 +12,11 @@ export default async function FillingSymmetricGeneratePage({ searchParams }: Sym
   if (!id) notFound()
 
   return <FillingFlowPage mode="symmetric-generate" templateId={id} routeBase="/filling" />
+}
+ */
+
+import { FillingDisabledState } from "@/features/filling/filling-disabled-state"
+
+export default function FillingSymmetricGeneratePage() {
+  return <FillingDisabledState />
 }

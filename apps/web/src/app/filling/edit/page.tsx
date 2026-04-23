@@ -1,3 +1,4 @@
+/**
 import { notFound } from "next/navigation"
 import { FillingFlowPage } from "@/features/filling/filling-pages"
 import { getRouteId } from "@/features/routing/route-id"
@@ -11,4 +12,11 @@ export default async function FillingEditPage({ searchParams }: EditPageProps) {
   if (!id) notFound()
 
   return <FillingFlowPage mode="edit" templateId={id} routeBase="/filling" />
+}
+ */
+
+import { FillingDisabledState } from "@/features/filling/filling-disabled-state"
+
+export default function FillingEditPage() {
+  return <FillingDisabledState />
 }
