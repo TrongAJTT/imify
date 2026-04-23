@@ -16,7 +16,7 @@ import { buildSmartOutputFileName, readImageDimensions } from "@/options/compone
 import { downloadWithFilename, formatBytes, withBatchResize } from "@/options/components/batch/utils"
 import { consumePendingInspectorOptimizeFile } from "@/options/shared/inspector-optimize-bridge"
 import { buildActiveCodecOptionsForTarget } from "@/options/shared/target-format-state"
-import { PixelCompareWorkspace } from "@/options/components/diffchecker/pixel-compare-workspace"
+import { PixelCompareWorkspace } from "@imify/features/diffchecker/pixel-compare-workspace"
 import { Button } from "@imify/ui/ui/button"
 import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
 import { Heading, MutedText } from "@imify/ui/ui/typography"
