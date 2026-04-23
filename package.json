@@ -26,7 +26,14 @@
     "sync:mozjpeg-wasm": "node scripts/sync-mozjpeg-wasm.mjs",
     "sync:oxipng-wasm": "node scripts/sync-oxipng-wasm.mjs",
     "sync:webp-wasm": "node scripts/sync-webp-wasm.mjs",
-    "sync:resize-wasm": "node scripts/sync-resize-wasm.mjs"
+    "sync:resize-wasm": "node scripts/sync-resize-wasm.mjs",
+    "--- monorepo ---": "---",
+    "workspace:dev:web": "pnpm --filter @imify/web dev",
+    "workspace:build:web": "pnpm --filter @imify/web build",
+    "workspace:build:all": "turbo build",
+    "workspace:typecheck": "turbo typecheck",
+    "workspace:lint": "turbo lint",
+    "workspace:clean": "turbo clean"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -71,6 +78,7 @@
     "postcss": "^8.5.8",
     "prettier": "3.2.4",
     "tailwindcss": "^3.4.19",
+    "turbo": "latest",
     "typescript": "5.3.3"
   },
   "manifest": {
