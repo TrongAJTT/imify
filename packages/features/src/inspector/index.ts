@@ -27,6 +27,11 @@ export {
   buildPaletteCssVariables,
   buildOptimizedDataUri
 } from "./developer-utils"
+export * from "./display-accordion"
+export * from "./metadata-accordion"
+export * from "./information-accordion"
+export * from "./inspector-sidebar-panel"
+export * from "./inspector-drop-zone"
 export type {
   InspectorResult,
   InspectorImageData,

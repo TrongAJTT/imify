@@ -1,21 +1,20 @@
 "use client"
 
 import { SharedInspectorPage } from "@imify/features/inspector/inspector-page"
+import { InspectorDropZone, InspectorSidebarPanel } from "@imify/features/inspector"
+import { useMemo } from "react"
+import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 
 export function InspectorPage() {
+  const sidebar = useMemo(() => <InspectorSidebarPanel />, [])
+  useWorkspaceSidebar(sidebar)
+
   return (
     <SharedInspectorPage
+      containerClassName="p-4"
       renderWorkspace={(props) => (
         <div className="space-y-4">
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Paste or choose an image to inspect metadata, palette and dimensions.
-          </p>
-          {!props.file ? (
-            <label className="block rounded-md border border-slate-300 p-3 text-sm">
-              Select image
-              <input type="file" accept="image/*" className="mt-2 block w-full text-xs" onChange={(e) => e.target.files?.[0] && void props.onLoadFile(e.target.files[0])} />
-            </label>
-          ) : null}
+          {!props.file && !props.isAnalyzing && !props.error ? <InspectorDropZone onLoadFile={(file) => { void props.onLoadFile(file) }} /> : null}
           {props.isAnalyzing ? <p className="text-sm text-sky-600">Analyzing image...</p> : null}
           {props.error ? <p className="text-sm text-red-600">{props.error}</p> : null}
           {props.result?.basic ? (
