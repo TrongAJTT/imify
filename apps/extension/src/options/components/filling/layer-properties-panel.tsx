@@ -1,6 +1,6 @@
-import type { VectorLayer } from "@/features/filling/types"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { TextInput } from "@/options/components/ui/text-input"
+import type { VectorLayer } from "@imify/features/filling/types"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { TextInput } from "@imify/ui/ui/text-input"
 import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 interface LayerPropertiesPanelProps {

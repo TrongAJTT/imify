@@ -5,11 +5,11 @@ import type {
   ResizeMode,
   ResizeResamplingAlgorithm,
   SupportedDPI
-} from "@/core/types"
+} from "@imify/core/types"
 import {
   DEFAULT_RESAMPLING_ALGORITHM,
   normalizeResizeResamplingAlgorithm
-} from "@/core/resize-resampling"
+} from "@imify/core/resize-resampling"
 
 export const PAPER_OPTIONS: PaperSize[] = ["A3", "A4", "A5", "B5", "Letter", "Legal"]
 export const DPI_OPTIONS: SupportedDPI[] = [72, 150, 300]

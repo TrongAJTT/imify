@@ -7,16 +7,16 @@ import type {
   LayerGroup,
   VectorLayer,
   ShapeType,
-} from "@/features/filling/types"
-import { generateId } from "@/features/filling/types"
-import { generateShapePoints, regenerateLayerShapePoints } from "@/features/filling/shape-generators"
-import { getBoundingBox } from "@/features/filling/vector-math"
+} from "@imify/features/filling/types"
+import { generateId } from "@imify/features/filling/types"
+import { generateShapePoints, regenerateLayerShapePoints } from "@imify/features/filling/shape-generators"
+import { getBoundingBox } from "@imify/features/filling/vector-math"
 import { CanvasSizeDialog } from "@/options/components/filling/canvas-size-dialog"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { ResizableAccordionCard } from "@/options/components/ui/resizable-accordion-card"
-import { Button } from "@/options/components/ui/button"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { SelectInput } from "@/options/components/ui/select-input"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { ResizableAccordionCard } from "@imify/ui/ui/resizable-accordion-card"
+import { Button } from "@imify/ui/ui/button"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { SelectInput } from "@imify/ui/ui/select-input"
 import { LayerListPanel } from "@/options/components/filling/layer-list-panel"
 import { LayerPropertiesPanel } from "@/options/components/filling/layer-properties-panel"
 import { ShapePickerDialog } from "@/options/components/filling/shape-picker-dialog"
@@ -24,7 +24,7 @@ import { GroupLayerPanel } from "@/options/components/filling/group-layer-panel"
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem
-} from "@/options/components/ui/workspace-config-sidebar-panel"
+} from "@imify/ui/ui/workspace-config-sidebar-panel"
 
 interface ManualEditorSidebarProps {
   layers: VectorLayer[]

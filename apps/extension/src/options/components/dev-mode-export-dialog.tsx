@@ -1,13 +1,13 @@
 import { useState, useMemo } from "react"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { Button } from "@/options/components/ui/button"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
+import { Button } from "@imify/ui/ui/button"
 import { Check } from "lucide-react"
-import { buildDebugLog, downloadDebugLog } from "@/features/dev-mode/debug-log-builder"
+import { buildDebugLog, downloadDebugLog } from "@imify/features/dev-mode/debug-log-builder"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type { WorkspaceLayoutPreferences } from "@/options/shared/layout-preferences"
 import type { OptionsTab } from "@/options/shared"
 
-import { DEV_MODE_FEATURES } from "@/features/dev-mode/dev-mode-registry"
+import { DEV_MODE_FEATURES } from "@imify/features/dev-mode/dev-mode-registry"
 
 interface DevModeExportDialogProps {
   isOpen: boolean

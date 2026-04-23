@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo } from "react"
 
 import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrumb"
 import { SplitterPresetSelectView } from "@/options/components/splitter/splitter-preset-select-view"
-import type { SplitterPresetConfig } from "@/features/splitter/types"
+import type { SplitterPresetConfig } from "@imify/features/splitter/types"
 import {
   cloneSplitterPresetConfig,
   useSplitterPresetStore
-} from "@/options/stores/splitter-preset-store"
-import { useSplitterStore } from "@/options/stores/splitter-store"
-import { useWorkspaceHeaderStore } from "@/options/stores/workspace-header-store"
+} from "@imify/stores/stores/splitter-preset-store"
+import { useSplitterStore } from "@imify/stores/stores/splitter-store"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 
 interface SplitterWorkspaceShellProps {
   workspace: React.ReactNode

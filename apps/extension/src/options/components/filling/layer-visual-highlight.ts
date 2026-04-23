@@ -1,4 +1,4 @@
-import type { FillCustomizationTab } from "@/options/stores/fill-ui-store"
+import type { FillCustomizationTab } from "@imify/stores/stores/fill-ui-store"
 
 export type LayerContainerHighlightMode = "none" | "missing" | "focus"
 

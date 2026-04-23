@@ -1,7 +1,7 @@
 import { ChevronDown, Download, FileText, Files, Save } from "lucide-react"
 
-import { Button } from "@/options/components/ui/button"
-import { ControlledPopover } from "@/options/components/ui/controlled-popover"
+import { Button } from "@imify/ui/ui/button"
+import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
 
 export type ExportSplitMode = "zip" | "one_by_one" | "pdf" | "individual_pdf"
 

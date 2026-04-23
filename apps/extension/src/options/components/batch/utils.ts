@@ -1,5 +1,5 @@
-import { toOutputFilename } from "@/core/download-utils"
-import { APP_CONFIG } from "@/core/config"
+import { toOutputFilename } from "@imify/core/download-utils"
+import { APP_CONFIG } from "@imify/core/config"
 import type {
   ConversionProgressPayload,
   FormatCodecOptions,
@@ -8,7 +8,7 @@ import type {
   ResizeConfig,
   ResizeResamplingAlgorithm,
   SupportedDPI
-} from "@/core/types"
+} from "@imify/core/types"
 import type { BatchFormatOptions, BatchResizeMode } from "@/options/components/batch/types"
 import { buildResizeOverrideFromState } from "@/options/shared/resize-state"
 import { resolveEffectiveTargetFormat } from "@/options/shared/target-format-options"

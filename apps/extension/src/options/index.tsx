@@ -1,21 +1,22 @@
-﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
+// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import "@/style.css"
+
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useRef, useState, useEffect, useCallback } from "react"
-import { Button } from "@/options/components/ui/button"
+import { Button } from "@imify/ui/ui/button"
 import { PopupApp } from "@/popup/popup-app"
 import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
 import SidepanelAuditSnapshotApp from "@/sidepanel/sidepanel-audit-snapshot-app"
 
-import { toUserFacingConversionError } from "@/core/error-utils"
+import { toUserFacingConversionError } from "@imify/core/error-utils"
 import { type ExtensionStorageState,
-  STORAGE_KEY, STORAGE_VERSION } from "@/core/types"
-import { convertImageWithWorker } from "@/features/converter/conversion-worker-pool"
+  STORAGE_KEY, STORAGE_VERSION } from "@imify/core/types"
+import { convertImageWithWorker } from "@imify/engine/converter/conversion-worker-pool"
 import { OFFSCREEN_CONVERT_REQUEST,
   type OffscreenConvertRequest, type OffscreenConvertResponse } from "@/background/offscreen-types"
-import { CUSTOM_FORMATS } from "@/core/format-config"
-import { DEFAULT_STORAGE_STATE } from "@/features/settings"
+import { CUSTOM_FORMATS } from "@imify/core/format-config"
+import { DEFAULT_STORAGE_STATE } from "@imify/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
 import { SplicingTab } from "@/options/components/splicing/splicing-tab"
 import { SplicingSidebarShell } from "@/options/components/splicing/splicing-sidebar-shell"
@@ -53,8 +54,8 @@ import {
   PERFORMANCE_PREFERENCES_KEY
 } from "@/options/shared/performance-preferences"
 import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
-import { useBatchStore } from "@/options/stores/batch-store"
-import { useSplicingStore } from "@/options/stores/splicing-store"
+import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
 import { Tooltip } from "@/options/components/tooltip"
 import {

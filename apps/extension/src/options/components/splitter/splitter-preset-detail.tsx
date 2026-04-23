@@ -1,4 +1,4 @@
-import type { SavedSplitterPreset } from "@/options/stores/splitter-preset-store"
+import type { SavedSplitterPreset } from "@imify/stores/stores/splitter-preset-store"
 
 interface SplitterPresetDetailProps {
   preset: SavedSplitterPreset

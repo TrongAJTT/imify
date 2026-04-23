@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react"
 import { Check, Edit2, Pin, PinOff, Plus, Trash2 } from "lucide-react"
 
-import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
+import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
 import { WorkspaceSelectHeader } from "@/options/components/shared/workspace-select-header"
 import { SavePresetDialog } from "@/options/components/batch/save-preset-dialog"
 import { PatternPresetDetail } from "@/options/components/pattern/pattern-preset-detail"
-import type { SavedPatternPreset } from "@/options/stores/pattern-preset-store"
+import type { SavedPatternPreset } from "@imify/stores/stores/pattern-preset-store"
 import { PRESET_HIGHLIGHT_COLORS } from "@/options/shared/preset-colors"
 
 interface PatternPresetSelectViewProps {

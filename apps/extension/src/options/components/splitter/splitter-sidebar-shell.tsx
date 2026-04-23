@@ -1,7 +1,7 @@
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
+import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
 import { SplitterPresetInfoPanel } from "@/options/components/splitter/splitter-preset-info-panel"
 import { SplitterSidebarPanel } from "@/options/components/splitter/splitter-sidebar-panel"
-import { useSplitterPresetStore } from "@/options/stores/splitter-preset-store"
+import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
 
 interface SplitterSidebarShellProps {
   enableWideSidebarGrid?: boolean

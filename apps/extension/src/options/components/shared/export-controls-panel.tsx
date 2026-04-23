@@ -1,8 +1,8 @@
 import { FileEdit } from "lucide-react"
 import type { ReactNode } from "react"
 import { ConcurrencySelector } from "@/options/components/shared/concurrency-selector"
-import SidebarCard from "@/options/components/ui/sidebar-card"
-import type { ImageFormat } from "@/core/types"
+import SidebarCard from "@imify/ui/ui/sidebar-card"
+import type { ImageFormat } from "@imify/core/types"
 
 interface ExportControlsPanelProps {
   /** Format being exported (for concurrency limits) */

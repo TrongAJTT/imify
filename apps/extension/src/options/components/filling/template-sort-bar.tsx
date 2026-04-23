@@ -1,6 +1,6 @@
-import { useFillingStore } from "@/options/stores/filling-store"
-import { SelectInput } from "@/options/components/ui/select-input"
-import type { TemplateSortMode } from "@/features/filling/types"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import type { TemplateSortMode } from "@imify/features/filling/types"
 
 const SORT_OPTIONS: Array<{ value: TemplateSortMode; label: string }> = [
   { value: "usage_count", label: "Most used" },

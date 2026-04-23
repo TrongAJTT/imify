@@ -3,15 +3,15 @@ import type {
   DiffAlignAnchor,
   DiffAlignMode,
   DiffViewMode
-} from "@/features/diffchecker/types"
-import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
+} from "@imify/features/diffchecker/types"
+import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { ViewModeAccordion } from "@/options/components/diffchecker/view-mode-accordion"
 import { ComparisonAccordion } from "@/options/components/diffchecker/comparison-accordion"
 import { AlignmentAccordion } from "@/options/components/diffchecker/alignment-accordion"
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem
-} from "@/options/components/ui/workspace-config-sidebar-panel"
+} from "@imify/ui/ui/workspace-config-sidebar-panel"
 
 interface DiffcheckerSidebarPanelProps {
   enableWideSidebarGrid?: boolean

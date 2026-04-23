@@ -1,9 +1,9 @@
 import { Sparkles, Layers, Scissors } from "lucide-react"
 
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { SelectInput } from "@/options/components/ui/select-input"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { SelectInput } from "@imify/ui/ui/select-input"
 import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 
 export interface AvifAdvancedSettingsCardProps {

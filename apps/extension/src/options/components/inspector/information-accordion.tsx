@@ -1,6 +1,6 @@
 import { Info } from "lucide-react"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { MutedText } from "@/options/components/ui/typography"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { MutedText } from "@imify/ui/ui/typography"
 
 interface InformationAccordionProps {}
 

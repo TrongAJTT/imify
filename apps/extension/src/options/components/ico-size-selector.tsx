@@ -1,6 +1,6 @@
-import { ICO_SIZE_OPTIONS } from "@/core/format-config"
-import { LabelText } from "@/options/components/ui/typography"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import { ICO_SIZE_OPTIONS } from "@imify/core/format-config"
+import { LabelText } from "@imify/ui/ui/typography"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { Gift, Sparkles } from "lucide-react"
 import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 

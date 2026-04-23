@@ -7,12 +7,12 @@ import type {
   FillingTemplate,
   ShapeAppearanceOrder,
   SymmetricParams,
-} from "@/features/filling/types"
-import { DEFAULT_SYMMETRIC_PARAMS } from "@/features/filling/types"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { SelectInput } from "@/options/components/ui/select-input"
+} from "@imify/features/filling/types"
+import { DEFAULT_SYMMETRIC_PARAMS } from "@imify/features/filling/types"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { SelectInput } from "@imify/ui/ui/select-input"
 import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 const AXIS_DIR_OPTIONS = [

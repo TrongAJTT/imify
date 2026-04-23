@@ -1,6 +1,6 @@
 import { ImagePlus } from "lucide-react"
 
-import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
+import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
 
 interface SidepanelDropInputCardProps {
   selectedFileName: string | null

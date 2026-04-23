@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
-import type { LayerGroup, VectorLayer } from "@/features/filling/types"
-import { regenerateLayerShapePoints } from "@/features/filling/shape-generators"
+import type { LayerGroup, VectorLayer } from "@imify/features/filling/types"
+import { regenerateLayerShapePoints } from "@imify/features/filling/shape-generators"
 
 interface EditorContextValue {
   editorLayers: VectorLayer[]

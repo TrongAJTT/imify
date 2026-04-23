@@ -1,5 +1,5 @@
 import { Globe, Layers, LayoutTemplate } from "lucide-react"
-import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"
+import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@imify/core/types"
 import { GlobalFormatsTab } from "@/options/components/context-menu/global-formats-tab"
 import { CustomFormatsTab } from "@/options/components/context-menu/custom-formats-tab"
 import { MenuPreviewTab } from "@/options/components/context-menu/menu-preview-tab"

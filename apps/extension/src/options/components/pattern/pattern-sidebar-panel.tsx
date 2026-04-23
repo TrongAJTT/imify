@@ -1,7 +1,7 @@
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
-} from "@/options/components/ui/workspace-config-sidebar-panel"
+} from "@imify/ui/ui/workspace-config-sidebar-panel"
 import { PatternAssetSettingsAccordion } from "@/options/components/pattern/pattern-asset-settings-accordion"
 import { PatternAssetsAccordion } from "@/options/components/pattern/pattern-assets-accordion"
 import { PatternBoundaryAccordion } from "@/options/components/pattern/pattern-boundary-accordion"

@@ -2,7 +2,7 @@ import {
   RenamePatternDialog,
   BATCH_RENAME_PRESETS,
   BATCH_RENAME_TAGS
-} from "@/options/components/ui/rename-pattern-dialog"
+} from "@imify/ui/ui/rename-pattern-dialog"
 
 export interface BatchRenameDialogProps {
   isOpen: boolean

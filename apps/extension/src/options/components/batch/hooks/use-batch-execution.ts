@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react"
 
-import { toUserFacingConversionError } from "@/core/error-utils"
-import type { ConversionProgressPayload, FormatConfig } from "@/core/types"
-import { applyExifPolicy } from "@/features/converter/exif"
-import { convertImage } from "@/features/converter"
-import { setConversionWorkerPoolSize, terminateConversionWorkerPool } from "@/features/converter/conversion-worker-pool"
+import { toUserFacingConversionError } from "@imify/core/error-utils"
+import type { ConversionProgressPayload, FormatConfig } from "@imify/core/types"
+import { applyExifPolicy } from "@imify/engine/converter/exif"
+import { convertImage } from "@imify/engine/converter"
+import { setConversionWorkerPoolSize, terminateConversionWorkerPool } from "@imify/engine/converter/conversion-worker-pool"
 import type {
   BatchQueueItem,
   BatchRunMode,

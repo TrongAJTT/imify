@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react"
 import { Database, Search, ShieldAlert, ChevronDown, ChevronUp } from "lucide-react"
-import type { ExifEntry, ExifGroup } from "@/features/inspector"
-import { SENSITIVE_TAGS } from "@/features/inspector/exif-tags"
+import type { ExifEntry, ExifGroup } from "@imify/features/inspector"
+import { SENSITIVE_TAGS } from "@imify/features/inspector/exif-tags"
 import { InfoSection } from "./info-section"
-import { useInspectorStore } from "@/options/stores/inspector-store"
+import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 
 interface ExifTableCardProps {
   entries: ExifEntry[]

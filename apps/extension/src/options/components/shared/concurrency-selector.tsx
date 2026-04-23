@@ -1,12 +1,12 @@
 import { HelpCircle, Lock } from "lucide-react"
 import { useEffect, type ReactNode } from "react"
 
-import type { ImageFormat } from "@/core/types"
-import { NumberInput } from "@/options/components/ui/number-input"
+import type { ImageFormat } from "@imify/core/types"
+import { NumberInput } from "@imify/ui/ui/number-input"
 import { Tooltip } from "@/options/components/tooltip"
-import { Button } from "@/options/components/ui/button"
-import { ControlledPopover } from "@/options/components/ui/controlled-popover"
-import { LabelText } from "@/options/components/ui/typography"
+import { Button } from "@imify/ui/ui/button"
+import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
+import { LabelText } from "@imify/ui/ui/typography"
 import {
   clampConcurrencyValue,
   MAX_CONCURRENCY

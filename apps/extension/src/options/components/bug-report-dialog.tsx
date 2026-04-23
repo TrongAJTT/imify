@@ -1,8 +1,8 @@
 import React from "react"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { Button } from "@/options/components/ui/button"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
+import { Button } from "@imify/ui/ui/button"
 import { AlertCircle, Bug, CheckCircle2, ExternalLink, Info, ShieldCheck, Terminal, X } from "lucide-react"
-import { Heading, Subheading, BodyText, MutedText, Kicker, LabelText } from "@/options/components/ui/typography"
+import { Heading, Subheading, BodyText, MutedText, Kicker, LabelText } from "@imify/ui/ui/typography"
 
 // Assets
 import devModeEnableVideo from "url:@assets/features/dev_mode-enable.webm"

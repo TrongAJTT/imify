@@ -1,4 +1,4 @@
-import { ControlledPopover } from "@/options/components/ui/controlled-popover"
+import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
 
 type TooltipProps = {
   content: React.ReactNode

@@ -1,4 +1,4 @@
-import type { FormatCodecOptions } from "@/core/types"
+import type { FormatCodecOptions } from "@imify/core/types"
 
 export type ActiveFormatOptionKey = "bmp" | "jxl" | "webp" | "avif" | "mozjpeg" | "png" | "tiff"
 

@@ -1,6 +1,6 @@
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { useSplicingPresetStore } from "@/options/stores/splicing-preset-store"
+import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
+import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
 import { SplicingPresetInfoPanel } from "@/options/components/splicing/splicing-preset-info-panel"
 import { SplicingSidebarPanel } from "@/options/components/splicing/splicing-sidebar-panel"
 

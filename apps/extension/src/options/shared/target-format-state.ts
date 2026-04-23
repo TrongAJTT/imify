@@ -1,4 +1,4 @@
-import { QUALITY_FORMATS } from "@/core/format-config"
+import { QUALITY_FORMATS } from "@imify/core/format-config"
 import {
   normalizeAvifCodecOptions,
   normalizeBmpColorDepth,
@@ -8,9 +8,9 @@ import {
   normalizePngDitheringLevel,
   normalizeWebpEffort,
   normalizeWebpNearLossless
-} from "@/core/codec-options"
-import { normalizeJxlCodecOptions } from "@/core/jxl-options"
-import type { BmpColorDepth, FormatCodecOptions, ImageFormat, TiffColorMode } from "@/core/types"
+} from "@imify/core/codec-options"
+import { normalizeJxlCodecOptions } from "@imify/core/jxl-options"
+import type { BmpColorDepth, FormatCodecOptions, ImageFormat, TiffColorMode } from "@imify/core/types"
 import type { TargetFormatOptionValue } from "@/options/shared/target-format-options"
 
 export type TargetFormatStateValue = TargetFormatOptionValue

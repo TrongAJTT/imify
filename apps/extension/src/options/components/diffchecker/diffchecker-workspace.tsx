@@ -2,7 +2,7 @@ import type {
   DiffComputeResult,
   DiffImageItem,
   DiffViewMode
-} from "@/features/diffchecker/types"
+} from "@imify/features/diffchecker/types"
 import { DiffStatsBar } from "@/options/components/diffchecker/diff-stats-bar"
 import { ImageDropPair } from "@/options/components/diffchecker/image-drop-pair"
 import { PixelCompareWorkspace } from "@/options/components/diffchecker/pixel-compare-workspace"

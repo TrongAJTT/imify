@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react"
-import { useInspectorStore } from "@/options/stores/inspector-store"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
+import { useInspectorStore } from "@imify/stores/stores/inspector-store"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { InteractivePreview, type PixelSample } from "./interactive-preview"
-import { Kicker } from "../ui/typography"
+import { Kicker } from "@imify/ui"
 
 interface VisualAnalysisDialogProps {
   imageUrl: string

@@ -1,6 +1,6 @@
 import { Layers, PenTool, WandSparkles, Image as ImageIcon } from "lucide-react"
 
-import { MutedText } from "@/options/components/ui/typography"
+import { MutedText } from "@imify/ui/ui/typography"
 
 export function FillingInfoPanel() {
   return (

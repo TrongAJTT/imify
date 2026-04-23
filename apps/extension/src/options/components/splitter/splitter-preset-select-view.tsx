@@ -3,9 +3,9 @@ import { Check, Edit2, Plus, Trash2 } from "lucide-react"
 
 import { SavePresetDialog } from "@/options/components/batch/save-preset-dialog"
 import { WorkspaceSelectHeader } from "@/options/components/shared/workspace-select-header"
-import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
+import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
 import { SplitterPresetDetail } from "@/options/components/splitter/splitter-preset-detail"
-import type { SavedSplitterPreset } from "@/options/stores/splitter-preset-store"
+import type { SavedSplitterPreset } from "@imify/stores/stores/splitter-preset-store"
 import { PRESET_HIGHLIGHT_COLORS } from "@/options/shared/preset-colors"
 
 interface SplitterPresetSelectViewProps {

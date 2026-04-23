@@ -1,10 +1,10 @@
 import { X } from "lucide-react"
 
-import type { ShapeType } from "@/features/filling/types"
-import { SHAPE_CATEGORIES, SHAPE_LABELS, generateShapePoints } from "@/features/filling/shape-generators"
-import { flattenPoints } from "@/features/filling/vector-math"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { Subheading } from "@/options/components/ui/typography"
+import type { ShapeType } from "@imify/features/filling/types"
+import { SHAPE_CATEGORIES, SHAPE_LABELS, generateShapePoints } from "@imify/features/filling/shape-generators"
+import { flattenPoints } from "@imify/features/filling/vector-math"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
+import { Subheading } from "@imify/ui/ui/typography"
 
 interface ShapePickerDialogProps {
   isOpen: boolean

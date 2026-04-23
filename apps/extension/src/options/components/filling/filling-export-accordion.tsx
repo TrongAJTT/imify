@@ -1,10 +1,10 @@
 import { useEffect, useMemo } from "react"
 
-import type { FillingExportFormat } from "@/features/filling/types"
+import type { FillingExportFormat } from "@imify/features/filling/types"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
-import { useFillingStore } from "@/options/stores/filling-store"
-import { buildFillingFormatOptions } from "@/options/stores/filling-format-options"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
+import { buildFillingFormatOptions } from "@imify/stores/stores/filling-format-options"
 import { buildTargetFormatOptions, type TargetFormatOptionValue } from "@/options/shared/target-format-options"
 import {
   buildTargetFormatQualityCardConfig,

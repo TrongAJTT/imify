@@ -1,5 +1,5 @@
 ﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
-import type { ConversionProgressPayload } from "@/core/types"
+import type { ConversionProgressPayload } from "@imify/core/types"
 
 const MESSAGE_TYPE = "CONVERT_PROGRESS"
 

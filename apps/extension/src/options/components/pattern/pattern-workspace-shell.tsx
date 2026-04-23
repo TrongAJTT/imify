@@ -6,9 +6,9 @@ import {
   clonePatternPresetConfig,
   type PatternPresetConfig,
   usePatternPresetStore,
-} from "@/options/stores/pattern-preset-store"
-import { usePatternStore } from "@/options/stores/pattern-store"
-import { useWorkspaceHeaderStore } from "@/options/stores/workspace-header-store"
+} from "@imify/stores/stores/pattern-preset-store"
+import { usePatternStore } from "@imify/stores/stores/pattern-store"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 
 interface PatternWorkspaceShellProps {
   workspace: React.ReactNode

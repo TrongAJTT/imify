@@ -1,5 +1,5 @@
 import { Tooltip } from "@/options/components/tooltip"
-import { Button } from "@/options/components/ui/button"
+import { Button } from "@imify/ui/ui/button"
 import { Play, List, Clock, Check, X, Pause, Trash2, RotateCw } from "lucide-react"
 import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 

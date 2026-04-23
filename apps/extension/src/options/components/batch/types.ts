@@ -1,4 +1,4 @@
-import { BATCH_TARGET_FORMATS, HIGH_CONCURRENCY_FORMATS as BASE_HIGH_CONCURRENCY_FORMATS } from "@/core/format-config"
+import { BATCH_TARGET_FORMATS, HIGH_CONCURRENCY_FORMATS as BASE_HIGH_CONCURRENCY_FORMATS } from "@imify/core/format-config"
 import { buildTargetFormatOptions } from "@/options/shared/target-format-options"
 import type {
   BmpColorDepth,
@@ -7,7 +7,7 @@ import type {
   ResizeResamplingAlgorithm,
   SupportedDPI,
   TiffColorMode
-} from "@/core/types"
+} from "@imify/core/types"
 
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
 export type BatchRunMode = "all" | "failed"

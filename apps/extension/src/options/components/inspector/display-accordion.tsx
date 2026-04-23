@@ -1,9 +1,9 @@
 import { Palette } from "lucide-react"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
-import { SelectInput } from "@/options/components/ui/select-input"
-import { SliderInput } from "@/options/components/ui/slider-input"
-import type { ColorBlindMode, PreviewChannelMode } from "@/features/inspector"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import { SliderInput } from "@imify/ui/ui/slider-input"
+import type { ColorBlindMode, PreviewChannelMode } from "@imify/features/inspector"
 
 const CHANNEL_OPTIONS: Array<{ value: PreviewChannelMode; label: string }> = [
   { value: "all", label: "All (RGB)" },

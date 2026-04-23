@@ -3,11 +3,11 @@ import { Link2, RotateCcw, Unlink2, Maximize2, Crop, Minimize } from "lucide-rea
 
 import { Tooltip } from "@/options/components/tooltip"
 import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
-import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { RadioCard } from "@/options/components/ui/radio-card"
-import { SelectInput } from "@/options/components/ui/select-input"
-import { LabelText } from "@/options/components/ui/typography"
+import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { RadioCard } from "@imify/ui/ui/radio-card"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import { LabelText } from "@imify/ui/ui/typography"
 
 const ASPECT_RATIO_OPTIONS = [
   { value: "free", label: "Free" },

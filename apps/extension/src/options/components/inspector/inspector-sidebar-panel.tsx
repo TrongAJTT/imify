@@ -1,11 +1,11 @@
-import { useInspectorStore } from "@/options/stores/inspector-store"
+import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { DisplayAccordion } from "@/options/components/inspector/display-accordion"
 import { MetadataAccordion } from "@/options/components/inspector/metadata-accordion"
 import { InformationAccordion } from "@/options/components/inspector/information-accordion"
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem
-} from "@/options/components/ui/workspace-config-sidebar-panel"
+} from "@imify/ui/ui/workspace-config-sidebar-panel"
 
 interface InspectorSidebarPanelProps {
   enableWideSidebarGrid?: boolean

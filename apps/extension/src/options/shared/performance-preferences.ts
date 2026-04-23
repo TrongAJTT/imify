@@ -1,5 +1,5 @@
-import { normalizeResizeResamplingAlgorithm } from "@/core/resize-resampling"
-import type { FormatCodecOptions, ImageFormat, ResizeConfig } from "@/core/types"
+import { normalizeResizeResamplingAlgorithm } from "@imify/core/resize-resampling"
+import type { FormatCodecOptions, ImageFormat, ResizeConfig } from "@imify/core/types"
 
 export const PERFORMANCE_PREFERENCES_KEY = "imify_performance_preferences"
 export const MAX_CONCURRENCY = 90

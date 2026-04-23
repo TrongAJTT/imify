@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import type { InspectorResult } from "@/features/inspector"
+import type { InspectorResult } from "@imify/features/inspector"
 import { BasicInfoCard } from "./basic-info-card"
 import { ColorInspectorCard } from "./color-inspector-card"
 import { ExifTableCard } from "./exif-table-card"

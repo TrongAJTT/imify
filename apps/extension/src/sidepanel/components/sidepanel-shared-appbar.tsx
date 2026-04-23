@@ -1,8 +1,8 @@
 import { Check, ChevronDown, Expand, Moon, Sun } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
-import { Button } from "@/options/components/ui/button"
-import { MutedText, Subheading } from "@/options/components/ui/typography"
+import { Button } from "@imify/ui/ui/button"
+import { MutedText, Subheading } from "@imify/ui/ui/typography"
 
 import iconImage from "url:@assets/icon.png"
 

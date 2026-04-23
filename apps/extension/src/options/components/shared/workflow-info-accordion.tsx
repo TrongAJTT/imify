@@ -1,7 +1,7 @@
 import { Info } from "lucide-react"
 
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import type { ColorTheme } from "@/options/components/ui/theme-config"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import type { ColorTheme } from "@imify/ui/ui/theme-config"
 
 interface WorkflowInfoAccordionProps {
   label: string

@@ -1,50 +1,33 @@
 /**
- * @imify/features — Shared, platform-agnostic feature modules.
- *
- * Only exports modules with ZERO chrome.* or @plasmohq/storage dependencies.
- * Files tagged PLATFORM:extension are excluded.
+ * @imify/features — Public API
  */
 
-// ─── Feature logic modules ───────────────────────────────────────────────────
-
-// Image Splicing
-export * from "../../../apps/extension/src/features/splicing/layout-engine"
-export * from "../../../apps/extension/src/features/splicing/canvas-renderer"
-export * from "../../../apps/extension/src/features/splicing/types"
-
-// Image Splitter
-export * from "../../../apps/extension/src/features/splitter/types"
-
-// Image Filling
-export * from "../../../apps/extension/src/features/filling/canvas-export-renderer"
-export * from "../../../apps/extension/src/features/filling/fill-runtime-items"
-export * from "../../../apps/extension/src/features/filling/group-geometry"
-export * from "../../../apps/extension/src/features/filling/psd-export"
-export * from "../../../apps/extension/src/features/filling/shape-generators"
-export * from "../../../apps/extension/src/features/filling/symmetric-generator"
-export * from "../../../apps/extension/src/features/filling/template-storage"
-export * from "../../../apps/extension/src/features/filling/types"
-export * from "../../../apps/extension/src/features/filling/vector-math"
-
-// Pattern Generator
-export * from "../../../apps/extension/src/features/pattern/pattern-renderer"
-export * from "../../../apps/extension/src/features/pattern/types"
-
-// Difference Checker
-export * from "../../../apps/extension/src/features/diffchecker/types"
-
-// Image Inspector
-export * from "../../../apps/extension/src/features/inspector/types"
-
-// Custom Formats
-export * from "../../../apps/extension/src/features/custom-formats/index"
-
-// Settings (validation + defaults only — chrome I/O excluded)
-export * from "../../../apps/extension/src/features/settings/default-state"
-
-// ─── Dev Mode (cross-platform) ───────────────────────────────────────────────
-
-// Dev mode store (Zustand + localStorage — no chrome.* dependency)
-export * from "../../../apps/extension/src/features/dev-mode/dev-mode-store"
-// Feature registry for export/import dialogs
-export * from "../../../apps/extension/src/features/dev-mode/dev-mode-registry"
+export * from "./dev-mode/debug-log-builder"
+export * from "./dev-mode/dev-mode-registry"
+export * from "./dev-mode/dev-mode-storage"
+export * from "./dev-mode/dev-mode-store"
+export * from "./diffchecker/diff-engine"
+export * from "./diffchecker/types"
+export * from "./filling/canvas-export-renderer"
+export * from "./filling/fill-runtime-items"
+export * from "./filling/group-geometry"
+export * from "./filling/psd-export"
+export * from "./filling/shape-generators"
+export * from "./filling/symmetric-generator"
+export * from "./filling/template-storage"
+export * from "./filling/types"
+export * from "./filling/vector-math"
+export * from "./inspector"
+export * from "./pattern/pattern-drawing-utils"
+export * from "./pattern/pattern-generator"
+export * from "./pattern/pattern-renderer"
+export * from "./pattern/types"
+export * from "./settings"
+export * from "./splicing/canvas-renderer"
+export * from "./splicing/layout-engine"
+export * from "./splicing/types"
+export * from "./splitter/split-engine"
+export * from "./splitter/split-export"
+export * from "./splitter/types"
+export * from "./settings/storage"
+export * from "./settings/default-state"

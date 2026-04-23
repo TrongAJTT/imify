@@ -3,8 +3,8 @@ import type { RefObject } from "react"
 import { ChevronsRight } from 'lucide-react'
 
 import type { BatchExportAction, BatchSummary } from "@/options/components/batch/types"
-import { Button } from "@/options/components/ui/button"
-import { Subheading, MutedText, Heading, Kicker } from "@/options/components/ui/typography"
+import { Button } from "@imify/ui/ui/button"
+import { Subheading, MutedText, Heading, Kicker } from "@imify/ui/ui/typography"
 
 interface BatchSummaryCardProps {
   summary: BatchSummary

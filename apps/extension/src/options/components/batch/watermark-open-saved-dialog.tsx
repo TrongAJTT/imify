@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { BookmarkX, Check, FolderOpen, Sparkles, Stamp, Trash2, X } from "lucide-react"
 
-import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { Button } from "@/options/components/ui/button"
-import { SecondaryButton } from "@/options/components/ui/secondary-button"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
+import { Button } from "@imify/ui/ui/button"
+import { SecondaryButton } from "@imify/ui/ui/secondary-button"
 import type { BatchWatermarkConfig, BatchWatermarkPosition } from "@/options/components/batch/types"
-import type { SavedWatermarkItem } from "@/options/stores/watermark-store"
-import { watermarkStorage } from "@/core/indexed-db"
+import type { SavedWatermarkItem } from "@imify/stores/stores/watermark-store"
+import { watermarkStorage } from "@imify/core/indexed-db"
 
 interface WatermarkOpenSavedDialogProps {
   isOpen: boolean

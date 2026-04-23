@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { AlertTriangle } from "lucide-react"
 
-import { APP_CONFIG } from "@/core/config"
-import { useBatchStore } from "@/options/stores/batch-store"
-import { Button } from "@/options/components/ui/button"
-import { BodyText, Subheading, MutedText } from "@/options/components/ui/typography"
+import { APP_CONFIG } from "@imify/core/config"
+import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { Button } from "@imify/ui/ui/button"
+import { BodyText, Subheading, MutedText } from "@imify/ui/ui/typography"
 
 interface SplicingHeavyPreviewQualityDialogProps {
   isOpen: boolean

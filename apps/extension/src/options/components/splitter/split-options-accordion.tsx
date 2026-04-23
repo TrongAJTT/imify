@@ -1,16 +1,16 @@
-import type { SplitterSplitSettings } from "@/features/splitter/types"
+import type { SplitterSplitSettings } from "@imify/features/splitter/types"
 import {
   SPLITTER_ADVANCED_METHOD_TABLE_ROWS,
   SPLITTER_BASIC_METHOD_TABLE_ROWS,
   SPLITTER_TOOLTIPS
 } from "@/options/components/splitter/splitter-tooltips"
 import { Tooltip } from "@/options/components/tooltip"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { SegmentedControl } from "@/options/components/ui/segmented-control"
-import { SelectInput } from "@/options/components/ui/select-input"
-import { LabelText } from "@/options/components/ui/typography"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { SegmentedControl } from "@imify/ui/ui/segmented-control"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import { LabelText } from "@imify/ui/ui/typography"
 import { Scissors } from "lucide-react"
 
 interface SplitOptionsAccordionProps {

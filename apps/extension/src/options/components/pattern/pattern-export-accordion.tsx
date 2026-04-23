@@ -2,8 +2,8 @@ import { useMemo } from "react"
 
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
-import { usePatternStore } from "@/options/stores/pattern-store"
-import { buildPatternFormatOptions } from "@/options/stores/pattern-format-options"
+import { usePatternStore } from "@imify/stores/stores/pattern-store"
+import { buildPatternFormatOptions } from "@imify/stores/stores/pattern-format-options"
 import { buildTargetFormatOptions } from "@/options/shared/target-format-options"
 import {
   buildTargetFormatQualityCardConfig,

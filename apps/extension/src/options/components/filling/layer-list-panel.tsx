@@ -24,9 +24,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 
-import type { VectorLayer } from "@/features/filling/types"
-import { SHAPE_LABELS } from "@/features/filling/shape-generators"
-import { Button } from "@/options/components/ui/button"
+import type { VectorLayer } from "@imify/features/filling/types"
+import { SHAPE_LABELS } from "@imify/features/filling/shape-generators"
+import { Button } from "@imify/ui/ui/button"
 import { SortableFillLayerItem } from "@/options/components/filling/sortable-fill-layer-item"
 import { Tooltip } from "@/options/components/tooltip"
 import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"

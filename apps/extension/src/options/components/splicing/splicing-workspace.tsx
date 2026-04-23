@@ -8,11 +8,11 @@ import type {
   SplicingImageResize,
   SplicingImageStyle,
   SplicingLayoutConfig
-} from "@/features/splicing/types"
-import type { PreviewInteractionMode } from "@/options/components/ui/preview-interaction-mode-toggle"
+} from "@imify/features/splicing/types"
+import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
 import { CanvasPreview } from "@/options/components/splicing/canvas-preview"
 import { ImageStrip } from "@/options/components/splicing/image-strip"
-import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
+import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
 
 interface SplicingWorkspaceProps {
   hasImages: boolean

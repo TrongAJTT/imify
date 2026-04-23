@@ -2,17 +2,17 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Download, Trash2 } from "lucide-react"
 import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 
-import type { DiffComputeResult, DiffImageItem } from "@/features/diffchecker/types"
+import type { DiffComputeResult, DiffImageItem } from "@imify/features/diffchecker/types"
 import {
   computeFullDiff,
   exportCompositeView
-} from "@/features/diffchecker/diff-engine"
-import { decodeFileToImageData } from "@/features/image-pipeline/decode-image-data"
-import { renderImageDataPreview } from "@/features/image-pipeline/render-image-data"
-import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
+} from "@imify/features/diffchecker/diff-engine"
+import { decodeFileToImageData } from "@imify/engine/image-pipeline/decode-image-data"
+import { renderImageDataPreview } from "@imify/engine/image-pipeline/render-image-data"
+import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { DiffcheckerWorkspace } from "@/options/components/diffchecker/diffchecker-workspace"
-import { Button } from "@/options/components/ui/button"
-import { Subheading, MutedText } from "@/options/components/ui/typography"
+import { Button } from "@imify/ui/ui/button"
+import { Subheading, MutedText } from "@imify/ui/ui/typography"
 
 function isImageLikeFile(file: File): boolean {
   if (file.type.startsWith("image/")) {

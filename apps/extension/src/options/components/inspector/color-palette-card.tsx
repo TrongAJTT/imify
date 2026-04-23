@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react"
 import { Copy, Check, Code, Palette } from "lucide-react"
-import type { PaletteColor, ColorDisplayFormat } from "@/features/inspector"
-import { generateCssVariables } from "@/features/inspector"
+import type { PaletteColor, ColorDisplayFormat } from "@imify/features/inspector"
+import { generateCssVariables } from "@imify/features/inspector"
 import { InfoSection } from "./info-section"
-import { useInspectorStore } from "@/options/stores/inspector-store"
+import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 
 interface ColorPaletteCardProps {
   palette: PaletteColor[]

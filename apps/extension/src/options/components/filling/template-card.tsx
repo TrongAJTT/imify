@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react"
 import { Edit, Pin, PinOff, Trash2 } from "lucide-react"
 
-import type { FillingTemplate } from "@/features/filling/types"
-import { templateStorage } from "@/features/filling/template-storage"
-import { useFillingStore } from "@/options/stores/filling-store"
+import type { FillingTemplate } from "@imify/features/filling/types"
+import { templateStorage } from "@imify/features/filling/template-storage"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
 
 interface TemplateCardProps {
   template: FillingTemplate

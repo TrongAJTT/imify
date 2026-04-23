@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { getCanonicalExtension } from "@/core/download-utils"
+import { getCanonicalExtension } from "@imify/core/download-utils"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type {
   SplicingExportFormat,
   SplicingImageResize,
-} from "@/features/splicing/types"
-import { useSplicingStore } from "@/options/stores/splicing-store"
+} from "@imify/features/splicing/types"
+import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import {
   RenamePatternDialog,
   SPLICING_EXPORT_RENAME_PRESETS,
   SPLICING_EXPORT_RENAME_TAGS
-} from "@/options/components/ui/rename-pattern-dialog"
+} from "@imify/ui/ui/rename-pattern-dialog"
 import {
   ALIGNMENT_OPTIONS,
   EXPORT_FORMAT_OPTIONS,
@@ -28,7 +28,7 @@ import { PreviewSettingsAccordion } from "@/options/components/splicing/preview-
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
-} from "@/options/components/ui/workspace-config-sidebar-panel"
+} from "@imify/ui/ui/workspace-config-sidebar-panel"
 import {
   buildTargetFormatQualityCardConfig,
   supportsTargetFormatQuality,

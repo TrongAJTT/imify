@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useToast } from "@/core/hooks/use-toast"
-import { ToastContainer } from "@/core/components/toast-container"
-import type { ColorBlindMode, PreviewChannelMode } from "@/features/inspector"
-import { rgbToHex, transformPixelForPreview } from "@/features/inspector"
+import { useToast } from "@imify/core/hooks/use-toast"
+import { ToastContainer } from "@imify/ui/components/toast-container"
+import type { ColorBlindMode, PreviewChannelMode } from "@imify/features/inspector"
+import { rgbToHex, transformPixelForPreview } from "@imify/features/inspector"
 
 export type PixelSample = {
   x: number

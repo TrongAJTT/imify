@@ -1,6 +1,6 @@
-import { FORMAT_LABELS } from "@/core/format-config"
-import { getCanonicalExtension } from "@/core/download-utils"
-import type { FormatCodecOptions, ImageFormat } from "@/core/types"
+import { FORMAT_LABELS } from "@imify/core/format-config"
+import { getCanonicalExtension } from "@imify/core/download-utils"
+import type { FormatCodecOptions, ImageFormat } from "@imify/core/types"
 
 export type TargetFormatOptionValue = Exclude<ImageFormat, "pdf"> | "mozjpeg"
 

@@ -2,10 +2,10 @@ import { useEffect, useMemo } from "react"
 
 import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrumb"
 import { SplicingPresetSelectView } from "@/options/components/splicing/splicing-preset-select-view"
-import { useSplicingPresetStore } from "@/options/stores/splicing-preset-store"
-import { useSplicingStore } from "@/options/stores/splicing-store"
-import { useWorkspaceHeaderStore } from "@/options/stores/workspace-header-store"
-import type { SplicingPresetConfig } from "@/options/stores/splicing-preset-store"
+import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
+import { useSplicingStore } from "@imify/stores/stores/splicing-store"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import type { SplicingPresetConfig } from "@imify/stores/stores/splicing-preset-store"
 
 interface SplicingWorkspaceShellProps {
   workspace: React.ReactNode

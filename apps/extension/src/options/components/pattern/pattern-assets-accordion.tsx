@@ -15,13 +15,13 @@ import {
   DEFAULT_PATTERN_ASSET_BORDER_SETTINGS,
   DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS,
   type PatternAsset,
-} from "@/features/pattern/types"
+} from "@imify/features/pattern/types"
 import { PatternAssetDrawingDialog } from "@/options/components/pattern/pattern-asset-drawing-dialog"
 import { PatternAssetListItem } from "@/options/components/pattern/pattern-asset-list-item"
-import { Button } from "@/options/components/ui/button"
-import { ResizableAccordionCard } from "@/options/components/ui/resizable-accordion-card"
+import { Button } from "@imify/ui/ui/button"
+import { ResizableAccordionCard } from "@imify/ui/ui/resizable-accordion-card"
 import { PATTERN_TOOLTIPS } from "@/options/components/pattern/pattern-tooltips"
-import { usePatternStore } from "@/options/stores/pattern-store"
+import { usePatternStore } from "@imify/stores/stores/pattern-store"
 import { Tooltip } from "../tooltip"
 
 const ASSET_CARD_MIN_HEIGHT = 220

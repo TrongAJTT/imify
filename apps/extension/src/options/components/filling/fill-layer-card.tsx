@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react"
 import { ImageOff, Layers } from "lucide-react"
 
-import type { LayerFillState } from "@/features/filling/types"
-import type { FillRuntimeItem } from "@/features/filling/fill-runtime-items"
-import { SHAPE_LABELS } from "@/features/filling/shape-generators"
-import { useFillingStore } from "@/options/stores/filling-store"
+import type { LayerFillState } from "@imify/features/filling/types"
+import type { FillRuntimeItem } from "@imify/features/filling/fill-runtime-items"
+import { SHAPE_LABELS } from "@imify/features/filling/shape-generators"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
 
 interface FillLayerCardProps {
   item: FillRuntimeItem

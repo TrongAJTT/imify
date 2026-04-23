@@ -1,5 +1,5 @@
 import { MapPin, ExternalLink } from "lucide-react"
-import type { GpsInfo } from "@/features/inspector"
+import type { GpsInfo } from "@imify/features/inspector"
 import { InfoSection, InfoRow } from "./info-section"
 
 interface GpsCardProps {

@@ -11,7 +11,7 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, horizontalListSortingStrategy, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 
-import type { SplicingImageItem } from "@/features/splicing/types"
+import type { SplicingImageItem } from "@imify/features/splicing/types"
 import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
 
 interface ImageStripProps {

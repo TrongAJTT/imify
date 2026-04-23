@@ -3,11 +3,11 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical, ListOrdered, Plus, Trash2 } from "lucide-react"
 
-import type { SplitterSplitSettings } from "@/features/splitter/types"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { Button } from "@/options/components/ui/button"
-import { LabelText } from "@/options/components/ui/typography"
-import { NumberInput } from "@/options/components/ui/number-input"
+import type { SplitterSplitSettings } from "@imify/features/splitter/types"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { Button } from "@imify/ui/ui/button"
+import { LabelText } from "@imify/ui/ui/typography"
+import { NumberInput } from "@imify/ui/ui/number-input"
 
 interface SplitterPatternSequenceAccordionProps {
   settings: SplitterSplitSettings

@@ -1,5 +1,5 @@
 import { Palette, AlertTriangle } from "lucide-react"
-import type { ColorInfo } from "@/features/inspector"
+import type { ColorInfo } from "@imify/features/inspector"
 import { InfoSection, InfoRow } from "./info-section"
 
 interface ColorInfoCardProps {

@@ -1,7 +1,7 @@
 ﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import { useCallback } from "react"
-import { STORAGE_VERSION, type ContextMenuSettings, type ExtensionStorageState, type FormatConfig, type ImageFormat } from "@/core/types"
-import { DEFAULT_STORAGE_STATE } from "@/features/settings"
+import { STORAGE_VERSION, type ContextMenuSettings, type ExtensionStorageState, type FormatConfig, type ImageFormat } from "@imify/core/types"
+import { DEFAULT_STORAGE_STATE } from "@imify/features/settings"
 import type { PersistedStorageState } from "@/options/shared"
 
 type PersistedStateSetter = (

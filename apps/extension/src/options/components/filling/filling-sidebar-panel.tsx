@@ -1,8 +1,8 @@
 import { useMemo } from "react"
 
-import { useFillingStore } from "@/options/stores/filling-store"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useEditorContextSafe } from "@/options/components/filling/editor-context"
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
+import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
 import { FillingInfoPanel } from "@/options/components/filling/template-info-accordion"
 import { ManualEditorSidebar } from "@/options/components/filling/manual-editor-sidebar"
 import { SymmetricSidebar } from "@/options/components/filling/symmetric-sidebar"

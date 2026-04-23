@@ -7,17 +7,17 @@ import {
   type DrawingTool,
   type Stroke,
   type StrokeSmoothingSettings
-} from "@/features/pattern/pattern-drawing-utils"
+} from "@imify/features/pattern/pattern-drawing-utils"
 import { Tooltip } from "@/options/components/tooltip"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { Button } from "@/options/components/ui/button"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
-import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
-import { NumberInput } from "@/options/components/ui/number-input"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
+import { Button } from "@imify/ui/ui/button"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
+import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
+import { NumberInput } from "@imify/ui/ui/number-input"
 import { PATTERN_TOOLTIPS } from "@/options/components/pattern/pattern-tooltips"
-import { TextInput } from "@/options/components/ui/text-input"
+import { TextInput } from "@imify/ui/ui/text-input"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
-import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { Brush, Eraser, RotateCcw, Trash2, X } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 

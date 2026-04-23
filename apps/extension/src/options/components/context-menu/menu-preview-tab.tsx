@@ -1,13 +1,13 @@
 import { ArrowRight, Check, MousePointer2, Pin, PinOff } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-import type { ExtensionStorageState, MenuSortMode } from "@/core/types"
-import { getContextMenuLayout } from "@/core/context-menu-order"
+import type { ExtensionStorageState, MenuSortMode } from "@imify/core/types"
+import { getContextMenuLayout } from "@imify/core/context-menu-order"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
-import { SecondaryButton } from "@/options/components/ui/secondary-button"
-import { SelectInput } from "@/options/components/ui/select-input"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
-import { MutedText, BodyText, LabelText } from "@/options/components/ui/typography"
+import { SecondaryButton } from "@imify/ui/ui/secondary-button"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import { SurfaceCard } from "@imify/ui/ui/surface-card"
+import { MutedText, BodyText, LabelText } from "@imify/ui/ui/typography"
 import { CONTEXT_MENU_SORT_OPTIONS } from "@/options/shared"
 
 interface ContextMenuTabProps {

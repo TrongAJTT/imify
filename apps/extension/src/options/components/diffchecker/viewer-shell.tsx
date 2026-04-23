@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Expand, Shrink } from "lucide-react"
 import { DIFFCHECKER_TOOLTIPS } from "@/options/components/diffchecker/diffchecker-tooltips"
-import { useDiffcheckerStore } from "@/options/stores/diffchecker-store"
+import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { Tooltip } from "@/options/components/tooltip"
-import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
+import { ZoomPanControl } from "@imify/ui/ui/zoom-pan-control"
 
 interface ViewerShellProps {
   children: ReactNode

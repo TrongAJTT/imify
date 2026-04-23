@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef } from "react"
 import { Frame, RefreshCcw } from "lucide-react"
 
 import { PatternBoundaryControls } from "@/options/components/pattern/pattern-boundary-controls"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { Button } from "@/options/components/ui/button"
-import { usePatternStore } from "@/options/stores/pattern-store"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { Button } from "@imify/ui/ui/button"
+import { usePatternStore } from "@imify/stores/stores/pattern-store"
 
 export function PatternBoundaryAccordion() {
   const inboundBoundary = usePatternStore((state) => state.settings.inboundBoundary)

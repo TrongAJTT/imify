@@ -1,5 +1,5 @@
 import { SlidersHorizontal } from "lucide-react"
-import { BodyText } from "@/options/components/ui/typography"
+import { BodyText } from "@imify/ui/ui/typography"
 
 export function FormatOptionsEmptyState() {
   return (

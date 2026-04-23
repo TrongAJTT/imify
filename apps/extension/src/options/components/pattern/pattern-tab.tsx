@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Download, Loader2 } from "lucide-react"
 
-import { ToastContainer } from "@/core/components/toast-container"
-import { toUserFacingConversionError } from "@/core/error-utils"
-import { useConversionToasts } from "@/core/hooks/use-toast"
-import type { ConversionProgressPayload } from "@/core/types"
-import { renderPatternToContext } from "@/features/pattern/pattern-renderer"
-import { buildActivePatternFormatOptions } from "@/options/stores/pattern-format-options"
-import { usePatternStore } from "@/options/stores/pattern-store"
+import { ToastContainer } from "@imify/ui/components/toast-container"
+import { toUserFacingConversionError } from "@imify/core/error-utils"
+import { useConversionToasts } from "@imify/core/hooks/use-toast"
+import type { ConversionProgressPayload } from "@imify/core/types"
+import { renderPatternToContext } from "@imify/features/pattern/pattern-renderer"
+import { buildActivePatternFormatOptions } from "@imify/stores/stores/pattern-format-options"
+import { usePatternStore } from "@imify/stores/stores/pattern-store"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
-import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
-import { Button } from "@/options/components/ui/button"
-import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
+import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
+import { Button } from "@imify/ui/ui/button"
+import { ZoomPanControl } from "@imify/ui/ui/zoom-pan-control"
 import { exportPatternComposition } from "@/options/components/pattern/pattern-export-utils"
 import { PatternBoundaryVisualOverlay } from "@/options/components/pattern/pattern-boundary-visual-overlay"
 import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
-} from "@/options/components/ui/preview-interaction-mode-toggle"
+} from "@imify/ui/ui/preview-interaction-mode-toggle"
 
 const PREVIEW_PADDING = 16
 const PREVIEW_MIN_ZOOM = 50

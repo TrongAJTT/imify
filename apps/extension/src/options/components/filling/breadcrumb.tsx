@@ -1,4 +1,4 @@
-import { useFillingStore } from "@/options/stores/filling-store"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrumb"
 
 function stepLabel(step: string): string | null {

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 
-import type { LayerGroup, VectorLayer } from "@/features/filling/types"
-import { useFillingStore } from "@/options/stores/filling-store"
-import { useWorkspaceHeaderStore } from "@/options/stores/workspace-header-store"
-import { templateStorage } from "@/features/filling/template-storage"
+import type { LayerGroup, VectorLayer } from "@imify/features/filling/types"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { templateStorage } from "@imify/features/filling/template-storage"
 import { useEditorContext } from "@/options/components/filling/editor-context"
 import { FillingBreadcrumb } from "@/options/components/filling/breadcrumb"
 import { TemplateList } from "@/options/components/filling/template-list"

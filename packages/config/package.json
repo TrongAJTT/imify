@@ -9,5 +9,6 @@
     "./postcss": "./postcss.config.js",
     "./prettier": "./prettier.config.mjs",
     "./tsconfig": "./tsconfig.base.json"
-  }
+  },
+  "license": "Apache-2.0"
 }

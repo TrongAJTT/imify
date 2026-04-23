@@ -1,4 +1,4 @@
-import type { SetupContext } from "@/options/stores/batch-store"
+import type { SetupContext } from "@imify/stores/stores/batch-store"
 import { WorkflowInfoAccordion } from "@/options/components/shared/workflow-info-accordion"
 
 interface ProcessorPresetInfoAccordionProps {

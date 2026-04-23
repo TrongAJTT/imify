@@ -1,5 +1,5 @@
-import type { DiffStats } from "@/features/diffchecker/types"
-import { MutedText } from "@/options/components/ui/typography"
+import type { DiffStats } from "@imify/features/diffchecker/types"
+import { MutedText } from "@imify/ui/ui/typography"
 
 interface DiffStatsBarProps {
   stats: DiffStats | null

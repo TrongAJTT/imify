@@ -1,6 +1,6 @@
 import { Info, Settings, Layers, RefreshCw } from "lucide-react"
 
-import type { SetupContext } from "@/options/stores/batch-store"
+import type { SetupContext } from "@imify/stores/stores/batch-store"
 
 interface ProcessorPresetInfoPanelProps {
   context: SetupContext

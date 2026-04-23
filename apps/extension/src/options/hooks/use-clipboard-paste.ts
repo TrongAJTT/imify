@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import {
   fetchRemoteImagesFromUrls,
   parseHttpUrlsFromText
-} from "@/features/converter/remote-image-import"
+} from "@imify/engine/converter/remote-image-import"
 
 export interface UseClipboardPasteOptions {
   /**

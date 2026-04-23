@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { useBatchStore } from "@/options/stores/batch-store"
-import { APP_CONFIG } from "@/core/config"
-import { Button } from "@/options/components/ui/button"
+import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { APP_CONFIG } from "@imify/core/config"
+import { Button } from "@imify/ui/ui/button"
 import {
   DiscreteSlider,
   type DiscreteSliderOption
-} from "@/options/components/ui/discrete-slider"
-import { SelectInput } from "@/options/components/ui/select-input"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { ToggleSwitchLabel } from "@/options/components/ui/toggle-switch-label"
-import { SettingsSectionHeader } from "@/options/components/ui/settings-section-header"
-import { SettingsItemHeader } from "@/options/components/ui/settings-item-header"
-import { MutedText, Subheading } from "@/options/components/ui/typography"
+} from "@imify/ui/ui/discrete-slider"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { ToggleSwitchLabel } from "@imify/ui/ui/toggle-switch-label"
+import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header"
+import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header"
+import { MutedText, Subheading } from "@imify/ui/ui/typography"
 import { SettingsShortcutsPanel } from "@/options/components/settings-shortcuts-panel"
 import {
   BarChart3,
@@ -25,13 +25,13 @@ import {
   ShieldAlert,
   X
 } from "lucide-react"
-import { useDevModeEnabled } from "@/features/dev-mode/dev-mode-storage"
+import { useDevModeEnabled } from "@imify/features/dev-mode/dev-mode-storage"
 import { DevModeStateViewer } from "@/options/components/dev-mode-state-viewer"
 import { DevModeExportDialog } from "@/options/components/dev-mode-export-dialog"
 import { DevModeImportDialog } from "@/options/components/dev-mode-import-dialog"
-import { useToast } from "@/core/hooks/use-toast"
-import { ToastContainer } from "@/core/components/toast-container"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
+import { useToast } from "@imify/core/hooks/use-toast"
+import { ToastContainer } from "@imify/ui/components/toast-container"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { TAB_ITEMS, type OptionsTab } from "@/options/shared"
 import {
   CONFIGURATION_SIDEBAR_WIDTH_OPTIONS,

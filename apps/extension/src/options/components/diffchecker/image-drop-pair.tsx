@@ -1,7 +1,7 @@
 import { ImagePlus, X, Upload } from "lucide-react"
-import type { DiffImageItem } from "@/features/diffchecker/types"
+import type { DiffImageItem } from "@imify/features/diffchecker/types"
 import { DIFFCHECKER_TOOLTIPS } from "@/options/components/diffchecker/diffchecker-tooltips"
-import { MutedText } from "@/options/components/ui/typography"
+import { MutedText } from "@imify/ui/ui/typography"
 import { Tooltip } from "@/options/components/tooltip"
 import { useThumbnail } from "@/options/hooks/use-thumbnail"
 

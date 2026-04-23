@@ -1,14 +1,14 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { AlertCircle, Loader2 } from "lucide-react"
 
-import type { DiffViewMode } from "@/features/diffchecker/types"
+import type { DiffViewMode } from "@imify/features/diffchecker/types"
 import {
   renderImageDataPreview,
   type RenderImageDataPreviewResult
-} from "@/features/image-pipeline/render-image-data"
+} from "@imify/engine/image-pipeline/render-image-data"
 import { DIFFCHECKER_TOOLTIPS } from "@/options/components/diffchecker/diffchecker-tooltips"
 import { Tooltip } from "@/options/components/tooltip"
-import { MutedText } from "@/options/components/ui/typography"
+import { MutedText } from "@imify/ui/ui/typography"
 import { ViewerOverlay } from "@/options/components/diffchecker/viewer-overlay"
 import { ViewerShell } from "@/options/components/diffchecker/viewer-shell"
 import { ViewerSideBySide } from "@/options/components/diffchecker/viewer-side-by-side"

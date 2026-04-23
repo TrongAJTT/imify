@@ -1,6 +1,6 @@
 import { Moon, Sun, Info, Heart, Settings } from "lucide-react"
 import { Tooltip } from "./tooltip"
-import { useWorkspaceHeaderStore } from "@/options/stores/workspace-header-store"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 
 interface HeaderProps {
   isLoading: boolean

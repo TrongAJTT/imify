@@ -1,4 +1,4 @@
-import type { FormatCodecOptions, FormatConfig, ImageFormat } from "@/core/types"
+import type { FormatCodecOptions, FormatConfig, ImageFormat } from "@imify/core/types"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import {
   buildTargetFormatOptions,

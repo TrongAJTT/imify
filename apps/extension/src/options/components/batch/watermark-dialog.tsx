@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react"
 import { CheckCircle2, FolderOpen, ImagePlus, RotateCcw, Save, Sparkles, Stamp, Type, UploadCloud, X } from "lucide-react"
 
-import { Button } from "@/options/components/ui/button"
-import { SecondaryButton } from "@/options/components/ui/secondary-button"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { TextInput } from "@/options/components/ui/text-input"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
+import { Button } from "@imify/ui/ui/button"
+import { SecondaryButton } from "@imify/ui/ui/secondary-button"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { TextInput } from "@imify/ui/ui/text-input"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
+import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
 import { Tooltip } from "@/options/components/tooltip"
-import { LabelText } from "@/options/components/ui/typography"
+import { LabelText } from "@imify/ui/ui/typography"
 import type { BatchWatermarkConfig } from "@/options/components/batch/types"
 import {
   DEFAULT_BATCH_WATERMARK,
@@ -17,7 +17,7 @@ import {
   applyWatermarkToImageBlob,
   toDataUrl
 } from "@/options/components/batch/watermark"
-import { watermarkStorage } from "@/core/indexed-db"
+import { watermarkStorage } from "@imify/core/indexed-db"
 import { WatermarkOpenSavedDialog } from "@/options/components/batch/watermark-open-saved-dialog"
 import { WatermarkSaveDialog, type WatermarkSaveAction } from "@/options/components/batch/watermark-save-dialog"
 import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
@@ -27,7 +27,7 @@ import {
   findMatchingSavedWatermarkId,
   isWatermarkConfigEqual
 } from "@/options/components/batch/watermark-config"
-import { useWatermarkStore, type SavedWatermarkItem, type WatermarkContext } from "@/options/stores/watermark-store"
+import { useWatermarkStore, type SavedWatermarkItem, type WatermarkContext } from "@imify/stores/stores/watermark-store"
 
 interface BatchWatermarkDialogProps {
   isOpen: boolean

@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react"
 import { Link2, Loader2, Plus } from "lucide-react"
 
-import { parseHttpUrlsFromText } from "@/features/converter/remote-image-import"
-import { Button } from "@/options/components/ui/button"
-import { SecondaryButton } from "@/options/components/ui/secondary-button"
-import { MutedText } from "@/options/components/ui/typography"
+import { parseHttpUrlsFromText } from "@imify/engine/converter/remote-image-import"
+import { Button } from "@imify/ui/ui/button"
+import { SecondaryButton } from "@imify/ui/ui/secondary-button"
+import { MutedText } from "@imify/ui/ui/typography"
 
 interface ImageUrlImportControlProps {
   allowMultiple: boolean

@@ -1,8 +1,8 @@
 import { Plus } from "lucide-react"
 import { useState } from "react"
 
-import { useFillingStore } from "@/options/stores/filling-store"
-import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
+import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
 import { TemplateSortBar } from "@/options/components/filling/template-sort-bar"
 import { TemplateCard } from "@/options/components/filling/template-card"
 import { TemplateMethodDialog } from "@/options/components/filling/template-method-dialog"

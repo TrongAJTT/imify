@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react"
 import { FileText, Monitor, Ruler, Share2, X } from "lucide-react"
 
-import { CANVAS_SIZE_PRESETS, type CanvasSizePreset } from "@/features/filling/types"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { Button } from "@/options/components/ui/button"
-import { Subheading, MutedText } from "@/options/components/ui/typography"
+import { CANVAS_SIZE_PRESETS, type CanvasSizePreset } from "@imify/features/filling/types"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
+import { Button } from "@imify/ui/ui/button"
+import { Subheading, MutedText } from "@imify/ui/ui/typography"
 
 interface CanvasSizeDialogProps {
   isOpen: boolean

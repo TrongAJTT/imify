@@ -2,21 +2,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage, Layer, Line, Rect, Transformer } from "react-konva"
 import type Konva from "konva"
 
-import type { FillingTemplate, SymmetricParams } from "@/features/filling/types"
-import { DEFAULT_SYMMETRIC_PARAMS } from "@/features/filling/types"
+import type { FillingTemplate, SymmetricParams } from "@imify/features/filling/types"
+import { DEFAULT_SYMMETRIC_PARAMS } from "@imify/features/filling/types"
 import {
   buildSymmetricShapePolygon,
   deriveSymmetricLayoutMetrics,
   generateSymmetricLayers,
   type SymmetricLayoutMetrics,
-} from "@/features/filling/symmetric-generator"
-import { flattenPoints, getBoundingBox } from "@/features/filling/vector-math"
-import { templateStorage } from "@/features/filling/template-storage"
-import { useFillingStore } from "@/options/stores/filling-store"
+} from "@imify/features/filling/symmetric-generator"
+import { flattenPoints, getBoundingBox } from "@imify/features/filling/vector-math"
+import { templateStorage } from "@imify/features/filling/template-storage"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
-import { Subheading, MutedText } from "@/options/components/ui/typography"
-import { Button } from "@/options/components/ui/button"
-import { VisualHelpTooltip } from "@/options/components/ui/visual-help-tooltip"
+import { Subheading, MutedText } from "@imify/ui/ui/typography"
+import { Button } from "@imify/ui/ui/button"
+import { VisualHelpTooltip } from "@imify/ui/ui/visual-help-tooltip"
 import symmetricVisualEditorVideo from "url:assets/features/symmetric_generator-visual_editor.webm"
 import { Save } from "lucide-react"
 

@@ -1,7 +1,7 @@
 import React from "react"
 import { Heart, X } from "lucide-react"
-import { Button } from "@/options/components/ui/button"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
+import { Button } from "@imify/ui/ui/button"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
 
 import bmcLogo from "url:assets/images/bmc-logo.svg"
 import githubLogo from "url:assets/images/github-logo.svg"

@@ -1,9 +1,9 @@
 import { useMemo } from "react"
 import { AlertTriangle, CheckCircle2, Gauge, Settings2, Sparkles, Wand2, Zap } from "lucide-react"
 
-import type { FormatCodecOptions } from "@/core/types"
-import { Button } from "@/options/components/ui/button"
-import { ControlledPopover } from "@/options/components/ui/controlled-popover"
+import type { FormatCodecOptions } from "@imify/core/types"
+import { Button } from "@imify/ui/ui/button"
+import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
 import {
   calculateConcurrencyAdvisor,
   type AdvisorTargetFormat,

@@ -1,14 +1,14 @@
-import { Button } from "@/options/components/ui/button"
-import { getAppMetadata } from "@/core/app-metadata"
+import { Button } from "@imify/ui/ui/button"
+import { getAppMetadata } from "@imify/core/app-metadata"
 import { Bug, Github, LayoutGrid, Library, X } from "lucide-react"
 import React, { useCallback, useEffect, useRef } from "react"
 import iconImage from "url:@assets/icon.png"
 
 import { Tooltip } from "@/options/components/tooltip"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { useDevModeEnabled } from "@/features/dev-mode/dev-mode-storage"
-import { useToast } from "@/core/hooks/use-toast"
-import { ToastContainer } from "@/core/components/toast-container"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
+import { useDevModeEnabled } from "@imify/features/dev-mode/dev-mode-storage"
+import { useToast } from "@imify/core/hooks/use-toast"
+import { ToastContainer } from "@imify/ui/components/toast-container"
 import { BugReportDialog } from "./bug-report-dialog"
 
 const appMetadata = getAppMetadata()

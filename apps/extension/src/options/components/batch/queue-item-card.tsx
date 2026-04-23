@@ -1,8 +1,8 @@
 import { formatBytes } from "@/options/components/batch/utils"
 import type { BatchQueueItem } from "@/options/components/batch/types"
 import { X, ArrowRight } from "lucide-react"
-import { Button } from "@/options/components/ui/button"
-import { BodyText, MutedText } from "@/options/components/ui/typography"
+import { Button } from "@imify/ui/ui/button"
+import { BodyText, MutedText } from "@imify/ui/ui/typography"
 import { useThumbnail } from "@/options/hooks/use-thumbnail"
 
 export function QueueItemCard({

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { drawSplicingCanvas } from "@/features/splicing/canvas-renderer"
-import { calculateLayout } from "@/features/splicing/layout-engine"
+import { drawSplicingCanvas } from "@imify/features/splicing/canvas-renderer"
+import { calculateLayout } from "@imify/features/splicing/layout-engine"
 import { usePanDrag } from "@/options/hooks/use-pan-drag"
 import { usePointerZoom } from "@/options/hooks/use-pointer-zoom"
-import { useSplicingStore } from "@/options/stores/splicing-store"
-import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
-import type { PreviewInteractionMode } from "@/options/components/ui/preview-interaction-mode-toggle"
+import { useSplicingStore } from "@imify/stores/stores/splicing-store"
+import { ZoomPanControl } from "@imify/ui/ui/zoom-pan-control"
+import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
 import type {
   LayoutResult,
   SplicingCanvasStyle,
@@ -14,7 +14,7 @@ import type {
   SplicingImageResize,
   SplicingImageStyle,
   SplicingLayoutConfig
-} from "@/features/splicing/types"
+} from "@imify/features/splicing/types"
 
 /** Show reset when pan exceeds this distance from center (px), any axis */
 const PREVIEW_PAN_RESET_THRESHOLD_PX = 150

@@ -6,30 +6,36 @@
   "description": "A privacy-first, powerful image toolkit. Save image directly from your context menu, and even more. Supports ICO, AVIF, JPEG XL.",
   "author": "TrongAJTT <trong.ajtt.dev@gmail.com>",
   "scripts": {
-    "sync:wasm": "node scripts/sync-wasm.mjs",
+    "sync:wasm": "node ../../scripts/sync-wasm.mjs",
     "predev": "pnpm sync:wasm",
     "dev": "plasmo dev",
+    "typecheck": "tsc --noEmit",
     "dev:chrome": "plasmo dev --target=chrome-mv3",
     "dev:firefox": "plasmo dev --target=firefox-mv3",
     "prebuild": "pnpm sync:wasm",
     "build": "plasmo build",
     "build:ci": "pnpm build:chrome && pnpm build:firefox && pnpm verify:manifests",
     "build:chrome": "plasmo build --target=chrome-mv3",
-    "build:firefox": "plasmo build --target=firefox-mv3 && node scripts/sanitize-firefox-manifest.mjs",
+    "build:firefox": "plasmo build --target=firefox-mv3 && node ../../scripts/sanitize-firefox-manifest.mjs",
     "prepackage": "pnpm sync:wasm",
     "package": "plasmo package",
     "package:chrome": "plasmo build --target=chrome-mv3 --zip",
-    "package:firefox": "pnpm build:firefox && node scripts/zip-firefox-build.mjs",
-    "verify:manifests": "node scripts/verify-target-manifests.mjs",
-    "sync:avif-wasm": "node scripts/sync-avif-wasm.mjs",
-    "sync:jxl-wasm": "node scripts/sync-jxl-wasm.mjs",
-    "sync:mozjpeg-wasm": "node scripts/sync-mozjpeg-wasm.mjs",
-    "sync:oxipng-wasm": "node scripts/sync-oxipng-wasm.mjs",
-    "sync:webp-wasm": "node scripts/sync-webp-wasm.mjs",
-    "sync:resize-wasm": "node scripts/sync-resize-wasm.mjs"
+    "package:firefox": "pnpm build:firefox && node ../../scripts/zip-firefox-build.mjs",
+    "verify:manifests": "node ../../scripts/verify-target-manifests.mjs",
+    "sync:avif-wasm": "node ../../scripts/sync-avif-wasm.mjs",
+    "sync:jxl-wasm": "node ../../scripts/sync-jxl-wasm.mjs",
+    "sync:mozjpeg-wasm": "node ../../scripts/sync-mozjpeg-wasm.mjs",
+    "sync:oxipng-wasm": "node ../../scripts/sync-oxipng-wasm.mjs",
+    "sync:webp-wasm": "node ../../scripts/sync-webp-wasm.mjs",
+    "sync:resize-wasm": "node ../../scripts/sync-resize-wasm.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
+    "@imify/core": "workspace:*",
+    "@imify/engine": "workspace:*",
+    "@imify/features": "workspace:*",
+    "@imify/stores": "workspace:*",
+    "@imify/ui": "workspace:*",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@jsquash/oxipng": "^2.3.0",
@@ -117,5 +123,6 @@
     "content_security_policy": {
       "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
     }
-  }
+  },
+  "license": "Apache-2.0"
 }

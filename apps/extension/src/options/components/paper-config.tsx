@@ -1,6 +1,6 @@
-import type { PaperSize, SupportedDPI } from "@/core/types"
+import type { PaperSize, SupportedDPI } from "@imify/core/types"
 import { DPI_OPTIONS, PAPER_OPTIONS } from "@/options/shared"
-import { SelectInput } from "@/options/components/ui/select-input"
+import { SelectInput } from "@imify/ui/ui/select-input"
 
 interface PaperConfigProps {
   paperSize: PaperSize

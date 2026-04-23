@@ -1,14 +1,14 @@
 import { Rows, } from "lucide-react"
-import { NumberInput } from "@/options/components/ui/number-input"
+import { NumberInput } from "@imify/ui/ui/number-input"
 import { SelectField } from "@/options/components/splicing/splicing-sidebar-fields"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { RadioCard } from "@/options/components/ui/radio-card"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { RadioCard } from "@imify/ui/ui/radio-card"
 import type {
   SplicingAlignment,
   SplicingDirection,
   SplicingImageAppearanceDirection,
   SplicingPreset
-} from "@/features/splicing/types"
+} from "@imify/features/splicing/types"
 import {
   type BentoLayoutMode,
   GRID_DIRECTION_OPTIONS,

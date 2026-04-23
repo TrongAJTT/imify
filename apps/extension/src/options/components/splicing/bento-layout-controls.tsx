@@ -2,9 +2,9 @@ import { Scissors } from "lucide-react"
 import type {
   SplicingAlignment,
   SplicingImageAppearanceDirection
-} from "@/features/splicing/types"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
-import { NumberInput } from "@/options/components/ui/number-input"
+} from "@imify/features/splicing/types"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
+import { NumberInput } from "@imify/ui/ui/number-input"
 import { SPLICING_TOOLTIPS } from "@/options/components/splicing/splicing-tooltips"
 import {
   BENTO_LAYOUT_OPTIONS,

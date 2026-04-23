@@ -1,6 +1,6 @@
 import { AlertTriangle, BarChart3, CheckCircle2, Gauge } from "lucide-react"
-import type { WebPerformanceReport } from "@/features/inspector"
-import { Button } from "@/options/components/ui/button"
+import type { WebPerformanceReport } from "@imify/features/inspector"
+import { Button } from "@imify/ui/ui/button"
 import { InfoSection } from "./info-section"
 
 interface WebPerformanceCardProps {

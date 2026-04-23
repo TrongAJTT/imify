@@ -1,7 +1,7 @@
 import { Sparkles, Eraser, Palette, Cpu, ScanLine } from "lucide-react"
 
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 
 export interface PngAdvancedSettingsCardProps {

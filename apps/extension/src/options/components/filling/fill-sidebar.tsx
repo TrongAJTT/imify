@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import type { FillingTemplate } from "@/features/filling/types"
+import type { FillingTemplate } from "@imify/features/filling/types"
 import {
   closestCenter,
   DndContext,
@@ -12,24 +12,24 @@ import {
 } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
-import { useFillingStore } from "@/options/stores/filling-store"
-import { useFillUiStore } from "@/options/stores/fill-ui-store"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
+import { useFillUiStore } from "@imify/stores/stores/fill-ui-store"
 import { FillLayerCard } from "@/options/components/filling/fill-layer-card"
 import { FillLayerCustomizationAccordion } from "@/options/components/filling/fill-layer-customization-accordion"
 import { FillCanvasAccordion } from "@/options/components/filling/fill-canvas-accordion"
 import { FillingExportAccordion } from "@/options/components/filling/filling-export-accordion"
 import { SortableFillLayerItem } from "@/options/components/filling/sortable-fill-layer-item"
-import { ResizableAccordionCard } from "@/options/components/ui/resizable-accordion-card"
+import { ResizableAccordionCard } from "@imify/ui/ui/resizable-accordion-card"
 import { ImagePlus } from "lucide-react"
 import {
   buildFillRuntimeItems,
   expandRuntimeOrderToVisibleLayerIds,
   type FillRuntimeItem,
-} from "@/features/filling/fill-runtime-items"
+} from "@imify/features/filling/fill-runtime-items"
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem
-} from "@/options/components/ui/workspace-config-sidebar-panel"
+} from "@imify/ui/ui/workspace-config-sidebar-panel"
 
 interface FillSidebarProps {
   template: FillingTemplate

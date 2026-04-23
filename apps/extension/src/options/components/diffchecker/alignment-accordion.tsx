@@ -1,7 +1,7 @@
-import type { DiffAlignAnchor, DiffAlignMode } from "@/features/diffchecker/types"
+import type { DiffAlignAnchor, DiffAlignMode } from "@imify/features/diffchecker/types"
 import { Maximize2 } from "lucide-react"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { SelectInput } from "@/options/components/ui/select-input"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { SelectInput } from "@imify/ui/ui/select-input"
 
 const ALIGN_MODE_OPTIONS = [
   { value: "fit-larger", label: "Match Larger" },

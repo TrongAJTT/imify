@@ -1,16 +1,16 @@
 import { useMemo, useRef, useState } from "react"
 import { ImagePlus, Palette, Ruler, X } from "lucide-react"
 
-import type { PatternBackgroundType } from "@/features/pattern/types"
-import type { CanvasSizePreset } from "@/features/filling/types"
+import type { PatternBackgroundType } from "@imify/features/pattern/types"
+import type { CanvasSizePreset } from "@imify/features/filling/types"
 import { CanvasSizeDialog } from "@/options/components/filling/canvas-size-dialog"
-import { Button } from "@/options/components/ui/button"
-import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { SelectInput } from "@/options/components/ui/select-input"
-import { SliderInput } from "@/options/components/ui/slider-input"
-import { usePatternStore } from "@/options/stores/pattern-store"
+import { Button } from "@imify/ui/ui/button"
+import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import { SliderInput } from "@imify/ui/ui/slider-input"
+import { usePatternStore } from "@imify/stores/stores/pattern-store"
 
 const BG_TYPE_OPTIONS: Array<{ value: PatternBackgroundType; label: string }> = [
   { value: "solid", label: "Customized Color" },

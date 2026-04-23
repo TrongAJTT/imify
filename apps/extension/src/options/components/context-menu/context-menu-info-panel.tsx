@@ -1,6 +1,6 @@
 import React from "react"
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
-import { MutedText } from "@/options/components/ui/typography"
+import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
+import { MutedText } from "@imify/ui/ui/typography"
 import { Globe, Layers, LayoutTemplate } from "lucide-react"
 
 export function ContextMenuInfoPanel() {

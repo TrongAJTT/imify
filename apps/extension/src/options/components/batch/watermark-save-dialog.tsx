@@ -1,10 +1,10 @@
 import { Save, Stamp, X } from "lucide-react"
 
-import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { Button } from "@/options/components/ui/button"
-import { SecondaryButton } from "@/options/components/ui/secondary-button"
-import { TextInput } from "@/options/components/ui/text-input"
-import type { SavedWatermarkItem } from "@/options/stores/watermark-store"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
+import { Button } from "@imify/ui/ui/button"
+import { SecondaryButton } from "@imify/ui/ui/secondary-button"
+import { TextInput } from "@imify/ui/ui/text-input"
+import type { SavedWatermarkItem } from "@imify/stores/stores/watermark-store"
 
 export type WatermarkSaveAction = "save_new" | "overwrite"
 

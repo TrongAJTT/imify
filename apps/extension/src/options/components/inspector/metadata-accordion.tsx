@@ -1,7 +1,7 @@
 import { Tags } from "lucide-react"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { SelectInput } from "@/options/components/ui/select-input"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { Eye } from "lucide-react"
 
 const EXIF_SORT_OPTIONS = [

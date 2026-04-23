@@ -1,12 +1,12 @@
-import type { FillRuntimeItem } from "@/features/filling/fill-runtime-items"
+import type { FillRuntimeItem } from "@imify/features/filling/fill-runtime-items"
 import type {
   CanvasFillState,
   FillingExportConfig,
   FillingTemplate,
   ImageTransform,
   LayerFillState,
-} from "@/features/filling/types"
-import type { RasterPipelineFormat } from "@/features/converter/raster-processing-pipeline"
+} from "@imify/features/filling/types"
+import type { RasterPipelineFormat } from "@imify/engine/converter/raster-processing-pipeline"
 
 export interface FillExportWorkerPayload {
   template: FillingTemplate

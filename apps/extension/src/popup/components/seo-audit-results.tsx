@@ -1,8 +1,8 @@
 import { AlertTriangle, CheckCircle2, Loader2, ShieldAlert } from "lucide-react"
 
 import type { SeoAuditAssetItem, SeoAuditReport } from "@/features/seo-audit"
-import { SurfaceCard } from "@/options/components/ui/surface-card"
-import { Kicker, MutedText } from "@/options/components/ui/typography"
+import { SurfaceCard } from "@imify/ui/ui/surface-card"
+import { Kicker, MutedText } from "@imify/ui/ui/typography"
 
 interface SeoAuditResultsProps {
   report: SeoAuditReport | null

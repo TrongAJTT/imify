@@ -1,6 +1,6 @@
 ﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
-import type { FormatConfig } from "@/core/types"
-import type { ConvertImageResult } from "@/features/converter"
+import type { FormatConfig } from "@imify/core/types"
+import type { ConvertImageResult } from "@imify/engine/converter"
 import { OFFSCREEN_CONVERT_REQUEST, OFFSCREEN_DOCUMENT_PATH,
   type OffscreenConvertRequest, type OffscreenConvertResponse } from "@/background/offscreen-types"
 

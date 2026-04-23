@@ -12,7 +12,7 @@ import {
   toCssDataUri,
   type InspectorResult,
   type PaletteColor
-} from "@/features/inspector"
+} from "@imify/features/inspector"
 import { InfoSection } from "./info-section"
 import { Tooltip } from "@/options/components/tooltip"
 import { INSPECTOR_TOOLTIPS } from "@/options/components/inspector/inspector-tooltips"

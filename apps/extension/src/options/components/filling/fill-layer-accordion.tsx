@@ -1,14 +1,14 @@
 import { useCallback, useRef } from "react"
 import { ImagePlus, RotateCcw, X } from "lucide-react"
 
-import type { LayerFillState, VectorLayer, ImageTransform } from "@/features/filling/types"
-import { DEFAULT_IMAGE_TRANSFORM } from "@/features/filling/types"
-import { SHAPE_LABELS } from "@/features/filling/shape-generators"
-import { useFillingStore } from "@/options/stores/filling-store"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { ColorPickerPopover } from "@/options/components/ui/color-picker-popover"
-import { Button } from "@/options/components/ui/button"
+import type { LayerFillState, VectorLayer, ImageTransform } from "@imify/features/filling/types"
+import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types"
+import { SHAPE_LABELS } from "@imify/features/filling/shape-generators"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
+import { Button } from "@imify/ui/ui/button"
 import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 interface FillLayerAccordionProps {

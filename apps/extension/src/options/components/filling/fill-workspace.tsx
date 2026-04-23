@@ -3,46 +3,46 @@ import { Stage, Layer, Line, Rect, Group, Text, Image as KonvaImage, Transformer
 import type Konva from "konva"
 import { Download, Loader2 } from "lucide-react"
 
-import { ToastContainer } from "@/core/components/toast-container"
-import { useConversionToasts } from "@/core/hooks/use-toast"
-import type { ConversionProgressPayload } from "@/core/types"
+import { ToastContainer } from "@imify/ui/components/toast-container"
+import { useConversionToasts } from "@imify/core/hooks/use-toast"
+import type { ConversionProgressPayload } from "@imify/core/types"
 import {
   buildFillRuntimeItems,
   type FillRuntimeGroupItem,
   type FillRuntimeItem,
   type FillRuntimeLayerItem,
-} from "@/features/filling/fill-runtime-items"
+} from "@imify/features/filling/fill-runtime-items"
 import {
   applyRuntimeTransformToPoint,
   applyRuntimeTransformToPolygons,
   computeConvexHull,
   getBoundsFromPoints,
   toWorldLayerPoints,
-} from "@/features/filling/group-geometry"
-import type { CanvasFillState, FillingTemplate, VectorLayer } from "@/features/filling/types"
-import { DEFAULT_IMAGE_TRANSFORM } from "@/features/filling/types"
-import { useFillingStore } from "@/options/stores/filling-store"
-import { useFillUiStore } from "@/options/stores/fill-ui-store"
+} from "@imify/features/filling/group-geometry"
+import type { CanvasFillState, FillingTemplate, VectorLayer } from "@imify/features/filling/types"
+import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types"
+import { useFillingStore } from "@imify/stores/stores/filling-store"
+import { useFillUiStore } from "@imify/stores/stores/fill-ui-store"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
-import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { useTransformGuides, type RectBounds } from "@/options/hooks/use-transform-guides"
-import { buildActiveFillingFormatOptions } from "@/options/stores/filling-format-options"
+import { buildActiveFillingFormatOptions } from "@imify/stores/stores/filling-format-options"
 import {
   regenerateLayerShapePoints,
   resolveLayerShapePoints,
-} from "@/features/filling/shape-generators"
-import { flattenPoints, pointInPolygon, roundedPolygonPoints } from "@/features/filling/vector-math"
+} from "@imify/features/filling/shape-generators"
+import { flattenPoints, pointInPolygon, roundedPolygonPoints } from "@imify/features/filling/vector-math"
 import {
   resolveLayerContainerHighlightMode,
   type LayerContainerHighlightMode,
 } from "@/options/components/filling/layer-visual-highlight"
-import { Subheading, MutedText } from "@/options/components/ui/typography"
-import { Button } from "@/options/components/ui/button"
-import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
+import { Subheading, MutedText } from "@imify/ui/ui/typography"
+import { Button } from "@imify/ui/ui/button"
+import { ZoomPanControl } from "@imify/ui/ui/zoom-pan-control"
 import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
-} from "@/options/components/ui/preview-interaction-mode-toggle"
+} from "@imify/ui/ui/preview-interaction-mode-toggle"
 import { exportFilledTemplate } from "./filling-export-utils"
 
 const CANVAS_PADDING = 40

@@ -1,9 +1,9 @@
-import type { DiffAlgorithm, DiffViewMode } from "@/features/diffchecker/types"
+import type { DiffAlgorithm, DiffViewMode } from "@imify/features/diffchecker/types"
 import { Settings } from "lucide-react"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { SelectInput } from "@/options/components/ui/select-input"
-import { MutedText } from "@/options/components/ui/typography"
-import { SliderInput } from "@/options/components/ui/slider-input"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import { MutedText } from "@imify/ui/ui/typography"
+import { SliderInput } from "@imify/ui/ui/slider-input"
 
 const ALGORITHM_OPTIONS = [
   { value: "heatmap", label: "Heatmap" },

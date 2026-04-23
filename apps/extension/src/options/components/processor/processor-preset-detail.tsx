@@ -1,5 +1,5 @@
-import type { SavedSetupPreset } from "@/options/stores/batch-store"
-import type { SetupContext } from "@/options/stores/batch-store"
+import type { SavedSetupPreset } from "@imify/stores/stores/batch-store"
+import type { SetupContext } from "@imify/stores/stores/batch-store"
 
 interface PresetDetailLineProps {
   label: string

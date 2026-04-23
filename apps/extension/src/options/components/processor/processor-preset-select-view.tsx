@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react"
 import { Check, Edit2, Plus, Trash2 } from "lucide-react"
 
-import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
+import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
 import { WorkspaceSelectHeader } from "@/options/components/shared/workspace-select-header"
 import { SavePresetDialog } from "@/options/components/batch/save-preset-dialog"
 import { ProcessorPresetDetail } from "@/options/components/processor/processor-preset-detail"
-import type { SavedSetupPreset, SetupContext } from "@/options/stores/batch-store"
+import type { SavedSetupPreset, SetupContext } from "@imify/stores/stores/batch-store"
 import { PRESET_HIGHLIGHT_COLORS } from "@/options/shared/preset-colors"
 
 interface ProcessorPresetSelectViewProps {

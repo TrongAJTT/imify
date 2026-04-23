@@ -1,6 +1,6 @@
 ﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
-import { getContextMenuLayout } from "@/core/context-menu-order"
-import type { ExtensionStorageState } from "@/core/types"
+import { getContextMenuLayout } from "@imify/core/context-menu-order"
+import type { ExtensionStorageState } from "@imify/core/types"
 
 export const MENU_ROOT_ID = "imify_convert_root"
 export const MENU_ITEM_PREFIX = "imify_format_"

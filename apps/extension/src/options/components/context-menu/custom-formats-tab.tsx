@@ -15,18 +15,18 @@ import {
   rectSortingStrategy
 } from "@dnd-kit/sortable"
 
-import { DEFAULT_ICO_SIZES } from "@/core/format-config"
-import type { ExtensionStorageState, FormatConfig } from "@/core/types"
-import { type CustomFormatInput, validateCustomFormatInput } from "@/features/custom-formats"
+import { DEFAULT_ICO_SIZES } from "@imify/core/format-config"
+import type { ExtensionStorageState, FormatConfig } from "@imify/core/types"
+import { type CustomFormatInput, validateCustomFormatInput } from "@imify/engine/custom-formats"
 import { CustomFormatForm } from "@/options/components/context-menu/custom-format-form"
 import { createCustomFormatId, normalizeCustomInput } from "@/options/shared"
-import { Heading, Subheading, BodyText, MutedText, LabelText } from "@/options/components/ui/typography"
+import { Heading, Subheading, BodyText, MutedText, LabelText } from "@imify/ui/ui/typography"
 import { CheckCircle2, Circle, Edit, Plus, Trash2, X } from "lucide-react"
-import { Button } from "@/options/components/ui/button"
+import { Button } from "@imify/ui/ui/button"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
-import { SecondaryButton } from "@/options/components/ui/secondary-button"
+import { SecondaryButton } from "@imify/ui/ui/secondary-button"
 import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
-import { DialogWrapper } from "@/options/components/ui/dialog-wrapper"
+import { DialogWrapper } from "@imify/ui/ui/dialog-wrapper"
 
 interface PendingDelete {
   item: FormatConfig

@@ -1,5 +1,5 @@
 import { Shield, AlertTriangle, AlertCircle, Info } from "lucide-react"
-import type { PrivacyAlert } from "@/features/inspector"
+import type { PrivacyAlert } from "@imify/features/inspector"
 import { InfoSection } from "./info-section"
 
 interface PrivacyAlertsCardProps {

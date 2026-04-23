@@ -1,9 +1,9 @@
-import type { PatternBoundarySettings } from "@/features/pattern/types"
-import { Button } from "@/options/components/ui/button"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { SelectInput } from "@/options/components/ui/select-input"
-import type { PatternVisualBoundaryTarget } from "@/options/stores/pattern-store"
+import type { PatternBoundarySettings } from "@imify/features/pattern/types"
+import { Button } from "@imify/ui/ui/button"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import type { PatternVisualBoundaryTarget } from "@imify/stores/stores/pattern-store"
 import { Eye } from "lucide-react"
 
 const BOUNDARY_SHAPE_OPTIONS = [

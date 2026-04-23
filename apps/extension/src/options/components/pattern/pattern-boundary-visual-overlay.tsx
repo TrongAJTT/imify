@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Ellipse, Group, Layer, Rect, Stage, Text, Transformer } from "react-konva"
 import type Konva from "konva"
 
-import type { PatternBoundarySettings } from "@/features/pattern/types"
-import type { PatternVisualBoundaryTarget } from "@/options/stores/pattern-store"
+import type { PatternBoundarySettings } from "@imify/features/pattern/types"
+import type { PatternVisualBoundaryTarget } from "@imify/stores/stores/pattern-store"
 
 const MIN_BOUNDARY_SIZE = 8
 

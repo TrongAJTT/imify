@@ -1,6 +1,6 @@
-import { Button } from "@/options/components/ui/button"
+import { Button } from "@imify/ui/ui/button"
 import { useKeyPress } from "@/options/hooks/use-key-press"
-import type { SavedSetupPreset } from "@/options/stores/batch-store"
+import type { SavedSetupPreset } from "@imify/stores/stores/batch-store"
 import { Check, Edit2, FolderOpen, Trash2, X } from "lucide-react"
 import React, { useEffect, useState } from "react"
 import { createPortal } from "react-dom"

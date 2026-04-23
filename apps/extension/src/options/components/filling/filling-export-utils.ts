@@ -1,6 +1,6 @@
-import { clampQuality } from "@/core/image-utils"
-import { buildJxlEncodeOptions } from "@/core/jxl-options"
-import type { FillRuntimeItem } from "@/features/filling/fill-runtime-items"
+import { clampQuality } from "@imify/core/image-utils"
+import { buildJxlEncodeOptions } from "@imify/core/jxl-options"
+import type { FillRuntimeItem } from "@imify/features/filling/fill-runtime-items"
 import type {
   CanvasFillState,
   FillingExportConfig,
@@ -8,27 +8,27 @@ import type {
   FillingTemplate,
   ImageTransform,
   LayerFillState,
-} from "@/features/filling/types"
-import { templateStorage } from "@/features/filling/template-storage"
-import { renderFilledCanvas } from "@/features/filling/canvas-export-renderer"
-import { encodeAvif } from "@/features/converter/avif-encoder"
-import { encodeImageDataToBmp } from "@/features/converter/bmp-encoder"
-import { encodeJxl } from "@/features/converter/jxl-encoder"
-import { encodeMozJpeg } from "@/features/converter/mozjpeg-encoder"
-import { optimisePngWithOxi } from "@/features/converter/oxipng"
-import { encodePngFromImageData } from "@/features/converter/png-tiny"
+} from "@imify/features/filling/types"
+import { templateStorage } from "@imify/features/filling/template-storage"
+import { renderFilledCanvas } from "@imify/features/filling/canvas-export-renderer"
+import { encodeAvif } from "@imify/engine/converter/avif-encoder"
+import { encodeImageDataToBmp } from "@imify/engine/converter/bmp-encoder"
+import { encodeJxl } from "@imify/engine/converter/jxl-encoder"
+import { encodeMozJpeg } from "@imify/engine/converter/mozjpeg-encoder"
+import { optimisePngWithOxi } from "@imify/engine/converter/oxipng"
+import { encodePngFromImageData } from "@imify/engine/converter/png-tiny"
 import {
   createDefaultRasterAdapterRegistry,
   encodeRasterWithAdapters,
   type RasterEncodeDependencies,
-} from "@/features/converter/raster-encode-adapters"
+} from "@imify/engine/converter/raster-encode-adapters"
 import {
   CANVAS_MIME_BY_FORMAT,
   encodeCanvasFormatFromImageData,
   type RasterPipelineFormat,
-} from "@/features/converter/raster-processing-pipeline"
-import { encodeImageDataToTiff } from "@/features/converter/tiff-encoder"
-import { encodeWebp } from "@/features/converter/webp-encoder"
+} from "@imify/engine/converter/raster-processing-pipeline"
+import { encodeImageDataToTiff } from "@imify/engine/converter/tiff-encoder"
+import { encodeWebp } from "@imify/engine/converter/webp-encoder"
 import type {
   FillExportWorkerPayload,
   FillExportWorkerRequestMessage,

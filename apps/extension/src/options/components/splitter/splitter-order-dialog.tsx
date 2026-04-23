@@ -4,11 +4,11 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities"
 import { ArrowUpDown, GripVertical, MoveHorizontal, MoveVertical, X } from "lucide-react"
 
-import type { SplitterSplitSettings } from "@/features/splitter/types"
+import type { SplitterSplitSettings } from "@imify/features/splitter/types"
 import { SPLITTER_TOOLTIPS } from "@/options/components/splitter/splitter-tooltips"
 import { Tooltip } from "@/options/components/tooltip"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
-import { SelectInput } from "@/options/components/ui/select-input"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
+import { SelectInput } from "@imify/ui/ui/select-input"
 
 interface SplitterOrderDialogProps {
   isOpen: boolean

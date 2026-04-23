@@ -1,9 +1,9 @@
 ﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { ToastContainer } from "@/core/components/toast-container"
-import { useConversionToasts } from "@/core/hooks/use-toast"
-import type { ConversionProgressPayload } from "@/core/types"
+import { ToastContainer } from "@imify/ui/components/toast-container"
+import { useConversionToasts } from "@imify/core/hooks/use-toast"
+import type { ConversionProgressPayload } from "@imify/core/types"
 
 interface DownloadViaAnchorPayload {
   dataUrl: string

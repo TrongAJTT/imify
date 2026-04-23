@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Download, ImagePlus, Move } from "lucide-react"
 
-import { toUserFacingConversionError } from "@/core/error-utils"
-import type { FormatConfig } from "@/core/types"
-import { convertImage } from "@/features/converter"
-import { applyExifPolicy } from "@/features/converter/exif"
-import { fetchRemoteImageAsFile } from "@/features/converter/remote-image-import"
+import { toUserFacingConversionError } from "@imify/core/error-utils"
+import type { FormatConfig } from "@imify/core/types"
+import { convertImage } from "@imify/engine/converter"
+import { applyExifPolicy } from "@imify/engine/converter/exif"
+import { fetchRemoteImageAsFile } from "@imify/engine/converter/remote-image-import"
 import {
   decodeBlobToImageData,
   decodeFileToImageData
-} from "@/features/image-pipeline/decode-image-data"
+} from "@imify/engine/image-pipeline/decode-image-data"
 import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import { applyWatermarkToImageBlob } from "@/options/components/batch/watermark"
 import { buildSmartOutputFileName, readImageDimensions } from "@/options/components/batch/pipeline"
@@ -17,11 +17,11 @@ import { downloadWithFilename, formatBytes, withBatchResize } from "@/options/co
 import { consumePendingInspectorOptimizeFile } from "@/options/shared/inspector-optimize-bridge"
 import { buildActiveCodecOptionsForTarget } from "@/options/shared/target-format-state"
 import { PixelCompareWorkspace } from "@/options/components/diffchecker/pixel-compare-workspace"
-import { Button } from "@/options/components/ui/button"
-import { EmptyDropCard } from "@/options/components/ui/empty-drop-card"
-import { Heading, MutedText } from "@/options/components/ui/typography"
-import { useBatchStore } from "@/options/stores/batch-store"
-import { useWatermarkStore } from "@/options/stores/watermark-store"
+import { Button } from "@imify/ui/ui/button"
+import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
+import { Heading, MutedText } from "@imify/ui/ui/typography"
+import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { useWatermarkStore } from "@imify/stores/stores/watermark-store"
 import { ImageUrlImportControl } from "@/options/components/image-url-import-control"
 
 const PREVIEW_DEBOUNCE_MS = 420

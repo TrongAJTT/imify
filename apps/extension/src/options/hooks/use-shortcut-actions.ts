@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react"
 
-import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import {
   eventMatchesShortcut,
   isShortcutEventFromEditableTarget,
   type ShortcutActionId,
-} from "@/options/shared/shortcuts"
+} from "@imify/stores/shortcuts"
 
 export interface ShortcutActionHandler {
   actionId: ShortcutActionId

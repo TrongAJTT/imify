@@ -1,30 +1,23 @@
 /**
- * @imify/core — Platform-agnostic core types, utilities, and constants.
- *
- * Re-exports from src/core/ (current location pre-Phase 3 move).
- * After Phase 3, files will live directly in this package.
+ * @imify/core — Public API
  */
 
-// Types & constants
-export * from "../../../apps/extension/src/core/types"
-export * from "../../../apps/extension/src/core/config"
-export * from "../../../apps/extension/src/core/format-config"
-export * from "../../../apps/extension/src/core/paper-constants"
+export * from "./app-metadata"
+export * from "./attributions"
+export * from "./avif-options"
+export * from "./browser-detection"
+export * from "./codec-options"
+export * from "./config"
+export * from "./context-menu-order"
+export * from "./download-utils"
+export * from "./error-utils"
+export * from "./format-config"
+export * from "./image-utils"
+export * from "./indexed-db"
+export * from "./jxl-options"
+export * from "./paper-constants"
+export * from "./resize-resampling"
+export * from "./storage-adapter"
+export * from "./types"
 
-// Codec options
-export * from "../../../apps/extension/src/core/codec-options"
-export * from "../../../apps/extension/src/core/avif-options"
-export * from "../../../apps/extension/src/core/jxl-options"
-
-// Utilities
-export * from "../../../apps/extension/src/core/app-metadata"
-export * from "../../../apps/extension/src/core/browser-detection"
-export * from "../../../apps/extension/src/core/image-utils"
-export * from "../../../apps/extension/src/core/download-utils"
-export * from "../../../apps/extension/src/core/error-utils"
-export * from "../../../apps/extension/src/core/resize-resampling"
-export * from "../../../apps/extension/src/core/indexed-db"
-export * from "../../../apps/extension/src/core/context-menu-order"
-export * from "../../../apps/extension/src/core/attributions"
-export * from "../../../apps/extension/src/core/storage-adapter"
-
+export * from "./hooks/use-toast"

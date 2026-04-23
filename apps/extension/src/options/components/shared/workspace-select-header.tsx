@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 
-import { Button } from "@/options/components/ui/button"
-import { Subheading } from "@/options/components/ui/typography"
+import { Button } from "@imify/ui/ui/button"
+import { Subheading } from "@imify/ui/ui/typography"
 
 interface WorkspaceSelectHeaderProps {
   title: string

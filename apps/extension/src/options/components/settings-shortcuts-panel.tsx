@@ -1,19 +1,19 @@
 import { useMemo, useState } from "react"
 import { RotateCcw, X } from "lucide-react"
 
-import { ShortcutBindingInput } from "@/options/components/ui/shortcut-binding-input"
-import { SettingsItemHeader } from "@/options/components/ui/settings-item-header"
-import { SettingsSectionHeader } from "@/options/components/ui/settings-section-header"
-import { Button } from "@/options/components/ui/button"
-import { TextInput } from "@/options/components/ui/text-input"
-import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { ShortcutBindingInput } from "@imify/ui/ui/shortcut-binding-input"
+import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header"
+import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header"
+import { Button } from "@imify/ui/ui/button"
+import { TextInput } from "@imify/ui/ui/text-input"
+import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import {
   DEFAULT_SHORTCUT_PREFERENCES,
   formatShortcutBinding,
   shortcutBindingToIdentifier,
   type ShortcutActionId,
   type ShortcutDefinition,
-} from "@/options/shared/shortcuts"
+} from "@imify/stores/shortcuts"
 
 export function SettingsShortcutsPanel() {
   const [searchQuery, setSearchQuery] = useState("")

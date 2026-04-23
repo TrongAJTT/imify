@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 
-import { getCanonicalExtension } from "@/core/download-utils"
-import type { SplitterExportFormat } from "@/features/splitter/types"
+import { getCanonicalExtension } from "@imify/core/download-utils"
+import type { SplitterExportFormat } from "@imify/features/splitter/types"
 import { ColorMatchRulesAccordion } from "@/options/components/splitter/color-match-rules-accordion"
 import { SplitterCustomGuidesAccordion } from "@/options/components/splitter/splitter-custom-guides-accordion"
 import { SplitterExportPanel } from "@/options/components/splitter/splitter-export-panel"
@@ -14,18 +14,18 @@ import {
   RenamePatternDialog,
   SPLITTER_EXPORT_RENAME_PRESETS,
   SPLITTER_EXPORT_RENAME_TAGS
-} from "@/options/components/ui/rename-pattern-dialog"
+} from "@imify/ui/ui/rename-pattern-dialog"
 import {
   buildTargetFormatQualityCardConfig,
   supportsTargetFormatQuality,
   supportsTargetFormatTinyMode
 } from "@/options/shared/target-format-state"
 import { buildTargetFormatOptions } from "@/options/shared/target-format-options"
-import { useSplitterStore } from "@/options/stores/splitter-store"
+import { useSplitterStore } from "@imify/stores/stores/splitter-store"
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem
-} from "@/options/components/ui/workspace-config-sidebar-panel"
+} from "@imify/ui/ui/workspace-config-sidebar-panel"
 
 interface SplitterSidebarPanelProps {
   enableWideSidebarGrid?: boolean

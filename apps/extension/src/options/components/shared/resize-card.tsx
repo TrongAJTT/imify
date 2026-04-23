@@ -3,13 +3,13 @@ import {
   DEFAULT_RESAMPLING_ALGORITHM,
   RESAMPLING_ALGORITHM_OPTIONS,
   normalizeResizeResamplingAlgorithm
-} from "@/core/resize-resampling"
-import type { ResizeResamplingAlgorithm } from "@/core/types"
+} from "@imify/core/resize-resampling"
+import type { ResizeResamplingAlgorithm } from "@imify/core/types"
 import { SmartResizeModule } from "@/options/components/smart-resize-module"
 import { PaperConfig } from "@/options/components/paper-config"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { NumberInput } from "@/options/components/ui/number-input"
-import { SelectInput } from "@/options/components/ui/select-input"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { SelectInput } from "@imify/ui/ui/select-input"
 
 export type ResizeCardProps = {
   resizeMode: string

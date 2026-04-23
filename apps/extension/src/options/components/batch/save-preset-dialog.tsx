@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react"
 import { Check, Save, X } from "lucide-react"
 import { createPortal } from "react-dom"
 
-import { Button } from "@/options/components/ui/button"
+import { Button } from "@imify/ui/ui/button"
 import { useKeyPress } from "@/options/hooks/use-key-press"
 
 interface SavePresetDialogProps {

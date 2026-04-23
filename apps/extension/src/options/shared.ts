@@ -4,10 +4,10 @@ import type {
   ImageFormat,
   MenuSortMode,
   ResizeMode
-} from "@/core/types"
-import { QUALITY_FORMATS } from "@/core/format-config"
-import { normalizeFormatOptionsForCustomFormat } from "@/features/custom-formats/format-options-normalizer"
-import type { CustomFormatInput } from "@/features/custom-formats"
+} from "@imify/core/types"
+import { QUALITY_FORMATS } from "@imify/core/format-config"
+import { normalizeFormatOptionsForCustomFormat } from "@imify/engine/custom-formats/format-options-normalizer"
+import type { CustomFormatInput } from "@imify/engine/custom-formats"
 import {
   DPI_OPTIONS,
   PAPER_OPTIONS,

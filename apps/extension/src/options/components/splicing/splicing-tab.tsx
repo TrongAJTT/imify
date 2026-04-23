@@ -2,39 +2,39 @@ import { arrayMove } from "@dnd-kit/sortable"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Trash2 } from "lucide-react"
 
-import { APP_CONFIG } from "@/core/config"
-import { ToastContainer } from "@/core/components/toast-container"
-import { useConversionToasts } from "@/core/hooks/use-toast"
-import type { ConversionProgressPayload } from "@/core/types"
-import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@/features/converter/wasm-worker-pool"
+import { APP_CONFIG } from "@imify/core/config"
+import { ToastContainer } from "@imify/ui/components/toast-container"
+import { useConversionToasts } from "@imify/core/hooks/use-toast"
+import type { ConversionProgressPayload } from "@imify/core/types"
+import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@imify/engine/converter/wasm-worker-pool"
 import { useSplicingExport } from "@/options/components/splicing/use-splicing-export"
 import type {
   SplicingImageItem,
   LayoutResult,
   SplicingPreset,
   SplicingDirection
-} from "@/features/splicing/types"
+} from "@imify/features/splicing/types"
 import { SplicingHeavyPreviewQualityDialog } from "@/options/components/splicing/splicing-heavy-preview-quality-dialog"
 import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
 import { ExportSplitButton, type ExportSplitMode } from "@/options/components/shared/export-split-button"
 import { SplicingWorkspace } from "@/options/components/splicing/splicing-workspace"
 import { SplicingWorkspaceShell } from "@/options/components/splicing/splicing-workspace-shell"
-import { Button } from "@/options/components/ui/button"
+import { Button } from "@imify/ui/ui/button"
 import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
-} from "@/options/components/ui/preview-interaction-mode-toggle"
-import { Subheading, MutedText } from "@/options/components/ui/typography"
+} from "@imify/ui/ui/preview-interaction-mode-toggle"
+import { Subheading, MutedText } from "@imify/ui/ui/typography"
 import {
   useSplicingStore,
   normalizePreviewQualityPercent,
   resolveLayoutConfig,
   resolveCanvasStyle,
   resolveImageStyle
-} from "@/options/stores/splicing-store"
-import { useBatchStore } from "@/options/stores/batch-store"
+} from "@imify/stores/stores/splicing-store"
+import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
-import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import type { SplicingExportMode } from "@/options/components/splicing/use-splicing-export"
 

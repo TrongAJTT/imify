@@ -3,7 +3,7 @@ import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable"
 
 import { QueueItemCard } from "@/options/components/batch/queue-item-card"
 import type { BatchQueueItem } from "@/options/components/batch/types"
-import { BodyText } from "@/options/components/ui/typography"
+import { BodyText } from "@imify/ui/ui/typography"
 import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
 
 interface BatchQueueGridProps {

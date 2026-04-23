@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from "react"
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
-} from "@/options/components/ui/workspace-config-sidebar-panel"
+} from "@imify/ui/ui/workspace-config-sidebar-panel"
 import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
 import { ResizeCard } from "@/options/components/shared/resize-card"
@@ -13,8 +13,8 @@ import {
   type BatchTargetFormat
 } from "@/options/components/batch/types"
 import { buildResizeOverride } from "@/options/components/batch/utils"
-import { useBatchStore } from "@/options/stores/batch-store"
-import { useWatermarkStore } from "@/options/stores/watermark-store"
+import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { useWatermarkStore } from "@imify/stores/stores/watermark-store"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import { BatchRenameDialog } from "./rename-dialog"
 import { BatchWatermarkDialog } from "./watermark-dialog"

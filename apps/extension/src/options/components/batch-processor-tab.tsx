@@ -3,15 +3,15 @@ import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor,
   useSensors, type DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 
-import { ToastContainer } from "@/core/components/toast-container"
-import { useConversionToasts, useToast } from "@/core/hooks/use-toast"
-import type { ConversionProgressPayload, FormatConfig } from "@/core/types"
-import { fetchRemoteImagesFromUrls } from "@/features/converter/remote-image-import"
+import { ToastContainer } from "@imify/ui/components/toast-container"
+import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast"
+import type { ConversionProgressPayload, FormatConfig } from "@imify/core/types"
+import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import"
 import { useClipboardPaste } from "@/options/hooks/use-clipboard-paste"
 import { BatchActionBar } from "@/options/components/batch/action-bar"
 import { BatchQueueGrid } from "@/options/components/batch/queue-grid"
 import { BatchSummaryCard } from "@/options/components/batch/summary-card"
-import { BodyText } from "@/options/components/ui/typography"
+import { BodyText } from "@imify/ui/ui/typography"
 import type { BatchQueueItem } from "@/options/components/batch/types"
 import { BatchUploadDropzone } from "@/options/components/batch/upload-dropzone"
 import { MAX_FILE_SIZE_BYTES, MAX_TOTAL_QUEUE_BYTES,
@@ -23,8 +23,8 @@ import { useBatchExecution } from "@/options/components/batch/hooks/use-batch-ex
 import { useBatchExportActions } from "@/options/components/batch/hooks/use-batch-export-actions"
 import { ImageUrlImportControl } from "@/options/components/image-url-import-control"
 import { buildActiveCodecOptionsForTarget } from "@/options/shared/target-format-state"
-import { useBatchStore } from "@/options/stores/batch-store"
-import { useWatermarkStore } from "@/options/stores/watermark-store"
+import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { useWatermarkStore } from "@imify/stores/stores/watermark-store"
 
 export function BatchProcessorTab() {
   const targetFormat = useBatchStore((state) => state.targetFormat)

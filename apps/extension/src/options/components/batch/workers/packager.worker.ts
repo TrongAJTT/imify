@@ -1,6 +1,6 @@
 import { zipSync } from "fflate"
 
-import { convertImageToPdf, mergeImagesToPdf } from "@/features/converter/pdf-engine"
+import { convertImageToPdf, mergeImagesToPdf } from "@imify/engine/converter/pdf-engine"
 import type {
   PackagerAddMessage,
   PackagerCancelMessage,

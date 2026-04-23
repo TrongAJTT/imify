@@ -7,7 +7,7 @@ import { PopupActionGrid } from "@/popup/components/popup-action-grid"
 import { useSeoAudit } from "@/popup/hooks/use-seo-audit"
 import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { Expand, Moon, Sun, X } from "lucide-react"
-import { Button } from "@/options/components/ui/button"
+import { Button } from "@imify/ui/ui/button"
 
 import iconImage from "url:@assets/icon.png"
 

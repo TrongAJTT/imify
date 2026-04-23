@@ -1,7 +1,7 @@
-import { SidebarPanel } from "@/options/components/ui/sidebar-panel"
+import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
 import { PatternPresetInfoPanel } from "@/options/components/pattern/pattern-preset-info-panel"
 import { PatternSidebarPanel } from "@/options/components/pattern/pattern-sidebar-panel"
-import { usePatternPresetStore } from "@/options/stores/pattern-preset-store"
+import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
 
 interface PatternSidebarShellProps {
   enableWideSidebarGrid?: boolean

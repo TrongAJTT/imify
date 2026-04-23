@@ -1,4 +1,4 @@
-import type { SavedSplicingPreset } from "@/options/stores/splicing-preset-store"
+import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store"
 
 interface PresetDetailLineProps {
   label: string

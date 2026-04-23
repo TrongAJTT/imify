@@ -1,5 +1,5 @@
 import type { SeoAuditReport } from "@/features/seo-audit"
-import { BodyText, Kicker, MutedText, Subheading } from "@/options/components/ui/typography"
+import { BodyText, Kicker, MutedText, Subheading } from "@imify/ui/ui/typography"
 
 function formatBytes(value: number): string {
   if (value < 1024) {

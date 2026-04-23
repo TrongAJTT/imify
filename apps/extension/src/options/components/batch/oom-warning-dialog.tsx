@@ -1,7 +1,7 @@
 import { AlertTriangle, X } from "lucide-react"
 import { useState } from "react"
-import { Button } from "@/options/components/ui/button"
-import { BodyText, Subheading, MutedText } from "@/options/components/ui/typography"
+import { Button } from "@imify/ui/ui/button"
+import { BodyText, Subheading, MutedText } from "@imify/ui/ui/typography"
 
 interface OOMWarningDialogProps {
   isOpen: boolean

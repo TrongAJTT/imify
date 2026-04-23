@@ -1,9 +1,9 @@
 import React from "react"
 import { ExternalLink, X } from "lucide-react"
-import { Button } from "@/options/components/ui/button"
-import { BaseDialog } from "@/options/components/ui/base-dialog"
+import { Button } from "@imify/ui/ui/button"
+import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Tooltip } from "@/options/components/tooltip"
-import { ATTRIBUTIONS } from "@/core/attributions"
+import { ATTRIBUTIONS } from "@imify/core/attributions"
 
 interface AttributionDialogProps {
   isOpen: boolean

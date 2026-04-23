@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { PanelRightOpen, ScanSearch, Settings2 } from "lucide-react"
 
-import { Button } from "@/options/components/ui/button"
+import { Button } from "@imify/ui/ui/button"
 
 interface PopupActionGridProps {
   isScanRunning: boolean

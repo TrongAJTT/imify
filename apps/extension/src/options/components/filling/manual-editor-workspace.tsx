@@ -3,27 +3,27 @@ import { Stage, Layer, Line, Rect, Transformer } from "react-konva"
 import type Konva from "konva"
 import { Loader2, Save } from "lucide-react"
 
-import type { LayerGroup, VectorLayer } from "@/features/filling/types"
-import { resolveLayerShapePoints } from "@/features/filling/shape-generators"
+import type { LayerGroup, VectorLayer } from "@imify/features/filling/types"
+import { resolveLayerShapePoints } from "@imify/features/filling/shape-generators"
 import {
   buildGroupOverlayPolygons,
   getBoundsFromPoints,
   toWorldLayerPoints,
-} from "@/features/filling/group-geometry"
-import { flattenPoints } from "@/features/filling/vector-math"
+} from "@imify/features/filling/group-geometry"
+import { flattenPoints } from "@imify/features/filling/vector-math"
 import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
-import { useShortcutPreferences } from "@/options/hooks/use-shortcut-preferences"
+import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { useTransformGuides, type RectBounds } from "@/options/hooks/use-transform-guides"
-import { Subheading, MutedText } from "@/options/components/ui/typography"
-import { Button } from "@/options/components/ui/button"
-import { ZoomPanControl } from "@/options/components/ui/zoom-pan-control"
-import { VisualHelpTooltip } from "@/options/components/ui/visual-help-tooltip"
+import { Subheading, MutedText } from "@imify/ui/ui/typography"
+import { Button } from "@imify/ui/ui/button"
+import { ZoomPanControl } from "@imify/ui/ui/zoom-pan-control"
+import { VisualHelpTooltip } from "@imify/ui/ui/visual-help-tooltip"
 import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 import manualEditorMultiSelectVideo from "url:assets/features/image_filling_manual-visual_multi_select.webm"
 import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
-} from "@/options/components/ui/preview-interaction-mode-toggle"
+} from "@imify/ui/ui/preview-interaction-mode-toggle"
 
 interface ManualEditorWorkspaceProps {
   canvasWidth: number

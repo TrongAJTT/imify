@@ -1,4 +1,4 @@
-import type { SavedPatternPreset } from "@/options/stores/pattern-preset-store"
+import type { SavedPatternPreset } from "@imify/stores/stores/pattern-preset-store"
 
 interface PresetDetailLineProps {
   label: string

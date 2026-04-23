@@ -1,7 +1,7 @@
-import type { DiffViewMode } from "@/features/diffchecker/types"
+import type { DiffViewMode } from "@imify/features/diffchecker/types"
 import { Columns, Layers, Zap } from "lucide-react"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { RadioCard } from "@/options/components/ui/radio-card"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { RadioCard } from "@imify/ui/ui/radio-card"
 
 const VIEW_MODES: Array<{
   value: DiffViewMode

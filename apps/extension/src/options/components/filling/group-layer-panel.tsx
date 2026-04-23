@@ -1,10 +1,10 @@
 import { Link, Unlink2 } from "lucide-react"
 
-import type { LayerGroup, VectorLayer } from "@/features/filling/types"
-import { AccordionCard } from "@/options/components/ui/accordion-card"
-import { Button } from "@/options/components/ui/button"
-import { CheckboxCard } from "@/options/components/ui/checkbox-card"
-import { TextInput } from "@/options/components/ui/text-input"
+import type { LayerGroup, VectorLayer } from "@imify/features/filling/types"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { Button } from "@imify/ui/ui/button"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
+import { TextInput } from "@imify/ui/ui/text-input"
 
 interface GroupLayerPanelProps {
   group: LayerGroup | null
