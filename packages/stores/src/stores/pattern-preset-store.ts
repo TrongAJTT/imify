@@ -13,7 +13,7 @@ import {
   DEFAULT_PATTERN_SETTINGS,
 } from "@imify/features/pattern/types"
 import type { BmpColorDepth, TiffColorMode } from "@imify/core/types"
-import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "@/options/shared/preset-colors"
+import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "./preset-colors"
 
 
 

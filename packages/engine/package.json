@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "description": "Image processing pipeline, WASM encoders, and worker pool for Imify",
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

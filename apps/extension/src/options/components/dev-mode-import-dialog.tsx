@@ -5,6 +5,7 @@ import { Check, Upload, AlertTriangle } from "lucide-react"
 import { buildDebugLog, downloadDebugLog, importDebugLog, type DebugLogPayload } from "@imify/features/dev-mode/debug-log-builder"
 import { DEV_MODE_FEATURES } from "@imify/features/dev-mode/dev-mode-registry"
 import { getAppMetadata } from "@imify/core/app-metadata"
+import { getStorageState, setStorageState } from "@/adapters/chrome-storage-state"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type { WorkspaceLayoutPreferences } from "@/options/shared/layout-preferences"
 import type { OptionsTab } from "@/options/shared"
@@ -88,13 +89,14 @@ export function DevModeImportDialog({
           activeTab,
           performancePreferences,
           layoutPreferences,
+          getStorageState,
           exportType: "backup",
           exportedFeatures: allFeatureIds
         })
         downloadDebugLog(backupPayload)
       }
 
-      await importDebugLog(payload, selectedFeatures)
+      await importDebugLog(payload, selectedFeatures, { setStorageState })
       
       onSuccess?.()
       onClose()

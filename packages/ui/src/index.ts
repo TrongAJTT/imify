@@ -4,6 +4,7 @@
 
 export * from "./components/animating-spinner"
 export * from "./components/toast-container"
+export * from "./hooks/theme-mode"
 export * from "./ui/accordion-card"
 export * from "./ui/accordion-group"
 export * from "./ui/base-dialog"

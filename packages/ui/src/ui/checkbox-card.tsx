@@ -1,5 +1,5 @@
 import { HelpCircle } from "lucide-react"
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "./tooltip"
 import { getThemeClasses, type ColorTheme, type ThemeClasses } from "./theme-config"
 
 interface CheckboxCardProps {

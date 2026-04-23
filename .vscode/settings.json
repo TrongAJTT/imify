@@ -3,6 +3,7 @@
         "pnpm": true,
         "git diff": true,
         "git check-ignore": true,
-        "npx gitnexus": true
+        "npx gitnexus": true,
+        "Test-Path": true
     }
 }

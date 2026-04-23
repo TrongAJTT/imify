@@ -3,6 +3,7 @@ import "@/style.css"
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Loader2 } from "lucide-react"
+import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
 
 import { inspectImage, type InspectorResult } from "@imify/features/inspector"
 import { BasicInfoCard } from "@/options/components/inspector/basic-info-card"
@@ -14,6 +15,8 @@ import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { SidepanelDropInputCard } from "@/sidepanel/components/sidepanel-drop-input-card"
 import { SidepanelSharedAppbar } from "@/sidepanel/components/sidepanel-shared-appbar"
+
+bootstrapExtensionAdapters()
 
 async function switchSidepanel(view: "inspector" | "audit"): Promise<void> {
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })

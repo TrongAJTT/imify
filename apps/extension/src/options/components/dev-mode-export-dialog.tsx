@@ -3,6 +3,7 @@ import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
 import { Check } from "lucide-react"
 import { buildDebugLog, downloadDebugLog } from "@imify/features/dev-mode/debug-log-builder"
+import { getStorageState } from "@/adapters/chrome-storage-state"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type { WorkspaceLayoutPreferences } from "@/options/shared/layout-preferences"
 import type { OptionsTab } from "@/options/shared"
@@ -50,6 +51,7 @@ export function DevModeExportDialog({
         activeTab,
         performancePreferences,
         layoutPreferences,
+        getStorageState,
         exportType: "normal",
         exportedFeatures: selectedFeatures
       })

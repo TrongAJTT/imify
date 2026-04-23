@@ -1,6 +1,6 @@
 import { HelpCircle } from "lucide-react"
 
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "./tooltip"
 
 interface RadioCardProps {
   icon?: React.ReactNode

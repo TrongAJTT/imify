@@ -2,6 +2,7 @@
 import "@/style.css"
 
 import { useState } from "react"
+import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
 
 import { PopupActionGrid } from "@/popup/components/popup-action-grid"
 import { useSeoAudit } from "@/popup/hooks/use-seo-audit"
@@ -10,6 +11,8 @@ import { Expand, Moon, Sun, X } from "lucide-react"
 import { Button } from "@imify/ui/ui/button"
 
 import iconImage from "url:@assets/icon.png"
+
+bootstrapExtensionAdapters()
 
 function toErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message.trim().length > 0) {

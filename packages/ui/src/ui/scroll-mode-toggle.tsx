@@ -1,5 +1,5 @@
 import { Mouse } from "lucide-react"
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "./tooltip"
 
 interface ScrollModeToggleProps {
   isScrollPan: boolean

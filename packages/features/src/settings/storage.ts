@@ -1,6 +1,3 @@
-// PLATFORM:extension — reads/writes chrome.storage.sync directly.
-// In Phase 2: sanitize/parse logic → packages/features/settings,
-// chrome I/O → apps/extension/src/adapters/chrome-storage-adapter.ts
 import {
   STORAGE_KEY,
   STORAGE_VERSION,
@@ -142,7 +139,7 @@ function sanitizeState(state: unknown): ExtensionStorageState {
   }
 }
 
-function parsePersistedState(value: unknown): PersistedStorageState {
+export function parsePersistedState(value: unknown): PersistedStorageState {
   if (typeof value === "string") {
     try {
       return parsePersistedState(JSON.parse(value))
@@ -181,74 +178,82 @@ function parsePersistedState(value: unknown): PersistedStorageState {
   }
 }
 
-async function readRawState(): Promise<PersistedStorageState> {
-  const result = await chrome.storage.sync.get(STORAGE_KEY)
-
-  return parsePersistedState(result[STORAGE_KEY])
-}
-
-export async function getStorageState(): Promise<ExtensionStorageState> {
-  const persisted = await readRawState()
-
-  return persisted.state
-}
-
-export async function setStorageState(state: ExtensionStorageState): Promise<void> {
+export function serializePersistedState(state: ExtensionStorageState): string {
   const payload = {
     version: STORAGE_VERSION,
     state: sanitizeState(state)
   } satisfies PersistedStorageState
-
-  await chrome.storage.sync.set({
-    [STORAGE_KEY]: JSON.stringify(payload)
-  })
+  return JSON.stringify(payload)
 }
 
-export async function patchStorageState(
-  updater: (current: ExtensionStorageState) => ExtensionStorageState
-): Promise<ExtensionStorageState> {
-  const current = await getStorageState()
-  const next = sanitizeState(updater(current))
-
-  await setStorageState(next)
-
-  return next
+export interface StorageStateRawAccess {
+  read: () => Promise<unknown>
+  write: (rawValue: string) => Promise<void>
+  subscribe?: (listener: (rawValue: unknown) => void) => () => void
 }
 
-export async function ensureStorageState(): Promise<ExtensionStorageState> {
-  const persisted = await readRawState()
+export interface StorageStateAccessors {
+  getStorageState: () => Promise<ExtensionStorageState>
+  setStorageState: (state: ExtensionStorageState) => Promise<void>
+  patchStorageState: (
+    updater: (current: ExtensionStorageState) => ExtensionStorageState
+  ) => Promise<ExtensionStorageState>
+  ensureStorageState: () => Promise<ExtensionStorageState>
+  onStorageStateChanged: (listener: (state: ExtensionStorageState) => void) => () => void
+}
 
-  if (persisted.version !== STORAGE_VERSION) {
-    await setStorageState(persisted.state)
+export function createStorageStateAccessors(access: StorageStateRawAccess): StorageStateAccessors {
+  async function readRawState(): Promise<PersistedStorageState> {
+    const raw = await access.read()
+    return parsePersistedState(raw)
   }
 
-  return persisted.state
-}
+  async function getStorageState(): Promise<ExtensionStorageState> {
+    const persisted = await readRawState()
+    return persisted.state
+  }
 
-export function onStorageStateChanged(
-  listener: (state: ExtensionStorageState) => void
-): () => void {
-  const handler: Parameters<typeof chrome.storage.onChanged.addListener>[0] = (
-    changes,
-    areaName
-  ) => {
-    if (areaName !== "sync") {
-      return
+  async function setStorageState(state: ExtensionStorageState): Promise<void> {
+    await access.write(serializePersistedState(state))
+  }
+
+  async function patchStorageState(
+    updater: (current: ExtensionStorageState) => ExtensionStorageState
+  ): Promise<ExtensionStorageState> {
+    const current = await getStorageState()
+    const next = sanitizeState(updater(current))
+    await setStorageState(next)
+    return next
+  }
+
+  async function ensureStorageState(): Promise<ExtensionStorageState> {
+    const persisted = await readRawState()
+    if (persisted.version !== STORAGE_VERSION) {
+      await setStorageState(persisted.state)
+    }
+    return persisted.state
+  }
+
+  function onStorageStateChanged(
+    listener: (state: ExtensionStorageState) => void
+  ): () => void {
+    if (!access.subscribe) {
+      return () => {}
     }
 
-    const change = changes[STORAGE_KEY]
-
-    if (!change) {
-      return
-    }
-
-    const parsed = parsePersistedState(change.newValue)
-    listener(parsed.state)
+    return access.subscribe((rawValue) => {
+      const parsed = parsePersistedState(rawValue)
+      listener(parsed.state)
+    })
   }
 
-  chrome.storage.onChanged.addListener(handler)
-
-  return () => {
-    chrome.storage.onChanged.removeListener(handler)
+  return {
+    getStorageState,
+    setStorageState,
+    patchStorageState,
+    ensureStorageState,
+    onStorageStateChanged
   }
 }
+
+export { STORAGE_KEY }

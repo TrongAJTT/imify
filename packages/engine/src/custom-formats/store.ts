@@ -6,8 +6,7 @@ import type {
 } from "@imify/core/types"
 import { CUSTOM_FORMATS, QUALITY_FORMATS } from "@imify/core/format-config"
 import { normalizeFormatOptionsForCustomFormat } from "./format-options-normalizer"
-import { patchStorageState } from "@imify/features/settings"
-import { normalizeCustomResizeConfig } from "@/options/shared/resize-state"
+import { normalizeCustomResizeConfig } from "@imify/core/resize-state"
 
 export interface CustomFormatInput {
   name: string
@@ -16,6 +15,25 @@ export interface CustomFormatInput {
   quality?: number
   formatOptions?: FormatCodecOptions
   resize: ResizeConfig
+}
+
+type PatchStorageState = (
+  updater: (current: ExtensionStorageState) => ExtensionStorageState
+) => Promise<ExtensionStorageState>
+
+let patchStorageStateImpl: PatchStorageState | null = null
+
+export function registerCustomFormatStorageAccess(access: {
+  patchStorageState: PatchStorageState
+}): void {
+  patchStorageStateImpl = access.patchStorageState
+}
+
+function requirePatchStorageState(): PatchStorageState {
+  if (!patchStorageStateImpl) {
+    throw new Error("Custom format storage access is not registered")
+  }
+  return patchStorageStateImpl
 }
 
 function clampQuality(quality: number | undefined): number | undefined {
@@ -91,6 +109,7 @@ export function validateCustomFormatInput(input: CustomFormatInput): string | nu
 }
 
 export async function createCustomFormat(input: CustomFormatInput): Promise<FormatConfig> {
+  const patchStorageState = requirePatchStorageState()
   const formatConfig = normalizeCustomFormat(input, createCustomFormatId())
 
   await patchStorageState((current) => {
@@ -107,6 +126,7 @@ export async function updateCustomFormat(
   id: string,
   input: CustomFormatInput
 ): Promise<FormatConfig | null> {
+  const patchStorageState = requirePatchStorageState()
   const formatConfig = normalizeCustomFormat(input, id)
   let found = false
 
@@ -130,6 +150,7 @@ export async function updateCustomFormat(
 }
 
 export async function deleteCustomFormat(id: string): Promise<boolean> {
+  const patchStorageState = requirePatchStorageState()
   let removed = false
 
   await patchStorageState((current: ExtensionStorageState) => {

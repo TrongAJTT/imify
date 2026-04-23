@@ -4,6 +4,7 @@ import "@/style.css"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useRef, useState, useEffect, useCallback } from "react"
+import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
 import { Button } from "@imify/ui/ui/button"
 import { PopupApp } from "@/popup/popup-app"
 import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
@@ -80,6 +81,8 @@ import { DonateDialog } from "./components/donate-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 import { CONTEXT_MENU_SUB_TABS } from "./components/context-menu/context-menu-settings-tab"
+
+bootstrapExtensionAdapters()
 
 const syncStorage = new Storage({
   area: "sync",

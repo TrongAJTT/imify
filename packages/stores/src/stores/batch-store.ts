@@ -18,8 +18,8 @@ import { mergeNormalizedJxlCodecOptions } from "@imify/core/jxl-options"
 import { DEFAULT_ICO_SIZES } from "@imify/core/format-config"
 import { normalizeResizeResamplingAlgorithm } from "@imify/core/resize-resampling"
 import type { BmpColorDepth, PaperSize, SupportedDPI, TiffColorMode } from "@imify/core/types"
-import type { BatchResizeMode, BatchSetupState, BatchTargetFormat } from "@/options/components/batch/types"
-import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "@/options/shared/preset-colors"
+import type { BatchResizeMode, BatchSetupState, BatchTargetFormat } from "./batch-types"
+import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "./preset-colors"
 
 
 

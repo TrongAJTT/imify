@@ -3,6 +3,7 @@ import "@/style.css"
 
 import { Clock3, Loader2, ScanSearch } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
+import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
 
 import { runSeoAuditOnActiveTab, saveSeoAuditSnapshot } from "@/features/seo-audit"
 import { Button } from "@imify/ui/ui/button"
@@ -12,6 +13,8 @@ import { SeoAuditSnapshotInline } from "@/sidepanel/components/seo-audit-snapsho
 import { SidepanelSharedAppbar } from "@/sidepanel/components/sidepanel-shared-appbar"
 import { useSeoAuditSnapshot } from "@/sidepanel/hooks/use-seo-audit-snapshot"
 import { Tooltip } from "@/options/components/tooltip"
+
+bootstrapExtensionAdapters()
 
 async function switchSidepanel(view: "inspector" | "audit"): Promise<void> {
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "./tooltip"
 
 export interface SegmentedControlOption<T extends string> {
   value: T

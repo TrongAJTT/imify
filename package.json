@@ -6,6 +6,7 @@
   "scripts": {
     "dev:ext": "pnpm --filter @imify/extension dev",
     "dev:web": "pnpm --filter @imify/web dev",
+    "build:web": "pnpm --filter @imify/web build",
     "build:all": "turbo build",
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",

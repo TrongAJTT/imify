@@ -9,7 +9,7 @@ import {
   type SplitterSplitSettings,
   type SplitterExportSettings
 } from "@imify/features/splitter/types"
-import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "@/options/shared/preset-colors"
+import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "./preset-colors"
 
 
 

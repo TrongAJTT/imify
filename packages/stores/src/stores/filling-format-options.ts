@@ -10,7 +10,7 @@ import {
 } from "@imify/core/codec-options"
 import { normalizeJxlCodecOptionsFromExportSource } from "@imify/core/jxl-options"
 import type { FillingExportConfig } from "@imify/features/filling/types"
-import { buildActiveFormatOptions } from "@/options/shared/active-format-options"
+import { buildActiveFormatOptions } from "./active-format-options"
 import type { BmpColorDepth, MozJpegChromaSubsampling } from "@imify/core/types"
 import type { FillingStoreState } from "./filling-store"
 

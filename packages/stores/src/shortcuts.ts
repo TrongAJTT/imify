@@ -1,7 +1,3 @@
-// PLATFORM:extension — shortcutStorage uses @plasmohq/storage (chrome.storage.sync)
-
-import { Storage } from "@plasmohq/storage"
-
 export type ShortcutActionId =
   | "global.preview.zoom_mode"
   | "global.preview.pan_mode"
@@ -33,9 +29,6 @@ export interface ShortcutDefinition {
 }
 
 export const SHORTCUT_PREFERENCES_KEY = "imify_shortcut_preferences_v1"
-
-// TODO(monorepo-phase2): replace with StorageAdapter injection
-export const shortcutStorage = new Storage({ area: "sync" })
 
 export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
   {

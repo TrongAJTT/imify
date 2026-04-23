@@ -3,7 +3,7 @@ import type { ReactNode } from "react"
 
 import { InfoPopover } from "./info-popover"
 import { LabelText } from "./typography"
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "./tooltip"
 
 export interface SelectInputOption {
   value: string

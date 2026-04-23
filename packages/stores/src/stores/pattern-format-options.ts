@@ -10,7 +10,7 @@ import {
 } from "@imify/core/codec-options"
 import { normalizeJxlCodecOptionsFromExportSource } from "@imify/core/jxl-options"
 import type { BmpColorDepth, FormatCodecOptions, MozJpegChromaSubsampling } from "@imify/core/types"
-import { buildActiveFormatOptions } from "@/options/shared/active-format-options"
+import { buildActiveFormatOptions } from "./active-format-options"
 import type { PatternStoreState } from "./pattern-store"
 
 export type PatternFormatOptionSource = Pick<

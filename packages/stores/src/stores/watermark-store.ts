@@ -2,13 +2,13 @@
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 
-import type { BatchWatermarkConfig } from "@/options/components/batch/types"
-import { DEFAULT_BATCH_WATERMARK } from "@/options/components/batch/watermark"
+import type { BatchWatermarkConfig } from "./batch-types"
 import {
+  DEFAULT_BATCH_WATERMARK,
   cloneWatermarkConfig,
   findMatchingSavedWatermarkId,
   sanitizeWatermarkForStorage
-} from "@/options/components/batch/watermark-config"
+} from "./watermark-config"
 import { watermarkStorage } from "@imify/core/indexed-db"
 
 export type WatermarkContext = "single" | "batch"

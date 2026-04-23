@@ -7,7 +7,7 @@ import {
 } from "@imify/core/codec-options"
 import { normalizeJxlCodecOptionsFromExportSource } from "@imify/core/jxl-options"
 import type { SplicingExportConfig } from "@imify/features/splicing/types"
-import { buildActiveFormatOptions } from "@/options/shared/active-format-options"
+import { buildActiveFormatOptions } from "./active-format-options"
 import type { SplicingStoreState } from "./splicing-store"
 
 type SplicingFormatOptions = NonNullable<SplicingExportConfig["formatOptions"]>

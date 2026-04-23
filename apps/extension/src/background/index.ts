@@ -3,7 +3,12 @@ import { blobToDownloadDataUrl, toOutputFilename, type OutputFormat } from "@imi
 import { toUserFacingConversionError } from "@imify/core/error-utils"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@imify/core/types"
 import { convertImage } from "@imify/engine/converter"
-import { ensureStorageState, getStorageState, onStorageStateChanged, patchStorageState } from "@imify/features/settings"
+import {
+  ensureStorageState,
+  getStorageState,
+  onStorageStateChanged,
+  patchStorageState
+} from "@/adapters/chrome-storage-state"
 import { extractConfigIdFromMenuItem, rebuildContextMenu } from "@/background/context-menu-builder"
 import { convertImageViaOffscreen } from "@/background/offscreen-bridge"
 import { publishConvertProgress } from "@/background/message-hub"

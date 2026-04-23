@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react"
 import { LabelText } from "./typography"
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "./tooltip"
 
 interface NumberInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: number

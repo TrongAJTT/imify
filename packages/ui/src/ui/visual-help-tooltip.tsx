@@ -1,6 +1,6 @@
 import { SquareMousePointer } from "lucide-react"
 
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "./tooltip"
 
 interface VisualHelpTooltipProps {
   label?: string

@@ -1,13 +1,14 @@
 import { getAppMetadata } from "@imify/core/app-metadata"
 import { DEV_MODE_FEATURES } from "./dev-mode-registry"
 import type { ExtensionStorageState } from "@imify/core/types"
-import type { PerformancePreferences } from "@/options/shared/performance-preferences"
-import type { WorkspaceLayoutPreferences } from "@/options/shared/layout-preferences"
-import type { OptionsTab } from "@/options/shared"
+import type {
+  OptionsTab
+} from "./debug-shared"
 // PLATFORM:extension — getStorageState/setStorageState use chrome.storage.sync
-import { WORKSPACE_LAYOUT_PREFERENCES_KEY } from "@/options/shared/layout-preferences"
-import { PERFORMANCE_PREFERENCES_KEY } from "@/options/shared/performance-preferences"
-import { getStorageState, setStorageState } from "../settings/storage"
+import {
+  PERFORMANCE_PREFERENCES_KEY,
+  WORKSPACE_LAYOUT_PREFERENCES_KEY
+} from "./debug-shared"
 
 // ─── Privacy masking ────────────────────────────────────────────────────────
 
@@ -139,8 +140,9 @@ export interface DebugLogPayload {
 
 export interface BuildDebugLogParams {
   activeTab: OptionsTab | null
-  performancePreferences: PerformancePreferences | null
-  layoutPreferences: WorkspaceLayoutPreferences | null
+  performancePreferences: unknown | null
+  layoutPreferences: unknown | null
+  getStorageState?: () => Promise<ExtensionStorageState>
   exportType?: "normal" | "backup"
   exportedFeatures?: string[]
 }
@@ -150,11 +152,12 @@ export async function buildDebugLog(params: BuildDebugLogParams): Promise<DebugL
     activeTab, 
     performancePreferences, 
     layoutPreferences,
+    getStorageState,
     exportType = "normal",
     exportedFeatures = DEV_MODE_FEATURES.map(f => f.id)
   } = params
   const appMetadata = getAppMetadata()
-  const extensionStorageState = await getStorageState()
+  const extensionStorageState = getStorageState ? await getStorageState() : null
 
   const hasFeature = (id: string) => exportedFeatures.includes(id)
 
@@ -222,7 +225,16 @@ export function downloadDebugLog(payload: DebugLogPayload): void {
 
 // ─── Import helper ───────────────────────────────────────────────────────────
 
-export async function importDebugLog(payload: DebugLogPayload, importFeatures: string[]): Promise<void> {
+export interface ImportDebugLogOptions {
+  setStorageState?: (state: ExtensionStorageState) => Promise<void>
+}
+
+export async function importDebugLog(
+  payload: DebugLogPayload,
+  importFeatures: string[],
+  options: ImportDebugLogOptions = {}
+): Promise<void> {
+  const { setStorageState } = options
   const hasFeature = (id: string) => importFeatures.includes(id)
 
   for (const feature of DEV_MODE_FEATURES) {
@@ -234,7 +246,7 @@ export async function importDebugLog(payload: DebugLogPayload, importFeatures: s
     }
   }
 
-  if (hasFeature("settings") && payload.settings) {
+  if (setStorageState && hasFeature("settings") && payload.settings) {
     await setStorageState(payload.settings as ExtensionStorageState)
   }
 

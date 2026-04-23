@@ -8,7 +8,7 @@ import {
 import { normalizeJxlCodecOptions } from "@imify/core/jxl-options"
 import type { FormatCodecOptions } from "@imify/core/types"
 import type { SplitterExportSettings } from "@imify/features/splitter/types"
-import { buildActiveFormatOptions } from "@/options/shared/active-format-options"
+import { buildActiveFormatOptions } from "./active-format-options"
 
 export function buildSplitterFormatOptions(source: SplitterExportSettings): FormatCodecOptions {
   const options = source.codecOptions

@@ -5,7 +5,7 @@ import { Button } from "./button"
 import { TextInput } from "./text-input"
 import { SelectChip } from "./select-chip"
 import { BaseDialog } from "./base-dialog"
-import { buildSmartOutputFileName } from "@/options/components/batch/pipeline"
+import { buildSmartOutputFileName } from "@imify/core/file-name-pattern"
 
 export interface RenamePatternPreviewSample {
   originalFileName: string
