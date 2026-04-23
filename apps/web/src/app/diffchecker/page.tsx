@@ -1,10 +1,5 @@
-import { FeaturePlaceholderPage } from "@/components/layout/feature-placeholder-page"
+import { DiffcheckerPage as DiffcheckerFeaturePage } from "@/features/diffchecker/diffchecker-page"
 
 export default function DiffcheckerPage() {
-  return (
-    <FeaturePlaceholderPage
-      title="Diffchecker"
-      description="The first full web feature port starts with Diffchecker in Phase 4.4 wave 1."
-    />
-  )
+  return <DiffcheckerFeaturePage />
 }

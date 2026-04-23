@@ -4,6 +4,7 @@ import initAvifFactory from "@assets/wasm/avif_enc.js"
 import initJxlFactory from "@assets/wasm/jxl_enc.js"
 
 import { buildNormalizedJxlWasmOptions, type JxlEncodeOptions } from "@imify/core/jxl-options"
+import { resolveEngineWasmUrl } from "./runtime-adapter"
 
 interface WasmModule {
   encode: (
@@ -34,11 +35,7 @@ let avifModulePromise: Promise<WasmModule> | null = null
 let jxlModulePromise: Promise<WasmModule> | null = null
 
 function resolveWasmUrl(fileName: string): string {
-  if (typeof location !== "undefined" && location.origin) {
-    return `${location.origin}/assets/wasm/${fileName}`
-  }
-
-  return new URL(`../../assets/wasm/${fileName}`, import.meta.url).toString()
+  return resolveEngineWasmUrl(fileName)
 }
 
 async function getAvifModule(): Promise<WasmModule> {

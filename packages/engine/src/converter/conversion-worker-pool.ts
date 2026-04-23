@@ -5,6 +5,8 @@ export function setConversionWorkerFactory(factory: WorkerFactory) {
   conversionWorkerFactory = factory;
 }
 
+import { createEngineConversionWorker } from "./runtime-adapter"
+
 import type { ConvertImageResult } from "./"
 import type { FormatConfig, ImageFormat } from "@imify/core/types"
 
@@ -134,7 +136,7 @@ class ConversionWorkerPool {
 
   private createSlot(): WorkerSlot {
     const slot: WorkerSlot = {
-      worker: null as any, // null as any /* new Worker(new URL("./conversion.worker.ts", import.meta.url) */, { type: "module" }),
+      worker: null as any,
       busy: false,
       taskId: null,
       bindHandlers: () => {
@@ -158,7 +160,7 @@ class ConversionWorkerPool {
           }
 
           slot.worker.terminate()
-          slot.worker = (conversionWorkerFactory ? conversionWorkerFactory() : (() => { throw new Error("conversionWorkerFactory not set") })())
+          slot.worker = conversionWorkerFactory ? conversionWorkerFactory() : createEngineConversionWorker()
           slot.busy = false
           slot.taskId = null
           slot.bindHandlers()
@@ -167,6 +169,7 @@ class ConversionWorkerPool {
       }
     }
 
+    slot.worker = conversionWorkerFactory ? conversionWorkerFactory() : createEngineConversionWorker()
     slot.bindHandlers()
     return slot
   }

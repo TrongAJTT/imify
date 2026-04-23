@@ -5,6 +5,8 @@ export function setWasmWorkerFactory(factory: WorkerFactory) {
   wasmWorkerFactory = factory;
 }
 
+import { createEngineWasmWorker } from "./runtime-adapter"
+
 import type { ImageFormat } from "@imify/core/types"
 
 type WasmWorkerFormat = Extract<ImageFormat, "avif" | "jxl">
@@ -145,7 +147,7 @@ class WasmEncodeWorkerPool {
   }
 
   private createSlot(): WorkerSlot {
-    const worker = (wasmWorkerFactory ? wasmWorkerFactory() : (() => { throw new Error("wasmWorkerFactory not set") })())
+    const worker = wasmWorkerFactory ? wasmWorkerFactory() : createEngineWasmWorker()
 
     const slot: WorkerSlot = {
       worker,
@@ -173,7 +175,7 @@ class WasmEncodeWorkerPool {
       }
 
       slot.worker.terminate()
-      slot.worker = (wasmWorkerFactory ? wasmWorkerFactory() : (() => { throw new Error("wasmWorkerFactory not set") })())
+      slot.worker = wasmWorkerFactory ? wasmWorkerFactory() : createEngineWasmWorker()
       slot.busy = false
       slot.taskId = null
 

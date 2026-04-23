@@ -4,6 +4,9 @@
   "private": true,
   "description": "Next.js web app for Imify",
   "scripts": {
+    "sync:wasm": "node ../../scripts/sync-web-wasm.mjs",
+    "predev": "pnpm sync:wasm",
+    "prebuild": "pnpm sync:wasm",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

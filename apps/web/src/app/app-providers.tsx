@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { registerStorageAdapter } from "@imify/core/storage-adapter"
+import { registerEngineRuntimeAdapter } from "@imify/engine/converter/runtime-adapter"
 import { localStorageAdapter } from "../adapters/local-storage-adapter"
 
 interface AppProvidersProps {
@@ -27,6 +28,9 @@ export function AppProviders({ children }: AppProvidersProps) {
   useEffect(() => {
     if (hasLocalStorage) {
       registerStorageAdapter(localStorageAdapter)
+      registerEngineRuntimeAdapter({
+        resolveWasmUrl: (fileName) => `${window.location.origin}/assets/wasm/${fileName}`
+      })
     }
     setIsReady(true)
   }, [hasLocalStorage])

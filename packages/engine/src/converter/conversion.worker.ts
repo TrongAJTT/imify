@@ -19,6 +19,7 @@ import {
 } from "@imify/engine/converter/raster-processing-pipeline"
 import { encodeImageDataToTiff } from "./tiff-encoder"
 import { encodeWebp } from "./webp-encoder"
+import { resolveEngineWasmUrl } from "./runtime-adapter"
 
 interface WasmModule {
   encode: (
@@ -82,7 +83,7 @@ let avifModulePromise: Promise<WasmModule> | null = null
 let jxlModulePromise: Promise<WasmModule> | null = null
 
 function resolveWasmUrl(fileName: string): string {
-  return `${self.location.origin}/assets/wasm/${fileName}`
+  return resolveEngineWasmUrl(fileName)
 }
 
 async function getAvifModule(): Promise<WasmModule> {

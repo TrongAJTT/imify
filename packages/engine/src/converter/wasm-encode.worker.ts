@@ -2,6 +2,7 @@
 import initAvifFactory from "@assets/wasm/avif_enc.js"
 // @ts-ignore: This JS module is shipped as a static asset.
 import initJxlFactory from "@assets/wasm/jxl_enc.js"
+import { resolveEngineWasmUrl } from "./runtime-adapter"
 
 interface WasmModule {
   encode: (
@@ -48,7 +49,7 @@ let avifModulePromise: Promise<WasmModule> | null = null
 let jxlModulePromise: Promise<WasmModule> | null = null
 
 function resolveWasmUrl(fileName: string): string {
-  return `${self.location.origin}/assets/wasm/${fileName}`
+  return resolveEngineWasmUrl(fileName)
 }
 
 async function getAvifModule(): Promise<WasmModule> {

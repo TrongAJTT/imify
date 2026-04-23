@@ -3,6 +3,7 @@ import { convertRasterImage } from "./canvas-engine"
 import { convertSourceToIcoOutput } from "./ico-encoder"
 import { convertImageToPdf } from "./pdf-engine"
 import { convertImageWithWorker, isConversionWorkerSupported } from "./conversion-worker-pool"
+export { registerEngineRuntimeAdapter } from "./runtime-adapter"
 
 export interface ConvertImageParams {
   sourceBlob: Blob
