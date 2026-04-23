@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { Kicker } from "@imify/ui/ui/typography"
+import { Kicker } from "@imify/ui"
 
 interface InfoSectionProps {
   title: string

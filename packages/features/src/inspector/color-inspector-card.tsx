@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
 import { Check, ChevronDown, Copy, Palette } from "lucide-react"
-import type { ColorInfo, PaletteColor, ColorDisplayFormat } from "@imify/features/inspector"
+import type { ColorInfo, PaletteColor, ColorDisplayFormat } from "./types"
 import {
   buildGradientCss,
   buildScssVariables,
@@ -9,11 +9,11 @@ import {
   generateCssVariables,
   getColorName,
   getSuggestedGradient
-} from "@imify/features/inspector"
+} from "./index"
 import { InfoSection, InfoRow } from "./info-section"
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "@imify/ui"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
-import { INSPECTOR_TOOLTIPS } from "@/options/components/inspector/inspector-tooltips"
+import { INSPECTOR_TOOLTIPS } from "./inspector-tooltips"
 
 function formatColor(c: PaletteColor, format: ColorDisplayFormat): string {
   switch (format) {

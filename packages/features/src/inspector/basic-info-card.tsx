@@ -1,8 +1,7 @@
 import { FileImage, Ruler, Clock, Pipette } from "lucide-react"
-import type { BasicInfo, DimensionInfo, ResolutionInfo, TimeInfo } from "@imify/features/inspector"
-import { formatFileSize } from "@imify/features/inspector"
+import type { BasicInfo, DimensionInfo, ResolutionInfo, TimeInfo } from "./types"
+import { formatFileSize } from "./format-utils"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
-import { Button } from "@imify/ui/ui/button"
 import { InfoSection, InfoRow } from "./info-section"
 
 interface BasicInfoCardProps {

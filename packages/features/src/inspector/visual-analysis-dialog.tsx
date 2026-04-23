@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react"
+import { BaseDialog, Kicker } from "@imify/ui"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
-import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { InteractivePreview, type PixelSample } from "./interactive-preview"
-import { Kicker } from "@imify/ui"
 
 interface VisualAnalysisDialogProps {
   imageUrl: string
@@ -16,27 +15,21 @@ export function VisualAnalysisDialog({ imageUrl, alt }: VisualAnalysisDialogProp
   const colorBlindMode = useInspectorStore((s) => s.colorBlindMode)
   const loupeEnabled = useInspectorStore((s) => s.loupeEnabled)
   const loupeZoom = useInspectorStore((s) => s.loupeZoom)
-
   const [sample, setSample] = useState<PixelSample | null>(null)
   const [isReady, setIsReady] = useState(false)
   const loupeCanvasRef = useRef<HTMLCanvasElement | null>(null)
-
   const LOUPE_WIDTH = 192
   const LOUPE_HEIGHT = 108
   const LOUPE_SAMPLE_SIZE = 14
 
   useEffect(() => {
     if (!sample || !loupeEnabled || !isReady) return
-
     const loupeCanvas = loupeCanvasRef.current
     if (!loupeCanvas) return
-
     loupeCanvas.width = LOUPE_WIDTH
     loupeCanvas.height = LOUPE_HEIGHT
     const loupeCtx = loupeCanvas.getContext("2d")
     if (!loupeCtx) return
-
-    // Re-create loupe rendering logic from InteractivePreview but for this standalone canvas
     const img = new Image()
     img.src = imageUrl
     img.onload = () => {
@@ -44,38 +37,21 @@ export function VisualAnalysisDialog({ imageUrl, alt }: VisualAnalysisDialogProp
       const scale = Math.min(1, MAX_PREVIEW_EDGE / Math.max(img.width, img.height))
       const width = Math.max(1, Math.round(img.width * scale))
       const height = Math.max(1, Math.round(img.height * scale))
-
       const tempCanvas = new OffscreenCanvas(width, height)
-      const tempCtx = tempCanvas.getContext("2d")!
+      const tempCtx = tempCanvas.getContext("2d")
+      if (!tempCtx) return
       tempCtx.drawImage(img, 0, 0, width, height)
-      
       const loupeRatio = LOUPE_WIDTH / LOUPE_HEIGHT
-      const effectiveSampleHeight = Math.max(
-        4,
-        Math.round((LOUPE_SAMPLE_SIZE * 8) / Math.max(2, loupeZoom))
-      )
+      const effectiveSampleHeight = Math.max(4, Math.round((LOUPE_SAMPLE_SIZE * 8) / Math.max(2, loupeZoom)))
       const effectiveSampleWidth = Math.max(4, Math.round(effectiveSampleHeight * loupeRatio))
       const halfWidth = Math.floor(effectiveSampleWidth / 2)
       const halfHeight = Math.floor(effectiveSampleHeight / 2)
-      
       const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
       const sx = clamp(sample.x - halfWidth, 0, Math.max(0, width - effectiveSampleWidth))
       const sy = clamp(sample.y - halfHeight, 0, Math.max(0, height - effectiveSampleHeight))
-
       loupeCtx.clearRect(0, 0, LOUPE_WIDTH, LOUPE_HEIGHT)
       loupeCtx.imageSmoothingEnabled = false
-      loupeCtx.drawImage(
-        tempCanvas,
-        sx,
-        sy,
-        effectiveSampleWidth,
-        effectiveSampleHeight,
-        0,
-        0,
-        LOUPE_WIDTH,
-        LOUPE_HEIGHT
-      )
-
+      loupeCtx.drawImage(tempCanvas, sx, sy, effectiveSampleWidth, effectiveSampleHeight, 0, 0, LOUPE_WIDTH, LOUPE_HEIGHT)
       loupeCtx.strokeStyle = "rgba(255,255,255,0.9)"
       loupeCtx.lineWidth = 1
       loupeCtx.beginPath()
@@ -85,20 +61,19 @@ export function VisualAnalysisDialog({ imageUrl, alt }: VisualAnalysisDialogProp
       loupeCtx.lineTo(LOUPE_WIDTH, LOUPE_HEIGHT / 2)
       loupeCtx.stroke()
     }
-  }, [sample, loupeEnabled, loupeZoom, isReady, imageUrl, LOUPE_WIDTH, LOUPE_HEIGHT])
+  }, [isReady, imageUrl, loupeEnabled, loupeZoom, sample])
 
   return (
     <BaseDialog
       isOpen={isOpen}
       onClose={() => setOpen(false)}
-      contentClassName="w-[min(1100px,calc(100vw-1rem))] h-[70vh] max-h-[70vh] max-w-[calc(100vw-1rem)] rounded-md overflow-x-hidden p-3 sm:p-4 lg:p-5"
+      contentClassName="h-[70vh] max-h-[70vh] w-[min(1100px,calc(100vw-1rem))] max-w-[calc(100vw-1rem)] overflow-x-hidden rounded-md p-3 sm:p-4 lg:p-5"
     >
       <div className="flex h-full min-h-0 min-w-0 flex-col gap-3 sm:gap-4 lg:gap-6">
         <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4 lg:flex-row lg:gap-6">
-          {/* Left side: Image */}
           <div className="flex min-h-[220px] min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-md border border-dashed border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-950/20">
             <div className="flex h-full w-full items-center justify-center p-2">
-              <div className="aspect-square w-full mt-auto">
+              <div className="mt-auto aspect-square w-full">
                 <InteractivePreview
                   imageUrl={imageUrl}
                   alt={alt}
@@ -114,8 +89,6 @@ export function VisualAnalysisDialog({ imageUrl, alt }: VisualAnalysisDialogProp
               </div>
             </div>
           </div>
-
-          {/* Right side: Standalone Loupe and Sample info */}
           <div className="w-full min-w-0 shrink-0 overflow-y-auto lg:w-72 lg:pr-1">
             <div className="flex flex-col gap-4 sm:gap-5 lg:gap-6">
             <div>

@@ -1,7 +1,7 @@
 import { SharedInspectorPage } from "@imify/features/inspector/inspector-page"
 import { setPendingInspectorOptimizeFile } from "@/options/shared/inspector-optimize-bridge"
 import { InspectorDropZone } from "@imify/features/inspector/inspector-drop-zone"
-import { InspectorWorkspace } from "./inspector-workspace"
+import { InspectorWorkspace } from "@imify/features/inspector/inspector-workspace"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 
 interface InspectorTabProps {

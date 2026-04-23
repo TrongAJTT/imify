@@ -76,7 +76,14 @@ export function PixelCompareWorkspace({
           </Tooltip>
         </div>
       )}
-      {isBusy ? <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-slate-900/10"><Loader2 size={24} className="animate-spin text-sky-500" /><span className="text-xs font-medium text-slate-600 dark:text-slate-400">Rendering preview...</span></div> : null}
+      {isBusy ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/10">
+          <div className="flex items-center gap-2 rounded-md border border-slate-200/90 bg-white/95 px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/95">
+            <Loader2 size={18} className="animate-spin text-sky-500" />
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Rendering preview...</span>
+          </div>
+        </div>
+      ) : null}
     </ViewerShell>
   )
 }

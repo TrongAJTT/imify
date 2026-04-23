@@ -32,6 +32,17 @@ export * from "./metadata-accordion"
 export * from "./information-accordion"
 export * from "./inspector-sidebar-panel"
 export * from "./inspector-drop-zone"
+export * from "./inspector-workspace"
+export * from "./basic-info-card"
+export * from "./color-inspector-card"
+export * from "./exif-table-card"
+export * from "./gps-card"
+export * from "./privacy-alerts-card"
+export * from "./web-performance-card"
+export * from "./developer-actions-card"
+export * from "./inspector-tooltips"
+export * from "./interactive-preview"
+export * from "./visual-analysis-dialog"
 export type {
   InspectorResult,
   InspectorImageData,

@@ -12,10 +12,10 @@ import {
   toCssDataUri,
   type InspectorResult,
   type PaletteColor
-} from "@imify/features/inspector"
+} from "./index"
 import { InfoSection } from "./info-section"
-import { Tooltip } from "@/options/components/tooltip"
-import { INSPECTOR_TOOLTIPS } from "@/options/components/inspector/inspector-tooltips"
+import { Tooltip } from "@imify/ui"
+import { INSPECTOR_TOOLTIPS } from "./inspector-tooltips"
 
 interface DeveloperActionsCardProps {
   bitmap: ImageBitmap
@@ -220,4 +220,3 @@ export function DeveloperActionsCard({
     </InfoSection>
   )
 }
-
