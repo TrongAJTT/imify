@@ -1,0 +1,12 @@
+{
+  "name": "@imify/core",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Platform-agnostic core types, utilities, and constants for Imify",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  }
+}

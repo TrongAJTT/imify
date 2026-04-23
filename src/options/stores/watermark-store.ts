@@ -1,5 +1,4 @@
-﻿// PLATFORM:extension — uses @plasmohq/storage for persistence. TODO(monorepo-phase2): replace with StorageAdapter.
-import { Storage } from "@plasmohq/storage"
+﻿import { deferredStorage } from "@/core/storage-adapter"
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 
@@ -33,22 +32,7 @@ interface WatermarkStoreState {
   deleteSavedWatermark: (savedId: string) => void
 }
 
-const storage = new Storage({
-  area: "local"
-})
 
-const plasmoStorage = {
-  getItem: async (name: string): Promise<string | null> => {
-    const value = await storage.get(name)
-    return value ? JSON.stringify(value) : null
-  },
-  setItem: async (name: string, value: string): Promise<void> => {
-    await storage.set(name, JSON.parse(value))
-  },
-  removeItem: async (name: string): Promise<void> => {
-    await storage.remove(name)
-  }
-}
 
 function createDefaultContextWatermarks(): Record<WatermarkContext, BatchWatermarkConfig> {
   return {
@@ -228,7 +212,7 @@ export const useWatermarkStore = create<WatermarkStoreState>()(
     }),
     {
       name: "imify-watermark-library",
-      storage: createJSONStorage(() => plasmoStorage),
+      storage: createJSONStorage(() => deferredStorage),
       partialize: (state) => ({
         savedWatermarks: state.savedWatermarks.map(toNormalizedSavedWatermark)
       }),

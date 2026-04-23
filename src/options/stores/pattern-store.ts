@@ -1,8 +1,6 @@
-﻿// PLATFORM:extension — uses @plasmohq/storage for persistence. TODO(monorepo-phase2): replace with StorageAdapter.
-import { create } from "zustand"
+﻿import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
-import { Storage } from "@plasmohq/storage"
-
+import { deferredStorage } from "@/core/storage-adapter"
 import {
   mergeNormalizedAvifTextExportSource,
   mergeNormalizedPngExportSource,
@@ -37,20 +35,7 @@ import {
 } from "@/features/pattern/types"
 import type { BmpColorDepth, TiffColorMode } from "@/core/types"
 
-const storage = new Storage({ area: "local" })
 
-const plasmoStorage = {
-  getItem: async (name: string): Promise<string | null> => {
-    const value = await storage.get(name)
-    return value ? JSON.stringify(value) : null
-  },
-  setItem: async (name: string, value: string): Promise<void> => {
-    await storage.set(name, JSON.parse(value))
-  },
-  removeItem: async (name: string): Promise<void> => {
-    await storage.remove(name)
-  },
-}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
@@ -724,7 +709,7 @@ export const usePatternStore = create<PatternStoreState>()(
     }),
     {
       name: "imify_pattern_generator",
-      storage: createJSONStorage(() => plasmoStorage),
+      storage: createJSONStorage(() => deferredStorage),
       partialize: (state) => ({
         canvas: {
           ...state.canvas,

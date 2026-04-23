@@ -1,8 +1,6 @@
-﻿// PLATFORM:extension — uses @plasmohq/storage for persistence. TODO(monorepo-phase2): replace with StorageAdapter.
-import { create } from "zustand"
+﻿import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
-import { Storage } from "@plasmohq/storage"
-
+import { deferredStorage } from "@/core/storage-adapter"
 import {
   mergeNormalizedAvifNumericExportSource,
   mergeNormalizedPngExportSource,
@@ -22,21 +20,6 @@ import type {
   SplicingPreset
 } from "@/features/splicing/types"
 import type { BmpColorDepth, TiffColorMode } from "@/core/types"
-
-const storage = new Storage({ area: "local" })
-
-const plasmoStorage = {
-  getItem: async (name: string): Promise<string | null> => {
-    const value = await storage.get(name)
-    return value ? JSON.stringify(value) : null
-  },
-  setItem: async (name: string, value: string): Promise<void> => {
-    await storage.set(name, JSON.parse(value))
-  },
-  removeItem: async (name: string): Promise<void> => {
-    await storage.remove(name)
-  }
-}
 
 export const PREVIEW_QUALITY_PERCENTS = [20, 30, 50, 75, 100] as const
 
@@ -433,7 +416,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
     }),
     {
       name: "imify_splicing",
-      storage: createJSONStorage(() => plasmoStorage),
+      storage: createJSONStorage(() => deferredStorage),
       merge: (persistedState, currentState) => {
         const p = persistedState as Partial<SplicingStoreState>
         const next: SplicingStoreState = { ...currentState, ...p }

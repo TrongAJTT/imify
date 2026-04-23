@@ -1,8 +1,6 @@
-﻿// PLATFORM:extension — uses @plasmohq/storage for persistence. TODO(monorepo-phase2): replace with StorageAdapter.
-import { create } from "zustand"
+﻿import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
-import { Storage } from "@plasmohq/storage"
-
+import { deferredStorage } from "@/core/storage-adapter"
 import {
   mergeNormalizedAvifCodecOptions,
   mergeNormalizedBmpCodecOptions,
@@ -24,20 +22,7 @@ import {
   type SplitterSplitSettings
 } from "@/features/splitter/types"
 
-const storage = new Storage({ area: "local" })
 
-const plasmoStorage = {
-  getItem: async (name: string): Promise<string | null> => {
-    const value = await storage.get(name)
-    return value ? JSON.stringify(value) : null
-  },
-  setItem: async (name: string, value: string): Promise<void> => {
-    await storage.set(name, JSON.parse(value))
-  },
-  removeItem: async (name: string): Promise<void> => {
-    await storage.remove(name)
-  }
-}
 
 function normalizeCustomGuides(guides: SplitterCustomGuide[] | undefined): SplitterCustomGuide[] {
   const safeGuides = Array.isArray(guides) ? guides : []
@@ -357,7 +342,7 @@ export const useSplitterStore = create<SplitterStoreState>()(
     }),
     {
       name: "imify-splitter",
-      storage: createJSONStorage(() => plasmoStorage),
+      storage: createJSONStorage(() => deferredStorage),
       partialize: (state) => ({
         splitSettings: state.splitSettings,
         exportSettings: state.exportSettings,
