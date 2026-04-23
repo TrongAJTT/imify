@@ -1,0 +1,105 @@
+"use client"
+
+import { useEffect, useRef } from "react"
+import {
+  fetchRemoteImagesFromUrls,
+  parseHttpUrlsFromText
+} from "@imify/engine/converter/remote-image-import"
+
+export interface UseClipboardPasteOptions {
+  onFiles: (files: File[]) => void
+  onUrls?: (urls: string[]) => void
+  enabled?: boolean
+  onFetchStart?: () => void
+  onFetchEnd?: () => void
+  onError?: (message: string) => void
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!target || !(target instanceof HTMLElement)) return false
+  const tag = target.tagName.toLowerCase()
+  return (
+    tag === "input" ||
+    tag === "textarea" ||
+    target.isContentEditable ||
+    Boolean(target.closest("[contenteditable='true']"))
+  )
+}
+
+function extractImageFiles(items: DataTransferItemList): File[] {
+  return Array.from(items)
+    .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
+    .flatMap((item) => {
+      const blob = item.getAsFile()
+      if (!blob) return []
+      const ext = blob.type.split("/")[1] || "png"
+      return [
+        new File([blob], `pasted_${Date.now()}.${ext}`, {
+          type: blob.type,
+          lastModified: Date.now()
+        })
+      ]
+    })
+}
+
+export function useClipboardPaste({
+  onFiles,
+  onUrls,
+  enabled = true,
+  onFetchStart,
+  onFetchEnd,
+  onError
+}: UseClipboardPasteOptions): void {
+  const onFilesRef = useRef(onFiles)
+  const onUrlsRef = useRef(onUrls)
+  const onFetchStartRef = useRef(onFetchStart)
+  const onFetchEndRef = useRef(onFetchEnd)
+  const onErrorRef = useRef(onError)
+
+  useEffect(() => { onFilesRef.current = onFiles }, [onFiles])
+  useEffect(() => { onUrlsRef.current = onUrls }, [onUrls])
+  useEffect(() => { onFetchStartRef.current = onFetchStart }, [onFetchStart])
+  useEffect(() => { onFetchEndRef.current = onFetchEnd }, [onFetchEnd])
+  useEffect(() => { onErrorRef.current = onError }, [onError])
+
+  useEffect(() => {
+    if (!enabled) return
+    const onPaste = (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items
+      if (!items?.length) return
+      if (isEditableTarget(event.target)) return
+
+      const imageFiles = extractImageFiles(items)
+      if (imageFiles.length) {
+        event.preventDefault()
+        onFilesRef.current(imageFiles)
+        return
+      }
+
+      const text = event.clipboardData?.getData("text") || ""
+      const urls = parseHttpUrlsFromText(text)
+      if (!urls.length) return
+
+      event.preventDefault()
+      if (onUrlsRef.current) {
+        onUrlsRef.current(urls)
+        return
+      }
+
+      onFetchStartRef.current?.()
+      fetchRemoteImagesFromUrls(urls)
+        .then(({ files, failures }) => {
+          if (files.length) onFilesRef.current(files)
+          else onErrorRef.current?.(failures[0]?.reason ?? "No images could be imported from the URL(s)")
+        })
+        .catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : "Failed to import URL"
+          onErrorRef.current?.(msg)
+        })
+        .finally(() => onFetchEndRef.current?.())
+    }
+
+    window.addEventListener("paste", onPaste)
+    return () => window.removeEventListener("paste", onPaste)
+  }, [enabled])
+}
