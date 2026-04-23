@@ -1,3 +1,4 @@
+﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import "@/style.css"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"

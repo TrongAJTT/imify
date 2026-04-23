@@ -1,3 +1,4 @@
+﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import type { FormatConfig } from "@/core/types"
 import type { ConvertImageResult } from "@/features/converter"
 import { OFFSCREEN_CONVERT_REQUEST, OFFSCREEN_DOCUMENT_PATH,

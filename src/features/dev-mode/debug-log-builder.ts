@@ -4,7 +4,7 @@ import type { ExtensionStorageState } from "@/core/types"
 import type { PerformancePreferences } from "@/options/shared/performance-preferences"
 import type { WorkspaceLayoutPreferences } from "@/options/shared/layout-preferences"
 import type { OptionsTab } from "@/options/shared"
-import { Storage } from "@plasmohq/storage"
+// PLATFORM:extension — getStorageState/setStorageState use chrome.storage.sync
 import { WORKSPACE_LAYOUT_PREFERENCES_KEY } from "@/options/shared/layout-preferences"
 import { PERFORMANCE_PREFERENCES_KEY } from "@/options/shared/performance-preferences"
 import { getStorageState, setStorageState } from "@/features/settings/storage"
@@ -238,13 +238,28 @@ export async function importDebugLog(payload: DebugLogPayload, importFeatures: s
     await setStorageState(payload.settings as ExtensionStorageState)
   }
 
-  const localStorage = new Storage({ area: "local" })
-  const syncStorage = new Storage({ area: "sync" })
-
+  // Write performance & layout prefs via native localStorage.
+  // @plasmohq/storage in "local" area and "sync" area ultimately writes to
+  // chrome.storage — we keep the same key names so the extension picks them
+  // up on next load without needing a Plasmo-specific API here.
   if (hasFeature("performance") && payload.performance) {
-    await syncStorage.set(PERFORMANCE_PREFERENCES_KEY, payload.performance)
+    try {
+      window.localStorage.setItem(
+        PERFORMANCE_PREFERENCES_KEY,
+        JSON.stringify(payload.performance)
+      )
+    } catch {
+      // Ignore storage quota / security errors
+    }
   }
   if (hasFeature("layout") && payload.layout) {
-    await localStorage.set(WORKSPACE_LAYOUT_PREFERENCES_KEY, payload.layout)
+    try {
+      window.localStorage.setItem(
+        WORKSPACE_LAYOUT_PREFERENCES_KEY,
+        JSON.stringify(payload.layout)
+      )
+    } catch {
+      // Ignore storage quota / security errors
+    }
   }
 }

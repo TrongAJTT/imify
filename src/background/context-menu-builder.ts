@@ -1,3 +1,4 @@
+﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import { getContextMenuLayout } from "@/core/context-menu-order"
 import type { ExtensionStorageState } from "@/core/types"
 

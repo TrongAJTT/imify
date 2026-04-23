@@ -1,3 +1,4 @@
+﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import { blobToDownloadDataUrl, toOutputFilename, type OutputFormat } from "@/core/download-utils"
 import { toUserFacingConversionError } from "@/core/error-utils"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@/core/types"

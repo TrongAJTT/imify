@@ -1,3 +1,4 @@
+﻿// PLATFORM:extension — uses @plasmohq/storage for persistence. TODO(monorepo-phase2): replace with StorageAdapter.
 import { useCallback, useMemo } from "react"
 import { useStorage } from "@plasmohq/storage/hook"
 

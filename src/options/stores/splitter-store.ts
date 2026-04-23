@@ -1,3 +1,4 @@
+﻿// PLATFORM:extension — uses @plasmohq/storage for persistence. TODO(monorepo-phase2): replace with StorageAdapter.
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { Storage } from "@plasmohq/storage"

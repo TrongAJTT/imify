@@ -1,3 +1,4 @@
+﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { ToastContainer } from "@/core/components/toast-container"

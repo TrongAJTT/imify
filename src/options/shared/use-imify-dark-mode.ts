@@ -1,3 +1,4 @@
+// PLATFORM:extension — uses chrome.storage.sync for dark mode persistence
 import { useCallback, useEffect, useState } from "react"
 
 const IMIFY_DARK_MODE_KEY = "imify_dark_mode"

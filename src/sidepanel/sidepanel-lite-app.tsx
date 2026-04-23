@@ -1,3 +1,4 @@
+﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import "@/style.css"
 
 import { useCallback, useEffect, useRef, useState } from "react"

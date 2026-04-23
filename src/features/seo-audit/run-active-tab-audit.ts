@@ -1,3 +1,4 @@
+﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import {
   SEO_AUDIT_REQUEST_TYPE,
   type SeoAuditReport,

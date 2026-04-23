@@ -1,3 +1,4 @@
+﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import type { SeoAuditReport } from "@/features/seo-audit/types"
 
 const SEO_AUDIT_SNAPSHOT_KEY = "imify_seo_audit_snapshot"

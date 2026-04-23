@@ -1,3 +1,6 @@
+// PLATFORM:extension — reads/writes chrome.storage.sync directly.
+// In Phase 2: sanitize/parse logic → packages/features/settings,
+// chrome I/O → apps/extension/src/adapters/chrome-storage-adapter.ts
 import {
   STORAGE_KEY,
   STORAGE_VERSION,
