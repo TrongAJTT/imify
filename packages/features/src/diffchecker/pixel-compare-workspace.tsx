@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react"
 import { AlertCircle, Loader2 } from "lucide-react"
 import type { DiffViewMode } from "./types"
 import { renderImageDataPreview, type RenderImageDataPreviewResult } from "@imify/engine/image-pipeline/render-image-data"
+import { createImagePreviewInWorker, isImagePreviewWorkerSupported } from "@imify/engine/converter/preview-worker-client"
 import { MutedText, Tooltip } from "@imify/ui"
 import { DIFFCHECKER_TOOLTIPS } from "./diffchecker-tooltips"
 import { ViewerOverlay } from "./viewer-overlay"
@@ -33,6 +34,32 @@ interface PixelCompareWorkspaceProps {
   emptyFallback?: ReactNode
 }
 
+function PreviewLoadingOverlay() {
+  return (
+    <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/15">
+      <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 shadow-md dark:border-slate-600 dark:bg-slate-900">
+        <Loader2 size={18} className="animate-spin text-sky-500" />
+        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Rendering preview...</span>
+      </div>
+    </div>
+  )
+}
+
+async function imageDataToPreviewSourceBlob(imageData: ImageData, mimeTypeHint?: string): Promise<Blob> {
+  const canvas = new OffscreenCanvas(imageData.width, imageData.height)
+  const ctx = canvas.getContext("2d", { alpha: true, willReadFrequently: false })
+  if (!ctx) {
+    throw new Error("Cannot acquire 2D context for preview source conversion")
+  }
+  ctx.putImageData(imageData, 0, 0)
+  const type = mimeTypeHint && mimeTypeHint.startsWith("image/") ? mimeTypeHint : "image/png"
+  try {
+    return await canvas.convertToBlob({ type, quality: 0.9 })
+  } catch {
+    return await canvas.convertToBlob({ type: "image/png" })
+  }
+}
+
 export function PixelCompareWorkspace({
   mode, imageDataA, imageDataB, zoom, panX, panY, onZoomChange, onPanChange, splitPosition = 50, onSplitChange, overlayOpacity = 75,
   className, labelA = "A", labelB = "B", preferredMimeTypeA, preferredMimeTypeB, maxPreviewDimension, isProcessing = false, emptyFallback
@@ -48,9 +75,37 @@ export function PixelCompareWorkspace({
     let cancelled = false
     if (!imageDataA || !imageDataB) { setPreviewA(null); setPreviewB(null); setFallbackUsed(false); setIsRendering(false); return }
     setIsRendering(true)
+    const renderWithWorker = async (imageData: ImageData, preferredMimeType?: string) => {
+      const sourceBlob = await imageDataToPreviewSourceBlob(imageData, preferredMimeType)
+      const workerResult = await createImagePreviewInWorker(sourceBlob, maxPreviewDimension ?? 3072)
+      const objectUrl = URL.createObjectURL(workerResult.previewBlob)
+      const requestedMimeType = (preferredMimeType ?? "image/webp").toLowerCase()
+      const outputMimeType = workerResult.previewBlob.type.toLowerCase()
+      return {
+        previewBlob: workerResult.previewBlob,
+        objectUrl,
+        width: workerResult.previewWidth,
+        height: workerResult.previewHeight,
+        requestedMimeType,
+        outputMimeType,
+        fallbackUsed: outputMimeType !== requestedMimeType
+      } as RenderImageDataPreviewResult
+    }
+
+    const renderPreview = async (imageData: ImageData, preferredMimeType?: string) => {
+      if (isImagePreviewWorkerSupported()) {
+        try {
+          return await renderWithWorker(imageData, preferredMimeType)
+        } catch {
+          // Fallback to in-thread rendering when worker path is unavailable.
+        }
+      }
+      return renderImageDataPreview(imageData, { preferredMimeType, maxDimension: maxPreviewDimension })
+    }
+
     void Promise.all([
-      renderImageDataPreview(imageDataA, { preferredMimeType: preferredMimeTypeA, maxDimension: maxPreviewDimension }),
-      renderImageDataPreview(imageDataB, { preferredMimeType: preferredMimeTypeB, maxDimension: maxPreviewDimension })
+      renderPreview(imageDataA, preferredMimeTypeA),
+      renderPreview(imageDataB, preferredMimeTypeB)
     ]).then(([a, b]) => {
       if (cancelled) { URL.revokeObjectURL(a.objectUrl); URL.revokeObjectURL(b.objectUrl); return }
       setPreviewA((p) => { if (p?.objectUrl) URL.revokeObjectURL(p.objectUrl); return a })
@@ -76,14 +131,7 @@ export function PixelCompareWorkspace({
           </Tooltip>
         </div>
       )}
-      {isBusy ? (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/10">
-          <div className="flex items-center gap-2 rounded-md border border-slate-200/90 bg-white/95 px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/95">
-            <Loader2 size={18} className="animate-spin text-sky-500" />
-            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Rendering preview...</span>
-          </div>
-        </div>
-      ) : null}
+      {isBusy ? <PreviewLoadingOverlay /> : null}
     </ViewerShell>
   )
 }

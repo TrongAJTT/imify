@@ -20,7 +20,7 @@ function resolveWasmUrl(fileName: string): string {
 async function ensureOxiPngReady(): Promise<void> {
   if (!oxiPngInitPromise) {
     oxiPngInitPromise = (async () => {
-      const module = await import(/* @vite-ignore */ resolveWasmUrl("oxipng.js"))
+      const module = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl("oxipng.js"))
       const initOxiPng = (module.default ?? module) as () => Promise<unknown>
       const optimise = (module as { optimise?: typeof optimiseOxiPngWasm }).optimise
       if (typeof optimise !== "function") {

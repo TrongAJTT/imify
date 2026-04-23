@@ -61,7 +61,7 @@ function resolveWasmUrl(fileName: string): string {
 async function getWebpModule(): Promise<WebpWasmModule> {
   if (!webpModulePromise) {
     const wasmUrl = resolveWasmUrl("webp_enc.wasm")
-    const factoryModule = await import(/* @vite-ignore */ resolveWasmUrl("webp_enc.js"))
+    const factoryModule = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl("webp_enc.js"))
     const initWebpFactory = (factoryModule.default ?? factoryModule) as (
       options: Record<string, unknown>
     ) => Promise<WebpWasmModule>

@@ -50,7 +50,7 @@ function resolveWasmUrl(fileName: string): string {
 async function getMozJpegModule(): Promise<MozJpegWasmModule> {
   if (!mozJpegModulePromise) {
     const wasmUrl = resolveWasmUrl("mozjpeg_enc.wasm")
-    const factoryModule = await import(/* @vite-ignore */ resolveWasmUrl("mozjpeg_enc.js"))
+    const factoryModule = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl("mozjpeg_enc.js"))
     const initMozJpegFactory = (factoryModule.default ?? factoryModule) as (
       options: Record<string, unknown>
     ) => Promise<MozJpegWasmModule>

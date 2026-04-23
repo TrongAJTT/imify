@@ -1,6 +1,7 @@
 import { registerStorageAdapter } from "@imify/core/storage-adapter"
 import { registerCustomFormatStorageAccess } from "@imify/engine/custom-formats"
 import { registerEngineRuntimeAdapter } from "@imify/engine/converter/runtime-adapter"
+import { setPreviewWorkerFactory } from "@imify/engine/converter/preview-worker-client"
 import { patchStorageState } from "@/adapters/chrome-storage-state"
 import { plasmoStorageAdapter } from "@/adapters/plasmo-storage-adapter"
 
@@ -24,6 +25,12 @@ export function bootstrapExtensionAdapters(): void {
         type: "module"
       })
   })
+  setPreviewWorkerFactory(
+    () =>
+      new Worker(new URL("@imify/engine/converter/preview.worker", import.meta.url), {
+        type: "module"
+      })
+  )
 
   adaptersBootstrapped = true
 }

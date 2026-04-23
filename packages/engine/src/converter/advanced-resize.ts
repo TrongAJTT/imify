@@ -73,7 +73,7 @@ async function ensureResizeModuleLoaded(): Promise<void> {
   if (initResize && resizeWithWasm) {
     return
   }
-  const module = await import(/* @vite-ignore */ resolveWasmAssetUrl("squoosh_resize.js"))
+  const module = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmAssetUrl("squoosh_resize.js"))
   initResize = (module.default ?? module) as ResizeWasmInit
   resizeWithWasm = (module as { resize?: ResizeWasmFn }).resize ?? null
   if (!initResize || !resizeWithWasm) {
@@ -85,7 +85,7 @@ async function ensureHqxModuleLoaded(): Promise<void> {
   if (initHqx && hqxResize) {
     return
   }
-  const module = await import(/* @vite-ignore */ resolveWasmAssetUrl("squooshhqx.js"))
+  const module = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmAssetUrl("squooshhqx.js"))
   initHqx = (module.default ?? module) as ResizeWasmInit
   hqxResize = (module as { resize?: HqxWasmFn }).resize ?? null
   if (!initHqx || !hqxResize) {
@@ -97,7 +97,7 @@ async function ensureMagicKernelModuleLoaded(): Promise<void> {
   if (initMagicKernel && magicKernelResize) {
     return
   }
-  const module = await import(/* @vite-ignore */ resolveWasmAssetUrl("jsquash_magic_kernel.js"))
+  const module = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmAssetUrl("jsquash_magic_kernel.js"))
   initMagicKernel = (module.default ?? module) as ResizeWasmInit
   magicKernelResize = (module as { resize?: MagicKernelWasmFn }).resize ?? null
   if (!initMagicKernel || !magicKernelResize) {

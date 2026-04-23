@@ -1,9 +1,7 @@
-import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
+import { ProcessorSidebarShell as SharedProcessorSidebarShell } from "@imify/features/processor/processor-sidebar-shell"
+import { BatchSetupSidebarPanel } from "@imify/features/processor/setup-sidebar-panel"
+import type { PerformancePreferences } from "@imify/features/processor/performance-preferences"
 import type { SetupContext } from "@imify/stores/stores/batch-store"
-import { useBatchStore } from "@imify/stores/stores/batch-store"
-import { BatchSetupSidebarPanel } from "@/options/components/batch/setup-sidebar-panel"
-import type { PerformancePreferences } from "@/options/shared/performance-preferences"
-import { ProcessorPresetInfoPanel } from "@/options/components/processor/processor-preset-info-panel"
 
 interface ProcessorSidebarShellProps {
   context: SetupContext
@@ -18,21 +16,16 @@ export function ProcessorSidebarShell({
   onOpenSettings,
   enableWideSidebarGrid = false,
 }: ProcessorSidebarShellProps) {
-  const viewMode = useBatchStore((state) => state.presetViewByContext[context] ?? "select")
-
-  if (viewMode === "select") {
-    return (
-      <SidebarPanel title="INFORMATION" childrenClassName="flex flex-col gap-3">
-        <ProcessorPresetInfoPanel context={context} />
-      </SidebarPanel>
-    )
-  }
-
   return (
-    <BatchSetupSidebarPanel
-      performancePreferences={performancePreferences}
-      onOpenSettings={onOpenSettings}
-      enableWideSidebarGrid={enableWideSidebarGrid}
+    <SharedProcessorSidebarShell
+      context={context}
+      workspaceSidebar={
+        <BatchSetupSidebarPanel
+          performancePreferences={performancePreferences}
+          onOpenSettings={onOpenSettings}
+          enableWideSidebarGrid={enableWideSidebarGrid}
+        />
+      }
     />
   )
 }

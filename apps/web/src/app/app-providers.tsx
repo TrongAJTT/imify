@@ -1,13 +1,15 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
 import { registerStorageAdapter } from "@imify/core/storage-adapter"
 import { registerEngineRuntimeAdapter } from "@imify/engine/converter/runtime-adapter"
+import { setPreviewWorkerFactory } from "@imify/engine/converter/preview-worker-client"
 import { localStorageAdapter } from "../adapters/local-storage-adapter"
 
 interface AppProvidersProps {
   children: React.ReactNode
 }
+
+let adaptersRegistered = false
 
 function canAccessLocalStorage(): boolean {
   if (typeof window === "undefined") return false
@@ -21,31 +23,41 @@ function canAccessLocalStorage(): boolean {
   }
 }
 
-export function AppProviders({ children }: AppProvidersProps) {
-  const [isReady, setIsReady] = useState(false)
-  const hasLocalStorage = useMemo(() => canAccessLocalStorage(), [])
-
-  useEffect(() => {
-    if (hasLocalStorage) {
-      registerStorageAdapter(localStorageAdapter)
-      registerEngineRuntimeAdapter({
-        resolveWasmUrl: (fileName) => `${window.location.origin}/assets/wasm/${fileName}`
-      })
-    }
-    setIsReady(true)
-  }, [hasLocalStorage])
-
-  if (!isReady) {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Initializing Imify Web...</div>
+function ensureWebAdaptersRegistered(): void {
+  if (!canAccessLocalStorage() || adaptersRegistered) {
+    return
   }
 
-  if (process.env.NODE_ENV !== "production" && !hasLocalStorage) {
-    return (
-      <div className="m-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-        Local storage is unavailable in this browser context. Persisted web stores are disabled.
-      </div>
+  try {
+    registerStorageAdapter(localStorageAdapter)
+    registerEngineRuntimeAdapter({
+      resolveWasmUrl: (fileName) => `${window.location.origin}/assets/wasm/${fileName}`,
+      createWasmWorker: () =>
+        new Worker(new URL("@imify/engine/converter/wasm-encode.worker", import.meta.url), {
+          type: "module"
+        }),
+      createConversionWorker: () =>
+        new Worker(new URL("@imify/engine/converter/conversion.worker", import.meta.url), {
+          type: "module"
+        })
+    })
+    setPreviewWorkerFactory(
+      () =>
+        new Worker(new URL("@imify/engine/converter/preview.worker", import.meta.url), {
+          type: "module"
+        })
     )
+    adaptersRegistered = true
+  } catch {
+    // Keep UI rendering even if storage/runtime adapters are unavailable.
   }
+}
 
+if (typeof window !== "undefined") {
+  ensureWebAdaptersRegistered()
+}
+
+export function AppProviders({ children }: AppProvidersProps) {
+  ensureWebAdaptersRegistered()
   return <>{children}</>
 }

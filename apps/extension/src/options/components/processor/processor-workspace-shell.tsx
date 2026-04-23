@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react"
 
 import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrumb"
-import { ProcessorPresetSelectView } from "@/options/components/processor/processor-preset-select-view"
+import { ProcessorPresetSelectView } from "@imify/features/processor/processor-preset-select-view"
 import { useBatchStore, type SetupContext } from "@imify/stores/stores/batch-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 
