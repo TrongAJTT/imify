@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { HexAlphaColorPicker, HexColorInput, HexColorPicker } from "react-colorful"
+import { Pipette } from "lucide-react"
 
 import { ControlledPopover } from "./controlled-popover"
 import { LabelText } from "./typography"
 
 type ColorOutputMode = "rgba" | "hex"
+interface EyeDropperLike {
+  open: () => Promise<{ sRGBHex: string }>
+}
 
 interface ParsedRgba {
   r: number
@@ -189,6 +193,7 @@ export function ColorPickerPopover({
   appearance = "inline",
   className
 }: ColorPickerPopoverProps) {
+  const [isPickingColor, setIsPickingColor] = useState(false)
   const gradientParsed = useMemo(() => parseGradient(value), [value])
   const [activeTab, setActiveTab] = useState<PickerTab>(
     enableGradient && gradientParsed ? "gradient" : "solid"
@@ -245,6 +250,8 @@ export function ColorPickerPopover({
   const selectedStop =
     gradientValue.stops.find((stop) => stop.id === activeGradientStopId) ?? gradientValue.stops[0]
   const gradientStopValue = selectedStop?.color ?? "#000000"
+  const canUseEyeDropper =
+    typeof window !== "undefined" && typeof (window as Window & { EyeDropper?: new () => EyeDropperLike }).EyeDropper === "function"
 
   const updateGradientStop = (stopId: string, patch: Partial<GradientStop>) => {
     emitGradient({
@@ -315,6 +322,33 @@ export function ColorPickerPopover({
     setActiveGradientStopId(remaining[0]?.id ?? "")
   }
 
+  const pickColorFromScreen = async (): Promise<void> => {
+    if (!canUseEyeDropper || isPickingColor) {
+      return
+    }
+    setIsPickingColor(true)
+    try {
+      const EyeDropperCtor = (window as Window & { EyeDropper?: new () => EyeDropperLike }).EyeDropper
+      if (!EyeDropperCtor) {
+        return
+      }
+      const eyeDropper = new EyeDropperCtor()
+      const result = await eyeDropper.open()
+      if (!result?.sRGBHex) {
+        return
+      }
+      if (activeTab === "gradient" && enableGradient && selectedStop) {
+        updateGradientStop(selectedStop.id, { color: result.sRGBHex })
+        return
+      }
+      emitColor(result.sRGBHex)
+    } catch {
+      // User can cancel eyedropper; silently ignore.
+    } finally {
+      setIsPickingColor(false)
+    }
+  }
+
   return (
     <div className={`relative ${className ?? ""}`.trim()}>
       <div className={appearance === "stacked" ? "space-y-1" : "flex items-center justify-between gap-2"}>
@@ -382,6 +416,15 @@ export function ColorPickerPopover({
                       <span className="text-[11px] text-slate-500 dark:text-slate-400">
                         Click bar to add mark
                       </span>
+                      <button
+                        type="button"
+                        className="ml-auto inline-flex h-6 w-[74px] items-center justify-center gap-1 rounded border border-slate-200 px-2 text-[11px] font-medium text-slate-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+                        onClick={() => void pickColorFromScreen()}
+                        disabled={!canUseEyeDropper || isPickingColor}
+                      >
+                        <Pipette size={12} />
+                        {isPickingColor ? "Picking" : "Pick"}
+                      </button>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <LabelText className="text-[11px]">Angle</LabelText>
@@ -464,6 +507,15 @@ export function ColorPickerPopover({
                         {Math.round(parsed.a * 100)}%
                       </span>
                     ) : null}
+                    <button
+                      type="button"
+                      className="inline-flex h-6 w-[74px] items-center justify-center gap-1 rounded border border-slate-200 px-2 text-[11px] font-medium text-slate-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+                      onClick={() => void pickColorFromScreen()}
+                      disabled={!canUseEyeDropper || isPickingColor}
+                    >
+                      <Pipette size={12} />
+                      {isPickingColor ? "Picking" : "Pick"}
+                    </button>
                   </div>
                 </>
               )}
