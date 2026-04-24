@@ -4,12 +4,12 @@ import {
   type PatternAsset,
   type PatternAssetBorderSettings,
   type PatternAssetMonochromeSettings
-} from "@imify/features/pattern/types"
-import { Button } from "@imify/ui/ui/button"
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
-import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
-import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
-import { NumberInput } from "@imify/ui/ui/number-input"
+} from "./types"
+import { Button } from "@imify/ui"
+import { CheckboxCard } from "@imify/ui"
+import { ColorPickerPopover } from "@imify/ui"
+import { ControlledPopover } from "@imify/ui"
+import { NumberInput } from "@imify/ui"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import {
@@ -254,3 +254,5 @@ export function PatternAssetListItem({
     </div>
   )
 }
+
+

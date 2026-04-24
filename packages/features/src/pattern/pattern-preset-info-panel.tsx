@@ -50,3 +50,5 @@ export function PatternPresetInfoPanel({ compact = false }: PatternPresetInfoPan
     </div>
   )
 }
+
+

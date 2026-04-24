@@ -1,8 +1,8 @@
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { SelectInput } from "@imify/ui/ui/select-input"
-import { PATTERN_TOOLTIPS } from "@/options/components/pattern/pattern-tooltips"
+import { AccordionCard } from "@imify/ui"
+import { CheckboxCard } from "@imify/ui"
+import { NumberInput } from "@imify/ui"
+import { SelectInput } from "@imify/ui"
+import { PATTERN_TOOLTIPS } from "./pattern-tooltips"
 import { usePatternStore } from "@imify/stores/stores/pattern-store"
 import { Aperture } from "lucide-react"
 
@@ -144,3 +144,5 @@ export function PatternSettingsAccordion() {
     </AccordionCard>
   )
 }
+
+

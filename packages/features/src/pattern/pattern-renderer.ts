@@ -817,3 +817,5 @@ export async function renderPatternToImageData(
 
   return ctx.getImageData(0, 0, width, height)
 }
+
+

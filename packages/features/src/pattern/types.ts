@@ -257,3 +257,5 @@ export const DEFAULT_PATTERN_EXPORT_SETTINGS: PatternExportSettings = {
   exportBmpDitheringLevel: 50,
   exportTiffColorMode: "color",
 }
+
+

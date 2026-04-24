@@ -21,3 +21,5 @@ export const PATTERN_TOOLTIPS = {
     unsavedChangesConfirm: "You have unsaved drawing progress. Close without saving?"
   }
 } as const
+
+

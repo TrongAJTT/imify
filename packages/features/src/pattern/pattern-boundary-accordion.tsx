@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from "react"
 import { Frame, RefreshCcw } from "lucide-react"
 
-import { PatternBoundaryControls } from "@/options/components/pattern/pattern-boundary-controls"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { Button } from "@imify/ui/ui/button"
+import { PatternBoundaryControls } from "./pattern-boundary-controls"
+import { AccordionCard } from "@imify/ui"
+import { Button } from "@imify/ui"
 import { usePatternStore } from "@imify/stores/stores/pattern-store"
 
 export function PatternBoundaryAccordion() {
@@ -104,3 +104,5 @@ export function PatternBoundaryAccordion() {
     </div>
   )
 }
+
+

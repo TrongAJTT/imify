@@ -349,3 +349,5 @@ export function toRenderableAssets(assets: PatternAsset[]): PatternRenderableAss
       cornerRadius: Math.max(0, asset.cornerRadius ?? 0),
     }))
 }
+
+

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { PatternWorkPage as PatternWorkClientPage } from "@/features/wave3/wave3-pages"
+import { PatternWorkPage as PatternWorkClientPage } from "@/features/pattern/pattern-pages"
 import { getRouteId } from "@/features/routing/route-id"
 
 interface WorkPageProps {

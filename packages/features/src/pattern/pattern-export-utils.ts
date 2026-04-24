@@ -2,7 +2,7 @@ import { clampQuality } from "@imify/core/image-utils"
 import { buildJxlEncodeOptions } from "@imify/core/jxl-options"
 import type { FormatCodecOptions } from "@imify/core/types"
 import { renderPatternToImageData } from "@imify/features/pattern/pattern-renderer"
-import type { PatternAsset, PatternCanvasSettings, PatternExportFormat, PatternSettings } from "@imify/features/pattern/types"
+import type { PatternAsset, PatternCanvasSettings, PatternExportFormat, PatternSettings } from "./types"
 import { encodeAvif } from "@imify/engine/converter/avif-encoder"
 import { encodeImageDataToBmp } from "@imify/engine/converter/bmp-encoder"
 import { encodeJxl } from "@imify/engine/converter/jxl-encoder"
@@ -23,9 +23,7 @@ import { encodeImageDataToTiff } from "@imify/engine/converter/tiff-encoder"
 import { encodeWebp } from "@imify/engine/converter/webp-encoder"
 import type {
   PatternExportWorkerPayload,
-  PatternExportWorkerRequestMessage,
-  PatternExportWorkerResponseMessage,
-} from "@/options/components/pattern/pattern-export-worker-protocol"
+} from "./pattern-export-worker-protocol"
 
 interface ExportPatternCompositionOptions {
   canvas: PatternCanvasSettings
@@ -145,55 +143,9 @@ async function exportPatternWithWorker(
   payload: PatternExportWorkerPayload,
   onProgress?: (payload: { percent: number; message: string }) => void
 ): Promise<Blob> {
-  const requestId = Date.now() + Math.floor(Math.random() * 10000)
-
-  return new Promise<Blob>((resolve, reject) => {
-    const worker = new Worker(new URL("./pattern-export.worker.ts", import.meta.url), { type: "module" })
-
-    const cleanup = () => {
-      worker.onmessage = null
-      worker.onerror = null
-      worker.terminate()
-    }
-
-    worker.onmessage = (event: MessageEvent<PatternExportWorkerResponseMessage>) => {
-      const message = event.data
-
-      if (!message || message.id !== requestId) {
-        return
-      }
-
-      if (message.type === "progress") {
-        onProgress?.({
-          percent: message.percent,
-          message: message.message,
-        })
-        return
-      }
-
-      cleanup()
-
-      if (!message.ok) {
-        reject(new Error(message.error || "Pattern export worker failed"))
-        return
-      }
-
-      resolve(new Blob([message.outputBuffer], { type: message.mimeType || `image/${payload.targetFormat}` }))
-    }
-
-    worker.onerror = () => {
-      cleanup()
-      reject(new Error("Pattern export worker crashed"))
-    }
-
-    const requestMessage: PatternExportWorkerRequestMessage = {
-      id: requestId,
-      type: "start",
-      payload,
-    }
-
-    worker.postMessage(requestMessage)
-  })
+  // Keep a single runtime path across web/extension to avoid shared-package worker
+  // resolver issues in Parcel/Plasmo builds.
+  return exportPatternInline(payload, onProgress)
 }
 
 async function exportPatternInline(
@@ -290,3 +242,5 @@ export async function exportPatternComposition({
   downloadBlob(outputBlob, `${outputBaseName}.${extension}`)
   onProgress?.({ percent: 100, message: "Download started" })
 }
+
+

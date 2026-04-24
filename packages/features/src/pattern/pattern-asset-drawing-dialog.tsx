@@ -8,18 +8,19 @@ import {
   type Stroke,
   type StrokeSmoothingSettings
 } from "@imify/features/pattern/pattern-drawing-utils"
-import { Tooltip } from "@/options/components/tooltip"
-import { BaseDialog } from "@imify/ui/ui/base-dialog"
-import { Button } from "@imify/ui/ui/button"
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
-import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { PATTERN_TOOLTIPS } from "@/options/components/pattern/pattern-tooltips"
-import { TextInput } from "@imify/ui/ui/text-input"
-import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { Tooltip } from "../shared/tooltip"
+import { BaseDialog } from "@imify/ui"
+import { Button } from "@imify/ui"
+import { CheckboxCard } from "@imify/ui"
+import { ColorPickerPopover } from "@imify/ui"
+import { NumberInput } from "@imify/ui"
+import { PATTERN_TOOLTIPS } from "./pattern-tooltips"
+import { TextInput } from "@imify/ui"
+import { useShortcutActions } from "../filling/use-shortcut-actions"
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { Brush, Eraser, RotateCcw, Trash2, X } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { flushSync } from "react-dom"
 
 interface PatternAssetDrawingDialogProps {
   isOpen: boolean
@@ -121,6 +122,13 @@ export function PatternAssetDrawingDialog({
 
     return combinedStrokes.length > 0
   }, [combinedStrokes.length, sourceImage])
+  const canUndo = useMemo(() => {
+    if (strokes.length > 0 || hasClearedSource) {
+      return true
+    }
+
+    return (activeStroke?.points.length ?? 0) > 0
+  }, [activeStroke?.points.length, hasClearedSource, strokes.length])
   const hasUndoHistory = strokes.length > 0 || hasClearedSource
   const decreaseBrushShortcut = getShortcutLabel(
     "pattern.draw.decrease_brush_size"
@@ -335,16 +343,24 @@ export function PatternAssetDrawingDialog({
 
       canvas.releasePointerCapture(event.pointerId)
       setBrushPreview(toBrushPreview(canvas, event, activeBrushSize))
-      setIsDrawing(false)
 
-      setActiveStroke((current) => {
-        if (!current || current.points.length < 2) {
+      let strokeToCommit: Stroke | null = null
+
+      flushSync(() => {
+        setIsDrawing(false)
+        setActiveStroke((current) => {
+          if (current && current.points.length >= 2) {
+            strokeToCommit = current
+          }
           return null
-        }
-
-        setStrokes((previous) => [...previous, current])
-        return null
+        })
       })
+
+      if (strokeToCommit) {
+        flushSync(() => {
+          setStrokes((previous) => [...previous, strokeToCommit as Stroke])
+        })
+      }
     },
     [activeBrushSize, isDrawing]
   )
@@ -448,26 +464,31 @@ export function PatternAssetDrawingDialog({
       onClose={onClose}
       isDirty={hasUndoHistory}
       contentClassName="w-[980px] max-w-[96vw] rounded-2xl overflow-hidden">
-      <div className="border-b border-slate-200 dark:border-slate-800 px-5 py-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-            Draw Asset
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Sketch directly in-browser. Saved output is auto-trimmed transparent
-            PNG.
-          </p>
+      <div
+        onPointerDown={(event) => event.stopPropagation()}
+        onPointerMove={(event) => event.stopPropagation()}
+        onPointerUp={(event) => event.stopPropagation()}
+      >
+        <div className="border-b border-slate-200 dark:border-slate-800 px-5 py-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+              Draw Asset
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Sketch directly in-browser. Saved output is auto-trimmed transparent
+              PNG.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleManualClose}
+            className="h-8 w-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+            aria-label="Close drawing dialog">
+            <X size={16} />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleManualClose}
-          className="h-8 w-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-          aria-label="Close drawing dialog">
-          <X size={16} />
-        </button>
-      </div>
 
-      <div className="p-4 space-y-3">
+        <div className="p-4 space-y-3">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
           <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/20 p-3">
             <div className="relative rounded-lg border border-slate-200 dark:border-slate-700 bg-[linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc),linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc)] dark:bg-[linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a),linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a)] bg-[length:20px_20px] bg-[position:0_0,10px_10px]">
@@ -616,7 +637,7 @@ export function PatternAssetDrawingDialog({
                     variant="secondary"
                     size="sm"
                     onClick={handleUndo}
-                    disabled={strokes.length === 0}
+                    disabled={!canUndo}
                     className="w-full">
                     <RotateCcw size={14} />
                     Undo
@@ -644,19 +665,22 @@ export function PatternAssetDrawingDialog({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-          <Button variant="secondary" size="sm" onClick={handleManualClose}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => void handleSave()}
-            disabled={!hasContent}>
-            {saveButtonLabel}
-          </Button>
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <Button variant="secondary" size="sm" onClick={handleManualClose}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => void handleSave()}
+              disabled={!hasContent}>
+              {saveButtonLabel}
+            </Button>
+          </div>
         </div>
       </div>
     </BaseDialog>
   )
 }
+
+

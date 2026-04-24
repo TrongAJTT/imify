@@ -1,6 +1,6 @@
 import type { FormatCodecOptions } from "@imify/core/types"
 import type { RasterPipelineFormat } from "@imify/engine/converter/raster-processing-pipeline"
-import type { PatternAsset, PatternCanvasSettings, PatternSettings } from "@imify/features/pattern/types"
+import type { PatternAsset, PatternCanvasSettings, PatternSettings } from "./types"
 
 export interface PatternExportWorkerPayload {
   canvas: PatternCanvasSettings
@@ -43,3 +43,5 @@ export type PatternExportWorkerResponseMessage =
   | PatternExportWorkerProgressMessage
   | PatternExportWorkerSuccessMessage
   | PatternExportWorkerErrorMessage
+
+

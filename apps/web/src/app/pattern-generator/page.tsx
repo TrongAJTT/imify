@@ -1,4 +1,4 @@
-import { PatternLandingPage } from "@/features/wave3/wave3-pages"
+import { PatternLandingPage } from "@/features/pattern/pattern-pages"
 
 export default function PatternGeneratorPage() {
   return <PatternLandingPage />

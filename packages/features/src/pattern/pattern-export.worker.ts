@@ -23,7 +23,7 @@ import type {
   PatternExportWorkerPayload,
   PatternExportWorkerRequestMessage,
   PatternExportWorkerResponseMessage,
-} from "@/options/components/pattern/pattern-export-worker-protocol"
+} from "./pattern-export-worker-protocol"
 
 const rasterAdapterRegistry = createDefaultRasterAdapterRegistry()
 
@@ -198,3 +198,5 @@ self.onmessage = (event: MessageEvent<PatternExportWorkerRequestMessage>) => {
 
   void handleExport(message)
 }
+
+

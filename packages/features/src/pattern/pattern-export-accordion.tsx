@@ -1,15 +1,15 @@
 import { useMemo } from "react"
 
-import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
-import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
+import { FormatAdvancedSettingsCard } from "../processor/format-advanced-settings-card"
+import { TargetFormatQualityCard } from "../processor/target-format-quality-card"
 import { usePatternStore } from "@imify/stores/stores/pattern-store"
 import { buildPatternFormatOptions } from "@imify/stores/stores/pattern-format-options"
-import { buildTargetFormatOptions } from "@/options/shared/target-format-options"
+import { buildTargetFormatOptions } from "../processor/target-format-options"
 import {
   buildTargetFormatQualityCardConfig,
   supportsTargetFormatQuality,
   supportsTargetFormatTinyMode,
-} from "@/options/shared/target-format-state"
+} from "../processor/target-format-state"
 
 const PATTERN_TARGET_FORMAT_OPTIONS = buildTargetFormatOptions([
   "jpg",
@@ -222,3 +222,5 @@ export function PatternExportAccordion() {
     </div>
   )
 }
+
+

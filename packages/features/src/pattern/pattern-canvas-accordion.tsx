@@ -1,15 +1,15 @@
 import { useMemo, useRef, useState } from "react"
 import { ImagePlus, Palette, Ruler, X } from "lucide-react"
 
-import type { PatternBackgroundType } from "@imify/features/pattern/types"
+import type { PatternBackgroundType } from "./types"
 import type { CanvasSizePreset } from "@imify/features/filling/types"
-import { CanvasSizeDialog } from "@/options/components/filling/canvas-size-dialog"
-import { Button } from "@imify/ui/ui/button"
-import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { SelectInput } from "@imify/ui/ui/select-input"
-import { SliderInput } from "@imify/ui/ui/slider-input"
+import { CanvasSizeDialog } from "../filling/canvas-size-dialog"
+import { Button } from "@imify/ui"
+import { ColorPickerPopover } from "@imify/ui"
+import { NumberInput } from "@imify/ui"
+import { AccordionCard } from "@imify/ui"
+import { SelectInput } from "@imify/ui"
+import { SliderInput } from "@imify/ui"
 import { usePatternStore } from "@imify/stores/stores/pattern-store"
 
 const BG_TYPE_OPTIONS: Array<{ value: PatternBackgroundType; label: string }> = [
@@ -196,3 +196,5 @@ export function PatternCanvasAccordion() {
     </>
   )
 }
+
+

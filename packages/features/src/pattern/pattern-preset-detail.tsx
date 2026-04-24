@@ -35,3 +35,5 @@ export function PatternPresetDetail({ preset }: PatternPresetDetailProps) {
     </div>
   )
 }
+
+
