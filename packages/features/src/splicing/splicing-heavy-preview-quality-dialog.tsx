@@ -3,8 +3,7 @@ import { AlertTriangle } from "lucide-react"
 
 import { APP_CONFIG } from "@imify/core/config"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
-import { Button } from "@imify/ui/ui/button"
-import { BodyText, Subheading, MutedText } from "@imify/ui/ui/typography"
+import { Button, BodyText, Subheading, MutedText } from "@imify/ui"
 
 interface SplicingHeavyPreviewQualityDialogProps {
   isOpen: boolean
@@ -106,3 +105,5 @@ export function SplicingHeavyPreviewQualityDialog({
     </div>
   )
 }
+
+

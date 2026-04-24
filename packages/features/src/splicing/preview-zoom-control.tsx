@@ -1,8 +1,8 @@
 import { RotateCcw } from "lucide-react"
 import type { RefObject } from "react"
-import type { ValueScrubHandlers } from "@/options/hooks/use-value-scrubbing"
-import { Tooltip } from "@/options/components/tooltip"
-import { SPLICING_TOOLTIPS } from "@/options/components/splicing/splicing-tooltips"
+import type { ValueScrubHandlers } from "../shared/use-value-scrubbing"
+import { Tooltip } from "../shared/tooltip"
+import { SPLICING_TOOLTIPS } from "./splicing-tooltips"
 
 interface PreviewZoomControlProps {
   editingZoom: boolean
@@ -82,4 +82,6 @@ export function PreviewZoomControl({
     </div>
   )
 }
+
+
 

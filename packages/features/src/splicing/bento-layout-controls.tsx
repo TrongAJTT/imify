@@ -2,10 +2,9 @@ import { Scissors } from "lucide-react"
 import type {
   SplicingAlignment,
   SplicingImageAppearanceDirection
-} from "@imify/features/splicing/types"
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { SPLICING_TOOLTIPS } from "@/options/components/splicing/splicing-tooltips"
+} from "./types"
+import { CheckboxCard, NumberInput } from "@imify/ui"
+import { SPLICING_TOOLTIPS } from "./splicing-tooltips"
 import {
   BENTO_LAYOUT_OPTIONS,
   getBentoDirectionOptions,
@@ -13,7 +12,7 @@ import {
   isBentoFlowLayoutMode,
   SelectField,
   type BentoLayoutMode
-} from "@/options/components/splicing/splicing-sidebar-fields"
+} from "./splicing-sidebar-fields"
 
 interface BentoLayoutControlsProps {
   mode: BentoLayoutMode
@@ -108,3 +107,5 @@ export function BentoLayoutControls({
     </>
   )
 }
+
+

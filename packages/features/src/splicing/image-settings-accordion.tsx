@@ -1,9 +1,7 @@
 import { Image as ImageIcon } from "lucide-react"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { ResizeCard } from "@/options/components/shared/resize-card"
-import type { SplicingImageResize } from "@imify/features/splicing/types"
+import { NumberInput, ColorPickerPopover, AccordionCard } from "@imify/ui"
+import { ResizeCard } from "../processor/resize-card"
+import type { SplicingImageResize } from "./types"
 
 interface ImageSettingsAccordionProps {
   imageResize: SplicingImageResize
@@ -117,3 +115,5 @@ export function ImageSettingsAccordion({
     </AccordionCard>
   )
 }
+
+

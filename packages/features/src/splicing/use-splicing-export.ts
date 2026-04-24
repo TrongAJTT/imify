@@ -7,11 +7,11 @@ import { APP_CONFIG } from "@imify/core/config"
 import type { ConversionProgressPayload } from "@imify/core/types"
 import { getCanonicalExtension } from "@imify/core/download-utils"
 import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@imify/engine/converter/wasm-worker-pool"
-import { exportSplicedImage, computeSplicingExportCanvasDimensions } from "@imify/features/splicing/canvas-renderer"
-import { calculateLayout, calculateProcessedSize } from "@imify/features/splicing/layout-engine"
-import type { SplicingExportConfig, SplicingImageItem } from "@imify/features/splicing/types"
-import { buildSmartOutputFileName, reserveUniqueFileName } from "@/options/components/batch/pipeline"
-import type { ExportSplitMode } from "@/options/components/shared/export-split-button"
+import { exportSplicedImage, computeSplicingExportCanvasDimensions } from "./canvas-renderer"
+import { calculateLayout, calculateProcessedSize } from "./layout-engine"
+import type { SplicingExportConfig, SplicingImageItem } from "./types"
+import { buildSmartOutputFileName, reserveUniqueFileName } from "@imify/core/file-name-pattern"
+import type { ExportSplitMode } from "../shared/export-split-button"
 import { buildActiveSplicingFormatOptions } from "@imify/stores/stores/splicing-format-options"
 import { useSplicingStore, resolveCanvasStyle, resolveImageStyle, resolveLayoutConfig } from "@imify/stores/stores/splicing-store"
 
@@ -366,4 +366,6 @@ export function useSplicingExport({
 
   return { performExport }
 }
+
+
 

@@ -1,21 +1,19 @@
 import { useMemo } from "react"
 import { Crop, FileEdit, Stamp } from "lucide-react"
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
-import SidebarCard from "@imify/ui/ui/sidebar-card"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { ConcurrencySelector } from "@/options/components/shared/concurrency-selector"
-import { SmartConcurrencyAdvisorCard } from "@/options/components/shared/smart-concurrency-advisor-card"
+import { CheckboxCard, SidebarCard, AccordionCard } from "@imify/ui"
+import { ConcurrencySelector } from "../processor/concurrency-selector"
+import { SmartConcurrencyAdvisorCard } from "../processor/smart-concurrency-advisor-card"
 import {
   calculateConcurrencyAdvisor,
   resolveConcurrencyLockState,
   type PerformancePreferences
-} from "@/options/shared/performance-preferences"
+} from "../processor/performance-preferences"
 import {
   EXPORT_MODE_OPTIONS,
   SelectField
-} from "@/options/components/splicing/splicing-sidebar-fields"
+} from "./splicing-sidebar-fields"
 import type { FormatCodecOptions } from "@imify/core/types"
-import type { SplicingExportFormat, SplicingExportMode } from "@imify/features/splicing/types"
+import type { SplicingExportFormat, SplicingExportMode } from "./types"
 
 interface SplicingExportPanelProps {
   /** Format being exported (for concurrency limits) */
@@ -165,3 +163,5 @@ export function SplicingExportPanel({
     </AccordionCard>
   )
 }
+
+

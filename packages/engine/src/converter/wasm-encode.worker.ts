@@ -49,7 +49,7 @@ function resolveWasmUrl(fileName: string): string {
 }
 
 async function loadWasmFactory(fileName: string): Promise<(options: Record<string, unknown>) => Promise<WasmModule>> {
-  const module = await import(/* @vite-ignore */ resolveWasmUrl(fileName))
+  const module = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl(fileName))
   return (module.default ?? module) as (options: Record<string, unknown>) => Promise<WasmModule>
 }
 

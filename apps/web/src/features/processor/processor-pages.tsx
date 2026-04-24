@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@imify/ui/ui/button"
-import { SidebarPanel, WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
+import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { SingleProcessorWorkspace } from "@imify/features/processor/single-processor-workspace"
 import { ProcessorPresetSelectView } from "@imify/features/processor/processor-preset-select-view"
 import { ProcessorSidebarShell } from "@imify/features/processor/processor-sidebar-shell"
@@ -36,6 +36,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
   const router = useRouter()
   const setupContext = useBatchStore((state) => state.setupContext)
   const setSetupContext = useBatchStore((state) => state.setSetupContext)
+  const setPresetViewMode = useBatchStore((state) => state.setPresetViewMode)
   const presets = useBatchStore((state) => state.presets)
   const saveCurrentPreset = useBatchStore((state) => state.saveCurrentPreset)
   const updatePresetMeta = useBatchStore((state) => state.updatePresetMeta)
@@ -48,11 +49,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
     () => (
       <ProcessorSidebarShell
         context={context}
-        workspaceSidebar={
-          <SidebarPanel title="CONFIGURATION" childrenClassName="space-y-2 text-xs text-slate-600 dark:text-slate-400">
-            <p>Open a preset to access workspace controls.</p>
-          </SidebarPanel>
-        }
+        workspaceSidebar={null}
       />
     ),
     [context]
@@ -67,6 +64,15 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
 
     ensureDefaultPresetForContext(context)
   }, [context, ensureDefaultPresetForContext, isBatchStoreRehydrated, scopedPresets.length, setupContext])
+
+  useEffect(() => {
+    if (!isBatchStoreRehydrated) {
+      return
+    }
+
+    // Landing routes always show preset selection + information sidebar.
+    setPresetViewMode(context, "select")
+  }, [context, isBatchStoreRehydrated, setPresetViewMode])
 
   useWorkspaceSidebar(sidebar)
 

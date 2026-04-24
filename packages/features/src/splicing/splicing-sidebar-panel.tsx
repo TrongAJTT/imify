@@ -1,39 +1,39 @@
 import { useEffect, useMemo, useState } from "react"
 
 import { getCanonicalExtension } from "@imify/core/download-utils"
-import type { PerformancePreferences } from "@/options/shared/performance-preferences"
+import type { PerformancePreferences } from "../processor/performance-preferences"
 import type {
   SplicingExportFormat,
   SplicingImageResize,
-} from "@imify/features/splicing/types"
+} from "./types"
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
-import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
-import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
+import { FormatAdvancedSettingsCard } from "../processor/format-advanced-settings-card"
+import { TargetFormatQualityCard } from "../processor/target-format-quality-card"
 import {
   RenamePatternDialog,
   SPLICING_EXPORT_RENAME_PRESETS,
   SPLICING_EXPORT_RENAME_TAGS
-} from "@imify/ui/ui/rename-pattern-dialog"
+} from "@imify/ui"
 import {
   ALIGNMENT_OPTIONS,
   EXPORT_FORMAT_OPTIONS,
   deriveBentoLayoutMode,
   getAvailableExportModes,
-} from "@/options/components/splicing/splicing-sidebar-fields"
-import { SplicingExportPanel } from "@/options/components/splicing/splicing-export-panel"
-import { LayoutSettingsAccordion } from "@/options/components/splicing/layout-settings-accordion"
-import { CanvasSettingsAccordion } from "@/options/components/splicing/canvas-settings-accordion"
-import { ImageSettingsAccordion } from "@/options/components/splicing/image-settings-accordion"
-import { PreviewSettingsAccordion } from "@/options/components/splicing/preview-settings-accordion"
+} from "./splicing-sidebar-fields"
+import { SplicingExportPanel } from "./splicing-export-panel"
+import { LayoutSettingsAccordion } from "./layout-settings-accordion"
+import { CanvasSettingsAccordion } from "./canvas-settings-accordion"
+import { ImageSettingsAccordion } from "./image-settings-accordion"
+import { PreviewSettingsAccordion } from "./preview-settings-accordion"
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
-} from "@imify/ui/ui/workspace-config-sidebar-panel"
+} from "@imify/ui"
 import {
   buildTargetFormatQualityCardConfig,
   supportsTargetFormatQuality,
   supportsTargetFormatTinyMode
-} from "@/options/shared/target-format-state"
+} from "../processor/target-format-state"
 
 interface SplicingSidebarPanelProps {
   performancePreferences: PerformancePreferences
@@ -467,3 +467,5 @@ export function SplicingSidebarPanel({
     </>
   )
 }
+
+

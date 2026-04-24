@@ -1,14 +1,13 @@
 import { Rows, } from "lucide-react"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { SelectField } from "@/options/components/splicing/splicing-sidebar-fields"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { RadioCard } from "@imify/ui/ui/radio-card"
+import { NumberInput } from "@imify/ui"
+import { SelectField } from "./splicing-sidebar-fields"
+import { AccordionCard, RadioCard } from "@imify/ui"
 import type {
   SplicingAlignment,
   SplicingDirection,
   SplicingImageAppearanceDirection,
   SplicingPreset
-} from "@imify/features/splicing/types"
+} from "./types"
 import {
   type BentoLayoutMode,
   GRID_DIRECTION_OPTIONS,
@@ -18,8 +17,8 @@ import {
   deriveBentoLayoutMode,
   getBentoDefaultImageDirection,
   mapBentoLayoutModeToDirections
-} from "@/options/components/splicing/splicing-sidebar-fields"
-import { BentoLayoutControls } from "@/options/components/splicing/bento-layout-controls"
+} from "./splicing-sidebar-fields"
+import { BentoLayoutControls } from "./bento-layout-controls"
 
 interface LayoutSettingsAccordionProps {
   preset: SplicingPreset
@@ -183,3 +182,5 @@ export function LayoutSettingsAccordion({
     </AccordionCard>
   )
 }
+
+

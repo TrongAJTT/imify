@@ -23,8 +23,31 @@ interface SplicingPresetDetailProps {
 export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
   const config = preset.config
 
-  // Layout display
-  const layoutLabel = `${config.primaryDirection} / ${config.secondaryDirection}`
+  const layoutLabel = (() => {
+    if (config.preset === "stitch_vertical") return "Stitch V"
+    if (config.preset === "stitch_horizontal") return "Stitch H"
+    if (config.preset === "grid") return `Grid (${config.gridCount} cols)`
+    if (config.preset === "bento") {
+      const modeLabel =
+        config.primaryDirection === "vertical" && config.secondaryDirection === "vertical"
+          ? "Vert"
+          : config.primaryDirection === "horizontal" && config.secondaryDirection === "vertical"
+            ? "Fixed Vert"
+            : config.primaryDirection === "horizontal" && config.secondaryDirection === "horizontal"
+              ? "Horiz"
+              : "Fixed Horiz"
+      return `Bento (${modeLabel})`
+    }
+    return "—"
+  })()
+
+  const canvasLabel = [
+    `${config.canvasPadding}`,
+    `${config.mainSpacing}`,
+    `${config.crossSpacing}`,
+    `${config.canvasBorderRadius}`,
+    `${config.canvasBorderWidth}`
+  ].join("/")
 
   // Resize display
   let resizeLabel = config.imageResize
@@ -32,7 +55,7 @@ export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
     : "—"
 
   // Export format
-  const formatLabel = config.exportFormat ? config.exportFormat.toUpperCase() : "—"
+  const formatLabel = config.exportFormat ? `${config.exportFormat.toUpperCase()} (${config.exportQuality}%, ${resizeLabel})` : "—"
 
   // Export mode
   let modeLabel = config.exportMode
@@ -46,10 +69,11 @@ export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
   return (
     <div className="space-y-2 rounded-md bg-slate-50/50 p-2 dark:bg-slate-900/20">
       <PresetDetailLine label="Layout" value={layoutLabel} />
-      <PresetDetailLine label="Spacing" value={`${config.mainSpacing}px`} />
-      <PresetDetailLine label="Image Resize" value={resizeLabel} />
-      <PresetDetailLine label="Format" value={formatLabel} />
+      <PresetDetailLine label="Canvas" value={canvasLabel} />
+      <PresetDetailLine label="Export Format" value={formatLabel} />
       <PresetDetailLine label="Export Mode" value={modeLabel} />
     </div>
   )
 }
+
+

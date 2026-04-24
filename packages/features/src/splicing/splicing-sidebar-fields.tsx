@@ -1,5 +1,5 @@
-import { SelectInput } from "@imify/ui/ui/select-input"
-import { buildTargetFormatOptions } from "@/options/shared/target-format-options"
+import { SelectInput } from "@imify/ui"
+import { buildTargetFormatOptions } from "../processor/target-format-options"
 import { Rows, Columns, Grid3x3, LayoutGrid } from "lucide-react"
 import type {
   SplicingAlignment,
@@ -9,7 +9,7 @@ import type {
   SplicingImageAppearanceDirection,
   SplicingImageResize,
   SplicingPreset
-} from "@imify/features/splicing/types"
+} from "./types"
 
 export type BentoLayoutMode = "vertical" | "horizontal" | "fixed_vertical" | "fixed_horizontal"
 
@@ -181,4 +181,6 @@ export function SelectField({
     />
   )
 }
+
+
 

@@ -10,7 +10,7 @@ import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-
 import { buildSmartOutputFileName, reserveUniqueFileName } from "@/options/components/batch/pipeline"
 import { downloadWithFilename, sleep } from "@/options/components/batch/utils"
 import { ExportSplitButton, type ExportSplitMode } from "@/options/components/shared/export-split-button"
-import { ImageStrip } from "@/options/components/splicing/image-strip"
+import { ImageStrip } from "@imify/features/splicing/image-strip"
 import { SplitterPreview } from "@/options/components/splitter/splitter-preview"
 import { Button } from "@imify/ui/ui/button"
 import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"

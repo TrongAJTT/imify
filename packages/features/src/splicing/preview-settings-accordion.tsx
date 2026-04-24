@@ -1,9 +1,7 @@
 import { Eye } from "lucide-react"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { SelectInput } from "@imify/ui/ui/select-input"
-import { MutedText } from "@imify/ui/ui/typography"
+import { AccordionCard, SelectInput, MutedText } from "@imify/ui"
 import { PREVIEW_QUALITY_PERCENTS } from "@imify/stores/stores/splicing-store"
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
+import { CheckboxCard } from "@imify/ui"
 
 interface PreviewSettingsAccordionProps {
   previewQualityPercent: number
@@ -55,3 +53,5 @@ export function PreviewSettingsAccordion({
     </AccordionCard>
   )
 }
+
+

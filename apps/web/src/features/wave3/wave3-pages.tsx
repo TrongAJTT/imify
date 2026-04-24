@@ -1,28 +1,8 @@
 "use client"
 
-import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
 import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
 import { PresetLandingPage, PresetWorkPage } from "@/features/presets/preset-flow-pages"
-import { SplicingWorkspacePage } from "@/features/splicing/splicing-workspace-page"
-
-export function SplicingLandingPage() {
-  const presets = useSplicingPresetStore((state) => state.presets)
-  const ensureDefaultPreset = useSplicingPresetStore((state) => state.ensureDefaultPreset)
-
-  return (
-    <PresetLandingPage
-      title="Image Splicing"
-      routeBase="/splicing"
-      presets={presets}
-      ensureDefaultPreset={ensureDefaultPreset}
-    />
-  )
-}
-
-export function SplicingWorkPage({ presetId }: { presetId: string }) {
-  return <SplicingWorkspacePage presetId={presetId} />
-}
 
 export function SplitterLandingPage() {
   const presets = useSplitterPresetStore((state) => state.presets)

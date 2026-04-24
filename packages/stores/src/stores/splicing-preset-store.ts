@@ -2,6 +2,7 @@
 import { persist, createJSONStorage } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
 import type {
+  SplicingPreset,
   SplicingDirection,
   SplicingAlignment,
   SplicingImageAppearanceDirection,
@@ -16,10 +17,12 @@ import type { TiffColorMode, BmpColorDepth } from "@imify/core/types"
 export type SplicingPresetViewMode = "select" | "workspace"
 
 export interface SplicingPresetConfig {
+  preset: SplicingPreset
   primaryDirection: SplicingDirection
   secondaryDirection: SplicingDirection
   gridCount: number
   flowMaxSize: number
+  flowSplitOverflow: boolean
   alignment: SplicingAlignment
   imageAppearanceDirection: SplicingImageAppearanceDirection
   canvasPadding: number
@@ -44,6 +47,24 @@ export interface SplicingPresetConfig {
   exportJxlEpf: 0 | 1 | 2 | 3
   exportWebpLossless: boolean
   exportWebpNearLossless: number
+  exportWebpEffort: number
+  exportWebpSharpYuv: boolean
+  exportWebpPreserveExactAlpha: boolean
+  exportAvifSpeed: number
+  exportAvifQualityAlpha?: number
+  exportAvifLossless: boolean
+  exportAvifSubsample: 1 | 2 | 3
+  exportAvifTune: "auto" | "ssim" | "psnr"
+  exportAvifHighAlphaQuality: boolean
+  exportMozJpegProgressive: boolean
+  exportMozJpegChromaSubsampling: 0 | 1 | 2
+  exportPngTinyMode: boolean
+  exportPngCleanTransparentPixels: boolean
+  exportPngAutoGrayscale: boolean
+  exportPngDithering: boolean
+  exportPngDitheringLevel: number
+  exportPngProgressiveInterlaced: boolean
+  exportPngOxiPngCompression: boolean
   exportBmpColorDepth: BmpColorDepth
   exportBmpDithering: boolean
   exportBmpDitheringLevel: number
@@ -52,6 +73,8 @@ export interface SplicingPresetConfig {
   exportTrimBackground: boolean
   exportConcurrency: number
   exportFileNamePattern: string
+  previewQualityPercent: number
+  previewShowImageNumber: boolean
 }
 
 export interface SavedSplicingPreset {
@@ -83,11 +106,13 @@ const PRESET_HIGHLIGHT_COLORS = ["rgb(59, 130, 246)", "rgb(34, 197, 94)", "rgb(2
 
 function createDefaultConfig(): SplicingPresetConfig {
   return {
+    preset: "stitch_vertical",
     primaryDirection: "vertical",
-    secondaryDirection: "horizontal",
+    secondaryDirection: "vertical",
     gridCount: 2,
-    flowMaxSize: 5,
-    alignment: "center",
+    flowMaxSize: 2000,
+    flowSplitOverflow: false,
+    alignment: "start",
     imageAppearanceDirection: "top_to_bottom",
     canvasPadding: 0,
     mainSpacing: 0,
@@ -97,28 +122,48 @@ function createDefaultConfig(): SplicingPresetConfig {
     canvasBorderColor: "#000000",
     backgroundColor: "#ffffff",
     imageResize: "original",
-    imageFitValue: 100,
+    imageFitValue: 800,
     imagePadding: 0,
-    imagePaddingColor: "#000000",
+    imagePaddingColor: "#ffffff",
     imageBorderRadius: 0,
     imageBorderWidth: 0,
     imageBorderColor: "#000000",
     exportFormat: "png",
-    exportQuality: 90,
+    exportQuality: 92,
     exportJxlEffort: 7,
     exportJxlLossless: false,
     exportJxlProgressive: false,
     exportJxlEpf: 1,
     exportWebpLossless: false,
-    exportWebpNearLossless: 0,
+    exportWebpNearLossless: 100,
+    exportWebpEffort: 5,
+    exportWebpSharpYuv: false,
+    exportWebpPreserveExactAlpha: false,
+    exportAvifSpeed: 6,
+    exportAvifQualityAlpha: undefined,
+    exportAvifLossless: false,
+    exportAvifSubsample: 1,
+    exportAvifTune: "auto",
+    exportAvifHighAlphaQuality: false,
+    exportMozJpegProgressive: true,
+    exportMozJpegChromaSubsampling: 2,
+    exportPngTinyMode: false,
+    exportPngCleanTransparentPixels: false,
+    exportPngAutoGrayscale: false,
+    exportPngDithering: false,
+    exportPngDitheringLevel: 0,
+    exportPngProgressiveInterlaced: false,
+    exportPngOxiPngCompression: false,
     exportBmpColorDepth: 24,
     exportBmpDithering: false,
-    exportBmpDitheringLevel: 100,
+    exportBmpDitheringLevel: 0,
     exportTiffColorMode: "color",
     exportMode: "single",
     exportTrimBackground: false,
-    exportConcurrency: 1,
-    exportFileNamePattern: "spliced-[Index]"
+    exportConcurrency: 2,
+    exportFileNamePattern: "spliced-[Index]",
+    previewQualityPercent: 20,
+    previewShowImageNumber: false
   }
 }
 

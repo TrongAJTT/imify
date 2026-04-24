@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react"
 import { Check, Edit2, Plus, Trash2 } from "lucide-react"
 
-import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
-import { WorkspaceSelectHeader } from "@/options/components/shared/workspace-select-header"
-import { SavePresetDialog } from "@/options/components/batch/save-preset-dialog"
-import { SplicingPresetDetail } from "@/options/components/splicing/splicing-preset-detail"
+import { EmptyDropCard } from "@imify/ui"
+import { WorkspaceSelectHeader } from "../processor/workspace-select-header"
+import { SavePresetDialog } from "../processor/save-preset-dialog"
+import { SplicingPresetDetail } from "./splicing-preset-detail"
 import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store"
-import { PRESET_HIGHLIGHT_COLORS } from "@/options/shared/preset-colors"
+import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors"
 
 interface SplicingPresetSelectViewProps {
   presets: SavedSplicingPreset[]
@@ -224,3 +224,5 @@ export function SplicingPresetSelectView({
     </div>
   )
 }
+
+

@@ -1,7 +1,5 @@
 import { Square } from "lucide-react"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { NumberInput, ColorPickerPopover, AccordionCard } from "@imify/ui"
 
 interface CanvasSettingsAccordionProps {
   canvasPadding: number
@@ -82,3 +80,5 @@ export function CanvasSettingsAccordion({
     </AccordionCard>
   )
 }
+
+

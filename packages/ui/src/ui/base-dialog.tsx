@@ -36,18 +36,19 @@ export const BaseDialog: React.FC<BaseDialogProps> = ({
   // Sync React's isOpen state with Native Dialog API
   useEffect(() => {
     const dialog = dialogRef.current
-    if (!dialog) return
-
     if (isOpen) {
+      if (!dialog) return
       if (!dialog.open) {
         dialog.showModal()
         // Prevent body scroll when dialog is open
         document.body.style.overflow = "hidden"
       }
     } else {
-      if (dialog.open) {
+      // Always restore body scroll when closed, even if the dialog node
+      // was unmounted/replaced before this effect runs.
+      document.body.style.overflow = ""
+      if (dialog?.open) {
         dialog.close()
-        document.body.style.overflow = ""
       }
     }
   }, [isOpen])
@@ -92,8 +93,6 @@ export const BaseDialog: React.FC<BaseDialogProps> = ({
       handleCloseAttempt()
     }
   }
-
-  if (!isOpen && typeof document !== "undefined") return null
 
   // Ensure we are in a browser environment before using Portal
   if (typeof document === "undefined") return null

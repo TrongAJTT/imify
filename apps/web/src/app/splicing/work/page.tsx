@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { SplicingWorkPage as SplicingWorkClientPage } from "@/features/wave3/wave3-pages"
+import { SplicingWorkPage as SplicingWorkClientPage } from "@/features/splicing/splicing-pages"
 import { getRouteId } from "@/features/routing/route-id"
 
 interface WorkPageProps {
