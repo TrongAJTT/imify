@@ -1,3 +1,4 @@
+import React from "react"
 interface ViewerOverlayProps {
   urlA: string
   urlB: string
@@ -29,3 +30,4 @@ export function ViewerOverlay({ urlA, urlB, opacity, zoom, panX, panY }: ViewerO
     </div>
   )
 }
+

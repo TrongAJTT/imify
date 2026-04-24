@@ -1,3 +1,4 @@
+import React from "react"
 import { Mouse } from "lucide-react"
 import { Tooltip } from "./tooltip"
 
@@ -51,3 +52,4 @@ export function ScrollModeToggle({
     </div>
   )
 }
+

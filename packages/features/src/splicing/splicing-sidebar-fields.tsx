@@ -1,3 +1,4 @@
+import React from "react"
 import { SelectInput } from "@imify/ui"
 import { buildTargetFormatOptions } from "../processor/target-format-options"
 import { Rows, Columns, Grid3x3, LayoutGrid } from "lucide-react"

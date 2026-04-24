@@ -1,3 +1,4 @@
+import React from "react"
 import { Circle, Expand, Palette, Square } from "lucide-react"
 
 import { AccordionCard } from "@imify/ui"
@@ -165,5 +166,6 @@ export function PatternAssetSettingsAccordion() {
     </AccordionCard>
   )
 }
+
 
 

@@ -1,3 +1,4 @@
+import React from "react"
 import { Save, Stamp, X } from "lucide-react"
 
 import { BaseDialog, Button, SecondaryButton, TextInput } from "@imify/ui"
@@ -165,3 +166,4 @@ export function WatermarkSaveDialog({
     </BaseDialog>
   )
 }
+

@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 import { Crop, FileEdit, Stamp } from "lucide-react"
 import { CheckboxCard, SidebarCard, AccordionCard } from "@imify/ui"
 import { ConcurrencySelector } from "../processor/concurrency-selector"
@@ -163,5 +163,6 @@ export function SplicingExportPanel({
     </AccordionCard>
   )
 }
+
 
 

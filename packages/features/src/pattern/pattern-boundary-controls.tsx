@@ -1,3 +1,4 @@
+import React from "react"
 import type { PatternBoundarySettings } from "./types"
 import { Button } from "@imify/ui"
 import { CheckboxCard } from "@imify/ui"
@@ -153,5 +154,6 @@ export function PatternBoundaryControls({
     </div>
   )
 }
+
 
 

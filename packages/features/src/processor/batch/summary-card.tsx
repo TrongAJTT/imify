@@ -1,3 +1,4 @@
+import React from "react"
 import type { RefObject } from "react"
 import { Check, ChevronDown, Download, FileText, Save, ChevronsRight } from "lucide-react"
 import { Button, Subheading, MutedText, Heading, Kicker } from "@imify/ui"
@@ -58,3 +59,4 @@ export function BatchSummaryCard(props: BatchSummaryCardProps) {
     </div>
   )
 }
+

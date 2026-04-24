@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { BaseDialog, Kicker } from "@imify/ui"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { InteractivePreview, type PixelSample } from "./interactive-preview"
@@ -184,3 +184,4 @@ export function VisualAnalysisDialog({ imageUrl, alt }: VisualAnalysisDialogProp
     </BaseDialog>
   )
 }
+

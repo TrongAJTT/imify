@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { Grid3x3, PenTool, Ruler, X } from "lucide-react"
 import { BaseDialog, Button, MutedText, NumberInput, RadioCard, SelectInput, Subheading, TextInput } from "@imify/ui"
 import { generateId, type CanvasSizePreset, type CanvasSizeUnit, type FillingTemplate } from "./types"
@@ -211,3 +211,4 @@ export function TemplateMethodDialog({
     </>
   )
 }
+

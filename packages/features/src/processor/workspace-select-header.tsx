@@ -1,3 +1,4 @@
+import React from "react"
 import type { ReactNode } from "react"
 import { Button, Subheading } from "@imify/ui"
 
@@ -19,3 +20,4 @@ export function WorkspaceSelectHeader({ title, createLabel, onCreate, createIcon
     </div>
   )
 }
+

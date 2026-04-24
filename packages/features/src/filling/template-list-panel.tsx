@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Edit, Pin, PinOff, Plus, Trash2 } from "lucide-react"
 import { Button, EmptyDropCard, SelectInput, Subheading } from "@imify/ui"
 import { templateStorage } from "./template-storage"
@@ -270,3 +270,4 @@ function formatRelativeTime(timestamp: number): string {
   const months = Math.floor(days / 30)
   return `${months}mo ago`
 }
+

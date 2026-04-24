@@ -1,3 +1,4 @@
+import React from "react"
 import { MutedText } from "./typography"
 
 interface ToggleSwitchLabelProps {
@@ -51,3 +52,4 @@ export function ToggleSwitchLabel({
     </label>
   )
 }
+

@@ -54,3 +54,4 @@ export function Kicker({ className, as: Component = "span", ...props }: React.HT
     />
   )
 }
+

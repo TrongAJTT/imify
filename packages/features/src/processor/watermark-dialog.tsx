@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { CheckCircle2, FolderOpen, ImagePlus, RotateCcw, Save, Sparkles, Stamp, Type, UploadCloud, X } from "lucide-react"
 
 import { Button, SecondaryButton, NumberInput, TextInput, BaseDialog, ColorPickerPopover } from "@imify/ui"
@@ -641,3 +641,4 @@ export function BatchWatermarkDialog({
     </>
   )
 }
+

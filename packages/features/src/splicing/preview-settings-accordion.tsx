@@ -1,3 +1,4 @@
+import React from "react"
 import { Eye } from "lucide-react"
 import { AccordionCard, SelectInput, MutedText } from "@imify/ui"
 import { PREVIEW_QUALITY_PERCENTS } from "@imify/stores/stores/splicing-store"
@@ -53,5 +54,6 @@ export function PreviewSettingsAccordion({
     </AccordionCard>
   )
 }
+
 
 

@@ -1,3 +1,4 @@
+import React from "react"
 import { ControlledPopover } from "./controlled-popover"
 
 type TooltipProps = {
@@ -32,3 +33,4 @@ export function Tooltip({
     </ControlledPopover>
   )
 }
+

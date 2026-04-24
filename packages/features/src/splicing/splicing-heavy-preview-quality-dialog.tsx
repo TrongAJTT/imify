@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import { AlertTriangle } from "lucide-react"
 
 import { APP_CONFIG } from "@imify/core/config"
@@ -105,5 +105,6 @@ export function SplicingHeavyPreviewQualityDialog({
     </div>
   )
 }
+
 
 

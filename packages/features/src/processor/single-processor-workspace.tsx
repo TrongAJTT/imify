@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { Download, ImagePlus, Move } from "lucide-react"
 import { toUserFacingConversionError } from "@imify/core/error-utils"
 import { buildSmartOutputFileName, readImageDimensions } from "@imify/core/file-name-pattern"
@@ -243,3 +243,4 @@ export function SingleProcessorWorkspace({ consumePendingOptimizeFile }: { consu
     </div>
   )
 }
+

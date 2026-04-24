@@ -1,3 +1,4 @@
+import React from "react"
 import { AlertTriangle, BarChart3, CheckCircle2, Gauge } from "lucide-react"
 import { Button } from "@imify/ui"
 import { type WebPerformanceReport } from "./types"

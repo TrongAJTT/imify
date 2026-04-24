@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react"
+import React, { useEffect, useState, type ReactNode } from "react"
 import { AlertCircle, Loader2 } from "lucide-react"
 import type { DiffViewMode } from "./types"
 import { renderImageDataPreview, type RenderImageDataPreviewResult } from "@imify/engine/image-pipeline/render-image-data"
@@ -135,3 +135,4 @@ export function PixelCompareWorkspace({
     </ViewerShell>
   )
 }
+

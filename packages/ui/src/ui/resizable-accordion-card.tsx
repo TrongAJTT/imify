@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { AccordionCard } from "./accordion-card"
 
@@ -96,3 +96,4 @@ export function ResizableAccordionCard({
 }
 
 export default ResizableAccordionCard
+

@@ -1,3 +1,4 @@
+import React from "react"
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
@@ -51,5 +52,6 @@ export function PatternSidebarPanel({ enableWideSidebarGrid = false }: PatternSi
     />
   )
 }
+
 
 

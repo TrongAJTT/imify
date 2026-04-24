@@ -1,3 +1,4 @@
+import React from "react"
 import type { SavedPatternPreset } from "@imify/stores/stores/pattern-preset-store"
 
 interface PresetDetailLineProps {
@@ -35,5 +36,6 @@ export function PatternPresetDetail({ preset }: PatternPresetDetailProps) {
     </div>
   )
 }
+
 
 

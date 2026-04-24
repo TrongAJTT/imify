@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react"
+import React, { useMemo, useRef, useState } from "react"
 import {
   closestCenter,
   DndContext,
@@ -326,5 +326,6 @@ export function PatternAssetsAccordion() {
     </>
   )
 }
+
 
 

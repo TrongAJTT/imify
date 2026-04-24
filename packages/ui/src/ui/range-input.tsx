@@ -1,3 +1,4 @@
+import React from "react"
 import { LabelText } from "./typography"
 
 interface RangeInputProps {
@@ -45,3 +46,4 @@ export function RangeInput({
     </div>
   )
 }
+

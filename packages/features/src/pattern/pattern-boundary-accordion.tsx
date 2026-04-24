@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react"
+import React, { useEffect, useMemo, useRef } from "react"
 import { Frame, RefreshCcw } from "lucide-react"
 
 import { PatternBoundaryControls } from "./pattern-boundary-controls"
@@ -104,5 +104,6 @@ export function PatternBoundaryAccordion() {
     </div>
   )
 }
+
 
 

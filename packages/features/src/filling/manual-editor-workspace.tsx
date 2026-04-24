@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage, Layer, Line, Rect, Transformer } from "react-konva"
 import type Konva from "konva"
 import { Loader2, Save } from "lucide-react"
@@ -427,3 +427,4 @@ export function ManualEditorWorkspace({
     </div>
   )
 }
+

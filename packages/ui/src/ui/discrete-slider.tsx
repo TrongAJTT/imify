@@ -1,3 +1,4 @@
+import React from "react"
 import { LabelText, MutedText } from "./typography"
 
 export interface DiscreteSliderOption {

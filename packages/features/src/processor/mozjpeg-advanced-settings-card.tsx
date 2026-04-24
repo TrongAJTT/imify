@@ -1,3 +1,4 @@
+import React from "react"
 import { Sparkles, ScanLine, Palette } from "lucide-react"
 
 import { AccordionCard, CheckboxCard, SelectInput } from "@imify/ui"
@@ -79,3 +80,4 @@ export function MozJpegAdvancedSettingsCard({
     </AccordionCard>
   )
 }
+

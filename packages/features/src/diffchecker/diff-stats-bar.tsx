@@ -1,3 +1,4 @@
+import React from "react"
 import type { DiffStats } from "./types"
 import { MutedText } from "@imify/ui"
 
@@ -32,3 +33,4 @@ export function DiffStatsBar({ stats, isComputing, diffWidth, diffHeight }: Diff
     </div>
   )
 }
+

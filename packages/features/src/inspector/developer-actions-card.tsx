@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Check, Code, Copy, Fingerprint, Hash, HelpCircle, Image, Shield } from "lucide-react"
 import {
   buildAspectRatioCss,
@@ -220,3 +220,4 @@ export function DeveloperActionsCard({
     </InfoSection>
   )
 }
+

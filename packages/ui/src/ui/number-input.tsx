@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react"
 import { LabelText } from "./typography"
 import { Tooltip } from "./tooltip"
@@ -167,3 +167,4 @@ export function NumberInput({
     </div>
   )
 }
+

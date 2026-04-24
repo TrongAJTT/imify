@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { BookmarkX, Check, FolderOpen, Sparkles, Stamp, Trash2, X } from "lucide-react"
 
 import { BaseDialog, Button, SecondaryButton } from "@imify/ui"
@@ -763,3 +763,4 @@ export function WatermarkOpenSavedDialog({
     </BaseDialog>
   )
 }
+

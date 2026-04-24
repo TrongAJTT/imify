@@ -1,3 +1,4 @@
+import React from "react"
 import type { DiffComputeResult, DiffImageItem, DiffViewMode } from "./types"
 import { DiffStatsBar } from "./diff-stats-bar"
 import { ImageDropPair } from "./image-drop-pair"
@@ -66,3 +67,4 @@ export function DiffcheckerWorkspace(props: DiffcheckerWorkspaceProps) {
     </div>
   )
 }
+

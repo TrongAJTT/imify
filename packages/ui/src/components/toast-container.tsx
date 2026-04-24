@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Check, AlertTriangle, X } from "lucide-react"
 import { AnimatingSpinner } from "./animating-spinner"
 import type { ToastPayload } from "@imify/core/hooks/use-toast"

@@ -1,5 +1,5 @@
 import { arrayMove } from "@dnd-kit/sortable"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AlertTriangle, ImagePlus, Trash2 } from "lucide-react"
 
 import { APP_CONFIG } from "@imify/core/config"
@@ -760,5 +760,6 @@ export function SplitterTab() {
     />
   )
 }
+
 
 

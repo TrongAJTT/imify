@@ -1,3 +1,4 @@
+import React from "react"
 import { Search } from "lucide-react"
 import { EmptyDropCard } from "@imify/ui"
 
@@ -22,3 +23,4 @@ export function InspectorDropZone({ onLoadFile }: InspectorDropZoneProps) {
     />
   )
 }
+

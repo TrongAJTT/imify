@@ -1,3 +1,4 @@
+import React from "react"
 import type { ReactNode } from "react"
 import { AlertCircle } from "lucide-react"
 import { Heading, MutedText } from "./typography"
@@ -28,3 +29,4 @@ export function WorkspaceNotFoundState({
     </div>
   )
 }
+

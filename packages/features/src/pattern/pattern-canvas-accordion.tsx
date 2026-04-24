@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react"
+import React, { useMemo, useRef, useState } from "react"
 import { ImagePlus, Palette, Ruler, X } from "lucide-react"
 
 import type { PatternBackgroundType } from "./types"
@@ -196,5 +196,6 @@ export function PatternCanvasAccordion() {
     </>
   )
 }
+
 
 

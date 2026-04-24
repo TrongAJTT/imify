@@ -1,3 +1,4 @@
+import React from "react"
 import { Info } from "lucide-react"
 import { AccordionCard, MutedText } from "@imify/ui"
 
@@ -14,3 +15,4 @@ export function InformationAccordion() {
     </AccordionCard>
   )
 }
+

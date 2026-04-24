@@ -1,3 +1,4 @@
+import React from "react"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { WorkspaceConfigSidebarPanel, type WorkspaceConfigSidebarItem } from "@imify/ui"
 import { DisplayAccordion } from "./display-accordion"
@@ -55,3 +56,4 @@ export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enabl
 
   return <WorkspaceConfigSidebarPanel title="INSPECTOR SETTINGS" items={sidebarItems} twoColumn={enableWideSidebarGrid} />
 }
+

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import React, { useRef, useState } from "react"
 import { Check, ChevronDown, Copy, Palette } from "lucide-react"
 import type { ColorInfo, PaletteColor, ColorDisplayFormat } from "./types"
 import {
@@ -366,3 +366,4 @@ export function ColorInspectorCard({ color, palette }: { color: ColorInfo; palet
     </InfoSection>
   )
 }
+

@@ -1,3 +1,4 @@
+import React from "react"
 import { AvifAdvancedSettingsCard } from "./avif-advanced-settings-card"
 import { JxlAdvancedSettingsCard } from "./jxl-advanced-settings-card"
 import { MozJpegAdvancedSettingsCard } from "./mozjpeg-advanced-settings-card"
@@ -168,3 +169,4 @@ export function FormatAdvancedSettingsCard({
 
   return null
 }
+

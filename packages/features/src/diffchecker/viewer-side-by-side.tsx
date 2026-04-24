@@ -1,3 +1,4 @@
+import React from "react"
 interface ViewerSideBySideProps {
   urlA: string
   urlB: string
@@ -42,3 +43,4 @@ export function ViewerSideBySide({
     </div>
   )
 }
+

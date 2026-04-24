@@ -1,3 +1,4 @@
+import React from "react"
 import { Sparkles, Layers, Scissors } from "lucide-react"
 
 import { AccordionCard, CheckboxCard, NumberInput, SelectInput } from "@imify/ui"
@@ -149,3 +150,4 @@ export function AvifAdvancedSettingsCard({
     </AccordionCard>
   )
 }
+

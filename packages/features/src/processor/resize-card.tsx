@@ -1,3 +1,4 @@
+import React from "react"
 import { Maximize2 } from "lucide-react"
 import {
   DEFAULT_RESAMPLING_ALGORITHM,
@@ -232,3 +233,4 @@ export function ResizeCard({
 }
 
 export default ResizeCard
+

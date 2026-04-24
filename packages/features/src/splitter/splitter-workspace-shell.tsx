@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react"
+import React, { useCallback, useEffect, useMemo } from "react"
 
 import { FeatureBreadcrumb } from "../shared/feature-breadcrumb"
 import { SplitterPresetSelectView } from "./splitter-preset-select-view"
@@ -138,5 +138,6 @@ export function SplitterWorkspaceShell({ workspace }: SplitterWorkspaceShellProp
 
   return <>{workspace}</>
 }
+
 
 

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import { AlertTriangle, X } from "lucide-react"
 import { Button, BodyText, Subheading, MutedText } from "@imify/ui"
 
@@ -41,3 +41,4 @@ export function OOMWarningDialog({ isOpen, onClose, onConfirm, totalSize, recomm
     </div>
   )
 }
+

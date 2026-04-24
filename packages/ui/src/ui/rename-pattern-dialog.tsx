@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import { X, Save, FileEdit, Zap, Tags } from "lucide-react"
 import { SecondaryButton } from "./secondary-button"
 import { Button } from "./button"
@@ -252,3 +252,4 @@ export const SPLITTER_EXPORT_RENAME_TAGS: Array<{ tag: string; label: string }> 
   { tag: "[PaddedIndex]", label: "Padded split index (001, 002...)" },
   { tag: "[Ext]", label: "File extension" }
 ]
+

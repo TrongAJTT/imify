@@ -1,3 +1,4 @@
+import React from "react"
 import { AnimatingSpinner } from "../components/animating-spinner"
 import { Heading, MutedText } from "./typography"
 
@@ -24,3 +25,4 @@ export function WorkspaceLoadingState({
     </div>
   )
 }
+

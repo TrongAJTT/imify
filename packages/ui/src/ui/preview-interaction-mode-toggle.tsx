@@ -1,3 +1,4 @@
+import React from "react"
 import { Hand, Pause, ZoomIn } from "lucide-react"
 
 import { SegmentedControl, type SegmentedControlOption } from "./segmented-control"
@@ -60,3 +61,4 @@ export function PreviewInteractionModeToggle({
 }
 
 export default PreviewInteractionModeToggle
+

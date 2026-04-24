@@ -1,5 +1,5 @@
 import { Plus, X } from "lucide-react"
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 import {
   closestCenter,
   DndContext,
@@ -125,5 +125,6 @@ export function ImageStrip({
     </DndContext>
   )
 }
+
 
 

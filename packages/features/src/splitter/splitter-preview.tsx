@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { AnimatingSpinner } from "@imify/ui"
 import { usePanDrag } from "../shared/use-pan-drag"
 import { ZoomPanControl } from "@imify/ui"
@@ -377,5 +377,6 @@ export function SplitterPreview({
     </div>
   )
 }
+
 
 

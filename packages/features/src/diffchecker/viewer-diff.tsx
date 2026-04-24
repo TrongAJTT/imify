@@ -1,3 +1,4 @@
+import React from "react"
 interface ViewerDiffProps {
   diffImageUrl: string
   zoom: number
@@ -27,3 +28,4 @@ export function ViewerDiff({ diffImageUrl, zoom, panX, panY }: ViewerDiffProps) 
     </div>
   )
 }
+

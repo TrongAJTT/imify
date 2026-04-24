@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Link2, RotateCcw, Unlink2, Maximize2, Crop, Minimize } from "lucide-react"
 
 import { Tooltip } from "@imify/ui"
@@ -429,3 +429,4 @@ export function SmartResizeModule({
     </div>
   )
 }
+

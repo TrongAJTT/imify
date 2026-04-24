@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import React, { useCallback, useState } from "react"
 import { type InspectorResult } from "./types"
 import { BasicInfoCard } from "./basic-info-card"
 import { ColorInspectorCard } from "./color-inspector-card"
@@ -58,3 +58,4 @@ export function InspectorWorkspace({ result, bitmap, imageUrl, file, onOptimizeN
     </div>
   )
 }
+

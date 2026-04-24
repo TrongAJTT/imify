@@ -1,3 +1,4 @@
+import React from "react"
 import { ImagePlus, Upload, X } from "lucide-react"
 import type { DiffImageItem } from "./types"
 import { MutedText, Tooltip } from "@imify/ui"
@@ -68,3 +69,4 @@ export function ImageDropPair({ imageA, imageB, onLoadA, onLoadB, onClearA, onCl
     </div>
   )
 }
+

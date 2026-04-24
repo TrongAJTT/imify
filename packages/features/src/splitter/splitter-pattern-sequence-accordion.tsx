@@ -1,3 +1,4 @@
+import React from "react"
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -211,5 +212,6 @@ export function SplitterPatternSequenceAccordion({
     </AccordionCard>
   )
 }
+
 
 

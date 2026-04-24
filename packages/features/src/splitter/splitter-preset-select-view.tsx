@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Check, Edit2, Plus, Trash2 } from "lucide-react"
 
 import { SavePresetDialog } from "../processor/save-preset-dialog"
@@ -221,5 +221,6 @@ export function SplitterPresetSelectView({
     </div>
   )
 }
+
 
 

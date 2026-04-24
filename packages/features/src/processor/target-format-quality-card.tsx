@@ -1,3 +1,4 @@
+import React from "react"
 import { IcoSizeSelector } from "./ico-size-selector"
 import { TARGET_FORMAT_TOOLTIPS } from "./target-format-tooltips"
 import { CheckboxCard, ColoredSliderCard, SliderInput, SelectInput, AccordionCard } from "@imify/ui"
@@ -497,3 +498,4 @@ export function TargetFormatQualityCard({
     </AccordionCard>
   )
 }
+

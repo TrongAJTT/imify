@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 
 import { getCanonicalExtension } from "@imify/core/download-utils"
 import type { PerformancePreferences } from "../processor/performance-preferences"
@@ -467,5 +467,6 @@ export function SplicingSidebarPanel({
     </>
   )
 }
+
 
 

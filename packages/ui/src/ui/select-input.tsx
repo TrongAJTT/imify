@@ -1,5 +1,5 @@
 import { HelpCircle } from "lucide-react"
-import type { ReactNode } from "react"
+import React, { type ReactNode } from "react"
 
 import { InfoPopover } from "./info-popover"
 import { LabelText } from "./typography"

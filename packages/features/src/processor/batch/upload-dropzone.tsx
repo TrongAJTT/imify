@@ -1,3 +1,4 @@
+import React from "react"
 import type { ReactNode } from "react"
 import { Upload } from "lucide-react"
 import { EmptyDropCard } from "@imify/ui"
@@ -19,3 +20,4 @@ export function BatchUploadDropzone({ onAppendFiles, urlImportControl }: BatchUp
     />
   )
 }
+

@@ -1,5 +1,5 @@
 import { HelpCircle, Lock } from "lucide-react"
-import { useEffect, type ReactNode } from "react"
+import React, { useEffect, type ReactNode } from "react"
 
 import type { ImageFormat } from "@imify/core/types"
 import { NumberInput } from "@imify/ui"
@@ -110,3 +110,4 @@ export function ConcurrencySelector({
     </div>
   )
 }
+

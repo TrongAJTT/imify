@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import React, { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Download, Trash2 } from "lucide-react"
 import type { DiffComputeResult, DiffImageItem, DiffViewMode } from "./types"
 import { computeFullDiff, exportCompositeView } from "./diff-engine"
@@ -228,3 +228,4 @@ export function SharedDiffcheckerPage({ renderWorkspace }: SharedDiffcheckerPage
     </div>
   )
 }
+

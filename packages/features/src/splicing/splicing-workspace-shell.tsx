@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import React, { useEffect, useMemo } from "react"
 
 import { FeatureBreadcrumb } from "../shared/feature-breadcrumb"
 import { SplicingPresetSelectView } from "./splicing-preset-select-view"
@@ -229,5 +229,6 @@ export function SplicingWorkspaceShell({ workspace }: SplicingWorkspaceShellProp
 
   return <>{workspace}</>
 }
+
 
 

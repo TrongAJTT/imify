@@ -1,3 +1,4 @@
+import React from "react"
 import type { DiffViewMode } from "./types"
 import { Columns, Layers, Zap } from "lucide-react"
 import { AccordionCard, RadioCard } from "@imify/ui"

@@ -1,3 +1,4 @@
+import React from "react"
 import { Sparkles, Eraser, Palette, Cpu, ScanLine } from "lucide-react"
 
 import { AccordionCard, CheckboxCard } from "@imify/ui"
@@ -119,3 +120,4 @@ export function PngAdvancedSettingsCard({
     </AccordionCard>
   )
 }
+

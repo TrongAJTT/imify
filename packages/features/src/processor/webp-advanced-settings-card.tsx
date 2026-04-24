@@ -1,3 +1,4 @@
+import React from "react"
 import { Sparkles, ShieldCheck, Palette } from "lucide-react"
 
 import { AccordionCard, CheckboxCard } from "@imify/ui"

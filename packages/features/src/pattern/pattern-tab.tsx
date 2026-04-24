@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Download, ImagePlus, Loader2 } from "lucide-react"
 
 import { ToastContainer } from "@imify/ui"
@@ -761,5 +761,6 @@ export function PatternTab() {
     </div>
   )
 }
+
 
 

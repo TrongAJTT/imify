@@ -1,3 +1,4 @@
+import React from "react"
 import type { PerformancePreferences } from "../processor/performance-preferences"
 import { SidebarPanel } from "@imify/ui"
 import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
@@ -36,5 +37,6 @@ export function SplicingSidebarShell({
     />
   )
 }
+
 
 

@@ -1,4 +1,4 @@
-import { type ReactNode, useRef } from "react"
+import React, { type ReactNode, useRef } from "react"
 import { Heading, MutedText } from "./typography"
 
 interface EmptyDropCardProps {
@@ -93,3 +93,4 @@ export function EmptyDropCard({
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 import { Lock, Stamp } from "lucide-react"
 import type { ResizeConfig } from "@imify/core/types"
 import { CheckboxCard, SidebarCard, AccordionCard } from "@imify/ui"
@@ -184,3 +184,4 @@ export function BatchExportPanel({
     </AccordionCard>
   )
 }
+

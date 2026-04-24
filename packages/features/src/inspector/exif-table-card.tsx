@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { ChevronDown, ChevronUp, Database, Search, ShieldAlert } from "lucide-react"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { SENSITIVE_TAGS } from "./exif-tags"
@@ -55,3 +55,4 @@ export function ExifTableCard({ entries }: { entries: ExifEntry[] }) {
     </InfoSection>
   )
 }
+

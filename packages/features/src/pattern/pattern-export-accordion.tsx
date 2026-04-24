@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 
 import { FormatAdvancedSettingsCard } from "../processor/format-advanced-settings-card"
 import { TargetFormatQualityCard } from "../processor/target-format-quality-card"
@@ -222,5 +222,6 @@ export function PatternExportAccordion() {
     </div>
   )
 }
+
 
 

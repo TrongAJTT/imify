@@ -1,3 +1,4 @@
+import React from "react"
 import { Image as ImageIcon } from "lucide-react"
 import { NumberInput, ColorPickerPopover, AccordionCard } from "@imify/ui"
 import { ResizeCard } from "../processor/resize-card"
@@ -115,5 +116,6 @@ export function ImageSettingsAccordion({
     </AccordionCard>
   )
 }
+
 
 

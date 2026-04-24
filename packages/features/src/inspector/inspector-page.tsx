@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import React, { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Trash2 } from "lucide-react"
 import { inspectImage, type InspectorResult } from "./index"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
@@ -140,3 +140,4 @@ export function SharedInspectorPage({
     </div>
   )
 }
+

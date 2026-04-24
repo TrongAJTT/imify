@@ -1,3 +1,4 @@
+import React from "react"
 import { Plus, Trash2, Palette } from "lucide-react"
 
 import type { SplitterColorRule } from "./types"
@@ -111,5 +112,6 @@ export function ColorMatchRulesAccordion({
     </AccordionCard>
   )
 }
+
 
 

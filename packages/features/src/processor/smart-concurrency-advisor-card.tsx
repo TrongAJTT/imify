@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 import { AlertTriangle, CheckCircle2, Gauge, Settings2, Sparkles, Wand2, Zap } from "lucide-react"
 
 import type { FormatCodecOptions } from "@imify/core/types"
@@ -143,3 +143,4 @@ export function SmartConcurrencyAdvisorCard({
     </ControlledPopover>
   )
 }
+

@@ -1,5 +1,5 @@
 import { RotateCcw } from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useValueScrubbing } from "../hooks/use-value-scrubbing"
 import { Tooltip } from "./tooltip"
 
@@ -172,3 +172,4 @@ export function ZoomPanControl({
     </div>
   )
 }
+

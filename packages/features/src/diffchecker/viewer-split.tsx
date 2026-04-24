@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react"
+import React, { useCallback, useRef, useState } from "react"
 
 interface ViewerSplitProps {
   urlA: string
@@ -79,3 +79,4 @@ export function ViewerSplit({
     </div>
   )
 }
+

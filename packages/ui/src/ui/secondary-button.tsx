@@ -1,3 +1,4 @@
+import React from "react"
 import type { ButtonHTMLAttributes, ReactNode } from "react"
 
 interface SecondaryButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,3 +19,4 @@ export function SecondaryButton({ children, className, type = "button", ...rest 
     </button>
   )
 }
+

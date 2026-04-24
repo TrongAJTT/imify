@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import { AlertCircle, Download, X } from "lucide-react"
 import { Button, BodyText, Subheading, MutedText } from "@imify/ui"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
@@ -111,3 +111,4 @@ export function BatchDownloadConfirmDialog({
     </div>
   )
 }
+

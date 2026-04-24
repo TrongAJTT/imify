@@ -1,3 +1,4 @@
+import React from "react"
 import { Eye, Tags } from "lucide-react"
 import { AccordionCard, CheckboxCard, SelectInput } from "@imify/ui"
 
@@ -26,3 +27,4 @@ export function MetadataAccordion(props: MetadataAccordionProps) {
     </AccordionCard>
   )
 }
+

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { FileText, Monitor, Ruler, Share2, X } from "lucide-react"
 import { CANVAS_SIZE_PRESETS, type CanvasSizePreset } from "./types"
 import { BaseDialog, Button, MutedText, Subheading } from "@imify/ui"

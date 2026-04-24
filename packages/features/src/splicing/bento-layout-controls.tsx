@@ -1,3 +1,4 @@
+import React from "react"
 import { Scissors } from "lucide-react"
 import type {
   SplicingAlignment,
@@ -107,5 +108,6 @@ export function BentoLayoutControls({
     </>
   )
 }
+
 
 

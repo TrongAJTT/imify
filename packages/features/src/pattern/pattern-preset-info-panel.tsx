@@ -1,3 +1,4 @@
+import React from "react"
 import { Info, Layers, RefreshCw } from "lucide-react"
 
 interface PatternPresetInfoPanelProps {
@@ -50,5 +51,6 @@ export function PatternPresetInfoPanel({ compact = false }: PatternPresetInfoPan
     </div>
   )
 }
+
 
 

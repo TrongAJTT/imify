@@ -1,3 +1,4 @@
+import React from "react"
 import type { DiffAlignAnchor, DiffAlignMode } from "./types"
 import { Maximize2 } from "lucide-react"
 import { AccordionCard, SelectInput } from "@imify/ui"
@@ -31,3 +32,4 @@ export function AlignmentAccordion({
     </AccordionCard>
   )
 }
+

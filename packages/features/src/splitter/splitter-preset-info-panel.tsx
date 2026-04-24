@@ -1,3 +1,4 @@
+import React from "react"
 import { Info, Layers, Scissors, RefreshCw } from "lucide-react"
 
 interface SplitterPresetInfoPanelProps {
@@ -62,5 +63,6 @@ export function SplitterPresetInfoPanel({ compact = false }: SplitterPresetInfoP
     </div>
   )
 }
+
 
 

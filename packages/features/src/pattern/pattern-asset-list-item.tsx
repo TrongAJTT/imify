@@ -1,3 +1,4 @@
+import React from "react"
 import {
   DEFAULT_PATTERN_ASSET_BORDER_SETTINGS,
   DEFAULT_PATTERN_ASSET_MONOCHROME_SETTINGS,
@@ -254,5 +255,6 @@ export function PatternAssetListItem({
     </div>
   )
 }
+
 
 

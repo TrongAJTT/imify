@@ -1,3 +1,4 @@
+import React from "react"
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { WorkspaceConfigSidebarPanel, type WorkspaceConfigSidebarItem } from "@imify/ui"
 import { ViewModeAccordion } from "./view-mode-accordion"
@@ -32,3 +33,4 @@ export function DiffcheckerSidebarPanel({ enableWideSidebarGrid = false }: { ena
 
   return <WorkspaceConfigSidebarPanel title="DIFFCHECKER SETTINGS" items={sidebarItems} twoColumn={enableWideSidebarGrid} />
 }
+

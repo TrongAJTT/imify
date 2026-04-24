@@ -1,3 +1,4 @@
+import React from "react"
 import { SidebarPanel } from "@imify/ui"
 import type { SetupContext } from "@imify/stores/stores/batch-store"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
@@ -21,3 +22,4 @@ export function ProcessorSidebarShell({ context, workspaceSidebar }: ProcessorSi
 
   return <>{workspaceSidebar}</>
 }
+

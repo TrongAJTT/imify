@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { HexAlphaColorPicker, HexColorInput, HexColorPicker } from "react-colorful"
 import { Pipette } from "lucide-react"
 
@@ -525,3 +525,4 @@ export function ColorPickerPopover({
     </div>
   )
 }
+

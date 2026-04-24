@@ -1,3 +1,4 @@
+import React from "react"
 import { FileImage, Ruler, Clock, Pipette } from "lucide-react"
 import type { BasicInfo, DimensionInfo, ResolutionInfo, TimeInfo } from "./types"
 import { formatFileSize } from "./format-utils"
@@ -91,3 +92,4 @@ export function BasicInfoCard({ basic, dimensions, resolution, time, imageUrl }:
     </div>
   )
 }
+

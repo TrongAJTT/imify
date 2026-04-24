@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Check, Edit2, Plus, Trash2 } from "lucide-react"
 import { EmptyDropCard } from "@imify/ui"
 import { PRESET_HIGHLIGHT_COLORS } from "@imify/stores/stores/preset-colors"
@@ -72,3 +72,4 @@ export function ProcessorPresetSelectView({
     </div>
   )
 }
+

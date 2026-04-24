@@ -1,3 +1,4 @@
+import React from "react"
 import type { DiffAlgorithm, DiffViewMode } from "./types"
 import { Settings } from "lucide-react"
 import { AccordionCard, MutedText, SelectInput, SliderInput } from "@imify/ui"
@@ -37,3 +38,4 @@ export function ComparisonAccordion({
     </AccordionCard>
   )
 }
+

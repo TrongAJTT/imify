@@ -1,3 +1,4 @@
+import React from "react"
 import { X, ArrowRight } from "lucide-react"
 import { Button, BodyText, MutedText } from "@imify/ui"
 import type { BatchQueueItem } from "./types"
@@ -60,3 +61,4 @@ export function QueueItemCard({
     </article>
   )
 }
+

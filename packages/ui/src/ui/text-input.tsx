@@ -1,3 +1,4 @@
+import React from "react"
 import { LabelText } from "./typography"
 
 interface TextInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> {
@@ -37,3 +38,4 @@ export function TextInput({
     </div>
   )
 }
+

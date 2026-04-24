@@ -1,3 +1,4 @@
+import React from "react"
 import { Image as ImageIcon, Layers, PenTool, WandSparkles } from "lucide-react"
 import { MutedText } from "@imify/ui"
 
@@ -55,3 +56,4 @@ function InfoRow({
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { Ellipse, Group, Layer, Rect, Stage, Text, Transformer } from "react-konva"
 import type Konva from "konva"
 
@@ -274,5 +274,6 @@ export function PatternBoundaryVisualOverlay({
     </Stage>
   )
 }
+
 
 

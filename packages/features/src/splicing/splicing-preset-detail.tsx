@@ -1,3 +1,4 @@
+import React from "react"
 import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store"
 
 interface PresetDetailLineProps {
@@ -75,5 +76,6 @@ export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
     </div>
   )
 }
+
 
 

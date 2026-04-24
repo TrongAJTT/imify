@@ -1,3 +1,4 @@
+import React from "react"
 export function AnimatingSpinner({ size = 16 }: { size?: number }) {
   return (
     <svg
@@ -18,3 +19,4 @@ export function AnimatingSpinner({ size = 16 }: { size?: number }) {
     </svg>
   )
 }
+

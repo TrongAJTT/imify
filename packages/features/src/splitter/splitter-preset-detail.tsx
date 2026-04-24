@@ -1,3 +1,4 @@
+import React from "react"
 import type { SavedSplitterPreset } from "@imify/stores/stores/splitter-preset-store"
 
 interface SplitterPresetDetailProps {
@@ -26,5 +27,6 @@ export function SplitterPresetDetail({ preset }: SplitterPresetDetailProps) {
     </div>
   )
 }
+
 
 

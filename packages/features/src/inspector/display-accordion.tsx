@@ -1,3 +1,4 @@
+import React from "react"
 import { Palette } from "lucide-react"
 import type { ColorBlindMode, PreviewChannelMode } from "./types"
 import { AccordionCard, CheckboxCard, SelectInput, SliderInput } from "@imify/ui"
@@ -44,3 +45,4 @@ export function DisplayAccordion(props: DisplayAccordionProps) {
     </AccordionCard>
   )
 }
+

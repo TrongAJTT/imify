@@ -1,3 +1,4 @@
+import React from "react"
 import {
   RenamePatternDialog,
   BATCH_RENAME_PRESETS,
@@ -34,3 +35,4 @@ export function BatchRenameDialog({ isOpen, onClose, onSave, initialPattern }: B
     />
   )
 }
+

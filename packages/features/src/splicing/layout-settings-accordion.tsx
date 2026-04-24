@@ -1,3 +1,4 @@
+import React from "react"
 import { Rows, } from "lucide-react"
 import { NumberInput } from "@imify/ui"
 import { SelectField } from "./splicing-sidebar-fields"
@@ -182,5 +183,6 @@ export function LayoutSettingsAccordion({
     </AccordionCard>
   )
 }
+
 
 

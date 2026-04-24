@@ -1,3 +1,4 @@
+import React from "react"
 import { SquareMousePointer } from "lucide-react"
 
 import { Tooltip } from "./tooltip"
@@ -55,3 +56,4 @@ export function VisualHelpTooltip({
     </Tooltip>
   )
 }
+

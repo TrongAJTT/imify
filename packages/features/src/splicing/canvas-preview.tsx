@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import { drawSplicingCanvas } from "./canvas-renderer"
 import { calculateLayout } from "./layout-engine"
@@ -504,5 +504,6 @@ export function CanvasPreview({
     </div>
   )
 }
+
 
 

@@ -1,3 +1,4 @@
+import React from "react"
 import type { PaperSize, SupportedDPI } from "@imify/core/types"
 import { DPI_OPTIONS, PAPER_OPTIONS } from "@imify/core/resize-state"
 import { SelectInput } from "@imify/ui"
@@ -43,3 +44,4 @@ export function PaperConfig({
     </div>
   )
 }
+

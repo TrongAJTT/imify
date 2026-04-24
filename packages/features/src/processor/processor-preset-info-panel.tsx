@@ -1,3 +1,4 @@
+import React from "react"
 import { Info, Layers, RefreshCw } from "lucide-react"
 
 import type { SetupContext } from "@imify/stores/stores/batch-store"
@@ -63,3 +64,4 @@ export function ProcessorPresetInfoPanel({ context }: ProcessorPresetInfoPanelPr
     </div>
   )
 }
+

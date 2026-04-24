@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import React, { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Expand, Shrink } from "lucide-react"
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { Tooltip, ZoomPanControl } from "@imify/ui"
@@ -166,3 +166,4 @@ export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanCha
     </div>
   )
 }
+

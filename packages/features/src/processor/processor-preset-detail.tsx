@@ -1,3 +1,4 @@
+import React from "react"
 import type { SavedSetupPreset, SetupContext } from "@imify/stores/stores/batch-store"
 
 function PresetDetailLine({ label, value }: { label: string; value: string | number | undefined }) {
@@ -31,3 +32,4 @@ export function ProcessorPresetDetail({ preset }: { preset: SavedSetupPreset; co
     </div>
   )
 }
+

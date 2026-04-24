@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import React, { useState, type ReactNode } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { Kicker } from "@imify/ui"
 
@@ -82,3 +82,4 @@ export function InfoRow({ label, value, mono }: { label: string; value: ReactNod
     </div>
   )
 }
+

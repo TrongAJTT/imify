@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react"
+import React, { useCallback, useEffect, useMemo } from "react"
 
 import { FeatureBreadcrumb } from "../shared/feature-breadcrumb"
 import { PatternPresetSelectView } from "./pattern-preset-select-view"
@@ -186,5 +186,6 @@ export function PatternWorkspaceShell({ workspace }: PatternWorkspaceShellProps)
 
   return <>{workspace}</>
 }
+
 
 

@@ -1,3 +1,4 @@
+import React from "react"
 import { ExternalLink, MapPin } from "lucide-react"
 import { type GpsInfo } from "./types"
 import { InfoRow, InfoSection } from "./info-section"
@@ -25,3 +26,4 @@ export function GpsCard({ gps }: { gps: GpsInfo }) {
     </InfoSection>
   )
 }
+

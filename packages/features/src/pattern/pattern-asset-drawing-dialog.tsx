@@ -19,7 +19,7 @@ import { TextInput } from "@imify/ui"
 import { useShortcutActions } from "../filling/use-shortcut-actions"
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { Brush, Eraser, RotateCcw, Trash2, X } from "lucide-react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 
 interface PatternAssetDrawingDialogProps {
@@ -682,5 +682,6 @@ export function PatternAssetDrawingDialog({
     </BaseDialog>
   )
 }
+
 
 

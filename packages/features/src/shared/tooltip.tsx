@@ -1,3 +1,4 @@
+import React from "react"
 import { ControlledPopover } from "@imify/ui"
 
 type TooltipProps = {

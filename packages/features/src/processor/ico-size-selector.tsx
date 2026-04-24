@@ -1,3 +1,4 @@
+import React from "react"
 import { ICO_SIZE_OPTIONS } from "@imify/core/format-config"
 import { LabelText, CheckboxCard } from "@imify/ui"
 import { Gift, Sparkles } from "lucide-react"
@@ -67,4 +68,5 @@ export function IcoSizeSelector({
     </div>
   )
 }
+
 

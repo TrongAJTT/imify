@@ -1,3 +1,4 @@
+import React from "react"
 import type { SplitterSplitSettings } from "./types"
 import {
   SPLITTER_ADVANCED_METHOD_TABLE_ROWS,
@@ -516,5 +517,6 @@ export function SplitOptionsAccordion({
     </AccordionCard>
   )
 }
+
 
 

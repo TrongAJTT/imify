@@ -1,3 +1,4 @@
+import React from "react"
 import { SidebarPanel } from "@imify/ui"
 import { SplitterPresetInfoPanel } from "./splitter-preset-info-panel"
 import { SplitterSidebarPanel } from "./splitter-sidebar-panel"
@@ -20,5 +21,6 @@ export function SplitterSidebarShell({ enableWideSidebarGrid = false }: Splitter
 
   return <SplitterSidebarPanel enableWideSidebarGrid={enableWideSidebarGrid} />
 }
+
 
 

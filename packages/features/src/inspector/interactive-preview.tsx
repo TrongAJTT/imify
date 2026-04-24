@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useToast } from "@imify/core/hooks/use-toast"
 import { ToastContainer } from "@imify/ui"
 import type { ColorBlindMode, PreviewChannelMode } from "./types"
@@ -249,3 +249,4 @@ export function InteractivePreview({
     </div>
   )
 }
+

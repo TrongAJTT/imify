@@ -1,3 +1,4 @@
+import React from "react"
 import { Kicker, MutedText } from "./typography"
 
 interface SettingsSectionHeaderProps {

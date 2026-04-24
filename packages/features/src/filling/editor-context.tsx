@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react"
+import React, { createContext, useCallback, useContext, useState, type ReactNode } from "react"
 import type { LayerGroup, VectorLayer } from "./types"
 import { regenerateLayerShapePoints } from "./shape-generators"
 

@@ -1,3 +1,4 @@
+import React from "react"
 import { SidebarPanel } from "@imify/ui"
 import { PatternPresetInfoPanel } from "./pattern-preset-info-panel"
 import { PatternSidebarPanel } from "./pattern-sidebar-panel"
@@ -20,5 +21,6 @@ export function PatternSidebarShell({ enableWideSidebarGrid = false }: PatternSi
 
   return <PatternSidebarPanel enableWideSidebarGrid={enableWideSidebarGrid} />
 }
+
 
 

@@ -1,3 +1,4 @@
+import React from "react"
 import type { ReactNode } from "react"
 
 import { Tooltip } from "./tooltip"
@@ -77,4 +78,5 @@ export function SegmentedControl<T extends string>({
     </div>
   )
 }
+
 

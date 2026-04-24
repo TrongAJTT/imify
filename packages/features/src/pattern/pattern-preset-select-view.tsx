@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Check, Edit2, Pin, PinOff, Plus, Trash2 } from "lucide-react"
 
 import { EmptyDropCard } from "@imify/ui"
@@ -236,5 +236,6 @@ export function PatternPresetSelectView({
     </div>
   )
 }
+
 
 

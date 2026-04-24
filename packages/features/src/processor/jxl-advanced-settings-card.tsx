@@ -1,3 +1,4 @@
+import React from "react"
 import { Sparkles, ScanLine } from "lucide-react"
 
 import { TARGET_FORMAT_TOOLTIPS } from "./target-format-tooltips"
@@ -81,3 +82,4 @@ export function JxlAdvancedSettingsCard({
     </AccordionCard>
   )
 }
+

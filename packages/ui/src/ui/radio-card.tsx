@@ -1,3 +1,4 @@
+import React from "react"
 import { HelpCircle } from "lucide-react"
 
 import { Tooltip } from "./tooltip"
@@ -67,3 +68,4 @@ export function RadioCard({
     </label>
   )
 }
+

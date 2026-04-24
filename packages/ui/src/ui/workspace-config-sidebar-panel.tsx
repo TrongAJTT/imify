@@ -1,3 +1,4 @@
+import React from "react"
 import {
   useEffect,
   useMemo,
@@ -226,3 +227,4 @@ export function WorkspaceConfigSidebarPanel({
     </SidebarPanel>
   )
 }
+

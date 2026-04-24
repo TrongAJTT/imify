@@ -1,3 +1,4 @@
+import React from "react"
 import { AccordionCard } from "@imify/ui"
 import { CheckboxCard } from "@imify/ui"
 import { NumberInput } from "@imify/ui"
@@ -144,5 +145,6 @@ export function PatternSettingsAccordion() {
     </AccordionCard>
   )
 }
+
 
 

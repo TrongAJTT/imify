@@ -1,3 +1,4 @@
+import React from "react"
 import { HelpCircle } from "lucide-react"
 import { Tooltip } from "./tooltip"
 import { getThemeClasses, type ColorTheme, type ThemeClasses } from "./theme-config"
@@ -71,3 +72,4 @@ export function CheckboxCard({
     </label>
   )
 }
+

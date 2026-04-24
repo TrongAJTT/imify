@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 
 import { getCanonicalExtension } from "@imify/core/download-utils"
 import type { SplitterExportFormat } from "./types"
@@ -331,5 +331,6 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     </>
   )
 }
+
 
 

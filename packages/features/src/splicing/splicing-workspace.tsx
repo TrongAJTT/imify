@@ -1,5 +1,5 @@
+import React from "react"
 import { ImagePlus } from "lucide-react"
-import type React from "react"
 
 import type {
   LayoutResult,
@@ -121,6 +121,7 @@ export function SplicingWorkspace({
     </>
   )
 }
+
 
 
 

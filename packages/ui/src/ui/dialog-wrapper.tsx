@@ -1,3 +1,4 @@
+import React from "react"
 import { X } from "lucide-react"
 import { Heading } from "./typography"
 
@@ -36,3 +37,4 @@ export function DialogWrapper({
     </div>
   )
 }
+

@@ -1,3 +1,4 @@
+import React from "react"
 import { Inbox } from "lucide-react"
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable"
 import { BodyText } from "@imify/ui"
@@ -30,3 +31,4 @@ export function BatchQueueGrid({ queue, isRunning, onRemoveItem }: BatchQueueGri
     </SortableContext>
   )
 }
+

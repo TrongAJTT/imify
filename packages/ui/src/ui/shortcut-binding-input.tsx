@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { Keyboard } from "lucide-react"
 
 import { Button } from "./button"
@@ -66,3 +66,4 @@ export function ShortcutBindingInput({ value, onChange }: ShortcutBindingInputPr
     </div>
   )
 }
+

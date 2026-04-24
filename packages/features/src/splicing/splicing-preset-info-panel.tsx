@@ -1,3 +1,4 @@
+import React from "react"
 import { Info, Settings, Layers, RefreshCw } from "lucide-react"
 
 interface SplicingPresetInfoPanelProps {
@@ -62,5 +63,6 @@ export function SplicingPresetInfoPanel({ compact = false }: SplicingPresetInfoP
     </div>
   )
 }
+
 
 

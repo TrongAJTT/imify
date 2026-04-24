@@ -1,3 +1,4 @@
+import React from "react"
 import type { ReactNode } from "react"
 
 interface SurfaceCardProps {
@@ -20,3 +21,4 @@ export function SurfaceCard({ children, className, as = "section", tone = "defau
 
   return <Tag className={mergedClassName}>{children}</Tag>
 }
+

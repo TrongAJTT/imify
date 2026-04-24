@@ -1,3 +1,4 @@
+import React from "react"
 import { AlertCircle, AlertTriangle, Info, Shield } from "lucide-react"
 import { type PrivacyAlert } from "./types"
 import { InfoSection } from "./info-section"

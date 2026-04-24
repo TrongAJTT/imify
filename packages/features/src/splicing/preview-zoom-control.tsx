@@ -1,3 +1,4 @@
+import React from "react"
 import { RotateCcw } from "lucide-react"
 import type { RefObject } from "react"
 import type { ValueScrubHandlers } from "../shared/use-value-scrubbing"
@@ -82,6 +83,7 @@ export function PreviewZoomControl({
     </div>
   )
 }
+
 
 
 
