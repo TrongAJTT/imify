@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { AnimatingSpinner } from "@imify/ui/components/animating-spinner"
-import { usePanDrag } from "@/options/hooks/use-pan-drag"
-import { ZoomPanControl } from "@imify/ui/ui/zoom-pan-control"
-import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
-import type { SplitterSplitPlan, SplitterSplitSettings } from "@imify/features/splitter/types"
+import { AnimatingSpinner } from "@imify/ui"
+import { usePanDrag } from "../shared/use-pan-drag"
+import { ZoomPanControl } from "@imify/ui"
+import type { PreviewInteractionMode } from "@imify/ui"
+import type { SplitterSplitPlan, SplitterSplitSettings } from "./types"
 
 interface SplitterPreviewProps {
   image: {
@@ -377,3 +377,5 @@ export function SplitterPreview({
     </div>
   )
 }
+
+

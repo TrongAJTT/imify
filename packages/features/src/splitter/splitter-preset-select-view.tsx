@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react"
 import { Check, Edit2, Plus, Trash2 } from "lucide-react"
 
-import { SavePresetDialog } from "@/options/components/batch"
-import { WorkspaceSelectHeader } from "@/options/components/shared/workspace-select-header"
-import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
-import { SplitterPresetDetail } from "@/options/components/splitter/splitter-preset-detail"
+import { SavePresetDialog } from "../processor/save-preset-dialog"
+import { WorkspaceSelectHeader } from "../processor/workspace-select-header"
+import { EmptyDropCard } from "@imify/ui"
+import { SplitterPresetDetail } from "./splitter-preset-detail"
 import type { SavedSplitterPreset } from "@imify/stores/stores/splitter-preset-store"
-import { PRESET_HIGHLIGHT_COLORS } from "@/options/shared/preset-colors"
+import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors"
 
 interface SplitterPresetSelectViewProps {
   presets: SavedSplitterPreset[]
@@ -221,3 +221,5 @@ export function SplitterPresetSelectView({
     </div>
   )
 }
+
+

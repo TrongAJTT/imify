@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo } from "react"
 
-import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrumb"
-import { SplitterPresetSelectView } from "@/options/components/splitter/splitter-preset-select-view"
-import type { SplitterPresetConfig } from "@imify/features/splitter/types"
+import { FeatureBreadcrumb } from "../shared/feature-breadcrumb"
+import { SplitterPresetSelectView } from "./splitter-preset-select-view"
+import type { SplitterPresetConfig } from "./types"
 import {
   cloneSplitterPresetConfig,
   useSplitterPresetStore
@@ -138,3 +138,5 @@ export function SplitterWorkspaceShell({ workspace }: SplitterWorkspaceShellProp
 
   return <>{workspace}</>
 }
+
+

@@ -1,7 +1,7 @@
 import { ArrowUpDown, FileEdit, Stamp } from "lucide-react"
 
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import SidebarCard from "@imify/ui/ui/sidebar-card"
+import { AccordionCard } from "@imify/ui"
+import { SidebarCard } from "@imify/ui"
 
 interface SplitterExportPanelProps {
   fileNamePattern: string
@@ -49,4 +49,6 @@ export function SplitterExportPanel({
     </AccordionCard>
   )
 }
+
+
 

@@ -26,3 +26,5 @@ export function SplitterPresetDetail({ preset }: SplitterPresetDetailProps) {
     </div>
   )
 }
+
+

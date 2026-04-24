@@ -1,31 +1,31 @@
 import { useMemo, useState } from "react"
 
 import { getCanonicalExtension } from "@imify/core/download-utils"
-import type { SplitterExportFormat } from "@imify/features/splitter/types"
-import { ColorMatchRulesAccordion } from "@/options/components/splitter/color-match-rules-accordion"
-import { SplitterCustomGuidesAccordion } from "@/options/components/splitter/splitter-custom-guides-accordion"
-import { SplitterExportPanel } from "@/options/components/splitter/splitter-export-panel"
-import { SplitterOrderDialog } from "@/options/components/splitter/splitter-order-dialog"
-import { SplitterPatternSequenceAccordion } from "@/options/components/splitter/splitter-pattern-sequence-accordion"
-import { SplitOptionsAccordion } from "@/options/components/splitter/split-options-accordion"
-import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
-import { TargetFormatQualityCard } from "@/options/components/shared/target-format-quality-card"
+import type { SplitterExportFormat } from "./types"
+import { ColorMatchRulesAccordion } from "./color-match-rules-accordion"
+import { SplitterCustomGuidesAccordion } from "./splitter-custom-guides-accordion"
+import { SplitterExportPanel } from "./splitter-export-panel"
+import { SplitterOrderDialog } from "./splitter-order-dialog"
+import { SplitterPatternSequenceAccordion } from "./splitter-pattern-sequence-accordion"
+import { SplitOptionsAccordion } from "./split-options-accordion"
+import { FormatAdvancedSettingsCard } from "../processor/format-advanced-settings-card"
+import { TargetFormatQualityCard } from "../processor/target-format-quality-card"
 import {
   RenamePatternDialog,
   SPLITTER_EXPORT_RENAME_PRESETS,
   SPLITTER_EXPORT_RENAME_TAGS
-} from "@imify/ui/ui/rename-pattern-dialog"
+} from "@imify/ui"
 import {
   buildTargetFormatQualityCardConfig,
   supportsTargetFormatQuality,
   supportsTargetFormatTinyMode
-} from "@/options/shared/target-format-state"
-import { buildTargetFormatOptions } from "@/options/shared/target-format-options"
+} from "../processor/target-format-state"
+import { buildTargetFormatOptions } from "../processor/target-format-options"
 import { useSplitterStore } from "@imify/stores/stores/splitter-store"
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem
-} from "@imify/ui/ui/workspace-config-sidebar-panel"
+} from "@imify/ui"
 
 interface SplitterSidebarPanelProps {
   enableWideSidebarGrid?: boolean
@@ -331,3 +331,5 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     </>
   )
 }
+
+

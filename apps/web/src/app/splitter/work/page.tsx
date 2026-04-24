@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { SplitterWorkPage as SplitterWorkClientPage } from "@/features/wave3/wave3-pages"
+import { SplitterWorkPage as SplitterWorkClientPage } from "@/features/splitter/splitter-pages"
 import { getRouteId } from "@/features/routing/route-id"
 
 interface WorkPageProps {

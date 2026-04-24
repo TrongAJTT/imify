@@ -1,11 +1,11 @@
 import { Plus, Trash2, Palette } from "lucide-react"
 
-import type { SplitterColorRule } from "@imify/features/splitter/types"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { Button } from "@imify/ui/ui/button"
-import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { SelectInput } from "@imify/ui/ui/select-input"
+import type { SplitterColorRule } from "./types"
+import { AccordionCard } from "@imify/ui"
+import { Button } from "@imify/ui"
+import { ColorPickerPopover } from "@imify/ui"
+import { NumberInput } from "@imify/ui"
+import { SelectInput } from "@imify/ui"
 
 interface ColorMatchRulesAccordionProps {
   rules: SplitterColorRule[]
@@ -111,3 +111,5 @@ export function ColorMatchRulesAccordion({
     </AccordionCard>
   )
 }
+
+

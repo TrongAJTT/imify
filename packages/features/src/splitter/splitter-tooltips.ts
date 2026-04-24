@@ -1,6 +1,6 @@
 export const SPLITTER_TOOLTIPS = {
   colorMatchGridFallback:
-    "Color Match only works with a single axis. Grid is currently treated as vertical splitting.",
+    "Color Match only works with a single axis. Grid is currently treated as horizontal splitting.",
   colorMatchOffset:
     "Moves the cut position away from the detected matching line/column. Positive values cut later, negative values cut earlier.",
   colorMatchTolerance:
@@ -40,3 +40,5 @@ export const SPLITTER_ADVANCED_METHOD_TABLE_ROWS = [
   { method: "Auto Sprite Extractor", description: "Detect alpha islands as sprite boxes." },
   { method: "Color Match", description: "Cut by color-based line detection." }
 ] as const
+
+

@@ -246,3 +246,5 @@ export const DEFAULT_SPLITTER_EXPORT_SETTINGS: SplitterExportSettings = {
   downloadMode: "zip",
   fileNamePattern: "split-[OriginalName]-[Index]"
 }
+
+

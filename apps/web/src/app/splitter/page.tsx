@@ -1,4 +1,4 @@
-import { SplitterLandingPage } from "@/features/wave3/wave3-pages"
+import { SplitterLandingPage } from "@/features/splitter/splitter-pages"
 
 export default function SplitterPage() {
   return <SplitterLandingPage />

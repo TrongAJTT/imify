@@ -1,16 +1,16 @@
-import type { SplitterSplitSettings } from "@imify/features/splitter/types"
+import type { SplitterSplitSettings } from "./types"
 import {
   SPLITTER_ADVANCED_METHOD_TABLE_ROWS,
   SPLITTER_BASIC_METHOD_TABLE_ROWS,
   SPLITTER_TOOLTIPS
-} from "@/options/components/splitter/splitter-tooltips"
-import { Tooltip } from "@/options/components/tooltip"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { SegmentedControl } from "@imify/ui/ui/segmented-control"
-import { SelectInput } from "@imify/ui/ui/select-input"
-import { LabelText } from "@imify/ui/ui/typography"
+} from "./splitter-tooltips"
+import { Tooltip } from "../shared/tooltip"
+import { AccordionCard } from "@imify/ui"
+import { ColorPickerPopover } from "@imify/ui"
+import { NumberInput } from "@imify/ui"
+import { SegmentedControl } from "@imify/ui"
+import { SelectInput } from "@imify/ui"
+import { LabelText } from "@imify/ui"
 import { Scissors } from "lucide-react"
 
 interface SplitOptionsAccordionProps {
@@ -156,7 +156,7 @@ export function SplitOptionsAccordion({
                   content={SPLITTER_TOOLTIPS.colorMatchGridFallback}
                   variant="wide1">
                   <span className="inline-flex h-6 items-center rounded-md border border-amber-300 bg-amber-50 px-2 text-[10px] font-semibold text-amber-700 dark:border-amber-700/70 dark:bg-amber-950/20 dark:text-amber-200">
-                    Fallback: Vertical
+                    Fallback: Horizontal
                   </span>
                 </Tooltip>
               ) : null}
@@ -516,3 +516,5 @@ export function SplitOptionsAccordion({
     </AccordionCard>
   )
 }
+
+

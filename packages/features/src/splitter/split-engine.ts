@@ -861,8 +861,8 @@ export function buildSplitterSplitPlan(args: {
 
   let effectiveDirection: SplitterDirection = settings.direction
   if (settings.mode === "advanced" && settings.advancedMethod === "color_match" && settings.direction === "grid") {
-    effectiveDirection = "vertical"
-    warnings.push("Color Match supports vertical or horizontal direction only. Grid was mapped to vertical.")
+    effectiveDirection = "horizontal"
+    warnings.push("Color Match supports vertical or horizontal direction only. Grid was mapped to horizontal.")
   }
 
   let xCuts: number[] = [0, width]
@@ -944,3 +944,5 @@ export function buildSplitterSplitPlan(args: {
     warnings
   }
 }
+
+
