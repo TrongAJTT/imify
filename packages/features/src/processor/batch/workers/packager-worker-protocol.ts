@@ -27,11 +27,7 @@ export interface PackagerCancelMessage {
   type: "cancel"
 }
 
-export type PackagerWorkerRequestMessage =
-  | PackagerStartMessage
-  | PackagerAddMessage
-  | PackagerFinalizeMessage
-  | PackagerCancelMessage
+export type PackagerWorkerRequestMessage = PackagerStartMessage | PackagerAddMessage | PackagerFinalizeMessage | PackagerCancelMessage
 
 export interface PackagerProgressMessage {
   id: number
@@ -56,10 +52,7 @@ export interface PackagerResultErrorMessage {
   error: string
 }
 
-export type PackagerWorkerResponseMessage =
-  | PackagerProgressMessage
-  | PackagerResultSuccessMessage
-  | PackagerResultErrorMessage
+export type PackagerWorkerResponseMessage = PackagerProgressMessage | PackagerResultSuccessMessage | PackagerResultErrorMessage
 
 export interface PackagerInputEntry {
   name: string

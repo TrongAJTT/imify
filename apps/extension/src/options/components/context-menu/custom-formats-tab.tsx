@@ -25,7 +25,7 @@ import { CheckCircle2, Circle, Edit, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@imify/ui/ui/button"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@imify/ui/ui/secondary-button"
-import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
+import { SortableQueueItem } from "@/options/components/batch"
 import { DialogWrapper } from "@imify/ui/ui/dialog-wrapper"
 
 interface PendingDelete {

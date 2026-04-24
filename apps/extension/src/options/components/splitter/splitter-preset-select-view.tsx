@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import { Check, Edit2, Plus, Trash2 } from "lucide-react"
 
-import { SavePresetDialog } from "@/options/components/batch/save-preset-dialog"
+import { SavePresetDialog } from "@/options/components/batch"
 import { WorkspaceSelectHeader } from "@/options/components/shared/workspace-select-header"
 import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
 import { SplitterPresetDetail } from "@/options/components/splitter/splitter-preset-detail"

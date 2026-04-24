@@ -3,7 +3,7 @@ import { Check, Edit2, Pin, PinOff, Plus, Trash2 } from "lucide-react"
 
 import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
 import { WorkspaceSelectHeader } from "@/options/components/shared/workspace-select-header"
-import { SavePresetDialog } from "@/options/components/batch/save-preset-dialog"
+import { SavePresetDialog } from "@/options/components/batch"
 import { PatternPresetDetail } from "@/options/components/pattern/pattern-preset-detail"
 import type { SavedPatternPreset } from "@imify/stores/stores/pattern-preset-store"
 import { PRESET_HIGHLIGHT_COLORS } from "@/options/shared/preset-colors"

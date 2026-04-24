@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@imify/ui/ui/button"
 import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { SingleProcessorWorkspace } from "@imify/features/processor/single-processor-workspace"
+import { BatchProcessorWorkspace } from "@imify/features/processor/batch"
 import { ProcessorPresetSelectView } from "@imify/features/processor/processor-preset-select-view"
 import { ProcessorSidebarShell } from "@imify/features/processor/processor-sidebar-shell"
 import { BatchSetupSidebarPanel } from "@imify/features/processor/setup-sidebar-panel"
@@ -230,35 +231,5 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
     return <SingleProcessorWorkspace />
   }
 
-  return (
-    <div className="space-y-4 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-lg font-semibold">{preset.name}</h1>
-          <p className="text-xs text-slate-500">Preset id: {preset.id}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => {
-              setPresetViewMode(context, "select")
-              router.push(getRoutePrefix(context))
-            }}
-          >
-            Back
-          </Button>
-          <Button type="button" onClick={() => syncActivePresetConfig(context)}>
-            Save snapshot
-          </Button>
-        </div>
-      </div>
-      <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-        <p className="mb-2 text-sm font-medium">Workspace configuration</p>
-        <pre className="max-h-[60vh] overflow-auto text-xs text-slate-600 dark:text-slate-300">
-          {JSON.stringify(config, null, 2)}
-        </pre>
-      </div>
-    </div>
-  )
+  return <BatchProcessorWorkspace />
 }

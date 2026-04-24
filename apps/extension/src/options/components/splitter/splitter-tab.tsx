@@ -6,9 +6,13 @@ import { APP_CONFIG } from "@imify/core/config"
 import { ToastContainer } from "@imify/ui/components/toast-container"
 import { useConversionToasts } from "@imify/core/hooks/use-toast"
 import type { ConversionProgressPayload } from "@imify/core/types"
-import { BatchDownloadConfirmDialog } from "@/options/components/batch/download-confirm-dialog"
-import { buildSmartOutputFileName, reserveUniqueFileName } from "@/options/components/batch/pipeline"
-import { downloadWithFilename, sleep } from "@/options/components/batch/utils"
+import {
+  BatchDownloadConfirmDialog,
+  buildSmartOutputFileName,
+  reserveUniqueFileName,
+  downloadWithFilename,
+  sleep
+} from "@/options/components/batch"
 import { ExportSplitButton, type ExportSplitMode } from "@/options/components/shared/export-split-button"
 import { ImageStrip } from "@imify/features/splicing/image-strip"
 import { SplitterPreview } from "@/options/components/splitter/splitter-preview"

@@ -21,7 +21,7 @@ import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { SecondaryButton } from "@imify/ui/ui/secondary-button"
 import { Button } from "@imify/ui/ui/button"
 import { BodyText, Subheading } from "@imify/ui/ui/typography"
-import { SortableQueueItem } from "@/options/components/batch/sortable-queue-item"
+import { SortableQueueItem } from "@/options/components/batch"
 import { GlobalFormatTargetQuality } from "@/options/components/context-menu/global-format-target-quality"
 import { FormatOptionsEmptyState } from "@/options/components/shared/format-options-empty-state"
 

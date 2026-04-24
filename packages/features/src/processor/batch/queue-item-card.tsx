@@ -1,9 +1,8 @@
-import { formatBytes } from "@/options/components/batch/utils"
-import type { BatchQueueItem } from "@/options/components/batch/types"
 import { X, ArrowRight } from "lucide-react"
-import { Button } from "@imify/ui/ui/button"
-import { BodyText, MutedText } from "@imify/ui/ui/typography"
-import { useThumbnail } from "@/options/hooks/use-thumbnail"
+import { Button, BodyText, MutedText } from "@imify/ui"
+import type { BatchQueueItem } from "./types"
+import { formatBytes } from "./utils"
+import { useThumbnail } from "./hooks/use-thumbnail"
 
 export function QueueItemCard({
   item,
@@ -15,13 +14,7 @@ export function QueueItemCard({
   onRemove: (id: string) => void
 }) {
   const { thumbnail } = useThumbnail(item.file)
-
-  const color =
-    item.status === "success"
-      ? "bg-emerald-500"
-      : item.status === "error"
-        ? "bg-red-500"
-        : "bg-sky-500"
+  const color = item.status === "success" ? "bg-emerald-500" : item.status === "error" ? "bg-red-500" : "bg-sky-500"
 
   return (
     <article className="relative flex flex-col overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
@@ -38,58 +31,31 @@ export function QueueItemCard({
               <X size={14} />
             </Button>
           ) : null}
-
-          <img
-            alt={item.file.name}
-            className="h-full w-full object-cover"
-            src={thumbnail}
-          />
+          <img alt={item.file.name} className="h-full w-full object-cover" src={thumbnail} />
         </div>
       ) : null}
-
       <div className="flex flex-1 flex-col p-3 pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <BodyText className="truncate font-semibold" title={item.file.name}>
-              {item.file.name}
-            </BodyText>
-            {item.outputFileName && (
-              <MutedText className="block truncate text-[10px] text-sky-600 dark:text-sky-400 font-mono mt-0.5">
-                ↳ {item.outputFileName}
-              </MutedText>
-            )}
+            <BodyText className="truncate font-semibold" title={item.file.name}>{item.file.name}</BodyText>
+            {item.outputFileName ? <MutedText className="block truncate text-[10px] text-sky-600 dark:text-sky-400 font-mono mt-0.5">↳ {item.outputFileName}</MutedText> : null}
           </div>
         </div>
-
         <div className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
           {item.outputBlob ? (
             <div className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded w-fit">
-              {formatBytes(item.file.size)}
-              <ArrowRight size={12} className="inline" />
-              {formatBytes(item.outputBlob.size)}
+              {formatBytes(item.file.size)} <ArrowRight size={12} className="inline" /> {formatBytes(item.outputBlob.size)}
             </div>
-          ) : (
-            <span className="px-1.5 py-0.5 bg-slate-50 dark:bg-slate-900/40 rounded border border-transparent">
-              {formatBytes(item.file.size)}
-            </span>
-          )}
+          ) : <span className="px-1.5 py-0.5 bg-slate-50 dark:bg-slate-900/40 rounded border border-transparent">{formatBytes(item.file.size)}</span>}
         </div>
-
         <div className="mt-1.5 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold border-t border-slate-50 dark:border-slate-700/50 pt-1.5">
-          <span className={item.status === "error" ? "text-red-500" : item.status === "success" ? "text-emerald-500" : ""}>
-            {item.status}
-          </span>
+          <span className={item.status === "error" ? "text-red-500" : item.status === "success" ? "text-emerald-500" : ""}>{item.status}</span>
           <span>{Math.round(item.percent)}%</span>
         </div>
-
         {item.message ? <MutedText className="mt-2 text-[10px] leading-tight text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-1.5 rounded">{item.message}</MutedText> : null}
       </div>
-
       <div className="absolute bottom-0 left-0 h-1 w-full bg-slate-100 dark:bg-slate-800">
-        <div
-          className={`h-full ${color} transition-all duration-300 ease-out`}
-          style={{ width: `${item.percent}%` }}
-        />
+        <div className={`h-full ${color} transition-all duration-300 ease-out`} style={{ width: `${item.percent}%` }} />
       </div>
     </article>
   )
