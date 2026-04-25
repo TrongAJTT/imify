@@ -6,9 +6,10 @@
   "description": "A privacy-first, powerful image toolkit. Save image directly from your context menu, and even more. Supports ICO, AVIF, JPEG XL.",
   "author": "TrongAJTT <trong.ajtt.dev@gmail.com>",
   "scripts": {
+    "check:media-assets": "node ../../scripts/check-media-asset-paths.mjs",
     "sync:features": "node ../../scripts/sync-shared-assets.mjs",
     "sync:wasm": "node ../../scripts/sync-wasm.mjs",
-    "sync:assets": "pnpm sync:wasm && pnpm sync:features",
+    "sync:assets": "pnpm sync:wasm && pnpm sync:features && pnpm check:media-assets",
     "predev": "pnpm sync:assets",
     "dev": "plasmo dev",
     "typecheck": "tsc --noEmit",

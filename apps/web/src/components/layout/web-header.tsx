@@ -1,7 +1,16 @@
 "use client"
 
 import React, { useMemo, useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
+import {
+  ArrowLeftRight,
+  Image,
+  Layers,
+  ScanSearch,
+  Scissors,
+  Stamp,
+  Workflow
+} from "lucide-react"
 import { useWebDarkMode } from "@/hooks/use-web-dark-mode"
 import {
   AboutDialog,
@@ -15,7 +24,6 @@ import {
   normalizeWorkspaceLayoutPreferences,
   WORKSPACE_LAYOUT_PREFERENCES_KEY
 } from "@imify/features/workspace-shell"
-import { FEATURE_MEDIA_ASSETS } from "@imify/features/shared/media-assets"
 import {
   DEFAULT_PERFORMANCE_PREFERENCES,
   PERFORMANCE_PREFERENCES_KEY,
@@ -32,6 +40,34 @@ const NAV_LINKS = [
   { href: "/diffchecker", label: "Diffchecker" },
   { href: "/inspector", label: "Inspector" }
 ]
+const ALL_TOOLS_MENU_GROUPS = [
+  {
+    title: "Image tool",
+    items: [
+      { href: "/single-processor", label: "Convert images" },
+      { href: "/splicing", label: "Splice images" },
+      { href: "/pattern-generator", label: "Pattern generator" },
+      { href: "/filling", label: "Image filling" },
+      { href: "/splitter", label: "Split images" }
+    ]
+  },
+  {
+    title: "Batch tool",
+    items: [
+      { href: "/batch-processor", label: "Batch processor" },
+      { href: "/diffchecker", label: "Diffchecker" },
+      { href: "/inspector", label: "Inspector" }
+    ]
+  },
+  {
+    title: "Workspace",
+    items: [
+      { href: "/single-processor", label: "Single Processor" },
+      { href: "/batch-processor", label: "Batch Processor" },
+      { href: "/filling", label: "Filling Workspace" }
+    ]
+  }
+] as const
 
 const WEB_DEFAULT_ROUTE_KEY = "imify_web_default_route"
 const LAYOUT_PREFERENCES_EVENT = "imify:layout-preferences-changed"
@@ -63,7 +99,6 @@ function publishLayoutPreferencesChanged(): void {
 
 export function WebHeader() {
   const router = useRouter()
-  const pathname = usePathname()
   const { isDark, toggleDarkMode } = useWebDarkMode()
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
@@ -87,10 +122,6 @@ export function WebHeader() {
     safeRead(PERFORMANCE_PREFERENCES_KEY, DEFAULT_PERFORMANCE_PREFERENCES, normalizePerformancePreferences)
   )
 
-  const navItems = useMemo(
-    () => NAV_LINKS.map((item) => ({ href: item.href, label: item.label })),
-    []
-  )
   const defaultScreenOptions = useMemo(
     () => NAV_LINKS.map((item) => ({ value: item.href, label: item.label })),
     []
@@ -101,11 +132,36 @@ export function WebHeader() {
       <WorkspaceOptionsHeader
         isLoading={false}
         isDark={isDark}
-        logoSrc={FEATURE_MEDIA_ASSETS.brand.imifyLogoPng}
         title="Imify"
         subtitle="Save and Process Images"
-        navItems={navItems}
-        activeNavHref={NAV_LINKS.find((item) => pathname?.startsWith(item.href))?.href ?? null}
+        toolsMenuGroups={ALL_TOOLS_MENU_GROUPS.map((group) => ({
+          title: group.title,
+          items: group.items.map((item) => ({
+            href: item.href,
+            label: item.label,
+            icon:
+              item.href === "/single-processor" ? (
+                <Image size={14} />
+              ) : item.href === "/batch-processor" ? (
+                <Workflow size={14} />
+              ) : item.href === "/splicing" ? (
+                <Layers size={14} />
+              ) : item.href === "/splitter" ? (
+                <Scissors size={14} />
+              ) : item.href === "/pattern-generator" ? (
+                <Stamp size={14} />
+              ) : item.href === "/filling" ? (
+                <Layers size={14} />
+              ) : item.href === "/diffchecker" ? (
+                <ArrowLeftRight size={14} />
+              ) : item.href === "/inspector" ? (
+                <ScanSearch size={14} />
+              ) : (
+                <Workflow size={14} />
+              )
+          }))
+        }))}
+        toolsMenuLabel="All Tools"
         onNavigate={(href) => router.push(href)}
         onToggleDark={toggleDarkMode}
         onOpenAbout={() => setIsAboutDialogOpen(true)}
@@ -117,7 +173,6 @@ export function WebHeader() {
         isOpen={isAboutDialogOpen}
         onClose={() => setIsAboutDialogOpen(false)}
         onOpenAttribution={() => setIsAttributionDialogOpen(true)}
-        iconSrc={FEATURE_MEDIA_ASSETS.brand.imifyLogoPng}
       />
       <AttributionDialog
         isOpen={isAttributionDialogOpen}

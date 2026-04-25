@@ -9,7 +9,7 @@ import { useSeoAudit } from "@/popup/hooks/use-seo-audit"
 import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { Expand, Moon, Sun, X } from "lucide-react"
 import { Button } from "@imify/ui/ui/button"
-import { FEATURE_MEDIA_ASSETS } from "@imify/features/shared/media-assets"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
 
 bootstrapExtensionAdapters()
 
@@ -87,7 +87,7 @@ export function PopupApp() {
         <header className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-800">
           <div className="flex min-w-0 items-center gap-2">
             <img
-              src={FEATURE_MEDIA_ASSETS.brand.imifyLogoPng}
+              src={resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.imifyLogoPng)}
               alt="Imify"
               className="h-8 w-8 rounded-lg shadow-sm"
             />

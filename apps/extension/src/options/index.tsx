@@ -11,6 +11,7 @@ import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
 import SidepanelAuditSnapshotApp from "@/sidepanel/sidepanel-audit-snapshot-app"
 
 import { toUserFacingConversionError } from "@imify/core/error-utils"
+import { AboutDialog, DonateDialog, WorkspaceOptionsHeader } from "@imify/features/workspace-shell"
 import { type ExtensionStorageState,
   STORAGE_KEY, STORAGE_VERSION } from "@imify/core/types"
 import { convertImageWithWorker } from "@imify/engine/converter/conversion-worker-pool"
@@ -30,7 +31,6 @@ import { DiffcheckerTab, DiffcheckerSidebarPanel } from "@/options/components/di
 import { InspectorTab, InspectorSidebarPanel } from "@/options/components/inspector"
 import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
 import { ContextMenuInfoPanel } from "@/options/components/context-menu/context-menu-info-panel"
-import { OptionsHeaderWrapper } from "@/options/components/options-header-wrapper"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
 import { TabButton } from "@/options/components/tab-button"
 import { type OptionsTab, type PersistedStorageState, TAB_ITEMS } from "@/options/shared"
@@ -67,10 +67,8 @@ import {
   Workflow,
   X
 } from "lucide-react"
-import { AboutDialogWrapper } from "./components/about-dialog-wrapper"
 import { AttributionDialogWrapper } from "./components/attribution-dialog-wrapper"
 import { SettingsDialog, type SettingsDialogTab } from "@/options/components/settings-dialog"
-import { DonateDialog } from "./components/donate-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 import { CONTEXT_MENU_SUB_TABS } from "./components/context-menu/context-menu-settings-tab"
@@ -445,7 +443,7 @@ export default function OptionsPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50">
       {/* Title bar */}
-      <OptionsHeaderWrapper
+      <WorkspaceOptionsHeader
         isDark={isDark}
         isLoading={isLoading}
         onOpenAbout={() => setIsAboutDialogOpen(true)}
@@ -455,7 +453,7 @@ export default function OptionsPage() {
       />
 
       {/* Dialogs */}
-      <AboutDialogWrapper
+      <AboutDialog
         isOpen={isAboutDialogOpen}
         onClose={() => setIsAboutDialogOpen(false)}
         onOpenAttribution={() => setIsAttributionDialogOpen(true)}

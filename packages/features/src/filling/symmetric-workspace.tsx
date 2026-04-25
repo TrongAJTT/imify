@@ -20,7 +20,7 @@ import {
 } from "./symmetric-generator"
 import { flattenPoints, getBoundingBox } from "./vector-math"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
-import { FEATURE_MEDIA_ASSETS } from "../shared/media-assets"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 
 const CANVAS_PADDING = 40
 const FIRST_CONTROL_ID = "first_axis_first_shape"
@@ -383,7 +383,7 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
             <VisualHelpTooltip
               label={SYMMETRIC_VISUAL_HELP_TOOLTIPS.label}
               description={SYMMETRIC_VISUAL_HELP_TOOLTIPS.description}
-              webmSrc={FEATURE_MEDIA_ASSETS.filling.symmetricVisualEditorWebm}
+              webmSrc={resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.filling.symmetricVisualEditorWebm)}
               buttonAriaLabel={SYMMETRIC_VISUAL_HELP_TOOLTIPS.buttonAriaLabel}
               mediaAlt={SYMMETRIC_VISUAL_HELP_TOOLTIPS.mediaAlt}
             />

@@ -25,21 +25,21 @@ export function registerStorageAdapter(adapter: StorageAdapter): void {
 export const deferredStorage = {
   getItem: async (name: string): Promise<string | null> => {
     if (!activeStorageAdapter) {
-      console.warn(`[StorageAdapter] No adapter registered. Cannot get item: ${name}`)
+      // console.warn(`[StorageAdapter] No adapter registered. Cannot get item: ${name}`)
       return null
     }
     return activeStorageAdapter.getItem(name)
   },
   setItem: async (name: string, value: string): Promise<void> => {
     if (!activeStorageAdapter) {
-      console.warn(`[StorageAdapter] No adapter registered. Cannot set item: ${name}`)
+      // console.warn(`[StorageAdapter] No adapter registered. Cannot set item: ${name}`)
       return
     }
     return activeStorageAdapter.setItem(name, value)
   },
   removeItem: async (name: string): Promise<void> => {
     if (!activeStorageAdapter) {
-      console.warn(`[StorageAdapter] No adapter registered. Cannot remove item: ${name}`)
+      // console.warn(`[StorageAdapter] No adapter registered. Cannot remove item: ${name}`)
       return
     }
     return activeStorageAdapter.removeItem(name)

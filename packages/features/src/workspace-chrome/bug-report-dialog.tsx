@@ -5,22 +5,20 @@ import { AlertCircle, Bug, CheckCircle2, ExternalLink, Info, ShieldCheck, Termin
 import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
 import { BodyText, Heading, Kicker, LabelText, MutedText, Subheading } from "@imify/ui/ui/typography"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 
 interface BugReportDialogProps {
   isOpen: boolean
   onClose: () => void
-  devModeEnableVideoSrc?: string
-  devExportStep1Src?: string
-  devExportStep2Src?: string
 }
 
 export function BugReportDialog({
   isOpen,
-  onClose,
-  devModeEnableVideoSrc,
-  devExportStep1Src,
-  devExportStep2Src
+  onClose
 }: BugReportDialogProps) {
+  const devModeEnableVideoSrc = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.devMode.enableVideoWebm)
+  const devExportStep1Src = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.devMode.exportStep1Webp)
+  const devExportStep2Src = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.devMode.exportStep2Webp)
   return (
     <BaseDialog
       isOpen={isOpen}
@@ -97,7 +95,7 @@ export function BugReportDialog({
               <ul className="text-sm space-y-3 p-0 m-0 list-none">
                 <li className="flex items-start gap-3">
                   <div className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-[10px] font-black text-violet-600 shrink-0 mt-0.5">1</div>
-                  <BodyText className="text-slate-600 dark:text-slate-400"><strong>Visuals:</strong> Screenshots or recordings.</BodyText>
+                  <BodyText className="text-slate-600 dark:text-slate-400"><strong>Visuals:</strong> Screenshots or screen recordings.</BodyText>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-[10px] font-black text-violet-600 shrink-0 mt-0.5">2</div>

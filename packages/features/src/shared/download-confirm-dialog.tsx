@@ -1,7 +1,15 @@
 import React, { useState } from "react"
 import { AlertCircle, Download, X } from "lucide-react"
+import { detectBrowser, type SupportedBrowser } from "@imify/core/browser-detection"
 import { Button, BodyText, Subheading, MutedText } from "@imify/ui"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "./media-assets"
+
+const DOWNLOAD_HINT_IMAGE_BY_BROWSER: Record<SupportedBrowser, string> = {
+  chrome: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.downloadHints.chromeWebp),
+  edge: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.downloadHints.edgeWebp),
+  firefox: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.downloadHints.firefoxWebp)
+}
 
 interface BatchDownloadConfirmDialogProps {
   isOpen: boolean
@@ -18,6 +26,8 @@ export function BatchDownloadConfirmDialog({
 }: BatchDownloadConfirmDialogProps) {
   const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
   const [localSkip, setLocalSkip] = useState(false)
+  const browser = detectBrowser()
+  const downloadHintImg = DOWNLOAD_HINT_IMAGE_BY_BROWSER[browser]
 
   if (!isOpen) return null
 
@@ -63,6 +73,14 @@ export function BatchDownloadConfirmDialog({
                 <BodyText className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                   Make sure you have <span className="font-bold text-slate-900 dark:text-slate-100">disabled</span> the option <b>"Ask where to save each file before downloading"</b> in your browser settings.
                 </BodyText>
+
+                <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 shadow-sm">
+                  <img
+                    src={downloadHintImg}
+                    alt="Browser download settings hint"
+                    className="h-auto w-full rounded-md opacity-90 transition-opacity"
+                  />
+                </div>
 
                 <MutedText className="text-[12px] italic">
                   Otherwise, you will encounter {count} popups asking for the save location.

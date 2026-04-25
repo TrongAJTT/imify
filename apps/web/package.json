@@ -4,8 +4,9 @@
   "private": true,
   "description": "Next.js web app for Imify",
   "scripts": {
+    "check:media-assets": "node ../../scripts/check-media-asset-paths.mjs",
     "sync:features": "node ../../scripts/sync-shared-assets.mjs",
-    "sync:assets": "pnpm sync:features",
+    "sync:assets": "pnpm sync:features && pnpm check:media-assets",
     "predev": "pnpm sync:assets",
     "prebuild": "pnpm sync:assets",
     "dev": "next dev",

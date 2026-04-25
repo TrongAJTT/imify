@@ -6,14 +6,19 @@ import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
 import { IconLeadingButton } from "@imify/ui/ui/icon-leading-button"
 import { Subheading, MutedText } from "@imify/ui/ui/typography"
-import { FEATURE_MEDIA_ASSETS } from "../shared/media-assets"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 
 interface DonateDialogProps {
   isOpen: boolean
   onClose: () => void
 }
 
-export function DonateDialog({ isOpen, onClose }: DonateDialogProps) {
+export function DonateDialog({
+  isOpen,
+  onClose
+}: DonateDialogProps) {
+  const githubLogoSrc = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.githubLogoSvg)
+  const buyMeCoffeeLogoSrc = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.buyMeCoffeeLogoSvg)
   return (
     <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="w-full max-w-xl rounded-2xl p-8">
       <Button
@@ -37,7 +42,7 @@ export function DonateDialog({ isOpen, onClose }: DonateDialogProps) {
             className="w-full border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             leadingClassName="border-slate-300 bg-slate-100 text-slate-700"
             leadingIcon={
-              <img src={FEATURE_MEDIA_ASSETS.brand.githubLogoSvg} alt="GitHub" className="h-5 w-5 shrink-0 brightness-0" />
+              <img src={githubLogoSrc} alt="GitHub" className="h-5 w-5 shrink-0 brightness-0" />
             }
             href="https://github.com/sponsors/TrongAJTT"
             rel="noreferrer"
@@ -49,7 +54,7 @@ export function DonateDialog({ isOpen, onClose }: DonateDialogProps) {
             className="w-full border-yellow-200 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-950/30 dark:text-yellow-300 dark:hover:bg-yellow-900/40"
             leadingClassName="border-yellow-200 bg-yellow-100"
             leadingIcon={
-              <img src={FEATURE_MEDIA_ASSETS.brand.buyMeCoffeeLogoSvg} alt="Buy Me A Coffee" className="h-5 w-5 shrink-0" />
+              <img src={buyMeCoffeeLogoSrc} alt="Buy Me A Coffee" className="h-5 w-5 shrink-0" />
             }
             href="https://www.buymeacoffee.com/TrongAJTT"
             rel="noreferrer"

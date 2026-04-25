@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@imify/ui/ui/button"
 import { MutedText, Subheading } from "@imify/ui/ui/typography"
-import { FEATURE_MEDIA_ASSETS } from "@imify/features/shared/media-assets"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
 
 export type SidepanelView = "inspector" | "audit"
 
@@ -49,7 +49,7 @@ export function SidepanelSharedAppbar({
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <img
-            src={FEATURE_MEDIA_ASSETS.brand.imifyLogoPng}
+            src={resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.imifyLogoPng)}
             alt="Imify"
             className="h-8 w-8 rounded-lg shadow-sm"
           />

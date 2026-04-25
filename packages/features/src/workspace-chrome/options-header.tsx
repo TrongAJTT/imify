@@ -1,22 +1,30 @@
 "use client"
 
 import React from "react"
-import { Heart, Info, Moon, Settings, Sun } from "lucide-react"
+import { ChevronDown, Heart, Info, Moon, Settings, Sun } from "lucide-react"
 import { Tooltip } from "../shared/tooltip"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 
 export interface WorkspaceHeaderNavItem {
   href: string
   label: string
+  icon?: React.ReactNode
+}
+
+export interface WorkspaceHeaderToolsGroup {
+  title: string
+  items: WorkspaceHeaderNavItem[]
 }
 
 interface WorkspaceOptionsHeaderProps {
   isLoading: boolean
   isDark: boolean
-  logoSrc?: string
   title?: string
   subtitle?: string
   navItems?: WorkspaceHeaderNavItem[]
+  toolsMenuGroups?: WorkspaceHeaderToolsGroup[]
+  toolsMenuLabel?: string
   activeNavHref?: string | null
   onNavigate?: (href: string) => void
   onToggleDark: () => void
@@ -57,10 +65,11 @@ function TitleBarButton({
 export function WorkspaceOptionsHeader({
   isLoading,
   isDark,
-  logoSrc,
   title = "Imify",
   subtitle = "Save and Process Images",
   navItems,
+  toolsMenuGroups,
+  toolsMenuLabel = "All Tools",
   activeNavHref = null,
   onNavigate,
   onToggleDark,
@@ -69,6 +78,35 @@ export function WorkspaceOptionsHeader({
   onOpenDonate
 }: WorkspaceOptionsHeaderProps) {
   const breadcrumb = useWorkspaceHeaderStore((s) => s.breadcrumb)
+  const logoSrc = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.imifyLogoPng)
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = React.useState(false)
+  const closeToolsMenuTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasToolsMenu = Boolean(toolsMenuGroups?.length)
+
+  const clearCloseToolsMenuTimer = React.useCallback(() => {
+    if (!closeToolsMenuTimerRef.current) return
+    clearTimeout(closeToolsMenuTimerRef.current)
+    closeToolsMenuTimerRef.current = null
+  }, [])
+
+  const openToolsMenu = React.useCallback(() => {
+    clearCloseToolsMenuTimer()
+    setIsToolsMenuOpen(true)
+  }, [clearCloseToolsMenuTimer])
+
+  const scheduleCloseToolsMenu = React.useCallback(() => {
+    clearCloseToolsMenuTimer()
+    closeToolsMenuTimerRef.current = setTimeout(() => {
+      setIsToolsMenuOpen(false)
+      closeToolsMenuTimerRef.current = null
+    }, 120)
+  }, [clearCloseToolsMenuTimer])
+
+  React.useEffect(() => {
+    return () => {
+      clearCloseToolsMenuTimer()
+    }
+  }, [clearCloseToolsMenuTimer])
 
   return (
     <header className="h-12 flex items-center justify-between px-4 gap-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
@@ -109,6 +147,55 @@ export function WorkspaceOptionsHeader({
       </div>
 
       <div className="flex items-center gap-1 shrink-0">
+        {hasToolsMenu ? (
+          <div
+            className="relative hidden lg:block"
+            onMouseEnter={openToolsMenu}
+            onMouseLeave={scheduleCloseToolsMenu}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                clearCloseToolsMenuTimer()
+                setIsToolsMenuOpen((prev) => !prev)
+              }}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-sky-300 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-sky-50 dark:border-sky-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              {toolsMenuLabel}
+              <ChevronDown size={13} className={`transition-transform ${isToolsMenuOpen ? "rotate-180" : ""}`} />
+            </button>
+            <div className="absolute left-0 top-full h-3 w-full" />
+            {isToolsMenuOpen ? (
+              <div className="absolute right-0 top-[calc(100%+10px)] z-30 min-w-[700px] rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                <div className="grid grid-cols-3 gap-5">
+                  {toolsMenuGroups?.map((group) => (
+                    <div key={group.title} className="space-y-2">
+                      <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{group.title}</div>
+                      <div className="space-y-1.5">
+                        {group.items.map((item) => (
+                          <button
+                            key={item.href}
+                            type="button"
+                            onClick={() => {
+                              onNavigate?.(item.href)
+                              setIsToolsMenuOpen(false)
+                            }}
+                            className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                          >
+                            <span className="flex h-5 w-5 items-center justify-center text-slate-400 dark:text-slate-500">
+                              {item.icon ?? <span className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />}
+                            </span>
+                            <span>{item.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         <TitleBarButton
           onClick={onToggleDark}
           tooltipText={isDark ? "Switch to light mode" : "Switch to dark mode"}

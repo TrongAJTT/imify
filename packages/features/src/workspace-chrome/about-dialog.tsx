@@ -10,6 +10,7 @@ import { ToastContainer } from "@imify/ui/components/toast-container"
 import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
 import { BodyText, Kicker, MutedText, Subheading } from "@imify/ui/ui/typography"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 import { Tooltip } from "../shared/tooltip"
 import { BugReportDialog } from "./bug-report-dialog"
 
@@ -21,10 +22,6 @@ interface AboutDialogProps {
   isOpen: boolean
   onClose: () => void
   onOpenAttribution: () => void
-  iconSrc?: string
-  devModeEnableVideoSrc?: string
-  devExportStep1Src?: string
-  devExportStep2Src?: string
 }
 
 function useEasterEggClicker(onActivate: () => void) {
@@ -86,12 +83,9 @@ function ActionLink({
 export function AboutDialog({
   isOpen,
   onClose,
-  onOpenAttribution,
-  iconSrc,
-  devModeEnableVideoSrc,
-  devExportStep1Src,
-  devExportStep2Src
+  onOpenAttribution
 }: AboutDialogProps) {
+  const iconSrc = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.imifyLogoPng)
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled()
   const { toasts, hide, success, warning } = useToast()
   const [isBugReportDialogOpen, setIsBugReportDialogOpen] = useState(false)
@@ -273,9 +267,6 @@ export function AboutDialog({
       <BugReportDialog
         isOpen={isBugReportDialogOpen}
         onClose={() => setIsBugReportDialogOpen(false)}
-        devModeEnableVideoSrc={devModeEnableVideoSrc}
-        devExportStep1Src={devExportStep1Src}
-        devExportStep2Src={devExportStep2Src}
       />
       <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>
