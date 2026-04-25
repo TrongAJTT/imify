@@ -11,6 +11,8 @@ import { useSplicingPresetStore, type SplicingPresetConfig } from "@imify/stores
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 
 function useSplicingPresetHydrated(): boolean {
   // Keep the first render deterministic across SSR/CSR to avoid hydration mismatch.
@@ -100,6 +102,10 @@ function extractSplicingPresetConfig(splicingState: any): SplicingPresetConfig {
 
 export function SplicingLandingPage() {
   const router = useRouter()
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const setPresetViewMode = useSplicingPresetStore((state) => state.setPresetViewMode)
   const ensureDefaultPreset = useSplicingPresetStore((state) => state.ensureDefaultPreset)
   const saveCurrentPreset = useSplicingPresetStore((state) => state.saveCurrentPreset)
@@ -130,6 +136,13 @@ export function SplicingLandingPage() {
   )
 
   useWorkspaceSidebar(sidebar)
+
+  useEffect(() => {
+    setHeaderSection("Image Splicing")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="splicing" />)
+    return () => resetHeader()
+  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   useEffect(() => {
     if (!isRehydrated) {
@@ -163,6 +176,11 @@ export function SplicingLandingPage() {
 }
 
 export function SplicingWorkPage({ presetId }: { presetId: string }) {
+  const router = useRouter()
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const applyPreset = useSplicingPresetStore((state) => state.applyPreset)
   const setPresetViewMode = useSplicingPresetStore((state) => state.setPresetViewMode)
   const presets = useSplicingPresetStore((state) => state.presets)
@@ -193,6 +211,20 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
     () => presets.find((entry) => entry.id === presetId) ?? null,
     [presetId, presets]
   )
+
+  useEffect(() => {
+    setHeaderSection("Image Splicing")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(
+      <FeatureBreadcrumb
+        compact
+        rootToolId="splicing"
+        activeLabel={preset?.name ?? null}
+        onRootClick={() => router.push("/splicing")}
+      />
+    )
+    return () => resetHeader()
+  }, [preset?.name, resetHeader, router, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   useEffect(() => {
     if (!isRehydrated || !preset) {

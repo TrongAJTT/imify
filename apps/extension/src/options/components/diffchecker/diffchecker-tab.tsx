@@ -1,7 +1,24 @@
 import { SharedDiffcheckerPage } from "@imify/features/diffchecker/diffchecker-page"
 import { DiffcheckerWorkspace } from "@imify/features/diffchecker/diffchecker-workspace"
+import { useEffect } from "react"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 
 export function DiffcheckerTab() {
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
+
+  useEffect(() => {
+    setHeaderSection("Difference Checker")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(
+      <FeatureBreadcrumb compact rootToolId="diffchecker" />
+    )
+    return () => resetHeader()
+  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
+
   return (
     <SharedDiffcheckerPage
       renderWorkspace={(props) => (

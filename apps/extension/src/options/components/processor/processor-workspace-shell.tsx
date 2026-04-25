@@ -34,6 +34,7 @@ export function ProcessorWorkspaceShell({ context, workspace }: ProcessorWorkspa
   const isBatchStoreRehydrated = useBatchStore((store) => (store as any)._hasHydrated)
 
   const contextLabel = context === "single" ? "Single Processor" : "Batch Processor"
+  const contextToolId = context === "single" ? "single-processor" : "batch-processor"
   const viewMode = presetViewByContext[context] ?? "select"
   const scopedPresets = useMemo(
     () => presets.filter((preset) => preset.context === context),
@@ -58,7 +59,7 @@ export function ProcessorWorkspaceShell({ context, workspace }: ProcessorWorkspa
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
-        rootLabel={contextLabel}
+        rootToolId={contextToolId}
         activeLabel={viewMode === "workspace" ? activePreset?.name ?? null : null}
         onRootClick={
           viewMode === "workspace"

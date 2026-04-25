@@ -137,7 +137,7 @@ export function PatternWorkspaceShell({ workspace }: PatternWorkspaceShellProps)
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
-        rootLabel="Pattern Generator"
+        rootToolId="pattern-generator"
         activeLabel={presetViewMode === "workspace" ? activePreset?.name ?? null : null}
         onRootClick={
           presetViewMode === "workspace"

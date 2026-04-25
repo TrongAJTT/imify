@@ -62,7 +62,7 @@ export function SplitterLandingPage() {
   useEffect(() => {
     setHeaderSection("Image Splitter")
     setHeaderActions(null)
-    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootLabel="Image Splitter" />)
+    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="splitter" />)
     return () => resetHeader()
   }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
@@ -120,7 +120,7 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
-        rootLabel="Image Splitter"
+        rootToolId="splitter"
         activeLabel={preset?.name ?? null}
         onRootClick={() => router.push("/splitter")}
       />

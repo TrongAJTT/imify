@@ -52,6 +52,10 @@ function getContextLabel(context: SetupContext): string {
   return context === "single" ? "Single Processor" : "Batch Processor"
 }
 
+function getContextToolId(context: SetupContext): "single-processor" | "batch-processor" {
+  return context === "single" ? "single-processor" : "batch-processor"
+}
+
 export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
   const router = useRouter()
   const setupContext = useBatchStore((state) => state.setupContext)
@@ -104,7 +108,9 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
     const contextLabel = getContextLabel(context)
     setHeaderSection(contextLabel)
     setHeaderActions(null)
-    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootLabel={contextLabel} />)
+    setHeaderBreadcrumb(
+      <FeatureBreadcrumb compact rootToolId={getContextToolId(context)} />
+    )
     return () => resetHeader()
   }, [context, resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
@@ -174,7 +180,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
-        rootLabel={contextLabel}
+        rootToolId={getContextToolId(context)}
         activeLabel={preset?.name ?? null}
         onRootClick={() => router.push(getRoutePrefix(context))}
       />

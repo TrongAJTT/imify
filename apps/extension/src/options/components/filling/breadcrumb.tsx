@@ -33,7 +33,7 @@ export function FillingBreadcrumb({ compact = false }: { compact?: boolean }) {
   return (
     <FeatureBreadcrumb
       compact={compact}
-      rootLabel="Image Filling"
+      rootToolId="filling"
       middleLabel={middleLabel}
       activeLabel={activeLabel}
       onRootClick={navigateToSelect}

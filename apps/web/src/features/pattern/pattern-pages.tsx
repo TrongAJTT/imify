@@ -14,6 +14,8 @@ import {
 import { usePatternStore } from "@imify/stores/stores/pattern-store"
 import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 
 const AUTO_SAVE_DELAY_MS = 420
 const PatternTab = dynamic(
@@ -124,6 +126,10 @@ function applyPatternPresetConfig(config: PatternPresetConfig): void {
 
 export function PatternLandingPage() {
   const router = useRouter()
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const isHydrated = usePatternPresetHydrated()
   const presets = usePatternPresetStore((state) => state.presets)
   const ensureDefaultPreset = usePatternPresetStore((state) => state.ensureDefaultPreset)
@@ -136,6 +142,13 @@ export function PatternLandingPage() {
   const patternState = usePatternStore()
 
   useWorkspaceSidebar(<PatternSidebarShell />)
+
+  useEffect(() => {
+    setHeaderSection("Pattern Generator")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="pattern-generator" />)
+    return () => resetHeader()
+  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   useEffect(() => {
     if (!isHydrated) {
@@ -178,6 +191,10 @@ export function PatternLandingPage() {
 export function PatternWorkPage({ presetId }: { presetId: string }) {
   const isHydrated = usePatternPresetHydrated()
   const router = useRouter()
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const presets = usePatternPresetStore((state) => state.presets)
   const activePresetId = usePatternPresetStore((state) => state.activePresetId)
   const applyPreset = usePatternPresetStore((state) => state.applyPreset)
@@ -193,6 +210,20 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
     () => presets.find((entry) => entry.id === presetId) ?? null,
     [presetId, presets]
   )
+
+  useEffect(() => {
+    setHeaderSection("Pattern Generator")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(
+      <FeatureBreadcrumb
+        compact
+        rootToolId="pattern-generator"
+        activeLabel={preset?.name ?? null}
+        onRootClick={() => router.push("/pattern-generator")}
+      />
+    )
+    return () => resetHeader()
+  }, [preset?.name, resetHeader, router, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   useEffect(() => {
     if (!isHydrated) {

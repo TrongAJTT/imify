@@ -56,6 +56,8 @@ import {
 import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
 import { Tooltip } from "@/options/components/tooltip"
 import {
@@ -260,6 +262,10 @@ export default function OptionsPage() {
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false)
   const [settingsDialogInitialTab, setSettingsDialogInitialTab] = useState<SettingsDialogTab>("general")
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const setSetupContext = useBatchStore((store) => store.setSetupContext)
   const setPreviewQualityPercent = useSplicingStore((store) => store.setPreviewQualityPercent)
   const isBatchStoreRehydrated = useBatchStore((store) => (store as any)._hasHydrated)
@@ -334,6 +340,16 @@ export default function OptionsPage() {
       setSetupContext(activeTab)
     }
   }, [activeTab, setSetupContext])
+
+  useEffect(() => {
+    if (activeTab !== "context-menu") {
+      return
+    }
+    setHeaderSection("Context Menu")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="context-menu" />)
+    return () => resetHeader()
+  }, [activeTab, resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   useKeyPress("Escape", () => {
     if (isAttributionDialogOpen) {

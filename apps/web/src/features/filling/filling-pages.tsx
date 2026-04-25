@@ -102,7 +102,7 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
   useEffect(() => {
     setHeaderSection("Image Filling")
     setHeaderActions(null)
-    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootLabel="Image Filling" />)
+    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="filling" />)
     return () => resetHeader()
   }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
@@ -244,7 +244,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
-        rootLabel="Image Filling"
+        rootToolId="filling"
         middleLabel={template?.name ?? null}
         activeLabel={template ? modeLabel : null}
         onRootClick={() => router.push(routeBase)}

@@ -3,12 +3,29 @@ import { setPendingInspectorOptimizeFile } from "@/options/shared/inspector-opti
 import { InspectorDropZone } from "@imify/features/inspector/inspector-drop-zone"
 import { InspectorWorkspace } from "@imify/features/inspector/inspector-workspace"
 import { LoadingSpinner } from "@/options/components/loading-spinner"
+import { useEffect } from "react"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 
 interface InspectorTabProps {
   onOpenSingleProcessor?: () => void
 }
 
 export function InspectorTab({ onOpenSingleProcessor }: InspectorTabProps) {
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
+
+  useEffect(() => {
+    setHeaderSection("Image Inspector")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(
+      <FeatureBreadcrumb compact rootToolId="inspector" />
+    )
+    return () => resetHeader()
+  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
+
   return (
     <SharedInspectorPage
       onOptimizeIntent={setPendingInspectorOptimizeFile}

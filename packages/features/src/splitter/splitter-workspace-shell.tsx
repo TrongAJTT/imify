@@ -68,7 +68,7 @@ export function SplitterWorkspaceShell({ workspace }: SplitterWorkspaceShellProp
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
-        rootLabel="Image Splitter"
+        rootToolId="splitter"
         activeLabel={presetViewMode === "workspace" ? activePreset?.name ?? null : null}
         onRootClick={
           presetViewMode === "workspace"

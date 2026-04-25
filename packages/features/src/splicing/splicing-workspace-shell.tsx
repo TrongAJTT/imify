@@ -175,7 +175,7 @@ export function SplicingWorkspaceShell({ workspace }: SplicingWorkspaceShellProp
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
-        rootLabel="Image Splicing"
+        rootToolId="splicing"
         activeLabel={presetViewMode === "workspace" ? activePreset?.name ?? null : null}
         onRootClick={
           presetViewMode === "workspace"

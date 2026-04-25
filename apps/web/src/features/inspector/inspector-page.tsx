@@ -3,12 +3,27 @@
 import { SharedInspectorPage } from "@imify/features/inspector/inspector-page"
 import { InspectorDropZone, InspectorSidebarPanel, InspectorWorkspace } from "@imify/features/inspector"
 import { AnimatingSpinner } from "@imify/ui"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 
 export function InspectorPage() {
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const sidebar = useMemo(() => <InspectorSidebarPanel />, [])
   useWorkspaceSidebar(sidebar)
+
+  useEffect(() => {
+    setHeaderSection("Image Inspector")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(
+      <FeatureBreadcrumb compact rootToolId="inspector" />
+    )
+    return () => resetHeader()
+  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   return (
     <SharedInspectorPage

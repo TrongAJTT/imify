@@ -1,8 +1,14 @@
 import React from "react"
 import { ChevronRight } from "lucide-react"
+import {
+  getWorkspaceToolLabel,
+  renderWorkspaceToolIcon,
+  type WorkspaceToolDefinition
+} from "../workspace-shell/workspace-tools"
 
 interface FeatureBreadcrumbProps {
-  rootLabel: string
+  rootLabel?: string
+  rootToolId?: WorkspaceToolDefinition["id"]
   middleLabel?: string | null
   activeLabel?: string | null
   compact?: boolean
@@ -12,14 +18,17 @@ interface FeatureBreadcrumbProps {
 
 export function FeatureBreadcrumb({
   rootLabel,
+  rootToolId,
   middleLabel = null,
   activeLabel = null,
   compact = false,
   onRootClick,
   onMiddleClick
 }: FeatureBreadcrumbProps) {
-  const rootLabelClass = compact ? "max-w-[120px] truncate" : "max-w-[200px] truncate"
+  const rootLabelClass = compact ? "max-w-[160px]" : "max-w-[220px]"
   const labelClass = compact ? "max-w-[100px]" : "max-w-[180px]"
+  const rootIcon = rootToolId ? renderWorkspaceToolIcon(rootToolId, compact ? 14 : 13) : null
+  const resolvedRootLabel = rootLabel ?? (rootToolId ? getWorkspaceToolLabel(rootToolId) : null) ?? "Workspace"
 
   return (
     <nav
@@ -31,13 +40,14 @@ export function FeatureBreadcrumb({
         type="button"
         onClick={onRootClick}
         disabled={!onRootClick}
-        className={`font-medium transition-colors ${
+        className={`inline-flex min-w-0 items-center gap-1.5 font-medium transition-colors ${
           onRootClick
             ? "hover:text-sky-600 dark:hover:text-sky-400"
             : "cursor-default"
         } ${rootLabelClass}`}
       >
-        {rootLabel}
+        {rootIcon ? <span className="shrink-0">{rootIcon}</span> : null}
+        <span className="truncate">{resolvedRootLabel}</span>
       </button>
 
       {middleLabel ? (

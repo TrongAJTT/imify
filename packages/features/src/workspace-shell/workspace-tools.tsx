@@ -184,6 +184,11 @@ export function renderWorkspaceToolIcon(toolId: string, size = 16): React.ReactN
   }
 }
 
+export function getWorkspaceToolLabel(toolId: string): string | null {
+  const tool = WORKSPACE_TOOLS.find((entry) => entry.id === toolId)
+  return tool?.label ?? null
+}
+
 export function getWorkspaceToolsMenuGroups(): Array<{
   title: string
   items: Array<{ id: string; href: string; label: string }>
