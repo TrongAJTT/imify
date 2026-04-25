@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { ImageOff, Layers } from "lucide-react"
 
 import type { LayerFillState } from "@imify/features/filling/types"
@@ -57,44 +57,29 @@ async function generateLayerPreview(imageUrl: string): Promise<string | null> {
 export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
   const selectedLayerId = useFillingStore((s) => s.selectedLayerId)
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId)
-
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
-
   const selected = selectedLayerId === item.id
   const hasImage = Boolean(fillState?.imageUrl)
 
   useEffect(() => {
     let isMounted = true
-
     const loadPreview = async () => {
       if (!fillState?.imageUrl) {
         if (isMounted) setPreviewImageUrl(null)
         return
       }
-
       const preview = await generateLayerPreview(fillState.imageUrl)
-      if (!isMounted) return
-
-      setPreviewImageUrl(preview ?? fillState.imageUrl)
+      if (isMounted) setPreviewImageUrl(preview ?? fillState.imageUrl)
     }
-
     void loadPreview()
-
     return () => {
       isMounted = false
     }
   }, [fillState?.imageUrl])
 
   const sublabel = useMemo(() => {
-    const baseTypeLabel =
-      item.kind === "group"
-        ? item.typeLabel
-        : SHAPE_LABELS[item.layer.shapeType]
-
-    if (hasImage && fillState) {
-      return `Filled, ${baseTypeLabel}`
-    }
-    return `Empty, ${baseTypeLabel}`
+    const baseTypeLabel = item.kind === "group" ? item.typeLabel : SHAPE_LABELS[item.layer.shapeType]
+    return hasImage && fillState ? `Filled, ${baseTypeLabel}` : `Empty, ${baseTypeLabel}`
   }, [fillState, hasImage, item])
 
   return (
@@ -111,12 +96,7 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
       ].join(" ")}
       onClick={() => setSelectedLayerId(item.id)}
       onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          setSelectedLayerId(item.id)
-          return
-        }
-
-        if (e.key === " ") {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault()
           setSelectedLayerId(item.id)
         }
@@ -136,7 +116,6 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
             </div>
           )}
         </div>
-
         <div className="min-w-0 flex-1">
           <div className="truncate text-[12px] font-bold text-slate-800 dark:text-slate-100 inline-flex items-center gap-1.5">
             {item.kind === "group" && <Layers size={12} className="text-amber-500 shrink-0" />}

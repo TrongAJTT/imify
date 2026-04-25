@@ -1,9 +1,8 @@
+import React from "react"
 import type { ImageTransform } from "@imify/features/filling/types"
 import { Button } from "@imify/ui/ui/button"
 import { NumberInput } from "@imify/ui/ui/number-input"
 import { RotateCcw } from "lucide-react"
-import { Tooltip } from "../tooltip"
-import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 interface FillTransformControlsProps {
   transform: ImageTransform
@@ -28,11 +27,9 @@ export function FillTransformControls({
           min={-360}
           max={360}
         />
-        <Tooltip content={FILLING_TOOLTIPS.fillTransformControls.resetRotation}>
-          <Button type="button" variant="secondary" size="sm" onClick={onReset}>
-            <RotateCcw size={14} />
-          </Button>
-        </Tooltip>
+        <Button type="button" variant="secondary" size="sm" onClick={onReset}>
+          <RotateCcw size={14} />
+        </Button>
         {actions}
       </div>
 
@@ -60,7 +57,6 @@ export function FillTransformControls({
           onChangeValue={(value) => onChange({ scaleX: value / 100 })}
           min={1}
           max={1000}
-          tooltipContent={FILLING_TOOLTIPS.fillTransformControls.scaleInPercentage}
         />
         <NumberInput
           label="Scale Y"
@@ -68,7 +64,6 @@ export function FillTransformControls({
           onChangeValue={(value) => onChange({ scaleY: value / 100 })}
           min={1}
           max={1000}
-          tooltipContent={FILLING_TOOLTIPS.fillTransformControls.scaleInPercentage}
         />
       </div>
     </div>

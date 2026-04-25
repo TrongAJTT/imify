@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ImagePlus, Layers, Palette, SlidersHorizontal, X } from "lucide-react"
 
 import type { FillingTemplate, ImageTransform, LayerFillState, VectorLayer } from "@imify/features/filling/types"
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types"
 import { regenerateLayerShapePoints } from "@imify/features/filling/shape-generators"
 import { buildFillRuntimeItems, type FillRuntimeItem } from "@imify/features/filling/fill-runtime-items"
-import { FillTransformControls } from "@/options/components/filling/fill-transform-controls"
-import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { FillTransformControls } from "@imify/features/filling/fill-transform-controls"
+import { useShortcutActions } from "@imify/features/filling/use-shortcut-actions"
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useFillUiStore, type FillCustomizationTab } from "@imify/stores/stores/fill-ui-store"
@@ -14,9 +14,9 @@ import { AccordionCard } from "@imify/ui/ui/accordion-card"
 import { Button } from "@imify/ui/ui/button"
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
 import { NumberInput } from "@imify/ui/ui/number-input"
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "@imify/features/shared/tooltip"
 import { SHORTCUT_DEFINITION_MAP, type ShortcutActionId } from "@imify/stores/shortcuts"
-import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
+import { FILLING_TOOLTIPS } from "@imify/features/filling/filling-tooltips"
 
 interface FillLayerCustomizationAccordionProps {
   template: FillingTemplate

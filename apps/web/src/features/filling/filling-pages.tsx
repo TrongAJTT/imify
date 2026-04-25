@@ -9,10 +9,9 @@ import { TemplateMethodDialog } from "@imify/features/filling/template-method-di
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { FillingTemplateListPanel } from "@imify/features/filling/template-list-panel"
 import { templateStorage } from "@imify/features/filling/template-storage"
-import { buildFillRuntimeItems } from "@imify/features/filling/fill-runtime-items"
 import type { FillingStep, LayerGroup, VectorLayer } from "@imify/features/filling/types"
-import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types"
 import { regenerateLayerShapePoints } from "@imify/features/filling/shape-generators"
+import { FillWorkspace } from "@imify/features/filling/fill-workspace"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { FillingOverviewSidebar, FillingWorkflowSidebar } from "./filling-sidebar"
 
@@ -117,10 +116,6 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   const setActiveTemplateId = useFillingStore((state) => state.setActiveTemplateId)
   const setEditingTemplateId = useFillingStore((state) => state.setEditingTemplateId)
   const initFillStatesForTemplate = useFillingStore((state) => state.initFillStatesForTemplate)
-  const layerFillStates = useFillingStore((state) => state.layerFillStates)
-  const selectedLayerId = useFillingStore((state) => state.selectedLayerId)
-  const setSelectedLayerId = useFillingStore((state) => state.setSelectedLayerId)
-  const updateLayerFillState = useFillingStore((state) => state.updateLayerFillState)
   const [didActivateMode, setDidActivateMode] = useState(false)
   const refreshTemplates = useCallback(async () => {
     const all = await templateStorage.getAll()
@@ -199,11 +194,6 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   )
   useWorkspaceSidebar(sidebar)
 
-  const runtimeItems = useMemo(() => {
-    if (!template) return []
-    return buildFillRuntimeItems(template, new Set())
-  }, [template])
-
   useEffect(() => {
     if (!template || didActivateMode) {
       return
@@ -252,83 +242,8 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
 
   return (
     <div className="space-y-4 p-6">
-      {mode !== "symmetric-generate" && mode !== "edit" && (
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
-            <p className="text-xs text-slate-500">{template.name}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button type="button" variant="secondary" onClick={() => router.push(routeBase)}>
-              Back
-            </Button>
-          </div>
-        </div>
-      )}
-
       {mode === "fill" && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-          <p className="mb-3 text-sm font-medium">Fill Runtime Items</p>
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-            <div className="space-y-2">
-              {runtimeItems.length === 0 ? (
-                <p className="text-xs text-slate-500">No runtime items yet.</p>
-              ) : (
-                runtimeItems.map((item) => {
-                  const fillState = layerFillStates.find((entry) => entry.layerId === item.id)
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedLayerId(item.id)}
-                      className={`w-full rounded border px-3 py-2 text-left text-xs ${
-                        selectedLayerId === item.id
-                          ? "border-sky-500 bg-sky-50 dark:bg-sky-900/20"
-                          : "border-slate-200 dark:border-slate-700"
-                      }`}
-                    >
-                      <div className="font-semibold">{item.name}</div>
-                      <div className="text-slate-500">{fillState?.imageUrl ? "Image filled" : "Empty"}</div>
-                    </button>
-                  )
-                })
-              )}
-            </div>
-
-            <div className="rounded border border-slate-200 p-3 dark:border-slate-700">
-              {selectedLayerId ? (
-                <>
-                  <p className="mb-2 text-xs font-semibold">Selected: {selectedLayerId}</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0]
-                      if (!file || !selectedLayerId) return
-                      const nextUrl = URL.createObjectURL(file)
-                      const image = new window.Image()
-                      image.onload = () => {
-                        updateLayerFillState(selectedLayerId, {
-                          imageUrl: nextUrl,
-                          imageTransform: {
-                            ...DEFAULT_IMAGE_TRANSFORM,
-                            scaleX: 1,
-                            scaleY: 1,
-                          },
-                        })
-                      }
-                      image.onerror = () => URL.revokeObjectURL(nextUrl)
-                      image.src = nextUrl
-                    }}
-                    className="w-full text-xs"
-                  />
-                </>
-              ) : (
-                <p className="text-xs text-slate-500">Select a runtime item to upload image.</p>
-              )}
-            </div>
-          </div>
-        </div>
+        <FillWorkspace template={template} />
       )}
 
       {mode === "edit" && (

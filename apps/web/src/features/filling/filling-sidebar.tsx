@@ -11,6 +11,7 @@ import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
 import { FillingInfoPanel } from "@imify/features/filling/filling-info-panel"
 import { SymmetricSidebar } from "@imify/features/filling/symmetric-sidebar"
 import { ManualEditorSidebar } from "@imify/features/filling/manual-editor-sidebar"
+import { FillSidebar } from "@imify/features/filling/fill-sidebar"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import type { CanvasBackgroundType, FillingTemplate, LayerFillState, LayerGroup, VectorLayer } from "@imify/features/filling/types"
 
@@ -70,14 +71,11 @@ export function FillingWorkflowSidebar({
   template: FillingTemplate
   manualEditor?: ManualEditorSidebarBindings | null
 }) {
-  const selectedLayerId = useFillingStore((state) => state.selectedLayerId)
-  const layerFillStates = useFillingStore((state) => state.layerFillStates)
   const canvasFillState = useFillingStore((state) => state.canvasFillState)
   const exportFormat = useFillingStore((state) => state.exportFormat)
   const exportQuality = useFillingStore((state) => state.exportQuality)
   const setCanvasFillState = useFillingStore((state) => state.setCanvasFillState)
   const updateLayerFillState = useFillingStore((state) => state.updateLayerFillState)
-  const setSelectedLayerId = useFillingStore((state) => state.setSelectedLayerId)
   const setExportFormat = useFillingStore((state) => state.setExportFormat)
   const setExportQuality = useFillingStore((state) => state.setExportQuality)
   const setExportJxlEffort = useFillingStore((state) => state.setExportJxlEffort)
@@ -115,16 +113,6 @@ export function FillingWorkflowSidebar({
   const exportBmpDitheringLevel = useFillingStore((state) => state.exportBmpDitheringLevel)
   const exportTiffColorMode = useFillingStore((state) => state.exportTiffColorMode)
 
-  const selectedLayer = useMemo(
-    () => template.layers.find((layer) => layer.id === selectedLayerId) ?? template.layers[0] ?? null,
-    [selectedLayerId, template.layers]
-  )
-
-  const selectedLayerState = useMemo<LayerFillState | null>(
-    () => layerFillStates.find((state) => state.layerId === selectedLayer?.id) ?? null,
-    [layerFillStates, selectedLayer?.id]
-  )
-
   const modeLabel = mode === "fill" ? "Fill" : mode === "edit" ? "Manual Edit" : "Symmetric Generate"
 
   if (mode === "symmetric-generate") {
@@ -159,6 +147,14 @@ export function FillingWorkflowSidebar({
     )
   }
 
+  if (mode === "fill") {
+    return (
+      <div className="space-y-2">
+        <FillSidebar template={template} enableWideSidebarGrid={false} />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-2">
       <AccordionCard icon={<Box size={16} />} label="Template" sublabel={modeLabel} colorTheme="sky" defaultOpen>
@@ -169,66 +165,6 @@ export function FillingWorkflowSidebar({
           <p>{template.usageCount} exports</p>
         </div>
       </AccordionCard>
-
-      {mode === "fill" && (
-        <AccordionCard
-          icon={<Layers size={16} />}
-          label="Layers"
-          sublabel={selectedLayer ? selectedLayer.name : "No layer"}
-          colorTheme="sky"
-          defaultOpen
-        >
-          <div className="space-y-2">
-            <div className="space-y-1.5">
-              {template.layers.map((layer) => (
-                <button
-                  key={layer.id}
-                  type="button"
-                  onClick={() => setSelectedLayerId(layer.id)}
-                  className={`w-full rounded border px-2 py-1 text-left text-xs transition ${
-                    selectedLayer?.id === layer.id
-                      ? "border-sky-500 bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-300"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800/40"
-                  }`}
-                >
-                  {layer.name}
-                </button>
-              ))}
-            </div>
-
-            {selectedLayer && selectedLayerState && (
-              <div className="space-y-2 border-t border-slate-200 pt-2 dark:border-slate-700">
-                <p className="text-[11px] text-slate-500">
-                  {selectedLayerState.imageUrl ? "Image attached" : "No image attached"}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <NumberInput
-                    label="Border"
-                    value={selectedLayerState.borderWidth}
-                    onChangeValue={(value) => updateLayerFillState(selectedLayer.id, { borderWidth: value })}
-                    min={0}
-                    max={50}
-                  />
-                  <NumberInput
-                    label="Corner Radius"
-                    value={selectedLayerState.cornerRadius}
-                    onChangeValue={(value) => updateLayerFillState(selectedLayer.id, { cornerRadius: value })}
-                    min={0}
-                    max={200}
-                  />
-                </div>
-                <ColorPickerPopover
-                  label="Border Color"
-                  value={selectedLayerState.borderColor}
-                  onChange={(value) => updateLayerFillState(selectedLayer.id, { borderColor: value })}
-                  outputMode="hex"
-                  enableAlpha={false}
-                />
-              </div>
-            )}
-          </div>
-        </AccordionCard>
-      )}
 
       <AccordionCard icon={<Palette size={16} />} label="Canvas" sublabel="Background & overrides" colorTheme="purple">
         <div className="space-y-2">

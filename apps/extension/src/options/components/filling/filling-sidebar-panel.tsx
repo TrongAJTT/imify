@@ -6,7 +6,7 @@ import { ManualEditorSidebar } from "@imify/features/filling/manual-editor-sideb
 import { useEditorContextSafe } from "@/options/components/filling/editor-context"
 import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
 import { FillingInfoPanel } from "@/options/components/filling/template-info-accordion"
-import { FillSidebar } from "@/options/components/filling/fill-sidebar"
+import { FillSidebar } from "@imify/features/filling/fill-sidebar"
 
 interface FillingSidebarPanelProps {
   enableWideSidebarGrid?: boolean

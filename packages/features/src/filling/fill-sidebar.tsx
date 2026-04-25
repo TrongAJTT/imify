@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
-
+import React, { useEffect, useMemo, useState } from "react"
 import type { FillingTemplate } from "@imify/features/filling/types"
 import {
   closestCenter,
@@ -11,14 +10,13 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
-
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useFillUiStore } from "@imify/stores/stores/fill-ui-store"
-import { FillLayerCard } from "@/options/components/filling/fill-layer-card"
-import { FillLayerCustomizationAccordion } from "@/options/components/filling/fill-layer-customization-accordion"
-import { FillCanvasAccordion } from "@/options/components/filling/fill-canvas-accordion"
-import { FillingExportAccordion } from "@/options/components/filling/filling-export-accordion"
-import { SortableFillLayerItem } from "@/options/components/filling/sortable-fill-layer-item"
+import { FillLayerCard } from "@imify/features/filling/fill-layer-card"
+import { FillLayerCustomizationAccordion } from "@imify/features/filling/fill-layer-customization-accordion"
+import { FillCanvasAccordion } from "@imify/features/filling/fill-canvas-accordion"
+import { FillingExportAccordion } from "@imify/features/filling/filling-export-accordion"
+import { SortableFillLayerItem } from "@imify/features/filling/sortable-fill-layer-item"
 import { ResizableAccordionCard } from "@imify/ui/ui/resizable-accordion-card"
 import { ImagePlus } from "lucide-react"
 import {
@@ -46,10 +44,7 @@ export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSid
   const [layersAccordionHeight, setLayersAccordionHeight] = useState(320)
 
   const activeTemplate = useMemo(() => {
-    if (sessionTemplate && sessionTemplate.id === template.id) {
-      return sessionTemplate
-    }
-
+    if (sessionTemplate && sessionTemplate.id === template.id) return sessionTemplate
     return template
   }, [sessionTemplate, template])
 
@@ -57,10 +52,7 @@ export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSid
 
   useEffect(() => {
     initializeFillSession(template)
-
-    return () => {
-      resetFillSessionState()
-    }
+    return () => resetFillSessionState()
   }, [initializeFillSession, resetFillSessionState, template.id])
 
   const runtimeItems = useMemo(
@@ -69,18 +61,13 @@ export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSid
   )
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
-
     const oldIndex = runtimeItems.findIndex((item) => item.id === active.id)
     const newIndex = runtimeItems.findIndex((item) => item.id === over.id)
     if (oldIndex < 0 || newIndex < 0) return
@@ -105,12 +92,7 @@ export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSid
       return nextLayer ?? layer
     })
 
-    const nextTemplate: FillingTemplate = {
-      ...activeTemplate,
-      layers: reorderedLayers,
-      updatedAt: Date.now(),
-    }
-
+    const nextTemplate: FillingTemplate = { ...activeTemplate, layers: reorderedLayers, updatedAt: Date.now() }
     updateSessionTemplate(() => nextTemplate)
   }
 
@@ -147,18 +129,9 @@ export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSid
         </ResizableAccordionCard>
       )
     },
-    {
-      id: "layer-customization",
-      content: <FillLayerCustomizationAccordion template={activeTemplate} />
-    },
-    {
-      id: "canvas",
-      content: <FillCanvasAccordion />
-    },
-    {
-      id: "export",
-      content: <FillingExportAccordion />
-    }
+    { id: "layer-customization", content: <FillLayerCustomizationAccordion template={activeTemplate} /> },
+    { id: "canvas", content: <FillCanvasAccordion /> },
+    { id: "export", content: <FillingExportAccordion /> }
   ]
 
   return <WorkspaceConfigSidebarPanel items={sidebarItems} twoColumn={enableWideSidebarGrid} />

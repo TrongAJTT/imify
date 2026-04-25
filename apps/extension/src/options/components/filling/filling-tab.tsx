@@ -9,7 +9,7 @@ import { useEditorContext } from "@/options/components/filling/editor-context"
 import { FillingBreadcrumb } from "@/options/components/filling/breadcrumb"
 import { TemplateList } from "@/options/components/filling/template-list"
 import { ManualEditorWorkspace } from "@/options/components/filling/manual-editor-workspace"
-import { FillWorkspace } from "@/options/components/filling/fill-workspace"
+import { FillWorkspace } from "@imify/features/filling/fill-workspace"
 
 function synchronizeGroupsWithLayers(groups: LayerGroup[], layers: VectorLayer[]): LayerGroup[] {
   const layerIdsByGroup = new Map<string, string[]>()

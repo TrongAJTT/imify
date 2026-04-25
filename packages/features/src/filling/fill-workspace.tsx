@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage, Layer, Line, Rect, Group, Text, Image as KonvaImage, Transformer } from "react-konva"
 import type Konva from "konva"
 import { Download, Loader2 } from "lucide-react"
@@ -23,9 +23,9 @@ import type { CanvasFillState, FillingTemplate, VectorLayer } from "@imify/featu
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useFillUiStore } from "@imify/stores/stores/fill-ui-store"
-import { useShortcutActions } from "@/options/hooks/use-shortcut-actions"
+import { useShortcutActions } from "@imify/features/filling/use-shortcut-actions"
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
-import { useTransformGuides, type RectBounds } from "@/options/hooks/use-transform-guides"
+import { useTransformGuides, type RectBounds } from "@imify/features/filling/use-transform-guides"
 import { buildActiveFillingFormatOptions } from "@imify/stores/stores/filling-format-options"
 import {
   regenerateLayerShapePoints,
@@ -35,7 +35,7 @@ import { flattenPoints, pointInPolygon, roundedPolygonPoints } from "@imify/feat
 import {
   resolveLayerContainerHighlightMode,
   type LayerContainerHighlightMode,
-} from "@/options/components/filling/layer-visual-highlight"
+} from "@imify/features/filling/layer-visual-highlight"
 import { Subheading, MutedText } from "@imify/ui/ui/typography"
 import { Button } from "@imify/ui/ui/button"
 import { ZoomPanControl } from "@imify/ui/ui/zoom-pan-control"
