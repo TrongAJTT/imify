@@ -50,7 +50,7 @@ export function ProcessorPresetSelectView({
   }
 
   return (
-    <div className="p-6">
+    <div className="p-0">
       {sortedPresets.length === 0 ? (
         <EmptyDropCard icon={<Plus size={28} className="text-sky-500" />} iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none" title={`No ${contextLabel.toLowerCase()} presets yet`} subtitle="Create your first preset to start working" onClick={openCreateDialog} />
       ) : (

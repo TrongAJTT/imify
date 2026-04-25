@@ -28,7 +28,7 @@ export function ContextMenuSettingsTab({
   onCommitCustom
 }: ContextMenuSettingsTabProps) {
   return (
-    <div className="p-6">
+    <div className="p-0">
       {activeSubTab === "global" && (
         <GlobalFormatsTab state={state} onCommit={onCommitGlobal} />
       )}

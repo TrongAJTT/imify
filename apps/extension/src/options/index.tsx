@@ -616,7 +616,7 @@ export default function OptionsPage() {
           )}
 
           {/* Scrollable content */}
-          <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-950">
+          <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-950 p-6">
             {tabContent}
           </main>
         </div>

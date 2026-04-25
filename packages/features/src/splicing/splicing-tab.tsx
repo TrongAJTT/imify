@@ -706,7 +706,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
       }`
     : null
   const workspaceContent = (
-    <div className="p-6">
+    <div className="p-0">
       {hasImages ? (
         <div className="flex items-center justify-between mb-4">
           <div>

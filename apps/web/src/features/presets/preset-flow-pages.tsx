@@ -48,7 +48,7 @@ export function PresetLandingPage({
 
   if (!sortedPresets.length) {
     return (
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-0">
         <h1 className="text-lg font-semibold">{title}</h1>
         <p className="text-sm text-slate-500">No preset yet. Create the first default preset to start workspace flow.</p>
         <Button type="button" onClick={createDefaultAndOpen}>
@@ -59,7 +59,7 @@ export function PresetLandingPage({
   }
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-0">
       <h1 className="text-lg font-semibold">{title} presets</h1>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3">
         {sortedPresets.map((preset) => (
@@ -92,7 +92,7 @@ export function PresetWorkPage({
 
   if (!preset) {
     return (
-      <div className="space-y-3 p-6">
+      <div className="space-y-3 p-0">
         <h1 className="text-lg font-semibold">{title}</h1>
         <p className="text-sm text-slate-500">Preset not found.</p>
         <Link href={routeBase} className="text-sm text-sky-600 dark:text-sky-400">
@@ -103,7 +103,7 @@ export function PresetWorkPage({
   }
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-0">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-lg font-semibold">{title} workspace</h1>

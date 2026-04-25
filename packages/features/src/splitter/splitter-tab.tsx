@@ -620,7 +620,7 @@ export function SplitterTab() {
   )
 
   const workspaceContent = (
-    <div className="p-6">
+    <div className="p-0">
       <input
         ref={fileInputRef}
         type="file"

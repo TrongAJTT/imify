@@ -162,7 +162,7 @@ export function FillingTab() {
   }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   return (
-    <div className="p-6">
+    <div className="p-0">
       {fillingStep === "select" && (
         <TemplateList onRefresh={loadTemplates} />
       )}

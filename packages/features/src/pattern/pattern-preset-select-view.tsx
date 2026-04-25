@@ -184,7 +184,7 @@ export function PatternPresetSelectView({
   }
 
   return (
-    <div className="p-6">
+    <div className="p-0">
       {sortedPresets.length === 0 ? (
         <EmptyDropCard
           icon={<Plus size={28} className="text-indigo-500" />}

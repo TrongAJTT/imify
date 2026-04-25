@@ -120,7 +120,7 @@ export function BatchProcessorWorkspace() {
   const canRunAll = Boolean(effectiveConfig) && !isRunning && queueStats.queued > 0
   const runAllLabel: "Start Batch" | "Continue Batch" = queueStats.processing > 0 || queueStats.success > 0 || queueStats.error > 0 ? "Continue Batch" : "Start Batch"
   return (
-    <div className="p-6">
+    <div className="p-0">
       <BatchActionBar canRetryFailed={canRetryFailed} canRunAll={canRunAll} cancelRequested={cancelRequested} isRunning={isRunning} onCancel={requestCancel} onClear={() => { setQueue([]); clearSummary() }} onRunAll={() => { void runBatch("all") }} onRunFailed={() => { void runBatch("failed") }} onTogglePause={togglePause} paused={paused} queueHasItems={queue.length > 0} queueStats={queueStats} runAllLabel={runAllLabel} />
       {cancelRequested ? <BodyText className="mt-3 text-amber-700 dark:text-amber-400">Cancel requested. Current in-flight items will finish before stopping.</BodyText> : null}
       {paused ? <BodyText className="mt-3 text-indigo-700 dark:text-indigo-400">Batch is paused. Click Resume to continue.</BodyText> : null}

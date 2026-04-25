@@ -112,7 +112,7 @@ export function SharedInspectorPage({
   }, [file, onOpenSingleProcessor, onOptimizeIntent, setTargetFormat])
 
   return (
-    <div className="p-3">
+    <div className="p-0">
       {file ? (
         <div className="mb-4 flex items-center justify-between">
           <div>

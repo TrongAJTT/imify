@@ -203,7 +203,7 @@ export function SingleProcessorWorkspace({ consumePendingOptimizeFile }: { consu
   return (
     <div className="space-y-0">
       {!sourceFile ? (
-        <div className="p-6">
+        <div className="p-0">
           <EmptyDropCard icon={<ImagePlus size={28} className="text-sky-500/80 dark:text-sky-400" />} title="Drop one image here, click to browse, or paste from clipboard" subtitle="Single Processor with live preview, debounce, and image URL import" onDropFiles={onAppendFiles} fileInput={{ onInputFiles: onAppendFiles }} topRightSlot={<ImageUrlImportControl allowMultiple={false} disabled={isImportingUrl} onProcessUrls={importFromImageUrls} />} />
         </div>
       ) : (

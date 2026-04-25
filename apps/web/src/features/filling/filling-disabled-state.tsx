@@ -11,7 +11,7 @@ export function FillingDisabledState() {
   useWorkspaceSidebar(sidebar)
 
   return (
-    <div className="p-6">
+    <div className="p-0">
       <EmptyDropCard
         icon={<Clock3 className="h-6 w-6 text-slate-500 dark:text-slate-300" />}
         title="Image Filling Is Coming Soon on Web"

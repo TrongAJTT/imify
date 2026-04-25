@@ -633,7 +633,7 @@ export function PatternTab() {
   }, [isResizing, setPreviewContainerHeight])
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-0 space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Pattern Preview</h2>

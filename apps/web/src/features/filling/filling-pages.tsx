@@ -108,7 +108,7 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
 
   return (
     <>
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-0">
         <FillingTemplateListPanel
           templates={templates}
           sortMode={sortMode}
@@ -290,7 +290,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
 
   if (!templatesLoaded) {
     return (
-      <div className="space-y-3 p-6">
+      <div className="space-y-3 p-0">
         <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
         <p className="text-sm text-slate-500">Loading template...</p>
       </div>
@@ -299,7 +299,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
 
   if (!template) {
     return (
-      <div className="space-y-3 p-6">
+      <div className="space-y-3 p-0">
         <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
         <p className="text-sm text-slate-500">Template not found.</p>
         <Link href={routeBase} className="text-sm text-sky-600 dark:text-sky-400">
@@ -310,7 +310,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   }
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-0">
       {mode === "fill" && (
         <FillWorkspace template={template} />
       )}

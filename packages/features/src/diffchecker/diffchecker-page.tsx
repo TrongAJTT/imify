@@ -207,7 +207,7 @@ export function SharedDiffcheckerPage({ renderWorkspace }: SharedDiffcheckerPage
   const dimensionLabel = hasBoth ? `${imageA.width} x ${imageA.height} vs ${imageB.width} x ${imageB.height}` : null
 
   return (
-    <div className="p-2">
+    <div className="p-0">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <Subheading>Difference Checker</Subheading>
