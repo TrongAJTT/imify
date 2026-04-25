@@ -4,7 +4,7 @@ import { resolve } from "node:path"
 const projectRoot = process.cwd()
 const sourceJs = resolve(projectRoot, "node_modules/@jsquash/webp/codec/enc/webp_enc.js")
 const sourceWasm = resolve(projectRoot, "node_modules/@jsquash/webp/codec/enc/webp_enc.wasm")
-const targetDir = resolve(projectRoot, "assets/wasm")
+const targetDir = resolve(projectRoot, "../../assets/wasm")
 const targetJs = resolve(targetDir, "webp_enc.js")
 const targetWasm = resolve(targetDir, "webp_enc.wasm")
 

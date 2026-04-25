@@ -4,7 +4,7 @@ import { resolve } from "node:path"
 const projectRoot = process.cwd()
 const sourceJs = resolve(projectRoot, "node_modules/@jsquash/oxipng/codec/pkg/squoosh_oxipng.js")
 const sourceWasm = resolve(projectRoot, "node_modules/@jsquash/oxipng/codec/pkg/squoosh_oxipng_bg.wasm")
-const targetDir = resolve(projectRoot, "assets/wasm")
+const targetDir = resolve(projectRoot, "../../assets/wasm")
 const targetJs = resolve(targetDir, "oxipng.js")
 const targetWasm = resolve(targetDir, "squoosh_oxipng_bg.wasm")
 

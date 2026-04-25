@@ -35,9 +35,18 @@ coverage/
 # AI Tooling & IDE (Cursor, GitHub Copilot, Nexus)
 .cursorrules
 .gitnexus
+.cursor/plans/
 .github/copilot-instructions.md
 
 # Documentation & Backups
 backups/
 .docs/
 SPECIFICATIONS.md
+
+# Generated synced media assets
+apps/extension/assets/features/
+apps/web/public/assets/features/
+apps/web/public/assets/wasm/
+
+# Generated shared wasm source-of-truth
+assets/wasm/
