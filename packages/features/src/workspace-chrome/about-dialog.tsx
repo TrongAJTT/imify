@@ -70,8 +70,8 @@ function ActionLink({
         rel="noreferrer"
         className={
           emphasized
-            ? "px-5 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-bold shadow-lg shadow-slate-900/10 dark:shadow-none hover:-translate-y-0.5 transition-all flex items-center gap-2"
-            : "px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2"
+            ? "px-5 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-bold shadow-lg shadow-slate-900/10 dark:shadow-none hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+            : "px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
         }
       >
         {children}
@@ -106,7 +106,7 @@ export function AboutDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-2xl rounded-2xl p-8 relative overflow-y-auto max-h-[90vh]"
+      contentClassName="w-full max-w-3xl rounded-2xl p-8 relative overflow-y-auto max-h-[90vh]"
     >
       <Button
         variant="outline"
@@ -199,7 +199,7 @@ export function AboutDialog({
               </svg>
             </div>
             <div>
-              <Kicker className="text-[10px] font-black tracking-widest leading-none">A project by</Kicker>
+              <Kicker className="text-[10px] font-black tracking-widest leading-none">A project by</Kicker><br/>
               <a
                 href="https://github.com/TrongAJTT"
                 target="_blank"

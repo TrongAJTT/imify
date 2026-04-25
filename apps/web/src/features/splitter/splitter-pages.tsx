@@ -12,6 +12,8 @@ import { cloneSplitterPresetConfig, useSplitterPresetStore } from "@imify/stores
 import { useSplitterStore } from "@imify/stores/stores/splitter-store"
 import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 
 function useSplitterPresetHydrated(): boolean {
   const [hydrated, setHydrated] = useState(false)
@@ -31,6 +33,10 @@ function useSplitterPresetHydrated(): boolean {
 
 export function SplitterLandingPage() {
   const router = useRouter()
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const isHydrated = useSplitterPresetHydrated()
   const presets = useSplitterPresetStore((state) => state.presets)
   const ensureDefaultPreset = useSplitterPresetStore((state) => state.ensureDefaultPreset)
@@ -52,6 +58,13 @@ export function SplitterLandingPage() {
     ensureDefaultPreset()
     setPresetViewMode("select")
   }, [ensureDefaultPreset, isHydrated, setPresetViewMode])
+
+  useEffect(() => {
+    setHeaderSection("Image Splitter")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootLabel="Image Splitter" />)
+    return () => resetHeader()
+  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   if (!isHydrated) {
     return <WorkspaceLoadingState title="Loading splitter presets..." />
@@ -83,6 +96,11 @@ export function SplitterLandingPage() {
 }
 
 export function SplitterWorkPage({ presetId }: { presetId: string }) {
+  const router = useRouter()
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const isHydrated = useSplitterPresetHydrated()
   const presets = useSplitterPresetStore((state) => state.presets)
   const applyPreset = useSplitterPresetStore((state) => state.applyPreset)
@@ -95,6 +113,20 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
   )
 
   useWorkspaceSidebar(<SplitterSidebarShell />)
+
+  useEffect(() => {
+    setHeaderSection("Image Splitter")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(
+      <FeatureBreadcrumb
+        compact
+        rootLabel="Image Splitter"
+        activeLabel={preset?.name ?? null}
+        onRootClick={() => router.push("/splitter")}
+      />
+    )
+    return () => resetHeader()
+  }, [preset?.name, resetHeader, router, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   useEffect(() => {
     if (!isHydrated || !preset) {

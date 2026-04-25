@@ -9,6 +9,11 @@ import { QUALITY_FORMATS } from "@imify/core/format-config"
 import { normalizeFormatOptionsForCustomFormat } from "@imify/engine/custom-formats/format-options-normalizer"
 import type { CustomFormatInput } from "@imify/engine/custom-formats"
 import {
+  WORKSPACE_PRIMARY_TOOL_IDS,
+  getExtensionSidebarToolGroups,
+  type WorkspacePrimaryToolId
+} from "@imify/features/workspace-shell"
+import {
   DPI_OPTIONS,
   PAPER_OPTIONS,
   normalizeCustomResizeConfig
@@ -17,32 +22,17 @@ import {
 export { QUALITY_FORMATS }
 export { PAPER_OPTIONS, DPI_OPTIONS }
 
-export type OptionsTab =
-  | "single"
-  | "batch"
-  | "splicing"
-  | "splitter"
-  | "filling"
-  | "pattern"
-  | "diffchecker"
-  | "inspector"
-  | "context-menu"
+export type OptionsTab = WorkspacePrimaryToolId
 export interface PersistedStorageState {
   version: number
   state: ExtensionStorageState
 }
 
-export const TAB_ITEMS: Array<{ id: OptionsTab; label: string }> = [
-  { id: "context-menu", label: "Context Menu" },
-  { id: "single", label: "Single Processor" },
-  { id: "batch", label: "Batch Processor" },
-  { id: "splicing", label: "Image Splicing" },
-  { id: "splitter", label: "Image Splitter" },
-  { id: "filling", label: "Image Filling" },
-  { id: "pattern", label: "Pattern Generator" },
-  { id: "diffchecker", label: "Difference Checker" },
-  { id: "inspector", label: "Image Inspector" },
-]
+export const TAB_ITEMS: Array<{ id: OptionsTab; label: string }> = getExtensionSidebarToolGroups()
+  .flatMap((group) => group.items)
+  .map((item) => ({ id: item.tabId, label: item.label }))
+
+export const OPTIONS_TAB_IDS = WORKSPACE_PRIMARY_TOOL_IDS
 
 export const CONTEXT_MENU_SORT_OPTIONS: Array<{ value: MenuSortMode; label: string }> = [
   { value: "global_then_custom", label: "Global formats, then custom formats" },

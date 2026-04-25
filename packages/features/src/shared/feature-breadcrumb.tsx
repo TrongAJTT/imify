@@ -22,7 +22,11 @@ export function FeatureBreadcrumb({
   const labelClass = compact ? "max-w-[100px]" : "max-w-[180px]"
 
   return (
-    <nav className={`flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 ${compact ? "" : "mb-4"}`}>
+    <nav
+      className={`flex items-center gap-1 text-slate-500 dark:text-slate-400 ${
+        compact ? "text-sm" : "text-xs mb-4"
+      }`}
+    >
       <button
         type="button"
         onClick={onRootClick}

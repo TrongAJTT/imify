@@ -11,7 +11,13 @@ import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
 import SidepanelAuditSnapshotApp from "@/sidepanel/sidepanel-audit-snapshot-app"
 
 import { toUserFacingConversionError } from "@imify/core/error-utils"
-import { AboutDialog, DonateDialog, WorkspaceOptionsHeader } from "@imify/features/workspace-shell"
+import {
+  AboutDialog,
+  DonateDialog,
+  WorkspaceOptionsHeader,
+  getExtensionSidebarToolGroups,
+  renderWorkspaceToolIcon
+} from "@imify/features/workspace-shell"
 import { type ExtensionStorageState,
   STORAGE_KEY, STORAGE_VERSION } from "@imify/core/types"
 import { convertImageWithWorker } from "@imify/engine/converter/conversion-worker-pool"
@@ -53,18 +59,9 @@ import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
 import { Tooltip } from "@/options/components/tooltip"
 import {
-  ArrowLeftRight,
   Heart,
-  Image,
-  Layers,
-  LayoutGrid,
-  Scissors,
-  ListTree,
   PanelLeftClose,
   PanelLeftOpen,
-  ScanSearch,
-  Stamp,
-  Workflow,
   X
 } from "lucide-react"
 import { AttributionDialogWrapper } from "./components/attribution-dialog-wrapper"
@@ -138,6 +135,7 @@ function resolveSidepanelPanel(): "inspector" | "audit" {
 
 let offscreenListenerAttached = false
 const VALID_TAB_IDS = new Set<OptionsTab>(TAB_ITEMS.map((tab) => tab.id))
+const EXTENSION_SIDEBAR_GROUPS = getExtensionSidebarToolGroups()
 
 function sanitizeOptionsTab(value: unknown): OptionsTab {
   if (typeof value === "string" && VALID_TAB_IDS.has(value as OptionsTab)) {
@@ -188,18 +186,6 @@ if (IS_OFFSCREEN_OPTIONS_DOCUMENT && !offscreenListenerAttached) {
 
     return true
   })
-}
-
-const TAB_ICON_COMPONENTS: Record<OptionsTab, JSX.Element> = {
-  single: <Image size={18} />,
-  batch: <Workflow size={18} />,
-  splicing: <LayoutGrid size={18} />,
-  splitter: <Scissors size={18} />,
-  filling: <Layers size={18} />,
-  pattern: <Stamp size={18} />,
-  diffchecker: <ArrowLeftRight size={18} />,
-  inspector: <ScanSearch size={18} />,
-  "context-menu": <ListTree size={18} />
 }
 
 function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorageState {
@@ -532,15 +518,24 @@ export default function OptionsPage() {
                 </button>
               </Tooltip>
             </div>
-            {TAB_ITEMS.map((tab) => (
-              <TabButton
-                key={tab.id}
-                active={tab.id === activeTab}
-                label={tab.label}
-                icon={TAB_ICON_COMPONENTS[tab.id]}
-                onClick={() => setActiveTab(tab.id)}
-                collapsed={isNavCollapsed}
-              />
+            {EXTENSION_SIDEBAR_GROUPS.map((group) => (
+              <div key={group.title} className="space-y-0.5">
+                {!isNavCollapsed ? (
+                  <div className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-600">
+                    {group.title}
+                  </div>
+                ) : null}
+                {group.items.map((tool) => (
+                  <TabButton
+                    key={tool.id}
+                    active={tool.tabId === activeTab}
+                    label={tool.label}
+                    icon={renderWorkspaceToolIcon(tool.id, 18)}
+                    onClick={() => setActiveTab(tool.tabId)}
+                    collapsed={isNavCollapsed}
+                  />
+                ))}
+              </div>
             ))}
           </div>
 

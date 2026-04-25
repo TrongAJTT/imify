@@ -1,5 +1,5 @@
 import { useFillingStore } from "@imify/stores/stores/filling-store"
-import { FeatureBreadcrumb } from "@/options/components/shared/feature-breadcrumb"
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 
 function stepLabel(step: string): string | null {
   switch (step) {

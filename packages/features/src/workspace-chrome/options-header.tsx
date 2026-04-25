@@ -26,6 +26,7 @@ interface WorkspaceOptionsHeaderProps {
   toolsMenuGroups?: WorkspaceHeaderToolsGroup[]
   toolsMenuLabel?: string
   activeNavHref?: string | null
+  onNavigateHome?: () => void
   onNavigate?: (href: string) => void
   onToggleDark: () => void
   onOpenAbout: () => void
@@ -52,7 +53,7 @@ function TitleBarButton({
     <button
       type="button"
       onClick={onClick}
-      className={`${label ? "px-3" : "w-9"} h-9 flex items-center justify-center gap-2 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors ${isDonate ? "text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300" : ""} ${className}`}
+      className={`${label ? "px-3" : "w-9"} h-9 flex items-center justify-center gap-2 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 rounded-full transition-colors ${isDonate ? "border border-rose-200 text-rose-500 dark:border-rose-700/70 dark:text-rose-400 hover:border-rose-300 dark:hover:border-rose-600 hover:text-rose-600 dark:hover:text-rose-300" : ""} ${className}`}
     >
       {children}
       {label ? <span className="text-xs font-bold">{label}</span> : null}
@@ -66,11 +67,12 @@ export function WorkspaceOptionsHeader({
   isLoading,
   isDark,
   title = "Imify",
-  subtitle = "Save and Process Images",
+  subtitle = "Powerful Image Toolkit",
   navItems,
   toolsMenuGroups,
   toolsMenuLabel = "All Tools",
   activeNavHref = null,
+  onNavigateHome,
   onNavigate,
   onToggleDark,
   onOpenAbout,
@@ -109,16 +111,41 @@ export function WorkspaceOptionsHeader({
   }, [clearCloseToolsMenuTimer])
 
   return (
-    <header className="h-12 flex items-center justify-between px-4 gap-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
-      <div className="flex items-center gap-2.5 min-w-0">
-        {logoSrc ? (
-          <img src={logoSrc} alt="Imify" className="w-6 h-6 rounded shrink-0" />
-        ) : null}
-        <span className="text-sm font-bold text-slate-900 dark:text-slate-100 shrink-0">{title}</span>
-        <span className="text-slate-300 dark:text-slate-700 shrink-0 select-none">|</span>
-        <span className="text-sm text-slate-500 dark:text-slate-400 truncate hidden sm:block">{subtitle}</span>
+    <header className="h-14 flex items-center justify-between px-4 gap-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+      <div className="flex items-center gap-6 min-w-0">
+        {onNavigateHome ? (
+          <button
+            type="button"
+            onClick={onNavigateHome}
+            className="flex items-center gap-2.5 min-w-0 rounded-md px-1 py-0.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+            aria-label="Go to landing page"
+          >
+            {logoSrc ? (
+              <img src={logoSrc} alt="Imify" className="w-7 h-7 rounded shrink-0" />
+            ) : null}
+            <div className="min-w-0 text-left">
+              <div className="text-sm font-bold leading-tight text-slate-900 dark:text-slate-100">{title}</div>
+              <div className="text-[11px] leading-tight text-slate-500 dark:text-slate-400 truncate hidden sm:block">
+                {subtitle}
+              </div>
+            </div>
+          </button>
+        ) : (
+          <div className="flex items-center gap-2.5 min-w-0">
+            {logoSrc ? (
+              <img src={logoSrc} alt="Imify" className="w-7 h-7 rounded shrink-0" />
+            ) : null}
+            <div className="min-w-0">
+              <div className="text-sm font-bold leading-tight text-slate-900 dark:text-slate-100">{title}</div>
+              <div className="text-[11px] leading-tight text-slate-500 dark:text-slate-400 truncate hidden sm:block">
+                {subtitle}
+              </div>
+            </div>
+          </div>
+        )}
         {navItems?.length ? (
           <div className="hidden lg:flex items-center gap-1 pl-2">
+            <span className="text-slate-300 dark:text-slate-700 shrink-0 select-none">|</span>
             {navItems.map((item) => (
               <button
                 key={item.href}
@@ -135,18 +162,6 @@ export function WorkspaceOptionsHeader({
             ))}
           </div>
         ) : null}
-        {breadcrumb ? (
-          <>
-            <span className="text-slate-300 dark:text-slate-700 shrink-0 select-none">|</span>
-            <div className="min-w-0 hidden lg:flex items-center">{breadcrumb}</div>
-          </>
-        ) : null}
-        {isLoading ? (
-          <span className="text-[11px] text-slate-400 dark:text-slate-500 animate-pulse shrink-0">Loading...</span>
-        ) : null}
-      </div>
-
-      <div className="flex items-center gap-1 shrink-0">
         {hasToolsMenu ? (
           <div
             className="relative hidden lg:block"
@@ -166,7 +181,7 @@ export function WorkspaceOptionsHeader({
             </button>
             <div className="absolute left-0 top-full h-3 w-full" />
             {isToolsMenuOpen ? (
-              <div className="absolute right-0 top-[calc(100%+10px)] z-30 min-w-[700px] rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+              <div className="absolute left-0 top-[calc(100%+10px)] z-30 min-w-[700px] rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900">
                 <div className="grid grid-cols-3 gap-5">
                   {toolsMenuGroups?.map((group) => (
                     <div key={group.title} className="space-y-2">
@@ -196,6 +211,21 @@ export function WorkspaceOptionsHeader({
             ) : null}
           </div>
         ) : null}
+        {breadcrumb ? <div className="min-w-0 hidden lg:flex items-center">{breadcrumb}</div> : null}
+        {isLoading ? (
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 animate-pulse shrink-0">Loading...</span>
+        ) : null}
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0">
+        <TitleBarButton
+          onClick={onOpenDonate}
+          tooltipText="Support the dev"
+          isDonate
+          label="Donate"
+        >
+          <Heart size={16} fill="red" stroke="red" />
+        </TitleBarButton>
         <TitleBarButton
           onClick={onToggleDark}
           tooltipText={isDark ? "Switch to light mode" : "Switch to dark mode"}
@@ -207,14 +237,6 @@ export function WorkspaceOptionsHeader({
         </TitleBarButton>
         <TitleBarButton onClick={onOpenSettings} tooltipText="Settings">
           <Settings size={18} />
-        </TitleBarButton>
-        <TitleBarButton
-          onClick={onOpenDonate}
-          tooltipText="Support the dev"
-          isDonate
-          label="Donate"
-        >
-          <Heart size={16} fill="red" stroke="red" />
         </TitleBarButton>
       </div>
     </header>
