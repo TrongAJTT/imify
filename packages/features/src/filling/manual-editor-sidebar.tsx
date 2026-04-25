@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import React, { useCallback, useMemo, useState } from "react"
 import { Layers, Settings2, Ruler } from "lucide-react"
 
 import type {
@@ -7,24 +7,24 @@ import type {
   LayerGroup,
   VectorLayer,
   ShapeType,
-} from "@imify/features/filling/types"
-import { generateId } from "@imify/features/filling/types"
-import { generateShapePoints, regenerateLayerShapePoints } from "@imify/features/filling/shape-generators"
-import { getBoundingBox } from "@imify/features/filling/vector-math"
-import { CanvasSizeDialog } from "@/options/components/filling/canvas-size-dialog"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { ResizableAccordionCard } from "@imify/ui/ui/resizable-accordion-card"
-import { Button } from "@imify/ui/ui/button"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { SelectInput } from "@imify/ui/ui/select-input"
-import { LayerListPanel } from "@/options/components/filling/layer-list-panel"
-import { LayerPropertiesPanel } from "@/options/components/filling/layer-properties-panel"
-import { ShapePickerDialog } from "@/options/components/filling/shape-picker-dialog"
-import { GroupLayerPanel } from "@/options/components/filling/group-layer-panel"
+} from "./types"
+import { generateId } from "./types"
+import { generateShapePoints, regenerateLayerShapePoints } from "./shape-generators"
+import { getBoundingBox } from "./vector-math"
+import { CanvasSizeDialog } from "./canvas-size-dialog"
+import { LayerListPanel } from "./layer-list-panel"
+import { LayerPropertiesPanel } from "./layer-properties-panel"
+import { ShapePickerDialog } from "./shape-picker-dialog"
+import { GroupLayerPanel } from "./group-layer-panel"
 import {
+  AccordionCard,
+  Button,
+  NumberInput,
+  SelectInput,
+  ResizableAccordionCard,
   WorkspaceConfigSidebarPanel,
-  type WorkspaceConfigSidebarItem
-} from "@imify/ui/ui/workspace-config-sidebar-panel"
+  type WorkspaceConfigSidebarItem,
+} from "@imify/ui"
 
 interface ManualEditorSidebarProps {
   layers: VectorLayer[]

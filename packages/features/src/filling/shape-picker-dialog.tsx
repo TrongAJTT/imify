@@ -1,10 +1,10 @@
+import React from "react"
 import { X } from "lucide-react"
 
-import type { ShapeType } from "@imify/features/filling/types"
-import { SHAPE_CATEGORIES, SHAPE_LABELS, generateShapePoints } from "@imify/features/filling/shape-generators"
-import { flattenPoints } from "@imify/features/filling/vector-math"
-import { BaseDialog } from "@imify/ui/ui/base-dialog"
-import { Subheading } from "@imify/ui/ui/typography"
+import type { ShapeType } from "./types"
+import { SHAPE_CATEGORIES, SHAPE_LABELS, generateShapePoints } from "./shape-generators"
+import { flattenPoints } from "./vector-math"
+import { BaseDialog, Subheading } from "@imify/ui"
 
 interface ShapePickerDialogProps {
   isOpen: boolean
@@ -14,7 +14,7 @@ interface ShapePickerDialogProps {
 
 export function ShapePickerDialog({ isOpen, onClose, onSelect }: ShapePickerDialogProps) {
   return (
-    <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="rounded-xl w-[440px] max-w-[95vw]">
+    <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="rounded-xl w-[600px] max-w-[95vw]">
       <div className="p-5">
         <div className="flex items-center justify-between mb-4">
           <Subheading>Add Shape Layer</Subheading>
@@ -33,7 +33,7 @@ export function ShapePickerDialog({ isOpen, onClose, onSelect }: ShapePickerDial
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600 mb-2">
                 {cat.label}
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
                 {cat.shapes.map((shapeType) => (
                   <ShapeButton
                     key={shapeType}

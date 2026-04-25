@@ -26,9 +26,16 @@ export type ShapeType =
   | "triangle_isosceles"
   | "parallelogram"
   | "rhombus"
+  | "trapezoid"
+  | "kite"
   | "pentagon"
   | "hexagon"
   | "star"
+  | "cross"
+  | "heart"
+  | "crescent"
+  | "arrow"
+  | "cloud"
   | "custom"
 
 // ── Vector Layer ──

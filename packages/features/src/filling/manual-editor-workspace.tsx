@@ -37,6 +37,7 @@ interface ManualEditorWorkspaceProps {
   onSaveTemplate: () => Promise<void>
   isSavingTemplate: boolean
   visualHelp?: ManualEditorVisualHelp
+  showHeader?: boolean
 }
 
 const CANVAS_PADDING = 40
@@ -59,6 +60,7 @@ export function ManualEditorWorkspace({
   onSaveTemplate,
   isSavingTemplate,
   visualHelp,
+  showHeader = true,
 }: ManualEditorWorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
@@ -368,37 +370,39 @@ export function ManualEditorWorkspace({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <Subheading>Manual Editor</Subheading>
-            {visualHelp ? (
-              <VisualHelpTooltip
-                label={visualHelp.label}
-                description={visualHelp.description}
-                webmSrc={visualHelp.webmSrc}
-                buttonAriaLabel={visualHelp.buttonAriaLabel}
-                mediaAlt={visualHelp.mediaAlt}
-              />
-            ) : null}
+      {showHeader ? (
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Subheading>Manual Editor</Subheading>
+              {visualHelp ? (
+                <VisualHelpTooltip
+                  label={visualHelp.label}
+                  description={visualHelp.description}
+                  webmSrc={visualHelp.webmSrc}
+                  buttonAriaLabel={visualHelp.buttonAriaLabel}
+                  mediaAlt={visualHelp.mediaAlt}
+                />
+              ) : null}
+            </div>
+            <MutedText className="text-xs mt-0.5">
+              {canvasWidth} x {canvasHeight} px &middot; {layers.length} layer{layers.length !== 1 ? "s" : ""}
+            </MutedText>
           </div>
-          <MutedText className="text-xs mt-0.5">
-            {canvasWidth} x {canvasHeight} px &middot; {layers.length} layer{layers.length !== 1 ? "s" : ""}
-          </MutedText>
+          <div className="flex items-center gap-3">
+            <PreviewInteractionModeToggle
+              mode={previewInteractionMode}
+              onChange={setPreviewInteractionMode}
+              zoomKeyHint={getShortcutLabel("global.preview.zoom_mode")}
+              panKeyHint={getShortcutLabel("global.preview.pan_mode")}
+              idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
+            />
+            <Button type="button" variant="primary" size="sm" onClick={() => { void onSaveTemplate() }} disabled={isSavingTemplate} className="min-w-[150px]">
+              {isSavingTemplate ? <><Loader2 size={14} className="animate-spin" />Saving...</> : <><Save size={14} />Save Template</>}
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <PreviewInteractionModeToggle
-            mode={previewInteractionMode}
-            onChange={setPreviewInteractionMode}
-            zoomKeyHint={getShortcutLabel("global.preview.zoom_mode")}
-            panKeyHint={getShortcutLabel("global.preview.pan_mode")}
-            idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
-          />
-          <Button type="button" variant="primary" size="sm" onClick={() => { void onSaveTemplate() }} disabled={isSavingTemplate} className="min-w-[150px]">
-            {isSavingTemplate ? <><Loader2 size={14} className="animate-spin" />Saving...</> : <><Save size={14} />Save Template</>}
-          </Button>
-        </div>
-      </div>
+      ) : null}
       <div ref={containerRef} className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden" style={{ height: `${previewContainerHeight}px`, cursor }}>
         <Stage ref={stageRef} width={stageSize.width} height={stageSize.height} onClick={handleStageClick} onTap={handleStageClick} onMouseDown={handleStageMouseDown} onMouseUp={handleStageMouseUp} onMouseMove={(e) => { handleStageMouseMove(e); const targetName = e.target.name(); if (targetName.includes("rotater")) { setCursor("crosshair"); return } if (targetName.includes("manual-layer-shape")) { const isPointerDown = (e.evt as MouseEvent).buttons === 1; setCursor(isPointerDown ? "grabbing" : "grab"); return } setCursor("default") }} onMouseLeave={() => setCursor("default")}>
           <Layer>

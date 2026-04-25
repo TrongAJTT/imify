@@ -2,10 +2,10 @@ import { useMemo } from "react"
 
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { SymmetricSidebar } from "@imify/features/filling/symmetric-sidebar"
+import { ManualEditorSidebar } from "@imify/features/filling/manual-editor-sidebar"
 import { useEditorContextSafe } from "@/options/components/filling/editor-context"
 import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
 import { FillingInfoPanel } from "@/options/components/filling/template-info-accordion"
-import { ManualEditorSidebar } from "@/options/components/filling/manual-editor-sidebar"
 import { FillSidebar } from "@/options/components/filling/fill-sidebar"
 
 interface FillingSidebarPanelProps {

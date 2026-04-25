@@ -10,10 +10,26 @@ import { SelectInput } from "@imify/ui/ui/select-input"
 import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
 import { FillingInfoPanel } from "@imify/features/filling/filling-info-panel"
 import { SymmetricSidebar } from "@imify/features/filling/symmetric-sidebar"
+import { ManualEditorSidebar } from "@imify/features/filling/manual-editor-sidebar"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
-import type { CanvasBackgroundType, FillingTemplate, LayerFillState } from "@imify/features/filling/types"
+import type { CanvasBackgroundType, FillingTemplate, LayerFillState, LayerGroup, VectorLayer } from "@imify/features/filling/types"
 
 type FillingSidebarMode = "select" | "fill" | "edit" | "symmetric-generate"
+
+interface ManualEditorSidebarBindings {
+  layers: VectorLayer[]
+  groups: LayerGroup[]
+  canvasWidth: number
+  canvasHeight: number
+  selectedLayerId: string | null
+  selectedLayerIds: string[]
+  onLayersChange: (layers: VectorLayer[]) => void
+  onGroupsChange: (groups: LayerGroup[]) => void
+  onCanvasSizeChange: (width: number, height: number) => void
+  onSelectLayer: (id: string | null) => void
+  onToggleLayerSelection: (id: string) => void
+  onClearSelection: () => void
+}
 
 const FORMAT_OPTIONS = [
   { value: "jpg", label: "JPG" },
@@ -48,9 +64,11 @@ export function FillingOverviewSidebar() {
 export function FillingWorkflowSidebar({
   mode,
   template,
+  manualEditor,
 }: {
   mode: FillingSidebarMode
   template: FillingTemplate
+  manualEditor?: ManualEditorSidebarBindings | null
 }) {
   const selectedLayerId = useFillingStore((state) => state.selectedLayerId)
   const layerFillStates = useFillingStore((state) => state.layerFillStates)
@@ -115,6 +133,28 @@ export function FillingWorkflowSidebar({
         <SidebarPanel title="CONFIGURATION" childrenClassName="space-y-2">
           <SymmetricSidebar template={template} />
         </SidebarPanel>
+      </div>
+    )
+  }
+
+  if (mode === "edit" && manualEditor) {
+    return (
+      <div className="space-y-2">
+        <ManualEditorSidebar
+          layers={manualEditor.layers}
+          groups={manualEditor.groups}
+          canvasWidth={manualEditor.canvasWidth}
+          canvasHeight={manualEditor.canvasHeight}
+          selectedLayerId={manualEditor.selectedLayerId}
+          selectedLayerIds={manualEditor.selectedLayerIds}
+          onLayersChange={manualEditor.onLayersChange}
+          onGroupsChange={manualEditor.onGroupsChange}
+          onCanvasSizeChange={manualEditor.onCanvasSizeChange}
+          onSelectLayer={manualEditor.onSelectLayer}
+          onToggleLayerSelection={manualEditor.onToggleLayerSelection}
+          onClearSelection={manualEditor.onClearSelection}
+          enableWideSidebarGrid={false}
+        />
       </div>
     )
   }

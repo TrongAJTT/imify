@@ -1,10 +1,8 @@
+import React from "react"
 import { Link, Unlink2 } from "lucide-react"
 
-import type { LayerGroup, VectorLayer } from "@imify/features/filling/types"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { Button } from "@imify/ui/ui/button"
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
-import { TextInput } from "@imify/ui/ui/text-input"
+import type { LayerGroup, VectorLayer } from "./types"
+import { AccordionCard, Button, CheckboxCard, TextInput } from "@imify/ui"
 
 interface GroupLayerPanelProps {
   group: LayerGroup | null
@@ -56,23 +54,6 @@ export function GroupLayerPanel({
             Ungroup
           </Button>
         </div>
-
-        {/* List of layer members of group, hide for now */}
-
-        {/* <div className="rounded-md border border-slate-200 dark:border-slate-700 p-2">
-          <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1">Members</div>
-          {members.length === 0 ? (
-            <div className="text-[11px] text-slate-400 dark:text-slate-500">No layers in this group.</div>
-          ) : (
-            <div className="space-y-0.5">
-              {members.map((layer, index) => (
-                <div key={layer.id} className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
-                  {index + 1}. {layer.name || layer.id}
-                </div>
-              ))}
-            </div>
-          )}
-        </div> */}
 
         <CheckboxCard
           title="Combine into one convex hull"

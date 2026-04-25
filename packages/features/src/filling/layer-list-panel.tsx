@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import React, { useCallback, useEffect, useMemo, useRef } from "react"
+import type { MouseEvent, ReactNode } from "react"
 import {
   Eye,
   EyeOff,
@@ -24,12 +25,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 
-import type { VectorLayer } from "@imify/features/filling/types"
-import { SHAPE_LABELS } from "@imify/features/filling/shape-generators"
-import { Button } from "@imify/ui/ui/button"
-import { SortableFillLayerItem } from "@/options/components/filling/sortable-fill-layer-item"
-import { Tooltip } from "@/options/components/tooltip"
-import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
+import type { VectorLayer } from "./types"
+import { SHAPE_LABELS } from "./shape-generators"
+import { Button } from "@imify/ui"
+import { SortableFillLayerItem } from "./sortable-fill-layer-item"
 
 interface LayerListPanelProps {
   layers: VectorLayer[]
@@ -195,35 +194,24 @@ export function LayerListPanel({
         </span>
 
         <div className="flex items-center gap-1.5">
-          <Tooltip
-            content={
-              isSelectedLayerGrouped
-                ? FILLING_TOOLTIPS.manualLayerList.ungroupSelectedLayer
-                : FILLING_TOOLTIPS.manualLayerList.groupSelectedLayer
-            }
-            variant="wide1"
-          >
-            <span>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={onToggleGroupForSelected}
-                disabled={!canToggleGroupForSelected}
-                className="h-7 min-w-[30px] px-2"
-              >
-                {isSelectedLayerGrouped ? <Unlink2 size={12} /> : <Link2 size={12} />}
-              </Button>
-            </span>
-          </Tooltip>
+          <span title={isSelectedLayerGrouped ? "Ungroup selected layer(s)" : "Group selected layer(s)"}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onToggleGroupForSelected}
+              disabled={!canToggleGroupForSelected}
+              className="h-7 min-w-[30px] px-2"
+            >
+              {isSelectedLayerGrouped ? <Unlink2 size={12} /> : <Link2 size={12} />}
+            </Button>
+          </span>
 
-          <Tooltip content={FILLING_TOOLTIPS.manualLayerList.addShapeLayer} variant="wide1">
-            <span>
-              <Button variant="secondary" size="sm" onClick={onAddShape} className="h-7 px-2 text-[11px]">
-                <Plus size={11} />
-                Add
-              </Button>
-            </span>
-          </Tooltip>
+          <span title="Add shape layer">
+            <Button variant="secondary" size="sm" onClick={onAddShape} className="h-7 px-2 text-[11px]">
+              <Plus size={11} />
+              Add
+            </Button>
+          </span>
         </div>
         </div>
       </div>
@@ -326,7 +314,7 @@ function LayerRow({
   layer: VectorLayer
   index: number
   isSelected: boolean
-  onSelect: (event: React.MouseEvent<HTMLDivElement>) => void
+  onSelect: (event: MouseEvent<HTMLDivElement>) => void
   onToggleLock: () => void
   onToggleVisibility: () => void
   onDelete: () => void
@@ -387,8 +375,8 @@ function IconButton({
   title,
   destructive = false,
 }: {
-  children: React.ReactNode
-  onClick: (e: React.MouseEvent) => void
+  children: ReactNode
+  onClick: (e: MouseEvent<HTMLButtonElement>) => void
   title: string
   destructive?: boolean
 }) {

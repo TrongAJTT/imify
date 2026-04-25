@@ -135,12 +135,69 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
 
   const [editorLayers, setEditorLayers] = useState<VectorLayer[]>([])
   const [editorGroups, setEditorGroups] = useState<LayerGroup[]>([])
+  const [editorCanvasWidth, setEditorCanvasWidth] = useState(1920)
+  const [editorCanvasHeight, setEditorCanvasHeight] = useState(1080)
   const [selectedEditorLayerId, setSelectedEditorLayerId] = useState<string | null>(null)
   const [selectedEditorLayerIds, setSelectedEditorLayerIds] = useState<string[]>([])
   const [isSavingTemplate, setIsSavingTemplate] = useState(false)
+  const handleSelectEditorLayer = useCallback((id: string | null) => {
+    setSelectedEditorLayerId(id)
+    setSelectedEditorLayerIds(id ? [id] : [])
+  }, [])
+  const handleToggleEditorLayerSelection = useCallback((id: string) => {
+    setSelectedEditorLayerIds((prev) => {
+      const exists = prev.includes(id)
+      const next = exists ? prev.filter((item) => item !== id) : [...prev, id]
+      setSelectedEditorLayerId(next[next.length - 1] ?? null)
+      return next
+    })
+  }, [])
+  const handleClearEditorSelection = useCallback(() => {
+    setSelectedEditorLayerId(null)
+    setSelectedEditorLayerIds([])
+  }, [])
 
   const template = useMemo(() => templates.find((entry) => entry.id === templateId) ?? null, [templateId, templates])
-  useWorkspaceSidebar(template ? <FillingWorkflowSidebar mode={mode} template={template} /> : null)
+  const manualEditorBindings = useMemo(
+    () =>
+      mode === "edit" && template
+        ? {
+            layers: editorLayers,
+            groups: editorGroups,
+            canvasWidth: editorCanvasWidth,
+            canvasHeight: editorCanvasHeight,
+            selectedLayerId: selectedEditorLayerId,
+            selectedLayerIds: selectedEditorLayerIds,
+            onLayersChange: setEditorLayers,
+            onGroupsChange: setEditorGroups,
+            onCanvasSizeChange: (width: number, height: number) => {
+              setEditorCanvasWidth(Math.max(1, Math.round(width)))
+              setEditorCanvasHeight(Math.max(1, Math.round(height)))
+            },
+            onSelectLayer: handleSelectEditorLayer,
+            onToggleLayerSelection: handleToggleEditorLayerSelection,
+            onClearSelection: handleClearEditorSelection,
+          }
+        : null,
+    [
+      editorCanvasHeight,
+      editorCanvasWidth,
+      editorGroups,
+      editorLayers,
+      handleClearEditorSelection,
+      handleSelectEditorLayer,
+      handleToggleEditorLayerSelection,
+      mode,
+      selectedEditorLayerId,
+      selectedEditorLayerIds,
+      template,
+    ]
+  )
+  const sidebar = useMemo(
+    () => (template ? <FillingWorkflowSidebar mode={mode} template={template} manualEditor={manualEditorBindings} /> : null),
+    [manualEditorBindings, mode, template]
+  )
+  useWorkspaceSidebar(sidebar)
 
   const runtimeItems = useMemo(() => {
     if (!template) return []
@@ -165,7 +222,9 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   useEffect(() => {
     if (!template || mode !== "edit") return
     setEditorLayers(template.layers)
-    setEditorGroups(template.groups)
+    setEditorGroups(template.groups ?? [])
+    setEditorCanvasWidth(template.canvasWidth)
+    setEditorCanvasHeight(template.canvasHeight)
     setSelectedEditorLayerId(null)
     setSelectedEditorLayerIds([])
   }, [mode, template])
@@ -193,7 +252,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
 
   return (
     <div className="space-y-4 p-6">
-      {mode !== "symmetric-generate" && (
+      {mode !== "symmetric-generate" && mode !== "edit" && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
@@ -274,33 +333,20 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
 
       {mode === "edit" && (
         <ManualEditorWorkspace
-          canvasWidth={template.canvasWidth}
-          canvasHeight={template.canvasHeight}
+          canvasWidth={editorCanvasWidth}
+          canvasHeight={editorCanvasHeight}
           groups={editorGroups}
           layers={editorLayers}
           selectedLayerId={selectedEditorLayerId}
           selectedLayerIds={selectedEditorLayerIds}
-          onSelectLayer={(id) => {
-            setSelectedEditorLayerId(id)
-            setSelectedEditorLayerIds(id ? [id] : [])
-          }}
-          onToggleLayerSelection={(id) => {
-            setSelectedEditorLayerIds((prev) => {
-              const exists = prev.includes(id)
-              const next = exists ? prev.filter((item) => item !== id) : [...prev, id]
-              setSelectedEditorLayerId(next[next.length - 1] ?? null)
-              return next
-            })
-          }}
+          onSelectLayer={handleSelectEditorLayer}
+          onToggleLayerSelection={handleToggleEditorLayerSelection}
           onSetSelectedLayers={(ids) => {
             const unique = Array.from(new Set(ids))
             setSelectedEditorLayerIds(unique)
             setSelectedEditorLayerId(unique[unique.length - 1] ?? null)
           }}
-          onClearSelection={() => {
-            setSelectedEditorLayerId(null)
-            setSelectedEditorLayerIds([])
-          }}
+          onClearSelection={handleClearEditorSelection}
           onUpdateLayer={(id, partial) => {
             setEditorLayers((prev) =>
               prev.map((layer) => {
@@ -321,19 +367,30 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
             if (isSavingTemplate) return
             setIsSavingTemplate(true)
             try {
-              await templateStorage.save({
+              const savedTemplate = {
                 ...template,
+                canvasWidth: editorCanvasWidth,
+                canvasHeight: editorCanvasHeight,
                 layers: editorLayers,
                 groups: editorGroups,
                 updatedAt: Date.now(),
-              })
+              }
+              await templateStorage.save(savedTemplate)
               const all = await templateStorage.getAll()
               useFillingStore.getState().setTemplates(all)
+              router.push(`${routeBase}/fill?id=${savedTemplate.id}`)
             } finally {
               setIsSavingTemplate(false)
             }
           }}
           isSavingTemplate={isSavingTemplate}
+          visualHelp={{
+            label: "Visual help",
+            description: "Use Ctrl/Cmd + click for multi-select. Drag to move shapes. Use Zoom/Pan/Idle to navigate.",
+            webmSrc: "/assets/features/image_filling_manual-visual_multi_select.webm",
+            buttonAriaLabel: "Open manual editor visual help",
+            mediaAlt: "Manual editor multi-select and transform guide",
+          }}
         />
       )}
 
