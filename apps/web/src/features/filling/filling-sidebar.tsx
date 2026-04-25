@@ -9,6 +9,7 @@ import { NumberInput } from "@imify/ui/ui/number-input"
 import { SelectInput } from "@imify/ui/ui/select-input"
 import { SidebarPanel } from "@imify/ui/ui/sidebar-panel"
 import { FillingInfoPanel } from "@imify/features/filling/filling-info-panel"
+import { SymmetricSidebar } from "@imify/features/filling/symmetric-sidebar"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import type { CanvasBackgroundType, FillingTemplate, LayerFillState } from "@imify/features/filling/types"
 
@@ -107,6 +108,16 @@ export function FillingWorkflowSidebar({
   )
 
   const modeLabel = mode === "fill" ? "Fill" : mode === "edit" ? "Manual Edit" : "Symmetric Generate"
+
+  if (mode === "symmetric-generate") {
+    return (
+      <div className="space-y-2">
+        <SidebarPanel title="CONFIGURATION" childrenClassName="space-y-2">
+          <SymmetricSidebar template={template} />
+        </SidebarPanel>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-2">

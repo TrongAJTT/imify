@@ -68,6 +68,7 @@ export interface FillingTemplate {
   canvasHeight: number
   layers: VectorLayer[]
   groups: LayerGroup[]
+  symmetricParams?: SymmetricParams
   createdAt: number
   updatedAt: number
   usageCount: number

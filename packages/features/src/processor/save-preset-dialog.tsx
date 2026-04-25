@@ -12,14 +12,14 @@ interface SavePresetDialogProps {
   title?: string
 }
 
-export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
+export function SavePresetDialog({
   isOpen,
   onClose,
   onSave,
   defaultName,
   highlightColors,
   title = "Save Configuration Preset"
-}) => {
+}: SavePresetDialogProps): React.ReactElement | null {
   const [presetName, setPresetName] = useState(defaultName)
   const [presetColor, setPresetColor] = useState(highlightColors[0] ?? "#0ea5e9")
 
@@ -66,5 +66,5 @@ export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
       </div>
     </div>,
     document.body
-  )
+  ) as unknown as React.ReactElement
 }

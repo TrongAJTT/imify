@@ -4,11 +4,11 @@ import type { LayerGroup, VectorLayer } from "@imify/features/filling/types"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { templateStorage } from "@imify/features/filling/template-storage"
+import { SymmetricWorkspace } from "@imify/features/filling/symmetric-workspace"
 import { useEditorContext } from "@/options/components/filling/editor-context"
 import { FillingBreadcrumb } from "@/options/components/filling/breadcrumb"
 import { TemplateList } from "@/options/components/filling/template-list"
 import { ManualEditorWorkspace } from "@/options/components/filling/manual-editor-workspace"
-import { SymmetricWorkspace } from "@/options/components/filling/symmetric-workspace"
 import { FillWorkspace } from "@/options/components/filling/fill-workspace"
 
 function synchronizeGroupsWithLayers(groups: LayerGroup[], layers: VectorLayer[]): LayerGroup[] {
@@ -42,6 +42,9 @@ export function FillingTab() {
   const setTemplates = useFillingStore((s) => s.setTemplates)
   const updateTemplate = useFillingStore((s) => s.updateTemplate)
   const navigateToSelect = useFillingStore((s) => s.navigateToSelect)
+  const setFillingStep = useFillingStore((s) => s.setFillingStep)
+  const setActiveTemplateId = useFillingStore((s) => s.setActiveTemplateId)
+  const setEditingTemplateId = useFillingStore((s) => s.setEditingTemplateId)
   const setHeaderSection = useWorkspaceHeaderStore((s) => s.setSection)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((s) => s.setBreadcrumb)
   const setHeaderActions = useWorkspaceHeaderStore((s) => s.setActions)
@@ -186,6 +189,11 @@ export function FillingTab() {
         <SymmetricWorkspace
           template={activeTemplate}
           onRefresh={loadTemplates}
+          onSaved={(savedTemplate) => {
+            setFillingStep("fill")
+            setActiveTemplateId(savedTemplate.id)
+            setEditingTemplateId(null)
+          }}
         />
       )}
 

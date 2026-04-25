@@ -22,7 +22,7 @@ interface BaseDialogProps {
  * 3. Click outside to close (backdrop click)
  * 4. isDirty check before closing
  */
-export const BaseDialog: React.FC<BaseDialogProps> = ({
+export function BaseDialog({
   isOpen,
   onClose,
   isDirty = false,
@@ -30,8 +30,13 @@ export const BaseDialog: React.FC<BaseDialogProps> = ({
   children,
   className = "",
   contentClassName = ""
-}) => {
+}: BaseDialogProps): React.ReactElement | null {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const [mounted, setMounted] = React.useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Sync React's isOpen state with Native Dialog API
   useEffect(() => {
@@ -94,8 +99,8 @@ export const BaseDialog: React.FC<BaseDialogProps> = ({
     }
   }
 
-  // Ensure we are in a browser environment before using Portal
-  if (typeof document === "undefined") return null
+  // Keep SSR output and first client render identical to avoid hydration mismatch.
+  if (!mounted) return null
 
   return createPortal(
     <dialog
@@ -119,5 +124,5 @@ export const BaseDialog: React.FC<BaseDialogProps> = ({
       </div>
     </dialog>,
     document.body
-  )
+  ) as unknown as React.ReactElement
 }

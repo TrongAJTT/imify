@@ -14,9 +14,11 @@ import type {
   CanvasFillState,
   LayerFillState,
   FillingExportFormat,
+  SymmetricParams,
 } from "@imify/features/filling/types"
 import {
   DEFAULT_CANVAS_FILL_STATE,
+  DEFAULT_SYMMETRIC_PARAMS,
   createLayerFillState,
 } from "@imify/features/filling/types"
 import { buildRuntimeFillStateIds } from "@imify/features/filling/fill-runtime-items"
@@ -39,6 +41,8 @@ export interface FillingStoreState {
   canvasFillState: CanvasFillState
   layerFillStates: LayerFillState[]
   selectedLayerId: string | null
+  symmetricParams: SymmetricParams
+  symmetricLayerCount: number
 
   // Export
   exportFormat: FillingExportFormat
@@ -85,6 +89,8 @@ export interface FillingStoreState {
   setLayerFillStates: (states: LayerFillState[]) => void
   updateLayerFillState: (layerId: string, partial: Partial<LayerFillState>) => void
   setSelectedLayerId: (id: string | null) => void
+  setSymmetricParams: (params: SymmetricParams | ((previous: SymmetricParams) => SymmetricParams)) => void
+  setSymmetricLayerCount: (count: number) => void
   initFillStatesForTemplate: (template: FillingTemplate) => void
   setExportFormat: (format: FillingExportFormat) => void
   setExportQuality: (quality: number) => void
@@ -192,6 +198,8 @@ export const useFillingStore = create<FillingStoreState>()(
       canvasFillState: { ...DEFAULT_CANVAS_FILL_STATE },
       layerFillStates: [],
       selectedLayerId: null,
+      symmetricParams: { ...DEFAULT_SYMMETRIC_PARAMS },
+      symmetricLayerCount: 0,
 
       exportFormat: "png",
       exportQuality: 90,
@@ -249,6 +257,11 @@ export const useFillingStore = create<FillingStoreState>()(
           ),
         })),
       setSelectedLayerId: (id) => set({ selectedLayerId: id }),
+      setSymmetricParams: (params) =>
+        set((state) => ({
+          symmetricParams: typeof params === "function" ? params(state.symmetricParams) : params,
+        })),
+      setSymmetricLayerCount: (count) => set({ symmetricLayerCount: Math.max(0, Math.floor(count)) }),
       initFillStatesForTemplate: (template) =>
         set(() => {
           const runtimeIds = buildRuntimeFillStateIds(template)
@@ -256,6 +269,8 @@ export const useFillingStore = create<FillingStoreState>()(
             layerFillStates: runtimeIds.map((runtimeId) => createLayerFillState(runtimeId)),
             canvasFillState: { ...DEFAULT_CANVAS_FILL_STATE },
             selectedLayerId: runtimeIds[0] ?? null,
+            symmetricParams: template.symmetricParams ?? { ...DEFAULT_SYMMETRIC_PARAMS },
+            symmetricLayerCount: template.layers.length,
           }
         }),
       setExportFormat: (format) => set({ exportFormat: format }),
@@ -309,6 +324,8 @@ export const useFillingStore = create<FillingStoreState>()(
           activeTemplateId: null,
           editingTemplateId: null,
           selectedLayerId: null,
+          symmetricParams: { ...DEFAULT_SYMMETRIC_PARAMS },
+          symmetricLayerCount: 0,
         }),
     }),
     {

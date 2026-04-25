@@ -21,6 +21,11 @@ const ManualEditorWorkspace = dynamic(
   { ssr: false }
 )
 
+const SymmetricWorkspace = dynamic(
+  () => import("@imify/features/filling/symmetric-workspace").then((m) => m.SymmetricWorkspace),
+  { ssr: false }
+)
+
 type FillingMode = "select" | "fill" | "edit" | "symmetric-generate"
 
 interface FillingHomePageProps {
@@ -105,6 +110,9 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
 export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPageProps) {
   const router = useRouter()
   const templates = useFillingStore((state) => state.templates)
+  const templatesLoaded = useFillingStore((state) => state.templatesLoaded)
+  const setTemplates = useFillingStore((state) => state.setTemplates)
+  const setTemplatesLoaded = useFillingStore((state) => state.setTemplatesLoaded)
   const setFillingStep = useFillingStore((state) => state.setFillingStep)
   const setActiveTemplateId = useFillingStore((state) => state.setActiveTemplateId)
   const setEditingTemplateId = useFillingStore((state) => state.setEditingTemplateId)
@@ -113,8 +121,18 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   const selectedLayerId = useFillingStore((state) => state.selectedLayerId)
   const setSelectedLayerId = useFillingStore((state) => state.setSelectedLayerId)
   const updateLayerFillState = useFillingStore((state) => state.updateLayerFillState)
-  const storeState = useFillingStore()
   const [didActivateMode, setDidActivateMode] = useState(false)
+  const refreshTemplates = useCallback(async () => {
+    const all = await templateStorage.getAll()
+    setTemplates(all)
+    setTemplatesLoaded(true)
+  }, [setTemplates, setTemplatesLoaded])
+
+  useEffect(() => {
+    if (templatesLoaded) return
+    void refreshTemplates()
+  }, [refreshTemplates, templatesLoaded])
+
   const [editorLayers, setEditorLayers] = useState<VectorLayer[]>([])
   const [editorGroups, setEditorGroups] = useState<LayerGroup[]>([])
   const [selectedEditorLayerId, setSelectedEditorLayerId] = useState<string | null>(null)
@@ -122,11 +140,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   const [isSavingTemplate, setIsSavingTemplate] = useState(false)
 
   const template = useMemo(() => templates.find((entry) => entry.id === templateId) ?? null, [templateId, templates])
-  const sidebar = useMemo(
-    () => (template ? <FillingWorkflowSidebar mode={mode} template={template} /> : null),
-    [mode, template]
-  )
-  useWorkspaceSidebar(sidebar)
+  useWorkspaceSidebar(template ? <FillingWorkflowSidebar mode={mode} template={template} /> : null)
 
   const runtimeItems = useMemo(() => {
     if (!template) return []
@@ -156,6 +170,15 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
     setSelectedEditorLayerIds([])
   }, [mode, template])
 
+  if (!templatesLoaded) {
+    return (
+      <div className="space-y-3 p-6">
+        <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
+        <p className="text-sm text-slate-500">Loading template...</p>
+      </div>
+    )
+  }
+
   if (!template) {
     return (
       <div className="space-y-3 p-6">
@@ -170,17 +193,19 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
 
   return (
     <div className="space-y-4 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
-          <p className="text-xs text-slate-500">{template.name}</p>
+      {mode !== "symmetric-generate" && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
+            <p className="text-xs text-slate-500">{template.name}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="secondary" onClick={() => router.push(routeBase)}>
+              Back
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="secondary" onClick={() => router.push(routeBase)}>
-            Back
-          </Button>
-        </div>
-      </div>
+      )}
 
       {mode === "fill" && (
         <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
@@ -313,12 +338,13 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
       )}
 
       {mode === "symmetric-generate" && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-          <p className="mb-2 text-sm font-medium">Symmetric Generate</p>
-          <p className="text-xs text-slate-500">
-            Symmetric workspace is active in store step <code>{storeState.fillingStep}</code>. Use sidebar controls to tune parameters.
-          </p>
-        </div>
+        <SymmetricWorkspace
+          template={template}
+          onRefresh={refreshTemplates}
+          onSaved={(savedTemplate) => {
+            router.push(`${routeBase}/fill?id=${savedTemplate.id}`)
+          }}
+        />
       )}
     </div>
   )
