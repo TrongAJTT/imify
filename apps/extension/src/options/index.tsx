@@ -24,13 +24,13 @@ import { SplitterTab, SplitterSidebarShell } from "@/options/components/splitter
 import { FillingTab } from "@/options/components/filling/filling-tab"
 import { FillingSidebarPanel } from "@/options/components/filling/filling-sidebar-panel"
 import { PatternTab, PatternSidebarShell, PatternWorkspaceShell } from "@/options/components/pattern"
-import { ProcessorWorkspaceShell, ProcessorSidebarShell } from "@/options/components/processor"
+import { ProcessorWorkspaceShell, ProcessorSidebarShellWrapper } from "@/options/components/processor"
 import { EditorProvider } from "@/options/components/filling/editor-context"
 import { DiffcheckerTab, DiffcheckerSidebarPanel } from "@/options/components/diffchecker"
 import { InspectorTab, InspectorSidebarPanel } from "@/options/components/inspector"
 import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
 import { ContextMenuInfoPanel } from "@/options/components/context-menu/context-menu-info-panel"
-import { OptionsHeader } from "@/options/components/options-header"
+import { OptionsHeaderWrapper } from "@/options/components/options-header-wrapper"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
 import { TabButton } from "@/options/components/tab-button"
 import { type OptionsTab, type PersistedStorageState, TAB_ITEMS } from "@/options/shared"
@@ -67,8 +67,8 @@ import {
   Workflow,
   X
 } from "lucide-react"
-import { AboutDialog } from "./components/about-dialog"
-import { AttributionDialog } from "./components/attribution-dialog"
+import { AboutDialogWrapper } from "./components/about-dialog-wrapper"
+import { AttributionDialogWrapper } from "./components/attribution-dialog-wrapper"
 import { SettingsDialog, type SettingsDialogTab } from "@/options/components/settings-dialog"
 import { DonateDialog } from "./components/donate-dialog"
 import { useKeyPress } from "./hooks/use-key-press"
@@ -445,7 +445,7 @@ export default function OptionsPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50">
       {/* Title bar */}
-      <OptionsHeader
+      <OptionsHeaderWrapper
         isDark={isDark}
         isLoading={isLoading}
         onOpenAbout={() => setIsAboutDialogOpen(true)}
@@ -455,7 +455,7 @@ export default function OptionsPage() {
       />
 
       {/* Dialogs */}
-      <AboutDialog
+      <AboutDialogWrapper
         isOpen={isAboutDialogOpen}
         onClose={() => setIsAboutDialogOpen(false)}
         onOpenAttribution={() => setIsAttributionDialogOpen(true)}
@@ -496,7 +496,7 @@ export default function OptionsPage() {
 
       <DonateDialog isOpen={isDonateDialogOpen} onClose={() => setIsDonateDialogOpen(false)} />
 
-      <AttributionDialog
+      <AttributionDialogWrapper
         isOpen={isAttributionDialogOpen}
         onClose={() => setIsAttributionDialogOpen(false)}
       />
@@ -549,7 +549,7 @@ export default function OptionsPage() {
           {/* Right panel content collapsed into left sidebar on smaller screens */}
           <div className={`xl:hidden border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col ${isNavCollapsed ? "hidden" : ""}`}>
             {activeTab === "single" && (
-              <ProcessorSidebarShell
+              <ProcessorSidebarShellWrapper
                 context="single"
                 performancePreferences={safePerformancePreferences}
                 onOpenSettings={() => openSettingsDialog("performance")}
@@ -558,7 +558,7 @@ export default function OptionsPage() {
             )}
 
             {activeTab === "batch" && (
-              <ProcessorSidebarShell
+              <ProcessorSidebarShellWrapper
                 context="batch"
                 performancePreferences={safePerformancePreferences}
                 onOpenSettings={() => openSettingsDialog("performance")}
@@ -633,7 +633,7 @@ export default function OptionsPage() {
           className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hidden xl:flex flex-col overflow-y-auto"
           style={{ width: configurationSidebarWidth }}>
           {activeTab === "single" && (
-            <ProcessorSidebarShell
+            <ProcessorSidebarShellWrapper
               context="single"
               performancePreferences={safePerformancePreferences}
               onOpenSettings={() => openSettingsDialog("performance")}
@@ -642,7 +642,7 @@ export default function OptionsPage() {
           )}
 
           {activeTab === "batch" && (
-            <ProcessorSidebarShell
+            <ProcessorSidebarShellWrapper
               context="batch"
               performancePreferences={safePerformancePreferences}
               onOpenSettings={() => openSettingsDialog("performance")}

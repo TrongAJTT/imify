@@ -66,10 +66,12 @@ export function FillingWorkflowSidebar({
   mode,
   template,
   manualEditor,
+  enableWideSidebarGrid = false
 }: {
   mode: FillingSidebarMode
   template: FillingTemplate
   manualEditor?: ManualEditorSidebarBindings | null
+  enableWideSidebarGrid?: boolean
 }) {
   const canvasFillState = useFillingStore((state) => state.canvasFillState)
   const exportFormat = useFillingStore((state) => state.exportFormat)
@@ -141,7 +143,7 @@ export function FillingWorkflowSidebar({
           onSelectLayer={manualEditor.onSelectLayer}
           onToggleLayerSelection={manualEditor.onToggleLayerSelection}
           onClearSelection={manualEditor.onClearSelection}
-          enableWideSidebarGrid={false}
+          enableWideSidebarGrid={enableWideSidebarGrid}
         />
       </div>
     )
@@ -150,7 +152,7 @@ export function FillingWorkflowSidebar({
   if (mode === "fill") {
     return (
       <div className="space-y-2">
-        <FillSidebar template={template} enableWideSidebarGrid={false} />
+        <FillSidebar template={template} enableWideSidebarGrid={enableWideSidebarGrid} />
       </div>
     )
   }

@@ -44,9 +44,8 @@ backups/
 SPECIFICATIONS.md
 
 # Generated synced media assets
-apps/extension/assets/features/
-apps/web/public/assets/features/
-apps/web/public/assets/wasm/
+apps/extension/assets/
+apps/web/public/assets/
 
 # Generated shared wasm source-of-truth
 assets/wasm/

@@ -8,7 +8,7 @@ import { SymmetricWorkspace } from "@imify/features/filling/symmetric-workspace"
 import { useEditorContext } from "@/options/components/filling/editor-context"
 import { FillingBreadcrumb } from "@/options/components/filling/breadcrumb"
 import { TemplateList } from "@/options/components/filling/template-list"
-import { ManualEditorWorkspace } from "@/options/components/filling/manual-editor-workspace"
+import { ManualEditorWorkspaceWrapper } from "@/options/components/filling/manual-editor-workspace-wrapper"
 import { FillWorkspace } from "@imify/features/filling/fill-workspace"
 
 function synchronizeGroupsWithLayers(groups: LayerGroup[], layers: VectorLayer[]): LayerGroup[] {
@@ -168,7 +168,7 @@ export function FillingTab() {
       )}
 
       {fillingStep === "create_manual" && activeTemplate && (
-        <ManualEditorWorkspace
+        <ManualEditorWorkspaceWrapper
           canvasWidth={canvasWidth}
           canvasHeight={canvasHeight}
           groups={editorGroups}

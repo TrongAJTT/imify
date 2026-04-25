@@ -2,6 +2,7 @@ import React from "react"
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
@@ -36,6 +37,7 @@ export interface WorkspaceConfigSidebarItem {
 interface WorkspaceConfigSidebarPanelProps {
   items: WorkspaceConfigSidebarItem[]
   twoColumn?: boolean
+  autoTwoColumnMinWidthPx?: number | null
   title?: string
   className?: string
 }
@@ -118,6 +120,7 @@ function SortableWorkspaceConfigItem({
 export function WorkspaceConfigSidebarPanel({
   items,
   twoColumn = false,
+  autoTwoColumnMinWidthPx = null,
   title = "CONFIGURATION",
   className,
 }: WorkspaceConfigSidebarPanelProps) {
@@ -125,10 +128,32 @@ export function WorkspaceConfigSidebarPanel({
   const itemMap = useMemo(() => new Map(items.map((item) => [item.id, item])), [items])
 
   const [orderedIds, setOrderedIds] = useState<string[]>(itemIds)
+  const [containerWidth, setContainerWidth] = useState<number>(0)
+  const contentRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     setOrderedIds((previousOrder) => mergeOrderedIds(previousOrder, itemIds))
   }, [itemIds])
+
+  useEffect(() => {
+    if (!autoTwoColumnMinWidthPx || !contentRef.current || typeof ResizeObserver === "undefined") {
+      return
+    }
+    const node = contentRef.current
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry) return
+      setContainerWidth(entry.contentRect.width)
+    })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [autoTwoColumnMinWidthPx])
+
+  const effectiveTwoColumn =
+    twoColumn ||
+    (typeof autoTwoColumnMinWidthPx === "number" &&
+      autoTwoColumnMinWidthPx > 0 &&
+      containerWidth >= autoTwoColumnMinWidthPx)
 
   const orderedItems = useMemo(
     () =>
@@ -139,12 +164,12 @@ export function WorkspaceConfigSidebarPanel({
   )
 
   const splitIndex = useMemo(() => {
-    if (!twoColumn) {
+    if (!effectiveTwoColumn) {
       return orderedItems.length
     }
 
     return Math.ceil(orderedItems.length / 2)
-  }, [orderedItems.length, twoColumn])
+  }, [effectiveTwoColumn, orderedItems.length])
 
   const leftColumnItems = useMemo(
     () => orderedItems.slice(0, splitIndex),
@@ -194,10 +219,10 @@ export function WorkspaceConfigSidebarPanel({
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={orderedItems.map((item) => item.id)}
-          strategy={twoColumn ? rectSortingStrategy : verticalListSortingStrategy}
+          strategy={effectiveTwoColumn ? rectSortingStrategy : verticalListSortingStrategy}
         >
-          {!twoColumn ? (
-            <div className="flex flex-col gap-3">
+          {!effectiveTwoColumn ? (
+            <div className="flex flex-col gap-3" ref={contentRef}>
               {orderedItems.map((item) => (
                 <SortableWorkspaceConfigItem key={item.id} itemId={item.id}>
                   {item.content}
@@ -205,7 +230,7 @@ export function WorkspaceConfigSidebarPanel({
               ))}
             </div>
           ) : (
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3" ref={contentRef}>
               <div className="min-w-0 flex-1 space-y-3">
                 {leftColumnItems.map((item) => (
                   <SortableWorkspaceConfigItem key={item.id} itemId={item.id}>

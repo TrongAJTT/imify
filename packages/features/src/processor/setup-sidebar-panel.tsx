@@ -29,12 +29,14 @@ interface BatchSetupSidebarPanelProps {
   performancePreferences: PerformancePreferences
   onOpenSettings: () => void
   enableWideSidebarGrid?: boolean
+  autoWideSidebarGridMinWidthPx?: number | null
 }
 
 export function BatchSetupSidebarPanel({
   performancePreferences,
   onOpenSettings,
   enableWideSidebarGrid = false,
+  autoWideSidebarGridMinWidthPx = null,
 }: BatchSetupSidebarPanelProps) {
   const setupContext = useBatchStore((state) => state.setupContext)
   const isRunning = useBatchStore((state) => state.isRunning)
@@ -320,6 +322,7 @@ export function BatchSetupSidebarPanel({
       <WorkspaceConfigSidebarPanel
         items={sidebarItems}
         twoColumn={enableWideSidebarGrid}
+        autoTwoColumnMinWidthPx={autoWideSidebarGridMinWidthPx}
       />
 
       <BatchRenameDialog

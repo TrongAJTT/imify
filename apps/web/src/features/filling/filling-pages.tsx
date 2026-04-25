@@ -14,6 +14,13 @@ import { regenerateLayerShapePoints } from "@imify/features/filling/shape-genera
 import { FillWorkspace } from "@imify/features/filling/fill-workspace"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { FillingOverviewSidebar, FillingWorkflowSidebar } from "./filling-sidebar"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
+import {
+  DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
+  normalizeWorkspaceLayoutPreferences,
+  WORKSPACE_LAYOUT_PREFERENCES_KEY
+} from "@imify/features/workspace-shell"
 
 const ManualEditorWorkspace = dynamic(
   () => import("@imify/features/filling/manual-editor-workspace").then((m) => m.ManualEditorWorkspace),
@@ -50,6 +57,18 @@ function toFillingStep(mode: FillingMode): FillingStep {
   return "create_symmetric"
 }
 
+function shouldEnableWideSidebarGrid(): boolean {
+  if (typeof window === "undefined") return false
+  try {
+    const raw = window.localStorage.getItem(WORKSPACE_LAYOUT_PREFERENCES_KEY)
+    const parsed = raw ? JSON.parse(raw) : DEFAULT_WORKSPACE_LAYOUT_PREFERENCES
+    const normalized = normalizeWorkspaceLayoutPreferences(parsed)
+    return normalized.configurationSidebarLevel >= 5
+  } catch {
+    return false
+  }
+}
+
 export function FillingHomePage({ routeBase }: FillingHomePageProps) {
   const router = useRouter()
   const templates = useFillingStore((state) => state.templates)
@@ -58,6 +77,10 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
   const setTemplates = useFillingStore((state) => state.setTemplates)
   const templatesLoaded = useFillingStore((state) => state.templatesLoaded)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
 
   const refreshTemplates = useCallback(async () => {
     const all = await templateStorage.getAll()
@@ -75,6 +98,13 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
     []
   )
   useWorkspaceSidebar(sidebar)
+
+  useEffect(() => {
+    setHeaderSection("Image Filling")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootLabel="Image Filling" />)
+    return () => resetHeader()
+  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   return (
     <>
@@ -107,6 +137,11 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
 }
 
 export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPageProps) {
+  const enableWideSidebarGrid = shouldEnableWideSidebarGrid()
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const router = useRouter()
   const templates = useFillingStore((state) => state.templates)
   const templatesLoaded = useFillingStore((state) => state.templatesLoaded)
@@ -189,10 +224,44 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
     ]
   )
   const sidebar = useMemo(
-    () => (template ? <FillingWorkflowSidebar mode={mode} template={template} manualEditor={manualEditorBindings} /> : null),
-    [manualEditorBindings, mode, template]
+    () =>
+      template ? (
+        <FillingWorkflowSidebar
+          mode={mode}
+          template={template}
+          manualEditor={manualEditorBindings}
+          enableWideSidebarGrid={enableWideSidebarGrid}
+        />
+      ) : null,
+    [enableWideSidebarGrid, manualEditorBindings, mode, template]
   )
   useWorkspaceSidebar(sidebar)
+
+  useEffect(() => {
+    const modeLabel = mode === "fill" ? "Fill" : mode === "edit" ? "Manual Editor" : "Symmetric Generate"
+    setHeaderSection("Image Filling")
+    setHeaderActions(null)
+    setHeaderBreadcrumb(
+      <FeatureBreadcrumb
+        compact
+        rootLabel="Image Filling"
+        middleLabel={template?.name ?? null}
+        activeLabel={template ? modeLabel : null}
+        onRootClick={() => router.push(routeBase)}
+        onMiddleClick={template ? () => router.push(`${routeBase}/fill?id=${template.id}`) : undefined}
+      />
+    )
+    return () => resetHeader()
+  }, [
+    mode,
+    resetHeader,
+    routeBase,
+    router,
+    setHeaderActions,
+    setHeaderBreadcrumb,
+    setHeaderSection,
+    template
+  ])
 
   useEffect(() => {
     if (!template || didActivateMode) {

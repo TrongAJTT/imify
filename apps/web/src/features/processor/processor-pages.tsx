@@ -11,7 +11,14 @@ import { ProcessorPresetSelectView } from "@imify/features/processor/processor-p
 import { ProcessorSidebarShell } from "@imify/features/processor/processor-sidebar-shell"
 import { BatchSetupSidebarPanel } from "@imify/features/processor/setup-sidebar-panel"
 import { DEFAULT_PERFORMANCE_PREFERENCES } from "@imify/features/processor/performance-preferences"
+import {
+  DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
+  normalizeWorkspaceLayoutPreferences,
+  WORKSPACE_LAYOUT_PREFERENCES_KEY
+} from "@imify/features/workspace-shell"
 import { useBatchStore, type SetupContext } from "@imify/stores/stores/batch-store"
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 
 interface ProcessorLandingPageProps {
@@ -24,6 +31,18 @@ interface ProcessorWorkPageProps {
 }
 
 const AUTO_SAVE_DELAY_MS = 420
+
+function shouldEnableWideSidebarGrid(): boolean {
+  if (typeof window === "undefined") return false
+  try {
+    const raw = window.localStorage.getItem(WORKSPACE_LAYOUT_PREFERENCES_KEY)
+    const parsed = raw ? JSON.parse(raw) : DEFAULT_WORKSPACE_LAYOUT_PREFERENCES
+    const normalized = normalizeWorkspaceLayoutPreferences(parsed)
+    return normalized.configurationSidebarLevel >= 5
+  } catch {
+    return false
+  }
+}
 
 function getRoutePrefix(context: SetupContext): string {
   return context === "single" ? "/single-processor" : "/batch-processor"
@@ -55,6 +74,10 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
     ),
     [context]
   )
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
 
   useEffect(() => { if (setupContext !== context) setSetupContext(context) }, [context, setSetupContext, setupContext])
 
@@ -77,6 +100,14 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
 
   useWorkspaceSidebar(sidebar)
 
+  useEffect(() => {
+    const contextLabel = getContextLabel(context)
+    setHeaderSection(contextLabel)
+    setHeaderActions(null)
+    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootLabel={contextLabel} />)
+    return () => resetHeader()
+  }, [context, resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
+
   return (
     <ProcessorPresetSelectView
       context={context}
@@ -95,6 +126,11 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
 }
 
 export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps) {
+  const enableWideSidebarGrid = shouldEnableWideSidebarGrid()
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const sidebar = useMemo(
     () => (
       <ProcessorSidebarShell
@@ -103,11 +139,13 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
           <BatchSetupSidebarPanel
             performancePreferences={DEFAULT_PERFORMANCE_PREFERENCES}
             onOpenSettings={() => undefined}
+            enableWideSidebarGrid={enableWideSidebarGrid}
+            autoWideSidebarGridMinWidthPx={440}
           />
         }
       />
     ),
-    [context]
+    [context, enableWideSidebarGrid]
   )
   useWorkspaceSidebar(sidebar)
 
@@ -128,6 +166,29 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
     () => presets.find((entry) => entry.id === presetId && entry.context === context) ?? null,
     [context, presetId, presets]
   )
+
+  useEffect(() => {
+    const contextLabel = getContextLabel(context)
+    setHeaderSection(contextLabel)
+    setHeaderActions(null)
+    setHeaderBreadcrumb(
+      <FeatureBreadcrumb
+        compact
+        rootLabel={contextLabel}
+        activeLabel={preset?.name ?? null}
+        onRootClick={() => router.push(getRoutePrefix(context))}
+      />
+    )
+    return () => resetHeader()
+  }, [
+    context,
+    preset?.name,
+    resetHeader,
+    router,
+    setHeaderActions,
+    setHeaderBreadcrumb,
+    setHeaderSection
+  ])
 
   useEffect(() => {
     if (!isBatchStoreRehydrated) {

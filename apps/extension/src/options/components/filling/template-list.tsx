@@ -2,7 +2,7 @@ import { useState } from "react"
 
 import { FillingTemplateListPanel } from "@imify/features/filling/template-list-panel"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
-import { TemplateMethodDialog } from "@/options/components/filling/template-method-dialog"
+import { TemplateMethodDialogWrapper } from "@/options/components/filling/template-method-dialog-wrapper"
 
 interface TemplateListProps {
   onRefresh: () => Promise<void>
@@ -42,7 +42,7 @@ export function TemplateList({ onRefresh }: TemplateListProps) {
         onRefresh={onRefresh}
       />
 
-      <TemplateMethodDialog
+      <TemplateMethodDialogWrapper
         isOpen={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onRefresh={onRefresh}
