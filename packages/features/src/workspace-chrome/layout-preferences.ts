@@ -10,6 +10,8 @@ export type SidebarWidthOption = {
   label: string
 }
 
+export const CONFIGURATION_SIDEBAR_MAX_PERCENT = 40
+
 export interface WorkspaceLayoutPreferences {
   navigationSidebarLevel: SidebarWidthLevel
   configurationSidebarLevel: SidebarWidthLevel
@@ -75,4 +77,8 @@ export function getConfigurationSidebarWidthPx(level: SidebarWidthLevel): number
     CONFIGURATION_SIDEBAR_WIDTH_OPTIONS.find((option) => option.level === level)?.widthPx ??
     CONFIGURATION_SIDEBAR_WIDTH_OPTIONS[1].widthPx
   )
+}
+
+export function getConfigurationSidebarWidthCss(level: SidebarWidthLevel): string {
+  return `min(${getConfigurationSidebarWidthPx(level)}px, ${CONFIGURATION_SIDEBAR_MAX_PERCENT}%)`
 }

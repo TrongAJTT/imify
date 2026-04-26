@@ -43,6 +43,7 @@ import { SingleProcessorTab } from "@/options/components/single-processor-tab"
 import { TabButton } from "@/options/components/tab-button"
 import { type OptionsTab, type PersistedStorageState, TAB_ITEMS } from "@/options/shared"
 import {
+  CONFIGURATION_SIDEBAR_MAX_PERCENT,
   DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
   getConfigurationSidebarWidthPx,
   getNavigationSidebarWidthPx,
@@ -655,7 +656,7 @@ export default function OptionsPage() {
         {/* Right panel */}
         <aside
           className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hidden xl:flex flex-col overflow-y-auto"
-          style={{ width: configurationSidebarWidth }}>
+          style={{ width: `min(${configurationSidebarWidth}px, ${CONFIGURATION_SIDEBAR_MAX_PERCENT}%)` }}>
           {activeTab === "single" && (
             <ProcessorSidebarShellWrapper
               context="single"

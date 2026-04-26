@@ -26,6 +26,77 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   "seo-audit": "Audit and optimize web images for maximum search engine performance."
 }
 
+const FAQ_ITEMS = [
+  {
+    question: "Are my images uploaded to your servers?",
+    answer: "No. Imify is built on a privacy-first architecture. All image processing occurs locally within your browser using Web Workers and WebAssembly. Your files never leave your device."
+  },
+  {
+    question: "Is Imify completely free to use?",
+    answer: "Yes, all the core tools provided in Imify Web are free to use. There are no hidden fees or premium locks on the web workspace features."
+  },
+  {
+    question: "What image formats are supported?",
+    answer: "We support a wide range of modern and traditional formats including JPEG, PNG, WebP, AVIF, and JPEG XL. Capabilities are constantly expanding based on browser support."
+  },
+  {
+    question: "Can I process multiple images at once?",
+    answer: "Absolutely! Our Batch Processor is specifically designed to handle hundreds of images simultaneously, applying formats and sizes across the entire set efficiently."
+  },
+  {
+    question: "Can I use Imify on mobile or tablet?",
+    answer: "Yes. Imify Web supports responsive usage on mobile and tablet devices. However, for the most seamless and complete experience, we still recommend using desktop."
+  },
+  {
+    question: "Do I need to install anything before using Imify Web?",
+    answer: "No installation is required. You can start using Imify Web directly in your browser right away. For extension-exclusive workflows, you can optionally install the browser extension."
+  }
+] as const
+
+const CAPABILITY_ITEMS = [
+  {
+    title: "Format Conversion & Optimization",
+    description: "Convert between PNG, JPEG, WebP, AVIF, and JPEG XL. Adjust quality, strip EXIF metadata for privacy, and fine-tune advanced encoder settings to get the perfect balance of size and quality."
+  },
+  {
+    title: "Layouts & Splitting",
+    description: "Seamlessly slice images for social media carousels, or splice multiple images together into beautiful bento grids and vertical strips. Perfect for content creators and designers."
+  },
+  {
+    title: "Advanced Inspection",
+    description: "Uncover hidden metadata, extract GPS coordinates, view the dominant color palette, and check the web performance metrics of your images with our deep Image Inspector."
+  },
+  {
+    title: "Watermarking & Resizing",
+    description: "Protect your intellectual property with customizable text or image watermarks. Smart resize your images to specific dimensions while maintaining aspect ratios."
+  }
+] as const
+
+function FaqItem({ question, answer }: { question: string; answer: string }) {
+  return (
+    <div className="bg-white p-10 dark:bg-slate-950 flex flex-col space-y-4">
+      <div className="flex items-start gap-3">
+        <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+        <Subheading className="text-xl leading-tight">{question}</Subheading>
+      </div>
+      <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed pl-5">
+        {answer}
+      </BodyText>
+    </div>
+  )
+}
+
+function CapabilityItem({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="space-y-4 bg-white p-10 dark:bg-slate-950">
+      <Subheading className="text-xl text-blue-600 dark:text-blue-400">{title}</Subheading>
+      <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed">
+        {description}
+      </BodyText>
+    </div>
+  )
+}
+
 export const metadata: Metadata = WEB_ROUTE_METADATA.home
 
 export default function Home() {
@@ -56,7 +127,7 @@ export default function Home() {
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-800">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-[1px]">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-[1px]">
             {ALL_TOOLS.map((tool) => (
               <Link
                 key={tool.id}
@@ -138,30 +209,9 @@ export default function Home() {
 
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-[1px]">
-            <div className="space-y-4 bg-white p-10 dark:bg-slate-950">
-              <Subheading className="text-xl text-blue-600 dark:text-blue-400">Format Conversion & Optimization</Subheading>
-              <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                Convert between PNG, JPEG, WebP, AVIF, and JPEG XL. Adjust quality, strip EXIF metadata for privacy, and fine-tune advanced encoder settings to get the perfect balance of size and quality.
-              </BodyText>
-            </div>
-            <div className="space-y-4 bg-white p-10 dark:bg-slate-950">
-              <Subheading className="text-xl text-blue-600 dark:text-blue-400">Layouts & Splitting</Subheading>
-              <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                Seamlessly slice images for social media carousels, or splice multiple images together into beautiful bento grids and vertical strips. Perfect for content creators and designers.
-              </BodyText>
-            </div>
-            <div className="space-y-4 bg-white p-10 dark:bg-slate-950">
-              <Subheading className="text-xl text-blue-600 dark:text-blue-400">Advanced Inspection</Subheading>
-              <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                Uncover hidden metadata, extract GPS coordinates, view the dominant color palette, and check the web performance metrics of your images with our deep Image Inspector.
-              </BodyText>
-            </div>
-            <div className="space-y-4 bg-white p-10 dark:bg-slate-950">
-              <Subheading className="text-xl text-blue-600 dark:text-blue-400">Watermarking & Resizing</Subheading>
-              <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                Protect your intellectual property with customizable text or image watermarks. Smart resize your images to specific dimensions while maintaining aspect ratios.
-              </BodyText>
-            </div>
+            {CAPABILITY_ITEMS.map((item) => (
+              <CapabilityItem key={item.title} title={item.title} description={item.description} />
+            ))}
           </div>
         </div>
       </section>
@@ -175,42 +225,9 @@ export default function Home() {
 
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-[1px]">
-            <div className="bg-white p-10 dark:bg-slate-950 flex flex-col space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
-                <Subheading className="text-xl leading-tight">Are my images uploaded to your servers?</Subheading>
-              </div>
-              <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed pl-5">
-                No. Imify is built on a privacy-first architecture. All image processing occurs locally within your browser using Web Workers and WebAssembly. Your files never leave your device.
-              </BodyText>
-            </div>
-            <div className="bg-white p-10 dark:bg-slate-950 flex flex-col space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
-                <Subheading className="text-xl leading-tight">Is Imify completely free to use?</Subheading>
-              </div>
-              <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed pl-5">
-                Yes, all the core tools provided in Imify Web are free to use. There are no hidden fees or premium locks on the web workspace features.
-              </BodyText>
-            </div>
-            <div className="bg-white p-10 dark:bg-slate-950 flex flex-col space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
-                <Subheading className="text-xl leading-tight">What image formats are supported?</Subheading>
-              </div>
-              <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed pl-5">
-                We support a wide range of modern and traditional formats including JPEG, PNG, WebP, AVIF, and JPEG XL. Capabilities are constantly expanding based on browser support.
-              </BodyText>
-            </div>
-            <div className="bg-white p-10 dark:bg-slate-950 flex flex-col space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
-                <Subheading className="text-xl leading-tight">Can I process multiple images at once?</Subheading>
-              </div>
-              <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed pl-5">
-                Absolutely! Our Batch Processor is specifically designed to handle hundreds of images simultaneously, applying formats and sizes across the entire set efficiently.
-              </BodyText>
-            </div>
+            {FAQ_ITEMS.map((item) => (
+              <FaqItem key={item.question} question={item.question} answer={item.answer} />
+            ))}
           </div>
         </div>
       </section>

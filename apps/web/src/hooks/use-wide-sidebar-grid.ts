@@ -6,6 +6,7 @@ import {
   normalizeWorkspaceLayoutPreferences,
   WORKSPACE_LAYOUT_PREFERENCES_KEY
 } from "@imify/features/workspace-shell"
+import { useIsDesktopLayout } from "@imify/features/workspace-shell"
 
 const LAYOUT_PREFERENCES_EVENT = "imify:layout-preferences-changed"
 
@@ -23,9 +24,11 @@ function readWideSidebarGridEnabled(): boolean {
 
 export function useWideSidebarGridEnabled(): boolean {
   const [enabled, setEnabled] = useState<boolean>(() => readWideSidebarGridEnabled())
+  const isDesktop = useIsDesktopLayout()
 
   useEffect(() => {
     const update = () => setEnabled(readWideSidebarGridEnabled())
+
     update()
     window.addEventListener(LAYOUT_PREFERENCES_EVENT, update)
     window.addEventListener("storage", update)
@@ -35,5 +38,5 @@ export function useWideSidebarGridEnabled(): boolean {
     }
   }, [])
 
-  return enabled
+  return enabled && isDesktop
 }

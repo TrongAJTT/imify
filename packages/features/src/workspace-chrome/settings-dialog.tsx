@@ -16,6 +16,7 @@ import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header"
 import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header"
 import { Subheading } from "@imify/ui/ui/typography"
 import {
+  CONFIGURATION_SIDEBAR_MAX_PERCENT,
   CONFIGURATION_SIDEBAR_WIDTH_OPTIONS,
   NAVIGATION_SIDEBAR_WIDTH_OPTIONS,
   type SidebarWidthLevel,
@@ -34,6 +35,7 @@ import type { OptionsTab } from "../dev-mode/debug-shared"
 import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter"
 import { SettingsShortcutsPanel } from "./settings-shortcuts-panel"
 import type { WorkspaceSettingsDialogTab } from "@imify/stores/stores/workspace-settings-dialog-store"
+import { SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX } from "./desktop-layout"
 
 export type SettingsDialogTab = WorkspaceSettingsDialogTab
 
@@ -85,6 +87,7 @@ export function WorkspaceSettingsDialog({
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled()
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+  const [isMobileDialog, setIsMobileDialog] = useState(false)
   const { toasts, hide, success } = useToast()
 
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
@@ -102,6 +105,15 @@ export function WorkspaceSettingsDialog({
     if (!isOpen) return
     setActiveTab(initialTab)
   }, [initialTab, isOpen])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const mediaQuery = window.matchMedia(`(max-width: ${SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX}px)`)
+    const update = () => setIsMobileDialog(mediaQuery.matches)
+    update()
+    mediaQuery.addEventListener("change", update)
+    return () => mediaQuery.removeEventListener("change", update)
+  }, [])
 
   const navigationWidthSliderOptions = useMemo<DiscreteSliderOption[]>(
     () =>
@@ -142,36 +154,64 @@ export function WorkspaceSettingsDialog({
     await setDevModeEnabled(false)
     setActiveTab("general")
   }
+  const tabs = [
+    { id: "general" as const, label: "General", icon: ListTree },
+    { id: "shortcuts" as const, label: "Shortkeys", icon: Keyboard },
+    { id: "performance" as const, label: "Performance", icon: Gauge },
+    { id: "warnings" as const, label: "Warnings", icon: ShieldAlert },
+    { id: "usage" as const, label: "Usage Stats", icon: BarChart3, hidden: !enableUsageStatsTab },
+    { id: "developer" as const, label: "Developer", icon: Code2, hidden: !devModeEnabled }
+  ].filter((tab) => !tab.hidden)
 
   return (
     <>
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="relative w-full max-w-3xl rounded-xl overflow-hidden h-[720px] max-h-[calc(100vh-4rem)] flex"
+      contentClassName={
+        isMobileDialog
+          ? "relative flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-3xl min-h-0 overflow-hidden rounded-xl flex-col"
+          : "relative flex h-[720px] max-h-[calc(100vh-4rem)] w-full max-w-3xl min-h-0 overflow-hidden rounded-xl"
+      }
     >
-      <div className="w-56 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4 shrink-0">
-        <div className="px-5 mb-6">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute right-3 top-3 z-20 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+        onClick={onClose}
+        aria-label="Close settings dialog"
+      >
+        <X size={18} />
+      </Button>
+      <div
+        className={`shrink-0 border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 ${
+          isMobileDialog
+            ? "w-full border-b border-r-0 pb-3 pt-4"
+            : "w-56 border-r pt-6 pb-4"
+        }`}
+      >
+        <div className={`px-5 ${isMobileDialog ? "mb-3" : "mb-6"}`}>
           <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">Settings</Subheading>
         </div>
-        <nav className="flex-1 px-3 space-y-1">
-          {[
-            { id: "general" as const, label: "General", icon: ListTree },
-            { id: "shortcuts" as const, label: "Shortkeys", icon: Keyboard },
-            { id: "performance" as const, label: "Performance", icon: Gauge },
-            { id: "warnings" as const, label: "Warnings", icon: ShieldAlert },
-            { id: "usage" as const, label: "Usage Stats", icon: BarChart3, hidden: !enableUsageStatsTab },
-            { id: "developer" as const, label: "Developer", icon: Code2, hidden: !devModeEnabled }
-          ]
-            .filter((tab) => !tab.hidden)
-            .map((tab) => (
+        <nav
+          className={`flex-1 px-3 ${
+            isMobileDialog
+              ? "flex gap-1.5 overflow-x-auto pb-1 mr-5"
+              : "space-y-1"
+          }`}
+        >
+          {tabs.map((tab) => (
               <React.Fragment key={tab.id}>
                 {tab.id === "developer" ? (
-                  <div className="my-2 border-t border-slate-200 dark:border-slate-700" />
+                  <div className={`my-2 border-t border-slate-200 dark:border-slate-700 ${isMobileDialog ? "hidden" : ""}`} />
                 ) : null}
                 <button
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center rounded-lg py-2 text-sm font-medium transition-colors ${
+                    isMobileDialog
+                      ? "w-auto shrink-0 whitespace-nowrap gap-2 px-2.5 text-[13px]"
+                      : "w-full gap-3 px-3"
+                  } ${
                     tab.id === "developer"
                       ? activeTab === tab.id
                         ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300"
@@ -189,18 +229,8 @@ export function WorkspaceSettingsDialog({
         </nav>
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col relative bg-white dark:bg-slate-900">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-4 right-4 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-          onClick={onClose}
-          aria-label="Close settings dialog"
-        >
-          <X size={18} />
-        </Button>
-
-        <div className="flex-1 min-w-0 overflow-y-auto p-8 pt-12">
+      <div className="flex-1 min-h-0 min-w-0 flex flex-col bg-white dark:bg-slate-900">
+        <div className={`flex-1 min-h-0 min-w-0 overflow-y-auto ${isMobileDialog ? "p-4 pt-5 pr-10 pb-10" : "p-8 pt-12 pr-8"}`}>
           {activeTab === "general" ? (
             <div className="animate-in fade-in duration-300 space-y-5">
               <SettingsSectionHeader
@@ -239,7 +269,11 @@ export function WorkspaceSettingsDialog({
                   value={layoutPreferences.configurationSidebarLevel}
                   options={configurationWidthSliderOptions}
                   onChange={(value) => onChangeConfigurationSidebarLevel(value as SidebarWidthLevel)}
-                  valueFormatter={(option) => `${option.label} (${configurationWidthPx}px)`}
+                  valueFormatter={(option) =>
+                    isMobileDialog
+                      ? `${option.label} (${configurationWidthPx}px)`
+                      : `${option.label} (${configurationWidthPx}px, ${CONFIGURATION_SIDEBAR_MAX_PERCENT}%)`
+                  }
                 />
               </section>
             </div>
