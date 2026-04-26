@@ -1,3 +1,6 @@
+"use client"
+
+import React from "react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Check, Copy, RefreshCw } from "lucide-react"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
@@ -7,18 +10,16 @@ import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { usePatternStore } from "@imify/stores/stores/pattern-store"
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
-import { getStorageState, onStorageStateChanged } from "@/adapters/chrome-storage-state"
-import type { ExtensionStorageState } from "@imify/core/types"
 import { Button } from "@imify/ui/ui/button"
-import type { OptionsTab } from "@/options/shared"
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "../shared/tooltip"
+import type { OptionsTab } from "./debug-shared"
+import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter"
 
-/** Strip action functions (any property that is a function) from a store snapshot */
 function stripActions(state: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(state)) {
-    if (typeof v !== "function") {
-      out[k] = v
+  for (const [key, value] of Object.entries(state)) {
+    if (typeof value !== "function") {
+      out[key] = value
     }
   }
   return out
@@ -27,31 +28,41 @@ function stripActions(state: Record<string, unknown>): Record<string, unknown> {
 type StoreFilter = "all" | OptionsTab | "batch_global"
 
 interface DevModeStateViewerProps {
-  /** The currently active tab in the main workspace — used to pre-select the filter */
   activeTab: OptionsTab | null
+  settingsAdapter: DevModeSettingsAdapter
 }
 
-export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
+export function DevModeStateViewer({ activeTab, settingsAdapter }: DevModeStateViewerProps) {
   const [filter, setFilter] = useState<StoreFilter>(activeTab ?? "all")
   const [copied, setCopied] = useState(false)
-  const [storageState, setStorageState] = useState<ExtensionStorageState | null>(null)
+  const [settingsState, setSettingsState] = useState<unknown>(null)
 
   useEffect(() => {
     let unmounted = false
-    getStorageState().then((state) => {
-      if (!unmounted) setStorageState(state)
+    settingsAdapter.getSettingsState().then((state) => {
+      if (!unmounted) {
+        setSettingsState(state)
+      }
     })
-    const unsubscribe = onStorageStateChanged((state) => {
-      if (!unmounted) setStorageState(state)
+
+    if (!settingsAdapter.subscribeSettingsState) {
+      return () => {
+        unmounted = true
+      }
+    }
+
+    const unsubscribe = settingsAdapter.subscribeSettingsState((state) => {
+      if (!unmounted) {
+        setSettingsState(state)
+      }
     })
+
     return () => {
       unmounted = true
       unsubscribe()
     }
-  }, [])
+  }, [settingsAdapter])
 
-  // Subscribe to all stores. We get the full state object (which only changes reference on actual updates)
-  // instead of mapping inline to avoid infinite re-render loops caused by returning a new object every time.
   const batchState = useBatchStore()
   const splicingState = useSplicingStore()
   const splitterState = useSplitterStore()
@@ -62,25 +73,48 @@ export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
 
   const allStores = useMemo<Record<string, Record<string, unknown>>>(() => {
     const rootBatch = stripActions(batchState as unknown as Record<string, unknown>)
-    // Extract context configs to view them individually
     const singleConfig = (batchState as any).contextConfigs?.single || {}
     const batchConfig = (batchState as any).contextConfigs?.batch || {}
+    const presets = Array.isArray((batchState as any).presets) ? (batchState as any).presets : []
+    const activePresetIds = (batchState as any).activePresetIds || {}
+    const recentPresetIds = (batchState as any).recentPresetIds || {}
+
+    const singlePresets = presets.filter((preset: any) => preset?.context === "single")
+    const batchPresets = presets.filter((preset: any) => preset?.context === "batch")
 
     return {
       batch_global: rootBatch,
-      single: stripActions(singleConfig),
-      batch: stripActions(batchConfig),
+      single: {
+        activeConfig: stripActions(singleConfig),
+        activePresetId: activePresetIds.single ?? null,
+        recentPresetId: recentPresetIds.single ?? null,
+        presets: singlePresets.map((preset: any) => stripActions(preset))
+      },
+      batch: {
+        activeConfig: stripActions(batchConfig),
+        activePresetId: activePresetIds.batch ?? null,
+        recentPresetId: recentPresetIds.batch ?? null,
+        presets: batchPresets.map((preset: any) => stripActions(preset))
+      },
       splicing: stripActions(splicingState as unknown as Record<string, unknown>),
       splitter: stripActions(splitterState as unknown as Record<string, unknown>),
       filling: stripActions(fillingState as unknown as Record<string, unknown>),
       pattern: stripActions(patternState as unknown as Record<string, unknown>),
       diffchecker: stripActions(diffcheckerState as unknown as Record<string, unknown>),
       inspector: stripActions(inspectorState as unknown as Record<string, unknown>),
-      "context-menu": storageState?.context_menu as unknown as Record<string, unknown> || {},
+      "context-menu": (settingsState as any)?.context_menu || {}
     }
-  }, [batchState, splicingState, splitterState, fillingState, patternState, diffcheckerState, inspectorState, storageState])
+  }, [
+    batchState,
+    diffcheckerState,
+    fillingState,
+    inspectorState,
+    patternState,
+    settingsState,
+    splicingState,
+    splitterState
+  ])
 
-  /** Map a tab id to its corresponding store key */
   const tabToStoreKey: Partial<Record<StoreFilter, keyof typeof allStores>> = {
     batch_global: "batch_global",
     single: "single",
@@ -91,7 +125,7 @@ export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
     filling: "filling",
     pattern: "pattern",
     diffchecker: "diffchecker",
-    inspector: "inspector",
+    inspector: "inspector"
   }
 
   const visibleSnapshot = useMemo(() => {
@@ -99,11 +133,11 @@ export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
       return allStores
     }
     const key = tabToStoreKey[filter]
-    if (key) {
-      return { [key]: allStores[key] }
+    if (!key) {
+      return allStores
     }
-    return allStores
-  }, [filter, allStores])
+    return { [key]: allStores[key] }
+  }, [allStores, filter, tabToStoreKey])
 
   const jsonText = useMemo(() => {
     try {
@@ -117,9 +151,9 @@ export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
     try {
       await navigator.clipboard.writeText(jsonText)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      window.setTimeout(() => setCopied(false), 2000)
     } catch {
-      // ignore
+      // Ignore permission errors from clipboard API.
     }
   }, [jsonText])
 
@@ -134,24 +168,24 @@ export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
     { value: "filling", label: "Image Filling" },
     { value: "pattern", label: "Pattern Generator" },
     { value: "diffchecker", label: "Difference Checker" },
-    { value: "inspector", label: "Image Inspector" },
+    { value: "inspector", label: "Image Inspector" }
   ]
 
   return (
     <div className="flex flex-col gap-3 pt-0.5 w-full max-w-full overflow-hidden">
-      {/* Filter selector */}
       <div className="flex items-center gap-2 flex-wrap min-w-0">
         <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">Show:</span>
         <select
           value={filter}
-          onChange={(e) => setFilter(e.target.value as StoreFilter)}
+          onChange={(event) => setFilter(event.target.value as StoreFilter)}
           className="text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500 max-w-[200px] sm:max-w-xs truncate"
         >
-          {filterOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          {filterOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
           ))}
         </select>
-
         <div className="ml-auto flex items-center gap-1.5">
           <Tooltip content="Copy current view to clipboard">
             <Button
@@ -168,21 +202,15 @@ export function DevModeStateViewer({ activeTab }: DevModeStateViewerProps) {
         </div>
       </div>
 
-      {/* Live JSON viewer */}
       <div className="relative rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-950 overflow-hidden w-full">
         <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-700/50">
           <div className="flex items-center gap-1.5">
             <RefreshCw size={10} className="text-emerald-500 animate-spin" style={{ animationDuration: "3s" }} />
             <span className="text-[10px] font-mono text-slate-400">Live State Monitor</span>
           </div>
-          <span className="text-[10px] font-mono text-slate-500">
-            {jsonText.length.toLocaleString()} chars
-          </span>
+          <span className="text-[10px] font-mono text-slate-500">{jsonText.length.toLocaleString()} chars</span>
         </div>
-        <pre
-          className="text-[11px] font-mono text-slate-300 leading-relaxed overflow-auto p-3 whitespace-pre-wrap break-all"
-          style={{ maxHeight: "380px" }}
-        >
+        <pre className="text-[11px] font-mono text-slate-300 leading-relaxed overflow-auto p-3 whitespace-pre-wrap break-all" style={{ maxHeight: "380px" }}>
           {jsonText}
         </pre>
       </div>

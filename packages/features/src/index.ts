@@ -4,8 +4,12 @@
 
 export * from "./dev-mode/debug-log-builder"
 export * from "./dev-mode/dev-mode-registry"
+export * from "./dev-mode/dev-mode-settings-adapter"
 export * from "./dev-mode/dev-mode-storage"
 export * from "./dev-mode/dev-mode-store"
+export * from "./dev-mode/dev-mode-state-viewer"
+export * from "./dev-mode/dev-mode-export-dialog"
+export * from "./dev-mode/dev-mode-import-dialog"
 export * from "./diffchecker/diff-engine"
 export * from "./diffchecker/diffchecker-page"
 export * from "./diffchecker/types"

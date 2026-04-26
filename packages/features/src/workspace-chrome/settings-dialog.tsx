@@ -2,9 +2,11 @@
 
 import React from "react"
 import { useEffect, useMemo, useState } from "react"
-import { BarChart3, Gauge, Keyboard, ListTree, RotateCcw, ShieldAlert, X } from "lucide-react"
+import { BarChart3, Code2, Download, Gauge, Keyboard, ListTree, PowerOff, RotateCcw, ShieldAlert, X } from "lucide-react"
 import { APP_CONFIG } from "@imify/core/config"
+import { useToast } from "@imify/core/hooks/use-toast"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { ToastContainer } from "@imify/ui/components/toast-container"
 import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
 import { DiscreteSlider, type DiscreteSliderOption } from "@imify/ui/ui/discrete-slider"
@@ -24,9 +26,16 @@ import {
   normalizePerformancePreferences,
   type PerformancePreferences
 } from "../processor/performance-preferences"
+import { useDevModeEnabled } from "../dev-mode/dev-mode-storage"
+import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog"
+import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog"
+import { DevModeStateViewer } from "../dev-mode/dev-mode-state-viewer"
+import type { OptionsTab } from "../dev-mode/debug-shared"
+import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter"
 import { SettingsShortcutsPanel } from "./settings-shortcuts-panel"
+import type { WorkspaceSettingsDialogTab } from "@imify/stores/stores/workspace-settings-dialog-store"
 
-export type SettingsDialogTab = "general" | "shortcuts" | "performance" | "warnings" | "usage"
+export type SettingsDialogTab = WorkspaceSettingsDialogTab
 
 export interface WorkspaceDefaultScreenOption {
   value: string
@@ -49,6 +58,8 @@ interface WorkspaceSettingsDialogProps {
   onChangePerformancePreferences: (value: PerformancePreferences) => void
   showNavigationSidebarWidthControl?: boolean
   enableUsageStatsTab?: boolean
+  devModeSettingsAdapter?: DevModeSettingsAdapter
+  devModeActiveTab?: OptionsTab | null
 }
 
 export function WorkspaceSettingsDialog({
@@ -66,9 +77,15 @@ export function WorkspaceSettingsDialog({
   performancePreferences,
   onChangePerformancePreferences,
   showNavigationSidebarWidthControl = true,
-  enableUsageStatsTab = true
+  enableUsageStatsTab = true,
+  devModeSettingsAdapter,
+  devModeActiveTab = null
 }: WorkspaceSettingsDialogProps) {
   const [activeTab, setActiveTab] = useState<SettingsDialogTab>(initialTab)
+  const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled()
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+  const { toasts, hide, success } = useToast()
 
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
@@ -121,7 +138,13 @@ export function WorkspaceSettingsDialog({
     onChangePerformancePreferences(normalizePerformancePreferences(next))
   }
 
+  const handleDisableDevMode = async () => {
+    await setDevModeEnabled(false)
+    setActiveTab("general")
+  }
+
   return (
+    <>
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
@@ -137,22 +160,31 @@ export function WorkspaceSettingsDialog({
             { id: "shortcuts" as const, label: "Shortkeys", icon: Keyboard },
             { id: "performance" as const, label: "Performance", icon: Gauge },
             { id: "warnings" as const, label: "Warnings", icon: ShieldAlert },
-            { id: "usage" as const, label: "Usage Stats", icon: BarChart3, hidden: !enableUsageStatsTab }
+            { id: "usage" as const, label: "Usage Stats", icon: BarChart3, hidden: !enableUsageStatsTab },
+            { id: "developer" as const, label: "Developer", icon: Code2, hidden: !devModeEnabled }
           ]
             .filter((tab) => !tab.hidden)
             .map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
-                }`}
-              >
-                <tab.icon size={16} />
-                {tab.label}
-              </button>
+              <React.Fragment key={tab.id}>
+                {tab.id === "developer" ? (
+                  <div className="my-2 border-t border-slate-200 dark:border-slate-700" />
+                ) : null}
+                <button
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    tab.id === "developer"
+                      ? activeTab === tab.id
+                        ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300"
+                        : "text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300"
+                      : activeTab === tab.id
+                        ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
+                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+                  }`}
+                >
+                  <tab.icon size={16} />
+                  {tab.label}
+                </button>
+              </React.Fragment>
             ))}
         </nav>
       </div>
@@ -352,8 +384,93 @@ export function WorkspaceSettingsDialog({
               </section>
             </div>
           ) : null}
+
+          {activeTab === "developer" && devModeEnabled && devModeSettingsAdapter ? (
+            <div className="animate-in fade-in duration-300 space-y-5">
+              <SettingsSectionHeader
+                title="Developer Tools"
+                description="Real-time state monitor and debug log export. Only visible when Developer Mode is active."
+              />
+
+              <section className="space-y-4">
+                <SettingsItemHeader
+                  title="LIVE STATE MONITOR"
+                  description="Inspect current state in real-time. Updates as you change settings."
+                />
+                <DevModeStateViewer activeTab={devModeActiveTab} settingsAdapter={devModeSettingsAdapter} />
+              </section>
+
+              <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
+                <SettingsItemHeader
+                  title="EXPORT DEBUG LOG"
+                  description="Selectively export your configuration to JSON."
+                />
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2 rounded-lg"
+                  onClick={() => setIsExportDialogOpen(true)}
+                >
+                  <Download size={14} />
+                  Export System Log
+                </Button>
+              </section>
+
+              <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
+                <SettingsItemHeader
+                  title="IMPORT DEBUG LOG"
+                  description="Import a JSON debug file to restore selected state."
+                />
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2 rounded-lg"
+                  onClick={() => setIsImportDialogOpen(true)}
+                >
+                  <Download size={14} className="rotate-180" />
+                  Import System Log
+                </Button>
+              </section>
+
+              <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
+                <SettingsItemHeader
+                  title="DISABLE DEVELOPER MODE"
+                  description="Hide this tab and disable debug features. You can re-enable from About dialog Easter Egg."
+                />
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2 rounded-lg border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  onClick={handleDisableDevMode}
+                >
+                  <PowerOff size={14} />
+                  Disable Developer Mode
+                </Button>
+              </section>
+            </div>
+          ) : null}
         </div>
       </div>
+      <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>
+    {devModeSettingsAdapter ? (
+      <>
+        <DevModeExportDialog
+          isOpen={isExportDialogOpen}
+          onClose={() => setIsExportDialogOpen(false)}
+          activeTab={devModeActiveTab}
+          performancePreferences={safePerformancePreferences}
+          layoutPreferences={layoutPreferences}
+          settingsAdapter={devModeSettingsAdapter}
+        />
+        <DevModeImportDialog
+          isOpen={isImportDialogOpen}
+          onClose={() => setIsImportDialogOpen(false)}
+          activeTab={devModeActiveTab}
+          performancePreferences={safePerformancePreferences}
+          layoutPreferences={layoutPreferences}
+          settingsAdapter={devModeSettingsAdapter}
+          onSuccess={() => success("Import successful", "State has been restored.", 3000)}
+        />
+      </>
+    ) : null}
+    </>
   )
 }

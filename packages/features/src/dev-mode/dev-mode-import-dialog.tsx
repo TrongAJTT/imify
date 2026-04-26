@@ -1,21 +1,23 @@
-import { useState, useMemo, useRef } from "react"
+"use client"
+
+import React from "react"
+import { useRef, useState, type ChangeEvent } from "react"
+import { AlertTriangle, Check, Upload } from "lucide-react"
 import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
-import { Check, Upload, AlertTriangle } from "lucide-react"
-import { buildDebugLog, downloadDebugLog, importDebugLog, type DebugLogPayload } from "@imify/features/dev-mode/debug-log-builder"
-import { DEV_MODE_FEATURES } from "@imify/features/dev-mode/dev-mode-registry"
 import { getAppMetadata } from "@imify/core/app-metadata"
-import { getStorageState, setStorageState } from "@/adapters/chrome-storage-state"
-import type { PerformancePreferences } from "@/options/shared/performance-preferences"
-import type { WorkspaceLayoutPreferences } from "@/options/shared/layout-preferences"
-import type { OptionsTab } from "@/options/shared"
+import { DEV_MODE_FEATURES } from "./dev-mode-registry"
+import { buildDebugLog, downloadDebugLog, importDebugLog, type DebugLogPayload } from "./debug-log-builder"
+import type { OptionsTab } from "./debug-shared"
+import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter"
 
 interface DevModeImportDialogProps {
   isOpen: boolean
   onClose: () => void
   activeTab: OptionsTab | null
-  performancePreferences: PerformancePreferences | null
-  layoutPreferences: WorkspaceLayoutPreferences | null
+  performancePreferences: unknown | null
+  layoutPreferences: unknown | null
+  settingsAdapter: DevModeSettingsAdapter
   onSuccess?: () => void
 }
 
@@ -25,6 +27,7 @@ export function DevModeImportDialog({
   activeTab,
   performancePreferences,
   layoutPreferences,
+  settingsAdapter,
   onSuccess
 }: DevModeImportDialogProps) {
   const [file, setFile] = useState<File | null>(null)
@@ -35,12 +38,13 @@ export function DevModeImportDialog({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const appMetadata = getAppMetadata()
-  const isVersionMismatch = payload 
-    ? (payload.imify_version !== appMetadata.version || payload.imify_version_type !== appMetadata.versionType)
+  const isVersionMismatch = payload
+    ? payload.imify_version !== appMetadata.version ||
+      payload.imify_version_type !== appMetadata.versionType
     : false
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0]
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const selected = event.target.files?.[0]
     if (!selected) return
 
     setFile(selected)
@@ -48,9 +52,9 @@ export function DevModeImportDialog({
     setPayload(null)
 
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = (loadEvent) => {
       try {
-        const text = e.target?.result as string
+        const text = loadEvent.target?.result as string
         const parsed = JSON.parse(text) as DebugLogPayload
         if (parsed.schema_version !== 1 || !parsed.metadata || !parsed.metadata.exportedFeatures) {
           throw new Error("Invalid or corrupted export file format.")
@@ -64,9 +68,9 @@ export function DevModeImportDialog({
     reader.readAsText(selected)
   }
 
-  const toggleFeature = (id: string) => {
-    setSelectedFeatures(prev => 
-      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
+  const toggleFeature = (featureId: string) => {
+    setSelectedFeatures((prev) =>
+      prev.includes(featureId) ? prev.filter((id) => id !== featureId) : [...prev, featureId]
     )
   }
 
@@ -74,30 +78,30 @@ export function DevModeImportDialog({
     if (!payload || selectedFeatures.length === 0) return
 
     if (isVersionMismatch) {
-      const confirm = window.confirm(
-        `Version Mismatch!\n\nImporting data from ${payload.imify_version} (${payload.imify_version_type}) to ${appMetadata.version} (${appMetadata.versionType}) may cause data corruption or unexpected behavior.\n\nAre you sure you want to proceed?`
+      const confirmed = window.confirm(
+        `Version mismatch.\n\nImport from ${payload.imify_version} (${payload.imify_version_type}) into ${appMetadata.version} (${appMetadata.versionType}) may cause unexpected behavior.\n\nDo you want to continue?`
       )
-      if (!confirm) return
+      if (!confirmed) return
     }
 
     setIsImporting(true)
     try {
       if (payload.metadata.exportType === "normal") {
-        // Force full backup
-        const allFeatureIds = DEV_MODE_FEATURES.map(f => f.id)
+        const allFeatureIds = DEV_MODE_FEATURES.map((feature) => feature.id)
         const backupPayload = await buildDebugLog({
           activeTab,
           performancePreferences,
           layoutPreferences,
-          getStorageState,
+          getStorageState: settingsAdapter.getSettingsState,
           exportType: "backup",
           exportedFeatures: allFeatureIds
         })
         downloadDebugLog(backupPayload)
       }
 
-      await importDebugLog(payload, selectedFeatures, { setStorageState })
-      
+      await importDebugLog(payload, selectedFeatures, {
+        setStorageState: settingsAdapter.setSettingsState
+      })
       onSuccess?.()
       onClose()
     } catch (err: any) {
@@ -126,14 +130,13 @@ export function DevModeImportDialog({
       className="max-w-md w-full"
       contentClassName="p-6 flex flex-col gap-6"
     >
-      <div className="contents" onClick={(e) => e.stopPropagation()}>
+      <div className="contents" onClick={(event) => event.stopPropagation()}>
         <div>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Import System Log</h2>
-          <p className="text-sm text-slate-500 mt-1">Restore your configuration from a previously exported JSON file.</p>
+          <p className="text-sm text-slate-500 mt-1">Restore configuration from a previously exported JSON file.</p>
         </div>
 
         <div className="flex flex-col gap-4">
-          {/* File Input */}
           <div>
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-2">Select File</label>
             <div className="flex items-center gap-2">
@@ -141,70 +144,67 @@ export function DevModeImportDialog({
                 <Upload size={14} />
                 Choose JSON
               </Button>
-              <span className="text-xs text-slate-500 truncate">
-                {file ? file.name : "No file selected"}
-              </span>
-              <input 
-                type="file" 
-                accept=".json" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                className="hidden" 
+              <span className="text-xs text-slate-500 truncate">{file ? file.name : "No file selected"}</span>
+              <input
+                type="file"
+                accept=".json"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
               />
             </div>
-            {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+            {error ? <p className="text-xs text-red-500 mt-2">{error}</p> : null}
           </div>
 
-          {/* Feature Selection */}
-          {payload && (
+          {payload ? (
             <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex flex-col gap-1">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Features to Import</span>
-                <span className="text-xs text-slate-500">Only features included in the export file are shown.</span>
+                <span className="text-xs text-slate-500">Only features included in this export are shown.</span>
               </div>
               <div className="grid grid-cols-1 gap-2 max-h-[30vh] overflow-y-auto pr-2">
-                {payload.metadata.exportedFeatures.map(id => {
-                  const feature = DEV_MODE_FEATURES.find(f => f.id === id)
-                  const label = feature ? feature.label : id
+                {payload.metadata.exportedFeatures.map((featureId) => {
+                  const feature = DEV_MODE_FEATURES.find((entry) => entry.id === featureId)
+                  const label = feature?.label ?? featureId
                   return (
-                    <label 
-                      key={id} 
+                    <label
+                      key={featureId}
                       className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
-                      onClick={() => toggleFeature(id)}
+                      onClick={() => toggleFeature(featureId)}
                     >
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${selectedFeatures.includes(id) ? 'bg-sky-500 border-sky-500 text-white' : 'border-slate-300 dark:border-slate-600 bg-transparent'}`}>
-                        {selectedFeatures.includes(id) && <Check size={14} />}
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${selectedFeatures.includes(featureId) ? "bg-sky-500 border-sky-500 text-white" : "border-slate-300 dark:border-slate-600 bg-transparent"}`}>
+                        {selectedFeatures.includes(featureId) ? <Check size={14} /> : null}
                       </div>
-                      <span className="text-sm text-slate-700 dark:text-slate-300 select-none">
-                        {label}
-                      </span>
+                      <span className="text-sm text-slate-700 dark:text-slate-300 select-none">{label}</span>
                     </label>
                   )
                 })}
               </div>
 
-              {isNormalExport && (
+              {isNormalExport ? (
                 <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg text-xs text-amber-700 dark:text-amber-400">
-                  You are importing a normal export. A full backup of your current state will be automatically downloaded before applying the import.
+                  This is a normal export. A full backup of your current state will be downloaded before import.
                 </div>
-              )}
+              ) : null}
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
           <div className="flex-1">
-            {isVersionMismatch && (
+            {isVersionMismatch ? (
               <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-500 text-xs font-medium">
                 <AlertTriangle size={14} />
                 <span>Version Mismatch</span>
               </div>
-            )}
+            ) : null}
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <Button variant="outline" onClick={handleClose} disabled={isImporting}>Cancel</Button>
-            <Button 
-              onClick={handleImport} 
+            <Button variant="outline" onClick={handleClose} disabled={isImporting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleImport}
               disabled={!payload || selectedFeatures.length === 0 || isImporting}
               className="bg-sky-500 hover:bg-sky-600 text-white"
             >

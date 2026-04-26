@@ -1,6 +1,5 @@
 import { getAppMetadata } from "@imify/core"
 import { DEV_MODE_FEATURES } from "./dev-mode-registry"
-import type { ExtensionStorageState } from "@imify/core"
 import type {
   OptionsTab
 } from "./debug-shared"
@@ -142,7 +141,7 @@ export interface BuildDebugLogParams {
   activeTab: OptionsTab | null
   performancePreferences: unknown | null
   layoutPreferences: unknown | null
-  getStorageState?: () => Promise<ExtensionStorageState>
+  getStorageState?: () => Promise<unknown>
   exportType?: "normal" | "backup"
   exportedFeatures?: string[]
 }
@@ -226,7 +225,7 @@ export function downloadDebugLog(payload: DebugLogPayload): void {
 // ─── Import helper ───────────────────────────────────────────────────────────
 
 export interface ImportDebugLogOptions {
-  setStorageState?: (state: ExtensionStorageState) => Promise<void>
+  setStorageState?: (state: unknown) => Promise<void>
 }
 
 export async function importDebugLog(
@@ -247,7 +246,7 @@ export async function importDebugLog(
   }
 
   if (setStorageState && hasFeature("settings") && payload.settings) {
-    await setStorageState(payload.settings as ExtensionStorageState)
+    await setStorageState(payload.settings)
   }
 
   // Write performance & layout prefs via native localStorage.

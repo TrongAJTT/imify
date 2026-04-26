@@ -12,6 +12,7 @@ import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
 
@@ -103,6 +104,7 @@ function extractSplicingPresetConfig(splicingState: any): SplicingPresetConfig {
 
 export function SplicingLandingPage() {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
+  const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
@@ -131,11 +133,11 @@ export function SplicingLandingPage() {
           }
           useSplicingStore.getState().setPreviewQualityPercent(next)
         }}
-        onOpenSettings={() => undefined}
+        onOpenSettings={() => openSettingsDialog("performance")}
         enableWideSidebarGrid={enableWideSidebarGrid}
       />
     ),
-    [enableWideSidebarGrid]
+    [enableWideSidebarGrid, openSettingsDialog]
   )
 
   useWorkspaceSidebar(sidebar)
@@ -180,6 +182,7 @@ export function SplicingLandingPage() {
 
 export function SplicingWorkPage({ presetId }: { presetId: string }) {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
+  const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
@@ -203,11 +206,11 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
           }
           useSplicingStore.getState().setPreviewQualityPercent(next)
         }}
-        onOpenSettings={() => undefined}
+        onOpenSettings={() => openSettingsDialog("performance")}
         enableWideSidebarGrid={enableWideSidebarGrid}
       />
     ),
-    [enableWideSidebarGrid]
+    [enableWideSidebarGrid, openSettingsDialog]
   )
 
   useWorkspaceSidebar(sidebar)

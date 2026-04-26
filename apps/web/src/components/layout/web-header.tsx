@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import React, { useCallback, useMemo, useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { useWebDarkMode } from "@/hooks/use-web-dark-mode"
 import { useWebPageMode } from "@/hooks/use-web-page-mode"
 import {
@@ -9,7 +9,6 @@ import {
   AttributionDialog,
   DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
   DonateDialog,
-  type SettingsDialogTab,
   type WorkspaceLayoutPreferences,
   WorkspaceOptionsHeader,
   WorkspaceSettingsDialog,
@@ -18,6 +17,9 @@ import {
   normalizeWorkspaceLayoutPreferences,
   WORKSPACE_LAYOUT_PREFERENCES_KEY
 } from "@imify/features/workspace-shell"
+import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
+import type { OptionsTab } from "@imify/features/dev-mode/debug-shared"
+import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
 import {
   DEFAULT_PERFORMANCE_PREFERENCES,
   PERFORMANCE_PREFERENCES_KEY,
@@ -35,6 +37,8 @@ const NAV_LINKS = Array.from(
 
 const WEB_DEFAULT_ROUTE_KEY = "imify_web_default_route"
 const LAYOUT_PREFERENCES_EVENT = "imify:layout-preferences-changed"
+const PERFORMANCE_PREFERENCES_EVENT = "imify:performance-preferences-changed"
+const DARK_MODE_KEY = "imify-dark-mode"
 
 function safeRead<T>(key: string, fallback: T, normalize: (value: unknown) => T): T {
   if (typeof window === "undefined") return fallback
@@ -61,15 +65,35 @@ function publishLayoutPreferencesChanged(): void {
   window.dispatchEvent(new CustomEvent(LAYOUT_PREFERENCES_EVENT))
 }
 
+function publishPerformancePreferencesChanged(): void {
+  if (typeof window === "undefined") return
+  window.dispatchEvent(new CustomEvent(PERFORMANCE_PREFERENCES_EVENT))
+}
+
+function toDevModeActiveTab(pathname: string): OptionsTab | null {
+  if (pathname.startsWith("/single-processor")) return "single"
+  if (pathname.startsWith("/batch-processor")) return "batch"
+  if (pathname.startsWith("/splicing")) return "splicing"
+  if (pathname.startsWith("/splitter")) return "splitter"
+  if (pathname.startsWith("/filling")) return "filling"
+  if (pathname.startsWith("/pattern-generator")) return "pattern"
+  if (pathname.startsWith("/diffchecker")) return "diffchecker"
+  if (pathname.startsWith("/inspector")) return "inspector"
+  return null
+}
+
 export function WebHeader() {
+  const pathname = usePathname()
   const router = useRouter()
   const { isMonolithicPage: isStickyHeader } = useWebPageMode()
   const { isDark, toggleDarkMode } = useWebDarkMode()
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false)
-  const [settingsInitialTab] = useState<SettingsDialogTab>("general")
+  const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
+  const settingsInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
+  const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
+  const closeSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.closeSettingsDialog)
 
   const [defaultRoute, setDefaultRoute] = useState<string>(() => {
     if (typeof window === "undefined") return NAV_LINKS[0].href
@@ -85,6 +109,67 @@ export function WebHeader() {
   )
   const [performancePreferences, setPerformancePreferences] = useState(() =>
     safeRead(PERFORMANCE_PREFERENCES_KEY, DEFAULT_PERFORMANCE_PREFERENCES, normalizePerformancePreferences)
+  )
+  const devModeActiveTab = useMemo(() => toDevModeActiveTab(pathname ?? "/"), [pathname])
+  const readDevModeSettingsSnapshot = useCallback(
+    () => ({
+      defaultRoute: safeRead(WEB_DEFAULT_ROUTE_KEY, NAV_LINKS[0].href, (value) =>
+        typeof value === "string" ? value : NAV_LINKS[0].href
+      ),
+      darkMode: safeRead(DARK_MODE_KEY, "system", (value) => (typeof value === "string" ? value : "system")),
+      layoutPreferences: safeRead(
+        WORKSPACE_LAYOUT_PREFERENCES_KEY,
+        DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
+        normalizeWorkspaceLayoutPreferences
+      ),
+      performancePreferences: safeRead(
+        PERFORMANCE_PREFERENCES_KEY,
+        DEFAULT_PERFORMANCE_PREFERENCES,
+        normalizePerformancePreferences
+      )
+    }),
+    []
+  )
+  const devModeSettingsAdapter = useMemo<DevModeSettingsAdapter>(
+    () => ({
+      getSettingsState: async () => readDevModeSettingsSnapshot(),
+      setSettingsState: async (state) => {
+        const safeState = state && typeof state === "object" ? (state as Record<string, unknown>) : {}
+        if (typeof safeState.defaultRoute === "string") {
+          safeWrite(WEB_DEFAULT_ROUTE_KEY, safeState.defaultRoute)
+          setDefaultRoute(safeState.defaultRoute)
+        }
+        if (typeof safeState.darkMode === "string") {
+          safeWrite(DARK_MODE_KEY, safeState.darkMode)
+        }
+        if (safeState.layoutPreferences) {
+          const nextLayout = normalizeWorkspaceLayoutPreferences(safeState.layoutPreferences)
+          safeWrite(WORKSPACE_LAYOUT_PREFERENCES_KEY, nextLayout)
+          setLayoutPreferences(nextLayout)
+          publishLayoutPreferencesChanged()
+        }
+        if (safeState.performancePreferences) {
+          const nextPerformance = normalizePerformancePreferences(safeState.performancePreferences)
+          safeWrite(PERFORMANCE_PREFERENCES_KEY, nextPerformance)
+          setPerformancePreferences(nextPerformance)
+          publishPerformancePreferencesChanged()
+        }
+      },
+      subscribeSettingsState: (listener) => {
+        const handler = () => {
+          listener(readDevModeSettingsSnapshot())
+        }
+        window.addEventListener("storage", handler)
+        window.addEventListener(LAYOUT_PREFERENCES_EVENT, handler)
+        window.addEventListener(PERFORMANCE_PREFERENCES_EVENT, handler)
+        return () => {
+          window.removeEventListener("storage", handler)
+          window.removeEventListener(LAYOUT_PREFERENCES_EVENT, handler)
+          window.removeEventListener(PERFORMANCE_PREFERENCES_EVENT, handler)
+        }
+      }
+    }),
+    [readDevModeSettingsSnapshot]
   )
 
   const defaultScreenOptions = useMemo(
@@ -112,7 +197,7 @@ export function WebHeader() {
       onNavigate={(href) => router.push(href)}
       onToggleDark={toggleDarkMode}
       onOpenAbout={() => setIsAboutDialogOpen(true)}
-      onOpenSettings={() => setIsSettingsDialogOpen(true)}
+      onOpenSettings={() => openSettingsDialog("general")}
       onOpenDonate={() => setIsDonateDialogOpen(true)}
     />
   )
@@ -144,7 +229,7 @@ export function WebHeader() {
       />
       <WorkspaceSettingsDialog
         isOpen={isSettingsDialogOpen}
-        onClose={() => setIsSettingsDialogOpen(false)}
+        onClose={closeSettingsDialog}
         initialTab={settingsInitialTab}
         defaultScreenValue={defaultRoute}
         defaultScreenOptions={defaultScreenOptions}
@@ -172,9 +257,12 @@ export function WebHeader() {
           const next = normalizePerformancePreferences(value)
           setPerformancePreferences(next)
           safeWrite(PERFORMANCE_PREFERENCES_KEY, next)
+          publishPerformancePreferencesChanged()
         }}
         showNavigationSidebarWidthControl={false}
         enableUsageStatsTab={false}
+        devModeSettingsAdapter={devModeSettingsAdapter}
+        devModeActiveTab={devModeActiveTab}
       />
     </>
   )

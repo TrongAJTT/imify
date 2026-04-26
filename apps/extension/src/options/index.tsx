@@ -14,10 +14,12 @@ import { toUserFacingConversionError } from "@imify/core/error-utils"
 import {
   AboutDialog,
   DonateDialog,
+  WorkspaceSettingsDialog,
   WorkspaceOptionsHeader,
   getExtensionSidebarToolGroups,
   renderWorkspaceToolIcon
 } from "@imify/features/workspace-shell"
+import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
 import { type ExtensionStorageState,
   STORAGE_KEY, STORAGE_VERSION } from "@imify/core/types"
 import { convertImageWithWorker } from "@imify/engine/converter/conversion-worker-pool"
@@ -57,6 +59,7 @@ import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
 import { Tooltip } from "@/options/components/tooltip"
@@ -67,7 +70,7 @@ import {
   X
 } from "lucide-react"
 import { AttributionDialogWrapper } from "./components/attribution-dialog-wrapper"
-import { SettingsDialog, type SettingsDialogTab } from "@/options/components/settings-dialog"
+import { getStorageState, onStorageStateChanged, setStorageState } from "@/adapters/chrome-storage-state"
 import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 import { CONTEXT_MENU_SUB_TABS } from "./components/context-menu/context-menu-settings-tab"
@@ -260,8 +263,10 @@ export default function OptionsPage() {
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false)
-  const [settingsDialogInitialTab, setSettingsDialogInitialTab] = useState<SettingsDialogTab>("general")
+  const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
+  const settingsDialogInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
+  const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
+  const closeSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.closeSettingsDialog)
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
@@ -291,6 +296,16 @@ export default function OptionsPage() {
   const safeActiveContextMenuSubTab = sanitizeContextMenuSubTab(activeContextMenuSubTab)
   const safeLayoutPreferences = normalizeWorkspaceLayoutPreferences(layoutPreferences)
   const safePerformancePreferences = normalizePerformancePreferences(performancePreferences)
+  const devModeSettingsAdapter = useMemo<DevModeSettingsAdapter>(
+    () => ({
+      getSettingsState: getStorageState,
+      setSettingsState: async (state) => {
+        await setStorageState(state as any)
+      },
+      subscribeSettingsState: (listener) => onStorageStateChanged((state) => listener(state))
+    }),
+    []
+  )
   const navigationSidebarWidth = getNavigationSidebarWidthPx(
     safeLayoutPreferences.navigationSidebarLevel
   )
@@ -314,11 +329,6 @@ export default function OptionsPage() {
     }
     setPreviewQualityPercent(next)
   }, [setPreviewQualityPercent])
-
-  const openSettingsDialog = useCallback((tab: SettingsDialogTab = "general") => {
-    setSettingsDialogInitialTab(tab)
-    setIsSettingsDialogOpen(true)
-  }, [])
 
   useEffect(() => {
     if (didInitDefaultTabRef.current) {
@@ -355,7 +365,7 @@ export default function OptionsPage() {
     if (isAttributionDialogOpen) {
       setIsAttributionDialogOpen(false)
     } else if (isSettingsDialogOpen) {
-      setIsSettingsDialogOpen(false)
+      closeSettingsDialog()
     } else if (isAboutDialogOpen) {
       setIsAboutDialogOpen(false)
     } else if (isDonateDialogOpen) {
@@ -461,12 +471,16 @@ export default function OptionsPage() {
         onOpenAttribution={() => setIsAttributionDialogOpen(true)}
       />
 
-      <SettingsDialog
+      <WorkspaceSettingsDialog
         isOpen={isSettingsDialogOpen}
-        onClose={() => setIsSettingsDialogOpen(false)}
+        onClose={closeSettingsDialog}
         initialTab={settingsDialogInitialTab}
-        defaultOptionsTab={safeDefaultOptionsTab}
-        onChangeDefaultOptionsTab={(tab: OptionsTab) => {
+        defaultScreenValue={safeDefaultOptionsTab}
+        defaultScreenOptions={TAB_ITEMS.map((tab) => ({
+          value: tab.id,
+          label: tab.label
+        }))}
+        onChangeDefaultScreenValue={(tab) => {
           const nextTab = sanitizeOptionsTab(tab)
           void setDefaultOptionsTab(nextTab)
         }}
@@ -491,7 +505,8 @@ export default function OptionsPage() {
         onChangePerformancePreferences={(value) => {
           void setPerformancePreferences(value)
         }}
-        activeWorkspaceTab={activeTab}
+        devModeSettingsAdapter={devModeSettingsAdapter}
+        devModeActiveTab={activeTab}
       />
 
       <DonateDialog isOpen={isDonateDialogOpen} onClose={() => setIsDonateDialogOpen(false)} />
