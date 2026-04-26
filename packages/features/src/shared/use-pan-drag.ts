@@ -28,6 +28,7 @@ export function usePanDrag(options: UsePanDragOptions = {}): UsePanDragResult {
   const [pan, setPan] = useState<PanState>({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
   const panStartRef = useRef<{ x: number; y: number; originX: number; originY: number } | null>(null)
+  const activePointerIdRef = useRef<number | null>(null)
 
   const resetPan = useCallback(() => {
     setPan({ x: 0, y: 0 })
@@ -37,9 +38,15 @@ export function usePanDrag(options: UsePanDragOptions = {}): UsePanDragResult {
     (e: React.PointerEvent<HTMLElement>) => {
       if (!enabled) return
       if (onlyWhenZoomed && currentZoom <= 100) return
+      if (e.button !== 0) return
 
       const container = e.currentTarget
-      container.setPointerCapture(e.pointerId)
+      e.preventDefault()
+      try {
+        container.setPointerCapture(e.pointerId)
+      } catch {
+        // Some extension runtimes can throw here; allow local pan anyway.
+      }
 
       panStartRef.current = {
         x: e.clientX,
@@ -47,6 +54,7 @@ export function usePanDrag(options: UsePanDragOptions = {}): UsePanDragResult {
         originX: pan.x,
         originY: pan.y
       }
+      activePointerIdRef.current = e.pointerId
       setIsPanning(true)
     },
     [enabled, onlyWhenZoomed, currentZoom, pan]
@@ -55,6 +63,9 @@ export function usePanDrag(options: UsePanDragOptions = {}): UsePanDragResult {
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLElement>) => {
       if (!panStartRef.current || !isPanning || !enabled) {
+        return
+      }
+      if (activePointerIdRef.current !== null && e.pointerId !== activePointerIdRef.current) {
         return
       }
 
@@ -70,19 +81,33 @@ export function usePanDrag(options: UsePanDragOptions = {}): UsePanDragResult {
   )
 
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLElement>) => {
-    if (isPanning) {
-      e.currentTarget.releasePointerCapture(e.pointerId)
-      panStartRef.current = null
-      setIsPanning(false)
+    if (!isPanning) return
+    if (activePointerIdRef.current !== null && e.pointerId !== activePointerIdRef.current) {
+      return
     }
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    } catch {
+      // Ignore release failure; finalize pan state below.
+    }
+    activePointerIdRef.current = null
+    panStartRef.current = null
+    setIsPanning(false)
   }, [isPanning])
 
   const handlePointerCancel = useCallback((e: React.PointerEvent<HTMLElement>) => {
-    if (isPanning) {
-      e.currentTarget.releasePointerCapture(e.pointerId)
-      panStartRef.current = null
-      setIsPanning(false)
+    if (!isPanning) return
+    if (activePointerIdRef.current !== null && e.pointerId !== activePointerIdRef.current) {
+      return
     }
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    } catch {
+      // Ignore release failure; finalize pan state below.
+    }
+    activePointerIdRef.current = null
+    panStartRef.current = null
+    setIsPanning(false)
   }, [isPanning])
 
   return {

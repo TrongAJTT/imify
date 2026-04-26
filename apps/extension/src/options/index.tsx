@@ -16,6 +16,7 @@ import {
   DonateDialog,
   WorkspaceSettingsDialog,
   WorkspaceOptionsHeader,
+  useIsDesktopLayout,
   getExtensionSidebarToolGroups,
   renderWorkspaceToolIcon
 } from "@imify/features/workspace-shell"
@@ -247,6 +248,7 @@ export default function OptionsPage() {
   }
 
   const { isDark, toggleDarkMode } = useImifyDarkMode()
+  const isDesktopLayout = useIsDesktopLayout()
 
   const [defaultOptionsTab, setDefaultOptionsTab, { isLoading: isDefaultTabLoading }] = useStorage<OptionsTab>(
     { key: "imify_options_default_tab", instance: syncStorage },
@@ -572,7 +574,8 @@ export default function OptionsPage() {
           </div>
 
           {/* Right panel content collapsed into left sidebar on smaller screens */}
-          <div className={`xl:hidden border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col ${isNavCollapsed ? "hidden" : ""}`}>
+          {!isDesktopLayout && !isNavCollapsed ? (
+            <div className="border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col">
             {activeTab === "single" && (
               <ProcessorSidebarShellWrapper
                 context="single"
@@ -621,7 +624,8 @@ export default function OptionsPage() {
             )}
 
             <TabInfoPanel activeTab={activeTab} />
-          </div>
+            </div>
+          ) : null}
         </nav>
 
         {/* Content column */}
@@ -654,58 +658,60 @@ export default function OptionsPage() {
         </div>
 
         {/* Right panel */}
-        <aside
-          className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hidden xl:flex flex-col overflow-y-auto"
-          style={{ width: `min(${configurationSidebarWidth}px, ${CONFIGURATION_SIDEBAR_MAX_PERCENT}%)` }}>
-          {activeTab === "single" && (
-            <ProcessorSidebarShellWrapper
-              context="single"
-              performancePreferences={safePerformancePreferences}
-              onOpenSettings={() => openSettingsDialog("performance")}
-              enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-            />
-          )}
+        {isDesktopLayout ? (
+          <aside
+            className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto"
+            style={{ width: `min(${configurationSidebarWidth}px, ${CONFIGURATION_SIDEBAR_MAX_PERCENT}%)` }}>
+            {activeTab === "single" && (
+              <ProcessorSidebarShellWrapper
+                context="single"
+                performancePreferences={safePerformancePreferences}
+                onOpenSettings={() => openSettingsDialog("performance")}
+                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+              />
+            )}
 
-          {activeTab === "batch" && (
-            <ProcessorSidebarShellWrapper
-              context="batch"
-              performancePreferences={safePerformancePreferences}
-              onOpenSettings={() => openSettingsDialog("performance")}
-              enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-            />
-          )}
+            {activeTab === "batch" && (
+              <ProcessorSidebarShellWrapper
+                context="batch"
+                performancePreferences={safePerformancePreferences}
+                onOpenSettings={() => openSettingsDialog("performance")}
+                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+              />
+            )}
 
-          {activeTab === "splicing" && (
-            <SplicingSidebarShell
-              performancePreferences={safePerformancePreferences}
-              onPreviewQualityChange={handleSidebarPreviewQualityChange}
-              onOpenSettings={() => openSettingsDialog("performance")}
-              enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-            />
-          )}
+            {activeTab === "splicing" && (
+              <SplicingSidebarShell
+                performancePreferences={safePerformancePreferences}
+                onPreviewQualityChange={handleSidebarPreviewQualityChange}
+                onOpenSettings={() => openSettingsDialog("performance")}
+                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+              />
+            )}
 
-          {activeTab === "splitter" && (
-            <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-          )}
+            {activeTab === "splitter" && (
+              <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+            )}
 
-          {activeTab === "filling" && (
-            <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-          )}
+            {activeTab === "filling" && (
+              <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+            )}
 
-          {activeTab === "pattern" && (
-            <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-          )}
+            {activeTab === "pattern" && (
+              <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+            )}
 
-          {activeTab === "diffchecker" && (
-            <DiffcheckerSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-          )}
+            {activeTab === "diffchecker" && (
+              <DiffcheckerSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+            )}
 
-          {activeTab === "inspector" && (
-            <InspectorSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-          )}
+            {activeTab === "inspector" && (
+              <InspectorSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+            )}
 
-          <TabInfoPanel activeTab={activeTab} />
-        </aside>
+            <TabInfoPanel activeTab={activeTab} />
+          </aside>
+        ) : null}
       </div>
       </EditorProvider>
     </div>

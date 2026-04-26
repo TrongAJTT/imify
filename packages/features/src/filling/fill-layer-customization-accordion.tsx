@@ -22,7 +22,7 @@ import {
   getFirstCommonImageFileFromDataTransfer,
   hasFileDragPayload,
   isCommonImageFile,
-} from "@imify/features/shared/image-file-utils"
+} from "../shared/image-file-utils"
 
 interface FillLayerCustomizationAccordionProps {
   template: FillingTemplate

@@ -239,6 +239,7 @@ export function SplitterPreview({
               style={{
                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
                 transformOrigin: "center center",
+                touchAction: "none",
                 cursor:
                   previewInteractionMode === "pan"
                     ? "grab"

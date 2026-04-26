@@ -11,6 +11,7 @@ import {
   closestCenter,
   DndContext,
   KeyboardSensor,
+  MouseSensor,
   PointerSensor,
   useSensor,
   useSensors,
@@ -72,6 +73,16 @@ class WorkspaceCardPointerSensor extends PointerSensor {
     {
       eventName: "onPointerDown" as const,
       handler: ({ nativeEvent }: ReactPointerEvent<Element>) =>
+        canStartWorkspaceCardDrag(nativeEvent.target),
+    },
+  ]
+}
+
+class WorkspaceCardMouseSensor extends MouseSensor {
+  static activators = [
+    {
+      eventName: "onMouseDown" as const,
+      handler: ({ nativeEvent }: React.MouseEvent<Element>) =>
         canStartWorkspaceCardDrag(nativeEvent.target),
     },
   ]
@@ -183,6 +194,9 @@ export function WorkspaceConfigSidebarPanel({
 
   const sensors = useSensors(
     useSensor(WorkspaceCardPointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(WorkspaceCardMouseSensor, {
       activationConstraint: { distance: 8 },
     }),
     useSensor(KeyboardSensor, {
