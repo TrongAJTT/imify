@@ -14,6 +14,7 @@ import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
+import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
 
 function useSplitterPresetHydrated(): boolean {
   const [hydrated, setHydrated] = useState(false)
@@ -32,6 +33,7 @@ function useSplitterPresetHydrated(): boolean {
 }
 
 export function SplitterLandingPage() {
+  const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
@@ -49,7 +51,7 @@ export function SplitterLandingPage() {
   const exportSettings = useSplitterStore((state) => state.exportSettings)
   const applyPresetConfig = useSplitterStore((state) => state.applyPresetConfig)
 
-  useWorkspaceSidebar(<SplitterSidebarShell />)
+  useWorkspaceSidebar(<SplitterSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
 
   useEffect(() => {
     if (!isHydrated) {
@@ -96,6 +98,7 @@ export function SplitterLandingPage() {
 }
 
 export function SplitterWorkPage({ presetId }: { presetId: string }) {
+  const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
@@ -112,7 +115,7 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
     [presetId, presets]
   )
 
-  useWorkspaceSidebar(<SplitterSidebarShell />)
+  useWorkspaceSidebar(<SplitterSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
 
   useEffect(() => {
     setHeaderSection("Image Splitter")

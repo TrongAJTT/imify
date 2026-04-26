@@ -7,13 +7,18 @@ import { useEffect, useMemo } from "react"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
+import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
 
 export function InspectorPage() {
+  const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
-  const sidebar = useMemo(() => <InspectorSidebarPanel />, [])
+  const sidebar = useMemo(
+    () => <InspectorSidebarPanel enableWideSidebarGrid={enableWideSidebarGrid} />,
+    [enableWideSidebarGrid]
+  )
   useWorkspaceSidebar(sidebar)
 
   useEffect(() => {

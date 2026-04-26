@@ -7,6 +7,7 @@ import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-s
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 
 export interface WorkspaceHeaderNavItem {
+  id?: string
   href: string
   label: string
   icon?: React.ReactNode
@@ -148,7 +149,7 @@ export function WorkspaceOptionsHeader({
             <span className="text-slate-300 dark:text-slate-700 shrink-0 select-none">|</span>
             {navItems.map((item) => (
               <button
-                key={item.href}
+                key={item.id ?? item.href}
                 type="button"
                 onClick={() => onNavigate?.(item.href)}
                 className={`px-2 py-1 rounded text-xs transition-colors ${
@@ -189,7 +190,7 @@ export function WorkspaceOptionsHeader({
                       <div className="space-y-1.5">
                         {group.items.map((item) => (
                           <button
-                            key={item.href}
+                            key={item.id ?? item.href}
                             type="button"
                             onClick={() => {
                               onNavigate?.(item.href)
@@ -229,6 +230,7 @@ export function WorkspaceOptionsHeader({
         <TitleBarButton
           onClick={onToggleDark}
           tooltipText={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          className="ml-2"
         >
           {isDark ? <Moon size={18} /> : <Sun size={18} />}
         </TitleBarButton>

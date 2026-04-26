@@ -46,22 +46,26 @@ export function WorkspaceShell({ children, rightSidebar }: WorkspaceShellProps) 
   }, [])
 
   return (
-    <div className="flex w-full flex-1 gap-4 px-4 py-4">
-      <section className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        {children}
+    <div className="flex w-full flex-1 gap-4 px-2 pb-2 pt-4 md:px-4 md:pb-4 md:pt-4">
+      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex-1 overflow-auto p-4 md:p-6">
+          {children}
+        </div>
       </section>
       <aside
-        className="hidden shrink-0 rounded-xl border border-slate-200 bg-white p-0 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:block"
+        className="hidden shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:block"
         style={{ width: sidebarWidth }}
       >
-        {rightSidebar ?? (
-          <div className="space-y-2 p-4">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Configuration Sidebar</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300">
-              Shared right sidebar placeholder for upcoming feature routes.
-            </p>
-          </div>
-        )}
+        <div className="h-full overflow-auto">
+          {rightSidebar ?? (
+            <div className="space-y-2 p-4">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Configuration Sidebar</h2>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                Shared right sidebar placeholder for upcoming feature routes.
+              </p>
+            </div>
+          )}
+        </div>
       </aside>
     </div>
   )

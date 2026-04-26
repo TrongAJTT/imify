@@ -136,7 +136,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "context-menu",
     label: "Context Menu",
-    href: "/options?tab=context-menu",
+    href: "/extension",
     categoryId: "extension-exclusive",
     iconColorClassName: "text-blue-500",
     extTabId: "context-menu",
@@ -146,7 +146,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "seo-audit",
     label: "SEO Audit",
-    href: "/options?view=sidepanel&panel=audit",
+    href: "/extension",
     categoryId: "extension-exclusive",
     iconColorClassName: "text-fuchsia-500",
     showOnWebToolsMenu: true,

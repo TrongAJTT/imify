@@ -13,6 +13,7 @@ import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
+import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
 
 function useSplicingPresetHydrated(): boolean {
   // Keep the first render deterministic across SSR/CSR to avoid hydration mismatch.
@@ -101,6 +102,7 @@ function extractSplicingPresetConfig(splicingState: any): SplicingPresetConfig {
 }
 
 export function SplicingLandingPage() {
+  const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
@@ -130,9 +132,10 @@ export function SplicingLandingPage() {
           useSplicingStore.getState().setPreviewQualityPercent(next)
         }}
         onOpenSettings={() => undefined}
+        enableWideSidebarGrid={enableWideSidebarGrid}
       />
     ),
-    []
+    [enableWideSidebarGrid]
   )
 
   useWorkspaceSidebar(sidebar)
@@ -176,6 +179,7 @@ export function SplicingLandingPage() {
 }
 
 export function SplicingWorkPage({ presetId }: { presetId: string }) {
+  const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
@@ -200,9 +204,10 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
           useSplicingStore.getState().setPreviewQualityPercent(next)
         }}
         onOpenSettings={() => undefined}
+        enableWideSidebarGrid={enableWideSidebarGrid}
       />
     ),
-    []
+    [enableWideSidebarGrid]
   )
 
   useWorkspaceSidebar(sidebar)

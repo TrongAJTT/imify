@@ -16,6 +16,7 @@ import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
+import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
 
 const AUTO_SAVE_DELAY_MS = 420
 const PatternTab = dynamic(
@@ -125,6 +126,7 @@ function applyPatternPresetConfig(config: PatternPresetConfig): void {
 }
 
 export function PatternLandingPage() {
+  const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
@@ -141,7 +143,7 @@ export function PatternLandingPage() {
   const deletePreset = usePatternPresetStore((state) => state.deletePreset)
   const patternState = usePatternStore()
 
-  useWorkspaceSidebar(<PatternSidebarShell />)
+  useWorkspaceSidebar(<PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
 
   useEffect(() => {
     setHeaderSection("Pattern Generator")
@@ -189,6 +191,7 @@ export function PatternLandingPage() {
 }
 
 export function PatternWorkPage({ presetId }: { presetId: string }) {
+  const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const isHydrated = usePatternPresetHydrated()
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
@@ -204,7 +207,7 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
   const appliedPresetIdRef = useRef<string | null>(null)
   const patternState = usePatternStore()
 
-  useWorkspaceSidebar(<PatternSidebarShell />)
+  useWorkspaceSidebar(<PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
 
   const preset = useMemo(
     () => presets.find((entry) => entry.id === presetId) ?? null,

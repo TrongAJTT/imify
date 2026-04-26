@@ -16,11 +16,7 @@ import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { FillingOverviewSidebar, FillingWorkflowSidebar } from "./filling-sidebar"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
-import {
-  DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
-  normalizeWorkspaceLayoutPreferences,
-  WORKSPACE_LAYOUT_PREFERENCES_KEY
-} from "@imify/features/workspace-shell"
+import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
 
 const ManualEditorWorkspace = dynamic(
   () => import("@imify/features/filling/manual-editor-workspace").then((m) => m.ManualEditorWorkspace),
@@ -55,18 +51,6 @@ function toFillingStep(mode: FillingMode): FillingStep {
   if (mode === "fill") return "select"
   if (mode === "edit") return "create_manual"
   return "create_symmetric"
-}
-
-function shouldEnableWideSidebarGrid(): boolean {
-  if (typeof window === "undefined") return false
-  try {
-    const raw = window.localStorage.getItem(WORKSPACE_LAYOUT_PREFERENCES_KEY)
-    const parsed = raw ? JSON.parse(raw) : DEFAULT_WORKSPACE_LAYOUT_PREFERENCES
-    const normalized = normalizeWorkspaceLayoutPreferences(parsed)
-    return normalized.configurationSidebarLevel >= 5
-  } catch {
-    return false
-  }
 }
 
 export function FillingHomePage({ routeBase }: FillingHomePageProps) {
@@ -137,7 +121,7 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
 }
 
 export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPageProps) {
-  const enableWideSidebarGrid = shouldEnableWideSidebarGrid()
+  const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)

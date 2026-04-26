@@ -11,15 +11,11 @@ import { ProcessorPresetSelectView } from "@imify/features/processor/processor-p
 import { ProcessorSidebarShell } from "@imify/features/processor/processor-sidebar-shell"
 import { BatchSetupSidebarPanel } from "@imify/features/processor/setup-sidebar-panel"
 import { DEFAULT_PERFORMANCE_PREFERENCES } from "@imify/features/processor/performance-preferences"
-import {
-  DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
-  normalizeWorkspaceLayoutPreferences,
-  WORKSPACE_LAYOUT_PREFERENCES_KEY
-} from "@imify/features/workspace-shell"
 import { useBatchStore, type SetupContext } from "@imify/stores/stores/batch-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
+import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
 
 interface ProcessorLandingPageProps {
   context: SetupContext
@@ -31,18 +27,6 @@ interface ProcessorWorkPageProps {
 }
 
 const AUTO_SAVE_DELAY_MS = 420
-
-function shouldEnableWideSidebarGrid(): boolean {
-  if (typeof window === "undefined") return false
-  try {
-    const raw = window.localStorage.getItem(WORKSPACE_LAYOUT_PREFERENCES_KEY)
-    const parsed = raw ? JSON.parse(raw) : DEFAULT_WORKSPACE_LAYOUT_PREFERENCES
-    const normalized = normalizeWorkspaceLayoutPreferences(parsed)
-    return normalized.configurationSidebarLevel >= 5
-  } catch {
-    return false
-  }
-}
 
 function getRoutePrefix(context: SetupContext): string {
   return context === "single" ? "/single-processor" : "/batch-processor"
@@ -132,7 +116,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
 }
 
 export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps) {
-  const enableWideSidebarGrid = shouldEnableWideSidebarGrid()
+  const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)

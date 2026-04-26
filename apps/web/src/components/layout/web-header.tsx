@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useWebDarkMode } from "@/hooks/use-web-dark-mode"
+import { useWebPageMode } from "@/hooks/use-web-page-mode"
 import {
   AboutDialog,
   AttributionDialog,
@@ -24,8 +25,12 @@ import {
 } from "@imify/features/processor/performance-preferences"
 
 const WEB_TOOLS_MENU_GROUPS = getWorkspaceToolsMenuGroups()
-const NAV_LINKS = WEB_TOOLS_MENU_GROUPS.flatMap((group) =>
-  group.items.map((item) => ({ href: item.href, label: item.label }))
+const NAV_LINKS = Array.from(
+  new Map(
+    WEB_TOOLS_MENU_GROUPS.flatMap((group) =>
+      group.items.map((item) => [item.href, { href: item.href, label: item.label }])
+    )
+  ).values()
 )
 
 const WEB_DEFAULT_ROUTE_KEY = "imify_web_default_route"
@@ -58,6 +63,7 @@ function publishLayoutPreferencesChanged(): void {
 
 export function WebHeader() {
   const router = useRouter()
+  const { isMonolithicPage: isStickyHeader } = useWebPageMode()
   const { isDark, toggleDarkMode } = useWebDarkMode()
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
@@ -86,29 +92,42 @@ export function WebHeader() {
     []
   )
 
+  const headerNode = (
+    <WorkspaceOptionsHeader
+      isLoading={false}
+      isDark={isDark}
+      title="Imify"
+      subtitle="Powerful Image Toolkit"
+      toolsMenuGroups={WEB_TOOLS_MENU_GROUPS.map((group) => ({
+        title: group.title,
+        items: group.items.map((item) => ({
+          id: item.id,
+          href: item.href,
+          label: item.label,
+          icon: renderWorkspaceToolIcon(item.id, 14)
+        }))
+      }))}
+      toolsMenuLabel="All Tools"
+      onNavigateHome={() => router.push("/")}
+      onNavigate={(href) => router.push(href)}
+      onToggleDark={toggleDarkMode}
+      onOpenAbout={() => setIsAboutDialogOpen(true)}
+      onOpenSettings={() => setIsSettingsDialogOpen(true)}
+      onOpenDonate={() => setIsDonateDialogOpen(true)}
+    />
+  )
+
   return (
     <>
-      <WorkspaceOptionsHeader
-        isLoading={false}
-        isDark={isDark}
-        title="Imify"
-        subtitle="Powerful Image Toolkit"
-        toolsMenuGroups={WEB_TOOLS_MENU_GROUPS.map((group) => ({
-          title: group.title,
-          items: group.items.map((item) => ({
-            href: item.href,
-            label: item.label,
-            icon: renderWorkspaceToolIcon(item.id, 14)
-          }))
-        }))}
-        toolsMenuLabel="All Tools"
-        onNavigateHome={() => router.push("/")}
-        onNavigate={(href) => router.push(href)}
-        onToggleDark={toggleDarkMode}
-        onOpenAbout={() => setIsAboutDialogOpen(true)}
-        onOpenSettings={() => setIsSettingsDialogOpen(true)}
-        onOpenDonate={() => setIsDonateDialogOpen(true)}
-      />
+      {isStickyHeader ? (
+        <div className="sticky top-0 z-40 px-4 pt-3 md:px-6">
+          <div className="mx-auto w-full max-w-6xl rounded-2xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 [&>header]:rounded-2xl">
+            {headerNode}
+          </div>
+        </div>
+      ) : (
+        headerNode
+      )}
 
       <AboutDialog
         isOpen={isAboutDialogOpen}
