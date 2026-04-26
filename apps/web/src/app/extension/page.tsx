@@ -1,11 +1,9 @@
 import { Metadata } from "next"
 import { BodyText, Heading } from "@imify/ui/ui/typography"
 import { ExtensionDownloadButtons } from "./extension-download-buttons"
+import { WEB_ROUTE_METADATA } from "../seo-metadata"
 
-export const metadata: Metadata = {
-  title: "Imify Browser Extension",
-  description: "Download the Imify browser extension to unlock Context Menu processing and deep SEO Image Audits.",
-}
+export const metadata: Metadata = WEB_ROUTE_METADATA.extension
 
 export default function ExtensionPage() {
   return (
@@ -70,7 +68,7 @@ export default function ExtensionPage() {
             <div className="space-y-6">
               <Heading className="text-2xl text-fuchsia-600 dark:text-fuchsia-400 md:text-3xl">In-Page Image SEO Audit</Heading>
               <BodyText className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                Run a comprehensive SEO audit on all images within your active tab. Detect missing alt texts, oversized images, and inefficient formats instantly. Review detailed snapshots right in your browser's sidepanel.
+                Run a comprehensive SEO audit on all images within your active tab. Detect missing alt texts, oversized images, and inefficient formats instantly. Review detailed snapshots right in your browser&apos;s sidepanel.
               </BodyText>
               <ul className="space-y-4 pt-2">
                 <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300 font-medium">

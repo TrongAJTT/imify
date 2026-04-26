@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import {
   getWorkspaceToolsMenuGroups,
@@ -5,6 +6,7 @@ import {
 } from "@imify/features/workspace-shell/workspace-tools"
 import { Button } from "@imify/ui/ui/button"
 import { BodyText, Heading, Kicker, MutedText, Subheading } from "@imify/ui/ui/typography"
+import { WEB_ROUTE_METADATA } from "./seo-metadata"
 
 const TOOL_GROUPS = getWorkspaceToolsMenuGroups()
 
@@ -23,6 +25,8 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   "context-menu": "Customize your browser-wide quick-access image processing workflow.",
   "seo-audit": "Audit and optimize web images for maximum search engine performance."
 }
+
+export const metadata: Metadata = WEB_ROUTE_METADATA.home
 
 export default function Home() {
   return (
@@ -79,7 +83,7 @@ export default function Home() {
         <div className="text-center space-y-4">
           <Heading className="text-3xl md:text-4xl">Why Choose Imify?</Heading>
           <BodyText className="mx-auto max-w-2xl text-slate-500 text-lg">
-            We designed Imify to be the only image utility you'll ever need. Here is what makes it stand out.
+            We designed Imify to be the only image utility you&apos;ll ever need. Here is what makes it stand out.
           </BodyText>
         </div>
 

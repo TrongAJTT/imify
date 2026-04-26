@@ -5,10 +5,14 @@ import { WebFooter } from "@/components/layout/web-footer"
 import { WebHeader } from "@/components/layout/web-header"
 import { WorkspaceLayout } from "@/components/layout/workspace-layout"
 import { FEATURE_MEDIA_ASSET_PATHS } from "@imify/features/shared/media-assets"
+import { WEB_ROUTE_METADATA } from "./seo-metadata"
 
 export const metadata: Metadata = {
-  title: "Imify Web",
-  description: "Web workspace for Imify image tools.",
+  title: {
+    default: "Imify",
+    template: "%s | Imify"
+  },
+  description: WEB_ROUTE_METADATA.home.description,
   icons: {
     icon: FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
     shortcut: FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
