@@ -31,6 +31,7 @@ import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { useShortcutActions } from "../filling/use-shortcut-actions"
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { useClipboardPaste } from "../shared/use-clipboard-paste"
+import { hasFileDragPayload, isCommonImageFile } from "../shared/image-file-utils"
 import type { SplicingExportMode } from "./use-splicing-export"
 
 const THUMB_MAX = 256
@@ -385,7 +386,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   }, [])
 
   const addFiles = useCallback(async (files: File[]) => {
-    const imageFiles = files.filter((f) => f.type.startsWith("image/"))
+    const imageFiles = files.filter((f) => isCommonImageFile(f))
     if (imageFiles.length === 0) return
 
     const shouldShowProgress = true
@@ -625,6 +626,9 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
+      if (!hasFileDragPayload(e.dataTransfer)) {
+        return
+      }
       e.preventDefault()
       const files = Array.from(e.dataTransfer.files)
       void addFiles(files)

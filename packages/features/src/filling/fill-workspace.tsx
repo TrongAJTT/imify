@@ -43,7 +43,12 @@ import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
 } from "@imify/ui/ui/preview-interaction-mode-toggle"
-import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "@imify/features/shared/image-file-input"
+import {
+  COMMON_IMAGE_ACCEPT,
+  getFirstCommonImageFileFromDataTransfer,
+  hasFileDragPayload,
+  isCommonImageFile,
+} from "@imify/features/shared/image-file-utils"
 import { exportFilledTemplate } from "./filling-export-utils"
 
 const CANVAS_PADDING = 40
@@ -59,40 +64,6 @@ function safeRevokeObjectUrl(value: string | null | undefined) {
   }
 
   URL.revokeObjectURL(value)
-}
-
-function hasFileDragPayload(dataTransfer: DataTransfer): boolean {
-  if (dataTransfer.files && dataTransfer.files.length > 0) {
-    return true
-  }
-
-  if (dataTransfer.items && dataTransfer.items.length > 0) {
-    return Array.from(dataTransfer.items).some((item) => item.kind === "file")
-  }
-
-  return Array.from(dataTransfer.types ?? []).includes("Files")
-}
-
-function getFirstImageFileFromDataTransfer(dataTransfer: DataTransfer): File | null {
-  const directFile = dataTransfer.files?.[0]
-  if (directFile && isCommonImageFile(directFile)) {
-    return directFile
-  }
-
-  if (dataTransfer.items) {
-    for (const item of Array.from(dataTransfer.items)) {
-      if (item.kind !== "file") {
-        continue
-      }
-
-      const file = item.getAsFile()
-      if (file && isCommonImageFile(file)) {
-        return file
-      }
-    }
-  }
-
-  return null
 }
 
 function resolveToastTargetFormat(
@@ -397,7 +368,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
       event.preventDefault()
 
-      const file = getFirstImageFileFromDataTransfer(event.dataTransfer)
+      const file = getFirstCommonImageFileFromDataTransfer(event.dataTransfer)
       if (!file) {
         setIsDragOverSelectedEmptyTarget(false)
         return

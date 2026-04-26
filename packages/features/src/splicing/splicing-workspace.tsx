@@ -13,7 +13,7 @@ import type { PreviewInteractionMode } from "@imify/ui"
 import { CanvasPreview } from "./canvas-preview"
 import { ImageStrip } from "./image-strip"
 import { EmptyDropCard } from "@imify/ui"
-import { COMMON_IMAGE_ACCEPT } from "../shared/image-file-input"
+import { COMMON_IMAGE_ACCEPT } from "../shared/image-file-utils"
 
 interface SplicingWorkspaceProps {
   hasImages: boolean

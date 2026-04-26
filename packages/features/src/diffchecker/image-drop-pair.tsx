@@ -3,7 +3,7 @@ import { ImagePlus, Upload, X } from "lucide-react"
 import type { DiffImageItem } from "./types"
 import { MutedText, Tooltip } from "@imify/ui"
 import { DIFFCHECKER_TOOLTIPS } from "./diffchecker-tooltips"
-import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-input"
+import { COMMON_IMAGE_ACCEPT, hasFileDragPayload, isCommonImageFile } from "../shared/image-file-utils"
 
 interface ImageDropPairProps {
   imageA: DiffImageItem | null
@@ -27,6 +27,9 @@ function openFilePicker(onFiles: (files: File[]) => void) {
 
 function DropZone({ label, image, onLoad, onClear }: { label: string; image: DiffImageItem | null; onLoad: (files: File[]) => void; onClear: () => void }) {
   const handleDrop = (e: React.DragEvent) => {
+    if (!hasFileDragPayload(e.dataTransfer)) {
+      return
+    }
     e.preventDefault()
     const files = Array.from(e.dataTransfer.files).filter(isCommonImageFile)
     if (files.length) onLoad(files)
@@ -54,7 +57,7 @@ function DropZone({ label, image, onLoad, onClear }: { label: string; image: Dif
   }
 
   return (
-    <div className="flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 py-10 transition-all hover:border-sky-400 dark:border-slate-600 dark:bg-slate-800/30" onClick={() => openFilePicker(onLoad)} onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
+    <div className="flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 py-10 transition-all hover:border-sky-400 dark:border-slate-600 dark:bg-slate-800/30" onClick={() => openFilePicker(onLoad)} onDragOver={(e) => { if (hasFileDragPayload(e.dataTransfer)) e.preventDefault() }} onDrop={handleDrop}>
       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-100 text-sky-500 dark:bg-sky-900/30"><ImagePlus size={20} /></div>
       <MutedText className="text-xs">Drop or click to browse</MutedText>

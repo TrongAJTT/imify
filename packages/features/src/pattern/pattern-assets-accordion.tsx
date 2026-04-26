@@ -23,7 +23,7 @@ import { ResizableAccordionCard } from "@imify/ui"
 import { PATTERN_TOOLTIPS } from "./pattern-tooltips"
 import { usePatternStore } from "@imify/stores/stores/pattern-store"
 import { Tooltip } from "../shared/tooltip"
-import { COMMON_IMAGE_ACCEPT_WITH_SVG } from "../shared/image-file-input"
+import { COMMON_IMAGE_ACCEPT_WITH_SVG } from "../shared/image-file-utils"
 
 const ASSET_CARD_MIN_HEIGHT = 220
 const ASSET_CARD_MAX_HEIGHT = 760

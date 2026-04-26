@@ -2,7 +2,7 @@ import React from "react"
 import type { ReactNode } from "react"
 import { Upload } from "lucide-react"
 import { EmptyDropCard } from "@imify/ui"
-import { COMMON_IMAGE_ACCEPT } from "@imify/features/shared/image-file-input"
+import { COMMON_IMAGE_ACCEPT } from "@imify/features/shared/image-file-utils"
 
 interface BatchUploadDropzoneProps {
   onAppendFiles: (files: FileList | null) => void

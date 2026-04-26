@@ -4,7 +4,7 @@ type SeoMetadataEntry = Pick<Metadata, "title" | "description">
 
 export const WEB_ROUTE_METADATA = {
   home: {
-    title: "Home",
+    title: "Home | Imify Web",
     description:
       "Imify is a fast, privacy-first online image toolkit for conversion, compression, resizing, batch processing, splitting, splicing, pattern generation, and visual inspection directly in your browser."
   },

@@ -30,7 +30,7 @@ import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { buildActiveSplitterFormatOptions } from "@imify/stores/stores/splitter-format-options"
 import { useSplitterStore } from "@imify/stores/stores/splitter-store"
 import { SplitterWorkspaceShell } from "./splitter-workspace-shell"
-import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-input"
+import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-utils"
 const splitterGuideHelpVideo = "assets/features/image-splitter_visual-guides-control.webm"
 
 interface SplitterImageItem {

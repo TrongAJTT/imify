@@ -4,6 +4,7 @@ import { usePanDrag } from "../shared/use-pan-drag"
 import { ZoomPanControl } from "@imify/ui"
 import type { PreviewInteractionMode } from "@imify/ui"
 import type { SplitterSplitPlan, SplitterSplitSettings } from "./types"
+import { hasFileDragPayload } from "../shared/image-file-utils"
 
 interface SplitterPreviewProps {
   image: {
@@ -208,6 +209,9 @@ export function SplitterPreview({
             if (!onDropFiles) {
               return
             }
+            if (!hasFileDragPayload(event.dataTransfer)) {
+              return
+            }
             event.preventDefault()
             setIsDragOver(true)
           }}
@@ -219,6 +223,9 @@ export function SplitterPreview({
           }}
           onDrop={(event) => {
             if (!onDropFiles) {
+              return
+            }
+            if (!hasFileDragPayload(event.dataTransfer)) {
               return
             }
             event.preventDefault()

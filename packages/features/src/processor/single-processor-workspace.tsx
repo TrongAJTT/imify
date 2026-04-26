@@ -22,7 +22,7 @@ import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
 import {
   COMMON_IMAGE_ACCEPT,
   isCommonImageFile,
-} from "../shared/image-file-input";
+} from "../shared/image-file-utils";
 import { useClipboardPaste } from "../shared/use-clipboard-paste";
 import { ImageUrlImportControl } from "./image-url-import-control";
 import {
@@ -237,7 +237,9 @@ export function SingleProcessorWorkspace({
   };
 
   const onAppendFiles = (files: FileList | null) => {
-    if (files?.length) void attachSingleFile(files[0]);
+    if (!files?.length) return;
+    const firstImageFile = Array.from(files).find((file) => isCommonImageFile(file));
+    if (firstImageFile) void attachSingleFile(firstImageFile);
   };
   const importFromImageUrls = async (urls: string[]) => {
     const firstUrl = urls[0];

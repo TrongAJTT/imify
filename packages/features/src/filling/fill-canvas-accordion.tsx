@@ -10,7 +10,7 @@ import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { Button } from "@imify/ui/ui/button"
 import { FILLING_TOOLTIPS } from "@imify/features/filling/filling-tooltips"
-import { COMMON_IMAGE_ACCEPT } from "@imify/features/shared/image-file-input"
+import { COMMON_IMAGE_ACCEPT } from "@imify/features/shared/image-file-utils"
 
 const BG_TYPE_OPTIONS: Array<{ value: CanvasBackgroundType; label: string }> = [
   { value: "solid", label: "Customized Color" },

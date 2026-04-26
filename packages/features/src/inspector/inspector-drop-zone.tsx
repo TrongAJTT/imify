@@ -1,7 +1,7 @@
 import React from "react"
 import { Search } from "lucide-react"
 import { EmptyDropCard } from "@imify/ui"
-import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-input"
+import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-utils"
 
 interface InspectorDropZoneProps {
   onLoadFile: (file: File) => void

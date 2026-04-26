@@ -9,7 +9,7 @@ import { AccordionCard } from "@imify/ui/ui/accordion-card"
 import { NumberInput } from "@imify/ui/ui/number-input"
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
 import { Button } from "@imify/ui/ui/button"
-import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "@imify/features/shared/image-file-input"
+import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "@imify/features/shared/image-file-utils"
 import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 interface FillLayerAccordionProps {

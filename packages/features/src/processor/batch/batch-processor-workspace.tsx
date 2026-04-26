@@ -21,6 +21,7 @@ import { readImageDimensions } from "./pipeline"
 import { MAX_FILE_SIZE_BYTES, MAX_TOTAL_QUEUE_BYTES, formatBytes, toMb, withBatchResize } from "./utils"
 import { useBatchExecution } from "./hooks/use-batch-execution"
 import { useBatchExportActions } from "./hooks/use-batch-export-actions"
+import { isCommonImageFile } from "../../shared/image-file-utils"
 
 export function BatchProcessorWorkspace() {
   const targetFormat = useBatchStore((s) => s.targetFormat)
@@ -84,7 +85,7 @@ export function BatchProcessorWorkspace() {
   const removeItem = (id: string) => setQueue((current) => current.filter((item) => item.id !== id))
   const appendImageFiles = (inputFiles: File[]) => {
     if (!inputFiles.length) return
-    const nextItems: BatchQueueItem[] = inputFiles.filter((file) => file.type.startsWith("image/")).map((file) => ({ id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, file, status: file.size > MAX_FILE_SIZE_BYTES ? "error" : "queued", percent: file.size > MAX_FILE_SIZE_BYTES ? 100 : 0, message: file.size > MAX_FILE_SIZE_BYTES ? `Skipped: file is larger than ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB limit` : undefined }))
+    const nextItems: BatchQueueItem[] = inputFiles.filter((file) => isCommonImageFile(file)).map((file) => ({ id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, file, status: file.size > MAX_FILE_SIZE_BYTES ? "error" : "queued", percent: file.size > MAX_FILE_SIZE_BYTES ? 100 : 0, message: file.size > MAX_FILE_SIZE_BYTES ? `Skipped: file is larger than ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB limit` : undefined }))
     if (!nextItems.length) return
     setQueue((current) => [...current, ...nextItems])
   }

@@ -17,7 +17,12 @@ import { NumberInput } from "@imify/ui/ui/number-input"
 import { Tooltip } from "@imify/features/shared/tooltip"
 import { SHORTCUT_DEFINITION_MAP, type ShortcutActionId } from "@imify/stores/shortcuts"
 import { FILLING_TOOLTIPS } from "@imify/features/filling/filling-tooltips"
-import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "@imify/features/shared/image-file-input"
+import {
+  COMMON_IMAGE_ACCEPT,
+  getFirstCommonImageFileFromDataTransfer,
+  hasFileDragPayload,
+  isCommonImageFile,
+} from "@imify/features/shared/image-file-utils"
 
 interface FillLayerCustomizationAccordionProps {
   template: FillingTemplate
@@ -52,40 +57,6 @@ const TAB_INFO_TEXT: Record<FillCustomizationTab, string> = {
 function safeRevokeObjectUrl(value: string | null | undefined) {
   if (!value || !value.startsWith("blob:")) return
   URL.revokeObjectURL(value)
-}
-
-function hasFileDragPayload(dataTransfer: DataTransfer): boolean {
-  if (dataTransfer.files && dataTransfer.files.length > 0) {
-    return true
-  }
-
-  if (dataTransfer.items && dataTransfer.items.length > 0) {
-    return Array.from(dataTransfer.items).some((item) => item.kind === "file")
-  }
-
-  return Array.from(dataTransfer.types ?? []).includes("Files")
-}
-
-function getFirstImageFileFromDataTransfer(dataTransfer: DataTransfer): File | null {
-  const directFile = dataTransfer.files?.[0]
-  if (directFile && isCommonImageFile(directFile)) {
-    return directFile
-  }
-
-  if (dataTransfer.items) {
-    for (const item of Array.from(dataTransfer.items)) {
-      if (item.kind !== "file") {
-        continue
-      }
-
-      const file = item.getAsFile()
-      if (file && isCommonImageFile(file)) {
-        return file
-      }
-    }
-  }
-
-  return null
 }
 
 function clampSize(value: number): number {
@@ -370,7 +341,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
       event.preventDefault()
       setIsDragOverImageDropZone(false)
 
-      const file = getFirstImageFileFromDataTransfer(event.dataTransfer)
+      const file = getFirstCommonImageFileFromDataTransfer(event.dataTransfer)
       if (!file) {
         return
       }
