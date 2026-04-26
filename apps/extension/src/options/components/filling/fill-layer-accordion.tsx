@@ -9,6 +9,7 @@ import { AccordionCard } from "@imify/ui/ui/accordion-card"
 import { NumberInput } from "@imify/ui/ui/number-input"
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
 import { Button } from "@imify/ui/ui/button"
+import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "@imify/features/shared/image-file-input"
 import { FILLING_TOOLTIPS } from "@/options/components/filling/filling-tooltips"
 
 interface FillLayerAccordionProps {
@@ -24,7 +25,7 @@ export function FillLayerAccordion({ layer, fillState }: FillLayerAccordionProps
   const handleImageUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
-      if (!file) return
+      if (!file || !isCommonImageFile(file)) return
       const url = URL.createObjectURL(file)
 
       const img = new Image()
@@ -94,7 +95,7 @@ export function FillLayerAccordion({ layer, fillState }: FillLayerAccordionProps
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept={COMMON_IMAGE_ACCEPT}
           className="hidden"
           onChange={handleImageUpload}
         />

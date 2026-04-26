@@ -30,6 +30,7 @@ import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { buildActiveSplitterFormatOptions } from "@imify/stores/stores/splitter-format-options"
 import { useSplitterStore } from "@imify/stores/stores/splitter-store"
 import { SplitterWorkspaceShell } from "./splitter-workspace-shell"
+import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-input"
 const splitterGuideHelpVideo = "assets/features/image-splitter_visual-guides-control.webm"
 
 interface SplitterImageItem {
@@ -44,14 +45,6 @@ interface SplitterImageItem {
 const THUMB_MAX = 256
 const COLOR_MATCH_GRID_FALLBACK_WARNING =
   "Color Match supports vertical or horizontal direction only. Grid was mapped to horizontal."
-
-function isImageLikeFile(file: File): boolean {
-  if (file.type.startsWith("image/")) {
-    return true
-  }
-
-  return /\.(png|jpe?g|webp|avif|bmp|gif|tiff?|jxl|ico)$/i.test(file.name)
-}
 
 async function createThumbnail(file: File): Promise<{ thumbnailUrl: string; width: number; height: number }> {
   const bitmap = await createImageBitmap(file)
@@ -293,7 +286,7 @@ export function SplitterTab() {
   }, [activeImage, splitSettings])
 
   const appendFiles = useCallback(async (incomingFiles: File[]) => {
-    const imageFiles = incomingFiles.filter(isImageLikeFile)
+    const imageFiles = incomingFiles.filter(isCommonImageFile)
     if (imageFiles.length === 0) {
       return
     }
@@ -624,7 +617,7 @@ export function SplitterTab() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={COMMON_IMAGE_ACCEPT}
         multiple
         className="hidden"
         onChange={handleFileInput}

@@ -11,6 +11,7 @@ import { AccordionCard } from "@imify/ui"
 import { SelectInput } from "@imify/ui"
 import { SliderInput } from "@imify/ui"
 import { usePatternStore } from "@imify/stores/stores/pattern-store"
+import { COMMON_IMAGE_ACCEPT_WITH_SVG } from "../shared/image-file-input"
 
 const BG_TYPE_OPTIONS: Array<{ value: PatternBackgroundType; label: string }> = [
   { value: "solid", label: "Customized Color" },
@@ -98,7 +99,7 @@ export function PatternCanvasAccordion() {
           <input
             ref={imageInputRef}
             type="file"
-            accept="image/*,.svg"
+            accept={COMMON_IMAGE_ACCEPT_WITH_SVG}
             className="hidden"
             onChange={(event) => void handleUploadBackground(event)}
           />

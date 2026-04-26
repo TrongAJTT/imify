@@ -3,6 +3,7 @@ import { ImagePlus, Upload, X } from "lucide-react"
 import type { DiffImageItem } from "./types"
 import { MutedText, Tooltip } from "@imify/ui"
 import { DIFFCHECKER_TOOLTIPS } from "./diffchecker-tooltips"
+import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-input"
 
 interface ImageDropPairProps {
   imageA: DiffImageItem | null
@@ -16,7 +17,7 @@ interface ImageDropPairProps {
 function openFilePicker(onFiles: (files: File[]) => void) {
   const input = document.createElement("input")
   input.type = "file"
-  input.accept = "image/*"
+  input.accept = COMMON_IMAGE_ACCEPT
   input.onchange = () => {
     const file = input.files?.[0]
     if (file) onFiles([file])
@@ -27,7 +28,7 @@ function openFilePicker(onFiles: (files: File[]) => void) {
 function DropZone({ label, image, onLoad, onClear }: { label: string; image: DiffImageItem | null; onLoad: (files: File[]) => void; onClear: () => void }) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
-    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"))
+    const files = Array.from(e.dataTransfer.files).filter(isCommonImageFile)
     if (files.length) onLoad(files)
   }
 

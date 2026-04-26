@@ -43,6 +43,7 @@ import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
 } from "@imify/ui/ui/preview-interaction-mode-toggle"
+import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "@imify/features/shared/image-file-input"
 import { exportFilledTemplate } from "./filling-export-utils"
 
 const CANVAS_PADDING = 40
@@ -74,7 +75,7 @@ function hasFileDragPayload(dataTransfer: DataTransfer): boolean {
 
 function getFirstImageFileFromDataTransfer(dataTransfer: DataTransfer): File | null {
   const directFile = dataTransfer.files?.[0]
-  if (directFile?.type.startsWith("image/")) {
+  if (directFile && isCommonImageFile(directFile)) {
     return directFile
   }
 
@@ -85,7 +86,7 @@ function getFirstImageFileFromDataTransfer(dataTransfer: DataTransfer): File | n
       }
 
       const file = item.getAsFile()
-      if (file?.type.startsWith("image/")) {
+      if (file && isCommonImageFile(file)) {
         return file
       }
     }
@@ -252,7 +253,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
   const applyImageFileToSelectedRuntimeItem = useCallback(
     (file: File) => {
-      if (!selectedRuntimeItem || selectedFillState?.imageUrl || !file.type.startsWith("image/")) {
+      if (!selectedRuntimeItem || selectedFillState?.imageUrl || !isCommonImageFile(file)) {
         return
       }
 
@@ -1387,7 +1388,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         <input
           ref={emptyImageUploadInputRef}
           type="file"
-          accept="image/*"
+          accept={COMMON_IMAGE_ACCEPT}
           className="hidden"
           onChange={handleEmptyLayerImageUpload}
         />

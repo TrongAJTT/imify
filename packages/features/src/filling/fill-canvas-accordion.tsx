@@ -10,6 +10,7 @@ import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { Button } from "@imify/ui/ui/button"
 import { FILLING_TOOLTIPS } from "@imify/features/filling/filling-tooltips"
+import { COMMON_IMAGE_ACCEPT } from "@imify/features/shared/image-file-input"
 
 const BG_TYPE_OPTIONS: Array<{ value: CanvasBackgroundType; label: string }> = [
   { value: "solid", label: "Customized Color" },
@@ -47,7 +48,7 @@ export function FillCanvasAccordion() {
   return (
     <AccordionCard icon={<Palette size={16} />} label="Canvas" sublabel={sublabel} colorTheme="purple" defaultOpen={false}>
       <div className="space-y-3">
-        <input ref={bgImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleBgImageUpload} />
+        <input ref={bgImageInputRef} type="file" accept={COMMON_IMAGE_ACCEPT} className="hidden" onChange={handleBgImageUpload} />
         <SelectInput label="Background" value={backgroundTypeForSelect} options={BG_TYPE_OPTIONS} onChange={(v) => update({ backgroundType: v as CanvasBackgroundType })} />
         {(backgroundTypeForSelect === "solid" || backgroundTypeForSelect === "image") && (
           <ColorPickerPopover label="Customized Color" value={state.backgroundColor} onChange={(v) => update({ backgroundColor: v })} enableAlpha outputMode="rgba" />

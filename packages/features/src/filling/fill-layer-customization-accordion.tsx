@@ -17,6 +17,7 @@ import { NumberInput } from "@imify/ui/ui/number-input"
 import { Tooltip } from "@imify/features/shared/tooltip"
 import { SHORTCUT_DEFINITION_MAP, type ShortcutActionId } from "@imify/stores/shortcuts"
 import { FILLING_TOOLTIPS } from "@imify/features/filling/filling-tooltips"
+import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "@imify/features/shared/image-file-input"
 
 interface FillLayerCustomizationAccordionProps {
   template: FillingTemplate
@@ -67,7 +68,7 @@ function hasFileDragPayload(dataTransfer: DataTransfer): boolean {
 
 function getFirstImageFileFromDataTransfer(dataTransfer: DataTransfer): File | null {
   const directFile = dataTransfer.files?.[0]
-  if (directFile?.type.startsWith("image/")) {
+  if (directFile && isCommonImageFile(directFile)) {
     return directFile
   }
 
@@ -78,7 +79,7 @@ function getFirstImageFileFromDataTransfer(dataTransfer: DataTransfer): File | n
       }
 
       const file = item.getAsFile()
-      if (file?.type.startsWith("image/")) {
+      if (file && isCommonImageFile(file)) {
         return file
       }
     }
@@ -289,7 +290,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
 
   const applyImageFileToSelectedRuntimeItem = useCallback(
     (file: File) => {
-      if (!selectedRuntimeItem || !file.type.startsWith("image/")) {
+      if (!selectedRuntimeItem || !isCommonImageFile(file)) {
         return
       }
 
@@ -468,7 +469,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept={COMMON_IMAGE_ACCEPT}
               className="hidden"
               onChange={handleImageUpload}
             />

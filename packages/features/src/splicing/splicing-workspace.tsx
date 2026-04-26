@@ -13,6 +13,7 @@ import type { PreviewInteractionMode } from "@imify/ui"
 import { CanvasPreview } from "./canvas-preview"
 import { ImageStrip } from "./image-strip"
 import { EmptyDropCard } from "@imify/ui"
+import { COMMON_IMAGE_ACCEPT } from "../shared/image-file-input"
 
 interface SplicingWorkspaceProps {
   hasImages: boolean
@@ -70,7 +71,7 @@ export function SplicingWorkspace({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={COMMON_IMAGE_ACCEPT}
         multiple
         className="hidden"
         onChange={onFileInput}

@@ -1,6 +1,7 @@
 import { ImagePlus } from "lucide-react"
 
 import { EmptyDropCard } from "@imify/ui/ui/empty-drop-card"
+import { COMMON_IMAGE_ACCEPT } from "@imify/features/shared/image-file-input"
 
 interface SidepanelDropInputCardProps {
   selectedFileName: string | null
@@ -19,7 +20,7 @@ export function SidepanelDropInputCard({
       title={isAnalyzing ? "Analyzing image..." : "Drop image here or click to choose"}
       subtitle={selectedFileName ?? "Supports JPG, PNG, WebP, AVIF, BMP, TIFF and more"}
       fileInput={{
-        accept: "image/*",
+        accept: COMMON_IMAGE_ACCEPT,
         multiple: false,
         onInputFiles: (files) => onPickFile(files?.[0])
       }}

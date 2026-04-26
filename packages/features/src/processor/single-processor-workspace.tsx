@@ -19,6 +19,10 @@ import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
 import { Button, EmptyDropCard, Heading, MutedText } from "@imify/ui";
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
+import {
+  COMMON_IMAGE_ACCEPT,
+  isCommonImageFile,
+} from "../shared/image-file-input";
 import { useClipboardPaste } from "../shared/use-clipboard-paste";
 import { ImageUrlImportControl } from "./image-url-import-control";
 import {
@@ -48,11 +52,6 @@ function toOutputFilenameWithExtension(
 ): string {
   const base = nameOrBase.replace(/\.[^.]+$/, "") || "image";
   return `${base}.${extension}`;
-}
-
-function isImageLikeFile(file: File): boolean {
-  if (file.type.startsWith("image/")) return true;
-  return /\.(png|jpe?g|webp|avif|bmp|gif|tiff?|jxl|ico)$/i.test(file.name);
 }
 
 function toAspectRatioLabel(width: number, height: number): string {
@@ -215,7 +214,7 @@ export function SingleProcessorWorkspace({
 
   const attachSingleFile = async (file: File) => {
     const attachSequence = ++attachSequenceRef.current;
-    if (!isImageLikeFile(file)) {
+    if (!isCommonImageFile(file)) {
       setErrorText("Please choose an image file.");
       return;
     }
@@ -419,7 +418,7 @@ export function SingleProcessorWorkspace({
             title="Drop one image here, click to browse, or paste from clipboard"
             subtitle="Single Processor with live preview, debounce, and image URL import"
             onDropFiles={onAppendFiles}
-            fileInput={{ onInputFiles: onAppendFiles }}
+            fileInput={{ accept: COMMON_IMAGE_ACCEPT, onInputFiles: onAppendFiles }}
             topRightSlot={
               <ImageUrlImportControl
                 allowMultiple={false}

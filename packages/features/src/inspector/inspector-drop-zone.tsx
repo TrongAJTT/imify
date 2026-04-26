@@ -1,6 +1,7 @@
 import React from "react"
 import { Search } from "lucide-react"
 import { EmptyDropCard } from "@imify/ui"
+import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-input"
 
 interface InspectorDropZoneProps {
   onLoadFile: (file: File) => void
@@ -10,7 +11,7 @@ export function InspectorDropZone({ onLoadFile }: InspectorDropZoneProps) {
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return
     const file = files[0]
-    if (file.type.startsWith("image/")) onLoadFile(file)
+    if (isCommonImageFile(file)) onLoadFile(file)
   }
 
   return (
@@ -19,7 +20,7 @@ export function InspectorDropZone({ onLoadFile }: InspectorDropZoneProps) {
       title="Drop an image here or click to browse"
       subtitle="Supports JPG, PNG, WebP, AVIF, and more"
       onDropFiles={handleFiles}
-      fileInput={{ accept: "image/*", onInputFiles: handleFiles }}
+      fileInput={{ accept: COMMON_IMAGE_ACCEPT, onInputFiles: handleFiles }}
     />
   )
 }
