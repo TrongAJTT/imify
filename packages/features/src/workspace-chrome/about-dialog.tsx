@@ -14,6 +14,7 @@ import { BodyText, Kicker, MutedText, Subheading } from "@imify/ui/ui/typography
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 import { Tooltip } from "../shared/tooltip"
 import { BugReportDialog } from "./bug-report-dialog"
+import { WhatsNewDialog } from "./whats-new-dialog"
 
 const appMetadata = getAppMetadata()
 const DEV_MODE_CLICK_TARGET = 7
@@ -90,6 +91,7 @@ export function AboutDialog({
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled()
   const { toasts, hide, success, warning } = useToast()
   const [isBugReportDialogOpen, setIsBugReportDialogOpen] = useState(false)
+  const [isWhatsNewDialogOpen, setIsWhatsNewDialogOpen] = useState(false)
 
   const activateDevMode = useCallback(async () => {
     if (devModeEnabled) {
@@ -243,6 +245,14 @@ export function AboutDialog({
               </button>
             </Tooltip>
             <MutedText className="flex items-center justify-center lg:justify-end gap-3 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => setIsWhatsNewDialogOpen(true)}
+                className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
+              >
+                What&apos;s New
+              </button>
+              <span className="text-slate-300 dark:text-slate-700">|</span>
               <a
                 href={IMIFY_LINKS.terms}
                 target="_blank"
@@ -268,6 +278,10 @@ export function AboutDialog({
       <BugReportDialog
         isOpen={isBugReportDialogOpen}
         onClose={() => setIsBugReportDialogOpen(false)}
+      />
+      <WhatsNewDialog
+        isOpen={isWhatsNewDialogOpen}
+        onClose={() => setIsWhatsNewDialogOpen(false)}
       />
       <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>

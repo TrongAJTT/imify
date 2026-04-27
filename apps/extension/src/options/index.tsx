@@ -1,4 +1,4 @@
-// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
+// PLATFORM: extension — uses chrome.* browser APIs. Do not import in web app.
 import "@/style.css"
 
 import { Storage } from "@plasmohq/storage"
@@ -614,7 +614,7 @@ export default function OptionsPage() {
             >
               {!isNavCollapsed ? (
                 <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600">
-                  Navigation
+                  Features
                 </div>
               ) : null}
 

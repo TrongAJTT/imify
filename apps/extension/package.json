@@ -115,7 +115,11 @@
     "web_accessible_resources": [
       {
         "resources": [
-          "assets/wasm/*"
+          "assets/wasm/*",
+          "assets/WHATS_NEW.md",
+          "assets/*.png",
+          "assets/images/*",
+          "assets/features/*"
         ],
         "matches": [
           "http://*/*",

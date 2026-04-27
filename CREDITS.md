@@ -28,6 +28,9 @@ This list is synchronized with `src/core/attributions.ts` (source of truth for t
 *   **[react-colorful](https://github.com/omgovich/react-colorful)**
     *   **Author(s):** Vlad Shilov and contributors
     *   **License:** MIT License
+*   **[markdown-to-jsx](https://github.com/quantizor/markdown-to-jsx)**
+    *   **Author(s):** Quantizor and contributors
+    *   **License:** MIT License
 
 ## Image & Document Processing
 *   **[pdf-lib](https://pdf-lib.js.org/)**
@@ -45,7 +48,7 @@ This list is synchronized with `src/core/attributions.ts` (source of truth for t
 *   **[UTIF.js](https://github.com/photopea/UTIF.js)**
     *   **Author(s):** Ivan Kutskir (photopea)
     *   **License:** MIT License
-*   **[@jsquash/avif, @jsquash/jxl, @jsquash/oxipng](https://github.com/jSquash/jSquash)**
+*   **[@jsquash/avif, @jsquash/jxl, @jsquash/webp, @jsquash/oxipng, @jsquash/jpeg, @jsquash/resize](https://github.com/jSquash/jSquash)**
     *   **Author(s):** Jamie Sinclair and jSquash contributors
     *   **License:** Apache License 2.0
 
