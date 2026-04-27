@@ -2,8 +2,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules
+node_modules/
 .pnp.js
 
 # Build & Production
@@ -11,6 +11,7 @@ dist/
 build/
 out/
 .plasmo/
+.turbo/cache/
 *.tsbuildinfo
 
 # Environment & Secrets
@@ -34,9 +35,20 @@ coverage/
 # AI Tooling & IDE (Cursor, GitHub Copilot, Nexus)
 .cursorrules
 .gitnexus
+.cursor/plans/
 .github/copilot-instructions.md
 
 # Documentation & Backups
 backups/
 .docs/
 SPECIFICATIONS.md
+
+# Generated synced media assets
+apps/extension/assets/
+apps/web/public/assets/
+
+# Generated shared wasm source-of-truth
+assets/wasm/
+
+# Turbo
+.turbo/cache/

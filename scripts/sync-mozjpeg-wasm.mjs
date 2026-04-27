@@ -4,7 +4,7 @@ import { resolve } from "node:path"
 const projectRoot = process.cwd()
 const sourceJs = resolve(projectRoot, "node_modules/@jsquash/jpeg/codec/enc/mozjpeg_enc.js")
 const sourceWasm = resolve(projectRoot, "node_modules/@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm")
-const targetDir = resolve(projectRoot, "assets/wasm")
+const targetDir = resolve(projectRoot, "../../assets/wasm")
 const targetJs = resolve(targetDir, "mozjpeg_enc.js")
 const targetWasm = resolve(targetDir, "mozjpeg_enc.wasm")
 

@@ -1,29 +1,29 @@
-# <img src="assets/icon.png" alt="Imify" width="24" height="24" style="vertical-align: middle;"> Imify - Save & Process Images
+# <img src="/assets/icon.png" alt="Imify" width="24" height="24" style="vertical-align: middle;"> Imify - Powerful Image Toolkit
 
-> A privacy-first, 100% client-side browser extension that lets you save, convert, resize, and inspect images directly in your browser — without uploading anything to a server.
+> A privacy-first, 100% client-side image processing suite. Available as a **Next.js Web Application** and a **Browser Extension**. Save, convert, resize, split, splice, and audit images directly in your browser — without uploading anything to a server.
 
 ![version](https://img.shields.io/github/release/trongajtt/imify?color=green)
 [![License](https://img.shields.io/badge/license-Apache%202-blue)](./LICENSE)
 [![React](https://img.shields.io/badge/React-18.2.0-61dafb.svg)](https://reactjs.org/)
 [![Plasmo](https://img.shields.io/badge/Plasmo-Framework-blue?logo=plasmo)](https://www.plasmo.com/)
 
-## ✨ Key Features
+## ✨ Key Features (v2.0.0 Suite)
 
-* **100% Client-Side Processing**: Zero server dependencies. Complete data privacy.
-* **Rich Format Support**: Read and convert to `JPG`, `PNG` (Tiny mode, Floyd-Steinberg dithering, and optional OxiPNG WASM optimization), `WebP`, `AVIF`, `JXL` (JPEG XL), `TIFF`, `ICO`, `BMP`, and `PDF`.
-* **Right-Click Context Menu**: Right-click any image on the web to instantly convert and download using your preferred formats and presets.
-  * **Pin to Top**: Pin up to **2** items so your most important actions never move.
-  * **Most Used (Stable) Sorting**: Sort by usage frequency with a stability threshold to avoid constant reshuffling.
-* **Smart Resizing Engine**:
-  * Keep original size / Change Width / Change Height / Scale by Percentage (%)
-  * **Smart Framing**: Fit (Contain) or Fill (Cover) target dimensions.
-  * **Page Size Matching**: Automatically fit images to standard paper sizes (A4, Letter, etc.) with adjustable DPI print-ready PDFs.
-* **Batch Processing**: A dedicated dashboard to drag-and-drop multiple files to convert them in bulk. Includes ZIP packaging.
-* **Frictionless Import**: Easily fetch images via remote URLs directly from the UI or via clipboard paste, bypassing strict web CORS limits smoothly.
-* **Custom Presets**: Create, edit, and toggle your own custom conversion formats to appear in the right-click menu.
-* **Real-time Progress**: Non-intrusive sticky toasts inject into the current webpage to show conversion progress for heavy formats (e.g. AVIF, PDF).
-* **Usage Stats**: See how often each format/preset is used and reset stats anytime.
-* **Modern Options UI**: Desktop-like layout with a collapsible navigation sidebar and clearer empty-state drop areas.
+* **Dual Platforms**: Use Imify as a standalone web application or as a tightly integrated browser extension.
+* **100% Client-Side Processing**: Zero server dependencies. Complete data privacy using WebAssembly and Web Workers.
+* **Rich Format Support**: Read and convert to `JPG`, `PNG` (Tiny mode, Floyd-Steinberg dithering, and OxiPNG WASM optimization), `WebP`, `AVIF`, `JXL` (JPEG XL), `TIFF`, `ICO`, `BMP`, and `PDF`.
+* **Advanced Processing Tools (Available in both the web application and the browser extension)**:
+  * **Batch Processor**: Drag-and-drop multiple files to convert them in bulk. Includes ZIP packaging.
+  * **Image Splitter**: Slice images via grid systems or custom percentage/pixel sequences with a reorderable guide UI.
+  * **Image Splicing**: Vertically or horizontally stitch multiple images together with gap controls.
+  * **Pattern & Fill**: Generate seamless patterns and use symmetric edge-filling techniques.
+  * **Difference Checker**: Pixel-perfect visual comparison tool for QA and analysis.
+  * **Image Inspector**: Deep dive into image metadata and EXIF data.
+* **Extension-Exclusive Features**:
+  * **Right-Click Context Menu**: Instantly convert and download any web image using your preferred presets.
+  * **SEO Audit**: Deep DOM scanning to detect oversized images, missing alt text, lazy-loading issues, and potential bandwidth savings via modern formats.
+* **Smart Resizing Engine**: Scale by dimension, percentage, or match standard physical paper sizes (A4, Letter) with DPI controls.
+* **Modern Workspace UI**: A unified, desktop-like layout with collapsible navigation, reorderable sidebar configurations (`dnd-kit`), and dark mode support.
 
 ## 📸 Screenshots
 
@@ -34,6 +34,13 @@
   <img src="https://cdn.trongajtt.com/apps/imify/image-processor.webp" alt="ImifyPreview" style="width:32%;">
   <img src="https://cdn.trongajtt.com/apps/imify/image-inspector.webp" alt="ImifyPreview" style="width:32%;">
 </div>
+
+## 💝 Support & Donate
+
+If you find Imify useful, please consider supporting its development:
+
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-6e5494?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/TrongAJTT)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/trongajtt)
 
 ## 📥 Installation
 
@@ -50,29 +57,29 @@ Imify is officially available on the Chrome Web Store, Microsoft Edge Add-ons St
 
 ## 🛠️ Tech Stack
 
-* **Framework**: [Plasmo](https://docs.plasmo.com/) (React-based browser extension framework)
-* **UI/Styling**: React, Tailwind CSS, Lucide React
+* **Monorepo**: [Turborepo](https://turbo.build/)
+* **Web App**: [Next.js](https://nextjs.org/) (App Router)
+* **Extension Framework**: [Plasmo](https://docs.plasmo.com/) (Manifest V3)
+* **UI/Styling**: React, Tailwind CSS, Radix UI, dnd-kit, Lucide React
+* **State Management**: Zustand
 * **Core Image Processing**: Native `OffscreenCanvas` API, Web Workers
 * **Advanced Encoders**: WebAssembly (Wasm) via `@jsquash/avif`, `@jsquash/jxl`, `@jsquash/oxipng`; plus `image-q`, `UPNG.js`, `UTIF.js`, `fflate`
-* **PDF Generation**: `pdf-lib` (Client-side PDF document creation)
 * **Language**: TypeScript (Strict typing)
-* **Manifest Version**: MV3
 
-## 📂 Project Structure (Feature-Based)
+## 📂 Monorepo Structure
 
 ```text
-src/
-├── background/             # Service worker: Context menu logic & Message routing
-├── contents/               # CSUI: Injected sticky progress toasts
-├── options/                # Options Page: Dashboard for Settings & Batch Conversion
-├── features/               # Vertical slices of business logic
-│   ├── batch-processor/    # Drag & drop bulk processing logic
-│   ├── converter/          # Core Engines: Canvas processing, BMP encoding, PDF embedding
-│   ├── custom-formats/     # CRUD operations for user presets
-│   └── settings/           # Storage sync and global format toggles
-├── core/                   # Pure functions, math, and constants
-│   ├── image-utils.ts      # Dimension calculation & aspect ratio math
-│   └── paper-constants.ts  # Physical paper size to Pixel/DPI mappings
+imify/
+├── apps/
+│   ├── extension/          # Plasmo browser extension (Background, Popup, Sidepanel, Options)
+│   └── web/                # Next.js web application
+├── packages/
+│   ├── config/             # Shared build, lint, and Tailwind presets
+│   ├── core/               # Platform-agnostic types, math, and pure utilities
+│   ├── engine/             # Wasm worker pools, quantizers, and encoders
+│   ├── features/           # Shared business logic and UI (Splitter, Batch, SEO Audit)
+│   ├── stores/             # Global Zustand state management
+│   └── ui/                 # Design system (Radix, dnd-kit, Theme engines)
 ```
 
 ## 🚀 Getting Started
@@ -99,15 +106,18 @@ src/
 
 ### Development
 
-To start the development server (Hot Module Replacement enabled):
+We use Turborepo to manage tasks across the monorepo.
 
 ```bash
-# Default (Chrome)
+# Start all development servers (Web app + Extension on Chrome)
 pnpm dev
 
-# Specific targets
-pnpm dev:chrome
-pnpm dev:firefox
+# Start only the Web app
+pnpm --filter @imify/web dev
+
+# Start only the Extension (Targeting specific browsers)
+pnpm --filter @imify/extension dev:chrome
+pnpm --filter @imify/extension dev:firefox
 ```
 
 ### Loading the Extension
@@ -168,10 +178,3 @@ This extension is explicitly designed to respect user privacy:
 ## 📄 License
 
 This project is licensed under the Apache 2.0 License - see the [LICENSE](./LICENSE) file for details.
-
-## 💝 Support & Donate
-
-If you find Imify useful, please consider supporting its development:
-
-[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-6e5494?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/TrongAJTT)
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/trongajtt)

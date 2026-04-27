@@ -2,7 +2,7 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 
 const projectRoot = process.cwd()
-const targetDir = resolve(projectRoot, "assets/wasm")
+const targetDir = resolve(projectRoot, "../../assets/wasm")
 
 const RESIZE_ASSETS = [
   {

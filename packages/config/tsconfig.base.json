@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": true,
+    "noEmit": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@imify/core/*": ["../core/src/*"],
+      "@imify/engine/*": ["../engine/src/*"],
+      "@imify/ui/*": ["../ui/src/*"],
+      "@imify/features/*": ["../features/src/*"],
+      "@imify/stores/*": ["../stores/src/*"],
+      "@imify/core": ["../core/src/index.ts"],
+      "@imify/engine": ["../engine/src/index.ts"],
+      "@imify/ui": ["../ui/src/index.ts"],
+      "@imify/features": ["../features/src/index.ts"],
+      "@imify/stores": ["../stores/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build"]
+}
