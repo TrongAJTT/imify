@@ -30,7 +30,7 @@ import {
 import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { useShortcutActions } from "../filling/use-shortcut-actions"
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
-import { useClipboardPaste } from "../shared/use-clipboard-paste"
+import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake"
 import { hasFileDragPayload, isCommonImageFile } from "../shared/image-file-utils"
 import type { SplicingExportMode } from "./use-splicing-export"
 
@@ -182,7 +182,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
     },
   ])
 
-  useClipboardPaste({ onFiles: (files) => void addFiles(files) })
+  useClipboardImageIntake({ mode: "multiple", onImages: (files) => void addFiles(files) })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imagesCountRef = useRef(0)
   const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)

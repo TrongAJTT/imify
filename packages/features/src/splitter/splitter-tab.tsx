@@ -31,6 +31,7 @@ import { buildActiveSplitterFormatOptions } from "@imify/stores/stores/splitter-
 import { useSplitterStore } from "@imify/stores/stores/splitter-store"
 import { SplitterWorkspaceShell } from "./splitter-workspace-shell"
 import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-utils"
+import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake"
 const splitterGuideHelpVideo = "assets/features/image-splitter_visual-guides-control.webm"
 
 interface SplitterImageItem {
@@ -365,6 +366,13 @@ export function SplitterTab() {
       importToastHideTimerRef.current = null
     }, 2500)
   }, [activeImageId, exportSettings.targetFormat, pushImportToast])
+
+  useClipboardImageIntake({
+    mode: "multiple",
+    onImages: (files) => {
+      void appendFiles(files)
+    }
+  })
 
   const handleDropFiles = useCallback((files: FileList | null) => {
     if (!files || files.length === 0) {

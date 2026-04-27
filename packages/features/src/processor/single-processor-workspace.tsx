@@ -23,7 +23,7 @@ import {
   COMMON_IMAGE_ACCEPT,
   isCommonImageFile,
 } from "../shared/image-file-utils";
-import { useClipboardPaste } from "../shared/use-clipboard-paste";
+import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 import { ImageUrlImportControl } from "./image-url-import-control";
 import {
   withBatchResize,
@@ -259,8 +259,9 @@ export function SingleProcessorWorkspace({
     }
   };
 
-  useClipboardPaste({
-    onFiles: (files) => {
+  useClipboardImageIntake({
+    mode: "single",
+    onImages: (files) => {
       if (files[0]) void attachSingleFile(files[0]);
     },
     onUrls: importFromImageUrls,

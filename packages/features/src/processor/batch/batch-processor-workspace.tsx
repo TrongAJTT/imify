@@ -7,7 +7,7 @@ import type { ConversionProgressPayload, FormatConfig } from "@imify/core/types"
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store"
-import { useClipboardPaste } from "../../shared/use-clipboard-paste"
+import { useClipboardImageIntake } from "../../shared/use-clipboard-image-intake"
 import { BatchDownloadConfirmDialog } from "../../shared/download-confirm-dialog"
 import { ImageUrlImportControl } from "../image-url-import-control"
 import { buildActiveCodecOptionsForTarget } from "../target-format-state"
@@ -109,7 +109,7 @@ export function BatchProcessorWorkspace() {
       setQueue((items) => arrayMove(items, items.findIndex((item) => item.id === active.id), items.findIndex((item) => item.id === over.id)))
     }
   }
-  useClipboardPaste({ onFiles: appendImageFiles, onUrls: importFromImageUrls })
+  useClipboardImageIntake({ mode: "multiple", onImages: appendImageFiles, onUrls: importFromImageUrls })
   const totalQueueBytes = useMemo(() => queue.reduce((sum, item) => sum + item.file.size, 0), [queue])
   const queueTooLarge = totalQueueBytes > MAX_TOTAL_QUEUE_BYTES
   const queueStats = useMemo(() => queue.reduce((acc, item) => { acc[item.status] += 1; return acc }, { queued: 0, processing: 0, success: 0, error: 0 }), [queue])

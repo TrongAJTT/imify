@@ -8,7 +8,8 @@ import { decodeFileToImageData } from "@imify/engine/image-pipeline/decode-image
 import { renderImageDataPreview } from "@imify/engine/image-pipeline/render-image-data"
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { Button, MutedText, Subheading } from "@imify/ui"
-import { useClipboardPaste } from "../shared/use-clipboard-paste"
+import { isCommonImageFile } from "../shared/image-file-utils"
+import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake"
 
 export interface SharedDiffcheckerRenderProps {
   imageA: DiffImageItem | null
@@ -34,11 +35,6 @@ export interface SharedDiffcheckerRenderProps {
 
 interface SharedDiffcheckerPageProps {
   renderWorkspace: (props: SharedDiffcheckerRenderProps) => ReactNode
-}
-
-function isImageLikeFile(file: File): boolean {
-  if (file.type.startsWith("image/")) return true
-  return /\.(png|jpe?g|webp|avif|bmp|gif|tiff?|jxl|ico)$/i.test(file.name)
 }
 
 async function createImageItemWithDecodedData(file: File): Promise<{ item: DiffImageItem; imageData: ImageData }> {
@@ -86,7 +82,7 @@ export function SharedDiffcheckerPage({ renderWorkspace }: SharedDiffcheckerPage
   const setSplitPosition = useDiffcheckerStore((s) => s.setSplitPosition)
 
   const handleLoadFromSide = useCallback(async (side: "A" | "B", files: File[]) => {
-    const validFiles = files.filter(isImageLikeFile)
+    const validFiles = files.filter(isCommonImageFile)
     if (validFiles.length === 0) return
     setDiffResult(null)
 
@@ -170,8 +166,9 @@ export function SharedDiffcheckerPage({ renderWorkspace }: SharedDiffcheckerPage
 
   useEffect(() => () => { for (const url of prevUrlsRef.current) URL.revokeObjectURL(url) }, [])
 
-  useClipboardPaste({
-    onFiles: (files) => {
+  useClipboardImageIntake({
+    mode: "single",
+    onImages: (files) => {
       const file = files[0]
       if (!file) return
       if (!imageA || pasteSlotRef.current === "A") { void handleLoadA([file]); pasteSlotRef.current = "B" }

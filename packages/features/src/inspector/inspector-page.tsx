@@ -6,7 +6,7 @@ import { inspectImage, type InspectorResult } from "./index"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { Button, MutedText, Subheading } from "@imify/ui"
-import { useClipboardPaste } from "../shared/use-clipboard-paste"
+import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake"
 
 export interface SharedInspectorRenderProps {
   file: File | null
@@ -81,8 +81,9 @@ export function SharedInspectorPage({
 
   useEffect(() => () => { if (prevUrlRef.current) URL.revokeObjectURL(prevUrlRef.current) }, [])
 
-  useClipboardPaste({
-    onFiles: (files) => { if (files[0]) void handleLoadFile(files[0]) },
+  useClipboardImageIntake({
+    mode: "single",
+    onImages: (files) => { if (files[0]) void handleLoadFile(files[0]) },
     onFetchStart: () => setIsAnalyzing(true),
     onFetchEnd: () => setIsAnalyzing(false),
     onError: (msg) => setError(msg),
