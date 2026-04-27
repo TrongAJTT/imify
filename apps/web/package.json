@@ -9,9 +9,9 @@
     "sync:assets": "pnpm sync:features && pnpm check:media-assets",
     "predev": "pnpm sync:assets",
     "prebuild": "pnpm sync:assets",
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node ../../scripts/with-root-metadata.mjs next dev",
+    "build": "node ../../scripts/with-root-metadata.mjs next build",
+    "start": "node ../../scripts/with-root-metadata.mjs next start",
     "lint": "next lint",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },

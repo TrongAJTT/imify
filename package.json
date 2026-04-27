@@ -1,7 +1,13 @@
 {
   "name": "imify-monorepo",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "private": true,
+  "imifyMetadata": {
+    "displayName": "Imify - Powerful Image Toolkit",
+    "versionType": "Stable",
+    "description": "A privacy-first, powerful image toolkit. Save image directly from your context menu, and even more. Supports ICO, AVIF, JPEG XL.",
+    "author": "TrongAJTT <trong.ajtt.dev@gmail.com>"
+  },
   "packageManager": "pnpm@10.32.1",
   "scripts": {
     "dev:ext": "pnpm --filter @imify/extension dev",
