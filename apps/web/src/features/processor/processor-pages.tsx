@@ -99,6 +99,10 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
     return () => resetHeader()
   }, [context, resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
+  if (!isBatchStoreRehydrated || setupContext !== context) {
+    return <WorkspaceLoadingState title="Loading processor presets..." />
+  }
+
   return (
     <ProcessorPresetSelectView
       context={context}
@@ -277,10 +281,11 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
     )
   }
 
+  if (setupContext !== context || activePresetId !== preset.id) {
+    return <WorkspaceLoadingState title="Loading preset workspace..." />
+  }
+
   if (context === "single") {
-    if (!isBatchStoreRehydrated || setupContext !== context || activePresetId !== preset.id) {
-      return <WorkspaceLoadingState title="Loading preset workspace..." />
-    }
     return <SingleProcessorWorkspace />
   }
 

@@ -2,15 +2,33 @@
 
 import { SharedInspectorPage } from "@imify/features/inspector/inspector-page"
 import { InspectorDropZone, InspectorSidebarPanel, InspectorWorkspace } from "@imify/features/inspector"
-import { AnimatingSpinner } from "@imify/ui"
-import { useEffect, useMemo } from "react"
+import { AnimatingSpinner, WorkspaceLoadingState } from "@imify/ui"
+import { useEffect, useMemo, useState } from "react"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { useInspectorStore } from "@imify/stores/stores/inspector-store"
+
+function useInspectorStoreHydrated(): boolean {
+  const [hydrated, setHydrated] = useState(false)
+
+  useEffect(() => {
+    setHydrated(useInspectorStore.persist.hasHydrated())
+    const unsubStart = useInspectorStore.persist.onHydrate(() => setHydrated(false))
+    const unsubFinish = useInspectorStore.persist.onFinishHydration(() => setHydrated(true))
+    return () => {
+      unsubStart()
+      unsubFinish()
+    }
+  }, [])
+
+  return hydrated
+}
 
 export function InspectorPage() {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
+  const isHydrated = useInspectorStoreHydrated()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
@@ -29,6 +47,10 @@ export function InspectorPage() {
     )
     return () => resetHeader()
   }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
+
+  if (!isHydrated) {
+    return <WorkspaceLoadingState title="Loading image inspector..." />
+  }
 
   return (
     <SharedInspectorPage

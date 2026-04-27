@@ -7,6 +7,8 @@ import { Save } from "lucide-react"
 import { Button } from "@imify/ui/ui/button"
 import { MutedText, Subheading } from "@imify/ui/ui/typography"
 import { VisualHelpTooltip } from "@imify/ui/ui/visual-help-tooltip"
+import { PreviewInteractionModeToggle, ZoomPanControl } from "@imify/ui"
+import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
 import { templateStorage } from "./template-storage"
 import { SYMMETRIC_VISUAL_HELP_TOOLTIPS } from "./symmetric-tooltips"
 import type { FillingTemplate, SymmetricParams } from "./types"
@@ -20,9 +22,14 @@ import {
 } from "./symmetric-generator"
 import { flattenPoints, getBoundingBox } from "./vector-math"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
+import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
+import { useShortcutActions } from "./use-shortcut-actions"
 
 const CANVAS_PADDING = 40
+const PREVIEW_MIN_ZOOM = 50
+const PREVIEW_MAX_ZOOM = 10000
+const PREVIEW_ZOOM_STEP = 10
 const FIRST_CONTROL_ID = "first_axis_first_shape"
 const SECOND_CONTROL_ID = "first_axis_second_shape"
 const THIRD_CONTROL_ID = "second_axis_first_shape"
@@ -101,11 +108,15 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
   const stageRef = useRef<Konva.Stage>(null)
   const transformerRef = useRef<Konva.Transformer>(null)
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 })
+  const [previewZoom, setPreviewZoom] = useState(100)
+  const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 })
+  const [previewInteractionMode, setPreviewInteractionMode] = useState<PreviewInteractionMode>("zoom")
   const params = useFillingStore((state) => state.symmetricParams)
   const [selectedControlId, setSelectedControlId] = useState<SymmetricControlId | null>(null)
   const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false)
   const [cursor, setCursor] = useState("default")
   const [positionGuideLines, setPositionGuideLines] = useState<number[][]>([])
+  const { getShortcutLabel } = useShortcutPreferences()
   const updateTemplate = useFillingStore((state) => state.updateTemplate)
   const setSymmetricParams = useFillingStore((state) => state.setSymmetricParams)
   const setSymmetricLayerCount = useFillingStore((state) => state.setSymmetricLayerCount)
@@ -132,6 +143,86 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
     ro.observe(container)
     return () => ro.disconnect()
   }, [])
+
+  const clampPreviewZoom = useCallback((value: number) => {
+    return Math.max(PREVIEW_MIN_ZOOM, Math.min(PREVIEW_MAX_ZOOM, Math.round(value)))
+  }, [])
+
+  useShortcutActions([
+    { actionId: "global.preview.zoom_mode", handler: () => setPreviewInteractionMode("zoom") },
+    { actionId: "global.preview.pan_mode", handler: () => setPreviewInteractionMode("pan") },
+    { actionId: "global.preview.idle_mode", handler: () => setPreviewInteractionMode("idle") },
+  ])
+
+  const fitScale = useMemo(() => {
+    const availW = stageSize.width - CANVAS_PADDING * 2
+    const availH = stageSize.height - CANVAS_PADDING * 2
+    return Math.min(1, availW / template.canvasWidth, availH / template.canvasHeight)
+  }, [stageSize, template.canvasHeight, template.canvasWidth])
+
+  const handlePreviewWheel = useCallback((event: WheelEvent) => {
+    const target = event.target as HTMLElement | null
+    if (target?.closest('[class*="pointer-events-auto"]')) return
+    if (previewInteractionMode === "idle") return
+    if (event.cancelable) event.preventDefault()
+
+    if (previewInteractionMode === "pan") {
+      const delta = event.deltaY > 0 ? 50 : -50
+      if (event.shiftKey) {
+        setPreviewPan((current) => ({ ...current, x: current.x - delta }))
+      } else {
+        setPreviewPan((current) => ({ ...current, y: current.y - delta }))
+      }
+      return
+    }
+
+    const oldZoom = previewZoom
+    const nextZoom = clampPreviewZoom(oldZoom + (event.deltaY > 0 ? -PREVIEW_ZOOM_STEP : PREVIEW_ZOOM_STEP))
+    if (nextZoom === oldZoom) return
+
+    const oldRenderScale = fitScale * (oldZoom / 100)
+    const newRenderScale = fitScale * (nextZoom / 100)
+    if (oldRenderScale <= 0 || newRenderScale <= 0) {
+      setPreviewZoom(nextZoom)
+      return
+    }
+
+    const container = containerRef.current
+    if (!container) return
+
+    const rect = container.getBoundingClientRect()
+    const pointerX = event.clientX - rect.left
+    const pointerY = event.clientY - rect.top
+    const baseOffsetOldX = (stageSize.width - template.canvasWidth * oldRenderScale) / 2
+    const baseOffsetOldY = (stageSize.height - template.canvasHeight * oldRenderScale) / 2
+    const worldX = (pointerX - baseOffsetOldX - previewPan.x) / oldRenderScale
+    const worldY = (pointerY - baseOffsetOldY - previewPan.y) / oldRenderScale
+    const baseOffsetNewX = (stageSize.width - template.canvasWidth * newRenderScale) / 2
+    const baseOffsetNewY = (stageSize.height - template.canvasHeight * newRenderScale) / 2
+    const nextPanX = pointerX - baseOffsetNewX - worldX * newRenderScale
+    const nextPanY = pointerY - baseOffsetNewY - worldY * newRenderScale
+
+    setPreviewZoom(nextZoom)
+    setPreviewPan({ x: Math.round(nextPanX * 100) / 100, y: Math.round(nextPanY * 100) / 100 })
+  }, [
+    clampPreviewZoom,
+    fitScale,
+    previewInteractionMode,
+    previewPan.x,
+    previewPan.y,
+    previewZoom,
+    stageSize.height,
+    stageSize.width,
+    template.canvasHeight,
+    template.canvasWidth
+  ])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    container.addEventListener("wheel", handlePreviewWheel, { passive: false })
+    return () => container.removeEventListener("wheel", handlePreviewWheel)
+  }, [handlePreviewWheel])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -250,14 +341,9 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
     }
   }, [controlMap, selectedControlId])
 
-  const scale = useMemo(() => {
-    const availW = stageSize.width - CANVAS_PADDING * 2
-    const availH = stageSize.height - CANVAS_PADDING * 2
-    return Math.min(1, availW / template.canvasWidth, availH / template.canvasHeight)
-  }, [stageSize, template.canvasHeight, template.canvasWidth])
-
-  const offsetX = (stageSize.width - template.canvasWidth * scale) / 2
-  const offsetY = (stageSize.height - template.canvasHeight * scale) / 2
+  const renderScale = fitScale * (previewZoom / 100)
+  const offsetX = (stageSize.width - template.canvasWidth * renderScale) / 2 + previewPan.x
+  const offsetY = (stageSize.height - template.canvasHeight * renderScale) / 2 + previewPan.y
 
   useEffect(() => {
     const transformer = transformerRef.current
@@ -393,10 +479,19 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
             {template.canvasHeight} px
           </MutedText>
         </div>
-        <Button variant="primary" size="sm" onClick={handleSave}>
-          <Save size={14} />
-          Save Template
-        </Button>
+        <div className="flex items-center gap-3">
+          <PreviewInteractionModeToggle
+            mode={previewInteractionMode}
+            onChange={setPreviewInteractionMode}
+            zoomKeyHint={getShortcutLabel("global.preview.zoom_mode")}
+            panKeyHint={getShortcutLabel("global.preview.pan_mode")}
+            idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
+          />
+          <Button variant="primary" size="sm" onClick={handleSave}>
+            <Save size={14} />
+            Save Template
+          </Button>
+        </div>
       </div>
 
       <div
@@ -409,8 +504,8 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
             <Rect
               x={offsetX}
               y={offsetY}
-              width={template.canvasWidth * scale}
-              height={template.canvasHeight * scale}
+              width={template.canvasWidth * renderScale}
+              height={template.canvasHeight * renderScale}
               fill="#ffffff"
               stroke="#cbd5e1"
               strokeWidth={1}
@@ -418,13 +513,13 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
             />
 
             {generatedLayers.map((layer) => {
-              const flat = flattenPoints(layer.points).map((value) => value * scale)
+              const flat = flattenPoints(layer.points).map((value) => value * renderScale)
               return (
                 <Line
                   key={layer.id}
                   points={flat}
-                  x={offsetX + layer.x * scale}
-                  y={offsetY + layer.y * scale}
+                  x={offsetX + layer.x * renderScale}
+                  y={offsetY + layer.y * renderScale}
                   closed
                   fill="rgba(59, 130, 246, 0.12)"
                   stroke="#94a3b8"
@@ -435,10 +530,10 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
             })}
 
             {controls.map((control) => {
-              const stageX = offsetX + control.bounds.x * scale
-              const stageY = offsetY + control.bounds.y * scale
-              const stageWidth = Math.max(8, control.bounds.width * scale)
-              const stageHeight = Math.max(8, control.bounds.height * scale)
+              const stageX = offsetX + control.bounds.x * renderScale
+              const stageY = offsetY + control.bounds.y * renderScale
+              const stageWidth = Math.max(8, control.bounds.width * renderScale)
+              const stageHeight = Math.max(8, control.bounds.height * renderScale)
               const isSelected = selectedControlId === control.id
 
               return (
@@ -485,7 +580,7 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
                     setPositionGuideLines([])
                   }}
                   onDragMove={(event) => {
-                    const movingWorldRect = toWorldRect(event.target as Konva.Rect, offsetX, offsetY, scale)
+                    const movingWorldRect = toWorldRect(event.target as Konva.Rect, offsetX, offsetY, renderScale)
                     const candidateRects = controls
                       .filter((candidate) => candidate.id !== control.id)
                       .map((candidate) => candidate.bounds as RectBounds)
@@ -506,17 +601,17 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
                     const deltaY = constrainedRect.y - movingWorldRect.y
 
                     if (Math.abs(deltaX) > 0.001 || Math.abs(deltaY) > 0.001) {
-                      event.target.x(event.target.x() + deltaX * scale)
-                      event.target.y(event.target.y() + deltaY * scale)
+                      event.target.x(event.target.x() + deltaX * renderScale)
+                      event.target.y(event.target.y() + deltaY * renderScale)
                     }
 
                     const stageGuides = guides.map((guide) => {
                       if (guide.orientation === "vertical") {
-                        const x = offsetX + guide.value * scale
-                        return [x, offsetY, x, offsetY + template.canvasHeight * scale]
+                        const x = offsetX + guide.value * renderScale
+                        return [x, offsetY, x, offsetY + template.canvasHeight * renderScale]
                       }
-                      const y = offsetY + guide.value * scale
-                      return [offsetX, y, offsetX + template.canvasWidth * scale, y]
+                      const y = offsetY + guide.value * renderScale
+                      return [offsetX, y, offsetX + template.canvasWidth * renderScale, y]
                     })
                     setPositionGuideLines(stageGuides)
 
@@ -533,7 +628,7 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
                     applyThirdControlRect(constrainedRect)
                   }}
                   onDragEnd={(event) => {
-                    const worldRect = toWorldRect(event.target as Konva.Rect, offsetX, offsetY, scale)
+                    const worldRect = toWorldRect(event.target as Konva.Rect, offsetX, offsetY, renderScale)
 
                     if (control.id === FIRST_CONTROL_ID) {
                       applyFirstControlRect(worldRect, false)
@@ -558,7 +653,7 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
                     }
 
                     const node = event.target as Konva.Rect
-                    const worldRect = toWorldRect(node, offsetX, offsetY, scale)
+                    const worldRect = toWorldRect(node, offsetX, offsetY, renderScale)
                     applyFirstControlRect(worldRect, true)
 
                     node.scaleX(1)
@@ -596,6 +691,15 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
             />
           </Layer>
         </Stage>
+        <ZoomPanControl
+          zoom={previewZoom}
+          panX={previewPan.x}
+          panY={previewPan.y}
+          onZoomChange={setPreviewZoom}
+          onPanChange={(x, y) => setPreviewPan({ x, y })}
+          minZoom={PREVIEW_MIN_ZOOM}
+          maxZoom={PREVIEW_MAX_ZOOM}
+        />
       </div>
     </div>
   )

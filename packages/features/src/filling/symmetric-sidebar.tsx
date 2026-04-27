@@ -90,7 +90,13 @@ export function SymmetricSidebar({ template }: SymmetricSidebarProps) {
   const sublabel = `${params.axisDirection === "horizontal" ? "H" : "V"} axis, ${params.axisCount} axes, ${layerCount} shapes`
 
   return (
-    <AccordionCard icon={<Grid3x3 size={16} />} label="Symmetric Parameters" sublabel={sublabel} colorTheme="sky" defaultOpen={true}>
+    <AccordionCard icon={<Grid3x3 size={16} />}
+      label="Symmetric Parameters"
+      sublabel={sublabel}
+      colorTheme="sky"
+      alwaysOpen={true}
+      disabled={layerCount === 0}
+    >
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <SelectInput

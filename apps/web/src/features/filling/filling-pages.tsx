@@ -1,10 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
-import { Button } from "@imify/ui/ui/button"
+import { OctagonX } from "lucide-react"
 import { TemplateMethodDialog } from "@imify/features/filling/template-method-dialog"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { FillingTemplateListPanel } from "@imify/features/filling/template-list-panel"
@@ -17,6 +17,7 @@ import { FillingOverviewSidebar, FillingWorkflowSidebar } from "./filling-sideba
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { Heading, MutedText, WorkspaceLoadingState } from "@imify/ui"
 
 const ManualEditorWorkspace = dynamic(
   () => import("@imify/features/filling/manual-editor-workspace").then((m) => m.ManualEditorWorkspace),
@@ -39,6 +40,8 @@ interface FillingFlowPageProps {
   templateId: string
   routeBase: string
 }
+
+const SYMMETRIC_GENERATE_ACCESS_KEY = "imify_filling_symmetric_access_template_id"
 
 function toTitle(mode: FillingMode): string {
   if (mode === "fill") return "Filling Workspace"
@@ -90,6 +93,10 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
     return () => resetHeader()
   }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
+  if (!templatesLoaded) {
+    return <WorkspaceLoadingState title="Loading filling templates..." />
+  }
+
   return (
     <>
       <div className="space-y-4 p-0">
@@ -113,6 +120,7 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
             router.push(`${routeBase}/edit?id=${template.id}`)
             return
           }
+          window.sessionStorage.setItem(SYMMETRIC_GENERATE_ACCESS_KEY, template.id)
           router.push(`${routeBase}/symmetric-generate?id=${template.id}`)
         }}
       />
@@ -135,7 +143,9 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   const setActiveTemplateId = useFillingStore((state) => state.setActiveTemplateId)
   const setEditingTemplateId = useFillingStore((state) => state.setEditingTemplateId)
   const initFillStatesForTemplate = useFillingStore((state) => state.initFillStatesForTemplate)
-  const [didActivateMode, setDidActivateMode] = useState(false)
+  const fillingStep = useFillingStore((state) => state.fillingStep)
+  const activeTemplateId = useFillingStore((state) => state.activeTemplateId)
+  const editingTemplateId = useFillingStore((state) => state.editingTemplateId)
   const refreshTemplates = useCallback(async () => {
     const all = await templateStorage.getAll()
     setTemplates(all)
@@ -154,6 +164,10 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   const [selectedEditorLayerId, setSelectedEditorLayerId] = useState<string | null>(null)
   const [selectedEditorLayerIds, setSelectedEditorLayerIds] = useState<string[]>([])
   const [isSavingTemplate, setIsSavingTemplate] = useState(false)
+  const [symmetricAccessStatus, setSymmetricAccessStatus] = useState<"checking" | "allowed" | "blocked">(
+    mode === "symmetric-generate" ? "checking" : "allowed"
+  )
+  const symmetricAccessValidatedRef = useRef(false)
   const handleSelectEditorLayer = useCallback((id: string | null) => {
     setSelectedEditorLayerId(id)
     setSelectedEditorLayerIds(id ? [id] : [])
@@ -248,19 +262,56 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   ])
 
   useEffect(() => {
-    if (!template || didActivateMode) {
+    if (mode !== "symmetric-generate") {
+      symmetricAccessValidatedRef.current = false
+      setSymmetricAccessStatus("allowed")
       return
     }
-    setFillingStep(toFillingStep(mode))
-    setActiveTemplateId(template.id)
-    setEditingTemplateId(mode === "edit" ? template.id : null)
-    initFillStatesForTemplate(template)
-    setDidActivateMode(true)
-  }, [didActivateMode, initFillStatesForTemplate, mode, setActiveTemplateId, setEditingTemplateId, setFillingStep, template])
+    if (symmetricAccessValidatedRef.current) {
+      setSymmetricAccessStatus("allowed")
+      return
+    }
+    const allowedTemplateId = window.sessionStorage.getItem(SYMMETRIC_GENERATE_ACCESS_KEY)
+    if (allowedTemplateId === templateId) {
+      symmetricAccessValidatedRef.current = true
+      setSymmetricAccessStatus("allowed")
+      window.setTimeout(() => {
+        window.sessionStorage.removeItem(SYMMETRIC_GENERATE_ACCESS_KEY)
+      }, 0)
+      return
+    }
+    setSymmetricAccessStatus("blocked")
+  }, [mode, templateId])
 
   useEffect(() => {
-    setDidActivateMode(false)
-  }, [mode, templateId])
+    if (!template) {
+      return
+    }
+    const nextStep = toFillingStep(mode)
+    const nextEditingTemplateId = mode === "edit" ? template.id : null
+    if (activeTemplateId !== template.id) {
+      initFillStatesForTemplate(template)
+    }
+    if (fillingStep !== nextStep) {
+      setFillingStep(nextStep)
+    }
+    if (activeTemplateId !== template.id) {
+      setActiveTemplateId(template.id)
+    }
+    if (editingTemplateId !== nextEditingTemplateId) {
+      setEditingTemplateId(nextEditingTemplateId)
+    }
+  }, [
+    activeTemplateId,
+    editingTemplateId,
+    fillingStep,
+    initFillStatesForTemplate,
+    mode,
+    setActiveTemplateId,
+    setEditingTemplateId,
+    setFillingStep,
+    template
+  ])
 
   useEffect(() => {
     if (!template || mode !== "edit") return
@@ -273,10 +324,26 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   }, [mode, template])
 
   if (!templatesLoaded) {
+    return <WorkspaceLoadingState title={`Loading ${toTitle(mode).toLowerCase()}...`} />
+  }
+
+  if (mode === "symmetric-generate" && symmetricAccessStatus === "checking") {
+    return <WorkspaceLoadingState title="Validating symmetric generator access..." />
+  }
+
+  if (mode === "symmetric-generate" && symmetricAccessStatus === "blocked") {
     return (
-      <div className="space-y-3 p-0">
-        <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
-        <p className="text-sm text-slate-500">Loading template...</p>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <div className="rounded-full border border-rose-200 bg-rose-50 p-3 text-rose-500 dark:border-rose-900/60 dark:bg-rose-900/20 dark:text-rose-400">
+          <OctagonX size={22} />
+        </div>
+        <Heading className="text-2xl text-rose-600 dark:text-rose-400">Direct access is not allowed</Heading>
+        <MutedText className="max-w-xl text-base">
+          This page can only be opened right after creating a template from the Create Template dialog.
+        </MutedText>
+        <Link href={routeBase} className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
+          Back to template list
+        </Link>
       </div>
     )
   }
@@ -291,6 +358,16 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
         </Link>
       </div>
     )
+  }
+
+  const modeReady = mode === "edit"
+    ? fillingStep === "create_manual" && activeTemplateId === template.id && editingTemplateId === template.id
+    : mode === "fill"
+      ? fillingStep === "select" && activeTemplateId === template.id && editingTemplateId === null
+      : fillingStep === "create_symmetric" && activeTemplateId === template.id && editingTemplateId === null
+
+  if (!modeReady) {
+    return <WorkspaceLoadingState title={`Loading ${toTitle(mode).toLowerCase()}...`} />
   }
 
   return (
