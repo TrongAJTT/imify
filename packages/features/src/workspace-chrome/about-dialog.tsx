@@ -3,6 +3,7 @@
 import React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Bug, Github, LayoutGrid, Library, X } from "lucide-react"
+import { IMIFY_LINKS } from "@imify/core"
 import { getAppMetadata } from "@imify/core/app-metadata"
 import { useDevModeEnabled } from "@imify/features/dev-mode/dev-mode-storage"
 import { useToast } from "@imify/core/hooks/use-toast"
@@ -201,7 +202,7 @@ export function AboutDialog({
             <div>
               <Kicker className="text-[10px] font-black tracking-widest leading-none">A project by</Kicker><br/>
               <a
-                href="https://github.com/TrongAJTT"
+                href={IMIFY_LINKS.authorProfile}
                 target="_blank"
                 rel="noreferrer"
                 className="text-lg text-slate-900 dark:text-white font-bold hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
@@ -222,11 +223,11 @@ export function AboutDialog({
                   Attribution
                 </button>
               </Tooltip>
-              <ActionLink href="https://github.com/TrongAJTT/imify" tooltip="View Github repo of Imify" emphasized>
+              <ActionLink href={IMIFY_LINKS.repository} tooltip="View Github repo of Imify" emphasized>
                 <Github size={15} />
                 Repository
               </ActionLink>
-              <ActionLink href="https://www.trongajtt.com/apps" tooltip="View Author's Apps">
+              <ActionLink href={IMIFY_LINKS.moreApps} tooltip="View Author's Apps">
                 <LayoutGrid size={15} />
                 More Apps
               </ActionLink>
@@ -243,7 +244,7 @@ export function AboutDialog({
             </Tooltip>
             <MutedText className="flex items-center justify-center lg:justify-end gap-3 text-xs font-medium">
               <a
-                href="https://www.trongajtt.com/apps/imify/terms/"
+                href={IMIFY_LINKS.terms}
                 target="_blank"
                 rel="noreferrer"
                 className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
@@ -252,7 +253,7 @@ export function AboutDialog({
               </a>
               <span className="text-slate-300 dark:text-slate-700">|</span>
               <a
-                href="https://www.trongajtt.com/apps/imify/policy/"
+                href={IMIFY_LINKS.privacy}
                 target="_blank"
                 rel="noreferrer"
                 className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"

@@ -154,6 +154,7 @@ export function SplicingLandingPage() {
       return
     }
     ensureDefaultPreset()
+
     setPresetViewMode("select")
   }, [ensureDefaultPreset, isRehydrated, setPresetViewMode])
 

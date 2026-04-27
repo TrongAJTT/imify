@@ -12,6 +12,10 @@ import SidepanelAuditSnapshotApp from "@/sidepanel/sidepanel-audit-snapshot-app"
 
 import { toUserFacingConversionError } from "@imify/core/error-utils"
 import {
+  DEFAULT_PREFER_RECENT_PRESET_ENTRY,
+  PREFER_RECENT_PRESET_ENTRY_KEY
+} from "@imify/core"
+import {
   AboutDialog,
   DonateDialog,
   WorkspaceSettingsDialog,
@@ -59,6 +63,9 @@ import {
 } from "@/options/shared/performance-preferences"
 import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
+import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
+import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
@@ -259,6 +266,10 @@ export default function OptionsPage() {
     "global"
   )
   const [activeTab, setActiveTab] = useState<OptionsTab>("context-menu")
+  const [preferRecentPresetEntry, setPreferRecentPresetEntry, { isLoading: isPreferRecentPresetEntryLoading }] = useStorage<boolean>(
+    { key: PREFER_RECENT_PRESET_ENTRY_KEY, instance: syncStorage },
+    DEFAULT_PREFER_RECENT_PRESET_ENTRY
+  )
   const [isNavCollapsed, setIsNavCollapsed] = useStorage<boolean>(
     { key: "imify_options_nav_collapsed", instance: syncStorage },
     false
@@ -292,6 +303,7 @@ export default function OptionsPage() {
 
   const isLoading =
     isSettingsLoading ||
+    isPreferRecentPresetEntryLoading ||
     isLayoutPreferencesLoading ||
     isPerformancePreferencesLoading ||
     !isBatchStoreRehydrated
@@ -333,6 +345,71 @@ export default function OptionsPage() {
     setPreviewQualityPercent(next)
   }, [setPreviewQualityPercent])
 
+  const handleToolTabActivation = useCallback((nextTab: OptionsTab) => {
+    if (nextTab === "single" || nextTab === "batch") {
+      const context = nextTab
+      setSetupContext(context)
+      const batchState = useBatchStore.getState()
+      const scopedPresets = batchState.presets.filter((preset) => preset.context === context)
+      const recentPresetId = batchState.recentPresetIds[context] ?? null
+      const canOpenRecentPreset =
+        preferRecentPresetEntry &&
+        !!recentPresetId &&
+        scopedPresets.some((preset) => preset.id === recentPresetId)
+      if (canOpenRecentPreset && recentPresetId) {
+        batchState.applyPresetToCurrentContext(recentPresetId)
+        batchState.setPresetViewMode(context, "workspace")
+      } else {
+        batchState.setPresetViewMode(context, "select")
+      }
+      return
+    }
+
+    if (nextTab === "splitter") {
+      const splitterState = useSplitterPresetStore.getState()
+      const recentPresetId = splitterState.recentPresetId
+      const canOpenRecentPreset =
+        preferRecentPresetEntry &&
+        !!recentPresetId &&
+        splitterState.presets.some((preset) => preset.id === recentPresetId)
+      if (canOpenRecentPreset && recentPresetId) {
+        splitterState.applyPreset(recentPresetId)
+      } else {
+        splitterState.setPresetViewMode("select")
+      }
+      return
+    }
+
+    if (nextTab === "splicing") {
+      const splicingState = useSplicingPresetStore.getState()
+      const recentPresetId = splicingState.recentPresetId
+      const canOpenRecentPreset =
+        preferRecentPresetEntry &&
+        !!recentPresetId &&
+        splicingState.presets.some((preset) => preset.id === recentPresetId)
+      if (canOpenRecentPreset && recentPresetId) {
+        splicingState.applyPreset(recentPresetId)
+      } else {
+        splicingState.setPresetViewMode("select")
+      }
+      return
+    }
+
+    if (nextTab === "pattern") {
+      const patternState = usePatternPresetStore.getState()
+      const recentPresetId = patternState.recentPresetId
+      const canOpenRecentPreset =
+        preferRecentPresetEntry &&
+        !!recentPresetId &&
+        patternState.presets.some((preset) => preset.id === recentPresetId)
+      if (canOpenRecentPreset && recentPresetId) {
+        patternState.applyPreset(recentPresetId)
+      } else {
+        patternState.setPresetViewMode("select")
+      }
+    }
+  }, [preferRecentPresetEntry, setSetupContext])
+
   useEffect(() => {
     if (didInitDefaultTabRef.current) {
       return
@@ -349,10 +426,8 @@ export default function OptionsPage() {
   }, [isDefaultTabLoading, safeDefaultOptionsTab])
 
   useEffect(() => {
-    if (activeTab === "single" || activeTab === "batch") {
-      setSetupContext(activeTab)
-    }
-  }, [activeTab, setSetupContext])
+    handleToolTabActivation(activeTab)
+  }, [activeTab, handleToolTabActivation])
 
   useEffect(() => {
     if (activeTab !== "context-menu") {
@@ -486,6 +561,10 @@ export default function OptionsPage() {
         onChangeDefaultScreenValue={(tab) => {
           const nextTab = sanitizeOptionsTab(tab)
           void setDefaultOptionsTab(nextTab)
+        }}
+        preferRecentPresetEntry={preferRecentPresetEntry}
+        onChangePreferRecentPresetEntry={(checked) => {
+          void setPreferRecentPresetEntry(checked)
         }}
         usageEntries={usageEntries}
         onResetUsageStats={() => {

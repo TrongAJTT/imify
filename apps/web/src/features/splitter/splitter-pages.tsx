@@ -43,7 +43,6 @@ export function SplitterLandingPage() {
   const presets = useSplitterPresetStore((state) => state.presets)
   const ensureDefaultPreset = useSplitterPresetStore((state) => state.ensureDefaultPreset)
   const saveCurrentPreset = useSplitterPresetStore((state) => state.saveCurrentPreset)
-  const applyPreset = useSplitterPresetStore((state) => state.applyPreset)
   const updatePresetMeta = useSplitterPresetStore((state) => state.updatePresetMeta)
   const deletePreset = useSplitterPresetStore((state) => state.deletePreset)
   const setPresetViewMode = useSplitterPresetStore((state) => state.setPresetViewMode)
@@ -58,6 +57,7 @@ export function SplitterLandingPage() {
       return
     }
     ensureDefaultPreset()
+
     setPresetViewMode("select")
   }, [ensureDefaultPreset, isHydrated, setPresetViewMode])
 

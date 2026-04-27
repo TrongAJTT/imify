@@ -4,6 +4,7 @@ import {
   getWorkspaceToolsMenuGroups,
   renderWorkspaceToolIcon
 } from "@imify/features/workspace-shell/workspace-tools"
+import { buildToolEntryHref } from "@/features/presets/tool-entry-route"
 import { Button } from "@imify/ui/ui/button"
 import { BodyText, Heading, Kicker, MutedText, Subheading } from "@imify/ui/ui/typography"
 import { WEB_ROUTE_METADATA } from "./seo-metadata"
@@ -112,7 +113,7 @@ export default function Home() {
         </BodyText>
         <div className="flex flex-wrap justify-center gap-4 pt-4">
           <Button size="lg" className="rounded-full px-8 h-12 text-base" asChild>
-            <Link href="/single-processor">Start Processing Your Images</Link>
+            <Link href={buildToolEntryHref("single-processor", "/single-processor")}>Start Processing Your Images</Link>
           </Button>
         </div>
       </section>
@@ -131,7 +132,7 @@ export default function Home() {
             {ALL_TOOLS.map((tool) => (
               <Link
                 key={tool.id}
-                href={tool.href}
+                href={buildToolEntryHref(tool.id, tool.href)}
                 className="group flex flex-col items-center text-center bg-white p-8 transition-colors hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
               >
                 <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50">

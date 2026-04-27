@@ -9,6 +9,7 @@ import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { ToastContainer } from "@imify/ui/components/toast-container"
 import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { DiscreteSlider, type DiscreteSliderOption } from "@imify/ui/ui/discrete-slider"
 import { SelectInput } from "@imify/ui/ui/select-input"
 import { ToggleSwitchLabel } from "@imify/ui/ui/toggle-switch-label"
@@ -51,6 +52,8 @@ interface WorkspaceSettingsDialogProps {
   defaultScreenValue: string
   defaultScreenOptions: WorkspaceDefaultScreenOption[]
   onChangeDefaultScreenValue: (value: string) => void
+  preferRecentPresetEntry: boolean
+  onChangePreferRecentPresetEntry: (checked: boolean) => void
   usageEntries: Array<{ id: string; name: string; count: number }>
   onResetUsageStats: () => void
   layoutPreferences: WorkspaceLayoutPreferences
@@ -71,6 +74,8 @@ export function WorkspaceSettingsDialog({
   defaultScreenValue,
   defaultScreenOptions,
   onChangeDefaultScreenValue,
+  preferRecentPresetEntry,
+  onChangePreferRecentPresetEntry,
   usageEntries,
   onResetUsageStats,
   layoutPreferences,
@@ -247,6 +252,12 @@ export function WorkspaceSettingsDialog({
                   value={defaultScreenValue}
                   options={defaultScreenOptions}
                   onChange={onChangeDefaultScreenValue}
+                />
+                <CheckboxCard
+                  title="Prefer recently used preset"
+                  subtitle="Open the most recently used preset when entering preset-based tools, if available."
+                  checked={preferRecentPresetEntry}
+                  onChange={onChangePreferRecentPresetEntry}
                 />
               </section>
 

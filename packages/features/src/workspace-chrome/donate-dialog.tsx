@@ -2,6 +2,7 @@
 
 import React from "react"
 import { Heart, X } from "lucide-react"
+import { IMIFY_LINKS } from "@imify/core"
 import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
 import { IconLeadingButton } from "@imify/ui/ui/icon-leading-button"
@@ -44,7 +45,7 @@ export function DonateDialog({
             leadingIcon={
               <img src={githubLogoSrc} alt="GitHub" className="h-5 w-5 shrink-0 brightness-0" />
             }
-            href="https://github.com/sponsors/TrongAJTT"
+            href={IMIFY_LINKS.githubSponsor}
             rel="noreferrer"
             target="_blank"
           >
@@ -56,7 +57,7 @@ export function DonateDialog({
             leadingIcon={
               <img src={buyMeCoffeeLogoSrc} alt="Buy Me A Coffee" className="h-5 w-5 shrink-0" />
             }
-            href="https://www.buymeacoffee.com/TrongAJTT"
+            href={IMIFY_LINKS.buyMeCoffee}
             rel="noreferrer"
             target="_blank"
           >

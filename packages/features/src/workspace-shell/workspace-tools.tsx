@@ -41,6 +41,16 @@ export interface WorkspaceToolDefinition {
   showOnExtSidebar?: boolean
 }
 
+export const PRESET_RECENT_ENTRY_TOOL_IDS = [
+  "single-processor",
+  "batch-processor",
+  "splitter",
+  "splicing",
+  "pattern-generator"
+] as const
+
+export type PresetRecentEntryToolId = (typeof PRESET_RECENT_ENTRY_TOOL_IDS)[number]
+
 export interface WorkspaceToolCategoryDefinition {
   id: WorkspaceToolCategoryId
   label: string

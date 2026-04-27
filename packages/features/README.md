@@ -40,3 +40,6 @@ Each feature typically includes:
 
 ## Integration
 Applications import these features and wrap them in their respective platform-specific shells (Next.js layout or Extension Options page).
+
+## Feature Docs
+- `docs/PRESET_ENTRY_FLOW.md`: Cross-platform behavior and architecture for "Prefer recently used preset" entry flow (Web redirect route vs Extension tab-state activation).

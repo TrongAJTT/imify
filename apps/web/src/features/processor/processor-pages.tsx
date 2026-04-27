@@ -50,7 +50,6 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
   const saveCurrentPreset = useBatchStore((state) => state.saveCurrentPreset)
   const updatePresetMeta = useBatchStore((state) => state.updatePresetMeta)
   const deletePreset = useBatchStore((state) => state.deletePreset)
-  const applyPresetToCurrentContext = useBatchStore((state) => state.applyPresetToCurrentContext)
   const ensureDefaultPresetForContext = useBatchStore((state) => state.ensureDefaultPresetForContext)
   const isBatchStoreRehydrated = useBatchStore((store) => (store as any)._hasHydrated)
   const scopedPresets = useMemo(() => presets.filter((preset) => preset.context === context), [context, presets])
@@ -108,7 +107,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
       context={context}
       presets={scopedPresets}
       activePresetId={null}
-      onOpenPreset={(presetId) => { applyPresetToCurrentContext(presetId); router.push(`${getRoutePrefix(context)}/work?id=${presetId}`) }}
+      onOpenPreset={(presetId) => { router.push(`${getRoutePrefix(context)}/work?id=${presetId}`) }}
       onCreatePreset={(name, color) => {
         if (setupContext !== context) setSetupContext(context)
         const createdId = saveCurrentPreset({ name, highlightColor: color })

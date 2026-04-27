@@ -137,7 +137,6 @@ export function PatternLandingPage() {
   const ensureDefaultPreset = usePatternPresetStore((state) => state.ensureDefaultPreset)
   const setPresetViewMode = usePatternPresetStore((state) => state.setPresetViewMode)
   const saveCurrentPreset = usePatternPresetStore((state) => state.saveCurrentPreset)
-  const applyPreset = usePatternPresetStore((state) => state.applyPreset)
   const updatePresetMeta = usePatternPresetStore((state) => state.updatePresetMeta)
   const togglePresetPin = usePatternPresetStore((state) => state.togglePresetPin)
   const deletePreset = usePatternPresetStore((state) => state.deletePreset)
@@ -157,6 +156,7 @@ export function PatternLandingPage() {
       return
     }
     ensureDefaultPreset()
+
     setPresetViewMode("select")
   }, [ensureDefaultPreset, isHydrated, setPresetViewMode])
 
