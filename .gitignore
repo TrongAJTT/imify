@@ -49,3 +49,6 @@ apps/web/public/assets/
 
 # Generated shared wasm source-of-truth
 assets/wasm/
+
+# Turbo
+.turbo/cache/

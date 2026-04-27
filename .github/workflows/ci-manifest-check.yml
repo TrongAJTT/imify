@@ -37,4 +37,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build and verify target manifests
-        run: pnpm build:ci
+        run: pnpm --filter @imify/extension build:ci
