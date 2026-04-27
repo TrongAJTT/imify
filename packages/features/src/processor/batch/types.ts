@@ -19,6 +19,8 @@ export const HIGH_CONCURRENCY_FORMATS: ImageFormat[] = BASE_HIGH_CONCURRENCY_FOR
 export interface BatchQueueItem {
   id: string
   file: File
+  sourceWidth?: number
+  sourceHeight?: number
   status: BatchItemStatus
   percent: number
   message?: string

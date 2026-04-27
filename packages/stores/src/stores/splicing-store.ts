@@ -7,6 +7,7 @@ import {
   mergeNormalizedWebpExportSource
 } from "@imify/core/codec-options"
 import { mergeNormalizedJxlExportSource } from "@imify/core/jxl-options"
+import type { ResizeQuickStats } from "@imify/core/resize-quick-stats"
 import type {
   SplicingAlignment,
   SplicingCanvasStyle,
@@ -63,6 +64,7 @@ export interface SplicingStoreState {
   imageBorderRadius: number
   imageBorderWidth: number
   imageBorderColor: string
+  resizeQuickStats: ResizeQuickStats
 
   exportFormat: SplicingExportFormat
   exportQuality: number
@@ -137,6 +139,7 @@ export interface SplicingStoreState {
   setImageBorderRadius: (v: number) => void
   setImageBorderWidth: (v: number) => void
   setImageBorderColor: (v: string) => void
+  setResizeQuickStats: (v: ResizeQuickStats) => void
   setExportFormat: (v: SplicingExportFormat) => void
   setExportQuality: (v: number) => void
   setExportJxlEffort: (v: number) => void
@@ -272,6 +275,10 @@ export const useSplicingStore = create<SplicingStoreState>()(
       imageBorderRadius: 0,
       imageBorderWidth: 0,
       imageBorderColor: "#000000",
+      resizeQuickStats: {
+        width: null,
+        height: null
+      },
 
       exportFormat: "png",
       exportQuality: 92,
@@ -338,6 +345,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setImageBorderRadius: (v) => set({ imageBorderRadius: v }),
       setImageBorderWidth: (v) => set({ imageBorderWidth: v }),
       setImageBorderColor: (v) => set({ imageBorderColor: v }),
+      setResizeQuickStats: (v) => set({ resizeQuickStats: v }),
       setExportFormat: (v) => set({ exportFormat: v }),
       setExportQuality: (v) => set({ exportQuality: v }),
       setExportJxlEffort: (v) => set((state) => buildNormalizedSplicingJxlPatch(state, { exportJxlEffort: v })),
@@ -485,6 +493,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
           setCanvasBorderRadius, setCanvasBorderWidth, setCanvasBorderColor, setBackgroundColor,
           setImageResize, setImageFitValue, setImagePadding, setImagePaddingColor,
           setImageBorderRadius, setImageBorderWidth, setImageBorderColor,
+          setResizeQuickStats, resizeQuickStats,
           setExportFormat, setExportQuality, setExportJxlEffort,
           setExportJxlLossless, setExportJxlProgressive, setExportJxlEpf,
           setExportWebpLossless, setExportWebpNearLossless, setExportWebpEffort,

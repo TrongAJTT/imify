@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Trash2 } from "lucide-react"
 
 import { APP_CONFIG } from "@imify/core/config"
+import { buildResizeQuickStatsFromDimensions } from "@imify/core/resize-quick-stats"
 import { ToastContainer } from "@imify/ui"
 import { useConversionToasts } from "@imify/core/hooks/use-toast"
 import type { ConversionProgressPayload } from "@imify/core/types"
@@ -238,6 +239,7 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   const previewShowImageNumber = useSplicingStore((s) => s.previewShowImageNumber)
   const setPreviewQualityPercent = useSplicingStore((s) => s.setPreviewQualityPercent)
   const setPreviewShowImageNumber = useSplicingStore((s) => s.setPreviewShowImageNumber)
+  const setResizeQuickStats = useSplicingStore((s) => s.setResizeQuickStats)
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const skipSplicingHeavyPreviewQualityWarning = useBatchStore(
     (state) => state.skipSplicingHeavyPreviewQualityWarning
@@ -267,6 +269,16 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
     () => resolveImageStyle(storeState),
     [imagePadding, imagePaddingColor, imageBorderRadius, imageBorderWidth, imageBorderColor]
   )
+  useEffect(() => {
+    setResizeQuickStats(
+      buildResizeQuickStatsFromDimensions(
+        images.map((image) => ({
+          width: image.originalWidth,
+          height: image.originalHeight
+        }))
+      )
+    )
+  }, [images, setResizeQuickStats])
 
   const previewImagesTotalPixels = useMemo(
     () => images.reduce((s, img) => s + img.originalWidth * img.originalHeight, 0),

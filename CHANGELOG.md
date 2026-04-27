@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Resize Quick Stats (Batch + Splicing):** Added a quick-resize popover next to `Value (px)` for `Fit width` / `Fit height` modes with one-click `Min / Avg / Max` values.
+  - Batch now computes stats from the entire queue image dimensions.
+  - Splicing now computes stats from all loaded images.
+  - Shared stat calculation was extracted to `@imify/core` (`resize-quick-stats`) to keep logic consistent across both features.
+  - Updated quick-resize trigger/labels to improve readability (`Quick Stats` + icon, queue-based description).
+
 - **Image Splitter Workspace:** Added a dedicated `Image Splitter` tab directly below `Image Splicing` with full preset workflow and batch split export.
   - New splitter preset lifecycle (`select` / `workspace`) with default preset auto-bootstrap and breadcrumb path: `Image Splitter > {PresetName}`.
   - New splitter workspace with multi-image queue, drag-and-drop import, drag-and-drop reorder strip, dimension mismatch warnings, active-image highlight + preview switcher, and split-plan overlay preview.

@@ -1,5 +1,6 @@
 import React from "react"
-import { Maximize2 } from "lucide-react"
+import { PencilRuler, Maximize2 } from "lucide-react"
+import type { ResizeQuickStats } from "@imify/core/resize-quick-stats"
 import {
   DEFAULT_RESAMPLING_ALGORITHM,
   RESAMPLING_ALGORITHM_OPTIONS,
@@ -8,7 +9,7 @@ import {
 import type { ResizeResamplingAlgorithm } from "@imify/core/types"
 import { SmartResizeModule } from "./smart-resize-module"
 import { PaperConfig } from "./paper-config"
-import { AccordionCard, NumberInput, SelectInput } from "@imify/ui"
+import { AccordionCard, ControlledPopover, Kicker, LabelText, NumberInput, SelectInput } from "@imify/ui"
 
 export type ResizeCardProps = {
   resizeMode: string
@@ -23,6 +24,7 @@ export type ResizeCardProps = {
   resizeSourceWidth: number
   resizeSourceHeight: number
   resizeSyncVersion: number
+  resizeQuickStats?: ResizeQuickStats
   paperSize: string
   dpi: number
   onResizeModeChange: (mode: string) => void
@@ -98,6 +100,7 @@ export function ResizeCard({
   resizeSourceWidth,
   resizeSourceHeight,
   resizeSyncVersion,
+  resizeQuickStats,
   paperSize,
   dpi,
   onResizeModeChange,
@@ -148,6 +151,40 @@ export function ResizeCard({
     safeResamplingAlgorithm
   )
   const showResamplingAlgorithm = Boolean(onResamplingAlgorithmChange) && resizeMode !== "none" && resizeMode !== "inherit"
+  const isFitWidthMode = resizeMode === "fit_width" || resizeMode === "change_width"
+  const isFitHeightMode = resizeMode === "fit_height" || resizeMode === "change_height"
+  const showQuickResizePopover = isFitWidthMode || isFitHeightMode
+  const sourceEdge =
+    isFitWidthMode
+      ? resizeSourceWidth
+      : isFitHeightMode
+        ? resizeSourceHeight
+        : 0
+  const hasSourceEdge = sourceEdge > 0
+  const quickStatsFromQueue = isFitWidthMode ? resizeQuickStats?.width : isFitHeightMode ? resizeQuickStats?.height : null
+  const quickResizeValues = quickStatsFromQueue
+    ? [
+        { id: "min", label: "Min", value: Math.max(1, Math.round(quickStatsFromQueue.min)) },
+        { id: "avg", label: "Avg", value: Math.max(1, Math.round(quickStatsFromQueue.avg)) },
+        { id: "max", label: "Max", value: Math.max(1, Math.round(quickStatsFromQueue.max)) }
+      ]
+    : hasSourceEdge
+    ? (() => {
+        const safeSource = Math.max(1, Math.round(sourceEdge))
+        return [
+          { id: "min", label: "Min", value: safeSource },
+          { id: "avg", label: "Avg", value: safeSource },
+          { id: "max", label: "Max", value: safeSource }
+        ]
+      })()
+    : (() => {
+        const quickResizeBase = Math.max(1, Math.round(resizeValue))
+        return [
+          { id: "min", label: "Min", value: Math.max(1, Math.round(quickResizeBase * 0.5)) },
+          { id: "avg", label: "Avg", value: Math.max(1, Math.round(quickResizeBase)) },
+          { id: "max", label: "Max", value: Math.max(1, Math.round(quickResizeBase * 1.5)) }
+        ]
+      })()
 
   return (
     <AccordionCard
@@ -175,13 +212,60 @@ export function ResizeCard({
           resizeMode === "change_height" ||
           resizeMode === "fit_height" ||
           resizeMode === "scale") && (
-          <NumberInput
-            label={resizeMode === "scale" ? "Scale (%)" : "Value (px)"}
-            disabled={disabled}
-            min={1}
-            value={resizeValue}
-            onChangeValue={onResizeValueChange}
-          />
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <LabelText className="text-xs">
+                {resizeMode === "scale" ? "Scale (%)" : "Value (px)"}
+              </LabelText>
+
+              {showQuickResizePopover ? (
+                <ControlledPopover
+                  trigger={
+                    <button
+                      type="button"
+                      aria-label="Open quick resize options"
+                      disabled={disabled}
+                      className="h-6 rounded-md border border-slate-200 dark:border-slate-700 px-2 text-[10px] font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-flex items-center gap-1 justify-center disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <PencilRuler size={11} />
+                      Quick Stats
+                    </button>
+                  }
+                  preset="inspector"
+                  behavior="hybrid"
+                  side="bottom"
+                  align="end"
+                  closeOnContentClick
+                  contentClassName="z-[9999] w-56 rounded-md border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                >
+                  <Kicker className="text-[11px] text-slate-600 dark:text-slate-300">
+                    Queue-based presets.
+                  </Kicker>
+                  <div className="mt-1 grid grid-cols-3 gap-1.5">
+                    {quickResizeValues.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => onResizeValueChange(preset.value)}
+                        className="inline-flex flex-col items-center justify-center rounded-md border border-slate-200 px-2 py-1.5 text-[11px] transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                      >
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">{preset.label}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">{preset.value}px</span>
+                      </button>
+                    ))}
+                  </div>
+                </ControlledPopover>
+              ) : null}
+            </div>
+
+            <NumberInput
+              disabled={disabled}
+              min={1}
+              value={resizeValue}
+              onChangeValue={onResizeValueChange}
+            />
+          </div>
         )}
 
         {resizeMode === "set_size" && (

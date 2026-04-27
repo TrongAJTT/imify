@@ -73,6 +73,7 @@ export function SplicingSidebarPanel({
   const imageBorderRadius = useSplicingStore((s) => s.imageBorderRadius)
   const imageBorderWidth = useSplicingStore((s) => s.imageBorderWidth)
   const imageBorderColor = useSplicingStore((s) => s.imageBorderColor)
+  const resizeQuickStats = useSplicingStore((s) => s.resizeQuickStats)
   const isImageResizeOpen = useSplicingStore((s) => s.isImageResizeOpen)
 
   const exportMode = useSplicingStore((s) => s.exportMode)
@@ -313,6 +314,7 @@ export function SplicingSidebarPanel({
           imageBorderRadius={imageBorderRadius}
           imageBorderWidth={imageBorderWidth}
           imageBorderColor={imageBorderColor}
+          resizeQuickStats={resizeQuickStats}
           isImageResizeOpen={isImageResizeOpen}
           onImageResizeChange={(mode) => setImageResize((mode === "original" ? "original" : mode) as SplicingImageResize)}
           onImageFitValueChange={setImageFitValue}

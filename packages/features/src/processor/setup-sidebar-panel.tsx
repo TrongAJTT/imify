@@ -61,6 +61,7 @@ export function BatchSetupSidebarPanel({
   const resizeSourceWidth = useBatchStore((state) => state.resizeSourceWidth)
   const resizeSourceHeight = useBatchStore((state) => state.resizeSourceHeight)
   const resizeSyncVersion = useBatchStore((state) => state.resizeSyncVersion)
+  const resizeQuickStats = useBatchStore((state) => state.resizeQuickStats)
   const paperSize = useBatchStore((state) => state.paperSize)
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
@@ -260,6 +261,7 @@ export function BatchSetupSidebarPanel({
           resizeSourceWidth={resizeSourceWidth}
           resizeSourceHeight={resizeSourceHeight}
           resizeSyncVersion={resizeSyncVersion}
+          resizeQuickStats={resizeQuickStats}
           paperSize={paperSize}
           dpi={dpi}
           onResizeModeChange={(mode) => {
