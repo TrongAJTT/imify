@@ -42,7 +42,7 @@ export function SelectInput({
 
   return (
     <div className={`space-y-1 ${className}`}>
-      <LabelText className="text-xs">{labelElement}</LabelText>
+      <LabelText className={`text-xs ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>{labelElement}</LabelText>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}

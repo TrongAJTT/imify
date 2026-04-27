@@ -18,6 +18,7 @@ import {
 import {
   AboutDialog,
   DonateDialog,
+  WORKSPACE_TOOLS,
   WorkspaceSettingsDialog,
   WorkspaceOptionsHeader,
   useIsDesktopLayout,
@@ -311,6 +312,14 @@ export default function OptionsPage() {
   const safeActiveContextMenuSubTab = sanitizeContextMenuSubTab(activeContextMenuSubTab)
   const safeLayoutPreferences = normalizeWorkspaceLayoutPreferences(layoutPreferences)
   const safePerformancePreferences = normalizePerformancePreferences(performancePreferences)
+  const defaultWorkspaceOptions = useMemo(
+    () =>
+      WORKSPACE_TOOLS.filter((tool) => tool.showOnExtSidebar && tool.extTabId).map((tool) => ({
+        value: tool.extTabId as OptionsTab,
+        label: tool.label
+      })),
+    []
+  )
   const devModeSettingsAdapter = useMemo<DevModeSettingsAdapter>(
     () => ({
       getSettingsState: getStorageState,
@@ -553,11 +562,9 @@ export default function OptionsPage() {
         isOpen={isSettingsDialogOpen}
         onClose={closeSettingsDialog}
         initialTab={settingsDialogInitialTab}
+        showExtensionOnlyOptions
         defaultScreenValue={safeDefaultOptionsTab}
-        defaultScreenOptions={TAB_ITEMS.map((tab) => ({
-          value: tab.id,
-          label: tab.label
-        }))}
+        defaultScreenOptions={defaultWorkspaceOptions}
         onChangeDefaultScreenValue={(tab) => {
           const nextTab = sanitizeOptionsTab(tab)
           void setDefaultOptionsTab(nextTab)

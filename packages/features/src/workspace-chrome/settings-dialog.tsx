@@ -52,6 +52,7 @@ interface WorkspaceSettingsDialogProps {
   defaultScreenValue: string
   defaultScreenOptions: WorkspaceDefaultScreenOption[]
   onChangeDefaultScreenValue: (value: string) => void
+  showExtensionOnlyOptions?: boolean
   preferRecentPresetEntry: boolean
   onChangePreferRecentPresetEntry: (checked: boolean) => void
   usageEntries: Array<{ id: string; name: string; count: number }>
@@ -61,7 +62,6 @@ interface WorkspaceSettingsDialogProps {
   onChangeConfigurationSidebarLevel: (level: SidebarWidthLevel) => void
   performancePreferences: PerformancePreferences
   onChangePerformancePreferences: (value: PerformancePreferences) => void
-  showNavigationSidebarWidthControl?: boolean
   enableUsageStatsTab?: boolean
   devModeSettingsAdapter?: DevModeSettingsAdapter
   devModeActiveTab?: OptionsTab | null
@@ -74,6 +74,7 @@ export function WorkspaceSettingsDialog({
   defaultScreenValue,
   defaultScreenOptions,
   onChangeDefaultScreenValue,
+  showExtensionOnlyOptions = false,
   preferRecentPresetEntry,
   onChangePreferRecentPresetEntry,
   usageEntries,
@@ -83,7 +84,6 @@ export function WorkspaceSettingsDialog({
   onChangeConfigurationSidebarLevel,
   performancePreferences,
   onChangePerformancePreferences,
-  showNavigationSidebarWidthControl = true,
   enableUsageStatsTab = true,
   devModeSettingsAdapter,
   devModeActiveTab = null
@@ -160,12 +160,44 @@ export function WorkspaceSettingsDialog({
     setActiveTab("general")
   }
   const tabs = [
-    { id: "general" as const, label: "General", icon: ListTree },
-    { id: "shortcuts" as const, label: "Shortkeys", icon: Keyboard },
-    { id: "performance" as const, label: "Performance", icon: Gauge },
-    { id: "warnings" as const, label: "Warnings", icon: ShieldAlert },
-    { id: "usage" as const, label: "Usage Stats", icon: BarChart3, hidden: !enableUsageStatsTab },
-    { id: "developer" as const, label: "Developer", icon: Code2, hidden: !devModeEnabled }
+    {
+      id: "general" as const,
+      label: "General",
+      icon: ListTree,
+      iconClassName: "text-sky-600 dark:text-sky-400"
+    },
+    {
+      id: "shortcuts" as const,
+      label: "Shortkeys",
+      icon: Keyboard,
+      iconClassName: "text-indigo-600 dark:text-indigo-400"
+    },
+    {
+      id: "performance" as const,
+      label: "Performance",
+      icon: Gauge,
+      iconClassName: "text-emerald-600 dark:text-emerald-400"
+    },
+    {
+      id: "warnings" as const,
+      label: "Warnings",
+      icon: ShieldAlert,
+      iconClassName: "text-amber-600 dark:text-amber-400"
+    },
+    {
+      id: "usage" as const,
+      label: "Usage Stats",
+      icon: BarChart3,
+      iconClassName: "text-cyan-600 dark:text-cyan-400",
+      hidden: !enableUsageStatsTab
+    },
+    {
+      id: "developer" as const,
+      label: "Developer",
+      icon: Code2,
+      iconClassName: "text-violet-600 dark:text-violet-400",
+      hidden: !devModeEnabled
+    }
   ].filter((tab) => !tab.hidden)
 
   return (
@@ -226,7 +258,7 @@ export function WorkspaceSettingsDialog({
                         : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                 >
-                  <tab.icon size={16} />
+                  <tab.icon size={16} className={tab.iconClassName} />
                   {tab.label}
                 </button>
               </React.Fragment>
@@ -248,10 +280,11 @@ export function WorkspaceSettingsDialog({
                   description="Choose which workspace opens by default."
                 />
                 <SelectInput
-                  label="Default workspace"
+                  label="Default workspace (Ext only)"
                   value={defaultScreenValue}
                   options={defaultScreenOptions}
                   onChange={onChangeDefaultScreenValue}
+                  disabled={!showExtensionOnlyOptions}
                 />
                 <CheckboxCard
                   title="Prefer recently used preset"
@@ -266,15 +299,16 @@ export function WorkspaceSettingsDialog({
                   title="WORKSPACE SIDEBAR WIDTHS"
                   description="Tune left and right sidebar width with preset steps."
                 />
-                {showNavigationSidebarWidthControl ? (
+                {showExtensionOnlyOptions && (
                   <DiscreteSlider
-                    label="Navigation sidebar width"
+                    label="Navigation sidebar width (Ext only)"
                     value={layoutPreferences.navigationSidebarLevel}
                     options={navigationWidthSliderOptions}
                     onChange={(value) => onChangeNavigationSidebarLevel(value as SidebarWidthLevel)}
                     valueFormatter={(option) => `${option.label} (${navigationWidthPx}px)`}
+                    disabled={!showExtensionOnlyOptions}
                   />
-                ) : null}
+                )}
                 <DiscreteSlider
                   label="Configuration sidebar width"
                   value={layoutPreferences.configurationSidebarLevel}
@@ -290,9 +324,9 @@ export function WorkspaceSettingsDialog({
             </div>
           ) : null}
 
-          {activeTab === "shortcuts" ? <SettingsShortcutsPanel /> : null}
+          {activeTab === "shortcuts" && <SettingsShortcutsPanel />}
 
-          {activeTab === "performance" ? (
+          {activeTab === "performance" && (
             <div className="animate-in fade-in duration-300 space-y-5">
               <SettingsSectionHeader
                 title="Performance"
@@ -350,15 +384,15 @@ export function WorkspaceSettingsDialog({
                 ) : null}
               </section>
             </div>
-          ) : null}
+          )}
 
-          {activeTab === "warnings" ? (
+          {activeTab === "warnings" && (
             <div className="animate-in fade-in duration-300">
               <SettingsSectionHeader
                 title="Warning Dialogs"
                 description="Control how warning dialogs appear during processing."
               />
-              <section className="space-y-4">
+              <section className="mt-4 space-y-4">
                 <SettingsItemHeader
                   title="PREFERENCES"
                   description="These preferences are saved automatically."
@@ -385,7 +419,7 @@ export function WorkspaceSettingsDialog({
                 </div>
               </section>
             </div>
-          ) : null}
+          )}
 
           {enableUsageStatsTab && activeTab === "usage" ? (
             <div className="animate-in fade-in duration-300">
@@ -430,7 +464,7 @@ export function WorkspaceSettingsDialog({
             </div>
           ) : null}
 
-          {activeTab === "developer" && devModeEnabled && devModeSettingsAdapter ? (
+          {activeTab === "developer" && devModeEnabled && devModeSettingsAdapter && (
             <div className="animate-in fade-in duration-300 space-y-5">
               <SettingsSectionHeader
                 title="Developer Tools"
@@ -490,12 +524,12 @@ export function WorkspaceSettingsDialog({
                 </Button>
               </section>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
       <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>
-    {devModeSettingsAdapter ? (
+    {devModeSettingsAdapter && (
       <>
         <DevModeExportDialog
           isOpen={isExportDialogOpen}
@@ -515,7 +549,7 @@ export function WorkspaceSettingsDialog({
           onSuccess={() => success("Import successful", "State has been restored.", 3000)}
         />
       </>
-    ) : null}
+    )}
     </>
   )
 }

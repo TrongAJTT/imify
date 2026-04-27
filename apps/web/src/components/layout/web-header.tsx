@@ -277,7 +277,7 @@ export function WebHeader() {
           safeWrite(PERFORMANCE_PREFERENCES_KEY, next)
           publishPerformancePreferencesChanged()
         }}
-        showNavigationSidebarWidthControl={false}
+        showExtensionOnlyOptions={false}
         enableUsageStatsTab={false}
         devModeSettingsAdapter={devModeSettingsAdapter}
         devModeActiveTab={devModeActiveTab}
