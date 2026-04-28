@@ -1,9 +1,9 @@
 "use client"
 
 import { useMemo } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@imify/ui/ui/button"
+import { PresetNotFoundRedirectAction } from "./preset-not-found-redirect-action"
 
 interface SimplePreset {
   id: string
@@ -95,9 +95,10 @@ export function PresetWorkPage({
       <div className="space-y-3 p-0">
         <h1 className="text-lg font-semibold">{title}</h1>
         <p className="text-sm text-slate-500">Preset not found.</p>
-        <Link href={routeBase} className="text-sm text-sky-600 dark:text-sky-400">
-          Back to presets
-        </Link>
+        <PresetNotFoundRedirectAction
+          routeBase={routeBase}
+          onBeforeRedirect={() => setPresetViewMode("select")}
+        />
       </div>
     )
   }

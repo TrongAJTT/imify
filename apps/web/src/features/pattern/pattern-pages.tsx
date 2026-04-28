@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -17,6 +16,7 @@ import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action"
 
 const AUTO_SAVE_DELAY_MS = 420
 const PatternTab = dynamic(
@@ -265,16 +265,6 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
     }
   }, [activePresetId, isHydrated, patternState, preset, syncActivePresetConfig])
 
-  useEffect(() => {
-    if (!isHydrated || preset) {
-      return
-    }
-    if (presets.length > 0) {
-      setPresetViewMode("select")
-      router.push("/pattern-generator")
-    }
-  }, [isHydrated, preset, presets.length, router, setPresetViewMode])
-
   if (!isHydrated) {
     return <WorkspaceLoadingState title="Loading pattern workspace..." />
   }
@@ -285,9 +275,10 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
         title="Preset not found"
         message="This pattern preset id does not exist."
         action={
-          <Link href="/pattern-generator" className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
-            Back to preset list
-          </Link>
+          <PresetNotFoundRedirectAction
+            routeBase="/pattern-generator"
+            onBeforeRedirect={() => setPresetViewMode("select")}
+          />
         }
       />
     )

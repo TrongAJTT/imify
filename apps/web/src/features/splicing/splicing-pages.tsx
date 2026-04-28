@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { DEFAULT_PERFORMANCE_PREFERENCES } from "@imify/features/processor/performance-preferences"
@@ -15,6 +14,7 @@ import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-s
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action"
 
 function useSplicingPresetHydrated(): boolean {
   // Keep the first render deterministic across SSR/CSR to avoid hydration mismatch.
@@ -253,9 +253,10 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
         title="Preset not found"
         message="This splicing preset id does not exist."
         action={
-          <Link href="/splicing" className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
-            Back to preset list
-          </Link>
+          <PresetNotFoundRedirectAction
+            routeBase="/splicing"
+            onBeforeRedirect={() => setPresetViewMode("select")}
+          />
         }
       />
     )

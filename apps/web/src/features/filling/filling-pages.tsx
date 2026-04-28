@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
@@ -17,7 +16,8 @@ import { FillingOverviewSidebar, FillingWorkflowSidebar } from "./filling-sideba
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
-import { Heading, MutedText, WorkspaceLoadingState } from "@imify/ui"
+import { Heading, MutedText, WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
+import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action"
 
 const ManualEditorWorkspace = dynamic(
   () => import("@imify/features/filling/edit/workspace").then((m) => m.ManualEditorWorkspace),
@@ -391,9 +391,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
         <MutedText className="max-w-xl text-base">
           This page can only be opened right after creating a template from the Create Template dialog.
         </MutedText>
-        <Link href={routeBase} className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
-          Back to template list
-        </Link>
+        <PresetNotFoundRedirectAction routeBase={routeBase} buttonLabel="Back to template list" />
       </div>
     )
   }
@@ -408,22 +406,19 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
         <MutedText className="max-w-xl text-base">
           This page can only be opened right after creating a template from the Create Template dialog.
         </MutedText>
-        <Link href={routeBase} className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
-          Back to template list
-        </Link>
+        <PresetNotFoundRedirectAction routeBase={routeBase} buttonLabel="Back to template list" />
       </div>
     )
   }
 
   if (!template) {
     return (
-      <div className="space-y-3 p-0">
-        <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
-        <p className="text-sm text-slate-500">Template not found.</p>
-        <Link href={routeBase} className="text-sm text-sky-600 dark:text-sky-400">
-          Back to template list
-        </Link>
-      </div>
+      <WorkspaceNotFoundState
+        title="Template not found"
+        message={`This template id does not exist for ${toTitle(mode)}.`}
+        action={<PresetNotFoundRedirectAction routeBase={routeBase} />}
+        surface="plain"
+      />
     )
   }
 

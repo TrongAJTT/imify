@@ -1,9 +1,7 @@
 "use client"
 
 import { useEffect, useMemo } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Button } from "@imify/ui/ui/button"
 import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { SingleProcessorWorkspace } from "@imify/features/processor/single-processor-workspace"
 import { BatchProcessorWorkspace } from "@imify/features/processor/batch"
@@ -17,6 +15,7 @@ import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action"
 
 interface ProcessorLandingPageProps {
   context: SetupContext
@@ -272,9 +271,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
         title="Preset not found"
         message={`This preset id does not exist for ${getContextLabel(context)}.`}
         action={
-          <Link href={getRoutePrefix(context)} className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
-            Back to preset list
-          </Link>
+          <PresetNotFoundRedirectAction routeBase={getRoutePrefix(context)} />
         }
       />
     )

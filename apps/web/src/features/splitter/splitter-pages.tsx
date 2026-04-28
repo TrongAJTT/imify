@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
@@ -15,6 +14,7 @@ import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action"
 
 function useSplitterPresetHydrated(): boolean {
   const [hydrated, setHydrated] = useState(false)
@@ -155,9 +155,10 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
         title="Preset not found"
         message="This splitter preset id does not exist."
         action={
-          <Link href="/splitter" className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
-            Back to preset list
-          </Link>
+          <PresetNotFoundRedirectAction
+            routeBase="/splitter"
+            onBeforeRedirect={() => setPresetViewMode("select")}
+          />
         }
       />
     )
