@@ -85,7 +85,7 @@ export function FillingTab() {
     [templates, editingTemplateId, activeTemplateId]
   )
 
-  const handleSaveTemplate = useCallback(async () => {
+  const handleSaveTemplate = useCallback(async (destination: "fill" | "list") => {
     if (!activeTemplate || fillingStep !== "create_manual" || isSavingTemplate) {
       return
     }
@@ -106,7 +106,13 @@ export function FillingTab() {
 
       await templateStorage.save(updatedTemplate)
       updateTemplate(updatedTemplate)
-      navigateToSelect()
+      if (destination === "list") {
+        navigateToSelect()
+        return
+      }
+      setFillingStep("fill")
+      setActiveTemplateId(updatedTemplate.id)
+      setEditingTemplateId(null)
     } finally {
       setIsSavingTemplate(false)
     }
@@ -118,6 +124,9 @@ export function FillingTab() {
     editorLayers,
     fillingStep,
     isSavingTemplate,
+    setActiveTemplateId,
+    setEditingTemplateId,
+    setFillingStep,
     navigateToSelect,
     updateTemplate,
   ])
@@ -193,10 +202,14 @@ export function FillingTab() {
         <SymmetricWorkspace
           template={activeTemplate}
           onRefresh={loadTemplates}
-          onSaved={(savedTemplate) => {
-            setFillingStep("fill")
+          onSaved={(savedTemplate, destination) => {
+            if (destination === "list") {
+              navigateToSelect()
+              return
+            }
+            setFillingStep(destination === "edit" ? "create_manual" : "fill")
             setActiveTemplateId(savedTemplate.id)
-            setEditingTemplateId(null)
+            setEditingTemplateId(destination === "edit" ? savedTemplate.id : null)
           }}
         />
       )}
@@ -205,10 +218,14 @@ export function FillingTab() {
         <GridDesignWorkspace
           template={activeTemplate}
           onRefresh={loadTemplates}
-          onSaved={(savedTemplate) => {
-            setFillingStep("fill")
+          onSaved={(savedTemplate, destination) => {
+            if (destination === "list") {
+              navigateToSelect()
+              return
+            }
+            setFillingStep(destination === "edit" ? "create_manual" : "fill")
             setActiveTemplateId(savedTemplate.id)
-            setEditingTemplateId(null)
+            setEditingTemplateId(destination === "edit" ? savedTemplate.id : null)
           }}
         />
       )}

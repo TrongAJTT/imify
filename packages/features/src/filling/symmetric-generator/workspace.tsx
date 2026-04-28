@@ -3,8 +3,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage, Layer, Line, Rect, Transformer } from "react-konva"
 import type Konva from "konva"
-import { Save } from "lucide-react"
+import { ChevronDown, Save } from "lucide-react"
 import { Button } from "@imify/ui/ui/button"
+import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
 import { MutedText, Subheading } from "@imify/ui/ui/typography"
 import { VisualHelpTooltip } from "@imify/ui/ui/visual-help-tooltip"
 import { PreviewInteractionModeToggle, ZoomPanControl } from "@imify/ui"
@@ -100,7 +101,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 interface SymmetricWorkspaceProps {
   template: FillingTemplate
   onRefresh: () => Promise<void>
-  onSaved?: (template: FillingTemplate) => void | Promise<void>
+  onSaved?: (template: FillingTemplate, destination: "fill" | "edit" | "list") => void | Promise<void>
 }
 
 export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWorkspaceProps) {
@@ -116,6 +117,7 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
   const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false)
   const [cursor, setCursor] = useState("default")
   const [positionGuideLines, setPositionGuideLines] = useState<number[][]>([])
+  const [isSaving, setIsSaving] = useState(false)
   const { getShortcutLabel } = useShortcutPreferences()
   const updateTemplate = useFillingStore((state) => state.updateTemplate)
   const setSymmetricParams = useFillingStore((state) => state.setSymmetricParams)
@@ -430,20 +432,32 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
     }
   }, [])
 
-  const handleSave = useCallback(async () => {
-    const updated: FillingTemplate = {
-      ...template,
-      layers: generatedLayers,
-      symmetricParams: params,
-      updatedAt: Date.now(),
-    }
-    await templateStorage.save(updated)
-    updateTemplate(updated)
-    await onRefresh()
-    if (onSaved) {
-      await onSaved(updated)
-    }
-  }, [generatedLayers, onRefresh, onSaved, params, template, updateTemplate])
+  const handleSaveToDestination = useCallback(
+    async (destination: "fill" | "edit" | "list") => {
+      if (isSaving) {
+        return
+      }
+
+      setIsSaving(true)
+      try {
+        const updated: FillingTemplate = {
+          ...template,
+          layers: generatedLayers,
+          symmetricParams: params,
+          updatedAt: Date.now(),
+        }
+        await templateStorage.save(updated)
+        updateTemplate(updated)
+        await onRefresh()
+        if (onSaved) {
+          await onSaved(updated, destination)
+        }
+      } finally {
+        setIsSaving(false)
+      }
+    },
+    [generatedLayers, isSaving, onRefresh, onSaved, params, template, updateTemplate]
+  )
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -487,10 +501,55 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
             panKeyHint={getShortcutLabel("global.preview.pan_mode")}
             idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
           />
-          <Button variant="primary" size="sm" onClick={handleSave}>
-            <Save size={14} />
-            Save Template
-          </Button>
+          <div className="flex items-center">
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={isSaving}
+              className="rounded-r-none px-2"
+              onClick={() => void handleSaveToDestination("fill")}
+            >
+              <Save size={14} />
+              Save & Fill
+            </Button>
+            <ControlledPopover
+              preset="dropdown"
+              side="bottom"
+              align="end"
+              sideOffset={6}
+              collisionPadding={10}
+              trigger={
+                <Button
+                  variant="primary"
+                  size="sm"
+                  aria-label="Open save actions"
+                  disabled={isSaving}
+                  className="rounded-l-none border-l border-sky-400/60 px-2"
+                >
+                  <ChevronDown size={14} />
+                </Button>
+              }
+              contentClassName="z-[9999] min-w-[170px] rounded-md border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+              closeOnContentClick
+            >
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                onClick={() => void handleSaveToDestination("edit")}
+              >
+                <Save size={14} />
+                Save & Edit
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                onClick={() => void handleSaveToDestination("list")}
+              >
+                <Save size={14} />
+                Save & Back to list
+              </button>
+            </ControlledPopover>
+          </div>
         </div>
       </div>
 

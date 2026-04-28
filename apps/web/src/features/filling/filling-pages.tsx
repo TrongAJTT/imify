@@ -477,7 +477,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
               })
             )
           }}
-          onSaveTemplate={async () => {
+          onSaveTemplate={async (destination) => {
             if (isSavingTemplate) return
             setIsSavingTemplate(true)
             try {
@@ -492,6 +492,10 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
               await templateStorage.save(savedTemplate)
               const all = await templateStorage.getAll()
               useFillingStore.getState().setTemplates(all)
+              if (destination === "list") {
+                router.push(routeBase)
+                return
+              }
               router.push(`${routeBase}/fill?id=${savedTemplate.id}`)
             } finally {
               setIsSavingTemplate(false)
@@ -512,7 +516,15 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
         <SymmetricWorkspace
           template={template}
           onRefresh={refreshTemplates}
-          onSaved={(savedTemplate) => {
+          onSaved={(savedTemplate, destination) => {
+            if (destination === "list") {
+              router.push(routeBase)
+              return
+            }
+            if (destination === "edit") {
+              router.push(`${routeBase}/edit?id=${savedTemplate.id}`)
+              return
+            }
             router.push(`${routeBase}/fill?id=${savedTemplate.id}`)
           }}
         />
@@ -522,7 +534,15 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
         <GridDesignWorkspace
           template={template}
           onRefresh={refreshTemplates}
-          onSaved={(savedTemplate) => {
+          onSaved={(savedTemplate, destination) => {
+            if (destination === "list") {
+              router.push(routeBase)
+              return
+            }
+            if (destination === "edit") {
+              router.push(`${routeBase}/edit?id=${savedTemplate.id}`)
+              return
+            }
             router.push(`${routeBase}/fill?id=${savedTemplate.id}`)
           }}
         />

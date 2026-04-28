@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage, Layer, Line, Rect, Transformer } from "react-konva"
 import type Konva from "konva"
-import { Loader2, Save } from "lucide-react"
+import { ChevronDown, Loader2, Save } from "lucide-react"
 import type { LayerGroup, VectorLayer } from "../types"
 import { resolveLayerShapePoints } from "../shape-generators"
 import { buildGroupOverlayPolygons, getBoundsFromPoints, toWorldLayerPoints } from "../group-geometry"
@@ -12,6 +12,7 @@ import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { useShortcutActions } from "../use-shortcut-actions"
 import { useTransformGuides, type RectBounds } from "../use-transform-guides"
 import { Button, MutedText, PreviewInteractionModeToggle, Subheading, VisualHelpTooltip, ZoomPanControl } from "@imify/ui"
+import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
 
 export interface ManualEditorVisualHelp {
@@ -34,7 +35,7 @@ interface ManualEditorWorkspaceProps {
   onSetSelectedLayers: (ids: string[]) => void
   onClearSelection: () => void
   onUpdateLayer: (id: string, partial: Partial<VectorLayer>) => void
-  onSaveTemplate: () => Promise<void>
+  onSaveTemplate: (destination: "fill" | "list") => Promise<void>
   isSavingTemplate: boolean
   visualHelp?: ManualEditorVisualHelp
   showHeader?: boolean
@@ -397,9 +398,47 @@ export function ManualEditorWorkspace({
               panKeyHint={getShortcutLabel("global.preview.pan_mode")}
               idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
             />
-            <Button type="button" variant="primary" size="sm" onClick={() => { void onSaveTemplate() }} disabled={isSavingTemplate} className="min-w-[150px]">
-              {isSavingTemplate ? <><Loader2 size={14} className="animate-spin" />Saving...</> : <><Save size={14} />Save Template</>}
-            </Button>
+            <div className="flex items-center">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => { void onSaveTemplate("fill") }}
+                disabled={isSavingTemplate}
+                className="rounded-r-none px-2"
+              >
+                {isSavingTemplate ? <><Loader2 size={14} className="animate-spin" />Saving...</> : <><Save size={14} />Save & Fill</>}
+              </Button>
+              <ControlledPopover
+                preset="dropdown"
+                side="bottom"
+                align="end"
+                sideOffset={6}
+                collisionPadding={10}
+                trigger={
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    aria-label="Open save actions"
+                    disabled={isSavingTemplate}
+                    className="rounded-l-none border-l border-sky-400/60 px-2"
+                  >
+                    <ChevronDown size={14} />
+                  </Button>
+                }
+                contentClassName="z-[9999] min-w-[190px] rounded-md border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                closeOnContentClick
+              >
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  onClick={() => { void onSaveTemplate("list") }}
+                >
+                  <Save size={14} />
+                  Save & Back to list
+                </button>
+              </ControlledPopover>
+            </div>
           </div>
         </div>
       ) : null}

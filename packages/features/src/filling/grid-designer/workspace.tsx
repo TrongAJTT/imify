@@ -3,8 +3,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage } from "react-konva"
 import type Konva from "konva"
-import { Save } from "lucide-react"
+import { ChevronDown, Save } from "lucide-react"
 import { Button, PreviewInteractionModeToggle, ZoomPanControl } from "@imify/ui"
+import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
 import { MutedText, Subheading } from "@imify/ui/ui/typography"
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
@@ -24,7 +25,7 @@ const PREVIEW_ZOOM_STEP = 10
 interface GridDesignWorkspaceProps {
   template: FillingTemplate
   onRefresh: () => Promise<void>
-  onSaved?: (template: FillingTemplate) => void | Promise<void>
+  onSaved?: (template: FillingTemplate, destination: "fill" | "edit" | "list") => void | Promise<void>
 }
 
 export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesignWorkspaceProps) {
@@ -39,6 +40,7 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
   const setGridLayerCount = useFillingStore((state) => state.setGridLayerCount)
   const updateTemplate = useFillingStore((state) => state.updateTemplate)
   const { getShortcutLabel } = useShortcutPreferences()
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     setGridDesignParams(template.gridDesignParams ?? { ...DEFAULT_GRID_DESIGN_PARAMS })
@@ -179,15 +181,27 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
     }
   }, [activeParams, template])
 
-  const handleSave = useCallback(async () => {
-    const updated = buildUpdatedTemplate()
-    await templateStorage.save(updated)
-    updateTemplate(updated)
-    await onRefresh()
-    if (onSaved) {
-      await onSaved(updated)
-    }
-  }, [buildUpdatedTemplate, onRefresh, onSaved, updateTemplate])
+  const handleSaveToDestination = useCallback(
+    async (destination: "fill" | "edit" | "list") => {
+      if (isSaving) {
+        return
+      }
+
+      setIsSaving(true)
+      try {
+        const updated = buildUpdatedTemplate()
+        await templateStorage.save(updated)
+        updateTemplate(updated)
+        await onRefresh()
+        if (onSaved) {
+          await onSaved(updated, destination)
+        }
+      } finally {
+        setIsSaving(false)
+      }
+    },
+    [buildUpdatedTemplate, isSaving, onRefresh, onSaved, updateTemplate]
+  )
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -218,10 +232,55 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
             panKeyHint={getShortcutLabel("global.preview.pan_mode")}
             idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
           />
-          <Button variant="primary" size="sm" onClick={handleSave}>
-            <Save size={14} />
-            Save Template
-          </Button>
+          <div className="flex items-center">
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={isSaving}
+              className="rounded-r-none px-2"
+              onClick={() => void handleSaveToDestination("fill")}
+            >
+              <Save size={14} />
+              Save & Fill
+            </Button>
+            <ControlledPopover
+              preset="dropdown"
+              side="bottom"
+              align="end"
+              sideOffset={6}
+              collisionPadding={10}
+              trigger={
+                <Button
+                  variant="primary"
+                  size="sm"
+                  aria-label="Open save actions"
+                  disabled={isSaving}
+                  className="rounded-l-none border-l border-sky-400/60 px-2"
+                >
+                  <ChevronDown size={14} />
+                </Button>
+              }
+              contentClassName="z-[9999] min-w-[170px] rounded-md border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+              closeOnContentClick
+            >
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                onClick={() => void handleSaveToDestination("edit")}
+              >
+                <Save size={14} />
+                Save & Edit
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                onClick={() => void handleSaveToDestination("list")}
+              >
+                <Save size={14} />
+                Save & Back to list
+              </button>
+            </ControlledPopover>
+          </div>
         </div>
       </div>
 
