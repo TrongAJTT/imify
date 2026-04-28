@@ -10,6 +10,21 @@ const MAX_BACKGROUND_NODES = 1200
 const MAX_REPORT_ITEMS = 80
 const LARGE_IMAGE_BYTES = 500 * 1024
 const ESTIMATED_PAGE_HEAVY_BYTES = 2 * 1024 * 1024
+const PROTECTION_CLASS_OR_ID_PATTERNS = [
+  /watermark/i,
+  /protected/i,
+  /no[-_]?download/i,
+  /disable[-_]?save/i,
+  /copyright/i,
+  /anti[-_]?save/i
+]
+const PROTECTED_HOST_DENYLIST = [
+  "gettyimages.com",
+  "shutterstock.com",
+  "istockphoto.com",
+  "stock.adobe.com",
+  "dreamstime.com"
+]
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
@@ -300,6 +315,22 @@ function hasProtectionMarker(node: Element): boolean {
   )
 }
 
+function hasProtectionClassOrId(node: Element): boolean {
+  let current: Element | null = node
+  while (current) {
+    const className = current.className
+    const classText = typeof className === "string" ? className : ""
+    const idText = current.id ?? ""
+    const haystack = `${classText} ${idText}`
+
+    if (PROTECTION_CLASS_OR_ID_PATTERNS.some((pattern) => pattern.test(haystack))) {
+      return true
+    }
+    current = current.parentElement
+  }
+  return false
+}
+
 function hasContextMenuBlock(node: Element): boolean {
   let current: Element | null = node
   while (current) {
@@ -313,6 +344,15 @@ function hasContextMenuBlock(node: Element): boolean {
   return false
 }
 
+function isDeniedAssetHost(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase()
+    return PROTECTED_HOST_DENYLIST.some((host) => hostname === host || hostname.endsWith(`.${host}`))
+  } catch {
+    return false
+  }
+}
+
 export function scanCurrentPageForSeoAudit(): SeoAuditReport {
   const sizeByUrl = collectResourceSizes()
   const isHttpsPage = window.location.protocol === "https:"
@@ -323,13 +363,18 @@ export function scanCurrentPageForSeoAudit(): SeoAuditReport {
   const imageElements = Array.from(document.querySelectorAll<HTMLImageElement>("img"))
 
   for (const image of imageElements) {
-    if (hasProtectionMarker(image) || hasContextMenuBlock(image)) {
+    if (hasProtectionMarker(image) || hasProtectionClassOrId(image) || hasContextMenuBlock(image)) {
       protectedSkippedCount += 1
       continue
     }
 
     const url = toAbsoluteUrl(image.currentSrc || image.src)
     if (!url) {
+      continue
+    }
+
+    if (isDeniedAssetHost(url)) {
+      protectedSkippedCount += 1
       continue
     }
 
@@ -373,7 +418,12 @@ export function scanCurrentPageForSeoAudit(): SeoAuditReport {
   const candidates = Array.from(document.querySelectorAll<HTMLElement>("body *")).slice(0, MAX_BACKGROUND_NODES)
 
   for (const node of candidates) {
-    if (node.tagName === "CANVAS" || hasProtectionMarker(node) || hasContextMenuBlock(node)) {
+    if (
+      node.tagName === "CANVAS" ||
+      hasProtectionMarker(node) ||
+      hasProtectionClassOrId(node) ||
+      hasContextMenuBlock(node)
+    ) {
       protectedSkippedCount += 1
       continue
     }
@@ -393,6 +443,11 @@ export function scanCurrentPageForSeoAudit(): SeoAuditReport {
     for (const rawUrl of backgroundUrls) {
       const url = toAbsoluteUrl(rawUrl)
       if (!url) {
+        continue
+      }
+
+      if (isDeniedAssetHost(url)) {
+        protectedSkippedCount += 1
         continue
       }
 
@@ -443,7 +498,7 @@ export function scanCurrentPageForSeoAudit(): SeoAuditReport {
 
   if (protectedSkippedCount > 0) {
     recommendations.push(
-      `Skipped ${protectedSkippedCount} protected element(s) due to website protection markers/context-menu blocking.`
+      `Skipped ${protectedSkippedCount} protected element(s) due to website protection markers, class/id patterns, context-menu blocking, or host denylist rules.`
     )
   }
 
@@ -455,6 +510,6 @@ export function scanCurrentPageForSeoAudit(): SeoAuditReport {
     recommendations,
     assets: allAssets.slice(0, MAX_REPORT_ITEMS),
     policyNote:
-      "Imify SEO Audit is a diagnostic report only. It serves as a tool to help you understand the SEO impact of your images and how to improve them. It is not a tool for image download or modification."
+      "Imify SEO Audit is a diagnostic report only. It serves as a tool to help you understand the SEO impact of your images and how to improve them. It is not a tool for image download."
   }
 }

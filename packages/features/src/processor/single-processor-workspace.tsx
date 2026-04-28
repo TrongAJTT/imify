@@ -88,7 +88,11 @@ function describeDeltaRatio(
 
 export function SingleProcessorWorkspace({
   consumePendingOptimizeFile,
-}: { consumePendingOptimizeFile?: () => File | null } = {}) {
+  consumePendingImportUrl,
+}: {
+  consumePendingOptimizeFile?: () => File | null
+  consumePendingImportUrl?: () => string | null
+} = {}) {
   const targetFormat = useBatchStore((state) => state.targetFormat);
   const quality = useBatchStore((state) => state.quality);
   const formatOptions = useBatchStore((state) => state.formatOptions);
@@ -272,6 +276,11 @@ export function SingleProcessorWorkspace({
     const file = consumePendingOptimizeFile?.();
     if (file) void attachSingleFile(file);
   }, [consumePendingOptimizeFile]);
+
+  useEffect(() => {
+    const importUrl = consumePendingImportUrl?.();
+    if (importUrl) void importFromImageUrls([importUrl]);
+  }, [consumePendingImportUrl]);
 
   useEffect(() => {
     if (!sourceFile || !resultBlob || !resultOutputExtension) {

@@ -301,6 +301,7 @@ export default function OptionsPage() {
     { key: PERFORMANCE_PREFERENCES_KEY, instance: syncStorage },
     DEFAULT_PERFORMANCE_PREFERENCES
   )
+  const initialTabFromQueryRef = useRef<OptionsTab | null>(null)
 
   const isLoading =
     isSettingsLoading ||
@@ -340,6 +341,13 @@ export default function OptionsPage() {
 
   const previewQualityChangeHandlerRef = useRef<((next: number) => void) | null>(null)
   const didInitDefaultTabRef = useRef(false)
+
+  if (initialTabFromQueryRef.current === null && typeof window !== "undefined") {
+    const queryTab = new URLSearchParams(window.location.search).get("tab")
+    if (queryTab && VALID_TAB_IDS.has(queryTab as OptionsTab)) {
+      initialTabFromQueryRef.current = queryTab as OptionsTab
+    }
+  }
 
   const registerPreviewQualityChangeHandler = useCallback((handler: ((next: number) => void) | null) => {
     previewQualityChangeHandlerRef.current = handler
@@ -430,7 +438,7 @@ export default function OptionsPage() {
 
     // Only apply the user's "default tab" once on initial load.
     // Changing it in Settings should NOT force-navigate the current screen.
-    setActiveTab(safeDefaultOptionsTab)
+    setActiveTab(initialTabFromQueryRef.current ?? safeDefaultOptionsTab)
     didInitDefaultTabRef.current = true
   }, [isDefaultTabLoading, safeDefaultOptionsTab])
 

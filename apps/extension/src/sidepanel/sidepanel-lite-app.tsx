@@ -4,6 +4,7 @@ import "@/style.css"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
+import { fetchRemoteImageAsFile } from "@imify/engine/converter/remote-image-import"
 
 import { inspectImage, type InspectorResult } from "@imify/features/inspector"
 import { BasicInfoCard, ColorInspectorCard, ExifTableCard, VisualAnalysisDialog } from "@imify/features/inspector"
@@ -109,6 +110,29 @@ export default function SidePanelLiteApp() {
   const handleOpenSettings = useCallback(async () => {
     await chrome.runtime.openOptionsPage()
   }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const importUrl = params.get("importUrl")
+
+    if (!importUrl) {
+      return
+    }
+
+    params.delete("importUrl")
+    const nextSearch = params.toString()
+    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}${window.location.hash}`
+    window.history.replaceState(null, "", nextUrl)
+
+    void (async () => {
+      try {
+        const file = await fetchRemoteImageAsFile(importUrl)
+        await handlePickFile(file)
+      } catch {
+        setError("Unable to import image URL for inspection.")
+      }
+    })()
+  }, [handlePickFile])
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
