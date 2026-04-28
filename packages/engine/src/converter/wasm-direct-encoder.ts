@@ -1,5 +1,9 @@
 import { buildNormalizedJxlWasmOptions, type JxlEncodeOptions } from "@imify/core/jxl-options"
-import { resolveEngineWasmUrl } from "./runtime-adapter"
+import {
+  resolveEngineWasmFactoryModule,
+  resolveEngineWasmUrl,
+  unwrapEngineWasmFactoryModule
+} from "./runtime-adapter"
 
 interface WasmModule {
   encode: (
@@ -33,9 +37,14 @@ function resolveWasmUrl(fileName: string): string {
   return resolveEngineWasmUrl(fileName)
 }
 
-async function loadWasmFactory(fileName: string): Promise<(options: Record<string, unknown>) => Promise<WasmModule>> {
+async function loadWasmFactory(fileName: "avif_enc.js" | "jxl_enc.js"): Promise<(options: Record<string, unknown>) => Promise<WasmModule>> {
+  const runtimeModule = resolveEngineWasmFactoryModule(fileName)
+  if (runtimeModule) {
+    return unwrapEngineWasmFactoryModule<WasmModule>(runtimeModule, fileName)
+  }
+
   const module = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl(fileName))
-  return (module.default ?? module) as (options: Record<string, unknown>) => Promise<WasmModule>
+  return unwrapEngineWasmFactoryModule<WasmModule>(module, fileName)
 }
 
 async function getAvifModule(): Promise<WasmModule> {

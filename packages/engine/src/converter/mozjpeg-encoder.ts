@@ -1,5 +1,10 @@
 import { clampQuality } from "@imify/core/image-utils"
 import type { MozJpegCodecOptions } from "@imify/core/types"
+import {
+  resolveEngineWasmFactoryModule,
+  resolveEngineWasmUrl,
+  unwrapEngineWasmFactoryModule
+} from "./runtime-adapter"
 
 interface MozJpegWasmModule {
   encode: (
@@ -37,23 +42,17 @@ const MOZJPEG_DEFAULT_OPTIONS = {
 let mozJpegModulePromise: Promise<MozJpegWasmModule> | null = null
 
 function resolveWasmUrl(fileName: string): string {
-  const runtimeOrigin =
-    typeof self !== "undefined" && self.location
-      ? self.location.origin
-      : typeof location !== "undefined"
-      ? location.origin
-      : ""
-
-  return `${runtimeOrigin}/assets/wasm/${fileName}`
+  return resolveEngineWasmUrl(fileName)
 }
 
 async function getMozJpegModule(): Promise<MozJpegWasmModule> {
   if (!mozJpegModulePromise) {
     const wasmUrl = resolveWasmUrl("mozjpeg_enc.wasm")
-    const factoryModule = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl("mozjpeg_enc.js"))
-    const initMozJpegFactory = (factoryModule.default ?? factoryModule) as (
-      options: Record<string, unknown>
-    ) => Promise<MozJpegWasmModule>
+    const runtimeModule = resolveEngineWasmFactoryModule("mozjpeg_enc.js")
+    const module =
+      runtimeModule ??
+      (await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl("mozjpeg_enc.js")))
+    const initMozJpegFactory = unwrapEngineWasmFactoryModule<MozJpegWasmModule>(module, "mozjpeg_enc.js")
 
     mozJpegModulePromise = initMozJpegFactory({
       locateFile: (path: string) => {

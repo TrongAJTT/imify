@@ -1,6 +1,7 @@
 import { buildNormalizedJxlWasmOptions, type JxlEncodeOptions } from "@imify/core/jxl-options"
 import { encodeWithWasmWorker } from "./wasm-worker-pool"
 import { encodeJxlDirect } from "./wasm-direct-encoder"
+import { shouldUseEngineWasmWorkers } from "./runtime-adapter"
 
 export async function encodeJxl(
   imageData: ImageData,
@@ -9,7 +10,7 @@ export async function encodeJxl(
   const encodeOptions = buildNormalizedJxlWasmOptions(options)
 
   const encoded =
-    typeof Worker === "function"
+    typeof Worker === "function" && shouldUseEngineWasmWorkers()
       ? await encodeWithWasmWorker("jxl", imageData, encodeOptions)
       : await encodeJxlDirect(imageData, encodeOptions)
 

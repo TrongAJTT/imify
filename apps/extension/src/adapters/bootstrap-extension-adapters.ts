@@ -8,6 +8,14 @@ import { registerEngineRuntimeAdapter } from "@imify/engine/converter/runtime-ad
 import { setPreviewWorkerFactory } from "@imify/engine/converter/preview-worker-client"
 import { patchStorageState } from "@/adapters/chrome-storage-state"
 import { plasmoStorageAdapter } from "@/adapters/plasmo-storage-adapter"
+import avifFactoryModule from "../../assets/wasm/avif_enc.js"
+import jxlFactoryModule from "../../assets/wasm/jxl_enc.js"
+import mozjpegFactoryModule from "../../assets/wasm/mozjpeg_enc.js"
+import webpFactoryModule from "../../assets/wasm/webp_enc.js"
+import * as oxipngModule from "../../assets/wasm/oxipng.js"
+import * as resizeModule from "../../assets/wasm/squoosh_resize.js"
+import * as hqxModule from "../../assets/wasm/squooshhqx.js"
+import * as magicKernelModule from "../../assets/wasm/jsquash_magic_kernel.js"
 import iconPng from "url:@assets/icon.png"
 import githubLogoSvg from "url:@assets/images/github-logo.svg"
 import bmcLogoSvg from "url:@assets/images/bmc-logo.svg"
@@ -33,6 +41,20 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.downloadHints.firefoxWebp]: downloadHintFirefoxWebp
 }
 
+const extensionWasmFactoryMap: Record<string, unknown> = {
+  "avif_enc.js": avifFactoryModule,
+  "jxl_enc.js": jxlFactoryModule,
+  "mozjpeg_enc.js": mozjpegFactoryModule,
+  "webp_enc.js": webpFactoryModule
+}
+
+const extensionWasmModuleMap: Record<string, unknown> = {
+  "oxipng.js": oxipngModule,
+  "squoosh_resize.js": resizeModule,
+  "squooshhqx.js": hqxModule,
+  "jsquash_magic_kernel.js": magicKernelModule
+}
+
 export function bootstrapExtensionAdapters(): void {
   if (adaptersBootstrapped) {
     return
@@ -56,6 +78,9 @@ export function bootstrapExtensionAdapters(): void {
   registerCustomFormatStorageAccess({ patchStorageState })
   registerEngineRuntimeAdapter({
     resolveWasmUrl: (fileName) => chrome.runtime.getURL(`assets/wasm/${fileName}`),
+    getWasmFactoryModule: (fileName) => extensionWasmFactoryMap[fileName] ?? null,
+    getWasmNamedModule: (fileName) => extensionWasmModuleMap[fileName] ?? null,
+    useWasmWorkers: false,
     createWasmWorker: () =>
       new Worker(new URL("@imify/engine/converter/wasm-encode.worker", import.meta.url), {
         type: "module"

@@ -1,4 +1,5 @@
 import type { PngCodecOptions } from "@imify/core/types"
+import { resolveEngineWasmNamedModule, resolveEngineWasmUrl } from "./runtime-adapter"
 
 const OXIPNG_LEVEL = 4
 const OXIPNG_LIGHT_LEVEL = 1
@@ -7,20 +8,16 @@ let oxiPngInitPromise: Promise<unknown> | null = null
 let optimiseOxiPngWasm: ((data: Uint8Array, level: number, interlace: boolean, clean: boolean) => Uint8Array) | null = null
 
 function resolveWasmUrl(fileName: string): string {
-  const runtimeOrigin =
-    typeof self !== "undefined" && self.location
-      ? self.location.origin
-      : typeof location !== "undefined"
-        ? location.origin
-        : ""
-
-  return `${runtimeOrigin}/assets/wasm/${fileName}`
+  return resolveEngineWasmUrl(fileName)
 }
 
 async function ensureOxiPngReady(): Promise<void> {
   if (!oxiPngInitPromise) {
     oxiPngInitPromise = (async () => {
-      const module = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl("oxipng.js"))
+      const runtimeModule = resolveEngineWasmNamedModule("oxipng.js")
+      const module =
+        runtimeModule ??
+        (await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl("oxipng.js")))
       const initOxiPng = (module.default ?? module) as () => Promise<unknown>
       const optimise = (module as { optimise?: typeof optimiseOxiPngWasm }).optimise
       if (typeof optimise !== "function") {

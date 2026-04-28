@@ -1,5 +1,6 @@
 import { normalizeResizeResamplingAlgorithm } from "@imify/core/resize-resampling"
 import type { ResizeResamplingAlgorithm } from "@imify/core/types"
+import { resolveEngineWasmNamedModule, resolveEngineWasmUrl } from "./runtime-adapter"
 
 type AdvancedResamplingAlgorithm = Exclude<ResizeResamplingAlgorithm, "browser-default">
 
@@ -59,21 +60,17 @@ let hqxWasmReady: Promise<unknown> | null = null
 let magicKernelWasmReady: Promise<unknown> | null = null
 
 function resolveWasmAssetUrl(fileName: string): string {
-  const maybeLocation = (globalThis as { location?: { origin?: string } }).location
-  const origin = maybeLocation?.origin
-
-  if (!origin) {
-    return `/assets/wasm/${fileName}`
-  }
-
-  return `${origin}/assets/wasm/${fileName}`
+  return resolveEngineWasmUrl(fileName)
 }
 
 async function ensureResizeModuleLoaded(): Promise<void> {
   if (initResize && resizeWithWasm) {
     return
   }
-  const module = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmAssetUrl("squoosh_resize.js"))
+  const runtimeModule = resolveEngineWasmNamedModule("squoosh_resize.js")
+  const module =
+    runtimeModule ??
+    (await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmAssetUrl("squoosh_resize.js")))
   initResize = (module.default ?? module) as ResizeWasmInit
   resizeWithWasm = (module as { resize?: ResizeWasmFn }).resize ?? null
   if (!initResize || !resizeWithWasm) {
@@ -85,7 +82,10 @@ async function ensureHqxModuleLoaded(): Promise<void> {
   if (initHqx && hqxResize) {
     return
   }
-  const module = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmAssetUrl("squooshhqx.js"))
+  const runtimeModule = resolveEngineWasmNamedModule("squooshhqx.js")
+  const module =
+    runtimeModule ??
+    (await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmAssetUrl("squooshhqx.js")))
   initHqx = (module.default ?? module) as ResizeWasmInit
   hqxResize = (module as { resize?: HqxWasmFn }).resize ?? null
   if (!initHqx || !hqxResize) {
@@ -97,7 +97,10 @@ async function ensureMagicKernelModuleLoaded(): Promise<void> {
   if (initMagicKernel && magicKernelResize) {
     return
   }
-  const module = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmAssetUrl("jsquash_magic_kernel.js"))
+  const runtimeModule = resolveEngineWasmNamedModule("jsquash_magic_kernel.js")
+  const module =
+    runtimeModule ??
+    (await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmAssetUrl("jsquash_magic_kernel.js")))
   initMagicKernel = (module.default ?? module) as ResizeWasmInit
   magicKernelResize = (module as { resize?: MagicKernelWasmFn }).resize ?? null
   if (!initMagicKernel || !magicKernelResize) {

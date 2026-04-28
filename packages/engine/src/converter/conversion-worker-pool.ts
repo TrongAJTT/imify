@@ -5,7 +5,7 @@ export function setConversionWorkerFactory(factory: WorkerFactory) {
   conversionWorkerFactory = factory;
 }
 
-import { createEngineConversionWorker } from "./runtime-adapter"
+import { createEngineConversionWorker, shouldUseEngineWasmWorkers } from "./runtime-adapter"
 
 import type { ConvertImageResult } from "./"
 import type { FormatConfig, ImageFormat } from "@imify/core/types"
@@ -290,6 +290,10 @@ export function terminateConversionWorkerPool(format?: WorkerFormat): void {
 export function convertImageWithWorker(sourceBlob: Blob, config: FormatConfig): Promise<ConvertImageResult> {
   if (config.format === "pdf") {
     return Promise.reject(new Error("PDF conversion is not supported in conversion worker"))
+  }
+
+  if (!shouldUseEngineWasmWorkers() && (config.format === "avif" || config.format === "jxl")) {
+    return Promise.reject(new Error("WASM workers are disabled for AVIF/JXL in this runtime"))
   }
 
   if (!isConversionWorkerSupported()) {
