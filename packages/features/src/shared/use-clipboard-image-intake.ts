@@ -10,6 +10,9 @@ interface UseClipboardImageIntakeOptions {
   onUrls?: (urls: string[]) => void
   enabled?: boolean
   mode?: ClipboardImageMode
+  onFetchStart?: () => void
+  onFetchEnd?: () => void
+  onError?: (message: string) => void
 }
 
 export function useClipboardImageIntake({
@@ -17,10 +20,16 @@ export function useClipboardImageIntake({
   onUrls,
   enabled = true,
   mode = "multiple",
+  onFetchStart,
+  onFetchEnd,
+  onError,
 }: UseClipboardImageIntakeOptions): void {
   useClipboardPaste({
     enabled,
     onUrls,
+    onFetchStart,
+    onFetchEnd,
+    onError,
     onFiles: (files) => {
       const imageFiles = files.filter((file) => isCommonImageFile(file))
       if (!imageFiles.length) {

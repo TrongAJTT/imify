@@ -15,9 +15,11 @@ import type {
   LayerFillState,
   FillingExportFormat,
   SymmetricParams,
+  GridDesignParams,
 } from "@imify/features/filling/types"
 import {
   DEFAULT_CANVAS_FILL_STATE,
+  DEFAULT_GRID_DESIGN_PARAMS,
   DEFAULT_SYMMETRIC_PARAMS,
   createLayerFillState,
 } from "@imify/features/filling/types"
@@ -43,6 +45,8 @@ export interface FillingStoreState {
   selectedLayerId: string | null
   symmetricParams: SymmetricParams
   symmetricLayerCount: number
+  gridDesignParams: GridDesignParams
+  gridLayerCount: number
 
   // Export
   exportFormat: FillingExportFormat
@@ -91,6 +95,8 @@ export interface FillingStoreState {
   setSelectedLayerId: (id: string | null) => void
   setSymmetricParams: (params: SymmetricParams | ((previous: SymmetricParams) => SymmetricParams)) => void
   setSymmetricLayerCount: (count: number) => void
+  setGridDesignParams: (params: GridDesignParams | ((previous: GridDesignParams) => GridDesignParams)) => void
+  setGridLayerCount: (count: number) => void
   initFillStatesForTemplate: (template: FillingTemplate) => void
   setExportFormat: (format: FillingExportFormat) => void
   setExportQuality: (quality: number) => void
@@ -200,6 +206,8 @@ export const useFillingStore = create<FillingStoreState>()(
       selectedLayerId: null,
       symmetricParams: { ...DEFAULT_SYMMETRIC_PARAMS },
       symmetricLayerCount: 0,
+      gridDesignParams: { ...DEFAULT_GRID_DESIGN_PARAMS },
+      gridLayerCount: 0,
 
       exportFormat: "png",
       exportQuality: 90,
@@ -262,6 +270,11 @@ export const useFillingStore = create<FillingStoreState>()(
           symmetricParams: typeof params === "function" ? params(state.symmetricParams) : params,
         })),
       setSymmetricLayerCount: (count) => set({ symmetricLayerCount: Math.max(0, Math.floor(count)) }),
+      setGridDesignParams: (params) =>
+        set((state) => ({
+          gridDesignParams: typeof params === "function" ? params(state.gridDesignParams) : params,
+        })),
+      setGridLayerCount: (count) => set({ gridLayerCount: Math.max(0, Math.floor(count)) }),
       initFillStatesForTemplate: (template) =>
         set(() => {
           const runtimeIds = buildRuntimeFillStateIds(template)
@@ -271,6 +284,8 @@ export const useFillingStore = create<FillingStoreState>()(
             selectedLayerId: runtimeIds[0] ?? null,
             symmetricParams: template.symmetricParams ?? { ...DEFAULT_SYMMETRIC_PARAMS },
             symmetricLayerCount: template.layers.length,
+            gridDesignParams: template.gridDesignParams ?? { ...DEFAULT_GRID_DESIGN_PARAMS },
+            gridLayerCount: template.layers.length,
           }
         }),
       setExportFormat: (format) => set({ exportFormat: format }),
@@ -326,6 +341,8 @@ export const useFillingStore = create<FillingStoreState>()(
           selectedLayerId: null,
           symmetricParams: { ...DEFAULT_SYMMETRIC_PARAMS },
           symmetricLayerCount: 0,
+          gridDesignParams: { ...DEFAULT_GRID_DESIGN_PARAMS },
+          gridLayerCount: 0,
         }),
     }),
     {

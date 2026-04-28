@@ -40,6 +40,13 @@ export function TemplateMethodDialogWrapper({
           return
         }
 
+        if (method === "grid-design") {
+          setActiveTemplateId(template.id)
+          setEditingTemplateId(null)
+          setFillingStep("create_grid_design")
+          return
+        }
+
         setActiveTemplateId(template.id)
         setFillingStep("create_symmetric")
       }}

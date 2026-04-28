@@ -42,6 +42,7 @@ export function SplitterLandingPage() {
   const isHydrated = useSplitterPresetHydrated()
   const presets = useSplitterPresetStore((state) => state.presets)
   const ensureDefaultPreset = useSplitterPresetStore((state) => state.ensureDefaultPreset)
+  const applyPreset = useSplitterPresetStore((state) => state.applyPreset)
   const saveCurrentPreset = useSplitterPresetStore((state) => state.saveCurrentPreset)
   const updatePresetMeta = useSplitterPresetStore((state) => state.updatePresetMeta)
   const deletePreset = useSplitterPresetStore((state) => state.deletePreset)

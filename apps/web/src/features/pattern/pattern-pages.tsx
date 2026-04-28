@@ -136,6 +136,7 @@ export function PatternLandingPage() {
   const presets = usePatternPresetStore((state) => state.presets)
   const ensureDefaultPreset = usePatternPresetStore((state) => state.ensureDefaultPreset)
   const setPresetViewMode = usePatternPresetStore((state) => state.setPresetViewMode)
+  const applyPreset = usePatternPresetStore((state) => state.applyPreset)
   const saveCurrentPreset = usePatternPresetStore((state) => state.saveCurrentPreset)
   const updatePresetMeta = usePatternPresetStore((state) => state.updatePresetMeta)
   const togglePresetPin = usePatternPresetStore((state) => state.togglePresetPin)

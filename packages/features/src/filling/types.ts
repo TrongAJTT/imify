@@ -76,6 +76,7 @@ export interface FillingTemplate {
   layers: VectorLayer[]
   groups: LayerGroup[]
   symmetricParams?: SymmetricParams
+  gridDesignParams?: GridDesignParams
   createdAt: number
   updatedAt: number
   usageCount: number
@@ -145,6 +146,23 @@ export interface SymmetricParams {
   firstAxisPosition: number
 }
 
+// ── Grid Designer Params ──
+
+export interface GridDesignParams {
+  rowCount: number
+  outerPadding: number
+  /**
+   * Legacy single gap value (persisted by older versions).
+   * New code should prefer `gapX` and `gapY`.
+   */
+  gap?: number
+  gapX: number
+  gapY: number
+  rowDefinitions: string[]
+  uniformColumns: boolean
+  uniformColumnsDef: string
+}
+
 // ── Template Sort ──
 
 export type TemplateSortMode =
@@ -160,6 +178,7 @@ export type FillingStep =
   | "select"
   | "create_manual"
   | "create_symmetric"
+  | "create_grid_design"
   | "fill"
 
 // ── Export ──
@@ -198,6 +217,17 @@ export const DEFAULT_SYMMETRIC_PARAMS: SymmetricParams = {
   oddEvenOffset: 0,
   oddEvenShapeReverse: false,
   firstAxisPosition: 0,
+}
+
+export const DEFAULT_GRID_DESIGN_PARAMS: GridDesignParams = {
+  rowCount: 3,
+  outerPadding: 24,
+  gap: 16,
+  gapX: 16,
+  gapY: 16,
+  rowDefinitions: ["3", "3", "3"],
+  uniformColumns: false,
+  uniformColumnsDef: "3",
 }
 
 export const DEFAULT_IMAGE_TRANSFORM: ImageTransform = {

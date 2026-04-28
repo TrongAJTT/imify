@@ -2,6 +2,7 @@ import { useMemo } from "react"
 
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { SymmetricSidebar } from "@imify/features/filling/symmetric-sidebar"
+import { GridDesignSidebar } from "@imify/features/filling/grid-design-sidebar"
 import { ManualEditorSidebar } from "@imify/features/filling/manual-editor-sidebar"
 import { useEditorContextSafe } from "@/options/components/filling/editor-context"
 import { SidebarPanel } from "@imify/ui"
@@ -69,6 +70,9 @@ export function FillingSidebarPanel({ enableWideSidebarGrid = false }: FillingSi
       <SidebarPanel title="CONFIGURATION" childrenClassName="flex flex-col gap-3">
         {fillingStep === "create_symmetric" && activeTemplate && (
           <SymmetricSidebar template={activeTemplate} />
+        )}
+        {fillingStep === "create_grid_design" && activeTemplate && (
+          <GridDesignSidebar template={activeTemplate} />
         )}
       </SidebarPanel>
     </div>

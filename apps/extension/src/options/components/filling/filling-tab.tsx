@@ -5,6 +5,7 @@ import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { templateStorage } from "@imify/features/filling/template-storage"
 import { SymmetricWorkspace } from "@imify/features/filling/symmetric-workspace"
+import { GridDesignWorkspace } from "@imify/features/filling/grid-design-workspace"
 import { useEditorContext } from "@/options/components/filling/editor-context"
 import { FillingBreadcrumb } from "@/options/components/filling/breadcrumb"
 import { TemplateList } from "@/options/components/filling/template-list"
@@ -122,7 +123,10 @@ export function FillingTab() {
   ])
 
   useEffect(() => {
-    if (activeTemplate && (fillingStep === "create_manual" || fillingStep === "create_symmetric")) {
+    if (
+      activeTemplate &&
+      (fillingStep === "create_manual" || fillingStep === "create_symmetric" || fillingStep === "create_grid_design")
+    ) {
       setEditorLayers(activeTemplate.layers)
       setEditorGroups(activeTemplate.groups ?? [])
       clearSelectedLayers()
@@ -187,6 +191,18 @@ export function FillingTab() {
 
       {fillingStep === "create_symmetric" && activeTemplate && (
         <SymmetricWorkspace
+          template={activeTemplate}
+          onRefresh={loadTemplates}
+          onSaved={(savedTemplate) => {
+            setFillingStep("fill")
+            setActiveTemplateId(savedTemplate.id)
+            setEditingTemplateId(null)
+          }}
+        />
+      )}
+
+      {fillingStep === "create_grid_design" && activeTemplate && (
+        <GridDesignWorkspace
           template={activeTemplate}
           onRefresh={loadTemplates}
           onSaved={(savedTemplate) => {

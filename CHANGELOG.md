@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Grid Designer (Image Filling):** Added a new `Grid Designer` creation method for Filling on both web and extension.
+  - Added a guarded web route at `/filling/grid-design?id=...` and matching extension flow step `create_grid_design`.
+  - Added a dedicated Grid Designer workspace with zoom/pan preview, parser-driven layout generation, and template save flow.
+  - Added a Grid Designer sidebar with row count, outer padding, gap, per-row syntax input, and shared-row override controls.
+  - Added a text-based grid parser that supports equal-column shorthand, ratio-based row definitions, and adjacent row merging through indicators such as `#` / `@`.
+  - Added `gridDesignParams` template/store support so Grid Designer templates can persist and reopen safely across both runtimes.
+
 - **Resize Quick Stats (Batch + Splicing):** Added a quick-resize popover next to `Value (px)` for `Fit width` / `Fit height` modes with one-click `Min / Avg / Max` values.
   - Batch now computes stats from the entire queue image dimensions.
   - Splicing now computes stats from all loaded images.
