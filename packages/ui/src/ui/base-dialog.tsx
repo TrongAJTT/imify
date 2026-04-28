@@ -56,7 +56,7 @@ export function BaseDialog({
         dialog.close()
       }
     }
-  }, [isOpen])
+  }, [isOpen, mounted])
 
   // Cleanup overflow on unmount
   useEffect(() => {

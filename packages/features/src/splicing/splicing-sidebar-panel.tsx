@@ -8,6 +8,7 @@ import type {
 } from "./types"
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { FormatAdvancedSettingsCard } from "../processor/format-advanced-settings-card"
+import { getFormatAdvancedLabel } from "../processor/format-advanced-label"
 import { TargetFormatQualityCard } from "../processor/target-format-quality-card"
 import {
   RenamePatternDialog,
@@ -208,6 +209,7 @@ export function SplicingSidebarPanel({
   const availableExportModes = getAvailableExportModes(preset, preset === "bento" ? bentoLayoutMode : undefined)
   const showQuality = supportsTargetFormatQuality(exportFormat)
   const showTinyMode = supportsTargetFormatTinyMode(exportFormat)
+  const formatAdvancedLabel = useMemo(() => getFormatAdvancedLabel(exportFormat), [exportFormat])
   const splicingCodecOptions = {
     bmp: {
       colorDepth: exportBmpColorDepth,
@@ -256,6 +258,7 @@ export function SplicingSidebarPanel({
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "layout-settings",
+      label: "Layout",
       columnSpan: 2,
       content: (
         <LayoutSettingsAccordion
@@ -284,6 +287,7 @@ export function SplicingSidebarPanel({
     },
     {
       id: "canvas-settings",
+      label: "Canvas",
       content: (
         <CanvasSettingsAccordion
           canvasPadding={canvasPadding}
@@ -305,6 +309,7 @@ export function SplicingSidebarPanel({
     },
     {
       id: "image-settings",
+      label: "Image Settings",
       content: (
         <ImageSettingsAccordion
           imageResize={imageResize}
@@ -329,6 +334,7 @@ export function SplicingSidebarPanel({
     },
     {
       id: "export-format-quality",
+      label: "Export Format & Quality",
       columnSpan: 2,
       content: (
         <TargetFormatQualityCard
@@ -359,6 +365,7 @@ export function SplicingSidebarPanel({
     },
     {
       id: "format-advanced-settings",
+      label: formatAdvancedLabel,
       columnSpan: 2,
       content: (
         <FormatAdvancedSettingsCard
@@ -408,6 +415,7 @@ export function SplicingSidebarPanel({
     },
     {
       id: "export-settings",
+      label: "Export Settings",
       columnSpan: 2,
       content: (
         <SplicingExportPanel
@@ -435,6 +443,7 @@ export function SplicingSidebarPanel({
     },
     {
       id: "preview-settings",
+      label: "Preview Settings",
       content: (
         <PreviewSettingsAccordion
           previewQualityPercent={previewQualityPercent}

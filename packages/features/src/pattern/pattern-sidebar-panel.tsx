@@ -18,28 +18,34 @@ export function PatternSidebarPanel({ enableWideSidebarGrid = false }: PatternSi
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "canvas",
+      label: "Canvas",
       columnSpan: 2,
       content: <PatternCanvasAccordion />,
     },
     {
       id: "assets",
+      label: "Assets",
       columnSpan: 2,
       content: <PatternAssetsAccordion />,
     },
     {
       id: "asset-settings",
+      label: "Asset Settings",
       content: <PatternAssetSettingsAccordion />,
     },
     {
       id: "distribution-settings",
+      label: "Pattern",
       content: <PatternSettingsAccordion />,
     },
     {
       id: "boundary-settings",
+      label: "Boundary Settings",
       content: <PatternBoundaryAccordion />,
     },
     {
       id: "export-settings",
+      label: "Export Settings",
       columnSpan: 2,
       content: <PatternExportAccordion />,
     },

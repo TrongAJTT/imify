@@ -99,6 +99,7 @@ export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSid
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "layers",
+      label: "Layers",
       content: (
         <ResizableAccordionCard
           icon={<ImagePlus size={16} />}
@@ -129,9 +130,13 @@ export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSid
         </ResizableAccordionCard>
       )
     },
-    { id: "layer-customization", content: <FillLayerCustomizationAccordion template={activeTemplate} /> },
-    { id: "canvas", content: <FillCanvasAccordion /> },
-    { id: "export", content: <FillingExportAccordion /> }
+    {
+      id: "layer-customization",
+      label: "Layer Customization",
+      content: <FillLayerCustomizationAccordion template={activeTemplate} />
+    },
+    { id: "canvas", label: "Canvas", content: <FillCanvasAccordion /> },
+    { id: "export", label: "Export", content: <FillingExportAccordion /> }
   ]
 
   return <WorkspaceConfigSidebarPanel items={sidebarItems} twoColumn={enableWideSidebarGrid} />

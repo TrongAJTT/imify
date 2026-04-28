@@ -20,13 +20,19 @@ export function DiffcheckerSidebarPanel({ enableWideSidebarGrid = false }: { ena
   const setDiffThreshold = useDiffcheckerStore((s) => s.setDiffThreshold)
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
-    { id: "view-mode", content: <ViewModeAccordion viewMode={viewMode} onViewModeChange={setViewMode} /> },
+    {
+      id: "view-mode",
+      label: "View Mode",
+      content: <ViewModeAccordion viewMode={viewMode} onViewModeChange={setViewMode} />
+    },
     {
       id: "comparison",
+      label: "Comparison",
       content: <ComparisonAccordion viewMode={viewMode} algorithm={algorithm} overlayOpacity={overlayOpacity} diffThreshold={diffThreshold} onAlgorithmChange={setAlgorithm} onOverlayOpacityChange={setOverlayOpacity} onDiffThresholdChange={setDiffThreshold} />
     },
     {
       id: "alignment",
+      label: "Alignment",
       content: <AlignmentAccordion alignMode={alignMode} alignAnchor={alignAnchor} onAlignModeChange={setAlignMode} onAlignAnchorChange={setAlignAnchor} />
     }
   ]

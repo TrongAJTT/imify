@@ -25,6 +25,7 @@ export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enabl
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "display",
+      label: "Display",
       content: (
         <DisplayAccordion
           paletteCount={paletteCount}
@@ -42,6 +43,7 @@ export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enabl
     },
     {
       id: "metadata",
+      label: "Metadata",
       content: (
         <MetadataAccordion
           exifSortMode={exifSortMode}
@@ -51,7 +53,7 @@ export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enabl
         />
       )
     },
-    { id: "information", content: <InformationAccordion /> }
+    { id: "information", label: "Information", content: <InformationAccordion /> }
   ]
 
   return <WorkspaceConfigSidebarPanel title="INSPECTOR SETTINGS" items={sidebarItems} twoColumn={enableWideSidebarGrid} />
