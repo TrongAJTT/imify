@@ -7,15 +7,15 @@ import type {
   LayerGroup,
   VectorLayer,
   ShapeType,
-} from "./types"
-import { generateId } from "./types"
-import { generateShapePoints, regenerateLayerShapePoints } from "./shape-generators"
-import { getBoundingBox } from "./vector-math"
-import { CanvasSizeDialog } from "./canvas-size-dialog"
-import { LayerListPanel } from "./layer-list-panel"
-import { LayerPropertiesPanel } from "./layer-properties-panel"
-import { ShapePickerDialog } from "./shape-picker-dialog"
-import { GroupLayerPanel } from "./group-layer-panel"
+} from "../types"
+import { generateId } from "../types"
+import { generateShapePoints, regenerateLayerShapePoints } from "../shape-generators"
+import { getBoundingBox } from "../vector-math"
+import { CanvasSizeDialog } from "../canvas-size-dialog"
+import { LayerListPanel } from "../layer-list-panel"
+import { LayerPropertiesPanel } from "../layer-properties-panel"
+import { ShapePickerDialog } from "../shape-picker-dialog"
+import { GroupLayerPanel } from "../group-layer-panel"
 import {
   AccordionCard,
   Button,

@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import type { FillingTemplate, ImageTransform } from "@imify/features/filling/types"
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types"
-import { buildFillRuntimeItems } from "@imify/features/filling/fill-runtime-items"
+import { buildFillRuntimeItems } from "@imify/features/filling/fill/runtime-items"
 
 export type FillCustomizationTab = "image" | "border" | "layer"
 

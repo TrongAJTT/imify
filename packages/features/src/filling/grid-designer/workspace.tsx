@@ -9,12 +9,12 @@ import { MutedText, Subheading } from "@imify/ui/ui/typography"
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
-import { useShortcutActions } from "./use-shortcut-actions"
-import { parseGridDesign, generateGridLayers } from "./grid-design-generator"
-import { GridDesignCanvasLayer } from "./grid-design-canvas-layer"
-import { templateStorage } from "./template-storage"
-import type { FillingTemplate } from "./types"
-import { DEFAULT_GRID_DESIGN_PARAMS } from "./types"
+import { useShortcutActions } from "../use-shortcut-actions"
+import { parseGridDesign, generateGridLayers } from "./generator"
+import { GridDesignCanvasLayer } from "./canvas-layer"
+import { templateStorage } from "../template-storage"
+import type { FillingTemplate } from "../types"
+import { DEFAULT_GRID_DESIGN_PARAMS } from "../types"
 
 const CANVAS_PADDING = 40
 const PREVIEW_MIN_ZOOM = 50

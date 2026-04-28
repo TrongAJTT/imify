@@ -1,4 +1,4 @@
-import type { FillRuntimeItem } from "./fill-runtime-items"
+import type { FillRuntimeItem } from "./fill/runtime-items"
 import {
   applyRuntimeTransformToPoint,
   applyRuntimeTransformToPolygons,

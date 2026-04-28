@@ -1,5 +1,5 @@
-import type { FillingTemplate, LayerGroup, Point2D, VectorLayer } from "./types"
-import { buildGroupFillPolygons, getBoundsFromPoints, toWorldLayerPoints } from "./group-geometry"
+import type { FillingTemplate, LayerGroup, Point2D, VectorLayer } from "../types"
+import { buildGroupFillPolygons, getBoundsFromPoints, toWorldLayerPoints } from "../group-geometry"
 
 export const FILL_GROUP_RUNTIME_PREFIX = "fill-group:"
 

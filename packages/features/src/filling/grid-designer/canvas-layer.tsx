@@ -1,6 +1,6 @@
 import React from "react"
 import { Layer, Rect } from "react-konva"
-import type { GridLayoutCell } from "./grid-design-generator"
+import type { GridLayoutCell } from "./generator"
 
 interface GridDesignCanvasLayerProps {
   canvasWidth: number

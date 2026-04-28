@@ -7,10 +7,10 @@ import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { NumberInput } from "@imify/ui/ui/number-input"
 import { TextInput } from "@imify/ui/ui/text-input"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
-import type { FillingTemplate, GridDesignParams } from "./types"
-import { DEFAULT_GRID_DESIGN_PARAMS } from "./types"
-import { GRID_DESIGN_TOOLTIPS } from "./grid-design-tooltips"
-import { parseGridDesign } from "./grid-design-generator"
+import type { FillingTemplate, GridDesignParams } from "../types"
+import { DEFAULT_GRID_DESIGN_PARAMS } from "../types"
+import { GRID_DESIGN_TOOLTIPS } from "./tooltips"
+import { parseGridDesign } from "./generator"
 
 interface GridDesignSidebarProps {
   template: FillingTemplate

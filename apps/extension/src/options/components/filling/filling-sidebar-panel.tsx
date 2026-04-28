@@ -1,13 +1,13 @@
 import { useMemo } from "react"
 
 import { useFillingStore } from "@imify/stores/stores/filling-store"
-import { SymmetricSidebar } from "@imify/features/filling/symmetric-sidebar"
-import { GridDesignSidebar } from "@imify/features/filling/grid-design-sidebar"
-import { ManualEditorSidebar } from "@imify/features/filling/manual-editor-sidebar"
+import { SymmetricSidebar } from "@imify/features/filling/symmetric-generator/sidebar"
+import { GridDesignSidebar } from "@imify/features/filling/grid-designer/sidebar"
+import { ManualEditorSidebar } from "@imify/features/filling/edit/sidebar"
 import { useEditorContextSafe } from "@/options/components/filling/editor-context"
 import { SidebarPanel } from "@imify/ui"
 import { FillingInfoPanel } from "@/options/components/filling/template-info-accordion"
-import { FillSidebar } from "@imify/features/filling/fill-sidebar"
+import { FillSidebar } from "@imify/features/filling/fill/sidebar"
 
 interface FillingSidebarPanelProps {
   enableWideSidebarGrid?: boolean

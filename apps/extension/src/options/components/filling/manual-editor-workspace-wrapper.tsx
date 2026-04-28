@@ -1,3 +1,3 @@
-import { ManualEditorWorkspace as SharedManualEditorWorkspace } from "@imify/features/filling/manual-editor-workspace"
+import { ManualEditorWorkspace as SharedManualEditorWorkspace } from "@imify/features/filling/edit/workspace"
 
 export const ManualEditorWorkspaceWrapper = SharedManualEditorWorkspace

@@ -23,7 +23,7 @@ import {
   DEFAULT_SYMMETRIC_PARAMS,
   createLayerFillState,
 } from "@imify/features/filling/types"
-import { buildRuntimeFillStateIds } from "@imify/features/filling/fill-runtime-items"
+import { buildRuntimeFillStateIds } from "@imify/features/filling/fill/runtime-items"
 import type { BmpColorDepth, TiffColorMode } from "@imify/core/types"
 
 

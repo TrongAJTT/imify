@@ -12,10 +12,10 @@ import {
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useFillUiStore } from "@imify/stores/stores/fill-ui-store"
-import { FillLayerCard } from "@imify/features/filling/fill-layer-card"
-import { FillLayerCustomizationAccordion } from "@imify/features/filling/fill-layer-customization-accordion"
-import { FillCanvasAccordion } from "@imify/features/filling/fill-canvas-accordion"
-import { FillingExportAccordion } from "@imify/features/filling/filling-export-accordion"
+import { FillLayerCard } from "@imify/features/filling/fill/layer-card"
+import { FillLayerCustomizationAccordion } from "@imify/features/filling/fill/layer-customization-accordion"
+import { FillCanvasAccordion } from "@imify/features/filling/fill/canvas-accordion"
+import { FillingExportAccordion } from "@imify/features/filling/fill/export-accordion"
 import { SortableFillLayerItem } from "@imify/features/filling/sortable-fill-layer-item"
 import { ResizableAccordionCard } from "@imify/ui/ui/resizable-accordion-card"
 import { ImagePlus } from "lucide-react"
@@ -23,7 +23,7 @@ import {
   buildFillRuntimeItems,
   expandRuntimeOrderToVisibleLayerIds,
   type FillRuntimeItem,
-} from "@imify/features/filling/fill-runtime-items"
+} from "@imify/features/filling/fill/runtime-items"
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem

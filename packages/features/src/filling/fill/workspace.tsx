@@ -11,7 +11,7 @@ import {
   type FillRuntimeGroupItem,
   type FillRuntimeItem,
   type FillRuntimeLayerItem,
-} from "@imify/features/filling/fill-runtime-items"
+} from "@imify/features/filling/fill/runtime-items"
 import {
   applyRuntimeTransformToPoint,
   applyRuntimeTransformToPolygons,
@@ -48,8 +48,8 @@ import {
   getFirstCommonImageFileFromDataTransfer,
   hasFileDragPayload,
   isCommonImageFile,
-} from "../shared/image-file-utils"
-import { exportFilledTemplate } from "./filling-export-utils"
+} from "../../shared/image-file-utils"
+import { exportFilledTemplate } from "../filling-export-utils"
 
 const CANVAS_PADDING = 40
 const ROTATE_CURSOR = "crosshair"

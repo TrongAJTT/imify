@@ -1,4 +1,4 @@
-import { generateId, type GridDesignParams, type Point2D, type VectorLayer } from "./types"
+import { generateId, type GridDesignParams, type Point2D, type VectorLayer } from "../types"
 
 const EPSILON = 0.001
 

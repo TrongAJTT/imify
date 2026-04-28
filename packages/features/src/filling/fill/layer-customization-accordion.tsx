@@ -4,8 +4,8 @@ import { ImagePlus, Layers, Palette, SlidersHorizontal, X } from "lucide-react"
 import type { FillingTemplate, ImageTransform, LayerFillState, VectorLayer } from "@imify/features/filling/types"
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types"
 import { regenerateLayerShapePoints } from "@imify/features/filling/shape-generators"
-import { buildFillRuntimeItems, type FillRuntimeItem } from "@imify/features/filling/fill-runtime-items"
-import { FillTransformControls } from "@imify/features/filling/fill-transform-controls"
+import { buildFillRuntimeItems, type FillRuntimeItem } from "@imify/features/filling/fill/runtime-items"
+import { FillTransformControls } from "@imify/features/filling/fill/transform-controls"
 import { useShortcutActions } from "@imify/features/filling/use-shortcut-actions"
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
@@ -22,7 +22,7 @@ import {
   getFirstCommonImageFileFromDataTransfer,
   hasFileDragPayload,
   isCommonImageFile,
-} from "../shared/image-file-utils"
+} from "../../shared/image-file-utils"
 
 interface FillLayerCustomizationAccordionProps {
   template: FillingTemplate

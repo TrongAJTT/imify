@@ -11,7 +11,7 @@ import { FillingTemplateListPanel } from "@imify/features/filling/template-list-
 import { templateStorage } from "@imify/features/filling/template-storage"
 import type { FillingStep, LayerGroup, VectorLayer } from "@imify/features/filling/types"
 import { regenerateLayerShapePoints } from "@imify/features/filling/shape-generators"
-import { FillWorkspace } from "@imify/features/filling/fill-workspace"
+import { FillWorkspace } from "@imify/features/filling/fill/workspace"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { FillingOverviewSidebar, FillingWorkflowSidebar } from "./filling-sidebar"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
@@ -20,17 +20,17 @@ import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
 import { Heading, MutedText, WorkspaceLoadingState } from "@imify/ui"
 
 const ManualEditorWorkspace = dynamic(
-  () => import("@imify/features/filling/manual-editor-workspace").then((m) => m.ManualEditorWorkspace),
+  () => import("@imify/features/filling/edit/workspace").then((m) => m.ManualEditorWorkspace),
   { ssr: false }
 )
 
 const SymmetricWorkspace = dynamic(
-  () => import("@imify/features/filling/symmetric-workspace").then((m) => m.SymmetricWorkspace),
+  () => import("@imify/features/filling/symmetric-generator/workspace").then((m) => m.SymmetricWorkspace),
   { ssr: false }
 )
 
 const GridDesignWorkspace = dynamic(
-  () => import("@imify/features/filling/grid-design-workspace").then((m) => m.GridDesignWorkspace),
+  () => import("@imify/features/filling/grid-designer/workspace").then((m) => m.GridDesignWorkspace),
   { ssr: false }
 )
 

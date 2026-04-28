@@ -4,13 +4,13 @@ import type { LayerGroup, VectorLayer } from "@imify/features/filling/types"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { templateStorage } from "@imify/features/filling/template-storage"
-import { SymmetricWorkspace } from "@imify/features/filling/symmetric-workspace"
-import { GridDesignWorkspace } from "@imify/features/filling/grid-design-workspace"
+import { SymmetricWorkspace } from "@imify/features/filling/symmetric-generator/workspace"
+import { GridDesignWorkspace } from "@imify/features/filling/grid-designer/workspace"
 import { useEditorContext } from "@/options/components/filling/editor-context"
 import { FillingBreadcrumb } from "@/options/components/filling/breadcrumb"
 import { TemplateList } from "@/options/components/filling/template-list"
 import { ManualEditorWorkspaceWrapper } from "@/options/components/filling/manual-editor-workspace-wrapper"
-import { FillWorkspace } from "@imify/features/filling/fill-workspace"
+import { FillWorkspace } from "@imify/features/filling/fill/workspace"
 
 function synchronizeGroupsWithLayers(groups: LayerGroup[], layers: VectorLayer[]): LayerGroup[] {
   const layerIdsByGroup = new Map<string, string[]>()

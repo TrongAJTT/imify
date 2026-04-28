@@ -1,6 +1,6 @@
-import type { Point2D, SymmetricParams, VectorLayer } from "./types"
-import { generateId } from "./types"
-import { polygonIntersectsRect } from "./vector-math"
+import type { Point2D, SymmetricParams, VectorLayer } from "../types"
+import { generateId } from "../types"
+import { polygonIntersectsRect } from "../vector-math"
 
 export interface SymmetricLayoutMetrics {
   isHorizontal: boolean

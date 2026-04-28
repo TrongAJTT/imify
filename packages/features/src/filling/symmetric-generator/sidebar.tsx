@@ -7,9 +7,9 @@ import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { NumberInput } from "@imify/ui/ui/number-input"
 import { SelectInput } from "@imify/ui/ui/select-input"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
-import type { AxisAppearanceOrder, AxisDirection, FillingTemplate, ShapeAppearanceOrder, SymmetricParams } from "./types"
-import { DEFAULT_SYMMETRIC_PARAMS } from "./types"
-import { SYMMETRIC_SIDEBAR_TOOLTIPS } from "./symmetric-tooltips"
+import type { AxisAppearanceOrder, AxisDirection, FillingTemplate, ShapeAppearanceOrder, SymmetricParams } from "../types"
+import { DEFAULT_SYMMETRIC_PARAMS } from "../types"
+import { SYMMETRIC_SIDEBAR_TOOLTIPS } from "./tooltips"
 
 const AXIS_DIR_OPTIONS = [
   { value: "horizontal", label: "Horizontal" },

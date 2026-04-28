@@ -9,22 +9,22 @@ import { MutedText, Subheading } from "@imify/ui/ui/typography"
 import { VisualHelpTooltip } from "@imify/ui/ui/visual-help-tooltip"
 import { PreviewInteractionModeToggle, ZoomPanControl } from "@imify/ui"
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
-import { templateStorage } from "./template-storage"
-import { SYMMETRIC_VISUAL_HELP_TOOLTIPS } from "./symmetric-tooltips"
-import type { FillingTemplate, SymmetricParams } from "./types"
-import { DEFAULT_SYMMETRIC_PARAMS } from "./types"
-import { useTransformGuides, type RectBounds } from "./use-transform-guides"
+import { templateStorage } from "../template-storage"
+import { SYMMETRIC_VISUAL_HELP_TOOLTIPS } from "./tooltips"
+import type { FillingTemplate, SymmetricParams } from "../types"
+import { DEFAULT_SYMMETRIC_PARAMS } from "../types"
+import { useTransformGuides, type RectBounds } from "../use-transform-guides"
 import {
   buildSymmetricShapePolygon,
   deriveSymmetricLayoutMetrics,
   generateSymmetricLayers,
   type SymmetricLayoutMetrics,
-} from "./symmetric-generator"
-import { flattenPoints, getBoundingBox } from "./vector-math"
+} from "./generator"
+import { flattenPoints, getBoundingBox } from "../vector-math"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
-import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
-import { useShortcutActions } from "./use-shortcut-actions"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../../shared/media-assets"
+import { useShortcutActions } from "../use-shortcut-actions"
 
 const CANVAS_PADDING = 40
 const PREVIEW_MIN_ZOOM = 50
