@@ -260,8 +260,12 @@ function buildLayoutCells(cells: GridCell[][], params: GridDesignParams, canvasW
       }
 
       const rowTop = outerPadding + cell.rowIndex * (rowHeight + gapY)
-      const cellX = outerPadding + (cell.startPct / 100) * innerWidth + (gapX * cell.startPct) / 100
-      const cellWidth = Math.max(1, (cell.widthPct / 100) * innerWidth - gapX)
+      const baseStartX = outerPadding + (cell.startPct / 100) * innerWidth
+      const baseEndX = outerPadding + (cell.endPct / 100) * innerWidth
+      const startInset = nearlyEqual(cell.startPct, 0) ? 0 : gapX / 2
+      const endInset = nearlyEqual(cell.endPct, 100) ? 0 : gapX / 2
+      const cellX = baseStartX + startInset
+      const cellWidth = Math.max(1, baseEndX - endInset - cellX)
       const cellHeight = Math.max(1, rowHeight * cell.rowSpan + gapY * Math.max(0, cell.rowSpan - 1))
 
       layoutCells.push({
