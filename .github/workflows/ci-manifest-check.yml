@@ -36,5 +36,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Sync assets
+        run: pnpm --filter @imify/extension sync:assets
+
       - name: Build and verify target manifests
         run: pnpm --filter @imify/extension build:ci
