@@ -36,6 +36,7 @@ import previewImageFillingWebp from "url:@assets/features/preview-image_filling.
 import symmetricVisualEditorWebm from "url:@assets/features/guide-symgen-visual_editor.webm"
 import manualMultiSelectWebm from "url:@assets/features/guide-image_filling_manual-visual_multi_select.webm"
 import previewPatternGeneratorWebp from "url:@assets/features/preview-pattern_generator.webp"
+import previewContextMenuWebp from "url:@assets/features/preview-context_menu.webp"
 
 let adaptersBootstrapped = false
 const extensionMediaAssetMap: Record<string, string> = {
@@ -52,6 +53,7 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.splitter.guideVisualControlWebm]: splitterGuideVisualControlWebm,
   [FEATURE_MEDIA_ASSET_PATHS.splicing.previewWebp]: previewImageSplicingWebp,
   [FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp]: previewPatternGeneratorWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp]: previewContextMenuWebp,
   [FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp]: previewImageFillingWebp,
   [FEATURE_MEDIA_ASSET_PATHS.filling.symmetricVisualEditorWebm]: symmetricVisualEditorWebm,
   [FEATURE_MEDIA_ASSET_PATHS.filling.manualMultiSelectWebm]: manualMultiSelectWebm,

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { ChevronDown, ChevronLeft, ChevronRight, HelpCircle, Lightbulb } from "lucide-react"
+import { ChevronDown, HelpCircle, Lightbulb } from "lucide-react"
 
 interface PresetInfoFaqItem {
   question: string
@@ -25,7 +25,8 @@ interface PresetInfoShowcasePanelProps {
   subtitle: string
   tips: string[]
   featureChips: string[]
-  faqs: PresetInfoFaqItem[]
+  faqs: PresetInfoFaqItem[],
+  padding?: number
 }
 
 export function PresetInfoShowcasePanel({
@@ -40,10 +41,13 @@ export function PresetInfoShowcasePanel({
   tips,
   featureChips,
   faqs,
+  padding = 0,
 }: PresetInfoShowcasePanelProps) {
+  const IMAGE_AUTO_ADVANCE_MS = 6000
   const tipOfTheDay = tips[Math.abs(new Date().getDate()) % Math.max(1, tips.length)] ?? "Tip unavailable."
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
   const [previewIndex, setPreviewIndex] = useState(0)
+  const [progressRemaining, setProgressRemaining] = useState(1)
   const fallbackPreviewMediaSources: PresetInfoPreviewMediaItem[] =
     Array.isArray(previewSources) && previewSources.length > 0
       ? previewSources.map((src) => ({ src, type: "image", alt: previewAlt }))
@@ -89,24 +93,40 @@ export function PresetInfoShowcasePanel({
 
   useEffect(() => {
     if (!hasMultiplePreviews) {
+      setProgressRemaining(1)
       return
     }
+
+    setProgressRemaining(1)
 
     if (activePreviewMedia.type !== "image") {
       return
     }
 
-    const interval = window.setTimeout(() => {
+    const startAt = window.performance.now()
+    let rafId = 0
+    const autoAdvanceTimeout = window.setTimeout(() => {
       setPreviewIndex((current) => (current + 1) % effectivePreviewMediaSources.length)
-    }, 6000)
+    }, IMAGE_AUTO_ADVANCE_MS)
+
+    const tick = () => {
+      const elapsedMs = window.performance.now() - startAt
+      const remaining = Math.max(0, 1 - elapsedMs / IMAGE_AUTO_ADVANCE_MS)
+      setProgressRemaining(remaining)
+      if (remaining > 0) {
+        rafId = window.requestAnimationFrame(tick)
+      }
+    }
+    rafId = window.requestAnimationFrame(tick)
 
     return () => {
-      window.clearTimeout(interval)
+      window.clearTimeout(autoAdvanceTimeout)
+      window.cancelAnimationFrame(rafId)
     }
-  }, [activePreviewMedia.type, effectivePreviewMediaSources.length, hasMultiplePreviews])
+  }, [activePreviewMedia.src, activePreviewMedia.type, effectivePreviewMediaSources.length, hasMultiplePreviews])
 
   return (
-    <div className="space-y-5">
+    <div className={`space-y-5 p-${padding}`}>
       <div className="overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40">
         <div className="relative">
           <div
@@ -121,8 +141,35 @@ export function PresetInfoShowcasePanel({
                 autoPlay
                 muted
                 playsInline
+                onLoadedMetadata={(event) => {
+                  if (activePreviewMedia.type !== "video" || activePreviewMedia.src !== renderedPreviewMedia.src) {
+                    return
+                  }
+                  const durationSec = event.currentTarget.duration
+                  if (!Number.isFinite(durationSec) || durationSec <= 0) {
+                    setProgressRemaining(1)
+                    return
+                  }
+                  setProgressRemaining(1)
+                }}
+                onTimeUpdate={(event) => {
+                  if (activePreviewMedia.type !== "video" || activePreviewMedia.src !== renderedPreviewMedia.src) {
+                    return
+                  }
+                  const durationSec = event.currentTarget.duration
+                  const currentSec = event.currentTarget.currentTime
+                  if (!Number.isFinite(durationSec) || durationSec <= 0) {
+                    return
+                  }
+                  const remaining = Math.max(0, 1 - currentSec / durationSec)
+                  setProgressRemaining(remaining)
+                }}
                 onEnded={() => {
                   if (!hasMultiplePreviews) return
+                  if (activePreviewMedia.type !== "video" || activePreviewMedia.src !== renderedPreviewMedia.src) {
+                    return
+                  }
+                  setProgressRemaining(1)
                   setPreviewIndex((current) => (current + 1) % effectivePreviewMediaSources.length)
                 }}
               />
@@ -135,20 +182,27 @@ export function PresetInfoShowcasePanel({
             )}
           </div>
           {hasMultiplePreviews ? (
-            <div className="pointer-events-none absolute inset-x-2 bottom-2 flex items-center justify-between">
+            <>
               <button
                 type="button"
-                className="pointer-events-auto inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-300/90 bg-white/90 text-slate-700 transition hover:bg-white dark:border-slate-600 dark:bg-slate-900/90 dark:text-slate-200"
+                className="absolute inset-y-0 left-0 w-1/2 cursor-pointer"
                 aria-label="Previous preview"
                 onClick={() =>
                   setPreviewIndex((current) =>
                     (current - 1 + effectivePreviewMediaSources.length) % effectivePreviewMediaSources.length
                   )
                 }
-              >
-                <ChevronLeft size={13} />
-              </button>
-              <div className="inline-flex items-center gap-1 rounded-full border border-slate-300/90 bg-white/90 px-2 py-0.5 dark:border-slate-600 dark:bg-slate-900/90">
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 w-1/2 cursor-pointer"
+                aria-label="Next preview"
+                onClick={() =>
+                  setPreviewIndex((current) => (current + 1) % effectivePreviewMediaSources.length)
+                }
+              />
+              <div className="pointer-events-none absolute inset-x-2 bottom-2 flex items-center justify-center">
+                <div className="inline-flex items-center gap-1 rounded-full border border-slate-300/90 bg-white/90 px-2 py-0.5 opacity-60 dark:border-slate-600 dark:bg-slate-900/90">
                 {effectivePreviewMediaSources.map((item, index) => (
                   <span
                     key={`${item.type}_${item.src}_${index}`}
@@ -156,16 +210,15 @@ export function PresetInfoShowcasePanel({
                   />
                 ))}
               </div>
-              <button
-                type="button"
-                className="pointer-events-auto inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-300/90 bg-white/90 text-slate-700 transition hover:bg-white dark:border-slate-600 dark:bg-slate-900/90 dark:text-slate-200"
-                aria-label="Next preview"
-                onClick={() =>
-                  setPreviewIndex((current) => (current + 1) % effectivePreviewMediaSources.length)
-                }
-              >
-                <ChevronRight size={13} />
-              </button>
+              </div>
+            </>
+          ) : null}
+          {hasMultiplePreviews ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-slate-300/30 dark:bg-slate-700/35">
+              <div
+                className="h-full bg-slate-400/45 transition-[width] duration-100 ease-linear dark:bg-slate-500/40"
+                style={{ width: `${Math.max(0, Math.min(1, progressRemaining)) * 100}%`, marginLeft: "auto" }}
+              />
             </div>
           ) : null}
         </div>

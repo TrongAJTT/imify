@@ -6,6 +6,7 @@ import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
 import { Button } from "@imify/ui/ui/button"
+import { SidebarPanel } from "@imify/ui"
 import { PopupApp } from "@/popup/popup-app"
 import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
 import SidepanelAuditSnapshotApp from "@/sidepanel/sidepanel-audit-snapshot-app"
@@ -236,7 +237,11 @@ function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorage
 
 function TabInfoPanel({ activeTab }: { activeTab: OptionsTab }) {
   if (activeTab === "context-menu") {
-    return <ContextMenuInfoPanel />
+    return (
+      <SidebarPanel title="ABOUT THIS TOOL" childrenClassName="flex flex-col gap-3">
+        <ContextMenuInfoPanel />
+      </SidebarPanel>
+    )
   }
 
   return null

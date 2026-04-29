@@ -47,6 +47,9 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   pattern: {
     previewWebp: "/assets/features/preview-pattern_generator.webp"
   },
+  contextMenu: {
+    previewWebp: "/assets/features/preview-context_menu.webp"
+  },
   downloadHints: {
     chromeWebp: "/assets/images/img-download-not-ask-chrome.webp",
     edgeWebp: "/assets/images/img-download-not-ask-edge.webp",
@@ -84,6 +87,9 @@ export const FEATURE_MEDIA_ASSETS = {
   },
   pattern: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp
+  },
+  contextMenu: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp
   },
   downloadHints: {
     chromeWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.chromeWebp,
