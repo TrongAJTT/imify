@@ -60,12 +60,14 @@ jobs:
       - name: Validate tag matches package version
         shell: bash
         run: |
-          TAG_VERSION="${{ steps.release_meta.outputs.version }}"
+          FULL_TAG_VERSION="${{ steps.release_meta.outputs.version }}"
+          BASE_TAG_VERSION="${FULL_TAG_VERSION%%-*}"
           PACKAGE_VERSION="$(node -p "require('./apps/extension/package.json').version")"
-          if [[ "$TAG_VERSION" != "$PACKAGE_VERSION" ]]; then
-            echo "Tag '${{ inputs.version_tag }}' does not match extension package version 'v$PACKAGE_VERSION'"
+          if [[ "$BASE_TAG_VERSION" != "$PACKAGE_VERSION" ]]; then
+            echo "Base tag version '$BASE_TAG_VERSION' (from '$FULL_TAG_VERSION') does not match extension package version '$PACKAGE_VERSION'"
             exit 1
           fi
+          echo "Tag version check passed: $FULL_TAG_VERSION matches base $PACKAGE_VERSION"
 
       - name: Read release notes from file
         id: release_notes
