@@ -302,6 +302,12 @@ export default function OptionsPage() {
     { key: PERFORMANCE_PREFERENCES_KEY, instance: syncStorage },
     DEFAULT_PERFORMANCE_PREFERENCES
   )
+  // Keep a "live" copy so Export UI updates immediately after Settings changes,
+  // instead of waiting for storage re-hydration.
+  const [livePerformancePreferences, setLivePerformancePreferences] = useState(performancePreferences)
+  useEffect(() => {
+    setLivePerformancePreferences(performancePreferences)
+  }, [performancePreferences])
   const initialTabFromQueryRef = useRef<OptionsTab | null>(null)
 
   const isLoading =
@@ -313,7 +319,7 @@ export default function OptionsPage() {
   const safeDefaultOptionsTab = sanitizeOptionsTab(defaultOptionsTab)
   const safeActiveContextMenuSubTab = sanitizeContextMenuSubTab(activeContextMenuSubTab)
   const safeLayoutPreferences = normalizeWorkspaceLayoutPreferences(layoutPreferences)
-  const safePerformancePreferences = normalizePerformancePreferences(performancePreferences)
+  const safePerformancePreferences = normalizePerformancePreferences(livePerformancePreferences)
   const defaultWorkspaceOptions = useMemo(
     () =>
       WORKSPACE_TOOLS.filter((tool) => tool.showOnExtSidebar && tool.extTabId).map((tool) => ({
@@ -602,6 +608,7 @@ export default function OptionsPage() {
         }}
         performancePreferences={safePerformancePreferences}
         onChangePerformancePreferences={(value) => {
+          setLivePerformancePreferences(value)
           void setPerformancePreferences(value)
         }}
         devModeSettingsAdapter={devModeSettingsAdapter}

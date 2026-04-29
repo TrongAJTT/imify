@@ -11,6 +11,7 @@ import { encodeWebp, shouldUseWebpWasm } from "@imify/engine/converter/webp-enco
 import { calculateLayout, calculateProcessedSize } from "./layout-engine"
 import type {
   LayoutResult,
+  LayoutPlacement,
   SplicingCanvasStyle,
   SplicingExportConfig,
   SplicingExportFormat,
@@ -22,6 +23,40 @@ import type {
 
 type AnyContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 type CornerRadii = { tl: number; tr: number; br: number; bl: number }
+
+function getPlacementsOuterBounds(placements: LayoutPlacement[]): {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+  width: number
+  height: number
+} {
+  if (placements.length === 0) {
+    return { minX: 0, minY: 0, maxX: 1, maxY: 1, width: 1, height: 1 }
+  }
+
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+
+  for (const p of placements) {
+    const x = p.outerRect.x
+    const y = p.outerRect.y
+    const w = p.outerRect.width
+    const h = p.outerRect.height
+    minX = Math.min(minX, x)
+    minY = Math.min(minY, y)
+    maxX = Math.max(maxX, x + w)
+    maxY = Math.max(maxY, y + h)
+  }
+
+  const width = Math.max(1, maxX - minX)
+  const height = Math.max(1, maxY - minY)
+
+  return { minX, minY, maxX, maxY, width, height }
+}
 
 interface ParsedLinearGradientBackground {
   angleDeg: number
@@ -466,11 +501,11 @@ export function computeSplicingExportCanvasDimensions(
   let groupH = group.bounds.height + edgePad * 2
 
   if (exportConfig.trimBackground) {
-    if (exportConfig.exportMode === "per_row") {
-      groupW = group.bounds.width
-    } else if (exportConfig.exportMode === "per_col") {
-      groupH = group.bounds.height
-    }
+    // "Trim background" means crop to the actual outer bounds of placements
+    // for the current row/column group (not just canvas padding/border).
+    const outerBounds = getPlacementsOuterBounds(group.placements)
+    groupW = outerBounds.width
+    groupH = outerBounds.height
   }
 
   return { width: groupW, height: groupH }
@@ -579,14 +614,13 @@ export async function exportSplicedImage(
       let offsetX = group.bounds.x - edgePad
       let offsetY = group.bounds.y - edgePad
 
-      if (exportConfig.trimBackground) {
-        if (exportConfig.exportMode === "per_row") {
-          groupW = group.bounds.width
-          offsetX = group.bounds.x
-        } else if (exportConfig.exportMode === "per_col") {
-          groupH = group.bounds.height
-          offsetY = group.bounds.y
-        }
+      if (exportConfig.trimBackground && exportConfig.exportMode !== "single") {
+        // Crop to the actual placement outer bounds so the canvas background is removed completely.
+        const outerBounds = getPlacementsOuterBounds(group.placements)
+        groupW = outerBounds.width
+        groupH = outerBounds.height
+        offsetX = outerBounds.minX
+        offsetY = outerBounds.minY
       }
 
       const shifted: LayoutResult = {
@@ -608,8 +642,11 @@ export async function exportSplicedImage(
             })),
             bounds: {
               ...group.bounds,
-              x: exportConfig.trimBackground && exportConfig.exportMode === "per_row" ? group.bounds.x - offsetX : edgePad,
-              y: exportConfig.trimBackground && exportConfig.exportMode === "per_col" ? group.bounds.y - offsetY : edgePad
+              // Not used by the renderer (placements are), but keep it consistent.
+              x: 0,
+              y: 0,
+              width: groupW,
+              height: groupH
             }
           }
         ],

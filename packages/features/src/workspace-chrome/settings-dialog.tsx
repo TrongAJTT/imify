@@ -11,6 +11,7 @@ import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { DiscreteSlider, type DiscreteSliderOption } from "@imify/ui/ui/discrete-slider"
+import { NumberInput } from "@imify/ui/ui/number-input"
 import { SelectInput } from "@imify/ui/ui/select-input"
 import { ToggleSwitchLabel } from "@imify/ui/ui/toggle-switch-label"
 import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header"
@@ -153,6 +154,19 @@ export function WorkspaceSettingsDialog({
 
   const updatePerformancePreferences = (next: PerformancePreferences) => {
     onChangePerformancePreferences(normalizePerformancePreferences(next))
+  }
+
+  const updateHardwareProfile = (
+    updates: Partial<PerformancePreferences["hardwareProfile"]>
+  ) => {
+    updatePerformancePreferences({
+      ...safePerformancePreferences,
+      hardwareProfile: {
+        ...safePerformancePreferences.hardwareProfile,
+        ...updates,
+        source: "manual"
+      }
+    })
   }
 
   const handleDisableDevMode = async () => {
@@ -335,11 +349,14 @@ export function WorkspaceSettingsDialog({
               <section className="space-y-4">
                 <SettingsItemHeader
                   title="SMART CONCURRENCY ADVISOR"
-                  description="Enable advisor to get dynamic recommendations based on machine profile and current format options."
+                  description="Modern encoders like AVIF and JXL can consume high CPU and memory in browser workers. Enable advisor to get dynamic recommendations based on machine profile and current format options."
                 />
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+                  Privacy note: hardware data is only read and processed locally in your browser. No telemetry or external upload.
+                </div>
                 <ToggleSwitchLabel
                   label="Enable Smart Concurrency Advisor"
-                  description="Keep manual concurrency free (1-90), but show contextual safe recommendations."
+                  description="Keep manual concurrency free (1-90), but show contextual safe recommendations under Export Settings."
                   checked={advisorEnabled}
                   onChange={(checked) =>
                     updatePerformancePreferences({
@@ -350,7 +367,7 @@ export function WorkspaceSettingsDialog({
                 />
                 <ToggleSwitchLabel
                   label="Unlock max concurrency (Overclock)"
-                  description="Allow values up to 90 and bypass Advisor hard lock."
+                  description="Allow values up to 90 and bypass Advisor hard lock. This can increase crash risk on heavy formats."
                   checked={overclockEnabled}
                   onChange={(checked) =>
                     updatePerformancePreferences({
@@ -360,28 +377,84 @@ export function WorkspaceSettingsDialog({
                   }
                   colorWhenEnabled="amber"
                 />
-                {advisorEnabled ? (
+                {advisorEnabled && (
                   <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Hardware Profile</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Source: {hardwareProfile.source === "detected" ? "Auto-detected" : hardwareProfile.source === "manual" ? "Manual override" : "Fallback"}
-                    </p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        const detected = detectHardwareProfile()
-                        updatePerformancePreferences({
-                          ...safePerformancePreferences,
-                          hardwareProfile: detected
-                        })
-                      }}
-                    >
-                      Auto-Detect Hardware
-                    </Button>
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Hardware Profile</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Source:{" "}
+                          {hardwareProfile.source === "detected"
+                            ? "Auto-detected"
+                            : hardwareProfile.source === "manual"
+                              ? "Manual override"
+                              : "Fallback"}
+                        </p>
+                      </div>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const detected = detectHardwareProfile()
+                          updatePerformancePreferences({
+                            ...safePerformancePreferences,
+                            hardwareProfile: detected
+                          })
+                        }}
+                      >
+                        Auto-Detect Hardware
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <NumberInput
+                        label="CPU Cores (logical threads)"
+                        value={hardwareProfile.cpuCores}
+                        min={1}
+                        max={64}
+                        step={1}
+                        onChangeValue={(nextValue) => {
+                          updateHardwareProfile({ cpuCores: nextValue })
+                        }}
+                      />
+
+                      <NumberInput
+                        label="RAM Budget (GB)"
+                        value={hardwareProfile.ramBudgetGb}
+                        min={0.5}
+                        max={64}
+                        step={0.5}
+                        onChangeValue={(nextValue) => {
+                          updateHardwareProfile({ ramBudgetGb: nextValue })
+                        }}
+                      />
+                    </div>
+
+                    <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+                      Detected hardware:{" "}
+                      {hardwareProfile.detectedLogicalCores ?? hardwareProfile.cpuCores} threads, ~
+                      {hardwareProfile.detectedDeviceMemoryGb ?? "unknown"}GB device memory.
+                    </div>
                   </div>
-                ) : null}
+                )}
+
+                {!advisorEnabled && (
+                  <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-relaxed text-sky-800 dark:border-sky-900/50 dark:bg-slate-950/30 dark:text-sky-300">
+                    Smart mode is off. Concurrency Advisor is running in static fallback mode using default profile (4 threads, 4GB RAM budget).
+                  </div>
+                )}
+
+                {overclockEnabled ? (
+                  <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800 dark:border-rose-900/50 dark:bg-slate-950/30 dark:text-rose-300">
+                    Danger mode: overclock is enabled. Heavy formats (AVIF/JXL/PNG tiny+OxiPNG) can hit OOM if you push concurrency too high.
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-800 dark:border-emerald-900/50 dark:bg-slate-950/30 dark:text-emerald-300">
+                    Safe mode: concurrency max is hard-locked by Advisor calculations to reduce crash risk.
+                  </div>
+                )}
               </section>
             </div>
           )}

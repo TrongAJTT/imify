@@ -8,13 +8,13 @@ import { BatchProcessorWorkspace } from "@imify/features/processor/batch"
 import { ProcessorPresetSelectView } from "@imify/features/processor/processor-preset-select-view"
 import { ProcessorSidebarShell } from "@imify/features/processor/processor-sidebar-shell"
 import { BatchSetupSidebarPanel } from "@imify/features/processor/setup-sidebar-panel"
-import { DEFAULT_PERFORMANCE_PREFERENCES } from "@imify/features/processor/performance-preferences"
 import { useBatchStore, type SetupContext } from "@imify/stores/stores/batch-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { usePerformancePreferences } from "@/hooks/use-performance-preferences"
 import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action"
 
 interface ProcessorLandingPageProps {
@@ -121,6 +121,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
 export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps) {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
+  const performancePreferences = usePerformancePreferences()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
@@ -131,7 +132,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
         context={context}
         workspaceSidebar={
           <BatchSetupSidebarPanel
-            performancePreferences={DEFAULT_PERFORMANCE_PREFERENCES}
+            performancePreferences={performancePreferences}
             onOpenSettings={() => openSettingsDialog("performance")}
             enableWideSidebarGrid={enableWideSidebarGrid}
             autoWideSidebarGridMinWidthPx={440}
@@ -139,7 +140,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
         }
       />
     ),
-    [context, enableWideSidebarGrid, openSettingsDialog]
+    [context, enableWideSidebarGrid, openSettingsDialog, performancePreferences]
   )
   useWorkspaceSidebar(sidebar)
 
