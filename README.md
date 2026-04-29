@@ -139,6 +139,7 @@ pnpm build:ci
 
 # Build specific target
 pnpm build:chrome
+pnpm build:edge
 pnpm build:firefox
 ```
 
@@ -148,7 +149,9 @@ To generate `.zip` files for the Web Store or AMO:
 
 ```bash
 pnpm package:chrome
+pnpm package:edge
 pnpm package:firefox
+pnpm package:all
 ```
 
 This will generate a zip-ready folder in `build/chrome-mv3-prod` which you can upload directly to the Chrome Web Store.

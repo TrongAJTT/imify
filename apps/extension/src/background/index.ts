@@ -1,4 +1,4 @@
-﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
+// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import { blobToDownloadDataUrl, toOutputFilename, type OutputFormat } from "@imify/core/download-utils"
 import { toUserFacingConversionError } from "@imify/core/error-utils"
 import type { ExtensionStorageState, FormatConfig, ImageFormat } from "@imify/core/types"
@@ -99,7 +99,7 @@ function trackConfigUsageSilently(configId: string): void {
         }
       }
     }
-  }).catch(() => {})
+  }).catch(() => { })
 }
 
 async function downloadBlob(
@@ -202,15 +202,15 @@ async function handleImageMenuClick(
       (config.format === "avif" || config.format === "jxl")
     const converted = shouldUseOffscreenWorker
       ? await convertImageViaOffscreen(sourceBlob, config).catch(() =>
-          convertImage({
-            sourceBlob,
-            config
-          })
-        )
-      : await convertImage({
+        convertImage({
           sourceBlob,
           config
         })
+      )
+      : await convertImage({
+        sourceBlob,
+        config
+      })
 
     await publishConvertProgress({
       id: progressId,
@@ -306,4 +306,9 @@ chrome.runtime.onMessage.addListener((message) => {
   void rebuildContextMenu(message.payload as ExtensionStorageState).catch((error) => {
     console.error("[imify] Failed to rebuild context menu from message", error)
   })
+})
+
+// TODO: remove this after FF officially supports sidepanel
+chrome.action.onClicked.addListener(() => {
+  void chrome.runtime.openOptionsPage()
 })

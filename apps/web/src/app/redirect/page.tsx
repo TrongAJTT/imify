@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
@@ -62,7 +62,7 @@ function getRecentWorkspaceHref(toolId: PresetToolEntryId): string | null {
   return `/pattern-generator/work?id=${recentPresetId}`
 }
 
-export default function RedirectPage() {
+function RedirectContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [batchHydrated, setBatchHydrated] = useState(false)
@@ -132,5 +132,13 @@ export default function RedirectPage() {
   }, [batchHydrated, patternHydrated, router, splicingHydrated, splitterHydrated, toolId])
 
   return <WorkspaceLoadingState title="Opening tool..." />
+}
+
+export default function RedirectPage() {
+  return (
+    <Suspense fallback={<WorkspaceLoadingState title="Loading..." />}>
+      <RedirectContent />
+    </Suspense>
+  )
 }
 

@@ -19,10 +19,12 @@
     "build": "node ../../scripts/with-root-metadata.mjs plasmo build",
     "build:ci": "pnpm build:chrome && pnpm build:firefox && pnpm verify:manifests",
     "build:chrome": "node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3",
+    "build:edge": "node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3",
     "build:firefox": "node ../../scripts/with-root-metadata.mjs plasmo build --target=firefox-mv3 && node ../../scripts/sanitize-firefox-manifest.mjs",
     "prepackage": "pnpm sync:assets",
     "package": "node ../../scripts/with-root-metadata.mjs plasmo package",
     "package:chrome": "node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3 --zip",
+    "package:edge": "node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3 --zip",
     "package:firefox": "pnpm build:firefox && node ../../scripts/zip-firefox-build.mjs",
     "verify:manifests": "node ../../scripts/verify-target-manifests.mjs",
     "sync:avif-wasm": "node ../../scripts/sync-avif-wasm.mjs",
@@ -102,12 +104,6 @@
       "sidePanel",
       "storage"
     ],
-    "action": {
-      "default_popup": "options.html?view=popup"
-    },
-    "side_panel": {
-      "default_path": "options.html?view=sidepanel"
-    },
     "host_permissions": [
       "http://*/*",
       "https://*/*"

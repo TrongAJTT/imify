@@ -1,4 +1,4 @@
-﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
+// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import "@/style.css"
 
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -24,7 +24,7 @@ async function switchSidepanel(view: "inspector" | "audit"): Promise<void> {
 
   await chrome.sidePanel.setOptions({
     tabId: activeTab.id,
-    path: `options.html?view=sidepanel&panel=${view}`,
+    path: `sidepanel.html?panel=${view}`,
     enabled: true
   })
   await chrome.sidePanel.open({ tabId: activeTab.id })
