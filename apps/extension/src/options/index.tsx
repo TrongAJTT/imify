@@ -21,6 +21,7 @@ import {
   WORKSPACE_TOOLS,
   WorkspaceSettingsDialog,
   WorkspaceOptionsHeader,
+  WhatsNewUpdateNotificationGate,
   useIsDesktopLayout,
   getExtensionSidebarToolGroups,
   renderWorkspaceToolIcon
@@ -565,6 +566,7 @@ export default function OptionsPage() {
         onClose={() => setIsAboutDialogOpen(false)}
         onOpenAttribution={() => setIsAttributionDialogOpen(true)}
       />
+      <WhatsNewUpdateNotificationGate />
 
       <WorkspaceSettingsDialog
         isOpen={isSettingsDialogOpen}

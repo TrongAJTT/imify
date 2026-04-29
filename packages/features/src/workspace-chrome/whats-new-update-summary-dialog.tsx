@@ -1,22 +1,29 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
-import { X } from "lucide-react"
+import { BookOpenText, X } from "lucide-react"
 import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
 import { Heading, Kicker, MutedText } from "@imify/ui/ui/typography"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 import { FeatureMarkdown } from "../shared/feature-markdown"
-import { extractWhatsNewBodyBelowSummary } from "./whats-new-markdown-split"
+import { extractWhatsNewSummaryAbove } from "./whats-new-markdown-split"
 
-interface WhatsNewDialogProps {
+interface WhatsNewUpdateSummaryDialogProps {
   isOpen: boolean
   onClose: () => void
+  onOpenWhatsNew: () => void
+  version: string
 }
 
 const WHATS_NEW_MARKDOWN_PATH = "/assets/WHATS_NEW.md"
 
-export function WhatsNewDialog({ isOpen, onClose }: WhatsNewDialogProps) {
+export function WhatsNewUpdateSummaryDialog({
+  isOpen,
+  onClose,
+  onOpenWhatsNew,
+  version
+}: WhatsNewUpdateSummaryDialogProps) {
   const [markdown, setMarkdown] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -33,17 +40,17 @@ export function WhatsNewDialog({ isOpen, onClose }: WhatsNewDialogProps) {
     void fetch(markdownUrl)
       .then(async (response) => {
         if (!response.ok) {
-          throw new Error(`Failed to load changelog: ${response.status}`)
+          throw new Error(`Failed to load What's New summary: ${response.status}`)
         }
         return response.text()
       })
       .then((text) => {
         if (!isMounted) return
-        setMarkdown(extractWhatsNewBodyBelowSummary(text))
+        setMarkdown(extractWhatsNewSummaryAbove(text))
       })
       .catch(() => {
         if (!isMounted) return
-        setError("Could not load What's New content.")
+        setError("Could not load update summary.")
       })
       .finally(() => {
         if (!isMounted) return
@@ -67,7 +74,7 @@ export function WhatsNewDialog({ isOpen, onClose }: WhatsNewDialogProps) {
     if (!markdown.trim()) {
       return (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/30 p-6">
-          <MutedText>No release notes available for this version.</MutedText>
+          <MutedText>There's no summary for this update.</MutedText>
         </div>
       )
     }
@@ -85,11 +92,11 @@ export function WhatsNewDialog({ isOpen, onClose }: WhatsNewDialogProps) {
       <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 sticky top-0 z-20">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center overflow-hidden">
-            <img src={appIconSrc} alt="Imify" className="h-5 w-5 object-contain" />
+            <img src={appIconSrc} alt="Imify" className="h-8 w-8 object-contain" />
           </div>
           <div>
-            <Heading className="text-xl leading-tight">What's New</Heading>
-            <Kicker>Latest changes and improvements</Kicker>
+            <Heading className="text-xl leading-tight">Imify has been updated</Heading>
+            <Kicker>{`See what's new in v${version}.`}</Kicker>
           </div>
         </div>
         <Button
@@ -97,14 +104,19 @@ export function WhatsNewDialog({ isOpen, onClose }: WhatsNewDialogProps) {
           size="icon"
           className="rounded-full border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
           onClick={onClose}
-          aria-label="Close what's new dialog"
+          aria-label="Close what's new update summary dialog"
         >
           <X size={18} />
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-3 bg-slate-50/50 dark:bg-slate-900/50">
-        {content}
+      <div className="flex-1 overflow-y-auto px-6 pt-3 bg-slate-50/50 dark:bg-slate-900/50">{content}</div>
+
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <Button variant="primary" size="default" className="w-full" onClick={onOpenWhatsNew}>
+          <BookOpenText size={16} />
+          See full changelog
+        </Button>
       </div>
     </BaseDialog>
   )

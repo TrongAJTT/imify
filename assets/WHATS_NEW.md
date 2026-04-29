@@ -1,3 +1,9 @@
+- **Image Splitter Workspace:** Added a dedicated `Image Splitter` tab directly below `Image Splicing` with full preset workflow and batch split export.
+- **Customizable Shortkeys System:** Added configurable keyboard shortcuts with reusable shortcut infrastructure and settings UI.
+- **Fill Session Template Isolation:** Fill Mode now works against a session-only cloned template instead of mutating the original template reference.
+
+--- SUMMARY ABOVE
+
 ### Added
 
 ![](./images/dev-export-1.webp)

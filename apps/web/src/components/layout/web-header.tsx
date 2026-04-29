@@ -18,6 +18,7 @@ import {
   type WorkspaceLayoutPreferences,
   WorkspaceOptionsHeader,
   WorkspaceSettingsDialog,
+  WhatsNewUpdateNotificationGate,
   getWorkspaceToolsMenuGroups,
   renderWorkspaceToolIcon,
   normalizeWorkspaceLayoutPreferences,
@@ -232,6 +233,7 @@ export function WebHeader() {
         onClose={() => setIsAboutDialogOpen(false)}
         onOpenAttribution={() => setIsAttributionDialogOpen(true)}
       />
+      <WhatsNewUpdateNotificationGate />
       <AttributionDialog
         isOpen={isAttributionDialogOpen}
         onClose={() => setIsAttributionDialogOpen(false)}
