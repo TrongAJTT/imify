@@ -85,9 +85,9 @@ This gives:
 - Framework: Plasmo + React.
 - Responsibility:
   - extension options app (main workspace)
-  - popup and sidepanel apps
+  - sidepanel experiences (lite inspector + audit snapshot)
   - background/content script integrations
-  - browser-specific permissions and manifest behavior
+  - browser-specific permissions and manifest adaptations (e.g., Firefox-specific click behaviors)
 - Consumes the same shared modules for:
   - tool workflows
   - stores

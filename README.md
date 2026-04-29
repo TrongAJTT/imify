@@ -21,18 +21,19 @@
   * **Image Inspector**: Deep dive into image metadata and EXIF data.
 * **Extension-Exclusive Features**:
   * **Right-Click Context Menu**: Instantly convert and download any web image using your preferred presets.
-  * **SEO Audit**: Deep DOM scanning to detect oversized images, missing alt text, lazy-loading issues, and potential bandwidth savings via modern formats.
+  * **SEO Audit (Chrome & Edge)**: Deep DOM scanning to detect oversized images, missing alt text, and potential bandwidth savings via modern formats. (Note: Currently unavailable on Firefox because this feature requires Side Panel API).
 * **Smart Resizing Engine**: Scale by dimension, percentage, or match standard physical paper sizes (A4, Letter) with DPI controls.
 * **Modern Workspace UI**: A unified, desktop-like layout with collapsible navigation, reorderable sidebar configurations (`dnd-kit`), and dark mode support.
 
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="https://cdn.trongajtt.com/apps/imify/context-menu.webp" alt="ImifyPreview" style="width:32%;">
-  <img src="https://cdn.trongajtt.com/apps/imify/image-splicing.webp" alt="ImifyPreview" style="width:32%;">
-  <img src="https://cdn.trongajtt.com/apps/imify/difference-checker.webp" alt="ImifyPreview" style="width:32%;">
-  <img src="https://cdn.trongajtt.com/apps/imify/image-processor.webp" alt="ImifyPreview" style="width:32%;">
-  <img src="https://cdn.trongajtt.com/apps/imify/image-inspector.webp" alt="ImifyPreview" style="width:32%;">
+  <img src="assets/features/preview-context_menu.webp" alt="Context Menu" style="width:32%;">
+  <img src="assets/features/preview-image_splicing.webp" alt="Image Splicing" style="width:32%;">
+  <img src="assets/features/preview-difference_checker.webp" alt="Difference Checker" style="width:32%;">
+  <img src="assets/features/preview-batch_processor.webp" alt="Batch Processor" style="width:32%;">
+  <img src="assets/features/preview-image_inspector.webp" alt="Image Inspector" style="width:32%;">
+  <img src="assets/features/preview-pattern_generator.webp" alt="Pattern Generator" style="width:32%;">
 </div>
 
 ## 💝 Support & Donate
@@ -148,10 +149,16 @@ pnpm build:firefox
 To generate `.zip` files for the Web Store or AMO:
 
 ```bash
-pnpm package:chrome
-pnpm package:edge
-pnpm package:firefox
+pnpm package:chrome     # Output: apps/extension/build/chrome-mv3-prod/
+pnpm package:edge       # Output: apps/extension/build/edge-mv3-prod/
+pnpm package:firefox    # Output: apps/extension/build/firefox-mv3-prod.zip
 pnpm package:all
+```
+
+To build the web application:
+
+```bash
+pnpm build:web          # Output: apps/web/.next/
 ```
 
 This will generate a zip-ready folder in `build/chrome-mv3-prod` which you can upload directly to the Chrome Web Store.

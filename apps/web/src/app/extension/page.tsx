@@ -5,6 +5,8 @@ import { WEB_ROUTE_METADATA } from "../seo-metadata"
 
 export const metadata: Metadata = WEB_ROUTE_METADATA.extension
 
+import { AlertTriangle } from "lucide-react"
+
 export default function ExtensionPage() {
   return (
     <div className="space-y-24 py-12">
@@ -16,7 +18,7 @@ export default function ExtensionPage() {
         <BodyText className="mx-auto max-w-2xl text-lg md:text-xl text-slate-600 dark:text-slate-400">
           Unlock exclusive features deeply integrated into your browser workflow. Download Imify for your favorite browser to access Context Menu processing, active tab SEO audits, and more.
         </BodyText>
-        
+
         <ExtensionDownloadButtons />
       </section>
 
@@ -34,9 +36,9 @@ export default function ExtensionPage() {
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
             <div className="order-2 lg:order-1 rounded-2xl overflow-hidden border border-slate-200 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-slate-100 dark:bg-slate-900 ring-1 ring-slate-200/50 dark:ring-slate-800/50">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src="https://cdn.trongajtt.com/apps/imify/context-menu.webp" 
-                alt="Imify Context Menu Preview" 
+              <img
+                src="https://cdn.trongajtt.com/apps/imify/context-menu.webp"
+                alt="Imify Context Menu Preview"
                 className="w-full h-auto object-cover object-top transition-transform hover:scale-105 duration-700 ease-out"
                 loading="lazy"
               />
@@ -70,6 +72,12 @@ export default function ExtensionPage() {
               <BodyText className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                 Run a comprehensive SEO audit on all images within your active tab. Detect missing alt texts, oversized images, and inefficient formats instantly. Review detailed snapshots right in your browser&apos;s sidepanel.
               </BodyText>
+              <div className="rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-950/20">
+                <p className="flex items-center gap-2 text-[13px] font-medium text-amber-800 dark:text-amber-300">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  This feature is currently available for Chrome and Edge only because it requires Side Panel API support. We will be support Firefox as soon as Mozilla add Side Panel API support for Firefox.
+                </p>
+              </div>
               <ul className="space-y-4 pt-2">
                 <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300 font-medium">
                   <div className="h-2 w-2 rounded-full bg-fuchsia-600 dark:bg-fuchsia-400 shrink-0" />
@@ -87,9 +95,9 @@ export default function ExtensionPage() {
             </div>
             <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-slate-100 dark:bg-slate-900 ring-1 ring-slate-200/50 dark:ring-slate-800/50">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src="https://cdn.trongajtt.com/apps/imify/seo-audit-preview.webp" 
-                alt="Imify SEO Audit Preview" 
+              <img
+                src="https://cdn.trongajtt.com/apps/imify/seo-audit-preview.webp"
+                alt="Imify SEO Audit Preview"
                 className="w-full h-auto object-cover object-top transition-transform hover:scale-105 duration-700 ease-out"
                 loading="lazy"
               />

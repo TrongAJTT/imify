@@ -115,6 +115,7 @@ Execution chain:
 2. asset sync and checks run (same as dev)
 3. build:
    - `node ../../scripts/with-root-metadata.mjs next build`
+   - **Output**: `apps/web/.next/` (for server) and static exports if configured.
 
 ### Prod Start
 
@@ -160,14 +161,19 @@ Execution chain:
 5. `check:media-assets` validation runs
 6. Extension dev server starts with root metadata:
    - `node ../../scripts/with-root-metadata.mjs plasmo dev`
-
-### Dev (target-specific)
+   - **Output**: `apps/extension/build/chrome-mv3-dev/` (default target)
 
 - Chrome MV3:
   ```bash
   pnpm --filter @imify/extension dev:chrome
   ```
   -> `node ../../scripts/with-root-metadata.mjs plasmo dev --target=chrome-mv3`
+
+- Edge MV3:
+  ```bash
+  pnpm --filter @imify/extension dev:edge
+  ```
+  -> `node ../../scripts/with-root-metadata.mjs plasmo dev --target=edge-mv3`
 
 - Firefox MV3:
   ```bash
@@ -182,12 +188,21 @@ Execution chain:
   pnpm --filter @imify/extension build
   ```
   -> `prebuild` sync chain + `node ../../scripts/with-root-metadata.mjs plasmo build`
+  -> **Output**: `apps/extension/build/chrome-mv3-prod/` (default target)
 
 - Chrome:
   ```bash
   pnpm --filter @imify/extension build:chrome
   ```
   -> `node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3`
+  -> **Output**: `apps/extension/build/chrome-mv3-prod/`
+
+- Edge:
+  ```bash
+  pnpm --filter @imify/extension build:edge
+  ```
+  -> `node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3`
+  -> **Output**: `apps/extension/build/edge-mv3-prod/`
 
 - Firefox:
   ```bash
@@ -195,6 +210,7 @@ Execution chain:
   ```
   -> `node ../../scripts/with-root-metadata.mjs plasmo build --target=firefox-mv3`
   -> `node ../../scripts/sanitize-firefox-manifest.mjs`
+  -> **Output**: `apps/extension/build/firefox-mv3-prod/`
 
 ### Packaging
 
@@ -203,18 +219,28 @@ Execution chain:
   pnpm --filter @imify/extension package
   ```
   -> `prepackage` sync chain + `node ../../scripts/with-root-metadata.mjs plasmo package`
+  -> **Output**: `apps/extension/build/chrome-mv3-prod.zip` (default)
 
 - Chrome zip:
   ```bash
   pnpm --filter @imify/extension package:chrome
   ```
   -> `node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3 --zip`
+  -> **Output**: `apps/extension/build/chrome-mv3-prod.zip`
+
+- Edge zip:
+  ```bash
+  pnpm --filter @imify/extension package:edge
+  ```
+  -> `node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3 --zip`
+  -> **Output**: `apps/extension/build/edge-mv3-prod.zip`
 
 - Firefox zip:
   ```bash
   pnpm --filter @imify/extension package:firefox
   ```
   -> `pnpm build:firefox` + `node ../../scripts/zip-firefox-build.mjs`
+  -> **Output**: `apps/extension/build/firefox-mv3-prod.zip`
 
 ---
 

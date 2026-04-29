@@ -108,21 +108,21 @@ flowchart TD
 
 ## Feature Table
 
-| Feature | Web | Extension | Notes |
-|---|---|---|---|
-| Single Processor | Yes | Yes | Shared workflow |
-| Batch Processor | Yes | Yes | Shared workflow |
-| Image Splitter | Yes | Yes | Shared workflow |
-| Image Splicing | Yes | Yes | Shared workflow |
-| Image Filling | Yes | Yes | Shared workflow |
-| Pattern Generator | Yes | Yes | Shared workflow |
-| Difference Checker | Yes | Yes | Shared workflow |
-| Image Inspector | Yes | Yes | Shared workflow |
-| Context Menu settings | Yes | Yes | Web can surface extension info route; extension runs runtime actions |
-| SEO Audit runtime scanner | No | Yes | Needs browser page/content-script context |
-| Popup app | No | Yes | Extension runtime only |
-| Sidepanel app | No | Yes | Extension runtime only |
-| Landing / marketing pages | Yes | No | Web site shell only |
+| Feature                   | Web | Extension         | Notes                                                                |
+| ------------------------- | --- | ----------------- | -------------------------------------------------------------------- |
+| Single Processor          | Yes | Yes               | Shared workflow                                                      |
+| Batch Processor           | Yes | Yes               | Shared workflow                                                      |
+| Image Splitter            | Yes | Yes               | Shared workflow                                                      |
+| Image Splicing            | Yes | Yes               | Shared workflow                                                      |
+| Image Filling             | Yes | Yes               | Shared workflow                                                      |
+| Pattern Generator         | Yes | Yes               | Shared workflow                                                      |
+| Difference Checker        | Yes | Yes               | Shared workflow                                                      |
+| Image Inspector           | Yes | Yes               | Shared workflow                                                      |
+| Context Menu settings     | Yes | Yes               | Web can surface extension info route; extension runs runtime actions |
+| SEO Audit runtime scanner | No  | Yes (Chrome/Edge) | Needs browser page/content-script context                            |
+| Popup app                 | No  | Yes (Chrome/Edge) | Extension runtime only                                               |
+| Sidepanel app             | No  | Yes (Chrome/Edge) | Chrome/Edge (MV3). Firefox uses main workspace entry.                |
+| Landing / marketing pages | Yes | No                | Web site shell only                                                  |
 
 ---
 
@@ -137,4 +137,3 @@ When adding/removing a feature:
    - extension-only list
    - web-only list
    - feature table
-
