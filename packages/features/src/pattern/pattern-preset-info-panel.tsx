@@ -1,5 +1,6 @@
 import React from "react"
 import { PresetInfoShowcasePanel } from "@imify/features/shared/preset-info-showcase-panel"
+import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
 
 interface PatternPresetInfoPanelProps {
   compact?: boolean
@@ -10,7 +11,7 @@ export function PatternPresetInfoPanel({ compact = false }: PatternPresetInfoPan
 
   return (
     <PresetInfoShowcasePanel
-      previewSrc="/assets/features/preview-pattern_generator.webp"
+      previewSrc={resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp)}
       previewAlt="Pattern Generator canvas and sidebar controls preview"
       previewAspectRatio={previewAspectRatio}
       title="Pattern Generator"

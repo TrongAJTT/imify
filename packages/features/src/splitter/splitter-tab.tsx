@@ -32,7 +32,10 @@ import { useSplitterStore } from "@imify/stores/stores/splitter-store"
 import { SplitterWorkspaceShell } from "./splitter-workspace-shell"
 import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-utils"
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake"
-const splitterGuideHelpVideo = "assets/features/image-splitter_visual-guides-control.webm"
+import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
+const splitterGuideHelpVideo = resolveFeatureMediaAssetUrl(
+  FEATURE_MEDIA_ASSET_PATHS.splitter.guideVisualControlWebm
+)
 
 interface SplitterImageItem {
   id: string

@@ -2,6 +2,7 @@ import React from "react"
 
 import type { SetupContext } from "@imify/stores/stores/batch-store"
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel"
+import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 
 interface ProcessorPresetInfoPanelProps {
   context: SetupContext
@@ -11,7 +12,7 @@ export function ProcessorPresetInfoPanel({ context }: ProcessorPresetInfoPanelPr
   if (context === "single") {
     return (
       <PresetInfoShowcasePanel
-        previewSrc="/assets/features/preview-single_processor.webp"
+        previewSrc={resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.processor.previewSingleWebp)}
         previewAlt="Single Processor preview"
         previewAspectRatio="16 / 9"
         title="Single Processor in one view"
@@ -56,7 +57,7 @@ export function ProcessorPresetInfoPanel({ context }: ProcessorPresetInfoPanelPr
 
   return (
     <PresetInfoShowcasePanel
-      previewSrc="/assets/features/preview-batch_processor.webp"
+      previewSrc={resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp)}
       previewAlt="Batch Processor preview"
       previewAspectRatio="39 / 35"
       title="Batch Processor for high-throughput workflows"

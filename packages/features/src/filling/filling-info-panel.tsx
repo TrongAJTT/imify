@@ -1,20 +1,21 @@
 import React from "react"
 import { PresetInfoShowcasePanel } from "@imify/features/shared/preset-info-showcase-panel"
+import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
 
 const FILLING_PANEL_CONTENT = {
-  previewSrc: "/assets/features/preview-image_filling.webp",
+  previewSrc: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp),
   previewMediaSources: [
     {
-      src: "/assets/features/preview-image_filling.webp",
+      src: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp),
       type: "image" as const,
       alt: "Image Filling layout and final composition preview",
     },
     {
-      src: "/assets/features/symmetric_generator-visual_editor.webm",
+      src: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.filling.symmetricVisualEditorWebm),
       type: "video" as const,
     },
     {
-      src: "/assets/features/image_filling_manual-visual_multi_select.webm",
+      src: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.filling.manualMultiSelectWebm),
       type: "video" as const,
     },
   ],

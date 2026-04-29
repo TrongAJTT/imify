@@ -28,7 +28,24 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
     exportStep2Webp: "/assets/images/dev-export-2.webp"
   },
   filling: {
-    symmetricVisualEditorWebm: "/assets/features/symmetric_generator-visual_editor.webm"
+    previewImageWebp: "/assets/features/preview-image_filling.webp",
+    symmetricVisualEditorWebm: "/assets/features/guide-symgen-visual_editor.webm",
+    manualMultiSelectWebm: "/assets/features/guide-image_filling_manual-visual_multi_select.webm"
+  },
+  processor: {
+    previewSingleWebp: "/assets/features/preview-single_processor.webp",
+    previewBatchWebp: "/assets/features/preview-batch_processor.webp"
+  },
+  splitter: {
+    preview1Webp: "/assets/features/preview-image_splitter-1.webp",
+    preview2Webp: "/assets/features/preview-image_splitter-2.webp",
+    guideVisualControlWebm: "/assets/features/guide-image_splitter-visual_guides_control.webm"
+  },
+  splicing: {
+    previewWebp: "/assets/features/preview-image_splicing.webp"
+  },
+  pattern: {
+    previewWebp: "/assets/features/preview-pattern_generator.webp"
   },
   downloadHints: {
     chromeWebp: "/assets/images/img-download-not-ask-chrome.webp",
@@ -49,7 +66,24 @@ export const FEATURE_MEDIA_ASSETS = {
     exportStep2Webp: FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep2Webp
   },
   filling: {
-    symmetricVisualEditorWebm: FEATURE_MEDIA_ASSET_PATHS.filling.symmetricVisualEditorWebm
+    previewImageWebp: FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
+    symmetricVisualEditorWebm: FEATURE_MEDIA_ASSET_PATHS.filling.symmetricVisualEditorWebm,
+    manualMultiSelectWebm: FEATURE_MEDIA_ASSET_PATHS.filling.manualMultiSelectWebm
+  },
+  processor: {
+    previewSingleWebp: FEATURE_MEDIA_ASSET_PATHS.processor.previewSingleWebp,
+    previewBatchWebp: FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp
+  },
+  splitter: {
+    preview1Webp: FEATURE_MEDIA_ASSET_PATHS.splitter.preview1Webp,
+    preview2Webp: FEATURE_MEDIA_ASSET_PATHS.splitter.preview2Webp,
+    guideVisualControlWebm: FEATURE_MEDIA_ASSET_PATHS.splitter.guideVisualControlWebm
+  },
+  splicing: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.splicing.previewWebp
+  },
+  pattern: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp
   },
   downloadHints: {
     chromeWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.chromeWebp,

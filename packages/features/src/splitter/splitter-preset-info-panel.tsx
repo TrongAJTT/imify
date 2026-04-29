@@ -1,19 +1,37 @@
 import React from "react"
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel"
+import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 
 interface SplitterPresetInfoPanelProps {
   compact?: boolean
 }
 
 const SPLITTER_PREVIEW_SOURCES = [
-  "/assets/features/preview-image_splitter-1.webp",
-  "/assets/features/preview-image_splitter-2.webp",
-  "/assets/features/preview-image_splitter-3.webp"
+  resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.splitter.preview1Webp),
+  resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.splitter.preview2Webp),
+]
+
+const SPLITTER_PREVIEW_MEDIA_SOURCES = [
+  {
+    src: SPLITTER_PREVIEW_SOURCES[0],
+    type: "image" as const,
+    alt: "Image Splitter preview 1",
+  },
+  {
+    src: SPLITTER_PREVIEW_SOURCES[1],
+    type: "image" as const,
+    alt: "Image Splitter preview 2",
+  },
+  {
+    src: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.splitter.guideVisualControlWebm),
+    type: "video" as const,
+  },
 ]
 
 const SPLITTER_PANEL_CONTENT = {
   previewSrc: SPLITTER_PREVIEW_SOURCES[0],
   previewSources: SPLITTER_PREVIEW_SOURCES,
+  previewMediaSources: SPLITTER_PREVIEW_MEDIA_SOURCES,
   previewAlt: "Image Splitter preview",
   previewAspectRatio: "16 / 9",
   title: "Image Splitter for structured batch slicing",

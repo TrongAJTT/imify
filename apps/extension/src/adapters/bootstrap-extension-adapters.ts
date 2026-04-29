@@ -25,7 +25,17 @@ import downloadHintChromeWebp from "url:@assets/images/img-download-not-ask-chro
 import downloadHintEdgeWebp from "url:@assets/images/img-download-not-ask-edge.webp"
 import downloadHintFirefoxWebp from "url:@assets/images/img-download-not-ask-firefox.webp"
 import devModeEnableVideoWebm from "url:@assets/features/dev_mode-enable.webm"
-import symmetricVisualEditorWebm from "url:@assets/features/symmetric_generator-visual_editor.webm"
+import previewSingleProcessorWebp from "url:@assets/features/preview-single_processor.webp"
+import previewBatchProcessorWebp from "url:@assets/features/preview-batch_processor.webp"
+import previewSplitter1Webp from "url:@assets/features/preview-image_splitter-1.webp"
+import previewSplitter2Webp from "url:@assets/features/preview-image_splitter-2.webp"
+import previewSplitter3Webp from "url:@assets/features/preview-image_splitter-3.webp"
+import splitterGuideVisualControlWebm from "url:@assets/features/guide-image_splitter-visual_guides_control.webm"
+import previewImageSplicingWebp from "url:@assets/features/preview-image_splicing.webp"
+import previewImageFillingWebp from "url:@assets/features/preview-image_filling.webp"
+import symmetricVisualEditorWebm from "url:@assets/features/guide-symgen-visual_editor.webm"
+import manualMultiSelectWebm from "url:@assets/features/guide-image_filling_manual-visual_multi_select.webm"
+import previewPatternGeneratorWebp from "url:@assets/features/preview-pattern_generator.webp"
 
 let adaptersBootstrapped = false
 const extensionMediaAssetMap: Record<string, string> = {
@@ -35,7 +45,16 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep1Webp]: devExportStep1Webp,
   [FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep2Webp]: devExportStep2Webp,
   [FEATURE_MEDIA_ASSET_PATHS.devMode.enableVideoWebm]: devModeEnableVideoWebm,
+  [FEATURE_MEDIA_ASSET_PATHS.processor.previewSingleWebp]: previewSingleProcessorWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp]: previewBatchProcessorWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.splitter.preview1Webp]: previewSplitter1Webp,
+  [FEATURE_MEDIA_ASSET_PATHS.splitter.preview2Webp]: previewSplitter2Webp,
+  [FEATURE_MEDIA_ASSET_PATHS.splitter.guideVisualControlWebm]: splitterGuideVisualControlWebm,
+  [FEATURE_MEDIA_ASSET_PATHS.splicing.previewWebp]: previewImageSplicingWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp]: previewPatternGeneratorWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp]: previewImageFillingWebp,
   [FEATURE_MEDIA_ASSET_PATHS.filling.symmetricVisualEditorWebm]: symmetricVisualEditorWebm,
+  [FEATURE_MEDIA_ASSET_PATHS.filling.manualMultiSelectWebm]: manualMultiSelectWebm,
   [FEATURE_MEDIA_ASSET_PATHS.downloadHints.chromeWebp]: downloadHintChromeWebp,
   [FEATURE_MEDIA_ASSET_PATHS.downloadHints.edgeWebp]: downloadHintEdgeWebp,
   [FEATURE_MEDIA_ASSET_PATHS.downloadHints.firefoxWebp]: downloadHintFirefoxWebp

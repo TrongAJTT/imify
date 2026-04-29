@@ -1,12 +1,13 @@
 import React from "react"
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel"
+import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 
 interface SplicingPresetInfoPanelProps {
   compact?: boolean
 }
 
 const SPLICING_PANEL_CONTENT = {
-  previewSrc: "/assets/features/preview-image_splicing.webp",
+  previewSrc: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.splicing.previewWebp),
   previewAlt: "Image Splicing preview",
   previewAspectRatio: "16 / 9",
   title: "Image Splicing for visual composition workflows",
