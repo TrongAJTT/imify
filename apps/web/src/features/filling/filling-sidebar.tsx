@@ -54,7 +54,7 @@ const BACKGROUND_OPTIONS: Array<{ value: CanvasBackgroundType; label: string }> 
 export function FillingOverviewSidebar() {
   return (
     <div className="space-y-1">
-      <SidebarPanel title="INFORMATION" className="rounded border border-slate-200 dark:border-slate-700" childrenClassName="space-y-2">
+      <SidebarPanel title="ABOUT THIS TOOL" className="rounded border border-slate-200 dark:border-slate-700" childrenClassName="space-y-2">
         <div>
           <FillingInfoPanel />
         </div>
