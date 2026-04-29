@@ -31,8 +31,28 @@ const main = async () => {
   )
 
   ensure(
+    hasPermission(chrome.manifest, "sidePanel"),
+    `Expected Chrome manifest to include sidePanel permission: ${chrome.manifestPath}`
+  )
+
+  ensure(
     !hasPermission(firefox.manifest, "offscreen"),
     `Expected Firefox manifest to exclude offscreen permission: ${firefox.manifestPath}`
+  )
+
+  ensure(
+    !hasPermission(firefox.manifest, "sidePanel"),
+    `Expected Firefox manifest to exclude sidePanel permission: ${firefox.manifestPath}`
+  )
+
+  ensure(
+    !firefox.manifest.side_panel,
+    `Expected Firefox manifest to exclude side_panel key: ${firefox.manifestPath}`
+  )
+
+  ensure(
+    !firefox.manifest.action?.default_popup,
+    `Expected Firefox manifest to exclude action.default_popup key: ${firefox.manifestPath}`
   )
 
   ensure(
@@ -40,7 +60,7 @@ const main = async () => {
     `Expected Firefox manifest to include gecko id: ${firefox.manifestPath}`
   )
 
-  console.log("[verify-target-manifests] OK: Chrome/Firefox manifest checks passed")
+  console.log("[verify-target-manifests] OK: Chrome/Firefox manifest compliance checks passed")
 }
 
 main().catch((error) => {
