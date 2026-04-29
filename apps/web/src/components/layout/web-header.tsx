@@ -231,7 +231,8 @@ export function WebHeader() {
       <AboutDialog
         isOpen={isAboutDialogOpen}
         onClose={() => setIsAboutDialogOpen(false)}
-        onOpenAttribution={() => setIsAttributionDialogOpen(true)}
+        onOpenAboutAttribution={() => setIsAttributionDialogOpen(true)}
+        onOpenDonate={() => setIsDonateDialogOpen(true)}
       />
       <WhatsNewUpdateNotificationGate />
       <AttributionDialog

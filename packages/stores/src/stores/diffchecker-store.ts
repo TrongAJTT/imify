@@ -1,4 +1,4 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
 import type {
@@ -18,6 +18,7 @@ interface DiffcheckerState {
   diffThreshold: number
   /** Viewer container height in px (Difference Checker tab). */
   containerHeight: number
+  hasImage: boolean
 
   setViewMode: (mode: DiffViewMode) => void
   setAlgorithm: (algo: DiffAlgorithm) => void
@@ -27,6 +28,7 @@ interface DiffcheckerState {
   setSplitPosition: (position: number) => void
   setDiffThreshold: (threshold: number) => void
   setContainerHeight: (height: number) => void
+  setHasImage: (hasImage: boolean) => void
 }
 
 
@@ -44,6 +46,7 @@ export const useDiffcheckerStore = create<DiffcheckerState>()(
       splitPosition: 50,
       diffThreshold: 0,
       containerHeight: DEFAULT_CONTAINER_HEIGHT,
+      hasImage: false,
 
       setViewMode: (viewMode) => set({ viewMode }),
       setAlgorithm: (algorithm) => set({ algorithm }),
@@ -52,7 +55,8 @@ export const useDiffcheckerStore = create<DiffcheckerState>()(
       setOverlayOpacity: (overlayOpacity) => set({ overlayOpacity }),
       setSplitPosition: (splitPosition) => set({ splitPosition }),
       setDiffThreshold: (diffThreshold) => set({ diffThreshold }),
-      setContainerHeight: (containerHeight) => set({ containerHeight })
+      setContainerHeight: (containerHeight) => set({ containerHeight }),
+      setHasImage: (hasImage) => set({ hasImage })
     }),
     {
       name: "imify_diffchecker",

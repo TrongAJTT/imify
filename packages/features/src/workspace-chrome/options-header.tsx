@@ -34,6 +34,7 @@ interface WorkspaceOptionsHeaderProps {
   onOpenAbout: () => void
   onOpenSettings: () => void
   onOpenDonate: () => void
+  isExtension?: boolean
 }
 
 function TitleBarButton({
@@ -55,7 +56,7 @@ function TitleBarButton({
     <button
       type="button"
       onClick={onClick}
-      className={`${label ? "px-3" : "w-9"} h-9 flex items-center justify-center gap-2 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 rounded-full transition-colors ${isDonate ? "border border-rose-200 text-rose-500 dark:border-rose-700/70 dark:text-rose-400 hover:border-rose-300 dark:hover:border-rose-600 hover:text-rose-600 dark:hover:text-rose-300" : ""} ${className}`}
+      className={`${label ? "px-3" : "w-9"} h-9 flex items-center justify-center gap-2 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 rounded-full transition-colors ${isDonate && label ? "border border-rose-200 text-rose-500 dark:border-rose-700/70 dark:text-rose-400 hover:border-rose-300 dark:hover:border-rose-600 hover:text-rose-600 dark:hover:text-rose-300" : ""} ${className}`}
     >
       {children}
       {label ? <span className="text-xs font-bold">{label}</span> : null}
@@ -79,7 +80,8 @@ export function WorkspaceOptionsHeader({
   onToggleDark,
   onOpenAbout,
   onOpenSettings,
-  onOpenDonate
+  onOpenDonate,
+  isExtension = false
 }: WorkspaceOptionsHeaderProps) {
   const breadcrumb = useWorkspaceHeaderStore((s) => s.breadcrumb)
   const logoSrc = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.imifyLogoPng)
@@ -269,7 +271,7 @@ export function WorkspaceOptionsHeader({
             onClick={onOpenDonate}
             tooltipText="Support the dev"
             isDonate
-            label="Donate"
+            label={isExtension ? undefined : "Donate"}
           >
             <Heart size={16} fill="red" stroke="red" />
           </TitleBarButton>

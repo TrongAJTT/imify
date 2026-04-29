@@ -19,6 +19,7 @@ import * as magicKernelModule from "../../assets/wasm/jsquash_magic_kernel.js"
 import iconPng from "url:@assets/icon.png"
 import githubLogoSvg from "url:@assets/images/github-logo.svg"
 import bmcLogoSvg from "url:@assets/images/bmc-logo.svg"
+import paypalIconSvg from "url:@assets/images/pp-icon.svg"
 import devExportStep1Webp from "url:@assets/images/dev-export-1.webp"
 import devExportStep2Webp from "url:@assets/images/dev-export-2.webp"
 import downloadHintChromeWebp from "url:@assets/images/img-download-not-ask-chrome.webp"
@@ -29,7 +30,6 @@ import previewSingleProcessorWebp from "url:@assets/features/preview-single_proc
 import previewBatchProcessorWebp from "url:@assets/features/preview-batch_processor.webp"
 import previewSplitter1Webp from "url:@assets/features/preview-image_splitter-1.webp"
 import previewSplitter2Webp from "url:@assets/features/preview-image_splitter-2.webp"
-import previewSplitter3Webp from "url:@assets/features/preview-image_splitter-3.webp"
 import splitterGuideVisualControlWebm from "url:@assets/features/guide-image_splitter-visual_guides_control.webm"
 import previewImageSplicingWebp from "url:@assets/features/preview-image_splicing.webp"
 import previewImageFillingWebp from "url:@assets/features/preview-image_filling.webp"
@@ -37,12 +37,15 @@ import symmetricVisualEditorWebm from "url:@assets/features/guide-symgen-visual_
 import manualMultiSelectWebm from "url:@assets/features/guide-image_filling_manual-visual_multi_select.webm"
 import previewPatternGeneratorWebp from "url:@assets/features/preview-pattern_generator.webp"
 import previewContextMenuWebp from "url:@assets/features/preview-context_menu.webp"
+import previewDiffCheckerWebp from "url:@assets/features/preview-difference_checker.webp"
+import previewInspectorWebp from "url:@assets/features/preview-image_inspector.webp"
 
 let adaptersBootstrapped = false
 const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng]: iconPng,
   [FEATURE_MEDIA_ASSET_PATHS.brand.githubLogoSvg]: githubLogoSvg,
   [FEATURE_MEDIA_ASSET_PATHS.brand.buyMeCoffeeLogoSvg]: bmcLogoSvg,
+  [FEATURE_MEDIA_ASSET_PATHS.brand.paypalIconSvg]: paypalIconSvg,
   [FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep1Webp]: devExportStep1Webp,
   [FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep2Webp]: devExportStep2Webp,
   [FEATURE_MEDIA_ASSET_PATHS.devMode.enableVideoWebm]: devModeEnableVideoWebm,
@@ -59,7 +62,9 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.filling.manualMultiSelectWebm]: manualMultiSelectWebm,
   [FEATURE_MEDIA_ASSET_PATHS.downloadHints.chromeWebp]: downloadHintChromeWebp,
   [FEATURE_MEDIA_ASSET_PATHS.downloadHints.edgeWebp]: downloadHintEdgeWebp,
-  [FEATURE_MEDIA_ASSET_PATHS.downloadHints.firefoxWebp]: downloadHintFirefoxWebp
+  [FEATURE_MEDIA_ASSET_PATHS.downloadHints.firefoxWebp]: downloadHintFirefoxWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp]: previewDiffCheckerWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp]: previewInspectorWebp
 }
 
 const extensionWasmFactoryMap: Record<string, unknown> = {

@@ -1,4 +1,4 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
 import type {
@@ -20,6 +20,7 @@ interface InspectorState {
   loupeEnabled: boolean
   loupeZoom: number
   visualAnalysisDialogOpen: boolean
+  hasImage: boolean
 
   setColorFormat: (format: ColorDisplayFormat) => void
   setExifSortMode: (mode: ExifSortMode) => void
@@ -31,6 +32,7 @@ interface InspectorState {
   setLoupeEnabled: (enabled: boolean) => void
   setLoupeZoom: (zoom: number) => void
   setVisualAnalysisDialogOpen: (open: boolean) => void
+  setHasImage: (hasImage: boolean) => void
 }
 
 
@@ -48,6 +50,7 @@ export const useInspectorStore = create<InspectorState>()(
       loupeEnabled: true,
       loupeZoom: 8,
       visualAnalysisDialogOpen: false,
+      hasImage: false,
 
       setColorFormat: (colorFormat) => set({ colorFormat }),
       setExifSortMode: (exifSortMode) => set({ exifSortMode }),
@@ -58,7 +61,8 @@ export const useInspectorStore = create<InspectorState>()(
       setColorBlindMode: (colorBlindMode) => set({ colorBlindMode }),
       setLoupeEnabled: (loupeEnabled) => set({ loupeEnabled }),
       setLoupeZoom: (loupeZoom) => set({ loupeZoom: Math.max(2, Math.min(12, Math.round(loupeZoom))) }),
-      setVisualAnalysisDialogOpen: (visualAnalysisDialogOpen) => set({ visualAnalysisDialogOpen })
+      setVisualAnalysisDialogOpen: (visualAnalysisDialogOpen) => set({ visualAnalysisDialogOpen }),
+      setHasImage: (hasImage) => set({ hasImage })
     }),
     {
       name: "imify_inspector",

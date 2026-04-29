@@ -6,8 +6,10 @@ import {
 } from "@imify/features/workspace-shell/workspace-tools"
 import { buildToolEntryHref } from "@/features/presets/tool-entry-route"
 import { Button } from "@imify/ui/ui/button"
-import { BodyText, Heading, Kicker, MutedText, Subheading } from "@imify/ui/ui/typography"
+import { BodyText, Heading, MutedText, Subheading } from "@imify/ui/ui/typography"
 import { WEB_ROUTE_METADATA } from "./seo-metadata"
+import { ChevronRight } from "lucide-react"
+import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
 
 const TOOL_GROUPS = getWorkspaceToolsMenuGroups()
 
@@ -73,6 +75,63 @@ const CAPABILITY_ITEMS = [
   }
 ] as const
 
+const HIGHLIGHT_FEATURES = [
+  {
+    id: "batch-processor",
+    title: "Batch Processor",
+    description: "Scale your workflow by processing thousands of images in parallel. Convert, resize, and optimize in one go with zero server lag.",
+    image: FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp,
+    href: "/batch-processor",
+    accent: "text-purple-600 dark:text-purple-400",
+    bg: "bg-purple-50 dark:bg-purple-800"
+  },
+  {
+    id: "splicing",
+    title: "Image Splicing",
+    description: "Stitch images into beautiful bento grids or vertical strips. Perfect for social media layouts and visual storyboards.",
+    image: FEATURE_MEDIA_ASSET_PATHS.splicing.previewWebp,
+    href: "/splicing",
+    accent: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-800"
+  },
+  {
+    id: "splitter",
+    title: "Image Splitter",
+    description: "Slice images into perfect grids or carousels for Instagram and social media. Visual guides help you cut with precision.",
+    image: FEATURE_MEDIA_ASSET_PATHS.splitter.preview2Webp,
+    href: "/splitter",
+    accent: "text-pink-600 dark:text-pink-400",
+    bg: "bg-pink-50 dark:bg-pink-800"
+  },
+  {
+    id: "filling",
+    title: "Image Filling",
+    description: "Smartly pad or fill images to perfectly match any target aspect ratio without cropping important content.",
+    image: FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
+    href: "/filling",
+    accent: "text-indigo-600 dark:text-indigo-400",
+    bg: "bg-indigo-50 dark:bg-indigo-800"
+  },
+  {
+    id: "diffchecker",
+    title: "Difference Checker",
+    description: "Detect pixel-level variations between images. Compare quality, compression artifacts, and visual changes with precision.",
+    image: FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp,
+    href: "/diffchecker",
+    accent: "text-orange-600 dark:text-orange-400",
+    bg: "bg-orange-50 dark:bg-orange-800"
+  },
+  {
+    id: "inspector",
+    title: "Image Inspector",
+    description: "Deep audit of hidden metadata, EXIF data, GPS coordinates, and color palettes. Protect your privacy easily.",
+    image: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp,
+    href: "/inspector",
+    accent: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-800"
+  }
+] as const
+
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   return (
     <div className="bg-white p-10 dark:bg-slate-950 flex flex-col space-y-4">
@@ -98,6 +157,43 @@ function CapabilityItem({ title, description }: { title: string; description: st
   )
 }
 
+function HighlightFeatureCard({
+  title,
+  description,
+  image,
+  href,
+  accent,
+  bg,
+  id
+}: typeof HIGHLIGHT_FEATURES[number]) {
+  return (
+    <Link
+      href={buildToolEntryHref(id, href)}
+      className="group block relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-all hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1"
+    >
+      <div className="aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-900">
+        <img
+          src={resolveFeatureMediaAssetUrl(image)}
+          alt={title}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      </div>
+      <div className="border-t border-slate-200 dark:border-slate-800 p-6 space-y-3">
+        <div className="flex items-center gap-2">
+          <Subheading className="text-2xl font-bold">{title}</Subheading>
+          <ChevronRight size={16} className={`transition-colors ${accent} transition-transform group-hover:translate-x-1`} />
+        </div>
+        <BodyText className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+          {description}
+        </BodyText>
+      </div>
+      <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${bg} ${accent}`}>
+        Highlight Feature
+      </div>
+    </Link>
+  )
+}
+
 export const metadata: Metadata = WEB_ROUTE_METADATA.home
 
 export default function Home() {
@@ -112,8 +208,11 @@ export default function Home() {
           Fast, private, and fully client-side. Convert formats, resize, batch process, split, splice, and inspect images without ever uploading them to a server.
         </BodyText>
         <div className="flex flex-wrap justify-center gap-4 pt-4">
-          <Button size="lg" className="rounded-full px-8 h-12 text-base" asChild>
+          <Button size="lg" className="rounded-full px-8 h-12 text-base shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5" asChild>
             <Link href={buildToolEntryHref("single-processor", "/single-processor")}>Start Processing Your Images</Link>
+          </Button>
+          <Button size="lg" variant="outline" className="rounded-full px-8 h-12 text-base border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:-translate-y-0.5" asChild>
+            <Link href="/extension">View Extension</Link>
           </Button>
         </div>
       </section>
@@ -198,6 +297,22 @@ export default function Home() {
               </BodyText>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Top Features Showcase */}
+      <section className="mx-auto max-w-[1400px] px-4 space-y-12">
+        <div className="text-center space-y-4">
+          <Heading className="text-4xl md:text-5xl">Tools Built for Professionals</Heading>
+          <BodyText className="mx-auto max-w-2xl text-slate-500 text-lg">
+            Experience the precision of high-performance image processing with our signature tools.
+          </BodyText>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {HIGHLIGHT_FEATURES.map((feature) => (
+            <HighlightFeatureCard key={feature.id} {...feature} />
+          ))}
         </div>
       </section>
 

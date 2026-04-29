@@ -6,6 +6,7 @@ import { LoadingSpinner } from "@/options/components/loading-spinner"
 import { useEffect } from "react"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
+import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 
 interface InspectorTabProps {
   onOpenSingleProcessor?: () => void
@@ -30,8 +31,16 @@ export function InspectorTab({ onOpenSingleProcessor }: InspectorTabProps) {
     <SharedInspectorPage
       onOptimizeIntent={setPendingInspectorOptimizeFile}
       onOpenSingleProcessor={onOpenSingleProcessor}
-      renderWorkspace={(props) => (
-        <>
+      renderWorkspace={(props) => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const setHasImage = useInspectorStore((s) => s.setHasImage)
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useEffect(() => {
+          setHasImage(!!props.result)
+        }, [props.result, setHasImage])
+
+        return (
+          <>
           {props.isAnalyzing ? (
             <div className="flex flex-col items-center justify-center py-16">
               <LoadingSpinner />
@@ -54,8 +63,9 @@ export function InspectorTab({ onOpenSingleProcessor }: InspectorTabProps) {
               onOptimizeNow={props.onOptimizeNow}
             />
           ) : null}
-        </>
-      )}
+          </>
+        )
+      }}
     />
   )
 }

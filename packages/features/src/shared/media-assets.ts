@@ -20,7 +20,8 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   brand: {
     imifyLogoPng: "/assets/icon.png",
     githubLogoSvg: "/assets/images/github-logo.svg",
-    buyMeCoffeeLogoSvg: "/assets/images/bmc-logo.svg"
+    buyMeCoffeeLogoSvg: "/assets/images/bmc-logo.svg",
+    paypalIconSvg: "/assets/images/pp-icon.svg"
   },
   devMode: {
     enableVideoWebm: "/assets/features/dev_mode-enable.webm",
@@ -50,6 +51,12 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   contextMenu: {
     previewWebp: "/assets/features/preview-context_menu.webp"
   },
+  diffchecker: {
+    previewWebp: "/assets/features/preview-difference_checker.webp"
+  },
+  inspector: {
+    previewWebp: "/assets/features/preview-image_inspector.webp"
+  },
   downloadHints: {
     chromeWebp: "/assets/images/img-download-not-ask-chrome.webp",
     edgeWebp: "/assets/images/img-download-not-ask-edge.webp",
@@ -61,7 +68,8 @@ export const FEATURE_MEDIA_ASSETS = {
   brand: {
     imifyLogoPng: FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
     githubLogoSvg: FEATURE_MEDIA_ASSET_PATHS.brand.githubLogoSvg,
-    buyMeCoffeeLogoSvg: FEATURE_MEDIA_ASSET_PATHS.brand.buyMeCoffeeLogoSvg
+    buyMeCoffeeLogoSvg: FEATURE_MEDIA_ASSET_PATHS.brand.buyMeCoffeeLogoSvg,
+    paypalIconSvg: FEATURE_MEDIA_ASSET_PATHS.brand.paypalIconSvg
   },
   devMode: {
     enableVideoWebm: FEATURE_MEDIA_ASSET_PATHS.devMode.enableVideoWebm,
@@ -90,6 +98,12 @@ export const FEATURE_MEDIA_ASSETS = {
   },
   contextMenu: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp
+  },
+  diffchecker: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp
+  },
+  inspector: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp
   },
   downloadHints: {
     chromeWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.chromeWebp,

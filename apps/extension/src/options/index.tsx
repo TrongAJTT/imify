@@ -5,7 +5,6 @@ import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
-import { Button } from "@imify/ui/ui/button"
 import { SidebarPanel } from "@imify/ui"
 import { PopupApp } from "@/popup/popup-app"
 import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
@@ -28,11 +27,15 @@ import {
   renderWorkspaceToolIcon
 } from "@imify/features/workspace-shell"
 import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
-import { type ExtensionStorageState,
-  STORAGE_KEY, STORAGE_VERSION } from "@imify/core/types"
+import {
+  type ExtensionStorageState,
+  STORAGE_KEY, STORAGE_VERSION
+} from "@imify/core/types"
 import { convertImageWithWorker } from "@imify/engine/converter/conversion-worker-pool"
-import { OFFSCREEN_CONVERT_REQUEST,
-  type OffscreenConvertRequest, type OffscreenConvertResponse } from "@/background/offscreen-types"
+import {
+  OFFSCREEN_CONVERT_REQUEST,
+  type OffscreenConvertRequest, type OffscreenConvertResponse
+} from "@/background/offscreen-types"
 import { CUSTOM_FORMATS } from "@imify/core/format-config"
 import { DEFAULT_STORAGE_STATE } from "@imify/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
@@ -43,8 +46,10 @@ import { FillingSidebarPanel } from "@/options/components/filling/filling-sideba
 import { PatternTab, PatternSidebarShell, PatternWorkspaceShell } from "@/options/components/pattern"
 import { ProcessorWorkspaceShell, ProcessorSidebarShellWrapper } from "@/options/components/processor"
 import { EditorProvider } from "@/options/components/filling/editor-context"
-import { DiffcheckerTab, DiffcheckerSidebarPanel } from "@/options/components/diffchecker"
-import { InspectorTab, InspectorSidebarPanel } from "@/options/components/inspector"
+import { DiffcheckerTab } from "@/options/components/diffchecker"
+import { InspectorTab } from "@/options/components/inspector"
+import { DiffcheckerSidebarShell } from "@imify/features/diffchecker"
+import { InspectorSidebarShell } from "@imify/features/inspector"
 import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
 import { ContextMenuInfoPanel } from "@/options/components/context-menu/context-menu-info-panel"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
@@ -76,10 +81,8 @@ import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
 import { Tooltip } from "@/options/components/tooltip"
 import {
-  Heart,
   PanelLeftClose,
   PanelLeftOpen,
-  X
 } from "lucide-react"
 import { AttributionDialogWrapper } from "./components/attribution-dialog-wrapper"
 import { getStorageState, onStorageStateChanged, setStorageState } from "@/adapters/chrome-storage-state"
@@ -569,13 +572,15 @@ export default function OptionsPage() {
         onOpenSettings={() => openSettingsDialog("general")}
         onOpenDonate={() => setIsDonateDialogOpen(true)}
         onToggleDark={toggleDarkMode}
+        isExtension={true}
       />
 
       {/* Dialogs */}
       <AboutDialog
         isOpen={isAboutDialogOpen}
         onClose={() => setIsAboutDialogOpen(false)}
-        onOpenAttribution={() => setIsAttributionDialogOpen(true)}
+        onOpenAboutAttribution={() => setIsAttributionDialogOpen(true)}
+        onOpenDonate={() => setIsDonateDialogOpen(true)}
       />
       <WhatsNewUpdateNotificationGate />
 
@@ -629,198 +634,196 @@ export default function OptionsPage() {
 
       {/* Main workspace */}
       <EditorProvider>
-      <div className="flex-1 flex overflow-hidden min-h-0">
+        <div className="flex-1 flex overflow-hidden min-h-0">
 
-        {/* Left sidebar nav */}
-        <nav
-          className="shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto transition-[width] duration-200"
-          style={{ width: isNavCollapsed ? 56 : navigationSidebarWidth }}>
-          <div className="pt-4 pb-2 px-2 flex flex-col gap-0.5">
-            <div
-              className={`${
-                isNavCollapsed ? "px-0 pb-2 justify-center" : "px-3 pb-2 pt-0.5 justify-between"
-              } flex items-center`}
-            >
-              {!isNavCollapsed ? (
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600">
-                  Features
-                </div>
-              ) : null}
-
-              <Tooltip
-                content={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}
-                variant="nowrap"
+          {/* Left sidebar nav */}
+          <nav
+            className="shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto transition-[width] duration-200"
+            style={{ width: isNavCollapsed ? 56 : navigationSidebarWidth }}>
+            <div className="pt-4 pb-2 px-2 flex flex-col gap-0.5">
+              <div
+                className={`${isNavCollapsed ? "px-0 pb-2 justify-center" : "px-3 pb-2 pt-0.5 justify-between"
+                  } flex items-center`}
               >
-                <button
-                  type="button"
-                  onClick={() => void setIsNavCollapsed(!isNavCollapsed)}
-                  className="h-7 w-7 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
-                  aria-label={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}>
-                  {isNavCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-                </button>
-              </Tooltip>
-            </div>
-            {EXTENSION_SIDEBAR_GROUPS.map((group) => (
-              <div key={group.title} className="space-y-0.5">
                 {!isNavCollapsed ? (
-                  <div className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-600">
-                    {group.title}
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600">
+                    Features
                   </div>
                 ) : null}
-                {group.items.map((tool) => (
-                  <TabButton
-                    key={tool.id}
-                    active={tool.tabId === activeTab}
-                    label={tool.label}
-                    icon={renderWorkspaceToolIcon(tool.id, 18)}
-                    onClick={() => setActiveTab(tool.tabId)}
-                    collapsed={isNavCollapsed}
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
 
-          {/* Right panel content collapsed into left sidebar on smaller screens */}
-          {!isDesktopLayout && !isNavCollapsed ? (
-            <div className="border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col">
-            {activeTab === "single" && (
-              <ProcessorSidebarShellWrapper
-                context="single"
-                performancePreferences={safePerformancePreferences}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "batch" && (
-              <ProcessorSidebarShellWrapper
-                context="batch"
-                performancePreferences={safePerformancePreferences}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "splicing" && (
-              <SplicingSidebarShell
-                performancePreferences={safePerformancePreferences}
-                onPreviewQualityChange={handleSidebarPreviewQualityChange}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "splitter" && (
-              <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "filling" && (
-              <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "pattern" && (
-              <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "diffchecker" && (
-              <DiffcheckerSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "inspector" && (
-              <InspectorSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            <TabInfoPanel activeTab={activeTab} />
-            </div>
-          ) : null}
-        </nav>
-
-        {/* Content column */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Sub-tab bar for Context Menu */}
-          {activeTab === "context-menu" && (
-            <div className="flex shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6">
-              {CONTEXT_MENU_SUB_TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => void setActiveContextMenuSubTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 h-10 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
-                    safeActiveContextMenuSubTab === tab.id
-                      ? "border-sky-500 text-sky-600 dark:border-sky-400 dark:text-sky-400"
-                      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                  }`}
+                <Tooltip
+                  content={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}
+                  variant="nowrap"
                 >
-                  <span className="shrink-0">{tab.icon}</span>
-                  {tab.label}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => void setIsNavCollapsed(!isNavCollapsed)}
+                    className="h-7 w-7 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+                    aria-label={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}>
+                    {isNavCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+                  </button>
+                </Tooltip>
+              </div>
+              {EXTENSION_SIDEBAR_GROUPS.map((group) => (
+                <div key={group.title} className="space-y-0.5">
+                  {!isNavCollapsed ? (
+                    <div className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-600">
+                      {group.title}
+                    </div>
+                  ) : null}
+                  {group.items.map((tool) => (
+                    <TabButton
+                      key={tool.id}
+                      active={tool.tabId === activeTab}
+                      label={tool.label}
+                      icon={renderWorkspaceToolIcon(tool.id, 18)}
+                      onClick={() => setActiveTab(tool.tabId)}
+                      collapsed={isNavCollapsed}
+                    />
+                  ))}
+                </div>
               ))}
             </div>
-          )}
 
-          {/* Scrollable content */}
-          <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-950 p-6">
-            {tabContent}
-          </main>
+            {/* Right panel content collapsed into left sidebar on smaller screens */}
+            {!isDesktopLayout && !isNavCollapsed ? (
+              <div className="border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col">
+                {activeTab === "single" && (
+                  <ProcessorSidebarShellWrapper
+                    context="single"
+                    performancePreferences={safePerformancePreferences}
+                    onOpenSettings={() => openSettingsDialog("performance")}
+                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                  />
+                )}
+
+                {activeTab === "batch" && (
+                  <ProcessorSidebarShellWrapper
+                    context="batch"
+                    performancePreferences={safePerformancePreferences}
+                    onOpenSettings={() => openSettingsDialog("performance")}
+                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                  />
+                )}
+
+                {activeTab === "splicing" && (
+                  <SplicingSidebarShell
+                    performancePreferences={safePerformancePreferences}
+                    onPreviewQualityChange={handleSidebarPreviewQualityChange}
+                    onOpenSettings={() => openSettingsDialog("performance")}
+                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                  />
+                )}
+
+                {activeTab === "splitter" && (
+                  <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+
+                {activeTab === "filling" && (
+                  <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+
+                {activeTab === "pattern" && (
+                  <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+
+                {activeTab === "diffchecker" && (
+                  <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+
+                {activeTab === "inspector" && (
+                  <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+
+                <TabInfoPanel activeTab={activeTab} />
+              </div>
+            ) : null}
+          </nav>
+
+          {/* Content column */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            {/* Sub-tab bar for Context Menu */}
+            {activeTab === "context-menu" && (
+              <div className="flex shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6">
+                {CONTEXT_MENU_SUB_TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => void setActiveContextMenuSubTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-3 h-10 text-[13px] font-medium border-b-2 -mb-px transition-colors ${safeActiveContextMenuSubTab === tab.id
+                      ? "border-sky-500 text-sky-600 dark:border-sky-400 dark:text-sky-400"
+                      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                      }`}
+                  >
+                    <span className="shrink-0">{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Scrollable content */}
+            <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-950 p-6">
+              {tabContent}
+            </main>
+          </div>
+
+          {/* Right panel */}
+          {isDesktopLayout ? (
+            <aside
+              className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto"
+              style={{ width: `min(${configurationSidebarWidth}px, ${CONFIGURATION_SIDEBAR_MAX_PERCENT}%)` }}>
+              {activeTab === "single" && (
+                <ProcessorSidebarShellWrapper
+                  context="single"
+                  performancePreferences={safePerformancePreferences}
+                  onOpenSettings={() => openSettingsDialog("performance")}
+                  enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                />
+              )}
+
+              {activeTab === "batch" && (
+                <ProcessorSidebarShellWrapper
+                  context="batch"
+                  performancePreferences={safePerformancePreferences}
+                  onOpenSettings={() => openSettingsDialog("performance")}
+                  enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                />
+              )}
+
+              {activeTab === "splicing" && (
+                <SplicingSidebarShell
+                  performancePreferences={safePerformancePreferences}
+                  onPreviewQualityChange={handleSidebarPreviewQualityChange}
+                  onOpenSettings={() => openSettingsDialog("performance")}
+                  enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                />
+              )}
+
+              {activeTab === "splitter" && (
+                <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+
+              {activeTab === "filling" && (
+                <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+
+              {activeTab === "pattern" && (
+                <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+
+              {activeTab === "diffchecker" && (
+                <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+
+              {activeTab === "inspector" && (
+                <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+
+              <TabInfoPanel activeTab={activeTab} />
+            </aside>
+          ) : null}
         </div>
-
-        {/* Right panel */}
-        {isDesktopLayout ? (
-          <aside
-            className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto"
-            style={{ width: `min(${configurationSidebarWidth}px, ${CONFIGURATION_SIDEBAR_MAX_PERCENT}%)` }}>
-            {activeTab === "single" && (
-              <ProcessorSidebarShellWrapper
-                context="single"
-                performancePreferences={safePerformancePreferences}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "batch" && (
-              <ProcessorSidebarShellWrapper
-                context="batch"
-                performancePreferences={safePerformancePreferences}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "splicing" && (
-              <SplicingSidebarShell
-                performancePreferences={safePerformancePreferences}
-                onPreviewQualityChange={handleSidebarPreviewQualityChange}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "splitter" && (
-              <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "filling" && (
-              <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "pattern" && (
-              <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "diffchecker" && (
-              <DiffcheckerSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "inspector" && (
-              <InspectorSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            <TabInfoPanel activeTab={activeTab} />
-          </aside>
-        ) : null}
-      </div>
       </EditorProvider>
     </div>
   )

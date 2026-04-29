@@ -1,8 +1,7 @@
 "use client"
 
 import { SharedDiffcheckerPage } from "@imify/features/diffchecker/diffchecker-page"
-import { DiffcheckerWorkspace } from "@imify/features/diffchecker/diffchecker-workspace"
-import { DiffcheckerSidebarPanel } from "@imify/features/diffchecker/diffchecker-sidebar-panel"
+import { DiffcheckerWorkspace, DiffcheckerSidebarShell } from "@imify/features/diffchecker"
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { WorkspaceLoadingState } from "@imify/ui"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
@@ -35,7 +34,7 @@ export function DiffcheckerPage() {
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const sidebar = useMemo(
-    () => <DiffcheckerSidebarPanel enableWideSidebarGrid={enableWideSidebarGrid} />,
+    () => <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
     [enableWideSidebarGrid]
   )
   useWorkspaceSidebar(sidebar)
@@ -55,7 +54,16 @@ export function DiffcheckerPage() {
 
   return (
     <SharedDiffcheckerPage
-      renderWorkspace={(props) => <DiffcheckerWorkspace {...props} />}
+      renderWorkspace={(props) => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const setHasImage = useDiffcheckerStore((s) => s.setHasImage)
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useEffect(() => {
+          setHasImage(!!props.imageA || !!props.imageB)
+        }, [props.imageA, props.imageB, setHasImage])
+
+        return <DiffcheckerWorkspace {...props} />
+      }}
     />
   )
 }
