@@ -4,6 +4,7 @@ import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { ToastContainer, BodyText } from "@imify/ui"
 import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast"
 import type { ConversionProgressPayload, FormatConfig } from "@imify/core/types"
+import { buildResizeQuickStatsFromDimensions } from "@imify/core/resize-quick-stats"
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store"
@@ -50,6 +51,7 @@ export function BatchProcessorWorkspace() {
   const setHeavyFormatToast = useBatchStore((s) => s.setHeavyFormatToast)
   const setBatchIsRunning = useBatchStore((s) => s.setIsRunning)
   const syncResizeToSource = useBatchStore((s) => s.syncResizeToSource)
+  const setResizeQuickStats = useBatchStore((s) => s.setResizeQuickStats)
   const [queue, setQueue] = useState<BatchQueueItem[]>([])
   const [urlImportToast, setUrlImportToast] = useState<ConversionProgressPayload | null>(null)
   const [isImportingUrls, setIsImportingUrls] = useState(false)
@@ -82,12 +84,51 @@ export function BatchProcessorWorkspace() {
     void (async () => { const dimensions = await readImageDimensions(firstQueueItem.file); if (!dimensions || !active) return; syncResizeToSource(dimensions.width, dimensions.height) })()
     return () => { active = false }
   }, [firstQueueItem?.file, firstQueueItem?.id, syncResizeToSource])
+  useEffect(() => {
+    setResizeQuickStats(
+      buildResizeQuickStatsFromDimensions(
+        queue.map((item) => ({
+          width: item.sourceWidth,
+          height: item.sourceHeight
+        }))
+      )
+    )
+  }, [queue, setResizeQuickStats])
+  useEffect(
+    () => () => {
+      setResizeQuickStats({
+        width: null,
+        height: null
+      })
+    },
+    [setResizeQuickStats]
+  )
   const removeItem = (id: string) => setQueue((current) => current.filter((item) => item.id !== id))
   const appendImageFiles = (inputFiles: File[]) => {
     if (!inputFiles.length) return
     const nextItems: BatchQueueItem[] = inputFiles.filter((file) => isCommonImageFile(file)).map((file) => ({ id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, file, status: file.size > MAX_FILE_SIZE_BYTES ? "error" : "queued", percent: file.size > MAX_FILE_SIZE_BYTES ? 100 : 0, message: file.size > MAX_FILE_SIZE_BYTES ? `Skipped: file is larger than ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB limit` : undefined }))
     if (!nextItems.length) return
     setQueue((current) => [...current, ...nextItems])
+    void Promise.all(
+      nextItems.map(async (item) => ({
+        id: item.id,
+        dimensions: await readImageDimensions(item.file)
+      }))
+    ).then((dimensionResults) => {
+      setQueue((currentQueue) =>
+        currentQueue.map((queueItem) => {
+          const matched = dimensionResults.find((entry) => entry.id === queueItem.id)
+          if (!matched?.dimensions) {
+            return queueItem
+          }
+          return {
+            ...queueItem,
+            sourceWidth: matched.dimensions.width,
+            sourceHeight: matched.dimensions.height
+          }
+        })
+      )
+    })
   }
   const importFromImageUrls = async (urls: string[]) => {
     if (!urls.length) return

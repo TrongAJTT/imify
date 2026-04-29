@@ -26,6 +26,7 @@ interface ControlledPopoverProps {
   closeDelayMs?: number
   triggerWrapperClassName?: string
   contentClassName?: string
+  closeOnContentClick?: boolean
   contentOnMouseDown?: MouseEventHandler<HTMLDivElement>
   contentOnPointerDown?: PointerEventHandler<HTMLDivElement>
 }
@@ -90,6 +91,7 @@ export function ControlledPopover({
   closeDelayMs,
   triggerWrapperClassName,
   contentClassName,
+  closeOnContentClick = false,
   contentOnMouseDown,
   contentOnPointerDown
 }: ControlledPopoverProps) {
@@ -243,6 +245,14 @@ export function ControlledPopover({
             closePopover(true)
           }}
           onEscapeKeyDown={() => {
+            triggerHoveredRef.current = false
+            contentHoveredRef.current = false
+            closePopover(true)
+          }}
+          onClick={() => {
+            if (!closeOnContentClick || disabled) {
+              return
+            }
             triggerHoveredRef.current = false
             contentHoveredRef.current = false
             closePopover(true)

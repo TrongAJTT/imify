@@ -1,6 +1,6 @@
 import { clampQuality } from "@imify/core/image-utils"
 import { buildJxlEncodeOptions } from "@imify/core/jxl-options"
-import type { FillRuntimeItem } from "@imify/features/filling/fill-runtime-items"
+import type { FillRuntimeItem } from "@imify/features/filling/fill/runtime-items"
 import type { CanvasFillState, FillingExportConfig, FillingExportFormat, FillingTemplate, ImageTransform, LayerFillState } from "@imify/features/filling/types"
 import { templateStorage } from "@imify/features/filling/template-storage"
 import { renderFilledCanvas } from "@imify/features/filling/canvas-export-renderer"

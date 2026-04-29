@@ -17,6 +17,7 @@ import {
 import { mergeNormalizedJxlCodecOptions } from "@imify/core/jxl-options"
 import { DEFAULT_ICO_SIZES } from "@imify/core/format-config"
 import { normalizeResizeResamplingAlgorithm } from "@imify/core/resize-resampling"
+import type { ResizeQuickStats } from "@imify/core/resize-quick-stats"
 import type { BmpColorDepth, PaperSize, SupportedDPI, TiffColorMode } from "@imify/core/types"
 import type { BatchResizeMode, BatchSetupState, BatchTargetFormat } from "./batch-types"
 import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "./preset-colors"
@@ -285,6 +286,7 @@ interface BatchStoreState extends BatchSetupState {
   resizeSourceWidth: number
   resizeSourceHeight: number
   resizeSyncVersion: number
+  resizeQuickStats: ResizeQuickStats
   isRunning: boolean
   presets: SavedSetupPreset[]
   recentPresetIds: Partial<Record<SetupContext, string>>
@@ -324,6 +326,7 @@ interface BatchStoreState extends BatchSetupState {
   setResizeContainBackground: (value: string) => void
   setResizeResamplingAlgorithm: (value: BatchSetupState["resizeResamplingAlgorithm"]) => void
   syncResizeToSource: (width: number, height: number) => void
+  setResizeQuickStats: (value: ResizeQuickStats) => void
   setPaperSize: (value: PaperSize) => void
   setDpi: (value: SupportedDPI) => void
   setStripExif: (value: boolean) => void
@@ -502,6 +505,10 @@ export const useBatchStore = create<BatchStoreState>()(
       resizeSourceWidth: DEFAULT_BATCH_STATE.resizeWidth,
       resizeSourceHeight: DEFAULT_BATCH_STATE.resizeHeight,
       resizeSyncVersion: 0,
+      resizeQuickStats: {
+        width: null,
+        height: null
+      },
       isRunning: false,
       presets: [],
       recentPresetIds: {},
@@ -914,6 +921,7 @@ export const useBatchStore = create<BatchStoreState>()(
             }
           } as Partial<BatchStoreState>
         }),
+      setResizeQuickStats: (value) => set({ resizeQuickStats: value }),
       setPaperSize: (value) =>
         set((state) => {
           const setupContext = state.setupContext
@@ -1325,7 +1333,14 @@ export const useBatchStore = create<BatchStoreState>()(
       storage: createJSONStorage(() => deferredStorage),
       partialize: (state) => {
         // Only persist the non-runtime state
-        const { isRunning, heavyFormatToast, isTargetFormatQualityOpen, isResizeOpen, ...rest } = state
+        const {
+          isRunning,
+          heavyFormatToast,
+          isTargetFormatQualityOpen,
+          isResizeOpen,
+          resizeQuickStats: _resizeQuickStats,
+          ...rest
+        } = state
         const presets = state.presets.map((preset) => ({
           ...preset,
           config: cloneSetupState(preset.config)

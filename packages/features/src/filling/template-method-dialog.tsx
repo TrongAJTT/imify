@@ -1,13 +1,20 @@
 "use client"
 
 import React, { useCallback, useEffect, useState } from "react"
-import { Grid3x3, PenTool, Ruler, X } from "lucide-react"
+import { Grid3x3, LayoutGrid, PenTool, Ruler, X } from "lucide-react"
 import { BaseDialog, Button, MutedText, NumberInput, RadioCard, SelectInput, Subheading, TextInput } from "@imify/ui"
-import { DEFAULT_SYMMETRIC_PARAMS, generateId, type CanvasSizePreset, type CanvasSizeUnit, type FillingTemplate } from "./types"
+import {
+  DEFAULT_GRID_DESIGN_PARAMS,
+  DEFAULT_SYMMETRIC_PARAMS,
+  generateId,
+  type CanvasSizePreset,
+  type CanvasSizeUnit,
+  type FillingTemplate
+} from "./types"
 import { templateStorage } from "./template-storage"
 import { CanvasSizeDialog } from "./canvas-size-dialog"
 
-export type TemplateCreationMethod = "manual" | "symmetric"
+export type TemplateCreationMethod = "manual" | "symmetric" | "grid-design"
 
 interface TemplateMethodDialogProps {
   isOpen: boolean
@@ -114,6 +121,7 @@ export function TemplateMethodDialog({
       layers: [],
       groups: [],
       symmetricParams: { ...DEFAULT_SYMMETRIC_PARAMS },
+        gridDesignParams: { ...DEFAULT_GRID_DESIGN_PARAMS },
       createdAt: now,
       updatedAt: now,
       usageCount: 0,
@@ -172,7 +180,7 @@ export function TemplateMethodDialog({
 
             <section>
               <div className="mb-2 text-xs font-semibold text-slate-700 dark:text-slate-300">Creation Method</div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <RadioCard
                   icon={<PenTool size={16} className="text-sky-500" />}
                   title="Manual Editor"
@@ -187,6 +195,15 @@ export function TemplateMethodDialog({
                   title="Symmetric Generator"
                   subtitle="Generate structured layouts with controls"
                   value="symmetric"
+                  selectedValue={method}
+                  onChange={(value) => setMethod(value as TemplateCreationMethod)}
+                  className="h-full py-2.5"
+                />
+                <RadioCard
+                  icon={<LayoutGrid size={16} className="text-sky-500" />}
+                  title="Grid Designer"
+                  subtitle="Build flexible grids from compact row syntax"
+                  value="grid-design"
                   selectedValue={method}
                   onChange={(value) => setMethod(value as TemplateCreationMethod)}
                   className="h-full py-2.5"

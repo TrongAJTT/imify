@@ -1,31 +1,41 @@
-// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
+// PLATFORM: extension — uses chrome.* browser APIs. Do not import in web app.
 import "@/style.css"
 
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
-import { Button } from "@imify/ui/ui/button"
+import { SidebarPanel } from "@imify/ui"
 import { PopupApp } from "@/popup/popup-app"
 import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
 import SidepanelAuditSnapshotApp from "@/sidepanel/sidepanel-audit-snapshot-app"
 
 import { toUserFacingConversionError } from "@imify/core/error-utils"
 import {
+  DEFAULT_PREFER_RECENT_PRESET_ENTRY,
+  PREFER_RECENT_PRESET_ENTRY_KEY
+} from "@imify/core"
+import {
   AboutDialog,
   DonateDialog,
+  WORKSPACE_TOOLS,
   WorkspaceSettingsDialog,
   WorkspaceOptionsHeader,
+  WhatsNewUpdateNotificationGate,
   useIsDesktopLayout,
   getExtensionSidebarToolGroups,
   renderWorkspaceToolIcon
 } from "@imify/features/workspace-shell"
 import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
-import { type ExtensionStorageState,
-  STORAGE_KEY, STORAGE_VERSION } from "@imify/core/types"
+import {
+  type ExtensionStorageState,
+  STORAGE_KEY, STORAGE_VERSION
+} from "@imify/core/types"
 import { convertImageWithWorker } from "@imify/engine/converter/conversion-worker-pool"
-import { OFFSCREEN_CONVERT_REQUEST,
-  type OffscreenConvertRequest, type OffscreenConvertResponse } from "@/background/offscreen-types"
+import {
+  OFFSCREEN_CONVERT_REQUEST,
+  type OffscreenConvertRequest, type OffscreenConvertResponse
+} from "@/background/offscreen-types"
 import { CUSTOM_FORMATS } from "@imify/core/format-config"
 import { DEFAULT_STORAGE_STATE } from "@imify/features/settings"
 import { BatchProcessorTab } from "@/options/components/batch-processor-tab"
@@ -36,8 +46,10 @@ import { FillingSidebarPanel } from "@/options/components/filling/filling-sideba
 import { PatternTab, PatternSidebarShell, PatternWorkspaceShell } from "@/options/components/pattern"
 import { ProcessorWorkspaceShell, ProcessorSidebarShellWrapper } from "@/options/components/processor"
 import { EditorProvider } from "@/options/components/filling/editor-context"
-import { DiffcheckerTab, DiffcheckerSidebarPanel } from "@/options/components/diffchecker"
-import { InspectorTab, InspectorSidebarPanel } from "@/options/components/inspector"
+import { DiffcheckerTab } from "@/options/components/diffchecker"
+import { InspectorTab } from "@/options/components/inspector"
+import { DiffcheckerSidebarShell } from "@imify/features/diffchecker"
+import { InspectorSidebarShell } from "@imify/features/inspector"
 import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
 import { ContextMenuInfoPanel } from "@/options/components/context-menu/context-menu-info-panel"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
@@ -59,6 +71,9 @@ import {
 } from "@/options/shared/performance-preferences"
 import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
+import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
+import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
@@ -66,10 +81,8 @@ import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
 import { Tooltip } from "@/options/components/tooltip"
 import {
-  Heart,
   PanelLeftClose,
   PanelLeftOpen,
-  X
 } from "lucide-react"
 import { AttributionDialogWrapper } from "./components/attribution-dialog-wrapper"
 import { getStorageState, onStorageStateChanged, setStorageState } from "@/adapters/chrome-storage-state"
@@ -227,7 +240,11 @@ function normalizeExtensionState(state: ExtensionStorageState): ExtensionStorage
 
 function TabInfoPanel({ activeTab }: { activeTab: OptionsTab }) {
   if (activeTab === "context-menu") {
-    return <ContextMenuInfoPanel />
+    return (
+      <SidebarPanel title="ABOUT THIS TOOL" childrenClassName="flex flex-col gap-3">
+        <ContextMenuInfoPanel />
+      </SidebarPanel>
+    )
   }
 
   return null
@@ -259,6 +276,10 @@ export default function OptionsPage() {
     "global"
   )
   const [activeTab, setActiveTab] = useState<OptionsTab>("context-menu")
+  const [preferRecentPresetEntry, setPreferRecentPresetEntry, { isLoading: isPreferRecentPresetEntryLoading }] = useStorage<boolean>(
+    { key: PREFER_RECENT_PRESET_ENTRY_KEY, instance: syncStorage },
+    DEFAULT_PREFER_RECENT_PRESET_ENTRY
+  )
   const [isNavCollapsed, setIsNavCollapsed] = useStorage<boolean>(
     { key: "imify_options_nav_collapsed", instance: syncStorage },
     false
@@ -289,16 +310,32 @@ export default function OptionsPage() {
     { key: PERFORMANCE_PREFERENCES_KEY, instance: syncStorage },
     DEFAULT_PERFORMANCE_PREFERENCES
   )
+  // Keep a "live" copy so Export UI updates immediately after Settings changes,
+  // instead of waiting for storage re-hydration.
+  const [livePerformancePreferences, setLivePerformancePreferences] = useState(performancePreferences)
+  useEffect(() => {
+    setLivePerformancePreferences(performancePreferences)
+  }, [performancePreferences])
+  const initialTabFromQueryRef = useRef<OptionsTab | null>(null)
 
   const isLoading =
     isSettingsLoading ||
+    isPreferRecentPresetEntryLoading ||
     isLayoutPreferencesLoading ||
     isPerformancePreferencesLoading ||
     !isBatchStoreRehydrated
   const safeDefaultOptionsTab = sanitizeOptionsTab(defaultOptionsTab)
   const safeActiveContextMenuSubTab = sanitizeContextMenuSubTab(activeContextMenuSubTab)
   const safeLayoutPreferences = normalizeWorkspaceLayoutPreferences(layoutPreferences)
-  const safePerformancePreferences = normalizePerformancePreferences(performancePreferences)
+  const safePerformancePreferences = normalizePerformancePreferences(livePerformancePreferences)
+  const defaultWorkspaceOptions = useMemo(
+    () =>
+      WORKSPACE_TOOLS.filter((tool) => tool.showOnExtSidebar && tool.extTabId).map((tool) => ({
+        value: tool.extTabId as OptionsTab,
+        label: tool.label
+      })),
+    []
+  )
   const devModeSettingsAdapter = useMemo<DevModeSettingsAdapter>(
     () => ({
       getSettingsState: getStorageState,
@@ -320,6 +357,13 @@ export default function OptionsPage() {
   const previewQualityChangeHandlerRef = useRef<((next: number) => void) | null>(null)
   const didInitDefaultTabRef = useRef(false)
 
+  if (initialTabFromQueryRef.current === null && typeof window !== "undefined") {
+    const queryTab = new URLSearchParams(window.location.search).get("tab")
+    if (queryTab && VALID_TAB_IDS.has(queryTab as OptionsTab)) {
+      initialTabFromQueryRef.current = queryTab as OptionsTab
+    }
+  }
+
   const registerPreviewQualityChangeHandler = useCallback((handler: ((next: number) => void) | null) => {
     previewQualityChangeHandlerRef.current = handler
   }, [])
@@ -333,6 +377,71 @@ export default function OptionsPage() {
     setPreviewQualityPercent(next)
   }, [setPreviewQualityPercent])
 
+  const handleToolTabActivation = useCallback((nextTab: OptionsTab) => {
+    if (nextTab === "single" || nextTab === "batch") {
+      const context = nextTab
+      setSetupContext(context)
+      const batchState = useBatchStore.getState()
+      const scopedPresets = batchState.presets.filter((preset) => preset.context === context)
+      const recentPresetId = batchState.recentPresetIds[context] ?? null
+      const canOpenRecentPreset =
+        preferRecentPresetEntry &&
+        !!recentPresetId &&
+        scopedPresets.some((preset) => preset.id === recentPresetId)
+      if (canOpenRecentPreset && recentPresetId) {
+        batchState.applyPresetToCurrentContext(recentPresetId)
+        batchState.setPresetViewMode(context, "workspace")
+      } else {
+        batchState.setPresetViewMode(context, "select")
+      }
+      return
+    }
+
+    if (nextTab === "splitter") {
+      const splitterState = useSplitterPresetStore.getState()
+      const recentPresetId = splitterState.recentPresetId
+      const canOpenRecentPreset =
+        preferRecentPresetEntry &&
+        !!recentPresetId &&
+        splitterState.presets.some((preset) => preset.id === recentPresetId)
+      if (canOpenRecentPreset && recentPresetId) {
+        splitterState.applyPreset(recentPresetId)
+      } else {
+        splitterState.setPresetViewMode("select")
+      }
+      return
+    }
+
+    if (nextTab === "splicing") {
+      const splicingState = useSplicingPresetStore.getState()
+      const recentPresetId = splicingState.recentPresetId
+      const canOpenRecentPreset =
+        preferRecentPresetEntry &&
+        !!recentPresetId &&
+        splicingState.presets.some((preset) => preset.id === recentPresetId)
+      if (canOpenRecentPreset && recentPresetId) {
+        splicingState.applyPreset(recentPresetId)
+      } else {
+        splicingState.setPresetViewMode("select")
+      }
+      return
+    }
+
+    if (nextTab === "pattern") {
+      const patternState = usePatternPresetStore.getState()
+      const recentPresetId = patternState.recentPresetId
+      const canOpenRecentPreset =
+        preferRecentPresetEntry &&
+        !!recentPresetId &&
+        patternState.presets.some((preset) => preset.id === recentPresetId)
+      if (canOpenRecentPreset && recentPresetId) {
+        patternState.applyPreset(recentPresetId)
+      } else {
+        patternState.setPresetViewMode("select")
+      }
+    }
+  }, [preferRecentPresetEntry, setSetupContext])
+
   useEffect(() => {
     if (didInitDefaultTabRef.current) {
       return
@@ -344,15 +453,13 @@ export default function OptionsPage() {
 
     // Only apply the user's "default tab" once on initial load.
     // Changing it in Settings should NOT force-navigate the current screen.
-    setActiveTab(safeDefaultOptionsTab)
+    setActiveTab(initialTabFromQueryRef.current ?? safeDefaultOptionsTab)
     didInitDefaultTabRef.current = true
   }, [isDefaultTabLoading, safeDefaultOptionsTab])
 
   useEffect(() => {
-    if (activeTab === "single" || activeTab === "batch") {
-      setSetupContext(activeTab)
-    }
-  }, [activeTab, setSetupContext])
+    handleToolTabActivation(activeTab)
+  }, [activeTab, handleToolTabActivation])
 
   useEffect(() => {
     if (activeTab !== "context-menu") {
@@ -465,27 +572,32 @@ export default function OptionsPage() {
         onOpenSettings={() => openSettingsDialog("general")}
         onOpenDonate={() => setIsDonateDialogOpen(true)}
         onToggleDark={toggleDarkMode}
+        isExtension={true}
       />
 
       {/* Dialogs */}
       <AboutDialog
         isOpen={isAboutDialogOpen}
         onClose={() => setIsAboutDialogOpen(false)}
-        onOpenAttribution={() => setIsAttributionDialogOpen(true)}
+        onOpenAboutAttribution={() => setIsAttributionDialogOpen(true)}
+        onOpenDonate={() => setIsDonateDialogOpen(true)}
       />
+      <WhatsNewUpdateNotificationGate />
 
       <WorkspaceSettingsDialog
         isOpen={isSettingsDialogOpen}
         onClose={closeSettingsDialog}
         initialTab={settingsDialogInitialTab}
+        showExtensionOnlyOptions
         defaultScreenValue={safeDefaultOptionsTab}
-        defaultScreenOptions={TAB_ITEMS.map((tab) => ({
-          value: tab.id,
-          label: tab.label
-        }))}
+        defaultScreenOptions={defaultWorkspaceOptions}
         onChangeDefaultScreenValue={(tab) => {
           const nextTab = sanitizeOptionsTab(tab)
           void setDefaultOptionsTab(nextTab)
+        }}
+        preferRecentPresetEntry={preferRecentPresetEntry}
+        onChangePreferRecentPresetEntry={(checked) => {
+          void setPreferRecentPresetEntry(checked)
         }}
         usageEntries={usageEntries}
         onResetUsageStats={() => {
@@ -506,6 +618,7 @@ export default function OptionsPage() {
         }}
         performancePreferences={safePerformancePreferences}
         onChangePerformancePreferences={(value) => {
+          setLivePerformancePreferences(value)
           void setPerformancePreferences(value)
         }}
         devModeSettingsAdapter={devModeSettingsAdapter}
@@ -521,198 +634,196 @@ export default function OptionsPage() {
 
       {/* Main workspace */}
       <EditorProvider>
-      <div className="flex-1 flex overflow-hidden min-h-0">
+        <div className="flex-1 flex overflow-hidden min-h-0">
 
-        {/* Left sidebar nav */}
-        <nav
-          className="shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto transition-[width] duration-200"
-          style={{ width: isNavCollapsed ? 56 : navigationSidebarWidth }}>
-          <div className="pt-4 pb-2 px-2 flex flex-col gap-0.5">
-            <div
-              className={`${
-                isNavCollapsed ? "px-0 pb-2 justify-center" : "px-3 pb-2 pt-0.5 justify-between"
-              } flex items-center`}
-            >
-              {!isNavCollapsed ? (
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600">
-                  Navigation
-                </div>
-              ) : null}
-
-              <Tooltip
-                content={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}
-                variant="nowrap"
+          {/* Left sidebar nav */}
+          <nav
+            className="shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto transition-[width] duration-200"
+            style={{ width: isNavCollapsed ? 56 : navigationSidebarWidth }}>
+            <div className="pt-4 pb-2 px-2 flex flex-col gap-0.5">
+              <div
+                className={`${isNavCollapsed ? "px-0 pb-2 justify-center" : "px-3 pb-2 pt-0.5 justify-between"
+                  } flex items-center`}
               >
-                <button
-                  type="button"
-                  onClick={() => void setIsNavCollapsed(!isNavCollapsed)}
-                  className="h-7 w-7 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
-                  aria-label={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}>
-                  {isNavCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-                </button>
-              </Tooltip>
-            </div>
-            {EXTENSION_SIDEBAR_GROUPS.map((group) => (
-              <div key={group.title} className="space-y-0.5">
                 {!isNavCollapsed ? (
-                  <div className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-600">
-                    {group.title}
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600">
+                    Features
                   </div>
                 ) : null}
-                {group.items.map((tool) => (
-                  <TabButton
-                    key={tool.id}
-                    active={tool.tabId === activeTab}
-                    label={tool.label}
-                    icon={renderWorkspaceToolIcon(tool.id, 18)}
-                    onClick={() => setActiveTab(tool.tabId)}
-                    collapsed={isNavCollapsed}
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
 
-          {/* Right panel content collapsed into left sidebar on smaller screens */}
-          {!isDesktopLayout && !isNavCollapsed ? (
-            <div className="border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col">
-            {activeTab === "single" && (
-              <ProcessorSidebarShellWrapper
-                context="single"
-                performancePreferences={safePerformancePreferences}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "batch" && (
-              <ProcessorSidebarShellWrapper
-                context="batch"
-                performancePreferences={safePerformancePreferences}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "splicing" && (
-              <SplicingSidebarShell
-                performancePreferences={safePerformancePreferences}
-                onPreviewQualityChange={handleSidebarPreviewQualityChange}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "splitter" && (
-              <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "filling" && (
-              <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "pattern" && (
-              <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "diffchecker" && (
-              <DiffcheckerSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "inspector" && (
-              <InspectorSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            <TabInfoPanel activeTab={activeTab} />
-            </div>
-          ) : null}
-        </nav>
-
-        {/* Content column */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Sub-tab bar for Context Menu */}
-          {activeTab === "context-menu" && (
-            <div className="flex shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6">
-              {CONTEXT_MENU_SUB_TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => void setActiveContextMenuSubTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 h-10 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
-                    safeActiveContextMenuSubTab === tab.id
-                      ? "border-sky-500 text-sky-600 dark:border-sky-400 dark:text-sky-400"
-                      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                  }`}
+                <Tooltip
+                  content={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}
+                  variant="nowrap"
                 >
-                  <span className="shrink-0">{tab.icon}</span>
-                  {tab.label}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => void setIsNavCollapsed(!isNavCollapsed)}
+                    className="h-7 w-7 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+                    aria-label={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}>
+                    {isNavCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+                  </button>
+                </Tooltip>
+              </div>
+              {EXTENSION_SIDEBAR_GROUPS.map((group) => (
+                <div key={group.title} className="space-y-0.5">
+                  {!isNavCollapsed ? (
+                    <div className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-600">
+                      {group.title}
+                    </div>
+                  ) : null}
+                  {group.items.map((tool) => (
+                    <TabButton
+                      key={tool.id}
+                      active={tool.tabId === activeTab}
+                      label={tool.label}
+                      icon={renderWorkspaceToolIcon(tool.id, 18)}
+                      onClick={() => setActiveTab(tool.tabId)}
+                      collapsed={isNavCollapsed}
+                    />
+                  ))}
+                </div>
               ))}
             </div>
-          )}
 
-          {/* Scrollable content */}
-          <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-950 p-6">
-            {tabContent}
-          </main>
+            {/* Right panel content collapsed into left sidebar on smaller screens */}
+            {!isDesktopLayout && !isNavCollapsed ? (
+              <div className="border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col">
+                {activeTab === "single" && (
+                  <ProcessorSidebarShellWrapper
+                    context="single"
+                    performancePreferences={safePerformancePreferences}
+                    onOpenSettings={() => openSettingsDialog("performance")}
+                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                  />
+                )}
+
+                {activeTab === "batch" && (
+                  <ProcessorSidebarShellWrapper
+                    context="batch"
+                    performancePreferences={safePerformancePreferences}
+                    onOpenSettings={() => openSettingsDialog("performance")}
+                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                  />
+                )}
+
+                {activeTab === "splicing" && (
+                  <SplicingSidebarShell
+                    performancePreferences={safePerformancePreferences}
+                    onPreviewQualityChange={handleSidebarPreviewQualityChange}
+                    onOpenSettings={() => openSettingsDialog("performance")}
+                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                  />
+                )}
+
+                {activeTab === "splitter" && (
+                  <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+
+                {activeTab === "filling" && (
+                  <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+
+                {activeTab === "pattern" && (
+                  <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+
+                {activeTab === "diffchecker" && (
+                  <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+
+                {activeTab === "inspector" && (
+                  <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+
+                <TabInfoPanel activeTab={activeTab} />
+              </div>
+            ) : null}
+          </nav>
+
+          {/* Content column */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            {/* Sub-tab bar for Context Menu */}
+            {activeTab === "context-menu" && (
+              <div className="flex shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6">
+                {CONTEXT_MENU_SUB_TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => void setActiveContextMenuSubTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-3 h-10 text-[13px] font-medium border-b-2 -mb-px transition-colors ${safeActiveContextMenuSubTab === tab.id
+                      ? "border-sky-500 text-sky-600 dark:border-sky-400 dark:text-sky-400"
+                      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                      }`}
+                  >
+                    <span className="shrink-0">{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Scrollable content */}
+            <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-950 p-6">
+              {tabContent}
+            </main>
+          </div>
+
+          {/* Right panel */}
+          {isDesktopLayout ? (
+            <aside
+              className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto"
+              style={{ width: `min(${configurationSidebarWidth}px, ${CONFIGURATION_SIDEBAR_MAX_PERCENT}%)` }}>
+              {activeTab === "single" && (
+                <ProcessorSidebarShellWrapper
+                  context="single"
+                  performancePreferences={safePerformancePreferences}
+                  onOpenSettings={() => openSettingsDialog("performance")}
+                  enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                />
+              )}
+
+              {activeTab === "batch" && (
+                <ProcessorSidebarShellWrapper
+                  context="batch"
+                  performancePreferences={safePerformancePreferences}
+                  onOpenSettings={() => openSettingsDialog("performance")}
+                  enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                />
+              )}
+
+              {activeTab === "splicing" && (
+                <SplicingSidebarShell
+                  performancePreferences={safePerformancePreferences}
+                  onPreviewQualityChange={handleSidebarPreviewQualityChange}
+                  onOpenSettings={() => openSettingsDialog("performance")}
+                  enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                />
+              )}
+
+              {activeTab === "splitter" && (
+                <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+
+              {activeTab === "filling" && (
+                <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+
+              {activeTab === "pattern" && (
+                <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+
+              {activeTab === "diffchecker" && (
+                <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+
+              {activeTab === "inspector" && (
+                <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+
+              <TabInfoPanel activeTab={activeTab} />
+            </aside>
+          ) : null}
         </div>
-
-        {/* Right panel */}
-        {isDesktopLayout ? (
-          <aside
-            className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto"
-            style={{ width: `min(${configurationSidebarWidth}px, ${CONFIGURATION_SIDEBAR_MAX_PERCENT}%)` }}>
-            {activeTab === "single" && (
-              <ProcessorSidebarShellWrapper
-                context="single"
-                performancePreferences={safePerformancePreferences}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "batch" && (
-              <ProcessorSidebarShellWrapper
-                context="batch"
-                performancePreferences={safePerformancePreferences}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "splicing" && (
-              <SplicingSidebarShell
-                performancePreferences={safePerformancePreferences}
-                onPreviewQualityChange={handleSidebarPreviewQualityChange}
-                onOpenSettings={() => openSettingsDialog("performance")}
-                enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-              />
-            )}
-
-            {activeTab === "splitter" && (
-              <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "filling" && (
-              <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "pattern" && (
-              <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "diffchecker" && (
-              <DiffcheckerSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            {activeTab === "inspector" && (
-              <InspectorSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-            )}
-
-            <TabInfoPanel activeTab={activeTab} />
-          </aside>
-        ) : null}
-      </div>
       </EditorProvider>
     </div>
   )

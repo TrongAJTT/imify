@@ -1,4 +1,4 @@
-﻿// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
+// PLATFORM:extension — uses chrome.* browser APIs. Do not import in web app.
 import "@/style.css"
 
 import { useState } from "react"
@@ -33,7 +33,7 @@ async function openSidePanelLite(panel: "inspector" | "audit"): Promise<void> {
 
   await chrome.sidePanel.setOptions({
     tabId: activeTab.id,
-    path: `options.html?view=sidepanel&panel=${encodeURIComponent(panel)}`,
+    path: `sidepanel.html?panel=${encodeURIComponent(panel)}`,
     enabled: true
   })
 

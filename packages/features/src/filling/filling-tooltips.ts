@@ -12,7 +12,7 @@ import {
 import {
   SYMMETRIC_SIDEBAR_TOOLTIPS,
   SYMMETRIC_VISUAL_HELP_TOOLTIPS
-} from "@imify/features/filling/symmetric-tooltips"
+} from "@imify/features/filling/symmetric-generator/tooltips"
 
 export const FILLING_TOOLTIPS = {
   fillCanvas: FILL_CANVAS_TOOLTIPS,

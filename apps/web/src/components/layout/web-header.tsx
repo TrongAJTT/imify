@@ -2,8 +2,14 @@
 
 import React, { useCallback, useMemo, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
+import {
+  DEFAULT_PREFER_RECENT_PRESET_ENTRY,
+  normalizePreferRecentPresetEntry,
+  PREFER_RECENT_PRESET_ENTRY_KEY,
+} from "@imify/core"
 import { useWebDarkMode } from "@/hooks/use-web-dark-mode"
 import { useWebPageMode } from "@/hooks/use-web-page-mode"
+import { buildToolEntryHref } from "@/features/presets/tool-entry-route"
 import {
   AboutDialog,
   AttributionDialog,
@@ -12,6 +18,7 @@ import {
   type WorkspaceLayoutPreferences,
   WorkspaceOptionsHeader,
   WorkspaceSettingsDialog,
+  WhatsNewUpdateNotificationGate,
   getWorkspaceToolsMenuGroups,
   renderWorkspaceToolIcon,
   normalizeWorkspaceLayoutPreferences,
@@ -100,6 +107,13 @@ export function WebHeader() {
     const saved = window.localStorage.getItem(WEB_DEFAULT_ROUTE_KEY)
     return saved && NAV_LINKS.some((item) => item.href === saved) ? saved : NAV_LINKS[0].href
   })
+  const [preferRecentPresetEntry, setPreferRecentPresetEntry] = useState<boolean>(() =>
+    safeRead(
+      PREFER_RECENT_PRESET_ENTRY_KEY,
+      DEFAULT_PREFER_RECENT_PRESET_ENTRY,
+      normalizePreferRecentPresetEntry
+    )
+  )
   const [layoutPreferences, setLayoutPreferences] = useState<WorkspaceLayoutPreferences>(() =>
     safeRead(
       WORKSPACE_LAYOUT_PREFERENCES_KEY,
@@ -187,7 +201,7 @@ export function WebHeader() {
         title: group.title,
         items: group.items.map((item) => ({
           id: item.id,
-          href: item.href,
+          href: buildToolEntryHref(item.id, item.href),
           label: item.label,
           icon: renderWorkspaceToolIcon(item.id, 14)
         }))
@@ -217,8 +231,10 @@ export function WebHeader() {
       <AboutDialog
         isOpen={isAboutDialogOpen}
         onClose={() => setIsAboutDialogOpen(false)}
-        onOpenAttribution={() => setIsAttributionDialogOpen(true)}
+        onOpenAboutAttribution={() => setIsAttributionDialogOpen(true)}
+        onOpenDonate={() => setIsDonateDialogOpen(true)}
       />
+      <WhatsNewUpdateNotificationGate />
       <AttributionDialog
         isOpen={isAttributionDialogOpen}
         onClose={() => setIsAttributionDialogOpen(false)}
@@ -236,6 +252,11 @@ export function WebHeader() {
         onChangeDefaultScreenValue={(value) => {
           setDefaultRoute(value)
           safeWrite(WEB_DEFAULT_ROUTE_KEY, value)
+        }}
+        preferRecentPresetEntry={preferRecentPresetEntry}
+        onChangePreferRecentPresetEntry={(checked) => {
+          setPreferRecentPresetEntry(checked)
+          safeWrite(PREFER_RECENT_PRESET_ENTRY_KEY, checked)
         }}
         usageEntries={[]}
         onResetUsageStats={() => undefined}
@@ -259,7 +280,7 @@ export function WebHeader() {
           safeWrite(PERFORMANCE_PREFERENCES_KEY, next)
           publishPerformancePreferencesChanged()
         }}
-        showNavigationSidebarWidthControl={false}
+        showExtensionOnlyOptions={false}
         enableUsageStatsTab={false}
         devModeSettingsAdapter={devModeSettingsAdapter}
         devModeActiveTab={devModeActiveTab}

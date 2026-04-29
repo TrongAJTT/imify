@@ -5,6 +5,7 @@ import { ZoomPanControl } from "@imify/ui"
 import type { PreviewInteractionMode } from "@imify/ui"
 import type { SplitterSplitPlan, SplitterSplitSettings } from "./types"
 import { hasFileDragPayload } from "../shared/image-file-utils"
+import { preventWheelEvent } from "../shared/prevent-wheel-event"
 
 interface SplitterPreviewProps {
   image: {
@@ -32,11 +33,17 @@ export function SplitterPreview({
   splitSettings,
   onBasicGuideChange
 }: SplitterPreviewProps) {
+  const PREVIEW_ZOOM_FACTOR = 0.15
+
   const [isDragOver, setIsDragOver] = useState(false)
   const [zoom, setZoom] = useState(100)
   const [containerHeight, setContainerHeight] = useState(620)
   const [isResizing, setIsResizing] = useState(false)
   const previewFrameRef = useRef<HTMLDivElement>(null)
+  const previewInteractionModeRef = useRef(previewInteractionMode)
+  useEffect(() => {
+    previewInteractionModeRef.current = previewInteractionMode
+  }, [previewInteractionMode])
   const guideBoxRef = useRef<HTMLDivElement>(null)
   const dragAxisRef = useRef<"x" | "y" | null>(null)
   const [frameWidth, setFrameWidth] = useState(0)
@@ -162,6 +169,45 @@ export function SplitterPreview({
     }
   }, [image.height, image.width, onBasicGuideChange])
 
+  // Use native wheel listener to reliably block outer page scrolling.
+  // React's synthetic onWheel can be passive depending on browser/framework behavior.
+  useEffect(() => {
+    const el = previewFrameRef.current
+    if (!el) return
+
+    const handleWheel = (e: WheelEvent) => {
+      const mode = previewInteractionModeRef.current
+      if (mode === "idle") return
+
+      const target = e.target as HTMLElement | null
+      if (target?.closest('[class*="pointer-events-auto"]')) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (mode === "pan") {
+        const delta = e.deltaY > 0 ? 50 : -50
+        if (e.shiftKey) {
+          setPan((current) => ({ ...current, x: current.x - delta }))
+          return
+        }
+        setPan((current) => ({ ...current, y: current.y - delta }))
+        return
+      }
+
+      setZoom((current) => {
+        const dir = e.deltaY > 0 ? -1 : 1
+        const next = current * (1 + PREVIEW_ZOOM_FACTOR * dir)
+        return Math.max(50, Math.min(10000, Math.round(next)))
+      })
+    }
+
+    el.addEventListener("wheel", handleWheel, { passive: false, capture: true })
+    return () => {
+      el.removeEventListener("wheel", handleWheel, { capture: true } as any)
+    }
+  }, [setPan, setZoom])
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
@@ -180,30 +226,6 @@ export function SplitterPreview({
           style={{
             width: "100%",
             height: `${containerHeight}px`
-          }}
-          onWheel={(event) => {
-            if (previewInteractionMode === "idle") {
-              return
-            }
-
-            if (event.cancelable) {
-              event.preventDefault()
-            }
-
-            if (previewInteractionMode === "pan") {
-              const delta = event.deltaY > 0 ? 50 : -50
-              if (event.shiftKey) {
-                setPan((current) => ({ ...current, x: current.x - delta }))
-                return
-              }
-              setPan((current) => ({ ...current, y: current.y - delta }))
-              return
-            }
-
-            setZoom((current) => {
-              const next = current + (event.deltaY > 0 ? -10 : 10)
-              return Math.max(50, Math.min(10000, Math.round(next)))
-            })
           }}
           onDragOver={(event) => {
             if (!onDropFiles) {

@@ -1,22 +1,21 @@
 "use client"
 
 import { useEffect, useMemo } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Button } from "@imify/ui/ui/button"
 import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
 import { SingleProcessorWorkspace } from "@imify/features/processor/single-processor-workspace"
 import { BatchProcessorWorkspace } from "@imify/features/processor/batch"
 import { ProcessorPresetSelectView } from "@imify/features/processor/processor-preset-select-view"
 import { ProcessorSidebarShell } from "@imify/features/processor/processor-sidebar-shell"
 import { BatchSetupSidebarPanel } from "@imify/features/processor/setup-sidebar-panel"
-import { DEFAULT_PERFORMANCE_PREFERENCES } from "@imify/features/processor/performance-preferences"
 import { useBatchStore, type SetupContext } from "@imify/stores/stores/batch-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { usePerformancePreferences } from "@/hooks/use-performance-preferences"
+import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action"
 
 interface ProcessorLandingPageProps {
   context: SetupContext
@@ -50,7 +49,6 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
   const saveCurrentPreset = useBatchStore((state) => state.saveCurrentPreset)
   const updatePresetMeta = useBatchStore((state) => state.updatePresetMeta)
   const deletePreset = useBatchStore((state) => state.deletePreset)
-  const applyPresetToCurrentContext = useBatchStore((state) => state.applyPresetToCurrentContext)
   const ensureDefaultPresetForContext = useBatchStore((state) => state.ensureDefaultPresetForContext)
   const isBatchStoreRehydrated = useBatchStore((store) => (store as any)._hasHydrated)
   const scopedPresets = useMemo(() => presets.filter((preset) => preset.context === context), [context, presets])
@@ -99,12 +97,16 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
     return () => resetHeader()
   }, [context, resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
+  if (!isBatchStoreRehydrated || setupContext !== context) {
+    return <WorkspaceLoadingState title="Loading processor presets..." />
+  }
+
   return (
     <ProcessorPresetSelectView
       context={context}
       presets={scopedPresets}
       activePresetId={null}
-      onOpenPreset={(presetId) => { applyPresetToCurrentContext(presetId); router.push(`${getRoutePrefix(context)}/work?id=${presetId}`) }}
+      onOpenPreset={(presetId) => { router.push(`${getRoutePrefix(context)}/work?id=${presetId}`) }}
       onCreatePreset={(name, color) => {
         if (setupContext !== context) setSetupContext(context)
         const createdId = saveCurrentPreset({ name, highlightColor: color })
@@ -119,6 +121,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
 export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps) {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
+  const performancePreferences = usePerformancePreferences()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
@@ -129,7 +132,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
         context={context}
         workspaceSidebar={
           <BatchSetupSidebarPanel
-            performancePreferences={DEFAULT_PERFORMANCE_PREFERENCES}
+            performancePreferences={performancePreferences}
             onOpenSettings={() => openSettingsDialog("performance")}
             enableWideSidebarGrid={enableWideSidebarGrid}
             autoWideSidebarGridMinWidthPx={440}
@@ -137,7 +140,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
         }
       />
     ),
-    [context, enableWideSidebarGrid, openSettingsDialog]
+    [context, enableWideSidebarGrid, openSettingsDialog, performancePreferences]
   )
   useWorkspaceSidebar(sidebar)
 
@@ -269,18 +272,17 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
         title="Preset not found"
         message={`This preset id does not exist for ${getContextLabel(context)}.`}
         action={
-          <Link href={getRoutePrefix(context)} className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
-            Back to preset list
-          </Link>
+          <PresetNotFoundRedirectAction routeBase={getRoutePrefix(context)} />
         }
       />
     )
   }
 
+  if (setupContext !== context || activePresetId !== preset.id) {
+    return <WorkspaceLoadingState title="Loading preset workspace..." />
+  }
+
   if (context === "single") {
-    if (!isBatchStoreRehydrated || setupContext !== context || activePresetId !== preset.id) {
-      return <WorkspaceLoadingState title="Loading preset workspace..." />
-    }
     return <SingleProcessorWorkspace />
   }
 

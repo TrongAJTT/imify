@@ -1,22 +1,40 @@
 "use client"
 
 import { SharedDiffcheckerPage } from "@imify/features/diffchecker/diffchecker-page"
-import { DiffcheckerWorkspace } from "@imify/features/diffchecker/diffchecker-workspace"
-import { DiffcheckerSidebarPanel } from "@imify/features/diffchecker/diffchecker-sidebar-panel"
+import { DiffcheckerWorkspace, DiffcheckerSidebarShell } from "@imify/features/diffchecker"
+import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
+import { WorkspaceLoadingState } from "@imify/ui"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
 
+function useDiffcheckerStoreHydrated(): boolean {
+  const [hydrated, setHydrated] = useState(false)
+
+  useEffect(() => {
+    setHydrated(useDiffcheckerStore.persist.hasHydrated())
+    const unsubStart = useDiffcheckerStore.persist.onHydrate(() => setHydrated(false))
+    const unsubFinish = useDiffcheckerStore.persist.onFinishHydration(() => setHydrated(true))
+    return () => {
+      unsubStart()
+      unsubFinish()
+    }
+  }, [])
+
+  return hydrated
+}
+
 export function DiffcheckerPage() {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
+  const isHydrated = useDiffcheckerStoreHydrated()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const sidebar = useMemo(
-    () => <DiffcheckerSidebarPanel enableWideSidebarGrid={enableWideSidebarGrid} />,
+    () => <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
     [enableWideSidebarGrid]
   )
   useWorkspaceSidebar(sidebar)
@@ -30,9 +48,22 @@ export function DiffcheckerPage() {
     return () => resetHeader()
   }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
+  if (!isHydrated) {
+    return <WorkspaceLoadingState title="Loading difference checker..." />
+  }
+
   return (
     <SharedDiffcheckerPage
-      renderWorkspace={(props) => <DiffcheckerWorkspace {...props} />}
+      renderWorkspace={(props) => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const setHasImage = useDiffcheckerStore((s) => s.setHasImage)
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useEffect(() => {
+          setHasImage(!!props.imageA || !!props.imageB)
+        }, [props.imageA, props.imageB, setHasImage])
+
+        return <DiffcheckerWorkspace {...props} />
+      }}
     />
   )
 }

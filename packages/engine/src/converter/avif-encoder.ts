@@ -2,6 +2,7 @@ import { encodeWithWasmWorker } from "./wasm-worker-pool"
 import { encodeAvifDirect } from "./wasm-direct-encoder"
 import { buildNormalizedAvifOptions } from "@imify/core/avif-options"
 import type { AvifCodecOptions } from "@imify/core/types"
+import { shouldUseEngineWasmWorkers } from "./runtime-adapter"
 
 export interface AvifEncodeOptions {
   quality?: number
@@ -40,7 +41,7 @@ export async function encodeAvif(
   }
 
   const encoded =
-    typeof Worker === "function"
+    typeof Worker === "function" && shouldUseEngineWasmWorkers()
       ? await encodeWithWasmWorker("avif", imageData, encodeOptions)
       : await encodeAvifDirect(imageData, encodeOptions)
 

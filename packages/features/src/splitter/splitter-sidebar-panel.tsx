@@ -9,6 +9,7 @@ import { SplitterOrderDialog } from "./splitter-order-dialog"
 import { SplitterPatternSequenceAccordion } from "./splitter-pattern-sequence-accordion"
 import { SplitOptionsAccordion } from "./split-options-accordion"
 import { FormatAdvancedSettingsCard } from "../processor/format-advanced-settings-card"
+import { getFormatAdvancedLabel } from "../processor/format-advanced-label"
 import { TargetFormatQualityCard } from "../processor/target-format-quality-card"
 import {
   RenamePatternDialog,
@@ -96,10 +97,16 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
       : `(${horizontalLabel}) -> (${verticalLabel})`
   }, [splitSettings.gridTraversal, splitSettings.horizontalOrder, splitSettings.verticalOrder])
 
+  const formatAdvancedLabel = useMemo(
+    () => getFormatAdvancedLabel(exportSettings.targetFormat),
+    [exportSettings.targetFormat]
+  )
+
   const sidebarItems: WorkspaceConfigSidebarItem[] = useMemo(() => {
     const items: WorkspaceConfigSidebarItem[] = [
       {
         id: "split-options",
+        label: "Split Options",
         columnSpan: 2,
         content: (
           <SplitOptionsAccordion
@@ -115,6 +122,7 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     if (showColorRuleCard) {
       items.push({
         id: "color-match-rules",
+        label: "Color Match Rules",
         content: (
           <ColorMatchRulesAccordion
             rules={splitSettings.colorRules}
@@ -131,6 +139,7 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     if (showPatternSequenceCard) {
       items.push({
         id: "pattern-sequence",
+        label: "Pattern Sequence",
         columnSpan: 2,
         content: (
           <SplitterPatternSequenceAccordion
@@ -146,6 +155,7 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     if (showCustomGuidesCard) {
       items.push({
         id: "custom-guides",
+        label: "Custom Guides",
         columnSpan: 2,
         content: (
           <SplitterCustomGuidesAccordion
@@ -161,6 +171,7 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     items.push(
       {
         id: "export-format-quality",
+        label: "Export Format & Quality",
         columnSpan: 2,
         content: (
           <TargetFormatQualityCard
@@ -190,6 +201,7 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
       },
       {
         id: "format-advanced-settings",
+        label: formatAdvancedLabel,
         columnSpan: 2,
         content: (
           <FormatAdvancedSettingsCard
@@ -262,6 +274,7 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
       },
       {
         id: "export-settings",
+        label: "Export Settings",
         columnSpan: 2,
         content: (
           <SplitterExportPanel
@@ -294,7 +307,8 @@ export function SplitterSidebarPanel({ enableWideSidebarGrid = false }: Splitter
     splitOrderSummary,
     splitSettings,
     uiState,
-    updateColorRule
+    updateColorRule,
+    formatAdvancedLabel
   ])
 
   return (

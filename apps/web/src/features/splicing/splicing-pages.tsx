@@ -1,9 +1,7 @@
 "use client"
 
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { DEFAULT_PERFORMANCE_PREFERENCES } from "@imify/features/processor/performance-preferences"
 import { SplicingPresetSelectView } from "@imify/features/splicing/splicing-preset-select-view"
 import { SplicingSidebarShell } from "@imify/features/splicing/splicing-sidebar-shell"
 import { SplicingTab } from "@imify/features/splicing/splicing-tab"
@@ -15,6 +13,8 @@ import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-s
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { usePerformancePreferences } from "@/hooks/use-performance-preferences"
+import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action"
 
 function useSplicingPresetHydrated(): boolean {
   // Keep the first render deterministic across SSR/CSR to avoid hydration mismatch.
@@ -105,6 +105,7 @@ function extractSplicingPresetConfig(splicingState: any): SplicingPresetConfig {
 export function SplicingLandingPage() {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
+  const performancePreferences = usePerformancePreferences()
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
@@ -124,7 +125,7 @@ export function SplicingLandingPage() {
   const sidebar = useMemo(
     () => (
       <SplicingSidebarShell
-        performancePreferences={DEFAULT_PERFORMANCE_PREFERENCES}
+        performancePreferences={performancePreferences}
         onPreviewQualityChange={(next) => {
           const handler = previewQualityHandlerRef.current
           if (handler) {
@@ -137,7 +138,7 @@ export function SplicingLandingPage() {
         enableWideSidebarGrid={enableWideSidebarGrid}
       />
     ),
-    [enableWideSidebarGrid, openSettingsDialog]
+    [enableWideSidebarGrid, openSettingsDialog, performancePreferences]
   )
 
   useWorkspaceSidebar(sidebar)
@@ -154,6 +155,7 @@ export function SplicingLandingPage() {
       return
     }
     ensureDefaultPreset()
+
     setPresetViewMode("select")
   }, [ensureDefaultPreset, isRehydrated, setPresetViewMode])
 
@@ -183,6 +185,7 @@ export function SplicingLandingPage() {
 export function SplicingWorkPage({ presetId }: { presetId: string }) {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
   const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
+  const performancePreferences = usePerformancePreferences()
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
@@ -197,7 +200,7 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
   const sidebar = useMemo(
     () => (
       <SplicingSidebarShell
-        performancePreferences={DEFAULT_PERFORMANCE_PREFERENCES}
+        performancePreferences={performancePreferences}
         onPreviewQualityChange={(next) => {
           const handler = previewQualityHandlerRef.current
           if (handler) {
@@ -210,7 +213,7 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
         enableWideSidebarGrid={enableWideSidebarGrid}
       />
     ),
-    [enableWideSidebarGrid, openSettingsDialog]
+    [enableWideSidebarGrid, openSettingsDialog, performancePreferences]
   )
 
   useWorkspaceSidebar(sidebar)
@@ -252,9 +255,10 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
         title="Preset not found"
         message="This splicing preset id does not exist."
         action={
-          <Link href="/splicing" className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300">
-            Back to preset list
-          </Link>
+          <PresetNotFoundRedirectAction
+            routeBase="/splicing"
+            onBeforeRedirect={() => setPresetViewMode("select")}
+          />
         }
       />
     )

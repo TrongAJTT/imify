@@ -56,7 +56,7 @@ export function BaseDialog({
         dialog.close()
       }
     }
-  }, [isOpen])
+  }, [isOpen, mounted])
 
   // Cleanup overflow on unmount
   useEffect(() => {
@@ -109,7 +109,7 @@ export function BaseDialog({
       onClick={handleBackdropClick}
       className={cn(
         // prevent the native dialog from showing its own scrollbars
-        "m-auto p-0 rounded-2xl border-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden",
+        "m-auto p-0 rounded-xl border-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden",
         className
       )}
     >

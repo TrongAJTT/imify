@@ -2,6 +2,7 @@
 
 import React from "react"
 import { AlertCircle, Bug, CheckCircle2, ExternalLink, Info, ShieldCheck, Terminal, X } from "lucide-react"
+import { IMIFY_LINKS } from "@imify/core"
 import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
 import { BodyText, Heading, Kicker, LabelText, MutedText, Subheading } from "@imify/ui/ui/typography"
@@ -62,7 +63,7 @@ export function BugReportDialog({
                 <LabelText as="span" className="font-medium">Ready to report? Head over to our issue tracker.</LabelText>
               </div>
               <Button
-                onClick={() => window.open("https://github.com/TrongAJTT/imify/issues/new/choose", "_blank")}
+                onClick={() => window.open(IMIFY_LINKS.githubIssuesNew, "_blank")}
                 className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 text-white font-bold gap-2 shrink-0"
               >
                 Go to GitHub Issues

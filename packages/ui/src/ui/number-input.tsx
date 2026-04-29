@@ -29,6 +29,31 @@ export function NumberInput({
   const [draft, setDraft] = useState(String(value))
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const valueRef = useRef(value)
+  const propsRef = useRef({
+    min,
+    max,
+    step,
+    disabled: Boolean(disabled)
+  })
+
+  const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const holdingDirRef = useRef<"inc" | "dec" | null>(null)
+  const ignoreClickRef = useRef(false)
+
+  useEffect(() => {
+    valueRef.current = value
+  }, [value])
+
+  useEffect(() => {
+    propsRef.current = {
+      min,
+      max,
+      step,
+      disabled: Boolean(disabled)
+    }
+  }, [min, max, step, disabled])
 
   useEffect(() => {
     if (isFocused) {
@@ -40,29 +65,88 @@ export function NumberInput({
 
   const normalize = (raw: number): number => {
     let next = raw
-    if (min !== undefined) {
-      next = Math.max(min, next)
+    if (propsRef.current.min !== undefined) {
+      next = Math.max(propsRef.current.min, next)
     }
-    if (max !== undefined) {
-      next = Math.min(max, next)
+    if (propsRef.current.max !== undefined) {
+      next = Math.min(propsRef.current.max, next)
     }
 
     return next
   }
 
-  const increment = () => {
-    if (disabled) return
-    const next = normalize(value + step)
+  const clearHoldTimers = () => {
+    if (holdTimeoutRef.current) {
+      clearTimeout(holdTimeoutRef.current)
+      holdTimeoutRef.current = null
+    }
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current)
+      holdIntervalRef.current = null
+    }
+    holdingDirRef.current = null
+  }
+
+  const applyDelta = (dir: "inc" | "dec"): boolean => {
+    const { disabled: isDisabled, step: currentStep, min: currentMin, max: currentMax } = propsRef.current
+    if (isDisabled) return false
+
+    const current = valueRef.current
+    const nextRaw = dir === "inc" ? current + currentStep : current - currentStep
+    if (dir === "inc" && currentMax !== undefined && current >= currentMax) return false
+    if (dir === "dec" && currentMin !== undefined && current <= currentMin) return false
+
+    const next = normalize(nextRaw)
+    if (next === current) return false
+
     onChangeValue(next)
     setDraft(String(next))
+
+    // Keep repeat-ticks in sync even if the parent/store updates slightly later.
+    valueRef.current = next
+    return true
+  }
+
+  const increment = () => {
+    return applyDelta("inc")
   }
 
   const decrement = () => {
-    if (disabled) return
-    const next = normalize(value - step)
-    onChangeValue(next)
-    setDraft(String(next))
+    return applyDelta("dec")
   }
+
+  const startHold = (dir: "inc" | "dec") => {
+    if (holdingDirRef.current) return
+    holdingDirRef.current = dir
+
+    // Immediate first step for better perceived responsiveness.
+    applyDelta(dir)
+
+    // Then repeat while the pointer is held down.
+    holdTimeoutRef.current = setTimeout(() => {
+      if (holdingDirRef.current !== dir) return
+
+      holdIntervalRef.current = setInterval(() => {
+        if (holdingDirRef.current !== dir) {
+          clearHoldTimers()
+          return
+        }
+
+        const changed = applyDelta(dir)
+        // Stop repeating when we've hit bounds (nothing changes anymore).
+        if (!changed) {
+          clearHoldTimers()
+        }
+      }, 80)
+    }, 350)
+  }
+
+  useEffect(() => {
+    return () => {
+      clearHoldTimers()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const input = inputRef.current
@@ -149,7 +233,37 @@ export function NumberInput({
           <button
             type="button"
             disabled={disabled || (max !== undefined && value >= max)}
-            onClick={increment}
+            onPointerDown={(e) => {
+              if (disabled) return
+              // Only respond to primary mouse button.
+              if (e.pointerType === "mouse" && e.button !== 0) return
+
+              ignoreClickRef.current = true
+              e.preventDefault()
+              startHold("inc")
+            }}
+            onPointerUp={() => {
+              ignoreClickRef.current = false
+              clearHoldTimers()
+            }}
+            onPointerCancel={() => {
+              ignoreClickRef.current = false
+              clearHoldTimers()
+            }}
+            onPointerLeave={() => {
+              if (holdingDirRef.current) {
+                ignoreClickRef.current = false
+                clearHoldTimers()
+              }
+            }}
+            onClick={() => {
+              // Prevent double-trigger: pointerdown already did the action.
+              if (ignoreClickRef.current) {
+                ignoreClickRef.current = false
+                return
+              }
+              increment()
+            }}
             className="flex flex-1 items-center justify-center rounded-md text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-sky-500 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
           >
             <ChevronUp size={12} strokeWidth={3} />
@@ -157,7 +271,37 @@ export function NumberInput({
           <button
             type="button"
             disabled={disabled || (min !== undefined && value <= min)}
-            onClick={decrement}
+            onPointerDown={(e) => {
+              if (disabled) return
+              // Only respond to primary mouse button.
+              if (e.pointerType === "mouse" && e.button !== 0) return
+
+              ignoreClickRef.current = true
+              e.preventDefault()
+              startHold("dec")
+            }}
+            onPointerUp={() => {
+              ignoreClickRef.current = false
+              clearHoldTimers()
+            }}
+            onPointerCancel={() => {
+              ignoreClickRef.current = false
+              clearHoldTimers()
+            }}
+            onPointerLeave={() => {
+              if (holdingDirRef.current) {
+                ignoreClickRef.current = false
+                clearHoldTimers()
+              }
+            }}
+            onClick={() => {
+              // Prevent double-trigger: pointerdown already did the action.
+              if (ignoreClickRef.current) {
+                ignoreClickRef.current = false
+                return
+              }
+              decrement()
+            }}
             className="flex flex-1 items-center justify-center rounded-md text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-sky-500 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
           >
             <ChevronDown size={12} strokeWidth={3} />

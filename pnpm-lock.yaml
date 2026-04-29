@@ -376,6 +376,9 @@ importers:
       konva:
         specifier: ^10.2.5
         version: 10.2.5
+      markdown-to-jsx:
+        specifier: ^9.7.16
+        version: 9.7.16(react@18.3.1)(vue@3.3.4)
       react-konva:
         specifier: ^18.2.14
         version: 18.2.14(@types/react@18.2.48)(konva@10.2.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -4174,6 +4177,24 @@ packages:
   make-dir@2.1.0:
     resolution: {integrity: sha512-LS9X+dc8KLxXCb8dni79fLIIUA5VyZoyjSMCwTluaXA0o27cCK0bhXkpgw+sTXVpPy/lSO57ilRixqk0vDmtRA==}
     engines: {node: '>=6'}
+
+  markdown-to-jsx@9.7.16:
+    resolution: {integrity: sha512-+LEgOlYfUEB9i2Oaxasec9H2HytB1+SQcgwFmQiNTKwe8cQ2E9bDNgePGq6ChIycMxtpcEY0g44aQ3uJoMw8eg==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      react: 18.3.1
+      react-native: '*'
+      solid-js: '>=1.0.0'
+      vue: '>=3.0.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-native:
+        optional: true
+      solid-js:
+        optional: true
+      vue:
+        optional: true
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
@@ -9338,6 +9359,11 @@ snapshots:
       pify: 4.0.1
       semver: 5.7.2
     optional: true
+
+  markdown-to-jsx@9.7.16(react@18.3.1)(vue@3.3.4):
+    optionalDependencies:
+      react: 18.3.1
+      vue: 3.3.4
 
   math-intrinsics@1.1.0: {}
 

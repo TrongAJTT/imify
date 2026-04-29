@@ -1,5 +1,6 @@
 import React from "react"
 import { Image as ImageIcon } from "lucide-react"
+import type { ResizeQuickStats } from "@imify/core/resize-quick-stats"
 import { NumberInput, ColorPickerPopover, AccordionCard } from "@imify/ui"
 import { ResizeCard } from "../processor/resize-card"
 import type { SplicingImageResize } from "./types"
@@ -12,6 +13,7 @@ interface ImageSettingsAccordionProps {
   imageBorderRadius: number
   imageBorderWidth: number
   imageBorderColor: string
+  resizeQuickStats: ResizeQuickStats
   isImageResizeOpen: boolean
 
   onImageResizeChange: (mode: SplicingImageResize) => void
@@ -36,6 +38,7 @@ export function ImageSettingsAccordion({
   imageBorderRadius,
   imageBorderWidth,
   imageBorderColor,
+  resizeQuickStats,
   isImageResizeOpen,
   onImageResizeChange,
   onImageFitValueChange,
@@ -72,6 +75,7 @@ export function ImageSettingsAccordion({
           resizeSourceWidth={0}
           resizeSourceHeight={0}
           resizeSyncVersion={0}
+          resizeQuickStats={resizeQuickStats}
           paperSize="A4"
           dpi={300}
           onResizeModeChange={(mode) => onImageResizeChange((mode === "none" ? "original" : mode) as SplicingImageResize)}

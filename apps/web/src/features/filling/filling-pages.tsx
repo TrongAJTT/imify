@@ -1,34 +1,40 @@
 "use client"
 
-import Link from "next/link"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
-import { Button } from "@imify/ui/ui/button"
+import { OctagonX } from "lucide-react"
 import { TemplateMethodDialog } from "@imify/features/filling/template-method-dialog"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { FillingTemplateListPanel } from "@imify/features/filling/template-list-panel"
 import { templateStorage } from "@imify/features/filling/template-storage"
 import type { FillingStep, LayerGroup, VectorLayer } from "@imify/features/filling/types"
 import { regenerateLayerShapePoints } from "@imify/features/filling/shape-generators"
-import { FillWorkspace } from "@imify/features/filling/fill-workspace"
+import { FillWorkspace } from "@imify/features/filling/fill/workspace"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { FillingOverviewSidebar, FillingWorkflowSidebar } from "./filling-sidebar"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { Heading, MutedText, WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
+import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action"
 
 const ManualEditorWorkspace = dynamic(
-  () => import("@imify/features/filling/manual-editor-workspace").then((m) => m.ManualEditorWorkspace),
+  () => import("@imify/features/filling/edit/workspace").then((m) => m.ManualEditorWorkspace),
   { ssr: false }
 )
 
 const SymmetricWorkspace = dynamic(
-  () => import("@imify/features/filling/symmetric-workspace").then((m) => m.SymmetricWorkspace),
+  () => import("@imify/features/filling/symmetric-generator/workspace").then((m) => m.SymmetricWorkspace),
   { ssr: false }
 )
 
-type FillingMode = "select" | "fill" | "edit" | "symmetric-generate"
+const GridDesignWorkspace = dynamic(
+  () => import("@imify/features/filling/grid-designer/workspace").then((m) => m.GridDesignWorkspace),
+  { ssr: false }
+)
+
+type FillingMode = "select" | "fill" | "edit" | "symmetric-generate" | "grid-design"
 
 interface FillingHomePageProps {
   routeBase: string
@@ -40,9 +46,13 @@ interface FillingFlowPageProps {
   routeBase: string
 }
 
+const SYMMETRIC_GENERATE_ACCESS_KEY = "imify_filling_symmetric_access_template_id"
+const GRID_DESIGN_ACCESS_KEY = "imify_filling_grid_design_access_template_id"
+
 function toTitle(mode: FillingMode): string {
   if (mode === "fill") return "Filling Workspace"
   if (mode === "edit") return "Filling Editor"
+  if (mode === "grid-design") return "Grid Designer"
   if (mode === "symmetric-generate") return "Symmetric Generate"
   return "Filling"
 }
@@ -50,6 +60,7 @@ function toTitle(mode: FillingMode): string {
 function toFillingStep(mode: FillingMode): FillingStep {
   if (mode === "fill") return "select"
   if (mode === "edit") return "create_manual"
+  if (mode === "grid-design") return "create_grid_design"
   return "create_symmetric"
 }
 
@@ -90,6 +101,10 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
     return () => resetHeader()
   }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
+  if (!templatesLoaded) {
+    return <WorkspaceLoadingState title="Loading filling templates..." />
+  }
+
   return (
     <>
       <div className="space-y-4 p-0">
@@ -113,6 +128,12 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
             router.push(`${routeBase}/edit?id=${template.id}`)
             return
           }
+          if (method === "grid-design") {
+            window.sessionStorage.setItem(GRID_DESIGN_ACCESS_KEY, template.id)
+            router.push(`${routeBase}/grid-design?id=${template.id}`)
+            return
+          }
+          window.sessionStorage.setItem(SYMMETRIC_GENERATE_ACCESS_KEY, template.id)
           router.push(`${routeBase}/symmetric-generate?id=${template.id}`)
         }}
       />
@@ -135,7 +156,9 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   const setActiveTemplateId = useFillingStore((state) => state.setActiveTemplateId)
   const setEditingTemplateId = useFillingStore((state) => state.setEditingTemplateId)
   const initFillStatesForTemplate = useFillingStore((state) => state.initFillStatesForTemplate)
-  const [didActivateMode, setDidActivateMode] = useState(false)
+  const fillingStep = useFillingStore((state) => state.fillingStep)
+  const activeTemplateId = useFillingStore((state) => state.activeTemplateId)
+  const editingTemplateId = useFillingStore((state) => state.editingTemplateId)
   const refreshTemplates = useCallback(async () => {
     const all = await templateStorage.getAll()
     setTemplates(all)
@@ -154,6 +177,14 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   const [selectedEditorLayerId, setSelectedEditorLayerId] = useState<string | null>(null)
   const [selectedEditorLayerIds, setSelectedEditorLayerIds] = useState<string[]>([])
   const [isSavingTemplate, setIsSavingTemplate] = useState(false)
+  const [symmetricAccessStatus, setSymmetricAccessStatus] = useState<"checking" | "allowed" | "blocked">(
+    mode === "symmetric-generate" ? "checking" : "allowed"
+  )
+  const symmetricAccessValidatedRef = useRef(false)
+  const [gridDesignAccessStatus, setGridDesignAccessStatus] = useState<"checking" | "allowed" | "blocked">(
+    mode === "grid-design" ? "checking" : "allowed"
+  )
+  const gridDesignAccessValidatedRef = useRef(false)
   const handleSelectEditorLayer = useCallback((id: string | null) => {
     setSelectedEditorLayerId(id)
     setSelectedEditorLayerIds(id ? [id] : [])
@@ -222,7 +253,14 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   useWorkspaceSidebar(sidebar)
 
   useEffect(() => {
-    const modeLabel = mode === "fill" ? "Fill" : mode === "edit" ? "Manual Editor" : "Symmetric Generate"
+    const modeLabel =
+      mode === "fill"
+        ? "Fill"
+        : mode === "edit"
+          ? "Manual Editor"
+          : mode === "grid-design"
+            ? "Grid Designer"
+            : "Symmetric Generate"
     setHeaderSection("Image Filling")
     setHeaderActions(null)
     setHeaderBreadcrumb(
@@ -248,19 +286,78 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   ])
 
   useEffect(() => {
-    if (!template || didActivateMode) {
+    if (mode !== "symmetric-generate") {
+      symmetricAccessValidatedRef.current = false
+      setSymmetricAccessStatus("allowed")
       return
     }
-    setFillingStep(toFillingStep(mode))
-    setActiveTemplateId(template.id)
-    setEditingTemplateId(mode === "edit" ? template.id : null)
-    initFillStatesForTemplate(template)
-    setDidActivateMode(true)
-  }, [didActivateMode, initFillStatesForTemplate, mode, setActiveTemplateId, setEditingTemplateId, setFillingStep, template])
+    if (symmetricAccessValidatedRef.current) {
+      setSymmetricAccessStatus("allowed")
+      return
+    }
+    const allowedTemplateId = window.sessionStorage.getItem(SYMMETRIC_GENERATE_ACCESS_KEY)
+    if (allowedTemplateId === templateId) {
+      symmetricAccessValidatedRef.current = true
+      setSymmetricAccessStatus("allowed")
+      window.setTimeout(() => {
+        window.sessionStorage.removeItem(SYMMETRIC_GENERATE_ACCESS_KEY)
+      }, 0)
+      return
+    }
+    setSymmetricAccessStatus("blocked")
+  }, [mode, templateId])
 
   useEffect(() => {
-    setDidActivateMode(false)
+    if (mode !== "grid-design") {
+      gridDesignAccessValidatedRef.current = false
+      setGridDesignAccessStatus("allowed")
+      return
+    }
+    if (gridDesignAccessValidatedRef.current) {
+      setGridDesignAccessStatus("allowed")
+      return
+    }
+    const allowedTemplateId = window.sessionStorage.getItem(GRID_DESIGN_ACCESS_KEY)
+    if (allowedTemplateId === templateId) {
+      gridDesignAccessValidatedRef.current = true
+      setGridDesignAccessStatus("allowed")
+      window.setTimeout(() => {
+        window.sessionStorage.removeItem(GRID_DESIGN_ACCESS_KEY)
+      }, 0)
+      return
+    }
+    setGridDesignAccessStatus("blocked")
   }, [mode, templateId])
+
+  useEffect(() => {
+    if (!template) {
+      return
+    }
+    const nextStep = toFillingStep(mode)
+    const nextEditingTemplateId = mode === "edit" ? template.id : null
+    if (activeTemplateId !== template.id) {
+      initFillStatesForTemplate(template)
+    }
+    if (fillingStep !== nextStep) {
+      setFillingStep(nextStep)
+    }
+    if (activeTemplateId !== template.id) {
+      setActiveTemplateId(template.id)
+    }
+    if (editingTemplateId !== nextEditingTemplateId) {
+      setEditingTemplateId(nextEditingTemplateId)
+    }
+  }, [
+    activeTemplateId,
+    editingTemplateId,
+    fillingStep,
+    initFillStatesForTemplate,
+    mode,
+    setActiveTemplateId,
+    setEditingTemplateId,
+    setFillingStep,
+    template
+  ])
 
   useEffect(() => {
     if (!template || mode !== "edit") return
@@ -273,24 +370,68 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   }, [mode, template])
 
   if (!templatesLoaded) {
+    return <WorkspaceLoadingState title={`Loading ${toTitle(mode).toLowerCase()}...`} />
+  }
+
+  if (mode === "symmetric-generate" && symmetricAccessStatus === "checking") {
+    return <WorkspaceLoadingState title="Validating symmetric generator access..." />
+  }
+
+  if (mode === "grid-design" && gridDesignAccessStatus === "checking") {
+    return <WorkspaceLoadingState title="Validating grid designer access..." />
+  }
+
+  if (mode === "symmetric-generate" && symmetricAccessStatus === "blocked") {
     return (
-      <div className="space-y-3 p-0">
-        <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
-        <p className="text-sm text-slate-500">Loading template...</p>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <div className="rounded-full border border-rose-200 bg-rose-50 p-3 text-rose-500 dark:border-rose-900/60 dark:bg-rose-900/20 dark:text-rose-400">
+          <OctagonX size={22} />
+        </div>
+        <Heading className="text-2xl text-rose-600 dark:text-rose-400">Direct access is not allowed</Heading>
+        <MutedText className="max-w-xl text-base">
+          This page can only be opened right after creating a template from the Create Template dialog.
+        </MutedText>
+        <PresetNotFoundRedirectAction routeBase={routeBase} buttonLabel="Back to template list" />
+      </div>
+    )
+  }
+
+  if (mode === "grid-design" && gridDesignAccessStatus === "blocked") {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <div className="rounded-full border border-rose-200 bg-rose-50 p-3 text-rose-500 dark:border-rose-900/60 dark:bg-rose-900/20 dark:text-rose-400">
+          <OctagonX size={22} />
+        </div>
+        <Heading className="text-2xl text-rose-600 dark:text-rose-400">Direct access is not allowed</Heading>
+        <MutedText className="max-w-xl text-base">
+          This page can only be opened right after creating a template from the Create Template dialog.
+        </MutedText>
+        <PresetNotFoundRedirectAction routeBase={routeBase} buttonLabel="Back to template list" />
       </div>
     )
   }
 
   if (!template) {
     return (
-      <div className="space-y-3 p-0">
-        <h1 className="text-lg font-semibold">{toTitle(mode)}</h1>
-        <p className="text-sm text-slate-500">Template not found.</p>
-        <Link href={routeBase} className="text-sm text-sky-600 dark:text-sky-400">
-          Back to template list
-        </Link>
-      </div>
+      <WorkspaceNotFoundState
+        title="Template not found"
+        message={`This template id does not exist for ${toTitle(mode)}.`}
+        action={<PresetNotFoundRedirectAction routeBase={routeBase} />}
+        surface="plain"
+      />
     )
+  }
+
+  const modeReady = mode === "edit"
+    ? fillingStep === "create_manual" && activeTemplateId === template.id && editingTemplateId === template.id
+    : mode === "fill"
+      ? fillingStep === "select" && activeTemplateId === template.id && editingTemplateId === null
+      : mode === "grid-design"
+        ? fillingStep === "create_grid_design" && activeTemplateId === template.id && editingTemplateId === null
+      : fillingStep === "create_symmetric" && activeTemplateId === template.id && editingTemplateId === null
+
+  if (!modeReady) {
+    return <WorkspaceLoadingState title={`Loading ${toTitle(mode).toLowerCase()}...`} />
   }
 
   return (
@@ -331,7 +472,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
               })
             )
           }}
-          onSaveTemplate={async () => {
+          onSaveTemplate={async (destination) => {
             if (isSavingTemplate) return
             setIsSavingTemplate(true)
             try {
@@ -346,6 +487,10 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
               await templateStorage.save(savedTemplate)
               const all = await templateStorage.getAll()
               useFillingStore.getState().setTemplates(all)
+              if (destination === "list") {
+                router.push(routeBase)
+                return
+              }
               router.push(`${routeBase}/fill?id=${savedTemplate.id}`)
             } finally {
               setIsSavingTemplate(false)
@@ -366,7 +511,33 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
         <SymmetricWorkspace
           template={template}
           onRefresh={refreshTemplates}
-          onSaved={(savedTemplate) => {
+          onSaved={(savedTemplate, destination) => {
+            if (destination === "list") {
+              router.push(routeBase)
+              return
+            }
+            if (destination === "edit") {
+              router.push(`${routeBase}/edit?id=${savedTemplate.id}`)
+              return
+            }
+            router.push(`${routeBase}/fill?id=${savedTemplate.id}`)
+          }}
+        />
+      )}
+
+      {mode === "grid-design" && (
+        <GridDesignWorkspace
+          template={template}
+          onRefresh={refreshTemplates}
+          onSaved={(savedTemplate, destination) => {
+            if (destination === "list") {
+              router.push(routeBase)
+              return
+            }
+            if (destination === "edit") {
+              router.push(`${routeBase}/edit?id=${savedTemplate.id}`)
+              return
+            }
             router.push(`${routeBase}/fill?id=${savedTemplate.id}`)
           }}
         />

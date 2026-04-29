@@ -1,5 +1,10 @@
 import { clampQuality } from "@imify/core/image-utils"
 import type { WebpCodecOptions } from "@imify/core/types"
+import {
+  resolveEngineWasmFactoryModule,
+  resolveEngineWasmUrl,
+  unwrapEngineWasmFactoryModule
+} from "./runtime-adapter"
 
 interface WebpWasmModule {
   encode: (
@@ -48,23 +53,17 @@ const WEBP_DEFAULT_OPTIONS = {
 let webpModulePromise: Promise<WebpWasmModule> | null = null
 
 function resolveWasmUrl(fileName: string): string {
-  const runtimeOrigin =
-    typeof self !== "undefined" && self.location
-      ? self.location.origin
-      : typeof location !== "undefined"
-      ? location.origin
-      : ""
-
-  return `${runtimeOrigin}/assets/wasm/${fileName}`
+  return resolveEngineWasmUrl(fileName)
 }
 
 async function getWebpModule(): Promise<WebpWasmModule> {
   if (!webpModulePromise) {
     const wasmUrl = resolveWasmUrl("webp_enc.wasm")
-    const factoryModule = await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl("webp_enc.js"))
-    const initWebpFactory = (factoryModule.default ?? factoryModule) as (
-      options: Record<string, unknown>
-    ) => Promise<WebpWasmModule>
+    const runtimeModule = resolveEngineWasmFactoryModule("webp_enc.js")
+    const module =
+      runtimeModule ??
+      (await import(/* webpackIgnore: true */ /* @vite-ignore */ resolveWasmUrl("webp_enc.js")))
+    const initWebpFactory = unwrapEngineWasmFactoryModule<WebpWasmModule>(module, "webp_enc.js")
 
     webpModulePromise = initWebpFactory({
       locateFile: (path: string) => {

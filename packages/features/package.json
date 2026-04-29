@@ -16,6 +16,7 @@
     "@imify/stores": "workspace:*",
     "@imify/ui": "workspace:*",
     "konva": "^10.2.5",
+    "markdown-to-jsx": "^9.7.16",
     "react-konva": "^18.2.14"
   },
   "license": "Apache-2.0"

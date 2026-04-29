@@ -3,6 +3,7 @@ import { DiffcheckerWorkspace } from "@imify/features/diffchecker/diffchecker-wo
 import { useEffect } from "react"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
+import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 
 export function DiffcheckerTab() {
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
@@ -21,8 +22,16 @@ export function DiffcheckerTab() {
 
   return (
     <SharedDiffcheckerPage
-      renderWorkspace={(props) => (
-        <DiffcheckerWorkspace
+      renderWorkspace={(props) => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const setHasImage = useDiffcheckerStore((s) => s.setHasImage)
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useEffect(() => {
+          setHasImage(!!props.imageA || !!props.imageB)
+        }, [props.imageA, props.imageB, setHasImage])
+
+        return (
+          <DiffcheckerWorkspace
           imageA={props.imageA}
           imageB={props.imageB}
           imageDataA={props.imageDataA}
@@ -43,7 +52,8 @@ export function DiffcheckerTab() {
           onZoomChange={props.onZoomChange}
           onPanChange={props.onPanChange}
         />
-      )}
+        )
+      }}
     />
   )
 }

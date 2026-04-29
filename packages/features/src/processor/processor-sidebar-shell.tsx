@@ -14,7 +14,7 @@ export function ProcessorSidebarShell({ context, workspaceSidebar }: ProcessorSi
 
   if (viewMode === "select") {
     return (
-      <SidebarPanel title="INFORMATION" childrenClassName="flex flex-col gap-3">
+      <SidebarPanel title="ABOUT THIS TOOL" childrenClassName="flex flex-col gap-3">
         <ProcessorPresetInfoPanel context={context} />
       </SidebarPanel>
     )

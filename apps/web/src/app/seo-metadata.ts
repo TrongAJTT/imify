@@ -83,6 +83,11 @@ export const WEB_ROUTE_METADATA = {
     description:
       "Generate symmetric fill layouts from a selected template to produce balanced visual compositions suitable for catalogs, ads, and storefront creatives."
   },
+  fillingGridDesign: {
+    title: "Image Filling Grid Designer",
+    description:
+      "Generate structured grid-based fill layouts from compact row definitions to build bento-style compositions with reusable template logic."
+  },
   diffchecker: {
     title: "Difference Checker",
     description:

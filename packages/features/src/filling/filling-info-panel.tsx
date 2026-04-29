@@ -1,59 +1,89 @@
 import React from "react"
-import { Image as ImageIcon, Layers, PenTool, WandSparkles } from "lucide-react"
-import { MutedText } from "@imify/ui"
+import { PresetInfoShowcasePanel } from "@imify/features/shared/preset-info-showcase-panel"
+import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
+
+const FILLING_PANEL_CONTENT = {
+  previewSrc: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp),
+  previewMediaSources: [
+    {
+      src: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp),
+      type: "image" as const,
+      alt: "Image Filling layout and final composition preview",
+    },
+    {
+      src: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.filling.symmetricVisualEditorWebm),
+      type: "video" as const,
+    },
+    {
+      src: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.filling.manualMultiSelectWebm),
+      type: "video" as const,
+    },
+  ],
+  previewAlt: "Image Filling layout and final composition preview",
+  previewAspectRatio: "16 / 9",
+  title: "Image Filling",
+  subtitle:
+    "Design a reusable frame layout, place images into each region, and export polished composites with full style and codec control.",
+  tips: [
+    "Start with Auto Generators when you need a clean layout fast, then switch to Manual Editor for precise tweaks.",
+    "In Fill Workspace, drag, zoom, and rotate each image inside its frame to align subjects exactly where you want.",
+    "Use canvas and border overrides to keep a consistent visual style across multiple outputs from one template.",
+    "Reuse saved templates to speed up social cards, collage sets, and catalog-like production workflows.",
+  ],
+  featureChips: [
+    "Manual Editor",
+    "Auto Generators",
+    "Transform Tools",
+    "Style Overrides",
+    "Multi-format Export",
+    "Template Storage",
+  ],
+  faqs: [
+    {
+      question: "How is Image Filling different from Image Splicing?",
+      answer:
+        "Image Splicing stitches independent images into a generated strip or grid automatically. Image Filling uses a fixed template you design first, then lets you place and transform images inside each predefined region.",
+    },
+    {
+      question: "What workflows is this tool best for?",
+      answer:
+        "It is ideal for template-based production where consistency matters: social cards, collage layouts, and product showcase compositions with repeated structure.",
+    },
+    {
+      question: "How can I create a layout quickly?",
+      answer:
+        "You have three approaches: Manual Editor for custom drawing, Symmetric Generator for mirrored structures, and Grid Designer for fast bento-like layouts.",
+    },
+    {
+      question: "Can I edit auto-generated layouts manually afterward?",
+      answer:
+        "Yes. Templates created from Symmetric Generator or Grid Designer can be sent to Manual Editor for final fine-tuning before filling.",
+    },
+    {
+      question: "Can I share a URL so others can open my design?",
+      answer:
+        "No. The workflow is local-first and stores data in your browser environment, so there is no server-hosted share link for template sessions.",
+    },
+    {
+      question: "Do style settings get saved with my template?",
+      answer:
+        "Yes. Layout structure and style-related settings can be reused through templates, which makes repeat runs much faster.",
+    },
+  ],
+}
 
 export function FillingInfoPanel() {
   return (
-    <div className="space-y-6">
-      <MutedText className="text-sm leading-relaxed">
-        Build reusable template layouts, then place photos into each shape with clipping and fine-grained styling controls.
-      </MutedText>
-
-      <div className="space-y-5">
-        <InfoRow
-          icon={<Layers size={16} />}
-          title="Template Library"
-          description="Manage reusable layouts and quickly reopen any template for editing or filling."
-        />
-        <InfoRow
-          icon={<PenTool size={16} />}
-          title="Manual / Symmetric Editor"
-          description="Create shape structures manually or generate patterned layouts, then adjust groups and layer hierarchy."
-        />
-        <InfoRow
-          icon={<ImageIcon size={16} />}
-          title="Fill & Customize"
-          description="Drop images into each runtime item, then tune border, corner radius, and canvas background settings."
-        />
-        <InfoRow
-          icon={<WandSparkles size={16} />}
-          title="Advanced Export"
-          description="Export composites in multiple formats with quality options while keeping the output fully client-side."
-        />
-      </div>
-    </div>
+    <PresetInfoShowcasePanel
+      previewSrc={FILLING_PANEL_CONTENT.previewSrc}
+      previewMediaSources={FILLING_PANEL_CONTENT.previewMediaSources}
+      previewAlt={FILLING_PANEL_CONTENT.previewAlt}
+      previewAspectRatio={FILLING_PANEL_CONTENT.previewAspectRatio}
+      title={FILLING_PANEL_CONTENT.title}
+      subtitle={FILLING_PANEL_CONTENT.subtitle}
+      tips={FILLING_PANEL_CONTENT.tips}
+      featureChips={FILLING_PANEL_CONTENT.featureChips}
+      faqs={FILLING_PANEL_CONTENT.faqs}
+    />
   )
 }
-
-function InfoRow({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode
-  title: string
-  description: string
-}) {
-  return (
-    <div className="flex gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
-        {icon}
-      </div>
-      <div className="space-y-1">
-        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{title}</div>
-        <MutedText className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">{description}</MutedText>
-      </div>
-    </div>
-  )
-}
-

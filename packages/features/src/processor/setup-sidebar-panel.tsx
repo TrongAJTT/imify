@@ -19,6 +19,7 @@ import type { PerformancePreferences } from "./performance-preferences"
 import { BatchRenameDialog } from "./rename-dialog"
 import { BatchWatermarkDialog } from "./watermark-dialog"
 import { BatchExportPanel } from "./batch-export-panel"
+import { getFormatAdvancedLabel } from "./format-advanced-label"
 import {
   buildTargetFormatQualityCardConfig,
   supportsTargetFormatQuality,
@@ -61,6 +62,7 @@ export function BatchSetupSidebarPanel({
   const resizeSourceWidth = useBatchStore((state) => state.resizeSourceWidth)
   const resizeSourceHeight = useBatchStore((state) => state.resizeSourceHeight)
   const resizeSyncVersion = useBatchStore((state) => state.resizeSyncVersion)
+  const resizeQuickStats = useBatchStore((state) => state.resizeQuickStats)
   const paperSize = useBatchStore((state) => state.paperSize)
   const dpi = useBatchStore((state) => state.dpi)
   const stripExif = useBatchStore((state) => state.stripExif)
@@ -129,6 +131,7 @@ export function BatchSetupSidebarPanel({
   const supportsTinyMode = supportsTargetFormatTinyMode(targetFormat)
   const supportsExif = ["jpg", "webp", "avif", "mozjpeg"].includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
+  const formatAdvancedLabel = useMemo(() => getFormatAdvancedLabel(targetFormat), [targetFormat])
 
   const advisorResizeConfig = useMemo(
     () =>
@@ -165,6 +168,7 @@ export function BatchSetupSidebarPanel({
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "target-format-quality",
+      label: "Export Format & Quality",
       columnSpan: 2,
       content: (
         <TargetFormatQualityCard
@@ -197,6 +201,7 @@ export function BatchSetupSidebarPanel({
     },
     {
       id: "format-advanced-settings",
+      label: formatAdvancedLabel,
       content: (
         <FormatAdvancedSettingsCard
           targetFormat={targetFormat}
@@ -246,6 +251,7 @@ export function BatchSetupSidebarPanel({
     },
     {
       id: "resize",
+      label: "Resize",
       content: (
         <ResizeCard
           resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
@@ -260,6 +266,7 @@ export function BatchSetupSidebarPanel({
           resizeSourceWidth={resizeSourceWidth}
           resizeSourceHeight={resizeSourceHeight}
           resizeSyncVersion={resizeSyncVersion}
+          resizeQuickStats={resizeQuickStats}
           paperSize={paperSize}
           dpi={dpi}
           onResizeModeChange={(mode) => {
@@ -292,6 +299,7 @@ export function BatchSetupSidebarPanel({
     },
     {
       id: "export-settings",
+      label: "Export Settings",
       columnSpan: 2,
       content: (
         <BatchExportPanel

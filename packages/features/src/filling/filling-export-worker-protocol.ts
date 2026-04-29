@@ -1,4 +1,4 @@
-import type { FillRuntimeItem } from "@imify/features/filling/fill-runtime-items"
+import type { FillRuntimeItem } from "@imify/features/filling/fill/runtime-items"
 import type {
   CanvasFillState,
   FillingExportConfig,

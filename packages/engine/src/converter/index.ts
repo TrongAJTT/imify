@@ -3,6 +3,7 @@ import { convertRasterImage } from "./canvas-engine"
 import { convertSourceToIcoOutput } from "./ico-encoder"
 import { convertImageToPdf } from "./pdf-engine"
 import { convertImageWithWorker, isConversionWorkerSupported } from "./conversion-worker-pool"
+import { shouldUseEngineWasmWorkers } from "./runtime-adapter"
 export { registerEngineRuntimeAdapter } from "./runtime-adapter"
 
 export interface ConvertImageParams {
@@ -59,6 +60,31 @@ export async function convertImage(
   }
 
   if (!isConversionWorkerSupported()) {
+    const raster = await convertRasterImage({
+      sourceBlob,
+      targetFormat: config.format,
+      resize: config.resize,
+      quality: config.quality,
+      formatOptions: {
+        avif: config.formatOptions?.avif,
+        bmp: config.formatOptions?.bmp,
+        jxl: config.formatOptions?.jxl,
+        mozjpeg: config.formatOptions?.mozjpeg,
+        png: config.formatOptions?.png,
+        tiff: config.formatOptions?.tiff,
+        webp: config.formatOptions?.webp
+      }
+    })
+
+    return {
+      blob: raster.outputBlob,
+      format: config.format
+    }
+  }
+
+  // In extension runtime, AVIF/JXL worker loading may fail due bundler dynamic-module transforms.
+  // When the adapter disables WASM workers, skip conversion.worker and use direct raster path.
+  if (!shouldUseEngineWasmWorkers() && (config.format === "avif" || config.format === "jxl")) {
     const raster = await convertRasterImage({
       sourceBlob,
       targetFormat: config.format,

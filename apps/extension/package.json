@@ -11,18 +11,20 @@
     "sync:wasm": "node ../../scripts/sync-wasm.mjs",
     "sync:assets": "pnpm sync:wasm && pnpm sync:features && pnpm check:media-assets",
     "predev": "pnpm sync:assets",
-    "dev": "plasmo dev",
+    "dev": "node ../../scripts/with-root-metadata.mjs plasmo dev",
     "typecheck": "tsc --noEmit",
-    "dev:chrome": "plasmo dev --target=chrome-mv3",
-    "dev:firefox": "plasmo dev --target=firefox-mv3",
+    "dev:chrome": "node ../../scripts/with-root-metadata.mjs plasmo dev --target=chrome-mv3",
+    "dev:firefox": "node ../../scripts/with-root-metadata.mjs plasmo dev --target=firefox-mv3",
     "prebuild": "pnpm sync:assets",
-    "build": "plasmo build",
+    "build": "node ../../scripts/with-root-metadata.mjs plasmo build",
     "build:ci": "pnpm build:chrome && pnpm build:firefox && pnpm verify:manifests",
-    "build:chrome": "plasmo build --target=chrome-mv3",
-    "build:firefox": "plasmo build --target=firefox-mv3 && node ../../scripts/sanitize-firefox-manifest.mjs",
+    "build:chrome": "node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3",
+    "build:edge": "node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3",
+    "build:firefox": "node ../../scripts/with-root-metadata.mjs plasmo build --target=firefox-mv3 && node ../../scripts/sanitize-firefox-manifest.mjs",
     "prepackage": "pnpm sync:assets",
-    "package": "plasmo package",
-    "package:chrome": "plasmo build --target=chrome-mv3 --zip",
+    "package": "node ../../scripts/with-root-metadata.mjs plasmo package",
+    "package:chrome": "node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3 --zip",
+    "package:edge": "node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3 --zip",
     "package:firefox": "pnpm build:firefox && node ../../scripts/zip-firefox-build.mjs",
     "verify:manifests": "node ../../scripts/verify-target-manifests.mjs",
     "sync:avif-wasm": "node ../../scripts/sync-avif-wasm.mjs",
@@ -102,12 +104,6 @@
       "sidePanel",
       "storage"
     ],
-    "action": {
-      "default_popup": "options.html?view=popup"
-    },
-    "side_panel": {
-      "default_path": "options.html?view=sidepanel"
-    },
     "host_permissions": [
       "http://*/*",
       "https://*/*"
@@ -115,7 +111,11 @@
     "web_accessible_resources": [
       {
         "resources": [
-          "assets/wasm/*"
+          "assets/wasm/*",
+          "assets/WHATS_NEW.md",
+          "assets/*.png",
+          "assets/images/*",
+          "assets/features/*"
         ],
         "matches": [
           "http://*/*",

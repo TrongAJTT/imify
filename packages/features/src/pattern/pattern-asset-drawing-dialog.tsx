@@ -70,6 +70,18 @@ function sanitizePercent(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)))
 }
 
+function stopEvent(event: { stopPropagation: () => void }): void {
+  event.stopPropagation()
+}
+
+function stopEventAndPreventDefault(event: {
+  stopPropagation: () => void
+  preventDefault: () => void
+}): void {
+  event.stopPropagation()
+  event.preventDefault()
+}
+
 export function PatternAssetDrawingDialog({
   isOpen,
   mode = "create",
@@ -465,9 +477,16 @@ export function PatternAssetDrawingDialog({
       isDirty={hasUndoHistory}
       contentClassName="w-[980px] max-w-[96vw] rounded-2xl overflow-hidden">
       <div
-        onPointerDown={(event) => event.stopPropagation()}
-        onPointerMove={(event) => event.stopPropagation()}
-        onPointerUp={(event) => event.stopPropagation()}
+        onPointerDown={stopEvent}
+        onPointerMove={stopEvent}
+        onPointerUp={stopEvent}
+        onMouseDown={stopEvent}
+        onMouseMove={stopEvent}
+        onMouseUp={stopEvent}
+        onTouchStart={stopEvent}
+        onTouchMove={stopEvent}
+        onTouchEnd={stopEvent}
+        onWheel={stopEventAndPreventDefault}
       >
         <div className="border-b border-slate-200 dark:border-slate-800 px-5 py-4 flex items-center justify-between">
           <div>
@@ -497,11 +516,24 @@ export function PatternAssetDrawingDialog({
                 width={canvasSize.width}
                 height={canvasSize.height}
                 className="w-full h-auto rounded-lg touch-none cursor-none"
-                onPointerDown={beginStroke}
-                onPointerMove={continueStroke}
-                onPointerUp={finishStroke}
-                onPointerCancel={finishStroke}
+                onPointerDown={(event) => {
+                  stopEventAndPreventDefault(event)
+                  beginStroke(event)
+                }}
+                onPointerMove={(event) => {
+                  stopEventAndPreventDefault(event)
+                  continueStroke(event)
+                }}
+                onPointerUp={(event) => {
+                  stopEventAndPreventDefault(event)
+                  finishStroke(event)
+                }}
+                onPointerCancel={(event) => {
+                  stopEventAndPreventDefault(event)
+                  finishStroke(event)
+                }}
                 onPointerEnter={(event) => {
+                  stopEvent(event)
                   const canvas = canvasRef.current
                   if (!canvas) {
                     return
@@ -516,6 +548,7 @@ export function PatternAssetDrawingDialog({
                     setBrushPreview(null)
                   }
                 }}
+                onWheel={stopEventAndPreventDefault}
               />
 
               {brushPreview && (

@@ -259,14 +259,15 @@ export function PatternAssetsAccordion() {
             onChange={(event) => void handleAssetFilesUpload(event)}
           />
 
-          <div className="flex gap-2">
+          <div className="sticky top-0 z-10 -mx-1 border-b border-slate-200/80 bg-white/95 px-1 pb-2 pt-0.5 backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/95">
+            <div className="flex gap-1.5">
             <Button
               variant="secondary"
               size="sm"
               className="flex-1"
               onClick={() => fileInputRef.current?.click()}
             >
-              <Upload size={14} />
+              <Upload size={13} />
               Upload
             </Button>
             <Button
@@ -275,17 +276,18 @@ export function PatternAssetsAccordion() {
               className="flex-1"
               onClick={handleOpenDrawDialog}
             >
-              <Brush size={14} />
+              <Brush size={13} />
               Draw
             </Button>
 
             {assets.length > 0 && (
               <Tooltip content={PATTERN_TOOLTIPS.assets.clearAllAssets}>
-                <Button className="flex" variant="secondary" size="sm" onClick={handleClearAssets}>
+                <Button className="flex h-8 px-2.5" variant="secondary" size="sm" onClick={handleClearAssets}>
                   <Trash2 size={13} color="red" />
                 </Button>
               </Tooltip>
             )}
+            </div>
           </div>
 
           {assets.length === 0 ? (

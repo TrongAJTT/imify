@@ -9,13 +9,14 @@ import { NumberInput } from "@imify/ui/ui/number-input"
 import { SelectInput } from "@imify/ui/ui/select-input"
 import { SidebarPanel } from "@imify/ui"
 import { FillingInfoPanel } from "@imify/features/filling/filling-info-panel"
-import { SymmetricSidebar } from "@imify/features/filling/symmetric-sidebar"
-import { ManualEditorSidebar } from "@imify/features/filling/manual-editor-sidebar"
-import { FillSidebar } from "@imify/features/filling/fill-sidebar"
+import { SymmetricSidebar } from "@imify/features/filling/symmetric-generator/sidebar"
+import { GridDesignSidebar } from "@imify/features/filling/grid-designer/sidebar"
+import { ManualEditorSidebar } from "@imify/features/filling/edit/sidebar"
+import { FillSidebar } from "@imify/features/filling/fill/sidebar"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import type { CanvasBackgroundType, FillingTemplate, LayerFillState, LayerGroup, VectorLayer } from "@imify/features/filling/types"
 
-type FillingSidebarMode = "select" | "fill" | "edit" | "symmetric-generate"
+type FillingSidebarMode = "select" | "fill" | "edit" | "symmetric-generate" | "grid-design"
 
 interface ManualEditorSidebarBindings {
   layers: VectorLayer[]
@@ -53,7 +54,7 @@ const BACKGROUND_OPTIONS: Array<{ value: CanvasBackgroundType; label: string }> 
 export function FillingOverviewSidebar() {
   return (
     <div className="space-y-1">
-      <SidebarPanel title="INFORMATION" className="rounded border border-slate-200 dark:border-slate-700" childrenClassName="space-y-2">
+      <SidebarPanel title="ABOUT THIS TOOL" className="rounded border border-slate-200 dark:border-slate-700" childrenClassName="space-y-2">
         <div>
           <FillingInfoPanel />
         </div>
@@ -115,13 +116,30 @@ export function FillingWorkflowSidebar({
   const exportBmpDitheringLevel = useFillingStore((state) => state.exportBmpDitheringLevel)
   const exportTiffColorMode = useFillingStore((state) => state.exportTiffColorMode)
 
-  const modeLabel = mode === "fill" ? "Fill" : mode === "edit" ? "Manual Edit" : "Symmetric Generate"
+  const modeLabel =
+    mode === "fill"
+      ? "Fill"
+      : mode === "edit"
+        ? "Manual Edit"
+        : mode === "grid-design"
+          ? "Grid Designer"
+          : "Symmetric Generate"
 
   if (mode === "symmetric-generate") {
     return (
       <div className="space-y-2">
         <SidebarPanel title="CONFIGURATION" childrenClassName="space-y-2">
           <SymmetricSidebar template={template} />
+        </SidebarPanel>
+      </div>
+    )
+  }
+
+  if (mode === "grid-design") {
+    return (
+      <div className="space-y-2">
+        <SidebarPanel title="CONFIGURATION" childrenClassName="space-y-2">
+          <GridDesignSidebar template={template} />
         </SidebarPanel>
       </div>
     )

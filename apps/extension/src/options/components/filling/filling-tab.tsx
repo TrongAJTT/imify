@@ -4,12 +4,13 @@ import type { LayerGroup, VectorLayer } from "@imify/features/filling/types"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { templateStorage } from "@imify/features/filling/template-storage"
-import { SymmetricWorkspace } from "@imify/features/filling/symmetric-workspace"
+import { SymmetricWorkspace } from "@imify/features/filling/symmetric-generator/workspace"
+import { GridDesignWorkspace } from "@imify/features/filling/grid-designer/workspace"
 import { useEditorContext } from "@/options/components/filling/editor-context"
 import { FillingBreadcrumb } from "@/options/components/filling/breadcrumb"
 import { TemplateList } from "@/options/components/filling/template-list"
 import { ManualEditorWorkspaceWrapper } from "@/options/components/filling/manual-editor-workspace-wrapper"
-import { FillWorkspace } from "@imify/features/filling/fill-workspace"
+import { FillWorkspace } from "@imify/features/filling/fill/workspace"
 
 function synchronizeGroupsWithLayers(groups: LayerGroup[], layers: VectorLayer[]): LayerGroup[] {
   const layerIdsByGroup = new Map<string, string[]>()
@@ -84,7 +85,7 @@ export function FillingTab() {
     [templates, editingTemplateId, activeTemplateId]
   )
 
-  const handleSaveTemplate = useCallback(async () => {
+  const handleSaveTemplate = useCallback(async (destination: "fill" | "list") => {
     if (!activeTemplate || fillingStep !== "create_manual" || isSavingTemplate) {
       return
     }
@@ -105,7 +106,13 @@ export function FillingTab() {
 
       await templateStorage.save(updatedTemplate)
       updateTemplate(updatedTemplate)
-      navigateToSelect()
+      if (destination === "list") {
+        navigateToSelect()
+        return
+      }
+      setFillingStep("fill")
+      setActiveTemplateId(updatedTemplate.id)
+      setEditingTemplateId(null)
     } finally {
       setIsSavingTemplate(false)
     }
@@ -117,12 +124,18 @@ export function FillingTab() {
     editorLayers,
     fillingStep,
     isSavingTemplate,
+    setActiveTemplateId,
+    setEditingTemplateId,
+    setFillingStep,
     navigateToSelect,
     updateTemplate,
   ])
 
   useEffect(() => {
-    if (activeTemplate && (fillingStep === "create_manual" || fillingStep === "create_symmetric")) {
+    if (
+      activeTemplate &&
+      (fillingStep === "create_manual" || fillingStep === "create_symmetric" || fillingStep === "create_grid_design")
+    ) {
       setEditorLayers(activeTemplate.layers)
       setEditorGroups(activeTemplate.groups ?? [])
       clearSelectedLayers()
@@ -189,10 +202,30 @@ export function FillingTab() {
         <SymmetricWorkspace
           template={activeTemplate}
           onRefresh={loadTemplates}
-          onSaved={(savedTemplate) => {
-            setFillingStep("fill")
+          onSaved={(savedTemplate, destination) => {
+            if (destination === "list") {
+              navigateToSelect()
+              return
+            }
+            setFillingStep(destination === "edit" ? "create_manual" : "fill")
             setActiveTemplateId(savedTemplate.id)
-            setEditingTemplateId(null)
+            setEditingTemplateId(destination === "edit" ? savedTemplate.id : null)
+          }}
+        />
+      )}
+
+      {fillingStep === "create_grid_design" && activeTemplate && (
+        <GridDesignWorkspace
+          template={activeTemplate}
+          onRefresh={loadTemplates}
+          onSaved={(savedTemplate, destination) => {
+            if (destination === "list") {
+              navigateToSelect()
+              return
+            }
+            setFillingStep(destination === "edit" ? "create_manual" : "fill")
+            setActiveTemplateId(savedTemplate.id)
+            setEditingTemplateId(destination === "edit" ? savedTemplate.id : null)
           }}
         />
       )}

@@ -13,7 +13,7 @@ export function SplitterSidebarShell({ enableWideSidebarGrid = false }: Splitter
 
   if (presetViewMode === "select") {
     return (
-      <SidebarPanel title="INFORMATION" childrenClassName="flex flex-col gap-3">
+      <SidebarPanel title="ABOUT THIS TOOL" childrenClassName="flex flex-col gap-3">
         <SplitterPresetInfoPanel />
       </SidebarPanel>
     )
