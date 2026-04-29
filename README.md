@@ -28,11 +28,14 @@
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="assets/features/preview-context_menu.webp" alt="Context Menu" style="width:32%;">
-  <img src="assets/features/preview-image_splicing.webp" alt="Image Splicing" style="width:32%;">
-  <img src="assets/features/preview-difference_checker.webp" alt="Difference Checker" style="width:32%;">
-  <img src="assets/features/preview-batch_processor.webp" alt="Batch Processor" style="width:32%;">
-  <img src="assets/features/preview-image_inspector.webp" alt="Image Inspector" style="width:32%;">
+   <img src="https://cdn.trongajtt.com/apps/imify/context-menu.webp" alt="Context Menu" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/image-splicing.webp" alt="Image Splicing" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/difference-checker.webp" alt="Difference Checker" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/image-processor.webp" alt="image Processor" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/image-inspector.webp" alt="Image Inspector" style="width:32%;">
+  <img src="https://cdn.trongajtt.com/apps/imify/seo-audit-preview.webp" alt="SEO Audit" style="width:32%;">
+  <img src="assets/features/preview-image_filling.webp" alt="Image Filling" style="width:32%;">
+  <img src="assets/features/preview-image_splitter-2.webp" alt="Image Splitter 2" style="width:32%;">
   <img src="assets/features/preview-pattern_generator.webp" alt="Pattern Generator" style="width:32%;">
 </div>
 
@@ -169,13 +172,16 @@ If you are reviewing this extension for the Mozilla Add-ons Store, please follow
 
 1. Install dependencies: `pnpm install`
 2. Generate the Firefox package: `pnpm package:firefox`
-3. The generated add-on will be an archive located in the output build directory.
+3. The generated add-on will be an archive located in the output build directory (e.g., `apps/extension/build/firefox-mv3-prod.zip`).
 
 **Compliance Declaration regarding WebAssembly (WASM) & Minification:**
-- **WASM Origin:** All `.wasm` binaries used in this project for image encoding/decoding/optimisation (AVIF, JXL, OxiPNG, MozJPEG) are sourced standardly via open-source NPM packages (`@jsquash/avif`, `@jsquash/jxl`, `@jsquash/oxipng`, `@jsquash/mozjpeg`) as declared in `package.json`. There are no privately built or obfuscated custom wasm payloads.
-- **Zero Remote Execution:** The extension processes all images 100% locally and does not fetch any executable code, scripts, or WASM files from remote servers.
+- **WASM Origin:** All `.wasm` binaries used in this project for image encoding, decoding, and processing (AVIF, JXL, OxiPNG, MozJPEG, WebP, and Resampling) are sourced standardly via official open-source NPM packages (such as `@jsquash/avif`, `@jsquash/jxl`, `@jsquash/oxipng`, `@jsquash/mozjpeg`, `@jsquash/webp`, and `@jsquash/resize`) as declared in `package.json`. There are no privately built or obfuscated custom WASM payloads.
+- **Local Bundling:** During the build process (`pnpm build`), these WASM binaries are synchronized from `node_modules` into the extension's local `assets/wasm` directory via internal build scripts (`scripts/sync-wasm.mjs`). 
+- **Zero Remote Execution:** The extension processes all images 100% locally and does not fetch any executable code, scripts, or WASM files from remote servers. All resources are bundled within the final `.zip` package.
 
-> **Note for Firefox**: Our build pipeline includes a sanitation script (`scripts/sanitize-firefox-manifest.mjs`) that automatically removes the `offscreen` permission from the Firefox manifest to comply with AMO policies while maintaining maximum performance for Chrome users.
+> **Note for Firefox Reviewers**: Our build pipeline includes a dedicated sanitation script (`scripts/sanitize-firefox-manifest.mjs`). This script automatically adjusts the production manifest for Firefox to ensure compliance with current Gecko MV3 support:
+> 1. **Permission Cleanup**: Removes `offscreen` and `sidePanel` permissions which are currently unsupported or restricted in Firefox.
+> 2. **UI Adjustments**: Removes the `side_panel` and `action.default_popup` keys. Removing the popup allows the extension to use a fallback behavior (handled in `apps/extension/src/background/index.ts`) that opens the Options page directly when the user clicks the extension icon, providing a seamless experience despite the lack of Side Panel support.
 
 ## 🔒 Privacy & Security
 
