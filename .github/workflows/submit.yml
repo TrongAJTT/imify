@@ -50,8 +50,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -103,7 +101,7 @@ jobs:
         run: pnpm --filter @imify/extension package:chrome
 
       - name: Build Edge package
-        run: pnpm --filter @imify/extension exec plasmo build --target=edge-mv3 --zip
+        run: pnpm --filter @imify/extension package:edge
 
       - name: Build Firefox package
         run: pnpm --filter @imify/extension package:firefox
