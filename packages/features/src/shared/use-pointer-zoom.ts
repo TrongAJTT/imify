@@ -7,6 +7,13 @@ interface UsePointerZoomOptions {
   minZoom?: number
   maxZoom?: number
   zoomStep?: number
+  /**
+   * When provided, zoom will change multiplicatively:
+   * nextZoom = oldZoom * (1 + zoomFactor * dir)
+   * where dir is -1 when deltaY > 0 (zoom out) and +1 when deltaY < 0 (zoom in).
+   * This makes "step" grow as zoom level grows (DiffChecker-like feel).
+   */
+  zoomFactor?: number
   onZoomChange: (zoom: number) => void
   onPanChange: (x: number, y: number) => void
   getCanvasElement: () => HTMLCanvasElement | null
@@ -25,6 +32,7 @@ export function usePointerZoom({
   minZoom = 10,
   maxZoom = 800,
   zoomStep = 10,
+  zoomFactor,
   onZoomChange,
   onPanChange,
   getCanvasElement,
@@ -56,8 +64,11 @@ export function usePointerZoom({
       if (!canvas || !container) return
 
       const oldZoom = zoomRef.current
-      const delta = e.deltaY > 0 ? -zoomStep : zoomStep
-      const newZoom = clampZoom(oldZoom + delta)
+      const dir = e.deltaY > 0 ? -1 : 1
+      const newZoom =
+        typeof zoomFactor === "number"
+          ? clampZoom(oldZoom * (1 + zoomFactor * dir))
+          : clampZoom(oldZoom + (dir > 0 ? zoomStep : -zoomStep))
 
       if (newZoom === oldZoom) return
 
@@ -97,7 +108,7 @@ export function usePointerZoom({
       onZoomChange(newZoom)
       onPanChange(newPanX, newPanY)
     },
-    [zoomStep, minZoom, maxZoom, clampZoom, onZoomChange, onPanChange, getCanvasElement, getContainerElement]
+    [zoomStep, zoomFactor, minZoom, maxZoom, clampZoom, onZoomChange, onPanChange, getCanvasElement, getContainerElement]
   )
 
   return { zoomTowardPointer }

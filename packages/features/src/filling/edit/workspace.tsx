@@ -14,6 +14,7 @@ import { useTransformGuides, type RectBounds } from "../use-transform-guides"
 import { Button, MutedText, PreviewInteractionModeToggle, Subheading, VisualHelpTooltip, ZoomPanControl } from "@imify/ui"
 import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
+import { preventWheelEvent } from "../../shared/prevent-wheel-event"
 
 export interface ManualEditorVisualHelp {
   label: string
@@ -43,8 +44,11 @@ interface ManualEditorWorkspaceProps {
 
 const CANVAS_PADDING = 40
 const PREVIEW_MIN_ZOOM = 50
-const PREVIEW_MAX_ZOOM = 800
+const PREVIEW_MAX_ZOOM = 10000
 const PREVIEW_ZOOM_STEP = 10
+// When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
+// Matches DiffChecker's multiplicative approach.
+const PREVIEW_ZOOM_FACTOR = 0.15
 
 export function ManualEditorWorkspace({
   canvasWidth,
@@ -168,7 +172,7 @@ export function ManualEditorWorkspace({
     const target = event.target as HTMLElement | null
     if (target?.closest('[class*="pointer-events-auto"]')) return
     if (previewInteractionMode === "idle") return
-    if (event.cancelable) event.preventDefault()
+    preventWheelEvent(event)
 
     if (previewInteractionMode === "pan") {
       const delta = event.deltaY > 0 ? 50 : -50
@@ -178,7 +182,8 @@ export function ManualEditorWorkspace({
     }
 
     const oldZoom = previewZoom
-    const nextZoom = clampPreviewZoom(oldZoom + (event.deltaY > 0 ? -PREVIEW_ZOOM_STEP : PREVIEW_ZOOM_STEP))
+    const dir = event.deltaY > 0 ? -1 : 1
+    const nextZoom = clampPreviewZoom(oldZoom * (1 + PREVIEW_ZOOM_FACTOR * dir))
     if (nextZoom === oldZoom) return
 
     const oldRenderScale = fitScale * (oldZoom / 100)

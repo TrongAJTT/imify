@@ -26,11 +26,15 @@ import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../../shared/media-assets"
 import { useShortcutActions } from "../use-shortcut-actions"
+import { preventWheelEvent } from "../../shared/prevent-wheel-event"
 
 const CANVAS_PADDING = 40
 const PREVIEW_MIN_ZOOM = 50
 const PREVIEW_MAX_ZOOM = 10000
 const PREVIEW_ZOOM_STEP = 10
+// When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
+// Matches DiffChecker's multiplicative approach.
+const PREVIEW_ZOOM_FACTOR = 0.15
 const FIRST_CONTROL_ID = "first_axis_first_shape"
 const SECOND_CONTROL_ID = "first_axis_second_shape"
 const THIRD_CONTROL_ID = "second_axis_first_shape"
@@ -166,7 +170,7 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
     const target = event.target as HTMLElement | null
     if (target?.closest('[class*="pointer-events-auto"]')) return
     if (previewInteractionMode === "idle") return
-    if (event.cancelable) event.preventDefault()
+    preventWheelEvent(event)
 
     if (previewInteractionMode === "pan") {
       const delta = event.deltaY > 0 ? 50 : -50
@@ -179,7 +183,8 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
     }
 
     const oldZoom = previewZoom
-    const nextZoom = clampPreviewZoom(oldZoom + (event.deltaY > 0 ? -PREVIEW_ZOOM_STEP : PREVIEW_ZOOM_STEP))
+    const dir = event.deltaY > 0 ? -1 : 1
+    const nextZoom = clampPreviewZoom(oldZoom * (1 + PREVIEW_ZOOM_FACTOR * dir))
     if (nextZoom === oldZoom) return
 
     const oldRenderScale = fitScale * (oldZoom / 100)

@@ -27,6 +27,7 @@ import { useShortcutActions } from "@imify/features/filling/use-shortcut-actions
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { useTransformGuides, type RectBounds } from "@imify/features/filling/use-transform-guides"
 import { buildActiveFillingFormatOptions } from "@imify/stores/stores/filling-format-options"
+import { preventWheelEvent } from "../../shared/prevent-wheel-event"
 import {
   regenerateLayerShapePoints,
   resolveLayerShapePoints,
@@ -54,8 +55,11 @@ import { exportFilledTemplate } from "../filling-export-utils"
 const CANVAS_PADDING = 40
 const ROTATE_CURSOR = "crosshair"
 const PREVIEW_MIN_ZOOM = 50
-const PREVIEW_MAX_ZOOM = 800
+const PREVIEW_MAX_ZOOM = 10000
 const PREVIEW_ZOOM_STEP = 10
+// When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
+// Matches DiffChecker's multiplicative approach.
+const PREVIEW_ZOOM_FACTOR = 0.15
 const IMAGE_HITBOX_PADDING = 50
 
 function safeRevokeObjectUrl(value: string | null | undefined) {
@@ -556,9 +560,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         return
       }
 
-      if (event.cancelable) {
-        event.preventDefault()
-      }
+      preventWheelEvent(event)
 
       if (previewInteractionMode === "pan") {
         const delta = event.deltaY > 0 ? 50 : -50
@@ -571,7 +573,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       }
 
       const oldZoom = previewZoom
-      const nextZoom = clampPreviewZoom(oldZoom + (event.deltaY > 0 ? -PREVIEW_ZOOM_STEP : PREVIEW_ZOOM_STEP))
+      const dir = event.deltaY > 0 ? -1 : 1
+      const nextZoom = clampPreviewZoom(oldZoom * (1 + PREVIEW_ZOOM_FACTOR * dir))
       if (nextZoom === oldZoom) return
 
       const oldRenderScale = fitScale * (oldZoom / 100)

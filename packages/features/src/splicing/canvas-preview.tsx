@@ -87,7 +87,8 @@ export function CanvasPreview({
     panY: pan.y,
     minZoom: 50,
     maxZoom: 800,
-    zoomStep: 10,
+    // DiffChecker-like feel: zoom step grows as zoom increases.
+    zoomFactor: 0.15,
     onZoomChange: setPreviewZoom,
     onPanChange: (x, y) => setPan({ x, y }),
     getCanvasElement: () => canvasRef.current,

@@ -17,6 +17,7 @@ import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
 } from "@imify/ui"
+import { preventWheelEvent } from "../shared/prevent-wheel-event"
 
 const PatternBoundaryVisualOverlay = lazy(() =>
   import("./pattern-boundary-visual-overlay").then((module) => ({
@@ -28,6 +29,9 @@ const PREVIEW_PADDING = 16
 const PREVIEW_MIN_ZOOM = 50
 const PREVIEW_MAX_ZOOM = 2000
 const PREVIEW_ZOOM_STEP = 10
+// When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
+// Matches DiffChecker's multiplicative approach.
+const PREVIEW_ZOOM_FACTOR = 0.15
 
 function closeBitmapMap(map: Map<string, ImageBitmap>): void {
   for (const bitmap of map.values()) {
@@ -460,9 +464,7 @@ export function PatternTab() {
         return
       }
 
-      if (event.cancelable) {
-        event.preventDefault()
-      }
+      preventWheelEvent(event)
 
       if (previewInteractionMode === "pan") {
         const delta = event.deltaY > 0 ? 50 : -50
@@ -475,7 +477,8 @@ export function PatternTab() {
       }
 
       const oldZoom = previewZoom
-      const nextZoom = clampPreviewZoom(oldZoom + (event.deltaY > 0 ? -PREVIEW_ZOOM_STEP : PREVIEW_ZOOM_STEP))
+      const dir = event.deltaY > 0 ? -1 : 1
+      const nextZoom = clampPreviewZoom(oldZoom * (1 + PREVIEW_ZOOM_FACTOR * dir))
 
       if (nextZoom === oldZoom) {
         return

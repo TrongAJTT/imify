@@ -205,13 +205,13 @@ export function ReorderMenuPopover({
         />
         <ReorderMenuAction
           icon={<ChevronUp size={14} />}
-          label="Move up one"
+          label="Move up"
           disabled={!canMoveUp}
           onClick={onMoveUp}
         />
         <ReorderMenuAction
           icon={<ChevronDown size={14} />}
-          label="Move down one"
+          label="Move down"
           disabled={!canMoveDown}
           onClick={onMoveDown}
         />
