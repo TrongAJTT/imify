@@ -1,0 +1,34 @@
+{
+  "name": "@imify/core",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Platform-agnostic core types, utilities, and constants for Imify",
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*",
+    "./app-metadata": "./src/app-metadata.ts",
+    "./avif-options": "./src/avif-options.ts",
+    "./codec-options": "./src/codec-options.ts",
+    "./config": "./src/config.ts",
+    "./context-menu-order": "./src/context-menu-order.ts",
+    "./download-utils": "./src/download-utils.ts",
+    "./error-utils": "./src/error-utils.ts",
+    "./file-name-pattern": "./src/file-name-pattern.ts",
+    "./format-config": "./src/format-config.ts",
+    "./image-utils": "./src/image-utils.ts",
+    "./indexed-db": "./src/indexed-db.ts",
+    "./jxl-options": "./src/jxl-options.ts",
+    "./paper-constants": "./src/paper-constants.ts",
+    "./resize-state": "./src/resize-state.ts",
+    "./resize-resampling": "./src/resize-resampling.ts",
+    "./storage-adapter": "./src/storage-adapter.ts",
+    "./types": "./src/types.ts",
+    "./hooks/use-toast": "./src/hooks/use-toast.ts"
+  },
+  "license": "Apache-2.0"
+}

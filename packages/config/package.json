@@ -1,0 +1,14 @@
+{
+  "name": "@imify/config",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared tooling configuration for the Imify monorepo",
+  "exports": {
+    "./tailwind": "./tailwind.config.js",
+    "./tailwind-base": "./tailwind.base.config.js",
+    "./postcss": "./postcss.config.js",
+    "./prettier": "./prettier.config.mjs",
+    "./tsconfig": "./tsconfig.base.json"
+  },
+  "license": "Apache-2.0"
+}

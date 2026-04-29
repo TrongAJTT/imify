@@ -1,0 +1,18 @@
+# Generated artifacts and dependencies
+.git/
+.gitnexus/
+node_modules/
+.pnpm-store/
+.turbo/
+
+# Build outputs
+build/
+dist/
+coverage/
+apps/extension/.plasmo/
+apps/extension/build/
+apps/extension/dist/
+
+# Large local backups and sandbox files
+backups/
+static/sandbox/

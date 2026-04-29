@@ -12,7 +12,7 @@ const sanitizePermissions = (manifest) => {
   }
 
   const nextPermissions = manifest.permissions.filter(
-    (permission) => permission !== "offscreen"
+    (permission) => permission !== "offscreen" && permission !== "sidePanel"
   )
 
   if (nextPermissions.length === manifest.permissions.length) {
@@ -23,12 +23,31 @@ const sanitizePermissions = (manifest) => {
   return true
 }
 
+const sanitizeManifestFields = (manifest) => {
+  let changed = false
+
+  // TODO: remove this after FF officially supports sidepanel
+  if (manifest.side_panel) {
+    delete manifest.side_panel
+    changed = true
+  }
+
+  // TODO: remove this after FF officially supports sidepanel
+  if (manifest.action?.default_popup) {
+    delete manifest.action.default_popup
+    changed = true
+  }
+
+  return changed
+}
+
 const sanitizeManifestFile = async (manifestPath) => {
   const raw = await fs.readFile(manifestPath, "utf8")
   const manifest = JSON.parse(raw)
-  const changed = sanitizePermissions(manifest)
+  const permissionsChanged = sanitizePermissions(manifest)
+  const fieldsChanged = sanitizeManifestFields(manifest)
 
-  if (!changed) {
+  if (!permissionsChanged && !fieldsChanged) {
     return false
   }
 
@@ -64,7 +83,7 @@ const main = async () => {
       const changed = await sanitizeManifestFile(manifestPath)
       if (changed) {
         touched += 1
-        console.log(`[sanitize-firefox-manifest] removed offscreen from ${manifestPath}`)
+        console.log(`[sanitize-firefox-manifest] sanitized manifest for Firefox: ${manifestPath}`)
       }
     } catch {
       console.warn(`[sanitize-firefox-manifest] manifest not found: ${manifestPath}`)
