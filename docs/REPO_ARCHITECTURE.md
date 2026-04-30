@@ -69,11 +69,11 @@ This gives:
 
 ### 1) Web Branch (`apps/web`)
 
-- Framework: Next.js App Router.
+- Framework: Next.js App Router (Pure Static Export).
 - Responsibility:
   - website routes and workspace pages
   - web shell (header/footer/layout)
-  - web-specific routing and page composition
+  - client-side routing for workspace tool pages (via QueryIdPageGuard)
 - Consumes shared modules for:
   - tool workflows
   - state stores

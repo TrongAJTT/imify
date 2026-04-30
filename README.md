@@ -62,7 +62,7 @@ Imify is officially available on the Chrome Web Store, Microsoft Edge Add-ons St
 ## 🛠️ Tech Stack
 
 * **Monorepo**: [Turborepo](https://turbo.build/)
-* **Web App**: [Next.js](https://nextjs.org/) (App Router)
+* **Web App**: [Next.js](https://nextjs.org/) (App Router, Pure Static Export)
 * **Extension Framework**: [Plasmo](https://docs.plasmo.com/) (Manifest V3)
 * **UI/Styling**: React, Tailwind CSS, Radix UI, dnd-kit, Lucide React
 * **State Management**: Zustand
@@ -161,7 +161,7 @@ pnpm package:all
 To build the web application:
 
 ```bash
-pnpm build:web          # Output: apps/web/.next/
+pnpm build:web          # Output: apps/web/out/ (Static Export)
 ```
 
 This will generate a zip-ready folder in `build/chrome-mv3-prod` which you can upload directly to the Chrome Web Store.
