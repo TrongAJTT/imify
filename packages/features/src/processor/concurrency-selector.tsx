@@ -10,6 +10,7 @@ import {
   MAX_CONCURRENCY
 } from "./performance-preferences"
 import { getConcurrencyTooltip } from "./concurrency-messages"
+import { usePopoverTriggerBehavior } from "./use-popover-trigger-behavior"
 
 interface ConcurrencySelectorProps {
   format: ImageFormat
@@ -44,6 +45,7 @@ export function ConcurrencySelector({
   }, [safeValue, value, onChange])
 
   const tooltip = getConcurrencyTooltip(format)
+  const popoverBehavior = usePopoverTriggerBehavior()
 
   return (
     <div className={`space-y-1 ${className}`.trim()}>
@@ -74,7 +76,7 @@ export function ConcurrencySelector({
                 </button>
               }
               preset="inspector"
-              behavior="hover"
+              behavior={popoverBehavior}
               side="top"
               closeDelayMs={120}
               contentClassName="z-[9999] w-64 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-2.5"

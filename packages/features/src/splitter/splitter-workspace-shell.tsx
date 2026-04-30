@@ -50,6 +50,7 @@ export function SplitterWorkspaceShell({ workspace }: SplitterWorkspaceShellProp
 
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
 
   const activePreset = useMemo(
@@ -78,6 +79,9 @@ export function SplitterWorkspaceShell({ workspace }: SplitterWorkspaceShellProp
             : undefined
         }
       />
+    )
+    setHeaderOnBack(
+      presetViewMode === "workspace" ? () => setPresetViewMode("select") : null
     )
 
     return () => {

@@ -12,6 +12,7 @@ import type { FillingTemplate, GridDesignParams } from "../types"
 import { DEFAULT_GRID_DESIGN_PARAMS } from "../types"
 import { GRID_DESIGN_TOOLTIPS } from "./tooltips"
 import { parseGridDesign } from "./generator"
+import { usePopoverTriggerBehavior } from "../../shared/use-popover-trigger-behavior"
 
 interface GridDesignSidebarProps {
   template: FillingTemplate
@@ -116,6 +117,7 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
   const storeParams = useFillingStore((state) => state.gridDesignParams)
   const layerCount = useFillingStore((state) => state.gridLayerCount)
   const setGridDesignParams = useFillingStore((state) => state.setGridDesignParams)
+  const popoverBehavior = usePopoverTriggerBehavior()
 
   const params = useMemo(
     () => normalizeGridDesignParams(storeParams ?? template.gridDesignParams ?? { ...DEFAULT_GRID_DESIGN_PARAMS }),
@@ -279,7 +281,7 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
         </p>
 
         <ControlledPopover
-          behavior="hover"
+          behavior={popoverBehavior}
           side="top"
           align="end"
           sideOffset={8}

@@ -9,6 +9,7 @@ import {
   type ConcurrencyAdvisorResult,
   type PerformancePreferences
 } from "./performance-preferences"
+import { usePopoverTriggerBehavior } from "./use-popover-trigger-behavior"
 
 interface SmartConcurrencyAdvisorCardProps {
   advisor?: ConcurrencyAdvisorResult
@@ -80,6 +81,7 @@ export function SmartConcurrencyAdvisorCard({
         : "High crash risk"
 
   const TriggerIcon = advisor.usingFallbackProfile ? Gauge : Sparkles
+  const popoverBehavior = usePopoverTriggerBehavior()
 
   return (
     <ControlledPopover
@@ -94,6 +96,7 @@ export function SmartConcurrencyAdvisorCard({
         </button>
       }
       preset="inspector"
+      behavior={popoverBehavior}
       contentClassName={`z-[9999] w-[320px] rounded-md border p-3 shadow-xl ${TONE_MAP[advisor.riskLevel].popover}`}
     >
       <div className="space-y-2 text-xs">

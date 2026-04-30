@@ -27,6 +27,11 @@ import {
   renderWorkspaceToolIcon
 } from "@imify/features/workspace-shell"
 import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
+import { getDevModeEnabled } from "@imify/features/dev-mode/dev-mode-store"
+import {
+  ensureRuntimeLogCaptureInstalled,
+  setRuntimeLogCaptureEnabled
+} from "@imify/features/dev-mode/runtime-log-collector"
 import {
   type ExtensionStorageState,
   STORAGE_KEY, STORAGE_VERSION
@@ -91,6 +96,8 @@ import type { ContextMenuSubTab } from "./components/context-menu/context-menu-s
 import { CONTEXT_MENU_SUB_TABS } from "./components/context-menu/context-menu-settings-tab"
 
 bootstrapExtensionAdapters()
+ensureRuntimeLogCaptureInstalled()
+setRuntimeLogCaptureEnabled(getDevModeEnabled())
 
 const syncStorage = new Storage({
   area: "sync",

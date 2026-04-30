@@ -117,6 +117,7 @@ export function PatternWorkspaceShell({ workspace }: PatternWorkspaceShellProps)
 
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
 
   const patternState = usePatternStore()
@@ -147,6 +148,9 @@ export function PatternWorkspaceShell({ workspace }: PatternWorkspaceShellProps)
             : undefined
         }
       />
+    )
+    setHeaderOnBack(
+      presetViewMode === "workspace" ? () => setPresetViewMode("select") : null
     )
 
     return () => {

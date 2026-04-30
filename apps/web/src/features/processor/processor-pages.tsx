@@ -64,6 +64,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
 
   useEffect(() => { if (setupContext !== context) setSetupContext(context) }, [context, setSetupContext, setupContext])
@@ -94,8 +95,9 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
     setHeaderBreadcrumb(
       <FeatureBreadcrumb compact rootToolId={getContextToolId(context)} />
     )
+    setHeaderOnBack(() => router.push(getRoutePrefix(context)))
     return () => resetHeader()
-  }, [context, resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
+  }, [context, resetHeader, router, setHeaderActions, setHeaderBreadcrumb, setHeaderOnBack, setHeaderSection])
 
   if (!isBatchStoreRehydrated || setupContext !== context) {
     return <WorkspaceLoadingState title="Loading processor presets..." />
@@ -125,6 +127,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const sidebar = useMemo(
     () => (
@@ -174,6 +177,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
         onRootClick={() => router.push(getRoutePrefix(context))}
       />
     )
+    setHeaderOnBack(() => router.push(getRoutePrefix(context)))
     return () => resetHeader()
   }, [
     context,
@@ -182,6 +186,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
     router,
     setHeaderActions,
     setHeaderBreadcrumb,
+    setHeaderOnBack,
     setHeaderSection
   ])
 

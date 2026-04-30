@@ -18,6 +18,7 @@ export type DevModeFeatureId =
   | "settings"
   | "performance"
   | "layout"
+  | "runtime_logs"
 
 export interface DevModeFeatureDef {
   id: DevModeFeatureId
@@ -41,4 +42,5 @@ export const DEV_MODE_FEATURES: DevModeFeatureDef[] = [
   { id: "settings", label: "Settings & Context Menu" },
   { id: "performance", label: "Performance Preferences" },
   { id: "layout", label: "Workspace Layout Preferences" },
+  { id: "runtime_logs", label: "Runtime Console Logs" },
 ]

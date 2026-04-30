@@ -35,6 +35,8 @@ import { applyWatermarkToImageBlob } from "./watermark";
 
 const PREVIEW_DEBOUNCE_MS = 420;
 const PREVIEW_MAX_DIMENSION = 3072;
+const IMPACT_CHIP_BREAKPOINT_PX = 500;
+const STATS_ROW_BREAKPOINT_PX = 380;
 
 interface ImageMeta {
   width: number;
@@ -145,6 +147,8 @@ export function SingleProcessorWorkspace({
   const [zoom, setZoom] = useState(100);
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
+  const [showImpactChip, setShowImpactChip] = useState(false);
+  const [stackStatsCards, setStackStatsCards] = useState(false);
   const requestSequenceRef = useRef(0);
   const attachSequenceRef = useRef(0);
 
@@ -300,10 +304,10 @@ export function SingleProcessorWorkspace({
       resultOutputExtension === "zip"
         ? smartName || "favicon_kit.zip"
         : smartName ||
-            toOutputFilenameWithExtension(
-              sourceFile.name,
-              resultOutputExtension,
-            ),
+        toOutputFilenameWithExtension(
+          sourceFile.name,
+          resultOutputExtension,
+        ),
     );
   }, [
     fileNamePattern,
@@ -312,6 +316,17 @@ export function SingleProcessorWorkspace({
     resultOutputExtension,
     sourceFile,
   ]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const update = () => {
+      setShowImpactChip(window.innerWidth < IMPACT_CHIP_BREAKPOINT_PX);
+      setStackStatsCards(window.innerWidth < STATS_ROW_BREAKPOINT_PX);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   useEffect(() => {
     if (!sourceFile) {
@@ -359,10 +374,10 @@ export function SingleProcessorWorkspace({
             outputExtension === "zip"
               ? smartName || "favicon_kit.zip"
               : smartName ||
-                  toOutputFilenameWithExtension(
-                    sourceFile.name,
-                    outputExtension,
-                  ),
+              toOutputFilenameWithExtension(
+                sourceFile.name,
+                outputExtension,
+              ),
           );
           if (normalizedBlob.type.startsWith("image/")) {
             try {
@@ -444,16 +459,29 @@ export function SingleProcessorWorkspace({
         <>
           <div className="p-0">
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <Heading className="truncate text-base">
-                    {sourceFile.name}
-                  </Heading>
+                  <div className="flex items-center justify-between gap-2">
+                    <Heading className="truncate text-base">
+                      {sourceFile.name}
+                    </Heading>
+                    {showImpactChip && (
+                      <span
+                        className={`shrink-0 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums ${
+                          resultBlob
+                            ? `${delta.className} border-current/25`
+                            : "text-slate-500 border-slate-300 dark:text-slate-400 dark:border-slate-700"
+                        }`}
+                      >
+                        {resultBlob ? delta.label : "-"}
+                      </span>
+                    )}
+                  </div>
                   <MutedText className="text-xs">
                     Live preview updates after {PREVIEW_DEBOUNCE_MS}ms idle.
                   </MutedText>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button variant="secondary" onClick={clearAll} type="button">
                     Clear
                   </Button>
@@ -471,8 +499,8 @@ export function SingleProcessorWorkspace({
                   </Button>
                 </div>
               </div>
-              <div className="flex flex-col items-center divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50 sm:flex-row sm:divide-x sm:divide-y-0 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900/50">
-                <div className="flex w-full flex-1 flex-col items-center p-4 text-center transition-colors hover:bg-white sm:items-start sm:text-left dark:hover:bg-slate-900">
+              <div className={`flex items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900/50 ${stackStatsCards ? "flex-col divide-y divide-slate-200" : "flex-row divide-x divide-slate-200"}`}>
+                <div className={`flex w-full flex-1 flex-col p-4 transition-colors hover:bg-white dark:hover:bg-slate-900 ${stackStatsCards ? "items-center text-center" : "items-start text-left"}`}>
                   <div className="mb-1 flex items-center gap-1.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -493,7 +521,7 @@ export function SingleProcessorWorkspace({
                     </span>
                   </div>
                 </div>
-                <div className="flex w-full flex-1 flex-col items-center border-t p-4 text-center transition-colors hover:bg-white sm:items-start sm:text-left dark:hover:bg-slate-900 sm:border-t-0">
+                <div className={`flex w-full flex-1 flex-col p-4 transition-colors hover:bg-white dark:hover:bg-slate-900 ${stackStatsCards ? "items-center text-center border-t" : "items-start text-left border-t-0"}`}>
                   <div className="mb-1 flex items-center gap-1.5">
                     <div
                       className={`h-1.5 w-1.5 rounded-full ${isProcessing ? "animate-pulse bg-amber-400" : "bg-blue-500"}`}
@@ -522,7 +550,13 @@ export function SingleProcessorWorkspace({
                     </span>
                   </div>
                 </div>
-                <div className="flex w-full min-w-[120px] flex-none flex-col items-center justify-center border-t bg-white/50 p-4 text-center sm:w-auto sm:border-t-0 dark:bg-slate-900/30">
+                <div
+                  className={`w-full min-w-[120px] flex-1 flex-col items-center justify-center bg-white/50 p-4 text-center dark:bg-slate-900/30 ${
+                    stackStatsCards ? "border-t" : "border-t-0"
+                  } ${
+                    showImpactChip ? "hidden" : "flex"
+                  }`}
+                >
                   <span className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Impact
                   </span>

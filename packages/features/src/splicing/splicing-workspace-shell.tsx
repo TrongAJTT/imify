@@ -155,6 +155,7 @@ export function SplicingWorkspaceShell({ workspace }: SplicingWorkspaceShellProp
 
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
 
   const splicingState = useSplicingStore()
@@ -185,6 +186,9 @@ export function SplicingWorkspaceShell({ workspace }: SplicingWorkspaceShellProp
             : undefined
         }
       />
+    )
+    setHeaderOnBack(
+      presetViewMode === "workspace" ? () => setPresetViewMode("select") : null
     )
 
     return () => {

@@ -88,7 +88,7 @@ export function ZoomPanControl({
     Math.abs(panY) > resetPanThreshold
 
   return (
-    <div className={`absolute bottom-3 right-2 flex items-center gap-2 bg-slate-900/90 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-lg z-10 pointer-events-auto select-text ${className}`}>
+    <div className={`absolute bottom-3 right-2 flex items-center gap-2 bg-slate-900/95 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-xl z-10 pointer-events-auto select-none scale-90 sm:scale-100 origin-bottom-right transition-transform ${className}`}>
       {editingZoom ? (
         <input
           ref={zoomInputRef}

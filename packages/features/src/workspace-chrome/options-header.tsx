@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { ChevronDown, Heart, Info, Menu, Moon, Settings, Sun } from "lucide-react"
+import { ArrowLeft, ChevronDown, Heart, Info, Menu, Moon, Settings, Sun } from "lucide-react"
 import { Tooltip } from "../shared/tooltip"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
@@ -84,6 +84,7 @@ export function WorkspaceOptionsHeader({
   isExtension = false
 }: WorkspaceOptionsHeaderProps) {
   const breadcrumb = useWorkspaceHeaderStore((s) => s.breadcrumb)
+  const onBack = useWorkspaceHeaderStore((s) => s.onBack)
   const logoSrc = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.imifyLogoPng)
   const isDesktop = useIsDesktopLayout()
   const [isToolsMenuOpen, setIsToolsMenuOpen] = React.useState(false)
@@ -157,11 +158,10 @@ export function WorkspaceOptionsHeader({
                 key={item.id ?? item.href}
                 type="button"
                 onClick={() => onNavigate?.(item.href)}
-                className={`px-2 py-1 rounded text-xs transition-colors ${
-                  activeNavHref === item.href
-                    ? "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
-                    : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                }`}
+                className={`px-2 py-1 rounded text-xs transition-colors ${activeNavHref === item.href
+                  ? "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
+                  : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                  }`}
               >
                 {item.label}
               </button>
@@ -258,6 +258,16 @@ export function WorkspaceOptionsHeader({
             ) : null}
           </div>
         ) : null}
+        {onBack && !isDesktop ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+            aria-label="Back to tool menu"
+          >
+            <ArrowLeft size={18} />
+          </button>
+        ) : null}
         {breadcrumb && isDesktop ? <div className="min-w-0 flex items-center">{breadcrumb}</div> : null}
         {isLoading ? (
           <span className="text-[11px] text-slate-400 dark:text-slate-500 animate-pulse shrink-0">Loading...</span>
@@ -266,76 +276,76 @@ export function WorkspaceOptionsHeader({
 
       <div className="flex items-center gap-1 shrink-0">
         {isDesktop ? (
-        <div className="flex items-center gap-1">
-          <TitleBarButton
-            onClick={onOpenDonate}
-            tooltipText="Support the dev"
-            isDonate
-            label={isExtension ? undefined : "Donate"}
-          >
-            <Heart size={16} fill="red" stroke="red" />
-          </TitleBarButton>
-          <TitleBarButton
-            onClick={onToggleDark}
-            tooltipText={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="ml-2"
-          >
-            {isDark ? <Moon size={18} /> : <Sun size={18} />}
-          </TitleBarButton>
-          <TitleBarButton onClick={onOpenAbout} tooltipText="About Imify">
-            <Info size={18} />
-          </TitleBarButton>
-          <TitleBarButton onClick={onOpenSettings} tooltipText="Settings">
-            <Settings size={18} />
-          </TitleBarButton>
-        </div>
+          <div className="flex items-center gap-1">
+            <TitleBarButton
+              onClick={onOpenDonate}
+              tooltipText="Support the dev"
+              isDonate
+              label={isExtension ? undefined : "Donate"}
+            >
+              <Heart size={16} fill="red" stroke="red" />
+            </TitleBarButton>
+            <TitleBarButton
+              onClick={onToggleDark}
+              tooltipText={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              className="ml-2"
+            >
+              {isDark ? <Moon size={18} /> : <Sun size={18} />}
+            </TitleBarButton>
+            <TitleBarButton onClick={onOpenAbout} tooltipText="About Imify">
+              <Info size={18} />
+            </TitleBarButton>
+            <TitleBarButton onClick={onOpenSettings} tooltipText="Settings">
+              <Settings size={18} />
+            </TitleBarButton>
+          </div>
         ) : (
-        <div className="relative">
-          <TitleBarButton
-            onClick={() => setIsMoreMenuOpen((prev) => !prev)}
-            tooltipText="More actions"
-            className="border border-slate-200 dark:border-slate-700"
-          >
-            <Menu size={18} />
-          </TitleBarButton>
-          {isMoreMenuOpen ? (
-            <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-[180px] rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-              <button
-                type="button"
-                onClick={() => {
-                  onToggleDark()
-                  setIsMoreMenuOpen(false)
-                }}
-                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-              >
-                {isDark ? <Moon size={16} /> : <Sun size={16} />}
-                <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onOpenAbout()
-                  setIsMoreMenuOpen(false)
-                }}
-                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-              >
-                <Info size={16} />
-                <span>About</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onOpenSettings()
-                  setIsMoreMenuOpen(false)
-                }}
-                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-              >
-                <Settings size={16} />
-                <span>Settings</span>
-              </button>
-            </div>
-          ) : null}
-        </div>
+          <div className="relative">
+            <TitleBarButton
+              onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+              tooltipText="More actions"
+              className="border border-slate-200 dark:border-slate-700"
+            >
+              <Menu size={18} />
+            </TitleBarButton>
+            {isMoreMenuOpen ? (
+              <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-[180px] rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onToggleDark()
+                    setIsMoreMenuOpen(false)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                >
+                  {isDark ? <Moon size={16} /> : <Sun size={16} />}
+                  <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenAbout()
+                    setIsMoreMenuOpen(false)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                >
+                  <Info size={16} />
+                  <span>About</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenSettings()
+                    setIsMoreMenuOpen(false)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                >
+                  <Settings size={16} />
+                  <span>Settings</span>
+                </button>
+              </div>
+            ) : null}
+          </div>
         )}
       </div>
     </header>

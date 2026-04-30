@@ -535,15 +535,6 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     disabled={borderOverridden}
                     tooltipContent={borderOverridden ? FILLING_TOOLTIPS.fillLayerCustomization.borderDisabled : undefined}
                   />
-                  <ColorPickerPopover
-                    label="Color"
-                    value={selectedFillState?.borderColor ?? "#000000"}
-                    onChange={(value) => updateSelectedLayerState({ borderColor: value })}
-                    enableAlpha={false}
-                    enableGradient
-                    outputMode="hex"
-                    appearance="stacked"
-                  />
                   <NumberInput
                     label="Radius"
                     value={selectedFillState?.cornerRadius ?? 0}
@@ -552,6 +543,15 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     max={200}
                     disabled={cornerRadiusOverridden}
                     tooltipContent={cornerRadiusOverridden ? FILLING_TOOLTIPS.fillLayerCustomization.radiusDisabled : undefined}
+                  />
+                  <ColorPickerPopover
+                    label="Color"
+                    value={selectedFillState?.borderColor ?? "#000000"}
+                    onChange={(value) => updateSelectedLayerState({ borderColor: value })}
+                    enableAlpha={false}
+                    enableGradient
+                    outputMode="hex"
+                    appearance="stacked"
                   />
                 </div>
 

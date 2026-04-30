@@ -481,8 +481,8 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <Subheading>Symmetric Generator</Subheading>
             <VisualHelpTooltip
@@ -493,12 +493,12 @@ export function SymmetricWorkspace({ template, onRefresh, onSaved }: SymmetricWo
               mediaAlt={SYMMETRIC_VISUAL_HELP_TOOLTIPS.mediaAlt}
             />
           </div>
-          <MutedText className="mt-0.5 text-xs">
+          <MutedText className="mt-0.5 text-xs truncate">
             {generatedLayers.length} shape{generatedLayers.length !== 1 ? "s" : ""} generated &middot; {template.canvasWidth} x{" "}
             {template.canvasHeight} px
           </MutedText>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <PreviewInteractionModeToggle
             mode={previewInteractionMode}
             onChange={setPreviewInteractionMode}
