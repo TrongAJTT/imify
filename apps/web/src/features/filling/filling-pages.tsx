@@ -75,6 +75,7 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
 
   const refreshTemplates = useCallback(async () => {
@@ -98,8 +99,9 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
     setHeaderSection("Image Filling")
     setHeaderActions(null)
     setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="filling" />)
+    setHeaderOnBack(null)
     return () => resetHeader()
-  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
+  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderOnBack, setHeaderSection])
 
   if (!templatesLoaded) {
     return <WorkspaceLoadingState title="Loading filling templates..." />
@@ -146,6 +148,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
+  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
   const router = useRouter()
   const templates = useFillingStore((state) => state.templates)
@@ -273,6 +276,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
         onMiddleClick={template ? () => router.push(`${routeBase}/fill?id=${template.id}`) : undefined}
       />
     )
+    setHeaderOnBack(() => router.push(routeBase))
     return () => resetHeader()
   }, [
     mode,
@@ -281,6 +285,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
     router,
     setHeaderActions,
     setHeaderBreadcrumb,
+    setHeaderOnBack,
     setHeaderSection,
     template
   ])

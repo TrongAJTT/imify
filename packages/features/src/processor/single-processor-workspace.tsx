@@ -300,10 +300,10 @@ export function SingleProcessorWorkspace({
       resultOutputExtension === "zip"
         ? smartName || "favicon_kit.zip"
         : smartName ||
-            toOutputFilenameWithExtension(
-              sourceFile.name,
-              resultOutputExtension,
-            ),
+        toOutputFilenameWithExtension(
+          sourceFile.name,
+          resultOutputExtension,
+        ),
     );
   }, [
     fileNamePattern,
@@ -359,10 +359,10 @@ export function SingleProcessorWorkspace({
             outputExtension === "zip"
               ? smartName || "favicon_kit.zip"
               : smartName ||
-                  toOutputFilenameWithExtension(
-                    sourceFile.name,
-                    outputExtension,
-                  ),
+              toOutputFilenameWithExtension(
+                sourceFile.name,
+                outputExtension,
+              ),
           );
           if (normalizedBlob.type.startsWith("image/")) {
             try {
@@ -471,8 +471,8 @@ export function SingleProcessorWorkspace({
                   </Button>
                 </div>
               </div>
-              <div className="flex flex-col items-center divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50 sm:flex-row sm:divide-x sm:divide-y-0 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900/50">
-                <div className="flex w-full flex-1 flex-col items-center p-4 text-center transition-colors hover:bg-white sm:items-start sm:text-left dark:hover:bg-slate-900">
+              <div className="flex flex-col items-center divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50 min-[420px]:flex-row min-[420px]:divide-x min-[420px]:divide-y-0 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900/50">
+                <div className="flex w-full flex-1 flex-col items-center p-4 text-center transition-colors hover:bg-white min-[420px]:items-start min-[420px]:text-left dark:hover:bg-slate-900">
                   <div className="mb-1 flex items-center gap-1.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -493,7 +493,7 @@ export function SingleProcessorWorkspace({
                     </span>
                   </div>
                 </div>
-                <div className="flex w-full flex-1 flex-col items-center border-t p-4 text-center transition-colors hover:bg-white sm:items-start sm:text-left dark:hover:bg-slate-900 sm:border-t-0">
+                <div className="flex w-full flex-1 flex-col items-center border-t p-4 text-center transition-colors hover:bg-white min-[420px]:items-start min-[420px]:text-left dark:hover:bg-slate-900 min-[420px]:border-t-0">
                   <div className="mb-1 flex items-center gap-1.5">
                     <div
                       className={`h-1.5 w-1.5 rounded-full ${isProcessing ? "animate-pulse bg-amber-400" : "bg-blue-500"}`}
@@ -522,7 +522,7 @@ export function SingleProcessorWorkspace({
                     </span>
                   </div>
                 </div>
-                <div className="flex w-full min-w-[120px] flex-none flex-col items-center justify-center border-t bg-white/50 p-4 text-center sm:w-auto sm:border-t-0 dark:bg-slate-900/30">
+                <div className="flex w-full min-w-[120px] flex-none flex-col items-center justify-center border-t bg-white/50 p-4 text-center min-[420px]:w-auto min-[420px]:border-t-0 dark:bg-slate-900/30">
                   <span className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Impact
                   </span>
