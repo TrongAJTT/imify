@@ -444,7 +444,7 @@ export function SingleProcessorWorkspace({
         <>
           <div className="p-0">
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <Heading className="truncate text-base">
                     {sourceFile.name}
@@ -453,7 +453,7 @@ export function SingleProcessorWorkspace({
                     Live preview updates after {PREVIEW_DEBOUNCE_MS}ms idle.
                   </MutedText>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button variant="secondary" onClick={clearAll} type="button">
                     Clear
                   </Button>

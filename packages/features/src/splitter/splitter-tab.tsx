@@ -645,7 +645,7 @@ export function SplitterTab() {
         />
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <Subheading className="truncate">Image Splitter Workspace</Subheading>
@@ -670,7 +670,7 @@ export function SplitterTab() {
                 {images.length} image{images.length === 1 ? "" : "s"} in queue
               </MutedText>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <PreviewInteractionModeToggle
                 mode={previewInteractionMode}
                 onChange={setPreviewInteractionMode}
@@ -678,17 +678,19 @@ export function SplitterTab() {
                 panKeyHint={getShortcutLabel("global.preview.pan_mode")}
                 idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
               />
-              <Button variant="secondary" size="sm" onClick={handleClearAll} disabled={isExporting}>
-                <Trash2 size={14} />
-                Clear
-              </Button>
-              <ExportSplitButton
-                onExport={handleExportAction}
-                isLoading={isExporting}
-                primaryMode="zip"
-                oneByOneCount={estimatedExportFileCount}
-                showPdfOptions={false}
-              />
+              <div className="flex items-center gap-2">
+                <Button variant="secondary" size="sm" onClick={handleClearAll} disabled={isExporting}>
+                  <Trash2 size={14} />
+                  Clear
+                </Button>
+                <ExportSplitButton
+                  onExport={handleExportAction}
+                  isLoading={isExporting}
+                  primaryMode="zip"
+                  oneByOneCount={estimatedExportFileCount}
+                  showPdfOptions={false}
+                />
+              </div>
             </div>
           </div>
 

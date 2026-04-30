@@ -41,6 +41,13 @@ export function SplitterPreview({
   const [isResizing, setIsResizing] = useState(false)
   const previewFrameRef = useRef<HTMLDivElement>(null)
   const previewInteractionModeRef = useRef(previewInteractionMode)
+  
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 800) {
+      setContainerHeight(400)
+    }
+  }, [])
+
   useEffect(() => {
     previewInteractionModeRef.current = previewInteractionMode
   }, [previewInteractionMode])
@@ -210,15 +217,15 @@ export function SplitterPreview({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
         <span className="truncate">Preview: {image.name}</span>
-        <span>{plan?.rects.length ?? 0} slices</span>
+        <span className="shrink-0">{plan?.rects.length ?? 0} slices</span>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-slate-100 p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
+      <div className="rounded-xl border border-slate-200 bg-slate-100 p-1.5 sm:p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
         <div
           ref={previewFrameRef}
-          className={`relative mx-auto overflow-hidden rounded-lg border bg-white dark:bg-slate-950 ${
+          className={`relative mx-auto overflow-hidden rounded-lg border bg-white dark:bg-slate-950 touch-none ${
             isDragOver
               ? "border-cyan-500 ring-2 ring-cyan-300/60 dark:ring-cyan-700/60"
               : "border-slate-300 dark:border-slate-700"
@@ -335,7 +342,7 @@ export function SplitterPreview({
                 {canDragXGuide ? (
                   <button
                     type="button"
-                    className="absolute top-0 bottom-0 z-20 w-3 -translate-x-1/2 cursor-ew-resize bg-transparent"
+                    className="absolute top-0 bottom-0 z-20 w-4 -translate-x-1/2 cursor-ew-resize bg-transparent"
                     style={{ left: `${(firstXCut / image.width) * 100}%` }}
                     onPointerDown={(event) => {
                       event.preventDefault()
@@ -348,7 +355,7 @@ export function SplitterPreview({
                 {canDragYGuide ? (
                   <button
                     type="button"
-                    className="absolute left-0 right-0 z-20 h-3 -translate-y-1/2 cursor-ns-resize bg-transparent"
+                    className="absolute left-0 right-0 z-20 h-4 -translate-y-1/2 cursor-ns-resize bg-transparent"
                     style={{ top: `${(firstYCut / image.height) * 100}%` }}
                     onPointerDown={(event) => {
                       event.preventDefault()
@@ -369,10 +376,10 @@ export function SplitterPreview({
           ) : null}
 
           {isComputing ? (
-            <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+            <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center px-4 text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-slate-300/90 bg-white/95 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur dark:border-slate-600/90 dark:bg-slate-900/90 dark:text-slate-200">
                 <AnimatingSpinner size={12} />
-                Computing split preview...
+                <span className="truncate">Computing split preview...</span>
               </div>
             </div>
           ) : null}
@@ -392,10 +399,13 @@ export function SplitterPreview({
               event.preventDefault()
               setIsResizing(true)
             }}
-            className={`absolute bottom-0 left-0 right-0 h-1 cursor-ns-resize transition-colors ${
-              isResizing ? "bg-sky-500" : "bg-slate-300 hover:bg-sky-400 dark:bg-slate-600 dark:hover:bg-sky-500"
-            }`}
-          />
+            className={`absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize z-20 group`}
+          >
+            <div className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${
+                isResizing ? "bg-sky-500" : "bg-slate-300 group-hover:bg-sky-400 dark:bg-slate-600 dark:group-hover:bg-sky-500"
+              }`} 
+            />
+          </div>
         </div>
       </div>
 

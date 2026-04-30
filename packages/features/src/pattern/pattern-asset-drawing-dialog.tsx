@@ -74,12 +74,11 @@ function stopEvent(event: { stopPropagation: () => void }): void {
   event.stopPropagation()
 }
 
-function stopEventAndPreventDefault(event: {
-  stopPropagation: () => void
-  preventDefault: () => void
-}): void {
+function stopEventAndPreventDefault(event: any): void {
   event.stopPropagation()
-  event.preventDefault()
+  if (event.cancelable) {
+    event.preventDefault()
+  }
 }
 
 export function PatternAssetDrawingDialog({
@@ -475,19 +474,8 @@ export function PatternAssetDrawingDialog({
       isOpen={isOpen}
       onClose={onClose}
       isDirty={hasUndoHistory}
-      contentClassName="w-[980px] max-w-[96vw] rounded-2xl overflow-hidden">
-      <div
-        onPointerDown={stopEvent}
-        onPointerMove={stopEvent}
-        onPointerUp={stopEvent}
-        onMouseDown={stopEvent}
-        onMouseMove={stopEvent}
-        onMouseUp={stopEvent}
-        onTouchStart={stopEvent}
-        onTouchMove={stopEvent}
-        onTouchEnd={stopEvent}
-        onWheel={stopEventAndPreventDefault}
-      >
+      contentClassName="w-[980px] max-w-[96vw] rounded-2xl">
+      <div onWheel={stopEventAndPreventDefault}>
         <div className="border-b border-slate-200 dark:border-slate-800 px-5 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">

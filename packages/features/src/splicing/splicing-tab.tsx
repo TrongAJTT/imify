@@ -724,14 +724,14 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
   const workspaceContent = (
     <div className="p-0">
       {hasImages ? (
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <Subheading>Image Splicing</Subheading>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div className="min-w-0">
+            <Subheading className="truncate">Image Splicing</Subheading>
             {dimensionLabel && (
-              <MutedText className="text-xs mt-0.5">{dimensionLabel}</MutedText>
+              <MutedText className="text-xs mt-0.5 truncate">{dimensionLabel}</MutedText>
             )}
           </div>
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-wrap items-center gap-3">
             <PreviewInteractionModeToggle
               mode={previewInteractionMode}
               onChange={setPreviewInteractionMode}
@@ -739,22 +739,24 @@ export function SplicingTab({ onRegisterPreviewQualityChangeHandler }: SplicingT
               panKeyHint={getShortcutLabel("global.preview.pan_mode")}
               idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
             />
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleClearAll}
-              disabled={isExporting}
-            >
-              <Trash2 size={14} />
-              Clear
-            </Button>
-            <ExportSplitButton
-              onExport={handleExportAction}
-              isLoading={isExporting}
-              primaryMode={primaryExportMode}
-              oneByOneCount={exportTargetCount}
-              showPdfOptions={canExportPdf}
-            />
+            <div className="flex items-center gap-3">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleClearAll}
+                disabled={isExporting}
+              >
+                <Trash2 size={14} />
+                Clear
+              </Button>
+              <ExportSplitButton
+                onExport={handleExportAction}
+                isLoading={isExporting}
+                primaryMode={primaryExportMode}
+                oneByOneCount={exportTargetCount}
+                showPdfOptions={canExportPdf}
+              />
+            </div>
           </div>
         </div>
       ) : null}

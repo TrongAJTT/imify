@@ -23,6 +23,7 @@ export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanCha
   const ref = useRef<HTMLDivElement>(null)
   const containerHeight = useDiffcheckerStore((s) => s.containerHeight)
   const setContainerHeight = useDiffcheckerStore((s) => s.setContainerHeight)
+  const activePointerIdRef = useRef<number | null>(null)
   const panRef = useRef<{ sx: number; sy: number; px: number; py: number } | null>(null)
   const [dragging, setDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
@@ -103,26 +104,41 @@ export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanCha
   }, [isResizing, setContainerHeight])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (e.button !== 0) return
+    if (e.button !== 0 || activePointerIdRef.current !== null) return
     const target = e.target as HTMLElement
     if (target.closest(INTERACTIVE_SELECTOR)) return
-    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    
+    e.preventDefault()
+    try {
+      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    } catch {
+      // Ignore capture failure
+    }
+    
+    activePointerIdRef.current = e.pointerId
     panRef.current = { sx: e.clientX, sy: e.clientY, px: panX, py: panY }
     setDragging(true)
   }, [panX, panY])
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     const s = panRef.current
-    if (!s || !dragging) return
+    if (!s || !dragging || e.pointerId !== activePointerIdRef.current) return
     onPanChange(s.px + (e.clientX - s.sx), s.py + (e.clientY - s.sy))
   }, [dragging, onPanChange])
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (!dragging) return
-    ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+    if (e.pointerId !== activePointerIdRef.current) return
+    
+    try {
+      ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+    } catch {
+      // Ignore release failure
+    }
+    
+    activePointerIdRef.current = null
     panRef.current = null
     setDragging(false)
-  }, [dragging])
+  }, [])
 
   const handleDoubleClick = useCallback(() => {
     onZoomChange(100)
@@ -132,7 +148,7 @@ export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanCha
   return (
     <div
       ref={ref}
-      className={`relative overflow-hidden rounded-lg border border-slate-200 select-none [--ck-a:#e2e8f0] [--ck-b:#f8fafc] dark:border-slate-700 dark:[--ck-a:#334155] dark:[--ck-b:#1e293b] ${dragging ? "cursor-grabbing" : "cursor-grab"} ${className}`}
+      className={`relative overflow-hidden rounded-lg border border-slate-200 select-none touch-none [--ck-a:#e2e8f0] [--ck-b:#f8fafc] dark:border-slate-700 dark:[--ck-a:#334155] dark:[--ck-b:#1e293b] ${dragging ? "cursor-grabbing" : "cursor-grab"} ${className}`}
       style={{
         height: isFullscreen ? "100dvh" : `${Math.max(120, Math.round(containerHeight))}px`,
         backgroundImage: "repeating-conic-gradient(var(--ck-a) 0% 25%, var(--ck-b) 0% 50%)",
