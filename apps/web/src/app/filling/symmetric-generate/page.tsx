@@ -1,18 +1,15 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import { FillingFlowPage } from "@/features/filling/filling-pages"
-import { getRouteId } from "@/features/routing/route-id"
+import { Suspense } from "react"
+import { WorkspaceLoadingState } from "@imify/ui/ui/workspace-loading-state"
+import { QueryIdPageGuard } from "@/features/routing/query-id-page-guard"
 import { WEB_ROUTE_METADATA } from "../../seo-metadata"
-
-interface SymmetricPageProps {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}
 
 export const metadata: Metadata = WEB_ROUTE_METADATA.fillingSymmetricGenerate
 
-export default async function FillingSymmetricGeneratePage({ searchParams }: SymmetricPageProps) {
-  const id = getRouteId(await searchParams)
-  if (!id) notFound()
-
-  return <FillingFlowPage mode="symmetric-generate" templateId={id} routeBase="/filling" />
+export default function FillingSymmetricGeneratePage() {
+  return (
+    <Suspense fallback={<WorkspaceLoadingState />}>
+      <QueryIdPageGuard target="filling-symmetric-generate" />
+    </Suspense>
+  )
 }

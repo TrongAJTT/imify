@@ -1,18 +1,15 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import { ProcessorWorkPage } from "@/features/processor/processor-pages"
-import { getRouteId } from "@/features/routing/route-id"
+import { Suspense } from "react"
+import { WorkspaceLoadingState } from "@imify/ui/ui/workspace-loading-state"
+import { QueryIdPageGuard } from "@/features/routing/query-id-page-guard"
 import { WEB_ROUTE_METADATA } from "../../seo-metadata"
-
-interface WorkPageProps {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}
 
 export const metadata: Metadata = WEB_ROUTE_METADATA.singleProcessorWork
 
-export default async function SingleProcessorWorkPage({ searchParams }: WorkPageProps) {
-  const id = getRouteId(await searchParams)
-  if (!id) notFound()
-
-  return <ProcessorWorkPage context="single" presetId={id} />
+export default function SingleProcessorWorkPage() {
+  return (
+    <Suspense fallback={<WorkspaceLoadingState />}>
+      <QueryIdPageGuard target="single-work" />
+    </Suspense>
+  )
 }

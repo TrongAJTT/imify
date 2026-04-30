@@ -114,8 +114,8 @@ Execution chain:
 1. `prebuild` -> `pnpm sync:assets`
 2. asset sync and checks run (same as dev)
 3. build:
-   - `node ../../scripts/with-root-metadata.mjs next build`
-   - **Output**: `apps/web/.next/` (for server) and static exports if configured.
+    - `node ../../scripts/with-root-metadata.mjs next build`
+    - **Output**: `apps/web/out/` (Static Export).
 
 ### Prod Start
 
@@ -126,8 +126,8 @@ pnpm --filter @imify/web start
 ```
 
 Runs:
-
-- `node ../../scripts/with-root-metadata.mjs next start`
+- `npx serve apps/web/out` (or any static server)
+- *Note*: `next start` is not applicable for static exports.
 
 ---
 

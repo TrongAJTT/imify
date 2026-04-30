@@ -1,18 +1,15 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import { SplitterWorkPage as SplitterWorkClientPage } from "@/features/splitter/splitter-pages"
-import { getRouteId } from "@/features/routing/route-id"
+import { Suspense } from "react"
+import { WorkspaceLoadingState } from "@imify/ui/ui/workspace-loading-state"
+import { QueryIdPageGuard } from "@/features/routing/query-id-page-guard"
 import { WEB_ROUTE_METADATA } from "../../seo-metadata"
-
-interface WorkPageProps {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}
 
 export const metadata: Metadata = WEB_ROUTE_METADATA.splitterWork
 
-export default async function SplitterWorkPage({ searchParams }: WorkPageProps) {
-  const id = getRouteId(await searchParams)
-  if (!id) notFound()
-
-  return <SplitterWorkClientPage presetId={id} />
+export default function SplitterWorkPage() {
+  return (
+    <Suspense fallback={<WorkspaceLoadingState />}>
+      <QueryIdPageGuard target="splitter-work" />
+    </Suspense>
+  )
 }

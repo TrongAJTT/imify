@@ -1,6 +1,10 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  output: "export",
+  images: {
+    unoptimized: true
+  },
   transpilePackages: ["@imify/core", "@imify/engine", "@imify/features", "@imify/stores", "@imify/ui"],
   webpack: (config) => {
     const webReactKonva = require.resolve("react-konva", { paths: [__dirname] })
