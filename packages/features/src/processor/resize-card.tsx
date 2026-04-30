@@ -9,6 +9,7 @@ import {
 import type { ResizeResamplingAlgorithm } from "@imify/core/types"
 import { SmartResizeModule } from "./smart-resize-module"
 import { PaperConfig } from "./paper-config"
+import { usePopoverTriggerBehavior } from "./use-popover-trigger-behavior"
 import { AccordionCard, ControlledPopover, Kicker, LabelText, NumberInput, SelectInput } from "@imify/ui"
 
 export type ResizeCardProps = {
@@ -121,6 +122,8 @@ export function ResizeCard({
   alwaysOpen,
   groupId,
 }: ResizeCardProps) {
+  const quickStatsPopoverBehavior = usePopoverTriggerBehavior()
+
   const batchModeMap: Record<string, string> = {
     none: "No resize",
     change_width: "Fit width",
@@ -232,7 +235,7 @@ export function ResizeCard({
                     </button>
                   }
                   preset="inspector"
-                  behavior="hybrid"
+                  behavior={quickStatsPopoverBehavior}
                   side="bottom"
                   align="end"
                   closeOnContentClick

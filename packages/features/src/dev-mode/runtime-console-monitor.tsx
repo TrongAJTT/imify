@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useCallback, useMemo, useState } from "react"
-import { Check, Copy, RefreshCw, Trash2 } from "lucide-react"
+import { Check, Copy, Download, RefreshCw, Trash2 } from "lucide-react"
 import { Button } from "@imify/ui/ui/button"
 import { Tooltip } from "../shared/tooltip"
 import { useRuntimeLogStore } from "./runtime-log-collector"
@@ -30,6 +30,20 @@ export function RuntimeConsoleMonitor() {
     } catch {
       // Ignore permission errors from clipboard API.
     }
+  }, [logText])
+
+  const handleExportRuntimeLogs = useCallback(() => {
+    if (!logText) return
+    const blob = new Blob([logText], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const dateStr = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = `imify-runtime-console-${dateStr}.log`
+    document.body.appendChild(anchor)
+    anchor.click()
+    document.body.removeChild(anchor)
+    window.setTimeout(() => URL.revokeObjectURL(url), 5000)
   }, [logText])
 
   return (
@@ -62,6 +76,19 @@ export function RuntimeConsoleMonitor() {
             >
               <Trash2 size={11} />
               Clear
+            </Button>
+          </Tooltip>
+          <Tooltip content="Export runtime logs as .log file">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 border-slate-200 dark:border-slate-700"
+              onClick={handleExportRuntimeLogs}
+              disabled={!runtimeLogs.length}
+            >
+              <Download size={11} />
+              Export
             </Button>
           </Tooltip>
         </div>

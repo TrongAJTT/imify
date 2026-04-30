@@ -20,6 +20,7 @@ import {
   SlidersHorizontal,
   Trash2
 } from "lucide-react"
+import { usePopoverTriggerBehavior } from "../shared/use-popover-trigger-behavior"
 
 interface PatternAssetListItemProps {
   asset: PatternAsset
@@ -49,6 +50,7 @@ export function PatternAssetListItem({
   onEdit,
   onRemove
 }: PatternAssetListItemProps) {
+  const popoverBehavior = usePopoverTriggerBehavior()
   const {
     attributes,
     listeners,
@@ -111,7 +113,7 @@ export function PatternAssetListItem({
 
               <ControlledPopover
                 preset="tooltip"
-                behavior="hover"
+                behavior={popoverBehavior}
                 side="top"
                 align="end"
                 openDelayMs={120}

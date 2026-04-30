@@ -1313,14 +1313,14 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <Subheading>Fill Images</Subheading>
-          <MutedText className="text-xs mt-0.5">
+          <MutedText className="text-xs mt-0.5 truncate">
             {template.canvasWidth} x {template.canvasHeight} px &middot; {template.layers.length} layer{template.layers.length !== 1 ? "s" : ""}
           </MutedText>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <PreviewInteractionModeToggle
             mode={previewInteractionMode}
             onChange={setPreviewInteractionMode}

@@ -377,8 +377,8 @@ export function ManualEditorWorkspace({
   return (
     <div className="space-y-4">
       {showHeader ? (
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <Subheading>Manual Editor</Subheading>
               {visualHelp ? (
@@ -391,11 +391,11 @@ export function ManualEditorWorkspace({
                 />
               ) : null}
             </div>
-            <MutedText className="text-xs mt-0.5">
+            <MutedText className="text-xs mt-0.5 truncate">
               {canvasWidth} x {canvasHeight} px &middot; {layers.length} layer{layers.length !== 1 ? "s" : ""}
             </MutedText>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <PreviewInteractionModeToggle
               mode={previewInteractionMode}
               onChange={setPreviewInteractionMode}

@@ -218,16 +218,16 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <Subheading>Grid Designer</Subheading>
-          <MutedText className="mt-0.5 text-xs">
+          <MutedText className="mt-0.5 text-xs truncate">
             {parseResult.layoutCells.length} cell{parseResult.layoutCells.length !== 1 ? "s" : ""} generated &middot;{" "}
             {template.canvasWidth} x {template.canvasHeight} px
           </MutedText>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <PreviewInteractionModeToggle
             mode={previewInteractionMode}
             onChange={setPreviewInteractionMode}

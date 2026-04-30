@@ -552,40 +552,28 @@ export function WorkspaceSettingsDialog({
 
               <section className="space-y-4">
                 <SettingsItemHeader
-                  title="LIVE STATE MONITOR"
-                  description="Inspect current state in real-time. Updates as you change settings."
+                  title="SYSTEM MONITOR & LOG TOOLS"
+                  description="Inspect live state, then export/import full system snapshots for debugging."
                 />
                 <DevModeStateViewer activeTab={devModeActiveTab} settingsAdapter={devModeSettingsAdapter} />
-              </section>
-
-              <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
-                <SettingsItemHeader
-                  title="EXPORT DEBUG LOG"
-                  description="Selectively export your configuration to JSON."
-                />
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-2 rounded-lg"
-                  onClick={() => setIsExportDialogOpen(true)}
-                >
-                  <Download size={14} />
-                  Export System Log
-                </Button>
-              </section>
-
-              <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
-                <SettingsItemHeader
-                  title="IMPORT DEBUG LOG"
-                  description="Import a JSON debug file to restore selected state."
-                />
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-2 rounded-lg"
-                  onClick={() => setIsImportDialogOpen(true)}
-                >
-                  <Download size={14} className="rotate-180" />
-                  Import System Log
-                </Button>
+                <div className="flex flex-col gap-3 pt-1">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-2 rounded-lg"
+                    onClick={() => setIsExportDialogOpen(true)}
+                  >
+                    <Download size={14} />
+                    Export System Log
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-2 rounded-lg"
+                    onClick={() => setIsImportDialogOpen(true)}
+                  >
+                    <Download size={14} className="rotate-180" />
+                    Import System Log
+                  </Button>
+                </div>
               </section>
 
               <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
