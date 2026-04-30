@@ -19,7 +19,7 @@
 
 --- SUMMARY ABOVE
 
-Version 2.0.0 transforms Imify into a professional "Image Toolkit," introducing specialized creative workspaces, a diagnostic SEO engine, and a high-performance processing core.
+Version 2.1.0 transforms Imify into a professional "Image Toolkit," introducing specialized creative workspaces, a diagnostic SEO engine, and a high-performance processing core.
 
 ### ✨ Creative & Diagnostic Workspaces
 - **Image Filling Designer:** A powerful layer-based workspace to fill shapes (polygons, stars, circles) with images. Features symmetric grid generators and professional layer management.

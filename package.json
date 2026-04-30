@@ -11,8 +11,11 @@
   "packageManager": "pnpm@10.32.1",
   "scripts": {
     "dev": "turbo dev",
-    "sync:assets": "pnpm --filter @imify/extension sync:assets && pnpm --filter @imify/web sync:assets",
-    "dev:ext": "pnpm sync:assets && pnpm --filter @imify/extension dev",
+    "sync:package": "node scripts/sync-package-versions.mjs",
+    "sync:assets": "pnpm --filter @imify/extension sync:assets",
+    "dev:ext": "pnpm sync:assets && pnpm --filter @imify/extension dev:chrome",
+    "dev:chrome": "pnpm sync:assets && pnpm --filter @imify/extension dev:chrome",
+    "dev:firefox": "pnpm sync:assets && pnpm --filter @imify/extension dev:firefox",
     "dev:web": "pnpm sync:assets && pnpm --filter @imify/web dev",
     "build:web": "pnpm sync:assets && pnpm --filter @imify/web build",
     "build:ext": "pnpm sync:assets && pnpm --filter @imify/extension build",
