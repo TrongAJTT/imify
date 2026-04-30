@@ -110,18 +110,21 @@ imify/
 
 ### Development
 
-We use Turborepo to manage tasks across the monorepo.
+We use Turborepo and root-level scripts to manage tasks across the monorepo.
 
 ```bash
+# Sync package versions and metadata from root to all packages
+pnpm sync:package
+
 # Start all development servers (Web app + Extension on Chrome)
 pnpm dev
 
-# Start only the Web app
-pnpm --filter @imify/web dev
+# Start only the Web app (automatically syncs assets)
+pnpm dev:web
 
-# Start only the Extension (Targeting specific browsers)
-pnpm --filter @imify/extension dev:chrome
-pnpm --filter @imify/extension dev:firefox
+# Start only the Extension (Targeting specific browsers, automatically syncs assets)
+pnpm dev:chrome
+pnpm dev:firefox
 ```
 
 ### Loading the Extension
@@ -171,7 +174,7 @@ This will generate a zip-ready folder in `build/chrome-mv3-prod` which you can u
 If you are reviewing this extension for the Mozilla Add-ons Store, please follow these steps to reproduce the exact build:
 
 1. Install dependencies: `pnpm install`
-2. Generate the Firefox package: `pnpm package:firefox`
+2. Generate the Firefox package: `pnpm package:firefox` (This command automatically handles asset synchronization and manifest sanitation).
 3. The generated add-on will be an archive located in the output build directory (e.g., `apps/extension/build/firefox-mv3-prod.zip`).
 
 **Compliance Declaration regarding WebAssembly (WASM) & Minification:**

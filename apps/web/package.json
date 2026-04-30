@@ -7,8 +7,6 @@
     "check:media-assets": "node ../../scripts/check-media-asset-paths.mjs",
     "sync:features": "node ../../scripts/sync-shared-assets.mjs",
     "sync:assets": "pnpm sync:features && pnpm check:media-assets",
-    "predev": "pnpm sync:assets",
-    "prebuild": "pnpm sync:assets",
     "dev": "node ../../scripts/with-root-metadata.mjs next dev",
     "build": "node ../../scripts/with-root-metadata.mjs next build",
     "start": "node ../../scripts/with-root-metadata.mjs next start",

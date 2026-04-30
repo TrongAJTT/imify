@@ -1,4 +1,4 @@
-# AMO Reviewer Notes — Imify v2.0.0
+# AMO Reviewer Notes — Imify v2.1.0
 
 ## 1. `sidePanel` API calls (`chrome.sidePanel.setOptions`, `chrome.sidePanel.open`)
 
