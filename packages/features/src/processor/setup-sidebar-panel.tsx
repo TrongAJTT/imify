@@ -320,6 +320,7 @@ export function BatchSetupSidebarPanel({
           onOpenSettings={onOpenSettings}
           disabled={isRunning}
           hideConcurrency={setupContext === "single"}
+          isRunning={isRunning}
         />
       ),
     },

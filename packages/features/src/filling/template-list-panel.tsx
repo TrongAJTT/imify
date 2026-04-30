@@ -1,10 +1,12 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Edit, Pin, PinOff, Plus, Trash2 } from "lucide-react"
-import { Button, EmptyDropCard, SelectInput, Subheading } from "@imify/ui"
+import { Download, Edit, Pin, PinOff, Plus, Trash2 } from "lucide-react"
+import { Button, EmptyDropCard, SelectInput, Subheading, Tooltip } from "@imify/ui"
 import { templateStorage } from "./template-storage"
-import type { FillingTemplate, TemplateSortMode } from "./types"
+import { exportToPsd } from "./psd-export"
+import { createLayerFillState, DEFAULT_CANVAS_FILL_STATE, type FillingTemplate, type TemplateSortMode } from "./types"
+import { resolveLayerShapePoints } from "./shape-generators"
 
 const SORT_OPTIONS: Array<{ value: TemplateSortMode; label: string }> = [
   { value: "usage_count", label: "Most used" },
@@ -118,6 +120,7 @@ function FillingTemplateCard({
   onRefresh: () => Promise<void>
 }) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
+  const [isExportingPsd, setIsExportingPsd] = useState(false)
 
   useEffect(() => {
     let disposed = false
@@ -141,6 +144,29 @@ function FillingTemplateCard({
 
   const usageText = template.usageCount === 1 ? "1 export" : `${template.usageCount} exports`
   const lastUsedText = template.lastUsedAt ? `Last used ${formatRelativeTime(template.lastUsedAt)}` : "Never used"
+  const handleExportPsd = async () => {
+    if (isExportingPsd) {
+      return
+    }
+
+    setIsExportingPsd(true)
+
+    try {
+      const layerFillStates = template.layers.map((layer) => createLayerFillState(layer.id))
+      const blob = await exportToPsd(template, layerFillStates, DEFAULT_CANVAS_FILL_STATE, new Map())
+      const objectUrl = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = objectUrl
+      link.download = `${toSafeFileName(template.name)}.psd`
+      link.click()
+      URL.revokeObjectURL(objectUrl)
+    } catch (error) {
+      console.error("Failed to export template PSD", error)
+      window.alert("Failed to export PSD for this template.")
+    } finally {
+      setIsExportingPsd(false)
+    }
+  }
 
   return (
     <div className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
@@ -170,6 +196,12 @@ function FillingTemplateCard({
         <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white/90 px-1 py-1 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90">
           <ActionIconButton title="Edit template" icon={<Edit size={13} />} onClick={() => onEditTemplate(template)} />
           <ActionIconButton
+            title={isExportingPsd ? "Exporting PSD..." : "Export template as PSD"}
+            icon={<Download size={13} />}
+            onClick={() => void handleExportPsd()}
+            disabled={isExportingPsd}
+          />
+          <ActionIconButton
             title={template.isPinned ? "Unpin template" : "Pin template"}
             icon={template.isPinned ? <PinOff size={13} /> : <Pin size={13} />}
             onClick={() => {
@@ -198,28 +230,35 @@ function ActionIconButton({
   title,
   onClick,
   destructive = false,
+  disabled = false,
 }: {
   icon: React.ReactNode
   title: string
   onClick: () => void
   destructive?: boolean
+  disabled?: boolean
 }) {
   return (
-    <button
-      type="button"
-      title={title}
-      onClick={(event) => {
-        event.stopPropagation()
-        onClick()
-      }}
-      className={`rounded p-1.5 transition-colors ${
-        destructive
-          ? "text-red-600 hover:bg-red-50/90 dark:text-red-400 dark:hover:bg-red-500/20"
-          : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
-      }`}
-    >
-      {icon}
-    </button>
+    <Tooltip content={title}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={(event) => {
+          event.stopPropagation()
+          if (disabled) {
+            return
+          }
+          onClick()
+        }}
+        className={`rounded p-1.5 transition-colors ${
+          destructive
+            ? "text-red-600 hover:bg-red-50/90 dark:text-red-400 dark:hover:bg-red-500/20"
+            : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+        } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
+      >
+        {icon}
+      </button>
+    </Tooltip>
   )
 }
 
@@ -227,12 +266,14 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
   const scaleX = 240 / template.canvasWidth
   const scaleY = 135 / template.canvasHeight
   const scale = Math.min(scaleX, scaleY) * 0.85
+  const originX = (240 - template.canvasWidth * scale) / 2
+  const originY = (135 - template.canvasHeight * scale) / 2
 
   return (
     <svg width="240" height="135" viewBox="0 0 240 135" className="text-slate-300 dark:text-slate-600">
       <rect
-        x={(240 - template.canvasWidth * scale) / 2}
-        y={(135 - template.canvasHeight * scale) / 2}
+        x={originX}
+        y={originY}
         width={template.canvasWidth * scale}
         height={template.canvasHeight * scale}
         fill="none"
@@ -242,15 +283,18 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
         rx="2"
       />
       {template.layers.slice(0, 12).map((layer) => (
-        <rect
+        <polygon
           key={layer.id}
-          x={(240 - template.canvasWidth * scale) / 2 + layer.x * scale}
-          y={(135 - template.canvasHeight * scale) / 2 + layer.y * scale}
-          width={layer.width * scale}
-          height={layer.height * scale}
+          points={resolveLayerShapePoints(layer)
+            .map((point) => `${originX + (layer.x + point.x) * scale},${originY + (layer.y + point.y) * scale}`)
+            .join(" ")}
           fill="currentColor"
           opacity={0.3}
-          rx="1"
+          transform={
+            layer.rotation !== 0
+              ? `rotate(${layer.rotation} ${originX + (layer.x + layer.width / 2) * scale} ${originY + (layer.y + layer.height / 2) * scale})`
+              : undefined
+          }
         />
       ))}
     </svg>
@@ -269,5 +313,10 @@ function formatRelativeTime(timestamp: number): string {
   if (days < 30) return `${days}d ago`
   const months = Math.floor(days / 30)
   return `${months}mo ago`
+}
+
+function toSafeFileName(value: string): string {
+  const safe = value.trim().replace(/[\\/:*?"<>|]+/g, "_")
+  return safe.length > 0 ? safe : "filling-template"
 }
 

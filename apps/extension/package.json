@@ -18,14 +18,14 @@
     "prebuild": "pnpm sync:assets",
     "build": "node ../../scripts/with-root-metadata.mjs plasmo build",
     "build:ci": "pnpm sync:assets && pnpm build:chrome && pnpm build:firefox && pnpm verify:manifests",
-    "build:chrome": "pnpm sync:assets && node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3",
-    "build:edge": "pnpm sync:assets && node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3",
-    "build:firefox": "pnpm sync:assets && node ../../scripts/with-root-metadata.mjs plasmo build --target=firefox-mv3 && node ../../scripts/sanitize-firefox-manifest.mjs",
+    "build:chrome": "node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3",
+    "build:edge": "node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3",
+    "build:firefox": "node ../../scripts/with-root-metadata.mjs plasmo build --target=firefox-mv3 && node ../../scripts/sanitize-firefox-manifest.mjs",
     "prepackage": "pnpm sync:assets",
     "package": "node ../../scripts/with-root-metadata.mjs plasmo package",
-    "package:chrome": "pnpm sync:assets && node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3 --zip",
-    "package:edge": "pnpm sync:assets && node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3 --zip",
-    "package:firefox": "pnpm build:firefox && node ../../scripts/zip-firefox-build.mjs",
+    "package:chrome": "node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3 --zip",
+    "package:edge": "node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3 --zip",
+    "package:firefox": "pnpm build:firefox && node ../../scripts/sanitize-firefox-manifest.mjs && node ../../scripts/zip-firefox-build.mjs",
     "verify:manifests": "node ../../scripts/verify-target-manifests.mjs",
     "sync:avif-wasm": "node ../../scripts/sync-avif-wasm.mjs",
     "sync:jxl-wasm": "node ../../scripts/sync-jxl-wasm.mjs",
@@ -89,12 +89,7 @@
     "browser_specific_settings": {
       "gecko": {
         "id": "imify@trongajtt.com",
-        "strict_min_version": "109.0",
-        "data_collection_permissions": {
-          "required": [
-            "none"
-          ]
-        }
+        "strict_min_version": "109.0"
       }
     },
     "permissions": [

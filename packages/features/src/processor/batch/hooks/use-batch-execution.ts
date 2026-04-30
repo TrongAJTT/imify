@@ -51,12 +51,32 @@ export function useBatchExecution({
   useEffect(() => () => { terminateConversionWorkerPool() }, [])
 
   const setItemState = (id: string, partial: Partial<Pick<BatchQueueItem, "status" | "percent" | "message" | "outputBlob" | "outputFileName">>) => {
-    setQueue((current) => current.map((item) => (item.id === id ? { ...item, ...partial } : item)))
+    setQueue((current) => {
+      let changed = false
+      const next = current.map((item) => {
+        if (item.id !== id) {
+          return item
+        }
+        const merged = { ...item, ...partial }
+        const isSame =
+          merged.status === item.status &&
+          merged.percent === item.percent &&
+          merged.message === item.message &&
+          merged.outputBlob === item.outputBlob &&
+          merged.outputFileName === item.outputFileName
+        if (isSame) {
+          return item
+        }
+        changed = true
+        return merged
+      })
+      return changed ? next : current
+    })  
   }
 
   const processItem = async (item: BatchQueueItem, itemIndex: number, totalQueueCount: number): Promise<"success" | "error"> => {
-    setItemState(item.id, { status: "processing", percent: 10, message: undefined, outputBlob: undefined, outputFileName: undefined })
-    await notifyProgress(item.id, item.file.name, config, "processing", 10)
+    setItemState(item.id, { status: "processing", percent: 12, message: undefined, outputBlob: undefined, outputFileName: undefined })
+    await notifyProgress(item.id, item.file.name, config, "processing", 12)
     try {
       const sourceBlob = await applyWatermarkToImageBlob(item.file, watermark)
       const converted = await convertImage({ sourceBlob, config })
@@ -64,8 +84,8 @@ export function useBatchExecution({
       const dimensions = (await readImageDimensions(normalizedBlob)) || (await readImageDimensions(item.file))
       const outputExtension = converted.outputExtension ?? config.format
       const smartName = buildSmartOutputFileName({ pattern: fileNamePattern, originalFileName: item.file.name, outputExtension, index: itemIndex, totalFiles: totalQueueCount, dimensions, now: new Date() })
-      setItemState(item.id, { status: "processing", percent: 72 }); await notifyProgress(item.id, item.file.name, config, "processing", 72, "Converting image...")
-      setItemState(item.id, { status: "processing", percent: 92 }); await notifyProgress(item.id, item.file.name, config, "processing", 92, "Preparing output preview...")
+      setItemState(item.id, { status: "processing", percent: 84 })
+      await notifyProgress(item.id, item.file.name, config, "processing", 84, "Finalizing output...")
       setItemState(item.id, { status: "success", percent: 100, outputBlob: normalizedBlob, outputFileName: outputExtension === "zip" ? smartName || toWebKitZipFilename(item.file.name) : smartName || toOutputFilenameWithExtension(item.file.name, outputExtension) })
       await notifyProgress(item.id, item.file.name, config, "success", 100, "Ready for download")
       return "success"
