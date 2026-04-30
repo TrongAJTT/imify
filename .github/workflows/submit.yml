@@ -10,8 +10,8 @@ on:
         description: "Release title"
         required: true
         type: string
-      release_notes_file:
-        description: "Path to release notes file in repo (supports .md/.txt). Leave empty to use assets/WHATS_NEW.md"
+      release_notes:
+        description: "Release notes content (Markdown supported)"
         required: false
         type: string
 
@@ -69,31 +69,6 @@ jobs:
           fi
           echo "Tag version check passed: $FULL_TAG_VERSION matches base $PACKAGE_VERSION"
 
-      - name: Read release notes from file
-        id: release_notes
-        shell: bash
-        run: |
-          NOTES_FILE="${{ inputs.release_notes_file }}"
-          if [[ -z "$NOTES_FILE" ]]; then
-            NOTES_FILE="assets/WHATS_NEW.md"
-          fi
-          if [[ ! -f "$NOTES_FILE" ]]; then
-            echo "Release notes file not found: $NOTES_FILE"
-            exit 1
-          fi
-          EXT="${NOTES_FILE##*.}"
-          if [[ "$EXT" != "txt" && "$EXT" != "md" ]]; then
-            echo "Release notes file must be .txt or .md: $NOTES_FILE"
-            exit 1
-          fi
-
-          DELIM="RELEASE_NOTES_$(date +%s)_$RANDOM"
-          {
-            echo "body<<$DELIM"
-            cat "$NOTES_FILE"
-            echo "$DELIM"
-          } >> "$GITHUB_OUTPUT"
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -124,7 +99,7 @@ jobs:
         with:
           tag_name: ${{ inputs.version_tag }}
           name: ${{ inputs.release_title }}
-          body: ${{ steps.release_notes.outputs.body }}
+          body: ${{ inputs.release_notes }}
           prerelease: ${{ steps.release_meta.outputs.prerelease }}
           files: |
             release-artifacts/imify-chrome-${{ inputs.version_tag }}.zip
