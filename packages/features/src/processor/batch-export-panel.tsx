@@ -52,6 +52,8 @@ interface BatchExportPanelProps {
   disabled?: boolean
   /** Hide concurrency selector for contexts that do not use it */
   hideConcurrency?: boolean
+  /** Whether batch processor is currently running */
+  isRunning?: boolean
 }
 
 /**
@@ -75,7 +77,8 @@ export function BatchExportPanel({
   performancePreferences,
   onOpenSettings,
   disabled = false,
-  hideConcurrency = false
+  hideConcurrency = false,
+  isRunning = false
 }: BatchExportPanelProps) {
   const watermarkSummaryBase = buildWatermarkSummary(watermark)
   const watermarkSummary = watermarkSaved ? `${watermarkSummaryBase} · Saved` : watermarkSummaryBase
@@ -126,8 +129,22 @@ export function BatchExportPanel({
       sublabel="Performance, privacy, and watermarking"
       colorTheme="amber"
       defaultOpen={false}
+      alwaysOpen={isRunning}
     >
       <div className="space-y-3">
+        {isRunning && (
+          <div className="rounded-md border border-amber-200 bg-amber-50/70 p-2.5 dark:border-amber-900/60 dark:bg-amber-900/20">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+              NOTICE
+            </div>
+            <div className="mt-1 text-xs leading-relaxed text-amber-900 dark:text-amber-100">
+              You are not lagging. We intentionally reduce frame update frequency to optimize processing performance.
+              If too many images fail, the tab may be overloaded from previous runs. In that case, close this tab and
+              continue processing in a fresh tab.
+            </div>
+          </div>
+        )}
+
         <ExportControlsPanel
           targetFormat={concurrencyFormat}
           concurrency={concurrency}
