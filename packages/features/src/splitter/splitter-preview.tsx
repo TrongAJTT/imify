@@ -57,7 +57,9 @@ export function SplitterPreview({
   const { pan, setPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
     enabled: previewInteractionMode === "pan",
     onlyWhenZoomed: false,
-    currentZoom: zoom
+    currentZoom: zoom,
+    onZoomChange: setZoom,
+    onPanChange: (x, y) => setPan({ x, y })
   })
 
   if (!image) {

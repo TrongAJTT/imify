@@ -75,7 +75,9 @@ export function CanvasPreview({
 
   const { pan, setPan, resetPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
     onlyWhenZoomed: false,
-    currentZoom: zoom
+    currentZoom: zoom,
+    onZoomChange: setPreviewZoom,
+    onPanChange: (x, y) => setPan({ x, y })
   })
 
   const wheelThrottleRef = useRef<NodeJS.Timeout | null>(null)

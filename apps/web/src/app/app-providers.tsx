@@ -3,6 +3,11 @@
 import { registerStorageAdapter } from "@imify/core/storage-adapter"
 import { registerEngineRuntimeAdapter } from "@imify/engine/converter/runtime-adapter"
 import { setPreviewWorkerFactory } from "@imify/engine/converter/preview-worker-client"
+import { getDevModeEnabled } from "@imify/features/dev-mode/dev-mode-store"
+import {
+  ensureRuntimeLogCaptureInstalled,
+  setRuntimeLogCaptureEnabled
+} from "@imify/features/dev-mode/runtime-log-collector"
 import { localStorageAdapter } from "../adapters/local-storage-adapter"
 
 interface AppProvidersProps {
@@ -55,9 +60,13 @@ function ensureWebAdaptersRegistered(): void {
 
 if (typeof window !== "undefined") {
   ensureWebAdaptersRegistered()
+  ensureRuntimeLogCaptureInstalled()
+  setRuntimeLogCaptureEnabled(getDevModeEnabled())
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
   ensureWebAdaptersRegistered()
+  ensureRuntimeLogCaptureInstalled()
+  setRuntimeLogCaptureEnabled(getDevModeEnabled())
   return <>{children}</>
 }

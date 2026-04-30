@@ -33,6 +33,8 @@ import { useDevModeEnabled } from "../dev-mode/dev-mode-storage"
 import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog"
 import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog"
 import { DevModeStateViewer } from "../dev-mode/dev-mode-state-viewer"
+import { RuntimeConsoleMonitor } from "../dev-mode/runtime-console-monitor"
+import { setRuntimeLogCaptureEnabled } from "../dev-mode/runtime-log-collector"
 import type { OptionsTab } from "../dev-mode/debug-shared"
 import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter"
 import { SettingsShortcutsPanel } from "./settings-shortcuts-panel"
@@ -120,6 +122,10 @@ export function WorkspaceSettingsDialog({
     mediaQuery.addEventListener("change", update)
     return () => mediaQuery.removeEventListener("change", update)
   }, [])
+
+  useEffect(() => {
+    setRuntimeLogCaptureEnabled(devModeEnabled)
+  }, [devModeEnabled])
 
   const navigationWidthSliderOptions = useMemo<DiscreteSliderOption[]>(
     () =>
@@ -580,6 +586,14 @@ export function WorkspaceSettingsDialog({
                   <Download size={14} className="rotate-180" />
                   Import System Log
                 </Button>
+              </section>
+
+              <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
+                <SettingsItemHeader
+                  title="RUNTIME CONSOLE MONITOR"
+                  description="Capture runtime console output for quick debugging on desktop and mobile."
+                />
+                <RuntimeConsoleMonitor />
               </section>
 
               <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">

@@ -1,5 +1,6 @@
 import { getAppMetadata } from "@imify/core"
 import { DEV_MODE_FEATURES } from "./dev-mode-registry"
+import { useRuntimeLogStore } from "./runtime-log-collector"
 import type {
   OptionsTab
 } from "./debug-shared"
@@ -133,6 +134,7 @@ export interface DebugLogPayload {
   settings?: unknown
   performance?: unknown
   layout?: unknown
+  runtime_logs?: unknown
 }
 
 // ─── Main builder ────────────────────────────────────────────────────────────
@@ -198,6 +200,9 @@ export async function buildDebugLog(params: BuildDebugLogParams): Promise<DebugL
     settings: hasFeature("settings") && extensionStorageState ? sanitizeValue(extensionStorageState as unknown as Record<string, unknown>) : undefined,
     performance: hasFeature("performance") && performancePreferences ? sanitizeValue(performancePreferences as unknown as Record<string, unknown>) : undefined,
     layout: hasFeature("layout") && layoutPreferences ? sanitizeValue(layoutPreferences as unknown as Record<string, unknown>) : undefined,
+    runtime_logs: hasFeature("runtime_logs")
+      ? sanitizeValue(useRuntimeLogStore.getState().entries)
+      : undefined,
   }
 }
 

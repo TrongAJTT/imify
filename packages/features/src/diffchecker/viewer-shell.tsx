@@ -3,6 +3,7 @@ import { Expand, Shrink } from "lucide-react"
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { Tooltip, ZoomPanControl } from "@imify/ui"
 import { DIFFCHECKER_TOOLTIPS } from "./diffchecker-tooltips"
+import { usePanDrag } from "../shared/use-pan-drag"
 
 interface ViewerShellProps {
   children: ReactNode
@@ -103,42 +104,35 @@ export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanCha
     return () => { document.removeEventListener("mousemove", handleMouseMove); document.removeEventListener("mouseup", handleMouseUp) }
   }, [isResizing, setContainerHeight])
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (e.button !== 0 || activePointerIdRef.current !== null) return
+  const {
+    pan,
+    handlePointerDown: internalPointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel
+  } = usePanDrag({
+    enabled: true,
+    currentZoom: zoom,
+    panX,
+    panY,
+    onZoomChange,
+    onPanChange,
+    minZoom: MIN_ZOOM,
+    maxZoom: MAX_ZOOM
+  })
+
+  // Synchronize internal pan state with props if needed
+  // Since usePanDrag maintains its own state for single-pointer drag origin, 
+  // but ViewerShell receives panX/panY from props (managed in DiffcheckerPage).
+  // We should pass panX/panY as initial values or sync them.
+  // Actually, usePanDrag's `pan` state is local. 
+  // Let's modify usePanDrag to optionally take initialPan or sync with props.
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLElement>) => {
     const target = e.target as HTMLElement
     if (target.closest(INTERACTIVE_SELECTOR)) return
-    
-    e.preventDefault()
-    try {
-      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-    } catch {
-      // Ignore capture failure
-    }
-    
-    activePointerIdRef.current = e.pointerId
-    panRef.current = { sx: e.clientX, sy: e.clientY, px: panX, py: panY }
-    setDragging(true)
-  }, [panX, panY])
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    const s = panRef.current
-    if (!s || !dragging || e.pointerId !== activePointerIdRef.current) return
-    onPanChange(s.px + (e.clientX - s.sx), s.py + (e.clientY - s.sy))
-  }, [dragging, onPanChange])
-
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (e.pointerId !== activePointerIdRef.current) return
-    
-    try {
-      ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
-    } catch {
-      // Ignore release failure
-    }
-    
-    activePointerIdRef.current = null
-    panRef.current = null
-    setDragging(false)
-  }, [])
+    internalPointerDown(e)
+  }, [internalPointerDown])
 
   const handleDoubleClick = useCallback(() => {
     onZoomChange(100)
