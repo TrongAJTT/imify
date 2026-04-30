@@ -87,10 +87,11 @@ jobs:
             exit 1
           fi
 
+          DELIM="RELEASE_NOTES_$(date +%s)_$RANDOM"
           {
-            echo "body<<EOF"
+            echo "body<<$DELIM"
             cat "$NOTES_FILE"
-            echo "EOF"
+            echo "$DELIM"
           } >> "$GITHUB_OUTPUT"
 
       - name: Install dependencies
