@@ -1,8 +1,8 @@
 {
   "name": "@imify/web",
-  "version": "0.0.1",
+  "version": "2.1.0",
   "private": true,
-  "description": "Next.js web app for Imify",
+  "description": "A privacy-first, powerful image toolkit. Save image directly from your context menu, and even more. Supports ICO, AVIF, JPEG XL.",
   "scripts": {
     "check:media-assets": "node ../../scripts/check-media-asset-paths.mjs",
     "sync:features": "node ../../scripts/sync-shared-assets.mjs",
