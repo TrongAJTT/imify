@@ -43,21 +43,13 @@ async function syncVersions() {
 
         // Also sync specific metadata for apps if they exist
         if (target === "apps") {
-            if (pkg.displayName && pkg.displayName !== meta.displayName) {
-                pkg.displayName = meta.displayName
-                changed = true
-            }
-            if (pkg.description && pkg.description !== meta.description) {
-                pkg.description = meta.description
-                changed = true
-            }
-            if (pkg.author && pkg.author !== meta.author) {
-                pkg.author = meta.author
-                changed = true
-            }
-            if (pkg.versionType && pkg.versionType !== meta.versionType) {
-                pkg.versionType = meta.versionType
-                changed = true
+            const fields = ["displayName", "versionType", "description", "author"];
+            for (const field of fields) {
+                if (meta[field] !== undefined && pkg[field] !== meta[field]) {
+                    console.log(`[sync-package-versions] Syncing ${field} to ${pkg.name}`)
+                    pkg[field] = meta[field]
+                    changed = true
+                }
             }
         }
 

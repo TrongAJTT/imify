@@ -131,6 +131,7 @@ export function AboutDialog({
             tabIndex={-1}
           >
             {iconSrc ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={iconSrc}
                 alt="Imify Logo"
