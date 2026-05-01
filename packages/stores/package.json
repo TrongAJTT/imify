@@ -1,6 +1,6 @@
 {
   "name": "@imify/stores",
-  "version": "2.1.0",
+  "version": "2.1.2",
   "private": true,
   "description": "Shared Zustand stores for Imify",
   "scripts": {

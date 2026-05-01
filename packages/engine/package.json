@@ -1,6 +1,6 @@
 {
   "name": "@imify/engine",
-  "version": "2.1.0",
+  "version": "2.1.2",
   "private": true,
   "description": "Image processing pipeline, WASM encoders, and worker pool for Imify",
   "scripts": {

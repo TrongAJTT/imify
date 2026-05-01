@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.0] - 2026-05-01
+## [2.1.2] - 2026-05-01
 
-Version 2.1.0 transforms Imify into a professional "Image Toolkit," introducing specialized creative workspaces, a diagnostic SEO engine, and a high-performance processing core.
+Version 2.1.2 transforms Imify into a professional "Image Toolkit," introducing specialized creative workspaces, a diagnostic SEO engine, and a high-performance processing core.
 
 ### ✨ Creative & Diagnostic Workspaces
 - **Image Filling Designer:** A powerful layer-based workspace to fill shapes (polygons, stars, circles) with images. Features symmetric grid generators and professional layer management.

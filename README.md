@@ -7,7 +7,7 @@
 [![React](https://img.shields.io/badge/React-18.2.0-61dafb.svg)](https://reactjs.org/)
 [![Plasmo](https://img.shields.io/badge/Plasmo-Framework-blue?logo=plasmo)](https://www.plasmo.com/)
 
-## ✨ Key Features (v2.0.0 Suite)
+## ✨ Key Features (v2 Suite)
 
 * **Dual Platforms**: Use Imify as a standalone web application or as a tightly integrated browser extension.
 * **100% Client-Side Processing**: Zero server dependencies. Complete data privacy using WebAssembly and Web Workers.
