@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Home, Image as ImageIcon, Search, ArrowLeft } from "lucide-react"
 import { FEATURE_MEDIA_ASSETS } from "@imify/features/shared/media-assets"
 import { Button } from "@imify/ui"
@@ -13,11 +14,13 @@ export default function NotFound() {
     <div className="flex flex-col items-center justify-center py-24 px-4 text-center min-h-[60vh]">
       <div className="relative mb-10 group">
         <div className="absolute inset-0 blur-3xl bg-sky-500/20 rounded-full transition-all group-hover:bg-sky-500/30" />
-        <div className="relative flex items-center justify-center w-28 h-28 rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 transition-transform group-hover:scale-105 duration-500">
-          <img
+        <div className="relative flex items-center justify-center w-28 h-28 rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 transition-transform group-hover:scale-105 duration-500 overflow-hidden">
+          <Image
             src={FEATURE_MEDIA_ASSETS.brand.imifyLogoPng}
             alt="Imify Logo"
-            className="w-16 h-16 object-contain opacity-10 grayscale brightness-0 dark:invert"
+            width={64}
+            height={64}
+            className="object-contain opacity-10 grayscale brightness-0 dark:invert"
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <Search className="w-12 h-12 text-slate-400 animate-pulse" />

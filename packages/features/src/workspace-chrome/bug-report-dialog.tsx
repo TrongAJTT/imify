@@ -117,8 +117,14 @@ export function BugReportDialog({
               {devModeEnableVideoSrc ? (
                 <video src={devModeEnableVideoSrc} autoPlay loop muted playsInline className="rounded-2xl mb-4" />
               ) : null}
-              {devExportStep1Src ? <img src={devExportStep1Src} alt="Access export tool" className="rounded-2xl mb-4" /> : null}
-              {devExportStep2Src ? <img src={devExportStep2Src} alt="Export configuration" className="rounded-2xl" /> : null}
+              {devExportStep1Src ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={devExportStep1Src} alt="Access export tool" className="rounded-2xl mb-4" />
+              ) : null}
+              {devExportStep2Src ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={devExportStep2Src} alt="Export configuration" className="rounded-2xl" />
+              ) : null}
             </section>
           ) : null}
 

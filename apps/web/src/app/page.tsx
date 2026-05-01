@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import Image from "next/image"
 import {
   getWorkspaceToolsMenuGroups,
   renderWorkspaceToolIcon
@@ -171,11 +172,12 @@ function HighlightFeatureCard({
       href={buildToolEntryHref(id, href)}
       className="group block relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-all hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1"
     >
-      <div className="aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-900">
-        <img
+      <div className="aspect-[16/10] relative overflow-hidden bg-slate-100 dark:bg-slate-900">
+        <Image
           src={resolveFeatureMediaAssetUrl(image)}
           alt={title}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
       <div className="border-t border-slate-200 dark:border-slate-800 p-6 space-y-3">
