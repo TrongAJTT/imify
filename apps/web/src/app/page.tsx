@@ -9,8 +9,9 @@ import { buildToolEntryHref } from "@/features/presets/tool-entry-route"
 import { Button } from "@imify/ui/ui/button"
 import { BodyText, Heading, MutedText, Subheading } from "@imify/ui/ui/typography"
 import { WEB_ROUTE_METADATA } from "./seo-metadata"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Sparkles, Chrome } from "lucide-react"
 import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
+import { FindOnProductHuntBadge } from "@/features/community/find-us-badges"
 
 const TOOL_GROUPS = getWorkspaceToolsMenuGroups()
 
@@ -209,13 +210,22 @@ export default function Home() {
         <BodyText className="mx-auto max-w-2xl text-lg md:text-xl text-slate-600 dark:text-slate-400">
           Fast, private, and fully client-side. Convert formats, resize, batch process, split, splice, and inspect images without ever uploading them to a server.
         </BodyText>
-        <div className="flex flex-wrap justify-center gap-4 pt-4">
-          <Button size="lg" className="rounded-full px-8 h-12 text-base shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5" asChild>
-            <Link href={buildToolEntryHref("single-processor", "/single-processor")}>Start Processing Your Images</Link>
+        <div className="flex flex-col md:flex-row flex-wrap justify-center items-center gap-4 pt-4 px-4">
+          <Button size="lg" className="w-full md:w-auto rounded-xl px-8 h-12 text-base shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5" asChild>
+            <Link href={buildToolEntryHref("single-processor", "/single-processor")} className="flex items-center justify-center gap-2">
+              <Sparkles size={18} />
+              <span>Start Processing Your Images</span>
+            </Link>
           </Button>
-          <Button size="lg" variant="outline" className="rounded-full px-8 h-12 text-base border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:-translate-y-0.5" asChild>
-            <Link href="/extension">View Extension</Link>
+          <Button size="lg" variant="outline" className="w-full md:w-auto rounded-xl px-8 h-12 text-base border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:-translate-y-0.5" asChild>
+            <Link href="/extension" className="flex items-center justify-center gap-2">
+              <Chrome size={18} />
+              <span>View Extension</span>
+            </Link>
           </Button>
+          <div className="flex items-center w-full md:w-auto justify-center">
+            <FindOnProductHuntBadge className="w-full md:w-auto" />
+          </div>
         </div>
       </section>
 

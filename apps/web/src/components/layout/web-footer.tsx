@@ -4,6 +4,7 @@ import Link from "next/link"
 import { getWorkspaceToolsMenuGroups } from "@imify/features/workspace-shell/workspace-tools"
 import { IMIFY_LINKS } from "@imify/core"
 import { useWebPageMode } from "@/hooks/use-web-page-mode"
+import { FindOnProductHuntBadge, FindOnUnikornBadge, FindOnJ2TeamLaunchBadge } from "@/features/community/find-us-badges"
 
 const TOOL_GROUPS = getWorkspaceToolsMenuGroups()
 const ALL_TOOLS = TOOL_GROUPS.flatMap((g) => g.items)
@@ -35,7 +36,7 @@ export function WebFooter() {
   return (
     <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto w-full max-w-7xl px-6 py-12 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="md:col-span-2 space-y-4">
             <span className="text-xl font-bold text-slate-900 dark:text-white">Imify</span>
             <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
@@ -67,6 +68,15 @@ export function WebFooter() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Find us</h3>
+            <div className="flex flex-col gap-3">
+              <FindOnProductHuntBadge />
+              <FindOnUnikornBadge className="w-full" />
+              <FindOnJ2TeamLaunchBadge className="w-full" />
+            </div>
           </div>
         </div>
         

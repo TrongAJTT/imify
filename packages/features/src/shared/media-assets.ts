@@ -21,7 +21,8 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
     imifyLogoPng: "/assets/icon.png",
     githubLogoSvg: "/assets/images/github-logo.svg",
     buyMeCoffeeLogoSvg: "/assets/images/bmc-logo.svg",
-    paypalIconSvg: "/assets/images/pp-icon.svg"
+    paypalIconSvg: "/assets/images/pp-icon.svg",
+    j2teamLogoIco: "/assets/images/j2tl-logo.ico"
   },
   devMode: {
     enableVideoWebm: "/assets/features/dev_mode-enable.webm",
@@ -69,7 +70,8 @@ export const FEATURE_MEDIA_ASSETS = {
     imifyLogoPng: FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
     githubLogoSvg: FEATURE_MEDIA_ASSET_PATHS.brand.githubLogoSvg,
     buyMeCoffeeLogoSvg: FEATURE_MEDIA_ASSET_PATHS.brand.buyMeCoffeeLogoSvg,
-    paypalIconSvg: FEATURE_MEDIA_ASSET_PATHS.brand.paypalIconSvg
+    paypalIconSvg: FEATURE_MEDIA_ASSET_PATHS.brand.paypalIconSvg,
+    j2teamLogoIco: FEATURE_MEDIA_ASSET_PATHS.brand.j2teamLogoIco
   },
   devMode: {
     enableVideoWebm: FEATURE_MEDIA_ASSET_PATHS.devMode.enableVideoWebm,
