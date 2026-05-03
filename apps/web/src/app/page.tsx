@@ -9,8 +9,12 @@ import { buildToolEntryHref } from "@/features/presets/tool-entry-route"
 import { Button } from "@imify/ui/ui/button"
 import { BodyText, Heading, MutedText, Subheading } from "@imify/ui/ui/typography"
 import { WEB_ROUTE_METADATA } from "./seo-metadata"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Sparkles, Chrome } from "lucide-react"
 import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
+import { FindOnProductHuntBadge } from "@/features/community/find-us-badges"
+
+import { YoutubePlayerSection } from "@/features/community/youtube-player-section"
+import { FaqSection } from "@/features/community/faq-section"
 
 const TOOL_GROUPS = getWorkspaceToolsMenuGroups()
 
@@ -30,32 +34,6 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   "seo-audit": "Audit and optimize web images for maximum search engine performance."
 }
 
-const FAQ_ITEMS = [
-  {
-    question: "Are my images uploaded to your servers?",
-    answer: "No. Imify is built on a privacy-first architecture. All image processing occurs locally within your browser using Web Workers and WebAssembly. Your files never leave your device."
-  },
-  {
-    question: "Is Imify completely free to use?",
-    answer: "Yes, all the core tools provided in Imify Web are free to use. There are no hidden fees or premium locks on the web workspace features."
-  },
-  {
-    question: "What image formats are supported?",
-    answer: "We support a wide range of modern and traditional formats including JPEG, PNG, WebP, AVIF, and JPEG XL. Capabilities are constantly expanding based on browser support."
-  },
-  {
-    question: "Can I process multiple images at once?",
-    answer: "Absolutely! Our Batch Processor is specifically designed to handle hundreds of images simultaneously, applying formats and sizes across the entire set efficiently."
-  },
-  {
-    question: "Can I use Imify on mobile or tablet?",
-    answer: "Yes. Imify Web supports responsive usage on mobile and tablet devices. However, for the most seamless and complete experience, we still recommend using desktop."
-  },
-  {
-    question: "Do I need to install anything before using Imify Web?",
-    answer: "No installation is required. You can start using Imify Web directly in your browser right away. For extension-exclusive workflows, you can optionally install the browser extension."
-  }
-] as const
 
 const CAPABILITY_ITEMS = [
   {
@@ -133,19 +111,6 @@ const HIGHLIGHT_FEATURES = [
   }
 ] as const
 
-function FaqItem({ question, answer }: { question: string; answer: string }) {
-  return (
-    <div className="bg-white p-10 dark:bg-slate-950 flex flex-col space-y-4">
-      <div className="flex items-start gap-3">
-        <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
-        <Subheading className="text-xl leading-tight">{question}</Subheading>
-      </div>
-      <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed pl-5">
-        {answer}
-      </BodyText>
-    </div>
-  )
-}
 
 function CapabilityItem({ title, description }: { title: string; description: string }) {
   return (
@@ -209,13 +174,22 @@ export default function Home() {
         <BodyText className="mx-auto max-w-2xl text-lg md:text-xl text-slate-600 dark:text-slate-400">
           Fast, private, and fully client-side. Convert formats, resize, batch process, split, splice, and inspect images without ever uploading them to a server.
         </BodyText>
-        <div className="flex flex-wrap justify-center gap-4 pt-4">
-          <Button size="lg" className="rounded-full px-8 h-12 text-base shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5" asChild>
-            <Link href={buildToolEntryHref("single-processor", "/single-processor")}>Start Processing Your Images</Link>
+        <div className="flex flex-col md:flex-row flex-wrap justify-center items-center gap-4 pt-4 px-4">
+          <Button size="lg" className="w-full md:w-auto rounded-xl px-8 h-12 text-base shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5" asChild>
+            <Link href={buildToolEntryHref("single-processor", "/single-processor")} className="flex items-center justify-center gap-2">
+              <Sparkles size={18} />
+              <span>Start Processing Your Images</span>
+            </Link>
           </Button>
-          <Button size="lg" variant="outline" className="rounded-full px-8 h-12 text-base border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:-translate-y-0.5" asChild>
-            <Link href="/extension">View Extension</Link>
+          <Button size="lg" variant="outline" className="w-full md:w-auto rounded-xl px-8 h-12 text-base border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:-translate-y-0.5" asChild>
+            <Link href="/extension" className="flex items-center justify-center gap-2">
+              <Chrome size={18} />
+              <span>View Extension</span>
+            </Link>
           </Button>
+          <div className="flex items-center w-full md:w-auto justify-center">
+            <FindOnProductHuntBadge className="w-full md:w-auto" />
+          </div>
         </div>
       </section>
 
@@ -250,6 +224,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Video Demo Section */}
+      <YoutubePlayerSection />
 
       {/* Features/Highlights Section */}
       <section className="mx-auto max-w-6xl space-y-10 px-4">
@@ -335,20 +312,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="mx-auto max-w-5xl px-4 space-y-10 pb-12">
-        <div className="text-center space-y-3">
-          <Heading className="text-3xl md:text-4xl">Frequently Asked Questions</Heading>
-          <BodyText className="text-slate-500 text-lg">Everything you need to know about Imify.</BodyText>
-        </div>
-
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-800">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-[1px]">
-            {FAQ_ITEMS.map((item) => (
-              <FaqItem key={item.question} question={item.question} answer={item.answer} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <FaqSection />
     </div>
   )
 }

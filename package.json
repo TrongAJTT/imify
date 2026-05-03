@@ -1,6 +1,6 @@
 {
   "name": "imify-monorepo",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "private": true,
   "imifyMetadata": {
     "displayName": "Imify - Powerful Image Toolkit",

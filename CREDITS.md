@@ -31,6 +31,12 @@ This list is synchronized with `src/core/attributions.ts` (source of truth for t
 *   **[markdown-to-jsx](https://github.com/quantizor/markdown-to-jsx)**
     *   **Author(s):** Quantizor and contributors
     *   **License:** MIT License
+*   **[react-player](https://github.com/cookpete/react-player)**
+    *   **Author(s):** Pete Cook
+    *   **License:** MIT License
+*   **[youtube-video-element](https://github.com/luwes/youtube-video-element)**
+    *   **Author(s):** Wesley Luyten
+    *   **License:** MIT License
 
 ## Image & Document Processing
 *   **[pdf-lib](https://pdf-lib.js.org/)**
