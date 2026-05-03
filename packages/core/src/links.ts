@@ -9,5 +9,9 @@ export const IMIFY_LINKS = {
   githubSponsor: "https://github.com/sponsors/TrongAJTT",
   buyMeCoffee: "https://www.buymeacoffee.com/TrongAJTT",
   paypal: "https://paypal.me/TrongAjttDev",
+  productHunt: "https://www.producthunt.com/products/imiy?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-imiy",
+  unikorn: "https://unikorn.vn/p/imify",
+  j2teamLaunch: "https://launch.j2team.dev/products/imify-save-process-images",
+  videoDemo: "https://www.youtube.com/watch?v=ltMZ3KlBCWQ",
 } as const
 

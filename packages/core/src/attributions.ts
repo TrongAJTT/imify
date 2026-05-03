@@ -25,5 +25,7 @@ export const ATTRIBUTIONS: AttributionItem[] = [
   { name: "@jsquash/avif, @jsquash/jxl, @jsquash/webp, @jsquash/oxipng, @jsquash/jpeg & @jsquash/resize", author: "Jamie Sinclair and jSquash contributors", license: "Apache-2.0", url: "https://github.com/jamsinclair/jSquash" },
   { name: "clsx", author: "Luke Edwards", license: "MIT", url: "https://github.com/lukeed/clsx" },
   { name: "tailwind-merge", author: "Danylo and contributors", license: "MIT", url: "https://github.com/dcastil/tailwind-merge" },
-  { name: "perfect-freehand", author: "Steveruizok", license: "MIT", url: "https://github.com/steveruizok/perfect-freehand" }
+  { name: "perfect-freehand", author: "Steveruizok", license: "MIT", url: "https://github.com/steveruizok/perfect-freehand" },
+  { name: "react-player", author: "Pete Cook", license: "MIT", url: "https://github.com/cookpete/react-player" },
+  { name: "youtube-video-element", author: "Wesley Luyten", license: "MIT", url: "https://github.com/luwes/youtube-video-element" }
 ]

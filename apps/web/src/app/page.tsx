@@ -13,6 +13,8 @@ import { ChevronRight, Sparkles, Chrome } from "lucide-react"
 import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
 import { FindOnProductHuntBadge } from "@/features/community/find-us-badges"
 
+import { YoutubePlayerSection } from "@/features/community/youtube-player-section"
+
 const TOOL_GROUPS = getWorkspaceToolsMenuGroups()
 
 // Flatten tools for the main grid
@@ -260,6 +262,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Video Demo Section */}
+      <YoutubePlayerSection />
 
       {/* Features/Highlights Section */}
       <section className="mx-auto max-w-6xl space-y-10 px-4">

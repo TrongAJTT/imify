@@ -1,13 +1,14 @@
 import React from "react"
 import { cn } from "@imify/ui/ui/utils"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
+import { IMIFY_LINKS } from "@imify/core/links"
 
 interface CustomBadgeProps {
   href: string
   icon: string
   label: string
   brandName: string
-  primaryColor: string 
+  primaryColor: string
   className?: string
 }
 
@@ -34,7 +35,7 @@ export const CustomBadge: React.FC<CustomBadgeProps> = ({
         color: primaryColor
       }}
     >
-      <div 
+      <div
         className="flex items-center justify-center h-full aspect-square border-r-2 shrink-0"
         style={{ borderColor: primaryColor }}
       >
@@ -56,7 +57,7 @@ export const FindOnProductHuntBadge: React.FC<{ className?: string }> = ({ class
   return (
     <div className={cn("flex items-center justify-center md:justify-start", className)}>
       <a
-        href="https://www.producthunt.com/products/imiy?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-imiy"
+        href={IMIFY_LINKS.productHunt}
         target="_blank"
         rel="noopener noreferrer"
         className="transition-all hover:-translate-y-0.5 block h-12 w-full max-w-[222px]"
@@ -83,7 +84,7 @@ export const FindOnProductHuntBadge: React.FC<{ className?: string }> = ({ class
 export const FindOnUnikornBadge: React.FC<{ className?: string }> = ({ className }) => {
   return (
     <CustomBadge
-      href="https://unikorn.vn/p/imify"
+      href={IMIFY_LINKS.unikorn}
       icon="https://unikorn.vn/favicon.ico"
       label="Find us on"
       brandName="Unikorn"
@@ -96,7 +97,7 @@ export const FindOnUnikornBadge: React.FC<{ className?: string }> = ({ className
 export const FindOnJ2TeamLaunchBadge: React.FC<{ className?: string }> = ({ className }) => {
   return (
     <CustomBadge
-      href="https://launch.j2team.dev/products/imify-save-process-images"
+      href={IMIFY_LINKS.j2teamLaunch}
       icon={resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.j2teamLogoIco)}
       label="Find us on"
       brandName="J2TEAM Launch"
