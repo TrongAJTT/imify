@@ -14,6 +14,7 @@ import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "@imify/f
 import { FindOnProductHuntBadge } from "@/features/community/find-us-badges"
 
 import { YoutubePlayerSection } from "@/features/community/youtube-player-section"
+import { FaqSection } from "@/features/community/faq-section"
 
 const TOOL_GROUPS = getWorkspaceToolsMenuGroups()
 
@@ -33,32 +34,6 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   "seo-audit": "Audit and optimize web images for maximum search engine performance."
 }
 
-const FAQ_ITEMS = [
-  {
-    question: "Are my images uploaded to your servers?",
-    answer: "No. Imify is built on a privacy-first architecture. All image processing occurs locally within your browser using Web Workers and WebAssembly. Your files never leave your device."
-  },
-  {
-    question: "Is Imify completely free to use?",
-    answer: "Yes, all the core tools provided in Imify Web are free to use. There are no hidden fees or premium locks on the web workspace features."
-  },
-  {
-    question: "What image formats are supported?",
-    answer: "We support a wide range of modern and traditional formats including JPEG, PNG, WebP, AVIF, and JPEG XL. Capabilities are constantly expanding based on browser support."
-  },
-  {
-    question: "Can I process multiple images at once?",
-    answer: "Absolutely! Our Batch Processor is specifically designed to handle hundreds of images simultaneously, applying formats and sizes across the entire set efficiently."
-  },
-  {
-    question: "Can I use Imify on mobile or tablet?",
-    answer: "Yes. Imify Web supports responsive usage on mobile and tablet devices. However, for the most seamless and complete experience, we still recommend using desktop."
-  },
-  {
-    question: "Do I need to install anything before using Imify Web?",
-    answer: "No installation is required. You can start using Imify Web directly in your browser right away. For extension-exclusive workflows, you can optionally install the browser extension."
-  }
-] as const
 
 const CAPABILITY_ITEMS = [
   {
@@ -136,19 +111,6 @@ const HIGHLIGHT_FEATURES = [
   }
 ] as const
 
-function FaqItem({ question, answer }: { question: string; answer: string }) {
-  return (
-    <div className="bg-white p-10 dark:bg-slate-950 flex flex-col space-y-4">
-      <div className="flex items-start gap-3">
-        <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
-        <Subheading className="text-xl leading-tight">{question}</Subheading>
-      </div>
-      <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed pl-5">
-        {answer}
-      </BodyText>
-    </div>
-  )
-}
 
 function CapabilityItem({ title, description }: { title: string; description: string }) {
   return (
@@ -350,20 +312,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="mx-auto max-w-5xl px-4 space-y-10 pb-12">
-        <div className="text-center space-y-3">
-          <Heading className="text-3xl md:text-4xl">Frequently Asked Questions</Heading>
-          <BodyText className="text-slate-500 text-lg">Everything you need to know about Imify.</BodyText>
-        </div>
-
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-800">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-[1px]">
-            {FAQ_ITEMS.map((item) => (
-              <FaqItem key={item.question} question={item.question} answer={item.answer} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <FaqSection />
     </div>
   )
 }

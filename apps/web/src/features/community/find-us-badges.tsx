@@ -8,7 +8,8 @@ interface CustomBadgeProps {
   icon: string
   label: string
   brandName: string
-  primaryColor: string
+  colorClassName: string
+  iconClassName?: string
   className?: string
 }
 
@@ -17,7 +18,8 @@ export const CustomBadge: React.FC<CustomBadgeProps> = ({
   icon,
   label,
   brandName,
-  primaryColor,
+  colorClassName,
+  iconClassName,
   className
 }) => {
   return (
@@ -28,20 +30,14 @@ export const CustomBadge: React.FC<CustomBadgeProps> = ({
       className={cn(
         "flex items-center h-[48px] w-[222px] rounded-xl border-2 transition-all hover:-translate-y-0.5 overflow-hidden group mx-auto md:mx-0",
         "bg-white dark:bg-slate-950",
+        colorClassName,
         className
       )}
-      style={{
-        borderColor: primaryColor,
-        color: primaryColor
-      }}
     >
-      <div
-        className="flex items-center justify-center h-full aspect-square border-r-2 shrink-0"
-        style={{ borderColor: primaryColor }}
-      >
-        <img src={icon} alt={brandName} className="w-6 h-6 object-contain" />
+      <div className="flex items-center justify-center h-full aspect-square shrink-0">
+        <img src={icon} alt={brandName} className={cn("w-6 h-6 object-contain", iconClassName)} />
       </div>
-      <div className="flex flex-col px-3 justify-center min-w-0">
+      <div className="flex flex-col px-1 justify-center min-w-0">
         <span className="text-[10px] font-bold uppercase tracking-wider opacity-80 leading-none mb-1 truncate">
           {label}
         </span>
@@ -60,21 +56,21 @@ export const FindOnProductHuntBadge: React.FC<{ className?: string }> = ({ class
         href={IMIFY_LINKS.productHunt}
         target="_blank"
         rel="noopener noreferrer"
-        className="transition-all hover:-translate-y-0.5 block h-12 w-full max-w-[222px]"
+        className="transition-all hover:-translate-y-0.5 block h-12 w-[222px]"
       >
         <img
           src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1136860&theme=light&t=1777818024037"
           alt="Imiy - The powerful image toolkit for designers | Product Hunt"
           style={{ height: "48px" }}
           height="48"
-          className="block dark:hidden h-12 w-full object-contain"
+          className="block dark:hidden h-12 w-[222px] object-contain"
         />
         <img
           src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1136860&theme=dark&t=1777818034186"
           alt="Imiy - The powerful image toolkit for designers | Product Hunt"
           style={{ height: "48px" }}
           height="48"
-          className="hidden dark:block h-12 w-full object-contain"
+          className="hidden dark:block h-12 w-[222px] object-contain"
         />
       </a>
     </div>
@@ -88,7 +84,8 @@ export const FindOnUnikornBadge: React.FC<{ className?: string }> = ({ className
       icon="https://unikorn.vn/favicon.ico"
       label="Find us on"
       brandName="Unikorn"
-      primaryColor="#00b894"
+      colorClassName="border-slate-800 text-slate-800 dark:border-white dark:text-white"
+      iconClassName="dark:invert"
       className={className}
     />
   )
@@ -101,7 +98,7 @@ export const FindOnJ2TeamLaunchBadge: React.FC<{ className?: string }> = ({ clas
       icon={resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.j2teamLogoIco)}
       label="Find us on"
       brandName="J2TEAM Launch"
-      primaryColor="#1a73e8"
+      colorClassName="border-[#f43f5e] text-[#f43f5e]"
       className={className}
     />
   )

@@ -74,8 +74,8 @@ export function WebFooter() {
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Find us</h3>
             <div className="flex flex-col gap-3">
               <FindOnProductHuntBadge />
-              <FindOnUnikornBadge className="w-full" />
-              <FindOnJ2TeamLaunchBadge className="w-full" />
+              <FindOnUnikornBadge />
+              <FindOnJ2TeamLaunchBadge />
             </div>
           </div>
         </div>
