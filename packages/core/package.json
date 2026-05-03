@@ -1,6 +1,6 @@
 {
   "name": "@imify/core",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "private": true,
   "description": "Platform-agnostic core types, utilities, and constants for Imify",
   "scripts": {
