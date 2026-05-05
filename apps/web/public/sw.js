@@ -3,6 +3,15 @@ importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.4.1/workbox
 if (workbox) {
   console.log('Workbox is loaded');
 
+  // Skip analytics and external tracking services
+  workbox.routing.registerRoute(
+    ({ url }) => 
+      url.hostname.includes('cloudflareinsights.com') || 
+      url.hostname.includes('google-analytics.com') ||
+      url.pathname.startsWith('/cdn-cgi/'),
+    new workbox.strategies.NetworkOnly()
+  );
+
   // Pre-cache WASM files
   workbox.precaching.precacheAndRoute([
     { url: '/assets/wasm/avif_enc.js', revision: '1' },

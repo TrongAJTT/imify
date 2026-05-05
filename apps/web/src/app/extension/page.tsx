@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import Image from "next/image"
 import { BodyText, Heading } from "@imify/ui/ui/typography"
 import { ExtensionDownloadButtons } from "./extension-download-buttons"
 import { WEB_ROUTE_METADATA } from "../seo-metadata"
@@ -35,12 +36,12 @@ export default function ExtensionPage() {
           {/* Feature 1: Context Menu */}
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
             <div className="order-2 lg:order-1 rounded-2xl overflow-hidden border border-slate-200 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-slate-100 dark:bg-slate-900 ring-1 ring-slate-200/50 dark:ring-slate-800/50">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="https://cdn.trongajtt.com/apps/imify/context-menu.webp"
                 alt="Imify Context Menu Preview"
+                width={1200}
+                height={800}
                 className="w-full h-auto object-cover object-top transition-transform hover:scale-105 duration-700 ease-out"
-                loading="lazy"
               />
             </div>
             <div className="order-1 lg:order-2 space-y-6">
@@ -94,12 +95,12 @@ export default function ExtensionPage() {
               </ul>
             </div>
             <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-slate-100 dark:bg-slate-900 ring-1 ring-slate-200/50 dark:ring-slate-800/50">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="https://cdn.trongajtt.com/apps/imify/seo-audit-preview.webp"
                 alt="Imify SEO Audit Preview"
+                width={1200}
+                height={800}
                 className="w-full h-auto object-cover object-top transition-transform hover:scale-105 duration-700 ease-out"
-                loading="lazy"
               />
             </div>
           </div>

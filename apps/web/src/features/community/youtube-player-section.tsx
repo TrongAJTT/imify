@@ -88,13 +88,16 @@ export function YoutubePlayerSection() {
             config={{
               youtube: {
                 // @ts-ignore
-                autoplay: 1,
-                modestbranding: 1,
-                rel: 0,
-                controls: 0,
-                disablekb: 1,
-                iv_load_policy: 3,
-                vq: 'highres' // Hint for high resolution
+                playerVars: {
+                  autoplay: 1,
+                  modestbranding: 1,
+                  rel: 0,
+                  controls: 0,
+                  disablekb: 1,
+                  iv_load_policy: 3,
+                  enablejsapi: 1,
+                  origin: typeof window !== 'undefined' ? window.location.origin : undefined
+                } as any
               }
             }}
             onPlay={() => setPlaying(true)}

@@ -3,6 +3,7 @@
 import { Button } from "@imify/ui/ui/button"
 import { Tooltip } from "@imify/features/shared/tooltip"
 import { Github } from "lucide-react"
+import Image from "next/image"
 
 export function ExtensionDownloadButtons() {
   return (
@@ -18,8 +19,13 @@ export function ExtensionDownloadButtons() {
           rel="noopener noreferrer"
           className="block transition-transform hover:scale-105 active:scale-95 drop-shadow-sm hover:drop-shadow-md"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="https://cdn.trongajtt.com/assets/get-on-chrome.webp" alt="Get on Chrome Web Store" className="h-14 w-auto" />
+          <Image 
+            src="https://cdn.trongajtt.com/assets/get-on-chrome.webp" 
+            alt="Get on Chrome Web Store" 
+            width={200}
+            height={56}
+            className="h-14 w-auto object-contain" 
+          />
         </a>
       </Tooltip>
 
@@ -34,8 +40,13 @@ export function ExtensionDownloadButtons() {
           rel="noopener noreferrer"
           className="block transition-transform hover:scale-105 active:scale-95 drop-shadow-sm hover:drop-shadow-md"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="https://cdn.trongajtt.com/assets/get-on-edge.webp" alt="Get on Microsoft Edge Add-ons" className="h-14 w-auto" />
+          <Image 
+            src="https://cdn.trongajtt.com/assets/get-on-edge.webp" 
+            alt="Get on Microsoft Edge Add-ons" 
+            width={200}
+            height={56}
+            className="h-14 w-auto object-contain" 
+          />
         </a>
       </Tooltip>
 
@@ -50,8 +61,13 @@ export function ExtensionDownloadButtons() {
           rel="noopener noreferrer"
           className="block transition-transform hover:scale-105 active:scale-95 drop-shadow-sm hover:drop-shadow-md"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="https://cdn.trongajtt.com/assets/get-on-firefox.webp" alt="Get on Firefox Add-ons" className="h-14 w-auto" />
+          <Image 
+            src="https://cdn.trongajtt.com/assets/get-on-firefox.webp" 
+            alt="Get on Firefox Add-ons" 
+            width={200}
+            height={56}
+            className="h-14 w-auto object-contain" 
+          />
         </a>
       </Tooltip>
 
