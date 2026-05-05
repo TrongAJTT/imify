@@ -4,6 +4,7 @@ import Link from "next/link"
 import { getWorkspaceToolsMenuGroups } from "@imify/features/workspace-shell/workspace-tools"
 import { IMIFY_LINKS } from "@imify/core"
 import { useWebPageMode } from "@/hooks/use-web-page-mode"
+import { useIsDesktopLayout } from "@imify/features/workspace-chrome"
 import { FindOnProductHuntBadge, FindOnUnikornBadge, FindOnJ2TeamLaunchBadge } from "@/features/community/find-us-badges"
 
 const TOOL_GROUPS = getWorkspaceToolsMenuGroups()
@@ -11,6 +12,12 @@ const ALL_TOOLS = TOOL_GROUPS.flatMap((g) => g.items)
 
 export function WebFooter() {
   const { isMonolithicPage: isFullFooter } = useWebPageMode()
+  const isDesktop = useIsDesktopLayout()
+
+  // Hide footer ONLY on tool pages AND on mobile interface.
+  if (!isFullFooter && !isDesktop) {
+    return null
+  }
 
   if (!isFullFooter) {
     return (

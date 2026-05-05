@@ -83,30 +83,38 @@ export function WorkspaceShell({ children, rightSidebar }: WorkspaceShellProps) 
       </aside>
       </div>
       {hasRightSidebar && !isDesktop ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-2 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
-          <div className="mx-auto flex w-full max-w-6xl items-center rounded-2xl border border-slate-200/80 bg-white/90 p-1 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/90">
+        <div className="fixed inset-x-0 bottom-4 z-40 px-6 flex justify-center pointer-events-none">
+          <div className="relative pointer-events-auto flex w-full max-w-sm items-center gap-1 rounded-3xl border border-white/20 bg-white/70 p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-slate-800/50 dark:bg-slate-900/75">
+            {/* Sliding Indicator */}
+            <div 
+              className="absolute h-[calc(100%-12px)] w-[calc(50%-6px)] rounded-2xl bg-white shadow-sm transition-all duration-300 ease-out dark:bg-slate-800"
+              style={{
+                left: activeMobilePanel === "main" ? "6px" : "calc(50%)",
+              }}
+            />
+            
             <button
               type="button"
               onClick={() => setActiveMobilePanel("main")}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+              className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-bold transition-colors duration-300 ${
                 activeMobilePanel === "main"
-                  ? "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
-                  : "text-slate-600 dark:text-slate-300"
+                  ? "text-sky-600 dark:text-sky-400"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
             >
-              <SquareDashedMousePointer size={15} />
+              <SquareDashedMousePointer size={18} strokeWidth={activeMobilePanel === "main" ? 2.5 : 2} />
               Main
             </button>
             <button
               type="button"
               onClick={() => setActiveMobilePanel("config")}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+              className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-bold transition-colors duration-300 ${
                 activeMobilePanel === "config"
-                  ? "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
-                  : "text-slate-600 dark:text-slate-300"
+                  ? "text-sky-600 dark:text-sky-400"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
             >
-              <SlidersHorizontal size={15} />
+              <SlidersHorizontal size={18} strokeWidth={activeMobilePanel === "config" ? 2.5 : 2} />
               Config
             </button>
           </div>

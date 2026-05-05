@@ -62,6 +62,9 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
     chromeWebp: "/assets/images/img-download-not-ask-chrome.webp",
     edgeWebp: "/assets/images/img-download-not-ask-edge.webp",
     firefoxWebp: "/assets/images/img-download-not-ask-firefox.webp"
+  },
+  common: {
+    whatsNewMd: "/assets/WHATS_NEW.md"
   }
 } as const
 
@@ -111,5 +114,8 @@ export const FEATURE_MEDIA_ASSETS = {
     chromeWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.chromeWebp,
     edgeWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.edgeWebp,
     firefoxWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.firefoxWebp
+  },
+  common: {
+    whatsNewMd: FEATURE_MEDIA_ASSET_PATHS.common.whatsNewMd
   }
 } as const

@@ -16,7 +16,7 @@ interface WhatsNewUpdateSummaryDialogProps {
   version: string
 }
 
-const WHATS_NEW_MARKDOWN_PATH = "/assets/WHATS_NEW.md"
+const WHATS_NEW_MARKDOWN_PATH = FEATURE_MEDIA_ASSETS.common.whatsNewMd
 
 export function WhatsNewUpdateSummaryDialog({
   isOpen,

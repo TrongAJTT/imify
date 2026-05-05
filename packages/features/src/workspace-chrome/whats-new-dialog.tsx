@@ -14,7 +14,7 @@ interface WhatsNewDialogProps {
   onClose: () => void
 }
 
-const WHATS_NEW_MARKDOWN_PATH = "/assets/WHATS_NEW.md"
+const WHATS_NEW_MARKDOWN_PATH = FEATURE_MEDIA_ASSETS.common.whatsNewMd
 
 export function WhatsNewDialog({ isOpen, onClose }: WhatsNewDialogProps) {
   const [markdown, setMarkdown] = useState("")

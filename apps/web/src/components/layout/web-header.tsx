@@ -218,15 +218,19 @@ export function WebHeader() {
 
   return (
     <>
-      {isStickyHeader ? (
-        <div className="sticky top-0 z-40 px-4 pt-3 md:px-6">
-          <div className="mx-auto w-full max-w-6xl rounded-2xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 [&>header]:rounded-2xl">
+      <div className="sticky top-0 z-40 transition-all duration-300">
+        {isStickyHeader ? (
+          <div className="px-4 pt-3 md:px-6">
+            <div className="mx-auto w-full max-w-6xl rounded-2xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 [&>header]:rounded-2xl">
+              {headerNode}
+            </div>
+          </div>
+        ) : (
+          <div className="w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-900/80 [&>header]:bg-transparent [&>header]:border-none">
             {headerNode}
           </div>
-        </div>
-      ) : (
-        headerNode
-      )}
+        )}
+      </div>
 
       <AboutDialog
         isOpen={isAboutDialogOpen}

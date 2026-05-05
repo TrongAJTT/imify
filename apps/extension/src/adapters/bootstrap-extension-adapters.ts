@@ -40,6 +40,7 @@ import previewContextMenuWebp from "url:@assets/features/preview-context_menu.we
 import previewDiffCheckerWebp from "url:@assets/features/preview-difference_checker.webp"
 import previewInspectorWebp from "url:@assets/features/preview-image_inspector.webp"
 import j2teamLogoIco from "url:@assets/images/j2tl-logo.ico"
+import whatsNewMd from "url:@assets/WHATS_NEW.md"
 
 let adaptersBootstrapped = false
 const extensionMediaAssetMap: Record<string, string> = {
@@ -66,7 +67,8 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.downloadHints.firefoxWebp]: downloadHintFirefoxWebp,
   [FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp]: previewDiffCheckerWebp,
   [FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp]: previewInspectorWebp,
-  [FEATURE_MEDIA_ASSET_PATHS.brand.j2teamLogoIco]: j2teamLogoIco
+  [FEATURE_MEDIA_ASSET_PATHS.brand.j2teamLogoIco]: j2teamLogoIco,
+  [FEATURE_MEDIA_ASSET_PATHS.common.whatsNewMd]: whatsNewMd
 }
 
 const extensionWasmFactoryMap: Record<string, unknown> = {
