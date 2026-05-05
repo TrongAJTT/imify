@@ -39,7 +39,8 @@ import {
 } from "@imify/features/filling/layer-visual-highlight"
 import { Subheading, MutedText } from "@imify/ui/ui/typography"
 import { Button } from "@imify/ui/ui/button"
-import { ZoomPanControl } from "@imify/ui/ui/zoom-pan-control"
+import { AnimatingSpinner, ZoomPanControl } from "@imify/ui"
+import { useCanvasResizer } from "../../shared/use-canvas-resizer"
 import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
@@ -95,7 +96,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 })
   const [previewInteractionMode, setPreviewInteractionMode] =
     useState<PreviewInteractionMode>("zoom")
-  const [isResizingPreview, setIsResizingPreview] = useState(false)
+  const { isResizing: isResizingPreview, handleResizeStart: handlePreviewResizeStart } = useCanvasResizer({
+    containerRef,
+    onHeightChange: setPreviewContainerHeight,
+    minHeight: 320
+  })
 
   const canvasFillState = useFillingStore((s) => s.canvasFillState)
   const layerFillStates = useFillingStore((s) => s.layerFillStates)
@@ -437,36 +442,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     return () => ro.disconnect()
   }, [])
 
-  const handlePreviewResizeStart = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsResizingPreview(true)
-  }, [])
-
-  useEffect(() => {
-    if (!isResizingPreview) return
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const container = containerRef.current
-      if (!container) return
-
-      const rect = container.getBoundingClientRect()
-      const nextHeight = e.clientY - rect.top
-      setPreviewContainerHeight(Math.max(320, Math.round(nextHeight)))
-    }
-
-    const handleMouseUp = () => {
-      setIsResizingPreview(false)
-    }
-
-    document.addEventListener("mousemove", handleMouseMove)
-    document.addEventListener("mouseup", handleMouseUp)
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("mouseup", handleMouseUp)
-    }
-  }, [isResizingPreview])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1936,14 +1911,18 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         />
 
         <div
-          onMouseDown={handlePreviewResizeStart}
-          className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors ${
+          onPointerDown={handlePreviewResizeStart}
+          className={`absolute bottom-0 left-0 right-0 h-4 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors z-20 ${
             isResizingPreview ? "bg-sky-400 dark:bg-sky-500" : ""
           }`}
-          style={{ cursor: "ns-resize" }}
+          style={{ cursor: "ns-resize", touchAction: "none" }}
           role="separator"
           aria-label="Resize fill preview height"
-        />
+        >
+          <div className={`absolute inset-x-0 bottom-0 h-1.5 transition-colors ${
+            isResizingPreview ? "bg-sky-500" : ""
+          }`} />
+        </div>
       </div>
 
       <ToastContainer toasts={conversionToasts} onRemove={handleRemoveExportToast} />

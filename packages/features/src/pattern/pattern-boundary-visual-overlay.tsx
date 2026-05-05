@@ -220,7 +220,7 @@ export function PatternBoundaryVisualOverlay({
       width={displayWidth}
       height={displayHeight}
       className="pointer-events-auto"
-      onMouseDown={(event) => {
+      onPointerDown={(event) => {
         if (event.target === event.target.getStage()) {
           onActiveTargetChange(null)
         }

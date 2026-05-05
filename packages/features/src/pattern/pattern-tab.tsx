@@ -1,5 +1,7 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Download, ImagePlus, Loader2 } from "lucide-react"
+import { ChevronDown, Download, ImagePlus, Loader2, Save } from "lucide-react"
+import { useCanvasResizer } from "../shared/use-canvas-resizer"
+import { usePanDrag } from "../shared/use-pan-drag"
 
 import { ToastContainer } from "@imify/ui"
 import { toUserFacingConversionError } from "@imify/core/error-utils"
@@ -30,7 +32,6 @@ const PREVIEW_MIN_ZOOM = 50
 const PREVIEW_MAX_ZOOM = 2000
 const PREVIEW_ZOOM_STEP = 10
 // When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
-// Matches DiffChecker's multiplicative approach.
 const PREVIEW_ZOOM_FACTOR = 0.15
 
 function closeBitmapMap(map: Map<string, ImageBitmap>): void {
@@ -97,13 +98,25 @@ export function PatternTab() {
   const [previewZoom, setPreviewZoom] = useState(100)
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 })
   const [previewInteractionMode, setPreviewInteractionMode] = useState<PreviewInteractionMode>("zoom")
-  const [isResizing, setIsResizing] = useState(false)
   const [assetBitmapMap, setAssetBitmapMap] = useState<Map<string, ImageBitmap>>(new Map())
   const [backgroundBitmap, setBackgroundBitmap] = useState<ImageBitmap | null>(null)
   const [isRenderingPreview, setIsRenderingPreview] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [exportToastPayload, setExportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const { isResizing, handleResizeStart } = useCanvasResizer({
+    containerRef: previewHostRef,
+    onHeightChange: setPreviewContainerHeight,
+    minHeight: 200
+  })
+
+  const { pan: previewPanInternal, setPan: setPreviewPanInternal, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
+    onlyWhenZoomed: false,
+    currentZoom: previewZoom,
+    onZoomChange: setPreviewZoom,
+    onPanChange: (x, y) => setPreviewPan({ x, y })
+  })
 
   const assetBitmapsRef = useRef<Map<string, ImageBitmap>>(new Map())
   const backgroundBitmapRef = useRef<ImageBitmap | null>(null)
@@ -604,48 +617,9 @@ export function PatternTab() {
     }
   }
 
-  const handleResizeStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsResizing(true)
-  }, [])
-
-  useEffect(() => {
-    if (!isResizing) return
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const container = previewHostRef.current
-      if (!container) return
-
-      const rect = container.getBoundingClientRect()
-      const newHeight = e.clientY - rect.top
-
-      setPreviewContainerHeight(Math.max(200, newHeight))
-    }
-
-    const handleMouseUp = () => {
-      setIsResizing(false)
-    }
-
-    document.addEventListener("mousemove", handleMouseMove)
-    document.addEventListener("mouseup", handleMouseUp)
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("mouseup", handleMouseUp)
-    }
-  }, [isResizing, setPreviewContainerHeight])
-
   return (
     <div className="p-0 space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-2">
-        <div className="min-w-0">
-          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">Pattern Preview</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-            {activeAssets.length} active asset{activeAssets.length === 1 ? "" : "s"} •
-            {` ${canvas.width} x ${canvas.height}px`}
-          </p>
-        </div>
-
         <div className="flex flex-wrap items-center gap-3">
           <PreviewInteractionModeToggle
             mode={previewInteractionMode}
@@ -654,116 +628,133 @@ export function PatternTab() {
             panKeyHint={getShortcutLabel("global.preview.pan_mode")}
             idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
           />
-
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => void handleExportPattern()}
-            disabled={isExporting || activeAssets.length === 0}
-          >
-            {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-            {isExporting ? "Exporting..." : "Export Pattern"}
-          </Button>
+          <div className="flex items-center">
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleExportPattern}
+              disabled={isExporting}
+              className="rounded-r-none px-2"
+            >
+              {isExporting ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Save size={14} />
+                  Export Pattern
+                </>
+              )}
+            </Button>
+            <div className="rounded-l-none border-l border-sky-400/60 bg-sky-500 p-0 dark:bg-sky-600">
+              <Button
+                variant="primary"
+                size="sm"
+                aria-label="Export options"
+                disabled={isExporting}
+                className="rounded-l-none px-2"
+              >
+                <ChevronDown size={14} />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div
         ref={previewHostRef}
-        className="relative min-h-[460px] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 overflow-hidden"
-        style={{ height: `${previewContainerHeight}px` }}
+        className="relative mx-auto overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
+        style={{
+          width: "100%",
+          height: `${previewContainerHeight}px`,
+        }}
       >
-        {activeAssets.length === 0 ? (
-          <div className="h-full rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/30 flex items-center justify-center text-center px-4">
-            <div className="max-w-md">
-              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sky-600 dark:border-slate-700 dark:bg-slate-800 dark:text-sky-400">
-                <ImagePlus size={20} />
-              </div>
-              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                No assets to preview yet
-              </h3>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Add or draw at least one asset from the Pattern sidebar to render the canvas and enable export.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="relative h-full overflow-hidden">
-            <div
-              className="absolute left-0 top-0 rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%,transparent_75%,#e2e8f0_75%,#e2e8f0),linear-gradient(45deg,#e2e8f0_25%,transparent_25%,transparent_75%,#e2e8f0_75%,#e2e8f0)] dark:bg-[linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a),linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a)] bg-[length:20px_20px] bg-[position:0_0,10px_10px]"
-              style={{
-                width: `${displayWidth}px`,
-                height: `${displayHeight}px`,
-                transform: `translate(${previewBaseOffset.x + previewPan.x}px, ${previewBaseOffset.y + previewPan.y}px) scale(${previewZoom / 100})`,
-                transformOrigin: "top left",
-              }}
-            >
-              <canvas
-                ref={previewCanvasRef}
-                width={Math.max(1, Math.round(canvas.width))}
-                height={Math.max(1, Math.round(canvas.height))}
-                style={{ width: "100%", height: "100%", display: "block" }}
-              />
-
-              {shouldRenderBoundaryOverlay && (
-                <div className="absolute inset-0" data-pattern-boundary-overlay-root="true">
-                  <Suspense fallback={null}>
-                    <PatternBoundaryVisualOverlay
-                      renderScale={renderScale}
-                      displayWidth={displayWidth}
-                      displayHeight={displayHeight}
-                      inboundBoundary={settings.inboundBoundary}
-                      outboundBoundary={settings.outboundBoundary}
-                      activeTarget={activeVisualBoundary}
-                      onBoundaryChange={setBoundary}
-                      onActiveTargetChange={(target) => {
-                        if (!target) {
-                          hideVisualBoundary()
-                          return
-                        }
-
-                        setActiveVisualBoundary(target)
-                      }}
-                    />
-                  </Suspense>
-                </div>
-              )}
-
-              {isRenderingPreview && (
-                <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/50 backdrop-blur-[1px] flex items-center justify-center">
-                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                    <Loader2 size={14} className="animate-spin" />
-                    Rendering preview...
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <ZoomPanControl
-              zoom={previewZoom}
-              panX={previewPan.x}
-              panY={previewPan.y}
-              onZoomChange={(value) => setPreviewZoom(clampPreviewZoom(value))}
-              onPanChange={(x, y) => setPreviewPan({ x, y })}
-              minZoom={PREVIEW_MIN_ZOOM}
-              maxZoom={PREVIEW_MAX_ZOOM}
+        <div
+          className="relative h-full w-full flex items-center justify-center overflow-hidden"
+          style={{
+            transform: `translate(${previewPan.x}px, ${previewPan.y}px) scale(${previewZoom / 100})`,
+            transformOrigin: "center center",
+            touchAction: "none",
+            cursor:
+              previewInteractionMode === "pan"
+                ? "grab"
+                : previewInteractionMode === "idle"
+                  ? "default"
+                  : "zoom-in",
+          }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
+        >
+          <div
+            className="relative bg-white shadow-xl dark:bg-slate-950"
+            style={{
+              width: `${displayWidth}px`,
+              height: `${displayHeight}px`,
+            }}
+          >
+            <canvas
+              ref={previewCanvasRef}
+              width={displayWidth}
+              height={displayHeight}
+              className="h-full w-full object-contain"
             />
+
+            {shouldRenderBoundaryOverlay && (
+              <div className="absolute inset-0 z-10">
+                <Suspense fallback={null}>
+                  <PatternBoundaryVisualOverlay
+                    renderScale={renderScale}
+                    displayWidth={displayWidth}
+                    displayHeight={displayHeight}
+                    inboundBoundary={settings.inboundBoundary}
+                    outboundBoundary={settings.outboundBoundary}
+                    activeTarget={activeVisualBoundary}
+                    onBoundaryChange={setBoundary}
+                    onActiveTargetChange={setActiveVisualBoundary}
+                  />
+                </Suspense>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {isRenderingPreview && (
+          <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center px-4 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-300/90 bg-white/95 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur dark:border-slate-600/90 dark:bg-slate-900/90 dark:text-slate-200">
+              <Loader2 size={12} className="animate-spin" />
+              <span className="truncate">Rendering pattern preview...</span>
+            </div>
           </div>
         )}
 
+        <ZoomPanControl
+          zoom={previewZoom}
+          panX={previewPan.x}
+          panY={previewPan.y}
+          onZoomChange={(value) => setPreviewZoom(Math.max(PREVIEW_MIN_ZOOM, Math.min(PREVIEW_MAX_ZOOM, value)))}
+          onPanChange={(x, y) => setPreviewPan({ x, y })}
+          minZoom={PREVIEW_MIN_ZOOM}
+          maxZoom={PREVIEW_MAX_ZOOM}
+        />
+
         <div
           ref={resizeHandleRef}
-          onMouseDown={handleResizeStart}
-          className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors ${
-            isResizing ? "bg-sky-400 dark:bg-sky-500" : ""
-          }`}
-          style={{ cursor: "ns-resize" }}
-        />
+          onPointerDown={handleResizeStart}
+          className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors z-20 ${isResizing ? "bg-sky-400 dark:bg-sky-500" : ""
+            }`}
+          style={{ cursor: "ns-resize", touchAction: "none" }}
+        >
+          <div className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${isResizing ? "bg-sky-500" : ""
+            }`} />
+        </div>
       </div>
 
       <ToastContainer toasts={conversionToasts} onRemove={handleRemoveExportToast} />
     </div>
   )
 }
-
-
-

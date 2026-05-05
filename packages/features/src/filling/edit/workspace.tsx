@@ -12,6 +12,7 @@ import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { useShortcutActions } from "../use-shortcut-actions"
 import { useTransformGuides, type RectBounds } from "../use-transform-guides"
 import { Button, MutedText, PreviewInteractionModeToggle, Subheading, VisualHelpTooltip, ZoomPanControl } from "@imify/ui"
+import { useCanvasResizer } from "../../shared/use-canvas-resizer"
 import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
 import { preventWheelEvent } from "../../shared/prevent-wheel-event"
@@ -75,8 +76,12 @@ export function ManualEditorWorkspace({
   const [previewContainerHeight, setPreviewContainerHeight] = useState(520)
   const [previewZoom, setPreviewZoom] = useState(100)
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 })
+  const { isResizing: isResizingPreview, handleResizeStart: handlePreviewResizeStart } = useCanvasResizer({
+    containerRef,
+    onHeightChange: setPreviewContainerHeight,
+    minHeight: 320
+  })
   const [previewInteractionMode, setPreviewInteractionMode] = useState<PreviewInteractionMode>("zoom")
-  const [isResizingPreview, setIsResizingPreview] = useState(false)
   const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false)
   const [cursor, setCursor] = useState("default")
   const [rotationGuideLine, setRotationGuideLine] = useState<number[] | null>(null)
@@ -124,30 +129,6 @@ export function ManualEditorWorkspace({
     ro.observe(container)
     return () => ro.disconnect()
   }, [])
-
-  const handlePreviewResizeStart = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsResizingPreview(true)
-  }, [])
-
-  useEffect(() => {
-    if (!isResizingPreview) return
-    const handleMouseMove = (e: MouseEvent) => {
-      const container = containerRef.current
-      if (!container) return
-      const rect = container.getBoundingClientRect()
-      const nextHeight = e.clientY - rect.top
-      setPreviewContainerHeight(Math.max(320, Math.round(nextHeight)))
-    }
-    const handleMouseUp = () => setIsResizingPreview(false)
-    document.addEventListener("mousemove", handleMouseMove)
-    document.addEventListener("mouseup", handleMouseUp)
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("mouseup", handleMouseUp)
-    }
-  }, [isResizingPreview])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -239,7 +220,7 @@ export function ManualEditorWorkspace({
     y: (pointer.y - offsetY) / renderScale,
   }), [offsetX, renderScale])
 
-  const handleStageClick = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleStageClick = useCallback((e: Konva.KonvaEventObject<PointerEvent>) => {
     if (ignoreNextStageClickRef.current) {
       ignoreNextStageClickRef.current = false
       return
@@ -251,7 +232,7 @@ export function ManualEditorWorkspace({
     }
   }, [onClearSelection])
 
-  const handleStageMouseDown = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleStagePointerDown = useCallback((e: Konva.KonvaEventObject<PointerEvent>) => {
     if (e.target !== e.target.getStage() || selectedLayerIds.length > 0) return
     const pointer = e.target.getStage()?.getPointerPosition()
     if (!pointer) return
@@ -260,7 +241,7 @@ export function ManualEditorWorkspace({
     setSelectionBoxRect({ x: start.x, y: start.y, width: 0, height: 0 })
   }, [selectedLayerIds.length, toWorldPoint])
 
-  const handleStageMouseMove = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleStagePointerMove = useCallback((e: Konva.KonvaEventObject<PointerEvent>) => {
     if (!selectionBoxStart) return
     const pointer = e.target.getStage()?.getPointerPosition()
     if (!pointer) return
@@ -273,7 +254,7 @@ export function ManualEditorWorkspace({
     })
   }, [selectionBoxStart, toWorldPoint])
 
-  const handleStageMouseUp = useCallback(() => {
+  const handleStagePointerUp = useCallback(() => {
     if (!selectionBoxStart || !selectionBoxRect) return
     const hasDraggedSelectionBox = selectionBoxRect.width > 2 || selectionBoxRect.height > 2
     if (hasDraggedSelectionBox) {
@@ -448,7 +429,7 @@ export function ManualEditorWorkspace({
         </div>
       ) : null}
       <div ref={containerRef} className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden" style={{ height: `${previewContainerHeight}px`, cursor }}>
-        <Stage ref={stageRef} width={stageSize.width} height={stageSize.height} onClick={handleStageClick} onTap={handleStageClick} onMouseDown={handleStageMouseDown} onMouseUp={handleStageMouseUp} onMouseMove={(e) => { handleStageMouseMove(e); const targetName = e.target.name(); if (targetName.includes("rotater")) { setCursor("crosshair"); return } if (targetName.includes("manual-layer-shape")) { const isPointerDown = (e.evt as MouseEvent).buttons === 1; setCursor(isPointerDown ? "grabbing" : "grab"); return } setCursor("default") }} onMouseLeave={() => setCursor("default")}>
+        <Stage ref={stageRef} width={stageSize.width} height={stageSize.height} onClick={handleStageClick} onTap={handleStageClick} onPointerDown={handleStagePointerDown} onPointerUp={handleStagePointerUp} onPointerMove={(e) => { handleStagePointerMove(e); const targetName = e.target.name(); if (targetName.includes("rotater")) { setCursor("crosshair"); return } if (targetName.includes("manual-layer-shape")) { const isPointerDown = (e.evt as PointerEvent).buttons === 1; setCursor(isPointerDown ? "grabbing" : "grab"); return } setCursor("default") }} onMouseLeave={() => setCursor("default")}>
           <Layer>
             <Rect x={offsetX} y={offsetY} width={canvasWidth * renderScale} height={canvasHeight * renderScale} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} listening={false} />
             {positionGuideLines.map((points, index) => <Line key={`manual-position-guide-${index}`} points={points} stroke="rgba(14, 165, 233, 0.9)" strokeWidth={1.2} dash={[6, 6]} listening={false} perfectDrawEnabled={false} />)}
@@ -470,7 +451,17 @@ export function ManualEditorWorkspace({
           </Layer>
         </Stage>
         <ZoomPanControl zoom={previewZoom} panX={previewPan.x} panY={previewPan.y} onZoomChange={setPreviewZoom} onPanChange={(x, y) => setPreviewPan({ x, y })} minZoom={PREVIEW_MIN_ZOOM} maxZoom={PREVIEW_MAX_ZOOM} />
-        <div onMouseDown={handlePreviewResizeStart} className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors ${isResizingPreview ? "bg-sky-400 dark:bg-sky-500" : ""}`} style={{ cursor: "ns-resize" }} role="separator" aria-label="Resize manual preview height" />
+        <div
+          onPointerDown={handlePreviewResizeStart}
+          className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors z-20 ${isResizingPreview ? "bg-sky-400 dark:bg-sky-500" : ""
+            }`}
+          style={{ cursor: "ns-resize", touchAction: "none" }}
+          role="separator"
+          aria-label="Resize manual preview height"
+        >
+          <div className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${isResizingPreview ? "bg-sky-500" : ""
+            }`} />
+        </div>
       </div>
     </div>
   )

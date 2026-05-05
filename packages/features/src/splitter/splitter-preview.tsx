@@ -6,6 +6,7 @@ import type { PreviewInteractionMode } from "@imify/ui"
 import type { SplitterSplitPlan, SplitterSplitSettings } from "./types"
 import { hasFileDragPayload } from "../shared/image-file-utils"
 import { preventWheelEvent } from "../shared/prevent-wheel-event"
+import { useCanvasResizer } from "../shared/use-canvas-resizer"
 
 interface SplitterPreviewProps {
   image: {
@@ -37,23 +38,24 @@ export function SplitterPreview({
 
   const [isDragOver, setIsDragOver] = useState(false)
   const [zoom, setZoom] = useState(100)
-  const [containerHeight, setContainerHeight] = useState(620)
-  const [isResizing, setIsResizing] = useState(false)
+  const [containerHeight, setContainerHeight] = useState(520)
+  const [frameWidth, setFrameWidth] = useState(0)
   const previewFrameRef = useRef<HTMLDivElement>(null)
   const previewInteractionModeRef = useRef(previewInteractionMode)
-  
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 800) {
-      setContainerHeight(400)
-    }
-  }, [])
+
+  const { isResizing, handleResizeStart } = useCanvasResizer({
+    containerRef: previewFrameRef,
+    onHeightChange: setContainerHeight,
+    minHeight: 240
+  })
 
   useEffect(() => {
     previewInteractionModeRef.current = previewInteractionMode
   }, [previewInteractionMode])
+
   const guideBoxRef = useRef<HTMLDivElement>(null)
   const dragAxisRef = useRef<"x" | "y" | null>(null)
-  const [frameWidth, setFrameWidth] = useState(0)
+
   const { pan, setPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
     enabled: previewInteractionMode === "pan",
     onlyWhenZoomed: false,
@@ -61,6 +63,40 @@ export function SplitterPreview({
     onZoomChange: setZoom,
     onPanChange: (x, y) => setPan({ x, y })
   })
+
+  useEffect(() => {
+    const frame = previewFrameRef.current
+    if (!frame) return
+
+    const syncFrameWidth = () => {
+      setFrameWidth(frame.clientWidth)
+    }
+
+    syncFrameWidth()
+    const observer = new ResizeObserver(syncFrameWidth)
+    observer.observe(frame)
+    return () => observer.disconnect()
+  }, [])
+
+  const renderedImageBox = useMemo(() => {
+    if (!image) return { width: 0, height: 0 }
+    const safeHeight = Math.max(1, containerHeight)
+    const safeWidth = Math.max(1, frameWidth)
+    const imageAspect = Math.max(1, image.width) / Math.max(1, image.height)
+    const frameAspect = safeWidth / safeHeight
+
+    if (frameAspect > imageAspect) {
+      return {
+        width: Math.round(safeHeight * imageAspect),
+        height: safeHeight
+      }
+    }
+
+    return {
+      width: safeWidth,
+      height: Math.round(safeWidth / imageAspect)
+    }
+  }, [containerHeight, frameWidth, image])
 
   if (!image) {
     return null
@@ -80,68 +116,8 @@ export function SplitterPreview({
     splitSettings?.mode === "basic" &&
     (splitSettings.direction === "horizontal" || splitSettings.direction === "grid") &&
     firstYCut != null
-  const renderedImageBox = useMemo(() => {
-    const safeHeight = Math.max(1, containerHeight)
-    const safeWidth = Math.max(1, frameWidth)
-    const imageAspect = Math.max(1, image.width) / Math.max(1, image.height)
-    const frameAspect = safeWidth / safeHeight
 
-    if (frameAspect > imageAspect) {
-      return {
-        width: Math.round(safeHeight * imageAspect),
-        height: safeHeight
-      }
-    }
-
-    return {
-      width: safeWidth,
-      height: Math.round(safeWidth / imageAspect)
-    }
-  }, [containerHeight, frameWidth, image.height, image.width])
   const guideColor = splitSettings?.guideColor?.trim() || "#06b6d4"
-
-  useEffect(() => {
-    if (!isResizing) {
-      return
-    }
-
-    const handleMouseMove = (event: MouseEvent) => {
-      const frame = previewFrameRef.current
-      if (!frame) {
-        return
-      }
-      const rect = frame.getBoundingClientRect()
-      const nextHeight = Math.max(240, Math.round(event.clientY - rect.top))
-      setContainerHeight(nextHeight)
-    }
-
-    const handleMouseUp = () => {
-      setIsResizing(false)
-    }
-
-    window.addEventListener("mousemove", handleMouseMove)
-    window.addEventListener("mouseup", handleMouseUp)
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove)
-      window.removeEventListener("mouseup", handleMouseUp)
-    }
-  }, [isResizing])
-
-  useEffect(() => {
-    const frame = previewFrameRef.current
-    if (!frame) {
-      return
-    }
-
-    const syncFrameWidth = () => {
-      setFrameWidth(frame.clientWidth)
-    }
-
-    syncFrameWidth()
-    const observer = new ResizeObserver(syncFrameWidth)
-    observer.observe(frame)
-    return () => observer.disconnect()
-  }, [])
 
   useEffect(() => {
     const handleMove = (event: PointerEvent) => {
@@ -179,7 +155,6 @@ export function SplitterPreview({
   }, [image.height, image.width, onBasicGuideChange])
 
   // Use native wheel listener to reliably block outer page scrolling.
-  // React's synthetic onWheel can be passive depending on browser/framework behavior.
   useEffect(() => {
     const el = previewFrameRef.current
     if (!el) return
@@ -227,11 +202,10 @@ export function SplitterPreview({
       <div className="rounded-xl border border-slate-200 bg-slate-100 p-1.5 sm:p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
         <div
           ref={previewFrameRef}
-          className={`relative mx-auto overflow-hidden rounded-lg border bg-white dark:bg-slate-950 touch-none ${
-            isDragOver
+          className={`relative mx-auto overflow-hidden rounded-lg border bg-white dark:bg-slate-950 touch-none ${isDragOver
               ? "border-cyan-500 ring-2 ring-cyan-300/60 dark:ring-cyan-700/60"
               : "border-slate-300 dark:border-slate-700"
-          }`}
+            }`}
           style={{
             width: "100%",
             height: `${containerHeight}px`
@@ -301,44 +275,44 @@ export function SplitterPreview({
                 <div className="pointer-events-none absolute inset-0">
                   {isAutoSpriteMode
                     ? (plan?.rects ?? []).map((rect) => (
-                        <div
-                          key={`sprite_${rect.index}_${rect.x}_${rect.y}`}
-                          className="absolute border"
-                          style={{
-                            left: `${(rect.x / image.width) * 100}%`,
-                            top: `${(rect.y / image.height) * 100}%`,
-                            width: `${(rect.width / image.width) * 100}%`,
-                            height: `${(rect.height / image.height) * 100}%`,
-                            borderColor: guideColor
-                          }}
-                        />
-                      ))
+                      <div
+                        key={`sprite_${rect.index}_${rect.x}_${rect.y}`}
+                        className="absolute border"
+                        style={{
+                          left: `${(rect.x / image.width) * 100}%`,
+                          top: `${(rect.y / image.height) * 100}%`,
+                          width: `${(rect.width / image.width) * 100}%`,
+                          height: `${(rect.height / image.height) * 100}%`,
+                          borderColor: guideColor
+                        }}
+                      />
+                    ))
                     : null}
 
                   {!isAutoSpriteMode
                     ? xCuts.map((cut) => (
-                        <div
-                          key={`x_${cut}`}
-                          className="absolute top-0 bottom-0 w-px"
-                          style={{
-                            left: `${(cut / image.width) * 100}%`,
-                            backgroundColor: guideColor
-                          }}
-                        />
-                      ))
+                      <div
+                        key={`x_${cut}`}
+                        className="absolute top-0 bottom-0 w-px"
+                        style={{
+                          left: `${(cut / image.width) * 100}%`,
+                          backgroundColor: guideColor
+                        }}
+                      />
+                    ))
                     : null}
 
                   {!isAutoSpriteMode
                     ? yCuts.map((cut) => (
-                        <div
-                          key={`y_${cut}`}
-                          className="absolute left-0 right-0 h-px"
-                          style={{
-                            top: `${(cut / image.height) * 100}%`,
-                            backgroundColor: guideColor
-                          }}
-                        />
-                      ))
+                      <div
+                        key={`y_${cut}`}
+                        className="absolute left-0 right-0 h-px"
+                        style={{
+                          top: `${(cut / image.height) * 100}%`,
+                          backgroundColor: guideColor
+                        }}
+                      />
+                    ))
                     : null}
                 </div>
                 {canDragXGuide ? (
@@ -397,15 +371,12 @@ export function SplitterPreview({
           />
 
           <div
-            onMouseDown={(event) => {
-              event.preventDefault()
-              setIsResizing(true)
-            }}
-            className={`absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize z-20 group`}
+            onPointerDown={handleResizeStart}
+            className={`absolute bottom-0 left-0 right-0 h-1 cursor-ns-resize z-20 group`}
+            style={{ touchAction: "none" }}
           >
-            <div className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${
-                isResizing ? "bg-sky-500" : "bg-slate-300 group-hover:bg-sky-400 dark:bg-slate-600 dark:group-hover:bg-sky-500"
-              }`} 
+            <div className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${isResizing ? "bg-sky-500" : "bg-slate-300 group-hover:bg-sky-400 dark:bg-slate-600 dark:group-hover:bg-sky-500"
+              }`}
             />
           </div>
         </div>
@@ -419,6 +390,3 @@ export function SplitterPreview({
     </div>
   )
 }
-
-
-

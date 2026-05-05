@@ -4,6 +4,7 @@ import { drawSplicingCanvas } from "./canvas-renderer"
 import { calculateLayout } from "./layout-engine"
 import { usePanDrag } from "../shared/use-pan-drag"
 import { usePointerZoom } from "../shared/use-pointer-zoom"
+import { useCanvasResizer } from "../shared/use-canvas-resizer"
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { ZoomPanControl, type PreviewInteractionMode } from "@imify/ui"
 import type {
@@ -64,7 +65,11 @@ export function CanvasPreview({
   const previewShowImageNumber = useSplicingStore((s) => s.previewShowImageNumber)
   const [canvasWidth, setCanvasWidth] = useState(0)
   const [canvasHeight, setCanvasHeight] = useState(0)
-  const [isResizing, setIsResizing] = useState(false)
+  const { isResizing, handleResizeStart } = useCanvasResizer({
+    containerRef,
+    onHeightChange: setPreviewContainerHeight,
+    minHeight: 200
+  })
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null)
   const [numberingReady, setNumberingReady] = useState(false)
   const numberingTaskRef = useRef(0)
@@ -311,7 +316,7 @@ export function CanvasPreview({
     drawSplicingCanvas(ctx, sources, layoutResult, canvasStyle, imageStyle, previewScale * (zoom / 100), {
       showImageNumber: previewShowImageNumber && numberingReady
     })
-    
+
     setCanvasWidth(canvas.offsetWidth)
     setCanvasHeight(canvas.offsetHeight)
     onPreviewRenderedRef.current?.(images.length)
@@ -342,36 +347,6 @@ export function CanvasPreview({
     return () => observer.disconnect()
   }, [draw])
 
-  const handleResizeStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsResizing(true)
-  }, [])
-
-  useEffect(() => {
-    if (!isResizing) return
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const container = containerRef.current
-      if (!container) return
-
-      const rect = container.getBoundingClientRect()
-      const newHeight = e.clientY - rect.top
-
-      setPreviewContainerHeight(Math.max(200, newHeight))
-    }
-
-    const handleMouseUp = () => {
-      setIsResizing(false)
-    }
-
-    document.addEventListener("mousemove", handleMouseMove)
-    document.addEventListener("mouseup", handleMouseUp)
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("mouseup", handleMouseUp)
-    }
-  }, [isResizing, setPreviewContainerHeight])
 
   useEffect(() => {
     const container = containerRef.current
@@ -393,7 +368,7 @@ export function CanvasPreview({
 
         // Store pending event and throttle to avoid frame lag
         pendingWheelRef.current = e
-        
+
         if (wheelThrottleRef.current) {
           // Already scheduled, pending event will be processed
           return
@@ -498,12 +473,14 @@ export function CanvasPreview({
 
       <div
         ref={resizeHandleRef}
-        onMouseDown={handleResizeStart}
-        className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors ${
-          isResizing ? "bg-sky-400 dark:bg-sky-500" : ""
-        }`}
-        style={{ cursor: "ns-resize" }}
-      />
+        onPointerDown={handleResizeStart}
+        className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors z-20 ${isResizing ? "bg-sky-400 dark:bg-sky-500" : ""
+          }`}
+        style={{ cursor: "ns-resize", touchAction: "none" }}
+      >
+        <div className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${isResizing ? "bg-sky-500" : ""
+          }`} />
+      </div>
     </div>
   )
 }

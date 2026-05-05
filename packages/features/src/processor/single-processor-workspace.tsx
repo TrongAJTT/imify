@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Download, ImagePlus, Move } from "lucide-react";
+import { Download, ImagePlus, Move, SquareMousePointer, Mouse } from "lucide-react";
 import { toUserFacingConversionError } from "@imify/core/error-utils";
 import {
   buildSmartOutputFileName,
@@ -17,7 +17,7 @@ import {
 } from "@imify/engine/image-pipeline/decode-image-data";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
-import { Button, EmptyDropCard, Heading, MutedText } from "@imify/ui";
+import { Button, EmptyDropCard, Heading, InfoPopover, MutedText } from "@imify/ui";
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
 import {
   COMMON_IMAGE_ACCEPT,
@@ -467,11 +467,10 @@ export function SingleProcessorWorkspace({
                     </Heading>
                     {showImpactChip && (
                       <span
-                        className={`shrink-0 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums ${
-                          resultBlob
-                            ? `${delta.className} border-current/25`
-                            : "text-slate-500 border-slate-300 dark:text-slate-400 dark:border-slate-700"
-                        }`}
+                        className={`shrink-0 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums ${resultBlob
+                          ? `${delta.className} border-current/25`
+                          : "text-slate-500 border-slate-300 dark:text-slate-400 dark:border-slate-700"
+                          }`}
                       >
                         {resultBlob ? delta.label : "-"}
                       </span>
@@ -551,11 +550,9 @@ export function SingleProcessorWorkspace({
                   </div>
                 </div>
                 <div
-                  className={`w-full min-w-[120px] flex-1 flex-col items-center justify-center bg-white/50 p-4 text-center dark:bg-slate-900/30 ${
-                    stackStatsCards ? "border-t" : "border-t-0"
-                  } ${
-                    showImpactChip ? "hidden" : "flex"
-                  }`}
+                  className={`w-full min-w-[120px] flex-1 flex-col items-center justify-center bg-white/50 p-4 text-center dark:bg-slate-900/30 ${stackStatsCards ? "border-t" : "border-t-0"
+                    } ${showImpactChip ? "hidden" : "flex"
+                    }`}
                 >
                   <span className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Impact
@@ -599,15 +596,18 @@ export function SingleProcessorWorkspace({
                     Side by Side
                   </Button>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                    <Move size={12} />
-                    Drag to pan
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    • Scroll to zoom
-                  </span>
-                </div>
+                <InfoPopover label="Interaction Guide" icon={SquareMousePointer} iconSize={18}>
+                  <div className="flex flex-col gap-1.5 p-1">
+                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                      <Move size={14} className="text-sky-500" />
+                      <span><strong>Drag</strong> on the image to pan</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                      <Mouse size={14} className="text-sky-500" />
+                      <span><strong>Scroll</strong> (Mouse Wheel) to zoom</span>
+                    </div>
+                  </div>
+                </InfoPopover>
               </div>
               <PixelCompareWorkspace
                 className="h-[480px]"
