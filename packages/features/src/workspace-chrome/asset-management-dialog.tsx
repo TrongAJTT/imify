@@ -2,13 +2,15 @@
 
 import React, { useEffect, useState } from "react"
 import { Stamp, X, Library, ChevronRight, ArrowLeft } from "lucide-react"
-import { BaseDialog, Subheading, BodyText, MutedText } from "@imify/ui"
+import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui"
 import { AssetWatermarkTab } from "./asset-tabs/asset-watermark-tab"
 
 interface AssetManagementDialogProps {
   isOpen: boolean
   onClose: () => void
 }
+
+const DEFAULT_INACTIVE_CLASS = "text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
 
 type AssetTabId = "watermark"
 
@@ -26,10 +28,10 @@ interface AssetTabDefinition {
 }
 
 const ASSET_TABS: AssetTabDefinition[] = [
-  { 
-    id: "watermark", 
-    label: "Watermark", 
-    description: "Manage your saved watermark cards and patterns", 
+  {
+    id: "watermark",
+    label: "Watermark",
+    description: "Manage your saved watermark cards and patterns",
     icon: Stamp,
     colors: {
       activeBg: "bg-sky-50 dark:bg-sky-500/10",
@@ -85,26 +87,35 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
       <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center gap-3">
           {isMobile && activeTab && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setActiveTab(null)}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <ArrowLeft size={18} />
-            </button>
+            </Button>
           )}
-          <div>
-            <Subheading className="text-base font-bold">
+          <div className="flex flex-col min-w-0">
+            <Subheading className="text-base font-bold leading-tight truncate">
               {isMobile && activeTab ? ASSET_TABS.find(t => t.id === activeTab)?.label : "Asset Management"}
             </Subheading>
+            {isMobile && activeTab && (
+              <MutedText className="text-[10px] leading-tight truncate pr-4">
+                {ASSET_TABS.find(t => t.id === activeTab)?.description}
+              </MutedText>
+            )}
           </div>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onClose}
-          className="rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:text-slate-50 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+          className="rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-50 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+          aria-label="Close dialog"
         >
           <X size={18} />
-        </button>
+        </Button>
       </div>
 
       <div className="flex flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950/20">
@@ -113,19 +124,17 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
           <div className={`${isMobile ? "w-full p-4" : "w-64 border-r border-slate-100 p-3"} bg-white dark:border-slate-800 dark:bg-slate-900`}>
             <div className={isMobile ? "space-y-3" : "space-y-1"}>
               {ASSET_TABS.map((tab) => (
-                <button
+                <Button
                   key={tab.id}
-                  type="button"
+                  variant="ghost"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex w-full items-center gap-3 rounded-lg transition-all ${
-                    isMobile
-                      ? "p-4 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40"
-                      : `px-3 py-2.5 ${
-                          activeTab === tab.id
-                            ? `${tab.colors.activeBg} ${tab.colors.activeText} shadow-sm ring-1 ${tab.colors.activeRing}`
-                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
-                        }`
-                  }`}
+                  className={`flex w-full items-center justify-start gap-3 rounded-lg transition-all !px-0 !h-auto ${isMobile
+                    ? "p-4 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40"
+                    : `px-3 py-2.5 ${activeTab === tab.id
+                      ? `${tab.colors.activeBg} ${tab.colors.activeText} shadow-sm ring-1 ${tab.colors.activeRing}`
+                      : DEFAULT_INACTIVE_CLASS
+                    }`
+                    }`}
                 >
                   <div className={`${isMobile ? `rounded-lg ${tab.colors.activeBg} p-2 shadow-sm ${tab.colors.activeText}` : tab.colors.activeIcon}`}>
                     <tab.icon size={18} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
@@ -137,7 +146,7 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
                     {isMobile && <MutedText className="text-[10px] leading-tight">{tab.description}</MutedText>}
                   </div>
                   {isMobile && <ChevronRight size={16} className="text-slate-300" />}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

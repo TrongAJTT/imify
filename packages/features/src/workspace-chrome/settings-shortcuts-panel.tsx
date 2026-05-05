@@ -15,8 +15,9 @@ import {
   type ShortcutActionId,
   type ShortcutDefinition
 } from "@imify/stores/shortcuts"
+import { BodyText, MutedText } from "@imify/ui/index"
 
-export function SettingsShortcutsPanel() {
+export function SettingsShortcutsPanel({ isMobile }: { isMobile?: boolean }) {
   const [searchQuery, setSearchQuery] = useState("")
   const {
     isLoading,
@@ -106,10 +107,12 @@ export function SettingsShortcutsPanel() {
 
   return (
     <div className="animate-in fade-in duration-300 space-y-5">
-      <SettingsSectionHeader
-        title="Shortkeys"
-        description="Review and rebind keyboard shortcuts used across preview workspaces and Pattern Generator tools."
-      />
+      {!isMobile && (
+        <SettingsSectionHeader
+          title="Shortkeys"
+          description="Review and rebind keyboard shortcuts used across preview workspaces and Pattern Generator tools."
+        />
+      )}
 
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
@@ -167,9 +170,9 @@ export function SettingsShortcutsPanel() {
 
         {filteredGroupedDefinitions.map(([category, items]) => (
           <div key={category} className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <MutedText className="text-xs font-semibold uppercase tracking-wide">
               {category}
-            </p>
+            </MutedText>
             {items.map((definition) => {
               const conflicts = conflictMap.get(definition.id) ?? []
               return (
@@ -179,11 +182,11 @@ export function SettingsShortcutsPanel() {
                 >
                   <div className="grid gap-3 md:grid-cols-2 md:items-start">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{definition.label}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{definition.description}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <BodyText className="font-medium">{definition.label}</BodyText>
+                      <MutedText className="text-xs">{definition.description}</MutedText>
+                      <MutedText className="text-[11px]">
                         Default: {formatShortcutBinding(DEFAULT_SHORTCUT_PREFERENCES[definition.id])}
-                      </p>
+                      </MutedText>
                     </div>
 
                     <div className="space-y-2">
@@ -216,9 +219,9 @@ export function SettingsShortcutsPanel() {
                     </div>
                   </div>
                   {conflicts.length ? (
-                    <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+                    <MutedText className="mt-2 text-xs !text-amber-700 dark:!text-amber-300">
                       Conflict with: {conflicts.map((actionId) => definitionMap[actionId]?.label ?? actionId).join(", ")}
-                    </p>
+                    </MutedText>
                   ) : null}
                 </div>
               )
