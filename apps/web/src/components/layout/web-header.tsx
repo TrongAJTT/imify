@@ -12,6 +12,7 @@ import { useWebPageMode } from "@/hooks/use-web-page-mode"
 import { buildToolEntryHref } from "@/features/presets/tool-entry-route"
 import {
   AboutDialog,
+  AssetManagementDialog,
   AttributionDialog,
   DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
   DonateDialog,
@@ -97,6 +98,7 @@ export function WebHeader() {
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
+  const [isAssetManagementDialogOpen, setIsAssetManagementDialogOpen] = useState(false)
   const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
   const settingsInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
   const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
@@ -213,6 +215,7 @@ export function WebHeader() {
       onOpenAbout={() => setIsAboutDialogOpen(true)}
       onOpenSettings={() => openSettingsDialog()}
       onOpenDonate={() => setIsDonateDialogOpen(true)}
+      onOpenAssetManagement={() => setIsAssetManagementDialogOpen(true)}
     />
   )
 
@@ -246,6 +249,10 @@ export function WebHeader() {
       <DonateDialog
         isOpen={isDonateDialogOpen}
         onClose={() => setIsDonateDialogOpen(false)}
+      />
+      <AssetManagementDialog
+        isOpen={isAssetManagementDialogOpen}
+        onClose={() => setIsAssetManagementDialogOpen(false)}
       />
       <WorkspaceSettingsDialog
         isOpen={isSettingsDialogOpen}

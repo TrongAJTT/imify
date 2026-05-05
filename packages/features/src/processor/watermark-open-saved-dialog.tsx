@@ -426,7 +426,7 @@ function drawUnavailableMessage(ctx: CanvasRenderingContext2D, width: number, he
   ctx.fillText("Preview unavailable", width / 2, height - 14)
 }
 
-function buildWatermarkMetadata(item: SavedWatermarkItem): string {
+export function buildWatermarkMetadata(item: SavedWatermarkItem): string {
   const config = item.config
   if (config.type === "none") {
     return "No watermark"
@@ -465,7 +465,7 @@ function buildWatermarkMetadata(item: SavedWatermarkItem): string {
   return parts.join(" · ")
 }
 
-function WatermarkPreviewCard({
+export function WatermarkPreviewCard({
   item,
   selected,
   onSelect
@@ -596,7 +596,7 @@ function WatermarkPreviewCard({
   )
 }
 
-function EmptySavedWatermarkState() {
+export function EmptySavedWatermarkState() {
   return (
     <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/40 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-900/40">
       <div className="relative mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">

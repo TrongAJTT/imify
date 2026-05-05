@@ -17,6 +17,7 @@ import {
 } from "@imify/core"
 import {
   AboutDialog,
+  AssetManagementDialog,
   DonateDialog,
   WORKSPACE_TOOLS,
   WorkspaceSettingsDialog,
@@ -294,6 +295,7 @@ export default function OptionsPage() {
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
+  const [isAssetManagementDialogOpen, setIsAssetManagementDialogOpen] = useState(false)
   const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
   const settingsDialogInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
   const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
@@ -481,6 +483,8 @@ export default function OptionsPage() {
   useKeyPress("Escape", () => {
     if (isAttributionDialogOpen) {
       setIsAttributionDialogOpen(false)
+    } else if (isAssetManagementDialogOpen) {
+      setIsAssetManagementDialogOpen(false)
     } else if (isSettingsDialogOpen) {
       closeSettingsDialog()
     } else if (isAboutDialogOpen) {
@@ -488,7 +492,7 @@ export default function OptionsPage() {
     } else if (isDonateDialogOpen) {
       setIsDonateDialogOpen(false)
     }
-  }, isAboutDialogOpen || isAttributionDialogOpen || isDonateDialogOpen || isSettingsDialogOpen)
+  }, isAboutDialogOpen || isAttributionDialogOpen || isDonateDialogOpen || isSettingsDialogOpen || isAssetManagementDialogOpen)
 
   const state = normalizeExtensionState(persistedState?.state ?? DEFAULT_STORAGE_STATE)
   const {
@@ -577,6 +581,7 @@ export default function OptionsPage() {
         isLoading={isLoading}
         onOpenAbout={() => setIsAboutDialogOpen(true)}
         onOpenSettings={() => openSettingsDialog("general")}
+        onOpenAssetManagement={() => setIsAssetManagementDialogOpen(true)}
         onOpenDonate={() => setIsDonateDialogOpen(true)}
         onToggleDark={toggleDarkMode}
         isExtension={true}
@@ -633,6 +638,11 @@ export default function OptionsPage() {
       />
 
       <DonateDialog isOpen={isDonateDialogOpen} onClose={() => setIsDonateDialogOpen(false)} />
+
+      <AssetManagementDialog
+        isOpen={isAssetManagementDialogOpen}
+        onClose={() => setIsAssetManagementDialogOpen(false)}
+      />
 
       <AttributionDialogWrapper
         isOpen={isAttributionDialogOpen}

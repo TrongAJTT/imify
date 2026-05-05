@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { ArrowLeft, ChevronDown, Heart, Info, Menu, Moon, Settings, Sun } from "lucide-react"
+import { ArrowLeft, ChevronDown, Heart, Info, Library, Menu, Moon, Settings, Sun } from "lucide-react"
 import { Tooltip } from "../shared/tooltip"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
@@ -34,6 +34,7 @@ interface WorkspaceOptionsHeaderProps {
   onOpenAbout: () => void
   onOpenSettings: () => void
   onOpenDonate: () => void
+  onOpenAssetManagement: () => void
   isExtension?: boolean
 }
 
@@ -81,6 +82,7 @@ export function WorkspaceOptionsHeader({
   onOpenAbout,
   onOpenSettings,
   onOpenDonate,
+  onOpenAssetManagement,
   isExtension = false
 }: WorkspaceOptionsHeaderProps) {
   const breadcrumb = useWorkspaceHeaderStore((s) => s.breadcrumb)
@@ -292,6 +294,9 @@ export function WorkspaceOptionsHeader({
             >
               {isDark ? <Moon size={18} /> : <Sun size={18} />}
             </TitleBarButton>
+            <TitleBarButton onClick={onOpenAssetManagement} tooltipText="Asset Management">
+              <Library size={18} />
+            </TitleBarButton>
             <TitleBarButton onClick={onOpenAbout} tooltipText="About Imify">
               <Info size={18} />
             </TitleBarButton>
@@ -343,6 +348,17 @@ export function WorkspaceOptionsHeader({
                 >
                   <Info size={16} />
                   <span>About</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenAssetManagement()
+                    setIsMoreMenuOpen(false)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                >
+                  <Library size={16} />
+                  <span>Assets</span>
                 </button>
                 <button
                   type="button"
