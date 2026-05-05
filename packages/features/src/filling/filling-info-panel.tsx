@@ -57,7 +57,7 @@ const FILLING_PANEL_CONTENT = {
     {
       question: "Can I edit auto-generated layouts manually afterward?",
       answer:
-      "Yes. Templates created from Symmetric Generator or Grid Designer can be sent to Manual Editor for final fine-tuning before filling.",
+        "Yes. Templates created from Symmetric Generator or Grid Designer can be sent to Manual Editor for final fine-tuning before filling.",
     },
     {
       question: "Can I export a PSD file from the Template List to use in Photoshop or Affinity?",
@@ -73,6 +73,11 @@ const FILLING_PANEL_CONTENT = {
       question: "Do style settings get saved with my template?",
       answer:
         "Yes. Layout structure and style-related settings can be reused through templates, which makes repeat runs much faster.",
+    },
+    {
+      question: "I cannot fill the image into layer after I create the template?",
+      answer:
+        "This seems to be related to the web-state management. We are working on it. For now, please reload the page and the problem will be solved.",
     },
   ],
 }

@@ -108,15 +108,17 @@ export function BaseDialog({
       onCancel={handleCloseAttempt}
       onClick={handleBackdropClick}
       className={cn(
-        // prevent the native dialog from showing its own scrollbars
+        // m-auto centers it; adding w/max-w for mobile safety
         "m-auto p-0 rounded-xl border-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden",
+        "w-[calc(100%-2rem)] max-w-3xl",
         className
       )}
     >
       <div 
         className={cn(
           // inner container handles scrolling when content is tall
-          "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-auto max-h-[calc(100vh-4rem)]",
+          // use dvh (dynamic viewport height) for better mobile browser support
+          "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto max-h-[calc(100dvh-4rem)]",
           contentClassName
         )}
       >

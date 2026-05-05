@@ -109,7 +109,7 @@ export function AboutDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-3xl rounded-2xl p-8 relative overflow-y-auto max-h-[90vh]"
+      contentClassName="w-full max-w-3xl rounded-2xl p-6 md:p-8 relative"
     >
       <Button
         variant="outline"

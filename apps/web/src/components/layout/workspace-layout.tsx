@@ -24,7 +24,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   return (
     <WorkspaceSidebarContext.Provider value={contextValue}>
       {isMonolithicPage ? (
-        <main className={`flex w-full flex-1 ${isExtensionPage ? "py-0" : "py-6 md:py-10"} ${isExtensionPage ? "" : "px-4 md:px-6"}`}>
+        <main className={`flex w-full flex-1 ${isExtensionPage ? "py-0" : "py-6 md:py-10"} ${isExtensionPage ? "" : "px-0 md:px-6"}`}>
           <div className={`w-full ${isExtensionPage ? "" : "mx-auto max-w-6xl"}`}>{children}</div>
         </main>
       ) : (

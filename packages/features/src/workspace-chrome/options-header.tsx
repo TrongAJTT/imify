@@ -313,6 +313,18 @@ export function WorkspaceOptionsHeader({
                 <button
                   type="button"
                   onClick={() => {
+                    onOpenDonate()
+                    setIsMoreMenuOpen(false)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                >
+                  <Heart size={16} fill="currentColor" />
+                  <span>Donate</span>
+                </button>
+                <div className="h-px bg-slate-100 dark:bg-slate-800" />
+                <button
+                  type="button"
+                  onClick={() => {
                     onToggleDark()
                     setIsMoreMenuOpen(false)
                   }}

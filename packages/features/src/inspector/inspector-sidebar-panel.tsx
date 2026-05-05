@@ -3,7 +3,6 @@ import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { WorkspaceConfigSidebarPanel, type WorkspaceConfigSidebarItem } from "@imify/ui"
 import { DisplayAccordion } from "./display-accordion"
 import { MetadataAccordion } from "./metadata-accordion"
-import { InformationAccordion } from "./information-accordion"
 
 export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enableWideSidebarGrid?: boolean }) {
   const exifSortMode = useInspectorStore((s) => s.exifSortMode)
@@ -52,8 +51,7 @@ export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enabl
           onShowSensitiveOnlyChange={setShowSensitiveOnly}
         />
       )
-    },
-    { id: "information", label: "Information", content: <InformationAccordion /> }
+    }
   ]
 
   return <WorkspaceConfigSidebarPanel title="INSPECTOR SETTINGS" items={sidebarItems} twoColumn={enableWideSidebarGrid} />

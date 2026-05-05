@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useEffect, useMemo, useState } from "react"
-import { BarChart3, Code2, Download, Gauge, Keyboard, ListTree, PowerOff, RotateCcw, ShieldAlert, X } from "lucide-react"
+import { ArrowLeft, BarChart3, ChevronRight, Code2, Download, Gauge, Keyboard, ListTree, PowerOff, RotateCcw, ShieldAlert, X } from "lucide-react"
 import { APP_CONFIG } from "@imify/core/config"
 import { useToast } from "@imify/core/hooks/use-toast"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
@@ -51,7 +51,7 @@ export interface WorkspaceDefaultScreenOption {
 interface WorkspaceSettingsDialogProps {
   isOpen: boolean
   onClose: () => void
-  initialTab?: SettingsDialogTab
+  initialTab?: SettingsDialogTab | null
   defaultScreenValue: string
   defaultScreenOptions: WorkspaceDefaultScreenOption[]
   onChangeDefaultScreenValue: (value: string) => void
@@ -91,7 +91,7 @@ export function WorkspaceSettingsDialog({
   devModeSettingsAdapter,
   devModeActiveTab = null
 }: WorkspaceSettingsDialogProps) {
-  const [activeTab, setActiveTab] = useState<SettingsDialogTab>(initialTab)
+  const [activeTab, setActiveTab] = useState<SettingsDialogTab | null>(initialTab)
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled()
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
@@ -110,9 +110,18 @@ export function WorkspaceSettingsDialog({
   )
 
   useEffect(() => {
-    if (!isOpen) return
-    setActiveTab(initialTab)
-  }, [initialTab, isOpen])
+    if (!isOpen) {
+      if (isMobileDialog) setActiveTab(null)
+      return
+    }
+    if (initialTab) {
+      setActiveTab(initialTab)
+    } else if (!isMobileDialog) {
+      setActiveTab("general")
+    } else {
+      setActiveTab(null)
+    }
+  }, [initialTab, isOpen, isMobileDialog])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -177,7 +186,7 @@ export function WorkspaceSettingsDialog({
 
   const handleDisableDevMode = async () => {
     await setDevModeEnabled(false)
-    setActiveTab("general")
+    setActiveTab(isMobileDialog ? null : "general")
   }
   const tabs = [
     {
@@ -227,8 +236,8 @@ export function WorkspaceSettingsDialog({
       onClose={onClose}
       contentClassName={
         isMobileDialog
-          ? "relative flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-3xl min-h-0 overflow-hidden rounded-xl flex-col"
-          : "relative flex h-[720px] max-h-[calc(100vh-4rem)] w-full max-w-3xl min-h-0 overflow-hidden rounded-xl"
+          ? "relative flex h-[calc(100dvh-2rem)] w-full overflow-hidden rounded-xl flex-col"
+          : "relative flex h-[720px] w-full min-h-0 overflow-hidden rounded-xl"
       }
     >
       <Button
@@ -243,51 +252,73 @@ export function WorkspaceSettingsDialog({
       <div
         className={`shrink-0 border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 ${
           isMobileDialog
-            ? "w-full border-b border-r-0 pb-3 pt-4"
+            ? "w-full border-b border-r-0 pb-2 pt-2"
             : "w-56 border-r pt-6 pb-4"
         }`}
       >
-        <div className={`px-5 ${isMobileDialog ? "mb-3" : "mb-6"}`}>
-          <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">Settings</Subheading>
+        <div className={`px-4 ${isMobileDialog ? "mb-1" : "mb-6"}`}>
+          {isMobileDialog && activeTab ? (
+            <div className="flex items-center gap-3 h-10">
+              <button
+                onClick={() => setActiveTab(null)}
+                className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 transition-colors"
+                aria-label="Back to settings list"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <Subheading className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                {tabs.find(t => t.id === activeTab)?.label}
+              </Subheading>
+            </div>
+          ) : (
+            <div className={isMobileDialog ? "h-10 flex items-center" : ""}>
+              <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">Settings</Subheading>
+            </div>
+          )}
         </div>
-        <nav
-          className={`flex-1 px-3 ${
-            isMobileDialog
-              ? "flex gap-1.5 overflow-x-auto pb-1 mr-5"
-              : "space-y-1"
-          }`}
-        >
-          {tabs.map((tab) => (
-              <React.Fragment key={tab.id}>
-                {tab.id === "developer" ? (
-                  <div className={`my-2 border-t border-slate-200 dark:border-slate-700 ${isMobileDialog ? "hidden" : ""}`} />
-                ) : null}
-                <button
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center rounded-lg py-2 text-sm font-medium transition-colors ${
-                    isMobileDialog
-                      ? "w-auto shrink-0 whitespace-nowrap gap-2 px-2.5 text-[13px]"
-                      : "w-full gap-3 px-3"
-                  } ${
-                    tab.id === "developer"
-                      ? activeTab === tab.id
-                        ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300"
-                        : "text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300"
-                      : activeTab === tab.id
-                        ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
-                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                >
-                  <tab.icon size={16} className={tab.iconClassName} />
-                  {tab.label}
-                </button>
-              </React.Fragment>
-            ))}
-        </nav>
+
+        {(!isMobileDialog || !activeTab) && (
+          <nav
+            className={`flex-1 px-3 ${
+              isMobileDialog
+                ? "space-y-1 pb-4"
+                : "space-y-1"
+            }`}
+          >
+            {tabs.map((tab) => (
+                <React.Fragment key={tab.id}>
+                  {tab.id === "developer" && !isMobileDialog ? (
+                    <div className="my-2 border-t border-slate-200 dark:border-slate-700" />
+                  ) : null}
+                  <button
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center rounded-lg py-2 text-sm font-medium transition-colors ${
+                      isMobileDialog
+                        ? "w-full gap-3 px-3 py-3 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 mb-2 shadow-sm"
+                        : "w-full gap-3 px-3"
+                    } ${
+                      tab.id === "developer"
+                        ? activeTab === tab.id
+                          ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300"
+                          : "text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300"
+                        : activeTab === tab.id
+                          ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50"
+                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <tab.icon size={isMobileDialog ? 18 : 16} className={tab.iconClassName} />
+                    <span className="flex-1 text-left">{tab.label}</span>
+                    {isMobileDialog && <ChevronRight size={16} className="text-slate-300" />}
+                  </button>
+                </React.Fragment>
+              ))}
+          </nav>
+        )}
       </div>
 
-      <div className="flex-1 min-h-0 min-w-0 flex flex-col bg-white dark:bg-slate-900">
-        <div className={`flex-1 min-h-0 min-w-0 overflow-y-auto ${isMobileDialog ? "p-4 pt-5 pr-10 pb-10" : "p-8 pt-12 pr-8"}`}>
+      {(!isMobileDialog || activeTab) && (
+        <div className="flex-1 min-h-0 min-w-0 flex flex-col bg-white dark:bg-slate-900">
+          <div className={`flex-1 min-h-0 min-w-0 overflow-y-auto ${isMobileDialog ? "p-4 pt-5 pb-10" : "p-8 pt-12"}`}>
           {activeTab === "general" ? (
             <div className="animate-in fade-in duration-300 space-y-5">
               <SettingsSectionHeader
@@ -602,6 +633,7 @@ export function WorkspaceSettingsDialog({
           )}
         </div>
       </div>
+      )}
       <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>
     {devModeSettingsAdapter && (

@@ -29,7 +29,6 @@ export {
 } from "./developer-utils"
 export * from "./display-accordion"
 export * from "./metadata-accordion"
-export * from "./information-accordion"
 export * from "./inspector-sidebar-panel"
 export { InspectorSidebarShell } from "./inspector-sidebar-shell"
 export { InspectorPresetInfoPanel } from "./inspector-preset-info-panel"

@@ -211,7 +211,7 @@ export function WebHeader() {
       onNavigate={(href) => router.push(href)}
       onToggleDark={toggleDarkMode}
       onOpenAbout={() => setIsAboutDialogOpen(true)}
-      onOpenSettings={() => openSettingsDialog("general")}
+      onOpenSettings={() => openSettingsDialog()}
       onOpenDonate={() => setIsDonateDialogOpen(true)}
     />
   )

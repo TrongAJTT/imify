@@ -23,7 +23,7 @@ export function DonateDialog({
   const paypalIconSvg = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.paypalIconSvg)
 
   return (
-    <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="w-full max-w-xl rounded-2xl p-8">
+    <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="w-full max-w-xl rounded-2xl p-6 md:p-8">
       <Button
         variant="outline"
         size="icon"

@@ -121,7 +121,7 @@ export function TemplateMethodDialog({
       layers: [],
       groups: [],
       symmetricParams: { ...DEFAULT_SYMMETRIC_PARAMS },
-        gridDesignParams: { ...DEFAULT_GRID_DESIGN_PARAMS },
+      gridDesignParams: { ...DEFAULT_GRID_DESIGN_PARAMS },
       createdAt: now,
       updatedAt: now,
       usageCount: 0,
@@ -137,8 +137,8 @@ export function TemplateMethodDialog({
 
   return (
     <>
-      <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="rounded-xl w-[620px] max-w-[96vw]">
-        <div className="p-5">
+      <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="rounded-2xl w-full max-w-2xl">
+        <div className="p-4 md:p-6">
           <div className="mb-4 flex items-center justify-between">
             <Subheading>Create Template</Subheading>
             <button type="button" onClick={onClose} className="rounded p-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
