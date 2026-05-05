@@ -74,6 +74,7 @@ This gives:
   - website routes and workspace pages
   - web shell (header/footer/layout)
   - client-side routing for workspace tool pages (via QueryIdPageGuard)
+  - Progressive Web App (PWA) runtime and full offline support (Service Workers + Workbox)
 - Consumes shared modules for:
   - tool workflows
   - state stores

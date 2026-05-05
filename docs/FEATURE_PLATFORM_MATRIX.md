@@ -95,6 +95,7 @@ Core features only available in web app runtime:
 - Extension gateway page (`/extension`)
 - Next.js route metadata / sitemap / robots integration
 - Web-first route flows and page SEO behavior
+- Progressive Web App (PWA) with full offline support
 
 ```mermaid
 flowchart TD
@@ -102,6 +103,7 @@ flowchart TD
   W --> W2[Extension Gateway Page]
   W --> W3[SEO Metadata Routing]
   W --> W4[Sitemap and Robots]
+  W --> W5[PWA / Offline Mode]
 ```
 
 ---
@@ -123,6 +125,7 @@ flowchart TD
 | Popup app                 | No  | Yes (Chrome/Edge) | Extension runtime only                                               |
 | Sidepanel app             | No  | Yes (Chrome/Edge) | Chrome/Edge (MV3). Firefox uses main workspace entry.                |
 | Landing / marketing pages | Yes | No                | Web site shell only                                                  |
+| PWA / Offline Support     | Yes | Yes               | Web uses Service Workers; Extension is naturally offline.             |
 
 ---
 

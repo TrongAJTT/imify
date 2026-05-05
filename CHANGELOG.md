@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 📱 Progressive Web App (PWA) & Offline Support
+- **Full Offline Capability:** Imify Web now works 100% offline after the first visit. 
+- **WASM Pre-caching:** All core image processing engines (AVIF, JXL, MozJPEG, OxiPNG) are automatically cached for immediate offline use.
+- **Native App Experience:** Added a Web App Manifest, allowing Imify to be installed as a standalone application on desktop and mobile devices.
+- **Unified Update Flow:** Integrated Service Worker update detection with the "Imify has been updated" dialog, ensuring a seamless transition between versions.
+- **Automated Sync:** Enhanced development scripts to keep the PWA manifest synchronized with project metadata.
+
 ## [2.1.3] - 2026-05-03
 
 **Web App Only**

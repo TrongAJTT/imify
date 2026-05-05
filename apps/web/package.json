@@ -1,8 +1,8 @@
 {
   "name": "@imify/web",
-  "version": "2.1.3",
+  "version": "2.2.0",
   "displayName": "Imify - Powerful Image Toolkit",
-  "versionType": "Stable",
+  "versionType": "Dev",
   "author": "TrongAJTT <trong.ajtt.dev@gmail.com>",
   "private": true,
   "description": "A privacy-first, powerful image toolkit. Save image directly from your context menu, and even more. Supports ICO, AVIF, JPEG XL.",
