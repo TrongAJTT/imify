@@ -39,6 +39,19 @@ export function BackgroundRemoverWorkspace({
   const { toasts, hide } = useToast()
   const conversionToasts = useConversionToasts([progressPayload])
 
+  // Memoize source blob URL to prevent creating a new one on every render
+  const sourceFileUrl = React.useMemo(() => {
+    if (!sourceFile) return ""
+    return URL.createObjectURL(sourceFile)
+  }, [sourceFile])
+
+  // Cleanup blob URL when component unmounts or sourceFile changes
+  useEffect(() => {
+    return () => {
+      if (sourceFileUrl) URL.revokeObjectURL(sourceFileUrl)
+    }
+  }, [sourceFileUrl])
+
   // Check if model is cached for the dialog logic
   useEffect(() => {
     const checkModel = async () => {
@@ -154,7 +167,7 @@ export function BackgroundRemoverWorkspace({
             <div className="h-[520px] flex items-center justify-center p-12">
               <div className="relative group max-h-full">
                 <img
-                  src={URL.createObjectURL(sourceFile)}
+                  src={sourceFileUrl}
                   alt="Source"
                   className="max-h-[440px] w-auto rounded-lg shadow-2xl border-4 border-white dark:border-slate-800 transition-transform duration-500 group-hover:scale-[1.02]"
                 />

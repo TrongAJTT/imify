@@ -12,7 +12,9 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
   const { modelId = 'briaai/RMBG-1.4', onSuccess, onError } = options;
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPayload, setProgressPayload] = useState<ConversionProgressPayload | null>(null);
-  
+
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -71,7 +73,7 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
           });
           // Clear success toast after 3s
           setTimeout(() => setProgressPayload(null), 3000);
-          onSuccess?.(payload.output);
+          optionsRef.current.onSuccess?.(payload.output);
           break;
 
         case 'error':
@@ -83,7 +85,7 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
             percent: 100,
             message: payload.message
           });
-          onError?.(payload.message);
+          optionsRef.current.onError?.(payload.message);
           // Auto clear error toast after 10s
           setTimeout(() => setProgressPayload(null), 10000);
           break;
@@ -93,9 +95,11 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
     worker.addEventListener('message', handleMessage);
 
     return () => {
+      worker.removeEventListener('message', handleMessage);
       worker.terminate();
+      workerRef.current = null;
     };
-  }, [onSuccess, onError]);
+  }, []); // Run only once on mount — callbacks accessed via optionsRef
 
   const removeBackground = useCallback((image: string | ArrayBuffer | Uint8Array) => {
     if (!workerRef.current) return;
