@@ -30,7 +30,7 @@ export function mapConversionPayloadToToast(payload: ConversionProgressPayload):
           ? "Saved successfully"
           : "Failed to convert"),
     duration: isDone ? doneDuration : undefined,
-    chipText: payload.targetFormat.toUpperCase(),
+    chipText: payload.targetFormat?.toUpperCase(),
     status: payload.status,
     percent: Math.max(0, Math.min(100, payload.percent))
   }

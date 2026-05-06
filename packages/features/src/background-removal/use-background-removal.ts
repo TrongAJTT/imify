@@ -25,35 +25,67 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
 
       switch (action) {
         case 'download-progress':
-          setProgressPayload({
-            id: 'bg-remover-model-download',
-            fileName: `Downloading AI Model (${payload.file})`,
-            targetFormat: 'png', // Placeholder
-            status: 'processing',
-            percent: payload.progress,
-            message: `Loading model... ${Math.round(payload.progress)}%`
-          });
+          if (payload.status === 'initiate') {
+            setProgressPayload({
+              id: 'bg-remover-task',
+              fileName: 'Background Removal',
+              status: 'processing',
+              percent: 0,
+              message: `Initializing ${payload.file}...`
+            });
+          } else if (payload.status === 'progress') {
+            setProgressPayload({
+              id: 'bg-remover-task',
+              fileName: 'Background Removal',
+              status: 'processing',
+              percent: payload.progress,
+              message: `Downloading model: ${Math.round(payload.progress)}%`
+            });
+          } else if (payload.status === 'done') {
+            setProgressPayload({
+              id: 'bg-remover-task',
+              fileName: 'Background Removal',
+              status: 'processing',
+              percent: 100,
+              message: `Loaded ${payload.file}`
+            });
+          } else if (payload.status === 'ready') {
+            setProgressPayload({
+              id: 'bg-remover-task',
+              fileName: 'Background Removal',
+              status: 'processing',
+              percent: 100,
+              message: 'AI Model Ready'
+            });
+          }
           break;
 
         case 'segmentation-result':
           setIsProcessing(false);
-          setProgressPayload(null);
+          setProgressPayload({
+            id: 'bg-remover-task',
+            fileName: 'Background Removal',
+            status: 'success',
+            percent: 100,
+            message: 'Background removed successfully'
+          });
+          // Clear success toast after 3s
+          setTimeout(() => setProgressPayload(null), 3000);
           onSuccess?.(payload.output);
           break;
 
         case 'error':
           setIsProcessing(false);
           setProgressPayload({
-            id: 'bg-remover-error',
+            id: 'bg-remover-task',
             fileName: 'Background Removal',
-            targetFormat: 'png',
             status: 'error',
             percent: 100,
             message: payload.message
           });
           onError?.(payload.message);
-          // Auto clear error toast after 5s
-          setTimeout(() => setProgressPayload(null), 5000);
+          // Auto clear error toast after 10s
+          setTimeout(() => setProgressPayload(null), 10000);
           break;
       }
     };
@@ -70,12 +102,11 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
 
     setIsProcessing(true);
     setProgressPayload({
-      id: 'bg-remover-processing',
+      id: 'bg-remover-task',
       fileName: 'Background Removal',
-      targetFormat: 'png',
       status: 'processing',
       percent: 0,
-      message: 'Analyzing subject...'
+      message: 'Preparing AI pipeline...'
     });
 
     workerRef.current.postMessage({

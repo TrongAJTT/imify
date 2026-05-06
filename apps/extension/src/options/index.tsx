@@ -55,7 +55,9 @@ import { EditorProvider } from "@/options/components/filling/editor-context"
 import { DiffcheckerTab } from "@/options/components/diffchecker"
 import { InspectorTab } from "@/options/components/inspector"
 import { 
+  SharedBackgroundRemoverPage,
   BackgroundRemoverWorkspace, 
+  BackgroundRemoverDropZone,
   BackgroundRemoverSidebarShell 
 } from "@imify/features/background-removal"
 import { DiffcheckerSidebarShell } from "@imify/features/diffchecker"
@@ -568,8 +570,30 @@ export default function OptionsPage() {
       case "background-remover":
         return (
           <ProcessorWorkspaceShell
-            context="single" // Using single context for layout similarity
-            workspace={<BackgroundRemoverWorkspace />}
+            context="single"
+            workspace={
+              <SharedBackgroundRemoverPage
+                renderWorkspace={(props) => (
+                  <>
+                    {!props.sourceFile ? (
+                      <BackgroundRemoverDropZone onLoadFile={(file) => void props.onLoadFile(file)} />
+                    ) : (
+                      props.sourceImageData ? (
+                        <BackgroundRemoverWorkspace
+                          sourceFile={props.sourceFile}
+                          sourceImageData={props.sourceImageData}
+                          resultImageData={props.resultImageData}
+                          isProcessing={props.isProcessing}
+                          progressPayload={props.progressPayload}
+                          onClear={props.onClear}
+                          onStartProcessing={props.onStartProcessing}
+                        />
+                      ) : null
+                    )}
+                  </>
+                )}
+              />
+            }
           />
         )
       default:
