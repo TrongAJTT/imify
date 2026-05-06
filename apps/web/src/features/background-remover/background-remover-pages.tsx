@@ -50,6 +50,7 @@ export function BackgroundRemoverPage() {
                 progressPayload={props.progressPayload}
                 onClear={props.onClear}
                 onStartProcessing={props.onStartProcessing}
+                modelId={props.modelId}
               />
             ) : null // Or loading spinner
           )}

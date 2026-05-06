@@ -14,19 +14,6 @@ export interface AIModelMetadata {
 
 export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
   {
-    id: 'onnx-community/ormbg-ONNX',
-    name: 'ORMBG v1.0',
-    description: 'Verified community version of Open RMBG. Balanced speed and quality (44MB).',
-    size: '44 MB',
-    sizeBytes: 44 * 1024 * 1024,
-    source: 'Hugging Face / ONNX Community',
-    license: 'MIT',
-    licenseUrl: 'https://opensource.org/licenses/MIT',
-    termsUrl: 'https://huggingface.co/onnx-community/ormbg-ONNX',
-    author: 'ONNX Community',
-    authorUrl: 'https://huggingface.co/onnx-community'
-  },
-  {
     id: 'onnx-community/BiRefNet_lite-ONNX',
     name: 'BiRefNet Lite',
     description: 'High-quality Swin-Transformer model. Best for complex details (115MB).',
@@ -37,6 +24,19 @@ export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
     licenseUrl: 'https://opensource.org/licenses/MIT',
     termsUrl: 'https://huggingface.co/onnx-community/BiRefNet_lite-ONNX',
     author: 'ZhengPeng7',
+    authorUrl: 'https://huggingface.co/onnx-community'
+  },
+  {
+    id: 'onnx-community/ormbg-ONNX',
+    name: 'ORMBG v1.0',
+    description: 'Verified community version of Open RMBG. Balanced speed and quality (44MB).',
+    size: '44 MB',
+    sizeBytes: 44 * 1024 * 1024,
+    source: 'Hugging Face / ONNX Community',
+    license: 'MIT',
+    licenseUrl: 'https://opensource.org/licenses/MIT',
+    termsUrl: 'https://huggingface.co/onnx-community/ormbg-ONNX',
+    author: 'ONNX Community',
     authorUrl: 'https://huggingface.co/onnx-community'
   },
   {

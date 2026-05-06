@@ -1,118 +1,132 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { WorkspaceConfigSidebarPanel, type WorkspaceConfigSidebarItem, BodyText, MutedText } from "@imify/ui"
-import { Brain, Sliders, Image } from "lucide-react"
+import { Brain, Sliders, Image, Cpu, Settings2 } from "lucide-react"
 import { useBackgroundRemoverStore } from "@imify/stores"
+import { CheckboxCard, AccordionCard, SliderInput, SelectInput, RadioCard, ColorPickerPopover } from "@imify/ui"
 import { BACKGROUND_REMOVAL_MODELS } from "./models"
 
 export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings"
 
 export function BackgroundRemoverSidebar() {
-  const modelId = useBackgroundRemoverStore((s) => s.modelId)
-  const edgeSmoothing = useBackgroundRemoverStore((s) => s.edgeSmoothing)
-  const outputFormat = useBackgroundRemoverStore((s) => s.outputFormat)
+  const {
+    modelId,
+    setModelId,
+    edgeSmoothing,
+    setEdgeSmoothing,
+    outputFormat,
+    setOutputFormat,
+    backgroundColor,
+    setBackgroundColor,
+    unloadModelAfterProcess,
+    setUnloadModelAfterProcess
+  } = useBackgroundRemoverStore()
 
-  const setModelId = useBackgroundRemoverStore((s) => s.setModelId)
-  const setEdgeSmoothing = useBackgroundRemoverStore((s) => s.setEdgeSmoothing)
-  const setOutputFormat = useBackgroundRemoverStore((s) => s.setOutputFormat)
   const selectedModel = BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
+
+  // Initialize smart default for unloadModelAfterProcess based on hardware
+  useEffect(() => {
+    // Check if we have a persisted value or if it's the first time
+    const storageKey = "imify-background-remover-settings"
+    const saved = localStorage.getItem(storageKey)
+    if (!saved) {
+      // Very simple detection: if navigator.deviceMemory is available and <= 4
+      const ram = (navigator as any).deviceMemory
+      if (ram && ram <= 4) {
+        setUnloadModelAfterProcess(true)
+      }
+    }
+  }, [setUnloadModelAfterProcess])
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
-      id: "ai-engine",
-      label: "AI Engine",
+      id: "remover-settings-group",
+      label: "",
       content: (
-        <div className="space-y-4 p-1">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-              <Brain size={14} />
-              <BodyText className="text-xs font-semibold">AI Model</BodyText>
-            </div>
-            <select
-              value={selectedModel.id}
-              onChange={(e) => setModelId(e.target.value)}
-              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-pink-500/20 transition-all"
-            >
-              {BACKGROUND_REMOVAL_MODELS.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
-            </select>
-            <MutedText className="text-[10px]">
-              {selectedModel.description}
-            </MutedText>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: "refinement",
-      label: "Refinement",
-      content: (
-        <div className="space-y-4 p-1">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                <Sliders size={14} />
-                <BodyText className="text-xs font-semibold">Edge Smoothing</BodyText>
-              </div>
-              <span className="text-[10px] font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                {edgeSmoothing}px
-              </span>
-            </div>
-            <input 
-              type="range"
-              min="0"
-              max="20"
-              step="1"
-              value={edgeSmoothing}
-              onChange={(e) => setEdgeSmoothing(Number(e.target.value))}
-              className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-pink-500"
-            />
-            <MutedText className="text-[10px]">
-              Softens the edges of the isolated subject.
-            </MutedText>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: "output",
-      label: "Output",
-      content: (
-        <div className="space-y-4 p-1">
-          <div className="space-y-2">
+        <AccordionCard
+          label="Remover Settings"
+          icon={<Settings2 size={16} />}
+          defaultOpen={true}
+          colorTheme="pink"
+          childrenClassName="p-3 space-y-3"
+        >
+          {/* AI Model */}
+          <SelectInput
+            label="AI Model"
+            value={selectedModel.id}
+            options={BACKGROUND_REMOVAL_MODELS.map(m => ({ value: m.id, label: m.name }))}
+            onChange={setModelId}
+            tooltipContent={selectedModel.description}
+          />
+
+          {/* Edge Smoothing */}
+          <SliderInput
+            label="Edge Smoothing"
+            value={edgeSmoothing}
+            min={0}
+            max={20}
+            step={1}
+            suffix="px"
+            onChange={setEdgeSmoothing}
+          />
+
+          {/* Background Type */}
+          <div className="space-y-3">
             <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
               <Image size={14} />
               <BodyText className="text-xs font-semibold">Background Type</BodyText>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setOutputFormat("transparent")}
-                className={`px-3 py-2 rounded-lg border text-[11px] font-medium transition-all ${
-                  outputFormat === "transparent"
-                    ? "border-pink-500 bg-pink-50 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
-                }`}
-              >
-                Transparent
-              </button>
-              <button
-                onClick={() => setOutputFormat("color")}
-                className={`px-3 py-2 rounded-lg border text-[11px] font-medium transition-all ${
-                  outputFormat === "color"
-                    ? "border-pink-500 bg-pink-50 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
-                }`}
-              >
-                Solid Color
-              </button>
+
+            <div className="space-y-2">
+              <RadioCard
+                title="Transparent"
+                subtitle="Remove background and keep it clear"
+                value="transparent"
+                selectedValue={outputFormat}
+                onChange={(v) => setOutputFormat(v as any)}
+                colorTheme="pink"
+                icon={<div className="w-4 h-4 rounded-sm border border-slate-200 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAACtJREFUGFdjZEADJgY0QCSTmZkZpAAsAKYAFUAWQBVAFUAWQBVAFUAWQBUAFUAXQBUNAwAF+L7zAAAAAElFTkSuQmCC')] bg-repeat" />}
+              />
+
+              <RadioCard
+                title="Solid Color"
+                subtitle="Fill the background with a specific color"
+                value="color"
+                selectedValue={outputFormat}
+                onChange={(v) => setOutputFormat(v as any)}
+                colorTheme="pink"
+                icon={<div className="w-4 h-4 rounded-sm border border-slate-200" style={{ backgroundColor }} />}
+                rightSlot={
+                  <ColorPickerPopover
+                    label=""
+                    value={backgroundColor}
+                    onChange={setBackgroundColor}
+                    enableAlpha={false}
+                    enableGradient={false}
+                  />
+                }
+              />
             </div>
           </div>
-        </div>
+
+          {/* Resource Efficiency */}
+          <CheckboxCard
+            checked={unloadModelAfterProcess}
+            onChange={setUnloadModelAfterProcess}
+            title="Auto-unload AI Model"
+            subtitle="Free up RAM immediately after processing. Recommended for low-memory devices."
+            icon={<Cpu size={16} />}
+          />
+          {/* <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800/50">
+            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+              <Cpu size={14} />
+              <BodyText className="text-xs font-semibold">Resource Efficiency</BodyText>
+            </div>
+
+          </div> */}
+        </AccordionCard>
       )
     }
   ]
 
-  return <WorkspaceConfigSidebarPanel title="REMOVER SETTINGS" items={sidebarItems} />
+  return <WorkspaceConfigSidebarPanel title="CONFIGURATION" items={sidebarItems} />
 }

@@ -19,6 +19,7 @@ export interface SharedBackgroundRemoverRenderProps {
   onClear: () => void
   onStartProcessing: () => void
   onResultUpdate: (data: ImageData | null) => void
+  modelId: string
 }
 
 interface SharedBackgroundRemoverPageProps {
@@ -29,12 +30,16 @@ export function SharedBackgroundRemoverPage({
   renderWorkspace
 }: SharedBackgroundRemoverPageProps) {
   const setHasImage = useBackgroundRemoverStore((s) => s.setHasImage)
+  const modelId = useBackgroundRemoverStore((s) => s.modelId)
   const edgeSmoothing = useBackgroundRemoverStore((s) => s.edgeSmoothing)
   const outputFormat = useBackgroundRemoverStore((s) => s.outputFormat)
+  const backgroundColor = useBackgroundRemoverStore((s) => s.backgroundColor)
+  const unloadModelAfterProcess = useBackgroundRemoverStore((s) => s.unloadModelAfterProcess)
 
   const [sourceFile, setSourceFile] = useState<File | null>(null)
   const [sourceImageData, setSourceImageData] = useState<ImageData | null>(null)
   const [resultImageData, setResultImageData] = useState<ImageData | null>(null)
+  const [lastAiOutput, setLastAiOutput] = useState<any>(null)
   
   const [hasAgreedToDownload, setHasAgreedToDownload] = useState(false)
   const { error, success } = useToast()
@@ -82,12 +87,22 @@ export function SharedBackgroundRemoverPage({
     scaledMaskCtx.drawImage(maskCanvas, 0, 0, width, height)
     const finalMaskData = scaledMaskCtx.getImageData(0, 0, width, height)
 
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 255, g: 255, b: 255 }
+    }
+    const bgRgb = hexToRgb(backgroundColor)
+
     for (let i = 0; i < resultData.data.length; i += 4) {
       const alpha = finalMaskData.data[i] / 255
       if (outputFormat === "color") {
-        resultData.data[i] = resultData.data[i] * alpha + 255 * (1 - alpha)
-        resultData.data[i + 1] = resultData.data[i + 1] * alpha + 255 * (1 - alpha)
-        resultData.data[i + 2] = resultData.data[i + 2] * alpha + 255 * (1 - alpha)
+        resultData.data[i] = resultData.data[i] * alpha + bgRgb.r * (1 - alpha)
+        resultData.data[i + 1] = resultData.data[i + 1] * alpha + bgRgb.g * (1 - alpha)
+        resultData.data[i + 2] = resultData.data[i + 2] * alpha + bgRgb.b * (1 - alpha)
         resultData.data[i + 3] = 255
       } else {
         resultData.data[i + 3] = finalMaskData.data[i]
@@ -95,33 +110,27 @@ export function SharedBackgroundRemoverPage({
     }
 
     setResultImageData(resultData)
-  }, [sourceImageData, edgeSmoothing, outputFormat])
+  }, [sourceImageData, edgeSmoothing, outputFormat, backgroundColor])
 
   const {
     removeBackground,
     isProcessing,
     progressPayload
   } = useBackgroundRemoval({
+    modelId,
+    unloadAfterSuccess: unloadModelAfterProcess,
     onSuccess: (output) => {
+      setLastAiOutput(output)
       processOutput(output)
     }
   })
 
-  // Check if model is cached
+  // Live Update: Re-process output when refinement settings change without re-running AI
   useEffect(() => {
-    const checkModel = async () => {
-      if (typeof window === 'undefined') return
-      try {
-        const cache = await caches.open("transformers-cache")
-        const keys = await cache.keys()
-        const isCached = keys.some(request => request.url.includes(BACKGROUND_REMOVAL_MODELS[0].id))
-        if (isCached) setHasAgreedToDownload(true)
-      } catch (e) {
-        // Ignore cache errors
-      }
+    if (lastAiOutput) {
+      processOutput(lastAiOutput)
     }
-    checkModel()
-  }, [])
+  }, [edgeSmoothing, outputFormat, backgroundColor, lastAiOutput, processOutput])
 
   const handleLoadFile = useCallback(async (file: File) => {
     setSourceFile(file)
@@ -170,7 +179,8 @@ export function SharedBackgroundRemoverPage({
         onLoadFile: handleLoadFile,
         onClear: handleClear,
         onStartProcessing: handleStartProcessing,
-        onResultUpdate: setResultImageData
+        onResultUpdate: setResultImageData,
+        modelId
       })}
     </>
   )

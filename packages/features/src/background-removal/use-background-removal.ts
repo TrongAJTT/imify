@@ -6,16 +6,24 @@ export interface UseBackgroundRemovalOptions {
   modelId?: string;
   onSuccess?: (result: any) => void;
   onError?: (error: string) => void;
+  unloadAfterSuccess?: boolean;
 }
 
 export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) {
-  const { modelId = 'onnx-community/ormbg-ONNX', onSuccess, onError } = options;
+  const { modelId = 'onnx-community/ormbg-ONNX', onSuccess, onError, unloadAfterSuccess = false } = options;
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPayload, setProgressPayload] = useState<ConversionProgressPayload | null>(null);
 
   const optionsRef = useRef(options);
   optionsRef.current = options;
   const workerRef = useRef<Worker | null>(null);
+
+  const terminateWorker = useCallback(() => {
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     // Initialize worker
@@ -74,6 +82,10 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
           // Clear success toast after 3s
           setTimeout(() => setProgressPayload(null), 3000);
           optionsRef.current.onSuccess?.(payload.output);
+          
+          if (optionsRef.current.unloadAfterSuccess) {
+            terminateWorker();
+          }
           break;
 
         case 'error':
@@ -95,11 +107,9 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
     worker.addEventListener('message', handleMessage);
 
     return () => {
-      worker.removeEventListener('message', handleMessage);
-      worker.terminate();
-      workerRef.current = null;
+      terminateWorker();
     };
-  }, []); // Run only once on mount — callbacks accessed via optionsRef
+  }, [terminateWorker]); // Run only once on mount — callbacks accessed via optionsRef
 
   const removeBackground = useCallback((image: string | ArrayBuffer | Uint8Array) => {
     if (!workerRef.current) return;

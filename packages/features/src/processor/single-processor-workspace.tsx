@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Download, ImagePlus, Move, SquareMousePointer, Mouse } from "lucide-react";
+import { Download, ImagePlus } from "lucide-react";
 import { toUserFacingConversionError } from "@imify/core/error-utils";
 import {
   buildSmartOutputFileName,
@@ -19,6 +19,7 @@ import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
 import { Button, EmptyDropCard, Heading, InfoPopover, MutedText } from "@imify/ui";
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
+import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar";
 import {
   COMMON_IMAGE_ACCEPT,
   isCommonImageFile,
@@ -140,9 +141,7 @@ export function SingleProcessorWorkspace({
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isImportingUrl, setIsImportingUrl] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [compareViewMode, setCompareViewMode] = useState<
-    "split" | "side_by_side"
-  >("split");
+  const [viewMode, setViewMode] = useState<"split" | "side_by_side">("split");
   const [splitPosition, setSplitPosition] = useState(50);
   const [zoom, setZoom] = useState(100);
   const [panX, setPanX] = useState(0);
@@ -480,7 +479,7 @@ export function SingleProcessorWorkspace({
                     Live preview updates after {PREVIEW_DEBOUNCE_MS}ms idle.
                   </MutedText>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-row items-center gap-2 shrink-0">
                   <Button variant="secondary" onClick={clearAll} type="button">
                     Clear
                   </Button>
@@ -493,7 +492,6 @@ export function SingleProcessorWorkspace({
                     type="button"
                     variant="primary"
                   >
-                    <Download size={16} />
                     Download
                   </Button>
                 </div>
@@ -571,47 +569,19 @@ export function SingleProcessorWorkspace({
               ) : null}
             </div>
           </div>
-          <div className="pt-4">
+          <div className="pt-2">
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="inline-flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={compareViewMode === "split" ? "primary" : "ghost"}
-                    className="h-8"
-                    onClick={() => setCompareViewMode("split")}
-                  >
-                    Split View
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={
-                      compareViewMode === "side_by_side" ? "primary" : "ghost"
-                    }
-                    className="h-8"
-                    onClick={() => setCompareViewMode("side_by_side")}
-                  >
-                    Side by Side
-                  </Button>
-                </div>
-                <InfoPopover label="Interaction Guide" icon={SquareMousePointer} iconSize={18}>
-                  <div className="flex flex-col gap-1.5 p-1">
-                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                      <Move size={14} className="text-sky-500" />
-                      <span><strong>Drag</strong> on the image to pan</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                      <Mouse size={14} className="text-sky-500" />
-                      <span><strong>Scroll</strong> (Mouse Wheel) to zoom</span>
-                    </div>
-                  </div>
-                </InfoPopover>
-              </div>
+              {/* View Mode Toolbar (Centralized Component) */}
+              {resultImageData && (
+                <CompareViewModeToolbar
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  showGuide={true}
+                />
+              )}
               <PixelCompareWorkspace
                 className="h-[480px]"
-                mode={compareViewMode}
+                mode={viewMode}
                 imageDataA={sourceImageData}
                 imageDataB={resultImageData}
                 labelA="Original"

@@ -587,6 +587,7 @@ export default function OptionsPage() {
                           progressPayload={props.progressPayload}
                           onClear={props.onClear}
                           onStartProcessing={props.onStartProcessing}
+                          modelId={props.modelId}
                         />
                       ) : null
                     )}

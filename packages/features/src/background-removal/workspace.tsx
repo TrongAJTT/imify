@@ -11,6 +11,7 @@ import { useBackgroundRemoverStore } from "@imify/stores"
 import { BACKGROUND_REMOVAL_MODELS } from "./models"
 import { ModelDownloadDialog } from "./model-download-dialog"
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace"
+import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar"
 import type { ConversionProgressPayload } from "@imify/core/types"
 
 interface BackgroundRemoverWorkspaceProps {
@@ -21,6 +22,7 @@ interface BackgroundRemoverWorkspaceProps {
   progressPayload: ConversionProgressPayload | null
   onClear: () => void
   onStartProcessing: () => void
+  modelId: string
 }
 
 export function BackgroundRemoverWorkspace({
@@ -30,11 +32,19 @@ export function BackgroundRemoverWorkspace({
   isProcessing,
   progressPayload,
   onClear,
-  onStartProcessing
+  onStartProcessing,
+  modelId
 }: BackgroundRemoverWorkspaceProps) {
   const [viewMode, setViewMode] = useState<"split" | "side_by_side">("split")
+  const [splitPosition, setSplitPosition] = useState(50)
+  const [zoom, setZoom] = useState(100)
+  const [panX, setPanX] = useState(0)
+  const [panY, setPanY] = useState(0)
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false)
   const [hasAgreedToDownload, setHasAgreedToDownload] = useState(false)
+  const [processTime, setProcessTime] = useState<number | null>(null)
+  const [startTime, setStartTime] = useState<number | null>(null)
+  const [timerSeconds, setTimerSeconds] = useState(0)
 
   const { toasts, hide } = useToast()
   const conversionToasts = useConversionToasts([progressPayload])
@@ -52,19 +62,41 @@ export function BackgroundRemoverWorkspace({
     }
   }, [sourceFileUrl])
 
-  // Check if model is cached for the dialog logic
+  // Check if current model is cached
   useEffect(() => {
     const checkModel = async () => {
       if (typeof window === 'undefined') return
+      setHasAgreedToDownload(false) // Reset when model changes
       try {
         const cache = await caches.open("transformers-cache")
         const keys = await cache.keys()
-        const isCached = keys.some(request => request.url.includes(BACKGROUND_REMOVAL_MODELS[0].id))
+        const isCached = keys.some(request => request.url.includes(modelId))
         if (isCached) setHasAgreedToDownload(true)
       } catch (e) { }
     }
     checkModel()
-  }, [])
+  }, [modelId])
+
+  const selectedModel = BACKGROUND_REMOVAL_MODELS.find(m => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
+
+  // Timer logic for processing feedback
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isProcessing) {
+      const start = performance.now();
+      setStartTime(start);
+      setProcessTime(null);
+      setTimerSeconds(0);
+      interval = setInterval(() => {
+        setTimerSeconds((performance.now() - start) / 1000);
+      }, 100);
+    } else if (startTime !== null) {
+      const end = performance.now();
+      setProcessTime((end - startTime) / 1000);
+      setStartTime(null);
+    }
+    return () => clearInterval(interval);
+  }, [isProcessing]);
 
   const handleStartWithAgreement = () => {
     if (!hasAgreedToDownload) {
@@ -96,28 +128,56 @@ export function BackgroundRemoverWorkspace({
   return (
     <div className="space-y-4">
       {/* Action Bar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Action Bar */}
+      <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Eraser size={18} className="text-pink-500" />
             <h3 className="truncate text-base font-bold text-slate-900 dark:text-white">
               {sourceFile.name}
             </h3>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            AI-powered subject isolation
+            {isProcessing ? (
+              <span className="text-amber-600 dark:text-amber-400 font-medium">
+                Processing... ({timerSeconds.toFixed(1)}s)
+              </span>
+            ) : resultImageData && processTime !== null ? (
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                Processing completed in {processTime.toFixed(2)} seconds
+              </span>
+            ) : (
+              "Adjust settings in the sidebar then click Remove Background to process"
+            )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={onClear} className="h-9 px-4">
+        <div className="flex flex-row items-center gap-2 shrink-0">
+          <Button variant="secondary" onClick={onClear} className="h-9 px-4">
             Clear
           </Button>
-          {!resultImageData && (
+          {resultImageData && (
             <Button
-              variant="default"
+              variant="secondary"
               onClick={handleStartWithAgreement}
               disabled={isProcessing}
+              className="h-9 px-4"
+            >
+              Update
+            </Button>
+          )}
+          {resultImageData ? (
+            <Button
+              variant="default"
+              onClick={handleDownload}
               className="h-9 px-6 bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-500/20"
+            >
+              Download
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={handleStartWithAgreement}
+              disabled={isProcessing}
+              className="h-9 px-6 bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-500/20 border-none"
             >
               {isProcessing ? "Processing..." : "Remove Background"}
             </Button>
@@ -125,43 +185,33 @@ export function BackgroundRemoverWorkspace({
         </div>
       </div>
 
-      <div className="relative pt-2">
-        {/* Floating View Controls (Only visible when processed) */}
-        {resultImageData && (
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 p-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-full border border-slate-200 dark:border-slate-800 shadow-lg">
-            <Button
-              variant={viewMode === "split" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("split")}
-              className="rounded-full h-8 px-3 gap-2"
-            >
-              <Columns size={14} />
-              <span className="text-xs font-medium">Slider</span>
-            </Button>
-            <Button
-              variant={viewMode === "side_by_side" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("side_by_side")}
-              className="rounded-full h-8 px-3 gap-2"
-            >
-              <LayoutGrid size={14} />
-              <span className="text-xs font-medium">Side-by-side</span>
-            </Button>
-          </div>
-        )}
+      {/* View Mode Toolbar (Centralized Component) */}
+      {resultImageData && (
+        <CompareViewModeToolbar
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          showGuide={true}
+        />
+      )}
 
-        <div className="min-h-[500px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
+      <div className="relative">
+        <div className="min-h-[500px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 relative">
           {resultImageData ? (
             <PixelCompareWorkspace
               className="h-[520px]"
               mode={viewMode}
               imageDataA={sourceImageData}
               imageDataB={resultImageData}
-              zoom={100}
-              panX={0}
-              panY={0}
-              onZoomChange={() => { }}
-              onPanChange={() => { }}
+              splitPosition={splitPosition}
+              onSplitChange={setSplitPosition}
+              zoom={zoom}
+              panX={panX}
+              panY={panY}
+              onZoomChange={setZoom}
+              onPanChange={(x, y) => {
+                setPanX(x)
+                setPanY(y)
+              }}
             />
           ) : (
             <div className="h-[520px] flex items-center justify-center p-12">
@@ -183,23 +233,11 @@ export function BackgroundRemoverWorkspace({
         </div>
       </div>
 
-      {resultImageData && (
-        <div className="pt-6 flex justify-center">
-          <Button
-            onClick={handleDownload}
-            className="bg-pink-600 hover:bg-pink-700 text-white gap-2 px-10 py-7 text-lg font-black rounded-2xl shadow-xl shadow-pink-500/25 transition-all hover:scale-105 active:scale-95"
-          >
-            <Download size={24} />
-            Download Isolated PNG
-          </Button>
-        </div>
-      )}
-
       <ModelDownloadDialog
         isOpen={isDownloadDialogOpen}
         onClose={() => setIsDownloadDialogOpen(false)}
         onConfirm={handleConfirmDownload}
-        model={BACKGROUND_REMOVAL_MODELS[0]}
+        model={selectedModel}
       />
 
       <ToastContainer toasts={[...toasts, ...conversionToasts]} onRemove={hide} />
