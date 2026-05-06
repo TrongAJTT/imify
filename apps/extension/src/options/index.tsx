@@ -54,6 +54,10 @@ import { ProcessorWorkspaceShell, ProcessorSidebarShellWrapper } from "@/options
 import { EditorProvider } from "@/options/components/filling/editor-context"
 import { DiffcheckerTab } from "@/options/components/diffchecker"
 import { InspectorTab } from "@/options/components/inspector"
+import { 
+  BackgroundRemoverWorkspace, 
+  BackgroundRemoverSidebarShell 
+} from "@imify/features/background-removal"
 import { DiffcheckerSidebarShell } from "@imify/features/diffchecker"
 import { InspectorSidebarShell } from "@imify/features/inspector"
 import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
@@ -561,6 +565,13 @@ export default function OptionsPage() {
         return (
           <InspectorTab onOpenSingleProcessor={() => void setActiveTab("single")} />
         )
+      case "background-remover":
+        return (
+          <ProcessorWorkspaceShell
+            context="single" // Using single context for layout similarity
+            workspace={<BackgroundRemoverWorkspace />}
+          />
+        )
       default:
         return null
     }
@@ -751,6 +762,9 @@ export default function OptionsPage() {
                 {activeTab === "inspector" && (
                   <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
                 )}
+                {activeTab === "background-remover" && (
+                  <BackgroundRemoverSidebarShell />
+                )}
 
                 <TabInfoPanel activeTab={activeTab} />
               </div>
@@ -835,6 +849,9 @@ export default function OptionsPage() {
 
               {activeTab === "inspector" && (
                 <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+              {activeTab === "background-remover" && (
+                <BackgroundRemoverSidebarShell />
               )}
 
               <TabInfoPanel activeTab={activeTab} />

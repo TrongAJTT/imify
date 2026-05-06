@@ -9,7 +9,8 @@ import {
   Scissors,
   Search,
   Stamp,
-  Workflow
+  Workflow,
+  Eraser
 } from "lucide-react"
 
 export const WORKSPACE_PRIMARY_TOOL_IDS = [
@@ -21,6 +22,7 @@ export const WORKSPACE_PRIMARY_TOOL_IDS = [
   "pattern",
   "diffchecker",
   "inspector",
+  "background-remover",
   "context-menu"
 ] as const
 
@@ -161,6 +163,16 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
     iconColorClassName: "text-fuchsia-500",
     showOnWebToolsMenu: true,
     showOnExtSidebar: false
+  },
+  {
+    id: "background-remover",
+    label: "Background Remover",
+    href: "/background-remover",
+    categoryId: "image-processing",
+    iconColorClassName: "text-pink-500",
+    extTabId: "background-remover",
+    showOnWebToolsMenu: true,
+    showOnExtSidebar: true
   }
 ]
 
@@ -189,6 +201,8 @@ export function renderWorkspaceToolIcon(toolId: string, size = 16): React.ReactN
       return <ListTree size={size} className={className} />
     case "seo-audit":
       return <Search size={size} className={className} />
+    case "background-remover":
+      return <Eraser size={size} className={className} />
     default:
       return <Workflow size={size} className={className} />
   }
