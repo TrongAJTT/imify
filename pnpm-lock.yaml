@@ -382,6 +382,9 @@ importers:
       '@imify/ui':
         specifier: workspace:*
         version: link:../ui
+      '@xenova/transformers':
+        specifier: ^2.17.2
+        version: 2.17.2
       konva:
         specifier: ^10.2.5
         version: 10.2.5
