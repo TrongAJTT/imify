@@ -9,7 +9,7 @@ export interface UseBackgroundRemovalOptions {
 }
 
 export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) {
-  const { modelId = 'briaai/RMBG-1.4', onSuccess, onError } = options;
+  const { modelId = 'onnx-community/ormbg-ONNX', onSuccess, onError } = options;
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPayload, setProgressPayload] = useState<ConversionProgressPayload | null>(null);
 

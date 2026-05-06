@@ -2,6 +2,7 @@ import React from "react"
 import { WorkspaceConfigSidebarPanel, type WorkspaceConfigSidebarItem, BodyText, MutedText } from "@imify/ui"
 import { Brain, Sliders, Image } from "lucide-react"
 import { useBackgroundRemoverStore } from "@imify/stores"
+import { BACKGROUND_REMOVAL_MODELS } from "./models"
 
 export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings"
 
@@ -13,6 +14,8 @@ export function BackgroundRemoverSidebar() {
   const setModelId = useBackgroundRemoverStore((s) => s.setModelId)
   const setEdgeSmoothing = useBackgroundRemoverStore((s) => s.setEdgeSmoothing)
   const setOutputFormat = useBackgroundRemoverStore((s) => s.setOutputFormat)
+  const selectedModel = BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
+
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "ai-engine",
@@ -24,15 +27,19 @@ export function BackgroundRemoverSidebar() {
               <Brain size={14} />
               <BodyText className="text-xs font-semibold">AI Model</BodyText>
             </div>
-            <select 
-              value={modelId}
+            <select
+              value={selectedModel.id}
               onChange={(e) => setModelId(e.target.value)}
               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-pink-500/20 transition-all"
             >
-              <option value="briaai/RMBG-1.4">RMBG v1.4 (Recommended)</option>
+              {BACKGROUND_REMOVAL_MODELS.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
             </select>
             <MutedText className="text-[10px]">
-              Fast and lightweight model optimized for general subjects.
+              {selectedModel.description}
             </MutedText>
           </div>
         </div>

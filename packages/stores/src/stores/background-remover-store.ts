@@ -18,7 +18,7 @@ interface BackgroundRemoverState {
 export const useBackgroundRemoverStore = create<BackgroundRemoverState>()(
   persist(
     (set) => ({
-      modelId: "briaai/RMBG-1.4",
+      modelId: "onnx-community/ormbg-ONNX",
       edgeSmoothing: 2,
       outputFormat: "transparent",
       hasImage: false,

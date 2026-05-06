@@ -4,10 +4,12 @@ import React, { useEffect, useState } from "react"
 import { Trash2, HardDrive, AlertCircle } from "lucide-react"
 import { Button, BodyText, MutedText } from "@imify/ui"
 import { BACKGROUND_REMOVAL_MODELS, type AIModelMetadata } from "../../background-removal/models"
+import { useToast } from "@imify/core/hooks/use-toast"
 
 export function AssetAIModelsTab() {
   const [cachedModelIds, setCachedModelIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
+  const { success, error } = useToast()
 
   const checkCache = async () => {
     setIsLoading(true)
@@ -53,9 +55,11 @@ export function AssetAIModelsTab() {
       }
       
       await checkCache()
-    } catch (error) {
-      console.error("Failed to delete model cache:", error)
-      alert("Failed to delete model files. Please try again.")
+      
+      success("Model deleted", `Successfully cleared cached files for ${model.name}.`)
+    } catch (err) {
+      console.error("Failed to delete model cache:", err)
+      error("Delete failed", "Failed to delete model files. Please try again.")
     }
   }
 
