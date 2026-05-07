@@ -20,5 +20,9 @@
     "markdown-to-jsx": "^9.7.16",
     "react-konva": "^18.2.14"
   },
+  "alias": {
+    "sharp": false,
+    "@huggingface/transformers": "@huggingface/transformers/dist/transformers.web.js"
+  },
   "license": "Apache-2.0"
 }

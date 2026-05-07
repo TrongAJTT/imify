@@ -1,8 +1,26 @@
 import { pipeline, env, type BackgroundRemovalPipeline as BackgroundRemovalPipelineType } from '@huggingface/transformers';
+import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from '@imify/features/shared/media-assets';
 
 // Configure transformers.js environment
-env.allowLocalModels = false;
-env.useBrowserCache = true;
+// We prioritize local assets to ensure 100% offline capability
+env.allowLocalModels = true;
+env.useBrowserCache = true; // Still useful for models, engines will be fetched from wasmPaths
+
+// Use centralized asset resolution for ONNX engines
+const onnxWasmUrl = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasm);
+// ONNX Runtime Web expects a directory path for wasmPaths (ending with /)
+const wasmDirectory = onnxWasmUrl.substring(0, onnxWasmUrl.lastIndexOf('/') + 1);
+
+// Optimization: Use multi-threading if SharedArrayBuffer is available
+const isMultiThreadSupported = typeof SharedArrayBuffer !== 'undefined';
+const numThreads = isMultiThreadSupported ? Math.min(navigator.hardwareConcurrency || 4, 8) : 1;
+
+console.log(`[Worker] Multi-thread supported: ${isMultiThreadSupported}, using ${numThreads} threads.`);
+console.log(`[Worker] Engine directory: ${wasmDirectory}`);
+
+(env as any).backends.onnx.wasm.wasmPaths = wasmDirectory;
+(env as any).backends.onnx.wasm.numThreads = numThreads;
+// (env as any).backends.onnx.wasm.proxy = true; 
 
 // BiRefNet_lite requires 17 storage buffers per shader stage.
 // We query the GPU adapter limits before loading to pick the best backend

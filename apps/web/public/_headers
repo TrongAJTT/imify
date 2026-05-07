@@ -1,0 +1,4 @@
+# Enable Cross-Origin-Isolation for AI features
+/background-remover/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp

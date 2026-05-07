@@ -158,11 +158,14 @@ Practical effect:
 
 ## Assets and Build Orchestration
 
-Shared static assets originate in root `assets/` and are synchronized to both branches by scripts:
+Shared static assets originate in root `assets/` and are synchronized to both branches by specialized scripts:
 
-- `scripts/sync-shared-assets.mjs`
-  - copies into `apps/web/public/assets`
-  - copies into `apps/extension/assets`
+- `scripts/sync-wasm.mjs`: Syncs specialized image processing WASM binaries.
+- `scripts/sync-onnx-engine.mjs`: Syncs AI inference engines (ONNX) including multi-threaded and asyncify variants.
+- `scripts/patch-transformers.mjs`: Patches external libraries in `node_modules` for MV3 compatibility.
+- `scripts/sync-shared-assets.mjs`:
+  - copies root `assets/` into `apps/web/public/assets`
+  - copies root `assets/` into `apps/extension/assets`
 
 Command and metadata orchestration scripts are also centralized in root `scripts/`.
 

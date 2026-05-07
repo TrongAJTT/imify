@@ -92,5 +92,8 @@
     "@huggingface/transformers": "^4.2.0",
     "onnxruntime-common": "^1.25.1",
     "onnxruntime-web": "^1.25.1"
+  },
+  "alias": {
+    "sharp": false
   }
 }

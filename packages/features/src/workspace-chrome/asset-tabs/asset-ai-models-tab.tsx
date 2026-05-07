@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react"
 import { Trash2, HardDrive, AlertCircle, Image, Cpu, Sparkles, Download } from "lucide-react"
 import { Button, BodyText, MutedText } from "@imify/ui"
 import { BACKGROUND_REMOVAL_MODELS, type AIModelMetadata } from "../../background-removal/models"
+import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "../../shared/media-assets"
 import { ModelDownloadDialog } from "../../background-removal/model-download-dialog"
 import { useToast } from "@imify/core/hooks/use-toast"
 import { ToastContainer } from "@imify/ui/components/toast-container"
@@ -90,7 +91,10 @@ export function AssetAIModelsTab() {
     success("Download started", `Preparing to download ${model.name}.`)
 
     try {
-      const worker = new Worker(new URL("../../background-removal/worker.ts", import.meta.url))
+      const worker = new Worker(
+        new URL("../../background-removal/worker.ts", import.meta.url),
+        { type: "module" }
+      )
 
       worker.postMessage({
         action: "warm-up",
@@ -133,6 +137,35 @@ export function AssetAIModelsTab() {
               <MutedText className="text-[11px] !text-blue-700/80 dark:!text-blue-400/80 leading-relaxed">
                 Imify uses lightweight AI models that run 100% on your device. These models are downloaded once and cached in your browser for offline use.
               </MutedText>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Cpu size={16} className="text-indigo-500" />
+              <Subheading className="text-sm font-bold">AI Engine</Subheading>
+            </div>
+            <div className="p-4 rounded-xl border border-indigo-50/50 dark:border-indigo-500/10 bg-indigo-50/20 dark:bg-indigo-500/5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+                  <Cpu size={20} />
+                </div>
+                <div>
+                  <BodyText className="font-bold text-[13px]">ONNX Runtime Web</BodyText>
+                  <MutedText className="text-[11px]">Universal WASM Engines (Threaded + Asyncify)</MutedText>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/30 text-[9px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-tighter">
+                  Dual-Engine Bundled
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${typeof SharedArrayBuffer !== 'undefined' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                  <MutedText className="text-[10px]">
+                    {typeof SharedArrayBuffer !== 'undefined' ? 'Multi-thread Active' : 'Asyncify Fallback Active'}
+                  </MutedText>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -65,6 +65,12 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   },
   common: {
     whatsNewMd: "/assets/WHATS_NEW.md"
+  },
+  ai: {
+    onnxWasm: "/assets/onnx-engines/ort-wasm-simd-threaded.wasm",
+    onnxMjs: "/assets/onnx-engines/ort-wasm-simd-threaded.mjs",
+    onnxWasmAsyncify: "/assets/onnx-engines/ort-wasm-simd-threaded.asyncify.wasm",
+    onnxMjsAsyncify: "/assets/onnx-engines/ort-wasm-simd-threaded.asyncify.mjs"
   }
 } as const
 
@@ -117,5 +123,11 @@ export const FEATURE_MEDIA_ASSETS = {
   },
   common: {
     whatsNewMd: FEATURE_MEDIA_ASSET_PATHS.common.whatsNewMd
+  },
+  ai: {
+    onnxWasm: FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasm,
+    onnxMjs: FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjs,
+    onnxWasmAsyncify: FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasmAsyncify,
+    onnxMjsAsyncify: FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjsAsyncify
   }
 } as const
