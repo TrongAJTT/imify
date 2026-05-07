@@ -58,14 +58,14 @@ export function BackgroundRemoverSidebar() {
             tooltipContent={selectedModel.description}
           />
 
-          {/* Edge Smoothing */}
+          {/* Edge Refinement */}
           <SliderInput
-            label="Edge Smoothing"
+            label="Edge Refinement"
             value={edgeSmoothing}
-            min={0}
+            min={-10}
             max={20}
             step={1}
-            suffix="px"
+            suffix=""
             onChange={setEdgeSmoothing}
           />
 

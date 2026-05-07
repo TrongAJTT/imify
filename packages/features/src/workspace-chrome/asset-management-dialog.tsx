@@ -143,9 +143,9 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
                   key={tab.id}
                   variant="ghost"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex w-full items-center justify-start gap-3 rounded-lg transition-all !px-0 !h-auto ${isMobile
+                  className={`flex w-full items-center justify-start gap-3 rounded-lg transition-all !h-auto ${isMobile
                     ? "p-4 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40"
-                    : `px-3 py-2.5 ${activeTab === tab.id
+                    : `px-4 py-2.5 ${activeTab === tab.id
                       ? `${tab.colors.activeBg} ${tab.colors.activeText} shadow-sm ring-1 ${tab.colors.activeRing}`
                       : DEFAULT_INACTIVE_CLASS
                     }`

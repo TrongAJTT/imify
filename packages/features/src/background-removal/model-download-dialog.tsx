@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Download, ShieldCheck, ExternalLink, AlertTriangle } from "lucide-react"
+import { Download, ShieldCheck, ExternalLink, AlertTriangle, Wifi } from "lucide-react"
 import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui"
 import { type AIModelMetadata } from "./models"
 
@@ -10,16 +10,23 @@ interface ModelDownloadDialogProps {
   onClose: () => void
   onConfirm: () => void
   model: AIModelMetadata
+  confirmLabel?: string
 }
 
-export function ModelDownloadDialog({ isOpen, onClose, onConfirm, model }: ModelDownloadDialogProps) {
+export function ModelDownloadDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  model,
+  confirmLabel = "Download & Start"
+}: ModelDownloadDialogProps) {
   const [agreed, setAgreed] = useState(false)
 
   return (
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-md p-0 overflow-hidden"
+      contentClassName="w-full max-w-md p-0 overflow-hidden rounded-xl"
     >
       <div className="p-6 space-y-6">
         <div className="flex flex-col items-center text-center space-y-3">
@@ -29,7 +36,7 @@ export function ModelDownloadDialog({ isOpen, onClose, onConfirm, model }: Model
           <div className="space-y-1">
             <Subheading className="text-xl font-bold">Download AI Model</Subheading>
             <MutedText className="text-sm">
-              To use the Background Remover, you need to download the {model.name} model.
+              {model.name} is the model used for Background Remover
             </MutedText>
           </div>
         </div>
@@ -62,7 +69,19 @@ export function ModelDownloadDialog({ isOpen, onClose, onConfirm, model }: Model
                 Privacy & Data
               </BodyText>
               <MutedText className="text-[10px] leading-relaxed !text-amber-700/80 dark:!text-amber-400/80">
-                This model runs locally in your browser. Your images never leave your device. By downloading, you agree to the author's terms of use.
+                This model runs locally in your browser. Your images never leave your device. Imify provides the interface to run these models but is not the distributor. By downloading, you agree to the original author's terms of use and license.
+              </MutedText>
+            </div>
+          </div>
+
+          <div className="flex gap-3 items-start p-3 rounded-lg border border-sky-100 bg-sky-50/50 dark:border-sky-500/20 dark:bg-sky-500/5">
+            <Wifi className="text-sky-500 shrink-0 mt-0.5" size={16} />
+            <div className="space-y-1">
+              <BodyText className="text-[11px] font-semibold !text-sky-800 dark:!text-sky-400">
+                Internet Connection
+              </BodyText>
+              <MutedText className="text-[10px] leading-relaxed !text-sky-700/80 dark:!text-sky-400/80">
+                A stable internet connection is required for the initial download. Once cached, the model will be available for offline use.
               </MutedText>
             </div>
           </div>
@@ -87,7 +106,7 @@ export function ModelDownloadDialog({ isOpen, onClose, onConfirm, model }: Model
               </svg>
             </div>
             <span className="text-xs text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
-              I agree to the <a href={model.termsUrl} target="_blank" rel="noreferrer" className="text-pink-500 hover:underline">Terms of Use</a> and License.
+              I agree to the <a href={model.termsUrl} target="_blank" rel="noreferrer" className="text-pink-500 hover:underline">Terms of Use and License</a>.
             </span>
           </label>
         </div>
@@ -103,7 +122,7 @@ export function ModelDownloadDialog({ isOpen, onClose, onConfirm, model }: Model
           disabled={!agreed}
           className="flex-1 bg-pink-600 hover:bg-pink-700 text-white"
         >
-          Download & Start
+          {confirmLabel}
         </Button>
       </div>
     </BaseDialog>

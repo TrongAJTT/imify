@@ -83,6 +83,7 @@ export function SharedBackgroundRemoverPage({
     if (edgeSmoothing > 0) {
       scaledMaskCtx.filter = `blur(${edgeSmoothing}px)`
     }
+    // For negative values, we want a sharp refinement, so no blur filter here.
 
     scaledMaskCtx.drawImage(maskCanvas, 0, 0, width, height)
     const finalMaskData = scaledMaskCtx.getImageData(0, 0, width, height)
@@ -96,16 +97,29 @@ export function SharedBackgroundRemoverPage({
       } : { r: 255, g: 255, b: 255 }
     }
     const bgRgb = hexToRgb(backgroundColor)
+    
+    // Non-linear refinement using power function (gamma)
+    // Positive values: we already applied blur above
+    // Negative values: we use a power > 1 to "choke" the edges while preserving 255 (solid)
+    const exponent = edgeSmoothing < 0 ? 1 + Math.abs(edgeSmoothing) * 0.25 : 1
 
     for (let i = 0; i < resultData.data.length; i += 4) {
-      const alpha = finalMaskData.data[i] / 255
+      let maskAlpha = finalMaskData.data[i]
+      
+      if (exponent !== 1) {
+        // Normalize to 0-1, apply power, then scale back to 0-255
+        // This keeps 255 as 255 but shrinks everything else
+        maskAlpha = Math.pow(maskAlpha / 255, exponent) * 255
+      }
+
+      const alpha = maskAlpha / 255
       if (outputFormat === "color") {
         resultData.data[i] = resultData.data[i] * alpha + bgRgb.r * (1 - alpha)
         resultData.data[i + 1] = resultData.data[i + 1] * alpha + bgRgb.g * (1 - alpha)
         resultData.data[i + 2] = resultData.data[i + 2] * alpha + bgRgb.b * (1 - alpha)
         resultData.data[i + 3] = 255
       } else {
-        resultData.data[i + 3] = finalMaskData.data[i]
+        resultData.data[i + 3] = maskAlpha
       }
     }
 
@@ -148,6 +162,7 @@ export function SharedBackgroundRemoverPage({
     setSourceFile(null)
     setSourceImageData(null)
     setResultImageData(null)
+    setLastAiOutput(null)
     setHasImage(false)
   }, [setHasImage])
 

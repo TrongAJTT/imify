@@ -61,15 +61,11 @@ class BackgroundRemovalPipeline {
 self.addEventListener('message', async (event) => {
     const { action, payload } = event.data;
 
-    if (action === 'remove-background') {
+    if (action === 'remove-background' || action === 'warm-up') {
         try {
             const { image, options } = payload;
             const modelId = options?.modelId || 'onnx-community/ormbg-ONNX';
             
-            // @huggingface/transformers v3: RawImage.read() does not accept ArrayBuffer.
-            // Wrap in Blob so the pipeline can decode it correctly.
-            const imageInput = image instanceof ArrayBuffer ? new Blob([image]) : image;
-
             const segmenter = (await BackgroundRemovalPipeline.getInstance(modelId, (progress) => {
                 // Forward all status updates to main thread
                 self.postMessage({
@@ -77,6 +73,15 @@ self.addEventListener('message', async (event) => {
                     payload: progress
                 });
             })) as BackgroundRemovalPipelineType;
+
+            if (action === 'warm-up') {
+                self.postMessage({ action: 'warm-up-complete', payload: { modelId } });
+                return;
+            }
+
+            // @huggingface/transformers v3: RawImage.read() does not accept ArrayBuffer.
+            // Wrap in Blob so the pipeline can decode it correctly.
+            const imageInput = image instanceof ArrayBuffer ? new Blob([image]) : image;
 
             // Perform segmentation
             console.log('[Worker] Starting segmentation...');
