@@ -8,11 +8,13 @@ import {
 } from "@imify/ui"
 import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast"
 import { useBackgroundRemoverStore } from "@imify/stores"
-import { BACKGROUND_REMOVAL_MODELS, type AIModelVariant } from "./models"
+import { BACKGROUND_REMOVAL_MODELS } from "./models"
 import { ModelDownloadDialog } from "./model-download-dialog"
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace"
 import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar"
-import type { ConversionProgressPayload } from "@imify/core/types"
+import type { ConversionProgressPayload, FormatConfig } from "@imify/core/types"
+import { convertImage } from "@imify/engine/converter"
+import { downloadWithFilename } from "../processor/processor-utils"
 
 interface BackgroundRemoverWorkspaceProps {
   sourceFile: File
@@ -46,8 +48,17 @@ export function BackgroundRemoverWorkspace({
   const [processTime, setProcessTime] = useState<number | null>(null)
   const [startTime, setStartTime] = useState<number | null>(null)
   const [timerSeconds, setTimerSeconds] = useState(0)
+  const [isDownloading, setIsDownloading] = useState(false)
 
-  const { toasts, hide } = useToast()
+  const {
+    targetFormat,
+    quality,
+    codecOptions,
+    outputFormat,
+    backgroundColor
+  } = useBackgroundRemoverStore()
+
+  const { toasts, show, hide } = useToast()
   const conversionToasts = useConversionToasts([progressPayload])
 
   // Memoize source blob URL to prevent creating a new one on every render
@@ -139,17 +150,76 @@ export function BackgroundRemoverWorkspace({
     onStartProcessing()
   }
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!resultImageData) return
-    const canvas = document.createElement("canvas")
-    canvas.width = resultImageData.width
-    canvas.height = resultImageData.height
-    canvas.getContext("2d")?.putImageData(resultImageData, 0, 0)
 
-    const link = document.createElement("a")
-    link.download = sourceFile ? `${sourceFile.name.replace(/\.[^.]+$/, "")}_no_bg.png` : "result.png"
-    link.href = canvas.toDataURL("image/png")
-    link.click()
+    setIsDownloading(true)
+    const toastId = show({
+      title: "Encoding Image",
+      message: `Preparing ${targetFormat.toUpperCase()} file...`,
+      type: "notification",
+      duration: 60000 // Show for up to 1 minute while encoding
+    })
+
+    try {
+      const canvas = document.createElement("canvas")
+      canvas.width = resultImageData.width
+      canvas.height = resultImageData.height
+      const ctx = canvas.getContext("2d")
+      if (!ctx) throw new Error("Could not get canvas context")
+
+      // Use ImageBitmap for better performance and to respect alpha blending
+      const imageBitmap = await createImageBitmap(resultImageData)
+      
+      if (outputFormat === "color") {
+        ctx.fillStyle = backgroundColor
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+      }
+
+      ctx.drawImage(imageBitmap, 0, 0)
+
+      const sourceBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"))
+      if (!sourceBlob) throw new Error("Failed to create source blob")
+
+      const config: FormatConfig = {
+        id: "bg-remover-export",
+        name: "Background Remover Export",
+        format: targetFormat,
+        quality: quality,
+        formatOptions: codecOptions,
+        resize: { mode: "none" },
+        enabled: true
+      }
+
+      const converted = await convertImage({
+        sourceBlob,
+        config
+      })
+
+      const extension = converted.outputExtension || targetFormat
+      const baseName = sourceFile ? sourceFile.name.replace(/\.[^.]+$/, "") : "result"
+      const fileName = `${baseName}_no_bg.${extension}`
+
+      await downloadWithFilename(converted.blob, fileName)
+
+      hide(toastId)
+      show({
+        title: "Download Ready",
+        message: "Image exported successfully",
+        type: "success"
+      })
+    } catch (error) {
+      console.error("Download failed:", error)
+      hide(toastId)
+      show({
+        title: "Download Failed",
+        message: error instanceof Error ? error.message : "Unable to encode image",
+        type: "error",
+        duration: 5000
+      })
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   return (
@@ -195,9 +265,10 @@ export function BackgroundRemoverWorkspace({
             <Button
               variant="default"
               onClick={handleDownload}
-              className="h-9 px-6 bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-500/20"
+              disabled={isDownloading}
+              className="h-9 px-6 bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-500/20 disabled:bg-pink-400"
             >
-              Download
+              {isDownloading ? "Encoding..." : "Download"}
             </Button>
           ) : (
             <Button
@@ -239,6 +310,7 @@ export function BackgroundRemoverWorkspace({
                 setPanX(x)
                 setPanY(y)
               }}
+              bgColorB={outputFormat === "color" ? backgroundColor : null}
             />
           ) : (
             <div className="h-[520px] flex items-center justify-center p-12">

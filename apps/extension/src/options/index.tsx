@@ -788,7 +788,7 @@ export default function OptionsPage() {
                   <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
                 )}
                 {activeTab === "background-remover" && (
-                  <BackgroundRemoverSidebarShell />
+                  <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
                 )}
 
                 <TabInfoPanel activeTab={activeTab} />
@@ -876,7 +876,7 @@ export default function OptionsPage() {
                 <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
               )}
               {activeTab === "background-remover" && (
-                <BackgroundRemoverSidebarShell />
+                <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
               )}
 
               <TabInfoPanel activeTab={activeTab} />

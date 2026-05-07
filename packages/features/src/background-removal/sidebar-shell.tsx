@@ -4,7 +4,15 @@ import { BackgroundRemoverSidebar } from "./sidebar"
 import { SidebarPanel } from "@imify/ui"
 import { BackgroundRemoverPresetInfoPanel } from "./remover-preset-info-panel"
 
-export function BackgroundRemoverSidebarShell() {
+interface BackgroundRemoverSidebarShellProps {
+  enableWideSidebarGrid?: boolean
+  autoWideSidebarGridMinWidthPx?: number | null
+}
+
+export function BackgroundRemoverSidebarShell({
+  enableWideSidebarGrid = false,
+  autoWideSidebarGridMinWidthPx = null
+}: BackgroundRemoverSidebarShellProps) {
   const hasImage = useBackgroundRemoverStore((s) => s.hasImage)
 
   if (!hasImage) {
@@ -15,5 +23,10 @@ export function BackgroundRemoverSidebarShell() {
     )
   }
 
-  return <BackgroundRemoverSidebar />
+  return (
+    <BackgroundRemoverSidebar 
+      enableWideSidebarGrid={enableWideSidebarGrid}
+      autoWideSidebarGridMinWidthPx={autoWideSidebarGridMinWidthPx}
+    />
+  )
 }

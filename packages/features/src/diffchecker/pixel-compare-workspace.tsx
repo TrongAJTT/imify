@@ -32,6 +32,7 @@ interface PixelCompareWorkspaceProps {
   maxPreviewDimension?: number
   isProcessing?: boolean
   emptyFallback?: ReactNode
+  bgColorB?: string | null
 }
 
 function PreviewLoadingOverlay() {
@@ -62,7 +63,8 @@ async function imageDataToPreviewSourceBlob(imageData: ImageData, mimeTypeHint?:
 
 export function PixelCompareWorkspace({
   mode, imageDataA, imageDataB, zoom, panX, panY, onZoomChange, onPanChange, splitPosition = 50, onSplitChange, overlayOpacity = 75,
-  className, labelA = "A", labelB = "B", preferredMimeTypeA, preferredMimeTypeB, maxPreviewDimension, isProcessing = false, emptyFallback
+  className, labelA = "A", labelB = "B", preferredMimeTypeA, preferredMimeTypeB, maxPreviewDimension, isProcessing = false, emptyFallback,
+  bgColorB = null
 }: PixelCompareWorkspaceProps) {
   const [previewA, setPreviewA] = useState<RenderImageDataPreviewResult | null>(null)
   const [previewB, setPreviewB] = useState<RenderImageDataPreviewResult | null>(null)
@@ -120,8 +122,8 @@ export function PixelCompareWorkspace({
 
   return (
     <ViewerShell className={className} zoom={zoom} panX={panX} panY={panY} onZoomChange={onZoomChange} onPanChange={onPanChange}>
-      {hasPreviews && mode === "split" && previewA && previewB ? <ViewerSplit urlA={previewA.objectUrl} urlB={previewB.objectUrl} labelA={labelA} labelB={labelB} splitPosition={splitPosition} onSplitChange={onSplitChange ?? (() => undefined)} zoom={zoom} panX={panX} panY={panY} /> : null}
-      {hasPreviews && mode === "side_by_side" && previewA && previewB ? <ViewerSideBySide urlA={previewA.objectUrl} urlB={previewB.objectUrl} labelA={labelA} labelB={labelB} zoom={zoom} panX={panX} panY={panY} /> : null}
+      {hasPreviews && mode === "split" && previewA && previewB ? <ViewerSplit urlA={previewA.objectUrl} urlB={previewB.objectUrl} labelA={labelA} labelB={labelB} splitPosition={splitPosition} onSplitChange={onSplitChange ?? (() => undefined)} zoom={zoom} panX={panX} panY={panY} bgColorB={bgColorB} /> : null}
+      {hasPreviews && mode === "side_by_side" && previewA && previewB ? <ViewerSideBySide urlA={previewA.objectUrl} urlB={previewB.objectUrl} labelA={labelA} labelB={labelB} zoom={zoom} panX={panX} panY={panY} bgColorB={bgColorB} /> : null}
       {hasPreviews && mode === "overlay" && previewA && previewB ? <ViewerOverlay urlA={previewA.objectUrl} urlB={previewB.objectUrl} opacity={overlayOpacity} zoom={zoom} panX={panX} panY={panY} /> : null}
       {!hasPreviews && !isBusy ? <div className="absolute inset-0 z-10 flex items-center justify-center px-6 text-center">{emptyFallback ?? <MutedText>Result preview is unavailable for this output type. You can still download the processed file.</MutedText>}</div> : null}
       {fallbackUsed && hasPreviews && (

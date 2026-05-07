@@ -226,6 +226,7 @@ export function WorkspaceConfigSidebarPanel({
     [orderedIds, itemMap]
   )
 
+
   const splitIndex = useMemo(() => {
     if (!effectiveTwoColumn) {
       return orderedItems.length

@@ -1,13 +1,33 @@
 import React, { useEffect } from "react"
-import { WorkspaceConfigSidebarPanel, type WorkspaceConfigSidebarItem, BodyText, MutedText } from "@imify/ui"
+import {
+  WorkspaceConfigSidebarPanel,
+  type WorkspaceConfigSidebarItem,
+  BodyText,
+  MutedText,
+  CheckboxCard,
+  AccordionCard,
+  SliderInput,
+  SelectInput,
+  RadioCard,
+  ColorPickerPopover
+} from "@imify/ui"
 import { Brain, Sliders, Image, Cpu, Settings2 } from "lucide-react"
-import { useBackgroundRemoverStore } from "@imify/stores"
-import { CheckboxCard, AccordionCard, SliderInput, SelectInput, RadioCard, ColorPickerPopover } from "@imify/ui"
 import { BACKGROUND_REMOVAL_MODELS } from "./models"
+import { TargetFormatQualityCard } from "../processor/target-format-quality-card"
+import { FormatAdvancedSettingsCard } from "../processor/format-advanced-settings-card"
+import { useBackgroundRemoverStore } from "@imify/stores"
 
 export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings"
 
-export function BackgroundRemoverSidebar() {
+interface BackgroundRemoverSidebarProps {
+  enableWideSidebarGrid?: boolean
+  autoWideSidebarGridMinWidthPx?: number | null
+}
+
+export function BackgroundRemoverSidebar({
+  enableWideSidebarGrid,
+  autoWideSidebarGridMinWidthPx
+}: BackgroundRemoverSidebarProps) {
   const {
     modelId,
     setModelId,
@@ -20,7 +40,13 @@ export function BackgroundRemoverSidebar() {
     backgroundColor,
     setBackgroundColor,
     unloadModelAfterProcess,
-    setUnloadModelAfterProcess
+    setUnloadModelAfterProcess,
+    targetFormat,
+    setTargetFormat,
+    quality,
+    setQuality,
+    codecOptions,
+    setCodecOptions
   } = useBackgroundRemoverStore()
 
   const selectedModel = BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
@@ -52,7 +78,7 @@ export function BackgroundRemoverSidebar() {
           colorTheme="pink"
           childrenClassName="p-3 space-y-3"
         >
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             {/* AI Model */}
             <SelectInput
               label="AI Model"
@@ -110,6 +136,35 @@ export function BackgroundRemoverSidebar() {
       )
     },
     {
+      id: "export-format-settings",
+      label: "",
+      content: (
+        <TargetFormatQualityCard
+          targetFormat={targetFormat}
+          quality={quality}
+          formatConfig={codecOptions}
+          formatOptions={[
+            { value: "png", label: "PNG (.png)" },
+            { value: "webp", label: "WebP (.webp)" },
+            { value: "avif", label: "AVIF (.avif)" },
+            { value: "jxl", label: "JXL (.jxl)" }
+          ]}
+          supportsQuality={targetFormat !== "png"}
+          supportsTinyMode={targetFormat === "png"}
+          onTargetFormatChange={(v) => setTargetFormat(v as any)}
+          onQualityChange={setQuality}
+          onPngTinyModeChange={(v) => setCodecOptions({ png: { tinyMode: v } })}
+          onPngDitheringLevelChange={(v) => setCodecOptions({ png: { ditheringLevel: v, dithering: v > 0 } })}
+          onWebpLosslessChange={(v) => setCodecOptions({ webp: { lossless: v } })}
+          onWebpNearLosslessChange={(v) => setCodecOptions({ webp: { nearLossless: v } })}
+          onWebpEffortChange={(v) => setCodecOptions({ webp: { effort: v } })}
+          onAvifSpeedChange={(v) => setCodecOptions({ avif: { speed: v } })}
+          onJxlEffortChange={(v) => setCodecOptions({ jxl: { effort: v } })}
+          onJxlLosslessChange={(v) => setCodecOptions({ jxl: { lossless: v } })}
+        />
+      )
+    },
+    {
       id: "output-settings",
       label: "",
       content: (
@@ -146,7 +201,7 @@ export function BackgroundRemoverSidebar() {
                 selectedValue={outputFormat}
                 onChange={(v) => setOutputFormat(v as any)}
                 colorTheme="pink"
-                icon={<div className="w-4 h-4 rounded-sm border border-slate-200 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAACtJREFUGFdjZEADJgY0QCSTmZkZpAAsAKYAFUAWQBVAFUAWQBVAFUAWQBUAFUAXQBUNAwAF+L7zAAAAAElFTkSuQmCC')] bg-repeat" />}
+                icon={<div className="w-4 h-4 rounded-sm border border-slate-200 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAACtJREFUGFdjZEADJgY0QCSTmZkZpAAsAKYAFUAWQBVAFUAWQBVAFUAWQBVAFUAWQBVAFUAWQBUAFUAXQBUNAwAF+L7zAAAAAElFTkSuQmCC')] bg-repeat" />}
               />
 
               <RadioCard
@@ -171,8 +226,58 @@ export function BackgroundRemoverSidebar() {
           </div>
         </AccordionCard>
       )
+    },
+    {
+      id: "format-advanced-settings",
+      label: "",
+      content: (
+        <FormatAdvancedSettingsCard
+          targetFormat={targetFormat}
+          png={{
+            cleanTransparentPixels: !!codecOptions.png?.cleanTransparentPixels,
+            autoGrayscale: !!codecOptions.png?.autoGrayscale,
+            oxipngCompression: !!codecOptions.png?.oxipngCompression,
+            progressiveInterlaced: !!codecOptions.png?.progressiveInterlaced,
+            onCleanTransparentPixelsChange: (v) => setCodecOptions({ png: { cleanTransparentPixels: v } }),
+            onAutoGrayscaleChange: (v) => setCodecOptions({ png: { autoGrayscale: v } }),
+            onOxiPngCompressionChange: (v) => setCodecOptions({ png: { oxipngCompression: v } }),
+            onProgressiveInterlacedChange: (v) => setCodecOptions({ png: { progressiveInterlaced: v } })
+          }}
+          webp={{
+            sharpYuv: !!codecOptions.webp?.sharpYuv,
+            preserveExactAlpha: !!codecOptions.webp?.preserveExactAlpha,
+            onSharpYuvChange: (v) => setCodecOptions({ webp: { sharpYuv: v } }),
+            onPreserveExactAlphaChange: (v) => setCodecOptions({ webp: { preserveExactAlpha: v } })
+          }}
+          avif={{
+            qualityAlpha: codecOptions.avif?.qualityAlpha,
+            lossless: !!codecOptions.avif?.lossless,
+            subsample: (codecOptions.avif?.subsample ?? 1) as 1 | 2 | 3,
+            tune: (codecOptions.avif?.tune ?? "auto") as "auto" | "ssim" | "psnr",
+            highAlphaQuality: !!codecOptions.avif?.highAlphaQuality,
+            onQualityAlphaChange: (v) => setCodecOptions({ avif: { qualityAlpha: v } }),
+            onLosslessChange: (v) => setCodecOptions({ avif: { lossless: v } }),
+            onSubsampleChange: (v) => setCodecOptions({ avif: { subsample: v } }),
+            onTuneChange: (v) => setCodecOptions({ avif: { tune: v } }),
+            onHighAlphaQualityChange: (v) => setCodecOptions({ avif: { highAlphaQuality: v } })
+          }}
+          jxl={{
+            progressive: !!codecOptions.jxl?.progressive,
+            epf: (codecOptions.jxl?.epf ?? 1) as 0 | 1 | 2 | 3,
+            onProgressiveChange: (v) => setCodecOptions({ jxl: { progressive: v } }),
+            onEpfChange: (v) => setCodecOptions({ jxl: { epf: v } })
+          }}
+        />
+      )
     }
   ]
 
-  return <WorkspaceConfigSidebarPanel title="CONFIGURATION" items={sidebarItems} />
+  return (
+    <WorkspaceConfigSidebarPanel
+      title="CONFIGURATION"
+      items={sidebarItems}
+      twoColumn={enableWideSidebarGrid}
+      autoTwoColumnMinWidthPx={autoWideSidebarGridMinWidthPx}
+    />
+  )
 }

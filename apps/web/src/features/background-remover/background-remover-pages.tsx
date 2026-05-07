@@ -12,15 +12,17 @@ import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-s
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useRouter } from "next/navigation"
+import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
 
 export function BackgroundRemoverPage() {
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
+  const enableWideSidebarGrid = useWideSidebarGridEnabled()
 
   // Register sidebar shell
-  useWorkspaceSidebar(<BackgroundRemoverSidebarShell />)
+  useWorkspaceSidebar(<BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
 
   React.useEffect(() => {
     setHeaderSection("Background Remover")
