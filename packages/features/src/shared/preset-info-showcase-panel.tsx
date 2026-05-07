@@ -48,20 +48,27 @@ export function PresetInfoShowcasePanel({
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
   const [previewIndex, setPreviewIndex] = useState(0)
   const [progressRemaining, setProgressRemaining] = useState(1)
-  const fallbackPreviewMediaSources: PresetInfoPreviewMediaItem[] =
-    Array.isArray(previewSources) && previewSources.length > 0
-      ? previewSources.map((src) => ({ src, type: "image", alt: previewAlt }))
-      : [{ src: previewSrc, type: "image", alt: previewAlt }]
-  const effectivePreviewMediaSources =
-    Array.isArray(previewMediaSources) && previewMediaSources.length > 0
+  const effectivePreviewMediaSources = React.useMemo(() => {
+    const fallback: PresetInfoPreviewMediaItem[] =
+      Array.isArray(previewSources) && previewSources.length > 0
+        ? previewSources.map((src) => ({ src, type: "image", alt: previewAlt }))
+        : [{ src: previewSrc, type: "image", alt: previewAlt }]
+    
+    return Array.isArray(previewMediaSources) && previewMediaSources.length > 0
       ? previewMediaSources
-      : fallbackPreviewMediaSources
+      : fallback
+  }, [previewSources, previewSrc, previewAlt, previewMediaSources])
+
   const [renderedPreviewMedia, setRenderedPreviewMedia] = useState<PresetInfoPreviewMediaItem>(
     effectivePreviewMediaSources[0] ?? { src: previewSrc, type: "image", alt: previewAlt }
   )
   const [isPreviewFading, setIsPreviewFading] = useState(false)
-  const activePreviewMedia =
-    effectivePreviewMediaSources[previewIndex % effectivePreviewMediaSources.length] ?? renderedPreviewMedia
+
+  const activePreviewMedia = React.useMemo(() => 
+    effectivePreviewMediaSources[previewIndex % effectivePreviewMediaSources.length] ?? renderedPreviewMedia,
+    [effectivePreviewMediaSources, previewIndex, renderedPreviewMedia]
+  )
+
   const hasMultiplePreviews = effectivePreviewMediaSources.length > 1
 
   useEffect(() => {
@@ -89,7 +96,7 @@ export function PresetInfoShowcasePanel({
     return () => {
       window.clearTimeout(timeout)
     }
-  }, [activePreviewMedia, renderedPreviewMedia])
+  }, [activePreviewMedia.src, activePreviewMedia.type, renderedPreviewMedia.src, renderedPreviewMedia.type, activePreviewMedia])
 
   useEffect(() => {
     if (!hasMultiplePreviews) {
@@ -124,6 +131,25 @@ export function PresetInfoShowcasePanel({
       window.cancelAnimationFrame(rafId)
     }
   }, [activePreviewMedia.src, activePreviewMedia.type, effectivePreviewMediaSources.length, hasMultiplePreviews])
+
+  const renderFormattedText = (text: string) => {
+    // This is a simple parser for **bold**, *italic*, and _underline_
+    // It works by finding all matches and splitting the text accordingly
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|_.*?_)/g)
+    
+    return parts.map((part, index) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={index} className="font-bold">{part.slice(2, -2)}</strong>
+      }
+      if (part.startsWith("*") && part.endsWith("*")) {
+        return <em key={index} className="italic">{part.slice(1, -1)}</em>
+      }
+      if (part.startsWith("_") && part.endsWith("_")) {
+        return <u key={index} className="underline decoration-slate-400/50 underline-offset-2">{part.slice(1, -1)}</u>
+      }
+      return part
+    })
+  }
 
   return (
     <div className={`space-y-5 p-${padding}`}>
@@ -274,7 +300,7 @@ export function PresetInfoShowcasePanel({
                   />
                 </button>
                 {isOpen ? (
-                  <div className="pb-2 pr-5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">{item.answer}</div>
+                  <div className="pb-2 pr-5 text-xs leading-relaxed text-slate-600 dark:text-slate-400 whitespace-pre-line">{renderFormattedText(item.answer)}</div>
                 ) : null}
               </div>
             )

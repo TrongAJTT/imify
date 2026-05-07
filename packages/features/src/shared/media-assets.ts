@@ -58,6 +58,10 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   inspector: {
     previewWebp: "/assets/features/preview-image_inspector.webp"
   },
+  remover: {
+    preview1Webp: "/assets/features/preview-background_remover-1.webp",
+    preview2Webp: "/assets/features/preview-background_remover-2.webp"
+  },
   downloadHints: {
     chromeWebp: "/assets/images/img-download-not-ask-chrome.webp",
     edgeWebp: "/assets/images/img-download-not-ask-edge.webp",
@@ -115,6 +119,10 @@ export const FEATURE_MEDIA_ASSETS = {
   },
   inspector: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp
+  },
+  remover: {
+    preview1Webp: FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp,
+    preview2Webp: FEATURE_MEDIA_ASSET_PATHS.remover.preview2Webp
   },
   downloadHints: {
     chromeWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.chromeWebp,

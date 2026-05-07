@@ -63,20 +63,46 @@ export function BackgroundRemoverWorkspace({
     }
   }, [sourceFileUrl])
 
-  // Check if current model is cached
+  // Check if current model + variant is cached
   useEffect(() => {
     const checkModel = async () => {
       if (typeof window === 'undefined') return
-      setHasAgreedToDownload(false) // Reset when model changes
+      
+      const selectedModel = BACKGROUND_REMOVAL_MODELS.find(m => m.id === modelId)
+      if (!selectedModel) return
+      
+      const variant = selectedModel.variants.find(v => v.id === variantId) ?? selectedModel.variants[0]
+      
       try {
         const cache = await caches.open("transformers-cache")
         const keys = await cache.keys()
-        const isCached = keys.some(request => request.url.includes(modelId))
-        if (isCached) setHasAgreedToDownload(true)
-      } catch (e) { }
+        
+        const isCached = keys.some(request => {
+          const url = request.url.toLowerCase()
+          
+          // Must match the model ID and be an ONNX weight file
+          const modelMatch = url.includes(modelId.toLowerCase())
+          const isWeightFile = url.endsWith('.onnx') || url.includes('.onnx?')
+          
+          if (!modelMatch || !isWeightFile) return false
+          
+          if (variant.quantized) {
+            return url.includes('quantized')
+          } else if (variant.dtype === 'fp16') {
+            return url.includes('fp16')
+          } else {
+            // Full precision: should NOT contain quantized or fp16 in the filename
+            return !url.includes('quantized') && !url.includes('fp16')
+          }
+        })
+        
+        setHasAgreedToDownload(isCached)
+      } catch (e) { 
+        setHasAgreedToDownload(false)
+      }
     }
     checkModel()
-  }, [modelId])
+  }, [modelId, variantId])
 
   const selectedModel = BACKGROUND_REMOVAL_MODELS.find(m => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
 
@@ -240,7 +266,6 @@ export function BackgroundRemoverWorkspace({
         onConfirm={handleConfirmDownload}
         model={selectedModel}
         variantId={variantId}
-        onVariantChange={setVariantId}
       />
 
       <ToastContainer toasts={[...toasts, ...conversionToasts]} onRemove={hide} />

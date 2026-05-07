@@ -10,7 +10,6 @@ interface ModelDownloadDialogProps {
   onConfirm: () => void
   model: AIModelMetadata
   variantId: string
-  onVariantChange: (id: string) => void
   confirmLabel?: string
 }
 
@@ -20,7 +19,6 @@ export function ModelDownloadDialog({
   onConfirm,
   model,
   variantId,
-  onVariantChange,
   confirmLabel = "Download & Start"
 }: ModelDownloadDialogProps) {
   const [agreed, setAgreed] = useState(false)
@@ -33,7 +31,8 @@ export function ModelDownloadDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-md p-0 overflow-hidden rounded-xl"
+      className="max-w-md"
+      contentClassName="w-full p-0 overflow-hidden rounded-xl"
     >
       <div className="p-6 space-y-6">
         <div className="flex flex-col items-center text-center space-y-3">
@@ -43,49 +42,41 @@ export function ModelDownloadDialog({
           <div className="space-y-1">
             <Subheading className="text-xl font-bold">Download AI Model</Subheading>
             <MutedText className="text-sm">
-              {model.name} for Background Remover
+              {model.name} — {selectedVariant.label}
             </MutedText>
           </div>
         </div>
 
-        {/* Variant Selection */}
-        {model.variants.length > 1 && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 px-1">
-              <Info size={12} className="text-slate-400" />
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Select Version</span>
+        {/* Variant Info (Read-only) */}
+        <div className="space-y-3">
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 space-y-3">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-500 font-medium tracking-tight">Model Source</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{model.source}</span>
             </div>
-            <SegmentedControl
-              value={variantId}
-              options={model.variants.map(v => ({ value: v.id, label: v.label }))}
-              onChange={onVariantChange}
-            />
-            {selectedVariant.description && (
-              <p className="text-[10px] text-slate-500 italic px-1">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-500 font-medium tracking-tight">Download Size</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">~{formatFileSize(selectedVariant.sizeBytes)}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-500 font-medium tracking-tight">License</span>
+              <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-200">
+                {model.license}
+                <a href={model.licenseUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">
+                  <ExternalLink size={10} />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {selectedVariant.description && (
+            <div className="flex items-start gap-2 px-1">
+              <Info size={12} className="text-pink-400 mt-0.5 shrink-0" />
+              <p className="text-[11px] text-slate-500 italic leading-relaxed">
                 {selectedVariant.description}
               </p>
-            )}
-          </div>
-        )}
-
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 space-y-3">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-500">Model Source</span>
-            <span className="font-semibold text-slate-700 dark:text-slate-200">{model.source}</span>
-          </div>
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-500">Download Size</span>
-            <span className="font-semibold text-slate-700 dark:text-slate-200">~{formatFileSize(selectedVariant.sizeBytes)}</span>
-          </div>
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-500">License</span>
-            <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-200">
-              {model.license}
-              <a href={model.licenseUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">
-                <ExternalLink size={10} />
-              </a>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -96,7 +87,7 @@ export function ModelDownloadDialog({
                 Privacy & Data
               </BodyText>
               <MutedText className="text-[10px] leading-relaxed !text-amber-700/80 dark:!text-amber-400/80">
-                This model runs locally in your browser. Your images never leave your device. Imify provides the interface to run these models but is not the distributor. By downloading, you agree to the original author's terms of use and license.
+                This model runs locally in your browser. Your images never leave your device. Imify provides the interface to run these models but is not the distributor.
               </MutedText>
             </div>
           </div>

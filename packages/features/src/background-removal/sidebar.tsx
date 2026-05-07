@@ -42,36 +42,84 @@ export function BackgroundRemoverSidebar() {
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
-      id: "remover-settings-group",
+      id: "ai-engine-settings",
       label: "",
       content: (
         <AccordionCard
-          label="Remover Settings"
-          icon={<Settings2 size={16} />}
+          label="AI Engine"
+          icon={<Brain size={16} />}
           defaultOpen={true}
           colorTheme="pink"
           childrenClassName="p-3 space-y-3"
         >
-          {/* AI Model */}
-          <SelectInput
-            label="AI Model"
-            value={selectedModel.id}
-            options={BACKGROUND_REMOVAL_MODELS.map(m => ({ value: m.id, label: m.name }))}
-            onChange={setModelId}
-            tooltipContent={selectedModel.description}
+          <div className="grid grid-cols-2 gap-2">
+            {/* AI Model */}
+            <SelectInput
+              label="AI Model"
+              value={selectedModel.id}
+              options={BACKGROUND_REMOVAL_MODELS.map(m => ({ value: m.id, label: m.name }))}
+              onChange={setModelId}
+              tooltipContent="Choose the AI architecture for background removal. Each model has unique characteristics in quality and speed."
+            />
+
+            {/* Model Variant */}
+            {selectedModel.variants.length > 0 && (
+              <SelectInput
+                label="Variant"
+                value={selectedVariant.id}
+                options={selectedModel.variants.map(v => ({ value: v.id, label: v.label }))}
+                onChange={setVariantId}
+                tooltipContent="Select model precision. Quantized variants are faster and lighter, while FP16 provides maximum accuracy."
+              />
+            )}
+          </div>
+
+          {/* Resource Efficiency */}
+          <CheckboxCard
+            checked={unloadModelAfterProcess}
+            onChange={setUnloadModelAfterProcess}
+            title="Auto-unload Model"
+            subtitle="Free up RAM immediately after processing."
+            tooltipContent="Automatically removes the AI model from browser memory after each process. Highly recommended for systems with low RAM."
+            icon={<Cpu size={16} />}
           />
 
-          {/* Model Variant */}
-          {selectedModel.variants.length > 0 && (
-            <SelectInput
-              label="Variant"
-              value={selectedVariant.id}
-              options={selectedModel.variants.map(v => ({ value: v.id, label: v.label }))}
-              onChange={setVariantId}
-              tooltipContent={selectedVariant.description}
-            />
-          )}
+          {/* Selection Overview Card */}
+          <div className="relative p-3.5 rounded-lg bg-slate-100/50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50 border-2 border-slate-200/60 dark:border-slate-700/50 shadow-sm space-y-3 transition-all">
+            <div className="flex items-center gap-2">
+              <Settings2 className="text-pink-500" size={14} />
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Current Selection</span>
+            </div>
 
+            <div className="space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0 shadow-[0_0_8px_rgba(244,114,182,0.4)]" />
+                <MutedText className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+                  <strong className="text-slate-900 dark:text-slate-200 font-bold">Model:</strong> {selectedModel.description}
+                </MutedText>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0 shadow-[0_0_8px_rgba(244,114,182,0.4)]" />
+                <MutedText className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+                  <strong className="text-slate-900 dark:text-slate-200 font-bold">Variant:</strong> {selectedVariant.description}
+                </MutedText>
+              </div>
+            </div>
+          </div>
+        </AccordionCard>
+      )
+    },
+    {
+      id: "output-settings",
+      label: "",
+      content: (
+        <AccordionCard
+          label="Processing & Output"
+          icon={<Sliders size={16} />}
+          defaultOpen={true}
+          colorTheme="pink"
+          childrenClassName="p-3 space-y-4"
+        >
           {/* Edge Refinement */}
           <SliderInput
             label="Edge Refinement"
@@ -121,22 +169,6 @@ export function BackgroundRemoverSidebar() {
               />
             </div>
           </div>
-
-          {/* Resource Efficiency */}
-          <CheckboxCard
-            checked={unloadModelAfterProcess}
-            onChange={setUnloadModelAfterProcess}
-            title="Auto-unload AI Model"
-            subtitle="Free up RAM immediately after processing. Recommended for low-memory devices."
-            icon={<Cpu size={16} />}
-          />
-          {/* <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800/50">
-            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-              <Cpu size={14} />
-              <BodyText className="text-xs font-semibold">Resource Efficiency</BodyText>
-            </div>
-
-          </div> */}
         </AccordionCard>
       )
     }

@@ -37,7 +37,7 @@ export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
       {
         id: 'fp16',
         label: 'FP16 (High Quality)',
-        description: 'Best balance of quality and speed. Recommended for most users.',
+        description: 'Original high precision. Best balance of quality and speed.',
         sizeBytes: 115 * 1024 * 1024,
         dtype: 'fp16'
       },
@@ -64,15 +64,15 @@ export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
     variants: [
       {
         id: 'fp16',
-        label: 'FP16 (Standard)',
-        description: 'Original high-precision weights. Balanced speed.',
+        label: 'FP16 (Recommended)',
+        description: 'Original precision. Typically the fastest choice on most machines.',
         sizeBytes: 88 * 1024 * 1024,
         dtype: 'fp16'
       },
       {
         id: 'quantized',
-        label: 'Quantized (Fast)',
-        description: '4-bit integer quantization. Smaller size, faster load, slightly lower quality.',
+        label: 'Quantized (Memory Saving)',
+        description: '4-bit integer weights. Uses less RAM, but can be slightly slower.',
         sizeBytes: 44 * 1024 * 1024,
         quantized: true
       }
@@ -93,7 +93,7 @@ export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
       {
         id: 'quantized',
         label: 'Quantized (Web Optimized)',
-        description: 'Ultra-lightweight version for mobile and slow connections.',
+        description: 'Ultra-lightweight version for mobile or extremely limited RAM.',
         sizeBytes: 6.6 * 1024 * 1024,
         quantized: true
       },

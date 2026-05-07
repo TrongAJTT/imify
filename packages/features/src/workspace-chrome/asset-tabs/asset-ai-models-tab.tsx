@@ -1,11 +1,10 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Trash2, HardDrive, AlertCircle, Image, Cpu, Sparkles, Download } from "lucide-react"
+import { Trash2, Image, Cpu, Download } from "lucide-react"
 import { Button, BodyText, MutedText } from "@imify/ui"
 import { formatFileSize } from "@imify/core"
 import { BACKGROUND_REMOVAL_MODELS, type AIModelMetadata } from "../../background-removal/models"
-import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "../../shared/media-assets"
 import { ModelDownloadDialog } from "../../background-removal/model-download-dialog"
 import { useToast } from "@imify/core/hooks/use-toast"
 import { ToastContainer } from "@imify/ui/components/toast-container"
@@ -289,7 +288,6 @@ export function AssetAIModelsTab() {
             onConfirm={handleDownloadConfirm}
             model={modelToDownload}
             variantId={selectedVariantId}
-            onVariantChange={setSelectedVariantId}
             confirmLabel="Download"
           />
         )}
