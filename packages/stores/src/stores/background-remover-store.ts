@@ -2,9 +2,11 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { BACKGROUND_REMOVAL_MODELS } from "@imify/features/background-removal/models"
 import type { FormatCodecOptions } from "@imify/core/types"
+import type { SavedSetupPreset } from "./batch-store"
+import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
 
 export type BackgroundRemoverOutputFormat = "transparent" | "color"
-export type BackgroundRemoverExportFormat = "png" | "webp" | "avif" | "jxl"
+export type BackgroundRemoverExportFormat = "png" | "webp" | "avif" | "jxl" | "mozjpeg"
 
 interface BackgroundRemoverState {
   modelId: string
@@ -19,19 +21,19 @@ interface BackgroundRemoverState {
   targetFormat: BackgroundRemoverExportFormat
   quality: number
   codecOptions: FormatCodecOptions
+  activePresetId: string | null
   
   setModelId: (id: string) => void
   setVariantId: (id: string) => void
   setEdgeSmoothing: (value: number) => void
   setOutputFormat: (format: BackgroundRemoverOutputFormat) => void
   setBackgroundColor: (color: string) => void
-  setHasImage: (hasImage: boolean) => void
-  setUnloadModelAfterProcess: (value: boolean) => void
+  setHasImage: (has: boolean) => void
+  setUnloadModelAfterProcess: (unload: boolean) => void
 
-  // Export setters
-  setTargetFormat: (format: BackgroundRemoverExportFormat) => void
-  setQuality: (quality: number) => void
-  setCodecOptions: (patch: Partial<FormatCodecOptions>) => void
+  applyPreset: (preset: SavedSetupPreset) => void
+  resetToDefault: () => void
+  clearActivePreset: () => void
 }
 
 const DEFAULT_CODEC_OPTIONS: FormatCodecOptions = {
@@ -54,11 +56,10 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>()(
       backgroundColor: "#ffffff",
       hasImage: false,
       unloadModelAfterProcess: false,
-
-      // Export settings defaults
-      targetFormat: "png",
-      quality: 92,
-      codecOptions: DEFAULT_CODEC_OPTIONS,
+      targetFormat: VIRTUAL_DEFAULT_PNG_PRESET.config.targetFormat as BackgroundRemoverExportFormat,
+      quality: VIRTUAL_DEFAULT_PNG_PRESET.config.quality,
+      codecOptions: VIRTUAL_DEFAULT_PNG_PRESET.config.formatOptions as FormatCodecOptions,
+      activePresetId: null,
 
       setModelId: (modelId) => {
         const model = BACKGROUND_REMOVAL_MODELS.find(m => m.id === modelId)
@@ -74,22 +75,40 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>()(
       setHasImage: (hasImage) => set({ hasImage }),
       setUnloadModelAfterProcess: (unloadModelAfterProcess) => set({ unloadModelAfterProcess }),
 
-      setTargetFormat: (targetFormat) => set({ targetFormat }),
-      setQuality: (quality) => set({ quality }),
-      setCodecOptions: (patch) => set((state) => ({
-        codecOptions: {
-          ...state.codecOptions,
-          ...patch,
-          // Deep merge for specific codecs if needed, but simple spread is often enough for top-level keys
-          png: patch.png ? { ...state.codecOptions.png, ...patch.png } : state.codecOptions.png,
-          webp: patch.webp ? { ...state.codecOptions.webp, ...patch.webp } : state.codecOptions.webp,
-          avif: patch.avif ? { ...state.codecOptions.avif, ...patch.avif } : state.codecOptions.avif,
-          jxl: patch.jxl ? { ...state.codecOptions.jxl, ...patch.jxl } : state.codecOptions.jxl,
+      applyPreset: (preset) => {
+        const { targetFormat, quality, formatOptions } = preset.config
+        const supportedFormats: BackgroundRemoverExportFormat[] = ["png", "webp", "avif", "jxl", "mozjpeg"]
+        
+        let mappedFormat: BackgroundRemoverExportFormat = "png"
+        if (supportedFormats.includes(targetFormat as any)) {
+          mappedFormat = targetFormat as BackgroundRemoverExportFormat
+        } else if (targetFormat === "jpg") {
+          mappedFormat = "mozjpeg"
         }
-      })),
+
+        set({
+          activePresetId: preset.id === VIRTUAL_DEFAULT_PNG_PRESET.id ? null : preset.id,
+          targetFormat: mappedFormat,
+          quality,
+          codecOptions: formatOptions as FormatCodecOptions
+        })
+      },
+      resetToDefault: () => {
+        set({
+          activePresetId: null,
+          targetFormat: VIRTUAL_DEFAULT_PNG_PRESET.config.targetFormat as BackgroundRemoverExportFormat,
+          quality: VIRTUAL_DEFAULT_PNG_PRESET.config.quality,
+          codecOptions: VIRTUAL_DEFAULT_PNG_PRESET.config.formatOptions as FormatCodecOptions
+        })
+      },
+      clearActivePreset: () => set({ activePresetId: null }),
     }),
     {
       name: "imify-background-remover-settings",
+      partialize: (state) => {
+        const { hasImage, activePresetId, ...rest } = state
+        return rest
+      }
     }
   )
 )

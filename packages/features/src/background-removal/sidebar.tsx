@@ -9,13 +9,17 @@ import {
   SliderInput,
   SelectInput,
   RadioCard,
-  ColorPickerPopover
+  ColorPickerPopover,
+  SidebarPanel
 } from "@imify/ui"
 import { Brain, Sliders, Image, Cpu, Settings2 } from "lucide-react"
 import { BACKGROUND_REMOVAL_MODELS } from "./models"
-import { TargetFormatQualityCard } from "../processor/target-format-quality-card"
-import { FormatAdvancedSettingsCard } from "../processor/format-advanced-settings-card"
+import { PresetSelector } from "../processor/preset-selector"
+import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils"
 import { useBackgroundRemoverStore } from "@imify/stores"
+
+import { BACKGROUND_REMOVER_PANEL_CONTENT } from "./remover-preset-info-panel"
+import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel"
 
 export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings"
 
@@ -41,12 +45,10 @@ export function BackgroundRemoverSidebar({
     setBackgroundColor,
     unloadModelAfterProcess,
     setUnloadModelAfterProcess,
-    targetFormat,
-    setTargetFormat,
-    quality,
-    setQuality,
-    codecOptions,
-    setCodecOptions
+    activePresetId,
+    applyPreset,
+    resetToDefault,
+    hasImage
   } = useBackgroundRemoverStore()
 
   const selectedModel = BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
@@ -54,17 +56,28 @@ export function BackgroundRemoverSidebar({
 
   // Initialize smart default for unloadModelAfterProcess based on hardware
   useEffect(() => {
-    // Check if we have a persisted value or if it's the first time
     const storageKey = "imify-background-remover-settings"
     const saved = localStorage.getItem(storageKey)
     if (!saved) {
-      // Very simple detection: if navigator.deviceMemory is available and <= 4
       const ram = (navigator as any).deviceMemory
       if (ram && ram <= 4) {
         setUnloadModelAfterProcess(true)
       }
     }
   }, [setUnloadModelAfterProcess])
+
+  // If no image is imported, show the tool's showcase information
+  if (!hasImage) {
+    return (
+      <SidebarPanel
+        title="ABOUT THIS TOOL"
+      >
+        <div className="px-1 py-1">
+          <PresetInfoShowcasePanel {...BACKGROUND_REMOVER_PANEL_CONTENT} padding={0} />
+        </div>
+      </SidebarPanel>
+    )
+  }
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
@@ -79,55 +92,43 @@ export function BackgroundRemoverSidebar({
           childrenClassName="p-3 space-y-3"
         >
           <div className="grid grid-cols-1 gap-2">
-            {/* AI Model */}
             <SelectInput
               label="AI Model"
               value={selectedModel.id}
               options={BACKGROUND_REMOVAL_MODELS.map(m => ({ value: m.id, label: m.name }))}
               onChange={setModelId}
-              tooltipContent="Choose the AI architecture for background removal. Each model has unique characteristics in quality and speed."
+              tooltipContent="Choose the AI architecture for background removal."
             />
 
-            {/* Model Variant */}
             {selectedModel.variants.length > 0 && (
               <SelectInput
                 label="Variant"
                 value={selectedVariant.id}
                 options={selectedModel.variants.map(v => ({ value: v.id, label: v.label }))}
                 onChange={setVariantId}
-                tooltipContent="Select model precision. Quantized variants are faster and lighter, while FP16 provides maximum accuracy."
+                tooltipContent="Select model precision."
               />
             )}
           </div>
 
-          {/* Resource Efficiency */}
           <CheckboxCard
             checked={unloadModelAfterProcess}
             onChange={setUnloadModelAfterProcess}
             title="Auto-unload Model"
             subtitle="Free up RAM immediately after processing."
-            tooltipContent="Automatically removes the AI model from browser memory after each process. Highly recommended for systems with low RAM."
             icon={<Cpu size={16} />}
           />
 
-          {/* Selection Overview Card */}
           <div className="relative p-3.5 rounded-lg bg-slate-100/50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50 border-2 border-slate-200/60 dark:border-slate-700/50 shadow-sm space-y-3 transition-all">
             <div className="flex items-center gap-2">
               <Settings2 className="text-pink-500" size={14} />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Current Selection</span>
             </div>
-
             <div className="space-y-2.5">
               <div className="flex items-start gap-2.5">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0 shadow-[0_0_8px_rgba(244,114,182,0.4)]" />
-                <MutedText className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
-                  <strong className="text-slate-900 dark:text-slate-200 font-bold">Model:</strong> {selectedModel.description}
-                </MutedText>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0 shadow-[0_0_8px_rgba(244,114,182,0.4)]" />
-                <MutedText className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
-                  <strong className="text-slate-900 dark:text-slate-200 font-bold">Variant:</strong> {selectedVariant.description}
+                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0" />
+                <MutedText className="text-[11px] leading-relaxed">
+                  <strong>Model:</strong> {selectedModel.description}
                 </MutedText>
               </div>
             </div>
@@ -136,31 +137,18 @@ export function BackgroundRemoverSidebar({
       )
     },
     {
-      id: "export-format-settings",
+      id: "output-preset",
       label: "",
       content: (
-        <TargetFormatQualityCard
-          targetFormat={targetFormat}
-          quality={quality}
-          formatConfig={codecOptions}
-          formatOptions={[
-            { value: "png", label: "PNG (.png)" },
-            { value: "webp", label: "WebP (.webp)" },
-            { value: "avif", label: "AVIF (.avif)" },
-            { value: "jxl", label: "JXL (.jxl)" }
-          ]}
-          supportsQuality={targetFormat !== "png"}
-          supportsTinyMode={targetFormat === "png"}
-          onTargetFormatChange={(v) => setTargetFormat(v as any)}
-          onQualityChange={setQuality}
-          onPngTinyModeChange={(v) => setCodecOptions({ png: { tinyMode: v } })}
-          onPngDitheringLevelChange={(v) => setCodecOptions({ png: { ditheringLevel: v, dithering: v > 0 } })}
-          onWebpLosslessChange={(v) => setCodecOptions({ webp: { lossless: v } })}
-          onWebpNearLosslessChange={(v) => setCodecOptions({ webp: { nearLossless: v } })}
-          onWebpEffortChange={(v) => setCodecOptions({ webp: { effort: v } })}
-          onAvifSpeedChange={(v) => setCodecOptions({ avif: { speed: v } })}
-          onJxlEffortChange={(v) => setCodecOptions({ jxl: { effort: v } })}
-          onJxlLosslessChange={(v) => setCodecOptions({ jxl: { lossless: v } })}
+        <PresetSelector
+          label="Output Preset"
+          theme="pink"
+          defaultPreset={VIRTUAL_DEFAULT_PNG_PRESET}
+          formatFilter={["png", "webp", "avif", "jxl"]}
+          activePresetId={activePresetId}
+          onSelect={applyPreset}
+          onReset={resetToDefault}
+          tooltipContent="Select an export preset from the Single Processor."
         />
       )
     },
@@ -175,28 +163,24 @@ export function BackgroundRemoverSidebar({
           colorTheme="pink"
           childrenClassName="p-3 space-y-4"
         >
-          {/* Edge Refinement */}
           <SliderInput
             label="Edge Refinement"
             value={edgeSmoothing}
             min={-10}
             max={20}
             step={1}
-            suffix=""
             onChange={setEdgeSmoothing}
           />
 
-          {/* Background Type */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-              <Image size={14} />
-              <BodyText className="text-xs font-semibold">Background Type</BodyText>
+            <div className="flex items-center gap-2">
+              <Image size={14} className="text-pink-500" />
+              <BodyText className="text-xs font-semibold uppercase tracking-wider text-slate-500">Background Type</BodyText>
             </div>
 
             <div className="space-y-2">
               <RadioCard
                 title="Transparent"
-                subtitle="Remove background and keep it clear"
                 value="transparent"
                 selectedValue={outputFormat}
                 onChange={(v) => setOutputFormat(v as any)}
@@ -206,7 +190,6 @@ export function BackgroundRemoverSidebar({
 
               <RadioCard
                 title="Solid Color"
-                subtitle="Fill the background with a specific color"
                 value="color"
                 selectedValue={outputFormat}
                 onChange={(v) => setOutputFormat(v as any)}
@@ -225,49 +208,6 @@ export function BackgroundRemoverSidebar({
             </div>
           </div>
         </AccordionCard>
-      )
-    },
-    {
-      id: "format-advanced-settings",
-      label: "",
-      content: (
-        <FormatAdvancedSettingsCard
-          targetFormat={targetFormat}
-          png={{
-            cleanTransparentPixels: !!codecOptions.png?.cleanTransparentPixels,
-            autoGrayscale: !!codecOptions.png?.autoGrayscale,
-            oxipngCompression: !!codecOptions.png?.oxipngCompression,
-            progressiveInterlaced: !!codecOptions.png?.progressiveInterlaced,
-            onCleanTransparentPixelsChange: (v) => setCodecOptions({ png: { cleanTransparentPixels: v } }),
-            onAutoGrayscaleChange: (v) => setCodecOptions({ png: { autoGrayscale: v } }),
-            onOxiPngCompressionChange: (v) => setCodecOptions({ png: { oxipngCompression: v } }),
-            onProgressiveInterlacedChange: (v) => setCodecOptions({ png: { progressiveInterlaced: v } })
-          }}
-          webp={{
-            sharpYuv: !!codecOptions.webp?.sharpYuv,
-            preserveExactAlpha: !!codecOptions.webp?.preserveExactAlpha,
-            onSharpYuvChange: (v) => setCodecOptions({ webp: { sharpYuv: v } }),
-            onPreserveExactAlphaChange: (v) => setCodecOptions({ webp: { preserveExactAlpha: v } })
-          }}
-          avif={{
-            qualityAlpha: codecOptions.avif?.qualityAlpha,
-            lossless: !!codecOptions.avif?.lossless,
-            subsample: (codecOptions.avif?.subsample ?? 1) as 1 | 2 | 3,
-            tune: (codecOptions.avif?.tune ?? "auto") as "auto" | "ssim" | "psnr",
-            highAlphaQuality: !!codecOptions.avif?.highAlphaQuality,
-            onQualityAlphaChange: (v) => setCodecOptions({ avif: { qualityAlpha: v } }),
-            onLosslessChange: (v) => setCodecOptions({ avif: { lossless: v } }),
-            onSubsampleChange: (v) => setCodecOptions({ avif: { subsample: v } }),
-            onTuneChange: (v) => setCodecOptions({ avif: { tune: v } }),
-            onHighAlphaQualityChange: (v) => setCodecOptions({ avif: { highAlphaQuality: v } })
-          }}
-          jxl={{
-            progressive: !!codecOptions.jxl?.progressive,
-            epf: (codecOptions.jxl?.epf ?? 1) as 0 | 1 | 2 | 3,
-            onProgressiveChange: (v) => setCodecOptions({ jxl: { progressive: v } }),
-            onEpfChange: (v) => setCodecOptions({ jxl: { epf: v } })
-          }}
-        />
       )
     }
   ]

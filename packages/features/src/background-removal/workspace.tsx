@@ -14,7 +14,9 @@ import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace"
 import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar"
 import type { ConversionProgressPayload, FormatConfig } from "@imify/core/types"
 import { convertImage } from "@imify/engine/converter"
-import { downloadWithFilename } from "../processor/processor-utils"
+import { downloadWithFilename, formatBytes } from "../processor/processor-utils"
+import { buildFormatConfigFromPreset, VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils"
+import { useBatchStore } from "@imify/stores/stores/batch-store"
 
 interface BackgroundRemoverWorkspaceProps {
   sourceFile: File
@@ -49,14 +51,20 @@ export function BackgroundRemoverWorkspace({
   const [startTime, setStartTime] = useState<number | null>(null)
   const [timerSeconds, setTimerSeconds] = useState(0)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [resultBlobSize, setResultBlobSize] = useState<number | null>(null)
+  const [isEncodingPreview, setIsEncodingPreview] = useState(false)
 
   const {
     targetFormat,
     quality,
     codecOptions,
     outputFormat,
-    backgroundColor
+    backgroundColor,
+    activePresetId
   } = useBackgroundRemoverStore()
+
+  const { presets } = useBatchStore()
+  const activePreset = presets.find(p => p.id === activePresetId) || VIRTUAL_DEFAULT_PNG_PRESET
 
   const { toasts, show, hide } = useToast()
   const conversionToasts = useConversionToasts([progressPayload])
@@ -78,25 +86,25 @@ export function BackgroundRemoverWorkspace({
   useEffect(() => {
     const checkModel = async () => {
       if (typeof window === 'undefined') return
-      
+
       const selectedModel = BACKGROUND_REMOVAL_MODELS.find(m => m.id === modelId)
       if (!selectedModel) return
-      
+
       const variant = selectedModel.variants.find(v => v.id === variantId) ?? selectedModel.variants[0]
-      
+
       try {
         const cache = await caches.open("transformers-cache")
         const keys = await cache.keys()
-        
+
         const isCached = keys.some(request => {
           const url = request.url.toLowerCase()
-          
+
           // Must match the model ID and be an ONNX weight file
           const modelMatch = url.includes(modelId.toLowerCase())
           const isWeightFile = url.endsWith('.onnx') || url.includes('.onnx?')
-          
+
           if (!modelMatch || !isWeightFile) return false
-          
+
           if (variant.quantized) {
             return url.includes('quantized')
           } else if (variant.dtype === 'fp16') {
@@ -106,9 +114,9 @@ export function BackgroundRemoverWorkspace({
             return !url.includes('quantized') && !url.includes('fp16')
           }
         })
-        
+
         setHasAgreedToDownload(isCached)
-      } catch (e) { 
+      } catch (e) {
         setHasAgreedToDownload(false)
       }
     }
@@ -135,6 +143,52 @@ export function BackgroundRemoverWorkspace({
     }
     return () => clearInterval(interval);
   }, [isProcessing]);
+
+  // Background encoding to get file size and delta
+  useEffect(() => {
+    const encodePreview = async () => {
+      if (!resultImageData || isProcessing) {
+        setResultBlobSize(null);
+        return;
+      }
+
+      setIsEncodingPreview(true);
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = resultImageData.width;
+        canvas.height = resultImageData.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const imageBitmap = await createImageBitmap(resultImageData);
+        if (outputFormat === "color") {
+          ctx.fillStyle = backgroundColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(imageBitmap, 0, 0);
+
+        const sourceBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (!sourceBlob) return;
+
+        const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
+        config.resize = { mode: "none" };
+
+        const converted = await convertImage({
+          sourceBlob,
+          config
+        });
+
+        setResultBlobSize(converted.blob.size);
+      } catch (error) {
+        console.error("Preview encoding failed:", error);
+        setResultBlobSize(null);
+      } finally {
+        setIsEncodingPreview(false);
+      }
+    };
+
+    encodePreview();
+  }, [resultImageData, activePreset, outputFormat, backgroundColor, isProcessing]);
 
   const handleStartWithAgreement = () => {
     if (!hasAgreedToDownload) {
@@ -170,7 +224,7 @@ export function BackgroundRemoverWorkspace({
 
       // Use ImageBitmap for better performance and to respect alpha blending
       const imageBitmap = await createImageBitmap(resultImageData)
-      
+
       if (outputFormat === "color") {
         ctx.fillStyle = backgroundColor
         ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -181,15 +235,9 @@ export function BackgroundRemoverWorkspace({
       const sourceBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"))
       if (!sourceBlob) throw new Error("Failed to create source blob")
 
-      const config: FormatConfig = {
-        id: "bg-remover-export",
-        name: "Background Remover Export",
-        format: targetFormat,
-        quality: quality,
-        formatOptions: codecOptions,
-        resize: { mode: "none" },
-        enabled: true
-      }
+      const config: FormatConfig = buildFormatConfigFromPreset(activePreset)
+      // Force no resize for Background Remover
+      config.resize = { mode: "none" }
 
       const converted = await convertImage({
         sourceBlob,
@@ -225,30 +273,42 @@ export function BackgroundRemoverWorkspace({
   return (
     <div className="space-y-4">
       {/* Action Bar */}
-      {/* Action Bar */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="truncate text-base font-bold text-slate-900 dark:text-white">
               {sourceFile.name}
             </h3>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {isProcessing ? (
               <span className="text-amber-600 dark:text-amber-400 font-medium">
                 Processing... ({timerSeconds.toFixed(1)}s)
               </span>
             ) : resultImageData && processTime !== null ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                Processing completed in {processTime.toFixed(2)} seconds
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium flex flex-wrap items-center gap-1.5">
+                <span>Processing completed in {processTime.toFixed(2)}s</span>
+                {resultBlobSize !== null && (
+                  <>
+                    <span className="xs:inline opacity-40">•</span>
+                    <span>{formatBytes(resultBlobSize)}</span>
+                    <span className="xs:inline opacity-40">•</span>
+                    <span className={((resultBlobSize - sourceFile.size) / sourceFile.size) > 0 ? "text-amber-600" : "text-emerald-600"}>
+                      {((resultBlobSize - sourceFile.size) / sourceFile.size * 100).toFixed(1)}%
+                    </span>
+                  </>
+                )}
+                {isEncodingPreview && (
+                  <span className="animate-pulse text-slate-400">...</span>
+                )}
               </span>
             ) : (
               "Adjust settings in the sidebar then click Remove Background to process"
             )}
           </p>
         </div>
-        <div className="flex flex-row items-center gap-2 shrink-0">
-          <Button variant="secondary" onClick={onClear} className="h-9 px-4">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Button variant="secondary" onClick={onClear} className="h-9 px-4 flex-1 sm:flex-none">
             Clear
           </Button>
           {resultImageData && (
@@ -256,7 +316,7 @@ export function BackgroundRemoverWorkspace({
               variant="secondary"
               onClick={handleStartWithAgreement}
               disabled={isProcessing}
-              className="h-9 px-4"
+              className="h-9 px-4 flex-1 sm:flex-none"
             >
               Update
             </Button>
@@ -266,7 +326,7 @@ export function BackgroundRemoverWorkspace({
               variant="default"
               onClick={handleDownload}
               disabled={isDownloading}
-              className="h-9 px-6 bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-500/20 disabled:bg-pink-400"
+              className="h-9 px-6 bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-500/20 disabled:bg-pink-400 flex-[2] sm:flex-none"
             >
               {isDownloading ? "Encoding..." : "Download"}
             </Button>
@@ -275,7 +335,7 @@ export function BackgroundRemoverWorkspace({
               variant="secondary"
               onClick={handleStartWithAgreement}
               disabled={isProcessing}
-              className="h-9 px-6 bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-500/20 border-none"
+              className="h-9 px-6 bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-500/20 border-none flex-[2] sm:flex-none"
             >
               {isProcessing ? "Processing..." : "Remove Background"}
             </Button>
