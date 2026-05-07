@@ -10,6 +10,7 @@ export type OptionsTab =
   | "pattern"
   | "diffchecker"
   | "inspector"
+  | "background-remover"
   | "context-menu"
 
 export interface PerformancePreferences {

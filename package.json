@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "turbo dev",
     "sync:package": "node scripts/sync-package-versions.mjs",
+    "sync:credit": "tsx scripts/sync-credits.ts",
     "sync:assets": "pnpm --filter @imify/extension sync:assets",
     "dev:ext": "pnpm sync:assets && pnpm --filter @imify/extension dev:chrome",
     "dev:chrome": "pnpm sync:assets && pnpm --filter @imify/extension dev:chrome",
@@ -82,10 +83,19 @@
     "react-konva": "^18.2.14",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^3.4.19",
+    "tsx": "^4.21.0",
     "turbo": "latest",
     "typescript": "5.3.3",
     "upng-js": "^2.1.0",
     "utif": "^3.1.0",
     "zustand": "^5.0.12"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
+    "onnxruntime-common": "^1.25.1",
+    "onnxruntime-web": "^1.25.1"
+  },
+  "alias": {
+    "sharp": false
   }
 }

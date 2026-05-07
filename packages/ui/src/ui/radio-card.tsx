@@ -2,6 +2,7 @@ import React from "react"
 import { HelpCircle } from "lucide-react"
 
 import { Tooltip } from "./tooltip"
+import { type ColorTheme } from "./theme-config"
 
 interface RadioCardProps {
   icon?: React.ReactNode
@@ -15,6 +16,7 @@ interface RadioCardProps {
   tooltipLabel?: string
   className?: string
   rightSlot?: React.ReactNode
+  colorTheme?: ColorTheme
 }
 
 export function RadioCard({
@@ -28,18 +30,36 @@ export function RadioCard({
   tooltipContent,
   tooltipLabel,
   className = "",
-  rightSlot
+  rightSlot,
+  colorTheme = "sky"
 }: RadioCardProps) {
   const checked = selectedValue === value
 
-  const activeClasses = "border-sky-300 bg-sky-50 text-sky-800 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-200"
+  const themeMap: Record<ColorTheme, string> = {
+    blue: "border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200",
+    purple: "border-purple-300 bg-purple-50 text-purple-800 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-200",
+    amber: "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200",
+    sky: "border-sky-300 bg-sky-50 text-sky-800 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-200",
+    orange: "border-orange-300 bg-orange-50 text-orange-800 dark:border-orange-800 dark:bg-orange-900/20 dark:text-orange-200",
+    pink: "border-pink-300 bg-pink-50 text-pink-800 dark:border-pink-800 dark:bg-pink-900/20 dark:text-pink-200",
+  }
+  const activeClasses = themeMap[colorTheme]
   const inactiveClasses = "border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
+
+  const focusRingMap: Record<ColorTheme, string> = {
+    blue: "focus-within:ring-blue-500/30",
+    purple: "focus-within:ring-purple-500/30",
+    amber: "focus-within:ring-amber-500/30",
+    sky: "focus-within:ring-sky-500/30",
+    orange: "focus-within:ring-orange-500/30",
+    pink: "focus-within:ring-pink-500/30",
+  }
 
   return (
     <label
-      className={`flex items-center justify-between rounded border px-2.5 py-1.5 transition-all ${
+      className={`flex items-center justify-between rounded border px-2.5 py-2 transition-all ${
         checked ? activeClasses : inactiveClasses
-      } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className} focus-within:ring-2 focus-within:ring-sky-500/30`}>
+      } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className} ${focusRingMap[colorTheme]}`}>
       <div className="flex items-start gap-2 min-w-0">
         <input
           checked={checked}

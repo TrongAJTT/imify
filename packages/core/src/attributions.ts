@@ -5,27 +5,56 @@ export interface AttributionItem {
   url: string
 }
 
-// Source of truth for open-source acknowledgements.
-export const ATTRIBUTIONS: AttributionItem[] = [
-  { name: "React", author: "Meta Platforms, Inc. and contributors", license: "MIT", url: "https://react.dev/" },
-  { name: "Plasmo", author: "Plasmo Corp.", license: "MIT", url: "https://docs.plasmo.com/" },
-  { name: "Tailwind CSS", author: "Tailwind Labs, Inc.", license: "MIT", url: "https://tailwindcss.com/" },
-  { name: "Lucide React", author: "Eric Fennis and Lucide contributors", license: "ISC", url: "https://lucide.dev/" },
-  { name: "Radix UI", author: "Modulz Inc. and Radix UI contributors", license: "MIT", url: "https://www.radix-ui.com/" },
-  { name: "Zustand", author: "Paul Henschel and Poimandres contributors", license: "MIT", url: "https://github.com/pmndrs/zustand" },
-  { name: "dnd-kit", author: "Claudéric Demers", license: "MIT", url: "https://dndkit.com/" },
-  { name: "react-colorful", author: "Vlad Shilov and contributors", license: "MIT", url: "https://github.com/omgovich/react-colorful" },
-  { name: "markdown-to-jsx", author: "Quantizor and contributors", license: "MIT", url: "https://github.com/quantizor/markdown-to-jsx" },
-  { name: "idb", author: "Jake Archibald", license: "ISC", url: "https://github.com/jakearchibald/idb" },
-  { name: "pdf-lib", author: "Andrew Dillon", license: "MIT", url: "https://pdf-lib.js.org/" },
-  { name: "UPNG.js", author: "Ivan Kutskir", license: "MIT", url: "https://github.com/photopea/UPNG.js" },
-  { name: "image-q", author: "Igor Bezkrovnyi", license: "MIT", url: "https://github.com/ibezkrovnyi/image-quantization" },
-  { name: "UTIF.js", author: "Ivan Kutskir", license: "MIT", url: "https://github.com/photopea/UTIF.js" },
-  { name: "fflate", author: "Arjun Barrett (101arrowz)", license: "MIT", url: "https://github.com/101arrowz/fflate" },
-  { name: "@jsquash/avif, @jsquash/jxl, @jsquash/webp, @jsquash/oxipng, @jsquash/jpeg & @jsquash/resize", author: "Jamie Sinclair and jSquash contributors", license: "Apache-2.0", url: "https://github.com/jamsinclair/jSquash" },
-  { name: "clsx", author: "Luke Edwards", license: "MIT", url: "https://github.com/lukeed/clsx" },
-  { name: "tailwind-merge", author: "Danylo and contributors", license: "MIT", url: "https://github.com/dcastil/tailwind-merge" },
-  { name: "perfect-freehand", author: "Steveruizok", license: "MIT", url: "https://github.com/steveruizok/perfect-freehand" },
-  { name: "react-player", author: "Pete Cook", license: "MIT", url: "https://github.com/cookpete/react-player" },
-  { name: "youtube-video-element", author: "Wesley Luyten", license: "MIT", url: "https://github.com/luwes/youtube-video-element" }
+export interface AttributionCategory {
+  id: string
+  label: string
+  items: AttributionItem[]
+}
+
+// Source of truth for open-source acknowledgements grouped by category.
+export const ATTRIBUTION_CATEGORIES: AttributionCategory[] = [
+  {
+    id: "ai-models",
+    label: "AI Models & Engines",
+    items: [
+      { name: "Transformers.js", author: "Hugging Face and contributors", license: "Apache-2.0", url: "https://github.com/huggingface/transformers.js" },
+      { name: "BiRefNet", author: "ZhengPeng7 and contributors", license: "MIT", url: "https://huggingface.co/ZhengPeng7/BiRefNet" },
+      { name: "ORMBG", author: "ONNX Community and contributors", license: "MIT", url: "https://huggingface.co/onnx-community/ormbg-ONNX" },
+      { name: "MODNet", author: "ONNX Community and contributors", license: "Apache-2.0", url: "https://huggingface.co/onnx-community/modnet-webnn" },
+      { name: "Selfie Segmenter", author: "Google and ONNX Community", license: "Apache-2.0", url: "https://huggingface.co/onnx-community/mediapipe_selfie_segmentation" }
+    ]
+  },
+  {
+    id: "core",
+    label: "Core Frameworks",
+    items: [
+      { name: "React", author: "Meta Platforms, Inc. and contributors", license: "MIT", url: "https://react.dev/" },
+      { name: "Plasmo", author: "Plasmo Corp.", license: "MIT", url: "https://docs.plasmo.com/" },
+      { name: "Tailwind CSS", author: "Tailwind Labs, Inc.", license: "MIT", url: "https://tailwindcss.com/" },
+      { name: "Lucide React", author: "Eric Fennis and Lucide contributors", license: "ISC", url: "https://lucide.dev/" },
+      { name: "Radix UI", author: "Modulz Inc. and Radix UI contributors", license: "MIT", url: "https://www.radix-ui.com/" },
+      { name: "Zustand", author: "Paul Henschel and Poimandres contributors", license: "MIT", url: "https://github.com/pmndrs/zustand" }
+    ]
+  },
+  {
+    id: "utilities",
+    label: "Utilities & Libraries",
+    items: [
+      { name: "dnd-kit", author: "Claudéric Demers", license: "MIT", url: "https://dndkit.com/" },
+      { name: "react-colorful", author: "Vlad Shilov and contributors", license: "MIT", url: "https://github.com/omgovich/react-colorful" },
+      { name: "markdown-to-jsx", author: "Quantizor and contributors", license: "MIT", url: "https://github.com/quantizor/markdown-to-jsx" },
+      { name: "idb", author: "Jake Archibald", license: "ISC", url: "https://github.com/jakearchibald/idb" },
+      { name: "pdf-lib", author: "Andrew Dillon", license: "MIT", url: "https://pdf-lib.js.org/" },
+      { name: "UPNG.js", author: "Ivan Kutskir", license: "MIT", url: "https://github.com/photopea/UPNG.js" },
+      { name: "image-q", author: "Igor Bezkrovnyi", license: "MIT", url: "https://github.com/ibezkrovnyi/image-quantization" },
+      { name: "UTIF.js", author: "Ivan Kutskir", license: "MIT", url: "https://github.com/photopea/UTIF.js" },
+      { name: "fflate", author: "Arjun Barrett (101arrowz)", license: "MIT", url: "https://github.com/101arrowz/fflate" },
+      { name: "@jsquash/avif, @jsquash/jxl, @jsquash/webp, @jsquash/oxipng, @jsquash/jpeg & @jsquash/resize", author: "Jamie Sinclair and jSquash contributors", license: "Apache-2.0", url: "https://github.com/jamsinclair/jSquash" },
+      { name: "clsx", author: "Luke Edwards", license: "MIT", url: "https://github.com/lukeed/clsx" },
+      { name: "tailwind-merge", author: "Danylo and contributors", license: "MIT", url: "https://github.com/dcastil/tailwind-merge" },
+      { name: "perfect-freehand", author: "Steveruizok", license: "MIT", url: "https://github.com/steveruizok/perfect-freehand" },
+      { name: "react-player", author: "Pete Cook", license: "MIT", url: "https://github.com/cookpete/react-player" },
+      { name: "youtube-video-element", author: "Wesley Luyten", license: "MIT", url: "https://github.com/luwes/youtube-video-element" }
+    ]
+  }
 ]

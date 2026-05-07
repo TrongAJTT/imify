@@ -32,7 +32,9 @@ flowchart TD
   
   subgraph Synchronization
     Sync --> WASM[Sync WASM to root assets/wasm]
-    Sync --> Features[Sync root assets to Apps]
+    Sync --> ONNX[Sync ONNX Engines to root assets/onnx-engines]
+    ONNX --> Patch[Patch Transformers.js library]
+    Patch --> Features[Sync root assets to Apps]
     Features --> ExtAssets[apps/extension/assets]
     Features --> WebAssets[apps/web/public/assets]
   end
@@ -53,7 +55,7 @@ flowchart TD
 |---------|--------|
 | `pnpm dev` | Starts Turbo Dev for the entire monorepo. |
 | `pnpm sync:package` | Syncs version/meta from root to children (Manual). |
-| `pnpm sync:assets` | Syncs all shared assets (WASM, Images, MD) to apps. |
+| `pnpm sync:assets` | Syncs all shared assets (WASM, AI Engines, Images, MD) to apps. |
 | `pnpm dev:web` | `sync:assets` + Next.js dev server. |
 | `pnpm dev:chrome` | `sync:assets` + Plasmo dev server (Chrome). |
 | `pnpm dev:firefox` | `sync:assets` + Plasmo dev server (Firefox). |
@@ -70,8 +72,10 @@ flowchart TD
 Unlike previous versions where each app had its own `predev` sync, we now run synchronization once from the root:
 1. Calls `@imify/extension sync:assets`.
 2. This runs `scripts/sync-wasm.mjs` (copies WASM from node_modules to root `assets/wasm`).
-3. Runs `scripts/sync-shared-assets.mjs` (copies root `assets/` to both extension and web public folders).
-4. Runs `scripts/check-media-asset-paths.mjs` to verify integrity.
+3. Runs `scripts/sync-onnx-engine.mjs` (copies ONNX binaries from node_modules to root `assets/onnx-engines`).
+4. Runs `scripts/patch-transformers.mjs` (patches the library in `node_modules` for MV3 compatibility).
+5. Runs `scripts/sync-shared-assets.mjs` (copies root `assets/` to both extension and web public folders).
+6. Runs `scripts/check-media-asset-paths.mjs` to verify integrity.
 
 ### 2. Extension Development (`pnpm dev:chrome` / `pnpm dev:firefox`)
 1. Root runs `sync:assets`.
@@ -91,6 +95,14 @@ Unlike previous versions where each app had its own `predev` sync, we now run sy
 ### Asset 404 / Missing Files
 - **Cause**: Assets were not synchronized.
 - **Fix**: Run `pnpm sync:assets` manually, or use the root-level `dev:*` commands which include it automatically.
+
+### AI Background Removal Not Working
+- **Cause**: ONNX engine WASM files missing or path resolution failed.
+- **Fix**: Ensure `pnpm sync:assets` was successful. Check if `assets/onnx-engines/` contains both `.wasm` and `.asyncify.wasm` files.
+
+### Extension Build Syntax Error (await)
+- **Cause**: `patch-transformers.mjs` was not run after a package update.
+- **Fix**: Run `pnpm sync:assets` manually to re-patch the library.
 
 ### Version Mismatch in UI
 - **Cause**: Root version was bumped but child packages were not updated.

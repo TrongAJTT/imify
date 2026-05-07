@@ -4,7 +4,7 @@
  * Based on SPECIFICATIONS.md design guidelines
  */
 
-export type ColorTheme = "blue" | "purple" | "amber" | "sky" | "orange"
+export type ColorTheme = "blue" | "purple" | "amber" | "sky" | "orange" | "pink"
 
 export type ThemeClasses = {
   icon: string
@@ -96,6 +96,20 @@ export function getThemeClasses(theme: ColorTheme): ThemeClasses {
       // Sidebar layout
       sidebarEdgeBorderHover: "hover:border-orange-300 dark:hover:border-orange-800",
       sidebarBgHover: "hover:bg-orange-50/60 dark:hover:bg-orange-500/10",
+    },
+    pink: {
+      icon: "text-pink-500 dark:text-pink-400",
+      hover: "hover:bg-pink-50/60 dark:hover:bg-pink-500/10",
+      activeBg: "bg-pink-50 dark:bg-pink-500/10",
+      activeBorder: "border-l-pink-500 dark:border-l-pink-500 border-pink-300 dark:border-pink-800",
+      activeText: "text-pink-800 dark:text-pink-200",
+      // Accordion layout
+      accordionLeftBorder: "border-l-pink-600 dark:border-l-pink-400",
+      accordionOpenEdgeBorder: "border-t-pink-300 border-r-pink-300 border-b-pink-300 dark:border-t-pink-800 dark:border-r-pink-800 dark:border-b-pink-800",
+      accordionContentBorder: "border-t-pink-200 dark:border-t-pink-800",
+      // Sidebar layout
+      sidebarEdgeBorderHover: "hover:border-pink-300 dark:hover:border-pink-800",
+      sidebarBgHover: "hover:bg-pink-50/60 dark:hover:bg-pink-500/10",
     },
   }
   return themes[theme]

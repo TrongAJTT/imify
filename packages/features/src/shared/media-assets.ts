@@ -58,6 +58,10 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   inspector: {
     previewWebp: "/assets/features/preview-image_inspector.webp"
   },
+  remover: {
+    preview1Webp: "/assets/features/preview-background_remover-1.webp",
+    preview2Webp: "/assets/features/preview-background_remover-2.webp"
+  },
   downloadHints: {
     chromeWebp: "/assets/images/img-download-not-ask-chrome.webp",
     edgeWebp: "/assets/images/img-download-not-ask-edge.webp",
@@ -65,6 +69,12 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   },
   common: {
     whatsNewMd: "/assets/WHATS_NEW.md"
+  },
+  ai: {
+    onnxWasm: "/assets/onnx-engines/ort-wasm-simd-threaded.wasm",
+    onnxMjs: "/assets/onnx-engines/ort-wasm-simd-threaded.mjs",
+    onnxWasmAsyncify: "/assets/onnx-engines/ort-wasm-simd-threaded.asyncify.wasm",
+    onnxMjsAsyncify: "/assets/onnx-engines/ort-wasm-simd-threaded.asyncify.mjs"
   }
 } as const
 
@@ -110,6 +120,10 @@ export const FEATURE_MEDIA_ASSETS = {
   inspector: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp
   },
+  remover: {
+    preview1Webp: FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp,
+    preview2Webp: FEATURE_MEDIA_ASSET_PATHS.remover.preview2Webp
+  },
   downloadHints: {
     chromeWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.chromeWebp,
     edgeWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.edgeWebp,
@@ -117,5 +131,11 @@ export const FEATURE_MEDIA_ASSETS = {
   },
   common: {
     whatsNewMd: FEATURE_MEDIA_ASSET_PATHS.common.whatsNewMd
+  },
+  ai: {
+    onnxWasm: FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasm,
+    onnxMjs: FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjs,
+    onnxWasmAsyncify: FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasmAsyncify,
+    onnxMjsAsyncify: FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjsAsyncify
   }
 } as const

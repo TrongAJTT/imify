@@ -160,7 +160,7 @@ export interface ExtensionStorageState {
 export interface ConversionProgressPayload {
   id: string
   fileName: string
-  targetFormat: ImageFormat | "mozjpeg"
+  targetFormat?: ImageFormat | "mozjpeg"
   status: "queued" | "processing" | "success" | "error"
   percent: number
   message?: string

@@ -7,6 +7,7 @@ interface ViewerSideBySideProps {
   panY: number
   labelA?: string
   labelB?: string
+  bgColorB?: string | null
 }
 
 export function ViewerSideBySide({
@@ -16,7 +17,8 @@ export function ViewerSideBySide({
   panX,
   panY,
   labelA = "A",
-  labelB = "B"
+  labelB = "B",
+  bgColorB = null
 }: ViewerSideBySideProps) {
   const imageStyle: React.CSSProperties = {
     position: "absolute",
@@ -36,7 +38,7 @@ export function ViewerSideBySide({
         <img src={urlA} alt="Image A" style={imageStyle} draggable={false} />
         <div className="pointer-events-none absolute top-3 left-3 z-10 select-none rounded-md bg-slate-900/70 px-2 py-0.5 text-[10px] font-bold text-white">{labelA}</div>
       </div>
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden" style={{ backgroundColor: bgColorB || "transparent" }}>
         <img src={urlB} alt="Image B" style={imageStyle} draggable={false} />
         <div className="pointer-events-none absolute top-3 right-3 z-10 select-none rounded-md bg-slate-900/70 px-2 py-0.5 text-[10px] font-bold text-white">{labelB}</div>
       </div>

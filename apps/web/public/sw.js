@@ -1,3 +1,4 @@
+// Service Worker v2 - Fixed: Added NetworkOnly for Hugging Face AI model downloads
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.4.1/workbox-sw.js');
 
 if (workbox) {
@@ -9,6 +10,15 @@ if (workbox) {
       url.hostname.includes('cloudflareinsights.com') || 
       url.hostname.includes('google-analytics.com') ||
       url.pathname.startsWith('/cdn-cgi/'),
+    new workbox.strategies.NetworkOnly()
+  );
+
+  // CRITICAL: Never intercept AI model downloads from Hugging Face
+  // Web Workers fetch models directly from HF; SW interception causes stalling
+  workbox.routing.registerRoute(
+    ({ url }) =>
+      url.hostname.includes('huggingface.co') ||
+      url.hostname.includes('cloudfront.net'),
     new workbox.strategies.NetworkOnly()
   );
 
@@ -35,8 +45,10 @@ if (workbox) {
   ]);
 
   // Cache static assets (CSS, JS) with StaleWhileRevalidate
+  // Note: 'worker' is intentionally excluded — Web Workers make cross-origin
+  // requests to Hugging Face that the SW cannot intercept safely.
   workbox.routing.registerRoute(
-    ({ request }) => request.destination === 'style' || request.destination === 'script' || request.destination === 'worker',
+    ({ request }) => request.destination === 'style' || request.destination === 'script',
     new workbox.strategies.StaleWhileRevalidate({
       cacheName: 'static-resources',
     })

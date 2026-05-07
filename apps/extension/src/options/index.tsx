@@ -54,6 +54,12 @@ import { ProcessorWorkspaceShell, ProcessorSidebarShellWrapper } from "@/options
 import { EditorProvider } from "@/options/components/filling/editor-context"
 import { DiffcheckerTab } from "@/options/components/diffchecker"
 import { InspectorTab } from "@/options/components/inspector"
+import { 
+  SharedBackgroundRemoverPage,
+  BackgroundRemoverWorkspace, 
+  BackgroundRemoverDropZone,
+  BackgroundRemoverSidebarShell 
+} from "@imify/features/background-removal"
 import { DiffcheckerSidebarShell } from "@imify/features/diffchecker"
 import { InspectorSidebarShell } from "@imify/features/inspector"
 import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
@@ -561,6 +567,36 @@ export default function OptionsPage() {
         return (
           <InspectorTab onOpenSingleProcessor={() => void setActiveTab("single")} />
         )
+      case "background-remover":
+        return (
+          <ProcessorWorkspaceShell
+            context="single"
+            workspace={
+              <SharedBackgroundRemoverPage
+                renderWorkspace={(props) => (
+                  <>
+                    {!props.sourceFile ? (
+                      <BackgroundRemoverDropZone onLoadFile={(file) => void props.onLoadFile(file)} />
+                    ) : (
+                      props.sourceImageData ? (
+                        <BackgroundRemoverWorkspace
+                          sourceFile={props.sourceFile}
+                          sourceImageData={props.sourceImageData}
+                          resultImageData={props.resultImageData}
+                          isProcessing={props.isProcessing}
+                          progressPayload={props.progressPayload}
+                          onClear={props.onClear}
+                          onStartProcessing={props.onStartProcessing}
+                          modelId={props.modelId}
+                        />
+                      ) : null
+                    )}
+                  </>
+                )}
+              />
+            }
+          />
+        )
       default:
         return null
     }
@@ -751,6 +787,9 @@ export default function OptionsPage() {
                 {activeTab === "inspector" && (
                   <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
                 )}
+                {activeTab === "background-remover" && (
+                  <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
 
                 <TabInfoPanel activeTab={activeTab} />
               </div>
@@ -835,6 +874,9 @@ export default function OptionsPage() {
 
               {activeTab === "inspector" && (
                 <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+              {activeTab === "background-remover" && (
+                <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
               )}
 
               <TabInfoPanel activeTab={activeTab} />

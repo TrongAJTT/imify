@@ -39,8 +39,14 @@ import previewPatternGeneratorWebp from "url:@assets/features/preview-pattern_ge
 import previewContextMenuWebp from "url:@assets/features/preview-context_menu.webp"
 import previewDiffCheckerWebp from "url:@assets/features/preview-difference_checker.webp"
 import previewInspectorWebp from "url:@assets/features/preview-image_inspector.webp"
+import previewRemover1Webp from "url:@assets/features/preview-background_remover-1.webp"
+import previewRemover2Webp from "url:@assets/features/preview-background_remover-2.webp"
 import j2teamLogoIco from "url:@assets/images/j2tl-logo.ico"
 import whatsNewMd from "url:@assets/WHATS_NEW.md"
+import onnxWasm from "url:@assets/onnx-engines/ort-wasm-simd-threaded.wasm"
+import onnxMjs from "url:@assets/onnx-engines/ort-wasm-simd-threaded.mjs"
+import onnxWasmAsyncify from "url:@assets/onnx-engines/ort-wasm-simd-threaded.asyncify.wasm"
+import onnxMjsAsyncify from "url:@assets/onnx-engines/ort-wasm-simd-threaded.asyncify.mjs"
 
 let adaptersBootstrapped = false
 const extensionMediaAssetMap: Record<string, string> = {
@@ -67,8 +73,14 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.downloadHints.firefoxWebp]: downloadHintFirefoxWebp,
   [FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp]: previewDiffCheckerWebp,
   [FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp]: previewInspectorWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp]: previewRemover1Webp,
+  [FEATURE_MEDIA_ASSET_PATHS.remover.preview2Webp]: previewRemover2Webp,
   [FEATURE_MEDIA_ASSET_PATHS.brand.j2teamLogoIco]: j2teamLogoIco,
-  [FEATURE_MEDIA_ASSET_PATHS.common.whatsNewMd]: whatsNewMd
+  [FEATURE_MEDIA_ASSET_PATHS.common.whatsNewMd]: whatsNewMd,
+  [FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasm]: onnxWasm,
+  [FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjs]: onnxMjs,
+  [FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasmAsyncify]: onnxWasmAsyncify,
+  [FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjsAsyncify]: onnxMjsAsyncify
 }
 
 const extensionWasmFactoryMap: Record<string, unknown> = {

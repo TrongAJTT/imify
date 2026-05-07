@@ -1,9 +1,10 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Stamp, X, Library, ChevronRight, ArrowLeft } from "lucide-react"
+import { Stamp, X, Library, ChevronRight, ArrowLeft, Brain } from "lucide-react"
 import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui"
 import { AssetWatermarkTab } from "./asset-tabs/asset-watermark-tab"
+import { AssetAIModelsTab } from "./asset-tabs/asset-ai-models-tab"
 
 interface AssetManagementDialogProps {
   isOpen: boolean
@@ -12,7 +13,7 @@ interface AssetManagementDialogProps {
 
 const DEFAULT_INACTIVE_CLASS = "text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
 
-type AssetTabId = "watermark"
+type AssetTabId = "watermark" | "ai-models"
 
 interface AssetTabDefinition {
   id: AssetTabId
@@ -38,6 +39,18 @@ const ASSET_TABS: AssetTabDefinition[] = [
       activeText: "text-sky-600 dark:text-sky-300",
       activeRing: "ring-sky-200 dark:ring-sky-800",
       activeIcon: "text-sky-600 dark:text-sky-400"
+    }
+  },
+  {
+    id: "ai-models",
+    label: "AI Models",
+    description: "Manage downloaded AI models for offline features",
+    icon: Brain,
+    colors: {
+      activeBg: "bg-pink-50 dark:bg-pink-500/10",
+      activeText: "text-pink-600 dark:text-pink-300",
+      activeRing: "ring-pink-200 dark:ring-pink-800",
+      activeIcon: "text-pink-600 dark:text-pink-400"
     }
   }
 ]
@@ -72,6 +85,8 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
     switch (activeTab) {
       case "watermark":
         return <AssetWatermarkTab />
+      case "ai-models":
+        return <AssetAIModelsTab />
       default:
         return null
     }
@@ -81,7 +96,8 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-5xl h-[85vh] md:h-[75vh] max-h-[800px] overflow-hidden flex flex-col"
+      className="max-w-6xl"
+      contentClassName="w-full max-w-6xl h-[90vh] md:h-[85vh] max-h-[900px] overflow-hidden flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-900">
@@ -128,9 +144,9 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
                   key={tab.id}
                   variant="ghost"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex w-full items-center justify-start gap-3 rounded-lg transition-all !px-0 !h-auto ${isMobile
+                  className={`flex w-full items-center justify-start gap-3 rounded-lg transition-all !h-auto ${isMobile
                     ? "p-4 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40"
-                    : `px-3 py-2.5 ${activeTab === tab.id
+                    : `px-4 py-2.5 ${activeTab === tab.id
                       ? `${tab.colors.activeBg} ${tab.colors.activeText} shadow-sm ring-1 ${tab.colors.activeRing}`
                       : DEFAULT_INACTIVE_CLASS
                     }`

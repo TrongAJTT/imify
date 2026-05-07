@@ -97,5 +97,10 @@ export const WEB_ROUTE_METADATA = {
     title: "Image Inspector",
     description:
       "Inspect image metadata, dimensions, and visual properties to verify asset quality, technical consistency, and readiness for delivery channels."
+  },
+  backgroundRemover: {
+    title: "Background Remover",
+    description:
+      "Isolate subjects from their background instantly using state-of-the-art AI that runs entirely on your browser for maximum privacy."
   }
 } satisfies Record<string, SeoMetadataEntry>
