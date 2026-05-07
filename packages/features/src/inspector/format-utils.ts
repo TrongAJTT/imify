@@ -1,4 +1,4 @@
-import { formatFileSize } from "@imify/core"
+export { formatFileSize } from "@imify/core"
 import type { BasicInfo, DimensionInfo, PrivacyAlert } from "./types"
 import { SENSITIVE_TAGS, AI_SOFTWARE_SIGNATURES } from "./exif-tags"
 import type { ExifEntry, GpsInfo } from "./types"

@@ -18,6 +18,41 @@ export const VIRTUAL_DEFAULT_PNG_PRESET: SavedSetupPreset = {
     quality: 92,
     concurrency: 3,
     formatOptions: {
+      bmp: {
+        colorDepth: 24,
+        dithering: false,
+        ditheringLevel: 0
+      },
+      jxl: {
+        effort: 7,
+        lossless: false,
+        progressive: false,
+        epf: 1
+      },
+      webp: {
+        lossless: false,
+        nearLossless: 100,
+        effort: 5,
+        sharpYuv: false,
+        preserveExactAlpha: false
+      },
+      avif: {
+        speed: 6,
+        qualityAlpha: undefined,
+        lossless: false,
+        subsample: 1,
+        tune: "auto",
+        highAlphaQuality: false
+      },
+      mozjpeg: {
+        progressive: true,
+        chromaSubsampling: 2
+      },
+      ico: {
+        sizes: [16, 32, 48, 64, 128, 256],
+        generateWebIconKit: false,
+        optimizeInternalPngLayers: false
+      },
       png: {
         tinyMode: false,
         cleanTransparentPixels: false,
@@ -26,6 +61,9 @@ export const VIRTUAL_DEFAULT_PNG_PRESET: SavedSetupPreset = {
         ditheringLevel: 0,
         progressiveInterlaced: false,
         oxipngCompression: false
+      },
+      tiff: {
+        colorMode: "color"
       }
     },
     resizeMode: "none",
