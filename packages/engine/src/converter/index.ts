@@ -9,6 +9,8 @@ export { registerEngineRuntimeAdapter } from "./runtime-adapter"
 export interface ConvertImageParams {
   sourceBlob: Blob
   config: FormatConfig
+  /** Optional: If true, force usage of native browser encoder if available */
+  preferNative?: boolean
 }
 
 export interface ConvertImageResult {
@@ -56,7 +58,29 @@ export async function convertImage(
         outputExtension: icoOutput.outputExtension
       }
     }
+  }
 
+  // Fast-path: If the browser supports the format natively and we prefer speed (default for standard formats)
+  // WebP/JPEG/PNG can be handled on main thread with OffscreenCanvas much faster than WASM workers for high-res images.
+  const isNativeSupported = config.format === "webp" || config.format === "jpg" || config.format === "png"
+  if (isNativeSupported) {
+    try {
+      const raster = await convertRasterImage({
+        sourceBlob,
+        targetFormat: config.format,
+        resize: config.resize,
+        quality: config.quality,
+        formatOptions: config.formatOptions
+      })
+
+      return {
+        blob: raster.outputBlob,
+        format: config.format
+      }
+    } catch (e) {
+      // Fallback to worker if native path fails
+      console.warn("Native conversion fast-path failed, falling back to worker:", e)
+    }
   }
 
   if (!isConversionWorkerSupported()) {

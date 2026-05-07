@@ -144,7 +144,7 @@ export function BackgroundRemoverSidebar({
           label="Output Preset"
           theme="pink"
           defaultPreset={VIRTUAL_DEFAULT_PNG_PRESET}
-          formatFilter={["png", "webp", "avif", "jxl"]}
+          formatFilter={["png", "webp", "avif", "jxl", "jpg"]}
           activePresetId={activePresetId}
           onSelect={applyPreset}
           onReset={resetToDefault}

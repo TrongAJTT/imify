@@ -6,7 +6,7 @@ import type { SavedSetupPreset } from "./batch-store"
 import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
 
 export type BackgroundRemoverOutputFormat = "transparent" | "color"
-export type BackgroundRemoverExportFormat = "png" | "webp" | "avif" | "jxl" | "mozjpeg"
+export type BackgroundRemoverExportFormat = "png" | "webp" | "avif" | "jxl" | "jpg"
 
 interface BackgroundRemoverState {
   modelId: string
@@ -77,13 +77,13 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>()(
 
       applyPreset: (preset) => {
         const { targetFormat, quality, formatOptions } = preset.config
-        const supportedFormats: BackgroundRemoverExportFormat[] = ["png", "webp", "avif", "jxl", "mozjpeg"]
+        const supportedFormats: BackgroundRemoverExportFormat[] = ["png", "webp", "avif", "jxl", "jpg"]
         
         let mappedFormat: BackgroundRemoverExportFormat = "png"
         if (supportedFormats.includes(targetFormat as any)) {
           mappedFormat = targetFormat as BackgroundRemoverExportFormat
-        } else if (targetFormat === "jpg") {
-          mappedFormat = "mozjpeg"
+        } else if (targetFormat === "mozjpeg") {
+          mappedFormat = "jpg"
         }
 
         set({
@@ -106,7 +106,14 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>()(
     {
       name: "imify-background-remover-settings",
       partialize: (state) => {
-        const { hasImage, activePresetId, ...rest } = state
+        const { 
+          hasImage, 
+          activePresetId, 
+          targetFormat, 
+          quality, 
+          codecOptions,
+          ...rest 
+        } = state
         return rest
       }
     }

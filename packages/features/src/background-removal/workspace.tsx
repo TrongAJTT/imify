@@ -146,6 +146,9 @@ export function BackgroundRemoverWorkspace({
 
   // Background encoding to get file size and delta
   useEffect(() => {
+    let isAborted = false;
+    let debounceTimer: NodeJS.Timeout;
+
     const encodePreview = async () => {
       if (!resultImageData || isProcessing) {
         setResultBlobSize(null);
@@ -167,8 +170,30 @@ export function BackgroundRemoverWorkspace({
         }
         ctx.drawImage(imageBitmap, 0, 0);
 
-        const sourceBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-        if (!sourceBlob) return;
+        if (isAborted) return;
+
+        // OPTIMIZATION: If we just need the size for preview, and target is WebP or JPEG,
+        // use the browser's native fast encoder instead of the WASM worker.
+        if (targetFormat === "webp" || targetFormat === "jpg") {
+          const mime = targetFormat === "webp" ? "image/webp" : "image/jpeg";
+          const nativeBlob = await new Promise<Blob | null>((resolve) => 
+            canvas.toBlob(resolve, mime, quality / 100)
+          );
+          if (isAborted) return;
+          if (nativeBlob) {
+            setResultBlobSize(nativeBlob.size);
+            return;
+          }
+        }
+
+        // Fallback to worker for other formats or if native failed
+        // Use a faster intermediate format (webp if supported, otherwise jpeg) instead of PNG
+        const intermediateMime = "image/webp";
+        const sourceBlob = await new Promise<Blob | null>((resolve) => 
+          canvas.toBlob(resolve, intermediateMime, 0.9)
+        );
+        
+        if (isAborted || !sourceBlob) return;
 
         const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
         config.resize = { mode: "none" };
@@ -178,17 +203,25 @@ export function BackgroundRemoverWorkspace({
           config
         });
 
+        if (isAborted) return;
         setResultBlobSize(converted.blob.size);
       } catch (error) {
         console.error("Preview encoding failed:", error);
-        setResultBlobSize(null);
+        if (!isAborted) setResultBlobSize(null);
       } finally {
-        setIsEncodingPreview(false);
+        if (!isAborted) setIsEncodingPreview(false);
       }
     };
 
-    encodePreview();
-  }, [resultImageData, activePreset, outputFormat, backgroundColor, isProcessing]);
+    debounceTimer = setTimeout(() => {
+      encodePreview();
+    }, 500);
+
+    return () => {
+      isAborted = true;
+      clearTimeout(debounceTimer);
+    };
+  }, [resultImageData, activePreset, outputFormat, backgroundColor, isProcessing, targetFormat, quality]);
 
   const handleStartWithAgreement = () => {
     if (!hasAgreedToDownload) {
@@ -232,23 +265,55 @@ export function BackgroundRemoverWorkspace({
 
       ctx.drawImage(imageBitmap, 0, 0)
 
-      const sourceBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"))
-      if (!sourceBlob) throw new Error("Failed to create source blob")
-
-      const config: FormatConfig = buildFormatConfigFromPreset(activePreset)
-      // Force no resize for Background Remover
-      config.resize = { mode: "none" }
-
-      const converted = await convertImage({
-        sourceBlob,
-        config
-      })
-
-      const extension = converted.outputExtension || targetFormat
+      const extension = targetFormat === "jpg" ? "jpg" : targetFormat
       const baseName = sourceFile ? sourceFile.name.replace(/\.[^.]+$/, "") : "result"
       const fileName = `${baseName}_no_bg.${extension}`
 
-      await downloadWithFilename(converted.blob, fileName)
+      // FAST-PATH: If target is natively supported, encode directly from canvas to avoid 
+      // the overhead of the shared conversion engine (which involves slow getImageData calls).
+      if (targetFormat === "webp" || targetFormat === "jpg" || targetFormat === "png") {
+        const mime = targetFormat === "webp" ? "image/webp" : targetFormat === "jpg" ? "image/jpeg" : "image/png"
+        
+        let finalCanvas = canvas
+        
+        // JPEG/JPG does not support transparency. If the output was transparent, 
+        // we must composite it onto a solid background (default to white if not set) 
+        // to avoid black backgrounds in the resulting JPEG.
+        if (targetFormat === "jpg" && outputFormat === "transparent") {
+          const bgCanvas = document.createElement("canvas")
+          bgCanvas.width = canvas.width
+          bgCanvas.height = canvas.height
+          const bgCtx = bgCanvas.getContext("2d")
+          if (bgCtx) {
+            bgCtx.fillStyle = "#ffffff" // Default to white for JPG with transparency
+            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height)
+            bgCtx.drawImage(canvas, 0, 0)
+            finalCanvas = bgCanvas
+          }
+        }
+
+        const finalBlob = await new Promise<Blob | null>((resolve) => 
+          finalCanvas.toBlob(resolve, mime, quality / 100)
+        )
+        
+        if (!finalBlob) throw new Error("Failed to encode image natively")
+        await downloadWithFilename(finalBlob, fileName)
+      } else {
+        // Fallback to worker for advanced formats (AVIF, JXL, etc.)
+        // Use a faster intermediate format (webp) instead of PNG to speed up the transfer to worker
+        const sourceBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.95))
+        if (!sourceBlob) throw new Error("Failed to create source blob")
+
+        const config: FormatConfig = buildFormatConfigFromPreset(activePreset)
+        config.resize = { mode: "none" }
+
+        const converted = await convertImage({
+          sourceBlob,
+          config
+        })
+
+        await downloadWithFilename(converted.blob, fileName)
+      }
 
       hide(toastId)
       show({

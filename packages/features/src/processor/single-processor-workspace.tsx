@@ -148,6 +148,7 @@ export function SingleProcessorWorkspace({
   const [panY, setPanY] = useState(0);
   const [showImpactChip, setShowImpactChip] = useState(false);
   const [stackStatsCards, setStackStatsCards] = useState(false);
+  const [processTime, setProcessTime] = useState<number | null>(null);
   const requestSequenceRef = useRef(0);
   const attachSequenceRef = useRef(0);
 
@@ -335,6 +336,9 @@ export function SingleProcessorWorkspace({
     const currentSequence = ++requestSequenceRef.current;
     setIsProcessing(true);
     setErrorText(null);
+    setProcessTime(null);
+    const start = performance.now();
+
     const timer = setTimeout(() => {
       void (async () => {
         try {
@@ -410,8 +414,13 @@ export function SingleProcessorWorkspace({
             toUserFacingConversionError(error, "Unable to process image"),
           );
         } finally {
-          if (requestSequenceRef.current === currentSequence)
+          if (requestSequenceRef.current === currentSequence) {
             setIsProcessing(false);
+            const end = performance.now();
+            if (start) {
+              setProcessTime((end - start) / 1000);
+            }
+          }
         }
       })();
     }, PREVIEW_DEBOUNCE_MS);
@@ -476,7 +485,17 @@ export function SingleProcessorWorkspace({
                     )}
                   </div>
                   <MutedText className="text-xs">
-                    Live preview updates after {PREVIEW_DEBOUNCE_MS}ms idle.
+                    {isProcessing ? (
+                      <span className="text-amber-600 dark:text-amber-400 font-medium">
+                        Processing...
+                      </span>
+                    ) : resultBlob && processTime !== null ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                        Processing completed in {processTime.toFixed(2)}s
+                      </span>
+                    ) : (
+                      `Live preview updates after ${PREVIEW_DEBOUNCE_MS}ms idle.`
+                    )}
                   </MutedText>
                 </div>
                 <div className="flex flex-row items-center gap-2 shrink-0">

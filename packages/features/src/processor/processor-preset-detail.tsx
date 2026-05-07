@@ -3,9 +3,17 @@ import type { SavedSetupPreset, SetupContext } from "@imify/stores/stores/batch-
 import { Shield } from "@imify/ui"
 import { FileCode, Gauge, Maximize, Trash2 } from "lucide-react"
 
-export function ProcessorPresetDetail({ preset }: { preset: SavedSetupPreset; context: SetupContext }) {
+export function ProcessorPresetDetail({ 
+  preset, 
+  alwaysVibrant = false 
+}: { 
+  preset: SavedSetupPreset; 
+  context: SetupContext;
+  alwaysVibrant?: boolean
+}) {
   const config = preset.config
-  const formatLabel = config.targetFormat ? config.targetFormat.toUpperCase() : "—"
+  const rawFormat = config.targetFormat === "mozjpeg" ? "jpg" : config.targetFormat
+  const formatLabel = rawFormat ? rawFormat.toUpperCase() : "—"
   const qualityLabel = config.quality !== undefined ? `${config.quality}%` : "—"
 
   let resizeLabel = "—"
@@ -17,7 +25,9 @@ export function ProcessorPresetDetail({ preset }: { preset: SavedSetupPreset; co
   else if (config.resizeMode === "change_height") resizeLabel = `H:${config.resizeValue}px`
   else resizeLabel = config.resizeMode
 
-  const mainColor = preset.highlightColor || "#3b82f6" // Default to blue-500 if missing
+  const rightBgClassName = alwaysVibrant
+    ? "bg-[var(--preset-color)] opacity-100"
+    : "bg-[var(--preset-color)] opacity-50 group-hover:opacity-100 transition-opacity"
 
   return (
     <div className="flex flex-wrap gap-2 p-1">
@@ -26,7 +36,7 @@ export function ProcessorPresetDetail({ preset }: { preset: SavedSetupPreset; co
         left="Format"
         right={formatLabel}
         icon={<FileCode size={13} />}
-        rightBg={mainColor}
+        rightBg={rightBgClassName}
       />
 
       {/* Quality Shield */}
@@ -35,7 +45,7 @@ export function ProcessorPresetDetail({ preset }: { preset: SavedSetupPreset; co
           left="Quality"
           right={qualityLabel}
           icon={<Gauge size={13} />}
-          rightBg={mainColor}
+          rightBg={rightBgClassName}
         />
       )}
 
@@ -44,7 +54,8 @@ export function ProcessorPresetDetail({ preset }: { preset: SavedSetupPreset; co
         left="Size"
         right={resizeLabel}
         icon={<Maximize size={13} />}
-        rightBg={mainColor}
+        rightBg={rightBgClassName}
+        className="transition-all"
       />
 
       {/* Strip EXIF Shield */}
@@ -53,7 +64,7 @@ export function ProcessorPresetDetail({ preset }: { preset: SavedSetupPreset; co
           left="EXIF"
           right={config.stripExif ? "Strip" : "Keep"}
           icon={<Trash2 size={13} />}
-          rightBg={mainColor}
+          rightBg={rightBgClassName}
         />
       )}
     </div>

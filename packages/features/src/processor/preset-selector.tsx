@@ -1,12 +1,14 @@
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import {
   AccordionCard,
   MutedText,
   Button,
   BaseDialog,
   Heading,
-  SidebarCard
+  SidebarCard,
+  Shield
 } from "@imify/ui"
+import { useImifyNavigation } from "../shared/use-imify-navigation"
 import { Bookmark, Sparkles, Plus, RotateCcw, X } from "lucide-react"
 import { useBatchStore, type SavedSetupPreset } from "@imify/stores/stores/batch-store"
 import { ProcessorPresetDetail } from "./processor-preset-detail"
@@ -41,22 +43,49 @@ export function PresetSelector({
 }: PresetSelectorProps) {
   const { presets } = useBatchStore()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedFormat, setSelectedFormat] = useState<string>("all")
 
-  // Filter presets by context "single" and optional format filter
+  const formats = useMemo(() => {
+    const baseFormats = ["all", "png", "webp", "avif", "jxl", "jpg", "bmp", "ico", "tiff"]
+    if (!formatFilter) return baseFormats
+
+    // Include 'all' plus any format allowed by formatFilter
+    return ["all", ...baseFormats.slice(1).filter(f => {
+      const target = f === "jpg" ? "mozjpeg" : f
+      return formatFilter.includes(target)
+    })]
+  }, [formatFilter])
+
+  // Filter presets by context "single" and optional format filter + dialog filter
   const availablePresets = presets.filter(p => {
     const contextMatch = p.context === "single"
-    const formatMatch = !formatFilter || formatFilter.includes(p.config.targetFormat)
-    return contextMatch && formatMatch
+    const propFormatMatch = !formatFilter || formatFilter.includes(p.config.targetFormat)
+
+    let dialogFormatMatch = true
+    if (selectedFormat !== "all") {
+      const fmt = p.config.targetFormat === "mozjpeg" ? "jpg" : p.config.targetFormat
+      dialogFormatMatch = fmt === selectedFormat
+    }
+
+    return contextMatch && propFormatMatch && dialogFormatMatch
   })
 
   const activePreset = activePresetId
     ? presets.find(p => p.id === activePresetId)
     : (activePresetId === null && defaultPreset ? defaultPreset : null)
 
+  const { openSingleProcessor } = useImifyNavigation()
+
   const handleCreatePreset = () => {
-    // Navigate to Single Processor
-    window.location.hash = "#/processor"
-    setIsDialogOpen(false)
+    openSingleProcessor()
+  }
+
+  const refreshPresets = async () => {
+    // Manually trigger a rehydration of the presets list from storage.
+    // This allows picking up new presets from other tabs without a full page reload.
+    if ((useBatchStore as any).persist?.rehydrate) {
+      await (useBatchStore as any).persist.rehydrate()
+    }
   }
 
   return (
@@ -70,7 +99,7 @@ export function PresetSelector({
           colorTheme={theme}
           childrenClassName="p-3 space-y-3"
         >
-          <div className="space-y-3">
+          <div className="space-y-3" style={{ "--preset-color": activePreset?.highlightColor || "#3b82f6" } as React.CSSProperties}>
             <SidebarCard
               label={activePreset ? activePreset.name : "Choose a Preset..."}
               sublabel={activePreset ? `Format: ${activePreset.config.targetFormat.toUpperCase()}` : "No preset selected"}
@@ -102,7 +131,7 @@ export function PresetSelector({
                   )}
                 </div>
 
-                <ProcessorPresetDetail preset={activePreset} context="single" />
+                <ProcessorPresetDetail preset={activePreset} context="single" alwaysVibrant={true} />
               </div>
             )}
           </div>
@@ -110,14 +139,47 @@ export function PresetSelector({
       </div>
 
       <BaseDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-        <div className="flex flex-col h-full max-h-[85vh]">
+        <div className="flex flex-col h-[800px] max-h-[90vh]">
           {/* Header */}
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Bookmark className={theme === "pink" ? "text-pink-500" : "text-blue-500"} size={20} />
-              <Heading className="text-lg">{label}</Heading>
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <div className="flex items-center gap-2">
+                <Bookmark className={theme === "pink" ? "text-pink-500" : "text-blue-500"} size={20} />
+                <Heading className="text-lg whitespace-nowrap">{label}</Heading>
+              </div>
+
+              {/* Format Filter Shield */}
+              <Shield
+                left="Filter"
+                size="sm"
+                leftBg="bg-slate-700 dark:bg-slate-800"
+                leftColor="text-white"
+                rightBg="bg-slate-100 dark:bg-slate-800"
+                rightColor="text-slate-600 dark:text-slate-400"
+                className="border border-slate-200 dark:border-slate-700"
+                right={
+                  <div className="flex items-center gap-1.5 h-full">
+                    {formats.map((f, i) => (
+                      <React.Fragment key={f}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFormat(f)}
+                          className={`transition-colors hover:text-sky-500 py-1 ${selectedFormat === f ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
+                        >
+                          {f.toUpperCase()}
+                        </button>
+                        {i < formats.length - 1 && <span className="opacity-30">•</span>}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                }
+              />
             </div>
-            <button onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+            
+            <button 
+              onClick={() => setIsDialogOpen(false)} 
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors shrink-0 -mr-2 -mt-1"
+            >
               <X size={20} className="text-slate-500" />
             </button>
           </div>
@@ -151,7 +213,7 @@ export function PresetSelector({
                 </MutedText>
                 <Button onClick={handleCreatePreset} variant="primary" className="gap-2">
                   <Plus size={16} />
-                  Create Your First Preset
+                  Create Your First And Refresh
                 </Button>
               </div>
             )}
@@ -159,7 +221,7 @@ export function PresetSelector({
 
           {/* Footer */}
           <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
-            <div>
+            <div className="flex items-center gap-2">
               {onReset && defaultPreset && (
                 <Button
                   variant="secondary"
@@ -170,9 +232,17 @@ export function PresetSelector({
                   className="gap-2 h-9"
                 >
                   <RotateCcw size={14} />
-                  Default PNG
+                  Reset
                 </Button>
               )}
+              <Button
+                variant="secondary"
+                onClick={refreshPresets}
+                className="gap-2 h-9"
+              >
+                <RotateCcw size={14} className="scale-x-[-1]" />
+                Refresh
+              </Button>
             </div>
             <Button variant="secondary" onClick={() => setIsDialogOpen(false)} className="h-9">
               Close

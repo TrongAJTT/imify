@@ -7,12 +7,16 @@ interface WorkspaceSelectHeaderProps {
   createLabel: string
   onCreate: () => void
   createIcon?: ReactNode
+  children?: ReactNode
 }
 
-export function WorkspaceSelectHeader({ title, createLabel, onCreate, createIcon }: WorkspaceSelectHeaderProps) {
+export function WorkspaceSelectHeader({ title, createLabel, onCreate, createIcon, children }: WorkspaceSelectHeaderProps) {
   return (
-    <div className="mb-4 flex items-center justify-between">
-      <Subheading>{title}</Subheading>
+    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Subheading>{title}</Subheading>
+        {children}
+      </div>
       <Button variant="primary" size="sm" onClick={onCreate}>
         {createIcon}
         {createLabel}

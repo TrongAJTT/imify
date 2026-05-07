@@ -53,6 +53,10 @@ export const BACKGROUND_REMOVER_PANEL_CONTENT = {
     {
       question: "Why is the first processing slower?",
       answer: "The first run requires initializing the AI engine and loading the model from the local cache into memory, which can take a few seconds depending on your hardware."
+    },
+    {
+      question: "Which export formats are supported?",
+      answer: "You can export your processed images as **PNG** (with transparency), **WebP**, **AVIF**, **JXL**, or **JPG** (on a solid background)."
     }
   ]
 }
