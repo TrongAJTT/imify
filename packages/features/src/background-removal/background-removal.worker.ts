@@ -1,30 +1,18 @@
 import { pipeline, env, type BackgroundRemovalPipeline as BackgroundRemovalPipelineType } from '@huggingface/transformers';
-import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from '@imify/features/shared/media-assets';
 
 // Configure transformers.js environment
-// We prioritize local assets to ensure 100% offline capability
 env.allowLocalModels = true;
-env.useBrowserCache = true; // Still useful for models, engines will be fetched from wasmPaths
+env.useBrowserCache = true;
 
-// Use centralized asset resolution for ONNX engines
-const onnxWasmUrl = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasm);
-// ONNX Runtime Web expects a directory path for wasmPaths (ending with /)
-const wasmDirectory = onnxWasmUrl.substring(0, onnxWasmUrl.lastIndexOf('/') + 1);
+// Default wasm paths if not configured elsewhere
+// These can be overridden by the main thread if needed, but we provide a sensible default
+(env as any).backends.onnx.wasm.wasmPaths = '/assets/onnx-engines/';
 
 // Optimization: Use multi-threading if SharedArrayBuffer is available
 const isMultiThreadSupported = typeof SharedArrayBuffer !== 'undefined';
 const numThreads = isMultiThreadSupported ? Math.min(navigator.hardwareConcurrency || 4, 8) : 1;
-
-console.log(`[Worker] Multi-thread supported: ${isMultiThreadSupported}, using ${numThreads} threads.`);
-console.log(`[Worker] Engine directory: ${wasmDirectory}`);
-
-(env as any).backends.onnx.wasm.wasmPaths = wasmDirectory;
 (env as any).backends.onnx.wasm.numThreads = numThreads;
-// (env as any).backends.onnx.wasm.proxy = true; 
 
-// BiRefNet_lite requires 17 storage buffers per shader stage.
-// We query the GPU adapter limits before loading to pick the best backend
-// without needing a warm-up inference run.
 async function detectBestDevice(): Promise<{ device: 'webgpu' | 'wasm'; dtype: 'fp16' | 'fp32' }> {
     if (typeof navigator === 'undefined' || !('gpu' in navigator)) {
         return { device: 'wasm', dtype: 'fp32' };
@@ -34,13 +22,10 @@ async function detectBestDevice(): Promise<{ device: 'webgpu' | 'wasm'; dtype: '
         if (!adapter) return { device: 'wasm', dtype: 'fp32' };
 
         const maxBuffers: number = adapter.limits.maxStorageBuffersPerShaderStage;
-        console.log(`[Worker] WebGPU maxStorageBuffersPerShaderStage: ${maxBuffers}`);
-
         if (maxBuffers >= 17) {
-            return { device: 'webgpu', dtype: 'fp16' }; // model_fp16.onnx — 115 MB
+            return { device: 'webgpu', dtype: 'fp16' };
         } else {
-            console.warn(`[Worker] WebGPU limit too low (${maxBuffers} < 17 required), using WASM.`);
-            return { device: 'wasm', dtype: 'fp32' };   // model.onnx — 224 MB
+            return { device: 'wasm', dtype: 'fp32' };
         }
     } catch {
         return { device: 'wasm', dtype: 'fp32' };
@@ -52,25 +37,31 @@ class BackgroundRemovalPipeline {
     static currentModelId: string | null = null;
     static instance: Promise<any> | null = null;
 
-    static async getInstance(modelId: string, progress_callback?: (progress: any) => void) {
-        // If model changed, dispose old instance (in a real app we'd call terminate/dispose, 
-        // here we at least clear the reference for GC)
-        if (this.currentModelId !== modelId) {
+    static async getInstance(modelId: string, options: { dtype?: 'fp16' | 'fp32'; quantized?: boolean; progress_callback?: (progress: any) => void } = {}) {
+        const { quantized = false, progress_callback } = options;
+        const { device, dtype: defaultDtype } = await detectBestDevice();
+        
+        const dtype = options.dtype || defaultDtype;
+        const instanceKey = `${modelId}:${device}:${dtype}:${quantized}`;
+        
+        if (this.currentModelId !== instanceKey) {
             this.instance = null;
-            this.currentModelId = modelId;
+            this.currentModelId = instanceKey;
         }
 
         if (this.instance !== null) return this.instance;
 
-        const { device, dtype } = await detectBestDevice();
-        console.log(`[Worker] Loading pipeline: ${modelId} on ${device} (${dtype})...`);
-
-        this.instance = pipeline(this.task as any, modelId, {
+        const pipelineOptions: any = {
             progress_callback,
             device: device as any,
-            dtype,
-        } as any);
+            quantized,
+        };
 
+        if (!quantized) {
+            pipelineOptions.dtype = dtype;
+        }
+
+        this.instance = pipeline(this.task as any, modelId, pipelineOptions);
         return this.instance;
     }
 }
@@ -84,12 +75,19 @@ self.addEventListener('message', async (event) => {
             const { image, options } = payload;
             const modelId = options?.modelId || 'onnx-community/ormbg-ONNX';
             
-            const segmenter = (await BackgroundRemovalPipeline.getInstance(modelId, (progress) => {
-                // Forward all status updates to main thread
-                self.postMessage({
-                    action: 'download-progress',
-                    payload: progress
-                });
+            // In this version, we trust the main thread to provide the correct flags
+            const preferredDtype = options?.dtype;
+            const useQuantized = options?.quantized ?? false;
+
+            const segmenter = (await BackgroundRemovalPipeline.getInstance(modelId, {
+                dtype: preferredDtype,
+                quantized: useQuantized,
+                progress_callback: (progress) => {
+                    self.postMessage({
+                        action: 'download-progress',
+                        payload: progress
+                    });
+                }
             })) as BackgroundRemovalPipelineType;
 
             if (action === 'warm-up') {

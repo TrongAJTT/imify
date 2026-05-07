@@ -1,15 +1,16 @@
-"use client"
-
-import React, { useState } from "react"
-import { Download, ShieldCheck, ExternalLink, AlertTriangle, Wifi } from "lucide-react"
-import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui"
-import { type AIModelMetadata } from "./models"
+import React, { useState, useMemo } from "react"
+import { Download, ShieldCheck, ExternalLink, AlertTriangle, Wifi, Info } from "lucide-react"
+import { BaseDialog, Subheading, BodyText, MutedText, Button, SegmentedControl } from "@imify/ui"
+import { formatFileSize } from "@imify/core"
+import { type AIModelMetadata, type AIModelVariant } from "./models"
 
 interface ModelDownloadDialogProps {
   isOpen: boolean
   onClose: () => void
   onConfirm: () => void
   model: AIModelMetadata
+  variantId: string
+  onVariantChange: (id: string) => void
   confirmLabel?: string
 }
 
@@ -18,9 +19,15 @@ export function ModelDownloadDialog({
   onClose,
   onConfirm,
   model,
+  variantId,
+  onVariantChange,
   confirmLabel = "Download & Start"
 }: ModelDownloadDialogProps) {
   const [agreed, setAgreed] = useState(false)
+
+  const selectedVariant = useMemo(() => 
+    model.variants.find(v => v.id === variantId) || model.variants[0],
+  [model.variants, variantId])
 
   return (
     <BaseDialog
@@ -36,10 +43,30 @@ export function ModelDownloadDialog({
           <div className="space-y-1">
             <Subheading className="text-xl font-bold">Download AI Model</Subheading>
             <MutedText className="text-sm">
-              {model.name} is the model used for Background Remover
+              {model.name} for Background Remover
             </MutedText>
           </div>
         </div>
+
+        {/* Variant Selection */}
+        {model.variants.length > 1 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 px-1">
+              <Info size={12} className="text-slate-400" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Select Version</span>
+            </div>
+            <SegmentedControl
+              value={variantId}
+              options={model.variants.map(v => ({ value: v.id, label: v.label }))}
+              onChange={onVariantChange}
+            />
+            {selectedVariant.description && (
+              <p className="text-[10px] text-slate-500 italic px-1">
+                {selectedVariant.description}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 space-y-3">
           <div className="flex justify-between items-center text-xs">
@@ -48,7 +75,7 @@ export function ModelDownloadDialog({
           </div>
           <div className="flex justify-between items-center text-xs">
             <span className="text-slate-500">Download Size</span>
-            <span className="font-semibold text-slate-700 dark:text-slate-200">~{model.size}</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-200">~{formatFileSize(selectedVariant.sizeBytes)}</span>
           </div>
           <div className="flex justify-between items-center text-xs">
             <span className="text-slate-500">License</span>

@@ -31,6 +31,7 @@ export function SharedBackgroundRemoverPage({
 }: SharedBackgroundRemoverPageProps) {
   const setHasImage = useBackgroundRemoverStore((s) => s.setHasImage)
   const modelId = useBackgroundRemoverStore((s) => s.modelId)
+  const variantId = useBackgroundRemoverStore((s) => s.variantId)
   const edgeSmoothing = useBackgroundRemoverStore((s) => s.edgeSmoothing)
   const outputFormat = useBackgroundRemoverStore((s) => s.outputFormat)
   const backgroundColor = useBackgroundRemoverStore((s) => s.backgroundColor)
@@ -41,7 +42,6 @@ export function SharedBackgroundRemoverPage({
   const [resultImageData, setResultImageData] = useState<ImageData | null>(null)
   const [lastAiOutput, setLastAiOutput] = useState<any>(null)
   
-  const [hasAgreedToDownload, setHasAgreedToDownload] = useState(false)
   const { error, success } = useToast()
 
   const processOutput = useCallback(async (output: any) => {
@@ -132,6 +132,7 @@ export function SharedBackgroundRemoverPage({
     progressPayload
   } = useBackgroundRemoval({
     modelId,
+    variantId,
     unloadAfterSuccess: unloadModelAfterProcess,
     onSuccess: (output) => {
       setLastAiOutput(output)

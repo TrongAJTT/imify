@@ -11,6 +11,8 @@ export function BackgroundRemoverSidebar() {
   const {
     modelId,
     setModelId,
+    variantId,
+    setVariantId,
     edgeSmoothing,
     setEdgeSmoothing,
     outputFormat,
@@ -22,6 +24,7 @@ export function BackgroundRemoverSidebar() {
   } = useBackgroundRemoverStore()
 
   const selectedModel = BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
+  const selectedVariant = selectedModel.variants.find(v => v.id === variantId) ?? selectedModel.variants[0]
 
   // Initialize smart default for unloadModelAfterProcess based on hardware
   useEffect(() => {
@@ -57,6 +60,17 @@ export function BackgroundRemoverSidebar() {
             onChange={setModelId}
             tooltipContent={selectedModel.description}
           />
+
+          {/* Model Variant */}
+          {selectedModel.variants.length > 0 && (
+            <SelectInput
+              label="Variant"
+              value={selectedVariant.id}
+              options={selectedModel.variants.map(v => ({ value: v.id, label: v.label }))}
+              onChange={setVariantId}
+              tooltipContent={selectedVariant.description}
+            />
+          )}
 
           {/* Edge Refinement */}
           <SliderInput

@@ -96,7 +96,8 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-5xl h-[85vh] md:h-[75vh] max-h-[800px] overflow-hidden flex flex-col"
+      className="max-w-6xl"
+      contentClassName="w-full max-w-6xl h-[90vh] md:h-[85vh] max-h-[900px] overflow-hidden flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-900">

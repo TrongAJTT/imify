@@ -24,3 +24,4 @@ export * from "./types"
 export * from "./workspace-entry-preferences"
 
 export * from "./hooks/use-toast"
+export * from "./format-utils"

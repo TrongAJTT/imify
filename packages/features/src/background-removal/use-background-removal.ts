@@ -4,13 +4,20 @@ import { BACKGROUND_REMOVAL_MODELS } from './models';
 
 export interface UseBackgroundRemovalOptions {
   modelId?: string;
+  variantId?: string;
   onSuccess?: (result: any) => void;
   onError?: (error: string) => void;
   unloadAfterSuccess?: boolean;
 }
 
 export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) {
-  const { modelId = 'onnx-community/ormbg-ONNX', onSuccess, onError, unloadAfterSuccess = false } = options;
+  const { 
+    modelId = 'onnx-community/ormbg-ONNX', 
+    variantId = 'fp16',
+    onSuccess, 
+    onError, 
+    unloadAfterSuccess = false 
+  } = options;
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPayload, setProgressPayload] = useState<ConversionProgressPayload | null>(null);
 
@@ -27,7 +34,7 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
 
   useEffect(() => {
     // Initialize worker
-    const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./background-removal.worker.ts', import.meta.url), { type: 'module' });
     workerRef.current = worker;
 
     const handleMessage = (event: MessageEvent) => {
@@ -105,6 +112,17 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
     };
 
     worker.addEventListener('message', handleMessage);
+    worker.onerror = (e) => {
+      console.error('[Worker Error]', e);
+      setIsProcessing(false);
+      setProgressPayload({
+        id: 'bg-remover-task',
+        fileName: 'Background Removal',
+        status: 'error',
+        percent: 100,
+        message: 'AI Worker crashed or failed to load. Please refresh.'
+      });
+    };
 
     return () => {
       terminateWorker();
@@ -123,16 +141,21 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
       message: 'Preparing AI pipeline...'
     });
 
+    const modelMeta = BACKGROUND_REMOVAL_MODELS.find(m => m.id === modelId);
+    const variantMeta = modelMeta?.variants.find(v => v.id === variantId) || modelMeta?.variants[0];
+
     workerRef.current.postMessage({
       action: 'remove-background',
       payload: {
         image,
         options: {
           modelId,
+          dtype: variantMeta?.dtype,
+          quantized: variantMeta?.quantized
         }
       }
     });
-  }, [modelId]);
+  }, [modelId, variantId]);
 
   return {
     removeBackground,

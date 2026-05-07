@@ -8,7 +8,7 @@ import {
 } from "@imify/ui"
 import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast"
 import { useBackgroundRemoverStore } from "@imify/stores"
-import { BACKGROUND_REMOVAL_MODELS } from "./models"
+import { BACKGROUND_REMOVAL_MODELS, type AIModelVariant } from "./models"
 import { ModelDownloadDialog } from "./model-download-dialog"
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace"
 import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar"
@@ -35,6 +35,7 @@ export function BackgroundRemoverWorkspace({
   onStartProcessing,
   modelId
 }: BackgroundRemoverWorkspaceProps) {
+  const { variantId, setVariantId } = useBackgroundRemoverStore()
   const [viewMode, setViewMode] = useState<"split" | "side_by_side">("split")
   const [splitPosition, setSplitPosition] = useState(50)
   const [zoom, setZoom] = useState(100)
@@ -238,6 +239,8 @@ export function BackgroundRemoverWorkspace({
         onClose={() => setIsDownloadDialogOpen(false)}
         onConfirm={handleConfirmDownload}
         model={selectedModel}
+        variantId={variantId}
+        onVariantChange={setVariantId}
       />
 
       <ToastContainer toasts={[...toasts, ...conversionToasts]} onRemove={hide} />
