@@ -86,6 +86,7 @@ export function BackgroundRemoverSidebar({
       content: (
         <AccordionCard
           label="AI Engine"
+          sublabel={`${selectedModel.name} (${selectedVariant.label})`}
           icon={<Brain size={16} />}
           defaultOpen={true}
           colorTheme="pink"
@@ -131,6 +132,13 @@ export function BackgroundRemoverSidebar({
                   <strong>Model:</strong> {selectedModel.description}
                 </MutedText>
               </div>
+              <div className="flex items-start gap-2.5">
+                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0" />
+                <MutedText className="text-[11px] leading-relaxed">
+                  <strong>Variant:</strong> {selectedVariant.label}
+                  {selectedVariant.description && <span className="opacity-70 italic ml-1">— {selectedVariant.description}</span>}
+                </MutedText>
+              </div>
             </div>
           </div>
         </AccordionCard>
@@ -142,7 +150,7 @@ export function BackgroundRemoverSidebar({
       content: (
         <PresetSelector
           label="Output Preset"
-          theme="pink"
+          theme="sky"
           defaultPreset={VIRTUAL_DEFAULT_PNG_PRESET}
           formatFilter={["png", "webp", "avif", "jxl", "jpg"]}
           activePresetId={activePresetId}
@@ -158,9 +166,10 @@ export function BackgroundRemoverSidebar({
       content: (
         <AccordionCard
           label="Processing & Output"
+          sublabel={outputFormat === "transparent" ? "Format: Transparent" : "Format: Solid Color"}
           icon={<Sliders size={16} />}
           defaultOpen={true}
-          colorTheme="pink"
+          colorTheme="purple"
           childrenClassName="p-3 space-y-4"
         >
           <SliderInput
@@ -174,7 +183,7 @@ export function BackgroundRemoverSidebar({
 
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Image size={14} className="text-pink-500" />
+              <Image size={14} className="text-purple-500" />
               <BodyText className="text-xs font-semibold uppercase tracking-wider text-slate-500">Background Type</BodyText>
             </div>
 
@@ -184,7 +193,7 @@ export function BackgroundRemoverSidebar({
                 value="transparent"
                 selectedValue={outputFormat}
                 onChange={(v) => setOutputFormat(v as any)}
-                colorTheme="pink"
+                colorTheme="purple"
                 icon={<div className="w-4 h-4 rounded-sm border border-slate-200 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAACtJREFUGFdjZEADJgY0QCSTmZkZpAAsAKYAFUAWQBVAFUAWQBVAFUAWQBVAFUAWQBVAFUAWQBUAFUAXQBUNAwAF+L7zAAAAAElFTkSuQmCC')] bg-repeat" />}
               />
 
@@ -193,7 +202,7 @@ export function BackgroundRemoverSidebar({
                 value="color"
                 selectedValue={outputFormat}
                 onChange={(v) => setOutputFormat(v as any)}
-                colorTheme="pink"
+                colorTheme="purple"
                 icon={<div className="w-4 h-4 rounded-sm border border-slate-200" style={{ backgroundColor }} />}
                 rightSlot={
                   <ColorPickerPopover

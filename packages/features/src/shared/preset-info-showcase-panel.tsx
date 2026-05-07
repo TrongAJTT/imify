@@ -25,8 +25,9 @@ interface PresetInfoShowcasePanelProps {
   subtitle: string
   tips: string[]
   featureChips: string[]
-  faqs: PresetInfoFaqItem[],
+  faqs: PresetInfoFaqItem[]
   padding?: number
+  maxHeight?: string | number
 }
 
 export function PresetInfoShowcasePanel({
@@ -42,6 +43,7 @@ export function PresetInfoShowcasePanel({
   featureChips,
   faqs,
   padding = 0,
+  maxHeight = 240,
 }: PresetInfoShowcasePanelProps) {
   const IMAGE_AUTO_ADVANCE_MS = 6000
   const tipOfTheDay = tips[Math.abs(new Date().getDate()) % Math.max(1, tips.length)] ?? "Tip unavailable."
@@ -156,8 +158,8 @@ export function PresetInfoShowcasePanel({
       <div className="overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40">
         <div className="relative">
           <div
-            className="flex w-full items-center justify-center bg-slate-100 dark:bg-slate-900/70"
-            style={{ aspectRatio: previewAspectRatio }}
+            className="flex w-full items-center justify-center bg-slate-100 dark:bg-slate-900/70 overflow-hidden"
+            style={{ aspectRatio: previewAspectRatio, maxHeight }}
           >
             {renderedPreviewMedia.type === "video" ? (
               <video

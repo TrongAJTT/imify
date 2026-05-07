@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { BookmarkX, Check, FolderOpen, Sparkles, Stamp, Trash2, X } from "lucide-react"
 
-import { BaseDialog, Button, SecondaryButton } from "@imify/ui"
+import { BaseDialog, Button, SecondaryButton, Subheading, BodyText, MutedText } from "@imify/ui"
 import type { BatchWatermarkConfig, BatchWatermarkPosition } from "@imify/stores/stores/batch-types"
 import type { SavedWatermarkItem } from "@imify/stores/stores/watermark-store"
 import { watermarkStorage } from "@imify/core/indexed-db"
@@ -433,7 +433,7 @@ export function buildWatermarkMetadata(item: SavedWatermarkItem): string {
   }
 
   const parts: string[] = []
-  
+
   // Position
   const positionLabel = {
     "top-left": "↖ Top-Left",
@@ -562,11 +562,10 @@ export function WatermarkPreviewCard({
     <button
       type="button"
       onClick={() => onSelect(item.id)}
-      className={`group overflow-hidden rounded-xl border text-left transition-all ${
-        selected
-          ? "border-sky-500 bg-sky-50/60 shadow-sm shadow-sky-500/20 ring-1 ring-sky-300 dark:bg-sky-500/10 dark:ring-sky-600"
-          : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
-      }`}
+      className={`group overflow-hidden rounded-xl border text-left transition-all ${selected
+        ? "border-sky-500 bg-sky-50/60 shadow-sm shadow-sky-500/20 ring-1 ring-sky-300 dark:bg-sky-500/10 dark:ring-sky-600"
+        : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
+        }`}
     >
       <div className="relative aspect-[3/2] w-full overflow-hidden border-b border-slate-200/70 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
         <canvas
@@ -583,14 +582,14 @@ export function WatermarkPreviewCard({
         ) : null}
       </div>
 
-      <div className="space-y-1.5 px-3 py-3">
-        <div className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">{item.name}</div>
-        <div className="text-[10px] text-slate-500 dark:text-slate-400">
+      <div className="space-y-1 px-3 py-3">
+        <div className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">{item.name}</div>
+        <MutedText className="text-[10px] leading-tight truncate">
           {buildWatermarkMetadata(item)}
-        </div>
-        <div className="text-[10px] text-slate-400 dark:text-slate-500">
+        </MutedText>
+        <MutedText className="text-[10px] opacity-60">
           Saved on {formatSavedDate(item)}
-        </div>
+        </MutedText>
       </div>
     </button>
   )
@@ -605,10 +604,10 @@ export function EmptySavedWatermarkState() {
           <BookmarkX size={12} />
         </span>
       </div>
-      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">No saved watermarks yet</p>
-      <p className="mt-1 max-w-sm text-xs text-slate-500 dark:text-slate-400">
+      <BodyText className="text-sm font-bold text-slate-800 dark:text-slate-100">No saved watermarks yet</BodyText>
+      <MutedText className="mt-1 max-w-sm text-xs text-center">
         Save your current watermark pattern first, then reopen it anytime from this library.
-      </p>
+      </MutedText>
       <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
         <Sparkles size={11} />
         Client-side only
@@ -679,16 +678,16 @@ export function WatermarkOpenSavedDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-4xl rounded-xl overflow-hidden flex flex-col"
+      contentClassName="w-full max-w-4xl mx-auto rounded-xl overflow-hidden flex flex-col"
     >
       <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/40">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <div className="rounded-lg bg-sky-100 p-2 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
-            <FolderOpen size={16} />
+            <FolderOpen size={18} />
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{title}</h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Choose a saved watermark card to continue.</p>
+          <div className="min-w-0">
+            <Subheading className="text-sm font-bold leading-tight">{title}</Subheading>
+            <MutedText className="text-[11px] leading-tight mt-0.5">Choose a saved watermark card to continue.</MutedText>
           </div>
         </div>
         <button
@@ -705,7 +704,7 @@ export function WatermarkOpenSavedDialog({
         {items.length === 0 ? (
           <EmptySavedWatermarkState />
         ) : (
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
             {items.map((item) => (
               <WatermarkPreviewCard
                 key={item.id}
@@ -719,11 +718,11 @@ export function WatermarkOpenSavedDialog({
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/40">
-        <div>
+        <div className="min-w-0">
           {selectedItem ? (
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Selected: <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedItem.name}</span>
-            </p>
+            <BodyText className="text-xs truncate">
+              Selected: <span className="font-bold text-sky-600 dark:text-sky-400">{selectedItem.name}</span>
+            </BodyText>
           ) : null}
         </div>
 

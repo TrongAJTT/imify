@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Trash2, Image, Cpu, Download } from "lucide-react"
+import { Trash2, Image, Cpu, Download, ChevronDown, ChevronRight } from "lucide-react"
 import { Button, BodyText, MutedText } from "@imify/ui"
 import { formatFileSize } from "@imify/core"
 import { BACKGROUND_REMOVAL_MODELS, type AIModelMetadata } from "../../background-removal/models"
@@ -14,6 +14,7 @@ export function AssetAIModelsTab() {
   const [isLoading, setIsLoading] = useState(true)
   const [modelToDownload, setModelToDownload] = useState<AIModelMetadata | null>(null)
   const [selectedVariantId, setSelectedVariantId] = useState<string>("")
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
   const { toasts, hide, success, error } = useToast()
 
   const MODEL_CATEGORIES = [
@@ -43,18 +44,20 @@ export function AssetAIModelsTab() {
 
       for (const model of allModels) {
         for (const variant of model.variants) {
-          // A variant is considered cached if there's a request in cache containing the model ID 
-          // AND specific characteristics of the variant if we can distinguish them.
-          // For now, transformers.js caches by model path. 
-          // If variants share the same path but different config (dtype/quantized), 
-          // we might need more complex check, but usually they are different files.
+          // A variant is considered cached ONLY if its primary ONNX weights file exists.
+          // This prevents false positives from shared metadata files like config.json.
           const isCached = keys.some(request => {
             const url = request.url.toLowerCase()
-            const modelMatch = url.includes(model.id.toLowerCase())
-            // Check for dtype or quantized in URL/filename
-            if (variant.quantized) return modelMatch && url.includes('quantized')
-            if (variant.dtype === 'fp16') return modelMatch && url.includes('fp16')
-            return modelMatch
+            if (!url.includes(model.id.toLowerCase())) return false
+            
+            // We only care about the weights files for status checking
+            if (!url.endsWith('.onnx')) return false
+
+            if (variant.quantized) return url.includes('quantized')
+            if (variant.dtype === 'fp16') return url.includes('fp16')
+            
+            // For full precision (usually fp32), it should not have special suffixes in the weights filename
+            return !url.includes('quantized') && !url.includes('fp16')
           })
 
           if (isCached) {
@@ -85,14 +88,21 @@ export function AssetAIModelsTab() {
 
       for (const request of keys) {
         const url = request.url.toLowerCase()
-        const modelMatch = url.includes(model.id.toLowerCase())
-        let variantMatch = false
+        if (!url.includes(model.id.toLowerCase())) continue
 
-        if (variant.quantized) variantMatch = url.includes('quantized')
-        else if (variant.dtype === 'fp16') variantMatch = url.includes('fp16')
-        else variantMatch = !url.includes('quantized') && !url.includes('fp16')
+        let shouldDelete = false
+        if (variant.quantized) {
+          shouldDelete = url.includes('quantized')
+        } else if (variant.dtype === 'fp16') {
+          shouldDelete = url.includes('fp16')
+        } else {
+          // For full precision, delete files that don't have other variant markers
+          // Note: this might delete shared files like config.json, which is okay as they are small 
+          // and will be re-downloaded if another variant needs them.
+          shouldDelete = !url.includes('quantized') && !url.includes('fp16')
+        }
 
-        if (modelMatch && variantMatch) {
+        if (shouldDelete) {
           await cache.delete(request)
         }
       }
@@ -147,6 +157,15 @@ export function AssetAIModelsTab() {
     }
   }
 
+  const toggleCategory = (categoryId: string) => {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev)
+      if (next.has(categoryId)) next.delete(categoryId)
+      else next.add(categoryId)
+      return next
+    })
+  }
+
   return (
     <div className="flex flex-col h-full overflow-hidden bg-slate-50/80 dark:bg-slate-950/40">
       <div className="flex-1 overflow-y-auto p-6">
@@ -171,15 +190,34 @@ export function AssetAIModelsTab() {
             </div>
           </div>
 
-          {MODEL_CATEGORIES.map((category) => (
-            <div key={category.id} className="space-y-5">
-              <div className="flex items-center gap-2.5 px-1">
-                {category.icon}
-                <Subheading className="text-sm font-extrabold tracking-tight uppercase text-slate-800 dark:text-slate-200">{category.label}</Subheading>
-              </div>
+          {MODEL_CATEGORIES.map((category) => {
+            const isCollapsed = collapsedCategories.has(category.id)
+            
+            return (
+              <div key={category.id} className="space-y-4">
+                <button
+                  onClick={() => toggleCategory(category.id)}
+                  className="flex w-full items-center justify-between gap-2.5 px-1 py-1 group cursor-pointer hover:opacity-80 transition-opacity"
+                >
+                  <div className="flex items-center gap-2.5">
+                    {category.icon}
+                    <Subheading className="text-sm font-extrabold tracking-tight uppercase text-slate-800 dark:text-slate-200">
+                      {category.label}
+                    </Subheading>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                      {category.models.length}
+                    </span>
+                  </div>
+                  {isCollapsed ? (
+                    <ChevronRight size={16} className="text-slate-400 group-hover:text-pink-500 transition-colors" />
+                  ) : (
+                    <ChevronDown size={16} className="text-slate-400 group-hover:text-pink-500 transition-colors" />
+                  )}
+                </button>
 
-              <div className="space-y-5">
-                {category.models.map((model) => (
+                {!isCollapsed && (
+                  <div className="space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {category.models.map((model) => (
                   <div
                     key={model.id}
                     className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none flex flex-col gap-6"
@@ -276,9 +314,11 @@ export function AssetAIModelsTab() {
                     </div>
                   </div>
                 ))}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {modelToDownload && (
