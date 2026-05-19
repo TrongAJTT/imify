@@ -28,6 +28,7 @@ import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
 import { useTransformGuides, type RectBounds } from "@imify/features/filling/use-transform-guides"
 import { buildActiveFillingFormatOptions } from "@imify/stores/stores/filling-format-options"
 import { preventWheelEvent } from "../../shared/prevent-wheel-event"
+import { useClipboardImageIntake } from "../../shared/use-clipboard-image-intake"
 import {
   regenerateLayerShapePoints,
   resolveLayerShapePoints,
@@ -270,6 +271,17 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     [selectedFillState?.imageUrl, selectedRuntimeItem, updateLayerFillState]
   )
 
+  // Lắng nghe sự kiện paste ảnh từ clipboard khi layer hiện tại chưa có ảnh
+  useClipboardImageIntake({
+    enabled: Boolean(selectedRuntimeItem && !selectedFillState?.imageUrl),
+    mode: "single",
+    onImages: (files) => {
+      if (files.length) {
+        applyImageFileToSelectedRuntimeItem(files[0])
+      }
+    },
+  })
+
   const triggerEmptyLayerImageSelect = useCallback(() => {
     if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
       return
@@ -277,6 +289,32 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
     emptyImageUploadInputRef.current?.click()
   }, [selectedFillState?.imageUrl, selectedRuntimeItem])
+
+  const handleEmptyOverlayClick = useCallback(async () => {
+    if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
+      return
+    }
+
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.read === "function") {
+        const clipboardItems = await navigator.clipboard.read()
+        for (const item of clipboardItems) {
+          const imageType = item.types.find((type) => type.startsWith("image/"))
+          if (imageType) {
+            const blob = await item.getType(imageType)
+            const ext = imageType.split("/")[1] || "png"
+            const file = new File([blob], `pasted_${Date.now()}.${ext}`, { type: imageType })
+            applyImageFileToSelectedRuntimeItem(file)
+            return
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to paste image from clipboard on click:", err)
+    }
+
+    triggerEmptyLayerImageSelect()
+  }, [selectedRuntimeItem, selectedFillState?.imageUrl, applyImageFileToSelectedRuntimeItem, triggerEmptyLayerImageSelect])
 
   const handleEmptyLayerImageUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1202,9 +1240,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
     const clipPolygons = selectedRuntimeItem.kind === "group"
       ? applyRuntimeTransformToPolygons(
-          selectedRuntimeItem.polygons,
-          groupRuntimeTransforms[selectedRuntimeItem.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }
-        )
+        selectedRuntimeItem.polygons,
+        groupRuntimeTransforms[selectedRuntimeItem.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }
+      )
       : [toWorldLayerPoints(selectedRuntimeItem.layer)]
 
     const clipPoints = clipPolygons.flat()
@@ -1760,8 +1798,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                     item={item}
                     fillState={fillState}
                     canvasFillState={canvasFillState}
-                  canvasWidth={template.canvasWidth}
-                  canvasHeight={template.canvasHeight}
+                    canvasWidth={template.canvasWidth}
+                    canvasHeight={template.canvasHeight}
                     loadedImg={loadedImg?.complete ? loadedImg : undefined}
                     runtimeTransform={groupRuntimeTransforms[item.id] ?? { ...DEFAULT_IMAGE_TRANSFORM }}
                     scale={renderScale}
@@ -1834,11 +1872,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                   name="fill-empty-upload-overlay"
                   onClick={(event) => {
                     event.cancelBubble = true
-                    triggerEmptyLayerImageSelect()
+                    void handleEmptyOverlayClick()
                   }}
                   onTap={(event) => {
                     event.cancelBubble = true
-                    triggerEmptyLayerImageSelect()
+                    void handleEmptyOverlayClick()
                   }}
                 >
                   <Rect
@@ -1912,16 +1950,14 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
         <div
           onPointerDown={handlePreviewResizeStart}
-          className={`absolute bottom-0 left-0 right-0 h-4 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors z-20 ${
-            isResizingPreview ? "bg-sky-400 dark:bg-sky-500" : ""
-          }`}
+          className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors z-20 ${isResizingPreview ? "bg-sky-400 dark:bg-sky-500" : ""
+            }`}
           style={{ cursor: "ns-resize", touchAction: "none" }}
           role="separator"
           aria-label="Resize fill preview height"
         >
-          <div className={`absolute inset-x-0 bottom-0 h-1.5 transition-colors ${
-            isResizingPreview ? "bg-sky-500" : ""
-          }`} />
+          <div className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${isResizingPreview ? "bg-sky-500" : ""
+            }`} />
         </div>
       </div>
 

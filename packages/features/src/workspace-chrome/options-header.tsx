@@ -6,6 +6,7 @@ import { Tooltip } from "../shared/tooltip"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 import { useIsDesktopLayout } from "./desktop-layout"
+import { GithubStarDonate } from "./github-star-donate"
 
 export interface WorkspaceHeaderNavItem {
   id?: string
@@ -279,14 +280,18 @@ export function WorkspaceOptionsHeader({
       <div className="flex items-center gap-1 shrink-0">
         {isDesktop ? (
           <div className="flex items-center gap-1">
-            <TitleBarButton
-              onClick={onOpenDonate}
-              tooltipText="Support the dev"
-              isDonate
-              label={isExtension ? undefined : "Donate"}
-            >
-              <Heart size={16} fill="red" stroke="red" />
-            </TitleBarButton>
+            {isExtension ? (
+              <TitleBarButton
+                onClick={onOpenDonate}
+                tooltipText="Support the dev"
+                isDonate
+                label={undefined}
+              >
+                <Heart size={16} fill="red" stroke="red" />
+              </TitleBarButton>
+            ) : (
+              <GithubStarDonate onOpenDonate={onOpenDonate} />
+            )}
             <TitleBarButton
               onClick={onToggleDark}
               tooltipText={isDark ? "Switch to light mode" : "Switch to dark mode"}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ImagePlus, Layers, Palette, SlidersHorizontal, X } from "lucide-react"
+import { ImagePlus, Layers, Palette, RotateCcw, SlidersHorizontal, X } from "lucide-react"
 
 import type { FillingTemplate, ImageTransform, LayerFillState, VectorLayer } from "@imify/features/filling/types"
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types"
@@ -129,6 +129,11 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
     {
       actionId: "fill.customization.tab_layer",
       handler: () => setActiveCustomizationTab("layer"),
+    },
+    {
+      actionId: "fill.customization.clear_image",
+      handler: () => handleClearImage(),
+      enabled: Boolean(selectedRuntimeItem && selectedFillState?.imageUrl),
     },
   ])
 
@@ -298,6 +303,32 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
     [selectedFillState?.imageUrl, selectedRuntimeItem, updateSelectedLayerState]
   )
 
+  const handleSelectImageClick = useCallback(async () => {
+    if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
+      return
+    }
+
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.read === "function") {
+        const clipboardItems = await navigator.clipboard.read()
+        for (const item of clipboardItems) {
+          const imageType = item.types.find((type) => type.startsWith("image/"))
+          if (imageType) {
+            const blob = await item.getType(imageType)
+            const ext = imageType.split("/")[1] || "png"
+            const file = new File([blob], `pasted_${Date.now()}.${ext}`, { type: imageType })
+            applyImageFileToSelectedRuntimeItem(file)
+            return
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to paste image from clipboard on sidebar button click:", err)
+    }
+
+    triggerImageSelect()
+  }, [selectedRuntimeItem, selectedFillState?.imageUrl, applyImageFileToSelectedRuntimeItem, triggerImageSelect])
+
   const handleImageUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
@@ -364,6 +395,23 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
       imageTransform: { ...DEFAULT_IMAGE_TRANSFORM },
     })
   }, [selectedFillState?.imageUrl, updateSelectedLayerState])
+
+  const handleClearLayer = useCallback(() => {
+    if (!selectedRuntimeItem) return
+
+    if (selectedFillState?.imageUrl) {
+      safeRevokeObjectUrl(selectedFillState.imageUrl)
+    }
+
+    updateSelectedLayerState({
+      imageUrl: null,
+      imageTransform: { ...DEFAULT_IMAGE_TRANSFORM },
+      borderWidth: 0,
+      borderColor: "#000000",
+      borderGradient: null,
+      cornerRadius: 0,
+    })
+  }, [selectedFillState?.imageUrl, selectedRuntimeItem, updateSelectedLayerState])
 
   const handleResetImageTransform = useCallback(() => {
     updateSelectedLayerState({
@@ -494,7 +542,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
                       Drag and drop an image here, or select one manually.
                     </p>
-                    <Button type="button" variant="secondary" size="sm" onClick={triggerImageSelect}>
+                    <Button type="button" variant="secondary" size="sm" onClick={handleSelectImageClick}>
                       <ImagePlus size={14} />
                       Select Image
                     </Button>
@@ -506,7 +554,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     onReset={handleResetImageTransform}
                     actions={
                       <>
-                        <Tooltip content={FILLING_TOOLTIPS.fillLayerCustomization.clearImage}>
+                        <Tooltip content={`${FILLING_TOOLTIPS.fillLayerCustomization.clearImage} (${getShortcutLabel("fill.customization.clear_image")})`}>
                             <Button type="button" variant="secondary" size="sm" onClick={handleClearImage}>
                             <X size={14} />
                           </Button>
@@ -569,15 +617,27 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                 onChange={handleLayerTransformChange}
                 onReset={handleResetLayerTransform}
                 actions={
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleDeleteLayer}
-                    className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
-                  >
-                    <X size={14} />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Tooltip content="Clear Layer style and image">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleClearLayer}
+                      >
+                        <RotateCcw size={14} />
+                      </Button>
+                    </Tooltip>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleDeleteLayer}
+                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+                    >
+                      <X size={14} />
+                    </Button>
+                  </div>
                 }
               />
             )}
