@@ -69,7 +69,7 @@ export function TemplateMethodDialog({
   initialHeight = 1080,
 }: TemplateMethodDialogProps) {
   const [name, setName] = useState("")
-  const [method, setMethod] = useState<TemplateCreationMethod>("manual")
+  const [method, setMethod] = useState<TemplateCreationMethod>("grid-design")
   const [widthPx, setWidthPx] = useState(initialWidth)
   const [heightPx, setHeightPx] = useState(initialHeight)
   const [unit, setUnit] = useState<CanvasSizeUnit>("px")
@@ -100,7 +100,7 @@ export function TemplateMethodDialog({
   useEffect(() => {
     if (!isOpen) return
     setName("")
-    setMethod("manual")
+    setMethod("grid-design")
     setWidthPx(initialWidth)
     setHeightPx(initialHeight)
     setUnit("px")
@@ -180,15 +180,16 @@ export function TemplateMethodDialog({
 
             <section>
               <div className="mb-2 text-xs font-semibold text-slate-700 dark:text-slate-300">Creation Method</div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <RadioCard
-                  icon={<PenTool size={16} className="text-sky-500" />}
-                  title="Manual Editor"
-                  subtitle="Add and arrange shape layers by hand"
-                  value="manual"
+                  icon={<LayoutGrid size={16} className="text-sky-500" />}
+                  title="Grid Designer"
+                  subtitle="Build flexible grids from compact row syntax"
+                  value="grid-design"
                   selectedValue={method}
                   onChange={(value) => setMethod(value as TemplateCreationMethod)}
                   className="h-full py-2.5"
+                  badgeText="Recommend"
                 />
                 <RadioCard
                   icon={<Grid3x3 size={16} className="text-sky-500" />}
@@ -200,10 +201,10 @@ export function TemplateMethodDialog({
                   className="h-full py-2.5"
                 />
                 <RadioCard
-                  icon={<LayoutGrid size={16} className="text-sky-500" />}
-                  title="Grid Designer"
-                  subtitle="Build flexible grids from compact row syntax"
-                  value="grid-design"
+                  icon={<PenTool size={16} className="text-sky-500" />}
+                  title="Manual Editor"
+                  subtitle="Add and arrange shape layers by hand"
+                  value="manual"
                   selectedValue={method}
                   onChange={(value) => setMethod(value as TemplateCreationMethod)}
                   className="h-full py-2.5"

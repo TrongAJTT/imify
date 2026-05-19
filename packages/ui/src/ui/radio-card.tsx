@@ -17,6 +17,7 @@ interface RadioCardProps {
   className?: string
   rightSlot?: React.ReactNode
   colorTheme?: ColorTheme
+  badgeText?: string
 }
 
 export function RadioCard({
@@ -31,7 +32,8 @@ export function RadioCard({
   tooltipLabel,
   className = "",
   rightSlot,
-  colorTheme = "sky"
+  colorTheme = "sky",
+  badgeText
 }: RadioCardProps) {
   const checked = selectedValue === value
 
@@ -71,8 +73,13 @@ export function RadioCard({
         <div className="flex items-start gap-2 min-w-0">
           {icon && <div className="shrink-0 mt-0.5">{icon}</div>}
           <div className="min-w-0">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="truncate text-[12px] font-bold text-slate-700 dark:text-slate-300">{title}</span>
+              {badgeText && (
+                <span className="shrink-0 inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[8px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase tracking-widest scale-90 origin-left">
+                  {badgeText}
+                </span>
+              )}
               {(tooltipContent || tooltipLabel) && (
                 <Tooltip content={tooltipContent} label={tooltipLabel} variant="wide2">
                   <HelpCircle size={14} className="shrink-0 cursor-help text-slate-400" />

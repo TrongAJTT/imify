@@ -21,7 +21,7 @@ interface GridDesignSidebarProps {
 interface GridTemplatePreset {
   id: string
   label: string
-  rowDefinitions: [string, string, string]
+  rowDefinitions: string[]
 }
 
 const GRID_TEMPLATE_PRESETS: GridTemplatePreset[] = [
@@ -33,7 +33,7 @@ const GRID_TEMPLATE_PRESETS: GridTemplatePreset[] = [
   {
     id: "vertical-3",
     label: "3 vertical columns",
-    rowDefinitions: ["1a 1b 1c", "1a 1b 1c", "1a 1b 1c"],
+    rowDefinitions: ["3"],
   },
   {
     id: "row3-col2",
@@ -84,7 +84,7 @@ function normalizeGridDesignParams(params: GridDesignParams): GridDesignParams {
 function GridTemplatePreview({ preset }: { preset: GridTemplatePreset }) {
   const previewParams: GridDesignParams = {
     ...DEFAULT_GRID_DESIGN_PARAMS,
-    rowCount: PRESET_ROWS,
+    rowCount: preset.rowDefinitions.length,
     outerPadding: PRESET_OUTER_PADDING,
     gap: PRESET_GAP,
     gapX: PRESET_GAP,
@@ -161,7 +161,7 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
     (preset: GridTemplatePreset) => {
       const rowDefinitions = [...preset.rowDefinitions]
       update({
-        rowCount: PRESET_ROWS,
+        rowCount: rowDefinitions.length,
         outerPadding: PRESET_OUTER_PADDING,
         gap: PRESET_GAP,
         gapX: PRESET_GAP,
@@ -321,7 +321,7 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
             ))}
           </div>
           <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-            Applies rows=3, outer padding=16, horizontal gap=16, vertical gap=16.
+            Applies outer padding=16, horizontal gap=16, vertical gap=16.
           </p>
         </ControlledPopover>
       </div>

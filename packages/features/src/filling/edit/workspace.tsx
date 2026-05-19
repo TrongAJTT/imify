@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage, Layer, Line, Rect, Transformer } from "react-konva"
 import type Konva from "konva"
-import { ChevronDown, Loader2, Save } from "lucide-react"
+import { ArrowLeft, ChevronDown, Image, Loader2, Save } from "lucide-react"
 import type { LayerGroup, VectorLayer } from "../types"
 import { resolveLayerShapePoints } from "../shape-generators"
 import { buildGroupOverlayPolygons, getBoundsFromPoints, toWorldLayerPoints } from "../group-geometry"
@@ -393,7 +393,7 @@ export function ManualEditorWorkspace({
                 disabled={isSavingTemplate}
                 className="rounded-r-none px-2"
               >
-                {isSavingTemplate ? <><Loader2 size={14} className="animate-spin" />Saving...</> : <><Save size={14} />Save & Fill</>}
+                {isSavingTemplate ? <><Loader2 size={14} className="animate-spin" />Saving...</> : <><Image size={14} />Save & Fill</>}
               </Button>
               <ControlledPopover
                 preset="dropdown"
@@ -420,7 +420,7 @@ export function ManualEditorWorkspace({
                   className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   onClick={() => { void onSaveTemplate("list") }}
                 >
-                  <Save size={14} />
+                  <ArrowLeft size={14} />
                   Save & Back to list
                 </button>
               </ControlledPopover>

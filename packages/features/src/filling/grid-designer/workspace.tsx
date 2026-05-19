@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Stage } from "react-konva"
 import type Konva from "konva"
-import { ChevronDown, Save } from "lucide-react"
+import { ArrowLeft, ChevronDown, Image, Pencil } from "lucide-react"
 import { Button, PreviewInteractionModeToggle, ZoomPanControl } from "@imify/ui"
 import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
 import { MutedText, Subheading } from "@imify/ui/ui/typography"
@@ -243,7 +243,7 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
               className="rounded-r-none px-2"
               onClick={() => void handleSaveToDestination("fill")}
             >
-              <Save size={14} />
+              <Image size={14} />
               Save & Fill
             </Button>
             <ControlledPopover
@@ -271,7 +271,7 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
                 className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                 onClick={() => void handleSaveToDestination("edit")}
               >
-                <Save size={14} />
+                <Pencil size={14} />
                 Save & Edit
               </button>
               <button
@@ -279,7 +279,7 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
                 className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                 onClick={() => void handleSaveToDestination("list")}
               >
-                <Save size={14} />
+                <ArrowLeft size={14} />
                 Save & Back to list
               </button>
             </ControlledPopover>
