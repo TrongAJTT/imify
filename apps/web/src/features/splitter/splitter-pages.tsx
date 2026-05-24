@@ -164,5 +164,5 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
     )
   }
 
-  return <SplitterTab />
+  return <SplitterTab onRootClick={() => router.push("/splitter")} />
 }

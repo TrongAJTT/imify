@@ -130,7 +130,7 @@ export function PresetSelector({
   // Filter and sort presets by context "single" and optional format filter + dialog filter
   const sortedAvailablePresets = useMemo(() => {
     const list = presets.filter((p) => {
-      const contextMatch = p.context === "single";
+      const contextMatch = true;
       const propFormatMatch =
         !formatFilter || formatFilter.includes(p.config.targetFormat);
 

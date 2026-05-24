@@ -2,10 +2,11 @@
 
 import React from "react"
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, BarChart3, ChevronRight, Code2, Download, Gauge, Keyboard, ListTree, PowerOff, RotateCcw, ShieldAlert, X } from "lucide-react"
+import { ArrowLeft, BarChart3, ChevronRight, Database, Download, Gauge, Keyboard, ListTree, RotateCcw, ShieldAlert, X } from "lucide-react"
 import { APP_CONFIG } from "@imify/core/config"
 import { useToast } from "@imify/core/hooks/use-toast"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { useAssetStatistics } from "./asset-management-dialog"
 import { ToastContainer } from "@imify/ui/components/toast-container"
 import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
@@ -29,13 +30,8 @@ import {
   normalizePerformancePreferences,
   type PerformancePreferences
 } from "../processor/performance-preferences"
-import { useDevModeEnabled } from "../dev-mode/dev-mode-storage"
 import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog"
 import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog"
-import { DevModeStateViewer } from "../dev-mode/dev-mode-state-viewer"
-import { RuntimeConsoleMonitor } from "../dev-mode/runtime-console-monitor"
-import { setRuntimeLogCaptureEnabled } from "../dev-mode/runtime-log-collector"
-import type { OptionsTab } from "../dev-mode/debug-shared"
 import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter"
 import { SettingsShortcutsPanel } from "./settings-shortcuts-panel"
 
@@ -70,7 +66,6 @@ interface WorkspaceSettingsDialogProps {
   onChangePerformancePreferences: (value: PerformancePreferences) => void
   enableUsageStatsTab?: boolean
   devModeSettingsAdapter?: DevModeSettingsAdapter
-  devModeActiveTab?: OptionsTab | null
 }
 
 export function WorkspaceSettingsDialog({
@@ -91,15 +86,47 @@ export function WorkspaceSettingsDialog({
   performancePreferences,
   onChangePerformancePreferences,
   enableUsageStatsTab = true,
-  devModeSettingsAdapter,
-  devModeActiveTab = null
+  devModeSettingsAdapter
 }: WorkspaceSettingsDialogProps) {
   const [activeTab, setActiveTab] = useState<SettingsDialogTab | null>(initialTab)
-  const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled()
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+
+  const presets = useBatchStore((state) => state.presets)
+  const schemaVersion = useBatchStore((state) => state.schemaVersion ?? 1)
+  const migrateSchemaToV2 = useBatchStore((state) => state.migrateSchemaToV2)
+  const assetStats = useAssetStatistics(isOpen)
+
+  const [stats, setStats] = useState({ sizeKb: 0, presetCount: 0, storeCount: 0 })
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    let size = 0
+    let storeCount = 0
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i)
+      if (key && key.startsWith("imify-")) {
+        size += (window.localStorage.getItem(key) ?? "").length * 2
+        storeCount++
+      }
+    }
+    setStats({
+      sizeKb: Math.round((size / 1024) * 10) / 10,
+      presetCount: presets.length,
+      storeCount
+    })
+  }, [presets])
+
+  const handleMigrateSchema = () => {
+    try {
+      migrateSchemaToV2()
+      success("Schema migration successful", "Your presets have been unified under Schema v2.0.", 3000)
+    } catch (err: any) {
+      error("Migration failed", err.message || "An unexpected error occurred.", 15000)
+    }
+  }
   const [isMobileDialog, setIsMobileDialog] = useState(false)
-  const { toasts, hide, success } = useToast()
+  const { toasts, hide, success, error } = useToast()
 
   const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
   const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
@@ -135,9 +162,7 @@ export function WorkspaceSettingsDialog({
     return () => mediaQuery.removeEventListener("change", update)
   }, [])
 
-  useEffect(() => {
-    setRuntimeLogCaptureEnabled(devModeEnabled)
-  }, [devModeEnabled])
+
 
   const navigationWidthSliderOptions = useMemo<DiscreteSliderOption[]>(
     () =>
@@ -187,10 +212,7 @@ export function WorkspaceSettingsDialog({
     })
   }
 
-  const handleDisableDevMode = async () => {
-    await setDevModeEnabled(false)
-    setActiveTab(isMobileDialog ? null : "general")
-  }
+
   const tabs = [
     {
       id: "general" as const,
@@ -244,15 +266,14 @@ export function WorkspaceSettingsDialog({
       hidden: !enableUsageStatsTab
     },
     {
-      id: "developer" as const,
-      label: "Developer",
-      description: "Advanced debugging and integration tools",
-      icon: Code2,
-      activeClassName: "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 shadow-sm ring-1 ring-violet-200 dark:ring-violet-800",
-      inactiveClassName: "text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300",
-      labelClassName: "text-violet-700 dark:text-violet-300",
-      iconClassName: "text-violet-600 dark:text-violet-400",
-      bgClassName: "bg-violet-50 dark:bg-violet-900/40"
+      id: "data" as const,
+      label: "Data Management",
+      description: "Statistics, backup imports/exports, and schema migration",
+      icon: Database,
+      activeClassName: DEFAULT_ACTIVE_CLASS,
+      inactiveClassName: DEFAULT_INACTIVE_CLASS,
+      iconClassName: "text-teal-600 dark:text-teal-400",
+      bgClassName: "bg-teal-50 dark:bg-teal-900/40"
     }
   ].filter((tab) => !tab.hidden)
 
@@ -616,65 +637,142 @@ export function WorkspaceSettingsDialog({
                 </div>
               )}
 
-              {activeTab === "developer" && devModeEnabled && devModeSettingsAdapter && (
+              {activeTab === "data" ? (
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
                     <SettingsSectionHeader
-                      title="Developer Tools"
-                      description="Real-time state monitor and debug log export. Only visible when Developer Mode is active."
+                      title="Data Management"
+                      description="Manage presets, template definitions, preferences, and database schema version."
                     />
                   )}
 
                   <section className="space-y-4">
                     <SettingsItemHeader
-                      title="SYSTEM MONITOR & LOG TOOLS"
-                      description="Inspect live state, then export/import full system snapshots for debugging."
+                      title="DATA STATISTICS"
+                      description="Overview of your persistent browser storage allocation for Imify presets and store preferences."
                     />
-                    <DevModeStateViewer activeTab={devModeActiveTab} settingsAdapter={devModeSettingsAdapter} />
-                    <div className="flex flex-col gap-3 pt-1">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start gap-2 rounded-lg"
-                        onClick={() => setIsExportDialogOpen(true)}
-                      >
-                        <Download size={14} />
-                        Export System Log
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start gap-2 rounded-lg"
-                        onClick={() => setIsImportDialogOpen(true)}
-                      >
-                        <Download size={14} className="rotate-180" />
-                        Import System Log
-                      </Button>
+                    <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          TOTAL PRESETS
+                        </span>
+                        <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                          {stats.presetCount}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          PERSISTED STORES
+                        </span>
+                        <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                          {stats.storeCount}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          STORAGE USED
+                        </span>
+                        <span className="text-2xl font-bold text-slate-850 dark:text-slate-100">
+                          {stats.sizeKb} <span className="text-xs font-semibold text-slate-500">KB</span>
+                        </span>
+                      </div>
                     </div>
                   </section>
 
                   <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
-                      title="RUNTIME CONSOLE MONITOR"
-                      description="Capture runtime console output for quick debugging on desktop and mobile."
+                      title="ASSET STATISTICS"
+                      description="Detailed view of saved watermarks and downloaded offline AI models."
                     />
-                    <RuntimeConsoleMonitor />
+                    <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          SAVED WATERMARKS
+                        </span>
+                        <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                          {assetStats.watermarkCount}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          CACHED AI MODELS
+                        </span>
+                        <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                          {assetStats.cachedModelCount}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          STORAGE OCCUPIED
+                        </span>
+                        <span className="text-2xl font-bold text-slate-850 dark:text-slate-100">
+                          {assetStats.totalSizeFormatted}
+                        </span>
+                      </div>
+                    </div>
                   </section>
 
-                  <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
+                  <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
-                      title="DISABLE DEVELOPER MODE"
-                      description="Hide this tab and disable debug features. You can re-enable from About dialog Easter Egg."
+                      title="BACKUP & RESTORE"
+                      description="Backup presets, templates, settings, and workspace preferences to a JSON file, or restore them from a backup."
                     />
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start gap-2 rounded-lg border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      onClick={handleDisableDevMode}
-                    >
-                      <PowerOff size={14} />
-                      Disable Developer Mode
-                    </Button>
+                    {devModeSettingsAdapter && (
+                      <div className="grid grid-cols-2 gap-3 pt-1">
+                        <Button
+                          variant="outline"
+                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          onClick={() => setIsExportDialogOpen(true)}
+                        >
+                          <Download size={14} />
+                          Export Data
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          onClick={() => setIsImportDialogOpen(true)}
+                        >
+                          <Download size={14} className="rotate-180" />
+                          Import Data
+                        </Button>
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
+                    <SettingsItemHeader
+                      title="SCHEMA MIGRATION"
+                      description="Manage and migrate the version of your local database schema."
+                    />
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-705 dark:bg-slate-900/40">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <BodyText className="font-semibold text-slate-800 dark:text-slate-200">
+                            Database Version
+                          </BodyText>
+                          <MutedText className="text-xs">
+                            Current schema version: {schemaVersion === 2 ? "v2.0 (Unified)" : "v1.0 (Legacy)"}
+                          </MutedText>
+                        </div>
+                        {schemaVersion === 1 ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-4"
+                            onClick={handleMigrateSchema}
+                          >
+                            Migrate to Schema v2
+                          </Button>
+                        ) : (
+                          <span className="text-xs font-semibold px-2.5 py-1 rounded bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50">
+                            Schema is Up to Date
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </section>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         )}
@@ -685,19 +783,23 @@ export function WorkspaceSettingsDialog({
           <DevModeExportDialog
             isOpen={isExportDialogOpen}
             onClose={() => setIsExportDialogOpen(false)}
-            activeTab={devModeActiveTab}
+            activeTab={null}
             performancePreferences={safePerformancePreferences}
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
+            title="Export Data"
+            description="Select the features you want to export. This file can be used to restore your settings and presets."
           />
           <DevModeImportDialog
             isOpen={isImportDialogOpen}
             onClose={() => setIsImportDialogOpen(false)}
-            activeTab={devModeActiveTab}
+            activeTab={null}
             performancePreferences={safePerformancePreferences}
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
             onSuccess={() => success("Import successful", "State has been restored.", 3000)}
+            title="Import Data"
+            description="Select a previously exported data file to restore your settings and presets."
           />
         </>
       )}

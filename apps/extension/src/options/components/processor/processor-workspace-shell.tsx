@@ -36,10 +36,7 @@ export function ProcessorWorkspaceShell({ context, workspace }: ProcessorWorkspa
   const contextLabel = context === "single" ? "Single Processor" : "Batch Processor"
   const contextToolId = context === "single" ? "single-processor" : "batch-processor"
   const viewMode = presetViewByContext[context] ?? "select"
-  const scopedPresets = useMemo(
-    () => presets.filter((preset) => preset.context === context),
-    [presets, context]
-  )
+  const scopedPresets = presets
   const activePresetId = activePresetIds[context] ?? null
   const activePreset = useMemo(
     () => scopedPresets.find((preset) => preset.id === activePresetId) ?? null,

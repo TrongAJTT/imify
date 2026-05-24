@@ -31,7 +31,7 @@ function getRecentWorkspaceHref(toolId: PresetToolEntryId): string | null {
     const state = useBatchStore.getState()
     const recentPresetId = state.recentPresetIds[context] ?? null
     if (!recentPresetId) return null
-    const canOpenRecent = state.presets.some((preset) => preset.id === recentPresetId && preset.context === context)
+    const canOpenRecent = state.presets.some((preset) => preset.id === recentPresetId)
     if (!canOpenRecent) return null
     return `${getLandingHref(toolId)}/work?id=${recentPresetId}`
   }

@@ -11,6 +11,51 @@ import { buildDebugLog, downloadDebugLog, importDebugLog, type DebugLogPayload }
 import type { OptionsTab } from "./debug-shared"
 import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter"
 
+interface SchemaMigration {
+  fromVersion: number
+  toVersion: number
+  migrate: (state: any) => any
+}
+
+const BATCH_SCHEMA_MIGRATIONS: SchemaMigration[] = [
+  {
+    fromVersion: 1,
+    toVersion: 2,
+    migrate: (state: any) => {
+      const cloneSetupState = (s: any) => {
+        return s ? JSON.parse(JSON.stringify(s)) : {}
+      }
+
+      const unifiedConfig = cloneSetupState(state.contextConfigs?.single ?? state)
+      const nextContextConfigs = {
+        single: unifiedConfig,
+        batch: unifiedConfig
+      }
+
+      // Deduplicate presets
+      const uniquePresets: any[] = []
+      const configHashes = new Set<string>()
+      const presets = state.presets || []
+      for (const preset of presets) {
+        const configStr = JSON.stringify(preset.config)
+        const hashKey = `${preset.name}_${configStr}`
+        if (!configHashes.has(hashKey)) {
+          configHashes.add(hashKey)
+          uniquePresets.push(preset)
+        }
+      }
+
+      return {
+        ...state,
+        ...unifiedConfig,
+        contextConfigs: nextContextConfigs,
+        presets: uniquePresets,
+        schemaVersion: 2
+      }
+    }
+  }
+]
+
 interface DevModeImportDialogProps {
   isOpen: boolean
   onClose: () => void
@@ -19,6 +64,8 @@ interface DevModeImportDialogProps {
   layoutPreferences: unknown | null
   settingsAdapter: DevModeSettingsAdapter
   onSuccess?: () => void
+  title?: string
+  description?: string
 }
 
 export function DevModeImportDialog({
@@ -28,13 +75,17 @@ export function DevModeImportDialog({
   performancePreferences,
   layoutPreferences,
   settingsAdapter,
-  onSuccess
+  onSuccess,
+  title = "Import System Log",
+  description = "Restore configuration from a previously exported JSON file."
 }: DevModeImportDialogProps) {
   const [file, setFile] = useState<File | null>(null)
   const [payload, setPayload] = useState<DebugLogPayload | null>(null)
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
   const [isImporting, setIsImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasOldSchema, setHasOldSchema] = useState(false)
+  const [originalSchemaVersion, setOriginalSchemaVersion] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const appMetadata = getAppMetadata()
@@ -50,6 +101,8 @@ export function DevModeImportDialog({
     setFile(selected)
     setError(null)
     setPayload(null)
+    setHasOldSchema(false)
+    setOriginalSchemaVersion(null)
 
     const reader = new FileReader()
     reader.onload = (loadEvent) => {
@@ -59,6 +112,38 @@ export function DevModeImportDialog({
         if (parsed.schema_version !== 1 || !parsed.metadata || !parsed.metadata.exportedFeatures) {
           throw new Error("Invalid or corrupted export file format.")
         }
+
+        // Check schema version of batch store
+        if (parsed.stores?.batch) {
+          const batchStore = parsed.stores.batch as any
+          const currentVersion = batchStore.schemaVersion ?? 1
+          const TARGET_VERSION = 2
+
+          if (currentVersion < TARGET_VERSION) {
+            setHasOldSchema(true)
+            setOriginalSchemaVersion(currentVersion)
+
+            // Loop checking and migrating until no more migrations are possible or target version reached
+            let tempVersion = currentVersion
+            let tempBatch = { ...batchStore }
+            let canMigrate = true
+
+            while (tempVersion < TARGET_VERSION && canMigrate) {
+              const migration = BATCH_SCHEMA_MIGRATIONS.find(
+                (m) => m.fromVersion === tempVersion
+              )
+              if (migration) {
+                tempBatch = migration.migrate(tempBatch)
+                tempVersion = migration.toVersion
+              } else {
+                canMigrate = false
+              }
+            }
+
+            parsed.stores.batch = tempBatch
+          }
+        }
+
         setPayload(parsed)
         setSelectedFeatures(parsed.metadata.exportedFeatures)
       } catch (err: any) {
@@ -116,6 +201,8 @@ export function DevModeImportDialog({
     setFile(null)
     setPayload(null)
     setError(null)
+    setHasOldSchema(false)
+    setOriginalSchemaVersion(null)
     setSelectedFeatures([])
     if (fileInputRef.current) fileInputRef.current.value = ""
     onClose()
@@ -132,8 +219,8 @@ export function DevModeImportDialog({
     >
       <div className="contents" onClick={(event) => event.stopPropagation()}>
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Import System Log</h2>
-          <p className="text-sm text-slate-500 mt-1">Restore configuration from a previously exported JSON file.</p>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
+          <p className="text-sm text-slate-500 mt-1">{description}</p>
         </div>
 
         <div className="flex flex-col gap-4">
@@ -181,11 +268,43 @@ export function DevModeImportDialog({
                 })}
               </div>
 
-              {isNormalExport ? (
-                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg text-xs text-amber-700 dark:text-amber-400">
-                  This is a normal export. A full backup of your current state will be downloaded before import.
+              {(isNormalExport || hasOldSchema) && (
+                <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/50">
+                  {isNormalExport && (
+                    <div
+                      tabIndex={0}
+                      className="relative group cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50 transition-colors hover:bg-amber-100 dark:hover:bg-amber-950/50 focus:outline-none focus:ring-1 focus:ring-amber-400 select-none animate-in fade-in zoom-in-95 duration-200"
+                    >
+                      <Upload size={12} className="rotate-180 text-amber-600 dark:text-amber-500" />
+                      <span>Backup</span>
+
+                      {/* Tooltip Popover */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3.5 bg-slate-900 dark:bg-slate-950 text-slate-100 text-xs font-normal rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-focus:opacity-100 group-focus:scale-100 transition-all duration-200 z-50 text-left leading-relaxed border border-slate-800 dark:border-slate-850">
+                        <p className="font-bold text-amber-450 dark:text-amber-400 mb-0.5">Auto-Backup Enabled</p>
+                        This is a normal export. A full backup of your current state will be automatically downloaded before proceeding.
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-950" />
+                      </div>
+                    </div>
+                  )}
+
+                  {hasOldSchema && (
+                    <div
+                      tabIndex={0}
+                      className="relative group cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800/50 transition-colors hover:bg-sky-100 dark:hover:bg-sky-950/50 focus:outline-none focus:ring-1 focus:ring-sky-400 select-none animate-in fade-in zoom-in-95 duration-200"
+                    >
+                      <AlertTriangle size={12} className="text-sky-600 dark:text-sky-500" />
+                      <span>Migration (v{originalSchemaVersion}.0)</span>
+
+                      {/* Tooltip Popover */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3.5 bg-slate-900 dark:bg-slate-950 text-slate-100 text-xs font-normal rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-focus:opacity-100 group-focus:scale-100 transition-all duration-200 z-50 text-left leading-relaxed border border-slate-800 dark:border-slate-850">
+                        <p className="font-bold text-sky-450 dark:text-sky-400 mb-0.5">Schema Migration</p>
+                        Older database schema version detected. The imported presets will be automatically migrated to unified schema v2.0 before restoring.
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-950" />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ) : null}
+              )}
             </div>
           ) : null}
         </div>

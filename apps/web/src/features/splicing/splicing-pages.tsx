@@ -269,6 +269,7 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
       onRegisterPreviewQualityChangeHandler={(handler) => {
         previewQualityHandlerRef.current = handler
       }}
+      onRootClick={() => router.push("/splicing")}
     />
   )
 }

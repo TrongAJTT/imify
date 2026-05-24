@@ -9,6 +9,7 @@ import type { SplicingPresetConfig } from "@imify/stores/stores/splicing-preset-
 
 interface SplicingWorkspaceShellProps {
   workspace: React.ReactNode
+  onRootClick?: () => void
 }
 
 const AUTO_SAVE_DELAY_MS = 420
@@ -139,7 +140,7 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
   })
 }
 
-export function SplicingWorkspaceShell({ workspace }: SplicingWorkspaceShellProps) {
+export function SplicingWorkspaceShell({ workspace, onRootClick }: SplicingWorkspaceShellProps) {
   const presets = useSplicingPresetStore((state) => state.presets)
   const presetViewMode = useSplicingPresetStore((state) => state.presetViewMode)
   const activePresetId = useSplicingPresetStore((state) => state.activePresetId)
@@ -182,6 +183,7 @@ export function SplicingWorkspaceShell({ workspace }: SplicingWorkspaceShellProp
           presetViewMode === "workspace"
             ? () => {
                 setPresetViewMode("select")
+                onRootClick?.()
               }
             : undefined
         }
@@ -194,7 +196,7 @@ export function SplicingWorkspaceShell({ workspace }: SplicingWorkspaceShellProp
     return () => {
       resetHeader()
     }
-  }, [activePreset?.name, presetViewMode, resetHeader, setHeaderBreadcrumb, setHeaderSection, setPresetViewMode])
+  }, [activePreset?.name, presetViewMode, resetHeader, setHeaderBreadcrumb, setHeaderSection, setPresetViewMode, onRootClick])
 
   useEffect(() => {
     if (presetViewMode !== "workspace" || !activePreset) {

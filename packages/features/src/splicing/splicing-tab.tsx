@@ -140,10 +140,12 @@ interface SplicingTabProps {
   onRegisterPreviewQualityChangeHandler?: (
     handler: ((next: number) => void) | null,
   ) => void;
+  onRootClick?: () => void;
 }
 
 export function SplicingTab({
   onRegisterPreviewQualityChangeHandler,
+  onRootClick,
 }: SplicingTabProps) {
   const [images, setImages] = useState<SplicingImageItem[]>([]);
   const [isExporting, setIsExporting] = useState(false);
@@ -968,5 +970,10 @@ export function SplicingTab({
     </div>
   );
 
-  return <SplicingWorkspaceShell workspace={workspaceContent} />;
+  return (
+    <SplicingWorkspaceShell
+      workspace={workspaceContent}
+      onRootClick={onRootClick}
+    />
+  );
 }

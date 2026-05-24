@@ -86,7 +86,11 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
-export function SplitterTab() {
+interface SplitterTabProps {
+  onRootClick?: () => void
+}
+
+export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   const splitSettings = useSplitterStore((state) => state.splitSettings)
   const setSplitSettings = useSplitterStore((state) => state.setSplitSettings)
   const exportSettings = useSplitterStore((state) => state.exportSettings)
@@ -748,6 +752,7 @@ export function SplitterTab() {
 
   return (
     <SplitterWorkspaceShell
+      onRootClick={onRootClick}
       workspace={
         <>
           {workspaceContent}

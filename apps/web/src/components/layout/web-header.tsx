@@ -19,6 +19,7 @@ import {
   type WorkspaceLayoutPreferences,
   WorkspaceOptionsHeader,
   WorkspaceSettingsDialog,
+  DevToolsDialog,
   WhatsNewUpdateNotificationGate,
   getWorkspaceToolsMenuGroups,
   renderWorkspaceToolIcon,
@@ -33,6 +34,7 @@ import {
   PERFORMANCE_PREFERENCES_KEY,
   normalizePerformancePreferences
 } from "@imify/features/processor/performance-preferences"
+import { useDevModeEnabled } from "@imify/features"
 
 const WEB_TOOLS_MENU_GROUPS = getWorkspaceToolsMenuGroups()
 const NAV_LINKS = Array.from(
@@ -99,6 +101,9 @@ export function WebHeader() {
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAssetManagementDialogOpen, setIsAssetManagementDialogOpen] = useState(false)
+  const [isDevToolsDialogOpen, setIsDevToolsDialogOpen] = useState(false)
+  const [devModeEnabled] = useDevModeEnabled()
+  
   const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
   const settingsInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
   const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
@@ -216,6 +221,8 @@ export function WebHeader() {
       onOpenSettings={() => openSettingsDialog()}
       onOpenDonate={() => setIsDonateDialogOpen(true)}
       onOpenAssetManagement={() => setIsAssetManagementDialogOpen(true)}
+      onOpenDevTools={() => setIsDevToolsDialogOpen(true)}
+      isDevModeEnabled={devModeEnabled}
     />
   )
 
@@ -253,6 +260,14 @@ export function WebHeader() {
       <AssetManagementDialog
         isOpen={isAssetManagementDialogOpen}
         onClose={() => setIsAssetManagementDialogOpen(false)}
+      />
+      <DevToolsDialog
+        isOpen={isDevToolsDialogOpen}
+        onClose={() => setIsDevToolsDialogOpen(false)}
+        devModeSettingsAdapter={devModeSettingsAdapter}
+        devModeActiveTab={devModeActiveTab}
+        layoutPreferences={layoutPreferences}
+        performancePreferences={performancePreferences}
       />
       <WorkspaceSettingsDialog
         isOpen={isSettingsDialogOpen}
@@ -294,7 +309,6 @@ export function WebHeader() {
         showExtensionOnlyOptions={false}
         enableUsageStatsTab={false}
         devModeSettingsAdapter={devModeSettingsAdapter}
-        devModeActiveTab={devModeActiveTab}
       />
     </>
   )

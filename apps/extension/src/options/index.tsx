@@ -22,11 +22,13 @@ import {
   WORKSPACE_TOOLS,
   WorkspaceSettingsDialog,
   WorkspaceOptionsHeader,
+  DevToolsDialog,
   WhatsNewUpdateNotificationGate,
   useIsDesktopLayout,
   getExtensionSidebarToolGroups,
   renderWorkspaceToolIcon
 } from "@imify/features/workspace-shell"
+import { useDevModeEnabled } from "@imify/features"
 import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
 import { getDevModeEnabled } from "@imify/features/dev-mode/dev-mode-store"
 import {
@@ -302,6 +304,8 @@ export default function OptionsPage() {
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
   const [isAssetManagementDialogOpen, setIsAssetManagementDialogOpen] = useState(false)
+  const [isDevToolsDialogOpen, setIsDevToolsDialogOpen] = useState(false)
+  const [devModeEnabled] = useDevModeEnabled()
   const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
   const settingsDialogInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
   const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
@@ -397,7 +401,7 @@ export default function OptionsPage() {
       const context = nextTab
       setSetupContext(context)
       const batchState = useBatchStore.getState()
-      const scopedPresets = batchState.presets.filter((preset) => preset.context === context)
+      const scopedPresets = batchState.presets
       const recentPresetId = batchState.recentPresetIds[context] ?? null
       const canOpenRecentPreset =
         preferRecentPresetEntry &&
@@ -620,6 +624,8 @@ export default function OptionsPage() {
         onOpenAssetManagement={() => setIsAssetManagementDialogOpen(true)}
         onOpenDonate={() => setIsDonateDialogOpen(true)}
         onToggleDark={toggleDarkMode}
+        onOpenDevTools={() => setIsDevToolsDialogOpen(true)}
+        isDevModeEnabled={devModeEnabled}
         isExtension={true}
       />
 
@@ -631,6 +637,15 @@ export default function OptionsPage() {
         onOpenDonate={() => setIsDonateDialogOpen(true)}
       />
       <WhatsNewUpdateNotificationGate />
+
+      <DevToolsDialog
+        isOpen={isDevToolsDialogOpen}
+        onClose={() => setIsDevToolsDialogOpen(false)}
+        devModeSettingsAdapter={devModeSettingsAdapter}
+        devModeActiveTab={activeTab}
+        layoutPreferences={safeLayoutPreferences}
+        performancePreferences={safePerformancePreferences}
+      />
 
       <WorkspaceSettingsDialog
         isOpen={isSettingsDialogOpen}
@@ -670,7 +685,6 @@ export default function OptionsPage() {
           void setPerformancePreferences(value)
         }}
         devModeSettingsAdapter={devModeSettingsAdapter}
-        devModeActiveTab={activeTab}
       />
 
       <DonateDialog isOpen={isDonateDialogOpen} onClose={() => setIsDonateDialogOpen(false)} />

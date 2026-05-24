@@ -1,10 +1,12 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Stamp, X, Library, ChevronRight, ArrowLeft, Brain } from "lucide-react"
+import { Stamp, X, Brain, Library, ChevronRight, ArrowLeft } from "lucide-react"
 import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui"
 import { AssetWatermarkTab } from "./asset-tabs/asset-watermark-tab"
 import { AssetAIModelsTab } from "./asset-tabs/asset-ai-models-tab"
+import { useWatermarkStore } from "@imify/stores/stores/watermark-store"
+import { formatFileSize } from "@imify/core"
 
 interface AssetManagementDialogProps {
   isOpen: boolean
@@ -177,4 +179,63 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
       </div>
     </BaseDialog>
   )
+}
+
+export interface AssetStatistics {
+  watermarkCount: number
+  cachedModelCount: number
+  cacheSizeBytes: number
+  totalSizeFormatted: string
+}
+
+export function useAssetStatistics(isOpen: boolean): AssetStatistics {
+  const savedWatermarks = useWatermarkStore((state) => state.savedWatermarks)
+  const [cachedModelCount, setCachedModelCount] = useState(0)
+  const [cacheSizeBytes, setCacheSizeBytes] = useState(0)
+
+  useEffect(() => {
+    if (!isOpen) return
+    if (typeof window === "undefined" || !window.caches) return
+
+    let active = true
+    caches.open("transformers-cache")
+      .then((cache) => {
+        return cache.keys().then((keys) => {
+          if (!active) return
+          const onnxKeys = keys.filter((key) => key.url.toLowerCase().endsWith(".onnx"))
+          setCachedModelCount(onnxKeys.length)
+
+          let sizeSum = 0
+          const promises = keys.map((request) =>
+            cache.match(request).then((response) => {
+              if (active && response) {
+                const contentLength = response.headers.get("content-length")
+                if (contentLength) {
+                  sizeSum += parseInt(contentLength, 10)
+                }
+              }
+            })
+          )
+
+          return Promise.all(promises).then(() => {
+            if (!active) return
+            setCacheSizeBytes(sizeSum)
+          })
+        })
+      })
+      .catch((err) => {
+        console.error("Failed to read model cache statistics:", err)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [isOpen])
+
+  return {
+    watermarkCount: savedWatermarks.length,
+    cachedModelCount,
+    cacheSizeBytes,
+    totalSizeFormatted: formatFileSize(cacheSizeBytes)
+  }
 }

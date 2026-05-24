@@ -17,6 +17,8 @@ interface DevModeExportDialogProps {
   performancePreferences: unknown | null
   layoutPreferences: unknown | null
   settingsAdapter: DevModeSettingsAdapter
+  title?: string
+  description?: string
 }
 
 export function DevModeExportDialog({
@@ -25,7 +27,9 @@ export function DevModeExportDialog({
   activeTab,
   performancePreferences,
   layoutPreferences,
-  settingsAdapter
+  settingsAdapter,
+  title = "Export System Log",
+  description = "Select the features you want to include in the export. Sensitive data will be automatically sanitized."
 }: DevModeExportDialogProps) {
   const allFeatureIds = useMemo(() => DEV_MODE_FEATURES.map((feature) => feature.id), [])
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>(allFeatureIds)
@@ -69,9 +73,9 @@ export function DevModeExportDialog({
     >
       <div className="contents" onClick={(event) => event.stopPropagation()}>
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Export System Log</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
           <p className="text-sm text-slate-500 mt-1">
-            Select the features you want to include in the export. Sensitive data will be automatically sanitized.
+            {description}
           </p>
         </div>
 

@@ -51,7 +51,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
   const deletePreset = useBatchStore((state) => state.deletePreset)
   const ensureDefaultPresetForContext = useBatchStore((state) => state.ensureDefaultPresetForContext)
   const isBatchStoreRehydrated = useBatchStore((store) => (store as any)._hasHydrated)
-  const scopedPresets = useMemo(() => presets.filter((preset) => preset.context === context), [context, presets])
+  const scopedPresets = presets
   const sidebar = useMemo(
     () => (
       <ProcessorSidebarShell
@@ -161,8 +161,8 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
   const isBatchStoreRehydrated = useBatchStore((store) => (store as any)._hasHydrated)
 
   const preset = useMemo(
-    () => presets.find((entry) => entry.id === presetId && entry.context === context) ?? null,
-    [context, presetId, presets]
+    () => presets.find((entry) => entry.id === presetId) ?? null,
+    [presetId, presets]
   )
 
   useEffect(() => {
@@ -215,7 +215,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
       return
     }
 
-    const scopedPresets = presets.filter((entry) => entry.context === context)
+    const scopedPresets = presets
     if (scopedPresets.length === 0) {
       const defaultPresetId = ensureDefaultPresetForContext(context)
       if (defaultPresetId) {

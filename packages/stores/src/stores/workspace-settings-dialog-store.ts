@@ -6,7 +6,7 @@ export type WorkspaceSettingsDialogTab =
   | "performance"
   | "warnings"
   | "usage"
-  | "developer"
+  | "data"
 
 interface WorkspaceSettingsDialogState {
   isOpen: boolean

@@ -12,6 +12,7 @@ import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-s
 
 interface SplitterWorkspaceShellProps {
   workspace: React.ReactNode
+  onRootClick?: () => void
 }
 
 const AUTO_SAVE_DELAY_MS = 420
@@ -30,7 +31,7 @@ function extractSplitterPresetConfig(
   })
 }
 
-export function SplitterWorkspaceShell({ workspace }: SplitterWorkspaceShellProps) {
+export function SplitterWorkspaceShell({ workspace, onRootClick }: SplitterWorkspaceShellProps) {
   const presets = useSplitterPresetStore((state) => state.presets)
   const presetViewMode = useSplitterPresetStore((state) => state.presetViewMode)
   const activePresetId = useSplitterPresetStore((state) => state.activePresetId)
@@ -75,6 +76,7 @@ export function SplitterWorkspaceShell({ workspace }: SplitterWorkspaceShellProp
           presetViewMode === "workspace"
             ? () => {
                 setPresetViewMode("select")
+                onRootClick?.()
               }
             : undefined
         }
@@ -87,7 +89,7 @@ export function SplitterWorkspaceShell({ workspace }: SplitterWorkspaceShellProp
     return () => {
       resetHeader()
     }
-  }, [activePreset?.name, presetViewMode, resetHeader, setHeaderBreadcrumb, setHeaderSection, setPresetViewMode])
+  }, [activePreset?.name, presetViewMode, resetHeader, setHeaderBreadcrumb, setHeaderSection, setPresetViewMode, onRootClick])
 
   useEffect(() => {
     if (presetViewMode !== "workspace" || !activePresetId) {
