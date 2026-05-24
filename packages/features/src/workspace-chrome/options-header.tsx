@@ -12,6 +12,7 @@ import {
   Settings,
   Sun,
   Code2,
+  Star,
 } from "lucide-react";
 import { Tooltip } from "../shared/tooltip";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
@@ -20,7 +21,8 @@ import {
   resolveFeatureMediaAssetUrl,
 } from "../shared/media-assets";
 import { useIsDesktopLayout } from "./desktop-layout";
-import { GithubStarDonate } from "./github-star-donate";
+import { GithubStarDonate, useGithubStars } from "./github-star-donate";
+import { IMIFY_LINKS } from "@imify/core";
 
 export interface WorkspaceHeaderNavItem {
   id?: string;
@@ -111,6 +113,7 @@ export function WorkspaceOptionsHeader({
 }: WorkspaceOptionsHeaderProps) {
   const breadcrumb = useWorkspaceHeaderStore((s) => s.breadcrumb);
   const onBack = useWorkspaceHeaderStore((s) => s.onBack);
+  const stars = useGithubStars();
   const logoSrc = resolveFeatureMediaAssetUrl(
     FEATURE_MEDIA_ASSETS.brand.imifyLogoPng,
   );
@@ -403,6 +406,21 @@ export function WorkspaceOptionsHeader({
             </TitleBarButton>
             {isMoreMenuOpen ? (
               <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-[180px] rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                <a
+                  href={IMIFY_LINKS.repository}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsMoreMenuOpen(false)}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-amber-500 transition-colors hover:bg-amber-50/50 dark:text-amber-450 dark:hover:bg-amber-950/15"
+                >
+                  <Star
+                    size={16}
+                    fill="currentColor"
+                    className="text-amber-400 dark:text-amber-500 fill-amber-400 dark:fill-amber-500"
+                  />
+                  <span>Github stars: {stars}</span>
+                </a>
+                <div className="h-px bg-slate-100 dark:bg-slate-800" />
                 <button
                   type="button"
                   onClick={() => {

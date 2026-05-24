@@ -10,6 +10,8 @@ import { DEV_MODE_FEATURES } from "./dev-mode-registry"
 import { buildDebugLog, downloadDebugLog, importDebugLog, type DebugLogPayload } from "./debug-log-builder"
 import type { OptionsTab } from "./debug-shared"
 import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter"
+import { Tooltip } from "../shared/tooltip"
+
 
 interface SchemaMigration {
   fromVersion: number
@@ -271,37 +273,35 @@ export function DevModeImportDialog({
               {(isNormalExport || hasOldSchema) && (
                 <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/50">
                   {isNormalExport && (
-                    <div
-                      tabIndex={0}
-                      className="relative group cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50 transition-colors hover:bg-amber-100 dark:hover:bg-amber-950/50 focus:outline-none focus:ring-1 focus:ring-amber-400 select-none animate-in fade-in zoom-in-95 duration-200"
+                    <Tooltip
+                      label="Auto-Backup Enabled"
+                      content="This is a normal export. A full backup of your current state will be automatically downloaded before proceeding."
+                      variant="wide1"
                     >
-                      <Upload size={12} className="rotate-180 text-amber-600 dark:text-amber-500" />
-                      <span>Backup</span>
-
-                      {/* Tooltip Popover */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3.5 bg-slate-900 dark:bg-slate-950 text-slate-100 text-xs font-normal rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-focus:opacity-100 group-focus:scale-100 transition-all duration-200 z-50 text-left leading-relaxed border border-slate-800 dark:border-slate-850">
-                        <p className="font-bold text-amber-450 dark:text-amber-400 mb-0.5">Auto-Backup Enabled</p>
-                        This is a normal export. A full backup of your current state will be automatically downloaded before proceeding.
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-950" />
+                      <div
+                        tabIndex={0}
+                        className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50 transition-colors hover:bg-amber-100 dark:hover:bg-amber-950/50 focus:outline-none focus:ring-1 focus:ring-amber-400 select-none"
+                      >
+                        <Upload size={12} className="rotate-180 text-amber-600 dark:text-amber-500" />
+                        <span>Backup</span>
                       </div>
-                    </div>
+                    </Tooltip>
                   )}
 
                   {hasOldSchema && (
-                    <div
-                      tabIndex={0}
-                      className="relative group cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800/50 transition-colors hover:bg-sky-100 dark:hover:bg-sky-950/50 focus:outline-none focus:ring-1 focus:ring-sky-400 select-none animate-in fade-in zoom-in-95 duration-200"
+                    <Tooltip
+                      label="Schema Migration"
+                      content="Older database schema version detected. The imported presets will be automatically migrated to unified schema v2.0 before restoring."
+                      variant="wide1"
                     >
-                      <AlertTriangle size={12} className="text-sky-600 dark:text-sky-500" />
-                      <span>Migration (v{originalSchemaVersion}.0)</span>
-
-                      {/* Tooltip Popover */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3.5 bg-slate-900 dark:bg-slate-950 text-slate-100 text-xs font-normal rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-focus:opacity-100 group-focus:scale-100 transition-all duration-200 z-50 text-left leading-relaxed border border-slate-800 dark:border-slate-850">
-                        <p className="font-bold text-sky-450 dark:text-sky-400 mb-0.5">Schema Migration</p>
-                        Older database schema version detected. The imported presets will be automatically migrated to unified schema v2.0 before restoring.
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-950" />
+                      <div
+                        tabIndex={0}
+                        className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800/50 transition-colors hover:bg-sky-100 dark:hover:bg-sky-950/50 focus:outline-none focus:ring-1 focus:ring-sky-400 select-none"
+                      >
+                        <AlertTriangle size={12} className="text-sky-600 dark:text-sky-500" />
+                        <span>Migration (v{originalSchemaVersion}.0)</span>
                       </div>
-                    </div>
+                    </Tooltip>
                   )}
                 </div>
               )}

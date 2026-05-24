@@ -46,18 +46,13 @@ export function RenameInputDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
+      shouldBlockCloseAttempt={() => true}
       contentClassName="w-full max-w-md rounded-xl overflow-hidden flex flex-col"
     >
       <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
         <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
           {title}
         </h3>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
       </div>
 
       <div className="p-6 space-y-4">
@@ -82,13 +77,10 @@ export function RenameInputDialog({
       </div>
 
       <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-end gap-3">
-        <SecondaryButton onClick={onClose} className="px-5">
-          Cancel
-        </SecondaryButton>
         <Button
           onClick={handleConfirm}
           disabled={!value.trim()}
-          className="px-5 flex items-center gap-1.5 shadow-lg shadow-sky-500/10"
+          className="px-5 flex items-center gap-1.5 shadow-lg shadow-sky-500/10 animate-in fade-in duration-200"
         >
           <Check className="w-4 h-4" />
           Confirm & Download

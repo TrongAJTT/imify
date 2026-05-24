@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react";
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
@@ -7,38 +7,50 @@ import {
   CheckboxCard,
   AccordionCard,
   SliderInput,
-  SelectInput,
   RadioCard,
   ColorPickerPopover,
-  SidebarPanel
-} from "@imify/ui"
-import { Brain, Sliders, Image, Cpu, Settings2 } from "lucide-react"
-import { BACKGROUND_REMOVAL_MODELS } from "./models"
-import { PresetSelector } from "../processor/preset-selector"
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils"
-import { useBackgroundRemoverStore, useBatchStore, type SavedSetupPreset } from "@imify/stores"
-import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader"
+  SidebarPanel,
+  SidebarCard,
+} from "@imify/ui";
+import {
+  Brain,
+  Sliders,
+  Image,
+  Cpu,
+  Settings2,
+  Eraser,
+  Palette,
+} from "lucide-react";
+import { BACKGROUND_REMOVAL_MODELS } from "./models";
+import { PresetSelector } from "../processor/preset-selector";
+import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
+import {
+  useBackgroundRemoverStore,
+  type SavedSetupPreset,
+} from "@imify/stores";
+import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
+import { ModelVariantDialog } from "./model-variant-dialog";
 
-import { BACKGROUND_REMOVER_PANEL_CONTENT } from "./remover-preset-info-panel"
-import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel"
+import { BACKGROUND_REMOVER_PANEL_CONTENT } from "./remover-preset-info-panel";
+import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
 
-export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings"
+export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings";
 
 const BG_REMOVER_PRESET: SavedSetupPreset = {
   ...VIRTUAL_DEFAULT_PNG_PRESET,
   id: "preset_background-remover",
   name: "Background Remover",
-  highlightColor: "#ec4899"
-}
+  highlightColor: "#ec4899",
+};
 
 interface BackgroundRemoverSidebarProps {
-  enableWideSidebarGrid?: boolean
-  autoWideSidebarGridMinWidthPx?: number | null
+  enableWideSidebarGrid?: boolean;
+  autoWideSidebarGridMinWidthPx?: number | null;
 }
 
 export function BackgroundRemoverSidebar({
   enableWideSidebarGrid,
-  autoWideSidebarGridMinWidthPx
+  autoWideSidebarGridMinWidthPx,
 }: BackgroundRemoverSidebarProps) {
   const {
     modelId,
@@ -56,38 +68,45 @@ export function BackgroundRemoverSidebar({
     activePresetId,
     applyPreset,
     resetToDefault,
-    hasImage
-  } = useBackgroundRemoverStore()
+    hasImage,
+  } = useBackgroundRemoverStore();
 
-  const selectedModel = BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
-  const selectedVariant = selectedModel.variants.find(v => v.id === variantId) ?? selectedModel.variants[0]
+  const selectedModel =
+    BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ??
+    BACKGROUND_REMOVAL_MODELS[0];
+  const selectedVariant =
+    selectedModel.variants.find((v) => v.id === variantId) ??
+    selectedModel.variants[0];
+  const [isModelVariantDialogOpen, setIsModelVariantDialogOpen] =
+    useState(false);
 
   // Auto-apply identified preset if it exists and no preset is active (initial load)
-  useIdentifiedPresetLoader(BG_REMOVER_PRESET, activePresetId, applyPreset)
+  useIdentifiedPresetLoader(BG_REMOVER_PRESET, activePresetId, applyPreset);
 
   // Initialize smart default for unloadModelAfterProcess based on hardware
   useEffect(() => {
-    const storageKey = "imify-background-remover-settings"
-    const saved = localStorage.getItem(storageKey)
+    const storageKey = "imify-background-remover-settings";
+    const saved = localStorage.getItem(storageKey);
     if (!saved) {
-      const ram = (navigator as any).deviceMemory
+      const ram = (navigator as any).deviceMemory;
       if (ram && ram <= 4) {
-        setUnloadModelAfterProcess(true)
+        setUnloadModelAfterProcess(true);
       }
     }
-  }, [setUnloadModelAfterProcess])
+  }, [setUnloadModelAfterProcess]);
 
   // If no image is imported, show the tool's showcase information
   if (!hasImage) {
     return (
-      <SidebarPanel
-        title="ABOUT THIS TOOL"
-      >
+      <SidebarPanel title="ABOUT THIS TOOL">
         <div className="px-1 py-1">
-          <PresetInfoShowcasePanel {...BACKGROUND_REMOVER_PANEL_CONTENT} padding={0} />
+          <PresetInfoShowcasePanel
+            {...BACKGROUND_REMOVER_PANEL_CONTENT}
+            padding={0}
+          />
         </div>
       </SidebarPanel>
-    )
+    );
   }
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
@@ -103,25 +122,13 @@ export function BackgroundRemoverSidebar({
           colorTheme="pink"
           childrenClassName="p-3 space-y-3"
         >
-          <div className="grid grid-cols-1 gap-2">
-            <SelectInput
-              label="AI Model"
-              value={selectedModel.id}
-              options={BACKGROUND_REMOVAL_MODELS.map(m => ({ value: m.id, label: m.name }))}
-              onChange={setModelId}
-              tooltipContent="Choose the AI architecture for background removal."
-            />
-
-            {selectedModel.variants.length > 0 && (
-              <SelectInput
-                label="Variant"
-                value={selectedVariant.id}
-                options={selectedModel.variants.map(v => ({ value: v.id, label: v.label }))}
-                onChange={setVariantId}
-                tooltipContent="Select model precision."
-              />
-            )}
-          </div>
+          <SidebarCard
+            label={`Model: ${selectedModel.name}`}
+            sublabel={selectedVariant.label}
+            icon={<Brain size={16} className="text-pink-500" />}
+            onClick={() => setIsModelVariantDialogOpen(true)}
+            className="cursor-pointer"
+          />
 
           <CheckboxCard
             checked={unloadModelAfterProcess}
@@ -134,7 +141,9 @@ export function BackgroundRemoverSidebar({
           <div className="relative p-3.5 rounded-lg bg-slate-100/50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50 border-2 border-slate-200/60 dark:border-slate-700/50 shadow-sm space-y-3 transition-all">
             <div className="flex items-center gap-2">
               <Settings2 className="text-pink-500" size={14} />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Current Selection</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                Current Selection
+              </span>
             </div>
             <div className="space-y-2.5">
               <div className="flex items-start gap-2.5">
@@ -147,13 +156,23 @@ export function BackgroundRemoverSidebar({
                 <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0" />
                 <MutedText className="text-[11px] leading-relaxed">
                   <strong>Variant:</strong> {selectedVariant.label}
-                  {selectedVariant.description && <span className="opacity-70 italic ml-1">— {selectedVariant.description}</span>}
+                  {selectedVariant.description && (
+                    <span className="opacity-85 italic ml-1">
+                      - {selectedVariant.description}
+                    </span>
+                  )}
+                </MutedText>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0" />
+                <MutedText className="text-[11px]">
+                  <strong>Suitable for:</strong> {selectedModel.usecase}
                 </MutedText>
               </div>
             </div>
           </div>
         </AccordionCard>
-      )
+      ),
     },
     {
       id: "output-preset",
@@ -169,7 +188,7 @@ export function BackgroundRemoverSidebar({
           onReset={resetToDefault}
           tooltipContent="Select an export preset from the Single Processor."
         />
-      )
+      ),
     },
     {
       id: "output-settings",
@@ -177,7 +196,11 @@ export function BackgroundRemoverSidebar({
       content: (
         <AccordionCard
           label="Processing & Output"
-          sublabel={outputFormat === "transparent" ? "Format: Transparent" : "Format: Solid Color"}
+          sublabel={
+            outputFormat === "transparent"
+              ? "Format: Transparent"
+              : "Format: Solid Color"
+          }
           icon={<Sliders size={16} />}
           defaultOpen={true}
           colorTheme="purple"
@@ -195,7 +218,9 @@ export function BackgroundRemoverSidebar({
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Image size={14} className="text-purple-500" />
-              <BodyText className="text-xs font-semibold uppercase tracking-wider text-slate-500">Background Type</BodyText>
+              <BodyText className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Background Type
+              </BodyText>
             </div>
 
             <div className="space-y-2">
@@ -205,7 +230,7 @@ export function BackgroundRemoverSidebar({
                 selectedValue={outputFormat}
                 onChange={(v) => setOutputFormat(v as any)}
                 colorTheme="purple"
-                icon={<div className="w-4 h-4 rounded-sm border border-slate-200 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAACtJREFUGFdjZEADJgY0QCSTmZkZpAAsAKYAFUAWQBVAFUAWQBVAFUAWQBVAFUAWQBVAFUAWQBUAFUAXQBUNAwAF+L7zAAAAAElFTkSuQmCC')] bg-repeat" />}
+                icon={<Eraser className="text-gray-500" size={16} />}
               />
 
               <RadioCard
@@ -214,7 +239,7 @@ export function BackgroundRemoverSidebar({
                 selectedValue={outputFormat}
                 onChange={(v) => setOutputFormat(v as any)}
                 colorTheme="purple"
-                icon={<div className="w-4 h-4 rounded-sm border border-slate-200" style={{ backgroundColor }} />}
+                icon={<Palette size={16} className="text-green-500" />}
                 rightSlot={
                   <ColorPickerPopover
                     label=""
@@ -228,16 +253,26 @@ export function BackgroundRemoverSidebar({
             </div>
           </div>
         </AccordionCard>
-      )
-    }
-  ]
+      ),
+    },
+  ];
 
   return (
-    <WorkspaceConfigSidebarPanel
-      title="CONFIGURATION"
-      items={sidebarItems}
-      twoColumn={enableWideSidebarGrid}
-      autoTwoColumnMinWidthPx={autoWideSidebarGridMinWidthPx}
-    />
-  )
+    <>
+      <WorkspaceConfigSidebarPanel
+        title="CONFIGURATION"
+        items={sidebarItems}
+        twoColumn={enableWideSidebarGrid}
+        autoTwoColumnMinWidthPx={autoWideSidebarGridMinWidthPx}
+      />
+      <ModelVariantDialog
+        isOpen={isModelVariantDialogOpen}
+        onClose={() => setIsModelVariantDialogOpen(false)}
+        modelId={modelId}
+        setModelId={setModelId}
+        variantId={variantId}
+        setVariantId={setVariantId}
+      />
+    </>
+  );
 }
