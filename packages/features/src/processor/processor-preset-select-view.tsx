@@ -7,6 +7,8 @@ import { PresetCard } from "./preset-card"
 import { SavePresetDialog } from "./save-preset-dialog"
 import { WorkspaceSelectHeader } from "./workspace-select-header"
 
+const FEATURE_PRESET_IDS = ["preset_background-remover"]
+
 export function ProcessorPresetSelectView({
   context, presets, activePresetId, onOpenPreset, onCreatePreset, onUpdatePresetMeta, onDeletePreset
 }: {
@@ -22,6 +24,7 @@ export function ProcessorPresetSelectView({
   const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false)
   const [editingPreset, setEditingPreset] = useState<SavedSetupPreset | null>(null)
   const [selectedFormat, setSelectedFormat] = useState<string>("all")
+  const [selectedType, setSelectedType] = useState<"processor" | "feature">("processor")
   
   const contextLabel = context === "single" ? "Single" : "Batch"
   const formats = useMemo(() => {
@@ -30,6 +33,13 @@ export function ProcessorPresetSelectView({
   
   const filteredPresets = useMemo(() => {
     let list = presets
+
+    if (selectedType === "processor") {
+      list = list.filter((p) => !FEATURE_PRESET_IDS.includes(p.id))
+    } else if (selectedType === "feature") {
+      list = list.filter((p) => FEATURE_PRESET_IDS.includes(p.id))
+    }
+
     if (selectedFormat !== "all") {
       list = list.filter(p => {
         const fmt = p.config.targetFormat === "mozjpeg" ? "jpg" : p.config.targetFormat
@@ -44,7 +54,7 @@ export function ProcessorPresetSelectView({
       }
       return b.updatedAt - a.updatedAt
     })
-  }, [presets, selectedFormat])
+  }, [presets, selectedFormat, selectedType])
 
   const sortedPresets = filteredPresets // Use filtered ones for display
   const openCreateDialog = () => { setEditingPreset(null); setIsSavePresetDialogOpen(true) }
@@ -59,31 +69,58 @@ export function ProcessorPresetSelectView({
   }
 
   const filterControl = (
-    <Shield
-      left="Filter"
-      size="sm"
-      leftBg="bg-slate-700 dark:bg-slate-800"
-      leftColor="text-white"
-      rightBg="bg-slate-100 dark:bg-slate-800"
-      rightColor="text-slate-600 dark:text-slate-400"
-      className="border border-slate-200 dark:border-slate-700"
-      right={
-        <div className="flex items-center gap-1.5 h-full">
-          {formats.map((f, i) => (
-            <React.Fragment key={f}>
-              <button
-                type="button"
-                onClick={() => setSelectedFormat(f)}
-                className={`transition-colors hover:text-sky-500 py-1 ${selectedFormat === f ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
-              >
-                {f.toUpperCase()}
-              </button>
-              {i < formats.length - 1 && <span className="opacity-30">•</span>}
-            </React.Fragment>
-          ))}
-        </div>
-      }
-    />
+    <div className="flex items-center gap-2">
+      <Shield
+        left="Type"
+        size="sm"
+        leftBg="bg-slate-700 dark:bg-slate-800"
+        leftColor="text-white"
+        rightBg="bg-slate-100 dark:bg-slate-800"
+        rightColor="text-slate-600 dark:text-slate-400"
+        className="border border-slate-200 dark:border-slate-700"
+        right={
+          <div className="flex items-center gap-1.5 h-full">
+            {(["processor", "feature"] as const).map((t, i, arr) => (
+              <React.Fragment key={t}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedType(t)}
+                  className={`transition-colors hover:text-sky-500 py-1 ${selectedType === t ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
+                >
+                  {t === "processor" ? "Processor" : "Features"}
+                </button>
+                {i < arr.length - 1 && <span className="opacity-30">•</span>}
+              </React.Fragment>
+            ))}
+          </div>
+        }
+      />
+      <Shield
+        left="Filter"
+        size="sm"
+        leftBg="bg-slate-700 dark:bg-slate-800"
+        leftColor="text-white"
+        rightBg="bg-slate-100 dark:bg-slate-800"
+        rightColor="text-slate-600 dark:text-slate-400"
+        className="border border-slate-200 dark:border-slate-700"
+        right={
+          <div className="flex items-center gap-1.5 h-full">
+            {formats.map((f, i) => (
+              <React.Fragment key={f}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFormat(f)}
+                  className={`transition-colors hover:text-sky-500 py-1 ${selectedFormat === f ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
+                >
+                  {f.toUpperCase()}
+                </button>
+                {i < formats.length - 1 && <span className="opacity-30">•</span>}
+              </React.Fragment>
+            ))}
+          </div>
+        }
+      />
+    </div>
   )
 
   return (

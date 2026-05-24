@@ -357,7 +357,7 @@ interface BatchStoreState extends BatchSetupState {
   isResizeOpen: boolean
   setIsResizeOpen: (value: boolean) => void
   setPresetViewMode: (context: SetupContext, mode: ProcessorPresetViewMode) => void
-  saveCurrentPreset: (payload: { name: string; highlightColor: string }) => string
+  saveCurrentPreset: (payload: { id?: string; name: string; highlightColor: string }) => string
   applyPresetToCurrentContext: (presetId: string) => void
   ensureDefaultPresetForContext: (context: SetupContext) => string | null
   syncActivePresetConfig: (context: SetupContext) => void
@@ -1089,13 +1089,46 @@ export const useBatchStore = create<BatchStoreState>()(
             activePresetIds: nextActivePresetIds
           }
         }),
-      saveCurrentPreset: ({ name, highlightColor }) => {
+      saveCurrentPreset: ({ id, name, highlightColor }) => {
         const timestamp = Date.now()
-        const presetId = `preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
+        const presetId = id || `preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
 
         set((state) => {
           const setupContext = state.setupContext
           const currentConfig = cloneContextConfig(state, setupContext)
+          const nextPresetViewByContext = {
+            ...(state.presetViewByContext ?? createDefaultPresetViewByContext()),
+            [setupContext]: "workspace" as ProcessorPresetViewMode
+          }
+
+          const existingPresetIndex = id ? state.presets.findIndex((p) => p.id === id) : -1
+
+          if (existingPresetIndex !== -1) {
+            const existingPreset = state.presets[existingPresetIndex]
+            const updatedPreset: SavedSetupPreset = {
+              ...existingPreset,
+              name: name.trim() || existingPreset.name,
+              highlightColor: highlightColor || existingPreset.highlightColor,
+              config: currentConfig,
+              updatedAt: timestamp
+            }
+
+            const nextPresets = [...state.presets]
+            nextPresets[existingPresetIndex] = updatedPreset
+
+            return {
+              presets: nextPresets,
+              recentPresetIds: {
+                ...state.recentPresetIds,
+                [setupContext]: presetId
+              },
+              activePresetIds: {
+                ...state.activePresetIds,
+                [setupContext]: presetId
+              },
+              presetViewByContext: nextPresetViewByContext
+            }
+          }
 
           const nextPreset: SavedSetupPreset = {
             id: presetId,
@@ -1106,11 +1139,6 @@ export const useBatchStore = create<BatchStoreState>()(
             createdAt: timestamp,
             updatedAt: timestamp,
             pinned: false
-          }
-
-          const nextPresetViewByContext = {
-            ...(state.presetViewByContext ?? createDefaultPresetViewByContext()),
-            [setupContext]: "workspace" as ProcessorPresetViewMode
           }
 
           return {

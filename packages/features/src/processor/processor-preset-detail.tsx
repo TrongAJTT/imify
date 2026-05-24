@@ -1,7 +1,7 @@
 import React from "react"
 import type { SavedSetupPreset, SetupContext } from "@imify/stores/stores/batch-store"
-import { Shield } from "@imify/ui"
-import { FileCode, Gauge, Maximize, Trash2 } from "lucide-react"
+import { Shield, Tooltip } from "@imify/ui"
+import { FileCode, Gauge, Maximize, Type } from "lucide-react"
 
 export function ProcessorPresetDetail({ 
   preset, 
@@ -15,6 +15,7 @@ export function ProcessorPresetDetail({
   const rawFormat = config.targetFormat === "mozjpeg" ? "jpg" : config.targetFormat
   const formatLabel = rawFormat ? rawFormat.toUpperCase() : "—"
   const qualityLabel = config.quality !== undefined ? `${config.quality}%` : "—"
+  const namePattern = config.fileNamePattern || "[OriginalName]"
 
   let resizeLabel = "—"
   if (config.resizeMode === "none") resizeLabel = "Original"
@@ -58,15 +59,15 @@ export function ProcessorPresetDetail({
         className="transition-all"
       />
 
-      {/* Strip EXIF Shield */}
-      {config.stripExif !== undefined && (
+      {/* Name Pattern Shield (Icon + Tooltip) */}
+      <Tooltip content={namePattern} label="File Name Pattern">
         <Shield
-          left="EXIF"
-          right={config.stripExif ? "Strip" : "Keep"}
-          icon={<Trash2 size={13} />}
+          left="Name"
+          right={<Type size={13} className="my-0.5" />}
+          icon={<Type size={13} />}
           rightBg={rightBgClassName}
         />
-      )}
+      </Tooltip>
     </div>
   )
 }

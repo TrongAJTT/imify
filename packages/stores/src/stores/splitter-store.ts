@@ -10,6 +10,8 @@ import {
 } from "@imify/core/codec-options"
 import { mergeNormalizedJxlCodecOptions } from "@imify/core/jxl-options"
 import type { FormatCodecOptions } from "@imify/core/types"
+import { useBatchStore, type SavedSetupPreset } from "./batch-store"
+import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
 import {
   createDefaultSplitterCustomGuide,
   createDefaultSplitterColorRule,
@@ -19,7 +21,8 @@ import {
   type SplitterCustomGuide,
   type SplitterExportSettings,
   type SplitterPresetConfig,
-  type SplitterSplitSettings
+  type SplitterSplitSettings,
+  type SplitterExportFormat
 } from "@imify/features/splitter/types"
 
 
@@ -56,6 +59,7 @@ export interface SplitterStoreState {
   splitSettings: SplitterSplitSettings
   exportSettings: SplitterExportSettings
   uiState: SplitterUiState
+  activePresetId: string | null
 
   setSplitSettings: (patch: Partial<SplitterSplitSettings>) => void
   setExportSettings: (patch: Partial<SplitterExportSettings>) => void
@@ -66,6 +70,8 @@ export interface SplitterStoreState {
   updateColorRule: (ruleId: string, patch: Partial<SplitterColorRule>) => void
   removeColorRule: (ruleId: string) => void
   applyPresetConfig: (config: SplitterPresetConfig) => void
+  applyPreset: (preset: SavedSetupPreset) => void
+  resetToDefault: () => void
 }
 
 function clampInt(value: number, min: number, max: number, fallback: number): number {
@@ -254,6 +260,7 @@ export const useSplitterStore = create<SplitterStoreState>()(
       splitSettings: normalizeSplitSettings(DEFAULT_SPLITTER_SPLIT_SETTINGS),
       exportSettings: normalizeExportSettings(DEFAULT_SPLITTER_EXPORT_SETTINGS),
       uiState: DEFAULT_UI_STATE,
+      activePresetId: null,
 
       setSplitSettings: (patch) =>
         set((state) => ({
@@ -338,16 +345,55 @@ export const useSplitterStore = create<SplitterStoreState>()(
         set({
           splitSettings: normalizeSplitSettings(config.splitSettings),
           exportSettings: normalizeExportSettings(config.exportSettings)
-        })
+        }),
+
+      applyPreset: (preset) => {
+        const { targetFormat, quality, formatOptions, fileNamePattern } = preset.config
+        const supportedFormats: SplitterExportFormat[] = ["png", "webp", "avif", "jxl", "jpg", "bmp", "tiff"]
+        
+        let mappedFormat: SplitterExportFormat = "png"
+        if (supportedFormats.includes(targetFormat as any)) {
+          mappedFormat = targetFormat as SplitterExportFormat
+        } else if (targetFormat === "mozjpeg") {
+          mappedFormat = "jpg"
+        }
+
+        set((state) => ({
+          activePresetId: preset.id === VIRTUAL_DEFAULT_PNG_PRESET.id ? null : preset.id,
+          exportSettings: normalizeExportSettings({
+            ...state.exportSettings,
+            targetFormat: mappedFormat,
+            quality,
+            codecOptions: formatOptions as FormatCodecOptions
+          })
+        }))
+
+        // Sync global fileNamePattern if it's an identified preset or intentional select
+        if (fileNamePattern) {
+          useBatchStore.getState().setFileNamePattern(fileNamePattern)
+        }
+      },
+
+      resetToDefault: () => {
+        set((state) => ({
+          activePresetId: null,
+          exportSettings: normalizeExportSettings({
+            ...state.exportSettings,
+            targetFormat: VIRTUAL_DEFAULT_PNG_PRESET.config.targetFormat as SplitterExportFormat,
+            quality: VIRTUAL_DEFAULT_PNG_PRESET.config.quality,
+            codecOptions: VIRTUAL_DEFAULT_PNG_PRESET.config.formatOptions as FormatCodecOptions
+          })
+        }))
+        useBatchStore.getState().setFileNamePattern(VIRTUAL_DEFAULT_PNG_PRESET.config.fileNamePattern)
+      }
     }),
     {
       name: "imify-splitter",
       storage: createJSONStorage(() => deferredStorage),
-      partialize: (state) => ({
-        splitSettings: state.splitSettings,
-        exportSettings: state.exportSettings,
-        uiState: state.uiState
-      }),
+      partialize: (state) => {
+        const { activePresetId, ...rest } = state
+        return rest
+      },
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<SplitterStoreState> | undefined
         const rehydrated = buildRehydratedSplitterState(persisted)

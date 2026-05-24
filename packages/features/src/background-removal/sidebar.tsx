@@ -16,12 +16,20 @@ import { Brain, Sliders, Image, Cpu, Settings2 } from "lucide-react"
 import { BACKGROUND_REMOVAL_MODELS } from "./models"
 import { PresetSelector } from "../processor/preset-selector"
 import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils"
-import { useBackgroundRemoverStore } from "@imify/stores"
+import { useBackgroundRemoverStore, useBatchStore, type SavedSetupPreset } from "@imify/stores"
+import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader"
 
 import { BACKGROUND_REMOVER_PANEL_CONTENT } from "./remover-preset-info-panel"
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel"
 
 export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings"
+
+const BG_REMOVER_PRESET: SavedSetupPreset = {
+  ...VIRTUAL_DEFAULT_PNG_PRESET,
+  id: "preset_background-remover",
+  name: "Background Remover",
+  highlightColor: "#ec4899"
+}
 
 interface BackgroundRemoverSidebarProps {
   enableWideSidebarGrid?: boolean
@@ -53,6 +61,9 @@ export function BackgroundRemoverSidebar({
 
   const selectedModel = BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
   const selectedVariant = selectedModel.variants.find(v => v.id === variantId) ?? selectedModel.variants[0]
+
+  // Auto-apply identified preset if it exists and no preset is active (initial load)
+  useIdentifiedPresetLoader(BG_REMOVER_PRESET, activePresetId, applyPreset)
 
   // Initialize smart default for unloadModelAfterProcess based on hardware
   useEffect(() => {
@@ -150,8 +161,8 @@ export function BackgroundRemoverSidebar({
       content: (
         <PresetSelector
           label="Output Preset"
-          theme="sky"
-          defaultPreset={VIRTUAL_DEFAULT_PNG_PRESET}
+          theme="pink"
+          identifiedPreset={BG_REMOVER_PRESET}
           formatFilter={["png", "webp", "avif", "jxl", "jpg"]}
           activePresetId={activePresetId}
           onSelect={applyPreset}
