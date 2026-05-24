@@ -74,7 +74,7 @@ export function useBatchExecution({
     })  
   }
 
-  const processItem = async (item: BatchQueueItem, itemIndex: number, totalQueueCount: number): Promise<"success" | "error"> => {
+  const processItem = async (item: BatchQueueItem, itemIndex: number, totalQueueCount: number, inputValue?: string): Promise<"success" | "error"> => {
     setItemState(item.id, { status: "processing", percent: 12, message: undefined, outputBlob: undefined, outputFileName: undefined })
     await notifyProgress(item.id, item.file.name, config, "processing", 12)
     try {
@@ -83,7 +83,7 @@ export function useBatchExecution({
       const normalizedBlob = await applyExifPolicy({ sourceBlob: item.file, outputBlob: converted.blob, stripExif })
       const dimensions = (await readImageDimensions(normalizedBlob)) || (await readImageDimensions(item.file))
       const outputExtension = converted.outputExtension ?? config.format
-      const smartName = buildSmartOutputFileName({ pattern: fileNamePattern, originalFileName: item.file.name, outputExtension, index: itemIndex, totalFiles: totalQueueCount, dimensions, now: new Date() })
+      const smartName = buildSmartOutputFileName({ pattern: fileNamePattern, originalFileName: item.file.name, outputExtension, index: itemIndex, totalFiles: totalQueueCount, dimensions, now: new Date(), input: inputValue })
       setItemState(item.id, { status: "processing", percent: 84 })
       await notifyProgress(item.id, item.file.name, config, "processing", 84, "Finalizing output...")
       setItemState(item.id, { status: "success", percent: 100, outputBlob: normalizedBlob, outputFileName: outputExtension === "zip" ? smartName || toWebKitZipFilename(item.file.name) : smartName || toOutputFilenameWithExtension(item.file.name, outputExtension) })
@@ -97,7 +97,7 @@ export function useBatchExecution({
     }
   }
 
-  const startBatchExecution = async (itemsToProcess: BatchQueueItem[], mode: BatchRunMode): Promise<void> => {
+  const startBatchExecution = async (itemsToProcess: BatchQueueItem[], mode: BatchRunMode, inputValue?: string): Promise<void> => {
     if (!itemsToProcess.length) return
     cancelRef.current = false; pauseRef.current = false; setPaused(false); setCancelRequested(false); setSummary(null); setIsRunning(true)
     const startedAt = Date.now()
@@ -118,7 +118,7 @@ export function useBatchExecution({
           while (pauseRef.current && !cancelRef.current) await sleep(120)
           if (cancelRef.current || nextItemIndex >= totalItems) return
           const currentIndex = nextItemIndex; nextItemIndex += 1
-          const status = await processItem(itemsToProcess[currentIndex], currentIndex + 1, totalQueueCount)
+          const status = await processItem(itemsToProcess[currentIndex], currentIndex + 1, totalQueueCount, inputValue)
           if (status === "success") successCount += 1; else failedCount += 1
           pushBatchProgress()
         }
@@ -138,7 +138,7 @@ export function useBatchExecution({
     }
   }
 
-  const runBatch = async (mode: BatchRunMode = "all") => {
+  const runBatch = async (mode: BatchRunMode = "all", inputValue?: string) => {
     if (isRunning) return
     const itemsToProcess = mode === "failed" ? queue.filter((item) => item.status === "error") : queue.filter((item) => item.status === "queued" || item.status === "error")
     if (!itemsToProcess.length) return
@@ -147,19 +147,19 @@ export function useBatchExecution({
       setOomWarning({ isOpen: true, totalSize: String(toMb(selectedBytes)), recommendedSize: String(toMb(MAX_TOTAL_QUEUE_BYTES)), mode })
       return
     }
-    await startBatchExecution(itemsToProcess, mode)
+    await startBatchExecution(itemsToProcess, mode, inputValue)
   }
 
   const requestCancel = () => { setCancelRequested(true); cancelRef.current = true; if (isWorkerConvertibleFormat(config.format)) terminateConversionWorkerPool(config.format) }
   const togglePause = () => setPaused((current) => !current)
   const closeOomWarning = () => setOomWarning(null)
-  const confirmOomWarning = async (dontShowAgain: boolean) => {
+  const confirmOomWarning = async (dontShowAgain: boolean, inputValue?: string) => {
     if (!oomWarning) return
     if (dontShowAgain) onPersistSkipOomWarning()
     const mode = oomWarning.mode
     setOomWarning(null)
     const itemsToProcess = mode === "failed" ? queue.filter((item) => item.status === "error") : queue.filter((item) => item.status === "queued" || item.status === "error")
-    await startBatchExecution(itemsToProcess, mode)
+    await startBatchExecution(itemsToProcess, mode, inputValue)
   }
   const clearSummary = () => setSummary(null)
   const clearBatchToast = (toastId?: string) => setBatchToastPayload((current) => (!current || (toastId && current.id !== toastId) ? current : null))

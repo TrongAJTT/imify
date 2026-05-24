@@ -59,6 +59,13 @@ export function RenamePatternDialog({
 
   const isDirty = pattern !== initialPattern
 
+  const inputTagCount = useMemo(() => {
+    const matches = pattern.match(/\[input\]/gi)
+    return matches ? matches.length : 0
+  }, [pattern])
+
+  const hasTooManyInputs = inputTagCount > 1
+
   const preview = useMemo(() => {
     return buildSmartOutputFileName({
       pattern,
@@ -176,22 +183,33 @@ export function RenamePatternDialog({
         </div>
       </div>
 
-      <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-end gap-3">
-        <SecondaryButton onClick={onClose} className="px-6">
-          Cancel
-        </SecondaryButton>
-        <Button
-          onClick={() => {
-            const finalPattern = pattern.trim() || emptyPatternFallback
-            onSave(finalPattern)
-            onClose()
-          }}
-          disabled={!isDirty}
-          className="px-6 flex items-center gap-2 shadow-lg shadow-sky-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save className="w-4 h-4" />
-          Apply pattern
-        </Button>
+      <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-rose-500 font-medium text-xs">
+          {hasTooManyInputs && (
+            <>
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              Dynamic tag [Input] can only be used once.
+            </>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-3 shrink-0">
+          <SecondaryButton onClick={onClose} className="px-6">
+            Cancel
+          </SecondaryButton>
+          <Button
+            onClick={() => {
+              const finalPattern = pattern.trim() || emptyPatternFallback
+              onSave(finalPattern)
+              onClose()
+            }}
+            disabled={!isDirty || hasTooManyInputs}
+            className="px-6 flex items-center gap-2 shadow-lg shadow-sky-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save className="w-4 h-4" />
+            Apply pattern
+          </Button>
+        </div>
       </div>
     </BaseDialog>
   )
@@ -213,7 +231,8 @@ export const BATCH_RENAME_TAGS: Array<{ tag: string; label: string }> = [
   { tag: "[Time]", label: "Current time (HHMMSS)" },
   { tag: "[Index]", label: "Sequence index (1, 2, 3...)" },
   { tag: "[PaddedIndex]", label: "Padded index (001, 002...)" },
-  { tag: "[Ext]", label: "Target extension" }
+  { tag: "[Ext]", label: "Target extension" },
+  { tag: "[Input]", label: "Custom user input" }
 ]
 
 /** Image Splicing: no original filename tag */
@@ -231,7 +250,8 @@ export const SPLICING_EXPORT_RENAME_TAGS: Array<{ tag: string; label: string }> 
   { tag: "[Time]", label: "Current time (HHMMSS)" },
   { tag: "[Index]", label: "Export index (1, 2, 3...)" },
   { tag: "[PaddedIndex]", label: "Padded index (001, 002...)" },
-  { tag: "[Ext]", label: "File extension" }
+  { tag: "[Ext]", label: "File extension" },
+  { tag: "[Input]", label: "Custom user input" }
 ]
 
 /** Image Splitter: keep original filename tag plus split-aware presets */
@@ -250,6 +270,7 @@ export const SPLITTER_EXPORT_RENAME_TAGS: Array<{ tag: string; label: string }> 
   { tag: "[Time]", label: "Current time (HHMMSS)" },
   { tag: "[Index]", label: "Split index (1, 2, 3...)" },
   { tag: "[PaddedIndex]", label: "Padded split index (001, 002...)" },
-  { tag: "[Ext]", label: "File extension" }
+  { tag: "[Ext]", label: "File extension" },
+  { tag: "[Input]", label: "Custom user input" }
 ]
 

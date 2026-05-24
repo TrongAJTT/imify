@@ -4,7 +4,7 @@ import { AlertTriangle, ImagePlus, Trash2 } from "lucide-react"
 
 import { APP_CONFIG } from "@imify/core/config"
 import { buildSmartOutputFileName, reserveUniqueFileName } from "@imify/core/file-name-pattern"
-import { ToastContainer } from "@imify/ui"
+import { ToastContainer, useRenameInputPrompt } from "@imify/ui"
 import { useConversionToasts } from "@imify/core/hooks/use-toast"
 import type { ConversionProgressPayload } from "@imify/core/types"
 import { BatchDownloadConfirmDialog } from "../shared/download-confirm-dialog"
@@ -104,6 +104,7 @@ export function SplitterTab() {
   const [exportToastPayload, setExportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
   const [pendingExportMode, setPendingExportMode] = useState<"one_by_one" | null>(null)
+  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt()
   const conversionToasts = useConversionToasts([importToastPayload, exportToastPayload])
   const { getShortcutLabel } = useShortcutPreferences()
 
@@ -454,7 +455,8 @@ export function SplitterTab() {
 
   const handleExport = async (
     downloadMode: "zip" | "one_by_one" = "zip",
-    forceDownloadConfirm: boolean = false
+    forceDownloadConfirm: boolean = false,
+    inputValue?: string
   ) => {
     if (images.length === 0 || isExporting) {
       return
@@ -538,7 +540,8 @@ export function SplitterTab() {
               width: segment.rect.width,
               height: segment.rect.height
             },
-            now: new Date()
+            now: new Date(),
+            input: inputValue
           })
 
           const uniqueName = reserveUniqueFileName(rawFileName, usedNames)
@@ -617,10 +620,13 @@ export function SplitterTab() {
   const handleExportAction = useCallback(
     async (mode: ExportSplitMode) => {
       if (mode === "zip" || mode === "one_by_one") {
-        await handleExport(mode)
+        checkAndPrompt(
+          exportSettings.fileNamePattern,
+          (inputValue) => void handleExport(mode, false, inputValue)
+        )
       }
     },
-    [handleExport]
+    [handleExport, exportSettings.fileNamePattern, checkAndPrompt]
   )
 
   const workspaceContent = (
@@ -756,11 +762,15 @@ export function SplitterTab() {
             onConfirm={() => {
               setShowDownloadConfirm(false)
               if (pendingExportMode) {
-                void handleExport(pendingExportMode, true)
+                checkAndPrompt(
+                  exportSettings.fileNamePattern,
+                  (inputValue) => void handleExport(pendingExportMode, true, inputValue)
+                )
               }
               setPendingExportMode(null)
             }}
           />
+          {renameInputPrompt}
         </>
       }
     />

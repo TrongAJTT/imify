@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Download, ImagePlus } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import { toUserFacingConversionError } from "@imify/core/error-utils";
 import {
   buildSmartOutputFileName,
@@ -17,7 +17,13 @@ import {
 } from "@imify/engine/image-pipeline/decode-image-data";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
-import { Button, EmptyDropCard, Heading, InfoPopover, MutedText } from "@imify/ui";
+import {
+  Button,
+  EmptyDropCard,
+  Heading,
+  MutedText,
+  useRenameInputPrompt,
+} from "@imify/ui";
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
 import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar";
 import {
@@ -93,8 +99,8 @@ export function SingleProcessorWorkspace({
   consumePendingOptimizeFile,
   consumePendingImportUrl,
 }: {
-  consumePendingOptimizeFile?: () => File | null
-  consumePendingImportUrl?: () => string | null
+  consumePendingOptimizeFile?: () => File | null;
+  consumePendingImportUrl?: () => string | null;
 } = {}) {
   const targetFormat = useBatchStore((state) => state.targetFormat);
   const quality = useBatchStore((state) => state.quality);
@@ -149,6 +155,7 @@ export function SingleProcessorWorkspace({
   const [showImpactChip, setShowImpactChip] = useState(false);
   const [stackStatsCards, setStackStatsCards] = useState(false);
   const [processTime, setProcessTime] = useState<number | null>(null);
+  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
   const requestSequenceRef = useRef(0);
   const attachSequenceRef = useRef(0);
 
@@ -246,7 +253,9 @@ export function SingleProcessorWorkspace({
 
   const onAppendFiles = (files: FileList | null) => {
     if (!files?.length) return;
-    const firstImageFile = Array.from(files).find((file) => isCommonImageFile(file));
+    const firstImageFile = Array.from(files).find((file) =>
+      isCommonImageFile(file),
+    );
     if (firstImageFile) void attachSingleFile(firstImageFile);
   };
   const importFromImageUrls = async (urls: string[]) => {
@@ -304,10 +313,10 @@ export function SingleProcessorWorkspace({
       resultOutputExtension === "zip"
         ? smartName || "favicon_kit.zip"
         : smartName ||
-        toOutputFilenameWithExtension(
-          sourceFile.name,
-          resultOutputExtension,
-        ),
+            toOutputFilenameWithExtension(
+              sourceFile.name,
+              resultOutputExtension,
+            ),
     );
   }, [
     fileNamePattern,
@@ -377,10 +386,10 @@ export function SingleProcessorWorkspace({
             outputExtension === "zip"
               ? smartName || "favicon_kit.zip"
               : smartName ||
-              toOutputFilenameWithExtension(
-                sourceFile.name,
-                outputExtension,
-              ),
+                  toOutputFilenameWithExtension(
+                    sourceFile.name,
+                    outputExtension,
+                  ),
           );
           if (normalizedBlob.type.startsWith("image/")) {
             try {
@@ -453,7 +462,10 @@ export function SingleProcessorWorkspace({
             title="Drop one image here, click to browse, or paste from clipboard"
             subtitle="Single Processor with live preview, debounce, and image URL import"
             onDropFiles={onAppendFiles}
-            fileInput={{ accept: COMMON_IMAGE_ACCEPT, onInputFiles: onAppendFiles }}
+            fileInput={{
+              accept: COMMON_IMAGE_ACCEPT,
+              onInputFiles: onAppendFiles,
+            }}
             topRightSlot={
               <ImageUrlImportControl
                 allowMultiple={false}
@@ -475,10 +487,11 @@ export function SingleProcessorWorkspace({
                     </Heading>
                     {showImpactChip && (
                       <span
-                        className={`shrink-0 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums ${resultBlob
-                          ? `${delta.className} border-current/25`
-                          : "text-slate-500 border-slate-300 dark:text-slate-400 dark:border-slate-700"
-                          }`}
+                        className={`shrink-0 rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums ${
+                          resultBlob
+                            ? `${delta.className} border-current/25`
+                            : "text-slate-500 border-slate-300 dark:text-slate-400 dark:border-slate-700"
+                        }`}
                       >
                         {resultBlob ? delta.label : "-"}
                       </span>
@@ -504,9 +517,39 @@ export function SingleProcessorWorkspace({
                   </Button>
                   <Button
                     disabled={!resultBlob || !resultFileName}
-                    onClick={async () => {
-                      if (resultBlob && resultFileName)
-                        await downloadWithFilename(resultBlob, resultFileName);
+                    onClick={() => {
+                      if (
+                        resultBlob &&
+                        resultFileName &&
+                        sourceFile &&
+                        resultOutputExtension
+                      ) {
+                        checkAndPrompt(
+                          fileNamePattern,
+                          async (inputValue) => {
+                            const finalFileName = buildSmartOutputFileName({
+                              pattern: fileNamePattern,
+                              originalFileName: sourceFile.name,
+                              outputExtension: resultOutputExtension,
+                              index: 1,
+                              totalFiles: 1,
+                              dimensions: resultNameDimensions,
+                              now: new Date(),
+                              input: inputValue,
+                            });
+                            await downloadWithFilename(
+                              resultBlob,
+                              finalFileName,
+                            );
+                          },
+                          async () => {
+                            await downloadWithFilename(
+                              resultBlob,
+                              resultFileName,
+                            );
+                          },
+                        );
+                      }
                     }}
                     type="button"
                     variant="primary"
@@ -515,8 +558,12 @@ export function SingleProcessorWorkspace({
                   </Button>
                 </div>
               </div>
-              <div className={`flex items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900/50 ${stackStatsCards ? "flex-col divide-y divide-slate-200" : "flex-row divide-x divide-slate-200"}`}>
-                <div className={`flex w-full flex-1 flex-col p-4 transition-colors hover:bg-white dark:hover:bg-slate-900 ${stackStatsCards ? "items-center text-center" : "items-start text-left"}`}>
+              <div
+                className={`flex items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900/50 ${stackStatsCards ? "flex-col divide-y divide-slate-200" : "flex-row divide-x divide-slate-200"}`}
+              >
+                <div
+                  className={`flex w-full flex-1 flex-col p-4 transition-colors hover:bg-white dark:hover:bg-slate-900 ${stackStatsCards ? "items-center text-center" : "items-start text-left"}`}
+                >
                   <div className="mb-1 flex items-center gap-1.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -537,7 +584,9 @@ export function SingleProcessorWorkspace({
                     </span>
                   </div>
                 </div>
-                <div className={`flex w-full flex-1 flex-col p-4 transition-colors hover:bg-white dark:hover:bg-slate-900 ${stackStatsCards ? "items-center text-center border-t" : "items-start text-left border-t-0"}`}>
+                <div
+                  className={`flex w-full flex-1 flex-col p-4 transition-colors hover:bg-white dark:hover:bg-slate-900 ${stackStatsCards ? "items-center text-center border-t" : "items-start text-left border-t-0"}`}
+                >
                   <div className="mb-1 flex items-center gap-1.5">
                     <div
                       className={`h-1.5 w-1.5 rounded-full ${isProcessing ? "animate-pulse bg-amber-400" : "bg-blue-500"}`}
@@ -567,9 +616,9 @@ export function SingleProcessorWorkspace({
                   </div>
                 </div>
                 <div
-                  className={`w-full min-w-[120px] flex-1 flex-col items-center justify-center bg-white/50 p-4 text-center dark:bg-slate-900/30 ${stackStatsCards ? "border-t" : "border-t-0"
-                    } ${showImpactChip ? "hidden" : "flex"
-                    }`}
+                  className={`w-full min-w-[120px] flex-1 flex-col items-center justify-center bg-white/50 p-4 text-center dark:bg-slate-900/30 ${
+                    stackStatsCards ? "border-t" : "border-t-0"
+                  } ${showImpactChip ? "hidden" : "flex"}`}
                 >
                   <span className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Impact
@@ -630,6 +679,8 @@ export function SingleProcessorWorkspace({
           </div>
         </>
       )}
+
+      {renameInputPrompt}
     </div>
   );
 }

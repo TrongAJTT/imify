@@ -76,7 +76,7 @@ export function useSplicingExport({
   setPendingExportModeForConfirm
 }: UseSplicingExportArgs) {
   const performExport = useCallback(
-    async (downloadMode: SplicingExportMode, forceDownloadConfirm: boolean = false) => {
+    async (downloadMode: SplicingExportMode, forceDownloadConfirm: boolean = false, inputValue?: string) => {
       if (images.length === 0 || isExporting) return
 
       if (
@@ -172,7 +172,8 @@ export function useSplicingExport({
             index: i + 1,
             totalFiles: blobs.length,
             outputExtension: ext,
-            now
+            now,
+            input: inputValue
           })
           return reserveUniqueFileName(raw, usedExportNames)
         }
@@ -186,7 +187,8 @@ export function useSplicingExport({
             index: i + 1,
             totalFiles: blobs.length,
             outputExtension: "pdf",
-            now
+            now,
+            input: inputValue
           })
           return reserveUniqueFileName(raw, usedExportNames)
         }

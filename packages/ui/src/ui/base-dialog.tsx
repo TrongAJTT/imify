@@ -41,9 +41,14 @@ export function BaseDialog({
   // Sync React's isOpen state with Native Dialog API
   useEffect(() => {
     const dialog = dialogRef.current
+    console.log("[BaseDialog] useEffect sync - isOpen:", isOpen, "mounted:", mounted, "dialogRef exists:", !!dialog, "dialog.open:", dialog?.open);
     if (isOpen) {
-      if (!dialog) return
+      if (!dialog) {
+        console.warn("[BaseDialog] dialogRef is null on isOpen = true!");
+        return;
+      }
       if (!dialog.open) {
+        console.log("[BaseDialog] calling dialog.showModal()");
         dialog.showModal()
         // Prevent body scroll when dialog is open
         document.body.style.overflow = "hidden"
@@ -53,6 +58,7 @@ export function BaseDialog({
       // was unmounted/replaced before this effect runs.
       document.body.style.overflow = ""
       if (dialog?.open) {
+        console.log("[BaseDialog] calling dialog.close()");
         dialog.close()
       }
     }

@@ -11,6 +11,7 @@ export interface SmartNameContext {
   totalFiles?: number
   dimensions: ImageDimensions | null
   now: Date
+  input?: string
 }
 
 function pad2(value: number): string {
@@ -31,7 +32,7 @@ function baseNameFromFileName(fileName: string): string {
 }
 
 export function buildSmartOutputFileName(context: SmartNameContext): string {
-  const { pattern, originalFileName, outputExtension, index, totalFiles, dimensions, now } = context
+  const { pattern, originalFileName, outputExtension, index, totalFiles, dimensions, now, input } = context
   const normalizedPattern = pattern.trim() || "[OriginalName]_[Index].[Ext]"
   const date = `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}`
   const time = `${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`
@@ -47,7 +48,9 @@ export function buildSmartOutputFileName(context: SmartNameContext): string {
     "[Time]": time,
     "[Index]": String(index),
     "[PaddedIndex]": paddedIndex,
-    "[Ext]": outputExtension.replace(/^\./, "")
+    "[Ext]": outputExtension.replace(/^\./, ""),
+    "[Input]": safeSegment(input ?? "[user-input]"),
+    "[input]": safeSegment(input ?? "[user-input]")
   }
 
   const replaced = Object.entries(replacements).reduce((acc, [token, value]) => {

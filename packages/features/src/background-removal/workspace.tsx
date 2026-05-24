@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react"
 import { Eraser, Download, LayoutGrid, Columns } from "lucide-react"
 import {
   Button,
-  ToastContainer
+  ToastContainer,
+  useRenameInputPrompt
 } from "@imify/ui"
 import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast"
 import { useBackgroundRemoverStore } from "@imify/stores"
@@ -17,6 +18,7 @@ import { convertImage } from "@imify/engine/converter"
 import { downloadWithFilename, formatBytes } from "../processor/processor-utils"
 import { buildFormatConfigFromPreset, VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
+import { buildSmartOutputFileName } from "@imify/core/file-name-pattern"
 
 interface BackgroundRemoverWorkspaceProps {
   sourceFile: File
@@ -63,8 +65,9 @@ export function BackgroundRemoverWorkspace({
     activePresetId
   } = useBackgroundRemoverStore()
 
-  const { presets } = useBatchStore()
+  const { presets, fileNamePattern } = useBatchStore()
   const activePreset = presets.find(p => p.id === activePresetId) || VIRTUAL_DEFAULT_PNG_PRESET
+  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt()
 
   const { toasts, show, hide } = useToast()
   const conversionToasts = useConversionToasts([progressPayload])
@@ -237,6 +240,48 @@ export function BackgroundRemoverWorkspace({
     onStartProcessing()
   }
 
+  const executeDownloadBlobCreationAndSave = async (canvas: HTMLCanvasElement, fileName: string) => {
+    const extension = targetFormat === "jpg" ? "jpg" : targetFormat
+    if (targetFormat === "webp" || targetFormat === "jpg" || targetFormat === "png") {
+      const mime = targetFormat === "webp" ? "image/webp" : targetFormat === "jpg" ? "image/jpeg" : "image/png"
+      
+      let finalCanvas = canvas
+      
+      if (targetFormat === "jpg" && outputFormat === "transparent") {
+        const bgCanvas = document.createElement("canvas")
+        bgCanvas.width = canvas.width
+        bgCanvas.height = canvas.height
+        const bgCtx = bgCanvas.getContext("2d")
+        if (bgCtx) {
+          bgCtx.fillStyle = "#ffffff"
+          bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height)
+          bgCtx.drawImage(canvas, 0, 0)
+          finalCanvas = bgCanvas
+        }
+      }
+
+      const finalBlob = await new Promise<Blob | null>((resolve) => 
+        finalCanvas.toBlob(resolve, mime, quality / 100)
+      )
+      
+      if (!finalBlob) throw new Error("Failed to encode image natively")
+      await downloadWithFilename(finalBlob, fileName)
+    } else {
+      const sourceBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.95))
+      if (!sourceBlob) throw new Error("Failed to create source blob")
+
+      const config: FormatConfig = buildFormatConfigFromPreset(activePreset)
+      config.resize = { mode: "none" }
+
+      const converted = await convertImage({
+        sourceBlob,
+        config
+      })
+
+      await downloadWithFilename(converted.blob, fileName)
+    }
+  }
+
   const handleDownload = async () => {
     if (!resultImageData) return
 
@@ -245,7 +290,7 @@ export function BackgroundRemoverWorkspace({
       title: "Encoding Image",
       message: `Preparing ${targetFormat.toUpperCase()} file...`,
       type: "notification",
-      duration: 60000 // Show for up to 1 minute while encoding
+      duration: 60000
     })
 
     try {
@@ -255,7 +300,6 @@ export function BackgroundRemoverWorkspace({
       const ctx = canvas.getContext("2d")
       if (!ctx) throw new Error("Could not get canvas context")
 
-      // Use ImageBitmap for better performance and to respect alpha blending
       const imageBitmap = await createImageBitmap(resultImageData)
 
       if (outputFormat === "color") {
@@ -266,61 +310,75 @@ export function BackgroundRemoverWorkspace({
       ctx.drawImage(imageBitmap, 0, 0)
 
       const extension = targetFormat === "jpg" ? "jpg" : targetFormat
-      const baseName = sourceFile ? sourceFile.name.replace(/\.[^.]+$/, "") : "result"
-      const fileName = `${baseName}_no_bg.${extension}`
 
-      // FAST-PATH: If target is natively supported, encode directly from canvas to avoid 
-      // the overhead of the shared conversion engine (which involves slow getImageData calls).
-      if (targetFormat === "webp" || targetFormat === "jpg" || targetFormat === "png") {
-        const mime = targetFormat === "webp" ? "image/webp" : targetFormat === "jpg" ? "image/jpeg" : "image/png"
-        
-        let finalCanvas = canvas
-        
-        // JPEG/JPG does not support transparency. If the output was transparent, 
-        // we must composite it onto a solid background (default to white if not set) 
-        // to avoid black backgrounds in the resulting JPEG.
-        if (targetFormat === "jpg" && outputFormat === "transparent") {
-          const bgCanvas = document.createElement("canvas")
-          bgCanvas.width = canvas.width
-          bgCanvas.height = canvas.height
-          const bgCtx = bgCanvas.getContext("2d")
-          if (bgCtx) {
-            bgCtx.fillStyle = "#ffffff" // Default to white for JPG with transparency
-            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height)
-            bgCtx.drawImage(canvas, 0, 0)
-            finalCanvas = bgCanvas
+      checkAndPrompt(
+        fileNamePattern,
+        async (inputValue) => {
+          try {
+            const fileName = buildSmartOutputFileName({
+              pattern: fileNamePattern,
+              originalFileName: sourceFile ? sourceFile.name : "result",
+              outputExtension: extension,
+              index: 1,
+              totalFiles: 1,
+              dimensions: { width: resultImageData.width, height: resultImageData.height },
+              now: new Date(),
+              input: inputValue
+            })
+
+            await executeDownloadBlobCreationAndSave(canvas, fileName)
+            hide(toastId)
+            show({
+              title: "Download Ready",
+              message: "Image exported successfully",
+              type: "success"
+            })
+          } catch (error) {
+            console.error("Download failed:", error)
+            hide(toastId)
+            show({
+              title: "Download Failed",
+              message: error instanceof Error ? error.message : "Unable to encode image",
+              type: "error",
+              duration: 5000
+            })
+          } finally {
+            setIsDownloading(false)
+          }
+        },
+        async () => {
+          try {
+            const fileName = buildSmartOutputFileName({
+              pattern: fileNamePattern,
+              originalFileName: sourceFile ? sourceFile.name : "result",
+              outputExtension: extension,
+              index: 1,
+              totalFiles: 1,
+              dimensions: { width: resultImageData.width, height: resultImageData.height },
+              now: new Date()
+            })
+
+            await executeDownloadBlobCreationAndSave(canvas, fileName)
+            hide(toastId)
+            show({
+              title: "Download Ready",
+              message: "Image exported successfully",
+              type: "success"
+            })
+          } catch (error) {
+            console.error("Download failed:", error)
+            hide(toastId)
+            show({
+              title: "Download Failed",
+              message: error instanceof Error ? error.message : "Unable to encode image",
+              type: "error",
+              duration: 5000
+            })
+          } finally {
+            setIsDownloading(false)
           }
         }
-
-        const finalBlob = await new Promise<Blob | null>((resolve) => 
-          finalCanvas.toBlob(resolve, mime, quality / 100)
-        )
-        
-        if (!finalBlob) throw new Error("Failed to encode image natively")
-        await downloadWithFilename(finalBlob, fileName)
-      } else {
-        // Fallback to worker for advanced formats (AVIF, JXL, etc.)
-        // Use a faster intermediate format (webp) instead of PNG to speed up the transfer to worker
-        const sourceBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.95))
-        if (!sourceBlob) throw new Error("Failed to create source blob")
-
-        const config: FormatConfig = buildFormatConfigFromPreset(activePreset)
-        config.resize = { mode: "none" }
-
-        const converted = await convertImage({
-          sourceBlob,
-          config
-        })
-
-        await downloadWithFilename(converted.blob, fileName)
-      }
-
-      hide(toastId)
-      show({
-        title: "Download Ready",
-        message: "Image exported successfully",
-        type: "success"
-      })
+      )
     } catch (error) {
       console.error("Download failed:", error)
       hide(toastId)
@@ -330,7 +388,6 @@ export function BackgroundRemoverWorkspace({
         type: "error",
         duration: 5000
       })
-    } finally {
       setIsDownloading(false)
     }
   }
@@ -466,6 +523,7 @@ export function BackgroundRemoverWorkspace({
       />
 
       <ToastContainer toasts={[...toasts, ...conversionToasts]} onRemove={hide} />
+      {renameInputPrompt}
     </div>
   )
 }

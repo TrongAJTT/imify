@@ -15,7 +15,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { ToastContainer, BodyText } from "@imify/ui";
+import { ToastContainer, BodyText, RenameInputDialog, useRenameInputPrompt } from "@imify/ui";
 import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
 import type {
   ConversionProgressPayload,
@@ -83,6 +83,8 @@ export function BatchProcessorWorkspace() {
   const [urlImportToast, setUrlImportToast] =
     useState<ConversionProgressPayload | null>(null);
   const [isImportingUrls, setIsImportingUrls] = useState(false);
+  const [batchInputValue, setBatchInputValue] = useState("");
+  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false);
   const pdfSplitRef = useRef<HTMLDivElement>(null);
   const firstQueueItem = queue[0];
@@ -417,10 +419,22 @@ export function BatchProcessorWorkspace() {
           clearSummary();
         }}
         onRunAll={() => {
-          void runBatch("all");
+          checkAndPrompt(
+            fileNamePattern,
+            (inputValue) => {
+              setBatchInputValue(inputValue);
+              void runBatch("all", inputValue);
+            }
+          );
         }}
         onRunFailed={() => {
-          void runBatch("failed");
+          checkAndPrompt(
+            fileNamePattern,
+            (inputValue) => {
+              setBatchInputValue(inputValue);
+              void runBatch("failed", inputValue);
+            }
+          );
         }}
         onTogglePause={togglePause}
         paused={paused}
@@ -508,10 +522,11 @@ export function BatchProcessorWorkspace() {
         recommendedSize={oomWarning?.recommendedSize || "350"}
         onClose={closeOomWarning}
         onConfirm={(dontShowAgain) => {
-          void confirmOomWarning(dontShowAgain);
+          void confirmOomWarning(dontShowAgain, batchInputValue);
         }}
       />
       <ToastContainer toasts={mergedToasts} onRemove={handleRemoveToast} />
+      {renameInputPrompt}
     </div>
   );
 }
