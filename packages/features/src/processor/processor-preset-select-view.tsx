@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react"
 import { Plus } from "lucide-react"
 import { EmptyDropCard, Shield, MutedText } from "@imify/ui"
 import { PRESET_HIGHLIGHT_COLORS } from "@imify/stores/stores/preset-colors"
-import type { SavedSetupPreset, SetupContext } from "@imify/stores/stores/batch-store"
+import { useBatchStore, type SavedSetupPreset, type SetupContext } from "@imify/stores/stores/batch-store"
 import { PresetCard } from "./preset-card"
 import { SavePresetDialog } from "./save-preset-dialog"
 import { WorkspaceSelectHeader } from "./workspace-select-header"
@@ -18,6 +18,7 @@ export function ProcessorPresetSelectView({
   onUpdatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
   onDeletePreset: (presetId: string) => void
 }) {
+  const { togglePinPreset } = useBatchStore()
   const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false)
   const [editingPreset, setEditingPreset] = useState<SavedSetupPreset | null>(null)
   const [selectedFormat, setSelectedFormat] = useState<string>("all")
@@ -35,7 +36,14 @@ export function ProcessorPresetSelectView({
         return fmt === selectedFormat
       })
     }
-    return [...list].sort((a, b) => b.updatedAt - a.updatedAt)
+    return [...list].sort((a, b) => {
+      const pinA = a.pinned ? 1 : 0
+      const pinB = b.pinned ? 1 : 0
+      if (pinA !== pinB) {
+        return pinB - pinA
+      }
+      return b.updatedAt - a.updatedAt
+    })
   }, [presets, selectedFormat])
 
   const sortedPresets = filteredPresets // Use filtered ones for display
@@ -102,6 +110,7 @@ export function ProcessorPresetSelectView({
                   onSelect={() => onOpenPreset(preset.id)} 
                   onEdit={() => openEditDialog(preset)} 
                   onDelete={() => confirmDeletePreset(preset)} 
+                  onTogglePin={() => togglePinPreset(preset.id)}
                 />
               ))
             )}

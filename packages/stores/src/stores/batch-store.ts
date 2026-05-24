@@ -1,4 +1,4 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
 import {
@@ -35,6 +35,7 @@ export interface SavedSetupPreset {
   config: BatchSetupState
   createdAt: number
   updatedAt: number
+  pinned?: boolean
 }
 
 function toAspectRatioLabel(width: number, height: number): string {
@@ -362,6 +363,7 @@ interface BatchStoreState extends BatchSetupState {
   syncActivePresetConfig: (context: SetupContext) => void
   updatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
   deletePreset: (presetId: string) => void
+  togglePinPreset: (presetId: string) => void
 }
 
 function cloneContextConfig(state: BatchStoreState, context: SetupContext): BatchSetupState {
@@ -1102,7 +1104,8 @@ export const useBatchStore = create<BatchStoreState>()(
             highlightColor,
             config: currentConfig,
             createdAt: timestamp,
-            updatedAt: timestamp
+            updatedAt: timestamp,
+            pinned: false
           }
 
           const nextPresetViewByContext = {
@@ -1193,7 +1196,8 @@ export const useBatchStore = create<BatchStoreState>()(
             highlightColor: DEFAULT_PRESET_HIGHLIGHT_COLOR,
             config: defaultConfig,
             createdAt: timestamp,
-            updatedAt: timestamp
+            updatedAt: timestamp,
+            pinned: false
           }
 
           return {
@@ -1326,7 +1330,19 @@ export const useBatchStore = create<BatchStoreState>()(
             presetViewByContext: nextPresetViewByContext,
             contextConfigs: nextContextConfigs
           }
-        })
+        }),
+      togglePinPreset: (presetId) =>
+        set((state) => ({
+          presets: state.presets.map((preset) =>
+            preset.id === presetId
+              ? {
+                  ...preset,
+                  pinned: !preset.pinned,
+                  updatedAt: Date.now()
+                }
+              : preset
+          )
+        }))
     }),
     {
       name: "imify-batch-setup",

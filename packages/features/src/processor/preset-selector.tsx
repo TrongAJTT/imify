@@ -41,7 +41,7 @@ export function PresetSelector({
   onSelect,
   onReset
 }: PresetSelectorProps) {
-  const { presets } = useBatchStore()
+  const { presets, togglePinPreset } = useBatchStore()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedFormat, setSelectedFormat] = useState<string>("all")
 
@@ -56,19 +56,30 @@ export function PresetSelector({
     })]
   }, [formatFilter])
 
-  // Filter presets by context "single" and optional format filter + dialog filter
-  const availablePresets = presets.filter(p => {
-    const contextMatch = p.context === "single"
-    const propFormatMatch = !formatFilter || formatFilter.includes(p.config.targetFormat)
+  // Filter and sort presets by context "single" and optional format filter + dialog filter
+  const sortedAvailablePresets = useMemo(() => {
+    const list = presets.filter(p => {
+      const contextMatch = p.context === "single"
+      const propFormatMatch = !formatFilter || formatFilter.includes(p.config.targetFormat)
 
-    let dialogFormatMatch = true
-    if (selectedFormat !== "all") {
-      const fmt = p.config.targetFormat === "mozjpeg" ? "jpg" : p.config.targetFormat
-      dialogFormatMatch = fmt === selectedFormat
-    }
+      let dialogFormatMatch = true
+      if (selectedFormat !== "all") {
+        const fmt = p.config.targetFormat === "mozjpeg" ? "jpg" : p.config.targetFormat
+        dialogFormatMatch = fmt === selectedFormat
+      }
 
-    return contextMatch && propFormatMatch && dialogFormatMatch
-  })
+      return contextMatch && propFormatMatch && dialogFormatMatch
+    })
+
+    return [...list].sort((a, b) => {
+      const pinA = a.pinned ? 1 : 0
+      const pinB = b.pinned ? 1 : 0
+      if (pinA !== pinB) {
+        return pinB - pinA
+      }
+      return b.updatedAt - a.updatedAt
+    })
+  }, [presets, formatFilter, selectedFormat])
 
   const activePreset = activePresetId
     ? presets.find(p => p.id === activePresetId)
@@ -141,14 +152,24 @@ export function PresetSelector({
       <BaseDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
         <div className="flex flex-col h-[800px] max-h-[90vh]">
           {/* Header */}
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-              <div className="flex items-center gap-2">
-                <Bookmark className={theme === "pink" ? "text-pink-500" : "text-blue-500"} size={20} />
-                <Heading className="text-lg whitespace-nowrap">{label}</Heading>
-              </div>
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Bookmark className={theme === "pink" ? "text-pink-500" : "text-blue-500"} size={20} />
+              <Heading className="text-lg whitespace-nowrap">{label}</Heading>
+            </div>
+            
+            <button 
+              onClick={() => setIsDialogOpen(false)} 
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors shrink-0 -mr-2"
+            >
+              <X size={20} className="text-slate-500" />
+            </button>
+          </div>
 
-              {/* Format Filter Shield */}
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
+            {/* Format Filter Shield (Relocated to Content) */}
+            <div className="flex justify-start">
               <Shield
                 left="Filter"
                 size="sm"
@@ -175,20 +196,10 @@ export function PresetSelector({
                 }
               />
             </div>
-            
-            <button 
-              onClick={() => setIsDialogOpen(false)} 
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors shrink-0 -mr-2 -mt-1"
-            >
-              <X size={20} className="text-slate-500" />
-            </button>
-          </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-            {availablePresets.length > 0 ? (
+            {sortedAvailablePresets.length > 0 ? (
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                {availablePresets.map(preset => (
+                {sortedAvailablePresets.map(preset => (
                   <PresetCard
                     key={preset.id}
                     preset={preset}
@@ -199,6 +210,7 @@ export function PresetSelector({
                       onSelect(preset)
                       setIsDialogOpen(false)
                     }}
+                    onTogglePin={() => togglePinPreset(preset.id)}
                   />
                 ))}
               </div>

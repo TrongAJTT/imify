@@ -1,7 +1,7 @@
 import React from "react"
 import type { SavedSetupPreset, SetupContext } from "@imify/stores/stores/batch-store"
 import { ProcessorPresetDetail } from "./processor-preset-detail"
-import { Edit2, Trash2, Check } from "lucide-react"
+import { Edit2, Trash2, Check, Pin } from "lucide-react"
 
 interface PresetCardProps {
   preset: SavedSetupPreset
@@ -11,6 +11,7 @@ interface PresetCardProps {
   onSelect?: () => void
   onEdit?: () => void
   onDelete?: () => void
+  onTogglePin?: () => void
   className?: string
 }
 
@@ -22,6 +23,7 @@ export function PresetCard({
   onSelect,
   onEdit,
   onDelete,
+  onTogglePin,
   className = ""
 }: PresetCardProps) {
   return (
@@ -63,31 +65,50 @@ export function PresetCard({
             </span>
           </div>
 
-          {showActions && (
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                type="button"
-                onClick={(event) => { event.preventDefault(); event.stopPropagation(); onEdit?.() }}
-                className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
-                aria-label="Edit preset"
-              >
-                <Edit2 size={13} />
-              </button>
-              <button
-                type="button"
-                onClick={(event) => { event.preventDefault(); event.stopPropagation(); onDelete?.() }}
-                className="rounded p-1 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-slate-500 dark:hover:bg-rose-500/20 dark:hover:text-rose-400"
-                aria-label="Delete preset"
-              >
-                <Trash2 size={13} />
-              </button>
-            </div>
-          )}
+          <div className={`flex items-center gap-1 shrink-0 ${!preset.pinned && !showActions ? "opacity-0 group-hover:opacity-100 transition-opacity" : ""}`}>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onTogglePin?.()
+              }}
+              className={`rounded p-1 transition-colors ${
+                preset.pinned
+                  ? "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/20"
+                  : "text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+              }`}
+              aria-label={preset.pinned ? "Unpin preset" : "Pin preset"}
+            >
+              <Pin size={13} className={preset.pinned ? "fill-amber-500 rotate-45" : ""} />
+            </button>
+
+            {showActions && (
+              <>
+                <button
+                  type="button"
+                  onClick={(event) => { event.preventDefault(); event.stopPropagation(); onEdit?.() }}
+                  className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+                  aria-label="Edit preset"
+                >
+                  <Edit2 size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => { event.preventDefault(); event.stopPropagation(); onDelete?.() }}
+                  className="rounded p-1 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-slate-500 dark:hover:bg-rose-500/20 dark:hover:text-rose-400"
+                  aria-label="Delete preset"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="relative z-10 px-3 pb-3">
-        <ProcessorPresetDetail preset={preset} context={context} alwaysVibrant={isActive} />
+        <ProcessorPresetDetail preset={preset} context={context} alwaysVibrant={true} />
       </div>
     </div>
   )
