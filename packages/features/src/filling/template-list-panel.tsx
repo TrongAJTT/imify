@@ -1,12 +1,34 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react"
-import { Download, Edit, Pin, PinOff, Plus, Trash2 } from "lucide-react"
-import { Button, EmptyDropCard, SelectInput, Subheading, Tooltip } from "@imify/ui"
-import { templateStorage } from "./template-storage"
-import { exportToPsd } from "./psd-export"
-import { createLayerFillState, DEFAULT_CANVAS_FILL_STATE, type FillingTemplate, type TemplateSortMode } from "./types"
-import { resolveLayerShapePoints } from "./shape-generators"
+import React, { useEffect, useState } from "react";
+import {
+  Download,
+  Edit,
+  Edit3,
+  Pin,
+  PinOff,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
+import {
+  BaseDialog,
+  Button,
+  EmptyDropCard,
+  SelectInput,
+  Subheading,
+  TextInput,
+  Tooltip,
+} from "@imify/ui";
+import { templateStorage } from "./template-storage";
+import { exportToPsd } from "./psd-export";
+import {
+  createLayerFillState,
+  DEFAULT_CANVAS_FILL_STATE,
+  type FillingTemplate,
+  type TemplateSortMode,
+} from "./types";
+import { resolveLayerShapePoints } from "./shape-generators";
 
 const SORT_OPTIONS: Array<{ value: TemplateSortMode; label: string }> = [
   { value: "usage_count", label: "Most used" },
@@ -14,39 +36,44 @@ const SORT_OPTIONS: Array<{ value: TemplateSortMode; label: string }> = [
   { value: "recently_used", label: "Recently used" },
   { value: "name_asc", label: "Name (A-Z)" },
   { value: "name_desc", label: "Name (Z-A)" },
-]
+];
 
-export function sortFillingTemplates(templates: FillingTemplate[], mode: TemplateSortMode): FillingTemplate[] {
-  const pinned = templates.filter((template) => template.isPinned)
-  const unpinned = templates.filter((template) => !template.isPinned)
+export function sortFillingTemplates(
+  templates: FillingTemplate[],
+  mode: TemplateSortMode,
+): FillingTemplate[] {
+  const pinned = templates.filter((template) => template.isPinned);
+  const unpinned = templates.filter((template) => !template.isPinned);
 
   const sortFn = (list: FillingTemplate[]) => {
     switch (mode) {
       case "recently_created":
-        return [...list].sort((a, b) => b.createdAt - a.createdAt)
+        return [...list].sort((a, b) => b.createdAt - a.createdAt);
       case "recently_used":
-        return [...list].sort((a, b) => (b.lastUsedAt ?? 0) - (a.lastUsedAt ?? 0))
+        return [...list].sort(
+          (a, b) => (b.lastUsedAt ?? 0) - (a.lastUsedAt ?? 0),
+        );
       case "name_asc":
-        return [...list].sort((a, b) => a.name.localeCompare(b.name))
+        return [...list].sort((a, b) => a.name.localeCompare(b.name));
       case "name_desc":
-        return [...list].sort((a, b) => b.name.localeCompare(a.name))
+        return [...list].sort((a, b) => b.name.localeCompare(a.name));
       case "usage_count":
       default:
-        return [...list].sort((a, b) => b.usageCount - a.usageCount)
+        return [...list].sort((a, b) => b.usageCount - a.usageCount);
     }
-  }
+  };
 
-  return [...sortFn(pinned), ...sortFn(unpinned)]
+  return [...sortFn(pinned), ...sortFn(unpinned)];
 }
 
 interface FillingTemplateListPanelProps {
-  templates: FillingTemplate[]
-  sortMode: TemplateSortMode
-  onSortModeChange: (mode: TemplateSortMode) => void
-  onCreate: () => void
-  onOpenTemplate: (template: FillingTemplate) => void
-  onEditTemplate: (template: FillingTemplate) => void
-  onRefresh: () => Promise<void>
+  templates: FillingTemplate[];
+  sortMode: TemplateSortMode;
+  onSortModeChange: (mode: TemplateSortMode) => void;
+  onCreate: () => void;
+  onOpenTemplate: (template: FillingTemplate) => void;
+  onEditTemplate: (template: FillingTemplate) => void;
+  onRefresh: () => Promise<void>;
 }
 
 export function FillingTemplateListPanel({
@@ -58,7 +85,32 @@ export function FillingTemplateListPanel({
   onEditTemplate,
   onRefresh,
 }: FillingTemplateListPanelProps) {
-  const sorted = sortFillingTemplates(templates, sortMode)
+  const sorted = sortFillingTemplates(templates, sortMode);
+
+  const [renameTemplate, setRenameTemplate] = useState<FillingTemplate | null>(
+    null,
+  );
+  const [renameName, setRenameName] = useState("");
+
+  const handleRenameConfirm = async () => {
+    if (!renameTemplate) return;
+    const trimmed = renameName.trim();
+    if (!trimmed) return;
+
+    try {
+      const updated = {
+        ...renameTemplate,
+        name: trimmed,
+        updatedAt: Date.now(),
+      };
+      await templateStorage.save(updated);
+      await onRefresh();
+      setRenameTemplate(null);
+    } catch (error) {
+      console.error("Failed to rename template", error);
+      window.alert("Failed to rename template.");
+    }
+  };
 
   if (templates.length === 0) {
     return (
@@ -69,7 +121,7 @@ export function FillingTemplateListPanel({
         subtitle="Create your first template to get started"
         onClick={onCreate}
       />
-    )
+    );
   }
 
   return (
@@ -101,11 +153,62 @@ export function FillingTemplateListPanel({
             onOpenTemplate={onOpenTemplate}
             onEditTemplate={onEditTemplate}
             onRefresh={onRefresh}
+            onRenameTemplate={(tmpl) => {
+              setRenameTemplate(tmpl);
+              setRenameName(tmpl.name);
+            }}
           />
         ))}
       </div>
+
+      <BaseDialog
+        isOpen={renameTemplate !== null}
+        onClose={() => setRenameTemplate(null)}
+        contentClassName="rounded-2xl w-full max-w-md"
+      >
+        <div className="p-4 md:p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <Subheading>Rename Template</Subheading>
+            <button
+              type="button"
+              onClick={() => setRenameTemplate(null)}
+              className="rounded p-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <X size={16} className="text-slate-400" />
+            </button>
+          </div>
+
+          <div className="mb-5 space-y-4">
+            <TextInput
+              label="New Name"
+              value={renameName}
+              onChange={setRenameName}
+              placeholder="e.g. My Photo Grid"
+              autoFocus
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setRenameTemplate(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleRenameConfirm}
+              disabled={!renameName.trim()}
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      </BaseDialog>
     </>
-  )
+  );
 }
 
 function FillingTemplateCard({
@@ -113,78 +216,104 @@ function FillingTemplateCard({
   onOpenTemplate,
   onEditTemplate,
   onRefresh,
+  onRenameTemplate,
 }: {
-  template: FillingTemplate
-  onOpenTemplate: (template: FillingTemplate) => void
-  onEditTemplate: (template: FillingTemplate) => void
-  onRefresh: () => Promise<void>
+  template: FillingTemplate;
+  onOpenTemplate: (template: FillingTemplate) => void;
+  onEditTemplate: (template: FillingTemplate) => void;
+  onRefresh: () => Promise<void>;
+  onRenameTemplate: (template: FillingTemplate) => void;
 }) {
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
-  const [isExportingPsd, setIsExportingPsd] = useState(false)
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [isExportingPsd, setIsExportingPsd] = useState(false);
 
   useEffect(() => {
-    let disposed = false
-    let url: string | null = null
+    let disposed = false;
+    let url: string | null = null;
 
     void templateStorage.getThumbnail(template.id).then((blob) => {
       if (!blob || disposed) {
-        return
+        return;
       }
-      url = URL.createObjectURL(blob)
-      setThumbnailUrl(url)
-    })
+      url = URL.createObjectURL(blob);
+      setThumbnailUrl(url);
+    });
 
     return () => {
-      disposed = true
+      disposed = true;
       if (url) {
-        URL.revokeObjectURL(url)
+        URL.revokeObjectURL(url);
       }
-    }
-  }, [template.id])
+    };
+  }, [template.id]);
 
-  const usageText = template.usageCount === 1 ? "1 export" : `${template.usageCount} exports`
-  const lastUsedText = template.lastUsedAt ? `Last used ${formatRelativeTime(template.lastUsedAt)}` : "Never used"
+  const usageText =
+    template.usageCount === 1 ? "1 export" : `${template.usageCount} exports`;
+  const lastUsedText = template.lastUsedAt
+    ? `Last used ${formatRelativeTime(template.lastUsedAt)}`
+    : "Never used";
   const handleExportPsd = async () => {
     if (isExportingPsd) {
-      return
+      return;
     }
 
-    setIsExportingPsd(true)
+    setIsExportingPsd(true);
 
     try {
-      const layerFillStates = template.layers.map((layer) => createLayerFillState(layer.id))
-      const blob = await exportToPsd(template, layerFillStates, DEFAULT_CANVAS_FILL_STATE, new Map())
-      const objectUrl = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = objectUrl
-      link.download = `${toSafeFileName(template.name)}.psd`
-      link.click()
-      URL.revokeObjectURL(objectUrl)
+      const layerFillStates = template.layers.map((layer) =>
+        createLayerFillState(layer.id),
+      );
+      const blob = await exportToPsd(
+        template,
+        layerFillStates,
+        DEFAULT_CANVAS_FILL_STATE,
+        new Map(),
+      );
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `${toSafeFileName(template.name)}.psd`;
+      link.click();
+      URL.revokeObjectURL(objectUrl);
     } catch (error) {
-      console.error("Failed to export template PSD", error)
-      window.alert("Failed to export PSD for this template.")
+      console.error("Failed to export template PSD", error);
+      window.alert("Failed to export PSD for this template.");
     } finally {
-      setIsExportingPsd(false)
+      setIsExportingPsd(false);
     }
-  }
+  };
 
   return (
     <div className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
-      <button type="button" onClick={() => onOpenTemplate(template)} className="w-full text-left">
+      <button
+        type="button"
+        onClick={() => onOpenTemplate(template)}
+        className="w-full text-left"
+      >
         <div className="flex aspect-video items-center justify-center overflow-hidden bg-slate-100 dark:bg-slate-800">
           {thumbnailUrl ? (
-            <img src={thumbnailUrl} alt={template.name} className="h-full w-full object-contain" />
+            <img
+              src={thumbnailUrl}
+              alt={template.name}
+              className="h-full w-full object-contain"
+            />
           ) : (
             <TemplatePreviewSvg template={template} />
           )}
         </div>
         <div className="p-3">
           <div className="flex items-center gap-1.5">
-            {template.isPinned && <Pin size={12} className="shrink-0 text-sky-500" />}
-            <h3 className="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{template.name}</h3>
+            {template.isPinned && (
+              <Pin size={12} className="shrink-0 text-sky-500" />
+            )}
+            <h3 className="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">
+              {template.name}
+            </h3>
           </div>
           <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-            {template.canvasWidth} x {template.canvasHeight} · {template.layers.length} layer{template.layers.length !== 1 ? "s" : ""}
+            {template.canvasWidth} x {template.canvasHeight} ·{" "}
+            {template.layers.length} layer
+            {template.layers.length !== 1 ? "s" : ""}
           </p>
           <p className="text-[11px] text-slate-400 dark:text-slate-500">
             {usageText} · {lastUsedText}
@@ -194,9 +323,20 @@ function FillingTemplateCard({
 
       <div className="absolute right-2 top-2 translate-y-1 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
         <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white/90 px-1 py-1 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90">
-          <ActionIconButton title="Edit template" icon={<Edit size={13} />} onClick={() => onEditTemplate(template)} />
           <ActionIconButton
-            title={isExportingPsd ? "Exporting PSD..." : "Export template as PSD"}
+            title="Edit template"
+            icon={<Edit size={13} />}
+            onClick={() => onEditTemplate(template)}
+          />
+          <ActionIconButton
+            title="Rename template"
+            icon={<Edit3 size={13} />}
+            onClick={() => onRenameTemplate(template)}
+          />
+          <ActionIconButton
+            title={
+              isExportingPsd ? "Exporting PSD..." : "Export template as PSD"
+            }
             icon={<Download size={13} />}
             onClick={() => void handleExportPsd()}
             disabled={isExportingPsd}
@@ -205,7 +345,7 @@ function FillingTemplateCard({
             title={template.isPinned ? "Unpin template" : "Pin template"}
             icon={template.isPinned ? <PinOff size={13} /> : <Pin size={13} />}
             onClick={() => {
-              void templateStorage.togglePin(template.id).then(onRefresh)
+              void templateStorage.togglePin(template.id).then(onRefresh);
             }}
           />
           <ActionIconButton
@@ -213,16 +353,20 @@ function FillingTemplateCard({
             icon={<Trash2 size={13} />}
             destructive
             onClick={() => {
-              if (!window.confirm(`Delete template "${template.name}"? This action cannot be undone.`)) {
-                return
+              if (
+                !window.confirm(
+                  `Delete template "${template.name}"? This action cannot be undone.`,
+                )
+              ) {
+                return;
               }
-              void templateStorage.remove(template.id).then(onRefresh)
+              void templateStorage.remove(template.id).then(onRefresh);
             }}
           />
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function ActionIconButton({
@@ -232,11 +376,11 @@ function ActionIconButton({
   destructive = false,
   disabled = false,
 }: {
-  icon: React.ReactNode
-  title: string
-  onClick: () => void
-  destructive?: boolean
-  disabled?: boolean
+  icon: React.ReactNode;
+  title: string;
+  onClick: () => void;
+  destructive?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <Tooltip content={title}>
@@ -244,11 +388,11 @@ function ActionIconButton({
         type="button"
         disabled={disabled}
         onClick={(event) => {
-          event.stopPropagation()
+          event.stopPropagation();
           if (disabled) {
-            return
+            return;
           }
-          onClick()
+          onClick();
         }}
         className={`rounded p-1.5 transition-colors ${
           destructive
@@ -259,18 +403,23 @@ function ActionIconButton({
         {icon}
       </button>
     </Tooltip>
-  )
+  );
 }
 
 function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
-  const scaleX = 240 / template.canvasWidth
-  const scaleY = 135 / template.canvasHeight
-  const scale = Math.min(scaleX, scaleY) * 0.85
-  const originX = (240 - template.canvasWidth * scale) / 2
-  const originY = (135 - template.canvasHeight * scale) / 2
+  const scaleX = 240 / template.canvasWidth;
+  const scaleY = 135 / template.canvasHeight;
+  const scale = Math.min(scaleX, scaleY) * 0.85;
+  const originX = (240 - template.canvasWidth * scale) / 2;
+  const originY = (135 - template.canvasHeight * scale) / 2;
 
   return (
-    <svg width="240" height="135" viewBox="0 0 240 135" className="text-slate-300 dark:text-slate-600">
+    <svg
+      width="240"
+      height="135"
+      viewBox="0 0 240 135"
+      className="text-slate-300 dark:text-slate-600"
+    >
       <rect
         x={originX}
         y={originY}
@@ -286,7 +435,10 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
         <polygon
           key={layer.id}
           points={resolveLayerShapePoints(layer)
-            .map((point) => `${originX + (layer.x + point.x) * scale},${originY + (layer.y + point.y) * scale}`)
+            .map(
+              (point) =>
+                `${originX + (layer.x + point.x) * scale},${originY + (layer.y + point.y) * scale}`,
+            )
             .join(" ")}
           fill="currentColor"
           opacity={0.3}
@@ -298,25 +450,24 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
         />
       ))}
     </svg>
-  )
+  );
 }
 
 function formatRelativeTime(timestamp: number): string {
-  const diff = Date.now() - timestamp
-  const seconds = Math.floor(diff / 1000)
-  if (seconds < 60) return "just now"
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}d ago`
-  const months = Math.floor(days / 30)
-  return `${months}mo ago`
+  const diff = Date.now() - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
 }
 
 function toSafeFileName(value: string): string {
-  const safe = value.trim().replace(/[\\/:*?"<>|]+/g, "_")
-  return safe.length > 0 ? safe : "filling-template"
+  const safe = value.trim().replace(/[\\/:*?"<>|]+/g, "_");
+  return safe.length > 0 ? safe : "filling-template";
 }
-

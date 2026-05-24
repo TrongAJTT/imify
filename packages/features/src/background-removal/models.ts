@@ -19,6 +19,7 @@ export interface AIModelMetadata {
   authorUrl: string;
   variants: AIModelVariant[];
   defaultVariantId: string;
+  usecase: string;
 }
 
 export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
@@ -33,6 +34,7 @@ export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
     author: 'ZhengPeng7',
     authorUrl: 'https://huggingface.co/onnx-community',
     defaultVariantId: 'fp16',
+    usecase: 'General',
     variants: [
       {
         id: 'fp16',
@@ -61,6 +63,7 @@ export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
     author: 'ONNX Community',
     authorUrl: 'https://huggingface.co/onnx-community',
     defaultVariantId: 'fp16',
+    usecase: 'General',
     variants: [
       {
         id: 'fp16',
@@ -89,6 +92,7 @@ export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
     author: 'ONNX Community',
     authorUrl: 'https://huggingface.co/onnx-community',
     defaultVariantId: 'quantized',
+    usecase: 'Portrait image',
     variants: [
       {
         id: 'quantized',
@@ -117,6 +121,7 @@ export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
     author: 'Google / ONNX Community',
     authorUrl: 'https://huggingface.co/onnx-community',
     defaultVariantId: 'standard',
+    usecase: 'Portrait image',
     variants: [
       {
         id: 'standard',

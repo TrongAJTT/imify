@@ -65,23 +65,34 @@ export function PresetCard({
             </span>
           </div>
 
-          <div className={`flex items-center gap-1 shrink-0 ${!preset.pinned && !showActions ? "opacity-0 group-hover:opacity-100 transition-opacity" : ""}`}>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                onTogglePin?.()
-              }}
-              className={`rounded p-1 transition-colors ${
-                preset.pinned
-                  ? "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/20"
-                  : "text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
-              }`}
-              aria-label={preset.pinned ? "Unpin preset" : "Pin preset"}
-            >
-              <Pin size={13} className={preset.pinned ? "fill-amber-500 rotate-45" : ""} />
-            </button>
+          <div className="flex items-center gap-1 shrink-0">
+            {onTogglePin ? (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onTogglePin()
+                }}
+                className={`rounded p-1 transition-colors ${
+                  preset.pinned
+                    ? "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/20"
+                    : "text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+                }`}
+                aria-label={preset.pinned ? "Unpin preset" : "Pin preset"}
+              >
+                <Pin size={13} className={preset.pinned ? "fill-amber-500 rotate-45" : ""} />
+              </button>
+            ) : (
+              preset.pinned && (
+                <div 
+                  className="p-1 text-amber-500 flex items-center justify-center shrink-0" 
+                  title="Pinned Preset"
+                >
+                  <Pin size={13} className="fill-amber-500 rotate-45" />
+                </div>
+              )
+            )}
 
             {showActions && (
               <>

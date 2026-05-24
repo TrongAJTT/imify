@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import {
   AccordionCard,
   MutedText,
@@ -6,13 +6,18 @@ import {
   BaseDialog,
   Heading,
   SidebarCard,
-  Shield
+  Shield,
+  TextInput,
+  LabelText
 } from "@imify/ui"
 import { useImifyNavigation } from "../shared/use-imify-navigation"
-import { Bookmark, Sparkles, Plus, RotateCcw, X } from "lucide-react"
+import { Bookmark, Sparkles, Plus, RotateCcw, X, Check } from "lucide-react"
 import { useBatchStore, type SavedSetupPreset } from "@imify/stores/stores/batch-store"
+import { PRESET_HIGHLIGHT_COLORS } from "@imify/stores/stores/preset-colors"
 import { ProcessorPresetDetail } from "./processor-preset-detail"
 import { PresetCard } from "./preset-card"
+import { BatchSetupSidebarPanel } from "./setup-sidebar-panel"
+import { DEFAULT_PERFORMANCE_PREFERENCES } from "./performance-preferences"
 
 interface PresetSelectorProps {
   label?: string
@@ -41,9 +46,47 @@ export function PresetSelector({
   onSelect,
   onReset
 }: PresetSelectorProps) {
-  const { presets, togglePinPreset } = useBatchStore()
+  const { presets, saveCurrentPreset, targetFormat } = useBatchStore()
+  
+  const isTargetFormatAllowed = useMemo(() => {
+    if (!formatFilter) return true
+    const normalizedTarget = targetFormat === "jpg" ? "mozjpeg" : targetFormat
+    return formatFilter.some(f => {
+      const normalizedFilter = f === "jpg" ? "mozjpeg" : f
+      return normalizedFilter === normalizedTarget
+    })
+  }, [formatFilter, targetFormat])
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedFormat, setSelectedFormat] = useState<string>("all")
+  const [activeTab, setActiveTab] = useState<"select" | "custom">("select")
+  
+  // Form Custom Creation State (simplified to basic metadata)
+  const [customName, setCustomName] = useState("")
+  const [customColor, setCustomColor] = useState("#0ea5e9")
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      setCustomName(`Custom Preset ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`)
+      setCustomColor(PRESET_HIGHLIGHT_COLORS[0] ?? "#0ea5e9")
+      setActiveTab("select")
+    }
+  }, [isDialogOpen])
+
+  const handleCreateAndApply = () => {
+    const createdId = saveCurrentPreset({
+      name: customName.trim() || "Custom Preset",
+      highlightColor: customColor
+    })
+    
+    // Synchronously retrieve the newly created preset object from the store and apply it
+    const newPreset = useBatchStore.getState().presets.find(p => p.id === createdId)
+    if (newPreset) {
+      onSelect(newPreset)
+    }
+    
+    setIsDialogOpen(false)
+  }
 
   const formats = useMemo(() => {
     const baseFormats = ["all", "png", "webp", "avif", "jxl", "jpg", "bmp", "ico", "tiff"]
@@ -151,11 +194,37 @@ export function PresetSelector({
 
       <BaseDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
         <div className="flex flex-col h-[800px] max-h-[90vh]">
-          {/* Header */}
+          {/* Header with Segment Control */}
           <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Bookmark className={theme === "pink" ? "text-pink-500" : "text-blue-500"} size={20} />
-              <Heading className="text-lg whitespace-nowrap">{label}</Heading>
+              <Heading className="text-lg whitespace-nowrap hidden sm:block">{label}</Heading>
+            </div>
+            
+            {/* Segment Button for switching tabs */}
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-xs font-semibold shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveTab("select")}
+                className={`px-3.5 py-1.5 rounded-md transition-all ${
+                  activeTab === "select"
+                    ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-sm font-bold"
+                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                }`}
+              >
+                Select Preset
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("custom")}
+                className={`px-3.5 py-1.5 rounded-md transition-all ${
+                  activeTab === "custom"
+                    ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-sm font-bold"
+                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                }`}
+              >
+                Custom Create
+              </button>
             </div>
             
             <button 
@@ -168,97 +237,173 @@ export function PresetSelector({
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
-            {/* Format Filter Shield (Relocated to Content) */}
-            <div className="flex justify-start">
-              <Shield
-                left="Filter"
-                size="sm"
-                leftBg="bg-slate-700 dark:bg-slate-800"
-                leftColor="text-white"
-                rightBg="bg-slate-100 dark:bg-slate-800"
-                rightColor="text-slate-600 dark:text-slate-400"
-                className="border border-slate-200 dark:border-slate-700"
-                right={
-                  <div className="flex items-center gap-1.5 h-full">
-                    {formats.map((f, i) => (
-                      <React.Fragment key={f}>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedFormat(f)}
-                          className={`transition-colors hover:text-sky-500 py-1 ${selectedFormat === f ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
-                        >
-                          {f.toUpperCase()}
-                        </button>
-                        {i < formats.length - 1 && <span className="opacity-30">•</span>}
-                      </React.Fragment>
+            {activeTab === "select" ? (
+              <>
+                {/* Format Filter Shield (Relocated to Content) */}
+                <div className="flex justify-start">
+                  <Shield
+                    left="Filter"
+                    size="sm"
+                    leftBg="bg-slate-700 dark:bg-slate-800"
+                    leftColor="text-white"
+                    rightBg="bg-slate-100 dark:bg-slate-800"
+                    rightColor="text-slate-600 dark:text-slate-400"
+                    className="border border-slate-200 dark:border-slate-700"
+                    right={
+                      <div className="flex items-center gap-1.5 h-full">
+                        {formats.map((f, i) => (
+                          <React.Fragment key={f}>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedFormat(f)}
+                              className={`transition-colors hover:text-sky-500 py-1 ${selectedFormat === f ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
+                            >
+                              {f.toUpperCase()}
+                            </button>
+                            {i < formats.length - 1 && <span className="opacity-30">•</span>}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    }
+                  />
+                </div>
+
+                {sortedAvailablePresets.length > 0 ? (
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                    {sortedAvailablePresets.map(preset => (
+                      <PresetCard
+                        key={preset.id}
+                        preset={preset}
+                        context="single"
+                        isActive={preset.id === activePresetId}
+                        showActions={false}
+                        onSelect={() => {
+                          onSelect(preset)
+                          setIsDialogOpen(false)
+                        }}
+                        onTogglePin={undefined} // Enforce static (non-interactive) Pin in dialog
+                      />
                     ))}
                   </div>
-                }
-              />
-            </div>
-
-            {sortedAvailablePresets.length > 0 ? (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                {sortedAvailablePresets.map(preset => (
-                  <PresetCard
-                    key={preset.id}
-                    preset={preset}
-                    context="single"
-                    isActive={preset.id === activePresetId}
-                    showActions={false}
-                    onSelect={() => {
-                      onSelect(preset)
-                      setIsDialogOpen(false)
-                    }}
-                    onTogglePin={() => togglePinPreset(preset.id)}
-                  />
-                ))}
-              </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+                      <Bookmark size={32} className="text-slate-300" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No Presets Found</h3>
+                    <MutedText className="max-w-[280px] mb-6">
+                      You haven't saved any Single Processor presets for the required formats ({formatFilter?.join(", ") || "any"}).
+                    </MutedText>
+                    <Button onClick={handleCreatePreset} variant="primary" className="gap-2">
+                      <Plus size={16} />
+                      Create Your First And Refresh
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                  <Bookmark size={32} className="text-slate-300" />
+              /* Custom Create Tab View */
+              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                {/* Basic Info: Preset Name & Color */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Preset Name */}
+                  <TextInput
+                    label="Preset Name"
+                    value={customName}
+                    onChange={(e) => setCustomName(e)}
+                    placeholder="e.g., Social WebP High Quality"
+                    className="w-full"
+                  />
+
+                  {/* Highlight Color */}
+                  <div className="space-y-2">
+                    <LabelText className="text-xs">Accent Color</LabelText>
+                    <div className="flex flex-wrap gap-2">
+                      {PRESET_HIGHLIGHT_COLORS.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setCustomColor(color)}
+                          className={`h-7 w-7 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center ${
+                            customColor === color 
+                              ? "border-slate-800 ring-2 ring-slate-800/10 dark:border-slate-100" 
+                              : "border-transparent"
+                          }`}
+                          style={{ backgroundColor: color }}
+                          aria-label={`Select accent color ${color}`}
+                        >
+                          {customColor === color && (
+                            <Check size={12} className="text-white drop-shadow-sm" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No Presets Found</h3>
-                <MutedText className="max-w-[280px] mb-6">
-                  You haven't saved any Single Processor presets for the required formats ({formatFilter?.join(", ") || "any"}).
-                </MutedText>
-                <Button onClick={handleCreatePreset} variant="primary" className="gap-2">
-                  <Plus size={16} />
-                  Create Your First And Refresh
-                </Button>
+
+                {/* Configuration Panel Section (Embedded Native Sidebar Panel) */}
+                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950">
+                  <BatchSetupSidebarPanel
+                    performancePreferences={DEFAULT_PERFORMANCE_PREFERENCES}
+                    onOpenSettings={() => {}}
+                    enableWideSidebarGrid={true}
+                  />
+                </div>
               </div>
             )}
           </div>
 
           {/* Footer */}
           <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              {onReset && defaultPreset && (
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {activeTab === "select" && onReset && defaultPreset && (
                 <Button
                   variant="secondary"
                   onClick={() => {
                     onReset()
                     setIsDialogOpen(false)
                   }}
-                  className="gap-2 h-9"
+                  className="gap-2 h-9 shrink-0"
                 >
                   <RotateCcw size={14} />
                   Reset
                 </Button>
               )}
-              <Button
-                variant="secondary"
-                onClick={refreshPresets}
-                className="gap-2 h-9"
-              >
-                <RotateCcw size={14} className="scale-x-[-1]" />
-                Refresh
-              </Button>
+              {activeTab === "select" && (
+                <Button
+                  variant="secondary"
+                  onClick={refreshPresets}
+                  className="gap-2 h-9 shrink-0"
+                >
+                  <RotateCcw size={14} className="scale-x-[-1]" />
+                  Refresh
+                </Button>
+              )}
+              {activeTab === "custom" && !isTargetFormatAllowed && (
+                <div className="flex items-center gap-2 text-rose-500 font-medium text-xs animate-in fade-in slide-in-from-left-2 duration-250 truncate">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                  <span className="truncate">
+                    Format {(targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat).toUpperCase()} is not supported. (Supported: {formatFilter?.map(f => (f === "mozjpeg" ? "MozJPEG" : f).toUpperCase()).join(", ")})
+                  </span>
+                </div>
+              )}
             </div>
-            <Button variant="secondary" onClick={() => setIsDialogOpen(false)} className="h-9">
-              Close
-            </Button>
+            
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="secondary" onClick={() => setIsDialogOpen(false)} className="h-9">
+                Close
+              </Button>
+              {activeTab === "custom" && (
+                <Button 
+                  variant="primary" 
+                  onClick={handleCreateAndApply} 
+                  disabled={!customName.trim() || !isTargetFormatAllowed} 
+                  className="h-9 font-bold px-5"
+                >
+                  Create & Apply
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </BaseDialog>

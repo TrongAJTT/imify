@@ -1,28 +1,41 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react"
-import { Trash2, Image, Cpu, Download, ChevronDown, ChevronRight } from "lucide-react"
-import { Button, BodyText, MutedText } from "@imify/ui"
-import { formatFileSize } from "@imify/core"
-import { BACKGROUND_REMOVAL_MODELS, type AIModelMetadata } from "../../background-removal/models"
-import { ModelDownloadDialog } from "../../background-removal/model-download-dialog"
-import { useToast } from "@imify/core/hooks/use-toast"
-import { ToastContainer } from "@imify/ui/components/toast-container"
+import React, { useEffect, useState } from "react";
+import {
+  Trash2,
+  Image,
+  Cpu,
+  Download,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
+import { Button, BodyText, MutedText } from "@imify/ui";
+import { formatFileSize } from "@imify/core";
+import {
+  BACKGROUND_REMOVAL_MODELS,
+  type AIModelMetadata,
+} from "../../background-removal/models";
+import { ModelDownloadDialog } from "../../background-removal/model-download-dialog";
+import { useToast } from "@imify/core/hooks/use-toast";
+import { ToastContainer } from "@imify/ui/components/toast-container";
 
 export function AssetAIModelsTab() {
-  const [cachedModelIds, setCachedModelIds] = useState<Set<string>>(new Set())
-  const [isLoading, setIsLoading] = useState(true)
-  const [modelToDownload, setModelToDownload] = useState<AIModelMetadata | null>(null)
-  const [selectedVariantId, setSelectedVariantId] = useState<string>("")
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
-  const { toasts, hide, success, error } = useToast()
+  const [cachedModelIds, setCachedModelIds] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+  const [modelToDownload, setModelToDownload] =
+    useState<AIModelMetadata | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string>("");
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
+    new Set(),
+  );
+  const { toasts, hide, success, error } = useToast();
 
   const MODEL_CATEGORIES = [
     {
       id: "background-remover",
       label: "Background Remover",
       icon: <Image size={16} className="text-pink-500" />,
-      models: BACKGROUND_REMOVAL_MODELS
+      models: BACKGROUND_REMOVAL_MODELS,
     },
     // Future categories can be added here easily:
     // {
@@ -31,104 +44,116 @@ export function AssetAIModelsTab() {
     //   icon: <Sparkles size={16} className="text-amber-500" />,
     //   models: UPSCALER_MODELS
     // }
-  ]
+  ];
 
-  const allModels = MODEL_CATEGORIES.flatMap(cat => cat.models)
+  const allModels = MODEL_CATEGORIES.flatMap((cat) => cat.models);
 
   const checkCache = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const cache = await caches.open("transformers-cache")
-      const keys = await cache.keys()
-      const cachedIds = new Set<string>()
+      const cache = await caches.open("transformers-cache");
+      const keys = await cache.keys();
+      const cachedIds = new Set<string>();
 
       for (const model of allModels) {
         for (const variant of model.variants) {
           // A variant is considered cached ONLY if its primary ONNX weights file exists.
           // This prevents false positives from shared metadata files like config.json.
-          const isCached = keys.some(request => {
-            const url = request.url.toLowerCase()
-            if (!url.includes(model.id.toLowerCase())) return false
-            
-            // We only care about the weights files for status checking
-            if (!url.endsWith('.onnx')) return false
+          const isCached = keys.some((request) => {
+            const url = request.url.toLowerCase();
+            if (!url.includes(model.id.toLowerCase())) return false;
 
-            if (variant.quantized) return url.includes('quantized')
-            if (variant.dtype === 'fp16') return url.includes('fp16')
-            
+            // We only care about the weights files for status checking
+            if (!url.endsWith(".onnx")) return false;
+
+            if (variant.quantized) return url.includes("quantized");
+            if (variant.dtype === "fp16") return url.includes("fp16");
+
             // For full precision (usually fp32), it should not have special suffixes in the weights filename
-            return !url.includes('quantized') && !url.includes('fp16')
-          })
+            return !url.includes("quantized") && !url.includes("fp16");
+          });
 
           if (isCached) {
-            cachedIds.add(`${model.id}:${variant.id}`)
+            cachedIds.add(`${model.id}:${variant.id}`);
           }
         }
       }
 
-      setCachedModelIds(cachedIds)
+      setCachedModelIds(cachedIds);
     } catch (error) {
-      console.error("Failed to check AI model cache:", error)
+      console.error("Failed to check AI model cache:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    checkCache()
-  }, [])
+    checkCache();
+  }, []);
 
   const handleDelete = async (model: AIModelMetadata, variant: any) => {
-    const shouldDelete = window.confirm(`Delete cached files for "${model.name} (${variant.label})"?`)
-    if (!shouldDelete) return
+    const shouldDelete = window.confirm(
+      `Delete cached files for "${model.name} (${variant.label})"?`,
+    );
+    if (!shouldDelete) return;
 
     try {
-      const cache = await caches.open("transformers-cache")
-      const keys = await cache.keys()
+      const cache = await caches.open("transformers-cache");
+      const keys = await cache.keys();
 
       for (const request of keys) {
-        const url = request.url.toLowerCase()
-        if (!url.includes(model.id.toLowerCase())) continue
+        const url = request.url.toLowerCase();
+        if (!url.includes(model.id.toLowerCase())) continue;
 
-        let shouldDelete = false
+        let shouldDelete = false;
         if (variant.quantized) {
-          shouldDelete = url.includes('quantized')
-        } else if (variant.dtype === 'fp16') {
-          shouldDelete = url.includes('fp16')
+          shouldDelete = url.includes("quantized");
+        } else if (variant.dtype === "fp16") {
+          shouldDelete = url.includes("fp16");
         } else {
           // For full precision, delete files that don't have other variant markers
-          // Note: this might delete shared files like config.json, which is okay as they are small 
+          // Note: this might delete shared files like config.json, which is okay as they are small
           // and will be re-downloaded if another variant needs them.
-          shouldDelete = !url.includes('quantized') && !url.includes('fp16')
+          shouldDelete = !url.includes("quantized") && !url.includes("fp16");
         }
 
         if (shouldDelete) {
-          await cache.delete(request)
+          await cache.delete(request);
         }
       }
 
-      await checkCache()
-      success("Model deleted", `Successfully cleared ${variant.label} for ${model.name}.`)
+      await checkCache();
+      success(
+        "Model deleted",
+        `Successfully cleared ${variant.label} for ${model.name}.`,
+      );
     } catch (err) {
-      console.error("Failed to delete model cache:", err)
-      error("Delete failed", "Failed to delete model files.")
+      console.error("Failed to delete model cache:", err);
+      error("Delete failed", "Failed to delete model files.");
     }
-  }
+  };
 
   const handleDownloadConfirm = async () => {
-    if (!modelToDownload) return
-    const model = modelToDownload
-    const variantId = selectedVariantId
-    setModelToDownload(null)
+    if (!modelToDownload) return;
+    const model = modelToDownload;
+    const variantId = selectedVariantId;
+    setModelToDownload(null);
 
-    const variant = model.variants.find(v => v.id === variantId) || model.variants[0]
-    success("Download started", `Preparing to download ${model.name} (${variant.label}).`)
+    const variant =
+      model.variants.find((v) => v.id === variantId) || model.variants[0];
+    success(
+      "Download started",
+      `Preparing to download ${model.name} (${variant.label}).`,
+    );
 
     try {
       const worker = new Worker(
-        new URL("../../background-removal/background-removal.worker.ts", import.meta.url),
-        { type: "module" }
-      )
+        new URL(
+          "../../background-removal/background-removal.worker.ts",
+          import.meta.url,
+        ),
+        { type: "module" },
+      );
 
       worker.postMessage({
         action: "warm-up",
@@ -136,35 +161,40 @@ export function AssetAIModelsTab() {
           options: {
             modelId: model.id,
             dtype: variant.dtype,
-            quantized: variant.quantized
-          }
-        }
-      })
+            quantized: variant.quantized,
+          },
+        },
+      });
 
       worker.onmessage = async (e) => {
         if (e.data.action === "warm-up-complete") {
-          success("Model ready", `${model.name} ${variant.label} cached successfully.`)
-          setTimeout(async () => { await checkCache() }, 500)
-          worker.terminate()
+          success(
+            "Model ready",
+            `${model.name} ${variant.label} cached successfully.`,
+          );
+          setTimeout(async () => {
+            await checkCache();
+          }, 500);
+          worker.terminate();
         } else if (e.data.action === "error") {
-          error("Download failed", `Failed to download ${model.name}.`)
-          worker.terminate()
+          error("Download failed", `Failed to download ${model.name}.`);
+          worker.terminate();
         }
-      }
+      };
     } catch (err) {
-      console.error("Failed to start download:", err)
-      error("Download failed", "Failed to initialize background downloader.")
+      console.error("Failed to start download:", err);
+      error("Download failed", "Failed to initialize background downloader.");
     }
-  }
+  };
 
   const toggleCategory = (categoryId: string) => {
-    setCollapsedCategories(prev => {
-      const next = new Set(prev)
-      if (next.has(categoryId)) next.delete(categoryId)
-      else next.add(categoryId)
-      return next
-    })
-  }
+    setCollapsedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) next.delete(categoryId);
+      else next.add(categoryId);
+      return next;
+    });
+  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-slate-50/80 dark:bg-slate-950/40">
@@ -178,21 +208,28 @@ export function AssetAIModelsTab() {
                   About AI Models & Engine
                 </BodyText>
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-700">
-                  <div className={`w-1.5 h-1.5 rounded-full ${typeof SharedArrayBuffer !== 'undefined' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full ${typeof SharedArrayBuffer !== "undefined" ? "bg-green-500" : "bg-amber-500"}`}
+                  />
                   <span className="text-[9px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-tight">
-                    {typeof SharedArrayBuffer !== 'undefined' ? 'Multi-thread Active' : 'Asyncify Fallback'}
+                    {typeof SharedArrayBuffer !== "undefined"
+                      ? "Multi-thread Active"
+                      : "Asyncify Fallback"}
                   </span>
                 </div>
               </div>
               <MutedText className="text-xs text-slate-600 dark:text-indigo-400/80 leading-relaxed">
-                Imify uses <strong>ONNX Runtime Web</strong> to run lightweight AI models 100% locally. These models are downloaded once and cached for offline use, ensuring your data never leaves your device.
+                Imify uses <strong>ONNX Runtime Web</strong> to run lightweight
+                AI models 100% locally. These models are downloaded once and
+                cached for offline use, ensuring your data never leaves your
+                device.
               </MutedText>
             </div>
           </div>
 
           {MODEL_CATEGORIES.map((category) => {
-            const isCollapsed = collapsedCategories.has(category.id)
-            
+            const isCollapsed = collapsedCategories.has(category.id);
+
             return (
               <div key={category.id} className="space-y-4">
                 <button
@@ -209,115 +246,140 @@ export function AssetAIModelsTab() {
                     </span>
                   </div>
                   {isCollapsed ? (
-                    <ChevronRight size={16} className="text-slate-400 group-hover:text-pink-500 transition-colors" />
+                    <ChevronRight
+                      size={16}
+                      className="text-slate-400 group-hover:text-pink-500 transition-colors"
+                    />
                   ) : (
-                    <ChevronDown size={16} className="text-slate-400 group-hover:text-pink-500 transition-colors" />
+                    <ChevronDown
+                      size={16}
+                      className="text-slate-400 group-hover:text-pink-500 transition-colors"
+                    />
                   )}
                 </button>
 
                 {!isCollapsed && (
                   <div className="space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
                     {category.models.map((model) => (
-                  <div
-                    key={model.id}
-                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none flex flex-col gap-6"
-                  >
-                    {/* Header: Model Main Info */}
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-1.5 flex-1">
-                        <div className="flex items-center gap-3">
-                          <BodyText className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                            {model.name}
-                          </BodyText>
-                          <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
-                            {model.source}
-                          </span>
+                      <div
+                        key={model.id}
+                        className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none flex flex-col gap-6"
+                      >
+                        {/* Header: Model Main Info */}
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-1.5 flex-1">
+                            <div className="flex items-center gap-3">
+                              <BodyText className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                                {model.name}
+                              </BodyText>
+                              <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
+                                {model.source}
+                              </span>
+                            </div>
+                            <MutedText className="text-sm leading-relaxed max-w-3xl text-slate-600 dark:text-slate-400">
+                              {model.description}
+                            </MutedText>
+                            <div className="flex items-center gap-3 pt-1">
+                              <a
+                                href={model.authorUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs text-pink-500 hover:text-pink-600 font-bold transition-colors"
+                              >
+                                by {model.author}
+                              </a>
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                              <MutedText className="text-xs font-medium">
+                                {model.license} License
+                              </MutedText>
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                              <MutedText className="text-xs font-medium text-green-600">
+                                Suitable for: {model.usecase}
+                              </MutedText>
+                            </div>
+                          </div>
                         </div>
-                        <MutedText className="text-sm leading-relaxed max-w-3xl text-slate-600 dark:text-slate-400">
-                          {model.description}
-                        </MutedText>
-                        <div className="flex items-center gap-3 pt-1">
-                          <a
-                            href={model.authorUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs text-pink-500 hover:text-pink-600 font-bold transition-colors"
-                          >
-                            by {model.author}
-                          </a>
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
-                          <MutedText className="text-xs font-medium">{model.license} License</MutedText>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Variant Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {model.variants.map((variant) => {
-                        const isCached = cachedModelIds.has(`${model.id}:${variant.id}`)
+                        {/* Variant Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {model.variants.map((variant) => {
+                            const isCached = cachedModelIds.has(
+                              `${model.id}:${variant.id}`,
+                            );
 
-                        return (
-                          <div
-                            key={variant.id}
-                            className={`group relative p-4 rounded-xl border transition-all duration-300 flex flex-col justify-start gap-1.5 ${isCached
-                              ? 'bg-emerald-50/20 border-emerald-200 dark:bg-emerald-500/5 dark:border-emerald-500/30 shadow-[0_4px_12px_-2px_rgba(16,185,129,0.12)]'
-                              : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.15)] hover:border-pink-300 dark:hover:border-pink-500/40'
-                              }`}
-                          >
-                            {/* Absolute Action Button */}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                if (isCached) {
-                                  handleDelete(model, variant)
-                                } else {
-                                  setSelectedVariantId(variant.id)
-                                  setModelToDownload(model)
-                                }
-                              }}
-                              className={`absolute top-2.5 right-2.5 h-8 w-8 rounded-xl shrink-0 border transition-all z-10 ${isCached
-                                ? "bg-emerald-50 border-emerald-100 text-emerald-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 dark:hover:bg-red-500/20 shadow-sm"
-                                : "bg-slate-50 border-slate-100 text-slate-400 hover:text-pink-600 hover:bg-pink-50 hover:border-pink-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 dark:hover:bg-pink-500/10 shadow-sm"
+                            return (
+                              <div
+                                key={variant.id}
+                                className={`group relative p-4 rounded-xl border transition-all duration-300 flex flex-col justify-start gap-1.5 ${
+                                  isCached
+                                    ? "bg-emerald-50/20 border-emerald-200 dark:bg-emerald-500/5 dark:border-emerald-500/30 shadow-[0_4px_12px_-2px_rgba(16,185,129,0.12)]"
+                                    : "bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.15)] hover:border-pink-300 dark:hover:border-pink-500/40"
                                 }`}
-                            >
-                              {isCached ? <Trash2 size={14} /> : <Download size={14} />}
-                            </Button>
+                              >
+                                {/* Absolute Action Button */}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    if (isCached) {
+                                      handleDelete(model, variant);
+                                    } else {
+                                      setSelectedVariantId(variant.id);
+                                      setModelToDownload(model);
+                                    }
+                                  }}
+                                  className={`absolute top-2.5 right-2.5 h-8 w-8 rounded-xl shrink-0 border transition-all z-10 ${
+                                    isCached
+                                      ? "bg-emerald-50 border-emerald-100 text-emerald-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 dark:hover:bg-red-500/20 shadow-sm"
+                                      : "bg-slate-50 border-slate-100 text-slate-400 hover:text-pink-600 hover:bg-pink-50 hover:border-pink-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 dark:hover:bg-pink-500/10 shadow-sm"
+                                  }`}
+                                >
+                                  {isCached ? (
+                                    <Trash2 size={14} />
+                                  ) : (
+                                    <Download size={14} />
+                                  )}
+                                </Button>
 
-                            {/* Variant Header: Label & Size */}
-                            <div className="flex items-start justify-between gap-3 pr-10">
-                              <div className="min-w-0 flex-1 flex flex-wrap items-center gap-2">
-                                <BodyText className={`text-[13px] font-black whitespace-nowrap tracking-tight ${isCached ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-200'}`}>
-                                  {variant.label}
-                                </BodyText>
-                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${isCached
-                                  ? 'bg-emerald-100/50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400'
-                                  : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
-                                  }`}>
-                                  {formatFileSize(variant.sizeBytes)}
-                                </span>
-                                {isCached && (
-                                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse shrink-0" />
+                                {/* Variant Header: Label & Size */}
+                                <div className="flex items-start justify-between gap-3 pr-10">
+                                  <div className="min-w-0 flex-1 flex flex-wrap items-center gap-2">
+                                    <BodyText
+                                      className={`text-[13px] font-black whitespace-nowrap tracking-tight ${isCached ? "text-emerald-700 dark:text-emerald-400" : "text-slate-800 dark:text-slate-200"}`}
+                                    >
+                                      {variant.label}
+                                    </BodyText>
+                                    <span
+                                      className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${
+                                        isCached
+                                          ? "bg-emerald-100/50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400"
+                                          : "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
+                                      }`}
+                                    >
+                                      {formatFileSize(variant.sizeBytes)}
+                                    </span>
+                                    {isCached && (
+                                      <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse shrink-0" />
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Variant Footer: Description */}
+                                {variant.description && (
+                                  <MutedText className="text-[12px] leading-relaxed italic font-medium opacity-80 text-slate-500 dark:text-slate-400 break-words">
+                                    {variant.description}
+                                  </MutedText>
                                 )}
                               </div>
-                            </div>
-
-                            {/* Variant Footer: Description */}
-                            {variant.description && (
-                              <MutedText className="text-[12px] leading-relaxed italic font-medium opacity-80 text-slate-500 dark:text-slate-400 break-words">
-                                {variant.description}
-                              </MutedText>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-            )
+            );
           })}
         </div>
 
@@ -337,15 +399,30 @@ export function AssetAIModelsTab() {
         <MutedText className="text-xs italic font-medium text-slate-500">
           AI models are stored securely in your browser's Cache Storage.
         </MutedText>
-        <Button variant="outline" size="sm" onClick={checkCache} className="h-9 px-4 text-xs font-bold border-slate-200 hover:bg-slate-50 transition-colors">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={checkCache}
+          className="h-9 px-4 text-xs font-bold border-slate-200 hover:bg-slate-50 transition-colors"
+        >
           Refresh Status
         </Button>
       </div>
 
       <ToastContainer toasts={toasts} onRemove={hide} />
     </div>
-  )
+  );
 }
-function Subheading({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <h3 className={`text-slate-900 dark:text-slate-100 ${className}`}>{children}</h3>
+function Subheading({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <h3 className={`text-slate-900 dark:text-slate-100 ${className}`}>
+      {children}
+    </h3>
+  );
 }
