@@ -64,11 +64,22 @@ export function PresetSelector({
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState<"select" | "custom">("select");
+  const [selectedType, setSelectedType] = useState<"processor" | "feature">(
+    "processor",
+  );
+  const [activeTab, setActiveTab] = useState<"select" | "custom">("custom");
 
   // Form Custom Creation State (simplified to basic metadata)
   const [customName, setCustomName] = useState("");
   const [customColor, setCustomColor] = useState("#0ea5e9");
+
+  const isFeaturePreset = (id: string) => {
+    return (
+      id.startsWith("preset_background-remover") ||
+      id.startsWith("preset_splicing_") ||
+      id.startsWith("preset_image-splitter_")
+    );
+  };
 
   // Initialize metadata only when the dialog opens
   useEffect(() => {
@@ -82,7 +93,7 @@ export function PresetSelector({
         );
         setCustomColor(PRESET_HIGHLIGHT_COLORS[0] ?? "#0ea5e9");
       }
-      setActiveTab("select");
+      setActiveTab("custom");
     }
   }, [isDialogOpen]); // Removed identifiedPreset dependency to prevent tab reset on sync
 
@@ -94,7 +105,9 @@ export function PresetSelector({
     });
 
     // Synchronously retrieve the newly created preset object from the store and apply it
-    const newPreset = useBatchStore.getState().presets.find((p) => p.id === createdId);
+    const newPreset = useBatchStore
+      .getState()
+      .presets.find((p) => p.id === createdId);
     if (newPreset) {
       onSelect(newPreset);
     }
@@ -133,6 +146,11 @@ export function PresetSelector({
       const propFormatMatch =
         !formatFilter || formatFilter.includes(p.config.targetFormat);
 
+      const typeMatch =
+        selectedType === "processor"
+          ? !isFeaturePreset(p.id)
+          : isFeaturePreset(p.id);
+
       let dialogFormatMatch = true;
       if (selectedFormat !== "all") {
         const fmt =
@@ -140,7 +158,7 @@ export function PresetSelector({
         dialogFormatMatch = fmt === selectedFormat;
       }
 
-      return contextMatch && propFormatMatch && dialogFormatMatch;
+      return contextMatch && propFormatMatch && dialogFormatMatch && typeMatch;
     });
 
     return [...list].sort((a, b) => {
@@ -151,7 +169,7 @@ export function PresetSelector({
       }
       return b.updatedAt - a.updatedAt;
     });
-  }, [presets, formatFilter, selectedFormat]);
+  }, [presets, formatFilter, selectedFormat, selectedType]);
 
   const activePreset = activePresetId
     ? presets.find((p) => p.id === activePresetId)
@@ -170,6 +188,16 @@ export function PresetSelector({
     // This allows picking up new presets from other tabs without a full page reload.
     if ((useBatchStore as any).persist?.rehydrate) {
       await (useBatchStore as any).persist.rehydrate();
+    }
+  };
+
+  const handleQuickEdit = () => {
+    setActiveTab("custom");
+    setIsDialogOpen(true);
+
+    // If we are currently on a saved preset, transition to the identified (custom) version
+    if (activePresetId !== null && identifiedPreset) {
+      onSelect(identifiedPreset);
     }
   };
 
@@ -241,6 +269,7 @@ export function PresetSelector({
                   preset={activePreset}
                   context="single"
                   alwaysVibrant={true}
+                  onClick={handleQuickEdit}
                 />
 
                 {renderSidebarContent && (
@@ -272,6 +301,17 @@ export function PresetSelector({
             <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-xs font-semibold shrink-0">
               <button
                 type="button"
+                onClick={() => setActiveTab("custom")}
+                className={`px-3.5 py-1.5 rounded-md transition-all ${
+                  activeTab === "custom"
+                    ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-sm font-bold"
+                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                }`}
+              >
+                Feature Preset
+              </button>
+              <button
+                type="button"
                 onClick={() => setActiveTab("select")}
                 className={`px-3.5 py-1.5 rounded-md transition-all ${
                   activeTab === "select"
@@ -280,17 +320,6 @@ export function PresetSelector({
                 }`}
               >
                 Select Preset
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("custom")}
-                className={`px-3.5 py-1.5 rounded-md transition-all ${
-                  activeTab === "custom"
-                    ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-sm font-bold"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
-                }`}
-              >
-                Feature Custom
               </button>
             </div>
 
@@ -306,8 +335,38 @@ export function PresetSelector({
           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
             {activeTab === "select" ? (
               <>
-                {/* Format Filter Shield (Relocated to Content) */}
-                <div className="flex justify-start">
+                {/* Type & Format Filter Shields */}
+                <div className="flex flex-wrap items-center gap-2 justify-start">
+                  <Shield
+                    left="Type"
+                    size="sm"
+                    leftBg="bg-slate-700 dark:bg-slate-800"
+                    leftColor="text-white"
+                    rightBg="bg-slate-100 dark:bg-slate-800"
+                    rightColor="text-slate-600 dark:text-slate-400"
+                    className="border border-slate-200 dark:border-slate-700"
+                    right={
+                      <div className="flex items-center gap-1.5 h-full">
+                        {(["processor", "feature"] as const).map(
+                          (t, i, arr) => (
+                            <React.Fragment key={t}>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedType(t)}
+                                className={`transition-colors hover:text-sky-500 py-1 ${selectedType === t ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
+                              >
+                                {t === "processor" ? "Processor" : "Features"}
+                              </button>
+                              {i < arr.length - 1 && (
+                                <span className="opacity-30">•</span>
+                              )}
+                            </React.Fragment>
+                          ),
+                        )}
+                      </div>
+                    }
+                  />
+
                   <Shield
                     left="Filter"
                     size="sm"

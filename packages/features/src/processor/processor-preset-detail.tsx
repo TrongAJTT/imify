@@ -5,11 +5,13 @@ import { FileCode, Gauge, Maximize, Type } from "lucide-react"
 
 export function ProcessorPresetDetail({ 
   preset, 
-  alwaysVibrant = false 
+  alwaysVibrant = false,
+  onClick
 }: { 
   preset: SavedSetupPreset; 
   context: SetupContext;
-  alwaysVibrant?: boolean
+  alwaysVibrant?: boolean;
+  onClick?: () => void
 }) {
   const config = preset.config
   const rawFormat = config.targetFormat === "mozjpeg" ? "jpg" : config.targetFormat
@@ -30,8 +32,8 @@ export function ProcessorPresetDetail({
     ? "bg-[var(--preset-color)] opacity-100"
     : "bg-[var(--preset-color)] opacity-50 group-hover:opacity-100 transition-opacity"
 
-  return (
-    <div className="flex flex-wrap gap-2 p-1">
+  const containerContent = (
+    <div className={`flex flex-wrap gap-2 p-1 ${onClick ? "hover:scale-[1.02] active:scale-95 transition-all cursor-pointer" : ""}`}>
       {/* Format Shield */}
       <Shield
         left="Format"
@@ -70,4 +72,18 @@ export function ProcessorPresetDetail({
       </Tooltip>
     </div>
   )
+
+  if (onClick) {
+    return (
+      <button 
+        type="button" 
+        onClick={onClick} 
+        className="w-full text-left focus:outline-none group"
+      >
+        {containerContent}
+      </button>
+    )
+  }
+
+  return containerContent
 }

@@ -1,14 +1,9 @@
 import React, { useEffect, useMemo } from "react";
 
-import { getCanonicalExtension } from "@imify/core/download-utils";
 import type { PerformancePreferences } from "../processor/performance-preferences";
 import type { SplicingImageResize } from "./types";
-import {
-  useSplicingStore,
-  resolveLayoutConfig,
-  resolveCanvasStyle,
-  resolveImageStyle,
-} from "@imify/stores/stores/splicing-store";
+import { useSplicingStore } from "@imify/stores/stores/splicing-store";
+import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store";
 import {
   ALIGNMENT_OPTIONS,
   deriveBentoLayoutMode,
@@ -20,11 +15,9 @@ import { CanvasSettingsAccordion } from "./canvas-settings-accordion";
 import { ImageSettingsAccordion } from "./image-settings-accordion";
 import { PreviewSettingsAccordion } from "./preview-settings-accordion";
 import {
-  AccordionCard,
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
 } from "@imify/ui";
-import { Stamp } from "lucide-react";
 import { PresetSelector } from "../processor/preset-selector";
 import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
 import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
@@ -87,8 +80,12 @@ export function SplicingSidebarPanel({
   const applyPreset = useSplicingStore((s) => s.applyPreset);
   const resetToDefault = useSplicingStore((s) => s.resetToDefault);
 
-  const identifiedPresetId = `preset_splicing_${layout.preset}`;
-  const identifiedPresetName = `Splicing #${layout.preset.split("_").pop()}`;
+  const activeSplicingPresetId = useSplicingPresetStore(
+    (s) => s.activePresetId,
+  );
+
+  const identifiedPresetId = `preset_splicing_${activeSplicingPresetId}`;
+  const identifiedPresetName = `Splicing #${activeSplicingPresetId}`;
   const identifiedPresetColor = "#f97316";
 
   const splicingIdentifiedPreset: SavedSetupPreset = useMemo(
@@ -284,22 +281,26 @@ export function SplicingSidebarPanel({
           onSelect={applyPreset}
           onReset={resetToDefault}
           renderSidebarContent={() => (
-             <div className="pt-2">
-               <SplicingExportPanel
+            <div className="pt-2">
+              <SplicingExportPanel
                 targetFormat={exportSettings.targetFormat}
                 concurrency={exportSettings.concurrency}
                 exportMode={exportSettings.exportMode}
                 exportTrimBackground={exportSettings.trimBackground}
                 availableExportModes={availableExportModes}
                 advisorFormatOptions={exportSettings.codecOptions}
-                onConcurrencyChange={(v) => setExportSettings({ concurrency: v })}
+                onConcurrencyChange={(v) =>
+                  setExportSettings({ concurrency: v })
+                }
                 onExportModeChange={(v) => setExportSettings({ exportMode: v })}
-                onExportTrimBackgroundChange={(v) => setExportSettings({ trimBackground: v })}
+                onExportTrimBackgroundChange={(v) =>
+                  setExportSettings({ trimBackground: v })
+                }
                 performancePreferences={performancePreferences}
                 onOpenSettings={onOpenSettings}
                 disabled={false}
               />
-             </div>
+            </div>
           )}
           tooltipContent="Select an export preset for Image Splicing."
         />

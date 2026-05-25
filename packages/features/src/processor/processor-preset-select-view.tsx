@@ -1,13 +1,11 @@
 import React, { useMemo, useState } from "react"
-import { Plus } from "lucide-react"
-import { EmptyDropCard, Shield, MutedText } from "@imify/ui"
+import { Plus, RotateCcw } from "lucide-react"
+import { EmptyDropCard, Shield, MutedText, Button } from "@imify/ui"
 import { PRESET_HIGHLIGHT_COLORS } from "@imify/stores/stores/preset-colors"
 import { useBatchStore, type SavedSetupPreset, type SetupContext } from "@imify/stores/stores/batch-store"
 import { PresetCard } from "./preset-card"
 import { SavePresetDialog } from "./save-preset-dialog"
 import { WorkspaceSelectHeader } from "./workspace-select-header"
-
-const FEATURE_PRESET_IDS = ["preset_background-remover"]
 
 export function ProcessorPresetSelectView({
   context, presets, activePresetId, onOpenPreset, onCreatePreset, onUpdatePresetMeta, onDeletePreset
@@ -25,6 +23,12 @@ export function ProcessorPresetSelectView({
   const [editingPreset, setEditingPreset] = useState<SavedSetupPreset | null>(null)
   const [selectedFormat, setSelectedFormat] = useState<string>("all")
   const [selectedType, setSelectedType] = useState<"processor" | "feature">("processor")
+
+  const isFeaturePreset = (id: string) => {
+    return id.startsWith("preset_background-remover") || 
+           id.startsWith("preset_splicing_") || 
+           id.startsWith("preset_image-splitter_")
+  }
   
   const contextLabel = context === "single" ? "Single" : "Batch"
   const formats = useMemo(() => {
@@ -35,9 +39,9 @@ export function ProcessorPresetSelectView({
     let list = presets
 
     if (selectedType === "processor") {
-      list = list.filter((p) => !FEATURE_PRESET_IDS.includes(p.id))
+      list = list.filter((p) => !isFeaturePreset(p.id))
     } else if (selectedType === "feature") {
-      list = list.filter((p) => FEATURE_PRESET_IDS.includes(p.id))
+      list = list.filter((p) => isFeaturePreset(p.id))
     }
 
     if (selectedFormat !== "all") {
@@ -59,6 +63,13 @@ export function ProcessorPresetSelectView({
   const sortedPresets = filteredPresets // Use filtered ones for display
   const openCreateDialog = () => { setEditingPreset(null); setIsSavePresetDialogOpen(true) }
   const openEditDialog = (preset: SavedSetupPreset) => { setEditingPreset(preset); setIsSavePresetDialogOpen(true) }
+  
+  const refreshPresets = async () => {
+    if ((useBatchStore as any).persist?.rehydrate) {
+      await (useBatchStore as any).persist.rehydrate();
+    }
+  }
+
   const handleSavePreset = (name: string, color: string) => {
     if (editingPreset) { onUpdatePresetMeta({ id: editingPreset.id, name, highlightColor: color }); setEditingPreset(null); setIsSavePresetDialogOpen(false); return }
     onCreatePreset(name, color); setIsSavePresetDialogOpen(false)
@@ -129,7 +140,23 @@ export function ProcessorPresetSelectView({
         <EmptyDropCard icon={<Plus size={28} className="text-sky-500" />} iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none" title={`No ${contextLabel.toLowerCase()} presets yet`} subtitle="Create your first preset to start working" onClick={openCreateDialog} />
       ) : (
         <>
-          <WorkspaceSelectHeader title={`${contextLabel} Presets`} createLabel="New Preset" onCreate={openCreateDialog} createIcon={<Plus size={14} />}>
+          <WorkspaceSelectHeader 
+            title={`${contextLabel} Presets`} 
+            createLabel="New Preset" 
+            onCreate={openCreateDialog} 
+            createIcon={<Plus size={14} />}
+            extraActions={
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={refreshPresets}
+                className="gap-2 h-8 px-3"
+              >
+                <RotateCcw size={12} className="scale-x-[-1]" />
+                <span className="hidden sm:inline">Refresh</span>
+              </Button>
+            }
+          >
             {filterControl}
           </WorkspaceSelectHeader>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3">

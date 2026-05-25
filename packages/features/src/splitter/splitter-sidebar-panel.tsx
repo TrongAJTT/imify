@@ -59,9 +59,8 @@ export function SplitterSidebarPanel({
   );
 
   const identifiedPresetId = `preset_image-splitter_${activeSplitterPresetId}`;
-  const identifiedPresetName = `Image Splitter #${activeSplitterPresetId?.split("_").pop()}`;
-  const identifiedPresetColor =
-    activeSplitterPreset?.highlightColor || "#f97316";
+  const identifiedPresetName = `Image Splitter #${activeSplitterPresetId}`;
+  const identifiedPresetColor = activeSplitterPreset?.highlightColor || "#f97316";
 
   const splitterIdentifiedPreset: SavedSetupPreset = useMemo(
     () => ({
