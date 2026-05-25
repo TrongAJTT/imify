@@ -102,5 +102,10 @@ export const WEB_ROUTE_METADATA = {
     title: "Background Remover",
     description:
       "Isolate subjects from their background instantly using state-of-the-art AI that runs entirely on your browser for maximum privacy."
+  },
+  imageUpscaler: {
+    title: "Image Upscaler",
+    description:
+      "Magnify and restore your images locally in your web browser using state-of-the-art super-resolution neural networks."
   }
 } satisfies Record<string, SeoMetadataEntry>

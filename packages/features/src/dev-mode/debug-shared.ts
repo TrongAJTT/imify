@@ -11,6 +11,7 @@ export type OptionsTab =
   | "diffchecker"
   | "inspector"
   | "background-remover"
+  | "image-upscaler"
   | "context-menu"
 
 export interface PerformancePreferences {
