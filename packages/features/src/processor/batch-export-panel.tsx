@@ -128,7 +128,7 @@ export function BatchExportPanel({
       label="Export Settings"
       sublabel="Performance, privacy, and watermarking"
       colorTheme="amber"
-      defaultOpen={false}
+      defaultOpen={true}
       alwaysOpen={isRunning}
     >
       <div className="space-y-3">

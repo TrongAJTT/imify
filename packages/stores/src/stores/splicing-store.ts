@@ -188,8 +188,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
       previewQualityPercent: 20,
       previewShowImageNumber: false,
       previewBentoFlowGroupCount: null,
-      isImageResizeOpen: false,
-      isExportFormatQualityOpen: false,
+      isImageResizeOpen: true,
+      isExportFormatQualityOpen: true,
       activePresetId: null,
 
       setLayout: (patch) => set((state) => ({ layout: { ...state.layout, ...patch } })),

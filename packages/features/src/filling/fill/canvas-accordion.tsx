@@ -46,7 +46,7 @@ export function FillCanvasAccordion() {
   const backgroundTypeForSelect: CanvasBackgroundType = state.backgroundType === "gradient" ? "solid" : state.backgroundType
 
   return (
-    <AccordionCard icon={<Palette size={16} />} label="Canvas" sublabel={sublabel} colorTheme="purple" defaultOpen={false}>
+    <AccordionCard icon={<Palette size={16} />} label="Canvas" sublabel={sublabel} colorTheme="purple" defaultOpen={true}>
       <div className="space-y-3">
         <input ref={bgImageInputRef} type="file" accept={COMMON_IMAGE_ACCEPT} className="hidden" onChange={handleBgImageUpload} />
         <SelectInput label="Background" value={backgroundTypeForSelect} options={BG_TYPE_OPTIONS} onChange={(v) => update({ backgroundType: v as CanvasBackgroundType })} />

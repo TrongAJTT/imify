@@ -59,7 +59,7 @@ export function ImageSettingsAccordion({
       label="Image Settings"
       sublabel={sublabel}
       colorTheme="orange"
-      defaultOpen={false}
+      defaultOpen={true}
     >
       <div className="space-y-3 pt-1">
         {/* Image Resize Card */}

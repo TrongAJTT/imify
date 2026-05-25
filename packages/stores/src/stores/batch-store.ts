@@ -239,8 +239,8 @@ function createDefaultSourceState(): Record<SetupContext, { width: number; heigh
 
 function createDefaultUIState(): Record<SetupContext, { isTargetFormatQualityOpen: boolean; isResizeOpen: boolean }> {
   return {
-    single: { isTargetFormatQualityOpen: false, isResizeOpen: false },
-    batch: { isTargetFormatQualityOpen: false, isResizeOpen: false }
+    single: { isTargetFormatQualityOpen: true, isResizeOpen: true },
+    batch: { isTargetFormatQualityOpen: true, isResizeOpen: true }
   }
 }
 
@@ -522,8 +522,8 @@ export const useBatchStore = create<BatchStoreState>()(
       skipOomWarning: false,
       skipSplicingHeavyPreviewQualityWarning: false,
       heavyFormatToast: null,
-      isTargetFormatQualityOpen: false,
-      isResizeOpen: false,
+      isTargetFormatQualityOpen: true,
+      isResizeOpen: true,
       contextConfigs: createDefaultContextConfigs(),
       sourceStateByContext: createDefaultSourceState(),
       uiStates: createDefaultUIState(),

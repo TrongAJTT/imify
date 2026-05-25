@@ -25,7 +25,7 @@ export function PreviewSettingsAccordion({
       label="Preview Settings"
       sublabel={sublabel}
       colorTheme="sky"
-      defaultOpen={false}
+      defaultOpen={true}
     >
       <div className="space-y-3">
         <div className="col-span-1">

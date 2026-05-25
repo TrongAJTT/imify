@@ -93,7 +93,7 @@ export function PatternCanvasAccordion() {
         label="Canvas"
         sublabel={sublabel}
         colorTheme="purple"
-        defaultOpen={false}
+        defaultOpen={true}
       >
         <div className="space-y-3">
           <input

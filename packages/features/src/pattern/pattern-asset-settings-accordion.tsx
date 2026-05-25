@@ -43,7 +43,7 @@ export function PatternAssetSettingsAccordion() {
       label="Asset Settings"
       sublabel={sublabel}
       colorTheme="amber"
-      defaultOpen={false}
+      defaultOpen={true}
     >
       <div className="space-y-3">
         <CheckboxCard

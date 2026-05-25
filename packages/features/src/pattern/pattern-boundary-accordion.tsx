@@ -72,7 +72,7 @@ export function PatternBoundaryAccordion() {
         label="Boundary"
         sublabel={sublabel}
         colorTheme="orange"
-        defaultOpen={false}
+        defaultOpen={true}
       >
         <div className="space-y-3">
           <div className="flex justify-center">

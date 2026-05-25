@@ -574,7 +574,7 @@ export function ManualEditorSidebar({
           label="Canvas"
           sublabel={`${canvasWidth} x ${canvasHeight} px`}
           colorTheme="amber"
-          defaultOpen={false}
+          defaultOpen={true}
         >
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">

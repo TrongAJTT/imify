@@ -84,7 +84,7 @@ export function LayoutSettingsAccordion({
       label="Layout Settings"
       sublabel={sublabelMap[preset]}
       colorTheme="sky"
-      defaultOpen={false}
+      defaultOpen={true}
     >
       <div className="space-y-3 pt-1">
         <div className="grid grid-cols-2 gap-1.5">

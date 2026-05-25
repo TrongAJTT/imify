@@ -111,7 +111,7 @@ export function DeveloperActionsCard({
   )
 
   return (
-    <InfoSection title="DEVELOPER TOOLS" icon={<Code size={13} />} defaultOpen={false}>
+    <InfoSection title="DEVELOPER TOOLS" icon={<Code size={13} />} defaultOpen={true}>
       <div className="space-y-3">
         <div>
           <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
