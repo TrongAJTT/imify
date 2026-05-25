@@ -254,38 +254,38 @@ export function SplicingTab({
     qualityPercent: number;
   } | null>(null);
 
-  const preset = useSplicingStore((s) => s.preset);
-  const primaryDirection = useSplicingStore((s) => s.primaryDirection);
-  const secondaryDirection = useSplicingStore((s) => s.secondaryDirection);
-  const gridCount = useSplicingStore((s) => s.gridCount);
-  const flowMaxSize = useSplicingStore((s) => s.flowMaxSize);
-  const flowSplitOverflow = useSplicingStore((s) => s.flowSplitOverflow);
-  const alignment = useSplicingStore((s) => s.alignment);
-  const imageAppearanceDirection = useSplicingStore(
-    (s) => s.imageAppearanceDirection,
-  );
+  const {
+    preset,
+    primaryDirection,
+    secondaryDirection,
+    gridCount,
+    flowMaxSize,
+    flowSplitOverflow,
+    alignment,
+    imageAppearanceDirection,
+  } = useSplicingStore((s) => s.layout);
 
-  const canvasPadding = useSplicingStore((s) => s.canvasPadding);
-  const mainSpacing = useSplicingStore((s) => s.mainSpacing);
-  const crossSpacing = useSplicingStore((s) => s.crossSpacing);
-  const canvasBorderRadius = useSplicingStore((s) => s.canvasBorderRadius);
-  const canvasBorderWidth = useSplicingStore((s) => s.canvasBorderWidth);
-  const canvasBorderColor = useSplicingStore((s) => s.canvasBorderColor);
-  const backgroundColor = useSplicingStore((s) => s.backgroundColor);
+  const {
+    padding: canvasPadding,
+    mainSpacing,
+    crossSpacing,
+    borderRadius: canvasBorderRadius,
+    borderWidth: canvasBorderWidth,
+    borderColor: canvasBorderColor,
+    backgroundColor,
+  } = useSplicingStore((s) => s.canvas);
 
-  const imageResize = useSplicingStore((s) => s.imageResize);
-  const imageFitValue = useSplicingStore((s) => s.imageFitValue);
-  const imagePadding = useSplicingStore((s) => s.imagePadding);
-  const imagePaddingColor = useSplicingStore((s) => s.imagePaddingColor);
-  const imageBorderRadius = useSplicingStore((s) => s.imageBorderRadius);
-  const imageBorderWidth = useSplicingStore((s) => s.imageBorderWidth);
-  const imageBorderColor = useSplicingStore((s) => s.imageBorderColor);
+  const {
+    resizeMode: imageResize,
+    fitValue: imageFitValue,
+    padding: imagePadding,
+    paddingColor: imagePaddingColor,
+    borderRadius: imageBorderRadius,
+    borderWidth: imageBorderWidth,
+    borderColor: imageBorderColor,
+  } = useSplicingStore((s) => s.image);
 
-  const exportFormat = useSplicingStore((s) => s.exportFormat);
-  const exportFileNamePattern = useSplicingStore(
-    (s) => s.exportFileNamePattern,
-  );
-  const exportMode = useSplicingStore((s) => s.exportMode);
+  const exportSettings = useSplicingStore((s) => s.exportSettings);
   const previewQualityPercent = useSplicingStore(
     (s) => s.previewQualityPercent,
   );
@@ -306,46 +306,23 @@ export function SplicingTab({
     (state) => state.skipSplicingHeavyPreviewQualityWarning,
   );
   const canExportPdf =
-    exportFormat === "jpg" ||
-    exportFormat === "mozjpeg" ||
-    exportFormat === "png" ||
-    exportFormat === "webp";
+    exportSettings.targetFormat === "jpg" ||
+    exportSettings.targetFormat === "mozjpeg" ||
+    exportSettings.targetFormat === "png" ||
+    exportSettings.targetFormat === "webp";
 
   const storeState = useSplicingStore.getState();
   const layoutConfig = useMemo(
     () => resolveLayoutConfig(storeState),
-    [
-      preset,
-      primaryDirection,
-      secondaryDirection,
-      gridCount,
-      flowMaxSize,
-      flowSplitOverflow,
-      alignment,
-      imageAppearanceDirection,
-    ],
+    [storeState.layout],
   );
   const canvasStyle = useMemo(
     () => resolveCanvasStyle(storeState),
-    [
-      canvasPadding,
-      mainSpacing,
-      crossSpacing,
-      canvasBorderRadius,
-      canvasBorderWidth,
-      canvasBorderColor,
-      backgroundColor,
-    ],
+    [storeState.canvas],
   );
   const imageStyle = useMemo(
     () => resolveImageStyle(storeState),
-    [
-      imagePadding,
-      imagePaddingColor,
-      imageBorderRadius,
-      imageBorderWidth,
-      imageBorderColor,
-    ],
+    [storeState.image],
   );
   useEffect(() => {
     setResizeQuickStats(
@@ -398,7 +375,7 @@ export function SplicingTab({
       pushPreviewQualityToast({
         id: toastId,
         fileName: `Preview quality ${next}%`,
-        targetFormat: exportFormat,
+        targetFormat: exportSettings.targetFormat,
         status: "processing",
         percent: 5,
         message: "Rebuilding preview images...",
@@ -407,7 +384,7 @@ export function SplicingTab({
     [
       images.length,
       previewShowImageNumber,
-      exportFormat,
+      exportSettings.targetFormat,
       setPreviewQualityPercent,
       pushPreviewQualityToast,
     ],
@@ -502,7 +479,7 @@ export function SplicingTab({
         pushImportToast({
           id: toastId,
           fileName: `Importing ${imageFiles.length} images`,
-          targetFormat: exportFormat,
+          targetFormat: exportSettings.targetFormat,
           status: "processing",
           percent: 5,
           message: "Preparing image import...",
@@ -535,7 +512,7 @@ export function SplicingTab({
           pushImportToast({
             id: toastId,
             fileName: `Importing ${imageFiles.length} images`,
-            targetFormat: exportFormat,
+            targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent,
             message: `Creating thumbnails ${processedCount}/${imageFiles.length}...`,
@@ -548,7 +525,7 @@ export function SplicingTab({
           pushImportToast({
             id: toastId,
             fileName: "Image import failed",
-            targetFormat: exportFormat,
+            targetFormat: exportSettings.targetFormat,
             status: "error",
             percent: 100,
             message: "No valid images were imported.",
@@ -567,7 +544,7 @@ export function SplicingTab({
         pushImportToast({
           id: toastId,
           fileName: `Importing ${imageFiles.length} images`,
-          targetFormat: exportFormat,
+          targetFormat: exportSettings.targetFormat,
           status: "processing",
           percent: 85,
           message: "Rendering preview canvas...",
@@ -591,7 +568,7 @@ export function SplicingTab({
         pendingRenderRef.current = null;
       }
     },
-    [exportFormat, previewShowImageNumber, pushImportToast],
+    [exportSettings.targetFormat, previewShowImageNumber, pushImportToast],
   );
 
   const finalizeImportToast = useCallback(
@@ -600,7 +577,7 @@ export function SplicingTab({
       pushImportToast({
         id: toastId,
         fileName: "Image import complete",
-        targetFormat: exportFormat,
+        targetFormat: exportSettings.targetFormat,
         status: "success",
         percent: 100,
         message: `Imported and rendered ${imageCount} images.`,
@@ -613,7 +590,7 @@ export function SplicingTab({
         importToastHideTimerRef.current = null;
       }, 2500);
     },
-    [exportFormat, pushImportToast],
+    [exportSettings.targetFormat, pushImportToast],
   );
 
   const finalizePreviewQualityToast = useCallback(
@@ -622,7 +599,7 @@ export function SplicingTab({
       pushPreviewQualityToast({
         id: toastId,
         fileName: `Preview quality ${qualityPercent}%`,
-        targetFormat: exportFormat,
+        targetFormat: exportSettings.targetFormat,
         status: "success",
         percent: 100,
         message: "Preview updated.",
@@ -635,7 +612,7 @@ export function SplicingTab({
         previewQualityToastHideTimerRef.current = null;
       }, 2500);
     },
-    [exportFormat, pushPreviewQualityToast],
+    [exportSettings.targetFormat, pushPreviewQualityToast],
   );
 
   const handlePreviewSourcesProgress = useCallback(
@@ -649,7 +626,7 @@ export function SplicingTab({
       pushPreviewQualityToast({
         id: pending.toastId,
         fileName: `Preview quality ${pending.qualityPercent}%`,
-        targetFormat: exportFormat,
+        targetFormat: exportSettings.targetFormat,
         status: "processing",
         percent,
         message:
@@ -658,7 +635,7 @@ export function SplicingTab({
             : "Rebuilding preview images...",
       });
     },
-    [exportFormat, pushPreviewQualityToast],
+    [exportSettings.targetFormat, pushPreviewQualityToast],
   );
 
   const handlePreviewRendered = useCallback(
@@ -672,7 +649,7 @@ export function SplicingTab({
           pushImportToast({
             id: importPending.toastId,
             fileName: `Importing ${importPending.expectedCount} images`,
-            targetFormat: exportFormat,
+            targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent: 90,
             message: "Preparing image numbers...",
@@ -692,7 +669,7 @@ export function SplicingTab({
           pushPreviewQualityToast({
             id: qualityPending.toastId,
             fileName: `Preview quality ${qualityPending.qualityPercent}%`,
-            targetFormat: exportFormat,
+            targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent: 90,
             message: "Preparing image numbers...",
@@ -701,7 +678,7 @@ export function SplicingTab({
       }
     },
     [
-      exportFormat,
+      exportSettings.targetFormat,
       finalizeImportToast,
       finalizePreviewQualityToast,
       pushImportToast,
@@ -724,7 +701,7 @@ export function SplicingTab({
           pushImportToast({
             id: importPending.toastId,
             fileName: `Importing ${importPending.expectedCount} images`,
-            targetFormat: exportFormat,
+            targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent,
             message: `Preparing image numbers ${payload.completed}/${payload.total}...`,
@@ -749,7 +726,7 @@ export function SplicingTab({
           pushPreviewQualityToast({
             id: qualityPending.toastId,
             fileName: `Preview quality ${qualityPending.qualityPercent}%`,
-            targetFormat: exportFormat,
+            targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent,
             message: `Preparing image numbers ${payload.completed}/${payload.total}...`,
@@ -766,7 +743,7 @@ export function SplicingTab({
       }
     },
     [
-      exportFormat,
+      exportSettings.targetFormat,
       finalizeImportToast,
       finalizePreviewQualityToast,
       pushImportToast,
@@ -826,7 +803,9 @@ export function SplicingTab({
     setLayoutResult(null);
   }, [images]);
   const exportTargetCount =
-    exportMode === "single" ? 1 : layoutResult?.groups.length ?? 0;
+    exportSettings.exportMode === "single"
+      ? 1
+      : layoutResult?.groups.length ?? 0;
   const { performExport } = useSplicingExport({
     images,
     exportTargetCount,
@@ -843,16 +822,16 @@ export function SplicingTab({
   const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
 
   const primaryExportMode: "zip" | "one_by_one" =
-    exportMode === "single" ? "one_by_one" : "zip";
+    exportSettings.exportMode === "single" ? "one_by_one" : "zip";
   const handleExportAction = useCallback(
     async (mode: ExportSplitMode) => {
       checkAndPrompt(
-        exportFileNamePattern,
+        exportSettings.fileNamePattern,
         (inputValue) =>
           void performExport(mode as SplicingExportMode, false, inputValue),
       );
     },
-    [performExport, exportFileNamePattern, checkAndPrompt],
+    [performExport, exportSettings.fileNamePattern, checkAndPrompt],
   );
 
   const hasImages = images.length > 0;
@@ -950,7 +929,7 @@ export function SplicingTab({
           const mode = pendingExportModeForConfirm ?? "one_by_one";
           setShowDownloadConfirm(false);
           checkAndPrompt(
-            exportFileNamePattern,
+            exportSettings.fileNamePattern,
             (inputValue) => void performExport(mode, true, inputValue),
           );
           setPendingExportModeForConfirm(null);

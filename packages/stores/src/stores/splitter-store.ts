@@ -1,78 +1,22 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import {
-  mergeNormalizedAvifCodecOptions,
-  mergeNormalizedBmpCodecOptions,
-  mergeNormalizedPngCodecOptions,
-  mergeNormalizedWebpCodecOptions,
-  normalizeMozJpegChromaSubsampling
-} from "@imify/core/codec-options"
-import { mergeNormalizedJxlCodecOptions } from "@imify/core/jxl-options"
 import type { FormatCodecOptions } from "@imify/core/types"
-import { useBatchStore, type SavedSetupPreset } from "./batch-store"
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
 import {
-  createDefaultSplitterCustomGuide,
   createDefaultSplitterColorRule,
   DEFAULT_SPLITTER_EXPORT_SETTINGS,
   DEFAULT_SPLITTER_SPLIT_SETTINGS,
   type SplitterColorRule,
   type SplitterCustomGuide,
+  type SplitterExportFormat,
   type SplitterExportSettings,
   type SplitterPresetConfig,
   type SplitterSplitSettings,
-  type SplitterExportFormat
+  type SplitterStoreState,
+  type SplitterUiState
 } from "@imify/features/splitter/types"
-
-
-
-function normalizeCustomGuides(guides: SplitterCustomGuide[] | undefined): SplitterCustomGuide[] {
-  const safeGuides = Array.isArray(guides) ? guides : []
-  const normalized = safeGuides
-    .filter((guide) => Boolean(guide?.id))
-    .map((guide) => ({
-      id: guide.id,
-      value: clampFloat(guide.value, 1, 100000, 50),
-      unit: (guide.unit === "pixel" ? "pixel" : "percent") as SplitterCustomGuide["unit"],
-      edge: (
-        guide.edge === "right" || guide.edge === "top" || guide.edge === "bottom"
-          ? guide.edge
-          : "left"
-      ) as SplitterCustomGuide["edge"]
-    }))
-
-  return normalized.length > 0 ? normalized : [createDefaultSplitterCustomGuide()]
-}
-
-interface SplitterUiState {
-  isSplitOptionsOpen: boolean
-  isPatternSequenceOpen: boolean
-  isCustomGuidesOpen: boolean
-  isColorMatchRulesOpen: boolean
-  isExportFormatQualityOpen: boolean
-  isFormatAdvancedOpen: boolean
-  isExportSettingsOpen: boolean
-}
-
-export interface SplitterStoreState {
-  splitSettings: SplitterSplitSettings
-  exportSettings: SplitterExportSettings
-  uiState: SplitterUiState
-  activePresetId: string | null
-
-  setSplitSettings: (patch: Partial<SplitterSplitSettings>) => void
-  setExportSettings: (patch: Partial<SplitterExportSettings>) => void
-  setCodecOptions: (patch: Partial<FormatCodecOptions>) => void
-  setUiState: (patch: Partial<SplitterUiState>) => void
-  setColorRules: (rules: SplitterColorRule[]) => void
-  addColorRule: () => void
-  updateColorRule: (ruleId: string, patch: Partial<SplitterColorRule>) => void
-  removeColorRule: (ruleId: string) => void
-  applyPresetConfig: (config: SplitterPresetConfig) => void
-  applyPreset: (preset: SavedSetupPreset) => void
-  resetToDefault: () => void
-}
+import { useBatchStore, type SavedSetupPreset } from "./batch-store"
+import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
 
 function clampInt(value: number, min: number, max: number, fallback: number): number {
   if (!Number.isFinite(value)) {
@@ -113,6 +57,10 @@ function normalizeColorRules(rules: SplitterColorRule[]): SplitterColorRule[] {
   return normalized.length > 0 ? normalized : [createDefaultSplitterColorRule(1)]
 }
 
+function normalizeCustomGuides(guides: SplitterCustomGuide[]): SplitterCustomGuide[] {
+  return guides.filter((g) => Boolean(g?.id) && Number.isFinite(g.value))
+}
+
 function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitSettings {
   const validSocialRatios = new Set(["1:1", "4:5", "3:4", "2:3", "5:4", "16:9", "9:16"])
   return {
@@ -148,15 +96,6 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
     socialPadColor: getTrimmedString(settings.socialPadColor) ?? "#ffffff",
     gridColumns: clampInt(settings.gridColumns, 1, 256, 3),
     gridRows: clampInt(settings.gridRows, 1, 256, 3),
-    gridMarginX: clampInt(settings.gridMarginX, 0, 100000, 0),
-    gridMarginY: clampInt(settings.gridMarginY, 0, 100000, 0),
-    gridGutterX: clampInt(settings.gridGutterX, 0, 100000, 0),
-    gridGutterY: clampInt(settings.gridGutterY, 0, 100000, 0),
-    gridRemainderMode: settings.gridRemainderMode === "distribute" ? "distribute" : "trim",
-    spriteAlphaThreshold: clampInt(settings.spriteAlphaThreshold, 0, 255, 1),
-    spriteConnectivity: settings.spriteConnectivity === 4 ? 4 : 8,
-    spriteMinArea: clampInt(settings.spriteMinArea, 1, 10000000, 16),
-    spritePadding: clampInt(settings.spritePadding, 0, 10000, 0),
     spriteSortMode:
       settings.spriteSortMode === "left_right" || settings.spriteSortMode === "size_desc"
         ? settings.spriteSortMode
@@ -164,47 +103,11 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
   }
 }
 
-function mergeCodecOptions(current: FormatCodecOptions, patch: Partial<FormatCodecOptions>): FormatCodecOptions {
-  return {
-    ...current,
-    bmp: patch.bmp
-      ? mergeNormalizedBmpCodecOptions(current.bmp, patch.bmp)
-      : current.bmp,
-    jxl: patch.jxl
-      ? mergeNormalizedJxlCodecOptions(current.jxl, patch.jxl)
-      : current.jxl,
-    webp: patch.webp
-      ? mergeNormalizedWebpCodecOptions(current.webp, patch.webp)
-      : current.webp,
-    avif: patch.avif
-      ? mergeNormalizedAvifCodecOptions(current.avif, patch.avif)
-      : current.avif,
-    mozjpeg: patch.mozjpeg
-      ? {
-          enabled: patch.mozjpeg.enabled ?? current.mozjpeg?.enabled ?? true,
-          progressive: patch.mozjpeg.progressive ?? current.mozjpeg?.progressive ?? true,
-          chromaSubsampling: normalizeMozJpegChromaSubsampling(
-            patch.mozjpeg.chromaSubsampling ?? current.mozjpeg?.chromaSubsampling
-          )
-        }
-      : current.mozjpeg,
-    png: patch.png
-      ? mergeNormalizedPngCodecOptions(current.png, patch.png)
-      : current.png,
-    tiff: patch.tiff
-      ? {
-          colorMode: patch.tiff.colorMode === "grayscale" ? "grayscale" : "color"
-        }
-      : current.tiff
-  }
-}
-
 function normalizeExportSettings(settings: SplitterExportSettings): SplitterExportSettings {
   return {
     ...settings,
     quality: clampInt(settings.quality, 1, 100, 92),
-    fileNamePattern: getTrimmedString(settings.fileNamePattern) ?? "split-[OriginalName]-[Index]",
-    codecOptions: mergeCodecOptions(DEFAULT_SPLITTER_EXPORT_SETTINGS.codecOptions, settings.codecOptions)
+    fileNamePattern: getTrimmedString(settings.fileNamePattern) ?? "split-[OriginalName]-[Index]"
   }
 }
 
@@ -226,7 +129,7 @@ function buildRehydratedSplitterState(
 
   const splitSettings = normalizeSplitSettings({
     ...DEFAULT_SPLITTER_SPLIT_SETTINGS,
-    ...persistedSplitSettings,
+    ...(persistedSplitSettings as any),
     colorRules: Array.isArray(persistedSplitSettings?.colorRules)
       ? persistedSplitSettings.colorRules
       : DEFAULT_SPLITTER_SPLIT_SETTINGS.colorRules,
@@ -237,11 +140,7 @@ function buildRehydratedSplitterState(
 
   const exportSettings = normalizeExportSettings({
     ...DEFAULT_SPLITTER_EXPORT_SETTINGS,
-    ...persistedExportSettings,
-    codecOptions: mergeCodecOptions(
-      DEFAULT_SPLITTER_EXPORT_SETTINGS.codecOptions,
-      persistedExportSettings?.codecOptions ?? {}
-    )
+    ...(persistedExportSettings as any)
   })
 
   return {
@@ -267,8 +166,8 @@ export const useSplitterStore = create<SplitterStoreState>()(
           splitSettings: normalizeSplitSettings({
             ...state.splitSettings,
             ...patch,
-            colorRules: patch.colorRules ?? state.splitSettings.colorRules,
-            customGuides: patch.customGuides ?? state.splitSettings.customGuides
+            colorRules: (patch.colorRules as any) ?? state.splitSettings.colorRules,
+            customGuides: (patch.customGuides as any) ?? state.splitSettings.customGuides
           })
         })),
 
@@ -276,18 +175,7 @@ export const useSplitterStore = create<SplitterStoreState>()(
         set((state) => ({
           exportSettings: normalizeExportSettings({
             ...state.exportSettings,
-            ...patch,
-            codecOptions: patch.codecOptions
-              ? mergeCodecOptions(state.exportSettings.codecOptions, patch.codecOptions)
-              : state.exportSettings.codecOptions
-          })
-        })),
-
-      setCodecOptions: (patch) =>
-        set((state) => ({
-          exportSettings: normalizeExportSettings({
-            ...state.exportSettings,
-            codecOptions: mergeCodecOptions(state.exportSettings.codecOptions, patch)
+            ...patch
           })
         })),
 
@@ -341,13 +229,13 @@ export const useSplitterStore = create<SplitterStoreState>()(
           })
         })),
 
-      applyPresetConfig: (config) =>
+      applyPresetConfig: (config: SplitterPresetConfig) =>
         set({
           splitSettings: normalizeSplitSettings(config.splitSettings),
           exportSettings: normalizeExportSettings(config.exportSettings)
         }),
 
-      applyPreset: (preset) => {
+      applyPreset: (preset: SavedSetupPreset) => {
         const { targetFormat, quality, formatOptions, fileNamePattern } = preset.config
         const supportedFormats: SplitterExportFormat[] = ["png", "webp", "avif", "jxl", "jpg", "bmp", "tiff"]
         
@@ -358,33 +246,47 @@ export const useSplitterStore = create<SplitterStoreState>()(
           mappedFormat = "jpg"
         }
 
+        const isIdentified = preset.id.startsWith("preset_image-splitter_")
+
         set((state) => ({
-          activePresetId: preset.id === VIRTUAL_DEFAULT_PNG_PRESET.id ? null : preset.id,
+          activePresetId: (preset.id === VIRTUAL_DEFAULT_PNG_PRESET.id || isIdentified) ? null : preset.id,
           exportSettings: normalizeExportSettings({
             ...state.exportSettings,
             targetFormat: mappedFormat,
             quality,
-            codecOptions: formatOptions as FormatCodecOptions
+            codecOptions: formatOptions as FormatCodecOptions,
+            fileNamePattern: fileNamePattern || state.exportSettings.fileNamePattern
           })
         }))
 
-        // Sync global fileNamePattern if it's an identified preset or intentional select
+        // Sync global batch store to keep the Output Settings dialog in sync
+        const batchStore = useBatchStore.getState()
+        batchStore.setTargetFormat(targetFormat as any)
+        batchStore.setQuality(quality)
         if (fileNamePattern) {
-          useBatchStore.getState().setFileNamePattern(fileNamePattern)
+          batchStore.setFileNamePattern(fileNamePattern)
         }
       },
 
       resetToDefault: () => {
+        const defaultConfig = VIRTUAL_DEFAULT_PNG_PRESET.config
         set((state) => ({
           activePresetId: null,
           exportSettings: normalizeExportSettings({
             ...state.exportSettings,
-            targetFormat: VIRTUAL_DEFAULT_PNG_PRESET.config.targetFormat as SplitterExportFormat,
-            quality: VIRTUAL_DEFAULT_PNG_PRESET.config.quality,
-            codecOptions: VIRTUAL_DEFAULT_PNG_PRESET.config.formatOptions as FormatCodecOptions
+            targetFormat: defaultConfig.targetFormat as SplitterExportFormat,
+            quality: defaultConfig.quality,
+            codecOptions: defaultConfig.formatOptions as FormatCodecOptions,
+            fileNamePattern: defaultConfig.fileNamePattern || DEFAULT_SPLITTER_EXPORT_SETTINGS.fileNamePattern
           })
         }))
-        useBatchStore.getState().setFileNamePattern(VIRTUAL_DEFAULT_PNG_PRESET.config.fileNamePattern)
+
+        const batchStore = useBatchStore.getState()
+        batchStore.setTargetFormat(defaultConfig.targetFormat as any)
+        batchStore.setQuality(defaultConfig.quality)
+        if (defaultConfig.fileNamePattern) {
+          batchStore.setFileNamePattern(defaultConfig.fileNamePattern)
+        }
       }
     }),
     {

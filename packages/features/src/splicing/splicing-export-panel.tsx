@@ -50,25 +50,23 @@ interface SplicingExportPanelProps {
 }
 
 /**
- * Export accordion for Image Splicing, combining export mode/trim controls with concurrency and file renaming.
- * Renders as a collapsible AccordionCard with export settings inside.
+ * Export controls for Image Splicing, focusing on Splicing-specific settings.
+ * Designed to be embedded within the standardized PresetSelector.
  */
 export function SplicingExportPanel({
   targetFormat,
   concurrency,
-  fileNamePattern,
   exportMode,
   exportTrimBackground,
   availableExportModes,
   advisorFormatOptions,
   onConcurrencyChange,
-  onFileRenamingClick,
   onExportModeChange,
   onExportTrimBackgroundChange,
   performancePreferences,
   onOpenSettings,
   disabled = false
-}: SplicingExportPanelProps) {
+}: Omit<SplicingExportPanelProps, "fileNamePattern" | "onFileRenamingClick">) {
   const handleExportModeChange = (mode: SplicingExportMode) => {
     onExportModeChange(mode)
     // Reset trim when switching to single mode
@@ -102,65 +100,50 @@ export function SplicingExportPanel({
   )
 
   return (
-    <AccordionCard
-      icon={<Stamp size={16} />}
-      label="Export Settings"
-      sublabel="Layout, performance, and file naming"
-      colorTheme="amber"
-      defaultOpen={false}
-    >
-      <div className="space-y-3 pt-1">
-        <SelectField
-          label="Export mode"
-          value={exportMode}
-          options={modeOptions}
-          onChange={(v) => handleExportModeChange(v as SplicingExportMode)}
-        />
-        {exportMode !== "single" && (
-          <ConcurrencySelector
-            format={concurrencyFormat}
-            value={concurrency}
-            onChange={onConcurrencyChange}
-            maxValue={concurrencyLockState.maxAllowedConcurrency}
-            isLocked={concurrencyLockState.isLocked}
-            onUnlockInSettings={onOpenSettings}
-            headerChip={
-              <SmartConcurrencyAdvisorCard
-                advisor={advisor}
-                targetFormat={targetFormat}
-                selectedConcurrency={concurrency}
-                formatOptions={advisorFormatOptions}
-                performancePreferences={performancePreferences}
-                onApplyRecommended={onConcurrencyChange}
-                onOpenSettings={onOpenSettings}
-                disabled={disabled}
-              />
-            }
-            disabled={disabled}
-          />
-        )}
-        <CheckboxCard
-          icon={<Crop size={16} />}
-          title="Trim background"
-          subtitle={
-            exportMode === "per_col"
-              ? "Remove top and bottom padding"
-              : "Remove left and right padding"
+    <div className="space-y-3">
+      <SelectField
+        label="Export mode"
+        value={exportMode}
+        options={modeOptions}
+        onChange={(v) => handleExportModeChange(v as SplicingExportMode)}
+      />
+      {exportMode !== "single" && (
+        <ConcurrencySelector
+          format={concurrencyFormat}
+          value={concurrency}
+          onChange={onConcurrencyChange}
+          maxValue={concurrencyLockState.maxAllowedConcurrency}
+          isLocked={concurrencyLockState.isLocked}
+          onUnlockInSettings={onOpenSettings}
+          headerChip={
+            <SmartConcurrencyAdvisorCard
+              advisor={advisor}
+              targetFormat={targetFormat}
+              selectedConcurrency={concurrency}
+              formatOptions={advisorFormatOptions}
+              performancePreferences={performancePreferences}
+              onApplyRecommended={onConcurrencyChange}
+              onOpenSettings={onOpenSettings}
+              disabled={disabled}
+            />
           }
-          checked={exportTrimBackground}
-          onChange={onExportTrimBackgroundChange}
-          disabled={disabled}
-          theme="amber"
-        />
-        <SidebarCard
-          icon={<FileEdit size={14} />}
-          label="File renaming"
-          sublabel={fileNamePattern}
-          onClick={onFileRenamingClick}
           disabled={disabled}
         />
-      </div>
-    </AccordionCard>
+      )}
+      <CheckboxCard
+        icon={<Crop size={16} />}
+        title="Trim background"
+        subtitle={
+          exportMode === "per_col"
+            ? "Remove top and bottom padding"
+            : "Remove left and right padding"
+        }
+        checked={exportTrimBackground}
+        onChange={onExportTrimBackgroundChange}
+        disabled={disabled}
+        theme="amber"
+      />
+    </div>
   )
 }
 

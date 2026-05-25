@@ -7,13 +7,12 @@ import { SplitterOrderDialog } from "./splitter-order-dialog";
 import { SplitterPatternSequenceAccordion } from "./splitter-pattern-sequence-accordion";
 import { SplitOptionsAccordion } from "./split-options-accordion";
 import { getFormatAdvancedLabel } from "../processor/format-advanced-label";
-import { buildTargetFormatOptions } from "../processor/target-format-options";
 import { PresetSelector } from "../processor/preset-selector";
 import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
 import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
 import { useSplitterStore } from "@imify/stores/stores/splitter-store";
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store";
-import { useBatchStore, type SavedSetupPreset } from "@imify/stores/stores/batch-store";
+import { type SavedSetupPreset } from "@imify/stores/stores/batch-store";
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
@@ -45,7 +44,6 @@ export function SplitterSidebarPanel({
   const activePresetId = useSplitterStore((state) => state.activePresetId);
 
   const setSplitSettings = useSplitterStore((state) => state.setSplitSettings);
-  const setCodecOptions = useSplitterStore((state) => state.setCodecOptions);
   const setUiState = useSplitterStore((state) => state.setUiState);
   const addColorRule = useSplitterStore((state) => state.addColorRule);
   const updateColorRule = useSplitterStore((state) => state.updateColorRule);
@@ -62,16 +60,36 @@ export function SplitterSidebarPanel({
 
   const identifiedPresetId = `preset_image-splitter_${activeSplitterPresetId}`;
   const identifiedPresetName = `Image Splitter #${activeSplitterPresetId?.split("_").pop()}`;
-  const identifiedPresetColor = activeSplitterPreset?.highlightColor || "#f97316";
+  const identifiedPresetColor =
+    activeSplitterPreset?.highlightColor || "#f97316";
 
-  const splitterIdentifiedPreset: SavedSetupPreset = useMemo(() => ({
-    ...VIRTUAL_DEFAULT_PNG_PRESET,
-    id: identifiedPresetId,
-    name: identifiedPresetName,
-    highlightColor: identifiedPresetColor
-  }), [identifiedPresetId, identifiedPresetName, identifiedPresetColor])
+  const splitterIdentifiedPreset: SavedSetupPreset = useMemo(
+    () => ({
+      ...VIRTUAL_DEFAULT_PNG_PRESET,
+      id: identifiedPresetId,
+      name: identifiedPresetName,
+      highlightColor: identifiedPresetColor,
+      config: {
+        ...VIRTUAL_DEFAULT_PNG_PRESET.config,
+        targetFormat: exportSettings.targetFormat as any,
+        quality: exportSettings.quality,
+        formatOptions: exportSettings.codecOptions as any,
+        fileNamePattern: exportSettings.fileNamePattern,
+      },
+    }),
+    [
+      identifiedPresetId,
+      identifiedPresetName,
+      identifiedPresetColor,
+      exportSettings,
+    ],
+  );
 
-  useIdentifiedPresetLoader(splitterIdentifiedPreset, activePresetId, applyPreset);
+  useIdentifiedPresetLoader(
+    splitterIdentifiedPreset,
+    activePresetId,
+    applyPreset,
+  );
 
   const showColorRuleCard =
     splitSettings.mode === "advanced" &&

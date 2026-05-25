@@ -1,4 +1,5 @@
 import type { FormatCodecOptions } from "@imify/core"
+import type { SavedSetupPreset } from "@imify/stores/stores/batch-store"
 
 export type SplitterDirection = "vertical" | "horizontal" | "grid"
 export type SplitterMode = "basic" | "advanced"
@@ -112,6 +113,36 @@ export interface SplitterExportSettings {
 export interface SplitterPresetConfig {
   splitSettings: SplitterSplitSettings
   exportSettings: SplitterExportSettings
+}
+
+export interface SplitterUiState {
+  isSplitOptionsOpen: boolean
+  isPatternSequenceOpen: boolean
+  isCustomGuidesOpen: boolean
+  isColorMatchRulesOpen: boolean
+  isExportFormatQualityOpen: boolean
+  isFormatAdvancedOpen: boolean
+  isExportSettingsOpen: boolean
+}
+
+export interface SplitterStoreState {
+  splitSettings: SplitterSplitSettings
+  exportSettings: SplitterExportSettings
+  uiState: SplitterUiState
+  activePresetId: string | null
+
+  setSplitSettings: (patch: Partial<SplitterSplitSettings>) => void
+  setExportSettings: (patch: Partial<SplitterExportSettings>) => void
+  setUiState: (patch: Partial<SplitterUiState>) => void
+
+  setColorRules: (rules: SplitterColorRule[]) => void
+  addColorRule: () => void
+  updateColorRule: (ruleId: string, patch: Partial<SplitterColorRule>) => void
+  removeColorRule: (ruleId: string) => void
+
+  applyPresetConfig: (config: SplitterPresetConfig) => void
+  applyPreset: (preset: SavedSetupPreset) => void
+  resetToDefault: () => void
 }
 
 export interface SplitterSplitRect {

@@ -32,7 +32,6 @@ interface PresetSelectorProps {
   identifiedPreset?: SavedSetupPreset;
   formatFilter?: string[];
   activePresetId: string | null;
-  renderCustomSettings?: () => React.ReactNode;
   renderSidebarContent?: () => React.ReactNode;
   onSelect: (preset: SavedSetupPreset) => void;
   onReset?: () => void;
@@ -48,7 +47,6 @@ export function PresetSelector({
   identifiedPreset,
   formatFilter,
   activePresetId,
-  renderCustomSettings,
   renderSidebarContent,
   onSelect,
   onReset,
@@ -72,6 +70,7 @@ export function PresetSelector({
   const [customName, setCustomName] = useState("");
   const [customColor, setCustomColor] = useState("#0ea5e9");
 
+  // Initialize metadata only when the dialog opens
   useEffect(() => {
     if (isDialogOpen) {
       if (identifiedPreset) {
@@ -85,7 +84,7 @@ export function PresetSelector({
       }
       setActiveTab("select");
     }
-  }, [isDialogOpen, identifiedPreset]);
+  }, [isDialogOpen]); // Removed identifiedPreset dependency to prevent tab reset on sync
 
   const handleCreateAndApply = () => {
     const createdId = saveCurrentPreset({
@@ -291,7 +290,7 @@ export function PresetSelector({
                     : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
               >
-                Custom Create
+                Feature Custom
               </button>
             </div>
 
@@ -379,7 +378,7 @@ export function PresetSelector({
                 )}
               </>
             ) : (
-              /* Custom Create Tab View */
+              /* Feature Custom Tab View */
               <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 {/* Basic Info: Preset Name & Color */}
                 {!identifiedPreset && (
@@ -430,7 +429,6 @@ export function PresetSelector({
                     onOpenSettings={() => {}}
                     enableWideSidebarGrid={true}
                   />
-                  {renderCustomSettings && renderCustomSettings()}
                 </div>
               </div>
             )}
