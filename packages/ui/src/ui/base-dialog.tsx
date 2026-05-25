@@ -113,6 +113,9 @@ export function BaseDialog({
       ref={dialogRef}
       onCancel={handleCloseAttempt}
       onClick={handleBackdropClick}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
       className={cn(
         // m-auto centers it; adding w/max-w for mobile safety
         "m-auto p-0 rounded-xl border-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden",

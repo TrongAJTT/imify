@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ImagePlus, Layers, Palette, RotateCcw, SlidersHorizontal, X } from "lucide-react"
+import { ClipboardPaste, ImagePlus, Layers, Palette, RotateCcw, SlidersHorizontal, X } from "lucide-react"
 
 import type { FillingTemplate, ImageTransform, LayerFillState, VectorLayer } from "@imify/features/filling/types"
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types"
@@ -303,8 +303,12 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
     [selectedFillState?.imageUrl, selectedRuntimeItem, updateSelectedLayerState]
   )
 
-  const handleSelectImageClick = useCallback(async () => {
-    if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
+  const handleSelectImageClick = useCallback(() => {
+    triggerImageSelect()
+  }, [triggerImageSelect])
+
+  const handlePasteFromClipboardClick = useCallback(async () => {
+    if (!selectedRuntimeItem) {
       return
     }
 
@@ -325,9 +329,7 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
     } catch (err) {
       console.warn("Failed to paste image from clipboard on sidebar button click:", err)
     }
-
-    triggerImageSelect()
-  }, [selectedRuntimeItem, selectedFillState?.imageUrl, applyImageFileToSelectedRuntimeItem, triggerImageSelect])
+  }, [selectedRuntimeItem, applyImageFileToSelectedRuntimeItem])
 
   const handleImageUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -542,10 +544,28 @@ export function FillLayerCustomizationAccordion({ template }: FillLayerCustomiza
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
                       Drag and drop an image here, or select one manually.
                     </p>
-                    <Button type="button" variant="secondary" size="sm" onClick={handleSelectImageClick}>
-                      <ImagePlus size={14} />
-                      Select Image
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleSelectImageClick}
+                        className="w-full"
+                      >
+                        <ImagePlus size={14} />
+                        Select Image
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={handlePasteFromClipboardClick}
+                        className="w-full"
+                      >
+                        <ClipboardPaste size={14} />
+                        Paste from Clipboard
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <FillTransformControls

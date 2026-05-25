@@ -27,6 +27,7 @@ interface ExportFilledTemplateOptions {
   exportQuality: number
   formatOptions?: FillingExportConfig["formatOptions"]
   fileNamePattern?: string
+  input?: string
   onProgress?: (payload: { percent: number; message: string }) => void
 }
 
@@ -102,7 +103,7 @@ async function exportFilledTemplateInline(payload: FillExportWorkerPayload, onPr
 }
 
 export async function exportFilledTemplate(options: ExportFilledTemplateOptions): Promise<void> {
-  const { template, layerFillStates, canvasFillState, runtimeItems, groupRuntimeTransforms, exportFormat, exportQuality, formatOptions, fileNamePattern, onProgress } = options
+  const { template, layerFillStates, canvasFillState, runtimeItems, groupRuntimeTransforms, exportFormat, exportQuality, formatOptions, fileNamePattern, input, onProgress } = options
   const { targetFormat, extension } = resolveRasterTargetFormat(exportFormat)
   const workerPayload: FillExportWorkerPayload = { template, layerFillStates, canvasFillState, runtimeItems, groupRuntimeTransforms, targetFormat, quality: exportQuality, formatOptions }
 
@@ -127,7 +128,8 @@ export async function exportFilledTemplate(options: ExportFilledTemplateOptions)
     index: 1,
     totalFiles: 1,
     dimensions: { width: template.canvasWidth, height: template.canvasHeight },
-    now: new Date()
+    now: new Date(),
+    input
   })
 
   downloadBlob(outputBlob, finalFilename)
