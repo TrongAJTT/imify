@@ -73,7 +73,7 @@ function safeRevokeObjectUrl(value: string | null | undefined) {
 }
 
 function resolveToastTargetFormat(
-  exportFormat: ReturnType<typeof useFillingStore.getState>["exportFormat"]
+  exportFormat: ReturnType<typeof useFillingStore.getState>["exportSettings"]["targetFormat"]
 ): ConversionProgressPayload["targetFormat"] {
   if (exportFormat === "psd") {
     return "png"
@@ -116,8 +116,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId)
   const setCanvasFillState = useFillingStore((s) => s.setCanvasFillState)
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState)
-  const exportFormat = useFillingStore((s) => s.exportFormat)
-  const exportQuality = useFillingStore((s) => s.exportQuality)
+  const exportSettings = useFillingStore((s) => s.exportSettings)
+  const { targetFormat: exportFormat, quality: exportQuality } = exportSettings
   const { getShortcutLabel } = useShortcutPreferences()
 
   const [loadedImages, setLoadedImages] = useState<Map<string, HTMLImageElement>>(new Map())
@@ -1183,6 +1183,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         groupRuntimeTransforms,
         exportFormat,
         exportQuality,
+        fileNamePattern: exportSettings.fileNamePattern,
         formatOptions: buildActiveFillingFormatOptions(useFillingStore.getState()),
         onProgress: ({ percent, message }) => {
           pushExportToast({

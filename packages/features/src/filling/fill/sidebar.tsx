@@ -15,7 +15,6 @@ import { useFillUiStore } from "@imify/stores/stores/fill-ui-store"
 import { FillLayerCard } from "@imify/features/filling/fill/layer-card"
 import { FillLayerCustomizationAccordion } from "@imify/features/filling/fill/layer-customization-accordion"
 import { FillCanvasAccordion } from "@imify/features/filling/fill/canvas-accordion"
-import { FillingExportAccordion } from "@imify/features/filling/fill/export-accordion"
 import { SortableFillLayerItem } from "@imify/features/filling/sortable-fill-layer-item"
 import { ResizableAccordionCard } from "@imify/ui/ui/resizable-accordion-card"
 import { ImagePlus } from "lucide-react"
@@ -28,11 +27,17 @@ import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem
 } from "@imify/ui/ui/workspace-config-sidebar-panel"
+import { PresetSelector } from "@imify/features/processor/preset-selector"
+import { useIdentifiedPresetLoader } from "@imify/features/shared/use-identified-preset-loader"
+import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
+import { useBatchStore, type SavedSetupPreset } from "@imify/stores/stores/batch-store"
 
 interface FillSidebarProps {
   template: FillingTemplate
   enableWideSidebarGrid?: boolean
 }
+
+const FILLING_TARGET_FORMATS = ["png", "webp", "avif", "jxl", "jpg", "bmp", "tiff"]
 
 export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSidebarProps) {
   const layerFillStates = useFillingStore((s) => s.layerFillStates)
@@ -42,6 +47,56 @@ export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSid
   const hiddenLayerIds = useFillUiStore((s) => s.hiddenLayerIds)
   const resetFillSessionState = useFillUiStore((s) => s.resetFillSessionState)
   const [layersAccordionHeight, setLayersAccordionHeight] = useState(320)
+
+  const exportSettings = useFillingStore((s) => s.exportSettings)
+  const activePresetId = useFillingStore((s) => s.activePresetId)
+  const applyPreset = useFillingStore((s) => s.applyPreset)
+  const resetToDefault = useFillingStore((s) => s.resetToDefault)
+
+  const identifiedPresetId = `preset_filling_${template.id}`
+  const identifiedPresetName = `Filling #${template.name}`
+  const identifiedPresetColor = "#06b6d4"
+
+  const fillingIdentifiedPreset: SavedSetupPreset = useMemo(() => ({
+    ...VIRTUAL_DEFAULT_PNG_PRESET,
+    id: identifiedPresetId,
+    name: identifiedPresetName,
+    highlightColor: identifiedPresetColor,
+    config: {
+      ...VIRTUAL_DEFAULT_PNG_PRESET.config,
+      targetFormat: exportSettings.targetFormat as any,
+      quality: exportSettings.quality,
+      formatOptions: exportSettings.codecOptions as any,
+      fileNamePattern: exportSettings.fileNamePattern
+    }
+  }), [identifiedPresetId, identifiedPresetName, identifiedPresetColor, exportSettings])
+
+  useIdentifiedPresetLoader(fillingIdentifiedPreset, activePresetId, applyPreset)
+
+  const batchTargetFormat = useBatchStore((s) => s.targetFormat)
+  const batchQuality = useBatchStore((s) => s.quality)
+  const batchFileNamePattern = useBatchStore((s) => s.fileNamePattern)
+  const batchFormatOptions = useBatchStore((s) => s.formatOptions)
+
+  // Sync global batch store changes to local store when in "Custom" mode (activePresetId is null)
+  useEffect(() => {
+    if (activePresetId === null) {
+      applyPreset({
+        id: identifiedPresetId,
+        name: identifiedPresetName,
+        highlightColor: identifiedPresetColor,
+        config: {
+          ...VIRTUAL_DEFAULT_PNG_PRESET.config,
+          targetFormat: batchTargetFormat,
+          quality: batchQuality,
+          fileNamePattern: batchFileNamePattern,
+          formatOptions: batchFormatOptions
+        },
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      })
+    }
+  }, [activePresetId, batchTargetFormat, batchQuality, batchFileNamePattern, batchFormatOptions, identifiedPresetId, identifiedPresetName, identifiedPresetColor, applyPreset])
 
   const activeTemplate = useMemo(() => {
     if (sessionTemplate && sessionTemplate.id === template.id) return sessionTemplate
@@ -136,8 +191,24 @@ export function FillSidebar({ template, enableWideSidebarGrid = false }: FillSid
       content: <FillLayerCustomizationAccordion template={activeTemplate} />
     },
     { id: "canvas", label: "Canvas", content: <FillCanvasAccordion /> },
-    { id: "export", label: "Export", content: <FillingExportAccordion /> }
+    { 
+      id: "output-settings", 
+      label: "", 
+      content: (
+        <PresetSelector 
+          label="Output Settings"
+          theme="amber"
+          identifiedPreset={fillingIdentifiedPreset}
+          formatFilter={FILLING_TARGET_FORMATS}
+          activePresetId={activePresetId}
+          onSelect={applyPreset}
+          onReset={resetToDefault}
+          tooltipContent="Select an export preset for Image Filling."
+        />
+      )
+    }
   ]
 
   return <WorkspaceConfigSidebarPanel items={sidebarItems} twoColumn={enableWideSidebarGrid} />
 }
+

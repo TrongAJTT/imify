@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo } from "react"
-import { Box, ImagePlus, Layers, Palette, Settings2 } from "lucide-react"
+import { useEffect, useMemo } from "react"
+import { Box, Layers, Palette } from "lucide-react"
 import { AccordionCard } from "@imify/ui/ui/accordion-card"
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
@@ -14,9 +14,15 @@ import { GridDesignSidebar } from "@imify/features/filling/grid-designer/sidebar
 import { ManualEditorSidebar } from "@imify/features/filling/edit/sidebar"
 import { FillSidebar } from "@imify/features/filling/fill/sidebar"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
-import type { CanvasBackgroundType, FillingTemplate, LayerFillState, LayerGroup, VectorLayer } from "@imify/features/filling/types"
+import type { CanvasBackgroundType, FillingTemplate, LayerGroup, VectorLayer } from "@imify/features/filling/types"
+import { PresetSelector } from "@imify/features/processor/preset-selector"
+import { useIdentifiedPresetLoader } from "@imify/features/shared/use-identified-preset-loader"
+import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
+import { useBatchStore, type SavedSetupPreset } from "@imify/stores/stores/batch-store"
 
 type FillingSidebarMode = "select" | "fill" | "edit" | "symmetric-generate" | "grid-design"
+
+const FILLING_TARGET_FORMATS = ["png", "webp", "avif", "jxl", "jpg", "bmp", "tiff"]
 
 interface ManualEditorSidebarBindings {
   layers: VectorLayer[]
@@ -75,46 +81,57 @@ export function FillingWorkflowSidebar({
   enableWideSidebarGrid?: boolean
 }) {
   const canvasFillState = useFillingStore((state) => state.canvasFillState)
-  const exportFormat = useFillingStore((state) => state.exportFormat)
-  const exportQuality = useFillingStore((state) => state.exportQuality)
   const setCanvasFillState = useFillingStore((state) => state.setCanvasFillState)
-  const updateLayerFillState = useFillingStore((state) => state.updateLayerFillState)
-  const setExportFormat = useFillingStore((state) => state.setExportFormat)
-  const setExportQuality = useFillingStore((state) => state.setExportQuality)
-  const setExportJxlEffort = useFillingStore((state) => state.setExportJxlEffort)
-  const setExportJxlLossless = useFillingStore((state) => state.setExportJxlLossless)
-  const setExportJxlProgressive = useFillingStore((state) => state.setExportJxlProgressive)
-  const setExportAvifSpeed = useFillingStore((state) => state.setExportAvifSpeed)
-  const setExportAvifLossless = useFillingStore((state) => state.setExportAvifLossless)
-  const setExportAvifQualityAlpha = useFillingStore((state) => state.setExportAvifQualityAlpha)
-  const setExportWebpLossless = useFillingStore((state) => state.setExportWebpLossless)
-  const setExportWebpEffort = useFillingStore((state) => state.setExportWebpEffort)
-  const setExportWebpNearLossless = useFillingStore((state) => state.setExportWebpNearLossless)
-  const setExportPngTinyMode = useFillingStore((state) => state.setExportPngTinyMode)
-  const setExportPngDitheringLevel = useFillingStore((state) => state.setExportPngDitheringLevel)
-  const setExportPngOxiPngCompression = useFillingStore((state) => state.setExportPngOxiPngCompression)
-  const setExportMozJpegProgressive = useFillingStore((state) => state.setExportMozJpegProgressive)
-  const setExportMozJpegChromaSubsampling = useFillingStore((state) => state.setExportMozJpegChromaSubsampling)
-  const setExportBmpColorDepth = useFillingStore((state) => state.setExportBmpColorDepth)
-  const setExportBmpDitheringLevel = useFillingStore((state) => state.setExportBmpDitheringLevel)
-  const setExportTiffColorMode = useFillingStore((state) => state.setExportTiffColorMode)
-  const exportMozJpegProgressive = useFillingStore((state) => state.exportMozJpegProgressive)
-  const exportMozJpegChromaSubsampling = useFillingStore((state) => state.exportMozJpegChromaSubsampling)
-  const exportPngTinyMode = useFillingStore((state) => state.exportPngTinyMode)
-  const exportPngOxiPngCompression = useFillingStore((state) => state.exportPngOxiPngCompression)
-  const exportPngDitheringLevel = useFillingStore((state) => state.exportPngDitheringLevel)
-  const exportWebpLossless = useFillingStore((state) => state.exportWebpLossless)
-  const exportWebpNearLossless = useFillingStore((state) => state.exportWebpNearLossless)
-  const exportWebpEffort = useFillingStore((state) => state.exportWebpEffort)
-  const exportAvifSpeed = useFillingStore((state) => state.exportAvifSpeed)
-  const exportAvifQualityAlpha = useFillingStore((state) => state.exportAvifQualityAlpha)
-  const exportAvifLossless = useFillingStore((state) => state.exportAvifLossless)
-  const exportJxlEffort = useFillingStore((state) => state.exportJxlEffort)
-  const exportJxlLossless = useFillingStore((state) => state.exportJxlLossless)
-  const exportJxlProgressive = useFillingStore((state) => state.exportJxlProgressive)
-  const exportBmpColorDepth = useFillingStore((state) => state.exportBmpColorDepth)
-  const exportBmpDitheringLevel = useFillingStore((state) => state.exportBmpDitheringLevel)
-  const exportTiffColorMode = useFillingStore((state) => state.exportTiffColorMode)
+  
+  const exportSettings = useFillingStore((state) => state.exportSettings)
+  const activePresetId = useFillingStore((state) => state.activePresetId)
+  const applyPreset = useFillingStore((state) => state.applyPreset)
+  const resetToDefault = useFillingStore((state) => state.resetToDefault)
+
+  const identifiedPresetId = `preset_filling_${template.id}`
+  const identifiedPresetName = `Filling #${template.name}`
+  const identifiedPresetColor = "#06b6d4"
+
+  const fillingIdentifiedPreset: SavedSetupPreset = useMemo(() => ({
+    ...VIRTUAL_DEFAULT_PNG_PRESET,
+    id: identifiedPresetId,
+    name: identifiedPresetName,
+    highlightColor: identifiedPresetColor,
+    config: {
+      ...VIRTUAL_DEFAULT_PNG_PRESET.config,
+      targetFormat: exportSettings.targetFormat as any,
+      quality: exportSettings.quality,
+      formatOptions: exportSettings.codecOptions as any,
+      fileNamePattern: exportSettings.fileNamePattern
+    }
+  }), [identifiedPresetId, identifiedPresetName, identifiedPresetColor, exportSettings])
+
+  useIdentifiedPresetLoader(fillingIdentifiedPreset, activePresetId, applyPreset)
+
+  const batchTargetFormat = useBatchStore((s) => s.targetFormat)
+  const batchQuality = useBatchStore((s) => s.quality)
+  const batchFileNamePattern = useBatchStore((s) => s.fileNamePattern)
+  const batchFormatOptions = useBatchStore((s) => s.formatOptions)
+
+  // Sync global batch store changes to local store when in "Custom" mode (activePresetId is null)
+  useEffect(() => {
+    if (activePresetId === null) {
+      applyPreset({
+        id: identifiedPresetId,
+        name: identifiedPresetName,
+        highlightColor: identifiedPresetColor,
+        config: {
+          ...VIRTUAL_DEFAULT_PNG_PRESET.config,
+          targetFormat: batchTargetFormat,
+          quality: batchQuality,
+          fileNamePattern: batchFileNamePattern,
+          formatOptions: batchFormatOptions
+        },
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      })
+    }
+  }, [activePresetId, batchTargetFormat, batchQuality, batchFileNamePattern, batchFormatOptions, identifiedPresetId, identifiedPresetName, identifiedPresetColor, applyPreset])
 
   const modeLabel =
     mode === "fill"
@@ -243,127 +260,16 @@ export function FillingWorkflowSidebar({
         </div>
       </AccordionCard>
 
-      <AccordionCard icon={<Settings2 size={16} />} label="Export" sublabel={exportFormat.toUpperCase()} colorTheme="amber">
-        <div className="space-y-2">
-          <SelectInput
-            label="Format"
-            value={exportFormat}
-            options={FORMAT_OPTIONS}
-            onChange={(value) => setExportFormat(value as typeof exportFormat)}
-          />
-          <NumberInput label="Quality" value={exportQuality} onChangeValue={setExportQuality} min={1} max={100} />
-
-          {(exportFormat === "jpg" || exportFormat === "mozjpeg") && (
-            <>
-              <CheckboxCard
-                icon={<ImagePlus size={14} />}
-                title="Progressive"
-                checked={exportMozJpegProgressive}
-                onChange={setExportMozJpegProgressive}
-              />
-              <SelectInput
-                label="Chroma Subsampling"
-                value={exportMozJpegChromaSubsampling}
-                options={[
-                  { value: "4:4:4", label: "4:4:4" },
-                  { value: "4:2:2", label: "4:2:2" },
-                  { value: "4:2:0", label: "4:2:0" },
-                ]}
-                onChange={setExportMozJpegChromaSubsampling}
-              />
-            </>
-          )}
-
-          {exportFormat === "png" && (
-            <>
-              <CheckboxCard title="Tiny Mode" checked={exportPngTinyMode} onChange={setExportPngTinyMode} />
-              <CheckboxCard
-                title="OxiPNG Compression"
-                checked={exportPngOxiPngCompression}
-                onChange={setExportPngOxiPngCompression}
-              />
-              <NumberInput
-                label="Dithering Level"
-                value={exportPngDitheringLevel}
-                onChangeValue={setExportPngDitheringLevel}
-                min={0}
-                max={100}
-              />
-            </>
-          )}
-
-          {exportFormat === "webp" && (
-            <>
-              <CheckboxCard title="Lossless" checked={exportWebpLossless} onChange={setExportWebpLossless} />
-              <NumberInput
-                label="Near Lossless"
-                value={exportWebpNearLossless}
-                onChangeValue={setExportWebpNearLossless}
-                min={0}
-                max={100}
-              />
-              <NumberInput label="Effort" value={exportWebpEffort} onChangeValue={setExportWebpEffort} min={0} max={6} />
-            </>
-          )}
-
-          {exportFormat === "avif" && (
-            <>
-              <NumberInput label="Speed" value={exportAvifSpeed} onChangeValue={setExportAvifSpeed} min={0} max={10} />
-              <NumberInput
-                label="Alpha Quality"
-                value={exportAvifQualityAlpha}
-                onChangeValue={setExportAvifQualityAlpha}
-                min={1}
-                max={100}
-              />
-              <CheckboxCard title="Lossless" checked={exportAvifLossless} onChange={setExportAvifLossless} />
-            </>
-          )}
-
-          {exportFormat === "jxl" && (
-            <>
-              <NumberInput label="Effort" value={exportJxlEffort} onChangeValue={setExportJxlEffort} min={1} max={9} />
-              <CheckboxCard title="Lossless" checked={exportJxlLossless} onChange={setExportJxlLossless} />
-              <CheckboxCard title="Progressive" checked={exportJxlProgressive} onChange={setExportJxlProgressive} />
-            </>
-          )}
-
-          {exportFormat === "bmp" && (
-            <>
-              <SelectInput
-                label="Color Depth"
-                value={String(exportBmpColorDepth)}
-                options={[
-                  { value: "1", label: "1-bit" },
-                  { value: "8", label: "8-bit" },
-                  { value: "24", label: "24-bit" },
-                  { value: "32", label: "32-bit" },
-                ]}
-                onChange={(value) => setExportBmpColorDepth(Number(value) as 1 | 8 | 24 | 32)}
-              />
-              <NumberInput
-                label="Dithering Level"
-                value={exportBmpDitheringLevel}
-                onChangeValue={setExportBmpDitheringLevel}
-                min={0}
-                max={100}
-              />
-            </>
-          )}
-
-          {exportFormat === "tiff" && (
-            <SelectInput
-              label="Color Mode"
-              value={exportTiffColorMode}
-              options={[
-                { value: "color", label: "Color" },
-                { value: "grayscale", label: "Grayscale" },
-              ]}
-              onChange={(value) => setExportTiffColorMode(value as "color" | "grayscale")}
-            />
-          )}
-        </div>
-      </AccordionCard>
+      <PresetSelector
+        label="Output Settings"
+        theme="amber"
+        identifiedPreset={fillingIdentifiedPreset}
+        formatFilter={FILLING_TARGET_FORMATS}
+        activePresetId={activePresetId}
+        onSelect={applyPreset}
+        onReset={resetToDefault}
+        tooltipContent="Select an export preset for Image Filling."
+      />
     </div>
   )
 }

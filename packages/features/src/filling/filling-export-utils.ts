@@ -15,6 +15,7 @@ import { CANVAS_MIME_BY_FORMAT, encodeCanvasFormatFromImageData, type RasterPipe
 import { encodeImageDataToTiff } from "@imify/engine/converter/tiff-encoder"
 import { encodeWebp } from "@imify/engine/converter/webp-encoder"
 import type { FillExportWorkerPayload, FillExportWorkerRequestMessage, FillExportWorkerResponseMessage } from "@imify/features/filling/filling-export-worker-protocol"
+import { buildSmartOutputFileName } from "@imify/core/file-name-pattern"
 
 interface ExportFilledTemplateOptions {
   template: FillingTemplate
@@ -25,6 +26,7 @@ interface ExportFilledTemplateOptions {
   exportFormat: FillingExportFormat
   exportQuality: number
   formatOptions?: FillingExportConfig["formatOptions"]
+  fileNamePattern?: string
   onProgress?: (payload: { percent: number; message: string }) => void
 }
 
@@ -100,7 +102,7 @@ async function exportFilledTemplateInline(payload: FillExportWorkerPayload, onPr
 }
 
 export async function exportFilledTemplate(options: ExportFilledTemplateOptions): Promise<void> {
-  const { template, layerFillStates, canvasFillState, runtimeItems, groupRuntimeTransforms, exportFormat, exportQuality, formatOptions, onProgress } = options
+  const { template, layerFillStates, canvasFillState, runtimeItems, groupRuntimeTransforms, exportFormat, exportQuality, formatOptions, fileNamePattern, onProgress } = options
   const { targetFormat, extension } = resolveRasterTargetFormat(exportFormat)
   const workerPayload: FillExportWorkerPayload = { template, layerFillStates, canvasFillState, runtimeItems, groupRuntimeTransforms, targetFormat, quality: exportQuality, formatOptions }
 
@@ -117,7 +119,18 @@ export async function exportFilledTemplate(options: ExportFilledTemplateOptions)
   }
 
   onProgress?.({ percent: 97, message: "Starting download..." })
-  downloadBlob(outputBlob, `${template.name}.${extension}`)
+  
+  const finalFilename = buildSmartOutputFileName({
+    pattern: fileNamePattern || "[OriginalName]",
+    originalFileName: template.name,
+    outputExtension: extension,
+    index: 1,
+    totalFiles: 1,
+    dimensions: { width: template.canvasWidth, height: template.canvasHeight },
+    now: new Date()
+  })
+
+  downloadBlob(outputBlob, finalFilename)
   onProgress?.({ percent: 100, message: "Download started" })
   await templateStorage.incrementUsage(template.id)
 }

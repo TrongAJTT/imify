@@ -27,7 +27,8 @@ export function ProcessorPresetSelectView({
   const isFeaturePreset = (id: string) => {
     return id.startsWith("preset_background-remover") || 
            id.startsWith("preset_splicing_") || 
-           id.startsWith("preset_image-splitter_")
+           id.startsWith("preset_image-splitter_") ||
+           id.startsWith("preset_filling_")
   }
   
   const contextLabel = context === "single" ? "Single" : "Batch"
