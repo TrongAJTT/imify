@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { Button, ToastContainer, useRenameInputPrompt } from "@imify/ui"
 import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast"
 import { useImageUpscalerStore } from "@imify/stores"
-import { IMAGE_UPSCALER_MODELS } from "./models"
+import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from "./models"
 import { ModelDownloadDialog } from "./model-download-dialog"
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace"
 import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar"
@@ -84,6 +84,7 @@ export function ImageUpscalerWorkspace({
       if (!selectedModel) return
 
       const variant = selectedModel.variants.find(v => v.id === variantId) ?? selectedModel.variants[0]
+      const repoId = resolveHuggingFaceRepoId(modelId).toLowerCase()
 
       try {
         const cache = await caches.open("transformers-cache")
@@ -91,7 +92,7 @@ export function ImageUpscalerWorkspace({
 
         const isCached = keys.some(request => {
           const url = request.url.toLowerCase()
-          const modelMatch = url.includes(modelId.toLowerCase())
+          const modelMatch = url.includes(repoId)
           const isWeightFile = url.endsWith('.onnx') || url.includes('.onnx?')
 
           if (!modelMatch || !isWeightFile) return false

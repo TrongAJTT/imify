@@ -233,14 +233,7 @@ export function ImageUpscalerSidebar({
       id: "export-presets",
       label: "",
       content: (
-        <AccordionCard
-          label="Export Settings"
-          icon={<Settings2 size={16} />}
-          defaultOpen={false}
-          colorTheme="purple"
-          childrenClassName="p-3"
-        >
-          <PresetSelector
+        <PresetSelector
             label="Output Preset"
             theme="purple"
             identifiedPreset={UPSCALER_PRESET}
@@ -250,7 +243,6 @@ export function ImageUpscalerSidebar({
             onReset={resetToDefault}
             tooltipContent="Select an export preset from the Single Processor."
           />
-        </AccordionCard>
       ),
     },
   ];

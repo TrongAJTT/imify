@@ -266,7 +266,9 @@ export function PresetInfoShowcasePanel({
           <Lightbulb size={13} />
           Tip of the day
         </div>
-        <div className="mt-1 text-xs leading-relaxed text-amber-900 dark:text-amber-100">{tipOfTheDay}</div>
+        <div className="mt-1 text-xs leading-relaxed text-amber-900 dark:text-amber-100">
+          {renderFormattedText(tipOfTheDay)}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-1.5">

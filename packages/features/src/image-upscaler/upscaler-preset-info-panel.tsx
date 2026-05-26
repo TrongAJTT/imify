@@ -1,13 +1,14 @@
 import React from "react"
-import { FEATURE_MEDIA_ASSETS } from "../shared/media-assets"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel"
+import { FEATURES_INFO_COMMON_FAQS } from "../shared/features-info-common-faqs"
 
 export const IMAGE_UPSCALER_PANEL_CONTENT = {
   title: "AI Image Upscaler",
   subtitle: "Magnify and restore your images locally in your web browser using state-of-the-art super-resolution neural networks.",
-  previewSrc: FEATURE_MEDIA_ASSETS.processor.previewSingleWebp,
+  previewSrc: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.upscaler.previewWebp),
   previewSources: [
-    FEATURE_MEDIA_ASSETS.processor.previewSingleWebp
+    resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.upscaler.previewWebp)
   ],
   previewAlt: "Image Upscaling Showcase",
   previewAspectRatio: "3 / 2",
@@ -18,10 +19,10 @@ export const IMAGE_UPSCALER_PANEL_CONTENT = {
     "Safe Mode Tiling"
   ],
   tips: [
-    "Use **Safe Mode (Tiling)** to upscale large images without running out of memory or crashing the tab.",
-    "For illustration or cartoon graphics, select **Real-ESRGAN Anime** for best edge definition.",
-    "For real-world photos or human portraits, select **SwinIR Light** for natural texture restoration.",
-    "Select the **Quantized** variant if your machine has less than 8GB of RAM.",
+    "The selected model now locks the scale factor automatically, so choose the 2x or 4x model first.",
+    "Use **Safe Mode (Tiling)** for large images to keep memory usage stable.",
+    "Raise **Denoise Strength** only when you need stronger restoration; low values preserve more detail.",
+    "Choose the **Quantized** variant if your machine has less than 8GB of RAM or you want faster model loading.",
     "Enable 'Auto-unload Model' to free up VRAM/RAM immediately after processing."
   ],
   faqs: [
@@ -39,8 +40,9 @@ export const IMAGE_UPSCALER_PANEL_CONTENT = {
     },
     {
       question: "What is the maximum supported scale?",
-      answer: "We offer 2x and 4x scales. Upscaling 4x on an already large image creates a massive file, so we recommend keeping outputs under 4096x4096px to avoid browser canvas limits."
-    }
+      answer: "Each model has its own fixed scale factor. Upscaling 4x on an already large image creates a massive file, so we recommend keeping outputs under 4096x4096px to avoid browser canvas limits."
+    },
+    ...FEATURES_INFO_COMMON_FAQS
   ]
 }
 

@@ -57,12 +57,17 @@ export function AssetAIModelsTab() {
       const cachedIds = new Set<string>();
 
       for (const model of allModels) {
+        const isUpscaler = IMAGE_UPSCALER_MODELS.some((m) => m.id === model.id)
+        const repoId = isUpscaler
+          ? resolveHuggingFaceRepoId(model.id).toLowerCase()
+          : model.id.toLowerCase()
+
         for (const variant of model.variants) {
           // A variant is considered cached ONLY if its primary ONNX weights file exists.
           // This prevents false positives from shared metadata files like config.json.
           const isCached = keys.some((request) => {
             const url = request.url.toLowerCase();
-            if (!url.includes(model.id.toLowerCase())) return false;
+            if (!url.includes(repoId)) return false;
 
             // We only care about the weights files for status checking
             if (!url.endsWith(".onnx")) return false;
@@ -102,9 +107,14 @@ export function AssetAIModelsTab() {
       const cache = await caches.open("transformers-cache");
       const keys = await cache.keys();
 
+      const isUpscaler = IMAGE_UPSCALER_MODELS.some((m) => m.id === model.id)
+      const repoId = isUpscaler
+        ? resolveHuggingFaceRepoId(model.id).toLowerCase()
+        : model.id.toLowerCase()
+
       for (const request of keys) {
         const url = request.url.toLowerCase();
-        if (!url.includes(model.id.toLowerCase())) continue;
+        if (!url.includes(repoId)) continue;
 
         let shouldDelete = false;
         if (variant.quantized) {
