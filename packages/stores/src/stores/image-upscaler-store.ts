@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { IMAGE_UPSCALER_MODELS } from "@imify/features/image-upscaler/models"
+import { IMAGE_UPSCALER_MODELS } from "@imify/features/upscaler/models"
 import type { FormatCodecOptions } from "@imify/core/types"
 import type { SavedSetupPreset } from "./batch-store"
 import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"

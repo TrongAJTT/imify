@@ -3,11 +3,11 @@ import { Maximize2 } from "lucide-react"
 import { EmptyDropCard } from "@imify/ui"
 import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-utils"
 
-interface ImageUpscalerDropZoneProps {
+interface UpscalerDropZoneProps {
   onLoadFile: (file: File) => void
 }
 
-export function ImageUpscalerDropZone({ onLoadFile }: ImageUpscalerDropZoneProps) {
+export function UpscalerDropZone({ onLoadFile }: UpscalerDropZoneProps) {
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return
     const file = files[0]

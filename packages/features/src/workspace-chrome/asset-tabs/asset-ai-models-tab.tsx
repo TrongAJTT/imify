@@ -16,7 +16,7 @@ import {
   BACKGROUND_REMOVAL_MODELS,
   type AIModelMetadata,
 } from "../../background-removal/models";
-import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from "../../image-upscaler/models";
+import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from "../../upscaler/models";
 import { ModelDownloadDialog } from "../../background-removal/model-download-dialog";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
@@ -40,8 +40,8 @@ export function AssetAIModelsTab() {
       models: BACKGROUND_REMOVAL_MODELS,
     },
     {
-      id: "image-upscaler",
-      label: "Image Upscaler",
+      id: "upscaler",
+      label: "Upscaler",
       icon: <Sparkles size={16} className="text-indigo-500" />,
       models: IMAGE_UPSCALER_MODELS,
     }
@@ -160,7 +160,7 @@ export function AssetAIModelsTab() {
     try {
       const isUpscaler = IMAGE_UPSCALER_MODELS.some((m) => m.id === model.id);
       const workerUrl = isUpscaler
-        ? new URL("../../image-upscaler/image-upscaler.worker.ts", import.meta.url)
+        ? new URL("../../upscaler/image-upscaler.worker.ts", import.meta.url)
         : new URL("../../background-removal/background-removal.worker.ts", import.meta.url);
 
       const worker = new Worker(workerUrl, { type: "module" });

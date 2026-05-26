@@ -21,13 +21,13 @@ export interface SharedImageUpscalerRenderProps {
   modelId: string
 }
 
-interface SharedImageUpscalerPageProps {
+interface SharedUpscalerPageProps {
   renderWorkspace: (props: SharedImageUpscalerRenderProps) => ReactNode
 }
 
-export function SharedImageUpscalerPage({
+export function SharedUpscalerPage({
   renderWorkspace
-}: SharedImageUpscalerPageProps) {
+}: SharedUpscalerPageProps) {
   const setHasImage = useImageUpscalerStore((s) => s.setHasImage)
   const modelId = useImageUpscalerStore((s) => s.modelId)
   const variantId = useImageUpscalerStore((s) => s.variantId)

@@ -27,27 +27,27 @@ import {
 import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
 import { ModelVariantDialog } from "./model-variant-dialog";
 
-import { IMAGE_UPSCALER_PANEL_CONTENT } from "./upscaler-preset-info-panel";
+import { UPSCALER_PANEL_CONTENT } from "./upscaler-preset-info-panel";
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
 
-export const IMAGE_UPSCALER_SIDEBAR_PANEL_ID = "image-upscaler-settings";
+export const UPSCALER_SIDEBAR_PANEL_ID = "upscaler-settings";
 
 const UPSCALER_PRESET: SavedSetupPreset = {
   ...VIRTUAL_DEFAULT_PNG_PRESET,
-  id: "preset_image-upscaler",
-  name: "Image Upscaler",
+  id: "preset_upscaler",
+  name: "Upscaler",
   highlightColor: "#a855f7", // Purple color theme
 };
 
-interface ImageUpscalerSidebarProps {
+interface UpscalerSidebarProps {
   enableWideSidebarGrid?: boolean;
   autoWideSidebarGridMinWidthPx?: number | null;
 }
 
-export function ImageUpscalerSidebar({
+export function UpscalerSidebar({
   enableWideSidebarGrid,
   autoWideSidebarGridMinWidthPx,
-}: ImageUpscalerSidebarProps) {
+}: UpscalerSidebarProps) {
   const {
     modelId,
     setModelId,
@@ -88,7 +88,7 @@ export function ImageUpscalerSidebar({
 
   // Initialize smart default for unloadModelAfterProcess based on hardware
   useEffect(() => {
-    const storageKey = "imify-image-upscaler-settings";
+    const storageKey = "imify-upscaler-settings";
     const saved = localStorage.getItem(storageKey);
     if (!saved) {
       const ram = (navigator as any).deviceMemory;
@@ -104,7 +104,7 @@ export function ImageUpscalerSidebar({
       <SidebarPanel title="ABOUT THIS TOOL">
         <div className="px-1 py-1">
           <PresetInfoShowcasePanel
-            {...IMAGE_UPSCALER_PANEL_CONTENT}
+            {...UPSCALER_PANEL_CONTENT}
             padding={0}
           />
         </div>
@@ -268,12 +268,12 @@ export function ImageUpscalerSidebar({
   );
 }
 
-export function ImageUpscalerSidebarShell({
+export function UpscalerSidebarShell({
   enableWideSidebarGrid,
   autoWideSidebarGridMinWidthPx = 1024,
-}: ImageUpscalerSidebarProps) {
+}: UpscalerSidebarProps) {
   return (
-    <ImageUpscalerSidebar
+    <UpscalerSidebar
       enableWideSidebarGrid={enableWideSidebarGrid}
       autoWideSidebarGridMinWidthPx={autoWideSidebarGridMinWidthPx}
     />

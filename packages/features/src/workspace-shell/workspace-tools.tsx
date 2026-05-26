@@ -24,7 +24,7 @@ export const WORKSPACE_PRIMARY_TOOL_IDS = [
   "diffchecker",
   "inspector",
   "background-remover",
-  "image-upscaler",
+  "upscaler",
   "context-menu"
 ] as const
 
@@ -177,12 +177,12 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
     showOnExtSidebar: true
   },
   {
-    id: "image-upscaler",
-    label: "Image Upscaler",
-    href: "/image-upscaler",
+    id: "upscaler",
+    label: "Upscaler",
+    href: "/upscaler",
     categoryId: "image-processing",
     iconColorClassName: "text-indigo-500",
-    extTabId: "image-upscaler",
+    extTabId: "upscaler",
     showOnWebToolsMenu: true,
     showOnExtSidebar: true
   }
@@ -215,7 +215,7 @@ export function renderWorkspaceToolIcon(toolId: string, size = 16): React.ReactN
       return <Search size={size} className={className} />
     case "background-remover":
       return <Eraser size={size} className={className} />
-    case "image-upscaler":
+    case "upscaler":
       return <Sparkles size={size} className={className} />
     default:
       return <Workflow size={size} className={className} />

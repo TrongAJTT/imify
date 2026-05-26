@@ -3,14 +3,14 @@ import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/med
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel"
 import { FEATURES_INFO_COMMON_FAQS } from "../shared/features-info-common-faqs"
 
-export const IMAGE_UPSCALER_PANEL_CONTENT = {
-  title: "AI Image Upscaler",
+export const UPSCALER_PANEL_CONTENT = {
+  title: "AI Upscaler",
   subtitle: "Magnify and restore your images locally in your web browser using state-of-the-art super-resolution neural networks.",
   previewSrc: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.upscaler.previewWebp),
   previewSources: [
     resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.upscaler.previewWebp)
   ],
-  previewAlt: "Image Upscaling Showcase",
+  previewAlt: "Upscaling Showcase",
   previewAspectRatio: "3 / 2",
   featureChips: [
     "AI-Super-Resolution",
@@ -46,6 +46,6 @@ export const IMAGE_UPSCALER_PANEL_CONTENT = {
   ]
 }
 
-export function ImageUpscalerPresetInfoPanel() {
-  return <PresetInfoShowcasePanel {...IMAGE_UPSCALER_PANEL_CONTENT} />
+export function UpscalerPresetInfoPanel() {
+  return <PresetInfoShowcasePanel {...UPSCALER_PANEL_CONTENT} />
 }

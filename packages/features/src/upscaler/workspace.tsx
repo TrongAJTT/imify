@@ -15,7 +15,7 @@ import { buildFormatConfigFromPreset, VIRTUAL_DEFAULT_PNG_PRESET } from "../proc
 import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { buildSmartOutputFileName } from "@imify/core/file-name-pattern"
 
-interface ImageUpscalerWorkspaceProps {
+interface UpscalerWorkspaceProps {
   sourceFile: File
   sourceImageData: ImageData
   resultImageData: ImageData | null
@@ -26,7 +26,7 @@ interface ImageUpscalerWorkspaceProps {
   modelId: string
 }
 
-export function ImageUpscalerWorkspace({
+export function UpscalerWorkspace({
   sourceFile,
   sourceImageData,
   resultImageData,
@@ -35,7 +35,7 @@ export function ImageUpscalerWorkspace({
   onClear,
   onStartProcessing,
   modelId
-}: ImageUpscalerWorkspaceProps) {
+}: UpscalerWorkspaceProps) {
   const { variantId } = useImageUpscalerStore()
   const [viewMode, setViewMode] = useState<"split" | "side_by_side">("split")
   const [splitPosition, setSplitPosition] = useState(50)

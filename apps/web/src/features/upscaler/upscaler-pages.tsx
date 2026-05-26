@@ -1,24 +1,26 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { 
-  SharedImageUpscalerPage, 
-  ImageUpscalerWorkspace, 
-  ImageUpscalerDropZone,
-  ImageUpscalerSidebarShell
-} from "@imify/features/image-upscaler"
+  SharedUpscalerPage, 
+  UpscalerWorkspace, 
+  UpscalerDropZone,
+  UpscalerSidebarShell
+} from "@imify/features/upscaler"
 
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
 import { useRouter } from "next/navigation"
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
+import { WorkspaceLoadingState } from "@imify/ui"
+import { useImageUpscalerStore } from "@imify/stores/stores/image-upscaler-store"
 
-function ImageUpscalerHardwareNoticeCard() {
+function UpscalerHardwareNoticeCard() {
   return (
     <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 p-4 dark:border-indigo-500/20 dark:bg-indigo-500/5">
       <div className="text-sm font-bold text-slate-900 dark:text-slate-100">
-        Bring the power of AI models to your browser.
+        This feature brings the power of AI models to your browser.
       </div>
       <div className="mt-2 space-y-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
         <p>
@@ -32,7 +34,21 @@ function ImageUpscalerHardwareNoticeCard() {
   )
 }
 
-export function ImageUpscalerPage() {
+export function UpscalerPage() {
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    setHydrated(useImageUpscalerStore.persist.hasHydrated())
+    const unsubStart = useImageUpscalerStore.persist.onHydrate(() => setHydrated(false))
+    const unsubFinish = useImageUpscalerStore.persist.onFinishHydration(() => setHydrated(true))
+    return () => {
+      try {
+        unsubStart()
+      } catch {}
+      try {
+        unsubFinish()
+      } catch {}
+    }
+  }, [])
   const router = useRouter()
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
   const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
@@ -40,32 +56,36 @@ export function ImageUpscalerPage() {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
 
   // Register sidebar shell
-  useWorkspaceSidebar(<ImageUpscalerSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
+  useWorkspaceSidebar(<UpscalerSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
 
   React.useEffect(() => {
-    setHeaderSection("Image Upscaler")
+    setHeaderSection("Upscaler")
     setHeaderBreadcrumb(
       <FeatureBreadcrumb 
         compact 
-        rootToolId="image-upscaler" 
-        onRootClick={() => router.push("/image-upscaler")}
+        rootToolId="upscaler" 
+        onRootClick={() => router.push("/upscaler")}
       />
     )
     return () => resetHeader()
   }, [resetHeader, router, setHeaderBreadcrumb, setHeaderSection])
 
+  if (!hydrated) {
+    return <WorkspaceLoadingState title="Loading upscaler..." />
+  }
+
   return (
-    <SharedImageUpscalerPage
+    <SharedUpscalerPage
       renderWorkspace={(props) => (
         <>
           {!props.sourceFile ? (
             <div className="space-y-4">
-              <ImageUpscalerDropZone onLoadFile={(file) => void props.onLoadFile(file)} />
-              <ImageUpscalerHardwareNoticeCard />
+              <UpscalerDropZone onLoadFile={(file) => void props.onLoadFile(file)} />
+              <UpscalerHardwareNoticeCard />
             </div>
           ) : (
             props.sourceImageData ? (
-              <ImageUpscalerWorkspace
+              <UpscalerWorkspace
                 sourceFile={props.sourceFile}
                 sourceImageData={props.sourceImageData}
                 resultImageData={props.resultImageData}
