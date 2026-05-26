@@ -32,6 +32,7 @@ export function SharedImageUpscalerPage({
   const modelId = useImageUpscalerStore((s) => s.modelId)
   const variantId = useImageUpscalerStore((s) => s.variantId)
   const scaleFactor = useImageUpscalerStore((s) => s.scaleFactor)
+  const denoiseLevel = useImageUpscalerStore((s) => s.denoiseLevel)
   const processingMode = useImageUpscalerStore((s) => s.processingMode)
   const unloadModelAfterProcess = useImageUpscalerStore((s) => s.unloadModelAfterProcess)
 
@@ -49,6 +50,7 @@ export function SharedImageUpscalerPage({
     modelId,
     variantId,
     scaleFactor,
+    denoiseLevel,
     processingMode,
     unloadAfterSuccess: unloadModelAfterProcess,
     onSuccess: (outputImageData) => {

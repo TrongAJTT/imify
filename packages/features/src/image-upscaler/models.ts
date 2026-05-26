@@ -21,67 +21,149 @@ export interface AIModelMetadata {
   defaultVariantId: string;
   usecase: string;
   suitableFor: string; // Current selection detail field
+  scaleFactor: number;
 }
 
 export const IMAGE_UPSCALER_MODELS: AIModelMetadata[] = [
   {
-    id: 'onnx-community/SwinIR-Light', // Heliosoph/swinir-onnx or similar standard path
-    name: 'SwinIR Light',
-    description: 'State-of-the-art restoration model for realistic photo upscaling and denoising.',
-    source: 'Hugging Face / ONNX Community',
+    id: 'swin2sr_lightweight',
+    name: 'Swin2SR Lightweight 2x',
+    description: 'Optimized, ultra-fast lightweight version of Swin2SR designed specifically for highly efficient 2x upscaling and denoising directly in the browser.',
+    source: 'Hugging Face / Xenova',
     license: 'Apache 2.0',
     licenseUrl: 'https://www.apache.org/licenses/LICENSE-2.0',
-    termsUrl: 'https://huggingface.co/onnx-community/SwinIR-Light',
-    author: 'Jingyun Liang',
-    authorUrl: 'https://github.com/JingyunLiang/SwinIR',
-    defaultVariantId: 'fp16',
-    usecase: 'Photo Restoration',
-    suitableFor: 'Real-world photos, portraits, and detailed natural textures.',
+    termsUrl: 'https://huggingface.co/Xenova/swin2SR-lightweight-x2-64',
+    author: 'Computer Vision Lab Würzburg',
+    authorUrl: 'https://github.com/caidas/swin2SR',
+    defaultVariantId: 'quantized',
+    usecase: 'Fast 2x Restoration',
+    suitableFor: 'Quick restorations, lightweight 2x upscaling, low-resolution photos, and performance-constrained devices.',
+    scaleFactor: 2,
     variants: [
       {
-        id: 'fp16',
-        label: 'FP16 (High Quality)',
-        description: 'Original high precision. Best balance of quality and speed.',
-        sizeBytes: 46 * 1024 * 1024,
-        dtype: 'fp16'
+        id: 'fp32',
+        label: 'FP32 (Full Precision)',
+        description: 'Original precision weights. High visual preservation with clean boundaries.',
+        sizeBytes: 8 * 1024 * 1024,
+        dtype: 'fp32'
       },
       {
         id: 'quantized',
         label: 'Quantized (Memory Saving)',
-        description: '4-bit integer weights. Uses less RAM, optimized for low memory devices.',
-        sizeBytes: 12 * 1024 * 1024,
+        description: '4-bit integer weights. Low memory usage, highly recommended for instant processing.',
+        sizeBytes: 7 * 1024 * 1024,
         quantized: true
       }
     ]
   },
   {
-    id: 'onnx-community/RealESRGAN-anime', // FuryTMP/RealESR_Animex4_fp16 or similar
-    name: 'Real-ESRGAN Anime',
-    description: 'Optimized Real-ESRGAN model designed specifically for 2D illustration and anime upscaling.',
+    id: 'swin2sr_realworld',
+    name: 'Swin2SR Realworld 4x',
+    description: 'Advanced 4x super-resolution model utilizing Swin Transformer v2 layers for high-quality restoration and blind artifact removal.',
     source: 'Hugging Face / ONNX Community',
-    license: 'BSD-3-Clause',
-    licenseUrl: 'https://opensource.org/licenses/BSD-3-Clause',
-    termsUrl: 'https://huggingface.co/onnx-community/RealESRGAN-anime',
-    author: 'Xintao Wang',
-    authorUrl: 'https://github.com/xinntao/Real-ESRGAN',
-    defaultVariantId: 'fp16',
-    usecase: 'Illustration & Anime',
-    suitableFor: '2D illustrations, cartoon graphics, and digital artwork with sharp edges.',
+    license: 'Apache 2.0',
+    licenseUrl: 'https://www.apache.org/licenses/LICENSE-2.0',
+    termsUrl: 'https://huggingface.co/onnx-community/swin2SR-realworld-sr-x4-64-bsrgan-psnr-ONNX',
+    author: 'ONNX Community',
+    authorUrl: 'https://huggingface.co/onnx-community',
+    defaultVariantId: 'quantized',
+    usecase: 'High-Quality 4x Restoration',
+    suitableFor: 'Real-world photos, detailed portraits, landscape captures, and heavy compression artifact removal.',
+    scaleFactor: 4,
     variants: [
       {
-        id: 'fp16',
-        label: 'FP16 (Recommended)',
-        description: 'Standard precision. Fastest execution and cleanest edge upscaling.',
-        sizeBytes: 64 * 1024 * 1024,
-        dtype: 'fp16'
+        id: 'fp32',
+        label: 'FP32 (Full Precision)',
+        description: 'Original precision weights. Best visual restoration quality.',
+        sizeBytes: 54 * 1024 * 1024,
+        dtype: 'fp32'
       },
       {
         id: 'quantized',
-        label: 'Quantized (Low RAM)',
-        description: '4-bit weights to minimize browser tab crash on older machines.',
-        sizeBytes: 16 * 1024 * 1024,
+        label: 'Quantized (Memory Saving)',
+        description: '4-bit integer weights. Low memory usage, recommended to prevent browser OOM crashes.',
+        sizeBytes: 19 * 1024 * 1024,
+        quantized: true
+      }
+    ]
+  },
+  {
+    id: 'apisr_anime',
+    name: 'APISR Anime 4x',
+    description: 'State-of-the-art super-resolution model designed specifically for 2D illustration, webcomics, and anime artwork.',
+    source: 'Hugging Face / Xenova',
+    license: 'Apache 2.0',
+    licenseUrl: 'https://www.apache.org/licenses/LICENSE-2.0',
+    termsUrl: 'https://huggingface.co/Xenova/4x_APISR_GRL_GAN_generator-onnx',
+    author: 'APISR Contributors',
+    authorUrl: 'https://github.com/Kiteretsu77/APISR',
+    defaultVariantId: 'fp32',
+    usecase: 'Anime & Illustration 4x',
+    suitableFor: '2D illustrations, manga/cartoon graphics, webcomics, and digital artwork with sharp edges.',
+    scaleFactor: 4,
+    variants: [
+      {
+        id: 'fp32',
+        label: 'FP32 (Full Precision)',
+        description: 'Full precision weights. Delivers maximum edge-preservation and color clarity.',
+        sizeBytes: 6.5 * 1024 * 1024,
+        dtype: 'fp32'
+      },
+      {
+        id: 'quantized',
+        label: 'Quantized (Memory Saving)',
+        description: 'Quantized weights. Fast processing and lower memory usage.',
+        sizeBytes: 4.7 * 1024 * 1024,
+        quantized: true
+      }
+    ]
+  },
+  {
+    id: 'apisr_anime_2x',
+    name: 'APISR Anime 2x',
+    description: 'Highly-optimized super-resolution model designed specifically for efficient 2x upscaling of 2D illustrations and anime artwork.',
+    source: 'Hugging Face / Xenova',
+    license: 'Apache 2.0',
+    licenseUrl: 'https://www.apache.org/licenses/LICENSE-2.0',
+    termsUrl: 'https://huggingface.co/Xenova/2x_APISR_RRDB_GAN_generator-onnx',
+    author: 'APISR Contributors',
+    authorUrl: 'https://github.com/Kiteretsu77/APISR',
+    defaultVariantId: 'fp32',
+    usecase: 'Anime & Illustration 2x',
+    suitableFor: '2D illustrations, manga/cartoon graphics, webcomics, and digital artwork with sharp edges.',
+    scaleFactor: 2,
+    variants: [
+      {
+        id: 'fp32',
+        label: 'FP32 (Full Precision)',
+        description: 'Full precision weights. Delivers maximum edge-preservation and color clarity.',
+        sizeBytes: 18 * 1024 * 1024,
+        dtype: 'fp32'
+      },
+      {
+        id: 'quantized',
+        label: 'Quantized (Memory Saving)',
+        description: 'Quantized weights. Fast processing and lower memory usage.',
+        sizeBytes: 4.72 * 1024 * 1024,
         quantized: true
       }
     ]
   }
 ];
+
+/**
+ * Resolves the actual Hugging Face model repository path based on chosen model.
+ */
+export function resolveHuggingFaceRepoId(modelId: string): string {
+  if (modelId === 'apisr_anime') {
+    return 'Xenova/4x_APISR_GRL_GAN_generator-onnx';
+  }
+  if (modelId === 'apisr_anime_2x') {
+    return 'Xenova/2x_APISR_RRDB_GAN_generator-onnx';
+  }
+  if (modelId === 'swin2sr_lightweight') {
+    return 'Xenova/swin2SR-lightweight-x2-64';
+  }
+  // Default/Fallback: swin2sr_realworld
+  return 'onnx-community/swin2SR-realworld-sr-x4-64-bsrgan-psnr-ONNX';
+}

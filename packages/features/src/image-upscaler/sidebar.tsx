@@ -75,9 +75,16 @@ export function ImageUpscalerSidebar({
     selectedModel.variants[0];
   const [isModelVariantDialogOpen, setIsModelVariantDialogOpen] =
     useState(false);
+  const isScaleLocked = typeof selectedModel.scaleFactor === "number";
 
   // Auto-apply identified preset if it exists and no preset is active (initial load)
   useIdentifiedPresetLoader(UPSCALER_PRESET, activePresetId, applyPreset);
+
+  useEffect(() => {
+    if (isScaleLocked && scaleFactor !== selectedModel.scaleFactor) {
+      setScaleFactor(selectedModel.scaleFactor);
+    }
+  }, [isScaleLocked, scaleFactor, selectedModel.scaleFactor, setScaleFactor]);
 
   // Initialize smart default for unloadModelAfterProcess based on hardware
   useEffect(() => {
@@ -173,26 +180,32 @@ export function ImageUpscalerSidebar({
             <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Scale Factor
             </span>
-            <div className="space-y-2">
-              <RadioCard
-                title="2x Magnify"
-                subtitle="High detail, fast processing."
-                value="2"
-                selectedValue={String(scaleFactor)}
-                onChange={(v) => setScaleFactor(Number(v))}
-                icon={<Maximize2 size={16} className="text-purple-500" />}
-                colorTheme="purple"
-              />
-              <RadioCard
-                title="4x Magnify"
-                subtitle="Maximum upscale resolution."
-                value="4"
-                selectedValue={String(scaleFactor)}
-                onChange={(v) => setScaleFactor(Number(v))}
-                icon={<Maximize2 size={16} className="text-purple-500" />}
-                colorTheme="purple"
-              />
-            </div>
+            {isScaleLocked ? (
+              <div className="rounded-lg border border-purple-200/70 bg-purple-50/60 px-3 py-2 text-xs font-semibold text-purple-700 dark:border-purple-700/40 dark:bg-purple-900/20 dark:text-purple-200">
+                Fixed at {selectedModel.scaleFactor}x by this model
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <RadioCard
+                  title="2x Magnify"
+                  subtitle="High detail, fast processing."
+                  value="2"
+                  selectedValue={String(scaleFactor)}
+                  onChange={(v) => setScaleFactor(Number(v))}
+                  icon={<Maximize2 size={16} className="text-purple-500" />}
+                  colorTheme="purple"
+                />
+                <RadioCard
+                  title="4x Magnify"
+                  subtitle="Maximum upscale resolution."
+                  value="4"
+                  selectedValue={String(scaleFactor)}
+                  onChange={(v) => setScaleFactor(Number(v))}
+                  icon={<Maximize2 size={16} className="text-purple-500" />}
+                  colorTheme="purple"
+                />
+              </div>
+            )}
           </div>
 
           {/* Denoise Level Slider */}

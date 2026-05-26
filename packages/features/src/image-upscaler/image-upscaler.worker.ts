@@ -31,6 +31,55 @@ async function detectBestDevice(): Promise<{ device: 'webgpu' | 'wasm'; dtype: '
     }
 }
 
+function applyDenoise(
+    source: Uint8ClampedArray,
+    width: number,
+    height: number,
+    channels: number,
+    strength: number
+): Uint8ClampedArray {
+    const alpha = Math.min(Math.max(strength, 0), 100) / 100;
+    if (alpha <= 0) return source;
+
+    const out = new Uint8ClampedArray(source.length);
+    const getIndex = (x: number, y: number) => (y * width + x) * channels;
+
+    for (let y = 0; y < height; y++) {
+        const y0 = Math.max(0, y - 1);
+        const y1 = Math.min(height - 1, y + 1);
+        for (let x = 0; x < width; x++) {
+            const x0 = Math.max(0, x - 1);
+            const x1 = Math.min(width - 1, x + 1);
+
+            let r = 0;
+            let g = 0;
+            let b = 0;
+            let count = 0;
+
+            for (let yy = y0; yy <= y1; yy++) {
+                for (let xx = x0; xx <= x1; xx++) {
+                    const idx = getIndex(xx, yy);
+                    r += source[idx];
+                    g += source[idx + 1];
+                    b += source[idx + 2];
+                    count++;
+                }
+            }
+
+            const idx = getIndex(x, y);
+            out[idx] = Math.round(source[idx] * (1 - alpha) + (r / count) * alpha);
+            out[idx + 1] = Math.round(source[idx + 1] * (1 - alpha) + (g / count) * alpha);
+            out[idx + 2] = Math.round(source[idx + 2] * (1 - alpha) + (b / count) * alpha);
+
+            if (channels === 4) {
+                out[idx + 3] = source[idx + 3];
+            }
+        }
+    }
+
+    return out;
+}
+
 class ImageUpscalingPipeline {
     static task = 'image-to-image';
     static currentModelId: string | null = null;
@@ -38,8 +87,10 @@ class ImageUpscalingPipeline {
 
     static async getInstance(modelId: string, options: { dtype?: 'fp16' | 'fp32'; quantized?: boolean; progress_callback?: (progress: any) => void } = {}) {
         const { quantized = false, progress_callback } = options;
-        const { device, dtype: defaultDtype } = await detectBestDevice();
+        let { device, dtype: defaultDtype } = await detectBestDevice();
         
+        // Something here
+
         const dtype = options.dtype || defaultDtype;
         const instanceKey = `${modelId}:${device}:${dtype}:${quantized}`;
         
@@ -75,6 +126,7 @@ self.addEventListener('message', async (event) => {
             const modelId = options?.modelId || 'onnx-community/SwinIR-Light';
             const scaleFactor = options?.scaleFactor || 2;
             const processingMode = options?.processingMode || 'safe';
+            const denoiseLevel = options?.denoiseLevel || 0;
             
             const preferredDtype = options?.dtype;
             const useQuantized = options?.quantized ?? false;
@@ -105,6 +157,10 @@ self.addEventListener('message', async (event) => {
             const W = inputImage.width;
             const H = inputImage.height;
             console.log(`[Worker] Image loaded: ${W}x${H}`);
+
+            const sourceData = denoiseLevel > 0
+                ? applyDenoise(inputImage.data as Uint8ClampedArray, W, H, inputImage.channels, denoiseLevel)
+                : inputImage.data;
 
             // Pre-calculate final upscaled dimensions
             const targetW = W * scaleFactor;
@@ -139,21 +195,20 @@ self.addEventListener('message', async (event) => {
 
                     // Extract input tile pixels
                     const tileInputData = new Uint8ClampedArray(tileW * tileH * 4);
-                    const originalData = inputImage.data;
+                    const originalData = sourceData;
 
                     for (let y = y0; y < y1; y++) {
                         const tileY = y - y0;
-                        const origRowOffset = y * W * 4;
                         const tileRowOffset = tileY * tileW * 4;
                         for (let x = x0; x < x1; x++) {
                             const tileX = x - x0;
-                            const origIdx = origRowOffset + x * 4;
+                            const origIdx = (y * W + x) * inputImage.channels;
                             const tileIdx = tileRowOffset + tileX * 4;
                             
                             tileInputData[tileIdx] = originalData[origIdx];
                             tileInputData[tileIdx + 1] = originalData[origIdx + 1];
                             tileInputData[tileIdx + 2] = originalData[origIdx + 2];
-                            tileInputData[tileIdx + 3] = originalData[origIdx + 3] ?? 255;
+                            tileInputData[tileIdx + 3] = inputImage.channels === 4 ? originalData[origIdx + 3] : 255;
                         }
                     }
 
@@ -183,16 +238,18 @@ self.addEventListener('message', async (event) => {
                     for (let y = upscaledTargetY0; y < upscaledTargetY1; y++) {
                         const tileY = y - y0 * scaleFactor;
                         const finalRowOffset = y * targetW * 4;
-                        const tileRowOffset = tileY * (tileW * scaleFactor) * 4;
                         for (let x = upscaledTargetX0; x < upscaledTargetX1; x++) {
                             const tileX = x - x0 * scaleFactor;
-                            const finalIdx = finalRowOffset + x * 4;
-                            const tileIdx = tileRowOffset + tileX * 4;
+                            
+                            if (tileX >= 0 && tileX < upscaledTile.width && tileY >= 0 && tileY < upscaledTile.height) {
+                                const finalIdx = finalRowOffset + x * 4;
+                                const tileIdx = (tileY * upscaledTile.width + tileX) * upscaledTile.channels;
 
-                            finalData[finalIdx] = upscaledTileData[tileIdx];
-                            finalData[finalIdx + 1] = upscaledTileData[tileIdx + 1];
-                            finalData[finalIdx + 2] = upscaledTileData[tileIdx + 2];
-                            finalData[finalIdx + 3] = upscaledTileData[tileIdx + 3] ?? 255;
+                                finalData[finalIdx] = upscaledTileData[tileIdx];
+                                finalData[finalIdx + 1] = upscaledTileData[tileIdx + 1];
+                                finalData[finalIdx + 2] = upscaledTileData[tileIdx + 2];
+                                finalData[finalIdx + 3] = upscaledTile.channels === 4 ? upscaledTileData[tileIdx + 3] : 255;
+                            }
                         }
                     }
 

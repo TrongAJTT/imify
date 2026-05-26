@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConversionProgressPayload } from '@imify/core/types';
-import { IMAGE_UPSCALER_MODELS } from './models';
+import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from './models';
 
 export interface UseImageUpscalerOptions {
   modelId?: string;
   variantId?: string;
   scaleFactor?: number;
+  denoiseLevel?: number;
   processingMode?: 'fast' | 'safe';
   onSuccess?: (result: ImageData) => void;
   onError?: (error: string) => void;
@@ -14,9 +15,10 @@ export interface UseImageUpscalerOptions {
 
 export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
   const { 
-    modelId = 'onnx-community/SwinIR-Light', 
-    variantId = 'fp16',
+    modelId = 'swin2sr_lightweight', 
+    variantId = 'quantized',
     scaleFactor = 2,
+    denoiseLevel = 0,
     processingMode = 'safe',
     onSuccess, 
     onError, 
@@ -168,20 +170,23 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
     const modelMeta = IMAGE_UPSCALER_MODELS.find(m => m.id === modelId);
     const variantMeta = modelMeta?.variants.find(v => v.id === variantId) || modelMeta?.variants[0];
 
+    const resolvedRepoId = resolveHuggingFaceRepoId(modelId);
+
     worker.postMessage({
       action: 'upscale',
       payload: {
         image,
         options: {
-          modelId,
+          modelId: resolvedRepoId,
           scaleFactor,
+          denoiseLevel,
           processingMode,
           dtype: variantMeta?.dtype,
           quantized: variantMeta?.quantized
         }
       }
     });
-  }, [modelId, variantId, scaleFactor, processingMode, initWorker]);
+  }, [modelId, variantId, scaleFactor, denoiseLevel, processingMode, initWorker]);
 
   return {
     upscaleImage,

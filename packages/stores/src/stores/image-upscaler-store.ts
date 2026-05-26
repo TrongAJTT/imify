@@ -39,8 +39,8 @@ interface ImageUpscalerState {
 export const useImageUpscalerStore = create<ImageUpscalerState>()(
   persist(
     (set) => ({
-      modelId: "onnx-community/SwinIR-Light",
-      variantId: "fp16",
+      modelId: "swin2sr_lightweight",
+      variantId: "quantized",
       scaleFactor: 2,
       denoiseLevel: 20,
       processingMode: "safe", // Default to safe to prevent browser crashes
@@ -55,7 +55,8 @@ export const useImageUpscalerStore = create<ImageUpscalerState>()(
         const model = IMAGE_UPSCALER_MODELS.find(m => m.id === modelId)
         set({ 
           modelId, 
-          variantId: model?.defaultVariantId || "fp16" 
+          variantId: model?.defaultVariantId || "quantized",
+          scaleFactor: model?.scaleFactor ?? 2
         })
       },
       setVariantId: (variantId) => set({ variantId }),

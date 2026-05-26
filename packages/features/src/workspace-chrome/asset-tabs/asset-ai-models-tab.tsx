@@ -8,6 +8,7 @@ import {
   Download,
   ChevronDown,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { Button, BodyText, MutedText } from "@imify/ui";
 import { formatFileSize } from "@imify/core";
@@ -15,6 +16,7 @@ import {
   BACKGROUND_REMOVAL_MODELS,
   type AIModelMetadata,
 } from "../../background-removal/models";
+import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from "../../image-upscaler/models";
 import { ModelDownloadDialog } from "../../background-removal/model-download-dialog";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
@@ -37,13 +39,12 @@ export function AssetAIModelsTab() {
       icon: <Image size={16} className="text-pink-500" />,
       models: BACKGROUND_REMOVAL_MODELS,
     },
-    // Future categories can be added here easily:
-    // {
-    //   id: "upscaler",
-    //   label: "Image Upscaler",
-    //   icon: <Sparkles size={16} className="text-amber-500" />,
-    //   models: UPSCALER_MODELS
-    // }
+    {
+      id: "image-upscaler",
+      label: "Image Upscaler",
+      icon: <Sparkles size={16} className="text-indigo-500" />,
+      models: IMAGE_UPSCALER_MODELS,
+    }
   ];
 
   const allModels = MODEL_CATEGORIES.flatMap((cat) => cat.models);
@@ -147,40 +148,71 @@ export function AssetAIModelsTab() {
     );
 
     try {
-      const worker = new Worker(
-        new URL(
-          "../../background-removal/background-removal.worker.ts",
-          import.meta.url,
-        ),
-        { type: "module" },
-      );
+      const isUpscaler = IMAGE_UPSCALER_MODELS.some((m) => m.id === model.id);
+      const workerUrl = isUpscaler
+        ? new URL("../../image-upscaler/image-upscaler.worker.ts", import.meta.url)
+        : new URL("../../background-removal/background-removal.worker.ts", import.meta.url);
 
-      worker.postMessage({
-        action: "warm-up",
-        payload: {
-          options: {
-            modelId: model.id,
-            dtype: variant.dtype,
-            quantized: variant.quantized,
+      const worker = new Worker(workerUrl, { type: "module" });
+
+      if (isUpscaler) {
+        const repoId = resolveHuggingFaceRepoId(model.id);
+
+        worker.postMessage({
+          action: "warm-up",
+          payload: {
+            options: {
+              modelId: repoId,
+              dtype: variant.dtype,
+              quantized: variant.quantized,
+            },
           },
-        },
-      });
+        });
 
-      worker.onmessage = async (e) => {
-        if (e.data.action === "warm-up-complete") {
-          success(
-            "Model ready",
-            `${model.name} ${variant.label} cached successfully.`,
-          );
-          setTimeout(async () => {
-            await checkCache();
-          }, 500);
-          worker.terminate();
-        } else if (e.data.action === "error") {
-          error("Download failed", `Failed to download ${model.name}.`);
-          worker.terminate();
-        }
-      };
+        worker.onmessage = async (e) => {
+          if (e.data.action === "warm-up-complete") {
+            success(
+              "Model ready",
+              `${model.name} ${variant.label} cached successfully.`,
+            );
+            setTimeout(async () => {
+              await checkCache();
+            }, 500);
+            worker.terminate();
+          } else if (e.data.action === "error") {
+            error("Download failed", `Failed to download ${model.name}.`);
+            worker.terminate();
+          }
+        };
+      } else {
+        // Standard background removal model
+        worker.postMessage({
+          action: "warm-up",
+          payload: {
+            options: {
+              modelId: model.id,
+              dtype: variant.dtype,
+              quantized: variant.quantized,
+            },
+          },
+        });
+
+        worker.onmessage = async (e) => {
+          if (e.data.action === "warm-up-complete") {
+            success(
+              "Model ready",
+              `${model.name} ${variant.label} cached successfully.`,
+            );
+            setTimeout(async () => {
+              await checkCache();
+            }, 500);
+            worker.terminate();
+          } else if (e.data.action === "error") {
+            error("Download failed", `Failed to download ${model.name}.`);
+            worker.terminate();
+          }
+        };
+      }
     } catch (err) {
       console.error("Failed to start download:", err);
       error("Download failed", "Failed to initialize background downloader.");
