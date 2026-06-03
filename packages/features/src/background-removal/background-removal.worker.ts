@@ -78,6 +78,11 @@ self.addEventListener('message', async (event) => {
             // In this version, we trust the main thread to provide the correct flags
             const preferredDtype = options?.dtype;
             const useQuantized = options?.quantized ?? false;
+            const wasmPaths = options?.wasmPaths as Record<string, string> | undefined;
+
+            if (wasmPaths) {
+                (env as any).backends.onnx.wasm.wasmPaths = wasmPaths;
+            }
 
             const segmenter = (await BackgroundRemovalPipeline.getInstance(modelId, {
                 dtype: preferredDtype,

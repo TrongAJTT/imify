@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConversionProgressPayload } from '@imify/core/types';
 import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from './models';
+import {
+  FEATURE_MEDIA_ASSET_PATHS,
+  resolveFeatureMediaAssetUrl
+} from '../shared/media-assets';
 
 export interface UseImageUpscalerOptions {
   modelId?: string;
@@ -171,6 +175,12 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
     const variantMeta = modelMeta?.variants.find(v => v.id === variantId) || modelMeta?.variants[0];
 
     const resolvedRepoId = resolveHuggingFaceRepoId(modelId);
+    const wasmPaths = {
+      'ort-wasm-simd-threaded.wasm': resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasm),
+      'ort-wasm-simd-threaded.mjs': resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjs),
+      'ort-wasm-simd-threaded.asyncify.wasm': resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasmAsyncify),
+      'ort-wasm-simd-threaded.asyncify.mjs': resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjsAsyncify)
+    };
 
     worker.postMessage({
       action: 'upscale',
@@ -182,7 +192,8 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
           denoiseLevel,
           processingMode,
           dtype: variantMeta?.dtype,
-          quantized: variantMeta?.quantized
+          quantized: variantMeta?.quantized,
+          wasmPaths
         }
       }
     });

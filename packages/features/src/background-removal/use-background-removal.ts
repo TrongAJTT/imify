@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConversionProgressPayload } from '@imify/core/types';
 import { BACKGROUND_REMOVAL_MODELS } from './models';
+import {
+  FEATURE_MEDIA_ASSET_PATHS,
+  resolveFeatureMediaAssetUrl
+} from '../shared/media-assets';
 
 export interface UseBackgroundRemovalOptions {
   modelId?: string;
@@ -144,6 +148,12 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
 
     const modelMeta = BACKGROUND_REMOVAL_MODELS.find(m => m.id === modelId);
     const variantMeta = modelMeta?.variants.find(v => v.id === variantId) || modelMeta?.variants[0];
+    const wasmPaths = {
+      'ort-wasm-simd-threaded.wasm': resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasm),
+      'ort-wasm-simd-threaded.mjs': resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjs),
+      'ort-wasm-simd-threaded.asyncify.wasm': resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasmAsyncify),
+      'ort-wasm-simd-threaded.asyncify.mjs': resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjsAsyncify)
+    };
 
     worker.postMessage({
       action: 'remove-background',
@@ -152,7 +162,8 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
         options: {
           modelId,
           dtype: variantMeta?.dtype,
-          quantized: variantMeta?.quantized
+          quantized: variantMeta?.quantized,
+          wasmPaths
         }
       }
     });

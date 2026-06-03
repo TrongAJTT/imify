@@ -130,6 +130,11 @@ self.addEventListener('message', async (event) => {
             
             const preferredDtype = options?.dtype;
             const useQuantized = options?.quantized ?? false;
+            const wasmPaths = options?.wasmPaths as Record<string, string> | undefined;
+
+            if (wasmPaths) {
+                (env as any).backends.onnx.wasm.wasmPaths = wasmPaths;
+            }
 
             const upscaler = await ImageUpscalingPipeline.getInstance(modelId, {
                 dtype: preferredDtype,
