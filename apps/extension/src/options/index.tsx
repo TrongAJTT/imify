@@ -64,6 +64,16 @@ import {
 } from "@imify/features/background-removal"
 import { DiffcheckerSidebarShell } from "@imify/features/diffchecker"
 import { InspectorSidebarShell } from "@imify/features/inspector"
+import {
+  SharedQrGeneratorPage,
+  QrGeneratorWorkspace,
+  QrGeneratorSidebarShell
+} from "@imify/features/qr-generator"
+import {
+  SharedQrReaderPage,
+  QrReaderWorkspace,
+  QrReaderSidebarShell
+} from "@imify/features/qr-reader"
 import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
 import { ContextMenuInfoPanel } from "@/options/components/context-menu/context-menu-info-panel"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
@@ -481,13 +491,24 @@ export default function OptionsPage() {
   }, [activeTab, handleToolTabActivation])
 
   useEffect(() => {
-    if (activeTab !== "context-menu") {
-      return
+    if (activeTab === "context-menu") {
+      setHeaderSection("Context Menu")
+      setHeaderActions(null)
+      setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="context-menu" />)
+      return () => resetHeader()
     }
-    setHeaderSection("Context Menu")
-    setHeaderActions(null)
-    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="context-menu" />)
-    return () => resetHeader()
+    if (activeTab === "qr-generator") {
+      setHeaderSection("QR Generator")
+      setHeaderActions(null)
+      setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="qr-generator" />)
+      return () => resetHeader()
+    }
+    if (activeTab === "qr-reader") {
+      setHeaderSection("QR Reader")
+      setHeaderActions(null)
+      setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="qr-reader" />)
+      return () => resetHeader()
+    }
   }, [activeTab, resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   useKeyPress("Escape", () => {
@@ -599,6 +620,18 @@ export default function OptionsPage() {
                 )}
               />
             }
+          />
+        )
+      case "qr-generator":
+        return (
+          <SharedQrGeneratorPage
+            renderWorkspace={() => <QrGeneratorWorkspace />}
+          />
+        )
+      case "qr-reader":
+        return (
+          <SharedQrReaderPage
+            renderWorkspace={() => <QrReaderWorkspace />}
           />
         )
       default:
@@ -804,6 +837,12 @@ export default function OptionsPage() {
                 {activeTab === "background-remover" && (
                   <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
                 )}
+                {activeTab === "qr-generator" && (
+                  <QrGeneratorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
+                {activeTab === "qr-reader" && (
+                  <QrReaderSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                )}
 
                 <TabInfoPanel activeTab={activeTab} />
               </div>
@@ -891,6 +930,12 @@ export default function OptionsPage() {
               )}
               {activeTab === "background-remover" && (
                 <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+              {activeTab === "qr-generator" && (
+                <QrGeneratorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+              {activeTab === "qr-reader" && (
+                <QrReaderSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
               )}
 
               <TabInfoPanel activeTab={activeTab} />

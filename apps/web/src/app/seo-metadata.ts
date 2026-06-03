@@ -107,5 +107,15 @@ export const WEB_ROUTE_METADATA = {
     title: "Upscaler",
     description:
       "Magnify and restore your images locally in your web browser using state-of-the-art super-resolution neural networks."
+  },
+  qrGenerator: {
+    title: "QR Generator",
+    description:
+      "Generate customizable, static QR codes directly in your browser with support for URL, text, contact cards (vCard), Wi-Fi logins, and custom logo embedding."
+  },
+  qrReader: {
+    title: "QR Reader",
+    description:
+      "Scan QR codes instantly using your device's camera or by uploading image files (PNG/SVG) to decode links, Wi-Fi details, and contact cards locally."
   }
 } satisfies Record<string, SeoMetadataEntry>

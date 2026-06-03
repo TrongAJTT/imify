@@ -51,3 +51,6 @@ export * from "./processor/setup-sidebar-panel"
 export * from "./processor/batch"
 export * from "./workspace-shell"
 export * from "./upscaler"
+export * from "./qr-generator"
+export * from "./qr-reader"
+
