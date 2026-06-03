@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **imify** (4287 symbols, 11519 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **imify** (14057 symbols, 24402 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -13,44 +13,12 @@ This project is indexed by GitNexus as **imify** (4287 symbols, 11519 relationsh
 - When exploring unfamiliar code, use `gitnexus_query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
 - When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `gitnexus_context({name: "symbolName"})`.
 
-## When Debugging
-
-1. `gitnexus_query({query: "<error or symptom>"})` — find execution flows related to the issue
-2. `gitnexus_context({name: "<suspect function>"})` — see all callers, callees, and process participation
-3. `READ gitnexus://repo/imify/process/{processName}` — trace the full execution flow step by step
-4. For regressions: `gitnexus_detect_changes({scope: "compare", base_ref: "main"})` — see what your branch changed
-
-## When Refactoring
-
-- **Renaming**: MUST use `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` first. Review the preview — graph edits are safe, text_search edits need manual review. Then run with `dry_run: false`.
-- **Extracting/Splitting**: MUST run `gitnexus_context({name: "target"})` to see all incoming/outgoing refs, then `gitnexus_impact({target: "target", direction: "upstream"})` to find all external callers before moving code.
-- After any refactor: run `gitnexus_detect_changes({scope: "all"})` to verify only expected files changed.
-
 ## Never Do
 
 - NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
 - NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
 - NEVER rename symbols with find-and-replace — use `gitnexus_rename` which understands the call graph.
 - NEVER commit changes without running `gitnexus_detect_changes()` to check affected scope.
-
-## Tools Quick Reference
-
-| Tool | When to use | Command |
-|------|-------------|---------|
-| `query` | Find code by concept | `gitnexus_query({query: "auth validation"})` |
-| `context` | 360-degree view of one symbol | `gitnexus_context({name: "validateUser"})` |
-| `impact` | Blast radius before editing | `gitnexus_impact({target: "X", direction: "upstream"})` |
-| `detect_changes` | Pre-commit scope check | `gitnexus_detect_changes({scope: "staged"})` |
-| `rename` | Safe multi-file rename | `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` |
-| `cypher` | Custom graph queries | `gitnexus_cypher({query: "MATCH ..."})` |
-
-## Impact Risk Levels
-
-| Depth | Meaning | Action |
-|-------|---------|--------|
-| d=1 | WILL BREAK — direct callers/importers | MUST update these |
-| d=2 | LIKELY AFFECTED — indirect deps | Should test |
-| d=3 | MAY NEED TESTING — transitive | Test if critical path |
 
 ## Resources
 
@@ -60,32 +28,6 @@ This project is indexed by GitNexus as **imify** (4287 symbols, 11519 relationsh
 | `gitnexus://repo/imify/clusters` | All functional areas |
 | `gitnexus://repo/imify/processes` | All execution flows |
 | `gitnexus://repo/imify/process/{name}` | Step-by-step execution trace |
-
-## Self-Check Before Finishing
-
-Before completing any code modification task, verify:
-1. `gitnexus_impact` was run for all modified symbols
-2. No HIGH/CRITICAL risk warnings were ignored
-3. `gitnexus_detect_changes()` confirms changes match expected scope
-4. All d=1 (WILL BREAK) dependents were updated
-
-## Keeping the Index Fresh
-
-After committing code changes, the GitNexus index becomes stale. Re-run analyze to update it:
-
-```bash
-npx gitnexus analyze
-```
-
-If the index previously included embeddings, preserve them by adding `--embeddings`:
-
-```bash
-npx gitnexus analyze --embeddings
-```
-
-To check whether embeddings exist, inspect `.gitnexus/meta.json` — the `stats.embeddings` field shows the count (0 means no embeddings). **Running analyze without `--embeddings` will delete any previously generated embeddings.**
-
-> Claude Code users: A PostToolUse hook handles this automatically after `git commit` and `git merge`.
 
 ## CLI
 
@@ -97,5 +39,25 @@ To check whether embeddings exist, inspect `.gitnexus/meta.json` — the `stats.
 | Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
 | Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+| Work in the Ui area (279 symbols) | `.claude/skills/generated/ui/SKILL.md` |
+| Work in the Stores area (247 symbols) | `.claude/skills/generated/stores/SKILL.md` |
+| Work in the Processor area (230 symbols) | `.claude/skills/generated/processor/SKILL.md` |
+| Work in the Filling area (209 symbols) | `.claude/skills/generated/filling/SKILL.md` |
+| Work in the Onnx-engines area (171 symbols) | `.claude/skills/generated/onnx-engines/SKILL.md` |
+| Work in the Pattern area (170 symbols) | `.claude/skills/generated/pattern/SKILL.md` |
+| Work in the Converter area (169 symbols) | `.claude/skills/generated/converter/SKILL.md` |
+| Work in the Splicing area (163 symbols) | `.claude/skills/generated/splicing/SKILL.md` |
+| Work in the Inspector area (131 symbols) | `.claude/skills/generated/inspector/SKILL.md` |
+| Work in the Fill area (122 symbols) | `.claude/skills/generated/fill/SKILL.md` |
+| Work in the Splitter area (110 symbols) | `.claude/skills/generated/splitter/SKILL.md` |
+| Work in the Hooks area (85 symbols) | `.claude/skills/generated/hooks/SKILL.md` |
+| Work in the Diffchecker area (71 symbols) | `.claude/skills/generated/diffchecker/SKILL.md` |
+| Work in the Batch area (45 symbols) | `.claude/skills/generated/batch/SKILL.md` |
+| Work in the Symmetric-generator area (36 symbols) | `.claude/skills/generated/symmetric-generator/SKILL.md` |
+| Work in the Background-removal area (36 symbols) | `.claude/skills/generated/background-removal/SKILL.md` |
+| Work in the Upscaler area (34 symbols) | `.claude/skills/generated/upscaler/SKILL.md` |
+| Work in the Grid-designer area (33 symbols) | `.claude/skills/generated/grid-designer/SKILL.md` |
+| Work in the Options area (32 symbols) | `.claude/skills/generated/options/SKILL.md` |
+| Work in the Context-menu area (32 symbols) | `.claude/skills/generated/context-menu/SKILL.md` |
 
 <!-- gitnexus:end -->
