@@ -17,7 +17,6 @@
     "noUnusedParameters": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "paths": {
       "@imify/core/*": ["../core/src/*"],
       "@imify/engine/*": ["../engine/src/*"],

@@ -38,6 +38,9 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
     previewSingleWebp: "/assets/features/preview-single_processor.webp",
     previewBatchWebp: "/assets/features/preview-batch_processor.webp"
   },
+  upscaler: {
+    previewWebp: "/assets/features/preview-upscaler.webp"
+  },
   splitter: {
     preview1Webp: "/assets/features/preview-image_splitter-1.webp",
     preview2Webp: "/assets/features/preview-image_splitter-2.webp",
@@ -99,6 +102,9 @@ export const FEATURE_MEDIA_ASSETS = {
   processor: {
     previewSingleWebp: FEATURE_MEDIA_ASSET_PATHS.processor.previewSingleWebp,
     previewBatchWebp: FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp
+  },
+  upscaler: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.upscaler.previewWebp
   },
   splitter: {
     preview1Webp: FEATURE_MEDIA_ASSET_PATHS.splitter.preview1Webp,

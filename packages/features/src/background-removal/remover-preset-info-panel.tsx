@@ -1,14 +1,15 @@
 import React from "react"
-import { FEATURE_MEDIA_ASSETS } from "../shared/media-assets"
+import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel"
+import { FEATURES_INFO_COMMON_FAQS } from "../shared/features-info-common-faqs"
 
 export const BACKGROUND_REMOVER_PANEL_CONTENT = {
   title: "AI Background Remover",
   subtitle: "Isolate subjects from their background instantly using state-of-the-art AI that runs 100% locally on your device.",
-  previewSrc: FEATURE_MEDIA_ASSETS.remover.preview1Webp,
+  previewSrc: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.remover.preview1Webp),
   previewSources: [
-    FEATURE_MEDIA_ASSETS.remover.preview1Webp,
-    FEATURE_MEDIA_ASSETS.remover.preview2Webp
+    resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.remover.preview1Webp),
+    resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.remover.preview2Webp)
   ],
   previewAlt: "Background Removal Showcase",
   previewAspectRatio: "3 / 2",
@@ -41,15 +42,7 @@ export const BACKGROUND_REMOVER_PANEL_CONTENT = {
       question: "Does it need an internet connection?",
       answer: "Only for the initial download of the AI models. Once cached in your browser, the tool works 100% offline."
     },
-    {
-      question: "What are common errors during processing?",
-      answer: `The most common technical challenges include:
-      • **bad_alloc** (Out of Memory): Occurs when your system lacks sufficient RAM to load the AI model. Try reloading the tab (if the current tab consumes too much memory) or using *Quantized* variants.
-      • **WASM Memory Limit**: Browsers limit WebAssembly to 4GB regardless of your system RAM.
-      • **QuotaExceededError**: Your browser's local storage or cache is full.
-      • **Browser Resource Policy**: The browser may terminate the process if it consumes too much CPU for too long.
-      Note: *Quantized* models are great for saving RAM, but **FP16** is usually faster on modern machines.`
-    },
+    ...FEATURES_INFO_COMMON_FAQS,
     {
       question: "Why is the first processing slower?",
       answer: "The first run requires initializing the AI engine and loading the model from the local cache into memory, which can take a few seconds depending on your hardware."

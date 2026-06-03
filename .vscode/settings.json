@@ -4,6 +4,7 @@
         "git diff": true,
         "git check-ignore": true,
         "npx gitnexus": true,
-        "Test-Path": true
+        "Test-Path": true,
+        "gitnexus": true
     }
 }

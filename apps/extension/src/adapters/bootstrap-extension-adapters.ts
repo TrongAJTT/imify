@@ -28,6 +28,7 @@ import downloadHintFirefoxWebp from "url:@assets/images/img-download-not-ask-fir
 import devModeEnableVideoWebm from "url:@assets/features/dev_mode-enable.webm"
 import previewSingleProcessorWebp from "url:@assets/features/preview-single_processor.webp"
 import previewBatchProcessorWebp from "url:@assets/features/preview-batch_processor.webp"
+import previewUpscalerWebp from "url:@assets/features/preview-upscaler.webp"
 import previewSplitter1Webp from "url:@assets/features/preview-image_splitter-1.webp"
 import previewSplitter2Webp from "url:@assets/features/preview-image_splitter-2.webp"
 import splitterGuideVisualControlWebm from "url:@assets/features/guide-image_splitter-visual_guides_control.webm"
@@ -59,6 +60,7 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.devMode.enableVideoWebm]: devModeEnableVideoWebm,
   [FEATURE_MEDIA_ASSET_PATHS.processor.previewSingleWebp]: previewSingleProcessorWebp,
   [FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp]: previewBatchProcessorWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.upscaler.previewWebp]: previewUpscalerWebp,
   [FEATURE_MEDIA_ASSET_PATHS.splitter.preview1Webp]: previewSplitter1Webp,
   [FEATURE_MEDIA_ASSET_PATHS.splitter.preview2Webp]: previewSplitter2Webp,
   [FEATURE_MEDIA_ASSET_PATHS.splitter.guideVisualControlWebm]: splitterGuideVisualControlWebm,
