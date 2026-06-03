@@ -389,9 +389,7 @@ export function QrGeneratorWorkspace() {
           {/* Left Column: Data Type selector and Content Inputs (3/5 width) */}
           <div className="lg:col-span-3 shadow-sm space-y-4 relative">
             <div className="border-b border-slate-100 dark:border-slate-850 pb-3">
-              <Subheading className="uppercase tracking-wide">
-                QR GENERATOR
-              </Subheading>
+              <Subheading>QR GENERATOR</Subheading>
               <MutedText className="text-xs">
                 Choose type and fill in QR details
               </MutedText>
