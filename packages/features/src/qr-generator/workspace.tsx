@@ -1,5 +1,4 @@
-import React, { useRef, useState } from "react";
-import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
+import React, { useRef, useState, useEffect } from "react"
 import {
   Download,
   RotateCcw,
@@ -9,8 +8,8 @@ import {
   Phone,
   MessageSquare,
   Wifi,
-  User,
-} from "lucide-react";
+  User
+} from "lucide-react"
 import {
   Button,
   SecondaryButton,
@@ -19,13 +18,14 @@ import {
   Subheading,
   MutedText,
   SelectInput,
-  TextArea,
-} from "@imify/ui";
-import { useQrGeneratorStore } from "@imify/stores";
-import { encodeQrData } from "./qr-encoder";
-import { downloadWithFilename } from "../processor/processor-utils";
-import { useToast } from "@imify/core/hooks/use-toast";
-import type { QrType } from "./types";
+  TextArea
+} from "@imify/ui"
+import { useQrGeneratorStore } from "@imify/stores"
+import { encodeQrData } from "./qr-encoder"
+import { downloadWithFilename } from "../processor/processor-utils"
+import { useToast } from "@imify/core/hooks/use-toast"
+import { renderMasterCanvas, exportAsSvg } from "./qr-render-engine"
+import type { QrType } from "./types"
 
 const QR_TYPE_OPTIONS = [
   { value: "url", label: "URL" },
@@ -34,8 +34,8 @@ const QR_TYPE_OPTIONS = [
   { value: "phone", label: "Phone" },
   { value: "sms", label: "SMS" },
   { value: "wifi", label: "Wi-Fi" },
-  { value: "vcard", label: "vCard (beta)" },
-] as const;
+  { value: "vcard", label: "vCard (beta)" }
+] as const
 
 const QR_TYPE_ICONS: Record<string, React.ReactNode> = {
   url: <Link size={13} />,
@@ -44,10 +44,11 @@ const QR_TYPE_ICONS: Record<string, React.ReactNode> = {
   phone: <Phone size={13} />,
   sms: <MessageSquare size={13} />,
   wifi: <Wifi size={13} />,
-  vcard: <User size={13} />,
-};
+  vcard: <User size={13} />
+}
 
 export function QrGeneratorWorkspace() {
+  const store = useQrGeneratorStore()
   const {
     type,
     setType,
@@ -62,97 +63,165 @@ export function QrGeneratorWorkspace() {
     excavateLogo,
     errorCorrectionLevel,
     resetToDefault,
-  } = useQrGeneratorStore();
 
-  const validLevels = ["L", "M", "Q", "H"] as const;
-  const qrLevel = (
-    validLevels.includes(errorCorrectionLevel as any)
-      ? errorCorrectionLevel
-      : "M"
-  ) as "L" | "M" | "Q" | "H";
+    // Design state
+    dotType,
+    markerBorderType,
+    markerCenterType,
+    syncMarkerBorderColorWithForeground,
+    markerBorderColor,
+    syncMarkerCenterColorWithForeground,
+    markerCenterColor,
 
-  const { success, error } = useToast();
-  const [isDownloading, setIsDownloading] = useState(false);
+    // Frame state
+    frameConfig,
+    frameText,
+    frameFontFamily,
+    frameFontId,
+    syncFrameColorWithForeground,
+    frameColor,
+    syncTextColorWithBackground,
+    frameTextColor
+  } = store
+
+  const { success, error } = useToast()
+  const [isDownloading, setIsDownloading] = useState(false)
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null)
 
   // Encode the current state's field values to the standard raw string
-  const rawQrValue = encodeQrData(type, data[type]);
+  const rawQrValue = encodeQrData(type, data[type])
+  const hasContent = rawQrValue.trim().length > 0
+
+  const getQrConfig = () => {
+    const state = useQrGeneratorStore.getState()
+    return {
+      ...state,
+      data: state.data[state.type]
+    }
+  }
+
+  // Update preview canvas
+  useEffect(() => {
+    let active = true
+    if (!hasContent) return
+
+    async function updatePreview() {
+      try {
+        const config = getQrConfig()
+        const canvas = await renderMasterCanvas(config, rawQrValue)
+        if (!active) return
+
+        const previewCanvas = previewCanvasRef.current
+        if (previewCanvas) {
+          previewCanvas.width = canvas.width
+          previewCanvas.height = canvas.height
+          const ctx = previewCanvas.getContext("2d")
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            ctx.drawImage(canvas, 0, 0)
+          }
+        }
+      } catch (err) {
+        console.error("Failed to render QR preview:", err)
+      }
+    }
+
+    updatePreview()
+    return () => {
+      active = false
+    }
+  }, [
+    rawQrValue,
+    hasContent,
+    size,
+    bgColor,
+    fgColor,
+    logoUrl,
+    logoWidth,
+    logoHeight,
+    excavateLogo,
+    errorCorrectionLevel,
+    dotType,
+    markerBorderType,
+    markerCenterType,
+    syncMarkerBorderColorWithForeground,
+    markerBorderColor,
+    syncMarkerCenterColorWithForeground,
+    markerCenterColor,
+    frameConfig,
+    frameText,
+    frameFontFamily,
+    frameFontId,
+    syncFrameColorWithForeground,
+    frameColor,
+    syncTextColorWithBackground,
+    frameTextColor
+  ])
 
   const downloadSVG = async () => {
     try {
-      setIsDownloading(true);
-      const svgElement = document.getElementById("imify-qr-svg");
-      if (!svgElement) {
-        throw new Error("SVG element not found");
-      }
+      setIsDownloading(true)
+      const config = getQrConfig()
+      const svgText = await exportAsSvg(config, rawQrValue)
+      
+      const blob = new Blob([svgText], {
+        type: "image/svg+xml;charset=utf-8"
+      })
 
-      const svgString = new XMLSerializer().serializeToString(svgElement);
-      const blob = new Blob([svgString], {
-        type: "image/svg+xml;charset=utf-8",
-      });
-
-      await downloadWithFilename(blob, `imify-qr-${type}.svg`);
-      success("Export Successful", "QR code downloaded as SVG");
+      await downloadWithFilename(blob, `imify-qr-${type}.svg`)
+      success("Export Successful", "QR code downloaded as SVG")
     } catch (err) {
-      error("Export Failed", "Could not download the QR code as SVG");
+      error("Export Failed", "Could not download the QR code as SVG")
     } finally {
-      setIsDownloading(false);
+      setIsDownloading(false)
     }
-  };
+  }
 
   const downloadPNG = async () => {
     try {
-      setIsDownloading(true);
-      const canvas = document.getElementById(
-        "imify-qr-canvas",
-      ) as HTMLCanvasElement;
-      if (!canvas) {
-        throw new Error("Canvas element not found");
-      }
-
-      // Convert canvas to blob to use standard download utility
+      setIsDownloading(true)
+      const config = getQrConfig()
+      const canvas = await renderMasterCanvas(config, rawQrValue)
+      
       canvas.toBlob(async (blob) => {
         if (blob) {
-          await downloadWithFilename(blob, `imify-qr-${type}.png`);
-          success("Export Successful", "QR code downloaded as PNG");
+          await downloadWithFilename(blob, `imify-qr-${type}.png`)
+          success("Export Successful", "QR code downloaded as PNG")
         } else {
-          error("Export Failed", "Could not export canvas to blob");
+          error("Export Failed", "Could not export canvas to blob")
         }
-        setIsDownloading(false);
-      }, "image/png");
+        setIsDownloading(false)
+      }, "image/png")
     } catch (err) {
-      error("Export Failed", "Could not download the QR code as PNG");
-      setIsDownloading(false);
+      error("Export Failed", "Could not download the QR code as PNG")
+      setIsDownloading(false)
     }
-  };
+  }
 
   const downloadWebP = async () => {
     try {
-      setIsDownloading(true);
-      const canvas = document.getElementById(
-        "imify-qr-canvas",
-      ) as HTMLCanvasElement;
-      if (!canvas) {
-        throw new Error("Canvas element not found");
-      }
+      setIsDownloading(true)
+      const config = getQrConfig()
+      const canvas = await renderMasterCanvas(config, rawQrValue)
 
       canvas.toBlob(
         async (blob) => {
           if (blob) {
-            await downloadWithFilename(blob, `imify-qr-${type}.webp`);
-            success("Export Successful", "QR code downloaded as WebP");
+            await downloadWithFilename(blob, `imify-qr-${type}.webp`)
+            success("Export Successful", "QR code downloaded as WebP")
           } else {
-            error("Export Failed", "Could not export canvas to blob");
+            error("Export Failed", "Could not export canvas to blob")
           }
-          setIsDownloading(false);
+          setIsDownloading(false)
         },
         "image/webp",
-        1.0,
-      );
+        1.0
+      )
     } catch (err) {
-      error("Export Failed", "Could not download the QR code as WebP");
-      setIsDownloading(false);
+      error("Export Failed", "Could not download the QR code as WebP")
+      setIsDownloading(false)
     }
-  };
+  }
 
   const renderDataFields = () => {
     switch (type) {
@@ -164,7 +233,7 @@ export function QrGeneratorWorkspace() {
             value={data.url.url}
             onChange={(val) => updateDataField("url", "url", val)}
           />
-        );
+        )
       case "text":
         return (
           <TextArea
@@ -175,7 +244,7 @@ export function QrGeneratorWorkspace() {
             heightExpandMode="slider"
             rows={6}
           />
-        );
+        )
       case "email":
         return (
           <div className="space-y-3">
@@ -200,7 +269,7 @@ export function QrGeneratorWorkspace() {
               rows={4}
             />
           </div>
-        );
+        )
       case "phone":
         return (
           <TextInput
@@ -209,7 +278,7 @@ export function QrGeneratorWorkspace() {
             value={data.phone.phone}
             onChange={(val) => updateDataField("phone", "phone", val)}
           />
-        );
+        )
       case "sms":
         return (
           <div className="space-y-3">
@@ -228,7 +297,7 @@ export function QrGeneratorWorkspace() {
               heightExpandMode="text"
             />
           </div>
-        );
+        )
       case "wifi":
         return (
           <div className="space-y-3">
@@ -254,11 +323,11 @@ export function QrGeneratorWorkspace() {
               options={[
                 { value: "WPA", label: "WPA/WPA2" },
                 { value: "WEP", label: "WEP" },
-                { value: "nopass", label: "Unsecured (No Password)" },
+                { value: "nopass", label: "Unsecured (No Password)" }
               ]}
             />
           </div>
-        );
+        )
       case "vcard":
         return (
           <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
@@ -372,14 +441,11 @@ export function QrGeneratorWorkspace() {
               />
             </div>
           </div>
-        );
+        )
       default:
-        return null;
+        return null
     }
-  };
-
-  // Check if QR code is empty or has content to preview
-  const hasContent = rawQrValue.trim().length > 0;
+  }
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden animate-in fade-in duration-300">
@@ -413,7 +479,7 @@ export function QrGeneratorWorkspace() {
             </div>
 
             {/* Float Reset Button in the top-right corner */}
-            <div className="absolute top-0   right-3">
+            <div className="absolute top-0 right-3">
               <SecondaryButton
                 onClick={resetToDefault}
                 className="text-xs h-8 flex items-center gap-1.5 px-3"
@@ -443,54 +509,13 @@ export function QrGeneratorWorkspace() {
                         ? "linear-gradient(45deg, #efefef 25%, transparent 25%), linear-gradient(-45deg, #efefef 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #efefef 75%), linear-gradient(-45deg, transparent 75%, #efefef 75%)"
                         : undefined,
                     backgroundSize: "20px 20px",
-                    backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
+                    backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px"
                   }}
                 >
                   <div className="w-full h-full flex items-center justify-center">
-                    <QRCodeSVG
-                      id="imify-qr-svg"
-                      value={rawQrValue}
-                      size={Math.min(size, 280)}
-                      bgColor={
-                        bgColor === "transparent" ? "rgba(0,0,0,0)" : bgColor
-                      }
-                      fgColor={fgColor}
-                      level={qrLevel}
-                      imageSettings={
-                        logoUrl
-                          ? {
-                              src: logoUrl,
-                              height: logoHeight,
-                              width: logoWidth,
-                              excavate: excavateLogo,
-                            }
-                          : undefined
-                      }
-                      className="max-h-full max-w-full"
-                    />
-                  </div>
-
-                  {/* Hidden Canvas used for PNG & WebP rendering/downloading */}
-                  <div className="hidden">
-                    <QRCodeCanvas
-                      id="imify-qr-canvas"
-                      value={rawQrValue}
-                      size={size}
-                      bgColor={
-                        bgColor === "transparent" ? "rgba(0,0,0,0)" : bgColor
-                      }
-                      fgColor={fgColor}
-                      level={qrLevel}
-                      imageSettings={
-                        logoUrl
-                          ? {
-                              src: logoUrl,
-                              height: logoHeight,
-                              width: logoWidth,
-                              excavate: excavateLogo,
-                            }
-                          : undefined
-                      }
+                    <canvas
+                      ref={previewCanvasRef}
+                      className="max-h-full max-w-full object-contain"
                     />
                   </div>
                 </div>
@@ -541,5 +566,5 @@ export function QrGeneratorWorkspace() {
         </div>
       </div>
     </div>
-  );
+  )
 }

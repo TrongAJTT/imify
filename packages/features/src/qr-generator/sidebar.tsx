@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
@@ -10,9 +10,18 @@ import {
   CheckboxCard,
   DiscreteSlider,
   LabelText,
+  SelectInput,
+  TextInput,
 } from "@imify/ui";
-import { Palette, Image as ImageIcon, Trash2, Upload } from "lucide-react";
-import { useQrGeneratorStore } from "@imify/stores";
+import {
+  Palette,
+  Image as ImageIcon,
+  Trash2,
+  Upload,
+  Type,
+} from "lucide-react";
+import { useQrGeneratorStore, useFontStore } from "@imify/stores";
+import { FRAME_PRESETS } from "./frame-presets";
 
 interface QrGeneratorSidebarProps {
   enableWideSidebarGrid?: boolean;
@@ -72,9 +81,50 @@ export function QrGeneratorSidebar({
     setExcavateLogo,
     errorCorrectionLevel,
     setErrorCorrectionLevel,
+
+    // Design state
+    dotType,
+    setDotType,
+    markerBorderType,
+    setMarkerBorderType,
+    markerCenterType,
+    setMarkerCenterType,
+    syncMarkerBorderColorWithForeground,
+    setSyncMarkerBorderColorWithForeground,
+    markerBorderColor,
+    setMarkerBorderColor,
+    syncMarkerCenterColorWithForeground,
+    setSyncMarkerCenterColorWithForeground,
+    markerCenterColor,
+    setMarkerCenterColor,
+
+    // Frame state
+    frameConfig,
+    setFrameConfig,
+    updateFrameConfigField,
+    frameText,
+    setFrameText,
+    frameFontFamily,
+    setFrameFontFamily,
+    frameFontId,
+    setFrameFontId,
+    syncFrameColorWithForeground,
+    setSyncFrameColorWithForeground,
+    frameColor,
+    setFrameColor,
+    syncTextColorWithBackground,
+    setSyncTextColorWithBackground,
+    frameTextColor,
+    setFrameTextColor,
   } = useQrGeneratorStore();
 
+  const { installedFonts, loadInstalledFonts } = useFontStore();
+  const [showAdvancedFrame, setShowAdvancedFrame] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    loadInstalledFonts();
+  }, [loadInstalledFonts]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -113,12 +163,13 @@ export function QrGeneratorSidebar({
       content: (
         <AccordionCard
           label="Design & Colors"
-          sublabel="Dots and background colors"
+          sublabel="Patterns, markers, and colors"
           icon={<Palette size={16} />}
           defaultOpen={true}
           colorTheme="purple"
           childrenClassName="p-3 space-y-4"
         >
+          {/* Colors */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <LabelText className="text-xs">Foreground Color</LabelText>
@@ -141,14 +192,130 @@ export function QrGeneratorSidebar({
               />
             </div>
           </div>
-          <DiscreteSlider
-            label="Resolution (Size)"
-            value={size}
-            options={RESOLUTION_OPTIONS}
-            onChange={setSize}
-            valueFormatter={(opt) => `${opt.value} px`}
-          />
-          <div className="space-y-2">
+
+          {/* Dot Pattern Grid */}
+          <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+            <LabelText className="text-xs">Dot Pattern</LabelText>
+            <div className="grid grid-cols-2 gap-1">
+              {(
+                [
+                  "square",
+                  "dots",
+                  "rounded",
+                  "extra-rounded",
+                  "classy",
+                  "classy-rounded",
+                ] as const
+              ).map((type) => (
+                <RadioCard
+                  key={type}
+                  title={type.replace("-", " ")}
+                  value={type}
+                  selectedValue={dotType}
+                  onChange={(v) => setDotType(v as any)}
+                  colorTheme="purple"
+                  className="flex items-center justify-center p-1.5 h-8 text-[10px] capitalize"
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Marker Border Grid */}
+          <div className="space-y-1.5">
+            <LabelText className="text-xs">Marker Border</LabelText>
+            <div className="grid grid-cols-2 gap-1">
+              {(["square", "dot", "extra-rounded"] as const).map((type) => (
+                <RadioCard
+                  key={type}
+                  title={type.replace("-", " ")}
+                  value={type}
+                  selectedValue={markerBorderType}
+                  onChange={(v) => setMarkerBorderType(v as any)}
+                  colorTheme="purple"
+                  className="flex items-center justify-center p-1.5 h-8 text-[10px] capitalize"
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Marker Center Grid */}
+          <div className="space-y-1.5">
+            <LabelText className="text-xs">Marker Center</LabelText>
+            <div className="grid grid-cols-2 gap-1">
+              {(["square", "dot", "heart", "star"] as const).map((type) => (
+                <RadioCard
+                  key={type}
+                  title={type}
+                  value={type}
+                  selectedValue={markerCenterType}
+                  onChange={(v) => setMarkerCenterType(v as any)}
+                  colorTheme="purple"
+                  className="flex items-center justify-center p-1.5 h-8 text-[10px] capitalize"
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Marker Colors Sync */}
+          <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div>
+              <CheckboxCard
+                checked={syncMarkerBorderColorWithForeground}
+                onChange={setSyncMarkerBorderColorWithForeground}
+                title="Sync Marker Border"
+                subtitle="Match marker border color with QR foreground"
+                icon={<Palette size={14} className="text-purple-500" />}
+              />
+              {!syncMarkerBorderColorWithForeground && (
+                <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
+                  <LabelText className="text-xs">Border Color</LabelText>
+                  <ColorPickerPopover
+                    label=""
+                    value={markerBorderColor}
+                    onChange={setMarkerBorderColor}
+                    enableAlpha={false}
+                    enableGradient={false}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <CheckboxCard
+                checked={syncMarkerCenterColorWithForeground}
+                onChange={setSyncMarkerCenterColorWithForeground}
+                title="Sync Marker Center"
+                subtitle="Match marker center color with QR foreground"
+                icon={<Palette size={14} className="text-purple-500" />}
+              />
+              {!syncMarkerCenterColorWithForeground && (
+                <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
+                  <LabelText className="text-xs">Center Color</LabelText>
+                  <ColorPickerPopover
+                    label=""
+                    value={markerCenterColor}
+                    onChange={setMarkerCenterColor}
+                    enableAlpha={false}
+                    enableGradient={false}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Resolution */}
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+            <DiscreteSlider
+              label="Resolution (Size)"
+              value={size}
+              options={RESOLUTION_OPTIONS}
+              onChange={setSize}
+              valueFormatter={(opt) => `${opt.value} px`}
+            />
+          </div>
+
+          {/* Error Correction */}
+          <div className="space-y-2 border-t border-slate-100 dark:border-slate-800 pt-3">
             <LabelText className="text-xs">Error Correction Level</LabelText>
             <div className="grid grid-cols-2 gap-1">
               {(["Low", "Medium", "Quartile", "High"] as const).map((level) => (
@@ -258,6 +425,207 @@ export function QrGeneratorSidebar({
                 icon={<Palette size={14} className="text-sky-500" />}
               />
             </div>
+          )}
+        </AccordionCard>
+      ),
+    },
+    {
+      id: "qr-frame-text",
+      label: "",
+      content: (
+        <AccordionCard
+          label="Frame & Text"
+          sublabel={
+            frameConfig.id === "none"
+              ? "No Frame"
+              : frameConfig.id.replace("-", " ")
+          }
+          icon={<Type size={16} />}
+          defaultOpen={false}
+          colorTheme="blue"
+          childrenClassName="p-3 space-y-4"
+        >
+          {/* Preset Selector */}
+          <div className="space-y-1.5">
+            <LabelText className="text-xs">Frame Preset</LabelText>
+            <div className="grid grid-cols-2 gap-1.5">
+              {[
+                { id: "none", label: "None" },
+                { id: "bottom-label", label: "Bottom Label" },
+                { id: "top-label", label: "Top Label" },
+                { id: "banner-bottom", label: "Banner Bottom" },
+                { id: "border-box", label: "Border Box" },
+                { id: "pill-bottom", label: "Pill Bottom" },
+              ].map((p) => (
+                <RadioCard
+                  key={p.id}
+                  title={p.label}
+                  value={p.id}
+                  selectedValue={frameConfig.id}
+                  onChange={(v) => {
+                    const preset = FRAME_PRESETS[v];
+                    if (preset) {
+                      setFrameConfig(preset);
+                    }
+                  }}
+                  colorTheme="blue"
+                  className="flex items-center justify-center p-2 h-9 text-xs"
+                />
+              ))}
+            </div>
+          </div>
+
+          {frameConfig.id !== "none" && (
+            <>
+              {/* Frame Text Input */}
+              <TextInput
+                label="Frame Text"
+                value={frameText}
+                onChange={setFrameText}
+                placeholder="e.g. SCAN ME"
+              />
+
+              {/* Font Picker */}
+              <SelectInput
+                label="Font Family"
+                value={frameFontFamily}
+                options={[
+                  { value: "sans-serif", label: "System Sans-Serif" },
+                  ...installedFonts.map((f) => ({
+                    value: f.name,
+                    label: f.name,
+                  })),
+                ]}
+                onChange={(family) => {
+                  setFrameFontFamily(family);
+                  const matchingFont = installedFonts.find(
+                    (f) => f.name === family,
+                  );
+                  setFrameFontId(matchingFont?.id || "");
+                }}
+              />
+
+              {/* Frame Colors Sync */}
+              <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div>
+                  <CheckboxCard
+                    checked={syncFrameColorWithForeground}
+                    onChange={setSyncFrameColorWithForeground}
+                    title="Sync Frame Color"
+                    subtitle="Match frame color with QR foreground"
+                    icon={<Palette size={14} className="text-emerald-500" />}
+                  />
+                  {!syncFrameColorWithForeground && (
+                    <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
+                      <LabelText className="text-xs">Frame Color</LabelText>
+                      <ColorPickerPopover
+                        label=""
+                        value={frameColor}
+                        onChange={setFrameColor}
+                        enableAlpha={false}
+                        enableGradient={false}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <CheckboxCard
+                    checked={syncTextColorWithBackground}
+                    onChange={setSyncTextColorWithBackground}
+                    title="Sync Text Color"
+                    subtitle="Match text color with QR background"
+                    icon={<Palette size={14} className="text-emerald-500" />}
+                  />
+                  {!syncTextColorWithBackground && (
+                    <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
+                      <LabelText className="text-xs">Text Color</LabelText>
+                      <ColorPickerPopover
+                        label=""
+                        value={frameTextColor}
+                        onChange={setFrameTextColor}
+                        enableAlpha={false}
+                        enableGradient={false}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Advanced Customization Toggle */}
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                <CheckboxCard
+                  checked={showAdvancedFrame}
+                  onChange={setShowAdvancedFrame}
+                  title="Advanced Frame Adjustments"
+                  subtitle="Manually override paddings, borders, and margins"
+                  icon={<Palette size={14} className="text-emerald-500" />}
+                />
+
+                {showAdvancedFrame && (
+                  <div className="space-y-4 pl-2 pt-2 border-l border-slate-200 dark:border-slate-800">
+                    <SliderInput
+                      label="Border Width"
+                      value={frameConfig.borderWidth}
+                      min={0}
+                      max={20}
+                      step={1}
+                      onChange={(v) => updateFrameConfigField("borderWidth", v)}
+                      suffix=" px"
+                    />
+                    <SliderInput
+                      label="Border Radius"
+                      value={frameConfig.borderRadius}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onChange={(v) =>
+                        updateFrameConfigField("borderRadius", v)
+                      }
+                      suffix=" px"
+                    />
+                    <SliderInput
+                      label="Top Padding"
+                      value={frameConfig.paddingTop}
+                      min={0}
+                      max={200}
+                      step={5}
+                      onChange={(v) => updateFrameConfigField("paddingTop", v)}
+                      suffix=" px"
+                    />
+                    <SliderInput
+                      label="Bottom Padding"
+                      value={frameConfig.paddingBottom}
+                      min={0}
+                      max={300}
+                      step={5}
+                      onChange={(v) =>
+                        updateFrameConfigField("paddingBottom", v)
+                      }
+                      suffix=" px"
+                    />
+                    <SliderInput
+                      label="Horizontal Padding"
+                      value={frameConfig.paddingX}
+                      min={0}
+                      max={100}
+                      step={5}
+                      onChange={(v) => updateFrameConfigField("paddingX", v)}
+                      suffix=" px"
+                    />
+                    <SliderInput
+                      label="Text Y Offset"
+                      value={frameConfig.textYOffset}
+                      min={-100}
+                      max={100}
+                      step={5}
+                      onChange={(v) => updateFrameConfigField("textYOffset", v)}
+                      suffix=" px"
+                    />
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </AccordionCard>
       ),

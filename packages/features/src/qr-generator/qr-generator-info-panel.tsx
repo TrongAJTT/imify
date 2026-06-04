@@ -14,14 +14,16 @@ export const QR_GENERATOR_PANEL_CONTENT = {
     "Offline Safe",
     "Logo Overlay",
     "SVG/PNG Export",
-    "Custom Colors"
+    "Custom Colors",
+    "Pattern Styling",
+    "Frame & Text"
   ],
   tips: [
+    "Use frame styles (like Bottom Label or Pill) to add a clear 'SCAN ME' call to action to boost engagement.",
+    "Customize dots and markers with modern designs (like rounded or classy) or fun center shapes (like hearts and stars).",
     "Ensure 'Excavate Logo' is enabled when embedding a logo so it doesn't overlap the QR code dots.",
     "Make sure there is high contrast between the Foreground and Background colors so scanning is reliable.",
-    "Export as **SVG** for lossless scaling, perfect for printing on high-resolution flyers or posters.",
-    "Use **vCard** to generate QR codes containing complete contact info that people can add instantly to their phones.",
-    "Select **Wi-Fi** to let guests scan and connect to your home or office network without typing passwords."
+    "Export as **SVG** for lossless scaling, perfect for printing on high-resolution flyers or posters."
   ],
   faqs: [
     {

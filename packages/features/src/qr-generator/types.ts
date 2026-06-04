@@ -68,4 +68,42 @@ export interface QrConfig {
   logoHeight: number
   excavateLogo: boolean
   errorCorrectionLevel: "L" | "M" | "Q" | "H"
+
+  // Design
+  dotType: QrDotType
+  markerBorderType: QrMarkerBorderType
+  markerCenterType: QrMarkerCenterType
+  syncMarkerBorderColorWithForeground: boolean
+  markerBorderColor: string
+  syncMarkerCenterColorWithForeground: boolean
+  markerCenterColor: string
+
+  // Frame
+  frameConfig: FrameConfig
+  frameText: string
+  frameFontFamily: string
+  frameFontId: string
+  syncFrameColorWithForeground: boolean
+  frameColor: string
+  syncTextColorWithBackground: boolean
+  frameTextColor: string
 }
+
+// --- DESIGN MODULE ---
+export type QrDotType = "square" | "dots" | "rounded" | "extra-rounded" | "classy" | "classy-rounded"
+export type QrMarkerBorderType = "square" | "dot" | "extra-rounded"
+export type QrMarkerCenterType = "square" | "dot" | "heart" | "star"
+
+// --- FRAME MODULE ---
+export type FramePresetId = "none" | "bottom-label" | "top-label" | "banner-bottom" | "border-box" | "pill-bottom" | "custom"
+
+export interface FrameConfig {
+  id: FramePresetId
+  paddingTop: number
+  paddingBottom: number
+  paddingX: number
+  borderRadius: number
+  borderWidth: number
+  textYOffset: number    // Y offset relative to calculated text baseline
+}
+
