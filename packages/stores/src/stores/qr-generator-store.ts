@@ -85,7 +85,7 @@ const INITIAL_DATA: QrDataMap = {
   email: { to: "", subject: "", body: "" },
   phone: { phone: "" },
   sms: { phone: "", message: "" },
-  wifi: { ssid: "", password: "", encryption: "WPA" },
+  wifi: { ssid: "", password: "", encryption: "WPA", hidden: false },
   vcard: {
     firstName: "",
     lastName: "",

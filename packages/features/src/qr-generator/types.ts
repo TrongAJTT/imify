@@ -27,6 +27,7 @@ export interface WifiFields {
   ssid: string
   password: string
   encryption: "WPA" | "WEP" | "nopass"
+  hidden?: boolean
 }
 
 export interface VCardFields {

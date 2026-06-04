@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react"
+import React, { useRef, useState, useEffect } from "react";
 import {
   Download,
   RotateCcw,
@@ -8,8 +8,8 @@ import {
   Phone,
   MessageSquare,
   Wifi,
-  User
-} from "lucide-react"
+  User,
+} from "lucide-react";
 import {
   Button,
   SecondaryButton,
@@ -18,14 +18,15 @@ import {
   Subheading,
   MutedText,
   SelectInput,
-  TextArea
-} from "@imify/ui"
-import { useQrGeneratorStore } from "@imify/stores"
-import { encodeQrData } from "./qr-encoder"
-import { downloadWithFilename } from "../processor/processor-utils"
-import { useToast } from "@imify/core/hooks/use-toast"
-import { renderMasterCanvas, exportAsSvg } from "./qr-render-engine"
-import type { QrType } from "./types"
+  TextArea,
+  CheckboxCard,
+} from "@imify/ui";
+import { useQrGeneratorStore } from "@imify/stores";
+import { encodeQrData } from "./qr-encoder";
+import { downloadWithFilename } from "../processor/processor-utils";
+import { useToast } from "@imify/core/hooks/use-toast";
+import { renderMasterCanvas, exportAsSvg } from "./qr-render-engine";
+import type { QrType } from "./types";
 
 const QR_TYPE_OPTIONS = [
   { value: "url", label: "URL" },
@@ -34,8 +35,8 @@ const QR_TYPE_OPTIONS = [
   { value: "phone", label: "Phone" },
   { value: "sms", label: "SMS" },
   { value: "wifi", label: "Wi-Fi" },
-  { value: "vcard", label: "vCard (beta)" }
-] as const
+  { value: "vcard", label: "vCard" },
+] as const;
 
 const QR_TYPE_ICONS: Record<string, React.ReactNode> = {
   url: <Link size={13} />,
@@ -44,11 +45,11 @@ const QR_TYPE_ICONS: Record<string, React.ReactNode> = {
   phone: <Phone size={13} />,
   sms: <MessageSquare size={13} />,
   wifi: <Wifi size={13} />,
-  vcard: <User size={13} />
-}
+  vcard: <User size={13} />,
+};
 
 export function QrGeneratorWorkspace() {
-  const store = useQrGeneratorStore()
+  const store = useQrGeneratorStore();
   const {
     type,
     setType,
@@ -83,55 +84,55 @@ export function QrGeneratorWorkspace() {
     syncFrameColorWithForeground,
     frameColor,
     syncTextColorWithBackground,
-    frameTextColor
-  } = store
+    frameTextColor,
+  } = store;
 
-  const { success, error } = useToast()
-  const [isDownloading, setIsDownloading] = useState(false)
-  const previewCanvasRef = useRef<HTMLCanvasElement>(null)
+  const { success, error } = useToast();
+  const [isDownloading, setIsDownloading] = useState(false);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Encode the current state's field values to the standard raw string
-  const rawQrValue = encodeQrData(type, data[type])
-  const hasContent = rawQrValue.trim().length > 0
+  const rawQrValue = encodeQrData(type, data[type]);
+  const hasContent = rawQrValue.trim().length > 0;
 
   const getQrConfig = () => {
-    const state = useQrGeneratorStore.getState()
+    const state = useQrGeneratorStore.getState();
     return {
       ...state,
-      data: state.data[state.type]
-    }
-  }
+      data: state.data[state.type],
+    };
+  };
 
   // Update preview canvas
   useEffect(() => {
-    let active = true
-    if (!hasContent) return
+    let active = true;
+    if (!hasContent) return;
 
     async function updatePreview() {
       try {
-        const config = getQrConfig()
-        const canvas = await renderMasterCanvas(config, rawQrValue)
-        if (!active) return
+        const config = getQrConfig();
+        const canvas = await renderMasterCanvas(config, rawQrValue);
+        if (!active) return;
 
-        const previewCanvas = previewCanvasRef.current
+        const previewCanvas = previewCanvasRef.current;
         if (previewCanvas) {
-          previewCanvas.width = canvas.width
-          previewCanvas.height = canvas.height
-          const ctx = previewCanvas.getContext("2d")
+          previewCanvas.width = canvas.width;
+          previewCanvas.height = canvas.height;
+          const ctx = previewCanvas.getContext("2d");
           if (ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
-            ctx.drawImage(canvas, 0, 0)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(canvas, 0, 0);
           }
         }
       } catch (err) {
-        console.error("Failed to render QR preview:", err)
+        console.error("Failed to render QR preview:", err);
       }
     }
 
-    updatePreview()
+    updatePreview();
     return () => {
-      active = false
-    }
+      active = false;
+    };
   }, [
     rawQrValue,
     hasContent,
@@ -159,73 +160,73 @@ export function QrGeneratorWorkspace() {
     syncFrameColorWithForeground,
     frameColor,
     syncTextColorWithBackground,
-    frameTextColor
-  ])
+    frameTextColor,
+  ]);
 
   const downloadSVG = async () => {
     try {
-      setIsDownloading(true)
-      const config = getQrConfig()
-      const svgText = await exportAsSvg(config, rawQrValue)
-      
-      const blob = new Blob([svgText], {
-        type: "image/svg+xml;charset=utf-8"
-      })
+      setIsDownloading(true);
+      const config = getQrConfig();
+      const svgText = await exportAsSvg(config, rawQrValue);
 
-      await downloadWithFilename(blob, `imify-qr-${type}.svg`)
-      success("Export Successful", "QR code downloaded as SVG")
+      const blob = new Blob([svgText], {
+        type: "image/svg+xml;charset=utf-8",
+      });
+
+      await downloadWithFilename(blob, `imify-qr-${type}.svg`);
+      success("Export Successful", "QR code downloaded as SVG");
     } catch (err) {
-      error("Export Failed", "Could not download the QR code as SVG")
+      error("Export Failed", "Could not download the QR code as SVG");
     } finally {
-      setIsDownloading(false)
+      setIsDownloading(false);
     }
-  }
+  };
 
   const downloadPNG = async () => {
     try {
-      setIsDownloading(true)
-      const config = getQrConfig()
-      const canvas = await renderMasterCanvas(config, rawQrValue)
-      
+      setIsDownloading(true);
+      const config = getQrConfig();
+      const canvas = await renderMasterCanvas(config, rawQrValue);
+
       canvas.toBlob(async (blob) => {
         if (blob) {
-          await downloadWithFilename(blob, `imify-qr-${type}.png`)
-          success("Export Successful", "QR code downloaded as PNG")
+          await downloadWithFilename(blob, `imify-qr-${type}.png`);
+          success("Export Successful", "QR code downloaded as PNG");
         } else {
-          error("Export Failed", "Could not export canvas to blob")
+          error("Export Failed", "Could not export canvas to blob");
         }
-        setIsDownloading(false)
-      }, "image/png")
+        setIsDownloading(false);
+      }, "image/png");
     } catch (err) {
-      error("Export Failed", "Could not download the QR code as PNG")
-      setIsDownloading(false)
+      error("Export Failed", "Could not download the QR code as PNG");
+      setIsDownloading(false);
     }
-  }
+  };
 
   const downloadWebP = async () => {
     try {
-      setIsDownloading(true)
-      const config = getQrConfig()
-      const canvas = await renderMasterCanvas(config, rawQrValue)
+      setIsDownloading(true);
+      const config = getQrConfig();
+      const canvas = await renderMasterCanvas(config, rawQrValue);
 
       canvas.toBlob(
         async (blob) => {
           if (blob) {
-            await downloadWithFilename(blob, `imify-qr-${type}.webp`)
-            success("Export Successful", "QR code downloaded as WebP")
+            await downloadWithFilename(blob, `imify-qr-${type}.webp`);
+            success("Export Successful", "QR code downloaded as WebP");
           } else {
-            error("Export Failed", "Could not export canvas to blob")
+            error("Export Failed", "Could not export canvas to blob");
           }
-          setIsDownloading(false)
+          setIsDownloading(false);
         },
         "image/webp",
-        1.0
-      )
+        1.0,
+      );
     } catch (err) {
-      error("Export Failed", "Could not download the QR code as WebP")
-      setIsDownloading(false)
+      error("Export Failed", "Could not download the QR code as WebP");
+      setIsDownloading(false);
     }
-  }
+  };
 
   const renderDataFields = () => {
     switch (type) {
@@ -233,11 +234,12 @@ export function QrGeneratorWorkspace() {
         return (
           <TextInput
             label="URL Link"
+            type="url"
             placeholder="e.g. https://google.com"
             value={data.url.url}
             onChange={(val) => updateDataField("url", "url", val)}
           />
-        )
+        );
       case "text":
         return (
           <TextArea
@@ -248,12 +250,13 @@ export function QrGeneratorWorkspace() {
             heightExpandMode="slider"
             rows={6}
           />
-        )
+        );
       case "email":
         return (
           <div className="space-y-3">
             <TextInput
               label="Recipient Email"
+              type="email"
               placeholder="e.g. contact@example.com"
               value={data.email.to}
               onChange={(val) => updateDataField("email", "to", val)}
@@ -273,21 +276,23 @@ export function QrGeneratorWorkspace() {
               rows={4}
             />
           </div>
-        )
+        );
       case "phone":
         return (
           <TextInput
             label="Phone Number"
+            type="tel"
             placeholder="e.g. +84123456789"
             value={data.phone.phone}
             onChange={(val) => updateDataField("phone", "phone", val)}
           />
-        )
+        );
       case "sms":
         return (
           <div className="space-y-3">
             <TextInput
               label="Recipient Phone"
+              type="tel"
               placeholder="e.g. +84123456789"
               value={data.sms.phone}
               onChange={(val) => updateDataField("sms", "phone", val)}
@@ -301,16 +306,30 @@ export function QrGeneratorWorkspace() {
               heightExpandMode="text"
             />
           </div>
-        )
+        );
       case "wifi":
         return (
           <div className="space-y-3">
-            <TextInput
-              label="Network Name (SSID)"
-              placeholder="e.g. MyHomeWifi"
-              value={data.wifi.ssid}
-              onChange={(val) => updateDataField("wifi", "ssid", val)}
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <TextInput
+                label="Network Name (SSID)"
+                placeholder="e.g. MyHomeWifi"
+                value={data.wifi.ssid}
+                onChange={(val) => updateDataField("wifi", "ssid", val)}
+              />
+              <SelectInput
+                label="Encryption Type"
+                value={data.wifi.encryption}
+                onChange={(val: string) =>
+                  updateDataField("wifi", "encryption", val as any)
+                }
+                options={[
+                  { value: "WPA", label: "WPA/WPA2" },
+                  { value: "WEP", label: "WEP" },
+                  { value: "nopass", label: "Unsecured (No Password)" },
+                ]}
+              />
+            </div>
             <TextInput
               label="Password"
               placeholder="e.g. p@ssw0rd123"
@@ -318,20 +337,15 @@ export function QrGeneratorWorkspace() {
               value={data.wifi.password}
               onChange={(val) => updateDataField("wifi", "password", val)}
             />
-            <SelectInput
-              label="Encryption Type"
-              value={data.wifi.encryption}
-              onChange={(val: string) =>
-                updateDataField("wifi", "encryption", val as any)
-              }
-              options={[
-                { value: "WPA", label: "WPA/WPA2" },
-                { value: "WEP", label: "WEP" },
-                { value: "nopass", label: "Unsecured (No Password)" }
-              ]}
+            <CheckboxCard
+              checked={Boolean(data.wifi.hidden)}
+              onChange={(val) => updateDataField("wifi", "hidden", val)}
+              title="Hidden SSID"
+              subtitle="This Wi-Fi network's SSID is hidden (not broadcasting)"
+              icon={<Wifi size={14} className="text-blue-500" />}
             />
           </div>
-        )
+        );
       case "vcard":
         return (
           <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
@@ -368,12 +382,14 @@ export function QrGeneratorWorkspace() {
             <div className="grid grid-cols-2 gap-2">
               <TextInput
                 label="Mobile Phone"
+                type="tel"
                 placeholder="+1 555-0100"
                 value={data.vcard.phoneMobile}
                 onChange={(val) => updateDataField("vcard", "phoneMobile", val)}
               />
               <TextInput
                 label="Work Phone"
+                type="tel"
                 placeholder="+1 555-0199"
                 value={data.vcard.phoneWork}
                 onChange={(val) => updateDataField("vcard", "phoneWork", val)}
@@ -388,6 +404,7 @@ export function QrGeneratorWorkspace() {
               />
               <TextInput
                 label="Website URL"
+                type="url"
                 placeholder="https://example.com"
                 value={data.vcard.url}
                 onChange={(val) => updateDataField("vcard", "url", val)}
@@ -445,11 +462,11 @@ export function QrGeneratorWorkspace() {
               />
             </div>
           </div>
-        )
+        );
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden animate-in fade-in duration-300">
@@ -457,7 +474,7 @@ export function QrGeneratorWorkspace() {
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start h-full">
           {/* Left Column: Data Type selector and Content Inputs (3/5 width) */}
-          <div className="lg:col-span-3 shadow-sm space-y-4 relative">
+          <div className="lg:col-span-3 shadow-sm space-y-4 relative pl-1">
             <div className="border-b border-slate-100 dark:border-slate-850 pb-3">
               <Subheading>QR GENERATOR</Subheading>
               <MutedText className="text-xs">
@@ -483,7 +500,7 @@ export function QrGeneratorWorkspace() {
             </div>
 
             {/* Float Reset Button in the top-right corner */}
-            <div className="absolute top-0 right-3">
+            <div className="absolute top-[-5px] right-3">
               <SecondaryButton
                 onClick={resetToDefault}
                 className="text-xs h-8 flex items-center gap-1.5 px-3"
@@ -513,7 +530,7 @@ export function QrGeneratorWorkspace() {
                         ? "linear-gradient(45deg, #efefef 25%, transparent 25%), linear-gradient(-45deg, #efefef 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #efefef 75%), linear-gradient(-45deg, transparent 75%, #efefef 75%)"
                         : undefined,
                     backgroundSize: "20px 20px",
-                    backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px"
+                    backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
                   }}
                 >
                   <div className="w-full h-full flex items-center justify-center">
@@ -570,5 +587,5 @@ export function QrGeneratorWorkspace() {
         </div>
       </div>
     </div>
-  )
+  );
 }

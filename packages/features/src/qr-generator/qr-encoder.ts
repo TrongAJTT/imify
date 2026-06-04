@@ -49,7 +49,8 @@ export const QR_ENCODERS: {
     const ssid = escapeWifiString(fields.ssid)
     const password = escapeWifiString(fields.password)
     const encryption = fields.encryption || "nopass"
-    return `WIFI:S:${ssid};T:${encryption};P:${password};;`
+    const hidden = fields.hidden ? ";H:true" : ""
+    return `WIFI:S:${ssid};T:${encryption};P:${password}${hidden};;`
   },
   vcard: (data) => {
     const fields = data as VCardFields

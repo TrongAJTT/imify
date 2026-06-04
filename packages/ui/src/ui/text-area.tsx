@@ -34,8 +34,9 @@ export function TextArea({
   }, [value, heightExpandMode]);
 
   const handleResizeStart = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      e.preventDefault();
+    (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+      // Prevent default to avoid scrolling on touch devices
+      if (e.cancelable) e.preventDefault();
       e.stopPropagation();
       setIsResizing(true);
     },
@@ -45,28 +46,33 @@ export function TextArea({
   useEffect(() => {
     if (!isResizing || heightExpandMode !== "slider") return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (e: MouseEvent | TouchEvent) => {
       const textarea = textareaRef.current;
       if (!textarea) return;
 
+      const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
       const rect = textarea.getBoundingClientRect();
       const nextHeight = Math.max(
         60,
-        Math.min(600, Math.round(e.clientY - rect.top)),
+        Math.min(600, Math.round(clientY - rect.top)),
       );
       setCustomHeight(nextHeight);
     };
 
-    const handleMouseUp = () => {
+    const handleUp = () => {
       setIsResizing(false);
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("mouseup", handleUp);
+    document.addEventListener("touchmove", handleMove, { passive: false });
+    document.addEventListener("touchend", handleUp);
 
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("mouseup", handleUp);
+      document.removeEventListener("touchmove", handleMove);
+      document.removeEventListener("touchend", handleUp);
     };
   }, [isResizing, heightExpandMode]);
 
@@ -90,7 +96,8 @@ export function TextArea({
           style={style}
           className={`
             w-full rounded-md border bg-white dark:bg-slate-800/80
-            px-3 py-2 text-slate-700 dark:text-slate-200 outline-none transition-all shadow-sm
+            px-3 py-2 text-slate-700 dark:text-slate-200 outline-none shadow-sm
+            ${heightExpandMode !== "slider" ? "transition-all" : ""}
             ${
               hasError
                 ? "border-rose-300 bg-rose-50 text-rose-900 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 dark:border-rose-900/60 dark:bg-rose-950/20 dark:text-rose-100"
@@ -104,6 +111,7 @@ export function TextArea({
         {heightExpandMode === "slider" && (
           <div
             onMouseDown={handleResizeStart}
+            onTouchStart={handleResizeStart}
             className={`h-1 w-full bg-slate-200 dark:bg-slate-700 hover:bg-sky-400 dark:hover:bg-sky-500 rounded-b border border-t-0 border-slate-200 dark:border-slate-700 transition-colors cursor-ns-resize ${
               isResizing ? "bg-sky-400 dark:bg-sky-500" : ""
             }`}
