@@ -14,17 +14,6 @@ export interface AttributionCategory {
 // Source of truth for open-source acknowledgements grouped by category.
 export const ATTRIBUTION_CATEGORIES: AttributionCategory[] = [
   {
-    id: "ai-models",
-    label: "AI Models & Engines",
-    items: [
-      { name: "Transformers.js", author: "Hugging Face and contributors", license: "Apache-2.0", url: "https://github.com/huggingface/transformers.js" },
-      { name: "BiRefNet", author: "ZhengPeng7 and contributors", license: "MIT", url: "https://huggingface.co/ZhengPeng7/BiRefNet" },
-      { name: "ORMBG", author: "ONNX Community and contributors", license: "MIT", url: "https://huggingface.co/onnx-community/ormbg-ONNX" },
-      { name: "MODNet", author: "ONNX Community and contributors", license: "Apache-2.0", url: "https://huggingface.co/onnx-community/modnet-webnn" },
-      { name: "Selfie Segmenter", author: "Google and ONNX Community", license: "Apache-2.0", url: "https://huggingface.co/onnx-community/mediapipe_selfie_segmentation" }
-    ]
-  },
-  {
     id: "core",
     label: "Core Frameworks",
     items: [
@@ -33,7 +22,9 @@ export const ATTRIBUTION_CATEGORIES: AttributionCategory[] = [
       { name: "Tailwind CSS", author: "Tailwind Labs, Inc.", license: "MIT", url: "https://tailwindcss.com/" },
       { name: "Lucide React", author: "Eric Fennis and Lucide contributors", license: "ISC", url: "https://lucide.dev/" },
       { name: "Radix UI", author: "Modulz Inc. and Radix UI contributors", license: "MIT", url: "https://www.radix-ui.com/" },
-      { name: "Zustand", author: "Paul Henschel and Poimandres contributors", license: "MIT", url: "https://github.com/pmndrs/zustand" }
+      { name: "Zustand", author: "Paul Henschel and Poimandres contributors", license: "MIT", url: "https://github.com/pmndrs/zustand" },
+      { name: "Konva", author: "Anton Lavrenov", license: "MIT", url: "https://github.com/konvajs/konva" },
+      { name: "React Konva", author: "Anton Lavrenov", license: "MIT", url: "https://github.com/konvajs/react-konva" }
     ]
   },
   {
@@ -54,7 +45,49 @@ export const ATTRIBUTION_CATEGORIES: AttributionCategory[] = [
       { name: "tailwind-merge", author: "Danylo and contributors", license: "MIT", url: "https://github.com/dcastil/tailwind-merge" },
       { name: "perfect-freehand", author: "Steveruizok", license: "MIT", url: "https://github.com/steveruizok/perfect-freehand" },
       { name: "react-player", author: "Pete Cook", license: "MIT", url: "https://github.com/cookpete/react-player" },
-      { name: "youtube-video-element", author: "Wesley Luyten", license: "MIT", url: "https://github.com/luwes/youtube-video-element" }
+      { name: "youtube-video-element", author: "Wesley Luyten", license: "MIT", url: "https://github.com/luwes/youtube-video-element" },
+      { name: "ag-psd", author: "Kirill Zolotarev", license: "MIT", url: "https://github.com/Agamnentzar/ag-psd" },
+      { name: "woff2-encoder", author: "Google and contributors (port by Jamie Sinclair)", license: "MIT", url: "https://github.com/jamsinclair/woff2-encoder" },
+      { name: "ONNX Runtime Web", author: "Microsoft Corporation", license: "MIT", url: "https://github.com/microsoft/onnxruntime" }
+    ]
+  },
+  {
+    id: "ai-models",
+    label: "AI Models & Engines",
+    items: [
+      { name: "Transformers.js", author: "Hugging Face and contributors", license: "Apache-2.0", url: "https://github.com/huggingface/transformers.js" },
+      { name: "BiRefNet", author: "ZhengPeng7 and contributors", license: "MIT", url: "https://huggingface.co/ZhengPeng7/BiRefNet" },
+      { name: "ORMBG", author: "ONNX Community and contributors", license: "MIT", url: "https://huggingface.co/onnx-community/ormbg-ONNX" },
+      { name: "MODNet", author: "ONNX Community and contributors", license: "Apache-2.0", url: "https://huggingface.co/onnx-community/modnet-webnn" },
+      { name: "Selfie Segmenter", author: "Google and ONNX Community", license: "Apache-2.0", url: "https://huggingface.co/onnx-community/mediapipe_selfie_segmentation" },
+      { name: "Swin2SR", author: "Computer Vision Lab Würzburg and contributors", license: "Apache-2.0", url: "https://github.com/caidas/swin2SR" },
+      { name: "APISR", author: "Kiteretsu77 and contributors", license: "Apache-2.0", url: "https://github.com/Kiteretsu77/APISR" }
+    ]
+  },
+  {
+    id: "fonts",
+    label: "Google Fonts Library",
+    items: [
+      { name: "Roboto", author: "Google", license: "Apache-2.0", url: "https://fonts.google.com/specimen/Roboto" },
+      { name: "Open Sans", author: "Steve Matteson", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Open+Sans" },
+      { name: "Montserrat", author: "Julieta Ulanovsky", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Montserrat" },
+      { name: "Lato", author: "Łukasz Dziedzic", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Lato" },
+      { name: "Poppins", author: "Indian Type Foundry", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Poppins" },
+      { name: "Inter", author: "Rasmus Andersson", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Inter" },
+      { name: "Oswald", author: "Vernon Adams", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Oswald" },
+      { name: "Raleway", author: "Matt McInerney", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Raleway" },
+      { name: "Nunito", author: "Vernon Adams", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Nunito" },
+      { name: "Merriweather", author: "Sorkin Type", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Merriweather" },
+      { name: "Playfair Display", author: "Claus Eggers Sørensen", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Playfair+Display" },
+      { name: "Ubuntu", author: "Canonical Ltd", license: "Ubuntu-Font-License-1.0", url: "https://fonts.google.com/specimen/Ubuntu" },
+      { name: "Source Sans 3", author: "Adobe", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Source+Sans+3" },
+      { name: "Bebas Neue", author: "Ryoichi Tsunekawa", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Bebas+Neue" },
+      { name: "Dancing Script", author: "Pablo Impallari", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Dancing+Script" },
+      { name: "Pacifico", author: "Vernon Adams", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Pacifico" },
+      { name: "Abril Fatface", author: "TypeTogether", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Abril+Fatface" },
+      { name: "Lobster", author: "Impallari Type", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Lobster" },
+      { name: "Quicksand", author: "Andrew Paglinawan", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Quicksand" },
+      { name: "Comfortaa", author: "Johan Aakerlund", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Comfortaa" }
     ]
   }
 ]
