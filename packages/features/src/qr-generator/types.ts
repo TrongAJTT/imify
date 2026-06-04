@@ -79,8 +79,9 @@ export interface QrConfig {
   markerCenterColor: string
 
   // Frame
-  frameConfig: FrameConfig
+  frameStyle: FrameStyleType
   frameText: string
+  frameTextScale: number
   frameFontFamily: string
   frameFontId: string
   syncFrameColorWithForeground: boolean
@@ -95,15 +96,5 @@ export type QrMarkerBorderType = "square" | "dot" | "extra-rounded"
 export type QrMarkerCenterType = "square" | "dot"
 
 // --- FRAME MODULE ---
-export type FramePresetId = "none" | "bottom-label" | "top-label" | "banner-bottom" | "border-box" | "pill-bottom" | "custom"
-
-export interface FrameConfig {
-  id: FramePresetId
-  paddingTop: number
-  paddingBottom: number
-  paddingX: number
-  borderRadius: number
-  borderWidth: number
-  textYOffset: number    // Y offset relative to calculated text baseline
-}
+export type FrameStyleType = "none" | "border" | "bottom" | "top" | "tooltip" | "ribbon"
 

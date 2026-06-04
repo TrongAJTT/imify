@@ -74,8 +74,9 @@ export function QrGeneratorWorkspace() {
     markerCenterColor,
 
     // Frame state
-    frameConfig,
+    frameStyle,
     frameText,
+    frameTextScale,
     frameFontFamily,
     frameFontId,
     syncFrameColorWithForeground,
@@ -148,8 +149,9 @@ export function QrGeneratorWorkspace() {
     markerBorderColor,
     syncMarkerCenterColorWithForeground,
     markerCenterColor,
-    frameConfig,
+    frameStyle,
     frameText,
+    frameTextScale,
     frameFontFamily,
     frameFontId,
     syncFrameColorWithForeground,

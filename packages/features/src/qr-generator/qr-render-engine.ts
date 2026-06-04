@@ -1,5 +1,85 @@
 import QRCodeStyling from "qr-code-styling"
-import type { QrConfig } from "./types"
+import type { QrConfig, FrameStyleType } from "./types"
+
+interface FrameLayout {
+  paddingTop: number
+  paddingBottom: number
+  paddingX: number
+  borderRadius: number
+  borderWidth: number
+  textY: number
+  isBottomText: boolean
+  totalWidth: number
+  totalHeight: number
+}
+
+function calculateFrameLayout(style: FrameStyleType, size: number, textScale: number): FrameLayout {
+  let paddingTop = 0
+  let paddingBottom = 0
+  let paddingX = 0
+  let borderRadius = 0
+  let borderWidth = 0
+  let isBottomText = true
+
+  switch (style) {
+    case "border":
+      paddingTop = paddingBottom = paddingX = size * 0.1
+      borderRadius = size * 0.05
+      borderWidth = size * 0.02
+      break
+    case "bottom":
+      paddingTop = size * 0.08
+      paddingBottom = size * 0.3
+      paddingX = size * 0.08
+      borderRadius = size * 0.06
+      break
+    case "top":
+      paddingTop = size * 0.3
+      paddingBottom = size * 0.08
+      paddingX = size * 0.08
+      borderRadius = size * 0.06
+      isBottomText = false
+      break
+    case "tooltip":
+      paddingTop = size * 0.08
+      paddingBottom = size * 0.35
+      paddingX = size * 0.08
+      borderRadius = size * 0.1
+      break
+    case "ribbon":
+      paddingTop = size * 0.3
+      paddingBottom = size * 0.08
+      paddingX = size * 0.08
+      isBottomText = false
+      break
+    case "none":
+    default:
+      break
+  }
+
+  const totalWidth = size + 2 * paddingX
+  const totalHeight = size + paddingTop + paddingBottom
+
+  // Calculate text Y position
+  let textY = 0
+  if (style !== "none") {
+    const textZoneHeight = isBottomText ? paddingBottom : paddingTop
+    const baseOffset = isBottomText ? totalHeight - textZoneHeight / 2 : textZoneHeight / 2
+    textY = baseOffset
+  }
+
+  return {
+    paddingTop,
+    paddingBottom,
+    paddingX,
+    borderRadius,
+    borderWidth,
+    textY,
+    isBottomText,
+    totalWidth,
+    totalHeight
+  }
+}
 
 export function createQrStylingInstance(config: QrConfig): QRCodeStyling {
   const resolvedMarkerBorderColor = config.syncMarkerBorderColorWithForeground ? config.fgColor : config.markerBorderColor
@@ -72,20 +152,10 @@ export async function renderMasterCanvas(config: QrConfig, encodedData: string):
     }
   })
 
-  // Calculate layout dimensions
-  const isNone = config.frameConfig.id === "none"
-  const paddingTop = isNone ? 0 : config.frameConfig.paddingTop
-  const paddingBottom = isNone ? 0 : config.frameConfig.paddingBottom
-  const paddingX = isNone ? 0 : config.frameConfig.paddingX
-  const borderRadius = isNone ? 0 : config.frameConfig.borderRadius
-  const borderWidth = isNone ? 0 : config.frameConfig.borderWidth
-
-  const totalWidth = config.size + 2 * paddingX
-  const totalHeight = config.size + paddingTop + paddingBottom
-
+  const layout = calculateFrameLayout(config.frameStyle, config.size, config.frameTextScale)
   const masterCanvas = document.createElement("canvas")
-  masterCanvas.width = totalWidth
-  masterCanvas.height = totalHeight
+  masterCanvas.width = layout.totalWidth
+  masterCanvas.height = layout.totalHeight
   const ctx = masterCanvas.getContext("2d")
   if (!ctx) return masterCanvas
 
@@ -93,50 +163,87 @@ export async function renderMasterCanvas(config: QrConfig, encodedData: string):
   const resolvedTextColor = config.syncTextColorWithBackground ? config.bgColor : config.frameTextColor
 
   // Draw frame background
-  if (!isNone) {
+  if (config.frameStyle !== "none") {
     ctx.save()
     ctx.fillStyle = resolvedFrameColor
-    ctx.beginPath()
-    if ((ctx as any).roundRect) {
-      ;(ctx as any).roundRect(0, 0, totalWidth, totalHeight, borderRadius)
-    } else {
-      const r = borderRadius
-      const w = totalWidth
-      const h = totalHeight
-      ctx.moveTo(r, 0)
-      ctx.lineTo(w - r, 0)
-      ctx.quadraticCurveTo(w, 0, w, r)
-      ctx.lineTo(w, h - r)
-      ctx.quadraticCurveTo(w, h, w - r, h)
-      ctx.lineTo(r, h)
-      ctx.quadraticCurveTo(0, h, 0, h - r)
-      ctx.lineTo(0, r)
-      ctx.quadraticCurveTo(0, 0, r, 0)
-    }
-    ctx.fill()
+    
+    if (config.frameStyle === "ribbon") {
+      const w = layout.totalWidth
+      const h = layout.totalHeight
+      const pt = layout.paddingTop
+      const px = layout.paddingX
+      const ribbonH = pt * 0.8
+      const ribbonY = pt * 0.1
+      
+      // Main ribbon body
+      ctx.fillRect(0, ribbonY, w, ribbonH)
+      
+      // Ribbon tails
+      ctx.beginPath()
+      ctx.moveTo(0, ribbonY + ribbonH)
+      ctx.lineTo(px * 0.5, ribbonY + ribbonH + ribbonY)
+      ctx.lineTo(px * 0.5, ribbonY)
+      ctx.fill()
+      
+      ctx.beginPath()
+      ctx.moveTo(w, ribbonY + ribbonH)
+      ctx.lineTo(w - px * 0.5, ribbonY + ribbonH + ribbonY)
+      ctx.lineTo(w - px * 0.5, ribbonY)
+      ctx.fill()
 
-    if (borderWidth > 0) {
-      ctx.strokeStyle = resolvedTextColor
-      ctx.lineWidth = borderWidth
-      ctx.stroke()
+      // QR Background area (if ribbon, we might want a white box under QR)
+      ctx.fillStyle = config.bgColor
+      ctx.fillRect(px, pt, config.size, config.size)
+    } else if (config.frameStyle === "tooltip") {
+      const w = layout.totalWidth
+      const h = layout.totalHeight
+      const r = layout.borderRadius
+      
+      ctx.beginPath()
+      if ((ctx as any).roundRect) {
+        ;(ctx as any).roundRect(0, 0, w, h - layout.paddingBottom * 0.3, r)
+      } else {
+        // Fallback for roundRect
+        ctx.rect(0, 0, w, h - layout.paddingBottom * 0.3)
+      }
+      ctx.fill()
+      
+      // Tooltip tail
+      ctx.beginPath()
+      const tailW = layout.paddingBottom * 0.4
+      const tailH = layout.paddingBottom * 0.3
+      ctx.moveTo(w / 2 - tailW / 2, h - tailH)
+      ctx.lineTo(w / 2, h)
+      ctx.lineTo(w / 2 + tailW / 2, h - tailH)
+      ctx.fill()
+    } else {
+      ctx.beginPath()
+      if ((ctx as any).roundRect) {
+        ;(ctx as any).roundRect(0, 0, layout.totalWidth, layout.totalHeight, layout.borderRadius)
+      } else {
+        ctx.rect(0, 0, layout.totalWidth, layout.totalHeight)
+      }
+      ctx.fill()
+
+      if (layout.borderWidth > 0) {
+        ctx.strokeStyle = resolvedTextColor
+        ctx.lineWidth = layout.borderWidth
+        ctx.stroke()
+      }
     }
     ctx.restore()
   }
 
   // Draw QR code image
-  const qrX = paddingX
-  const qrY = paddingTop
-  ctx.drawImage(img, qrX, qrY)
+  ctx.drawImage(img, layout.paddingX, layout.paddingTop)
 
   // Draw frame text
-  if (config.frameText && !isNone) {
+  if (config.frameText && config.frameStyle !== "none") {
     if (typeof document !== "undefined" && "fonts" in document) {
       try {
         const fontSpec = `bold 16px "${config.frameFontFamily}"`
         await document.fonts.load(fontSpec)
-      } catch (e) {
-        console.warn(`Failed to wait for font loading: ${config.frameFontFamily}`, e)
-      }
+      } catch (e) {}
     }
 
     ctx.save()
@@ -144,14 +251,11 @@ export async function renderMasterCanvas(config: QrConfig, encodedData: string):
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
 
-    const fontSize = Math.max(12, Math.round(config.size * 0.075))
+    const baseFontSize = Math.max(12, Math.round(config.size * 0.08))
+    const fontSize = baseFontSize * (config.frameTextScale / 100)
     ctx.font = `bold ${fontSize}px "${config.frameFontFamily}"`
 
-    const isBottomText = paddingBottom >= paddingTop
-    const textBaseY = isBottomText ? totalHeight - paddingBottom / 2 : paddingTop / 2
-    const textY = textBaseY + config.frameConfig.textYOffset
-
-    ctx.fillText(config.frameText, totalWidth / 2, textY)
+    ctx.fillText(config.frameText, layout.totalWidth / 2, layout.textY)
     ctx.restore()
   }
 
@@ -172,16 +276,7 @@ export async function exportAsSvg(config: QrConfig, encodedData: string): Promis
     rawSvgText = blob.toString("utf-8")
   }
 
-  // Calculate layout dimensions
-  const isNone = config.frameConfig.id === "none"
-  const paddingTop = isNone ? 0 : config.frameConfig.paddingTop
-  const paddingBottom = isNone ? 0 : config.frameConfig.paddingBottom
-  const paddingX = isNone ? 0 : config.frameConfig.paddingX
-  const borderRadius = isNone ? 0 : config.frameConfig.borderRadius
-  const borderWidth = isNone ? 0 : config.frameConfig.borderWidth
-
-  const totalWidth = config.size + 2 * paddingX
-  const totalHeight = config.size + paddingTop + paddingBottom
+  const layout = calculateFrameLayout(config.frameStyle, config.size, config.frameTextScale)
 
   // Extract inner elements of the generated QR SVG
   const match = rawSvgText.match(/<svg[^>]*>([\s\S]*?)<\/svg>/)
@@ -192,27 +287,51 @@ export async function exportAsSvg(config: QrConfig, encodedData: string): Promis
   const resolvedFrameColor = config.syncFrameColorWithForeground ? config.fgColor : config.frameColor
   const resolvedTextColor = config.syncTextColorWithBackground ? config.bgColor : config.frameTextColor
 
-  let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}">\n`
+  let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${layout.totalWidth}" height="${layout.totalHeight}" viewBox="0 0 ${layout.totalWidth} ${layout.totalHeight}">\n`
 
   // Draw frame background
-  if (!isNone) {
-    const borderAttr = borderWidth > 0 ? ` stroke="${resolvedTextColor}" stroke-width="${borderWidth}"` : ""
-    svgContent += `  <rect x="0" y="0" width="${totalWidth}" height="${totalHeight}" rx="${borderRadius}" ry="${borderRadius}" fill="${resolvedFrameColor}"${borderAttr} />\n`
+  if (config.frameStyle !== "none") {
+    if (config.frameStyle === "ribbon") {
+      const w = layout.totalWidth
+      const pt = layout.paddingTop
+      const px = layout.paddingX
+      const ribbonH = pt * 0.8
+      const ribbonY = pt * 0.1
+      
+      // Main ribbon body
+      svgContent += `  <rect x="0" y="${ribbonY}" width="${w}" height="${ribbonH}" fill="${resolvedFrameColor}" />\n`
+      // Ribbon tails
+      svgContent += `  <path d="M 0,${ribbonY + ribbonH} L ${px * 0.5},${ribbonY + ribbonH + ribbonY} L ${px * 0.5},${ribbonY} Z" fill="${resolvedFrameColor}" />\n`
+      svgContent += `  <path d="M ${w},${ribbonY + ribbonH} L ${w - px * 0.5},${ribbonY + ribbonH + ribbonY} L ${w - px * 0.5},${ribbonY} Z" fill="${resolvedFrameColor}" />\n`
+      // QR Background
+      svgContent += `  <rect x="${px}" y="${pt}" width="${config.size}" height="${config.size}" fill="${config.bgColor}" />\n`
+    } else if (config.frameStyle === "tooltip") {
+      const w = layout.totalWidth
+      const h = layout.totalHeight
+      const r = layout.borderRadius
+      const tailW = layout.paddingBottom * 0.4
+      const tailH = layout.paddingBottom * 0.3
+      const mainH = h - tailH
+      
+      svgContent += `  <rect x="0" y="0" width="${w}" height="${mainH}" rx="${r}" ry="${r}" fill="${resolvedFrameColor}" />\n`
+      svgContent += `  <path d="M ${w / 2 - tailW / 2},${mainH} L ${w / 2},${h} L ${w / 2 + tailW / 2},${mainH} Z" fill="${resolvedFrameColor}" />\n`
+    } else {
+      const borderAttr = layout.borderWidth > 0 ? ` stroke="${resolvedTextColor}" stroke-width="${layout.borderWidth}"` : ""
+      svgContent += `  <rect x="0" y="0" width="${layout.totalWidth}" height="${layout.totalHeight}" rx="${layout.borderRadius}" ry="${layout.borderRadius}" fill="${resolvedFrameColor}"${borderAttr} />\n`
+    }
   }
 
   // Draw QR code elements shifted by padding
-  svgContent += `  <g transform="translate(${paddingX}, ${paddingTop})">\n`
+  svgContent += `  <g transform="translate(${layout.paddingX}, ${layout.paddingTop})">\n`
   svgContent += `    ${innerElements}\n`
   svgContent += `  </g>\n`
 
   // Draw text label
-  if (config.frameText && !isNone) {
-    const fontSize = Math.max(12, Math.round(config.size * 0.075))
-    const isBottomText = paddingBottom >= paddingTop
-    const textBaseY = isBottomText ? totalHeight - paddingBottom / 2 : paddingTop / 2
-    const textY = textBaseY + config.frameConfig.textYOffset
+  if (config.frameText && config.frameStyle !== "none") {
+    const baseFontSize = Math.max(12, Math.round(config.size * 0.08))
+    const fontSize = baseFontSize * (config.frameTextScale / 100)
 
-    svgContent += `  <text x="${totalWidth / 2}" y="${textY}" fill="${resolvedTextColor}" font-family="${config.frameFontFamily}" font-size="${fontSize}" font-weight="bold" text-anchor="middle" dominant-baseline="central">${config.frameText}</text>\n`
+    svgContent += `  <text x="${layout.totalWidth / 2}" y="${layout.textY}" fill="${resolvedTextColor}" font-family="${config.frameFontFamily}" font-size="${fontSize}" font-weight="bold" text-anchor="middle" dominant-baseline="central">${config.frameText}</text>\n`
   }
 
   svgContent += `</svg>`

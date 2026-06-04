@@ -90,3 +90,49 @@ export const MarkerCenterDotIcon = ({ className }: IconProps) => (
     <circle cx="12" cy="12" r="5" />
   </svg>
 )
+
+// Frame Icons
+export const FrameNoneIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={className}>
+    <line x1="4" y1="4" x2="20" y2="20" />
+    <line x1="4" y1="20" x2="20" y2="4" />
+  </svg>
+)
+
+export const FrameBorderIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={className}>
+    <rect x="4" y="4" width="16" height="16" />
+    <rect x="7" y="7" width="10" height="10" fill="currentColor" stroke="none" />
+  </svg>
+)
+
+export const FrameBottomIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={className}>
+    <path d="M4,4 H20 V16 H14 L12,20 L10,16 H4 Z" />
+    <rect x="7" y="6" width="10" height="7" fill="currentColor" stroke="none" />
+  </svg>
+)
+
+export const FrameTopIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={className} transform="rotate(180)">
+    <path d="M4,4 H20 V16 H14 L12,20 L10,16 H4 Z" />
+    <rect x="7" y="6" width="10" height="7" fill="currentColor" stroke="none" />
+  </svg>
+)
+
+export const FrameTooltipIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={className}>
+    <rect x="4" y="4" width="16" height="13" rx="2" />
+    <path d="M9,17 L12,21 L15,17" />
+    <rect x="8" y="7" width="8" height="6" fill="currentColor" stroke="none" />
+  </svg>
+)
+
+export const FrameRibbonIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={className}>
+    <path d="M3,6 H21 V14 H3 Z" />
+    <path d="M3,14 L1,16 V8 L3,6" fill="currentColor" />
+    <path d="M21,14 L23,16 V8 L21,6" fill="currentColor" />
+    <rect x="7" y="8" width="10" height="8" fill="currentColor" stroke="none" />
+  </svg>
+)

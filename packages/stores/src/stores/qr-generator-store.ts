@@ -6,7 +6,7 @@ import type {
   QrDotType,
   QrMarkerBorderType,
   QrMarkerCenterType,
-  FrameConfig
+  FrameStyleType
 } from "@imify/features/qr-generator/types"
 
 interface QrGeneratorState {
@@ -32,8 +32,9 @@ interface QrGeneratorState {
   markerCenterColor: string
 
   // Frame
-  frameConfig: FrameConfig
+  frameStyle: FrameStyleType
   frameText: string
+  frameTextScale: number
   frameFontFamily: string
   frameFontId: string
   syncFrameColorWithForeground: boolean
@@ -63,8 +64,8 @@ interface QrGeneratorState {
   setMarkerCenterColor: (color: string) => void
 
   // Frame setters
-  setFrameConfig: (config: FrameConfig) => void
-  updateFrameConfigField: <K extends keyof FrameConfig>(key: K, value: FrameConfig[K]) => void
+  setFrameStyle: (style: FrameStyleType) => void
+  setFrameTextScale: (scale: number) => void
   setFrameText: (text: string) => void
   setFrameFontFamily: (family: string) => void
   setFrameFontId: (id: string) => void
@@ -101,16 +102,6 @@ const INITIAL_DATA: QrDataMap = {
   }
 }
 
-const DEFAULT_FRAME_CONFIG: FrameConfig = {
-  id: "none",
-  paddingTop: 0,
-  paddingBottom: 0,
-  paddingX: 0,
-  borderRadius: 0,
-  borderWidth: 0,
-  textYOffset: 0
-}
-
 export const useQrGeneratorStore = create<QrGeneratorState>()(
   persist(
     (set) => ({
@@ -136,8 +127,9 @@ export const useQrGeneratorStore = create<QrGeneratorState>()(
       markerCenterColor: "#000000",
 
       // Frame Defaults
-      frameConfig: DEFAULT_FRAME_CONFIG,
+      frameStyle: "none",
       frameText: "SCAN ME",
+      frameTextScale: 100,
       frameFontFamily: "sans-serif",
       frameFontId: "",
       syncFrameColorWithForeground: true,
@@ -176,18 +168,11 @@ export const useQrGeneratorStore = create<QrGeneratorState>()(
       setMarkerCenterColor: (markerCenterColor) => set({ markerCenterColor }),
 
       // Frame Setters
-      setFrameConfig: (frameConfig) => set({ frameConfig }),
-      updateFrameConfigField: (key, value) =>
-        set((state) => ({
-          frameConfig: {
-            ...state.frameConfig,
-            [key]: value,
-            id: "custom"
-          }
-        })),
+      setFrameStyle: (frameStyle) => set({ frameStyle }),
+      setFrameTextScale: (frameTextScale) => set({ frameTextScale }),
       setFrameText: (frameText) => set({ frameText }),
       setFrameFontFamily: (frameFontFamily) => set({ frameFontFamily }),
-      setFrameFontId: (frameFontId) => set({ frameFontId }),
+      setFrameFontId: (id: string) => set({ frameFontId: id }),
       setSyncFrameColorWithForeground: (syncFrameColorWithForeground) => set({ syncFrameColorWithForeground }),
       setFrameColor: (frameColor) => set({ frameColor }),
       setSyncTextColorWithBackground: (syncTextColorWithBackground) => set({ syncTextColorWithBackground }),
@@ -215,8 +200,9 @@ export const useQrGeneratorStore = create<QrGeneratorState>()(
           syncMarkerCenterColorWithForeground: true,
           markerCenterColor: "#000000",
 
-          frameConfig: DEFAULT_FRAME_CONFIG,
+          frameStyle: "none",
           frameText: "SCAN ME",
+          frameTextScale: 100,
           frameFontFamily: "sans-serif",
           frameFontId: "",
           syncFrameColorWithForeground: true,

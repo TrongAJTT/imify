@@ -12,6 +12,7 @@ import {
   LabelText,
   SelectInput,
   TextInput,
+  GridIconSelector,
 } from "@imify/ui";
 import {
   Palette,
@@ -21,11 +22,8 @@ import {
   Type,
   Grid2X2,
   Settings2,
-  Maximize,
 } from "lucide-react";
 import { useQrGeneratorStore, useFontStore } from "@imify/stores";
-import { FRAME_PRESETS } from "./frame-presets";
-import { DesignTypeSelector } from "./design-type-selector";
 import * as Icons from "./design-icons";
 
 interface QrGeneratorSidebarProps {
@@ -104,11 +102,12 @@ export function QrGeneratorSidebar({
     setMarkerCenterColor,
 
     // Frame state
-    frameConfig,
-    setFrameConfig,
-    updateFrameConfigField,
+    frameStyle,
+    setFrameStyle,
     frameText,
     setFrameText,
+    frameTextScale,
+    setFrameTextScale,
     frameFontFamily,
     setFrameFontFamily,
     frameFontId,
@@ -124,7 +123,6 @@ export function QrGeneratorSidebar({
   } = useQrGeneratorStore();
 
   const { installedFonts, loadInstalledFonts } = useFontStore();
-  const [showAdvancedFrame, setShowAdvancedFrame] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -201,17 +199,37 @@ export function QrGeneratorSidebar({
           {/* Dot Pattern */}
           <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
             <LabelText className="text-xs">Dot Pattern</LabelText>
-            <DesignTypeSelector
+            <GridIconSelector
               value={dotType}
               onChange={setDotType}
               columns={4}
               options={[
-                { value: "square", label: "Square", icon: <Icons.DotSquareIcon /> },
+                {
+                  value: "square",
+                  label: "Square",
+                  icon: <Icons.DotSquareIcon />,
+                },
                 { value: "dots", label: "Dots", icon: <Icons.DotDotsIcon /> },
-                { value: "rounded", label: "Rounded", icon: <Icons.DotRoundedIcon /> },
-                { value: "extra-rounded", label: "Extra Round", icon: <Icons.DotExtraRoundedIcon /> },
-                { value: "classy", label: "Classy", icon: <Icons.DotClassyIcon /> },
-                { value: "classy-rounded", label: "Classy Rnd", icon: <Icons.DotClassyRoundedIcon /> }
+                {
+                  value: "rounded",
+                  label: "Rounded",
+                  icon: <Icons.DotRoundedIcon />,
+                },
+                {
+                  value: "extra-rounded",
+                  label: "Extra Round",
+                  icon: <Icons.DotExtraRoundedIcon />,
+                },
+                {
+                  value: "classy",
+                  label: "Classy",
+                  icon: <Icons.DotClassyIcon />,
+                },
+                {
+                  value: "classy-rounded",
+                  label: "Classy Rnd",
+                  icon: <Icons.DotClassyRoundedIcon />,
+                },
               ]}
             />
           </div>
@@ -233,15 +251,27 @@ export function QrGeneratorSidebar({
           {/* Marker Border */}
           <div className="space-y-1.5">
             <LabelText className="text-xs">Marker Border</LabelText>
-            <DesignTypeSelector
+            <GridIconSelector
               value={markerBorderType}
               onChange={setMarkerBorderType}
               columns={4}
               colorTheme="blue"
               options={[
-                { value: "square", label: "Square", icon: <Icons.MarkerBorderSquareIcon /> },
-                { value: "dot", label: "Dot", icon: <Icons.MarkerBorderDotIcon /> },
-                { value: "extra-rounded", label: "Rounded", icon: <Icons.MarkerBorderExtraRoundedIcon /> }
+                {
+                  value: "square",
+                  label: "Square",
+                  icon: <Icons.MarkerBorderSquareIcon />,
+                },
+                {
+                  value: "dot",
+                  label: "Dot",
+                  icon: <Icons.MarkerBorderDotIcon />,
+                },
+                {
+                  value: "extra-rounded",
+                  label: "Rounded",
+                  icon: <Icons.MarkerBorderExtraRoundedIcon />,
+                },
               ]}
             />
           </div>
@@ -249,14 +279,22 @@ export function QrGeneratorSidebar({
           {/* Marker Center */}
           <div className="space-y-1.5">
             <LabelText className="text-xs">Marker Center</LabelText>
-            <DesignTypeSelector
+            <GridIconSelector
               value={markerCenterType}
               onChange={setMarkerCenterType}
               columns={4}
               colorTheme="blue"
               options={[
-                { value: "square", label: "Square", icon: <Icons.MarkerCenterSquareIcon /> },
-                { value: "dot", label: "Dot", icon: <Icons.MarkerCenterDotIcon /> }
+                {
+                  value: "square",
+                  label: "Square",
+                  icon: <Icons.MarkerCenterSquareIcon />,
+                },
+                {
+                  value: "dot",
+                  label: "Dot",
+                  icon: <Icons.MarkerCenterDotIcon />,
+                },
               ]}
             />
           </div>
@@ -454,47 +492,48 @@ export function QrGeneratorSidebar({
       content: (
         <AccordionCard
           label="Frame & Text"
-          sublabel={
-            frameConfig.id === "none"
-              ? "No Frame"
-              : frameConfig.id.replace("-", " ")
-          }
+          sublabel={frameStyle === "none" ? "No Frame" : frameStyle}
           icon={<Type size={16} />}
           defaultOpen={false}
           colorTheme="blue"
           childrenClassName="p-3 space-y-4"
         >
-          {/* Preset Selector */}
+          {/* Template Selector */}
           <div className="space-y-1.5">
-            <LabelText className="text-xs">Frame Preset</LabelText>
-            <div className="grid grid-cols-2 gap-1.5">
-              {[
-                { id: "none", label: "None" },
-                { id: "bottom-label", label: "Bottom Label" },
-                { id: "top-label", label: "Top Label" },
-                { id: "banner-bottom", label: "Banner Bottom" },
-                { id: "border-box", label: "Border Box" },
-                { id: "pill-bottom", label: "Pill Bottom" },
-              ].map((p) => (
-                <RadioCard
-                  key={p.id}
-                  title={p.label}
-                  value={p.id}
-                  selectedValue={frameConfig.id}
-                  onChange={(v) => {
-                    const preset = FRAME_PRESETS[v];
-                    if (preset) {
-                      setFrameConfig(preset);
-                    }
-                  }}
-                  colorTheme="blue"
-                  className="flex items-center justify-center p-2 h-9 text-xs"
-                />
-              ))}
-            </div>
+            <LabelText className="text-xs">Frame Template</LabelText>
+            <GridIconSelector
+              value={frameStyle}
+              onChange={setFrameStyle}
+              columns={4}
+              colorTheme="blue"
+              options={[
+                { value: "none", label: "None", icon: <Icons.FrameNoneIcon /> },
+                {
+                  value: "border",
+                  label: "Border",
+                  icon: <Icons.FrameBorderIcon />,
+                },
+                {
+                  value: "bottom",
+                  label: "Bottom",
+                  icon: <Icons.FrameBottomIcon />,
+                },
+                { value: "top", label: "Top", icon: <Icons.FrameTopIcon /> },
+                {
+                  value: "tooltip",
+                  label: "Tooltip",
+                  icon: <Icons.FrameTooltipIcon />,
+                },
+                {
+                  value: "ribbon",
+                  label: "Ribbon",
+                  icon: <Icons.FrameRibbonIcon />,
+                },
+              ]}
+            />
           </div>
 
-          {frameConfig.id !== "none" && (
+          {frameStyle !== "none" && (
             <>
               {/* Frame Text Input */}
               <TextInput
@@ -524,6 +563,17 @@ export function QrGeneratorSidebar({
                 }}
               />
 
+              {/* Text Scale Slider */}
+              <SliderInput
+                label="Text Scale"
+                value={frameTextScale}
+                min={50}
+                max={150}
+                step={5}
+                onChange={setFrameTextScale}
+                suffix="%"
+              />
+
               {/* Frame Colors Sync */}
               <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <div>
@@ -532,7 +582,7 @@ export function QrGeneratorSidebar({
                     onChange={setSyncFrameColorWithForeground}
                     title="Sync Frame Color"
                     subtitle="Match frame color with QR foreground"
-                    icon={<Palette size={14} className="text-emerald-500" />}
+                    icon={<Palette size={14} className="text-blue-500" />}
                   />
                   {!syncFrameColorWithForeground && (
                     <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
@@ -554,7 +604,7 @@ export function QrGeneratorSidebar({
                     onChange={setSyncTextColorWithBackground}
                     title="Sync Text Color"
                     subtitle="Match text color with QR background"
-                    icon={<Palette size={14} className="text-emerald-500" />}
+                    icon={<Palette size={14} className="text-blue-500" />}
                   />
                   {!syncTextColorWithBackground && (
                     <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
@@ -569,80 +619,6 @@ export function QrGeneratorSidebar({
                     </div>
                   )}
                 </div>
-              </div>
-
-              {/* Advanced Customization Toggle */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                <CheckboxCard
-                  checked={showAdvancedFrame}
-                  onChange={setShowAdvancedFrame}
-                  title="Advanced Frame Adjustments"
-                  subtitle="Manually override paddings, borders, and margins"
-                  icon={<Palette size={14} className="text-emerald-500" />}
-                />
-
-                {showAdvancedFrame && (
-                  <div className="space-y-4 pl-2 pt-2 border-l border-slate-200 dark:border-slate-800">
-                    <SliderInput
-                      label="Border Width"
-                      value={frameConfig.borderWidth}
-                      min={0}
-                      max={20}
-                      step={1}
-                      onChange={(v) => updateFrameConfigField("borderWidth", v)}
-                      suffix=" px"
-                    />
-                    <SliderInput
-                      label="Border Radius"
-                      value={frameConfig.borderRadius}
-                      min={0}
-                      max={100}
-                      step={1}
-                      onChange={(v) =>
-                        updateFrameConfigField("borderRadius", v)
-                      }
-                      suffix=" px"
-                    />
-                    <SliderInput
-                      label="Top Padding"
-                      value={frameConfig.paddingTop}
-                      min={0}
-                      max={200}
-                      step={5}
-                      onChange={(v) => updateFrameConfigField("paddingTop", v)}
-                      suffix=" px"
-                    />
-                    <SliderInput
-                      label="Bottom Padding"
-                      value={frameConfig.paddingBottom}
-                      min={0}
-                      max={300}
-                      step={5}
-                      onChange={(v) =>
-                        updateFrameConfigField("paddingBottom", v)
-                      }
-                      suffix=" px"
-                    />
-                    <SliderInput
-                      label="Horizontal Padding"
-                      value={frameConfig.paddingX}
-                      min={0}
-                      max={100}
-                      step={5}
-                      onChange={(v) => updateFrameConfigField("paddingX", v)}
-                      suffix=" px"
-                    />
-                    <SliderInput
-                      label="Text Y Offset"
-                      value={frameConfig.textYOffset}
-                      min={-100}
-                      max={100}
-                      step={5}
-                      onChange={(v) => updateFrameConfigField("textYOffset", v)}
-                      suffix=" px"
-                    />
-                  </div>
-                )}
               </div>
             </>
           )}
