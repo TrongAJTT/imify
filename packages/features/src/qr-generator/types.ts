@@ -1,4 +1,4 @@
-export type QrType = "url" | "text" | "email" | "phone" | "sms" | "wifi" | "vcard"
+export type QrType = "url" | "text" | "email" | "phone" | "sms" | "wifi" | "vcard" | "event" | "messaging"
 
 export interface UrlFields {
   url: string
@@ -37,6 +37,8 @@ export interface VCardFields {
   title: string
   phoneMobile: string
   phoneWork: string
+  phoneHome: string
+  phoneFax: string
   email: string
   url: string
   addressStreet: string
@@ -47,6 +49,22 @@ export interface VCardFields {
   note: string
 }
 
+export interface EventFields {
+  title: string
+  startDate: string // local format: YYYY-MM-DDTHH:mm
+  endDate: string   // local format: YYYY-MM-DDTHH:mm
+  location: string
+  description: string
+  url: string
+  reminderMinutes: number // -1 = no reminder
+}
+
+export interface MessagingFields {
+  platform: "whatsapp" | "telegram" | "zalo"
+  recipient: string
+  message: string
+}
+
 export interface QrDataMap {
   url: UrlFields
   text: TextFields
@@ -55,6 +73,8 @@ export interface QrDataMap {
   sms: SmsFields
   wifi: WifiFields
   vcard: VCardFields
+  event: EventFields
+  messaging: MessagingFields
 }
 
 export interface QrConfig {

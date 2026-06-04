@@ -93,6 +93,8 @@ const INITIAL_DATA: QrDataMap = {
     title: "",
     phoneMobile: "",
     phoneWork: "",
+    phoneHome: "",
+    phoneFax: "",
     email: "",
     url: "",
     addressStreet: "",
@@ -101,6 +103,20 @@ const INITIAL_DATA: QrDataMap = {
     addressZip: "",
     addressCountry: "",
     note: ""
+  },
+  event: {
+    title: "",
+    startDate: "",
+    endDate: "",
+    location: "",
+    description: "",
+    url: "",
+    reminderMinutes: -1
+  },
+  messaging: {
+    platform: "whatsapp",
+    recipient: "",
+    message: ""
   }
 }
 
@@ -219,9 +235,20 @@ export const useQrGeneratorStore = create<QrGeneratorState>()(
     {
       name: "imify-qr-generator-settings",
       partialize: (state) => {
-        const { logoUrl, ...rest } = state
-        return rest
-      }
+        const { logoUrl, ...rest } = state;
+        return rest;
+      },
+      merge: (persistedState: any, currentState) => {
+        if (!persistedState) return currentState;
+        return {
+          ...currentState,
+          ...persistedState,
+          data: {
+            ...currentState.data,
+            ...(persistedState.data || {}),
+          },
+        };
+      },
     }
   )
 )

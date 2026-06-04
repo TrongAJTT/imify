@@ -9,17 +9,16 @@ import {
   MessageSquare,
   Wifi,
   User,
+  Calendar,
+  MessageCircle,
 } from "lucide-react";
 import {
   Button,
   SecondaryButton,
-  TextInput,
   SelectChip,
   Subheading,
   MutedText,
-  SelectInput,
-  TextArea,
-  CheckboxCard,
+  LabelText,
 } from "@imify/ui";
 import { useQrGeneratorStore } from "@imify/stores";
 import { encodeQrData } from "./qr-encoder";
@@ -27,6 +26,7 @@ import { downloadWithFilename } from "../processor/processor-utils";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { renderMasterCanvas, exportAsSvg } from "./qr-render-engine";
 import type { QrType } from "./types";
+import { QrFieldsForm } from "./qr-fields-form";
 
 const QR_TYPE_OPTIONS = [
   { value: "url", label: "URL" },
@@ -36,6 +36,8 @@ const QR_TYPE_OPTIONS = [
   { value: "sms", label: "SMS" },
   { value: "wifi", label: "Wi-Fi" },
   { value: "vcard", label: "vCard" },
+  { value: "event", label: "Event" },
+  { value: "messaging", label: "Messaging" },
 ] as const;
 
 const QR_TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -46,6 +48,8 @@ const QR_TYPE_ICONS: Record<string, React.ReactNode> = {
   sms: <MessageSquare size={13} />,
   wifi: <Wifi size={13} />,
   vcard: <User size={13} />,
+  event: <Calendar size={13} />,
+  messaging: <MessageCircle size={13} />,
 };
 
 export function QrGeneratorWorkspace() {
@@ -228,246 +232,6 @@ export function QrGeneratorWorkspace() {
     }
   };
 
-  const renderDataFields = () => {
-    switch (type) {
-      case "url":
-        return (
-          <TextInput
-            label="URL Link"
-            type="url"
-            placeholder="e.g. https://google.com"
-            value={data.url.url}
-            onChange={(val) => updateDataField("url", "url", val)}
-          />
-        );
-      case "text":
-        return (
-          <TextArea
-            label="Plain Text"
-            value={data.text.text}
-            onChange={(val) => updateDataField("text", "text", val)}
-            placeholder="Type your message here..."
-            heightExpandMode="slider"
-            rows={6}
-          />
-        );
-      case "email":
-        return (
-          <div className="space-y-3">
-            <TextInput
-              label="Recipient Email"
-              type="email"
-              placeholder="e.g. contact@example.com"
-              value={data.email.to}
-              onChange={(val) => updateDataField("email", "to", val)}
-            />
-            <TextInput
-              label="Subject"
-              placeholder="e.g. Hello there"
-              value={data.email.subject}
-              onChange={(val) => updateDataField("email", "subject", val)}
-            />
-            <TextArea
-              label="Email Body"
-              value={data.email.body}
-              onChange={(val) => updateDataField("email", "body", val)}
-              placeholder="Type the message body here..."
-              heightExpandMode="slider"
-              rows={4}
-            />
-          </div>
-        );
-      case "phone":
-        return (
-          <TextInput
-            label="Phone Number"
-            type="tel"
-            placeholder="e.g. +84123456789"
-            value={data.phone.phone}
-            onChange={(val) => updateDataField("phone", "phone", val)}
-          />
-        );
-      case "sms":
-        return (
-          <div className="space-y-3">
-            <TextInput
-              label="Recipient Phone"
-              type="tel"
-              placeholder="e.g. +84123456789"
-              value={data.sms.phone}
-              onChange={(val) => updateDataField("sms", "phone", val)}
-            />
-            <TextArea
-              label="SMS Message"
-              value={data.sms.message}
-              onChange={(val) => updateDataField("sms", "message", val)}
-              placeholder="Type your text message here..."
-              rows={4}
-              heightExpandMode="text"
-            />
-          </div>
-        );
-      case "wifi":
-        return (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <TextInput
-                label="Network Name (SSID)"
-                placeholder="e.g. MyHomeWifi"
-                value={data.wifi.ssid}
-                onChange={(val) => updateDataField("wifi", "ssid", val)}
-              />
-              <SelectInput
-                label="Encryption Type"
-                value={data.wifi.encryption}
-                onChange={(val: string) =>
-                  updateDataField("wifi", "encryption", val as any)
-                }
-                options={[
-                  { value: "WPA", label: "WPA/WPA2" },
-                  { value: "WEP", label: "WEP" },
-                  { value: "nopass", label: "Unsecured (No Password)" },
-                ]}
-              />
-            </div>
-            <TextInput
-              label="Password"
-              placeholder="e.g. p@ssw0rd123"
-              type="password"
-              value={data.wifi.password}
-              onChange={(val) => updateDataField("wifi", "password", val)}
-            />
-            <CheckboxCard
-              checked={Boolean(data.wifi.hidden)}
-              onChange={(val) => updateDataField("wifi", "hidden", val)}
-              title="Hidden SSID"
-              subtitle="This Wi-Fi network's SSID is hidden (not broadcasting)"
-              icon={<Wifi size={14} className="text-blue-500" />}
-            />
-          </div>
-        );
-      case "vcard":
-        return (
-          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-            <div className="grid grid-cols-2 gap-2">
-              <TextInput
-                label="First Name"
-                placeholder="John"
-                value={data.vcard.firstName}
-                onChange={(val) => updateDataField("vcard", "firstName", val)}
-              />
-              <TextInput
-                label="Last Name"
-                placeholder="Doe"
-                value={data.vcard.lastName}
-                onChange={(val) => updateDataField("vcard", "lastName", val)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <TextInput
-                label="Organization"
-                placeholder="Acme Corp"
-                value={data.vcard.organization}
-                onChange={(val) =>
-                  updateDataField("vcard", "organization", val)
-                }
-              />
-              <TextInput
-                label="Job Title"
-                placeholder="Developer"
-                value={data.vcard.title}
-                onChange={(val) => updateDataField("vcard", "title", val)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <TextInput
-                label="Mobile Phone"
-                type="tel"
-                placeholder="+1 555-0100"
-                value={data.vcard.phoneMobile}
-                onChange={(val) => updateDataField("vcard", "phoneMobile", val)}
-              />
-              <TextInput
-                label="Work Phone"
-                type="tel"
-                placeholder="+1 555-0199"
-                value={data.vcard.phoneWork}
-                onChange={(val) => updateDataField("vcard", "phoneWork", val)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <TextInput
-                label="Email Address"
-                placeholder="john.doe@example.com"
-                value={data.vcard.email}
-                onChange={(val) => updateDataField("vcard", "email", val)}
-              />
-              <TextInput
-                label="Website URL"
-                type="url"
-                placeholder="https://example.com"
-                value={data.vcard.url}
-                onChange={(val) => updateDataField("vcard", "url", val)}
-              />
-            </div>
-            <div className="space-y-1">
-              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                Street Address
-              </span>
-              <TextInput
-                label=""
-                placeholder="123 Main St"
-                value={data.vcard.addressStreet}
-                onChange={(val) =>
-                  updateDataField("vcard", "addressStreet", val)
-                }
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <TextInput
-                label="City"
-                placeholder="New York"
-                value={data.vcard.addressCity}
-                onChange={(val) => updateDataField("vcard", "addressCity", val)}
-              />
-              <TextInput
-                label="State/Province"
-                placeholder="NY"
-                value={data.vcard.addressState}
-                onChange={(val) =>
-                  updateDataField("vcard", "addressState", val)
-                }
-              />
-              <TextInput
-                label="ZIP Code"
-                placeholder="10001"
-                value={data.vcard.addressZip}
-                onChange={(val) => updateDataField("vcard", "addressZip", val)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <TextInput
-                label="Country"
-                placeholder="USA"
-                value={data.vcard.addressCountry}
-                onChange={(val) =>
-                  updateDataField("vcard", "addressCountry", val)
-                }
-              />
-              <TextInput
-                label="Note/Remarks"
-                placeholder="Met at conference..."
-                value={data.vcard.note}
-                onChange={(val) => updateDataField("vcard", "note", val)}
-              />
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden animate-in fade-in duration-300">
       {/* Main Workspace split panel (3:2 ratio on desktop, stacked on mobile) */}
@@ -483,9 +247,7 @@ export function QrGeneratorWorkspace() {
             </div>
 
             <div className="space-y-2">
-              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                Select QR Type
-              </span>
+              <LabelText className="text-xs">Select QR Type</LabelText>
               <div className="flex flex-wrap gap-2">
                 {QR_TYPE_OPTIONS.map((opt) => (
                   <SelectChip
@@ -511,7 +273,11 @@ export function QrGeneratorWorkspace() {
             </div>
 
             <div className="pt-2 border-t border-slate-100 dark:border-slate-850">
-              {renderDataFields()}
+              <QrFieldsForm
+                type={type}
+                data={data}
+                updateDataField={updateDataField}
+              />
             </div>
           </div>
 
