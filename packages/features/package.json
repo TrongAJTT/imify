@@ -20,7 +20,8 @@
     "konva": "^10.2.5",
     "markdown-to-jsx": "^9.7.16",
     "qrcode.react": "^4.2.0",
-    "react-konva": "^18.2.14"
+    "react-konva": "^18.2.14",
+    "woff2-encoder": "^2.0.0"
   },
   "alias": {
     "sharp": false,

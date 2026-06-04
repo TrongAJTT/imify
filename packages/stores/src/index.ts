@@ -20,3 +20,5 @@ export * from "./stores/qr-generator-store"
 export * from "./stores/qr-reader-store"
 export * from "./use-shortcut-preferences"
 export * from "./shortcuts"
+export * from "./stores/font-store"
+

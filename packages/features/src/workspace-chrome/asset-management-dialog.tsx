@@ -1,11 +1,13 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Stamp, X, Brain, Library, ChevronRight, ArrowLeft } from "lucide-react"
+import { Stamp, X, Brain, Library, ChevronRight, ArrowLeft, Type } from "lucide-react"
 import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui"
 import { AssetWatermarkTab } from "./asset-tabs/asset-watermark-tab"
 import { AssetAIModelsTab } from "./asset-tabs/asset-ai-models-tab"
+import { AssetFontsTab } from "./asset-tabs/asset-fonts-tab"
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store"
+import { useFontStore } from "@imify/stores/stores/font-store"
 import { formatFileSize } from "@imify/core"
 
 interface AssetManagementDialogProps {
@@ -15,7 +17,7 @@ interface AssetManagementDialogProps {
 
 const DEFAULT_INACTIVE_CLASS = "text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
 
-type AssetTabId = "watermark" | "ai-models"
+type AssetTabId = "watermark" | "ai-models" | "fonts"
 
 interface AssetTabDefinition {
   id: AssetTabId
@@ -54,6 +56,18 @@ const ASSET_TABS: AssetTabDefinition[] = [
       activeRing: "ring-pink-200 dark:ring-pink-800",
       activeIcon: "text-pink-600 dark:text-pink-400"
     }
+  },
+  {
+    id: "fonts",
+    label: "Fonts",
+    description: "Manage installed fonts for QR codes and text features",
+    icon: Type,
+    colors: {
+      activeBg: "bg-violet-50 dark:bg-violet-500/10",
+      activeText: "text-violet-600 dark:text-violet-300",
+      activeRing: "ring-violet-200 dark:ring-violet-800",
+      activeIcon: "text-violet-600 dark:text-violet-400"
+    }
   }
 ]
 
@@ -89,6 +103,8 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
         return <AssetWatermarkTab />
       case "ai-models":
         return <AssetAIModelsTab />
+      case "fonts":
+        return <AssetFontsTab />
       default:
         return null
     }
@@ -102,7 +118,7 @@ export function AssetManagementDialog({ isOpen, onClose }: AssetManagementDialog
       contentClassName="w-full max-w-6xl h-[90vh] md:h-[85vh] max-h-[900px] overflow-hidden flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-100/10 dark:bg-slate-900">
         <div className="flex items-center gap-3">
           {isMobile && activeTab && (
             <Button
@@ -185,11 +201,14 @@ export interface AssetStatistics {
   watermarkCount: number
   cachedModelCount: number
   cacheSizeBytes: number
+  fontCount: number
+  fontSizeBytes: number
   totalSizeFormatted: string
 }
 
 export function useAssetStatistics(isOpen: boolean): AssetStatistics {
   const savedWatermarks = useWatermarkStore((state) => state.savedWatermarks)
+  const installedFonts = useFontStore((state) => state.installedFonts)
   const [cachedModelCount, setCachedModelCount] = useState(0)
   const [cacheSizeBytes, setCacheSizeBytes] = useState(0)
 
@@ -232,10 +251,16 @@ export function useAssetStatistics(isOpen: boolean): AssetStatistics {
     }
   }, [isOpen])
 
+  const fontCount = installedFonts.length
+  const fontSizeBytes = installedFonts.reduce((sum, f) => sum + f.fileSize, 0)
+
   return {
     watermarkCount: savedWatermarks.length,
     cachedModelCount,
     cacheSizeBytes,
-    totalSizeFormatted: formatFileSize(cacheSizeBytes)
+    fontCount,
+    fontSizeBytes,
+    totalSizeFormatted: formatFileSize(cacheSizeBytes + fontSizeBytes)
   }
 }
+

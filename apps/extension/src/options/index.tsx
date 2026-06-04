@@ -98,6 +98,7 @@ import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
 import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
+import { useFontStore } from "@imify/stores/stores/font-store"
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
@@ -339,12 +340,16 @@ export default function OptionsPage() {
     { key: PERFORMANCE_PREFERENCES_KEY, instance: syncStorage },
     DEFAULT_PERFORMANCE_PREFERENCES
   )
-  // Keep a "live" copy so Export UI updates immediately after Settings changes,
-  // instead of waiting for storage re-hydration.
   const [livePerformancePreferences, setLivePerformancePreferences] = useState(performancePreferences)
   useEffect(() => {
     setLivePerformancePreferences(performancePreferences)
   }, [performancePreferences])
+
+  const loadInstalledFonts = useFontStore((state) => state.loadInstalledFonts)
+  useEffect(() => {
+    loadInstalledFonts()
+  }, [loadInstalledFonts])
+
   const initialTabFromQueryRef = useRef<OptionsTab | null>(null)
 
   const isLoading =
