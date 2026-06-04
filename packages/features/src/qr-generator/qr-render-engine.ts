@@ -1,34 +1,9 @@
 import QRCodeStyling from "qr-code-styling"
 import type { QrConfig } from "./types"
 
-// Normalized path strings centered at (0, 0) inside a unit box [-0.5, -0.5] to [0.5, 0.5]
-const HEART_PATH = "M 0,-0.25 C -0.17,-0.5 -0.5,-0.5 -0.5,-0.17 C -0.5,0.17 0,0.5 0,0.5 C 0,0.5 0.5,0.17 0.5,-0.17 C 0.5,-0.5 0.17,-0.5 0,-0.25 Z"
-const STAR_PATH = "M 0,-0.5 L 0.118,-0.162 L 0.476,-0.155 L 0.190,0.062 L 0.294,0.405 L 0,0.2 L -0.294,0.405 L -0.190,0.062 L -0.476,-0.155 L -0.118,-0.162 Z"
-
-function drawCustomMarkerCenter(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  size: number,
-  type: "heart" | "star",
-  color: string
-) {
-  ctx.save()
-  ctx.translate(cx, cy)
-  ctx.scale(size, size)
-  ctx.fillStyle = color
-  
-  const pathStr = type === "heart" ? HEART_PATH : STAR_PATH
-  const path = new Path2D(pathStr)
-  ctx.fill(path)
-  ctx.restore()
-}
-
 export function createQrStylingInstance(config: QrConfig): QRCodeStyling {
   const resolvedMarkerBorderColor = config.syncMarkerBorderColorWithForeground ? config.fgColor : config.markerBorderColor
   const resolvedMarkerCenterColor = config.syncMarkerCenterColorWithForeground ? config.fgColor : config.markerCenterColor
-
-  const isCustomCenter = config.markerCenterType === "heart" || config.markerCenterType === "star"
 
   const options: any = {
     width: config.size,
@@ -53,8 +28,8 @@ export function createQrStylingInstance(config: QrConfig): QRCodeStyling {
       color: resolvedMarkerBorderColor
     },
     cornersDotOptions: {
-      type: isCustomCenter ? ("" as any) : config.markerCenterType,
-      color: isCustomCenter ? "transparent" : resolvedMarkerCenterColor
+      type: config.markerCenterType,
+      color: resolvedMarkerCenterColor
     }
   }
 
@@ -153,24 +128,6 @@ export async function renderMasterCanvas(config: QrConfig, encodedData: string):
   const qrY = paddingTop
   ctx.drawImage(img, qrX, qrY)
 
-  // Draw custom marker center if heart or star
-  if (config.markerCenterType === "heart" || config.markerCenterType === "star") {
-    const N = (qrInstance as any)._qr?.getModuleCount() || 21
-    const moduleSize = config.size / N
-    const size = 3 * moduleSize
-    const resolvedMarkerCenterColor = config.syncMarkerCenterColorWithForeground ? config.fgColor : config.markerCenterColor
-
-    const centers = [
-      { cx: qrX + 3.5 * moduleSize, cy: qrY + 3.5 * moduleSize },
-      { cx: qrX + (N - 3.5) * moduleSize, cy: qrY + 3.5 * moduleSize },
-      { cx: qrX + 3.5 * moduleSize, cy: qrY + (N - 3.5) * moduleSize }
-    ]
-
-    centers.forEach(({ cx, cy }) => {
-      drawCustomMarkerCenter(ctx, cx, cy, size, config.markerCenterType as "heart" | "star", resolvedMarkerCenterColor)
-    })
-  }
-
   // Draw frame text
   if (config.frameText && !isNone) {
     if (typeof document !== "undefined" && "fonts" in document) {
@@ -204,7 +161,7 @@ export async function renderMasterCanvas(config: QrConfig, encodedData: string):
 export async function exportAsSvg(config: QrConfig, encodedData: string): Promise<string> {
   const qrInstance = createQrStylingInstance(config)
   qrInstance.update({ data: encodedData })
-
+  
   // Get raw SVG from qr-code-styling
   const blob = await qrInstance.getRawData("svg")
   if (!blob) throw new Error("Failed to render QR SVG")
@@ -247,26 +204,6 @@ export async function exportAsSvg(config: QrConfig, encodedData: string): Promis
   svgContent += `  <g transform="translate(${paddingX}, ${paddingTop})">\n`
   svgContent += `    ${innerElements}\n`
   svgContent += `  </g>\n`
-
-  // Draw custom marker center if heart or star
-  if (config.markerCenterType === "heart" || config.markerCenterType === "star") {
-    const N = (qrInstance as any)._qr?.getModuleCount() || 21
-    const moduleSize = config.size / N
-    const size = 3 * moduleSize
-    const resolvedMarkerCenterColor = config.syncMarkerCenterColorWithForeground ? config.fgColor : config.markerCenterColor
-
-    const centers = [
-      { cx: paddingX + 3.5 * moduleSize, cy: paddingTop + 3.5 * moduleSize },
-      { cx: paddingX + (N - 3.5) * moduleSize, cy: paddingTop + 3.5 * moduleSize },
-      { cx: paddingX + 3.5 * moduleSize, cy: paddingTop + (N - 3.5) * moduleSize }
-    ]
-
-    const pathStr = config.markerCenterType === "heart" ? HEART_PATH : STAR_PATH
-
-    centers.forEach(({ cx, cy }) => {
-      svgContent += `  <path d="${pathStr}" transform="translate(${cx}, ${cy}) scale(${size})" fill="${resolvedMarkerCenterColor}" />\n`
-    })
-  }
 
   // Draw text label
   if (config.frameText && !isNone) {

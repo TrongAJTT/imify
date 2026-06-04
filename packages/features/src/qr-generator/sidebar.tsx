@@ -19,9 +19,14 @@ import {
   Trash2,
   Upload,
   Type,
+  Grid2X2,
+  Settings2,
+  Maximize,
 } from "lucide-react";
 import { useQrGeneratorStore, useFontStore } from "@imify/stores";
 import { FRAME_PRESETS } from "./frame-presets";
+import { DesignTypeSelector } from "./design-type-selector";
+import * as Icons from "./design-icons";
 
 interface QrGeneratorSidebarProps {
   enableWideSidebarGrid?: boolean;
@@ -53,10 +58,10 @@ const REVERSE_LEVEL_MAP = {
 const RESOLUTION_OPTIONS = [
   { value: 256, label: "256" },
   { value: 512, label: "512" },
+  { value: 768, label: "768" },
   { value: 1024, label: "1K" },
-  { value: 2048, label: "2K" },
-  { value: 3072, label: "3K" },
-  { value: 4096, label: "4K" },
+  { value: 1280, label: "1.25K" },
+  { value: 1536, label: "1.5K" },
 ] as const;
 
 export function QrGeneratorSidebar({
@@ -158,12 +163,12 @@ export function QrGeneratorSidebar({
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
-      id: "qr-colors-design",
+      id: "qr-design-colors",
       label: "",
       content: (
         <AccordionCard
-          label="Design & Colors"
-          sublabel="Patterns, markers, and colors"
+          label="Colors & Pattern"
+          sublabel="Base colors and dot style"
           icon={<Palette size={16} />}
           defaultOpen={true}
           colorTheme="purple"
@@ -193,67 +198,67 @@ export function QrGeneratorSidebar({
             </div>
           </div>
 
-          {/* Dot Pattern Grid */}
+          {/* Dot Pattern */}
           <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
             <LabelText className="text-xs">Dot Pattern</LabelText>
-            <div className="grid grid-cols-2 gap-1">
-              {(
-                [
-                  "square",
-                  "dots",
-                  "rounded",
-                  "extra-rounded",
-                  "classy",
-                  "classy-rounded",
-                ] as const
-              ).map((type) => (
-                <RadioCard
-                  key={type}
-                  title={type.replace("-", " ")}
-                  value={type}
-                  selectedValue={dotType}
-                  onChange={(v) => setDotType(v as any)}
-                  colorTheme="purple"
-                  className="flex items-center justify-center p-1.5 h-8 text-[10px] capitalize"
-                />
-              ))}
-            </div>
+            <DesignTypeSelector
+              value={dotType}
+              onChange={setDotType}
+              columns={4}
+              options={[
+                { value: "square", label: "Square", icon: <Icons.DotSquareIcon /> },
+                { value: "dots", label: "Dots", icon: <Icons.DotDotsIcon /> },
+                { value: "rounded", label: "Rounded", icon: <Icons.DotRoundedIcon /> },
+                { value: "extra-rounded", label: "Extra Round", icon: <Icons.DotExtraRoundedIcon /> },
+                { value: "classy", label: "Classy", icon: <Icons.DotClassyIcon /> },
+                { value: "classy-rounded", label: "Classy Rnd", icon: <Icons.DotClassyRoundedIcon /> }
+              ]}
+            />
           </div>
-
-          {/* Marker Border Grid */}
+        </AccordionCard>
+      ),
+    },
+    {
+      id: "qr-markers",
+      label: "",
+      content: (
+        <AccordionCard
+          label="Markers"
+          sublabel="Corner square and center style"
+          icon={<Grid2X2 size={16} />}
+          defaultOpen={true}
+          colorTheme="blue"
+          childrenClassName="p-3 space-y-4"
+        >
+          {/* Marker Border */}
           <div className="space-y-1.5">
             <LabelText className="text-xs">Marker Border</LabelText>
-            <div className="grid grid-cols-2 gap-1">
-              {(["square", "dot", "extra-rounded"] as const).map((type) => (
-                <RadioCard
-                  key={type}
-                  title={type.replace("-", " ")}
-                  value={type}
-                  selectedValue={markerBorderType}
-                  onChange={(v) => setMarkerBorderType(v as any)}
-                  colorTheme="purple"
-                  className="flex items-center justify-center p-1.5 h-8 text-[10px] capitalize"
-                />
-              ))}
-            </div>
+            <DesignTypeSelector
+              value={markerBorderType}
+              onChange={setMarkerBorderType}
+              columns={4}
+              colorTheme="blue"
+              options={[
+                { value: "square", label: "Square", icon: <Icons.MarkerBorderSquareIcon /> },
+                { value: "dot", label: "Dot", icon: <Icons.MarkerBorderDotIcon /> },
+                { value: "extra-rounded", label: "Rounded", icon: <Icons.MarkerBorderExtraRoundedIcon /> }
+              ]}
+            />
           </div>
 
-          {/* Marker Center Grid */}
+          {/* Marker Center */}
           <div className="space-y-1.5">
             <LabelText className="text-xs">Marker Center</LabelText>
-            <div className="grid grid-cols-2 gap-1">
-              {(["square", "dot", "heart", "star"] as const).map((type) => (
-                <RadioCard
-                  key={type}
-                  title={type}
-                  value={type}
-                  selectedValue={markerCenterType}
-                  onChange={(v) => setMarkerCenterType(v as any)}
-                  colorTheme="purple"
-                  className="flex items-center justify-center p-1.5 h-8 text-[10px] capitalize"
-                />
-              ))}
-            </div>
+            <DesignTypeSelector
+              value={markerCenterType}
+              onChange={setMarkerCenterType}
+              columns={4}
+              colorTheme="blue"
+              options={[
+                { value: "square", label: "Square", icon: <Icons.MarkerCenterSquareIcon /> },
+                { value: "dot", label: "Dot", icon: <Icons.MarkerCenterDotIcon /> }
+              ]}
+            />
           </div>
 
           {/* Marker Colors Sync */}
@@ -264,7 +269,7 @@ export function QrGeneratorSidebar({
                 onChange={setSyncMarkerBorderColorWithForeground}
                 title="Sync Marker Border"
                 subtitle="Match marker border color with QR foreground"
-                icon={<Palette size={14} className="text-purple-500" />}
+                icon={<Palette size={14} className="text-blue-500" />}
               />
               {!syncMarkerBorderColorWithForeground && (
                 <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
@@ -286,7 +291,7 @@ export function QrGeneratorSidebar({
                 onChange={setSyncMarkerCenterColorWithForeground}
                 title="Sync Marker Center"
                 subtitle="Match marker center color with QR foreground"
-                icon={<Palette size={14} className="text-purple-500" />}
+                icon={<Palette size={14} className="text-blue-500" />}
               />
               {!syncMarkerCenterColorWithForeground && (
                 <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
@@ -302,9 +307,23 @@ export function QrGeneratorSidebar({
               )}
             </div>
           </div>
-
+        </AccordionCard>
+      ),
+    },
+    {
+      id: "qr-quality-export",
+      label: "",
+      content: (
+        <AccordionCard
+          label="Quality & Resolution"
+          sublabel="Size and error correction"
+          icon={<Settings2 size={16} />}
+          defaultOpen={false}
+          colorTheme="amber"
+          childrenClassName="p-3 space-y-4"
+        >
           {/* Resolution */}
-          <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+          <div className="pt-1">
             <DiscreteSlider
               label="Resolution (Size)"
               value={size}
@@ -336,7 +355,7 @@ export function QrGeneratorSidebar({
                         "M",
                     )
                   }
-                  colorTheme="purple"
+                  colorTheme="amber"
                   tooltipContent={ERROR_CORRECTION_TOOLTIPS[level]}
                   className="flex items-center justify-center p-1.5 h-8 text-[11px]"
                 />

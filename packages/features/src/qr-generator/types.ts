@@ -92,7 +92,7 @@ export interface QrConfig {
 // --- DESIGN MODULE ---
 export type QrDotType = "square" | "dots" | "rounded" | "extra-rounded" | "classy" | "classy-rounded"
 export type QrMarkerBorderType = "square" | "dot" | "extra-rounded"
-export type QrMarkerCenterType = "square" | "dot" | "heart" | "star"
+export type QrMarkerCenterType = "square" | "dot"
 
 // --- FRAME MODULE ---
 export type FramePresetId = "none" | "bottom-label" | "top-label" | "banner-bottom" | "border-box" | "pill-bottom" | "custom"
