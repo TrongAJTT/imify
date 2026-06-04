@@ -23,6 +23,7 @@ interface QrGeneratorState {
   errorCorrectionLevel: "L" | "M" | "Q" | "H"
 
   // Design
+  qrMargin: number
   dotType: QrDotType
   markerBorderType: QrMarkerBorderType
   markerCenterType: QrMarkerCenterType
@@ -55,6 +56,7 @@ interface QrGeneratorState {
   setErrorCorrectionLevel: (level: "L" | "M" | "Q" | "H") => void
 
   // Design setters
+  setQrMargin: (margin: number) => void
   setDotType: (type: QrDotType) => void
   setMarkerBorderType: (type: QrMarkerBorderType) => void
   setMarkerCenterType: (type: QrMarkerCenterType) => void
@@ -118,6 +120,7 @@ export const useQrGeneratorStore = create<QrGeneratorState>()(
       errorCorrectionLevel: "M",
 
       // Design Defaults
+      qrMargin: 0,
       dotType: "square",
       markerBorderType: "square",
       markerCenterType: "square",
@@ -159,6 +162,7 @@ export const useQrGeneratorStore = create<QrGeneratorState>()(
       setErrorCorrectionLevel: (errorCorrectionLevel) => set({ errorCorrectionLevel }),
 
       // Design Setters
+      setQrMargin: (qrMargin) => set({ qrMargin }),
       setDotType: (dotType) => set({ dotType }),
       setMarkerBorderType: (markerBorderType) => set({ markerBorderType }),
       setMarkerCenterType: (markerCenterType) => set({ markerCenterType }),
@@ -192,6 +196,7 @@ export const useQrGeneratorStore = create<QrGeneratorState>()(
           excavateLogo: true,
           errorCorrectionLevel: "M",
 
+          qrMargin: 0,
           dotType: "square",
           markerBorderType: "square",
           markerCenterType: "square",

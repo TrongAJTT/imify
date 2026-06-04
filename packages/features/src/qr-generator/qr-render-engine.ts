@@ -63,8 +63,12 @@ function calculateFrameLayout(style: FrameStyleType, size: number, textScale: nu
   // Calculate text Y position
   let textY = 0
   if (style !== "none") {
-    const textZoneHeight = isBottomText ? paddingBottom : paddingTop
-    const baseOffset = isBottomText ? totalHeight - textZoneHeight / 2 : textZoneHeight / 2
+    let textZoneHeight = isBottomText ? paddingBottom : paddingTop
+    // For tooltip, the main body is smaller than the total paddingBottom because of the tail
+    if (style === "tooltip") {
+      textZoneHeight = paddingBottom * 0.7 // Exclude the tail height (30%)
+    }
+    const baseOffset = isBottomText ? totalHeight - paddingBottom + textZoneHeight / 2 : textZoneHeight / 2
     textY = baseOffset
   }
 
@@ -90,7 +94,7 @@ export function createQrStylingInstance(config: QrConfig): QRCodeStyling {
     height: config.size,
     type: "canvas" as const,
     data: "", // Set dynamically when encoding
-    margin: 0,
+    margin: config.qrMargin || 0,
     qrOptions: {
       typeNumber: 0,
       mode: "Byte" as const,

@@ -82,6 +82,10 @@ export function TextArea({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
+          onKeyDown={(e) => {
+            e.stopPropagation()
+            props.onKeyDown?.(e)
+          }}
           rows={heightExpandMode === "slider" ? undefined : rows}
           style={style}
           className={`

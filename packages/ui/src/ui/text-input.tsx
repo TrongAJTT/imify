@@ -30,6 +30,10 @@ export function TextInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          props.onKeyDown?.(e)
+        }}
         className={`
           w-full rounded-md border bg-white dark:bg-slate-800/80
           px-4 text-slate-700 dark:text-slate-200 outline-none transition-all shadow-sm

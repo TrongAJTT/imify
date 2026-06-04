@@ -70,6 +70,7 @@ export interface QrConfig {
   errorCorrectionLevel: "L" | "M" | "Q" | "H"
 
   // Design
+  qrMargin: number
   dotType: QrDotType
   markerBorderType: QrMarkerBorderType
   markerCenterType: QrMarkerCenterType

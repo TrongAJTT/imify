@@ -65,6 +65,7 @@ export function QrGeneratorWorkspace() {
     resetToDefault,
 
     // Design state
+    qrMargin,
     dotType,
     markerBorderType,
     markerCenterType,
@@ -142,6 +143,7 @@ export function QrGeneratorWorkspace() {
     logoHeight,
     excavateLogo,
     errorCorrectionLevel,
+    qrMargin,
     dotType,
     markerBorderType,
     markerCenterType,

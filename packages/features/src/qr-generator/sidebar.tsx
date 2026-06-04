@@ -86,6 +86,8 @@ export function QrGeneratorSidebar({
     setErrorCorrectionLevel,
 
     // Design state
+    qrMargin,
+    setQrMargin,
     dotType,
     setDotType,
     markerBorderType,
@@ -170,7 +172,7 @@ export function QrGeneratorSidebar({
           icon={<Palette size={16} />}
           defaultOpen={true}
           colorTheme="purple"
-          childrenClassName="p-3 space-y-4"
+          childrenClassName="p-3 space-y-3"
         >
           {/* Colors */}
           <div className="space-y-2">
@@ -196,8 +198,19 @@ export function QrGeneratorSidebar({
             </div>
           </div>
 
+          {/* Inner Padding */}
+          <SliderInput
+            label="Inner Padding"
+            value={qrMargin}
+            min={0}
+            max={100}
+            step={1}
+            onChange={setQrMargin}
+            suffix=" px"
+          />
+
           {/* Dot Pattern */}
-          <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+          <div className="space-y-1.5">
             <LabelText className="text-xs">Dot Pattern</LabelText>
             <GridIconSelector
               value={dotType}
@@ -246,7 +259,7 @@ export function QrGeneratorSidebar({
           icon={<Grid2X2 size={16} />}
           defaultOpen={true}
           colorTheme="blue"
-          childrenClassName="p-3 space-y-4"
+          childrenClassName="p-3 space-y-3"
         >
           {/* Marker Border */}
           <div className="space-y-1.5">
@@ -300,7 +313,7 @@ export function QrGeneratorSidebar({
           </div>
 
           {/* Marker Colors Sync */}
-          <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="space-y-3">
             <div>
               <CheckboxCard
                 checked={syncMarkerBorderColorWithForeground}
@@ -358,7 +371,7 @@ export function QrGeneratorSidebar({
           icon={<Settings2 size={16} />}
           defaultOpen={false}
           colorTheme="amber"
-          childrenClassName="p-3 space-y-4"
+          childrenClassName="p-3 space-y-3"
         >
           {/* Resolution */}
           <div className="pt-1">
@@ -372,7 +385,7 @@ export function QrGeneratorSidebar({
           </div>
 
           {/* Error Correction */}
-          <div className="space-y-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+          <div className="space-y-2">
             <LabelText className="text-xs">Error Correction Level</LabelText>
             <div className="grid grid-cols-2 gap-1">
               {(["Low", "Medium", "Quartile", "High"] as const).map((level) => (
@@ -460,20 +473,18 @@ export function QrGeneratorSidebar({
           </div>
           {logoUrl && (
             <div className="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-3">
-              <div className="grid grid-cols-1 gap-2">
-                <SliderInput
-                  label="Logo Size"
-                  value={logoWidth}
-                  min={10}
-                  max={120}
-                  step={2}
-                  onChange={(val) => {
-                    setLogoWidth(val);
-                    setLogoHeight(val);
-                  }}
-                  suffix=" px"
-                />
-              </div>
+              <SliderInput
+                label="Logo Size"
+                value={logoWidth}
+                min={10}
+                max={120}
+                step={2}
+                onChange={(val) => {
+                  setLogoWidth(val);
+                  setLogoHeight(val);
+                }}
+                suffix=" px"
+              />
               <CheckboxCard
                 checked={excavateLogo}
                 onChange={setExcavateLogo}
@@ -496,7 +507,7 @@ export function QrGeneratorSidebar({
           icon={<Type size={16} />}
           defaultOpen={false}
           colorTheme="blue"
-          childrenClassName="p-3 space-y-4"
+          childrenClassName="p-3 space-y-3"
         >
           {/* Template Selector */}
           <div className="space-y-1.5">
@@ -541,6 +552,7 @@ export function QrGeneratorSidebar({
                 value={frameText}
                 onChange={setFrameText}
                 placeholder="e.g. SCAN ME"
+                onKeyDown={(e) => e.stopPropagation()}
               />
 
               {/* Font Picker */}
@@ -568,57 +580,53 @@ export function QrGeneratorSidebar({
                 label="Text Scale"
                 value={frameTextScale}
                 min={50}
-                max={150}
+                max={200}
                 step={5}
                 onChange={setFrameTextScale}
                 suffix="%"
               />
 
               {/* Frame Colors Sync */}
-              <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <div>
-                  <CheckboxCard
-                    checked={syncFrameColorWithForeground}
-                    onChange={setSyncFrameColorWithForeground}
-                    title="Sync Frame Color"
-                    subtitle="Match frame color with QR foreground"
-                    icon={<Palette size={14} className="text-blue-500" />}
-                  />
-                  {!syncFrameColorWithForeground && (
-                    <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
-                      <LabelText className="text-xs">Frame Color</LabelText>
-                      <ColorPickerPopover
-                        label=""
-                        value={frameColor}
-                        onChange={setFrameColor}
-                        enableAlpha={false}
-                        enableGradient={false}
-                      />
-                    </div>
-                  )}
-                </div>
+              <div className="space-y-3">
+                <CheckboxCard
+                  checked={syncFrameColorWithForeground}
+                  onChange={setSyncFrameColorWithForeground}
+                  title="Sync Frame Color"
+                  subtitle="Match frame color with QR foreground"
+                  icon={<Palette size={14} className="text-blue-500" />}
+                />
+                {!syncFrameColorWithForeground && (
+                  <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
+                    <LabelText className="text-xs">Frame Color</LabelText>
+                    <ColorPickerPopover
+                      label=""
+                      value={frameColor}
+                      onChange={setFrameColor}
+                      enableAlpha={false}
+                      enableGradient={false}
+                    />
+                  </div>
+                )}
 
-                <div>
-                  <CheckboxCard
-                    checked={syncTextColorWithBackground}
-                    onChange={setSyncTextColorWithBackground}
-                    title="Sync Text Color"
-                    subtitle="Match text color with QR background"
-                    icon={<Palette size={14} className="text-blue-500" />}
-                  />
-                  {!syncTextColorWithBackground && (
-                    <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
-                      <LabelText className="text-xs">Text Color</LabelText>
-                      <ColorPickerPopover
-                        label=""
-                        value={frameTextColor}
-                        onChange={setFrameTextColor}
-                        enableAlpha={false}
-                        enableGradient={false}
-                      />
-                    </div>
-                  )}
-                </div>
+                <CheckboxCard
+                  checked={syncTextColorWithBackground}
+                  onChange={setSyncTextColorWithBackground}
+                  title="Sync Text Color"
+                  subtitle="Match text color with QR background"
+                  icon={<Palette size={14} className="text-blue-500" />}
+                />
+                {!syncTextColorWithBackground && (
+                  <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
+                    <LabelText className="text-xs">Text Color</LabelText>
+                    <ColorPickerPopover
+                      label=""
+                      value={frameTextColor}
+                      onChange={setFrameTextColor}
+                      enableAlpha={false}
+                      enableGradient={false}
+                    />
+                  </div>
+                )}
               </div>
             </>
           )}
