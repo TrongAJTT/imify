@@ -21,23 +21,6 @@ function escapeWifiString(val: string): string {
 }
 
 /**
- * Folds a vCard/iCal line to max 75 octets per RFC 6350 / RFC 5545.
- * Continuation lines start with a single space.
- */
-function foldLine(line: string): string {
-  if (line.length <= 75) return line;
-  const chunks: string[] = [];
-  // First chunk: 75 chars
-  chunks.push(line.substring(0, 75));
-  let i = 75;
-  while (i < line.length) {
-    chunks.push(" " + line.substring(i, i + 74));
-    i += 74;
-  }
-  return chunks.join("\r\n");
-}
-
-/**
  * Escape vCard text values: backslash, comma, semicolon, newline per RFC 6350
  */
 function escapeVCardText(val: string): string {
@@ -47,6 +30,7 @@ function escapeVCardText(val: string): string {
     .replace(/;/g, "\\;")
     .replace(/\n/g, "\\n");
 }
+
 
 /**
  * Convert an HTML datetime-local string (YYYY-MM-DDTHH:mm) to
@@ -128,40 +112,39 @@ export const QR_ENCODERS: {
 
     const fName = fields.firstName || "";
     const lName = fields.lastName || "";
-    // N and FN are required by RFC 6350
-    lines.push(`N:${escapeVCardText(lName)};${escapeVCardText(fName)};;;`);
+    lines.push(`N;CHARSET=UTF-8:${escapeVCardText(lName)};${escapeVCardText(fName)};;;`);
     const fn = [fName, lName].filter(Boolean).join(" ").trim() || "Unknown";
-    lines.push(`FN:${escapeVCardText(fn)}`);
+    lines.push(`FN;CHARSET=UTF-8:${escapeVCardText(fn)}`);
 
-    if (fields.organization) {
-      lines.push(`ORG:${escapeVCardText(fields.organization)}`);
-    }
-    if (fields.title) {
-      lines.push(`TITLE:${escapeVCardText(fields.title)}`);
-    }
-
-    // Phone numbers with correct TYPE parameters (RFC 6350)
     if (fields.phoneMobile) {
-      lines.push(`TEL;TYPE=CELL,VOICE:${fields.phoneMobile}`);
-    }
-    if (fields.phoneWork) {
-      lines.push(`TEL;TYPE=WORK,VOICE:${fields.phoneWork}`);
+      lines.push(`TEL;TYPE=CELL:${fields.phoneMobile}`);
     }
     if (fields.phoneHome) {
       lines.push(`TEL;TYPE=HOME,VOICE:${fields.phoneHome}`);
     }
+
+    if (fields.organization) {
+      lines.push(`ORG;CHARSET=UTF-8:${escapeVCardText(fields.organization)}`);
+    }
+    if (fields.title) {
+      lines.push(`TITLE;CHARSET=UTF-8:${escapeVCardText(fields.title)}`);
+    }
+
+    if (fields.phoneWork) {
+      lines.push(`TEL;TYPE=WORK,VOICE:${fields.phoneWork}`);
+    }
     if (fields.phoneFax) {
-      lines.push(`TEL;TYPE=FAX:${fields.phoneFax}`);
+      lines.push(`TEL;TYPE=FAX,WORK:${fields.phoneFax}`);
     }
 
     if (fields.email) {
-      lines.push(`EMAIL;TYPE=INTERNET:${fields.email}`);
+      lines.push(`EMAIL;CHARSET=UTF-8;TYPE=WORK,INTERNET:${fields.email}`);
     }
     if (fields.url) {
       lines.push(`URL:${fields.url}`);
     }
 
-    // Address: ADR;TYPE=WORK:PO Box;Extended;Street;City;State;Zip;Country
+    // Address
     const street = fields.addressStreet || "";
     const city = fields.addressCity || "";
     const state = fields.addressState || "";
@@ -169,17 +152,17 @@ export const QR_ENCODERS: {
     const country = fields.addressCountry || "";
     if (street || city || state || zip || country) {
       lines.push(
-        `ADR;TYPE=HOME:;;${escapeVCardText(street)};${escapeVCardText(city)};${escapeVCardText(state)};${escapeVCardText(zip)};${escapeVCardText(country)}`
+        `ADR;CHARSET=UTF-8;TYPE=WORK,PREF:;;${escapeVCardText(street)};${escapeVCardText(city)};${escapeVCardText(state)};${escapeVCardText(zip)};${escapeVCardText(country)}`
       );
     }
 
     if (fields.note) {
-      lines.push(`NOTE:${escapeVCardText(fields.note)}`);
+      lines.push(`NOTE;CHARSET=UTF-8:${escapeVCardText(fields.note)}`);
     }
 
     lines.push("END:VCARD");
-    // Fold long lines and join with CRLF per RFC 6350
-    return lines.map(foldLine).join("\r\n");
+    // Use plain \n for broad QR scanner compatibility instead of \r\n
+    return lines.join("\n");
   },
   event: (data) => {
     const fields = (data || {}) as EventFields;
@@ -243,8 +226,8 @@ export const QR_ENCODERS: {
     lines.push("END:VEVENT");
     lines.push("END:VCALENDAR");
 
-    // Fold long lines and join with CRLF per RFC 5545
-    return lines.map(foldLine).join("\r\n");
+    // Use plain \n for broad QR scanner compatibility instead of \r\n
+    return lines.join("\n");
   },
   messaging: (data) => {
     const fields = (data || {}) as MessagingFields;

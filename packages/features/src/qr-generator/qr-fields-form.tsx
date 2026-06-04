@@ -5,6 +5,7 @@ import {
   SelectInput,
   TextArea,
   CheckboxCard,
+  PhoneInput,
 } from "@imify/ui";
 import type { QrType, QrDataMap } from "./types";
 
@@ -72,10 +73,9 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
 
     case "phone":
       return (
-        <TextInput
+        <PhoneInput
           label="Phone Number"
-          type="tel"
-          placeholder="e.g. +84123456789"
+          placeholder="e.g. 123456789"
           value={data.phone.phone}
           onChange={(val) => updateDataField("phone", "phone", val)}
         />
@@ -84,10 +84,9 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
     case "sms":
       return (
         <div className="space-y-3">
-          <TextInput
+          <PhoneInput
             label="Recipient Phone"
-            type="tel"
-            placeholder="e.g. +84123456789"
+            placeholder="e.g. 123456789"
             value={data.sms.phone}
             onChange={(val) => updateDataField("sms", "phone", val)}
           />
@@ -356,12 +355,12 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
         description = "Users scanning this QR code will resolve directly to your Telegram chat.";
       } else if (platform === "whatsapp") {
         label = "WhatsApp Number";
-        placeholder = "e.g. +84123456789 (with country code)";
+        placeholder = "e.g. 123456789";
         typeInput = "tel";
         description = "A WhatsApp link that will open a chat screen with you, prefilled with a template message.";
       } else if (platform === "zalo") {
         label = "Zalo Phone Number";
-        placeholder = "e.g. 0912345678";
+        placeholder = "e.g. 912345678";
         typeInput = "tel";
         description = "Users scanning this QR code will open your Zalo profile/chat.";
       }
@@ -380,13 +379,22 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
               { value: "zalo", label: "Zalo" },
             ]}
           />
-          <TextInput
-            label={label}
-            type={typeInput}
-            placeholder={placeholder}
-            value={data.messaging.recipient}
-            onChange={(val) => updateDataField("messaging", "recipient", val)}
-          />
+          {platform === "telegram" ? (
+            <TextInput
+              label={label}
+              type={typeInput}
+              placeholder={placeholder}
+              value={data.messaging.recipient}
+              onChange={(val) => updateDataField("messaging", "recipient", val)}
+            />
+          ) : (
+            <PhoneInput
+              label={label}
+              placeholder={placeholder}
+              value={data.messaging.recipient}
+              onChange={(val) => updateDataField("messaging", "recipient", val)}
+            />
+          )}
           {platform === "whatsapp" && (
             <TextArea
               label="Template Message (Optional)"

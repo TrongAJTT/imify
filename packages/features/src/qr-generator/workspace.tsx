@@ -35,9 +35,9 @@ const QR_TYPE_OPTIONS = [
   { value: "phone", label: "Phone" },
   { value: "sms", label: "SMS" },
   { value: "wifi", label: "Wi-Fi" },
-  { value: "vcard", label: "vCard" },
   { value: "event", label: "Event" },
   { value: "messaging", label: "Messaging" },
+  // { value: "vcard", label: "vCard" }, // TODO: Add Full vCard support
 ] as const;
 
 const QR_TYPE_ICONS: Record<string, React.ReactNode> = {

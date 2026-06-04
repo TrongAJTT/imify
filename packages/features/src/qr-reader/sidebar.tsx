@@ -23,15 +23,86 @@ import {
   Sliders,
   ShieldCheck,
   HelpCircle,
+  Calendar,
+  MapPin,
+  AlignLeft,
+  MessageCircle,
+  Clock,
+  Printer,
 } from "lucide-react";
 import { useQrReaderStore } from "@imify/stores";
-import { parseQrString } from "./qr-parser";
+import { parseQrString, formatICalDateForDisplay } from "./qr-parser";
 import { useToast } from "@imify/core/hooks/use-toast";
 
 interface QrReaderSidebarProps {
   enableWideSidebarGrid?: boolean;
   autoWideSidebarGridMinWidthPx?: number | null;
 }
+
+// ---------------------------------------------------------------------------
+// Small reusable field row
+// ---------------------------------------------------------------------------
+function FieldRow({
+  icon,
+  label,
+  value,
+  mono = false,
+  onClick,
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  value: string;
+  mono?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
+      {icon && (
+        <span className="mt-0.5 text-slate-400 shrink-0">{icon}</span>
+      )}
+      <div className="flex flex-col min-w-0">
+        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+          {label}
+        </span>
+        <span
+          className={`text-xs font-medium select-all break-all leading-snug ${
+            onClick
+              ? "text-blue-500 hover:underline cursor-pointer"
+              : "text-slate-800 dark:text-slate-250"
+          } ${mono ? "font-mono" : ""}`}
+          onClick={onClick}
+        >
+          {value}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Platform display helpers
+const PLATFORM_META: Record<
+  string,
+  { label: string; color: string; iconColor: string }
+> = {
+  whatsapp: {
+    label: "WhatsApp",
+    color:
+      "bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800",
+    iconColor: "text-green-500",
+  },
+  telegram: {
+    label: "Telegram",
+    color:
+      "bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800",
+    iconColor: "text-sky-500",
+  },
+  zalo: {
+    label: "Zalo",
+    color:
+      "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+    iconColor: "text-blue-500",
+  },
+};
 
 export function QrReaderSidebar({
   enableWideSidebarGrid = false,
@@ -88,7 +159,8 @@ export function QrReaderSidebar({
 
   const renderStructuredData = () => {
     switch (parsed.type) {
-      case "url":
+      // ── URL ──────────────────────────────────────────────────────────────
+      case "url": {
         const cleanUrl = parsed.raw.startsWith("http")
           ? parsed.raw
           : `https://${parsed.raw}`;
@@ -105,7 +177,7 @@ export function QrReaderSidebar({
                 window.open(
                   "https://www.urlvoid.com/",
                   "_blank",
-                  "noopener,noreferrer",
+                  "noopener,noreferrer"
                 );
               }, 2000);
             })
@@ -131,15 +203,10 @@ export function QrReaderSidebar({
             >
               <ShieldCheck size={14} className="text-emerald-500" />
               <span>Check URL Reputation</span>
-              <span
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex"
-              >
+              <span onClick={(e) => e.stopPropagation()} className="inline-flex">
                 <Tooltip
                   variant="wide1"
-                  content={`• This action will take you outside to URLVoid to check the website trustworthiness.
-                    • If the link is shortened (e.g. bit.ly, tinyurl.com), URLVoid cannot scan the actual destination page. Be cautious!
-                  `}
+                  content={`• This action will take you outside to URLVoid to check the website trustworthiness.\n• If the link is shortened (e.g. bit.ly, tinyurl.com), URLVoid cannot scan the actual destination page. Be cautious!`}
                 >
                   <HelpCircle
                     size={13}
@@ -150,43 +217,21 @@ export function QrReaderSidebar({
             </SecondaryButton>
           </div>
         );
-      case "email":
+      }
+
+      // ── EMAIL ─────────────────────────────────────────────────────────────
+      case "email": {
         const email = parsed.emailData;
         if (!email) return null;
         return (
           <div className="space-y-2 text-xs">
-            <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
-              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                To
-              </span>
-              <span className="font-medium text-slate-800 dark:text-slate-250 select-all">
-                {email.to}
-              </span>
-            </div>
-            {email.subject && (
-              <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                  Subject
-                </span>
-                <span className="font-medium text-slate-800 dark:text-slate-250 select-all">
-                  {email.subject}
-                </span>
-              </div>
-            )}
-            {email.body && (
-              <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                  Message Body
-                </span>
-                <span className="font-medium text-slate-700 dark:text-slate-300 whitespace-pre-wrap select-all">
-                  {email.body}
-                </span>
-              </div>
-            )}
+            <FieldRow label="To" value={email.to} />
+            {email.subject && <FieldRow label="Subject" value={email.subject} />}
+            {email.body && <FieldRow label="Message Body" value={email.body} />}
             <Button
               onClick={() =>
                 window.open(
-                  `mailto:${email.to}?subject=${encodeURIComponent(email.subject || "")}&body=${encodeURIComponent(email.body || "")}`,
+                  `mailto:${email.to}?subject=${encodeURIComponent(email.subject || "")}&body=${encodeURIComponent(email.body || "")}`
                 )
               }
               className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
@@ -196,33 +241,20 @@ export function QrReaderSidebar({
             </Button>
           </div>
         );
-      case "sms":
+      }
+
+      // ── SMS ───────────────────────────────────────────────────────────────
+      case "sms": {
         const sms = parsed.smsData;
         if (!sms) return null;
         return (
           <div className="space-y-2 text-xs">
-            <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
-              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                Phone Number
-              </span>
-              <span className="font-medium text-slate-800 dark:text-slate-250 select-all">
-                {sms.phone}
-              </span>
-            </div>
-            {sms.message && (
-              <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                  Message
-                </span>
-                <span className="font-medium text-slate-700 dark:text-slate-350 select-all">
-                  {sms.message}
-                </span>
-              </div>
-            )}
+            <FieldRow label="Phone Number" value={sms.phone} />
+            {sms.message && <FieldRow label="Message" value={sms.message} />}
             <Button
               onClick={() =>
                 window.open(
-                  `sms:${sms.phone}?body=${encodeURIComponent(sms.message || "")}`,
+                  `sms:${sms.phone}?body=${encodeURIComponent(sms.message || "")}`
                 )
               }
               className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
@@ -232,18 +264,14 @@ export function QrReaderSidebar({
             </Button>
           </div>
         );
-      case "phone":
+      }
+
+      // ── PHONE ─────────────────────────────────────────────────────────────
+      case "phone": {
         const num = parsed.raw.substring(4);
         return (
           <div className="space-y-3">
-            <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850 text-xs">
-              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                Phone
-              </span>
-              <span className="font-medium text-slate-800 dark:text-slate-250 select-all">
-                {num}
-              </span>
-            </div>
+            <FieldRow label="Phone" value={num} />
             <Button
               onClick={() => window.open(`tel:${num}`)}
               className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
@@ -253,25 +281,25 @@ export function QrReaderSidebar({
             </Button>
           </div>
         );
-      case "wifi":
+      }
+
+      // ── WIFI ──────────────────────────────────────────────────────────────
+      case "wifi": {
         const wifi = parsed.wifiData;
         if (!wifi) return null;
         return (
           <div className="space-y-2 text-xs">
-            <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
-              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                Network SSID
-              </span>
-              <span className="font-medium text-slate-800 dark:text-slate-250 select-all">
-                {wifi.ssid}
-              </span>
-            </div>
+            <FieldRow
+              icon={<Wifi size={14} />}
+              label="Network SSID"
+              value={wifi.ssid}
+            />
             {wifi.password && (
               <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850 relative">
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
                   Password
                 </span>
-                <span className="font-mono font-medium text-slate-800 dark:text-slate-250 select-all pr-8">
+                <span className="font-mono font-medium text-xs text-slate-800 dark:text-slate-250 select-all pr-8">
                   {showPassword ? wifi.password : "••••••••"}
                 </span>
                 <button
@@ -283,131 +311,272 @@ export function QrReaderSidebar({
                 </button>
               </div>
             )}
-            <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
-              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                Security Type
-              </span>
-              <span className="font-medium text-slate-800 dark:text-slate-250">
-                {wifi.encryption || "None"}
-              </span>
-            </div>
+            <FieldRow
+              label="Security Type"
+              value={wifi.encryption || "None"}
+            />
+            {wifi.hidden !== undefined && (
+              <FieldRow
+                label="Hidden SSID"
+                value={wifi.hidden ? "Yes" : "No"}
+              />
+            )}
+            {wifi.password && (
+              <SecondaryButton
+                onClick={() => copyToClipboard(wifi.password!)}
+                className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
+              >
+                <Copy size={14} />
+                <span>Copy Password</span>
+              </SecondaryButton>
+            )}
           </div>
         );
-      case "vcard":
+      }
+
+      // ── VCARD ─────────────────────────────────────────────────────────────
+      case "vcard": {
         const vcard = parsed.vcardData;
         if (!vcard) return null;
         return (
-          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 text-xs">
+          <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1 text-xs">
             {vcard.name && (
-              <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-100 dark:border-slate-850">
-                <User size={14} className="mt-0.5 text-slate-400" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                    Name
-                  </span>
-                  <span className="font-medium text-slate-800 dark:text-slate-250">
-                    {vcard.name}
-                  </span>
-                </div>
-              </div>
+              <FieldRow
+                icon={<User size={14} />}
+                label="Name"
+                value={vcard.name}
+              />
             )}
             {(vcard.title || vcard.org) && (
-              <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-100 dark:border-slate-850">
-                <FileText size={14} className="mt-0.5 text-slate-400" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                    Company / Title
-                  </span>
-                  <span className="font-medium text-slate-850 dark:text-slate-250">
-                    {vcard.title ? `${vcard.title} - ` : ""}
-                    {vcard.org || ""}
-                  </span>
-                </div>
-              </div>
+              <FieldRow
+                icon={<FileText size={14} />}
+                label="Company / Title"
+                value={[vcard.title, vcard.org].filter(Boolean).join(" — ")}
+              />
             )}
             {vcard.phoneMobile && (
-              <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-100 dark:border-slate-850">
-                <Phone size={14} className="mt-0.5 text-slate-400" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                    Mobile Phone
-                  </span>
-                  <span className="font-medium text-slate-800 dark:text-slate-250 select-all">
-                    {vcard.phoneMobile}
-                  </span>
-                </div>
-              </div>
+              <FieldRow
+                icon={<Phone size={14} />}
+                label="Mobile Phone"
+                value={vcard.phoneMobile}
+                onClick={() => window.open(`tel:${vcard.phoneMobile}`)}
+              />
             )}
             {vcard.phoneWork && (
-              <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-100 dark:border-slate-850">
-                <Phone size={14} className="mt-0.5 text-slate-400" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                    Work Phone
-                  </span>
-                  <span className="font-medium text-slate-800 dark:text-slate-250 select-all">
-                    {vcard.phoneWork}
-                  </span>
-                </div>
-              </div>
+              <FieldRow
+                icon={<Phone size={14} />}
+                label="Work Phone"
+                value={vcard.phoneWork}
+                onClick={() => window.open(`tel:${vcard.phoneWork}`)}
+              />
+            )}
+            {vcard.phoneHome && (
+              <FieldRow
+                icon={<Phone size={14} />}
+                label="Home Phone"
+                value={vcard.phoneHome}
+                onClick={() => window.open(`tel:${vcard.phoneHome}`)}
+              />
+            )}
+            {vcard.phoneFax && (
+              <FieldRow
+                icon={<Printer size={14} />}
+                label="Fax"
+                value={vcard.phoneFax}
+              />
             )}
             {vcard.email && (
-              <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-100 dark:border-slate-850">
-                <Mail size={14} className="mt-0.5 text-slate-400" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                    Email
-                  </span>
-                  <span className="font-medium text-slate-800 dark:text-slate-250 select-all">
-                    {vcard.email}
-                  </span>
-                </div>
-              </div>
+              <FieldRow
+                icon={<Mail size={14} />}
+                label="Email"
+                value={vcard.email}
+                onClick={() => window.open(`mailto:${vcard.email}`)}
+              />
             )}
             {vcard.url && (
-              <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-100 dark:border-slate-850">
-                <ExternalLink size={14} className="mt-0.5 text-slate-400" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                    Website
-                  </span>
-                  <span
-                    className="font-medium text-blue-500 hover:underline cursor-pointer select-all"
-                    onClick={() => window.open(vcard.url, "_blank")}
-                  >
-                    {vcard.url}
-                  </span>
-                </div>
-              </div>
+              <FieldRow
+                icon={<ExternalLink size={14} />}
+                label="Website"
+                value={vcard.url}
+                onClick={() => window.open(vcard.url, "_blank")}
+              />
             )}
             {vcard.address && (
-              <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-100 dark:border-slate-850">
-                <FileText size={14} className="mt-0.5 text-slate-400" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                    Address
-                  </span>
-                  <span className="font-medium text-slate-800 dark:text-slate-250 select-all">
-                    {vcard.address}
-                  </span>
-                </div>
-              </div>
+              <FieldRow
+                icon={<MapPin size={14} />}
+                label="Address"
+                value={vcard.address}
+              />
             )}
             {vcard.note && (
-              <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-100 dark:border-slate-850">
-                <FileText size={14} className="mt-0.5 text-slate-400" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                    Notes
-                  </span>
-                  <span className="font-medium text-slate-650 dark:text-slate-350 select-all">
-                    {vcard.note}
-                  </span>
+              <FieldRow
+                icon={<AlignLeft size={14} />}
+                label="Notes"
+                value={vcard.note}
+              />
+            )}
+            <div className="flex gap-2 pt-1">
+              {vcard.phoneMobile && (
+                <Button
+                  onClick={() => window.open(`tel:${vcard.phoneMobile}`)}
+                  className="flex-1 text-xs h-9 flex items-center justify-center gap-1.5"
+                >
+                  <Phone size={14} />
+                  <span>Call</span>
+                </Button>
+              )}
+              {vcard.email && (
+                <Button
+                  onClick={() => window.open(`mailto:${vcard.email}`)}
+                  className="flex-1 text-xs h-9 flex items-center justify-center gap-1.5"
+                >
+                  <Mail size={14} />
+                  <span>Email</span>
+                </Button>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      // ── EVENT ─────────────────────────────────────────────────────────────
+      case "event": {
+        const ev = parsed.eventData;
+        if (!ev) return null;
+
+        const startDisplay = ev.startDate
+          ? formatICalDateForDisplay(ev.startDate)
+          : undefined;
+        const endDisplay = ev.endDate
+          ? formatICalDateForDisplay(ev.endDate)
+          : undefined;
+
+        return (
+          <div className="space-y-2 text-xs">
+            {ev.title && (
+              <FieldRow
+                icon={<Calendar size={14} />}
+                label="Event Name"
+                value={ev.title}
+              />
+            )}
+            {(startDisplay || endDisplay) && (
+              <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                  <Clock size={11} />
+                  Date & Time
+                </span>
+                <div className="mt-1 space-y-0.5">
+                  {startDisplay && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 w-8 shrink-0">From</span>
+                      <span className="font-medium text-slate-800 dark:text-slate-250">{startDisplay}</span>
+                    </div>
+                  )}
+                  {endDisplay && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 w-8 shrink-0">To</span>
+                      <span className="font-medium text-slate-800 dark:text-slate-250">{endDisplay}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
+            {ev.location && (
+              <FieldRow
+                icon={<MapPin size={14} />}
+                label="Location"
+                value={ev.location}
+              />
+            )}
+            {ev.description && (
+              <FieldRow
+                icon={<AlignLeft size={14} />}
+                label="Description"
+                value={ev.description}
+              />
+            )}
+            {ev.url && (
+              <FieldRow
+                icon={<ExternalLink size={14} />}
+                label="Event URL"
+                value={ev.url}
+                onClick={() => window.open(ev.url, "_blank")}
+              />
+            )}
+            <div className="flex gap-2 pt-1">
+              <Button
+                onClick={() => {
+                  const blob = new Blob([parsed.raw], {
+                    type: "text/calendar;charset=utf-8",
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `${ev.title || "event"}.ics`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="flex-1 text-xs h-9 flex items-center justify-center gap-1.5"
+              >
+                <Calendar size={14} />
+                <span>Save .ics File</span>
+              </Button>
+              {ev.url && (
+                <SecondaryButton
+                  onClick={() => window.open(ev.url, "_blank")}
+                  className="flex-1 text-xs h-9 flex items-center justify-center gap-1.5"
+                >
+                  <ExternalLink size={14} />
+                  <span>Open URL</span>
+                </SecondaryButton>
+              )}
+            </div>
           </div>
         );
+      }
+
+      // ── MESSAGING ─────────────────────────────────────────────────────────
+      case "messaging": {
+        const msg = parsed.messagingData;
+        if (!msg) return null;
+
+        const meta = PLATFORM_META[msg.platform] ?? PLATFORM_META["whatsapp"];
+
+        const openLink = () => {
+          window.open(parsed.raw, "_blank", "noopener,noreferrer");
+        };
+
+        return (
+          <div className="space-y-2 text-xs">
+            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${meta.color}`}>
+              <MessageCircle size={12} />
+              {meta.label}
+            </div>
+            <FieldRow
+              icon={<User size={14} />}
+              label={msg.platform === "telegram" ? "Username" : "Phone Number"}
+              value={msg.recipient}
+            />
+            {msg.message && (
+              <FieldRow
+                icon={<AlignLeft size={14} />}
+                label="Template Message"
+                value={msg.message}
+              />
+            )}
+            <Button
+              onClick={openLink}
+              className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
+            >
+              <MessageCircle size={14} />
+              <span>Open in {meta.label}</span>
+            </Button>
+          </div>
+        );
+      }
+
+      // ── TEXT (fallback) ───────────────────────────────────────────────────
       case "text":
       default:
         return (
