@@ -31,5 +31,46 @@
     "upscaler": { "label": "Phóng to ảnh (AI)" },
     "qrGenerator": { "label": "Tạo mã QR" },
     "qrReader": { "label": "Đọc mã QR" }
+  },
+  "popup": {
+    "subtitle": "Bộ Công cụ Ảnh Mạnh mẽ",
+    "lightMode": "Chuyển sang giao diện sáng",
+    "darkMode": "Chuyển sang giao diện tối",
+    "fullList": "Mở danh sách tính năng đầy đủ",
+    "close": "Đóng cửa sổ",
+    "chooseAction": "Chọn một thao tác cho trang này.",
+    "scanError": "Không thể quét trang hiện tại để kiểm định SEO.",
+    "inspectorError": "Không thể mở Bảng điều khiển kiểm tra nhanh.",
+    "settingsError": "Không thể mở trang cài đặt.",
+    "actions": {
+      "seoTitle": "Quét trang / Kiểm định SEO",
+      "seoDesc": "Chạy chẩn đoán hình ảnh SEO và mở kết quả trong Bảng điều khiển Snapshot.",
+      "inspectorTitle": "Kiểm tra nhanh ở Bảng bên",
+      "inspectorDesc": "Mở các công cụ kiểm tra ảnh nhỏ gọn trong khi vẫn giữ nguyên tab hiện tại.",
+      "settingsTitle": "Danh sách tính năng / Cài đặt",
+      "settingsDesc": "Mở toàn bộ không gian làm việc và cấu hình của Imify."
+    }
+  },
+  "sidepanel": {
+    "inspectorTitle": "Bộ kiểm tra ảnh nhanh Imify",
+    "inspectorSubtitle": "Kéo thả, kiểm tra, tối ưu hóa",
+    "auditTitle": "SEO Audit Snapshot",
+    "auditSubtitle": "Xem lại kết quả quét",
+    "changeView": "Thay đổi chế độ xem bảng bên",
+    "menuInspector": "Kiểm tra nhanh",
+    "menuAudit": "Kiểm định SEO",
+    "invalidImageError": "Vui lòng chọn một tệp ảnh hợp lệ.",
+    "inspectFailedError": "Không thể kiểm tra hình ảnh đã chọn.",
+    "importFailedError": "Không thể nhập URL hình ảnh để kiểm tra.",
+    "analyzingState": "Đang xử lý siêu dữ liệu ảnh và cấu hình màu...",
+    "loadingState": "Đang tải trạng thái snapshot đã lưu.",
+    "noScanState": "Chưa có lượt quét nào được thực hiện.",
+    "neverScanned": "Chưa từng quét",
+    "unknownScanTime": "Không rõ thời gian quét",
+    "scanStatus": "Trạng thái quét",
+    "scanning": "Đang quét...",
+    "scanNow": "Quét ngay",
+    "lastScanned": "Quét lần cuối lúc: {{time}}",
+    "noScanData": "Chưa có dữ liệu quét. Nhấp vào \"Quét ngay\" để tạo snapshot đầu tiên của bạn."
   }
 }
