@@ -19,6 +19,7 @@ import {
   TextArea,
   ToastContainer,
   Tooltip,
+  cn,
 } from "@imify/ui";
 import { useQrReaderStore } from "@imify/stores";
 import {
@@ -93,25 +94,31 @@ export function QrReaderWorkspace() {
   const [scannedQrImage, setScannedQrImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isScreenShare, setIsScreenShare] = useState(false);
+  const [hasDisplayMedia, setHasDisplayMedia] = useState(true);
 
-  // 1. Detect if camera is available
+  // 1. Detect if camera and screen capture are available
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      navigator.mediaDevices &&
-      navigator.mediaDevices.enumerateDevices
-    ) {
-      navigator.mediaDevices
-        .enumerateDevices()
-        .then((devices) => {
-          const hasCam = devices.some((device) => device.kind === "videoinput");
-          setHasCamera(hasCam);
-        })
-        .catch(() => {
-          setHasCamera(false);
-        });
+    if (typeof window !== "undefined" && navigator.mediaDevices) {
+      // Check camera
+      if (navigator.mediaDevices.enumerateDevices) {
+        navigator.mediaDevices
+          .enumerateDevices()
+          .then((devices) => {
+            const hasCam = devices.some(
+              (device) => device.kind === "videoinput",
+            );
+            setHasCamera(hasCam);
+          })
+          .catch(() => {
+            setHasCamera(false);
+          });
+      }
+
+      // Check screen capture support (getDisplayMedia)
+      setHasDisplayMedia(!!navigator.mediaDevices.getDisplayMedia);
     } else {
       setHasCamera(false);
+      setHasDisplayMedia(false);
     }
   }, [setHasCamera]);
 
@@ -356,7 +363,7 @@ export function QrReaderWorkspace() {
       },
       onClick: startScreenCapture,
     },
-  ];
+  ].filter((item) => item.id !== "screen" || hasDisplayMedia);
 
   return (
     <div className="flex-1 flex flex-col h-full gap-3 overflow-hidden animate-in fade-in duration-300">
@@ -490,7 +497,12 @@ export function QrReaderWorkspace() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full h-full min-h-0 max-w-6xl animate-in fade-in duration-300">
+          <div
+            className={cn(
+              "grid grid-cols-1 gap-6 w-full h-full min-h-0 max-w-6xl animate-in fade-in duration-300",
+              cardItems.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2",
+            )}
+          >
             {cardItems.map((item) => (
               <button
                 key={item.id}

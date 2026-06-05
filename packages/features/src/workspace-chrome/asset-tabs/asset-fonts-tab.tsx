@@ -19,6 +19,7 @@ import { formatFileSize } from "@imify/core";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
 import { useFontStore } from "@imify/stores/stores/font-store";
+import { isLocalFontAccessSupported } from "@imify/core/browser-detection";
 import {
   CURATED_GOOGLE_FONTS,
   fetchGoogleFontWoff2,
@@ -399,24 +400,26 @@ export function AssetFontsTab() {
           </button>
 
           {!collapsedSections.has("import-custom") && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-              {/* Card 1: System Font */}
-              <div
-                onClick={handleOpenSystemPicker}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:border-violet-500 dark:hover:border-violet-500 transition-all cursor-pointer flex gap-4 items-center group"
-              >
-                <div className="p-3 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-500 group-hover:scale-105 transition-transform">
-                  <Monitor size={22} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <BodyText className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                    Import System Font
-                  </BodyText>
-                  <MutedText className="text-xs truncate">
-                    Import any font installed on your computer
-                  </MutedText>
-                </div>
-              </div>
+           <div className={`grid gap-4 animate-in fade-in slide-in-from-top-2 duration-300 ${isLocalFontAccessSupported() ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}>
+             {/* Card 1: System Font */}
+             {isLocalFontAccessSupported() && (
+               <div
+                 onClick={handleOpenSystemPicker}
+                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:border-violet-500 dark:hover:border-violet-500 transition-all cursor-pointer flex gap-4 items-center group"
+               >
+                 <div className="p-3 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-500 group-hover:scale-105 transition-transform">
+                   <Monitor size={22} />
+                 </div>
+                 <div className="flex-1 min-w-0">
+                   <BodyText className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                     Import System Font
+                   </BodyText>
+                   <MutedText className="text-xs truncate">
+                     Import any font installed on your computer
+                   </MutedText>
+                 </div>
+               </div>
+             )}
 
               {/* Card 2: File Upload */}
               <div

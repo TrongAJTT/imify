@@ -240,7 +240,7 @@ export function DevModeStateViewer({
         </div>
         <pre
           className="text-[11px] font-mono text-slate-300 leading-relaxed overflow-auto p-3 whitespace-pre-wrap break-all"
-          style={{ maxHeight: "380px" }}
+          style={{ maxHeight: "480px" }}
         >
           {jsonText}
         </pre>
