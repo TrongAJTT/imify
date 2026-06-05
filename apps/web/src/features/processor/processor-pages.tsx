@@ -86,7 +86,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
     setPresetViewMode(context, "select")
   }, [context, isBatchStoreRehydrated, setPresetViewMode])
 
-  useWorkspaceSidebar(sidebar)
+  useWorkspaceSidebar(sidebar, "Processor Settings")
 
   useEffect(() => {
     const contextLabel = getContextLabel(context)
@@ -145,7 +145,7 @@ export function ProcessorWorkPage({ context, presetId }: ProcessorWorkPageProps)
     ),
     [context, enableWideSidebarGrid, openSettingsDialog, performancePreferences]
   )
-  useWorkspaceSidebar(sidebar)
+  useWorkspaceSidebar(sidebar, "Processor Settings")
 
   const router = useRouter()
   const setupContext = useBatchStore((state) => state.setupContext)

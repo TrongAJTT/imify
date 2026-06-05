@@ -141,7 +141,7 @@ export function SplicingLandingPage() {
     [enableWideSidebarGrid, openSettingsDialog, performancePreferences]
   )
 
-  useWorkspaceSidebar(sidebar)
+  useWorkspaceSidebar(sidebar, "Splicing Settings")
 
   useEffect(() => {
     setHeaderSection("Image Splicing")
@@ -216,7 +216,7 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
     [enableWideSidebarGrid, openSettingsDialog, performancePreferences]
   )
 
-  useWorkspaceSidebar(sidebar)
+  useWorkspaceSidebar(sidebar, "Splicing Settings")
 
   const preset = useMemo(
     () => presets.find((entry) => entry.id === presetId) ?? null,

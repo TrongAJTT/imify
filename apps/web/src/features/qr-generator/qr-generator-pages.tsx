@@ -39,7 +39,7 @@ export function QrGeneratorPage() {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
 
   // Register sidebar shell
-  useWorkspaceSidebar(<QrGeneratorSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
+  useWorkspaceSidebar(<QrGeneratorSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />, "QR Generator")
 
   useEffect(() => {
     setHeaderSection("QR Generator")

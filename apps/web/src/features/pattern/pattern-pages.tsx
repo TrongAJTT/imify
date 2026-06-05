@@ -143,7 +143,7 @@ export function PatternLandingPage() {
   const deletePreset = usePatternPresetStore((state) => state.deletePreset)
   const patternState = usePatternStore()
 
-  useWorkspaceSidebar(<PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
+  useWorkspaceSidebar(<PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />, "Pattern Settings")
 
   useEffect(() => {
     setHeaderSection("Pattern Generator")
@@ -208,7 +208,7 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
   const appliedPresetIdRef = useRef<string | null>(null)
   const patternState = usePatternStore()
 
-  useWorkspaceSidebar(<PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
+  useWorkspaceSidebar(<PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />, "Pattern Settings")
 
   const preset = useMemo(
     () => presets.find((entry) => entry.id === presetId) ?? null,

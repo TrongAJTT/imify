@@ -53,7 +53,7 @@ export function BackgroundRemoverPage() {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
 
   // Register sidebar shell
-  useWorkspaceSidebar(<BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
+  useWorkspaceSidebar(<BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />, "Background Remover")
 
   React.useEffect(() => {
     setHeaderSection("Background Remover")

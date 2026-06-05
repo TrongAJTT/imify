@@ -39,7 +39,7 @@ export function QrReaderPage() {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
 
   // Register sidebar shell
-  useWorkspaceSidebar(<QrReaderSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
+  useWorkspaceSidebar(<QrReaderSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />, "Scan Results")
 
   useEffect(() => {
     setHeaderSection("QR Reader")
