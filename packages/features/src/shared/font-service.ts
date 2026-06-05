@@ -49,7 +49,7 @@ export async function convertToWoff2IfNeeded(buffer: ArrayBuffer): Promise<Array
   try {
     const uint8Array = new Uint8Array(buffer)
     const compressed = await compress(uint8Array)
-    return compressed.buffer
+    return compressed.buffer as ArrayBuffer
   } catch (error) {
     console.error("Failed to convert font to WOFF2:", error)
     throw new Error("Could not convert font to WOFF2. Make sure it is a valid TTF or OTF file.")
