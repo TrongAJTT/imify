@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "languageName": "English",
+    "languageCode": "en",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "save": "Save",
+  "cancel": "Cancel",
+  "close": "Close",
+  "apply": "Apply",
+  "reset": "Reset",
+  "delete": "Delete",
+  "upload": "Upload",
+  "download": "Download",
+  "processing": "Processing...",
+  "done": "Done",
+  "error": "Error",
+  "warning": "Warning",
+  "noFileSelected": "No file selected",
+  "chooseFile": "Choose File"
+}

@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "languageName": "English",
+    "languageCode": "en",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "title": "Settings",
+  "tabs": {
+    "general": "General",
+    "performance": "Performance",
+    "layout": "Layout",
+    "shortcuts": "Shortcuts",
+    "language": "Language"
+  },
+  "general": {
+    "defaultScreen": "Default Screen",
+    "preferRecentPreset": "Prefer Recent Preset Entry",
+    "language": "Language",
+    "languageDescription": "Select the display language for Imify."
+  }
+}

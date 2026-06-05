@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "languageName": "English",
+    "languageCode": "en",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "title": "Imify",
+  "subtitle": "Powerful Image Toolkit",
+  "allTools": "All Tools",
+  "categories": {
+    "imageProcessing": "Image Processing",
+    "layoutComposition": "Layout & Composition",
+    "utilities": "Utilities",
+    "extensionExclusive": "Extension Exclusive"
+  },
+  "tools": {
+    "singleProcessor": { "label": "Single Processor" },
+    "batchProcessor": { "label": "Batch Processor" },
+    "splicing": { "label": "Image Splicing" },
+    "splitter": { "label": "Image Splitter" },
+    "filling": { "label": "Image Filling" },
+    "patternGenerator": { "label": "Pattern Generator" },
+    "diffchecker": { "label": "Difference Checker" },
+    "inspector": { "label": "Image Inspector" },
+    "contextMenu": { "label": "Context Menu" },
+    "seoAudit": { "label": "SEO Audit" },
+    "backgroundRemover": { "label": "Background Remover" },
+    "upscaler": { "label": "Upscaler" },
+    "qrGenerator": { "label": "QR Generator" },
+    "qrReader": { "label": "QR Reader" }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "languageName": "Tiếng Việt",
+    "languageCode": "vi",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "title": "Cài đặt",
+  "tabs": {
+    "general": "Chung",
+    "performance": "Hiệu năng",
+    "layout": "Bố cục",
+    "shortcuts": "Phím tắt",
+    "language": "Ngôn ngữ"
+  },
+  "general": {
+    "defaultScreen": "Màn hình mặc định",
+    "preferRecentPreset": "Ưu tiên preset gần đây",
+    "language": "Ngôn ngữ",
+    "languageDescription": "Chọn ngôn ngữ hiển thị cho Imify."
+  }
+}

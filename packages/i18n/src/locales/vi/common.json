@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "languageName": "Tiếng Việt",
+    "languageCode": "vi",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "save": "Lưu",
+  "cancel": "Hủy",
+  "close": "Đóng",
+  "apply": "Áp dụng",
+  "reset": "Đặt lại",
+  "delete": "Xóa",
+  "upload": "Tải lên",
+  "download": "Tải xuống",
+  "processing": "Đang xử lý...",
+  "done": "Hoàn thành",
+  "error": "Lỗi",
+  "warning": "Cảnh báo",
+  "noFileSelected": "Chưa chọn tệp nào",
+  "chooseFile": "Chọn tệp"
+}

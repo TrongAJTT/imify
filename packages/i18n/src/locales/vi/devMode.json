@@ -1,0 +1,29 @@
+{
+  "_meta": {
+    "languageName": "Tiếng Việt",
+    "languageCode": "vi",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "title": "Công cụ phát triển",
+  "enableDevMode": "Kích hoạt chế độ phát triển",
+  "showDebugKeys": "Hiển thị Key Debug i18n",
+  "showDebugKeysDescription": "Hiển thị key của chuỗi dịch bên cạnh nội dung để dễ gỡ lỗi.",
+  "importLanguage": "Nhập tệp ngôn ngữ",
+  "importLanguageDescription": "Tải một tệp JSON ngôn ngữ tùy chỉnh trong runtime để kiểm tra bản dịch.",
+  "downloadTemplate": "Tải mẫu rỗng",
+  "languageImportDialog": {
+    "title": "Nhập ngôn ngữ",
+    "step1Title": "Thông tin cấu hình ngôn ngữ",
+    "languageName": "Tên ngôn ngữ",
+    "languageCode": "Mã ngôn ngữ (ví dụ: fr-FR)",
+    "authorName": "Tên tác giả",
+    "authorGithub": "Đường dẫn GitHub",
+    "step2Title": "Tải lên tệp bản dịch",
+    "downloadTemplate": "Tải mẫu rỗng",
+    "importSuccess": "Đã tải thành công ngôn ngữ {{code}}!",
+    "importError": "Không thể phân tích cú pháp tệp ngôn ngữ."
+  }
+}

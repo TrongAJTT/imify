@@ -1,0 +1,14 @@
+﻿{
+    "_meta":  {
+                  "maintainers":  [
+                                      {
+                                          "role":  "Core Maintainer",
+                                          "name":  "TrongAJTT",
+                                          "github":  "https://github.com/trongajtt"
+                                      }
+                                  ],
+                  "languageName":  "English",
+                  "version":  "2.2.0",
+                  "languageCode":  "en"
+              }
+}

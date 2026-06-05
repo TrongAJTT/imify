@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "languageName": "Tiếng Việt",
+    "languageCode": "vi",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "title": "Imify",
+  "subtitle": "Bộ Công cụ Ảnh Mạnh mẽ",
+  "allTools": "Tất cả công cụ",
+  "categories": {
+    "imageProcessing": "Xử lý ảnh",
+    "layoutComposition": "Bố cục & Ghép ảnh",
+    "utilities": "Tiện ích",
+    "extensionExclusive": "Dành riêng cho Extension"
+  },
+  "tools": {
+    "singleProcessor": { "label": "Xử lý đơn lẻ" },
+    "batchProcessor": { "label": "Xử lý hàng loạt" },
+    "splicing": { "label": "Ghép ảnh liên tiếp" },
+    "splitter": { "label": "Cắt nhỏ ảnh" },
+    "filling": { "label": "Lấp đầy ảnh" },
+    "patternGenerator": { "label": "Tạo hình nền lặp" },
+    "diffchecker": { "label": "So sánh ảnh" },
+    "inspector": { "label": "Kiểm tra thông tin ảnh" },
+    "contextMenu": { "label": "Menu chuột phải" },
+    "seoAudit": { "label": "Kiểm định SEO" },
+    "backgroundRemover": { "label": "Tách nền ảnh" },
+    "upscaler": { "label": "Phóng to ảnh (AI)" },
+    "qrGenerator": { "label": "Tạo mã QR" },
+    "qrReader": { "label": "Đọc mã QR" }
+  }
+}
