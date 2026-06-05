@@ -41,6 +41,7 @@
     "@imify/features": "workspace:*",
     "@imify/stores": "workspace:*",
     "@imify/ui": "workspace:*",
+    "@imify/i18n": "workspace:*",
     "@jsquash/oxipng": "^2.3.0",
     "@plasmohq/storage": "^1.15.0",
     "@radix-ui/react-collapsible": "^1.1.12",

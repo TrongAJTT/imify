@@ -10,8 +10,10 @@ import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { Expand, Moon, Sun, X } from "lucide-react"
 import { Button } from "@imify/ui/ui/button"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
+import { initI18n } from "@imify/i18n"
 
 bootstrapExtensionAdapters()
+initI18n()
 
 function toErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message.trim().length > 0) {

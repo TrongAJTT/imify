@@ -22,6 +22,7 @@
     "@imify/features": "workspace:*",
     "@imify/stores": "workspace:*",
     "@imify/ui": "workspace:*",
+    "@imify/i18n": "workspace:*",
     "konva": "^10.2.5",
     "next": "^15.0.0",
     "react": "19.2.5",

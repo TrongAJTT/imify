@@ -186,6 +186,9 @@ importers:
       '@imify/features':
         specifier: workspace:*
         version: link:../../packages/features
+      '@imify/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@imify/stores':
         specifier: workspace:*
         version: link:../../packages/stores
@@ -322,6 +325,9 @@ importers:
       '@imify/features':
         specifier: workspace:*
         version: link:../../packages/features
+      '@imify/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@imify/stores':
         specifier: workspace:*
         version: link:../../packages/stores

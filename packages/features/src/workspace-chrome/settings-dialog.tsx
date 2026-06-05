@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, BarChart3, ChevronRight, Database, Download, Gauge, Keyboard, ListTree, RotateCcw, ShieldAlert, X } from "lucide-react"
+import { ArrowLeft, BarChart3, ChevronRight, Database, Download, Gauge, Globe, Keyboard, ListTree, RotateCcw, ShieldAlert, X } from "lucide-react"
 import { APP_CONFIG } from "@imify/core/config"
 import { useToast } from "@imify/core/hooks/use-toast"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
@@ -34,6 +34,7 @@ import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog"
 import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog"
 import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter"
 import { SettingsShortcutsPanel } from "./settings-shortcuts-panel"
+import { LanguageSettingsTab } from "./language-settings-tab"
 
 const DEFAULT_ACTIVE_CLASS = "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-slate-300 dark:ring-slate-700"
 const DEFAULT_INACTIVE_CLASS = "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
@@ -223,6 +224,16 @@ export function WorkspaceSettingsDialog({
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-sky-600 dark:text-sky-400",
       bgClassName: "bg-sky-50 dark:bg-sky-500/10"
+    },
+    {
+      id: "language" as const,
+      label: "Language",
+      description: "Select display language and localization options",
+      icon: Globe,
+      activeClassName: DEFAULT_ACTIVE_CLASS,
+      inactiveClassName: DEFAULT_INACTIVE_CLASS,
+      iconClassName: "text-teal-600 dark:text-teal-400",
+      bgClassName: "bg-teal-50 dark:bg-teal-500/10"
     },
     {
       id: "shortcuts" as const,
@@ -431,6 +442,8 @@ export function WorkspaceSettingsDialog({
                   </section>
                 </div>
               ) : null}
+
+              {activeTab === "language" && <LanguageSettingsTab isMobile={isMobileDialog} />}
 
               {activeTab === "shortcuts" && <SettingsShortcutsPanel isMobile={isMobileDialog} />}
 

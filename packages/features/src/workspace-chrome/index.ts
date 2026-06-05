@@ -11,3 +11,5 @@ export * from "./whats-new-dialog"
 export * from "./whats-new-update-notification-gate"
 export * from "./asset-management-dialog"
 export * from "./dev-tools-dialog"
+export * from "./language-settings-tab"
+

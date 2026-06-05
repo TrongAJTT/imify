@@ -13,8 +13,10 @@ import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { SidepanelDropInputCard } from "@/sidepanel/components/sidepanel-drop-input-card"
 import { SidepanelSharedAppbar } from "@/sidepanel/components/sidepanel-shared-appbar"
+import { initI18n } from "@imify/i18n"
 
 bootstrapExtensionAdapters()
+initI18n()
 
 async function switchSidepanel(view: "inspector" | "audit"): Promise<void> {
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })

@@ -14,7 +14,10 @@ import { SidepanelSharedAppbar } from "@/sidepanel/components/sidepanel-shared-a
 import { useSeoAuditSnapshot } from "@/sidepanel/hooks/use-seo-audit-snapshot"
 import { Tooltip } from "@/options/components/tooltip"
 
+import { initI18n } from "@imify/i18n"
+
 bootstrapExtensionAdapters()
+initI18n()
 
 async function switchSidepanel(view: "inspector" | "audit"): Promise<void> {
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })
