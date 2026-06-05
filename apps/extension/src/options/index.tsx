@@ -115,7 +115,7 @@ import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 import { CONTEXT_MENU_SUB_TABS } from "./components/context-menu/context-menu-settings-tab"
 
-import { initI18n } from "@imify/i18n"
+import { initI18n, useTranslation } from "@imify/i18n"
 
 bootstrapExtensionAdapters()
 ensureRuntimeLogCaptureInstalled()

@@ -257,7 +257,46 @@ export function renderWorkspaceToolIcon(toolId: string, size = 16): React.ReactN
   }
 }
 
+import i18n from "i18next"
+
+function getCategoryIdKey(id: string): string {
+  switch (id) {
+    case "image-processing": return "categories.imageProcessing"
+    case "layout-composition": return "categories.layoutComposition"
+    case "utilities": return "categories.utilities"
+    case "extension-exclusive": return "categories.extensionExclusive"
+    default: return `categories.${id}`
+  }
+}
+
+function getToolIdKey(id: string): string {
+  switch (id) {
+    case "single-processor": return "tools.singleProcessor.label"
+    case "batch-processor": return "tools.batchProcessor.label"
+    case "splicing": return "tools.splicing.label"
+    case "splitter": return "tools.splitter.label"
+    case "filling": return "tools.filling.label"
+    case "pattern-generator": return "tools.patternGenerator.label"
+    case "diffchecker": return "tools.diffchecker.label"
+    case "inspector": return "tools.inspector.label"
+    case "context-menu": return "tools.contextMenu.label"
+    case "seo-audit": return "tools.seoAudit.label"
+    case "background-remover": return "tools.backgroundRemover.label"
+    case "upscaler": return "tools.upscaler.label"
+    case "qr-generator": return "tools.qrGenerator.label"
+    case "qr-reader": return "tools.qrReader.label"
+    default: return `tools.${id}.label`
+  }
+}
+
 export function getWorkspaceToolLabel(toolId: string): string | null {
+  const key = getToolIdKey(toolId)
+  if (i18n.isInitialized) {
+    const translated = i18n.t(`workspace:${key}`)
+    if (translated && translated !== `workspace:${key}`) {
+      return translated
+    }
+  }
   const tool = WORKSPACE_TOOLS.find((entry) => entry.id === toolId)
   return tool?.label ?? null
 }
@@ -267,12 +306,25 @@ export function getWorkspaceToolsMenuGroups(): Array<{
   items: Array<{ id: string; href: string; label: string }>
 }> {
   return WORKSPACE_TOOL_CATEGORIES
-    .map((category) => ({
-      title: category.label,
-      items: WORKSPACE_TOOLS.filter(
-        (tool) => tool.categoryId === category.id && tool.showOnWebToolsMenu
-      ).map((tool) => ({ id: tool.id, href: tool.href, label: tool.label }))
-    }))
+    .map((category) => {
+      const categoryLabelKey = getCategoryIdKey(category.id)
+      const title = i18n.isInitialized
+        ? i18n.t(`workspace:${categoryLabelKey}`, { defaultValue: category.label })
+        : category.label
+
+      return {
+        title,
+        items: WORKSPACE_TOOLS.filter(
+          (tool) => tool.categoryId === category.id && tool.showOnWebToolsMenu
+        ).map((tool) => {
+          const toolLabelKey = getToolIdKey(tool.id)
+          const label = i18n.isInitialized
+            ? i18n.t(`workspace:${toolLabelKey}`, { defaultValue: tool.label })
+            : tool.label
+          return { id: tool.id, href: tool.href, label }
+        })
+      }
+    })
     .filter((group) => group.items.length > 0)
 }
 
@@ -281,15 +333,28 @@ export function getExtensionSidebarToolGroups(): Array<{
   items: Array<{ id: string; label: string; tabId: WorkspacePrimaryToolId }>
 }> {
   return WORKSPACE_TOOL_CATEGORIES
-    .map((category) => ({
-      title: category.label,
-      items: WORKSPACE_TOOLS.filter(
-        (tool) => tool.categoryId === category.id && tool.showOnExtSidebar && tool.extTabId
-      ).map((tool) => ({
-        id: tool.id,
-        label: tool.label,
-        tabId: tool.extTabId as WorkspacePrimaryToolId
-      }))
-    }))
+    .map((category) => {
+      const categoryLabelKey = getCategoryIdKey(category.id)
+      const title = i18n.isInitialized
+        ? i18n.t(`workspace:${categoryLabelKey}`, { defaultValue: category.label })
+        : category.label
+
+      return {
+        title,
+        items: WORKSPACE_TOOLS.filter(
+          (tool) => tool.categoryId === category.id && tool.showOnExtSidebar && tool.extTabId
+        ).map((tool) => {
+          const toolLabelKey = getToolIdKey(tool.id)
+          const label = i18n.isInitialized
+            ? i18n.t(`workspace:${toolLabelKey}`, { defaultValue: tool.label })
+            : tool.label
+          return {
+            id: tool.id,
+            label,
+            tabId: tool.extTabId as WorkspacePrimaryToolId
+          }
+        })
+      }
+    })
     .filter((group) => group.items.length > 0)
 }
