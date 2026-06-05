@@ -10,15 +10,19 @@ import {
   PowerOff,
   X,
   Gauge,
+  Languages,
 } from "lucide-react";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { Button } from "@imify/ui/ui/button";
+import { ToggleSwitchLabel } from "@imify/ui/ui/toggle-switch-label";
 import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header";
 import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header";
 import { Subheading, BodyText, MutedText } from "@imify/ui/ui/typography";
 import { useDevModeEnabled } from "../dev-mode/dev-mode-storage";
+import { useDevModeStore } from "../dev-mode/dev-mode-store";
+import { I18nRuntimeImportDialog } from "../dev-mode/i18n-runtime-import-dialog";
 import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog";
 import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog";
 import { DevModeStateViewer } from "../dev-mode/dev-mode-state-viewer";
@@ -62,7 +66,11 @@ export function DevToolsDialog({
   );
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isI18nImportDialogOpen, setIsI18nImportDialogOpen] = useState(false);
   const [isMobileDialog, setIsMobileDialog] = useState(false);
+
+  const showI18nDebugKeys = useDevModeStore((state) => state.showI18nDebugKeys);
+  const setShowI18nDebugKeys = useDevModeStore((state) => state.setShowI18nDebugKeys);
   const { toasts, hide, success } = useToast();
 
   const safePerformancePreferences = normalizePerformancePreferences(
@@ -296,6 +304,29 @@ export function DevToolsDialog({
                     </section>
                   )}
 
+                  <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
+                    <SettingsItemHeader
+                      title="LANGUAGE TOOLS"
+                      description="Developer tools for internationalization and localizing Imify."
+                    />
+                    <ToggleSwitchLabel
+                      label="Show i18n Debug Keys"
+                      description="Display translation keys next to strings in the UI to assist with localization."
+                      checked={showI18nDebugKeys}
+                      onChange={setShowI18nDebugKeys}
+                    />
+                    <div className="pt-1">
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        onClick={() => setIsI18nImportDialogOpen(true)}
+                      >
+                        <Languages size={14} />
+                        Import Custom Language
+                      </Button>
+                    </div>
+                  </section>
+
                   <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
                       title="DISABLE DEVELOPER MODE"
@@ -369,6 +400,17 @@ export function DevToolsDialog({
             settingsAdapter={devModeSettingsAdapter}
             onSuccess={() =>
               success("Import successful", "State has been restored.", 3000)
+            }
+          />
+          <I18nRuntimeImportDialog
+            isOpen={isI18nImportDialogOpen}
+            onClose={() => setIsI18nImportDialogOpen(false)}
+            onSuccess={(meta) =>
+              success(
+                "Language loaded successfully",
+                `Loaded custom language ${meta.languageName} (${meta.languageCode}) at runtime.`,
+                3000
+              )
             }
           />
         </>
