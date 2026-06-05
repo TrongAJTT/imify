@@ -53,7 +53,8 @@ export function AttributionDialog({ isOpen, onClose }: AttributionDialogProps) {
                 <Tooltip
                   key={item.name}
                   label={item.name}
-                  content={`● By: ${item.author}\n● License: ${item.license}`}
+                  content={`● By: ${item.author}
+                  ● License: ${item.license}`}
                   variant="wide1"
                 >
                   <a
@@ -75,7 +76,7 @@ export function AttributionDialog({ isOpen, onClose }: AttributionDialogProps) {
                     </div>
                     <div className="flex items-center justify-between mt-auto">
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate pr-2 uppercase">
-                        BY {item.author}
+                        By: {item.author}
                       </span>
                       <span className="shrink-0 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-black text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50">
                         {item.license}

@@ -72,14 +72,20 @@ This list is synchronized with `packages/core/src/attributions.ts` (source of tr
 *   **[react-player](https://github.com/cookpete/react-player)**
     *   **Author(s):** Pete Cook
     *   **License:** MIT
-*   **[youtube-video-element](https://github.com/luwes/youtube-video-element)**
-    *   **Author(s):** Wesley Luyten
+*   **[youtube-video-element](https://github.com/muxinc/youtube-video-element)**
+    *   **Author(s):** Mux, Inc.
     *   **License:** MIT
 *   **[ag-psd](https://github.com/Agamnentzar/ag-psd)**
     *   **Author(s):** Kirill Zolotarev
     *   **License:** MIT
-*   **[woff2-encoder](https://github.com/jamsinclair/woff2-encoder)**
-    *   **Author(s):** Google and contributors (port by Jamie Sinclair)
+*   **[woff2-encoder](https://github.com/itskyedo/woff2-encoder)**
+    *   **Author(s):** Google and contributors (port by itskyedo)
+    *   **License:** MIT
+*   **[jsQR](https://github.com/cozmo/jsQR)**
+    *   **Author(s):** Linus Unnebäck
+    *   **License:** Apache-2.0
+*   **[QR Code Styling](https://github.com/kozakdenys/qr-code-styling)**
+    *   **Author(s):** Denys Kozak
     *   **License:** MIT
 *   **[ONNX Runtime Web](https://github.com/microsoft/onnxruntime)**
     *   **Author(s):** Microsoft Corporation
@@ -101,8 +107,8 @@ This list is synchronized with `packages/core/src/attributions.ts` (source of tr
 *   **[Selfie Segmenter](https://huggingface.co/onnx-community/mediapipe_selfie_segmentation)**
     *   **Author(s):** Google and ONNX Community
     *   **License:** Apache-2.0
-*   **[Swin2SR](https://github.com/caidas/swin2SR)**
-    *   **Author(s):** Computer Vision Lab Würzburg and contributors
+*   **[Swin2SR](https://github.com/mv-lab/swin2sr)**
+    *   **Author(s):** Marcos Conde and mv-lab
     *   **License:** Apache-2.0
 *   **[APISR](https://github.com/Kiteretsu77/APISR)**
     *   **Author(s):** Kiteretsu77 and contributors

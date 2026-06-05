@@ -257,7 +257,7 @@ export function QrGeneratorSidebar({
           label="Markers"
           sublabel="Corner square and center style"
           icon={<Grid2X2 size={16} />}
-          defaultOpen={true}
+          defaultOpen={false}
           colorTheme="blue"
           childrenClassName="p-3 space-y-3"
         >
@@ -369,7 +369,7 @@ export function QrGeneratorSidebar({
           label="Quality & Resolution"
           sublabel="Size and error correction"
           icon={<Settings2 size={16} />}
-          defaultOpen={false}
+          defaultOpen={true}
           colorTheme="amber"
           childrenClassName="p-3 space-y-3"
         >

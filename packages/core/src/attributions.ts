@@ -1,3 +1,8 @@
+/**
+ * This file is for attribution purposes only.
+ * IMPORTANT NOTE: After editing the file, make sure to run the "pnpm sync:credit" command to automatically update the CREDIT.md file.
+ */
+
 export interface AttributionItem {
   name: string
   author: string
@@ -45,9 +50,11 @@ export const ATTRIBUTION_CATEGORIES: AttributionCategory[] = [
       { name: "tailwind-merge", author: "Danylo and contributors", license: "MIT", url: "https://github.com/dcastil/tailwind-merge" },
       { name: "perfect-freehand", author: "Steveruizok", license: "MIT", url: "https://github.com/steveruizok/perfect-freehand" },
       { name: "react-player", author: "Pete Cook", license: "MIT", url: "https://github.com/cookpete/react-player" },
-      { name: "youtube-video-element", author: "Wesley Luyten", license: "MIT", url: "https://github.com/luwes/youtube-video-element" },
+      { name: "youtube-video-element", author: "Mux, Inc.", license: "MIT", url: "https://github.com/muxinc/youtube-video-element" },
       { name: "ag-psd", author: "Kirill Zolotarev", license: "MIT", url: "https://github.com/Agamnentzar/ag-psd" },
-      { name: "woff2-encoder", author: "Google and contributors (port by Jamie Sinclair)", license: "MIT", url: "https://github.com/jamsinclair/woff2-encoder" },
+      { name: "woff2-encoder", author: "Google and contributors (port by itskyedo)", license: "MIT", url: "https://github.com/itskyedo/woff2-encoder" },
+      { name: "jsQR", author: "Linus Unnebäck", license: "Apache-2.0", url: "https://github.com/cozmo/jsQR" },
+      { name: "QR Code Styling", author: "Denys Kozak", license: "MIT", url: "https://github.com/kozakdenys/qr-code-styling" },
       { name: "ONNX Runtime Web", author: "Microsoft Corporation", license: "MIT", url: "https://github.com/microsoft/onnxruntime" }
     ]
   },
@@ -60,7 +67,7 @@ export const ATTRIBUTION_CATEGORIES: AttributionCategory[] = [
       { name: "ORMBG", author: "ONNX Community and contributors", license: "MIT", url: "https://huggingface.co/onnx-community/ormbg-ONNX" },
       { name: "MODNet", author: "ONNX Community and contributors", license: "Apache-2.0", url: "https://huggingface.co/onnx-community/modnet-webnn" },
       { name: "Selfie Segmenter", author: "Google and ONNX Community", license: "Apache-2.0", url: "https://huggingface.co/onnx-community/mediapipe_selfie_segmentation" },
-      { name: "Swin2SR", author: "Computer Vision Lab Würzburg and contributors", license: "Apache-2.0", url: "https://github.com/caidas/swin2SR" },
+      { name: "Swin2SR", author: "Marcos Conde and mv-lab", license: "Apache-2.0", url: "https://github.com/mv-lab/swin2sr" },
       { name: "APISR", author: "Kiteretsu77 and contributors", license: "Apache-2.0", url: "https://github.com/Kiteretsu77/APISR" }
     ]
   },
