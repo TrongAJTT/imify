@@ -6,6 +6,7 @@ import { useWebPageMode } from "@/hooks/use-web-page-mode"
 
 interface WorkspaceSidebarContextValue {
   setRightSidebar: (sidebar: React.ReactNode | null) => void
+  setRightSidebarTitle: (title: string | null) => void
 }
 
 const WorkspaceSidebarContext = createContext<WorkspaceSidebarContextValue | null>(null)
@@ -13,10 +14,12 @@ const WorkspaceSidebarContext = createContext<WorkspaceSidebarContextValue | nul
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const { isExtensionPage, isMonolithicPage } = useWebPageMode()
   const [rightSidebar, setRightSidebar] = useState<React.ReactNode | null>(null)
+  const [rightSidebarTitle, setRightSidebarTitle] = useState<string | null>(null)
 
   const contextValue = useMemo<WorkspaceSidebarContextValue>(
     () => ({
-      setRightSidebar
+      setRightSidebar,
+      setRightSidebarTitle
     }),
     []
   )
@@ -28,13 +31,13 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
           <div className={`w-full ${isExtensionPage ? "" : "mx-auto max-w-6xl"}`}>{children}</div>
         </main>
       ) : (
-        <WorkspaceShell rightSidebar={rightSidebar}>{children}</WorkspaceShell>
+        <WorkspaceShell rightSidebar={rightSidebar} title={rightSidebarTitle ?? "Configuration"}>{children}</WorkspaceShell>
       )}
     </WorkspaceSidebarContext.Provider>
   )
 }
 
-export function useWorkspaceSidebar(sidebar: React.ReactNode | null): void {
+export function useWorkspaceSidebar(sidebar: React.ReactNode | null, title: string | null = null): void {
   const context = useContext(WorkspaceSidebarContext)
 
   useEffect(() => {
@@ -42,8 +45,10 @@ export function useWorkspaceSidebar(sidebar: React.ReactNode | null): void {
       return
     }
     context.setRightSidebar(sidebar)
+    context.setRightSidebarTitle(title)
     return () => {
       context.setRightSidebar(null)
+      context.setRightSidebarTitle(null)
     }
-  }, [context, sidebar])
+  }, [context, sidebar, title])
 }

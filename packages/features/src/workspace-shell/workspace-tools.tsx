@@ -11,7 +11,9 @@ import {
   Stamp,
   Workflow,
   Eraser,
-  Sparkles
+  Sparkles,
+  QrCode,
+  Scan
 } from "lucide-react"
 
 export const WORKSPACE_PRIMARY_TOOL_IDS = [
@@ -25,7 +27,9 @@ export const WORKSPACE_PRIMARY_TOOL_IDS = [
   "inspector",
   "background-remover",
   "upscaler",
-  "context-menu"
+  "context-menu",
+  "qr-generator",
+  "qr-reader"
 ] as const
 
 export type WorkspacePrimaryToolId = (typeof WORKSPACE_PRIMARY_TOOL_IDS)[number]
@@ -33,6 +37,7 @@ export type WorkspaceToolCategoryId =
   | "image-processing"
   | "layout-composition"
   | "extension-exclusive"
+  | "utilities"
 
 export interface WorkspaceToolDefinition {
   id: string
@@ -63,6 +68,7 @@ export interface WorkspaceToolCategoryDefinition {
 export const WORKSPACE_TOOL_CATEGORIES: WorkspaceToolCategoryDefinition[] = [
   { id: "image-processing", label: "Image Processing" },
   { id: "layout-composition", label: "Layout & Composition" },
+  { id: "utilities", label: "Utilities" },
   { id: "extension-exclusive", label: "Extension Exclusive" }
 ]
 
@@ -131,7 +137,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
     id: "diffchecker",
     label: "Difference Checker",
     href: "/diffchecker",
-    categoryId: "layout-composition",
+    categoryId: "utilities",
     iconColorClassName: "text-rose-500",
     extTabId: "diffchecker",
     showOnWebToolsMenu: true,
@@ -141,7 +147,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
     id: "inspector",
     label: "Image Inspector",
     href: "/inspector",
-    categoryId: "layout-composition",
+    categoryId: "utilities",
     iconColorClassName: "text-teal-500",
     extTabId: "inspector",
     showOnWebToolsMenu: true,
@@ -185,8 +191,33 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
     extTabId: "upscaler",
     showOnWebToolsMenu: true,
     showOnExtSidebar: true
+  },
+  {
+    id: "qr-generator",
+    label: "QR Generator",
+    href: "/qr-generator",
+    categoryId: "utilities",
+    iconColorClassName: "text-amber-500",
+    extTabId: "qr-generator",
+    showOnWebToolsMenu: true,
+    showOnExtSidebar: true
+  },
+  {
+    id: "qr-reader",
+    label: "QR Reader",
+    href: "/qr-reader",
+    categoryId: "utilities",
+    iconColorClassName: "text-blue-500",
+    extTabId: "qr-reader",
+    showOnWebToolsMenu: true,
+    showOnExtSidebar: true
   }
 ]
+
+export function renderWorkspaceWorkspaceIcon(toolId: string, size = 16): React.ReactNode {
+  // Backwards compatibility alias helper
+  return renderWorkspaceToolIcon(toolId, size);
+}
 
 export function renderWorkspaceToolIcon(toolId: string, size = 16): React.ReactNode {
   const tool = WORKSPACE_TOOLS.find((entry) => entry.id === toolId)
@@ -217,6 +248,10 @@ export function renderWorkspaceToolIcon(toolId: string, size = 16): React.ReactN
       return <Eraser size={size} className={className} />
     case "upscaler":
       return <Sparkles size={size} className={className} />
+    case "qr-generator":
+      return <QrCode size={size} className={className} />
+    case "qr-reader":
+      return <Scan size={size} className={className} />
     default:
       return <Workflow size={size} className={className} />
   }

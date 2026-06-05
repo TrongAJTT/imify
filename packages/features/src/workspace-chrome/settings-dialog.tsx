@@ -682,7 +682,7 @@ export function WorkspaceSettingsDialog({
                   <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
                       title="ASSET STATISTICS"
-                      description="Detailed view of saved watermarks and downloaded offline AI models."
+                      description="Detailed view of saved watermarks, downloaded offline AI models, and offline fonts."
                     />
                     <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
                       <div className="flex flex-col gap-1">
@@ -707,6 +707,33 @@ export function WorkspaceSettingsDialog({
                         </span>
                         <span className="text-2xl font-bold text-slate-850 dark:text-slate-100">
                           {assetStats.totalSizeFormatted}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          GOOGLE FONTS
+                        </span>
+                        <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                          {assetStats.googleFontCount}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          CUSTOM FONTS
+                        </span>
+                        <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                          {assetStats.customFontCount}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          STORAGE OCCUPIED
+                        </span>
+                        <span className="text-2xl font-bold text-slate-850 dark:text-slate-100">
+                          {assetStats.fontSizeFormatted}
                         </span>
                       </div>
                     </div>

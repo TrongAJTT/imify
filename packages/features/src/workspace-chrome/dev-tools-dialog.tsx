@@ -9,6 +9,7 @@ import {
   Download,
   PowerOff,
   X,
+  Gauge,
 } from "lucide-react";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
@@ -22,6 +23,7 @@ import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog";
 import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog";
 import { DevModeStateViewer } from "../dev-mode/dev-mode-state-viewer";
 import { RuntimeConsoleMonitor } from "../dev-mode/runtime-console-monitor";
+import { BrowserCapabilitiesDashboard } from "../dev-mode/browser-capabilities";
 import { setRuntimeLogCaptureEnabled } from "../dev-mode/runtime-log-collector";
 import type { OptionsTab } from "../dev-mode/debug-shared";
 import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter";
@@ -55,7 +57,7 @@ export function DevToolsDialog({
   performancePreferences,
 }: DevToolsDialogProps) {
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
-  const [activeTab, setActiveTab] = useState<"system" | "console" | null>(
+  const [activeTab, setActiveTab] = useState<"system" | "console" | "capabilities" | null>(
     "system",
   );
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
@@ -111,6 +113,16 @@ export function DevToolsDialog({
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-violet-600 dark:text-violet-400",
       bgClassName: "bg-violet-50 dark:bg-violet-900/40",
+    },
+    {
+      id: "capabilities" as const,
+      label: "Capabilities",
+      description: "Browser feature detection and API support",
+      icon: Gauge,
+      activeClassName: DEFAULT_ACTIVE_CLASS,
+      inactiveClassName: DEFAULT_INACTIVE_CLASS,
+      iconClassName: "text-sky-600 dark:text-sky-400",
+      bgClassName: "bg-sky-50 dark:bg-sky-900/40",
     },
     {
       id: "console" as const,
@@ -298,6 +310,19 @@ export function DevToolsDialog({
                       Disable Developer Mode
                     </Button>
                   </section>
+                </div>
+              ) : null}
+
+              {activeTab === "capabilities" ? (
+                <div className="animate-in fade-in duration-300 space-y-5">
+                  {!isMobileDialog && (
+                    <SettingsSectionHeader
+                      title="BROWSER CAPABILITIES"
+                      description="Detected hardware and software feature support for the current environment."
+                    />
+                  )}
+
+                  <BrowserCapabilitiesDashboard />
                 </div>
               ) : null}
 

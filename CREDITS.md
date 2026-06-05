@@ -3,23 +3,6 @@
 Imify is made possible thanks to the following open-source projects and their contributors.
 This list is synchronized with `packages/core/src/attributions.ts` (source of truth for the Acknowledgements dialog).
 
-## AI Models & Engines
-*   **[Transformers.js](https://github.com/huggingface/transformers.js)**
-    *   **Author(s):** Hugging Face and contributors
-    *   **License:** Apache-2.0
-*   **[BiRefNet](https://huggingface.co/ZhengPeng7/BiRefNet)**
-    *   **Author(s):** ZhengPeng7 and contributors
-    *   **License:** MIT
-*   **[ORMBG](https://huggingface.co/onnx-community/ormbg-ONNX)**
-    *   **Author(s):** ONNX Community and contributors
-    *   **License:** MIT
-*   **[MODNet](https://huggingface.co/onnx-community/modnet-webnn)**
-    *   **Author(s):** ONNX Community and contributors
-    *   **License:** Apache-2.0
-*   **[Selfie Segmenter](https://huggingface.co/onnx-community/mediapipe_selfie_segmentation)**
-    *   **Author(s):** Google and ONNX Community
-    *   **License:** Apache-2.0
-
 ## Core Frameworks
 *   **[React](https://react.dev/)**
     *   **Author(s):** Meta Platforms, Inc. and contributors
@@ -38,6 +21,12 @@ This list is synchronized with `packages/core/src/attributions.ts` (source of tr
     *   **License:** MIT
 *   **[Zustand](https://github.com/pmndrs/zustand)**
     *   **Author(s):** Paul Henschel and Poimandres contributors
+    *   **License:** MIT
+*   **[Konva](https://github.com/konvajs/konva)**
+    *   **Author(s):** Anton Lavrenov
+    *   **License:** MIT
+*   **[React Konva](https://github.com/konvajs/react-konva)**
+    *   **Author(s):** Anton Lavrenov
     *   **License:** MIT
 
 ## Utilities & Libraries
@@ -83,6 +72,106 @@ This list is synchronized with `packages/core/src/attributions.ts` (source of tr
 *   **[react-player](https://github.com/cookpete/react-player)**
     *   **Author(s):** Pete Cook
     *   **License:** MIT
-*   **[youtube-video-element](https://github.com/luwes/youtube-video-element)**
-    *   **Author(s):** Wesley Luyten
+*   **[youtube-video-element](https://github.com/muxinc/youtube-video-element)**
+    *   **Author(s):** Mux, Inc.
     *   **License:** MIT
+*   **[ag-psd](https://github.com/Agamnentzar/ag-psd)**
+    *   **Author(s):** Kirill Zolotarev
+    *   **License:** MIT
+*   **[woff2-encoder](https://github.com/itskyedo/woff2-encoder)**
+    *   **Author(s):** Google and contributors (port by itskyedo)
+    *   **License:** MIT
+*   **[jsQR](https://github.com/cozmo/jsQR)**
+    *   **Author(s):** Linus Unnebäck
+    *   **License:** Apache-2.0
+*   **[QR Code Styling](https://github.com/kozakdenys/qr-code-styling)**
+    *   **Author(s):** Denys Kozak
+    *   **License:** MIT
+*   **[ONNX Runtime Web](https://github.com/microsoft/onnxruntime)**
+    *   **Author(s):** Microsoft Corporation
+    *   **License:** MIT
+
+## AI Models & Engines
+*   **[Transformers.js](https://github.com/huggingface/transformers.js)**
+    *   **Author(s):** Hugging Face and contributors
+    *   **License:** Apache-2.0
+*   **[BiRefNet](https://huggingface.co/ZhengPeng7/BiRefNet)**
+    *   **Author(s):** ZhengPeng7 and contributors
+    *   **License:** MIT
+*   **[ORMBG](https://huggingface.co/onnx-community/ormbg-ONNX)**
+    *   **Author(s):** ONNX Community and contributors
+    *   **License:** MIT
+*   **[MODNet](https://huggingface.co/onnx-community/modnet-webnn)**
+    *   **Author(s):** ONNX Community and contributors
+    *   **License:** Apache-2.0
+*   **[Selfie Segmenter](https://huggingface.co/onnx-community/mediapipe_selfie_segmentation)**
+    *   **Author(s):** Google and ONNX Community
+    *   **License:** Apache-2.0
+*   **[Swin2SR](https://github.com/mv-lab/swin2sr)**
+    *   **Author(s):** Marcos Conde and mv-lab
+    *   **License:** Apache-2.0
+*   **[APISR](https://github.com/Kiteretsu77/APISR)**
+    *   **Author(s):** Kiteretsu77 and contributors
+    *   **License:** Apache-2.0
+
+## Google Fonts Library
+*   **[Roboto](https://fonts.google.com/specimen/Roboto)**
+    *   **Author(s):** Google
+    *   **License:** Apache-2.0
+*   **[Open Sans](https://fonts.google.com/specimen/Open+Sans)**
+    *   **Author(s):** Steve Matteson
+    *   **License:** OFL-1.1
+*   **[Montserrat](https://fonts.google.com/specimen/Montserrat)**
+    *   **Author(s):** Julieta Ulanovsky
+    *   **License:** OFL-1.1
+*   **[Lato](https://fonts.google.com/specimen/Lato)**
+    *   **Author(s):** Łukasz Dziedzic
+    *   **License:** OFL-1.1
+*   **[Poppins](https://fonts.google.com/specimen/Poppins)**
+    *   **Author(s):** Indian Type Foundry
+    *   **License:** OFL-1.1
+*   **[Inter](https://fonts.google.com/specimen/Inter)**
+    *   **Author(s):** Rasmus Andersson
+    *   **License:** OFL-1.1
+*   **[Oswald](https://fonts.google.com/specimen/Oswald)**
+    *   **Author(s):** Vernon Adams
+    *   **License:** OFL-1.1
+*   **[Raleway](https://fonts.google.com/specimen/Raleway)**
+    *   **Author(s):** Matt McInerney
+    *   **License:** OFL-1.1
+*   **[Nunito](https://fonts.google.com/specimen/Nunito)**
+    *   **Author(s):** Vernon Adams
+    *   **License:** OFL-1.1
+*   **[Merriweather](https://fonts.google.com/specimen/Merriweather)**
+    *   **Author(s):** Sorkin Type
+    *   **License:** OFL-1.1
+*   **[Playfair Display](https://fonts.google.com/specimen/Playfair+Display)**
+    *   **Author(s):** Claus Eggers Sørensen
+    *   **License:** OFL-1.1
+*   **[Ubuntu](https://fonts.google.com/specimen/Ubuntu)**
+    *   **Author(s):** Canonical Ltd
+    *   **License:** Ubuntu-Font-License-1.0
+*   **[Source Sans 3](https://fonts.google.com/specimen/Source+Sans+3)**
+    *   **Author(s):** Adobe
+    *   **License:** OFL-1.1
+*   **[Bebas Neue](https://fonts.google.com/specimen/Bebas+Neue)**
+    *   **Author(s):** Ryoichi Tsunekawa
+    *   **License:** OFL-1.1
+*   **[Dancing Script](https://fonts.google.com/specimen/Dancing+Script)**
+    *   **Author(s):** Pablo Impallari
+    *   **License:** OFL-1.1
+*   **[Pacifico](https://fonts.google.com/specimen/Pacifico)**
+    *   **Author(s):** Vernon Adams
+    *   **License:** OFL-1.1
+*   **[Abril Fatface](https://fonts.google.com/specimen/Abril+Fatface)**
+    *   **Author(s):** TypeTogether
+    *   **License:** OFL-1.1
+*   **[Lobster](https://fonts.google.com/specimen/Lobster)**
+    *   **Author(s):** Impallari Type
+    *   **License:** OFL-1.1
+*   **[Quicksand](https://fonts.google.com/specimen/Quicksand)**
+    *   **Author(s):** Andrew Paglinawan
+    *   **License:** OFL-1.1
+*   **[Comfortaa](https://fonts.google.com/specimen/Comfortaa)**
+    *   **Author(s):** Johan Aakerlund
+    *   **License:** OFL-1.1

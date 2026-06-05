@@ -37,7 +37,7 @@ export function InspectorPage() {
     () => <InspectorSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
     [enableWideSidebarGrid]
   )
-  useWorkspaceSidebar(sidebar)
+  useWorkspaceSidebar(sidebar, "Inspector Settings")
 
   useEffect(() => {
     setHeaderSection("Image Inspector")

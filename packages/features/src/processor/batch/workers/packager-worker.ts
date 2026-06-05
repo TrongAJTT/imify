@@ -57,7 +57,7 @@ function sanitizeBaseName(fileName: string): string {
   return stripped.length ? stripped : "output"
 }
 function toTransferableArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  return new Uint8Array(bytes).buffer
+  return new Uint8Array(bytes).buffer as ArrayBuffer
 }
 function ensureUniqueEntryName(name: string, usedNames: Set<string>): string {
   const normalized = name.trim().length ? name.trim() : "output"

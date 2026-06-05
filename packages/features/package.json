@@ -16,9 +16,12 @@
     "@huggingface/transformers": "^4.2.0",
     "@imify/stores": "workspace:*",
     "@imify/ui": "workspace:*",
+    "jsqr": "^1.4.0",
     "konva": "^10.2.5",
     "markdown-to-jsx": "^9.7.16",
-    "react-konva": "^18.2.14"
+    "qr-code-styling": "^1.8.4",
+    "react-konva": "^18.2.14",
+    "woff2-encoder": "^2.0.0"
   },
   "alias": {
     "sharp": false,

@@ -93,7 +93,7 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
     () => <FillingOverviewSidebar />,
     []
   )
-  useWorkspaceSidebar(sidebar)
+  useWorkspaceSidebar(sidebar, "Filling Settings")
 
   useEffect(() => {
     setHeaderSection("Image Filling")
@@ -253,7 +253,7 @@ export function FillingFlowPage({ mode, templateId, routeBase }: FillingFlowPage
       ) : null,
     [enableWideSidebarGrid, manualEditorBindings, mode, template]
   )
-  useWorkspaceSidebar(sidebar)
+  useWorkspaceSidebar(sidebar, "Filling Settings")
 
   useEffect(() => {
     const modeLabel =

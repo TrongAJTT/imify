@@ -101,7 +101,7 @@ export function RuntimeConsoleMonitor() {
             <span className="text-[10px] font-mono text-slate-400">Runtime Console Monitor</span>
           </div>
         </div>
-        <pre className="text-[11px] font-mono text-slate-300 leading-relaxed overflow-auto p-3 whitespace-pre-wrap break-all" style={{ maxHeight: "260px" }}>
+        <pre className="text-[11px] font-mono text-slate-300 leading-relaxed overflow-auto p-3 whitespace-pre-wrap break-all" style={{ maxHeight: "560px" }}>
           {logText || "No runtime logs captured yet."}
         </pre>
       </div>

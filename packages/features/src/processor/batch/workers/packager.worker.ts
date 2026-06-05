@@ -19,7 +19,7 @@ function failJob(id: number, error: unknown): void {
 }
 function parseZipLevel(level: number | undefined): ZipLevel { if (!Number.isFinite(level)) return 6; return Math.min(9, Math.max(0, Math.round(level as number))) as ZipLevel }
 function sanitizeBaseName(fileName: string): string { const stripped = fileName.replace(/\.[^.]+$/, "").trim(); return stripped.length ? stripped : "output" }
-function toTransferableArrayBuffer(bytes: Uint8Array): ArrayBuffer { return new Uint8Array(bytes).buffer }
+function toTransferableArrayBuffer(bytes: Uint8Array): ArrayBuffer { return new Uint8Array(bytes).buffer as ArrayBuffer }
 function ensureUniqueEntryName(name: string, usedNames: Set<string>): string {
   const normalized = name.trim().length ? name.trim() : "output"
   if (!usedNames.has(normalized)) { usedNames.add(normalized); return normalized }

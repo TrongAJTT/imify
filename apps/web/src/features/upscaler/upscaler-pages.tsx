@@ -56,7 +56,7 @@ export function UpscalerPage() {
   const enableWideSidebarGrid = useWideSidebarGridEnabled()
 
   // Register sidebar shell
-  useWorkspaceSidebar(<UpscalerSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
+  useWorkspaceSidebar(<UpscalerSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />, "Upscaler Settings")
 
   React.useEffect(() => {
     setHeaderSection("Upscaler")

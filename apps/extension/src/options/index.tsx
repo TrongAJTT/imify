@@ -5,7 +5,7 @@ import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
-import { SidebarPanel } from "@imify/ui"
+import { SidebarPanel, BottomSheet } from "@imify/ui"
 import { PopupApp } from "@/popup/popup-app"
 import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
 import SidepanelAuditSnapshotApp from "@/sidepanel/sidepanel-audit-snapshot-app"
@@ -64,6 +64,16 @@ import {
 } from "@imify/features/background-removal"
 import { DiffcheckerSidebarShell } from "@imify/features/diffchecker"
 import { InspectorSidebarShell } from "@imify/features/inspector"
+import {
+  SharedQrGeneratorPage,
+  QrGeneratorWorkspace,
+  QrGeneratorSidebarShell
+} from "@imify/features/qr-generator"
+import {
+  SharedQrReaderPage,
+  QrReaderWorkspace,
+  QrReaderSidebarShell
+} from "@imify/features/qr-reader"
 import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
 import { ContextMenuInfoPanel } from "@/options/components/context-menu/context-menu-info-panel"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
@@ -88,6 +98,7 @@ import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
 import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
+import { useFontStore } from "@imify/stores/stores/font-store"
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
@@ -292,6 +303,7 @@ export default function OptionsPage() {
     "global"
   )
   const [activeTab, setActiveTab] = useState<OptionsTab>("context-menu")
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
   const [preferRecentPresetEntry, setPreferRecentPresetEntry, { isLoading: isPreferRecentPresetEntryLoading }] = useStorage<boolean>(
     { key: PREFER_RECENT_PRESET_ENTRY_KEY, instance: syncStorage },
     DEFAULT_PREFER_RECENT_PRESET_ENTRY
@@ -329,12 +341,16 @@ export default function OptionsPage() {
     { key: PERFORMANCE_PREFERENCES_KEY, instance: syncStorage },
     DEFAULT_PERFORMANCE_PREFERENCES
   )
-  // Keep a "live" copy so Export UI updates immediately after Settings changes,
-  // instead of waiting for storage re-hydration.
   const [livePerformancePreferences, setLivePerformancePreferences] = useState(performancePreferences)
   useEffect(() => {
     setLivePerformancePreferences(performancePreferences)
   }, [performancePreferences])
+
+  const loadInstalledFonts = useFontStore((state) => state.loadInstalledFonts)
+  useEffect(() => {
+    loadInstalledFonts()
+  }, [loadInstalledFonts])
+
   const initialTabFromQueryRef = useRef<OptionsTab | null>(null)
 
   const isLoading =
@@ -481,13 +497,24 @@ export default function OptionsPage() {
   }, [activeTab, handleToolTabActivation])
 
   useEffect(() => {
-    if (activeTab !== "context-menu") {
-      return
+    if (activeTab === "context-menu") {
+      setHeaderSection("Context Menu")
+      setHeaderActions(null)
+      setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="context-menu" />)
+      return () => resetHeader()
     }
-    setHeaderSection("Context Menu")
-    setHeaderActions(null)
-    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="context-menu" />)
-    return () => resetHeader()
+    if (activeTab === "qr-generator") {
+      setHeaderSection("QR Generator")
+      setHeaderActions(null)
+      setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="qr-generator" />)
+      return () => resetHeader()
+    }
+    if (activeTab === "qr-reader") {
+      setHeaderSection("QR Reader")
+      setHeaderActions(null)
+      setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="qr-reader" />)
+      return () => resetHeader()
+    }
   }, [activeTab, resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   useKeyPress("Escape", () => {
@@ -601,6 +628,18 @@ export default function OptionsPage() {
             }
           />
         )
+      case "qr-generator":
+        return (
+          <SharedQrGeneratorPage
+            renderWorkspace={() => <QrGeneratorWorkspace />}
+          />
+        )
+      case "qr-reader":
+        return (
+          <SharedQrReaderPage
+            renderWorkspace={() => <QrReaderWorkspace />}
+          />
+        )
       default:
         return null
     }
@@ -612,6 +651,19 @@ export default function OptionsPage() {
     registerPreviewQualityChangeHandler,
     state
   ])
+
+  const hasConfigSidebar = activeTab !== "context-menu"
+
+  const getBottomSheetTitle = () => {
+    switch (activeTab) {
+      case "qr-reader": return "Scan Results"
+      case "qr-generator": return "QR Generator"
+      case "background-remover": return "Background Remover"
+      case "single": return "Processor"
+      case "batch": return "Batch Processor"
+      default: return "Configuration"
+    }
+  }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50">
@@ -679,7 +731,7 @@ export default function OptionsPage() {
             configurationSidebarLevel: level
           })
         }}
-        performancePreferences={safePerformancePreferences}
+        performancePreferences={performancePreferences}
         onChangePerformancePreferences={(value) => {
           setLivePerformancePreferences(value)
           void setPerformancePreferences(value)
@@ -751,63 +803,6 @@ export default function OptionsPage() {
                 </div>
               ))}
             </div>
-
-            {/* Right panel content collapsed into left sidebar on smaller screens */}
-            {!isDesktopLayout && !isNavCollapsed ? (
-              <div className="border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col">
-                {activeTab === "single" && (
-                  <ProcessorSidebarShellWrapper
-                    context="single"
-                    performancePreferences={safePerformancePreferences}
-                    onOpenSettings={() => openSettingsDialog("performance")}
-                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-                  />
-                )}
-
-                {activeTab === "batch" && (
-                  <ProcessorSidebarShellWrapper
-                    context="batch"
-                    performancePreferences={safePerformancePreferences}
-                    onOpenSettings={() => openSettingsDialog("performance")}
-                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-                  />
-                )}
-
-                {activeTab === "splicing" && (
-                  <SplicingSidebarShell
-                    performancePreferences={safePerformancePreferences}
-                    onPreviewQualityChange={handleSidebarPreviewQualityChange}
-                    onOpenSettings={() => openSettingsDialog("performance")}
-                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-                  />
-                )}
-
-                {activeTab === "splitter" && (
-                  <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-
-                {activeTab === "filling" && (
-                  <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-
-                {activeTab === "pattern" && (
-                  <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-
-                {activeTab === "diffchecker" && (
-                  <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-
-                {activeTab === "inspector" && (
-                  <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-                {activeTab === "background-remover" && (
-                  <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-
-                <TabInfoPanel activeTab={activeTab} />
-              </div>
-            ) : null}
           </nav>
 
           {/* Content column */}
@@ -833,12 +828,12 @@ export default function OptionsPage() {
             )}
 
             {/* Scrollable content */}
-            <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-950 p-6">
+            <main className={`flex-1 overflow-y-auto md:bg-white md:dark:bg-slate-950 p-2 md:p-6 ${!isDesktopLayout && hasConfigSidebar ? "pb-14" : ""}`}>
               {tabContent}
             </main>
           </div>
 
-          {/* Right panel */}
+          {/* Right panel (Desktop) */}
           {isDesktopLayout ? (
             <aside
               className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto"
@@ -892,13 +887,103 @@ export default function OptionsPage() {
               {activeTab === "background-remover" && (
                 <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
               )}
+              {activeTab === "qr-generator" && (
+                <QrGeneratorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+              {activeTab === "qr-reader" && (
+                <QrReaderSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
 
               <TabInfoPanel activeTab={activeTab} />
             </aside>
-          ) : null}
+          ) : (
+            /* Mobile Bottom Sheet for Configuration */
+            hasConfigSidebar && (
+              <>
+                <BottomSheet 
+                  isOpen={isBottomSheetOpen} 
+                  onClose={() => setIsBottomSheetOpen(false)}
+                  title={getBottomSheetTitle()}
+                >
+                  <div className="flex flex-col gap-6">
+                    {activeTab === "single" && (
+                      <ProcessorSidebarShellWrapper
+                        context="single"
+                        performancePreferences={safePerformancePreferences}
+                        onOpenSettings={() => openSettingsDialog("performance")}
+                        enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                      />
+                    )}
+
+                    {activeTab === "batch" && (
+                      <ProcessorSidebarShellWrapper
+                        context="batch"
+                        performancePreferences={safePerformancePreferences}
+                        onOpenSettings={() => openSettingsDialog("performance")}
+                        enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                      />
+                    )}
+
+                    {activeTab === "splicing" && (
+                      <SplicingSidebarShell
+                        performancePreferences={safePerformancePreferences}
+                        onPreviewQualityChange={handleSidebarPreviewQualityChange}
+                        onOpenSettings={() => openSettingsDialog("performance")}
+                        enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                      />
+                    )}
+
+                    {activeTab === "splitter" && (
+                      <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+
+                    {activeTab === "filling" && (
+                      <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+
+                    {activeTab === "pattern" && (
+                      <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+
+                    {activeTab === "diffchecker" && (
+                      <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+
+                    {activeTab === "inspector" && (
+                      <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+                    {activeTab === "background-remover" && (
+                      <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+                    {activeTab === "qr-generator" && (
+                      <QrGeneratorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+                    {activeTab === "qr-reader" && (
+                      <QrReaderSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+
+                    <TabInfoPanel activeTab={activeTab} />
+                  </div>
+                </BottomSheet>
+
+                {/* Persistent Trigger Bar at bottom - Compact Version (Extension) */}
+                <button
+                  type="button"
+                  onClick={() => setIsBottomSheetOpen(true)}
+                  className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 rounded-t-2xl px-6 pb-2 pt-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] transition-transform active:translate-y-0.5"
+                >
+                  <div className="w-8 h-1 rounded-full bg-slate-200 dark:bg-slate-800 mb-1.5" />
+                  <div className="w-full flex items-center justify-center">
+                    <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em]">
+                      Configuration
+                    </h3>
+                  </div>
+                </button>
+              </>
+            )
+          )}
         </div>
       </EditorProvider>
     </div>
   )
 }
-

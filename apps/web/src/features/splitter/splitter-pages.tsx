@@ -51,7 +51,7 @@ export function SplitterLandingPage() {
   const exportSettings = useSplitterStore((state) => state.exportSettings)
   const applyPresetConfig = useSplitterStore((state) => state.applyPresetConfig)
 
-  useWorkspaceSidebar(<SplitterSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
+  useWorkspaceSidebar(<SplitterSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />, "Splitter Settings")
 
   useEffect(() => {
     if (!isHydrated) {
@@ -116,7 +116,7 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
     [presetId, presets]
   )
 
-  useWorkspaceSidebar(<SplitterSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />)
+  useWorkspaceSidebar(<SplitterSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />, "Splitter Settings")
 
   useEffect(() => {
     setHeaderSection("Image Splitter")

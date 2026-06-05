@@ -37,7 +37,7 @@ export function DiffcheckerPage() {
     () => <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
     [enableWideSidebarGrid]
   )
-  useWorkspaceSidebar(sidebar)
+  useWorkspaceSidebar(sidebar, "Diffchecker Settings")
 
   useEffect(() => {
     setHeaderSection("Difference Checker")
