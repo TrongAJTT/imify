@@ -1,14 +1,14 @@
-﻿{
-    "_meta":  {
-                  "maintainers":  [
-                                      {
-                                          "role":  "Core Maintainer",
-                                          "name":  "TrongAJTT",
-                                          "github":  "https://github.com/trongajtt"
-                                      }
-                                  ],
-                  "languageName":  "Tiáº¿ng Viá»‡t",
-                  "version":  "2.2.0",
-                  "languageCode":  "vi"
-              }
+{
+  "_meta": {
+    "languageName": "Tiếng Việt",
+    "languageCode": "vi",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "title": "Quét mã QR",
+  "scanAction": "Quét mã QR",
+  "scanResult": "Kết quả Quét",
+  "noQrFound": "Không tìm thấy mã QR nào trong hình ảnh"
 }

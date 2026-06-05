@@ -1,14 +1,17 @@
-﻿{
-    "_meta":  {
-                  "maintainers":  [
-                                      {
-                                          "role":  "Core Maintainer",
-                                          "name":  "TrongAJTT",
-                                          "github":  "https://github.com/trongajtt"
-                                      }
-                                  ],
-                  "languageName":  "Tiáº¿ng Viá»‡t",
-                  "version":  "2.2.0",
-                  "languageCode":  "vi"
-              }
+{
+  "_meta": {
+    "languageName": "Tiếng Việt",
+    "languageCode": "vi",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "title": "Bộ xử lý Ảnh Đơn & Hàng loạt",
+  "concurrencyTooltip": "Kiểm soát số lượng ảnh được xử lý đồng thời (1-90).",
+  "concurrencyFormatInfo": "Định dạng hiện tại: {{format}}.",
+  "concurrencyAdvisorInfo": "Sử dụng Trình tư vấn luồng xử lý thông minh bên dưới để có khuyến nghị phù hợp phần cứng.",
+  "batchProcessorTitle": "Bộ xử lý hàng loạt",
+  "singleProcessorTitle": "Bộ xử lý đơn",
+  "dropZonePlaceholder": "Kéo thả ảnh của bạn vào đây, hoặc click để chọn"
 }

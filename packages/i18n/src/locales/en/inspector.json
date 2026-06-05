@@ -1,14 +1,15 @@
-﻿{
-    "_meta":  {
-                  "maintainers":  [
-                                      {
-                                          "role":  "Core Maintainer",
-                                          "name":  "TrongAJTT",
-                                          "github":  "https://github.com/trongajtt"
-                                      }
-                                  ],
-                  "languageName":  "English",
-                  "version":  "2.2.0",
-                  "languageCode":  "en"
-              }
+{
+  "_meta": {
+    "languageName": "English",
+    "languageCode": "en",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "title": "Image Inspector",
+  "metaTitle": "Metadata Inspector",
+  "exifTitle": "EXIF Data",
+  "gpsTitle": "GPS Coordinates",
+  "paletteTitle": "Dominant Color Palette"
 }

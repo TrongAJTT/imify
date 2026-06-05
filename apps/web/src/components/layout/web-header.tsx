@@ -35,15 +35,7 @@ import {
   normalizePerformancePreferences
 } from "@imify/features/processor/performance-preferences"
 import { useDevModeEnabled } from "@imify/features"
-
-const WEB_TOOLS_MENU_GROUPS = getWorkspaceToolsMenuGroups()
-const NAV_LINKS = Array.from(
-  new Map(
-    WEB_TOOLS_MENU_GROUPS.flatMap((group) =>
-      group.items.map((item) => [item.href, { href: item.href, label: item.label }])
-    )
-  ).values()
-)
+import { useTranslation } from "@imify/i18n"
 
 const WEB_DEFAULT_ROUTE_KEY = "imify_web_default_route"
 const LAYOUT_PREFERENCES_EVENT = "imify:layout-preferences-changed"
@@ -103,6 +95,7 @@ export function WebHeader() {
   const [isAssetManagementDialogOpen, setIsAssetManagementDialogOpen] = useState(false)
   const [isDevToolsDialogOpen, setIsDevToolsDialogOpen] = useState(false)
   const [devModeEnabled] = useDevModeEnabled()
+  const { t, i18n } = useTranslation(["workspace", "common"])
   
   const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
   const settingsInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
@@ -110,9 +103,11 @@ export function WebHeader() {
   const closeSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.closeSettingsDialog)
 
   const [defaultRoute, setDefaultRoute] = useState<string>(() => {
-    if (typeof window === "undefined") return NAV_LINKS[0].href
+    if (typeof window === "undefined") return "/single-processor"
     const saved = window.localStorage.getItem(WEB_DEFAULT_ROUTE_KEY)
-    return saved && NAV_LINKS.some((item) => item.href === saved) ? saved : NAV_LINKS[0].href
+    const groups = getWorkspaceToolsMenuGroups()
+    const links = groups.flatMap((group) => group.items.map((item) => item.href))
+    return saved && links.includes(saved) ? saved : "/single-processor"
   })
   const [preferRecentPresetEntry, setPreferRecentPresetEntry] = useState<boolean>(() =>
     safeRead(
@@ -134,8 +129,8 @@ export function WebHeader() {
   const devModeActiveTab = useMemo(() => toDevModeActiveTab(pathname ?? "/"), [pathname])
   const readDevModeSettingsSnapshot = useCallback(
     () => ({
-      defaultRoute: safeRead(WEB_DEFAULT_ROUTE_KEY, NAV_LINKS[0].href, (value) =>
-        typeof value === "string" ? value : NAV_LINKS[0].href
+      defaultRoute: safeRead(WEB_DEFAULT_ROUTE_KEY, "/single-processor", (value) =>
+        typeof value === "string" ? value : "/single-processor"
       ),
       darkMode: safeRead(DARK_MODE_KEY, "system", (value) => (typeof value === "string" ? value : "system")),
       layoutPreferences: safeRead(
@@ -194,26 +189,39 @@ export function WebHeader() {
   )
 
   const defaultScreenOptions = useMemo(
-    () => NAV_LINKS.map((item) => ({ value: item.href, label: item.label })),
-    []
+    () => {
+      const groups = getWorkspaceToolsMenuGroups()
+      const links = Array.from(
+        new Map(
+          groups.flatMap((group) =>
+            group.items.map((item) => [item.href, { href: item.href, label: item.label }])
+          )
+        ).values()
+      )
+      return links.map((item) => ({ value: item.href, label: item.label }))
+    },
+    [i18n.language]
   )
 
   const headerNode = (
     <WorkspaceOptionsHeader
       isLoading={false}
       isDark={isDark}
-      title="Imify"
-      subtitle="Powerful Image Toolkit"
-      toolsMenuGroups={WEB_TOOLS_MENU_GROUPS.map((group) => ({
-        title: group.title,
-        items: group.items.map((item) => ({
-          id: item.id,
-          href: buildToolEntryHref(item.id, item.href),
-          label: item.label,
-          icon: renderWorkspaceToolIcon(item.id, 14)
+      title={t("workspace:title", { defaultValue: "Imify" })}
+      subtitle={t("workspace:subtitle", { defaultValue: "Powerful Image Toolkit" })}
+      toolsMenuGroups={useMemo(() => {
+        const groups = getWorkspaceToolsMenuGroups()
+        return groups.map((group) => ({
+          title: group.title,
+          items: group.items.map((item) => ({
+            id: item.id,
+            href: buildToolEntryHref(item.id, item.href),
+            label: item.label,
+            icon: renderWorkspaceToolIcon(item.id, 14)
+          }))
         }))
-      }))}
-      toolsMenuLabel="All Tools"
+      }, [i18n.language])}
+      toolsMenuLabel={t("workspace:allTools", { defaultValue: "All Tools" })}
       onNavigateHome={() => router.push("/")}
       onNavigate={(href) => router.push(href)}
       onToggleDark={toggleDarkMode}

@@ -1,14 +1,17 @@
-﻿{
-    "_meta":  {
-                  "maintainers":  [
-                                      {
-                                          "role":  "Core Maintainer",
-                                          "name":  "TrongAJTT",
-                                          "github":  "https://github.com/trongajtt"
-                                      }
-                                  ],
-                  "languageName":  "English",
-                  "version":  "2.2.0",
-                  "languageCode":  "en"
-              }
+{
+  "_meta": {
+    "languageName": "English",
+    "languageCode": "en",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "heroTitle": "The Powerful Image Toolkit Built for Your Browser",
+  "heroSubtitle": "Fast, private, and fully client-side. Convert formats, resize, batch process, split, splice, and inspect images without ever uploading them to a server.",
+  "startProcessing": "Start Processing Your Images",
+  "viewExtension": "View Extension",
+  "whyChooseImify": "Why Choose Imify?",
+  "privacyTitle": "100% Privacy",
+  "privacyDesc": "All processing happens directly in your browser. Your images never leave your device."
 }

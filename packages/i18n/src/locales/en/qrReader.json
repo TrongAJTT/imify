@@ -1,14 +1,14 @@
-﻿{
-    "_meta":  {
-                  "maintainers":  [
-                                      {
-                                          "role":  "Core Maintainer",
-                                          "name":  "TrongAJTT",
-                                          "github":  "https://github.com/trongajtt"
-                                      }
-                                  ],
-                  "languageName":  "English",
-                  "version":  "2.2.0",
-                  "languageCode":  "en"
-              }
+{
+  "_meta": {
+    "languageName": "English",
+    "languageCode": "en",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "title": "QR Reader",
+  "scanAction": "Scan QR Code",
+  "scanResult": "Scan Result",
+  "noQrFound": "No QR code found in the image"
 }

@@ -1,14 +1,17 @@
-﻿{
-    "_meta":  {
-                  "maintainers":  [
-                                      {
-                                          "role":  "Core Maintainer",
-                                          "name":  "TrongAJTT",
-                                          "github":  "https://github.com/trongajtt"
-                                      }
-                                  ],
-                  "languageName":  "English",
-                  "version":  "2.2.0",
-                  "languageCode":  "en"
-              }
+{
+  "_meta": {
+    "languageName": "English",
+    "languageCode": "en",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "title": "Batch & Single Processor",
+  "concurrencyTooltip": "Controls how many images are processed simultaneously (1-90).",
+  "concurrencyFormatInfo": "Current format: {{format}}.",
+  "concurrencyAdvisorInfo": "Use Smart Concurrency Advisor below for hardware-aware recommendations.",
+  "batchProcessorTitle": "Batch Processor",
+  "singleProcessorTitle": "Single Processor",
+  "dropZonePlaceholder": "Drag and drop your images here, or click to browse"
 }

@@ -26,7 +26,8 @@ import {
   WhatsNewUpdateNotificationGate,
   useIsDesktopLayout,
   getExtensionSidebarToolGroups,
-  renderWorkspaceToolIcon
+  renderWorkspaceToolIcon,
+  getWorkspaceToolLabel
 } from "@imify/features/workspace-shell"
 import { useDevModeEnabled } from "@imify/features"
 import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
@@ -296,6 +297,7 @@ export default function OptionsPage() {
 
   const { isDark, toggleDarkMode } = useImifyDarkMode()
   const isDesktopLayout = useIsDesktopLayout()
+  const { i18n: i18nInstance } = useTranslation("workspace")
 
   const [defaultOptionsTab, setDefaultOptionsTab, { isLoading: isDefaultTabLoading }] = useStorage<OptionsTab>(
     { key: "imify_options_default_tab", instance: syncStorage },
@@ -370,9 +372,9 @@ export default function OptionsPage() {
     () =>
       WORKSPACE_TOOLS.filter((tool) => tool.showOnExtSidebar && tool.extTabId).map((tool) => ({
         value: tool.extTabId as OptionsTab,
-        label: tool.label
+        label: getWorkspaceToolLabel(tool.id) ?? tool.label
       })),
-    []
+    [i18nInstance.language]
   )
   const devModeSettingsAdapter = useMemo<DevModeSettingsAdapter>(
     () => ({
