@@ -1,0 +1,144 @@
+"use client"
+
+import Image from "next/image"
+import { BodyText, Heading } from "@imify/ui/ui/typography"
+import { ExtensionDownloadButtons } from "./extension-download-buttons"
+import { AlertTriangle } from "lucide-react"
+import { useTranslation } from "@imify/i18n"
+
+export function ExtensionClient() {
+  const { t } = useTranslation("homepage")
+
+  return (
+    <div className="space-y-24 py-12">
+      {/* Hero Section */}
+      <section className="mx-auto max-w-4xl text-center space-y-8 px-4 py-8">
+        <Heading className="text-4xl md:text-5xl font-extrabold tracking-tight">
+          {t("extHeroTitle", { defaultValue: "Supercharge Your Browser with Imify" })}
+        </Heading>
+        <BodyText className="mx-auto max-w-2xl text-lg md:text-xl text-slate-600 dark:text-slate-400">
+          {t("extHeroSubtitle", {
+            defaultValue:
+              "Unlock exclusive features deeply integrated into your browser workflow. Download Imify for your favorite browser to access Context Menu processing, active tab SEO audits, and more."
+          })}
+        </BodyText>
+
+        <ExtensionDownloadButtons />
+      </section>
+
+      {/* Extension Exclusive Features */}
+      <section className="border-y border-indigo-200/70 bg-indigo-100/70 py-24 dark:border-indigo-800/60 dark:bg-indigo-950/35">
+        <div className="mx-auto w-full px-4 md:px-8 lg:px-12 xl:px-16 space-y-16">
+          <div className="text-center space-y-4">
+            <Heading className="text-3xl md:text-4xl">
+              {t("extExclusiveTitle", { defaultValue: "Extension Exclusive Features" })}
+            </Heading>
+            <BodyText className="mx-auto max-w-2xl text-slate-500 text-lg">
+              {t("extExclusiveSubtitle", {
+                defaultValue:
+                  "By installing the browser extension, you get access to powerful tools that seamlessly integrate with your browsing experience."
+              })}
+            </BodyText>
+          </div>
+
+          {/* Feature 1: Context Menu */}
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+            <div className="order-2 lg:order-1 rounded-2xl overflow-hidden border border-slate-200 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-slate-100 dark:bg-slate-900 ring-1 ring-slate-200/50 dark:ring-slate-800/50">
+              <Image
+                src="https://cdn.trongajtt.com/apps/imify/context-menu.webp"
+                alt="Imify Context Menu Preview"
+                width={1200}
+                height={800}
+                className="w-full h-auto object-cover object-top transition-transform hover:scale-105 duration-700 ease-out"
+              />
+            </div>
+            <div className="order-1 lg:order-2 space-y-6">
+              <Heading className="text-2xl text-blue-600 dark:text-blue-400 md:text-3xl">
+                {t("contextMenuTitle", { defaultValue: "Context Menu Processing" })}
+              </Heading>
+              <BodyText className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+                {t("contextMenuDesc", {
+                  defaultValue:
+                    "Right-click on any image across the web to instantly resize, convert, or batch process it without leaving your current tab. Configure your favorite quick-actions for a seamless and lightning-fast workflow."
+                })}
+              </BodyText>
+              <ul className="space-y-4 pt-2">
+                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300 font-medium">
+                  <div className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                  <span>
+                    {t("contextMenuBullet1", { defaultValue: "Process images directly from the right-click menu" })}
+                  </span>
+                </li>
+                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300 font-medium">
+                  <div className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                  <span>
+                    {t("contextMenuBullet2", { defaultValue: "Create custom presets for your most used formats" })}
+                  </span>
+                </li>
+                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300 font-medium">
+                  <div className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                  <span>
+                    {t("contextMenuBullet3", { defaultValue: "Send images to Imify workspaces with one click" })}
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Feature 2: SEO Audit */}
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+            <div className="space-y-6">
+              <Heading className="text-2xl text-fuchsia-600 dark:text-fuchsia-400 md:text-3xl">
+                {t("seoAuditTitle", { defaultValue: "In-Page Image SEO Audit" })}
+              </Heading>
+              <BodyText className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+                {t("seoAuditDesc", {
+                  defaultValue:
+                    "Run a comprehensive SEO audit on all images within your active tab. Detect missing alt texts, oversized images, and inefficient formats instantly. Review detailed snapshots right in your browser's sidepanel."
+                })}
+              </BodyText>
+              <div className="rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-950/20">
+                <p className="flex items-center gap-2 text-[13px] font-medium text-amber-800 dark:text-amber-300">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  {t("firefoxWarning", {
+                    defaultValue:
+                      "This feature is currently available for Chrome and Edge only because it requires Side Panel API support. We will be support Firefox as soon as Mozilla add Side Panel API support for Firefox."
+                  })}
+                </p>
+              </div>
+              <ul className="space-y-4 pt-2">
+                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300 font-medium">
+                  <div className="h-2 w-2 rounded-full bg-fuchsia-600 dark:bg-fuchsia-400 shrink-0" />
+                  <span>
+                    {t("seoAuditBullet1", { defaultValue: "Scan active pages for common image SEO issues" })}
+                  </span>
+                </li>
+                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300 font-medium">
+                  <div className="h-2 w-2 rounded-full bg-fuchsia-600 dark:bg-fuchsia-400 shrink-0" />
+                  <span>
+                    {t("seoAuditBullet2", { defaultValue: "Save audit snapshots for later review" })}
+                  </span>
+                </li>
+                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300 font-medium">
+                  <div className="h-2 w-2 rounded-full bg-fuchsia-600 dark:bg-fuchsia-400 shrink-0" />
+                  <span>
+                    {t("seoAuditBullet3", { defaultValue: "Analyze image rendering sizes vs. intrinsic sizes" })}
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-slate-100 dark:bg-slate-900 ring-1 ring-slate-200/50 dark:ring-slate-800/50">
+              <Image
+                src="https://cdn.trongajtt.com/apps/imify/seo-audit-preview.webp"
+                alt="Imify SEO Audit Preview"
+                width={1200}
+                height={800}
+                className="w-full h-auto object-cover object-top transition-transform hover:scale-105 duration-700 ease-out"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
