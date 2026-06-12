@@ -96,6 +96,10 @@ export function WebHeader() {
   const [isDevToolsDialogOpen, setIsDevToolsDialogOpen] = useState(false)
   const [devModeEnabled] = useDevModeEnabled()
   const { t, i18n } = useTranslation(["workspace", "common"])
+  const [isMounted, setIsMounted] = useState(false)
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
   
   const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
   const settingsInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
@@ -190,7 +194,7 @@ export function WebHeader() {
 
   const defaultScreenOptions = useMemo(
     () => {
-      const groups = getWorkspaceToolsMenuGroups()
+      const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en")
       const links = Array.from(
         new Map(
           groups.flatMap((group) =>
@@ -200,17 +204,17 @@ export function WebHeader() {
       )
       return links.map((item) => ({ value: item.href, label: item.label }))
     },
-    [i18n.language]
+    [i18n.language, isMounted]
   )
 
   const headerNode = (
     <WorkspaceOptionsHeader
       isLoading={false}
       isDark={isDark}
-      title={t("workspace:title", { defaultValue: "Imify" })}
-      subtitle={t("workspace:subtitle", { defaultValue: "Powerful Image Toolkit" })}
+      title={t("workspace:title", { lng: isMounted ? undefined : "en", defaultValue: "Imify" })}
+      subtitle={t("workspace:subtitle", { lng: isMounted ? undefined : "en", defaultValue: "Powerful Image Toolkit" })}
       toolsMenuGroups={useMemo(() => {
-        const groups = getWorkspaceToolsMenuGroups()
+        const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en")
         return groups.map((group) => ({
           title: group.title,
           items: group.items.map((item) => ({
@@ -220,8 +224,8 @@ export function WebHeader() {
             icon: renderWorkspaceToolIcon(item.id, 14)
           }))
         }))
-      }, [i18n.language])}
-      toolsMenuLabel={t("workspace:allTools", { defaultValue: "All Tools" })}
+      }, [i18n.language, isMounted])}
+      toolsMenuLabel={t("workspace:allTools", { lng: isMounted ? undefined : "en", defaultValue: "All Tools" })}
       onNavigateHome={() => router.push("/")}
       onNavigate={(href) => router.push(href)}
       onToggleDark={toggleDarkMode}

@@ -11,9 +11,143 @@
   "heroSubtitle": "Nhanh chóng, riêng tư và hoàn toàn cục bộ. Chuyển đổi định dạng, thay đổi kích thước, xử lý hàng loạt, cắt ghép và kiểm tra thông tin ảnh mà không cần tải lên máy chủ.",
   "startProcessing": "Bắt đầu xử lý hình ảnh",
   "viewExtension": "Xem tiện ích mở rộng",
+
+  "toolsTitle": "Mọi thứ bạn cần trong một nơi",
+  "toolsDesc": "Khám phá bộ công cụ xử lý ảnh chuyên nghiệp toàn diện của chúng tôi.",
+
+  "whyTitle": "Tại sao nên chọn Imify?",
+  "whyDesc": "Chúng tôi thiết kế Imify để trở thành công cụ xử lý ảnh duy nhất bạn cần. Đây là những điểm nổi bật.",
   "whyChooseImify": "Tại sao nên chọn Imify?",
   "privacyTitle": "Riêng tư 100%",
   "privacyDesc": "Tất cả quy trình xử lý diễn ra trực tiếp trên trình duyệt của bạn. Ảnh của bạn không bao giờ rời khỏi thiết bị.",
+  "experienceTitle": "Trải nghiệm liền mạch",
+  "experienceDesc": "Không còn thời gian chờ tải lên/tải xuống. Áp dụng chỉnh sửa, chuyển đổi định dạng và tải kết quả ngay lập tức.",
+  "openSourceTitle": "Mã nguồn mở",
+  "openSourceDesc": "Được xây dựng với tinh thần minh bạch và cộng đồng. Toàn bộ mã nguồn có thể được xem xét công khai trên GitHub.",
+  "freeTitle": "Hoàn toàn miễn phí",
+  "freeDesc": "Không giới hạn, không đăng ký. Tất cả tính năng cao cấp đều dành cho mọi người mà không có tường thanh toán.",
+
+  "proTitle": "Công cụ được tạo ra cho dân chuyên nghiệp",
+  "proDesc": "Trải nghiệm độ chính xác của xử lý ảnh hiệu suất cao với các công cụ đặc trưng của chúng tôi.",
+
+  "features": {
+    "batchTitle": "Xử lý hàng loạt",
+    "batchDesc": "Mở rộng quy trình bằng cách xử lý hàng nghìn ảnh song song. Chuyển đổi, thay đổi kích thước và tối ưu hóa chỉ trong một lần mà không cần chờ máy chủ.",
+    "splicingTitle": "Ghép ảnh",
+    "splicingDesc": "Ghép các ảnh thành lưới bento đẹp mắt hoặc dải dọc. Hoàn hảo cho các bố cục mạng xã hội và bảng câu chuyện trực quan.",
+    "splitterTitle": "Cắt ảnh",
+    "splitterDesc": "Cắt ảnh thành lưới hoặc carousel hoàn hảo cho Instagram và mạng xã hội. Hướng dẫn trực quan giúp bạn cắt chính xác.",
+    "fillingTitle": "Lấp đầy ảnh",
+    "fillingDesc": "Thêm viền hoặc lấp đầy ảnh để khớp hoàn hảo với tỷ lệ khung hình mục tiêu mà không cắt mất nội dung quan trọng.",
+    "diffTitle": "Kiểm tra sự khác biệt",
+    "diffDesc": "Phát hiện sự khác biệt ở cấp độ pixel giữa các ảnh. So sánh chất lượng, hiện tượng nhiễu nén và thay đổi hình ảnh với độ chính xác cao.",
+    "inspectorTitle": "Kiểm tra ảnh",
+    "inspectorDesc": "Kiểm tra sâu metadata ẩn, dữ liệu EXIF, tọa độ GPS và bảng màu. Bảo vệ quyền riêng tư của bạn một cách dễ dàng."
+  },
+
+  "highlightFeatureLabel": "Tính năng nổi bật",
+
+  "compTitle": "Khả năng toàn diện",
+  "compDesc": "Tìm hiểu sâu về những gì các mô-đun cốt lõi của chúng tôi có thể làm.",
+
+  "capabilities": {
+    "conversionTitle": "Chuyển đổi định dạng & Tối ưu hóa",
+    "conversionDesc": "Chuyển đổi giữa PNG, JPEG, WebP, AVIF và JPEG XL. Điều chỉnh chất lượng, xóa metadata EXIF để bảo vệ quyền riêng tư và tinh chỉnh các cài đặt bộ mã hóa nâng cao để đạt được sự cân bằng hoàn hảo giữa kích thước và chất lượng.",
+    "layoutsTitle": "Bố cục & Cắt ghép",
+    "layoutsDesc": "Cắt ảnh liền mạch cho carousel mạng xã hội, hoặc ghép nhiều ảnh lại với nhau thành các lưới bento và dải dọc đẹp mắt. Hoàn hảo cho các nhà sáng tạo nội dung và nhà thiết kế.",
+    "inspectorTitle": "Kiểm tra nâng cao",
+    "inspectorDesc": "Khám phá metadata ẩn, trích xuất tọa độ GPS, xem bảng màu chủ đạo và kiểm tra các chỉ số hiệu suất web của ảnh với công cụ Kiểm tra ảnh chuyên sâu của chúng tôi.",
+    "watermarkTitle": "Đóng dấu & Thay đổi kích thước",
+    "watermarkDesc": "Bảo vệ quyền sở hữu trí tuệ của bạn bằng hình mờ văn bản hoặc hình ảnh tùy chỉnh. Thay đổi kích thước ảnh thông minh theo kích thước cụ thể trong khi vẫn giữ nguyên tỷ lệ khung hình."
+  },
+
+  "tools": {
+    "singleProcessor": {
+      "desc": "Tối ưu hóa từng ảnh riêng lẻ với các tùy chỉnh chuyên nghiệp."
+    },
+    "batchProcessor": {
+      "desc": "Xử lý hàng nghìn ảnh ngay lập tức với các cài đặt sẵn thông minh."
+    },
+    "splicing": {
+      "desc": "Kết hợp nhiều ảnh thành các bố cục ấn tượng và thống nhất."
+    },
+    "splitter": {
+      "desc": "Cắt ảnh thành lưới hoặc carousel hoàn hảo cho mạng xã hội."
+    },
+    "filling": {
+      "desc": "Thêm viền hoặc lấp đầy ảnh để khớp hoàn hảo với tỷ lệ khung hình mục tiêu."
+    },
+    "patternGenerator": {
+      "desc": "Tạo các hoa văn lặp lại đẹp mắt và liền mạch từ bất kỳ nguồn ảnh nào."
+    },
+    "diffchecker": {
+      "desc": "So sánh hai ảnh cạnh nhau để phát hiện sự khác biệt chính xác từng pixel."
+    },
+    "inspector": {
+      "desc": "Khám phá sâu metadata ẩn, dữ liệu GPS và bảng màu."
+    },
+    "contextMenu": {
+      "desc": "Tùy chỉnh quy trình xử lý ảnh nhanh trên toàn trình duyệt của bạn."
+    },
+    "seoAudit": {
+      "desc": "Kiểm tra và tối ưu ảnh web để đạt hiệu suất tìm kiếm tối đa."
+    }
+  },
+
+  "video": {
+    "sectionTitle": "Xem Imify hoạt động thực tế",
+    "sectionDesc": "Xem phần trình chiếu ngắn về tất cả các tính năng có trong Imify v2.1.",
+    "milestones": {
+      "single": "Xử lý đơn lẻ",
+      "batch": "Xử lý hàng loạt",
+      "splitter": "Cắt ảnh",
+      "splicing": "Ghép ảnh",
+      "filling": "Lấp đầy ảnh",
+      "pattern": "Tạo hoa văn",
+      "diffchecker": "Kiểm tra khác biệt",
+      "inspector": "Kiểm tra ảnh"
+    }
+  },
+
+  "faq": {
+    "sectionTitle": "Câu hỏi thường gặp",
+    "sectionDesc": "Mọi thứ bạn cần biết về Imify.",
+    "items": [
+      {
+        "question": "Ảnh của tôi có an toàn khi xử lý trên trang web của bạn không?",
+        "answer": "Hoàn toàn an toàn. Imify không có máy chủ. Không có máy chủ từ xa nào lưu trữ dữ liệu của bạn; toàn bộ quy trình xử lý diễn ra cục bộ trên máy của bạn. Quyền riêng tư không chỉ là một tính năng — đó là kiến trúc của chúng tôi."
+      },
+      {
+        "question": "Trang web cảm thấy chậm hoặc lag trong quá trình chuyển đổi. Đây có phải là lỗi không?",
+        "answer": "Imify sử dụng chính phần cứng của bạn để xử lý ảnh. Các định dạng nặng như AVIF hoặc JXL có thể tốn nhiều tài nguyên. Nếu bạn gặp tình trạng lag, điều đó có nghĩa là nhu cầu xử lý đang vượt quá giới hạn của môi trường web trên thiết bị của bạn. Đối với nhu cầu chuyên nghiệp cực cao, một ứng dụng gốc chuyên dụng có thể phù hợp hơn."
+      },
+      {
+        "question": "Những định dạng ảnh nào được hỗ trợ?",
+        "answer": "Chúng tôi hỗ trợ nhiều định dạng hiện đại và truyền thống bao gồm JPEG, PNG, WebP, AVIF và JPEG XL. Khả năng hỗ trợ không ngừng được mở rộng dựa trên hỗ trợ của trình duyệt."
+      },
+      {
+        "question": "Tôi có thể sử dụng Imify trên điện thoại hoặc máy tính bảng không?",
+        "answer": "Về lý thuyết là có. Trang web có giao diện thích ứng cho cả màn hình nhỏ và lớn. Tuy nhiên, chúng tôi không khuyến nghị điều này. Imify được thiết kế và tối ưu cho màn hình lớn để mang lại trải nghiệm làm việc tốt nhất. Sử dụng trên màn hình điện thoại nhỏ sẽ khó thao tác và bạn sẽ không thể tận hưởng hết các tính năng."
+      },
+      {
+        "question": "Tôi có cần cài đặt gì trước khi sử dụng Imify Web không?",
+        "answer": "Không cần cài đặt. Bạn có thể bắt đầu sử dụng Imify Web trực tiếp trong trình duyệt ngay bây giờ. Đối với các quy trình độc quyền của tiện ích mở rộng, bạn có thể tùy chọn cài đặt tiện ích mở rộng trình duyệt."
+      },
+      {
+        "question": "Imify có hoàn toàn miễn phí không?",
+        "answer": "Có, tất cả các công cụ cốt lõi trong Imify Web đều miễn phí. Không có phí ẩn hoặc khóa tính năng cao cấp trên các tính năng không gian làm việc web."
+      },
+      {
+        "question": "Imify duy trì miễn phí như thế nào?",
+        "answer": "Vì quá trình xử lý diễn ra trên thiết bị của bạn, tôi không phát sinh chi phí xử lý phía máy chủ. Tuy nhiên, việc xây dựng công cụ và duy trì tên miền vẫn tốn tiền. Tôi đã tích hợp nút *Quyên góp* cho những ai thấy công cụ hữu ích và muốn giúp tôi trang trải các chi phí bảo trì này. Sự hỗ trợ của bạn hoàn toàn là tự nguyện nhưng thực sự được trân trọng!"
+      },
+      {
+        "question": "Tôi có thể hỗ trợ Imify bằng cách nào?",
+        "answer": "Nếu Imify đã giúp ích cho quy trình làm việc của bạn và bạn đang tự hỏi làm thế nào để tiếp thêm nhiên liệu cho cuộc cách mạng một người này, không cần tìm đâu xa ngoài nút 'Quyên góp' rực rỡ trên thanh ứng dụng! Dù thông qua *PayPal*, *Buy Me A Coffee* hay *GitHub Sponsors* huyền thoại, đóng góp của bạn là nguồn sống giữ cho cỗ máy hiệu suất cao này tiếp tục gầm rú. Hỗ trợ sự sáng tạo, tiếp thêm động lực đổi mới và giúp tôi giữ bộ công cụ này miễn phí cho mọi người, ở khắp mọi nơi. Sự hào phóng của bạn thực sự đáng kinh ngạc!"
+      }
+    ]
+  },
+
   "extHeroTitle": "Nâng cấp trình duyệt của bạn với Imify",
   "extHeroSubtitle": "Mở khóa các tính năng độc quyền được tích hợp sâu vào quy trình làm việc trên trình duyệt của bạn. Tải Imify cho trình duyệt yêu thích của bạn để truy cập tính năng xử lý qua Menu chuột phải, kiểm định SEO tab hiện tại và nhiều hơn thế nữa.",
   "extExclusiveTitle": "Tính năng độc quyền của Tiện ích mở rộng",

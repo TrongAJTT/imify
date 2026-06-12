@@ -289,10 +289,10 @@ function getToolIdKey(id: string): string {
   }
 }
 
-export function getWorkspaceToolLabel(toolId: string): string | null {
+export function getWorkspaceToolLabel(toolId: string, lng?: string): string | null {
   const key = getToolIdKey(toolId)
   if (i18n.isInitialized) {
-    const translated = i18n.t(`workspace:${key}`)
+    const translated = i18n.t(`workspace:${key}`, { lng })
     if (translated && translated !== `workspace:${key}`) {
       return translated
     }
@@ -301,7 +301,7 @@ export function getWorkspaceToolLabel(toolId: string): string | null {
   return tool?.label ?? null
 }
 
-export function getWorkspaceToolsMenuGroups(): Array<{
+export function getWorkspaceToolsMenuGroups(lng?: string): Array<{
   title: string
   items: Array<{ id: string; href: string; label: string }>
 }> {
@@ -309,7 +309,7 @@ export function getWorkspaceToolsMenuGroups(): Array<{
     .map((category) => {
       const categoryLabelKey = getCategoryIdKey(category.id)
       const title = i18n.isInitialized
-        ? i18n.t(`workspace:${categoryLabelKey}`, { defaultValue: category.label })
+        ? i18n.t(`workspace:${categoryLabelKey}`, { lng, defaultValue: category.label })
         : category.label
 
       return {
@@ -319,7 +319,7 @@ export function getWorkspaceToolsMenuGroups(): Array<{
         ).map((tool) => {
           const toolLabelKey = getToolIdKey(tool.id)
           const label = i18n.isInitialized
-            ? i18n.t(`workspace:${toolLabelKey}`, { defaultValue: tool.label })
+            ? i18n.t(`workspace:${toolLabelKey}`, { lng, defaultValue: tool.label })
             : tool.label
           return { id: tool.id, href: tool.href, label }
         })
@@ -328,7 +328,7 @@ export function getWorkspaceToolsMenuGroups(): Array<{
     .filter((group) => group.items.length > 0)
 }
 
-export function getExtensionSidebarToolGroups(): Array<{
+export function getExtensionSidebarToolGroups(lng?: string): Array<{
   title: string
   items: Array<{ id: string; label: string; tabId: WorkspacePrimaryToolId }>
 }> {
@@ -336,7 +336,7 @@ export function getExtensionSidebarToolGroups(): Array<{
     .map((category) => {
       const categoryLabelKey = getCategoryIdKey(category.id)
       const title = i18n.isInitialized
-        ? i18n.t(`workspace:${categoryLabelKey}`, { defaultValue: category.label })
+        ? i18n.t(`workspace:${categoryLabelKey}`, { lng, defaultValue: category.label })
         : category.label
 
       return {
@@ -346,7 +346,7 @@ export function getExtensionSidebarToolGroups(): Array<{
         ).map((tool) => {
           const toolLabelKey = getToolIdKey(tool.id)
           const label = i18n.isInitialized
-            ? i18n.t(`workspace:${toolLabelKey}`, { defaultValue: tool.label })
+            ? i18n.t(`workspace:${toolLabelKey}`, { lng, defaultValue: tool.label })
             : tool.label
           return {
             id: tool.id,
