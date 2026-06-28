@@ -11,6 +11,7 @@ import { SmartResizeModule } from "./smart-resize-module"
 import { PaperConfig } from "./paper-config"
 import { usePopoverTriggerBehavior } from "./use-popover-trigger-behavior"
 import { AccordionCard, ControlledPopover, Kicker, LabelText, NumberInput, SelectInput } from "@imify/ui"
+import { useTranslation } from "@imify/i18n"
 
 export type ResizeCardProps = {
   resizeMode: string
@@ -122,20 +123,21 @@ export function ResizeCard({
   alwaysOpen,
   groupId,
 }: ResizeCardProps) {
+  const { t } = useTranslation("processor")
   const quickStatsPopoverBehavior = usePopoverTriggerBehavior()
 
   const batchModeMap: Record<string, string> = {
-    none: "No resize",
-    change_width: "Fit width",
-    change_height: "Fit height",
-    set_size: "Set size",
-    scale: "Scale",
-    page_size: "Paper size"
+    none: t("resizeNone"),
+    change_width: t("resizeFitWidth"),
+    change_height: t("resizeFitHeight"),
+    set_size: t("resizeSetSize"),
+    scale: t("resizeScale"),
+    page_size: t("resizePaperSize")
   }
   const splicingModeMap: Record<string, string> = {
-    none: "No resize",
-    fit_width: "Fit width",
-    fit_height: "Fit height"
+    none: t("resizeNone"),
+    fit_width: t("resizeFitWidth"),
+    fit_height: t("resizeFitHeight")
   }
 
   const modeOptions =
@@ -192,7 +194,7 @@ export function ResizeCard({
   return (
     <AccordionCard
       icon={<Maximize2 size={14} />}
-      label="Resize"
+      label={t("resize")}
       sublabel={sublabel}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
@@ -203,7 +205,7 @@ export function ResizeCard({
     >
       <div className="space-y-3">
         <SelectInput
-          label="Resize type"
+          label={t("resizeType")}
           value={resizeMode}
           disabled={disabled}
           options={modeOptions}
@@ -218,7 +220,7 @@ export function ResizeCard({
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-2">
               <LabelText className="text-xs">
-                {resizeMode === "scale" ? "Scale (%)" : "Value (px)"}
+                {resizeMode === "scale" ? t("scalePercent") : t("valuePx")}
               </LabelText>
 
               {showQuickResizePopover ? (
@@ -231,7 +233,7 @@ export function ResizeCard({
                       className="h-6 rounded-md border border-slate-200 dark:border-slate-700 px-2 text-[10px] font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-flex items-center gap-1 justify-center disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <PencilRuler size={11} />
-                      Quick Stats
+                      {t("quickStats")}
                     </button>
                   }
                   preset="inspector"
@@ -305,7 +307,7 @@ export function ResizeCard({
 
         {showResamplingAlgorithm && (
           <SelectInput
-            label="Resampling Algorithm"
+            label={t("resamplingAlgorithm")}
             value={safeResamplingAlgorithm}
             disabled={disabled}
             options={RESAMPLING_ALGORITHM_OPTIONS}

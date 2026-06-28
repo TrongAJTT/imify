@@ -2,6 +2,7 @@ import React from "react"
 import { Sparkles, ShieldCheck, Palette } from "lucide-react"
 
 import { AccordionCard, CheckboxCard } from "@imify/ui"
+import { useTranslation } from "@imify/i18n"
 
 export interface WebpAdvancedSettingsCardProps {
   sharpYuv: boolean
@@ -26,22 +27,23 @@ export function WebpAdvancedSettingsCard({
   alwaysOpen,
   groupId
 }: WebpAdvancedSettingsCardProps) {
+  const { t } = useTranslation("processor")
   const tags: string[] = []
 
   if (sharpYuv) {
-    tags.push("Sharp YUV")
+    tags.push(t("sharpYuv"))
   }
 
   if (preserveExactAlpha) {
-    tags.push("Exact Alpha")
+    tags.push(t("exactAlpha"))
   }
 
-  const sublabel = tags.length ? tags.join(" • ") : "Color-edge and alpha preservation"
+  const sublabel = tags.length ? tags.join(" • ") : t("webpAdvancedSublabel")
 
   return (
     <AccordionCard
       icon={<Sparkles size={14} />}
-      label="WebP Advanced"
+      label={t("webpAdvanced")}
       sublabel={sublabel}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
@@ -53,11 +55,11 @@ export function WebpAdvancedSettingsCard({
       <div className="space-y-3">
         <CheckboxCard
           icon={<Palette size={16} />}
-          title="Sharp YUV"
+          title={t("sharpYuv")}
           subtitle={
             sharpYuv
-              ? "Enabled: sharper color edges for text and UI"
-              : "Improves color-edge sharpness in lossy WebP (slower encode)."
+              ? t("sharpYuvSubtitleEnabled")
+              : t("sharpYuvSubtitleDisabled")
           }
           checked={sharpYuv}
           onChange={onSharpYuvChange}
@@ -67,11 +69,11 @@ export function WebpAdvancedSettingsCard({
 
         <CheckboxCard
           icon={<ShieldCheck size={16} />}
-          title="Preserve Exact Alpha"
+          title={t("exactAlpha")}
           subtitle={
             preserveExactAlpha
-              ? "Enabled: keeps hidden RGB values in transparent pixels"
-              : "Keeps color data in fully transparent pixels for advanced pipelines."
+              ? t("preserveExactAlphaSubtitleEnabled")
+              : t("preserveExactAlphaSubtitleDisabled")
           }
           checked={preserveExactAlpha}
           onChange={onPreserveExactAlphaChange}

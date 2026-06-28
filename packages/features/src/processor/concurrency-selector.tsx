@@ -5,11 +5,11 @@ import type { ImageFormat } from "@imify/core/types"
 import { NumberInput } from "@imify/ui"
 import { Tooltip } from "@imify/ui"
 import { Button, ControlledPopover, LabelText } from "@imify/ui"
+import { useTranslation } from "@imify/i18n"
 import {
   clampConcurrencyValue,
   MAX_CONCURRENCY
 } from "./performance-preferences"
-import { getConcurrencyTooltip } from "./concurrency-messages"
 import { usePopoverTriggerBehavior } from "./use-popover-trigger-behavior"
 
 interface ConcurrencySelectorProps {
@@ -35,6 +35,7 @@ export function ConcurrencySelector({
   className = "",
   headerChip
 }: ConcurrencySelectorProps) {
+  const { t } = useTranslation("processor")
   const safeMaxValue = clampConcurrencyValue(maxValue)
   const safeValue = clampConcurrencyValue(value, safeMaxValue)
 
@@ -44,7 +45,7 @@ export function ConcurrencySelector({
     }
   }, [safeValue, value, onChange])
 
-  const tooltip = getConcurrencyTooltip(format)
+  const tooltip = <div style={{ whiteSpace: "pre-line" }}>{t("concurrencyTooltip", { format: format.toUpperCase() })}</div>
   const popoverBehavior = usePopoverTriggerBehavior()
 
   return (
@@ -52,7 +53,7 @@ export function ConcurrencySelector({
       <div className="flex items-center justify-between gap-2">
         <LabelText className="text-xs">
           <div className="flex items-center gap-1">
-            <span>Concurrency</span>
+            <span>{t("concurrency")}</span>
             <Tooltip content={tooltip}>
               <HelpCircle
                 size={12}
@@ -82,8 +83,7 @@ export function ConcurrencySelector({
               contentClassName="z-[9999] w-64 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-2.5"
             >
               <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
-                Concurrency is locked by Advisor safety guardrails.
-                Current safe max is <span className="font-semibold">{safeMaxValue}</span>.
+                {t("concurrencyLockedByAdvisor", { max: safeMaxValue })}
               </p>
               {onUnlockInSettings && (
                 <Button
@@ -93,7 +93,7 @@ export function ConcurrencySelector({
                   className="mt-2 w-full"
                   onClick={onUnlockInSettings}
                 >
-                  Unlock In Performance Settings
+                  {t("unlockInPerformanceSettings")}
                 </Button>
               )}
             </ControlledPopover>

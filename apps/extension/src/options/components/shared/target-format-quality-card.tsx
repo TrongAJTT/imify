@@ -244,7 +244,7 @@ export function TargetFormatQualityCard({
   return (
     <AccordionCard
       icon={<FileJson size={14} />}
-      label={cardLabel || "Export Format & Quality"}
+      label={cardLabel || t("exportFormatAndQuality")}
       sublabel={sublabel}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
@@ -257,7 +257,7 @@ export function TargetFormatQualityCard({
         {shouldShowTargetFormatSelector && (
           <div>
             <SelectInput
-              label="Target format"
+              label={t("targetFormat")}
               disabled={disabled}
               options={resolvedFormatOptions}
               onChange={(v) => onTargetFormatChange(v)}
@@ -270,7 +270,7 @@ export function TargetFormatQualityCard({
           <>
             {targetFormat === "webp" && onWebpNearLosslessChange && webpLosslessEnabled ? (
               <SliderInput
-                label="Near-Lossless"
+                label={t("nearLossless")}
                 tooltip={t("tooltipNearLossless")}
                 disabled={disabled || !webpLosslessEnabled}
                 min={0}
@@ -281,7 +281,7 @@ export function TargetFormatQualityCard({
               />
             ) : (
               <SliderInput
-                label="Quality"
+                label={t("quality")}
                 disabled={disabled || !showQualityControl}
                 min={1}
                 max={100}
