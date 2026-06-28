@@ -1,6 +1,6 @@
 import React from "react"
 import { IcoSizeSelector } from "./ico-size-selector"
-import { TARGET_FORMAT_TOOLTIPS } from "./target-format-tooltips"
+import { useTranslation } from "@imify/i18n"
 import { CheckboxCard, ColoredSliderCard, SliderInput, SelectInput, AccordionCard } from "@imify/ui"
 import { ALL_TARGET_FORMAT_OPTIONS } from "./target-format-options"
 import { normalizeMozJpegChromaSubsampling } from "@imify/core/codec-options"
@@ -144,6 +144,7 @@ export function TargetFormatQualityCard({
   alwaysOpen,
   groupId,
 }: TargetFormatQualityCardProps) {
+  const { t } = useTranslation("processor")
   const isIcoTarget = targetFormat === "ico"
   const avifSpeedOption = formatConfig?.avif?.speed
   const pngTinyModeEnabled = Boolean(formatConfig?.png?.tinyMode)
@@ -267,7 +268,7 @@ export function TargetFormatQualityCard({
             {targetFormat === "webp" && onWebpNearLosslessChange && webpLosslessEnabled ? (
               <SliderInput
                 label="Near-Lossless"
-                tooltip={TARGET_FORMAT_TOOLTIPS.nearLossless}
+                tooltip={t("tooltipNearLossless")}
                 disabled={disabled || !webpLosslessEnabled}
                 min={0}
                 max={100}
@@ -310,7 +311,7 @@ export function TargetFormatQualityCard({
             {onWebpEffortChange && (
               <SelectInput
                 label="Effort Level"
-                tooltipContent={TARGET_FORMAT_TOOLTIPS.webpEffort}
+                tooltipContent={t("tooltipWebpEffort")}
                 disabled={disabled}
                 options={[
                   { value: "1", label: "1 - Lightning (fastest)" },
@@ -341,7 +342,7 @@ export function TargetFormatQualityCard({
                     ? "Enabled: exact pixels, larger files, quality slider hidden"
                     : "Disabled: lossy mode with quality slider control"
                 }
-                tooltipContent={TARGET_FORMAT_TOOLTIPS.jxlLossless}
+                tooltipContent={t("tooltipJxlLossless")}
                 checked={jxlLosslessEnabled}
                 onChange={onJxlLosslessChange}
                 disabled={disabled}
@@ -351,7 +352,7 @@ export function TargetFormatQualityCard({
 
             <SelectInput
               label="Effort Level"
-              tooltipContent={TARGET_FORMAT_TOOLTIPS.jxlEffort}
+              tooltipContent={t("tooltipJxlEffort")}
               disabled={disabled}
               options={[
                 { value: "1", label: "1 - Lightning (fastest)" },
@@ -374,7 +375,7 @@ export function TargetFormatQualityCard({
           <div>
             <SelectInput
               label="Speed"
-              tooltipContent={TARGET_FORMAT_TOOLTIPS.avifSpeed}
+              tooltipContent={t("tooltipAvifSpeed")}
               disabled={disabled}
               options={[
                 { value: "0", label: "0 - Maximum quality (slowest)" },
@@ -399,7 +400,7 @@ export function TargetFormatQualityCard({
           <div className="space-y-2">
             <SelectInput
               label="Color Depth"
-              tooltipContent={TARGET_FORMAT_TOOLTIPS.bmpColorDepth}
+              tooltipContent={t("tooltipBmpColorDepth")}
               disabled={disabled}
               options={[
                 { value: "24", label: "24-bit RGB (Standard)" },
@@ -414,7 +415,7 @@ export function TargetFormatQualityCard({
             {bmpColorDepth === 1 && onBmpDitheringLevelChange && (
               <SliderInput
                 label="Dithering Level"
-                tooltip={TARGET_FORMAT_TOOLTIPS.bmpDithering}
+                tooltip={t("tooltipBmpDithering")}
                 value={bmpDitheringLevel}
                 min={0}
                 max={100}
@@ -431,7 +432,7 @@ export function TargetFormatQualityCard({
           <div>
             <SelectInput
               label="Color Mode"
-              tooltipContent={TARGET_FORMAT_TOOLTIPS.tiffColorMode}
+              tooltipContent={t("tooltipTiffColorMode")}
               disabled={disabled}
               options={[
                 { value: "color", label: "RGB (Full Color)" },
@@ -472,7 +473,7 @@ export function TargetFormatQualityCard({
               icon={<Zap size={16} />}
               title="Tiny Mode"
               subtitle="Quantize to reduce PNG size"
-              tooltipContent={TARGET_FORMAT_TOOLTIPS.tinyMode}
+              tooltipContent={t("tooltipTinyMode")}
               checked={pngTinyModeEnabled}
               onChange={onPngTinyModeChange}
               disabled={disabled || !supportsTinyMode}
@@ -482,7 +483,7 @@ export function TargetFormatQualityCard({
             {pngTinyModeEnabled && onPngDitheringLevelChange && (
               <SliderInput
                 label="Dithering Level"
-                tooltip={TARGET_FORMAT_TOOLTIPS.pngDithering}
+                tooltip={t("tooltipPngDithering")}
                 value={pngDitheringLevel}
                 min={0}
                 max={100}

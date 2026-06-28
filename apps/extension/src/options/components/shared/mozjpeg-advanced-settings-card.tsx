@@ -1,9 +1,9 @@
 import { Sparkles, ScanLine, Palette } from "lucide-react"
 
+import { useTranslation } from "@imify/i18n"
 import { AccordionCard } from "@imify/ui/ui/accordion-card"
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { SelectInput } from "@imify/ui/ui/select-input"
-import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 
 export interface MozJpegAdvancedSettingsCardProps {
   progressive: boolean
@@ -35,7 +35,8 @@ export function MozJpegAdvancedSettingsCard({
   onOpenChange,
   alwaysOpen,
   groupId
-}: MozJpegAdvancedSettingsCardProps) {
+ }: MozJpegAdvancedSettingsCardProps) {
+  const { t } = useTranslation("processor")
   const sublabel = `${progressive ? "Progressive" : "Baseline"} • Chroma ${chromaSubsamplingLabel(chromaSubsampling)}`
 
   return (
@@ -59,7 +60,7 @@ export function MozJpegAdvancedSettingsCard({
               ? "Enabled: loads blurry-to-sharp in multiple scans"
               : "Disabled: baseline JPEG scan"
           }
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.mozjpegAdvanced.progressiveLoading}
+          tooltipContent={t("tooltipProgressiveLoading")}
           checked={progressive}
           onChange={onProgressiveChange}
           disabled={disabled}
@@ -68,7 +69,7 @@ export function MozJpegAdvancedSettingsCard({
 
         <SelectInput
           label="Color Resolution (Chroma)"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.mozjpegAdvanced.colorResolution}
+          tooltipContent={t("tooltipColorResolution")}
           value={String(chromaSubsampling)}
           onChange={(value) => onChromaSubsamplingChange(Number(value) as 0 | 1 | 2)}
           disabled={disabled}

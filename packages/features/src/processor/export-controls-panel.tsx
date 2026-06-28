@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { ConcurrencySelector } from "./concurrency-selector"
 import { SidebarCard } from "@imify/ui"
 import type { ImageFormat } from "@imify/core/types"
+import { useTranslation } from "@imify/i18n"
 
 interface ExportControlsPanelProps {
   /** Format being exported (for concurrency limits) */
@@ -56,6 +57,7 @@ export function ExportControlsPanel({
   beforeFileRenaming,
   afterFileRenaming
 }: ExportControlsPanelProps) {
+  const { t } = useTranslation("processor")
   return (
     <>
       {!hideConcurrency ? (
@@ -74,7 +76,7 @@ export function ExportControlsPanel({
       {beforeFileRenaming}
       <SidebarCard
         icon={<FileEdit size={14} />}
-        label="File Renaming"
+        label={t("fileRenaming")}
         sublabel={fileNamePattern}
         onClick={onFileRenamingClick}
         disabled={disabled}

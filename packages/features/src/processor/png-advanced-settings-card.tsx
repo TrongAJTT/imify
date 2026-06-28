@@ -2,7 +2,7 @@ import React from "react"
 import { Sparkles, Eraser, Palette, Cpu, ScanLine } from "lucide-react"
 
 import { AccordionCard, CheckboxCard } from "@imify/ui"
-import { PROCESSOR_TOOLTIPS } from "./processor-tooltips"
+import { useTranslation } from "@imify/i18n"
 
 export interface PngAdvancedSettingsCardProps {
   cleanTransparentPixels: boolean
@@ -35,6 +35,7 @@ export function PngAdvancedSettingsCard({
   alwaysOpen,
   groupId
 }: PngAdvancedSettingsCardProps) {
+  const { t } = useTranslation("processor")
   const tags: string[] = []
 
   if (cleanTransparentPixels) {
@@ -72,7 +73,7 @@ export function PngAdvancedSettingsCard({
           icon={<Eraser size={16} />}
           title="Clean Transparent Pixels"
           subtitle={cleanTransparentPixels ? "Enabled" : "Zero RGB where alpha is 0 to improve PNG compression"}
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.pngAdvanced.cleanTransparentPixels}
+          tooltipContent={t("tooltipCleanTransparentPixels")}
           checked={cleanTransparentPixels}
           onChange={onCleanTransparentPixelsChange}
           disabled={disabled}
@@ -83,7 +84,7 @@ export function PngAdvancedSettingsCard({
           icon={<Palette size={16} />}
           title="Auto Grayscale Detection"
           subtitle={autoGrayscale ? "Enabled" : "Prefer grayscale encode path when image has no chroma"}
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.pngAdvanced.autoGrayscale}
+          tooltipContent={t("tooltipAutoGrayscale")}
           checked={autoGrayscale}
           onChange={onAutoGrayscaleChange}
           disabled={disabled}
@@ -94,7 +95,7 @@ export function PngAdvancedSettingsCard({
           icon={<Cpu size={16} />}
           title="OxiPNG Compression"
           subtitle={oxipngCompression ? "Enabled" : "Run OxiPNG pass for stronger lossless compression"}
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.pngAdvanced.oxipngCompression}
+          tooltipContent={t("tooltipOxipngCompression")}
           checked={oxipngCompression}
           onChange={onOxiPngCompressionChange}
           disabled={disabled}
@@ -110,7 +111,7 @@ export function PngAdvancedSettingsCard({
               ? "Enabled"
               : "Adam7 interlacing for progressive web loading"
           }
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.pngAdvanced.progressiveInterlaced}
+          tooltipContent={t("tooltipProgressiveInterlaced")}
           checked={progressiveInterlaced}
           onChange={onProgressiveInterlacedChange}
           disabled={disabled}

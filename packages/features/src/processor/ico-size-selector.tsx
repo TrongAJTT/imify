@@ -2,7 +2,7 @@ import React from "react"
 import { ICO_SIZE_OPTIONS } from "@imify/core/format-config"
 import { LabelText, CheckboxCard } from "@imify/ui"
 import { Gift, Sparkles } from "lucide-react"
-import { PROCESSOR_TOOLTIPS } from "./processor-tooltips"
+import { useTranslation } from "@imify/i18n"
 
 export function IcoSizeSelector({
   sizes,
@@ -23,6 +23,7 @@ export function IcoSizeSelector({
   onToggleWebKit: (next: boolean) => void
   onToggleOptimizeInternalPngLayers?: (next: boolean) => void
 }) {
+  const { t } = useTranslation("processor")
   return (
     <div className="space-y-2">
       <LabelText className="text-xs">{title}</LabelText>
@@ -48,7 +49,7 @@ export function IcoSizeSelector({
           disabled={disabled}
           onChange={onToggleWebKit}
           title="Generate Web Toolkit"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.icoSizeSelector.generateWebToolkit}
+          tooltipContent={t("tooltipGenerateWebToolkit")}
           theme="amber"
         />
 
@@ -60,7 +61,7 @@ export function IcoSizeSelector({
             onChange={onToggleOptimizeInternalPngLayers}
             title="Optimize internal PNG layers"
             subtitle="Smaller file size"
-            tooltipContent={PROCESSOR_TOOLTIPS.shared.icoSizeSelector.optimizeInternalPngLayers}
+            tooltipContent={t("tooltipOptimizeInternalPngLayers")}
             theme="blue"
           />
         </div>

@@ -2,6 +2,7 @@ import React, { useMemo } from "react"
 import { Lock, Stamp } from "lucide-react"
 import type { ResizeConfig } from "@imify/core/types"
 import { CheckboxCard, SidebarCard, AccordionCard } from "@imify/ui"
+import { useTranslation } from "@imify/i18n"
 import { ExportControlsPanel } from "./export-controls-panel"
 import { SmartConcurrencyAdvisorCard } from "./smart-concurrency-advisor-card"
 import { buildWatermarkSummary } from "./watermark-config"
@@ -15,7 +16,6 @@ import type {
   BatchTargetFormat,
   BatchWatermarkConfig
 } from "@imify/stores/stores/batch-types"
-import { PROCESSOR_TOOLTIPS } from "./processor-tooltips"
 
 interface BatchExportPanelProps {
   /** Format being exported (for concurrency limits) */
@@ -80,8 +80,9 @@ export function BatchExportPanel({
   hideConcurrency = false,
   isRunning = false
 }: BatchExportPanelProps) {
+  const { t } = useTranslation("processor")
   const watermarkSummaryBase = buildWatermarkSummary(watermark)
-  const watermarkSummary = watermarkSaved ? `${watermarkSummaryBase} · Saved` : watermarkSummaryBase
+  const watermarkSummary = watermarkSaved ? `${watermarkSummaryBase} · ${t("saved")}` : watermarkSummaryBase
   const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat
   const advisorFormatOptions = useMemo(
     () => ({
@@ -125,8 +126,8 @@ export function BatchExportPanel({
   return (
     <AccordionCard
       icon={<Stamp size={16} />}
-      label="Export Settings"
-      sublabel="Performance, privacy, and watermarking"
+      label={t("exportSettings")}
+      sublabel={t("performancePrivacyWatermarking")}
       colorTheme="amber"
       defaultOpen={true}
       alwaysOpen={isRunning}
@@ -172,23 +173,23 @@ export function BatchExportPanel({
             <>
               {supportsExif && (<CheckboxCard
                 icon={<Lock size={16} />}
-                title="Privacy mode"
+                title={t("privacyMode")}
                 subtitle={
                   stripExif
-                      ? "Strip EXIF data from output images"
-                      : "Keep EXIF data when possible"
+                      ? t("stripExif")
+                      : t("keepExif")
                 }
                 checked={stripExif && supportsExif}
                 onChange={onStripExifChange}
                 disabled={disabled || !supportsExif}
-                tooltipContent={PROCESSOR_TOOLTIPS.batch.exportPanel.privacyMode}
+                tooltipContent={t("tooltipPrivacyMode")}
                 className={!supportsExif ? "opacity-70" : ""}
                 theme="amber"
               />
               )}
               <SidebarCard
                 icon={<Stamp size={16} />}
-                label="Watermarking"
+                label={t("watermarking")}
                 sublabel={watermarkSummary}
                 onClick={onWatermarkingClick}
                 disabled={disabled}

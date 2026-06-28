@@ -15,7 +15,7 @@ import {
 import { watermarkStorage } from "@imify/core/indexed-db"
 import { WatermarkOpenSavedDialog } from "./watermark-open-saved-dialog"
 import { WatermarkSaveDialog, type WatermarkSaveAction } from "./watermark-save-dialog"
-import { PROCESSOR_TOOLTIPS } from "./processor-tooltips"
+import { useTranslation } from "@imify/i18n"
 import {
   buildWatermarkSummary,
   cloneWatermarkConfig,
@@ -39,6 +39,7 @@ export function BatchWatermarkDialog({
   onClose,
   onSave
 }: BatchWatermarkDialogProps) {
+  const { t } = useTranslation("processor")
   const [draft, setDraft] = useState<BatchWatermarkConfig>(cloneWatermarkConfig(initialConfig))
   const [previewUrl, setPreviewUrl] = useState<string>(WATERMARK_PREVIEW_DATA_URL)
   const [isLogoLoading, setIsLogoLoading] = useState(false)
@@ -543,7 +544,7 @@ export function BatchWatermarkDialog({
 
         <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="grid w-full grid-cols-[auto_1fr_1fr] gap-2 sm:flex sm:w-auto sm:items-center">
-            <Tooltip content={PROCESSOR_TOOLTIPS.batch.watermarkDialog.resetToDefaults}>
+          <Tooltip content={t("tooltipResetToDefaults")}>
               <button
                 type="button"
                 onClick={() => setDraft(cloneWatermarkConfig(DEFAULT_BATCH_WATERMARK))}

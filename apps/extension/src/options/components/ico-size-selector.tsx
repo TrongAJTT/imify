@@ -1,8 +1,8 @@
 import { ICO_SIZE_OPTIONS } from "@imify/core/format-config"
-import { LabelText } from "@imify/ui/ui/typography"
+import { useTranslation } from "@imify/i18n"
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
+import { LabelText } from "@imify/ui/ui/typography"
 import { Gift, Sparkles } from "lucide-react"
-import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
 
 export function IcoSizeSelector({
   sizes,
@@ -23,11 +23,12 @@ export function IcoSizeSelector({
   onToggleWebKit: (next: boolean) => void
   onToggleOptimizeInternalPngLayers?: (next: boolean) => void
 }) {
+  const { t } = useTranslation("processor")
   return (
     <div className="space-y-2">
       <LabelText className="text-xs">{title}</LabelText>
-      
-      <div className="grid grid-cols-2 gap-2">
+
+      <div className="grid grid-cols-2 gap-1">
         {ICO_SIZE_OPTIONS.map((option) => (
           <CheckboxCard
             key={option.value}
@@ -48,7 +49,7 @@ export function IcoSizeSelector({
           disabled={disabled}
           onChange={onToggleWebKit}
           title="Generate Web Toolkit"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.icoSizeSelector.generateWebToolkit}
+          tooltipContent={t("tooltipGenerateWebToolkit")}
           theme="amber"
         />
 
@@ -60,7 +61,7 @@ export function IcoSizeSelector({
             onChange={onToggleOptimizeInternalPngLayers}
             title="Optimize internal PNG layers"
             subtitle="Smaller file size"
-            tooltipContent={PROCESSOR_TOOLTIPS.shared.icoSizeSelector.optimizeInternalPngLayers}
+            tooltipContent={t("tooltipOptimizeInternalPngLayers")}
             theme="blue"
           />
         </div>
@@ -68,4 +69,3 @@ export function IcoSizeSelector({
     </div>
   )
 }
-
