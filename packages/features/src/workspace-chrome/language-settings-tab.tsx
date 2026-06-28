@@ -1,12 +1,18 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Check, ChevronDown, ChevronRight, Globe, User } from "lucide-react"
+import { Check, ChevronDown, ChevronRight, Globe, User, Trash2 } from "lucide-react"
 import { Button } from "@imify/ui/ui/button"
 import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header"
 import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header"
 import { useI18nStore } from "@imify/stores"
-import { getAvailableLanguages, calculateOverallCompletionDetails, type LanguageInfo } from "@imify/i18n"
+import {
+  getAvailableLanguages,
+  calculateOverallCompletionDetails,
+  deleteRuntimeLanguage,
+  useTranslation,
+  type LanguageInfo
+} from "@imify/i18n"
 
 interface LanguageSettingsTabProps {
   isMobile?: boolean
@@ -15,6 +21,7 @@ interface LanguageSettingsTabProps {
 export function LanguageSettingsTab({ isMobile = false }: LanguageSettingsTabProps) {
   const activeLanguage = useI18nStore((state) => state.language)
   const setLanguage = useI18nStore((state) => state.setLanguage)
+  const { i18n } = useTranslation()
 
   const [languages, setLanguages] = useState<LanguageInfo[]>([])
   const [expandedLangCode, setExpandedLangCode] = useState<string | null>(activeLanguage)
@@ -22,7 +29,7 @@ export function LanguageSettingsTab({ isMobile = false }: LanguageSettingsTabPro
   // Load languages info from i18n
   useEffect(() => {
     setLanguages(getAvailableLanguages())
-  }, [activeLanguage])
+  }, [activeLanguage, i18n.language])
 
   // Ensure active language is auto-expanded by default when activeLanguage changes
   useEffect(() => {
@@ -35,6 +42,20 @@ export function LanguageSettingsTab({ isMobile = false }: LanguageSettingsTabPro
 
   const handleApplyLanguage = (code: string) => {
     setLanguage(code)
+  }
+
+  const handleDeleteLanguage = async (code: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await deleteRuntimeLanguage(code)
+      if (activeLanguage === code) {
+        setLanguage("en")
+      } else {
+        setLanguages(getAvailableLanguages())
+      }
+    } catch (err) {
+      console.error("Failed to delete custom language:", err)
+    }
   }
 
   return (
@@ -96,7 +117,16 @@ export function LanguageSettingsTab({ isMobile = false }: LanguageSettingsTabPro
                       </div>
                     </div>
                   </div>
-                  <div className="text-slate-400 dark:text-slate-600">
+                  <div className="flex items-center gap-2 text-slate-450 dark:text-slate-500">
+                    {lang.isRuntime && (
+                      <button
+                        onClick={(e) => handleDeleteLanguage(lang.code, e)}
+                        className="p-1 rounded hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-colors mr-1"
+                        title="Delete custom language"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                     {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </div>
                 </div>

@@ -23,6 +23,8 @@ export {
   importLanguageAtRuntime,
   generateEmptyLanguageTemplate,
   getRuntimeLanguages,
+  loadRuntimeLanguages,
+  deleteRuntimeLanguage,
   type LanguageMeta
 } from "./runtime-import"
 export {

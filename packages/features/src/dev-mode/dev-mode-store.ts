@@ -35,6 +35,8 @@ export const useDevModeStore = create<DevModeState>()(
   )
 )
 
+import i18n from "i18next"
+
 // Sync singleton debug flag with current persisted state
 syncShowI18nDebugKeys(
   useDevModeStore.getState().enabled && useDevModeStore.getState().showI18nDebugKeys
@@ -43,6 +45,11 @@ syncShowI18nDebugKeys(
 // Subscribe to store changes to keep the singleton synced
 useDevModeStore.subscribe((state) => {
   syncShowI18nDebugKeys(state.enabled && state.showI18nDebugKeys)
+  if (i18n.isInitialized) {
+    i18n.changeLanguage(i18n.language).catch((err) => {
+      console.error("Failed to refresh language dev mode:", err)
+    })
+  }
 })
 
 // ─── Convenience API (drop-in replacement for old useDevModeEnabled) ──────────

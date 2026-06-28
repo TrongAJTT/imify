@@ -104,6 +104,8 @@ function buildResources() {
   }
 }
 
+import { loadRuntimeLanguages } from "./runtime-import"
+
 export function initI18n(): typeof i18n {
   if (i18n.isInitialized) return i18n
   i18n
@@ -118,5 +120,12 @@ export function initI18n(): typeof i18n {
       interpolation: { escapeValue: false },
       postProcess: ["imifyDevMode"]
     })
+
+  if (typeof window !== "undefined") {
+    loadRuntimeLanguages().catch((err) => {
+      console.error("Failed to load runtime languages:", err)
+    })
+  }
+
   return i18n
 }
