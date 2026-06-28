@@ -12,6 +12,7 @@ import { SPLITTER_TOOLTIPS } from "./splitter-tooltips";
 import { Tooltip } from "../shared/tooltip";
 import { BaseDialog, Button } from "@imify/ui";
 import { SelectInput } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
 
 interface SplitterOrderDialogProps {
   isOpen: boolean;
@@ -29,26 +30,18 @@ type AxisItem = {
   icon: React.ReactNode;
 };
 
-const HORIZONTAL_ORDER_OPTIONS = [
-  { value: "left_to_right", label: "Left to right" },
-  { value: "right_to_left", label: "Right to left" },
-];
-
-const VERTICAL_ORDER_OPTIONS = [
-  { value: "top_to_bottom", label: "Top to bottom" },
-  { value: "bottom_to_top", label: "Bottom to top" },
-];
-
 function formatHorizontalOrder(
   value: SplitterSplitSettings["horizontalOrder"],
+  t: (key: string) => string,
 ): string {
-  return value === "left_to_right" ? "Left->Right" : "Right->Left";
+  return value === "left_to_right" ? t("leftArrowRight") : t("rightArrowLeft");
 }
 
 function formatVerticalOrder(
   value: SplitterSplitSettings["verticalOrder"],
+  t: (key: string) => string,
 ): string {
-  return value === "top_to_bottom" ? "Top->Bottom" : "Bottom->Top";
+  return value === "top_to_bottom" ? t("topArrowBottom") : t("bottomArrowTop");
 }
 
 function buildGridOrderPreview(args: {
@@ -83,40 +76,52 @@ export function SplitterOrderDialog({
   settings,
   onChange,
 }: SplitterOrderDialogProps) {
+  const { t } = useTranslation("splitter");
+
+  const horizontalOrderOptions = useMemo(() => [
+    { value: "left_to_right", label: t("leftToRight") },
+    { value: "right_to_left", label: t("rightToLeft") },
+  ], [t]);
+
+  const verticalOrderOptions = useMemo(() => [
+    { value: "top_to_bottom", label: t("topToBottom") },
+    { value: "bottom_to_top", label: t("bottomToTop") },
+  ], [t]);
+
   const axisItems = useMemo<AxisItem[]>(
     () =>
       settings.gridTraversal === "column_first"
         ? [
             {
               id: "vertical",
-              label: "Vertical priority",
+              label: t("verticalPriority"),
               icon: <MoveVertical size={14} />,
             },
             {
               id: "horizontal",
-              label: "Horizontal priority",
+              label: t("horizontalPriority"),
               icon: <MoveHorizontal size={14} />,
             },
           ]
         : [
             {
               id: "horizontal",
-              label: "Horizontal priority",
+              label: t("horizontalPriority"),
               icon: <MoveHorizontal size={14} />,
             },
             {
               id: "vertical",
-              label: "Vertical priority",
+              label: t("verticalPriority"),
               icon: <MoveVertical size={14} />,
             },
           ],
-    [settings.gridTraversal],
+    [settings.gridTraversal, t],
   );
 
   const liveSummary =
     settings.gridTraversal === "column_first"
-      ? `(${formatVerticalOrder(settings.verticalOrder)}) -> (${formatHorizontalOrder(settings.horizontalOrder)})`
-      : `(${formatHorizontalOrder(settings.horizontalOrder)}) -> (${formatVerticalOrder(settings.verticalOrder)})`;
+      ? `(${formatVerticalOrder(settings.verticalOrder, t)}) -> (${formatHorizontalOrder(settings.horizontalOrder, t)})`
+      : `(${formatHorizontalOrder(settings.horizontalOrder, t)}) -> (${formatVerticalOrder(settings.verticalOrder, t)})`;
 
   const previewSequence = useMemo(
     () =>
@@ -151,99 +156,101 @@ export function SplitterOrderDialog({
       onClose={onClose}
       contentClassName="w-full max-w-3xl rounded-xl overflow-hidden"
     >
-      <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/30">
-        <div className="flex items-center gap-2">
-          <ArrowUpDown size={16} className="text-sky-600 dark:text-sky-400" />
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
-            Split Order
-          </h3>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-full p-1 hover:bg-slate-200 dark:hover:bg-slate-700"
-        >
-          <X size={14} />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-[1.1fr_1fr]">
-        <div className="space-y-3">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/40">
-            <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-              3 x 3 preview order
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {orderedNumbers.map((value, index) => (
-                <div
-                  key={`preview_${index + 1}`}
-                  className="flex h-16 items-center justify-center rounded-md border border-slate-200 bg-white text-sm font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  {value}
-                </div>
-              ))}
-            </div>
+      <div className="select-none">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/30">
+          <div className="flex items-center gap-2">
+            <ArrowUpDown size={16} className="text-sky-600 dark:text-sky-400" />
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
+              {t("splitOrderDialogTitle")}
+            </h3>
           </div>
-          <Tooltip
-            label="Live sequence"
-            content={SPLITTER_TOOLTIPS.orderDialogLiveSequence}
-            variant="wide1"
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-1 hover:bg-slate-200 dark:hover:bg-slate-700"
           >
-            <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-900/20 dark:text-sky-300">
-              {liveSummary}
-            </div>
-          </Tooltip>
+            <X size={14} />
+          </button>
         </div>
 
-        <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/40">
-          <SelectInput
-            label="Horizontal Order"
-            value={settings.horizontalOrder}
-            options={HORIZONTAL_ORDER_OPTIONS}
-            onChange={(value) =>
-              onChange({
-                horizontalOrder:
-                  value as SplitterSplitSettings["horizontalOrder"],
-              })
-            }
-          />
-          <SelectInput
-            label="Vertical Order"
-            value={settings.verticalOrder}
-            options={VERTICAL_ORDER_OPTIONS}
-            onChange={(value) =>
-              onChange({
-                verticalOrder: value as SplitterSplitSettings["verticalOrder"],
-              })
-            }
-          />
-
-          <div className="space-y-1.5 pt-1">
-            <div className="text-xs font-medium text-slate-600 dark:text-slate-300">
-              Priority axis
-            </div>
-            <div className="space-y-2">
-              {axisItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
-                >
-                  <div className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-200">
-                    {item.icon}
-                    <span>{item.label}</span>
+        <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-[1.1fr_1fr]">
+          <div className="space-y-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                {t("previewOrder3x3")}
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {orderedNumbers.map((value, index) => (
+                  <div
+                    key={`preview_${index + 1}`}
+                    className="flex h-16 items-center justify-center rounded-md border border-slate-200 bg-white text-sm font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    {value}
                   </div>
-                  {index === 0 && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={togglePriority}
-                      className="h-7 gap-1 px-2 text-[10px] font-bold"
-                    >
-                      <ChevronDown size={16} />
-                    </Button>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+            <Tooltip
+              label={t("liveSequence")}
+              content={SPLITTER_TOOLTIPS.orderDialogLiveSequence}
+              variant="wide1"
+            >
+              <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-900/20 dark:text-sky-300">
+                {liveSummary}
+              </div>
+            </Tooltip>
+          </div>
+
+          <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/40">
+            <SelectInput
+              label={t("horizontalOrder")}
+              value={settings.horizontalOrder}
+              options={horizontalOrderOptions}
+              onChange={(value) =>
+                onChange({
+                  horizontalOrder:
+                    value as SplitterSplitSettings["horizontalOrder"],
+                })
+              }
+            />
+            <SelectInput
+              label={t("verticalOrder")}
+              value={settings.verticalOrder}
+              options={verticalOrderOptions}
+              onChange={(value) =>
+                onChange({
+                  verticalOrder: value as SplitterSplitSettings["verticalOrder"],
+                })
+              }
+            />
+
+            <div className="space-y-1.5 pt-1">
+              <div className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                {t("priorityAxis")}
+              </div>
+              <div className="space-y-2">
+                {axisItems.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    <div className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-200">
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </div>
+                    {index === 0 && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={togglePriority}
+                        className="h-7 gap-1 px-2 text-[10px] font-bold"
+                      >
+                        <ChevronDown size={16} />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

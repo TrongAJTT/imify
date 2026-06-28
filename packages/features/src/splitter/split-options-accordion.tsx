@@ -1,10 +1,5 @@
-import React from "react"
+import React, { useMemo } from "react"
 import type { SplitterSplitSettings } from "./types"
-import {
-  SPLITTER_ADVANCED_METHOD_TABLE_ROWS,
-  SPLITTER_BASIC_METHOD_TABLE_ROWS,
-  SPLITTER_TOOLTIPS
-} from "./splitter-tooltips"
 import { Tooltip } from "../shared/tooltip"
 import { AccordionCard } from "@imify/ui"
 import { ColorPickerPopover } from "@imify/ui"
@@ -13,6 +8,7 @@ import { SegmentedControl } from "@imify/ui"
 import { SelectInput } from "@imify/ui"
 import { LabelText } from "@imify/ui"
 import { Scissors } from "lucide-react"
+import { useTranslation } from "@imify/i18n"
 
 interface SplitOptionsAccordionProps {
   settings: SplitterSplitSettings
@@ -21,76 +17,19 @@ interface SplitOptionsAccordionProps {
   onChange: (patch: Partial<SplitterSplitSettings>) => void
 }
 
-const DIRECTION_OPTIONS = [
-  { value: "vertical", label: "Vertical Slices" },
-  { value: "horizontal", label: "Horizontal Slices" },
-  { value: "grid", label: "Grid" }
-]
-
-const BASIC_METHOD_OPTIONS = [
-  { value: "count", label: "By Count" },
-  { value: "percent", label: "By Percent" },
-  { value: "pixel", label: "By Pixel" }
-]
-
-const ADVANCED_METHOD_OPTIONS = [
-  { value: "pixel_pattern", label: "Pixel Pattern" },
-  { value: "percent_pattern", label: "Percent Pattern" },
-  { value: "custom_list", label: "Custom List" },
-  { value: "social_carousel", label: "Social Carousel Slicer" },
-  { value: "gutter_margin_grid", label: "Gutter & Margin Grid" },
-  { value: "auto_sprite", label: "Auto Sprite Extractor" },
-  { value: "color_match", label: "Color Match" }
-]
-
-const SOCIAL_TARGET_RATIO_OPTIONS = [
-  { value: "1:1", label: "1:1 (Square)" },
-  { value: "4:5", label: "4:5 (Portrait)" },
-  { value: "3:4", label: "3:4 (Portrait)" },
-  { value: "2:3", label: "2:3 (Portrait)" },
-  { value: "5:4", label: "5:4 (Landscape)" },
-  { value: "16:9", label: "16:9 (Landscape)" },
-  { value: "9:16", label: "9:16 (Story/Reel)" }
-]
-
-const SOCIAL_OVERFLOW_OPTIONS = [
-  { value: "crop", label: "Crop remainder" },
-  { value: "stretch", label: "Stretch last slice" },
-  { value: "pad", label: "Pad last slice" }
-]
-
-const SAFE_ZONE_SELECTION_OPTIONS = [
-  { value: "nearest", label: "Nearest safe line" },
-  { value: "lowest_variance", label: "Lowest variance line" }
-]
-
-const GRID_REMAINDER_OPTIONS = [
-  { value: "trim", label: "Trim remainder" },
-  { value: "distribute", label: "Distribute remainder" }
-]
-
-const SPRITE_CONNECTIVITY_OPTIONS = [
-  { value: "8", label: "8-way" },
-  { value: "4", label: "4-way" }
-]
-
-const SPRITE_SORT_OPTIONS = [
-  { value: "top_left", label: "Top to bottom, then left" },
-  { value: "left_right", label: "Left to right, then top" },
-  { value: "size_desc", label: "Largest area first" }
-]
-
 function MethodTooltipTable({
-  rows
+  rows,
+  t
 }: {
   rows: ReadonlyArray<{ method: string; description: string }>
+  t: (key: string) => string
 }) {
   return (
     <table className="w-full border-collapse text-[11px] text-slate-700 dark:text-slate-200">
       <thead>
         <tr className="border-b border-slate-200 dark:border-white/15">
-          <th className="w-36 px-2 py-1 text-left font-semibold">Method</th>
-          <th className="px-2 py-1 text-left font-semibold">What it does</th>
+          <th className="w-36 px-2 py-1 text-left font-semibold">{t("method")}</th>
+          <th className="px-2 py-1 text-left font-semibold">{t("whatItDoes")}</th>
         </tr>
       </thead>
       <tbody>
@@ -111,6 +50,8 @@ export function SplitOptionsAccordion({
   onOpenChange,
   onChange
 }: SplitOptionsAccordionProps) {
+  const { t } = useTranslation("splitter")
+
   const usesGrid = settings.direction === "grid"
   const isBasic = settings.mode === "basic"
   const isColorMatch =
@@ -126,11 +67,79 @@ export function SplitOptionsAccordion({
   const showXAxisFields = settings.direction === "vertical" || usesGrid
   const showYAxisFields = settings.direction === "horizontal" || usesGrid
 
+  const directionOptions = useMemo(() => [
+    { value: "vertical", label: t("verticalSlices") },
+    { value: "horizontal", label: t("horizontalSlices") },
+    { value: "grid", label: t("grid") }
+  ], [t])
+
+  const basicMethodOptions = useMemo(() => [
+    { value: "count", label: t("count") },
+    { value: "percent", label: t("percent") },
+    { value: "pixel", label: t("pixel") }
+  ], [t])
+
+  const advancedMethodOptions = useMemo(() => [
+    { value: "pixel_pattern", label: t("pixelPattern") },
+    { value: "percent_pattern", label: t("percentPattern") },
+    { value: "custom_list", label: t("customList") },
+    { value: "social_carousel", label: t("socialCarousel") },
+    { value: "gutter_margin_grid", label: t("gutterMarginGrid") },
+    { value: "auto_sprite", label: t("autoSprite") },
+    { value: "color_match", label: t("colorMatch") }
+  ], [t])
+
+  const socialTargetRatioOptions = useMemo(() => [
+    { value: "1:1", label: `1:1 (${t("landscape")})` },
+    { value: "4:5", label: `4:5 (${t("portrait")})` },
+    { value: "3:4", label: `3:4 (${t("portrait")})` },
+    { value: "2:3", label: `2:3 (${t("portrait")})` },
+    { value: "5:4", label: `5:4 (${t("landscape")})` },
+    { value: "16:9", label: `16:9 (${t("landscape")})` },
+    { value: "9:16", label: `9:16 (${t("portrait")})` }
+  ], [t])
+
+  const socialOverflowOptions = useMemo(() => [
+    { value: "crop", label: t("cropRemainder") },
+    { value: "stretch", label: t("stretchLastSlice") },
+    { value: "pad", label: t("padLastSlice") }
+  ], [t])
+
+  const safeZoneSelectionOptions = useMemo(() => [
+    { value: "nearest", label: t("nearestSafeLine") },
+    { value: "lowest_variance", label: t("lowestVarianceLine") }
+  ], [t])
+
+  const gridRemainderOptions = useMemo(() => [
+    { value: "trim", label: t("trimRemainder") },
+    { value: "distribute", label: t("distributeRemainder") }
+  ], [t])
+
+  const spriteConnectivityOptions = useMemo(() => [
+    { value: "8", label: t("eightWay") },
+    { value: "4", label: t("fourWay") }
+  ], [t])
+
+  const spriteSortOptions = useMemo(() => [
+    { value: "top_left", label: t("topToBottomThenLeft") },
+    { value: "left_right", label: t("leftToRightThenTop") },
+    { value: "size_desc", label: t("largestAreaFirst") }
+  ], [t])
+
+  const basicMethodTableRows = t("tooltips.basicMethods", { returnObjects: true }) as Array<{ method: string; description: string }>
+  const advancedMethodTableRows = t("tooltips.advancedMethods", { returnObjects: true }) as Array<{ method: string; description: string }>
+
   return (
     <AccordionCard
       icon={<Scissors size={14} />}
-      label="Split Options"
-      sublabel={`${settings.mode === "basic" ? "Basic" : "Advanced"} • ${settings.direction}`}
+      label={t("splitOptions")}
+      sublabel={`${settings.mode === "basic" ? t("basic") : t("advanced")} • ${
+        settings.direction === "vertical"
+          ? t("verticalSlices")
+          : settings.direction === "horizontal"
+            ? t("horizontalSlices")
+            : t("grid")
+      }`}
       colorTheme="sky"
       isOpen={isOpen}
       onOpenChange={onOpenChange}>
@@ -139,8 +148,8 @@ export function SplitOptionsAccordion({
           <SegmentedControl
             value={settings.mode}
             options={[
-              { value: "basic", label: "Basic" },
-              { value: "advanced", label: "Advanced" }
+              { value: "basic", label: t("basic") },
+              { value: "advanced", label: t("advanced") }
             ]}
             onChange={(value) => onChange({ mode: value })}
             ariaLabel="Split mode"
@@ -151,13 +160,13 @@ export function SplitOptionsAccordion({
         {!isSocialCarousel && !isGutterMarginGrid && !isAutoSprite ? (
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-2">
-              <LabelText className="text-xs">Direction</LabelText>
+              <LabelText className="text-xs">{t("direction")}</LabelText>
               {isColorMatchGridFallback ? (
                 <Tooltip
-                  content={SPLITTER_TOOLTIPS.colorMatchGridFallback}
+                  content={t("tooltips.colorMatchGridFallback")}
                   variant="wide1">
                   <span className="inline-flex h-6 items-center rounded-md border border-amber-300 bg-amber-50 px-2 text-[10px] font-semibold text-amber-700 dark:border-amber-700/70 dark:bg-amber-950/20 dark:text-amber-200">
-                    Fallback: Horizontal
+                    {t("fallbackHorizontal")}
                   </span>
                 </Tooltip>
               ) : null}
@@ -171,7 +180,7 @@ export function SplitOptionsAccordion({
                 })
               }
               className="w-full h-8 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 px-3 text-xs leading-5 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all shadow-sm">
-              {DIRECTION_OPTIONS.map((option) => (
+              {directionOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -183,10 +192,15 @@ export function SplitOptionsAccordion({
         {isBasic ? (
           <>
             <SelectInput
-              label="Basic Method"
-              tooltipContent={<MethodTooltipTable rows={SPLITTER_BASIC_METHOD_TABLE_ROWS} />}
+              label={t("basicMethod")}
+              tooltipContent={
+                <MethodTooltipTable
+                  rows={Array.isArray(basicMethodTableRows) ? basicMethodTableRows : []}
+                  t={t}
+                />
+              }
               value={settings.basicMethod}
-              options={BASIC_METHOD_OPTIONS}
+              options={basicMethodOptions}
               onChange={(value) =>
                 onChange({
                   basicMethod: value as SplitterSplitSettings["basicMethod"]
@@ -198,7 +212,7 @@ export function SplitOptionsAccordion({
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {showXAxisFields ? (
                   <NumberInput
-                    label="Columns"
+                    label={t("columns")}
                     value={settings.countX}
                     min={1}
                     max={4096}
@@ -207,7 +221,7 @@ export function SplitOptionsAccordion({
                 ) : null}
                 {showYAxisFields ? (
                   <NumberInput
-                    label="Rows"
+                    label={t("rows")}
                     value={settings.countY}
                     min={1}
                     max={4096}
@@ -221,7 +235,7 @@ export function SplitOptionsAccordion({
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {showXAxisFields ? (
                   <NumberInput
-                    label="Column Size (%)"
+                    label={t("columnSizePercent")}
                     value={settings.percentX}
                     min={1}
                     max={100}
@@ -230,7 +244,7 @@ export function SplitOptionsAccordion({
                 ) : null}
                 {showYAxisFields ? (
                   <NumberInput
-                    label="Row Size (%)"
+                    label={t("rowSizePercent")}
                     value={settings.percentY}
                     min={1}
                     max={100}
@@ -244,7 +258,7 @@ export function SplitOptionsAccordion({
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {showXAxisFields ? (
                   <NumberInput
-                    label="Column Size (px)"
+                    label={t("columnSizePx")}
                     value={settings.pixelX}
                     min={1}
                     max={100000}
@@ -253,7 +267,7 @@ export function SplitOptionsAccordion({
                 ) : null}
                 {showYAxisFields ? (
                   <NumberInput
-                    label="Row Size (px)"
+                    label={t("rowSizePx")}
                     value={settings.pixelY}
                     min={1}
                     max={100000}
@@ -266,10 +280,15 @@ export function SplitOptionsAccordion({
         ) : (
           <>
             <SelectInput
-              label="Advanced Method"
-              tooltipContent={<MethodTooltipTable rows={SPLITTER_ADVANCED_METHOD_TABLE_ROWS} />}
+              label={t("advancedMethod")}
+              tooltipContent={
+                <MethodTooltipTable
+                  rows={Array.isArray(advancedMethodTableRows) ? advancedMethodTableRows : []}
+                  t={t}
+                />
+              }
               value={settings.advancedMethod}
-              options={ADVANCED_METHOD_OPTIONS}
+              options={advancedMethodOptions}
               onChange={(value) =>
                 onChange({
                   advancedMethod: value as SplitterSplitSettings["advancedMethod"],
@@ -282,8 +301,8 @@ export function SplitOptionsAccordion({
               <div className="space-y-2">
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <NumberInput
-                    label="Offset (px)"
-                    tooltipContent={SPLITTER_TOOLTIPS.colorMatchOffset}
+                    label={t("offset")}
+                    tooltipContent={t("tooltips.colorMatchOffset")}
                     value={settings.colorMatchOffset}
                     min={-10000}
                     max={10000}
@@ -292,8 +311,8 @@ export function SplitOptionsAccordion({
                     }
                   />
                   <NumberInput
-                    label="Tolerance"
-                    tooltipContent={SPLITTER_TOOLTIPS.colorMatchTolerance}
+                    label={t("tolerance")}
+                    tooltipContent={t("tooltips.colorMatchTolerance")}
                     value={settings.colorMatchTolerance}
                     min={0}
                     max={255}
@@ -302,8 +321,8 @@ export function SplitOptionsAccordion({
                     }
                   />
                   <NumberInput
-                    label="Skip Before (px)"
-                    tooltipContent={SPLITTER_TOOLTIPS.colorMatchSkipBefore}
+                    label={t("skipBefore")}
+                    tooltipContent={t("tooltips.colorMatchSkipBefore")}
                     value={settings.colorMatchSkipBefore}
                     min={0}
                     max={10000}
@@ -312,8 +331,8 @@ export function SplitOptionsAccordion({
                     }
                   />
                   <NumberInput
-                    label="Break After (px)"
-                    tooltipContent={SPLITTER_TOOLTIPS.colorMatchBreakAfter}
+                    label={t("breakAfter")}
+                    tooltipContent={t("tooltips.colorMatchBreakAfter")}
                     value={settings.colorMatchSkipPixels}
                     min={0}
                     max={10000}
@@ -330,39 +349,39 @@ export function SplitOptionsAccordion({
                     checked={settings.colorMatchSafeZoneEnabled}
                     onChange={(event) => onChange({ colorMatchSafeZoneEnabled: event.target.checked })}
                   />
-                  <span>Safe Zone (Low Variance)</span>
+                  <span>{t("safeZoneLowVariance")}</span>
                 </label>
 
                 {settings.colorMatchSafeZoneEnabled ? (
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <NumberInput
-                      label="Variance Threshold"
-                      tooltipContent={SPLITTER_TOOLTIPS.safeZoneVarianceThreshold}
+                      label={t("varianceThreshold")}
+                      tooltipContent={t("tooltips.safeZoneVarianceThreshold")}
                       value={settings.colorMatchSafeVarianceThreshold}
                       min={0}
                       max={10000}
                       onChangeValue={(value) => onChange({ colorMatchSafeVarianceThreshold: value })}
                     />
                     <NumberInput
-                      label="Search Radius (px)"
-                      tooltipContent={SPLITTER_TOOLTIPS.safeZoneSearchRadius}
+                      label={t("searchRadius")}
+                      tooltipContent={t("tooltips.safeZoneSearchRadius")}
                       value={settings.colorMatchSafeSearchRadius}
                       min={0}
                       max={1000}
                       onChangeValue={(value) => onChange({ colorMatchSafeSearchRadius: value })}
                     />
                     <NumberInput
-                      label="Search Step (px)"
-                      tooltipContent={SPLITTER_TOOLTIPS.safeZoneSearchStep}
+                      label={t("searchStep")}
+                      tooltipContent={t("tooltips.safeZoneSearchStep")}
                       value={settings.colorMatchSafeSearchStep}
                       min={1}
                       max={128}
                       onChangeValue={(value) => onChange({ colorMatchSafeSearchStep: value })}
                     />
                     <SelectInput
-                      label="Selection Mode"
+                      label={t("selectionMode")}
                       value={settings.colorMatchSafeSelectionMode}
-                      options={SAFE_ZONE_SELECTION_OPTIONS}
+                      options={safeZoneSelectionOptions}
                       onChange={(value) =>
                         onChange({ colorMatchSafeSelectionMode: value as SplitterSplitSettings["colorMatchSafeSelectionMode"] })
                       }
@@ -375,9 +394,9 @@ export function SplitOptionsAccordion({
             {isSocialCarousel ? (
               <div className="space-y-2">
                 <SelectInput
-                  label="Target Ratio"
+                  label={t("targetRatio")}
                   value={settings.socialTargetRatio}
-                  options={SOCIAL_TARGET_RATIO_OPTIONS}
+                  options={socialTargetRatioOptions}
                   onChange={(value) =>
                     onChange({
                       socialTargetRatio: value as SplitterSplitSettings["socialTargetRatio"]
@@ -385,9 +404,10 @@ export function SplitOptionsAccordion({
                   }
                 />
                 <SelectInput
-                  label="Remainder Handling"
+                  label={t("remainderHandling")}
+                  tooltipContent={t("tooltips.remainderHandling")}
                   value={settings.socialOverflowMode}
-                  options={SOCIAL_OVERFLOW_OPTIONS}
+                  options={socialOverflowOptions}
                   onChange={(value) =>
                     onChange({
                       socialOverflowMode: value as SplitterSplitSettings["socialOverflowMode"]
@@ -396,7 +416,7 @@ export function SplitOptionsAccordion({
                 />
                 {settings.socialOverflowMode === "pad" ? (
                   <ColorPickerPopover
-                    label="Pad Color"
+                    label={t("padColor")}
                     value={settings.socialPadColor || "#ffffff"}
                     onChange={(value) => onChange({ socialPadColor: value })}
                     enableGradient={false}
@@ -410,42 +430,42 @@ export function SplitOptionsAccordion({
               <div className="space-y-2">
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <NumberInput
-                    label="Columns"
+                    label={t("columns")}
                     value={settings.gridColumns}
                     min={1}
                     max={256}
                     onChangeValue={(value) => onChange({ gridColumns: value })}
                   />
                   <NumberInput
-                    label="Rows"
+                    label={t("rows")}
                     value={settings.gridRows}
                     min={1}
                     max={256}
                     onChangeValue={(value) => onChange({ gridRows: value })}
                   />
                   <NumberInput
-                    label="Margin X (px)"
+                    label={t("marginX")}
                     value={settings.gridMarginX}
                     min={0}
                     max={100000}
                     onChangeValue={(value) => onChange({ gridMarginX: value })}
                   />
                   <NumberInput
-                    label="Margin Y (px)"
+                    label={t("marginY")}
                     value={settings.gridMarginY}
                     min={0}
                     max={100000}
                     onChangeValue={(value) => onChange({ gridMarginY: value })}
                   />
                   <NumberInput
-                    label="Gutter X (px)"
+                    label={t("gutterX")}
                     value={settings.gridGutterX}
                     min={0}
                     max={100000}
                     onChangeValue={(value) => onChange({ gridGutterX: value })}
                   />
                   <NumberInput
-                    label="Gutter Y (px)"
+                    label={t("gutterY")}
                     value={settings.gridGutterY}
                     min={0}
                     max={100000}
@@ -453,9 +473,9 @@ export function SplitOptionsAccordion({
                   />
                 </div>
                 <SelectInput
-                  label="Remainder Handling"
+                  label={t("remainderHandling")}
                   value={settings.gridRemainderMode}
-                  options={GRID_REMAINDER_OPTIONS}
+                  options={gridRemainderOptions}
                   onChange={(value) => onChange({ gridRemainderMode: value as SplitterSplitSettings["gridRemainderMode"] })}
                 />
               </div>
@@ -465,40 +485,40 @@ export function SplitOptionsAccordion({
               <div className="space-y-2">
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <NumberInput
-                    label="Alpha Threshold"
-                    tooltipContent={SPLITTER_TOOLTIPS.spriteAlphaThreshold}
+                    label={t("alphaThreshold")}
+                    tooltipContent={t("tooltips.spriteAlphaThreshold")}
                     value={settings.spriteAlphaThreshold}
                     min={0}
                     max={255}
                     onChangeValue={(value) => onChange({ spriteAlphaThreshold: value })}
                   />
                   <NumberInput
-                    label="Min Area (px²)"
-                    tooltipContent={SPLITTER_TOOLTIPS.spriteMinArea}
+                    label={t("minArea")}
+                    tooltipContent={t("tooltips.spriteMinArea")}
                     value={settings.spriteMinArea}
                     min={1}
                     max={10000000}
                     onChangeValue={(value) => onChange({ spriteMinArea: value })}
                   />
                   <NumberInput
-                    label="Box Padding (px)"
-                    tooltipContent={SPLITTER_TOOLTIPS.spritePadding}
+                    label={t("boxPadding")}
+                    tooltipContent={t("tooltips.spritePadding")}
                     value={settings.spritePadding}
                     min={0}
-                    max={10000}
+                    max={1000}
                     onChangeValue={(value) => onChange({ spritePadding: value })}
                   />
                   <SelectInput
-                    label="Connectivity"
+                    label={t("connectivity")}
                     value={String(settings.spriteConnectivity)}
-                    options={SPRITE_CONNECTIVITY_OPTIONS}
+                    options={spriteConnectivityOptions}
                     onChange={(value) => onChange({ spriteConnectivity: value === "4" ? 4 : 8 })}
                   />
                 </div>
                 <SelectInput
-                  label="Sort Order"
+                  label={t("sortOrder")}
                   value={settings.spriteSortMode}
-                  options={SPRITE_SORT_OPTIONS}
+                  options={spriteSortOptions}
                   onChange={(value) => onChange({ spriteSortMode: value as SplitterSplitSettings["spriteSortMode"] })}
                 />
               </div>
@@ -507,7 +527,7 @@ export function SplitOptionsAccordion({
         )}
 
         <ColorPickerPopover
-          label="Guide Color"
+          label={t("guideColor")}
           value={settings.guideColor || "#06b6d4"}
           onChange={(value) => onChange({ guideColor: value })}
           enableGradient={false}

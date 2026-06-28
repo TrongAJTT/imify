@@ -7,7 +7,7 @@ import type { SplitterSplitPlan, SplitterSplitSettings } from "./types"
 import { hasFileDragPayload } from "../shared/image-file-utils"
 import { preventWheelEvent } from "../shared/prevent-wheel-event"
 import { useCanvasResizer } from "../shared/use-canvas-resizer"
-
+import { useTranslation } from "@imify/i18n"
 interface SplitterPreviewProps {
   image: {
     name: string
@@ -34,6 +34,7 @@ export function SplitterPreview({
   splitSettings,
   onBasicGuideChange
 }: SplitterPreviewProps) {
+  const { t } = useTranslation("splitter")
   const PREVIEW_ZOOM_FACTOR = 0.15
 
   const [isDragOver, setIsDragOver] = useState(false)
@@ -195,8 +196,12 @@ export function SplitterPreview({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
-        <span className="truncate">Preview: {image.name}</span>
-        <span className="shrink-0">{plan?.rects.length ?? 0} slices</span>
+        <span className="truncate">{t("previewLabel")}: {image.name}</span>
+        <span className="shrink-0">
+          {(plan?.rects.length ?? 0) === 1
+            ? t("slicesCount_one")
+            : t("slicesCount_other", { count: plan?.rects.length ?? 0 })}
+        </span>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-slate-100 p-1.5 sm:p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
@@ -347,7 +352,7 @@ export function SplitterPreview({
 
           {isDragOver ? (
             <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-cyan-500/15 text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-              Drop images to import
+              {t("dropImagesToImport")}
             </div>
           ) : null}
 
@@ -355,7 +360,7 @@ export function SplitterPreview({
             <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center px-4 text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-slate-300/90 bg-white/95 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur dark:border-slate-600/90 dark:bg-slate-900/90 dark:text-slate-200">
                 <AnimatingSpinner size={12} />
-                <span className="truncate">Computing split preview...</span>
+                <span className="truncate">{t("computingSplitPreview")}</span>
               </div>
             </div>
           ) : null}
