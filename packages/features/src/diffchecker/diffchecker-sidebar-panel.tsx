@@ -4,8 +4,10 @@ import { WorkspaceConfigSidebarPanel, type WorkspaceConfigSidebarItem } from "@i
 import { ViewModeAccordion } from "./view-mode-accordion"
 import { ComparisonAccordion } from "./comparison-accordion"
 import { AlignmentAccordion } from "./alignment-accordion"
+import { useTranslation } from "@imify/i18n"
 
 export function DiffcheckerSidebarPanel({ enableWideSidebarGrid = false }: { enableWideSidebarGrid?: boolean }) {
+  const { t } = useTranslation("diffchecker")
   const viewMode = useDiffcheckerStore((s) => s.viewMode)
   const algorithm = useDiffcheckerStore((s) => s.algorithm)
   const alignMode = useDiffcheckerStore((s) => s.alignMode)
@@ -22,21 +24,21 @@ export function DiffcheckerSidebarPanel({ enableWideSidebarGrid = false }: { ena
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "view-mode",
-      label: "View Mode",
+      label: t("viewMode"),
       content: <ViewModeAccordion viewMode={viewMode} onViewModeChange={setViewMode} />
     },
     {
       id: "comparison",
-      label: "Comparison",
+      label: t("comparison"),
       content: <ComparisonAccordion viewMode={viewMode} algorithm={algorithm} overlayOpacity={overlayOpacity} diffThreshold={diffThreshold} onAlgorithmChange={setAlgorithm} onOverlayOpacityChange={setOverlayOpacity} onDiffThresholdChange={setDiffThreshold} />
     },
     {
       id: "alignment",
-      label: "Alignment",
+      label: t("alignment"),
       content: <AlignmentAccordion alignMode={alignMode} alignAnchor={alignAnchor} onAlignModeChange={setAlignMode} onAlignAnchorChange={setAlignAnchor} />
     }
   ]
 
-  return <WorkspaceConfigSidebarPanel title="DIFFCHECKER SETTINGS" items={sidebarItems} twoColumn={enableWideSidebarGrid} />
+  return <WorkspaceConfigSidebarPanel title={t("diffcheckerSettings")} items={sidebarItems} twoColumn={enableWideSidebarGrid} />
 }
 

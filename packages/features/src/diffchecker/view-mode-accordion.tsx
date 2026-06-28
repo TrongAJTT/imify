@@ -1,21 +1,24 @@
-import React from "react"
+import React, { useMemo } from "react"
 import type { DiffViewMode } from "./types"
 import { Columns, Layers, Zap } from "lucide-react"
 import { AccordionCard, RadioCard } from "@imify/ui"
-
-const VIEW_MODES: Array<{ value: DiffViewMode; title: string; subtitle: string; icon: React.ReactNode }> = [
-  { value: "split", title: "Split", subtitle: "Drag slider to compare", icon: <Columns size={14} /> },
-  { value: "side_by_side", title: "Side by Side", subtitle: "View both images in parallel", icon: <Columns size={14} /> },
-  { value: "overlay", title: "Overlay", subtitle: "Adjust opacity to blend", icon: <Layers size={14} /> },
-  { value: "difference", title: "Difference", subtitle: "Pixel-level analysis", icon: <Zap size={14} /> }
-]
+import { useTranslation } from "@imify/i18n"
 
 export function ViewModeAccordion({ viewMode, onViewModeChange }: { viewMode: DiffViewMode; onViewModeChange: (mode: DiffViewMode) => void }) {
-  const currentModeLabel = VIEW_MODES.find((m) => m.value === viewMode)?.title || "Unknown"
+  const { t } = useTranslation("diffchecker")
+
+  const viewModes = useMemo(() => [
+    { value: "split" as const, title: t("split"), subtitle: t("dragSliderToCompare"), icon: <Columns size={14} /> },
+    { value: "side_by_side" as const, title: t("sideBySide"), subtitle: t("viewBothParallel"), icon: <Columns size={14} /> },
+    { value: "overlay" as const, title: t("overlay"), subtitle: t("adjustOpacityBlend"), icon: <Layers size={14} /> },
+    { value: "difference" as const, title: t("difference"), subtitle: t("pixelLevelAnalysis"), icon: <Zap size={14} /> }
+  ], [t])
+
+  const currentModeLabel = viewModes.find((m) => m.value === viewMode)?.title || "Unknown"
   return (
-    <AccordionCard icon={<Columns size={16} />} label="View Mode" sublabel={currentModeLabel} colorTheme="blue" alwaysOpen>
+    <AccordionCard icon={<Columns size={16} />} label={t("viewMode")} sublabel={currentModeLabel} colorTheme="blue" alwaysOpen>
       <div className="space-y-3 pt-1">
-        {VIEW_MODES.map((m) => (
+        {viewModes.map((m) => (
           <RadioCard key={m.value} icon={m.icon} title={m.title} subtitle={m.subtitle} value={m.value} selectedValue={viewMode} onChange={(v) => onViewModeChange(v as DiffViewMode)} />
         ))}
       </div>

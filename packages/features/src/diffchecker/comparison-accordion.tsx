@@ -1,13 +1,8 @@
-import React from "react"
+import React, { useMemo } from "react"
 import type { DiffAlgorithm, DiffViewMode } from "./types"
 import { Settings } from "lucide-react"
 import { AccordionCard, MutedText, SelectInput, SliderInput } from "@imify/ui"
-
-const ALGORITHM_OPTIONS = [
-  { value: "heatmap", label: "Heatmap" },
-  { value: "binary", label: "Binary (B/W)" },
-  { value: "ssim", label: "SSIM (Structural Similarity)" }
-]
+import { useTranslation } from "@imify/i18n"
 
 interface ComparisonAccordionProps {
   viewMode: DiffViewMode
@@ -22,18 +17,31 @@ interface ComparisonAccordionProps {
 export function ComparisonAccordion({
   viewMode, algorithm, overlayOpacity, diffThreshold, onAlgorithmChange, onOverlayOpacityChange, onDiffThresholdChange
 }: ComparisonAccordionProps) {
-  const sublabel = viewMode === "overlay" ? `Opacity: ${overlayOpacity}%` : viewMode === "difference" ? `Algorithm: ${algorithm}` : "Comparison controls"
+  const { t } = useTranslation("diffchecker")
+
+  const algorithmOptions = useMemo(() => [
+    { value: "heatmap", label: t("heatmap") },
+    { value: "binary", label: t("binary") },
+    { value: "ssim", label: t("ssim") }
+  ], [t])
+
+  const sublabel = viewMode === "overlay"
+    ? `${t("opacityLabel")}: ${overlayOpacity}%`
+    : viewMode === "difference"
+      ? `${t("algorithmLabel")}: ${algorithm}`
+      : t("comparison")
+
   return (
-    <AccordionCard icon={<Settings size={16} />} label="Comparison" sublabel={sublabel} colorTheme="purple" alwaysOpen>
+    <AccordionCard icon={<Settings size={16} />} label={t("comparison")} sublabel={sublabel} colorTheme="purple" alwaysOpen>
       <div className="space-y-3">
-        {viewMode === "overlay" ? <SliderInput label="Opacity" value={overlayOpacity} onChange={onOverlayOpacityChange} min={0} max={100} suffix="%" /> : null}
+        {viewMode === "overlay" ? <SliderInput label={t("opacityLabel")} value={overlayOpacity} onChange={onOverlayOpacityChange} min={0} max={100} suffix="%" /> : null}
         {viewMode === "difference" ? (
           <>
-            <SelectInput label="Algorithm" value={algorithm} options={ALGORITHM_OPTIONS} onChange={(v) => onAlgorithmChange(v as DiffAlgorithm)} />
-            {algorithm === "binary" ? <SliderInput label="Threshold" value={diffThreshold} onChange={onDiffThresholdChange} min={0} max={128} /> : null}
+            <SelectInput label={t("algorithmLabel")} value={algorithm} options={algorithmOptions} onChange={(v) => onAlgorithmChange(v as DiffAlgorithm)} />
+            {algorithm === "binary" ? <SliderInput label={t("thresholdLabel")} value={diffThreshold} onChange={onDiffThresholdChange} min={0} max={128} /> : null}
           </>
         ) : null}
-        {viewMode === "split" ? <MutedText className="text-xs">Drag the slider on the viewer to adjust the split position.</MutedText> : null}
+        {viewMode === "split" ? <MutedText className="text-xs">{t("dragSliderSplitPos")}</MutedText> : null}
       </div>
     </AccordionCard>
   )

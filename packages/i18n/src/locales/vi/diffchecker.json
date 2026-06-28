@@ -10,5 +10,81 @@
   "title": "So sánh ảnh",
   "compareSettings": "Thiết lập So sánh",
   "pixelDiff": "Khác biệt Pixel",
-  "compareAction": "So sánh các ảnh"
+  "compareAction": "So sánh các ảnh",
+  "dragDropTip": "Kéo và thả 2 ảnh vào cùng một ô và công cụ sẽ tự động đặt ảnh còn lại vào ô kia.",
+  "clear": "Xóa sạch",
+  "export": "Xuất ảnh",
+  "exporting": "Đang xuất...",
+  "changed": "Thay đổi",
+  "meanDiff": "Lệch trung bình",
+  "viewMode": "Chế độ xem",
+  "comparison": "So sánh",
+  "alignment": "Căn chỉnh",
+  "diffcheckerSettings": "CÀI ĐẶT SO SÁNH",
+  "split": "Chia đôi",
+  "sideBySide": "Song song",
+  "overlay": "Chồng lớp",
+  "difference": "Khác biệt",
+  "dragSliderToCompare": "Kéo thanh trượt để so sánh",
+  "viewBothParallel": "Xem cả hai ảnh song song",
+  "adjustOpacityBlend": "Điều chỉnh độ mờ để trộn ảnh",
+  "pixelLevelAnalysis": "Phân tích ở cấp độ pixel",
+  "opacityLabel": "Độ mờ",
+  "algorithmLabel": "Thuật toán",
+  "thresholdLabel": "Ngưỡng sai biệt",
+  "dragSliderSplitPos": "Kéo thanh trượt trên màn hình để điều chỉnh vị trí chia đôi.",
+  "heatmap": "Bản đồ nhiệt",
+  "binary": "Nhị phân (Trắng/Đen)",
+  "ssim": "SSIM (Độ tương đồng cấu trúc)",
+  "scaleLabel": "Chế độ co giãn",
+  "anchorLabel": "Neo ảnh",
+  "matchLarger": "Theo ảnh lớn hơn",
+  "matchSmaller": "Theo ảnh nhỏ hơn",
+  "originalSize": "Kích thước gốc",
+  "center": "Ở giữa",
+  "topLeft": "Góc trên-trái",
+  "analyzingDifferences": "Đang phân tích khác biệt...",
+  "renderingPreview": "Đang hiển thị hình xem trước...",
+  "previewUnavailable": "Không có hình xem trước cho định dạng đầu ra này. Bạn vẫn có thể tải xuống tệp đã xử lý.",
+  "imageA": "Ảnh A",
+  "imageB": "Ảnh B",
+  "dropOrClickBrowse": "Kéo thả hoặc click để chọn ảnh",
+  "showcase": {
+    "title": "So sánh ảnh",
+    "subtitle": "So sánh các hình ảnh với độ chính xác cấp độ pixel. Phát hiện tức thì các lỗi nén ảnh, lệch màu và sai lệch hiển thị.",
+    "tips": [
+      "Sử dụng chế độ Chia đôi (Split-View) để vuốt nhanh giữa các ảnh và phát hiện các thay đổi bố cục nhỏ.",
+      "Chế độ bản đồ nhiệt (Heatmap) làm nổi bật ngay cả những sai lệch màu nhỏ nhất bằng màu đỏ tươi.",
+      "Điều chỉnh độ mờ của chế độ chồng ảnh (Overlay) để xem hai hình ảnh xếp chồng lên nhau như thế nào.",
+      "Phóng to và di chuyển được đồng bộ hóa trên cả hai hình ảnh để so sánh chính xác."
+    ],
+    "featureChips": [
+      "Song song",
+      "Chia đôi",
+      "Chồng lớp",
+      "Bản đồ nhiệt",
+      "Ngưỡng sai biệt",
+      "Căn chỉnh Pixel"
+    ],
+    "faqs": [
+      {
+        "question": "Thuật toán Bản đồ nhiệt (Heatmap) hoạt động như thế nào?",
+        "answer": "Nó tính toán sự khác biệt trên từng pixel giữa Ảnh A và Ảnh B. Bất kỳ pixel không khớp nào sẽ được làm nổi bật với cường độ màu tỷ lệ thuận với mức độ khác biệt."
+      },
+      {
+        "question": "Tôi có thể so sánh các hình ảnh có kích thước khác nhau không?",
+        "answer": "Có! Sử dụng cài đặt Căn chỉnh (Alignment) để khít kích thước, kéo giãn hoặc neo hình ảnh vào giữa, góc trên bên trái, v.v. để căn chỉnh chúng một cách hoàn hảo."
+      },
+      {
+        "question": "Công cụ này có phù hợp để kiểm thử chất lượng không?",
+        "answer": "Hoàn toàn phù hợp. Nó được thiết kế cho các nhà thiết kế và nhà phát triển để xác minh chất lượng nén và tính nhất quán trực quan sau khi xử lý hình ảnh."
+      }
+    ]
+  },
+  "tooltips": {
+    "replaceImage": "Thay thế {{label}}",
+    "fallbackPreviewWarning": "Không thể hiển thị hình ảnh gốc, do đó đã sử dụng bản xem trước thay thế. Điều này có thể không phản ánh chính xác sự khác biệt pixel thực tế.",
+    "fullscreen": "Toàn màn hình",
+    "exitFullscreen": "Thoát toàn màn hình"
+  }
 }
