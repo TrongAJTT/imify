@@ -1,17 +1,17 @@
-import React from "react"
-import { cn } from "./utils"
+import React from "react";
+import { cn } from "./utils";
 
 interface ShieldProps {
-  left: React.ReactNode
-  right: React.ReactNode
-  leftBg?: string
-  rightBg?: string
-  leftColor?: string
-  rightColor?: string
-  icon?: React.ReactNode
-  trailingIcon?: React.ReactNode
-  className?: string
-  size?: "xs" | "sm" | "md"
+  left?: React.ReactNode;
+  right?: React.ReactNode;
+  leftBg?: string;
+  rightBg?: string;
+  leftColor?: string;
+  rightColor?: string;
+  icon?: React.ReactNode;
+  trailingIcon?: React.ReactNode;
+  className?: string;
+  size?: "xs" | "sm" | "md";
 }
 
 export function Shield({
@@ -24,45 +24,73 @@ export function Shield({
   icon,
   trailingIcon,
   className,
-  size = "sm"
+  size = "sm",
 }: ShieldProps) {
   const sizeClasses = {
     xs: "text-[9px] h-4.5",
     sm: "text-[11px] h-6",
-    md: "text-[12px] h-7.5"
-  }[size]
+    md: "text-[12px] h-7.5",
+  }[size];
 
   const paddingClasses = {
-    xs: "px-2",
-    sm: "px-3",
-    md: "px-4"
-  }[size]
+    xs: "px-1.5",
+    sm: "px-2",
+    md: "px-3",
+  }[size];
 
   const iconSizeClasses = {
     xs: "gap-1",
     sm: "gap-1.5",
-    md: "gap-2"
-  }[size]
+    md: "gap-2",
+  }[size];
 
   // If rightBg is a hex color (starts with #), we apply it via style
-  const isCustomBg = rightBg.startsWith("#")
+  const isCustomBg = rightBg.startsWith("#");
 
   return (
-    <div className={cn("inline-flex items-center overflow-hidden rounded-[4px] font-bold tracking-tight shadow-sm select-none", sizeClasses, className)}>
+    <div
+      className={cn(
+        "inline-flex items-center overflow-hidden rounded-[4px] font-bold tracking-tight shadow-sm select-none",
+        sizeClasses,
+        className,
+      )}
+    >
       {/* Left Part */}
-      <div className={cn("flex items-center h-full uppercase", leftBg, leftColor, paddingClasses, iconSizeClasses)}>
-        {icon && <span className="shrink-0 flex items-center justify-center opacity-80">{icon}</span>}
-        <span className="whitespace-nowrap">{left}</span>
+      <div
+        className={cn(
+          "flex items-center h-full uppercase",
+          leftBg,
+          leftColor,
+          paddingClasses,
+          iconSizeClasses,
+        )}
+      >
+        {icon && (
+          <span className="shrink-0 flex items-center justify-center opacity-80">
+            {icon}
+          </span>
+        )}
+        {left && <span className="whitespace-nowrap">{left}</span>}
       </div>
-      
+
       {/* Right Part */}
-      <div 
-        className={cn("flex items-center h-full uppercase", !isCustomBg && rightBg, rightColor, paddingClasses, iconSizeClasses)}
+      <div
+        className={cn(
+          "flex items-center h-full uppercase",
+          !isCustomBg && rightBg,
+          rightColor,
+          paddingClasses,
+          iconSizeClasses,
+        )}
         style={isCustomBg ? { backgroundColor: rightBg } : {}}
       >
-        <span className="whitespace-nowrap">{right}</span>
-        {trailingIcon && <span className="shrink-0 flex items-center justify-center">{trailingIcon}</span>}
+        {right && <span className="whitespace-nowrap">{right}</span>}
+        {trailingIcon && (
+          <span className="shrink-0 flex items-center justify-center">
+            {trailingIcon}
+          </span>
+        )}
       </div>
     </div>
-  )
+  );
 }

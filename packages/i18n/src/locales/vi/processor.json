@@ -105,12 +105,12 @@
   "unlockInPerformanceSettings": "Mở khóa trong Cài đặt hiệu năng",
   "targetFormat": "Định dạng đầu ra",
   "quality": "Chất lượng",
+  "nearLossless": "Gần lossless",
   "resizeType": "Kiểu kích thước",
   "scalePercent": "Tỷ lệ (%)",
   "valuePx": "Giá trị (px)",
   "quickStats": "Thống kê nhanh",
   "resamplingAlgorithm": "Thuận toán lấy mẫu lại",
-  "webpAdvanced": "WebP Nâng cao",
   "sharpYuv": "Làm sắc nét YUV",
   "exactAlpha": "Kênh Alpha chính xác",
   "webpAdvancedSublabel": "Bảo toàn cạnh màu và kênh trong suốt",
@@ -124,5 +124,89 @@
   "resizeSetSize": "Đặt kích thước",
   "resizeScale": "Tỷ lệ",
   "resizePaperSize": "Khổ giấy",
-  "concurrency": "Số luồng xử lý"
+  "concurrency": "Số luồng xử lý",
+  "showcaseSingle": {
+    "title": "Bộ xử lý đơn lẻ trong một giao diện",
+    "subtitle": "Tối ưu hóa một hình ảnh với xem trước trực tiếp, chuyển đổi định dạng, thay đổi kích thước, đóng dấu ảnh, chính sách EXIF và đặt tên xuất thông minh.",
+    "tips": [
+      "Bạn có thể bắt đầu ngay lập tức bằng cách dán từ bộ nhớ tạm hoặc nhập URL hình ảnh.",
+      "Bật tính năng đóng dấu để áp dụng bảo vệ bản quyền trước khi chuyển đổi.",
+      "Bật tùy chọn Xóa EXIF khi bạn cần loại bỏ siêu dữ liệu máy ảnh hoặc vị trí.",
+      "Sử dụng Chế độ xem chia đôi để nhanh chóng phát hiện các hiện tượng vỡ ảnh do nén quá mức.",
+      "Đối với các tài nguyên có độ trong suốt, hãy so sánh WebP và PNG để cân bằng giữa chất lượng và dung lượng tệp."
+    ],
+    "featureChips": [
+      "Chuyển đổi định dạng",
+      "Thay đổi kích thước & Cắt",
+      "Đóng dấu ảnh",
+      "Tinh chỉnh chất lượng",
+      "Xóa EXIF",
+      "Đổi tên thông minh",
+      "So sánh trực tiếp"
+    ],
+    "faqs": [
+      {
+        "question": "Sự khác biệt giữa Bộ xử lý đơn lẻ và hàng loạt là gì?",
+        "answer": "Bộ xử lý đơn lẻ được xây dựng để tối ưu hóa lặp lại một hình ảnh với phản hồi trực quan trực tiếp. Bộ xử lý hàng loạt áp dụng cùng một chiến lược cấu hình cho nhiều tệp."
+      },
+      {
+        "question": "Làm thế nào để tôi nhập một hình ảnh vào công cụ này?",
+        "answer": "Bạn có thể kéo thả, duyệt từ đĩa, dán từ bộ nhớ tạm, nhập bằng URL hình ảnh hoặc gửi hình ảnh từ các hành động tối ưu hóa của Trình kiểm tra ảnh."
+      },
+      {
+        "question": "Tại sao tính năng xem trước không khả dụng cho một số định dạng đầu ra?",
+        "answer": "Một số định dạng đầu ra không thể xem trước trực tiếp trong trình duyệt. Quá trình xử lý vẫn thành công và bạn có thể kiểm tra kết quả cuối cùng sau khi tải xuống."
+      },
+      {
+        "question": "Tại sao Bộ xử lý đơn lẻ và hàng loạt lại chia sẻ nhiều cài đặt?",
+        "answer": "Cả hai công cụ đều sử dụng cùng một kho lưu trữ cấu hình nên các preset luôn nhất quán giữa quy trình làm việc một ảnh và hàng loạt."
+      }
+    ]
+  },
+  "showcaseBatch": {
+    "title": "Bộ xử lý hàng loạt cho quy trình hiệu suất cao",
+    "subtitle": "Xếp hàng đợi nhiều tệp, xử lý song song, giám sát tiến trình và xuất kết quả dưới dạng ZIP, gộp PDF hoặc các tệp riêng lẻ.",
+    "tips": [
+      "Dán nhiều hình ảnh từ bộ nhớ tạm hoặc nhập trực tiếp nhiều URL vào hàng đợi.",
+      "Sử dụng chế độ lỗi để thử lại chỉ các mục bị lỗi thay vì chạy lại toàn bộ hàng đợi.",
+      "Nếu trường luồng xử lý đồng thời bị khóa, preset hiện tại hoặc rào cản thiết bị của bạn đang áp dụng một phạm vi an toàn.",
+      "Sử dụng Trình tư vấn thông minh để có được số lượng luồng khuyến nghị, sau đó áp dụng trực tiếp để tránh các đột biến không ổn định.",
+      "Các định dạng nặng như AVIF hoặc xuất PDF có thể làm tăng áp lực bộ nhớ trên các thiết bị cấu hình thấp.",
+      "Sau khi xử lý, hãy chọn chiến lược xuất tốt nhất: ZIP, gộp thành một tệp PDF hoặc các tệp riêng lẻ."
+    ],
+    "featureChips": [
+      "Xử lý song song",
+      "Xuất ZIP & PDF",
+      "Thử lại thông minh",
+      "Định dạng & Kích thước",
+      "Bảo vệ tràn bộ nhớ (OOM)",
+      "Đặt tên thông minh"
+    ],
+    "faqs": [
+      {
+        "question": "Bộ xử lý hàng loạt khác với Bộ xử lý đơn lẻ như thế nào?",
+        "answer": "Bộ xử lý hàng loạt được tối ưu hóa cho hiệu suất và thực thi hàng đợi trên nhiều tệp. Bộ xử lý đơn lẻ tập trung vào xem trước lặp lại một hình ảnh và tinh chỉnh chi tiết."
+      },
+      {
+        "question": "Các tùy chọn xuất của tôi sau khi chạy hàng loạt là gì?",
+        "answer": "Bạn có thể tải xuống một tệp ZIP, xuất các tệp riêng lẻ, gộp tất cả các đầu ra được hỗ trợ vào một tệp PDF hoặc đóng gói các tệp PDF riêng lẻ trong tệp ZIP."
+      },
+      {
+        "question": "Cảnh báo OOM (Tràn bộ nhớ) có nghĩa là gì?",
+        "answer": "Đây là rào cản an toàn cảnh báo khi tổng kích thước xếp hàng vượt quá ngưỡng khuyến nghị. Hãy chia nhỏ hàng đợi thành các lượt chạy nhỏ hơn để có độ ổn định tốt hơn."
+      },
+      {
+        "question": "Tại sau số luồng xử lý đồng thời bị khóa trong preset của tôi?",
+        "answer": "Trạng thái khóa có nghĩa là cấu hình hiện tại của bạn bị giới hạn bởi các quy tắc an toàn hoặc cài đặt preset được quản lý. Điều này giúp ngăn ngừa sự không ổn định của trình duyệt khi kích thước tệp, độ phức tạp của định dạng hoặc giới hạn thiết bị ở mức cao."
+      },
+      {
+        "question": "Tôi nên chọn giá trị luồng xử lý đồng thời phù hợp như thế nào?",
+        "answer": "Hãy bắt đầu với Trình tư vấn thông minh và giữ giá trị trong phạm vi khuyến nghị. Chỉ tăng dần khi các lượt chạy của bạn duy trì ổn định và giảm xuống nếu bạn thấy cảnh báo bộ nhớ hoặc chuyển đổi thất bại."
+      },
+      {
+        "question": "Tôi có thể tạm dừng hoặc hủy trong khi xử lý không?",
+        "answer": "Có. Bạn có thể tạm dừng, tiếp tục hoặc yêu cầu hủy một cách an toàn từ thanh hành động hàng loạt."
+      }
+    ]
+  }
 }
