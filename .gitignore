@@ -53,3 +53,6 @@ assets/wasm/
 
 # Turbo
 .turbo/cache/
+
+# Internal docs
+docs/knowledge/
