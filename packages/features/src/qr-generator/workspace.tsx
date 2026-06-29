@@ -27,6 +27,7 @@ import { useToast } from "@imify/core/hooks/use-toast";
 import { renderMasterCanvas, exportAsSvg } from "./qr-render-engine";
 import type { QrType } from "./types";
 import { QrFieldsForm } from "./qr-fields-form";
+import { useTranslation } from "@imify/i18n";
 
 const QR_TYPE_OPTIONS = [
   { value: "url", label: "URL" },
@@ -53,6 +54,7 @@ const QR_TYPE_ICONS: Record<string, React.ReactNode> = {
 };
 
 export function QrGeneratorWorkspace() {
+  const { t } = useTranslation("qrGenerator");
   const store = useQrGeneratorStore();
   const {
     type,
@@ -178,9 +180,9 @@ export function QrGeneratorWorkspace() {
       });
 
       await downloadWithFilename(blob, `imify-qr-${type}.svg`);
-      success("Export Successful", "QR code downloaded as SVG");
+      success(t("workspace.exportSuccess"), t("workspace.downloadSvgSuccess"));
     } catch (err) {
-      error("Export Failed", "Could not download the QR code as SVG");
+      error(t("workspace.exportFailed"), t("workspace.svgFailed"));
     } finally {
       setIsDownloading(false);
     }
@@ -195,14 +197,14 @@ export function QrGeneratorWorkspace() {
       canvas.toBlob(async (blob) => {
         if (blob) {
           await downloadWithFilename(blob, `imify-qr-${type}.png`);
-          success("Export Successful", "QR code downloaded as PNG");
+          success(t("workspace.exportSuccess"), t("workspace.downloadPngSuccess"));
         } else {
-          error("Export Failed", "Could not export canvas to blob");
+          error(t("workspace.exportFailed"), t("workspace.blobFailed"));
         }
         setIsDownloading(false);
       }, "image/png");
     } catch (err) {
-      error("Export Failed", "Could not download the QR code as PNG");
+      error(t("workspace.exportFailed"), t("workspace.pngFailed"));
       setIsDownloading(false);
     }
   };
@@ -217,9 +219,9 @@ export function QrGeneratorWorkspace() {
         async (blob) => {
           if (blob) {
             await downloadWithFilename(blob, `imify-qr-${type}.webp`);
-            success("Export Successful", "QR code downloaded as WebP");
+            success(t("workspace.exportSuccess"), t("workspace.downloadWebpSuccess"));
           } else {
-            error("Export Failed", "Could not export canvas to blob");
+            error(t("workspace.exportFailed"), t("workspace.blobFailed"));
           }
           setIsDownloading(false);
         },
@@ -227,7 +229,7 @@ export function QrGeneratorWorkspace() {
         1.0,
       );
     } catch (err) {
-      error("Export Failed", "Could not download the QR code as WebP");
+      error(t("workspace.exportFailed"), t("workspace.webpFailed"));
       setIsDownloading(false);
     }
   };
@@ -240,19 +242,19 @@ export function QrGeneratorWorkspace() {
           {/* Left Column: Data Type selector and Content Inputs (3/5 width) */}
           <div className="lg:col-span-3 shadow-sm space-y-4 relative pl-1">
             <div className="border-b border-slate-100 dark:border-slate-850 pb-3">
-              <Subheading>QR GENERATOR</Subheading>
+              <Subheading>{t("workspace.heading")}</Subheading>
               <MutedText className="text-xs">
-                Choose type and fill in QR details
+                {t("workspace.subheading")}
               </MutedText>
             </div>
 
             <div className="space-y-2">
-              <LabelText className="text-xs">Select QR Type</LabelText>
+              <LabelText className="text-xs">{t("workspace.selectType")}</LabelText>
               <div className="flex flex-wrap gap-2">
                 {QR_TYPE_OPTIONS.map((opt) => (
                   <SelectChip
                     key={opt.value}
-                    label={opt.label}
+                    label={t(`qrTypes.${opt.value}`, { defaultValue: opt.label })}
                     isActive={type === opt.value}
                     onClick={() => setType(opt.value as QrType)}
                     icon={QR_TYPE_ICONS[opt.value]}
@@ -268,7 +270,7 @@ export function QrGeneratorWorkspace() {
                 className="text-xs h-8 flex items-center gap-1.5 px-3"
               >
                 <RotateCcw size={13} />
-                <span>Reset</span>
+                <span>{t("workspace.reset")}</span>
               </SecondaryButton>
             </div>
 
@@ -341,11 +343,10 @@ export function QrGeneratorWorkspace() {
                   <Download size={22} />
                 </div>
                 <Subheading className="text-sm font-semibold mb-1">
-                  No QR Content
+                  {t("workspace.noContent")}
                 </Subheading>
                 <MutedText className="text-xs max-w-[240px]">
-                  Fill in the data fields on the left to generate and preview
-                  your custom QR code.
+                  {t("workspace.noContentDesc")}
                 </MutedText>
               </div>
             )}

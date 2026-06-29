@@ -8,6 +8,7 @@ import {
   PhoneInput,
 } from "@imify/ui";
 import type { QrType, QrDataMap } from "./types";
+import { useTranslation } from "@imify/i18n";
 
 interface QrFieldsFormProps {
   type: QrType;
@@ -20,13 +21,14 @@ interface QrFieldsFormProps {
 }
 
 export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps) {
+  const { t } = useTranslation("qrGenerator");
   switch (type) {
     case "url":
       return (
         <TextInput
-          label="URL Link"
+          label={t("fields.url")}
           type="url"
-          placeholder="e.g. https://google.com"
+          placeholder={t("fields.urlPlaceholder")}
           value={data.url.url}
           onChange={(val) => updateDataField("url", "url", val)}
         />
@@ -35,8 +37,8 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
     case "text":
       return (
         <TextArea
-          label="Plain Text"
-          placeholder="Type your text content here..."
+          label={t("fields.plainText")}
+          placeholder={t("fields.plainTextPlaceholder")}
           value={data.text.text}
           onChange={(val) => updateDataField("text", "text", val)}
           heightExpandMode="slider"
@@ -48,21 +50,21 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
       return (
         <div className="space-y-3">
           <TextInput
-            label="Recipient Email"
+            label={t("fields.recipientEmail")}
             type="email"
-            placeholder="e.g. contact@example.com"
+            placeholder={t("fields.recipientEmailPlaceholder")}
             value={data.email.to}
             onChange={(val) => updateDataField("email", "to", val)}
           />
           <TextInput
-            label="Subject"
-            placeholder="e.g. Hello there"
+            label={t("fields.subject")}
+            placeholder={t("fields.subjectPlaceholder")}
             value={data.email.subject}
             onChange={(val) => updateDataField("email", "subject", val)}
           />
           <TextArea
-            label="Email Body"
-            placeholder="Type email body..."
+            label={t("fields.emailBody")}
+            placeholder={t("fields.emailBodyPlaceholder")}
             value={data.email.body}
             onChange={(val) => updateDataField("email", "body", val)}
             heightExpandMode="text"
@@ -74,8 +76,8 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
     case "phone":
       return (
         <PhoneInput
-          label="Phone Number"
-          placeholder="e.g. 123456789"
+          label={t("fields.phoneNumber")}
+          placeholder={t("fields.phoneNumberPlaceholder")}
           value={data.phone.phone}
           onChange={(val) => updateDataField("phone", "phone", val)}
         />
@@ -85,14 +87,14 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
       return (
         <div className="space-y-3">
           <PhoneInput
-            label="Recipient Phone"
-            placeholder="e.g. 123456789"
+            label={t("fields.recipientPhone")}
+            placeholder={t("fields.phoneNumberPlaceholder")}
             value={data.sms.phone}
             onChange={(val) => updateDataField("sms", "phone", val)}
           />
           <TextArea
-            label="SMS Message"
-            placeholder="Type your text message here..."
+            label={t("fields.smsMessage")}
+            placeholder={t("fields.smsMessagePlaceholder")}
             value={data.sms.message}
             onChange={(val) => updateDataField("sms", "message", val)}
             heightExpandMode="text"
@@ -105,13 +107,13 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <TextInput
-              label="Network Name (SSID)"
-              placeholder="e.g. MyHomeWifi"
+              label={t("fields.networkName")}
+              placeholder={t("fields.networkNamePlaceholder")}
               value={data.wifi.ssid}
               onChange={(val) => updateDataField("wifi", "ssid", val)}
             />
             <SelectInput
-              label="Encryption Type"
+              label={t("fields.encryptionType")}
               value={data.wifi.encryption}
               onChange={(val: string) =>
                 updateDataField("wifi", "encryption", val as any)
@@ -119,13 +121,13 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
               options={[
                 { value: "WPA", label: "WPA/WPA2" },
                 { value: "WEP", label: "WEP" },
-                { value: "nopass", label: "Unsecured (No Password)" },
+                { value: "nopass", label: t("fields.reminders.none") },
               ]}
             />
           </div>
           <TextInput
-            label="Password"
-            placeholder="e.g. p@ssw0rd123"
+            label={t("fields.password")}
+            placeholder={t("fields.passwordPlaceholder")}
             type="password"
             value={data.wifi.password}
             onChange={(val) => updateDataField("wifi", "password", val)}
@@ -133,8 +135,8 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
           <CheckboxCard
             checked={Boolean(data.wifi.hidden)}
             onChange={(val) => updateDataField("wifi", "hidden", val)}
-            title="Hidden SSID"
-            subtitle="This Wi-Fi network's SSID is hidden (not broadcasting)"
+            title={t("fields.hiddenSsid")}
+            subtitle={t("fields.hiddenSsidDesc")}
             icon={<Wifi size={14} className="text-blue-500" />}
           />
         </div>
@@ -145,14 +147,14 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-2">
             <TextInput
-              label="First Name"
-              placeholder="John"
+              label={t("fields.firstName")}
+              placeholder={t("fields.firstNamePlaceholder")}
               value={data.vcard.firstName}
               onChange={(val) => updateDataField("vcard", "firstName", val)}
             />
             <TextInput
-              label="Last Name"
-              placeholder="Doe"
+              label={t("fields.lastName")}
+              placeholder={t("fields.lastNamePlaceholder")}
               value={data.vcard.lastName}
               onChange={(val) => updateDataField("vcard", "lastName", val)}
             />
@@ -160,14 +162,14 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
 
           <div className="grid grid-cols-2 gap-2">
             <TextInput
-              label="Organization"
-              placeholder="Acme Corp"
+              label={t("fields.organization")}
+              placeholder={t("fields.organizationPlaceholder")}
               value={data.vcard.organization}
               onChange={(val) => updateDataField("vcard", "organization", val)}
             />
             <TextInput
-              label="Job Title"
-              placeholder="Developer"
+              label={t("fields.jobTitle")}
+              placeholder={t("fields.jobTitlePlaceholder")}
               value={data.vcard.title}
               onChange={(val) => updateDataField("vcard", "title", val)}
             />
@@ -175,14 +177,14 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
 
           <div className="grid grid-cols-2 gap-2">
             <TextInput
-              label="Mobile Phone"
+              label={t("fields.mobilePhone")}
               type="tel"
               placeholder="+1 555-0100"
               value={data.vcard.phoneMobile}
               onChange={(val) => updateDataField("vcard", "phoneMobile", val)}
             />
             <TextInput
-              label="Work Phone"
+              label={t("fields.workPhone")}
               type="tel"
               placeholder="+1 555-0199"
               value={data.vcard.phoneWork}
@@ -192,14 +194,14 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
 
           <div className="grid grid-cols-2 gap-2">
             <TextInput
-              label="Home Phone"
+              label={t("fields.homePhone")}
               type="tel"
               placeholder="+1 555-0102"
               value={data.vcard.phoneHome}
               onChange={(val) => updateDataField("vcard", "phoneHome", val)}
             />
             <TextInput
-              label="Fax"
+              label={t("fields.fax")}
               type="tel"
               placeholder="+1 555-0103"
               value={data.vcard.phoneFax}
@@ -209,14 +211,14 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
 
           <div className="grid grid-cols-2 gap-2">
             <TextInput
-              label="Email"
+              label={t("fields.recipientEmail")}
               type="email"
-              placeholder="john@example.com"
+              placeholder={t("fields.recipientEmailPlaceholder")}
               value={data.vcard.email}
               onChange={(val) => updateDataField("vcard", "email", val)}
             />
             <TextInput
-              label="Website URL"
+              label={t("fields.websiteUrl")}
               type="url"
               placeholder="https://example.com"
               value={data.vcard.url}
@@ -226,23 +228,23 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
 
           <div className="border-t border-slate-100 dark:border-slate-850 pt-2 space-y-2">
             <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 block uppercase tracking-wider">
-              Address
+              {t("fields.address")}
             </span>
             <TextInput
-              label="Street Address"
+              label={t("fields.streetAddress")}
               placeholder="123 Main St"
               value={data.vcard.addressStreet}
               onChange={(val) => updateDataField("vcard", "addressStreet", val)}
             />
             <div className="grid grid-cols-2 gap-2">
               <TextInput
-                label="City"
+                label={t("fields.city")}
                 placeholder="New York"
                 value={data.vcard.addressCity}
                 onChange={(val) => updateDataField("vcard", "addressCity", val)}
               />
               <TextInput
-                label="State / Province"
+                label={t("fields.stateProvince")}
                 placeholder="NY"
                 value={data.vcard.addressState}
                 onChange={(val) =>
@@ -252,13 +254,13 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
             </div>
             <div className="grid grid-cols-2 gap-2">
               <TextInput
-                label="Zip / Postal Code"
+                label={t("fields.zipCode")}
                 placeholder="10001"
                 value={data.vcard.addressZip}
                 onChange={(val) => updateDataField("vcard", "addressZip", val)}
               />
               <TextInput
-                label="Country"
+                label={t("fields.country")}
                 placeholder="USA"
                 value={data.vcard.addressCountry}
                 onChange={(val) =>
@@ -268,8 +270,8 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
             </div>
             <div className="pt-1">
               <TextInput
-                label="Note/Remarks"
-                placeholder="Met at conference..."
+                label={t("fields.noteRemarks")}
+                placeholder={t("fields.noteRemarksPlaceholder")}
                 value={data.vcard.note}
                 onChange={(val) => updateDataField("vcard", "note", val)}
               />
@@ -282,60 +284,60 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
       return (
         <div className="space-y-3">
           <TextInput
-            label="Event Name"
-            placeholder="e.g. Tech Workshop 2026"
+            label={t("fields.eventName")}
+            placeholder={t("fields.eventNamePlaceholder")}
             value={data.event.title}
             onChange={(val) => updateDataField("event", "title", val)}
           />
           <div className="grid grid-cols-2 gap-3">
             <TextInput
-              label="Start Date & Time"
+              label={t("fields.startDate")}
               type="datetime-local"
               value={data.event.startDate}
               onChange={(val) => updateDataField("event", "startDate", val)}
             />
             <TextInput
-              label="End Date & Time"
+              label={t("fields.endDate")}
               type="datetime-local"
               value={data.event.endDate}
               onChange={(val) => updateDataField("event", "endDate", val)}
             />
           </div>
           <TextInput
-            label="Location"
-            placeholder="e.g. 123 Conference St, NY or Zoom Link"
+            label={t("fields.location")}
+            placeholder={t("fields.locationPlaceholder")}
             value={data.event.location}
             onChange={(val) => updateDataField("event", "location", val)}
           />
           <TextArea
-            label="Description (Optional)"
-            placeholder="Event details, agenda, or notes..."
+            label={t("fields.descriptionOpt")}
+            placeholder={t("fields.descriptionOptPlaceholder")}
             value={data.event.description}
             onChange={(val) => updateDataField("event", "description", val)}
             heightExpandMode="text"
             rows={3}
           />
           <TextInput
-            label="Event URL (Optional)"
+            label={t("fields.eventUrlOpt")}
             type="url"
             placeholder="https://example.com/event"
             value={data.event.url}
             onChange={(val) => updateDataField("event", "url", val)}
           />
           <SelectInput
-            label="Reminder Before Event"
+            label={t("fields.reminderMinutes")}
             value={String(data.event.reminderMinutes ?? -1)}
             onChange={(val: string) =>
               updateDataField("event", "reminderMinutes", parseInt(val, 10))
             }
             options={[
-              { value: "-1", label: "No reminder" },
-              { value: "5", label: "5 minutes before" },
-              { value: "15", label: "15 minutes before" },
-              { value: "30", label: "30 minutes before" },
-              { value: "60", label: "1 hour before" },
-              { value: "120", label: "2 hours before" },
-              { value: "1440", label: "1 day before" },
+              { value: "-1", label: t("fields.reminders.none") },
+              { value: "5", label: t("fields.reminders.5") },
+              { value: "15", label: t("fields.reminders.15") },
+              { value: "30", label: t("fields.reminders.30") },
+              { value: "60", label: t("fields.reminders.60") },
+              { value: "120", label: t("fields.reminders.120") },
+              { value: "1440", label: t("fields.reminders.1440") },
             ]}
           />
         </div>
@@ -343,7 +345,7 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
 
     case "messaging": {
       const platform = data.messaging.platform;
-      let label = "Phone Number";
+      let label = t("fields.phoneNumber");
       let placeholder = "e.g. +84123456789 (include country code)";
       let typeInput = "tel";
       let description = "";
@@ -352,23 +354,23 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
         label = "Telegram Username";
         placeholder = "e.g. username (without @)";
         typeInput = "text";
-        description = "Users scanning this QR code will resolve directly to your Telegram chat.";
+        description = t("fields.telegramDesc");
       } else if (platform === "whatsapp") {
         label = "WhatsApp Number";
         placeholder = "e.g. 123456789";
         typeInput = "tel";
-        description = "A WhatsApp link that will open a chat screen with you, prefilled with a template message.";
+        description = t("fields.whatsappDesc");
       } else if (platform === "zalo") {
         label = "Zalo Phone Number";
         placeholder = "e.g. 912345678";
         typeInput = "tel";
-        description = "Users scanning this QR code will open your Zalo profile/chat.";
+        description = t("fields.zaloDesc");
       }
 
       return (
         <div className="space-y-3">
           <SelectInput
-            label="Chat Platform"
+            label={t("fields.chatPlatform")}
             value={data.messaging.platform}
             onChange={(val: string) =>
               updateDataField("messaging", "platform", val as any)
@@ -397,8 +399,8 @@ export function QrFieldsForm({ type, data, updateDataField }: QrFieldsFormProps)
           )}
           {platform === "whatsapp" && (
             <TextArea
-              label="Template Message (Optional)"
-              placeholder="e.g. Hello, I am interested in your products!"
+              label={t("fields.templateMessageOpt")}
+              placeholder={t("fields.templateMessageOptPlaceholder")}
               value={data.messaging.message}
               onChange={(val) => updateDataField("messaging", "message", val)}
               heightExpandMode="text"

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useQrGeneratorStore, useFontStore } from "@imify/stores";
 import * as Icons from "./design-icons";
+import { useTranslation } from "@imify/i18n";
 
 interface QrGeneratorSidebarProps {
   enableWideSidebarGrid?: boolean;
@@ -66,6 +67,7 @@ export function QrGeneratorSidebar({
   enableWideSidebarGrid = false,
   autoWideSidebarGridMinWidthPx = null,
 }: QrGeneratorSidebarProps) {
+  const { t } = useTranslation("qrGenerator");
   const {
     size,
     setSize,
@@ -167,8 +169,8 @@ export function QrGeneratorSidebar({
       label: "",
       content: (
         <AccordionCard
-          label="Colors & Pattern"
-          sublabel="Base colors and dot style"
+          label={t("sidebar.colorsPattern")}
+          sublabel={t("sidebar.colorsPatternDesc")}
           icon={<Palette size={16} />}
           defaultOpen={true}
           colorTheme="purple"
@@ -177,7 +179,7 @@ export function QrGeneratorSidebar({
           {/* Colors */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <LabelText className="text-xs">Foreground Color</LabelText>
+              <LabelText className="text-xs">{t("sidebar.foregroundColor")}</LabelText>
               <ColorPickerPopover
                 label=""
                 value={fgColor}
@@ -187,7 +189,7 @@ export function QrGeneratorSidebar({
               />
             </div>
             <div className="flex items-center justify-between">
-              <LabelText className="text-xs">Background Color</LabelText>
+              <LabelText className="text-xs">{t("sidebar.backgroundColor")}</LabelText>
               <ColorPickerPopover
                 label=""
                 value={bgColor}
@@ -200,7 +202,7 @@ export function QrGeneratorSidebar({
 
           {/* Inner Padding */}
           <SliderInput
-            label="Inner Padding"
+            label={t("sidebar.innerPadding")}
             value={qrMargin}
             min={0}
             max={100}
@@ -211,7 +213,7 @@ export function QrGeneratorSidebar({
 
           {/* Dot Pattern */}
           <div className="space-y-1.5">
-            <LabelText className="text-xs">Dot Pattern</LabelText>
+            <LabelText className="text-xs">{t("sidebar.dotPattern")}</LabelText>
             <GridIconSelector
               value={dotType}
               onChange={setDotType}
@@ -219,28 +221,28 @@ export function QrGeneratorSidebar({
               options={[
                 {
                   value: "square",
-                  label: "Square",
+                  label: t("sidebar.dots.square"),
                   icon: <Icons.DotSquareIcon />,
                 },
-                { value: "dots", label: "Dots", icon: <Icons.DotDotsIcon /> },
+                { value: "dots", label: t("sidebar.dots.dots"), icon: <Icons.DotDotsIcon /> },
                 {
                   value: "rounded",
-                  label: "Rounded",
+                  label: t("sidebar.dots.rounded"),
                   icon: <Icons.DotRoundedIcon />,
                 },
                 {
                   value: "extra-rounded",
-                  label: "Extra Round",
+                  label: t("sidebar.dots.extra-rounded"),
                   icon: <Icons.DotExtraRoundedIcon />,
                 },
                 {
                   value: "classy",
-                  label: "Classy",
+                  label: t("sidebar.dots.classy"),
                   icon: <Icons.DotClassyIcon />,
                 },
                 {
                   value: "classy-rounded",
-                  label: "Classy Rnd",
+                  label: t("sidebar.dots.classy-rounded"),
                   icon: <Icons.DotClassyRoundedIcon />,
                 },
               ]}
@@ -254,8 +256,8 @@ export function QrGeneratorSidebar({
       label: "",
       content: (
         <AccordionCard
-          label="Markers"
-          sublabel="Corner square and center style"
+          label={t("sidebar.markers")}
+          sublabel={t("sidebar.markersDesc")}
           icon={<Grid2X2 size={16} />}
           defaultOpen={false}
           colorTheme="blue"
@@ -263,7 +265,7 @@ export function QrGeneratorSidebar({
         >
           {/* Marker Border */}
           <div className="space-y-1.5">
-            <LabelText className="text-xs">Marker Border</LabelText>
+            <LabelText className="text-xs">{t("sidebar.markerBorder")}</LabelText>
             <GridIconSelector
               value={markerBorderType}
               onChange={setMarkerBorderType}
@@ -272,17 +274,17 @@ export function QrGeneratorSidebar({
               options={[
                 {
                   value: "square",
-                  label: "Square",
+                  label: t("sidebar.markersOptions.square"),
                   icon: <Icons.MarkerBorderSquareIcon />,
                 },
                 {
                   value: "dot",
-                  label: "Dot",
+                  label: t("sidebar.markersOptions.dot"),
                   icon: <Icons.MarkerBorderDotIcon />,
                 },
                 {
                   value: "extra-rounded",
-                  label: "Rounded",
+                  label: t("sidebar.markersOptions.rounded"),
                   icon: <Icons.MarkerBorderExtraRoundedIcon />,
                 },
               ]}
@@ -291,7 +293,7 @@ export function QrGeneratorSidebar({
 
           {/* Marker Center */}
           <div className="space-y-1.5">
-            <LabelText className="text-xs">Marker Center</LabelText>
+            <LabelText className="text-xs">{t("sidebar.markerCenter")}</LabelText>
             <GridIconSelector
               value={markerCenterType}
               onChange={setMarkerCenterType}
@@ -300,12 +302,12 @@ export function QrGeneratorSidebar({
               options={[
                 {
                   value: "square",
-                  label: "Square",
+                  label: t("sidebar.markersOptions.square"),
                   icon: <Icons.MarkerCenterSquareIcon />,
                 },
                 {
                   value: "dot",
-                  label: "Dot",
+                  label: t("sidebar.markersOptions.dot"),
                   icon: <Icons.MarkerCenterDotIcon />,
                 },
               ]}
@@ -318,13 +320,13 @@ export function QrGeneratorSidebar({
               <CheckboxCard
                 checked={syncMarkerBorderColorWithForeground}
                 onChange={setSyncMarkerBorderColorWithForeground}
-                title="Sync Marker Border"
-                subtitle="Match marker border color with QR foreground"
+                title={t("sidebar.syncMarkerBorder")}
+                subtitle={t("sidebar.syncMarkerBorderDesc")}
                 icon={<Palette size={14} className="text-blue-500" />}
               />
               {!syncMarkerBorderColorWithForeground && (
                 <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
-                  <LabelText className="text-xs">Border Color</LabelText>
+                  <LabelText className="text-xs">{t("sidebar.borderColor")}</LabelText>
                   <ColorPickerPopover
                     label=""
                     value={markerBorderColor}
@@ -340,13 +342,13 @@ export function QrGeneratorSidebar({
               <CheckboxCard
                 checked={syncMarkerCenterColorWithForeground}
                 onChange={setSyncMarkerCenterColorWithForeground}
-                title="Sync Marker Center"
-                subtitle="Match marker center color with QR foreground"
+                title={t("sidebar.syncMarkerCenter")}
+                subtitle={t("sidebar.syncMarkerCenterDesc")}
                 icon={<Palette size={14} className="text-blue-500" />}
               />
               {!syncMarkerCenterColorWithForeground && (
                 <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
-                  <LabelText className="text-xs">Center Color</LabelText>
+                  <LabelText className="text-xs">{t("sidebar.centerColor")}</LabelText>
                   <ColorPickerPopover
                     label=""
                     value={markerCenterColor}
@@ -366,8 +368,8 @@ export function QrGeneratorSidebar({
       label: "",
       content: (
         <AccordionCard
-          label="Quality & Resolution"
-          sublabel="Size and error correction"
+          label={t("sidebar.qualityExport")}
+          sublabel={t("sidebar.qualityExportDesc")}
           icon={<Settings2 size={16} />}
           defaultOpen={true}
           colorTheme="amber"
@@ -376,7 +378,7 @@ export function QrGeneratorSidebar({
           {/* Resolution */}
           <div className="pt-1">
             <DiscreteSlider
-              label="Resolution (Size)"
+              label={t("sidebar.resolutionSize")}
               value={size}
               options={RESOLUTION_OPTIONS}
               onChange={setSize}
@@ -386,18 +388,16 @@ export function QrGeneratorSidebar({
 
           {/* Error Correction */}
           <div className="space-y-2">
-            <LabelText className="text-xs">Error Correction Level</LabelText>
+            <LabelText className="text-xs">{t("sidebar.errorCorrection")}</LabelText>
             <div className="grid grid-cols-2 gap-1">
               {(["Low", "Medium", "Quartile", "High"] as const).map((level) => (
                 <RadioCard
                   key={level}
-                  title={level}
+                  title={t("sidebar.ecLabels." + level, { defaultValue: level })}
                   value={level}
                   selectedValue={
                     errorCorrectionLevel in LEVEL_MAP
-                      ? LEVEL_MAP[
-                          errorCorrectionLevel as keyof typeof LEVEL_MAP
-                        ]
+                      ? LEVEL_MAP[errorCorrectionLevel as keyof typeof LEVEL_MAP]
                       : "Medium"
                   }
                   onChange={(v) =>
@@ -407,7 +407,7 @@ export function QrGeneratorSidebar({
                     )
                   }
                   colorTheme="amber"
-                  tooltipContent={ERROR_CORRECTION_TOOLTIPS[level]}
+                  tooltipContent={t("sidebar.ecTooltips." + level)}
                   className="flex items-center justify-center p-1.5 h-8 text-[11px]"
                 />
               ))}
@@ -421,8 +421,8 @@ export function QrGeneratorSidebar({
       label: "",
       content: (
         <AccordionCard
-          label="Logo Embedding"
-          sublabel={logoUrl ? "Logo Active" : "No Logo"}
+          label={t("sidebar.logoEmbedding")}
+          sublabel={logoUrl ? t("sidebar.logoActive") : t("sidebar.noLogo")}
           icon={<ImageIcon size={16} />}
           defaultOpen={true}
           colorTheme="sky"
@@ -443,7 +443,7 @@ export function QrGeneratorSidebar({
                 variant="secondary"
               >
                 <Upload size={14} />
-                <span>Upload Logo</span>
+                <span>{t("sidebar.uploadLogo")}</span>
               </Button>
             ) : (
               <div className="flex items-center gap-2 w-full">
@@ -459,7 +459,7 @@ export function QrGeneratorSidebar({
                   className="flex-1 text-xs py-1 h-8"
                   variant="secondary"
                 >
-                  Change
+                  {t("sidebar.change")}
                 </Button>
                 <button
                   type="button"
@@ -474,7 +474,7 @@ export function QrGeneratorSidebar({
           {logoUrl && (
             <div className="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-3">
               <SliderInput
-                label="Logo Size"
+                label={t("sidebar.logoSize")}
                 value={logoWidth}
                 min={10}
                 max={120}
@@ -488,8 +488,8 @@ export function QrGeneratorSidebar({
               <CheckboxCard
                 checked={excavateLogo}
                 onChange={setExcavateLogo}
-                title="Excavate QR Dots"
-                subtitle="Removes dots behind logo for better scanning"
+                title={t("sidebar.excavateQrDots")}
+                subtitle={t("sidebar.excavateQrDotsDesc")}
                 icon={<Palette size={14} className="text-sky-500" />}
               />
             </div>
@@ -502,8 +502,8 @@ export function QrGeneratorSidebar({
       label: "",
       content: (
         <AccordionCard
-          label="Frame & Text"
-          sublabel={frameStyle === "none" ? "No Frame" : frameStyle}
+          label={t("sidebar.frameText")}
+          sublabel={frameStyle === "none" ? t("sidebar.noFrame") : frameStyle}
           icon={<Type size={16} />}
           defaultOpen={false}
           colorTheme="blue"
@@ -511,33 +511,33 @@ export function QrGeneratorSidebar({
         >
           {/* Template Selector */}
           <div className="space-y-1.5">
-            <LabelText className="text-xs">Frame Template</LabelText>
+            <LabelText className="text-xs">{t("sidebar.frameTemplate")}</LabelText>
             <GridIconSelector
               value={frameStyle}
               onChange={setFrameStyle}
               columns={4}
               colorTheme="blue"
               options={[
-                { value: "none", label: "None", icon: <Icons.FrameNoneIcon /> },
+                { value: "none", label: t("sidebar.frames.none"), icon: <Icons.FrameNoneIcon /> },
                 {
                   value: "border",
-                  label: "Border",
+                  label: t("sidebar.frames.border"),
                   icon: <Icons.FrameBorderIcon />,
                 },
                 {
                   value: "bottom",
-                  label: "Bottom",
+                  label: t("sidebar.frames.bottom"),
                   icon: <Icons.FrameBottomIcon />,
                 },
-                { value: "top", label: "Top", icon: <Icons.FrameTopIcon /> },
+                { value: "top", label: t("sidebar.frames.top"), icon: <Icons.FrameTopIcon /> },
                 {
                   value: "tooltip",
-                  label: "Tooltip",
+                  label: t("sidebar.frames.tooltip"),
                   icon: <Icons.FrameTooltipIcon />,
                 },
                 {
                   value: "ribbon",
-                  label: "Ribbon",
+                  label: t("sidebar.frames.ribbon"),
                   icon: <Icons.FrameRibbonIcon />,
                 },
               ]}
@@ -548,7 +548,7 @@ export function QrGeneratorSidebar({
             <>
               {/* Frame Text Input */}
               <TextInput
-                label="Frame Text"
+                label={t("sidebar.frameTextLabel")}
                 value={frameText}
                 onChange={setFrameText}
                 placeholder="e.g. SCAN ME"
@@ -557,7 +557,7 @@ export function QrGeneratorSidebar({
 
               {/* Font Picker */}
               <SelectInput
-                label="Font Family"
+                label={t("sidebar.fontFamily")}
                 value={frameFontFamily}
                 options={[
                   { value: "sans-serif", label: "System Sans-Serif" },
@@ -577,7 +577,7 @@ export function QrGeneratorSidebar({
 
               {/* Text Scale Slider */}
               <SliderInput
-                label="Text Scale"
+                label={t("sidebar.textScale")}
                 value={frameTextScale}
                 min={50}
                 max={200}
@@ -591,13 +591,13 @@ export function QrGeneratorSidebar({
                 <CheckboxCard
                   checked={syncFrameColorWithForeground}
                   onChange={setSyncFrameColorWithForeground}
-                  title="Sync Frame Color"
-                  subtitle="Match frame color with QR foreground"
+                  title={t("sidebar.syncFrameColor")}
+                  subtitle={t("sidebar.syncFrameColorDesc")}
                   icon={<Palette size={14} className="text-blue-500" />}
                 />
                 {!syncFrameColorWithForeground && (
                   <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
-                    <LabelText className="text-xs">Frame Color</LabelText>
+                    <LabelText className="text-xs">{t("sidebar.frameColor")}</LabelText>
                     <ColorPickerPopover
                       label=""
                       value={frameColor}
@@ -611,13 +611,13 @@ export function QrGeneratorSidebar({
                 <CheckboxCard
                   checked={syncTextColorWithBackground}
                   onChange={setSyncTextColorWithBackground}
-                  title="Sync Text Color"
-                  subtitle="Match text color with QR background"
+                  title={t("sidebar.syncTextColor")}
+                  subtitle={t("sidebar.syncTextColorDesc")}
                   icon={<Palette size={14} className="text-blue-500" />}
                 />
                 {!syncTextColorWithBackground && (
                   <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
-                    <LabelText className="text-xs">Text Color</LabelText>
+                    <LabelText className="text-xs">{t("sidebar.textColor")}</LabelText>
                     <ColorPickerPopover
                       label=""
                       value={frameTextColor}
@@ -637,7 +637,7 @@ export function QrGeneratorSidebar({
 
   return (
     <WorkspaceConfigSidebarPanel
-      title="CONFIGURATION"
+      title={t("sidebar.configuration")}
       items={sidebarItems}
       twoColumn={enableWideSidebarGrid}
       autoTwoColumnMinWidthPx={autoWideSidebarGridMinWidthPx}
