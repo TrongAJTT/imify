@@ -53,9 +53,16 @@ export function WorkspaceShell({ children, rightSidebar, title = "Configuration"
     update()
     window.addEventListener(LAYOUT_PREFERENCES_EVENT, update)
     window.addEventListener("storage", update)
+    
+    const handleOpenMobileSidebar = () => {
+      setIsBottomSheetOpen(true)
+    }
+    window.addEventListener("imify:open-mobile-sidebar", handleOpenMobileSidebar)
+
     return () => {
       window.removeEventListener(LAYOUT_PREFERENCES_EVENT, update)
       window.removeEventListener("storage", update)
+      window.removeEventListener("imify:open-mobile-sidebar", handleOpenMobileSidebar)
     }
   }, [])
 

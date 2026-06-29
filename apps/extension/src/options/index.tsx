@@ -356,6 +356,16 @@ export default function OptionsPage() {
     loadInstalledFonts()
   }, [loadInstalledFonts])
 
+  useEffect(() => {
+    const handleOpenMobileSidebar = () => {
+      setIsBottomSheetOpen(true)
+    }
+    window.addEventListener("imify:open-mobile-sidebar", handleOpenMobileSidebar)
+    return () => {
+      window.removeEventListener("imify:open-mobile-sidebar", handleOpenMobileSidebar)
+    }
+  }, [])
+
   const initialTabFromQueryRef = useRef<OptionsTab | null>(null)
 
   const isLoading =
