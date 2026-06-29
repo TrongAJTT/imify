@@ -28,7 +28,7 @@
     "contextMenu": { "label": "Menu chuột phải" },
     "seoAudit": { "label": "Kiểm định SEO" },
     "backgroundRemover": { "label": "Tách nền ảnh" },
-    "upscaler": { "label": "Phóng to ảnh (AI)" },
+    "upscaler": { "label": "Phóng to ảnh (Exp)" },
     "qrGenerator": { "label": "Tạo mã QR" },
     "qrReader": { "label": "Đọc mã QR" }
   },

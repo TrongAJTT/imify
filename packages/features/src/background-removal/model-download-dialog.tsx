@@ -1,16 +1,17 @@
-import React, { useState, useMemo } from "react"
-import { Download, ShieldCheck, ExternalLink, AlertTriangle, Wifi, Info } from "lucide-react"
-import { BaseDialog, Subheading, BodyText, MutedText, Button, SegmentedControl } from "@imify/ui"
-import { formatFileSize } from "@imify/core"
-import { type AIModelMetadata, type AIModelVariant } from "./models"
+import React, { useState, useMemo } from "react";
+import { Download, ShieldCheck, ExternalLink, Wifi, Info } from "lucide-react";
+import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui";
+import { formatFileSize } from "@imify/core";
+import { type AIModelMetadata, type AIModelVariant } from "./models";
+import { useTranslation } from "@imify/i18n";
 
 interface ModelDownloadDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  model: AIModelMetadata
-  variantId: string
-  confirmLabel?: string
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  model: AIModelMetadata;
+  variantId: string;
+  confirmLabel?: string;
 }
 
 export function ModelDownloadDialog({
@@ -19,13 +20,30 @@ export function ModelDownloadDialog({
   onConfirm,
   model,
   variantId,
-  confirmLabel = "Download & Start"
+  confirmLabel,
 }: ModelDownloadDialogProps) {
-  const [agreed, setAgreed] = useState(false)
+  const { t } = useTranslation("backgroundRemover");
+  const [agreed, setAgreed] = useState(false);
 
-  const selectedVariant = useMemo(() => 
-    model.variants.find(v => v.id === variantId) || model.variants[0],
-  [model.variants, variantId])
+  const getModelTranslationKey = (id: string) => {
+    const keyMap: Record<string, string> = {
+      "onnx-community/BiRefNet_lite-ONNX": "birefnet",
+      "onnx-community/ormbg-ONNX": "ormbg",
+      "onnx-community/modnet-webnn": "modnet",
+      "onnx-community/mediapipe_selfie_segmentation": "selfie",
+    };
+    return keyMap[id] || "birefnet";
+  };
+
+  const modelKey = getModelTranslationKey(model.id);
+  const localizedModelName = t(`models.${modelKey}.name`, {
+    defaultValue: model.name,
+  });
+
+  const selectedVariant = useMemo(
+    () => model.variants.find((v) => v.id === variantId) || model.variants[0],
+    [model.variants, variantId],
+  );
 
   return (
     <BaseDialog
@@ -40,9 +58,14 @@ export function ModelDownloadDialog({
             <Download size={32} />
           </div>
           <div className="space-y-1">
-            <Subheading className="text-xl font-bold">Download AI Model</Subheading>
+            <Subheading className="text-xl font-bold">
+              {t("downloadDialog.title")}
+            </Subheading>
             <MutedText className="text-sm">
-              {model.name} — {selectedVariant.label}
+              {localizedModelName} —{" "}
+              {t(`variants.${selectedVariant.id}.label`, {
+                defaultValue: selectedVariant.label,
+              })}
             </MutedText>
           </div>
         </div>
@@ -51,18 +74,33 @@ export function ModelDownloadDialog({
         <div className="space-y-3">
           <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 space-y-3">
             <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-medium tracking-tight">Model Source</span>
-              <span className="font-semibold text-slate-700 dark:text-slate-200">{model.source}</span>
+              <span className="text-slate-500 font-medium tracking-tight">
+                {t("downloadDialog.modelSource")}
+              </span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">
+                {model.source}
+              </span>
             </div>
             <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-medium tracking-tight">Download Size</span>
-              <span className="font-semibold text-slate-700 dark:text-slate-200">~{formatFileSize(selectedVariant.sizeBytes)}</span>
+              <span className="text-slate-500 font-medium tracking-tight">
+                {t("downloadDialog.downloadSize")}
+              </span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">
+                ~{formatFileSize(selectedVariant.sizeBytes)}
+              </span>
             </div>
             <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-medium tracking-tight">License</span>
+              <span className="text-slate-500 font-medium tracking-tight">
+                {t("downloadDialog.license")}
+              </span>
               <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-200">
                 {model.license}
-                <a href={model.licenseUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">
+                <a
+                  href={model.licenseUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-500 hover:underline"
+                >
                   <ExternalLink size={10} />
                 </a>
               </div>
@@ -73,7 +111,9 @@ export function ModelDownloadDialog({
             <div className="flex items-start gap-2 px-1">
               <Info size={12} className="text-pink-400 mt-0.5 shrink-0" />
               <p className="text-[11px] text-slate-500 italic leading-relaxed">
-                {selectedVariant.description}
+                {t(`variants.${selectedVariant.id}.description`, {
+                  defaultValue: selectedVariant.description,
+                })}
               </p>
             </div>
           )}
@@ -84,10 +124,10 @@ export function ModelDownloadDialog({
             <ShieldCheck className="text-amber-500 shrink-0 mt-0.5" size={16} />
             <div className="space-y-1">
               <BodyText className="text-[11px] font-semibold !text-amber-800 dark:!text-amber-400">
-                Privacy & Data
+                {t("downloadDialog.privacyTitle")}
               </BodyText>
               <MutedText className="text-[10px] leading-relaxed !text-amber-700/80 dark:!text-amber-400/80">
-                This model runs locally in your browser. Your images never leave your device. Imify provides the interface to run these models but is not the distributor.
+                {t("downloadDialog.privacyDesc")}
               </MutedText>
             </div>
           </div>
@@ -96,10 +136,10 @@ export function ModelDownloadDialog({
             <Wifi className="text-sky-500 shrink-0 mt-0.5" size={16} />
             <div className="space-y-1">
               <BodyText className="text-[11px] font-semibold !text-sky-800 dark:!text-sky-400">
-                Internet Connection
+                {t("downloadDialog.internetTitle")}
               </BodyText>
               <MutedText className="text-[10px] leading-relaxed !text-sky-700/80 dark:!text-sky-400/80">
-                A stable internet connection is required for the initial download. Once cached, the model will be available for offline use.
+                {t("downloadDialog.internetDesc")}
               </MutedText>
             </div>
           </div>
@@ -124,7 +164,16 @@ export function ModelDownloadDialog({
               </svg>
             </div>
             <span className="text-xs text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
-              I agree to the <a href={model.termsUrl} target="_blank" rel="noreferrer" className="text-pink-500 hover:underline">Terms of Use and License</a>.
+              {t("downloadDialog.agreePrompt")}{" "}
+              <a
+                href={model.termsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-pink-500 hover:underline"
+              >
+                {t("downloadDialog.termsAndLicense")}
+              </a>
+              .
             </span>
           </label>
         </div>
@@ -132,7 +181,7 @@ export function ModelDownloadDialog({
 
       <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex gap-3">
         <Button variant="ghost" onClick={onClose} className="flex-1">
-          Cancel
+          {t("downloadDialog.cancel")}
         </Button>
         <Button
           variant="default"
@@ -140,9 +189,9 @@ export function ModelDownloadDialog({
           disabled={!agreed}
           className="flex-1 bg-pink-600 hover:bg-pink-700 text-white"
         >
-          {confirmLabel}
+          {confirmLabel || t("downloadDialog.confirmDefault")}
         </Button>
       </div>
     </BaseDialog>
-  )
+  );
 }

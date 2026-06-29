@@ -28,7 +28,7 @@
     "contextMenu": { "label": "Context Menu" },
     "seoAudit": { "label": "SEO Audit" },
     "backgroundRemover": { "label": "Background Remover" },
-    "upscaler": { "label": "Upscaler" },
+    "upscaler": { "label": "Upscaler (Exp)" },
     "qrGenerator": { "label": "QR Generator" },
     "qrReader": { "label": "QR Reader" }
   },

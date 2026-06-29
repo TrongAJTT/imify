@@ -1,18 +1,23 @@
-"use client"
+"use client";
 
-import React from "react"
-import { Check, Cpu, Brain, Award, Info, Scale, Shield } from "lucide-react"
-import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui"
-import { BACKGROUND_REMOVAL_MODELS, type AIModelMetadata, type AIModelVariant } from "./models"
-import { formatFileSize } from "@imify/core"
+import React from "react";
+import { Check, Cpu, Brain, Award, Info, Scale, Shield } from "lucide-react";
+import { BaseDialog, Button } from "@imify/ui";
+import {
+  BACKGROUND_REMOVAL_MODELS,
+  type AIModelMetadata,
+  type AIModelVariant,
+} from "./models";
+import { formatFileSize } from "@imify/core";
+import { useTranslation } from "@imify/i18n";
 
 interface ModelVariantDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  modelId: string
-  setModelId: (id: string) => void
-  variantId: string
-  setVariantId: (id: string) => void
+  isOpen: boolean;
+  onClose: () => void;
+  modelId: string;
+  setModelId: (id: string) => void;
+  variantId: string;
+  setVariantId: (id: string) => void;
 }
 
 export function ModelVariantDialog({
@@ -21,18 +26,52 @@ export function ModelVariantDialog({
   modelId,
   setModelId,
   variantId,
-  setVariantId
+  setVariantId,
 }: ModelVariantDialogProps) {
-  const selectedModel = BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
-  const selectedVariant = selectedModel.variants.find(v => v.id === variantId) ?? selectedModel.variants[0]
+  const { t } = useTranslation("backgroundRemover");
+
+  const getModelTranslationKey = (id: string) => {
+    const keyMap: Record<string, string> = {
+      "onnx-community/BiRefNet_lite-ONNX": "birefnet",
+      "onnx-community/ormbg-ONNX": "ormbg",
+      "onnx-community/modnet-webnn": "modnet",
+      "onnx-community/mediapipe_selfie_segmentation": "selfie",
+    };
+    return keyMap[id] || "birefnet";
+  };
+
+  const selectedModel =
+    BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ??
+    BACKGROUND_REMOVAL_MODELS[0];
+  const selectedVariant =
+    selectedModel.variants.find((v) => v.id === variantId) ??
+    selectedModel.variants[0];
 
   const handleModelSelect = (id: string) => {
-    const model = BACKGROUND_REMOVAL_MODELS.find(m => m.id === id)
-    if (!model) return
-    setModelId(id)
+    const model = BACKGROUND_REMOVAL_MODELS.find((m) => m.id === id);
+    if (!model) return;
+    setModelId(id);
     // Default to the first variant or standard variant of the new model
-    setVariantId(model.defaultVariantId || model.variants[0]?.id)
-  }
+    setVariantId(model.defaultVariantId || model.variants[0]?.id);
+  };
+
+  const selectedModelKey = getModelTranslationKey(selectedModel.id);
+  const localizedSelectedModelName = t(`models.${selectedModelKey}.name`, {
+    defaultValue: selectedModel.name,
+  });
+  const localizedSelectedModelDesc = t(
+    `models.${selectedModelKey}.description`,
+    { defaultValue: selectedModel.description },
+  );
+  const localizedSelectedModelUsecase = t(
+    `models.${selectedModelKey}.usecase`,
+    { defaultValue: selectedModel.usecase },
+  );
+
+  const localizedSelectedVariantLabel = t(
+    `variants.${selectedVariant.id}.label`,
+    { defaultValue: selectedVariant.label },
+  );
 
   return (
     <BaseDialog
@@ -46,10 +85,12 @@ export function ModelVariantDialog({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Brain className="text-pink-500" size={20} />
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">AI Engine Configuration</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              {t("dialog.title")}
+            </h2>
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Choose the neural network architecture and hardware precision variant optimized for your environment.
+            {t("dialog.description")}
           </p>
         </div>
 
@@ -57,11 +98,23 @@ export function ModelVariantDialog({
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Cpu size={15} className="text-pink-500" />
-            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Select AI Model</span>
+            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              {t("dialog.selectModel")}
+            </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {BACKGROUND_REMOVAL_MODELS.map((model) => {
-              const isActive = model.id === modelId
+              const isActive = model.id === modelId;
+              const mKey = getModelTranslationKey(model.id);
+              const localizedName = t(`models.${mKey}.name`, {
+                defaultValue: model.name,
+              });
+              const localizedDesc = t(`models.${mKey}.description`, {
+                defaultValue: model.description,
+              });
+              const localizedUsecase = t(`models.${mKey}.usecase`, {
+                defaultValue: model.usecase,
+              });
               return (
                 <button
                   key={model.id}
@@ -75,7 +128,7 @@ export function ModelVariantDialog({
                 >
                   <div className="flex items-start justify-between w-full gap-2 mb-1.5">
                     <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight">
-                      {model.name}
+                      {localizedName}
                     </h3>
                     {isActive ? (
                       <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-500 text-white shrink-0 shadow-sm animate-in zoom-in-50 duration-150">
@@ -84,18 +137,21 @@ export function ModelVariantDialog({
                     ) : null}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal mb-3 flex-1">
-                    {model.description}
+                    {localizedDesc}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-auto">
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-pink-100 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300 uppercase tracking-wider">
-                      {model.usecase}
+                      {localizedUsecase}
                     </span>
                     <span className="text-[10px] text-slate-400 truncate max-w-[150px]">
-                      By {model.author}
+                      {t("dialog.author", {
+                        author: model.author,
+                        defaultValue: `By ${model.author}`,
+                      })}
                     </span>
                   </div>
                 </button>
-              )
+              );
             })}
           </div>
         </div>
@@ -104,11 +160,21 @@ export function ModelVariantDialog({
         <div className="space-y-3 pt-1 border-t border-slate-100 dark:border-slate-800/60">
           <div className="flex items-center gap-2">
             <Info size={15} className="text-pink-500" />
-            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Select Precision Variant</span>
+            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              {t("dialog.hardwareVariant")}
+            </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {selectedModel.variants.map((v) => {
-              const isActive = v.id === variantId
+              const isActive = v.id === variantId;
+              const localizedLabel = t(`variants.${v.id}.label`, {
+                defaultValue: v.label,
+              });
+              const localizedDesc = v.description
+                ? t(`variants.${v.id}.description`, {
+                    defaultValue: v.description,
+                  })
+                : undefined;
               return (
                 <button
                   key={v.id}
@@ -121,20 +187,20 @@ export function ModelVariantDialog({
                   }`}
                 >
                   <div className="flex items-center justify-between w-full mb-1">
-                    <span className="font-semibold text-xs text-slate-800 dark:text-slate-200">
-                      {v.label}
+                    <span className="font-semibold text-xs text-slate-800 dark:text-slate-250">
+                      {localizedLabel}
                     </span>
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                       {formatFileSize(v.sizeBytes)}
                     </span>
                   </div>
-                  {v.description && (
+                  {localizedDesc && (
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-                      {v.description}
+                      {localizedDesc}
                     </p>
                   )}
                 </button>
-              )
+              );
             })}
           </div>
         </div>
@@ -144,7 +210,9 @@ export function ModelVariantDialog({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Award className="text-pink-500" size={16} />
-              <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Current Selection Details</span>
+              <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                {t("sidebar.currentSelection")}
+              </span>
             </div>
             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-pink-600 dark:text-pink-400 uppercase tracking-widest">
               Ready to Load
@@ -153,35 +221,51 @@ export function ModelVariantDialog({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div className="space-y-2">
-              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">AI Model:</span>
-                <span className="font-medium text-pink-600 dark:text-pink-400">{selectedModel.name}</span>
-              </div>
-              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">Suitable for:</span>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300 lowercase italic">
-                  {selectedModel.usecase}
+              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-350">
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("sidebar.modelLabel")}
+                </span>
+                <span className="font-medium text-pink-600 dark:text-pink-400">
+                  {localizedSelectedModelName}
                 </span>
               </div>
-              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">Description:</span>
-                <span className="leading-relaxed">{selectedModel.description}</span>
+              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-350">
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("sidebar.suitableForLabel")}
+                </span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300 lowercase italic">
+                  {localizedSelectedModelUsecase}
+                </span>
+              </div>
+              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-350">
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("dialog.descriptionLabel")}
+                </span>
+                <span className="leading-relaxed">
+                  {localizedSelectedModelDesc}
+                </span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">Precision:</span>
-                <span>{selectedVariant.label}</span>
+              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-350">
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("sidebar.variantLabel")}
+                </span>
+                <span>{localizedSelectedVariantLabel}</span>
               </div>
-              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">Storage Size:</span>
+              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-350">
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("dialog.storageSizeLabel")}
+                </span>
                 <span className="font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                   ~{formatFileSize(selectedVariant.sizeBytes)}
                 </span>
               </div>
-              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">License:</span>
+              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-350">
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("dialog.licenseLabel")}
+                </span>
                 <a
                   href={selectedModel.licenseUrl}
                   target="_blank"
@@ -202,10 +286,10 @@ export function ModelVariantDialog({
             onClick={onClose}
             className="bg-pink-500 hover:bg-pink-600 text-white rounded-lg px-6 font-semibold shrink-0 shadow-md shadow-pink-500/10"
           >
-            Apply & Close
+            {t("dialog.close")}
           </Button>
         </div>
       </div>
     </BaseDialog>
-  )
+  );
 }

@@ -1,29 +1,38 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from "react"
-import { Button, ToastContainer, useRenameInputPrompt } from "@imify/ui"
-import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast"
-import { useImageUpscalerStore } from "@imify/stores"
-import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from "./models"
-import { ModelDownloadDialog } from "./model-download-dialog"
-import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace"
-import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar"
-import type { ConversionProgressPayload, FormatConfig } from "@imify/core/types"
-import { convertImage } from "@imify/engine/converter"
-import { downloadWithFilename, formatBytes } from "../processor/processor-utils"
-import { buildFormatConfigFromPreset, VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils"
-import { useBatchStore } from "@imify/stores/stores/batch-store"
-import { buildSmartOutputFileName } from "@imify/core/file-name-pattern"
+import React, { useState, useEffect } from "react";
+import { Button, ToastContainer, useRenameInputPrompt } from "@imify/ui";
+import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
+import { useImageUpscalerStore } from "@imify/stores";
+import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from "./models";
+import { ModelDownloadDialog } from "./model-download-dialog";
+import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
+import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar";
+import type {
+  ConversionProgressPayload,
+  FormatConfig,
+} from "@imify/core/types";
+import { convertImage } from "@imify/engine/converter";
+import {
+  downloadWithFilename,
+  formatBytes,
+} from "../processor/processor-utils";
+import {
+  buildFormatConfigFromPreset,
+  VIRTUAL_DEFAULT_PNG_PRESET,
+} from "../processor/preset-utils";
+import { useBatchStore } from "@imify/stores/stores/batch-store";
+import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
 
 interface UpscalerWorkspaceProps {
-  sourceFile: File
-  sourceImageData: ImageData
-  resultImageData: ImageData | null
-  isProcessing: boolean
-  progressPayload: ConversionProgressPayload | null
-  onClear: () => void
-  onStartProcessing: () => void
-  modelId: string
+  sourceFile: File;
+  sourceImageData: ImageData;
+  resultImageData: ImageData | null;
+  isProcessing: boolean;
+  progressPayload: ConversionProgressPayload | null;
+  onClear: () => void;
+  onStartProcessing: () => void;
+  modelId: string;
 }
 
 export function UpscalerWorkspace({
@@ -34,87 +43,90 @@ export function UpscalerWorkspace({
   progressPayload,
   onClear,
   onStartProcessing,
-  modelId
+  modelId,
 }: UpscalerWorkspaceProps) {
-  const { variantId } = useImageUpscalerStore()
-  const [viewMode, setViewMode] = useState<"split" | "side_by_side">("split")
-  const [splitPosition, setSplitPosition] = useState(50)
-  const [zoom, setZoom] = useState(100)
-  const [panX, setPanX] = useState(0)
-  const [panY, setPanY] = useState(0)
-  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false)
-  const [hasAgreedToDownload, setHasAgreedToDownload] = useState(false)
-  const [processTime, setProcessTime] = useState<number | null>(null)
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [timerSeconds, setTimerSeconds] = useState(0)
-  const [isDownloading, setIsDownloading] = useState(false)
-  const [resultBlobSize, setResultBlobSize] = useState<number | null>(null)
-  const [isEncodingPreview, setIsEncodingPreview] = useState(false)
+  const { variantId } = useImageUpscalerStore();
+  const [viewMode, setViewMode] = useState<"split" | "side_by_side">("split");
+  const [splitPosition, setSplitPosition] = useState(50);
+  const [zoom, setZoom] = useState(100);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
+  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+  const [hasAgreedToDownload, setHasAgreedToDownload] = useState(false);
+  const [processTime, setProcessTime] = useState<number | null>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [resultBlobSize, setResultBlobSize] = useState<number | null>(null);
+  const [isEncodingPreview, setIsEncodingPreview] = useState(false);
 
-  const {
-    targetFormat,
-    quality,
-    activePresetId
-  } = useImageUpscalerStore()
+  const { targetFormat, quality, activePresetId } = useImageUpscalerStore();
 
-  const { presets, fileNamePattern } = useBatchStore()
-  const activePreset = presets.find(p => p.id === activePresetId) || VIRTUAL_DEFAULT_PNG_PRESET
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt()
+  const { presets } = useBatchStore();
+  const activePreset =
+    presets.find((p) => p.id === activePresetId) || VIRTUAL_DEFAULT_PNG_PRESET;
+  const fileNamePattern =
+    activePreset.config.fileNamePattern || "[OriginalName]";
+  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
 
-  const { toasts, show, hide } = useToast()
-  const conversionToasts = useConversionToasts([progressPayload])
+  const { toasts, show, hide } = useToast();
+  const conversionToasts = useConversionToasts([progressPayload]);
 
   const sourceFileUrl = React.useMemo(() => {
-    if (!sourceFile) return ""
-    return URL.createObjectURL(sourceFile)
-  }, [sourceFile])
+    if (!sourceFile) return "";
+    return URL.createObjectURL(sourceFile);
+  }, [sourceFile]);
 
   useEffect(() => {
     return () => {
-      if (sourceFileUrl) URL.revokeObjectURL(sourceFileUrl)
-    }
-  }, [sourceFileUrl])
+      if (sourceFileUrl) URL.revokeObjectURL(sourceFileUrl);
+    };
+  }, [sourceFileUrl]);
 
   // Check if current model + variant is cached
   useEffect(() => {
     const checkModel = async () => {
-      if (typeof window === 'undefined') return
+      if (typeof window === "undefined") return;
 
-      const selectedModel = IMAGE_UPSCALER_MODELS.find(m => m.id === modelId)
-      if (!selectedModel) return
+      const selectedModel = IMAGE_UPSCALER_MODELS.find((m) => m.id === modelId);
+      if (!selectedModel) return;
 
-      const variant = selectedModel.variants.find(v => v.id === variantId) ?? selectedModel.variants[0]
-      const repoId = resolveHuggingFaceRepoId(modelId).toLowerCase()
+      const variant =
+        selectedModel.variants.find((v) => v.id === variantId) ??
+        selectedModel.variants[0];
+      const repoId = resolveHuggingFaceRepoId(modelId).toLowerCase();
 
       try {
-        const cache = await caches.open("transformers-cache")
-        const keys = await cache.keys()
+        const cache = await caches.open("transformers-cache");
+        const keys = await cache.keys();
 
-        const isCached = keys.some(request => {
-          const url = request.url.toLowerCase()
-          const modelMatch = url.includes(repoId)
-          const isWeightFile = url.endsWith('.onnx') || url.includes('.onnx?')
+        const isCached = keys.some((request) => {
+          const url = request.url.toLowerCase();
+          const modelMatch = url.includes(repoId);
+          const isWeightFile = url.endsWith(".onnx") || url.includes(".onnx?");
 
-          if (!modelMatch || !isWeightFile) return false
+          if (!modelMatch || !isWeightFile) return false;
 
           if (variant.quantized) {
-            return url.includes('quantized')
-          } else if (variant.dtype === 'fp16') {
-            return url.includes('fp16')
+            return url.includes("quantized");
+          } else if (variant.dtype === "fp16") {
+            return url.includes("fp16");
           } else {
-            return !url.includes('quantized') && !url.includes('fp16')
+            return !url.includes("quantized") && !url.includes("fp16");
           }
-        })
+        });
 
-        setHasAgreedToDownload(isCached)
+        setHasAgreedToDownload(isCached);
       } catch (e) {
-        setHasAgreedToDownload(false)
+        setHasAgreedToDownload(false);
       }
-    }
-    checkModel()
-  }, [modelId, variantId])
+    };
+    checkModel();
+  }, [modelId, variantId]);
 
-  const selectedModel = IMAGE_UPSCALER_MODELS.find(m => m.id === modelId) ?? IMAGE_UPSCALER_MODELS[0]
+  const selectedModel =
+    IMAGE_UPSCALER_MODELS.find((m) => m.id === modelId) ??
+    IMAGE_UPSCALER_MODELS[0];
 
   // Timer logic for processing feedback
   useEffect(() => {
@@ -161,8 +173,8 @@ export function UpscalerWorkspace({
 
         if (targetFormat === "webp" || targetFormat === "jpg") {
           const mime = targetFormat === "webp" ? "image/webp" : "image/jpeg";
-          const nativeBlob = await new Promise<Blob | null>((resolve) => 
-            canvas.toBlob(resolve, mime, quality / 100)
+          const nativeBlob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob(resolve, mime, quality / 100),
           );
           if (isAborted) return;
           if (nativeBlob) {
@@ -172,10 +184,10 @@ export function UpscalerWorkspace({
         }
 
         const intermediateMime = "image/webp";
-        const sourceBlob = await new Promise<Blob | null>((resolve) => 
-          canvas.toBlob(resolve, intermediateMime, 0.9)
+        const sourceBlob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, intermediateMime, 0.9),
         );
-        
+
         if (isAborted || !sourceBlob) return;
 
         const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
@@ -183,7 +195,7 @@ export function UpscalerWorkspace({
 
         const converted = await convertImage({
           sourceBlob,
-          config
+          config,
         });
 
         if (isAborted) return;
@@ -208,64 +220,78 @@ export function UpscalerWorkspace({
 
   const handleStartWithAgreement = () => {
     if (!hasAgreedToDownload) {
-      setIsDownloadDialogOpen(true)
-      return
+      setIsDownloadDialogOpen(true);
+      return;
     }
-    onStartProcessing()
-  }
+    onStartProcessing();
+  };
 
   const handleConfirmDownload = () => {
-    setHasAgreedToDownload(true)
-    setIsDownloadDialogOpen(false)
-    onStartProcessing()
-  }
+    setHasAgreedToDownload(true);
+    setIsDownloadDialogOpen(false);
+    onStartProcessing();
+  };
 
-  const executeDownloadBlobCreationAndSave = async (canvas: HTMLCanvasElement, fileName: string) => {
-    if (targetFormat === "webp" || targetFormat === "jpg" || targetFormat === "png") {
-      const mime = targetFormat === "webp" ? "image/webp" : targetFormat === "jpg" ? "image/jpeg" : "image/png"
-      const finalBlob = await new Promise<Blob | null>((resolve) => 
-        canvas.toBlob(resolve, mime, quality / 100)
-      )
-      if (!finalBlob) throw new Error("Failed to encode image natively")
-      await downloadWithFilename(finalBlob, fileName)
+  const executeDownloadBlobCreationAndSave = async (
+    canvas: HTMLCanvasElement,
+    fileName: string,
+  ) => {
+    if (
+      targetFormat === "webp" ||
+      targetFormat === "jpg" ||
+      targetFormat === "png"
+    ) {
+      const mime =
+        targetFormat === "webp"
+          ? "image/webp"
+          : targetFormat === "jpg"
+            ? "image/jpeg"
+            : "image/png";
+      const finalBlob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, mime, quality / 100),
+      );
+      if (!finalBlob) throw new Error("Failed to encode image natively");
+      await downloadWithFilename(finalBlob, fileName);
     } else {
-      const sourceBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.95))
-      if (!sourceBlob) throw new Error("Failed to create source blob")
+      const sourceBlob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/webp", 0.95),
+      );
+      if (!sourceBlob) throw new Error("Failed to create source blob");
 
-      const config: FormatConfig = buildFormatConfigFromPreset(activePreset)
-      config.resize = { mode: "none" }
+      const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
+      config.resize = { mode: "none" };
 
       const converted = await convertImage({
         sourceBlob,
-        config
-      })
+        config,
+      });
 
-      await downloadWithFilename(converted.blob, fileName)
+      await downloadWithFilename(converted.blob, fileName);
     }
-  }
+  };
 
   const handleDownload = async () => {
-    if (!resultImageData) return
+    if (!resultImageData) return;
 
-    setIsDownloading(true)
+    setIsDownloading(true);
     const toastId = show({
       title: "Encoding Image",
       message: `Preparing ${targetFormat.toUpperCase()} file...`,
       type: "notification",
-      duration: 60000
-    })
+      duration: 60000,
+    });
 
     try {
-      const canvas = document.createElement("canvas")
-      canvas.width = resultImageData.width
-      canvas.height = resultImageData.height
-      const ctx = canvas.getContext("2d")
-      if (!ctx) throw new Error("Could not get canvas context")
+      const canvas = document.createElement("canvas");
+      canvas.width = resultImageData.width;
+      canvas.height = resultImageData.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not get canvas context");
 
-      const imageBitmap = await createImageBitmap(resultImageData)
-      ctx.drawImage(imageBitmap, 0, 0)
+      const imageBitmap = await createImageBitmap(resultImageData);
+      ctx.drawImage(imageBitmap, 0, 0);
 
-      const extension = targetFormat === "jpg" ? "jpg" : targetFormat
+      const extension = targetFormat === "jpg" ? "jpg" : targetFormat;
 
       checkAndPrompt(
         fileNamePattern,
@@ -277,29 +303,35 @@ export function UpscalerWorkspace({
               outputExtension: extension,
               index: 1,
               totalFiles: 1,
-              dimensions: { width: resultImageData.width, height: resultImageData.height },
+              dimensions: {
+                width: resultImageData.width,
+                height: resultImageData.height,
+              },
               now: new Date(),
-              input: inputValue
-            })
+              input: inputValue,
+            });
 
-            await executeDownloadBlobCreationAndSave(canvas, fileName)
-            hide(toastId)
+            await executeDownloadBlobCreationAndSave(canvas, fileName);
+            hide(toastId);
             show({
               title: "Download Ready",
               message: "Image upscaled and exported successfully",
-              type: "success"
-            })
+              type: "success",
+            });
           } catch (error) {
-            console.error("Download failed:", error)
-            hide(toastId)
+            console.error("Download failed:", error);
+            hide(toastId);
             show({
               title: "Download Failed",
-              message: error instanceof Error ? error.message : "Unable to encode image",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Unable to encode image",
               type: "error",
-              duration: 5000
-            })
+              duration: 5000,
+            });
           } finally {
-            setIsDownloading(false)
+            setIsDownloading(false);
           }
         },
         async () => {
@@ -310,43 +342,50 @@ export function UpscalerWorkspace({
               outputExtension: extension,
               index: 1,
               totalFiles: 1,
-              dimensions: { width: resultImageData.width, height: resultImageData.height },
-              now: new Date()
-            })
+              dimensions: {
+                width: resultImageData.width,
+                height: resultImageData.height,
+              },
+              now: new Date(),
+            });
 
-            await executeDownloadBlobCreationAndSave(canvas, fileName)
-            hide(toastId)
+            await executeDownloadBlobCreationAndSave(canvas, fileName);
+            hide(toastId);
             show({
               title: "Download Ready",
               message: "Image upscaled and exported successfully",
-              type: "success"
-            })
+              type: "success",
+            });
           } catch (error) {
-            console.error("Download failed:", error)
-            hide(toastId)
+            console.error("Download failed:", error);
+            hide(toastId);
             show({
               title: "Download Failed",
-              message: error instanceof Error ? error.message : "Unable to encode image",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Unable to encode image",
               type: "error",
-              duration: 5000
-            })
+              duration: 5000,
+            });
           } finally {
-            setIsDownloading(false)
+            setIsDownloading(false);
           }
-        }
-      )
+        },
+      );
     } catch (error) {
-      console.error("Download failed:", error)
-      hide(toastId)
+      console.error("Download failed:", error);
+      hide(toastId);
       show({
         title: "Download Failed",
-        message: error instanceof Error ? error.message : "Unable to encode image",
+        message:
+          error instanceof Error ? error.message : "Unable to encode image",
         type: "error",
-        duration: 5000
-      })
-      setIsDownloading(false)
+        duration: 5000,
+      });
+      setIsDownloading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -365,7 +404,10 @@ export function UpscalerWorkspace({
               </span>
             ) : resultImageData && processTime !== null ? (
               <span className="text-emerald-600 dark:text-emerald-400 font-medium flex flex-wrap items-center gap-1.5">
-                <span>Upscaled to {resultImageData.width}x{resultImageData.height} in {processTime.toFixed(2)}s</span>
+                <span>
+                  Upscaled to {resultImageData.width}x{resultImageData.height}{" "}
+                  in {processTime.toFixed(2)}s
+                </span>
                 {resultBlobSize !== null && (
                   <>
                     <span className="xs:inline opacity-40">•</span>
@@ -382,7 +424,11 @@ export function UpscalerWorkspace({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <Button variant="secondary" onClick={onClear} className="h-9 px-4 flex-1 sm:flex-none">
+          <Button
+            variant="secondary"
+            onClick={onClear}
+            className="h-9 px-4 flex-1 sm:flex-none"
+          >
             Clear
           </Button>
           {resultImageData && (
@@ -441,8 +487,8 @@ export function UpscalerWorkspace({
               panY={panY}
               onZoomChange={setZoom}
               onPanChange={(x, y) => {
-                setPanX(x)
-                setPanY(y)
+                setPanX(x);
+                setPanY(y);
               }}
             />
           ) : (
@@ -456,7 +502,9 @@ export function UpscalerWorkspace({
                 {isProcessing && (
                   <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center gap-3">
                     <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm font-bold text-indigo-600">Processing...</span>
+                    <span className="text-sm font-bold text-indigo-600">
+                      Processing...
+                    </span>
                   </div>
                 )}
               </div>
@@ -473,8 +521,11 @@ export function UpscalerWorkspace({
         variantId={variantId}
       />
 
-      <ToastContainer toasts={[...toasts, ...conversionToasts]} onRemove={hide} />
+      <ToastContainer
+        toasts={[...toasts, ...conversionToasts]}
+        onRemove={hide}
+      />
       {renameInputPrompt}
     </div>
-  )
+  );
 }

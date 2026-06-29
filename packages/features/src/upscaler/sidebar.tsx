@@ -7,25 +7,15 @@ import {
   SliderInput,
   RadioCard,
   SidebarPanel,
-  SidebarCard,
 } from "@imify/ui";
-import {
-  Brain,
-  Sliders,
-  Cpu,
-  Settings2,
-  Maximize2,
-  Grid,
-} from "lucide-react";
+import { Sliders, Maximize2, Grid } from "lucide-react";
 import { IMAGE_UPSCALER_MODELS } from "./models";
 import { PresetSelector } from "../processor/preset-selector";
 import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
-import {
-  useImageUpscalerStore,
-  type SavedSetupPreset,
-} from "@imify/stores";
+import { useImageUpscalerStore, type SavedSetupPreset } from "@imify/stores";
 import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
 import { ModelVariantDialog } from "./model-variant-dialog";
+import { AiEngineAccordionCard } from "../shared/ai-engine-accordion-card";
 
 import { UPSCALER_PANEL_CONTENT } from "./upscaler-preset-info-panel";
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
@@ -103,10 +93,7 @@ export function UpscalerSidebar({
     return (
       <SidebarPanel title="ABOUT THIS TOOL">
         <div className="px-1 py-1">
-          <PresetInfoShowcasePanel
-            {...UPSCALER_PANEL_CONTENT}
-            padding={0}
-          />
+          <PresetInfoShowcasePanel {...UPSCALER_PANEL_CONTENT} padding={0} />
         </div>
       </SidebarPanel>
     );
@@ -117,50 +104,25 @@ export function UpscalerSidebar({
       id: "ai-engine-settings",
       label: "",
       content: (
-        <AccordionCard
+        <AiEngineAccordionCard
           label="AI Engine"
           sublabel={`${selectedModel.name} (${selectedVariant.label})`}
-          icon={<Brain size={16} />}
-          defaultOpen={true}
           colorTheme="purple"
-          childrenClassName="p-3 space-y-3"
-        >
-          <SidebarCard
-            label={`Model: ${selectedModel.name}`}
-            sublabel={selectedVariant.label}
-            icon={<Brain size={16} className="text-purple-500" />}
-            onClick={() => setIsModelVariantDialogOpen(true)}
-            className="cursor-pointer"
-          />
-
-          <CheckboxCard
-            checked={unloadModelAfterProcess}
-            onChange={setUnloadModelAfterProcess}
-            title="Auto-unload Model"
-            subtitle="Free up RAM immediately after processing."
-            icon={<Cpu size={16} />}
-          />
-
-          <div className="relative p-3.5 rounded-lg bg-slate-100/50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50 shadow-sm space-y-3 transition-all">
-            <div className="flex items-center gap-2">
-              <Settings2 className="text-purple-500" size={14} />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                Current Selection
-              </span>
-            </div>
-            <div className="space-y-2.5">
-              <div className="flex items-start gap-2.5">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <span className="text-[10px] font-bold text-slate-400 block leading-tight">Suitable for</span>
-                  <span className="text-xs text-slate-700 dark:text-slate-200 font-medium">
-                    {selectedModel.suitableFor}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </AccordionCard>
+          modelName={selectedModel.name}
+          variantLabel={selectedVariant.label}
+          onConfigureClick={() => setIsModelVariantDialogOpen(true)}
+          unloadModelChecked={unloadModelAfterProcess}
+          onUnloadModelChange={setUnloadModelAfterProcess}
+          unloadModelTitle="Auto-unload Model"
+          unloadModelSubtitle="Free up RAM immediately after processing."
+          currentSelectionHeader="Current Selection"
+          modelLabelText="Model:"
+          modelDescription={selectedModel.description}
+          variantLabelText="Variant:"
+          variantDescription={selectedVariant.description}
+          suitableForLabelText="Suitable for:"
+          suitableForDescription={selectedModel.suitableFor}
+        />
       ),
     },
     {
@@ -169,7 +131,7 @@ export function UpscalerSidebar({
       content: (
         <AccordionCard
           label="Upscaling Options"
-          sublabel={`${scaleFactor}x Upscale (${processingMode === 'safe' ? 'Safe Mode' : 'Fast Mode'})`}
+          sublabel={`${scaleFactor}x Upscale (${processingMode === "safe" ? "Safe Mode" : "Fast Mode"})`}
           icon={<Sliders size={16} />}
           defaultOpen={true}
           colorTheme="purple"
@@ -234,15 +196,15 @@ export function UpscalerSidebar({
       label: "",
       content: (
         <PresetSelector
-            label="Output Preset"
-            theme="purple"
-            identifiedPreset={UPSCALER_PRESET}
-            formatFilter={["png", "webp", "avif", "jxl", "jpg"]}
-            activePresetId={activePresetId}
-            onSelect={applyPreset}
-            onReset={resetToDefault}
-            tooltipContent="Select an export preset from the Single Processor."
-          />
+          label="Output Preset"
+          theme="purple"
+          identifiedPreset={UPSCALER_PRESET}
+          formatFilter={["png", "webp", "avif", "jxl", "jpg"]}
+          activePresetId={activePresetId}
+          onSelect={applyPreset}
+          onReset={resetToDefault}
+          tooltipContent="Select an export preset from the Single Processor."
+        />
       ),
     },
   ];

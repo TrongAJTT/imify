@@ -3,24 +3,13 @@ import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
   BodyText,
-  MutedText,
-  CheckboxCard,
   AccordionCard,
   SliderInput,
   RadioCard,
   ColorPickerPopover,
   SidebarPanel,
-  SidebarCard,
 } from "@imify/ui";
-import {
-  Brain,
-  Sliders,
-  Image,
-  Cpu,
-  Settings2,
-  Eraser,
-  Palette,
-} from "lucide-react";
+import { Sliders, Image, Eraser, Palette } from "lucide-react";
 import { BACKGROUND_REMOVAL_MODELS } from "./models";
 import { PresetSelector } from "../processor/preset-selector";
 import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
@@ -30,8 +19,10 @@ import {
 } from "@imify/stores";
 import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
 import { ModelVariantDialog } from "./model-variant-dialog";
+import { useTranslation } from "@imify/i18n";
+import { AiEngineAccordionCard } from "../shared/ai-engine-accordion-card";
 
-import { BACKGROUND_REMOVER_PANEL_CONTENT } from "./remover-preset-info-panel";
+import { useBackgroundRemoverShowcaseContent } from "./remover-preset-info-panel";
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
 
 export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings";
@@ -52,6 +43,7 @@ export function BackgroundRemoverSidebar({
   enableWideSidebarGrid,
   autoWideSidebarGridMinWidthPx,
 }: BackgroundRemoverSidebarProps) {
+  const { t } = useTranslation("backgroundRemover");
   const {
     modelId,
     setModelId,
@@ -95,15 +87,44 @@ export function BackgroundRemoverSidebar({
     }
   }, [setUnloadModelAfterProcess]);
 
+  const getModelTranslationKey = (id: string) => {
+    const keyMap: Record<string, string> = {
+      "onnx-community/BiRefNet_lite-ONNX": "birefnet",
+      "onnx-community/ormbg-ONNX": "ormbg",
+      "onnx-community/modnet-webnn": "modnet",
+      "onnx-community/mediapipe_selfie_segmentation": "selfie",
+    };
+    return keyMap[id] || "birefnet";
+  };
+
+  const modelKey = getModelTranslationKey(selectedModel.id);
+  const localizedModelName = t(`models.${modelKey}.name`, {
+    defaultValue: selectedModel.name,
+  });
+  const localizedModelDescription = t(`models.${modelKey}.description`, {
+    defaultValue: selectedModel.description,
+  });
+  const localizedModelUsecase = t(`models.${modelKey}.usecase`, {
+    defaultValue: selectedModel.usecase,
+  });
+
+  const localizedVariantLabel = t(`variants.${selectedVariant.id}.label`, {
+    defaultValue: selectedVariant.label,
+  });
+  const localizedVariantDescription = selectedVariant.description
+    ? t(`variants.${selectedVariant.id}.description`, {
+        defaultValue: selectedVariant.description,
+      })
+    : undefined;
+
+  const showcaseContent = useBackgroundRemoverShowcaseContent();
+
   // If no image is imported, show the tool's showcase information
   if (!hasImage) {
     return (
-      <SidebarPanel title="ABOUT THIS TOOL">
+      <SidebarPanel title={t("sidebar.aboutThisTool")}>
         <div className="px-1 py-1">
-          <PresetInfoShowcasePanel
-            {...BACKGROUND_REMOVER_PANEL_CONTENT}
-            padding={0}
-          />
+          <PresetInfoShowcasePanel {...showcaseContent} padding={0} />
         </div>
       </SidebarPanel>
     );
@@ -114,64 +135,25 @@ export function BackgroundRemoverSidebar({
       id: "ai-engine-settings",
       label: "",
       content: (
-        <AccordionCard
-          label="AI Engine"
-          sublabel={`${selectedModel.name} (${selectedVariant.label})`}
-          icon={<Brain size={16} />}
-          defaultOpen={true}
+        <AiEngineAccordionCard
+          label={t("sidebar.aiEngine")}
+          sublabel={`${localizedModelName} (${localizedVariantLabel})`}
           colorTheme="pink"
-          childrenClassName="p-3 space-y-3"
-        >
-          <SidebarCard
-            label={`Model: ${selectedModel.name}`}
-            sublabel={selectedVariant.label}
-            icon={<Brain size={16} className="text-pink-500" />}
-            onClick={() => setIsModelVariantDialogOpen(true)}
-            className="cursor-pointer"
-          />
-
-          <CheckboxCard
-            checked={unloadModelAfterProcess}
-            onChange={setUnloadModelAfterProcess}
-            title="Auto-unload Model"
-            subtitle="Free up RAM immediately after processing."
-            icon={<Cpu size={16} />}
-          />
-
-          <div className="relative p-3.5 rounded-lg bg-slate-100/50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50 border-2 border-slate-200/60 dark:border-slate-700/50 shadow-sm space-y-3 transition-all">
-            <div className="flex items-center gap-2">
-              <Settings2 className="text-pink-500" size={14} />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                Current Selection
-              </span>
-            </div>
-            <div className="space-y-2.5">
-              <div className="flex items-start gap-2.5">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0" />
-                <MutedText className="text-[11px] leading-relaxed">
-                  <strong>Model:</strong> {selectedModel.description}
-                </MutedText>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0" />
-                <MutedText className="text-[11px] leading-relaxed">
-                  <strong>Variant:</strong> {selectedVariant.label}
-                  {selectedVariant.description && (
-                    <span className="opacity-85 italic ml-1">
-                      - {selectedVariant.description}
-                    </span>
-                  )}
-                </MutedText>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0" />
-                <MutedText className="text-[11px]">
-                  <strong>Suitable for:</strong> {selectedModel.usecase}
-                </MutedText>
-              </div>
-            </div>
-          </div>
-        </AccordionCard>
+          modelName={localizedModelName}
+          variantLabel={localizedVariantLabel}
+          onConfigureClick={() => setIsModelVariantDialogOpen(true)}
+          unloadModelChecked={unloadModelAfterProcess}
+          onUnloadModelChange={setUnloadModelAfterProcess}
+          unloadModelTitle={t("sidebar.autoUnload")}
+          unloadModelSubtitle={t("sidebar.autoUnloadDesc")}
+          currentSelectionHeader={t("sidebar.currentSelection")}
+          modelLabelText={t("sidebar.modelLabel")}
+          modelDescription={localizedModelDescription}
+          variantLabelText={t("sidebar.variantLabel")}
+          variantDescription={localizedVariantDescription}
+          suitableForLabelText={t("sidebar.suitableForLabel")}
+          suitableForDescription={localizedModelUsecase}
+        />
       ),
     },
     {
@@ -179,14 +161,14 @@ export function BackgroundRemoverSidebar({
       label: "",
       content: (
         <PresetSelector
-          label="Output Preset"
+          label={t("sidebar.outputPreset")}
           theme="pink"
           identifiedPreset={BG_REMOVER_PRESET}
           formatFilter={["png", "webp", "avif", "jxl", "jpg"]}
           activePresetId={activePresetId}
           onSelect={applyPreset}
           onReset={resetToDefault}
-          tooltipContent="Select an export preset from the Single Processor."
+          tooltipContent={t("sidebar.presetTooltip")}
         />
       ),
     },
@@ -195,11 +177,11 @@ export function BackgroundRemoverSidebar({
       label: "",
       content: (
         <AccordionCard
-          label="Processing & Output"
+          label={t("sidebar.processingOutput")}
           sublabel={
             outputFormat === "transparent"
-              ? "Format: Transparent"
-              : "Format: Solid Color"
+              ? t("sidebar.formatTransparent")
+              : t("sidebar.formatSolidColor")
           }
           icon={<Sliders size={16} />}
           defaultOpen={true}
@@ -207,7 +189,7 @@ export function BackgroundRemoverSidebar({
           childrenClassName="p-3 space-y-4"
         >
           <SliderInput
-            label="Edge Refinement"
+            label={t("sidebar.edgeRefinement")}
             value={edgeSmoothing}
             min={-10}
             max={20}
@@ -219,13 +201,13 @@ export function BackgroundRemoverSidebar({
             <div className="flex items-center gap-2">
               <Image size={14} className="text-purple-500" />
               <BodyText className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Background Type
+                {t("sidebar.backgroundType")}
               </BodyText>
             </div>
 
             <div className="space-y-2">
               <RadioCard
-                title="Transparent"
+                title={t("sidebar.transparent")}
                 value="transparent"
                 selectedValue={outputFormat}
                 onChange={(v) => setOutputFormat(v as any)}
@@ -234,7 +216,7 @@ export function BackgroundRemoverSidebar({
               />
 
               <RadioCard
-                title="Solid Color"
+                title={t("sidebar.solidColor")}
                 value="color"
                 selectedValue={outputFormat}
                 onChange={(v) => setOutputFormat(v as any)}
@@ -260,7 +242,7 @@ export function BackgroundRemoverSidebar({
   return (
     <>
       <WorkspaceConfigSidebarPanel
-        title="CONFIGURATION"
+        title={t("configuration")}
         items={sidebarItems}
         twoColumn={enableWideSidebarGrid}
         autoTwoColumnMinWidthPx={autoWideSidebarGridMinWidthPx}
