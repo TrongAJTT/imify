@@ -308,7 +308,8 @@ export default function OptionsPage() {
     "global"
   )
   const [activeTab, setActiveTab] = useState<OptionsTab>("context-menu")
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
+  const isMobileSidebarOpen = useWorkspaceHeaderStore((state) => state.isMobileSidebarOpen)
+  const setIsMobileSidebarOpen = useWorkspaceHeaderStore((state) => state.setIsMobileSidebarOpen)
   const [preferRecentPresetEntry, setPreferRecentPresetEntry, { isLoading: isPreferRecentPresetEntryLoading }] = useStorage<boolean>(
     { key: PREFER_RECENT_PRESET_ENTRY_KEY, instance: syncStorage },
     DEFAULT_PREFER_RECENT_PRESET_ENTRY
@@ -355,16 +356,6 @@ export default function OptionsPage() {
   useEffect(() => {
     loadInstalledFonts()
   }, [loadInstalledFonts])
-
-  useEffect(() => {
-    const handleOpenMobileSidebar = () => {
-      setIsBottomSheetOpen(true)
-    }
-    window.addEventListener("imify:open-mobile-sidebar", handleOpenMobileSidebar)
-    return () => {
-      window.removeEventListener("imify:open-mobile-sidebar", handleOpenMobileSidebar)
-    }
-  }, [])
 
   const initialTabFromQueryRef = useRef<OptionsTab | null>(null)
 
@@ -916,8 +907,8 @@ export default function OptionsPage() {
             hasConfigSidebar && (
               <>
                 <BottomSheet 
-                  isOpen={isBottomSheetOpen} 
-                  onClose={() => setIsBottomSheetOpen(false)}
+                  isOpen={isMobileSidebarOpen} 
+                  onClose={() => setIsMobileSidebarOpen(false)}
                   title={getBottomSheetTitle()}
                 >
                   <div className="flex flex-col gap-6">
@@ -984,7 +975,7 @@ export default function OptionsPage() {
                 {/* Persistent Trigger Bar at bottom - Compact Version (Extension) */}
                 <button
                   type="button"
-                  onClick={() => setIsBottomSheetOpen(true)}
+                  onClick={() => setIsMobileSidebarOpen(true)}
                   className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 rounded-t-2xl px-6 pb-2 pt-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] transition-transform active:translate-y-0.5"
                 >
                   <div className="w-8 h-1 rounded-full bg-slate-200 dark:bg-slate-800 mb-1.5" />

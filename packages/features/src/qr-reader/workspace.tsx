@@ -21,7 +21,7 @@ import {
   Tooltip,
   cn,
 } from "@imify/ui";
-import { useQrReaderStore } from "@imify/stores";
+import { useQrReaderStore, useWorkspaceHeaderStore } from "@imify/stores";
 import {
   COMMON_IMAGE_ACCEPT_WITH_SVG,
   isCommonImageFile,
@@ -178,6 +178,7 @@ export function QrReaderWorkspace() {
   const { t } = useTranslation("qrReader");
   const { hasCamera, setHasCamera, lastScanResult, setLastScanResult } =
     useQrReaderStore();
+  const setIsMobileSidebarOpen = useWorkspaceHeaderStore((s) => s.setIsMobileSidebarOpen);
 
   const { toasts, success, error, hide } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -303,7 +304,9 @@ export function QrReaderWorkspace() {
             // Extract QR image using helper function
             setScannedQrImage(extractQrImage(decodedCanvas, code.location));
             stopCamera();
-            window.dispatchEvent(new CustomEvent("imify:open-mobile-sidebar"));
+            setTimeout(() => {
+              setIsMobileSidebarOpen(true);
+            }, 1000);
             return; // Stop loop
           }
         }
@@ -352,7 +355,9 @@ export function QrReaderWorkspace() {
 
             // Extract QR image using helper function
             setScannedQrImage(extractQrImage(decodedCanvas, code.location));
-            window.dispatchEvent(new CustomEvent("imify:open-mobile-sidebar"));
+            setTimeout(() => {
+              setIsMobileSidebarOpen(true);
+            }, 1000);
           } else {
             error(
               t("workspace.scanFailed"),
