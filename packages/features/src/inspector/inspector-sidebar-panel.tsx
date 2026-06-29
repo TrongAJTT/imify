@@ -3,8 +3,10 @@ import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { WorkspaceConfigSidebarPanel, type WorkspaceConfigSidebarItem } from "@imify/ui"
 import { DisplayAccordion } from "./display-accordion"
 import { MetadataAccordion } from "./metadata-accordion"
+import { useTranslation } from "@imify/i18n"
 
 export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enableWideSidebarGrid?: boolean }) {
+  const { t } = useTranslation("inspector")
   const exifSortMode = useInspectorStore((s) => s.exifSortMode)
   const showSensitiveOnly = useInspectorStore((s) => s.showSensitiveOnly)
   const paletteCount = useInspectorStore((s) => s.paletteCount)
@@ -24,7 +26,7 @@ export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enabl
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "display",
-      label: "Display",
+      label: t("display"),
       content: (
         <DisplayAccordion
           paletteCount={paletteCount}
@@ -42,7 +44,7 @@ export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enabl
     },
     {
       id: "metadata",
-      label: "Metadata",
+      label: t("metadata"),
       content: (
         <MetadataAccordion
           exifSortMode={exifSortMode}
@@ -54,6 +56,6 @@ export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enabl
     }
   ]
 
-  return <WorkspaceConfigSidebarPanel title="INSPECTOR SETTINGS" items={sidebarItems} twoColumn={enableWideSidebarGrid} />
+  return <WorkspaceConfigSidebarPanel title={t("inspectorSettings")} items={sidebarItems} twoColumn={enableWideSidebarGrid} />
 }
 

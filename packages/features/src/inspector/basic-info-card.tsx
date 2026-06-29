@@ -4,6 +4,7 @@ import type { BasicInfo, DimensionInfo, ResolutionInfo, TimeInfo } from "./types
 import { formatFileSize } from "./format-utils"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { InfoSection, InfoRow } from "./info-section"
+import { useTranslation } from "@imify/i18n"
 
 interface BasicInfoCardProps {
   basic: BasicInfo
@@ -14,11 +15,12 @@ interface BasicInfoCardProps {
 }
 
 export function BasicInfoCard({ basic, dimensions, resolution, time, imageUrl }: BasicInfoCardProps) {
+  const { t } = useTranslation("inspector")
   const setVisualAnalysisDialogOpen = useInspectorStore((s) => s.setVisualAnalysisDialogOpen)
 
   return (
     <div className="flex flex-col gap-3">
-      <InfoSection title="FILE INFORMATION" icon={<FileImage size={13} />} collapsible={false}>
+      <InfoSection title={t("fileInformation")} icon={<FileImage size={13} />} collapsible={false}>
         <div className="relative mb-3 pt-4" style={{ maxHeight: 280 }}>
           <div className="w-full h-48 rounded border border-slate-200/80 dark:border-slate-700/70 bg-slate-100/80 dark:bg-slate-900/60 flex items-center justify-center text-slate-400 dark:text-slate-500">
             <img
@@ -33,37 +35,37 @@ export function BasicInfoCard({ basic, dimensions, resolution, time, imageUrl }:
           <button
             onClick={() => setVisualAnalysisDialogOpen(true)}
             className="absolute bottom-2 right-2 inline-flex items-center justify-center w-9 h-9 rounded-lg bg-slate-900/70 hover:bg-slate-900/85 text-white backdrop-blur-sm transition-colors"
-            title="Open Visual Analysis Dialog"
+            title={t("openVisualAnalysis")}
             aria-label="Color Picker"
           >
             <Pipette size={18} />
           </button>
         </div>
         <div className="divide-y divide-slate-100 dark:divide-slate-700/50 mt-5">
-          <InfoRow label="File Name" value={basic.fileName} />
-          <InfoRow label="Format" value={basic.format} />
-          <InfoRow label="MIME Type" value={basic.mimeType} mono />
-          <InfoRow label="File Size" value={formatFileSize(basic.fileSize)} />
+          <InfoRow label={t("fileName")} value={basic.fileName} />
+          <InfoRow label={t("format")} value={basic.format} />
+          <InfoRow label={t("mimeType")} value={basic.mimeType} mono />
+          <InfoRow label={t("fileSize")} value={formatFileSize(basic.fileSize)} />
         </div>
       </InfoSection>
 
-      <InfoSection title="DIMENSIONS" icon={<Ruler size={13} />} collapsible={false}>
+      <InfoSection title={t("dimensions")} icon={<Ruler size={13} />} collapsible={false}>
         <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-          <InfoRow label="Size" value={`${dimensions.width} x ${dimensions.height} px`} />
-          <InfoRow label="Megapixels" value={`${dimensions.megapixels} MP`} />
-          <InfoRow label="Aspect Ratio" value={dimensions.aspectRatio} />
-          <InfoRow label="Orientation" value={dimensions.orientation.charAt(0).toUpperCase() + dimensions.orientation.slice(1)} />
+          <InfoRow label={t("size")} value={`${dimensions.width} x ${dimensions.height} px`} />
+          <InfoRow label={t("megapixels")} value={`${dimensions.megapixels} MP`} />
+          <InfoRow label={t("aspectRatio")} value={dimensions.aspectRatio} />
+          <InfoRow label={t("orientation")} value={dimensions.orientation.charAt(0).toUpperCase() + dimensions.orientation.slice(1)} />
           {resolution && (
             <>
-              <InfoRow label="X Resolution" value={`${resolution.xDpi} ${resolution.unit}`} />
-              <InfoRow label="Y Resolution" value={`${resolution.yDpi} ${resolution.unit}`} />
+              <InfoRow label={t("xResolution")} value={`${resolution.xDpi} ${resolution.unit}`} />
+              <InfoRow label={t("yResolution")} value={`${resolution.yDpi} ${resolution.unit}`} />
             </>
           )}
         </div>
         {dimensions.matchedStandards.length > 0 && (
           <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Matching Standards
+              {t("matchingStandards")}
             </span>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {dimensions.matchedStandards.map((std) => (
@@ -79,14 +81,14 @@ export function BasicInfoCard({ basic, dimensions, resolution, time, imageUrl }:
         )}
       </InfoSection>
 
-      <InfoSection title="DATE & TIME" icon={<Clock size={13} />} collapsible={false}>
+      <InfoSection title={t("dateTime")} icon={<Clock size={13} />} collapsible={false}>
         <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-          <InfoRow label="Last Modified" value={time.lastModified.toLocaleString()} />
+          <InfoRow label={t("lastModified")} value={time.lastModified.toLocaleString()} />
           {(time.exifDateTimeOriginal || time.exifDateTime) && (
-            <InfoRow label="Created (EXIF)" value={time.exifDateTimeOriginal ?? time.exifDateTime ?? ""} />
+            <InfoRow label={t("createdExif")} value={time.exifDateTimeOriginal ?? time.exifDateTime ?? ""} />
           )}
-          {time.exifDateTime && <InfoRow label="EXIF DateTime" value={time.exifDateTime} />}
-          {time.exifDateTimeDigitized && <InfoRow label="Date Digitized" value={time.exifDateTimeDigitized} />}
+          {time.exifDateTime && <InfoRow label={t("exifDateTime")} value={time.exifDateTime} />}
+          {time.exifDateTimeDigitized && <InfoRow label={t("dateDigitized")} value={time.exifDateTimeDigitized} />}
         </div>
       </InfoSection>
     </div>
