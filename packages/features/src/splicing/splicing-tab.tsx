@@ -102,24 +102,38 @@ function buildGridStatsLabel(
     const isFixedVertical =
       primary === "horizontal" && secondary === "vertical";
     if (isVerticalFlow || isFixedVertical) {
-      return groupCount === 1 ? `1 ${t("workspace.statsColumn")}` : `${groupCount} ${t("workspace.statsColumns")}`;
+      return groupCount === 1
+        ? `1 ${t("workspace.statsColumn")}`
+        : `${groupCount} ${t("workspace.statsColumns")}`;
     }
-    const rowText = groupCount === 1 ? t("workspace.statsRow") : t("workspace.statsRows");
-    const colText = perGroupMax === 1 ? t("workspace.statsColumn") : t("workspace.statsColumns");
+    const rowText =
+      groupCount === 1 ? t("workspace.statsRow") : t("workspace.statsRows");
+    const colText =
+      perGroupMax === 1
+        ? t("workspace.statsColumn")
+        : t("workspace.statsColumns");
     return `${groupCount} ${rowText} × ${perGroupMax} ${colText}`;
   }
 
   if (preset === "stitch_vertical") {
-    return perGroupMax === 1 ? `1 ${t("workspace.statsRow")}` : `${perGroupMax} ${t("workspace.statsRows")}`;
+    return perGroupMax === 1
+      ? `1 ${t("workspace.statsRow")}`
+      : `${perGroupMax} ${t("workspace.statsRows")}`;
   }
 
   if (preset === "stitch_horizontal") {
-    return perGroupMax === 1 ? `1 ${t("workspace.statsColumn")}` : `${perGroupMax} ${t("workspace.statsColumns")}`;
+    return perGroupMax === 1
+      ? `1 ${t("workspace.statsColumn")}`
+      : `${perGroupMax} ${t("workspace.statsColumns")}`;
   }
 
   if (preset === "grid") {
-    const rowText = groupCount === 1 ? t("workspace.statsRow") : t("workspace.statsRows");
-    const colText = perGroupMax === 1 ? t("workspace.statsColumn") : t("workspace.statsColumns");
+    const rowText =
+      groupCount === 1 ? t("workspace.statsRow") : t("workspace.statsRows");
+    const colText =
+      perGroupMax === 1
+        ? t("workspace.statsColumn")
+        : t("workspace.statsColumns");
     return `${groupCount} ${rowText} × ${perGroupMax} ${colText}`;
   }
 
@@ -522,7 +536,10 @@ export function SplicingTab({
             targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent,
-            message: t("toasts.importThumb", { completed: processedCount, total: imageFiles.length }),
+            message: t("toasts.importThumb", {
+              completed: processedCount,
+              total: imageFiles.length,
+            }),
           });
         }
       }
@@ -632,13 +649,18 @@ export function SplicingTab({
       const percent = Math.min(88, 5 + Math.round(ratio * 83));
       pushPreviewQualityToast({
         id: pending.toastId,
-        fileName: t("toasts.previewQualityToast", { percent: pending.qualityPercent }),
+        fileName: t("toasts.previewQualityToast", {
+          percent: pending.qualityPercent,
+        }),
         targetFormat: exportSettings.targetFormat,
         status: "processing",
         percent,
         message:
           p.total > 0
-            ? t("toasts.previewScale", { completed: p.completed, total: p.total })
+            ? t("toasts.previewScale", {
+                completed: p.completed,
+                total: p.total,
+              })
             : t("toasts.previewQualityMsg"),
       });
     },
@@ -655,7 +677,9 @@ export function SplicingTab({
         } else {
           pushImportToast({
             id: importPending.toastId,
-            fileName: t("toasts.importing", { count: importPending.expectedCount }),
+            fileName: t("toasts.importing", {
+              count: importPending.expectedCount,
+            }),
             targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent: 90,
@@ -675,7 +699,9 @@ export function SplicingTab({
         } else {
           pushPreviewQualityToast({
             id: qualityPending.toastId,
-            fileName: t("toasts.previewQualityToast", { percent: qualityPending.qualityPercent }),
+            fileName: t("toasts.previewQualityToast", {
+              percent: qualityPending.qualityPercent,
+            }),
             targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent: 90,
@@ -708,11 +734,16 @@ export function SplicingTab({
           const percent = Math.min(99, 90 + Math.round(ratio * 9));
           pushImportToast({
             id: importPending.toastId,
-            fileName: t("toasts.importing", { count: importPending.expectedCount }),
+            fileName: t("toasts.importing", {
+              count: importPending.expectedCount,
+            }),
             targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent,
-            message: t("toasts.importNumbersProg", { completed: payload.completed, total: payload.total }),
+            message: t("toasts.importNumbersProg", {
+              completed: payload.completed,
+              total: payload.total,
+            }),
           });
         } else {
           importPending.numberingDone = true;
@@ -733,11 +764,16 @@ export function SplicingTab({
           const percent = Math.min(99, 90 + Math.round(ratio * 9));
           pushPreviewQualityToast({
             id: qualityPending.toastId,
-            fileName: t("toasts.previewQualityToast", { percent: qualityPending.qualityPercent }),
+            fileName: t("toasts.previewQualityToast", {
+              percent: qualityPending.qualityPercent,
+            }),
             targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent,
-            message: t("toasts.importNumbersProg", { completed: payload.completed, total: payload.total }),
+            message: t("toasts.importNumbersProg", {
+              completed: payload.completed,
+              total: payload.total,
+            }),
           });
         } else {
           qualityPending.numberingDone = true;

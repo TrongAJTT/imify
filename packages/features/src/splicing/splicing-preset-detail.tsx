@@ -1,10 +1,10 @@
-import React from "react"
-import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store"
-import { useTranslation } from "@imify/i18n"
+import React from "react";
+import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store";
+import { useTranslation } from "@imify/i18n";
 
 interface PresetDetailLineProps {
-  label: string
-  value: string | number | undefined
+  label: string;
+  value: string | number | undefined;
 }
 
 function PresetDetailLine({ label, value }: PresetDetailLineProps) {
@@ -15,70 +15,82 @@ function PresetDetailLine({ label, value }: PresetDetailLineProps) {
         {value ?? "—"}
       </span>
     </div>
-  )
+  );
 }
 
 interface SplicingPresetDetailProps {
-  preset: SavedSplicingPreset
+  preset: SavedSplicingPreset;
 }
 
 export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
-  const { t } = useTranslation("splicing")
-  const config = preset.config
+  const { t } = useTranslation("splicing");
+  const config = preset.config;
 
   const layoutLabel = (() => {
-    if (config.preset === "stitch_vertical") return t("preset.stitchV")
-    if (config.preset === "stitch_horizontal") return t("preset.stitchH")
-    if (config.preset === "grid") return `${t("preset.grid")} (${t("preset.layoutColumns", { count: config.gridCount })})`
+    if (config.preset === "stitch_vertical") return t("preset.stitchV");
+    if (config.preset === "stitch_horizontal") return t("preset.stitchH");
+    if (config.preset === "grid")
+      return `${t("preset.grid")} (${t("preset.layoutColumns", { count: config.gridCount })})`;
     if (config.preset === "bento") {
       const modeLabel =
-        config.primaryDirection === "vertical" && config.secondaryDirection === "vertical"
+        config.primaryDirection === "vertical" &&
+        config.secondaryDirection === "vertical"
           ? t("preset.bentoVert")
-          : config.primaryDirection === "horizontal" && config.secondaryDirection === "vertical"
+          : config.primaryDirection === "horizontal" &&
+              config.secondaryDirection === "vertical"
             ? t("preset.bentoFixedVert")
-            : config.primaryDirection === "horizontal" && config.secondaryDirection === "horizontal"
+            : config.primaryDirection === "horizontal" &&
+                config.secondaryDirection === "horizontal"
               ? t("preset.bentoHoriz")
-              : t("preset.bentoFixedHoriz")
-      return `${t("preset.bento")} (${modeLabel})`
+              : t("preset.bentoFixedHoriz");
+      return `${t("preset.bento")} (${modeLabel})`;
     }
-    return "—"
-  })()
+    return "—";
+  })();
 
   const canvasLabel = [
     `${config.canvasPadding}`,
     `${config.mainSpacing}`,
     `${config.crossSpacing}`,
     `${config.canvasBorderRadius}`,
-    `${config.canvasBorderWidth}`
-  ].join("/")
+    `${config.canvasBorderWidth}`,
+  ].join("/");
 
   // Resize display
   let resizeLabel = config.imageResize
     ? config.imageResize === "original"
       ? t("imageFields.original")
       : config.imageResize === "fit_width"
-      ? t("imageFields.fitWidth")
-      : t("imageFields.fitHeight")
-    : "—"
+        ? t("imageFields.fitWidth")
+        : t("imageFields.fitHeight")
+    : "—";
 
   // Export format
-  const formatLabel = config.exportFormat ? `${config.exportFormat.toUpperCase()} (${config.exportQuality}%, ${resizeLabel})` : "—"
+  const formatLabel = config.exportFormat
+    ? `${config.exportFormat.toUpperCase()} (${config.exportQuality}%, ${resizeLabel})`
+    : "—";
 
   // Export mode
   let modeLabel = config.exportMode
     ? config.exportMode === "single"
       ? t("preset.modeSingle")
       : config.exportMode === "per_row"
-      ? t("preset.modePerRow")
-      : t("preset.modePerCol")
-    : "—"
+        ? t("preset.modePerRow")
+        : t("preset.modePerCol")
+    : "—";
 
   return (
     <div className="space-y-2 rounded-md bg-slate-50/50 p-2 dark:bg-slate-900/20">
       <PresetDetailLine label={t("sidebar.layout")} value={layoutLabel} />
       <PresetDetailLine label={t("sidebar.canvas")} value={canvasLabel} />
-      <PresetDetailLine label={t("preset.exportFormat", { defaultValue: "Export Format" })} value={formatLabel} />
-      <PresetDetailLine label={t("exportFields.exportMode")} value={modeLabel} />
+      <PresetDetailLine
+        label={t("preset.exportFormat", { defaultValue: "Export Format" })}
+        value={formatLabel}
+      />
+      <PresetDetailLine
+        label={t("exportFields.exportMode")}
+        value={modeLabel}
+      />
     </div>
-  )
+  );
 }

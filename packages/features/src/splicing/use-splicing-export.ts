@@ -13,7 +13,6 @@ import { calculateLayout, calculateProcessedSize } from "./layout-engine"
 import type { SplicingExportConfig, SplicingImageItem } from "./types"
 import { buildSmartOutputFileName, reserveUniqueFileName } from "@imify/core/file-name-pattern"
 import type { ExportSplitMode } from "../shared/export-split-button"
-import { buildActiveSplicingFormatOptions } from "@imify/stores/stores/splicing-format-options"
 import { useSplicingStore, resolveCanvasStyle, resolveImageStyle, resolveLayoutConfig } from "@imify/stores/stores/splicing-store"
 
 export type SplicingExportMode = ExportSplitMode

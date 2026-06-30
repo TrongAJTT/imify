@@ -89,7 +89,8 @@ export function SplicingSidebarPanel({
 
   const identifiedPresetId = `preset_splicing_${activeSplicingPresetId}`;
   const identifiedPresetName = `Splicing #${activeSplicingPreset?.name || activeSplicingPresetId}`;
-  const identifiedPresetColor = activeSplicingPreset?.highlightColor || "#f97316";
+  const identifiedPresetColor =
+    activeSplicingPreset?.highlightColor || "#f97316";
 
   const splicingIdentifiedPreset: SavedSetupPreset = useMemo(
     () => ({

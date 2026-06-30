@@ -1,21 +1,25 @@
-import React, { useMemo, useState } from "react"
-import { Check, Edit2, Plus, Trash2 } from "lucide-react"
+import React, { useMemo, useState } from "react";
+import { Check, Edit2, Plus, Trash2 } from "lucide-react";
 
-import { EmptyDropCard } from "@imify/ui"
-import { WorkspaceSelectHeader } from "../processor/workspace-select-header"
-import { SavePresetDialog } from "../processor/save-preset-dialog"
-import { SplicingPresetDetail } from "./splicing-preset-detail"
-import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store"
-import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors"
-import { useTranslation } from "@imify/i18n"
+import { EmptyDropCard } from "@imify/ui";
+import { WorkspaceSelectHeader } from "../processor/workspace-select-header";
+import { SavePresetDialog } from "../processor/save-preset-dialog";
+import { SplicingPresetDetail } from "./splicing-preset-detail";
+import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store";
+import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
+import { useTranslation } from "@imify/i18n";
 
 interface SplicingPresetSelectViewProps {
-  presets: SavedSplicingPreset[]
-  activePresetId: string | null
-  onOpenPreset: (presetId: string) => void
-  onCreatePreset: (name: string, color: string) => void
-  onUpdatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
-  onDeletePreset: (presetId: string) => void
+  presets: SavedSplicingPreset[];
+  activePresetId: string | null;
+  onOpenPreset: (presetId: string) => void;
+  onCreatePreset: (name: string, color: string) => void;
+  onUpdatePresetMeta: (payload: {
+    id: string;
+    name: string;
+    highlightColor: string;
+  }) => void;
+  onDeletePreset: (presetId: string) => void;
 }
 
 function SplicingPresetCard({
@@ -23,15 +27,15 @@ function SplicingPresetCard({
   isActive,
   onOpen,
   onEdit,
-  onDelete
+  onDelete,
 }: {
-  preset: SavedSplicingPreset
-  isActive: boolean
-  onOpen: () => void
-  onEdit: () => void
-  onDelete: () => void
+  preset: SavedSplicingPreset;
+  isActive: boolean;
+  onOpen: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
-  const { t } = useTranslation("splicing")
+  const { t } = useTranslation("splicing");
 
   return (
     <div
@@ -40,8 +44,8 @@ function SplicingPresetCard({
       onClick={onOpen}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault()
-          onOpen()
+          event.preventDefault();
+          onOpen();
         }
       }}
       className={`group relative flex flex-col overflow-hidden rounded-lg border text-left transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
@@ -68,7 +72,9 @@ function SplicingPresetCard({
 
           <div className="flex items-center justify-between gap-2 text-[11px]">
             <span className="font-medium text-slate-400 dark:text-slate-500">
-              {new Date(preset.updatedAt || preset.createdAt).toLocaleDateString()}
+              {new Date(
+                preset.updatedAt || preset.createdAt,
+              ).toLocaleDateString()}
             </span>
             {isActive ? (
               <span className="inline-flex items-center gap-1 font-semibold text-orange-600 dark:text-orange-400">
@@ -88,9 +94,9 @@ function SplicingPresetCard({
           <button
             type="button"
             onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onEdit()
+              event.preventDefault();
+              event.stopPropagation();
+              onEdit();
             }}
             className="rounded p-1 text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
             aria-label="Edit preset"
@@ -100,9 +106,9 @@ function SplicingPresetCard({
           <button
             type="button"
             onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onDelete()
+              event.preventDefault();
+              event.stopPropagation();
+              onDelete();
             }}
             className="rounded p-1 text-red-600 transition-colors hover:bg-red-50/90 dark:text-red-400 dark:hover:bg-red-500/20"
             aria-label="Delete preset"
@@ -116,7 +122,7 @@ function SplicingPresetCard({
         <SplicingPresetDetail preset={preset} />
       </div>
     </div>
-  )
+  );
 }
 
 export function SplicingPresetSelectView({
@@ -125,51 +131,54 @@ export function SplicingPresetSelectView({
   onOpenPreset,
   onCreatePreset,
   onUpdatePresetMeta,
-  onDeletePreset
+  onDeletePreset,
 }: SplicingPresetSelectViewProps) {
-  const { t } = useTranslation("splicing")
-  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false)
-  const [editingPreset, setEditingPreset] = useState<SavedSplicingPreset | null>(null)
+  const { t } = useTranslation("splicing");
+  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
+  const [editingPreset, setEditingPreset] =
+    useState<SavedSplicingPreset | null>(null);
 
   const sortedPresets = useMemo(
     () => [...presets].sort((a, b) => b.updatedAt - a.updatedAt),
-    [presets]
-  )
+    [presets],
+  );
 
   const openCreateDialog = () => {
-    setEditingPreset(null)
-    setIsSavePresetDialogOpen(true)
-  }
+    setEditingPreset(null);
+    setIsSavePresetDialogOpen(true);
+  };
 
   const openEditDialog = (preset: SavedSplicingPreset) => {
-    setEditingPreset(preset)
-    setIsSavePresetDialogOpen(true)
-  }
+    setEditingPreset(preset);
+    setIsSavePresetDialogOpen(true);
+  };
 
   const handleSavePreset = (name: string, color: string) => {
     if (editingPreset) {
       onUpdatePresetMeta({
         id: editingPreset.id,
         name,
-        highlightColor: color
-      })
-      setEditingPreset(null)
-      setIsSavePresetDialogOpen(false)
-      return
+        highlightColor: color,
+      });
+      setEditingPreset(null);
+      setIsSavePresetDialogOpen(false);
+      return;
     }
 
-    onCreatePreset(name, color)
-    setIsSavePresetDialogOpen(false)
-  }
+    onCreatePreset(name, color);
+    setIsSavePresetDialogOpen(false);
+  };
 
   const confirmDeletePreset = (preset: SavedSplicingPreset) => {
-    const shouldDelete = window.confirm(t("select.deleteConfirm", { name: preset.name }))
+    const shouldDelete = window.confirm(
+      t("select.deleteConfirm", { name: preset.name }),
+    );
     if (!shouldDelete) {
-      return
+      return;
     }
 
-    onDeletePreset(preset.id)
-  }
+    onDeletePreset(preset.id);
+  };
 
   return (
     <div className="p-0">
@@ -210,8 +219,8 @@ export function SplicingPresetSelectView({
       <SavePresetDialog
         isOpen={isSavePresetDialogOpen}
         onClose={() => {
-          setIsSavePresetDialogOpen(false)
-          setEditingPreset(null)
+          setIsSavePresetDialogOpen(false);
+          setEditingPreset(null);
         }}
         onSave={handleSavePreset}
         highlightColors={[...PRESET_HIGHLIGHT_COLORS]}
@@ -222,11 +231,11 @@ export function SplicingPresetSelectView({
             : t("select.presetDefaultName", {
                 time: new Date().toLocaleTimeString([], {
                   hour: "2-digit",
-                  minute: "2-digit"
-                })
+                  minute: "2-digit",
+                }),
               })
         }
       />
     </div>
-  )
+  );
 }

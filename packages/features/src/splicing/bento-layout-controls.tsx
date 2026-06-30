@@ -1,35 +1,36 @@
-import React from "react"
-import { Scissors } from "lucide-react"
+import React from "react";
+import { Scissors } from "lucide-react";
 import type {
   SplicingAlignment,
-  SplicingImageAppearanceDirection
-} from "./types"
-import { CheckboxCard, NumberInput } from "@imify/ui"
+  SplicingImageAppearanceDirection,
+} from "./types";
+import { CheckboxCard, NumberInput } from "@imify/ui";
 import {
   BENTO_LAYOUT_OPTIONS,
   getBentoDirectionOptions,
-  getBentoFlowSizeLabel,
   isBentoFlowLayoutMode,
   SelectField,
-  type BentoLayoutMode
-} from "./splicing-sidebar-fields"
+  type BentoLayoutMode,
+} from "./splicing-sidebar-fields";
 
-import { useTranslation } from "@imify/i18n"
+import { useTranslation } from "@imify/i18n";
 
 interface BentoLayoutControlsProps {
-  mode: BentoLayoutMode
-  flowMaxSize: number
-  flowSplitOverflow: boolean
-  count: number
-  alignment: SplicingAlignment
-  alignmentOptions: Array<{ value: SplicingAlignment; label: string }>
-  imageAppearanceDirection: SplicingImageAppearanceDirection
-  onLayoutModeChange: (mode: BentoLayoutMode) => void
-  onFlowMaxSizeChange: (value: number) => void
-  onFlowSplitOverflowChange: (value: boolean) => void
-  onCountChange: (value: number) => void
-  onAlignmentChange: (value: SplicingAlignment) => void
-  onImageAppearanceDirectionChange: (value: SplicingImageAppearanceDirection) => void
+  mode: BentoLayoutMode;
+  flowMaxSize: number;
+  flowSplitOverflow: boolean;
+  count: number;
+  alignment: SplicingAlignment;
+  alignmentOptions: Array<{ value: SplicingAlignment; label: string }>;
+  imageAppearanceDirection: SplicingImageAppearanceDirection;
+  onLayoutModeChange: (mode: BentoLayoutMode) => void;
+  onFlowMaxSizeChange: (value: number) => void;
+  onFlowSplitOverflowChange: (value: boolean) => void;
+  onCountChange: (value: number) => void;
+  onAlignmentChange: (value: SplicingAlignment) => void;
+  onImageAppearanceDirectionChange: (
+    value: SplicingImageAppearanceDirection,
+  ) => void;
 }
 
 export function BentoLayoutControls({
@@ -45,25 +46,34 @@ export function BentoLayoutControls({
   onFlowSplitOverflowChange,
   onCountChange,
   onAlignmentChange,
-  onImageAppearanceDirectionChange
+  onImageAppearanceDirectionChange,
 }: BentoLayoutControlsProps) {
-  const { t } = useTranslation("splicing")
-  const isFlow = isBentoFlowLayoutMode(mode)
-  const countLabel = mode === "fixed_horizontal" ? t("preset.bentoMaxRow") : t("preset.bentoMaxCol")
+  const { t } = useTranslation("splicing");
+  const isFlow = isBentoFlowLayoutMode(mode);
+  const countLabel =
+    mode === "fixed_horizontal"
+      ? t("preset.bentoMaxRow")
+      : t("preset.bentoMaxCol");
 
   const translateOption = (opt: { value: string; label: string }) => {
-    const key = opt.value.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+    const key = opt.value.replace(/_([a-z])/g, (_, letter) =>
+      letter.toUpperCase(),
+    );
     return {
       value: opt.value,
-      label: t(`layoutFields.${key}`, { defaultValue: opt.label })
-    }
-  }
+      label: t(`layoutFields.${key}`, { defaultValue: opt.label }),
+    };
+  };
 
-  const localizedBentoOptions = BENTO_LAYOUT_OPTIONS.map(translateOption)
-  const localizedAlignmentOptions = alignmentOptions.map(translateOption)
-  const localizedDirectionOptions = getBentoDirectionOptions(mode).map(translateOption)
+  const localizedBentoOptions = BENTO_LAYOUT_OPTIONS.map(translateOption);
+  const localizedAlignmentOptions = alignmentOptions.map(translateOption);
+  const localizedDirectionOptions =
+    getBentoDirectionOptions(mode).map(translateOption);
 
-  const flowSizeLabel = mode === "vertical" ? t("preset.bentoMaxHeight") : t("preset.bentoMaxWidth")
+  const flowSizeLabel =
+    mode === "vertical"
+      ? t("preset.bentoMaxHeight")
+      : t("preset.bentoMaxWidth");
 
   return (
     <>
@@ -105,7 +115,11 @@ export function BentoLayoutControls({
           label={t("layoutFields.imageDirection")}
           value={imageAppearanceDirection}
           options={localizedDirectionOptions}
-          onChange={(value) => onImageAppearanceDirectionChange(value as SplicingImageAppearanceDirection)}
+          onChange={(value) =>
+            onImageAppearanceDirectionChange(
+              value as SplicingImageAppearanceDirection,
+            )
+          }
         />
       </div>
 
@@ -122,8 +136,5 @@ export function BentoLayoutControls({
         />
       )}
     </>
-  )
+  );
 }
-
-
-

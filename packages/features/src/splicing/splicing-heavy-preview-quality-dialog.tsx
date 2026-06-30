@@ -1,20 +1,20 @@
-import React, { useState } from "react"
-import { AlertTriangle } from "lucide-react"
+import React, { useState } from "react";
+import { AlertTriangle } from "lucide-react";
 
-import { APP_CONFIG } from "@imify/core/config"
-import { useBatchStore } from "@imify/stores/stores/batch-store"
-import { Button, BodyText, Subheading, MutedText } from "@imify/ui"
+import { APP_CONFIG } from "@imify/core/config";
+import { useBatchStore } from "@imify/stores/stores/batch-store";
+import { Button, BodyText, Subheading, MutedText } from "@imify/ui";
 
 interface SplicingHeavyPreviewQualityDialogProps {
-  isOpen: boolean
-  nextQualityPercent: number
-  imageCount: number
-  totalPixels: number
-  onClose: () => void
-  onConfirm: () => void
+  isOpen: boolean;
+  nextQualityPercent: number;
+  imageCount: number;
+  totalPixels: number;
+  onClose: () => void;
+  onConfirm: () => void;
 }
 
-import { useTranslation } from "@imify/i18n"
+import { useTranslation } from "@imify/i18n";
 
 export function SplicingHeavyPreviewQualityDialog({
   isOpen,
@@ -22,32 +22,34 @@ export function SplicingHeavyPreviewQualityDialog({
   imageCount,
   totalPixels,
   onClose,
-  onConfirm
+  onConfirm,
 }: SplicingHeavyPreviewQualityDialogProps) {
-  const { t } = useTranslation("splicing")
+  const { t } = useTranslation("splicing");
   const setSkipSplicingHeavyPreviewQualityWarning = useBatchStore(
-    (s) => s.setSkipSplicingHeavyPreviewQualityWarning
-  )
-  const [dontShowAgain, setDontShowAgain] = useState(false)
+    (s) => s.setSkipSplicingHeavyPreviewQualityWarning,
+  );
+  const [dontShowAgain, setDontShowAgain] = useState(false);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  const fmtM = (n: number) => (n / 1_000_000).toFixed(1)
-  const { HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT, HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS } =
-    APP_CONFIG.SPLICING
+  const fmtM = (n: number) => (n / 1_000_000).toFixed(1);
+  const {
+    HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT,
+    HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS,
+  } = APP_CONFIG.SPLICING;
 
   const handleConfirm = () => {
     if (dontShowAgain) {
-      setSkipSplicingHeavyPreviewQualityWarning(true)
+      setSkipSplicingHeavyPreviewQualityWarning(true);
     }
-    onConfirm()
-    setDontShowAgain(false)
-  }
+    onConfirm();
+    setDontShowAgain(false);
+  };
 
   const handleClose = () => {
-    onClose()
-    setDontShowAgain(false)
-  }
+    onClose();
+    setDontShowAgain(false);
+  };
 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
@@ -63,7 +65,9 @@ export function SplicingHeavyPreviewQualityDialog({
               <div className="p-2.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 shrink-0">
                 <AlertTriangle size={26} />
               </div>
-              <Subheading className="text-xl">{t("heavyDialog.title")}</Subheading>
+              <Subheading className="text-xl">
+                {t("heavyDialog.title")}
+              </Subheading>
             </div>
             <BodyText className="text-slate-600 dark:text-slate-400">
               {t("heavyDialog.description", { percent: nextQualityPercent })}
@@ -71,15 +75,21 @@ export function SplicingHeavyPreviewQualityDialog({
             <ul className="text-sm text-slate-600 dark:text-slate-400 list-disc pl-5 space-y-1">
               <li>
                 {t("heavyDialog.imagesLoaded")}{" "}
-                <span className="font-semibold text-slate-900 dark:text-white">{imageCount}</span>{" "}
-                {t("heavyDialog.warningIfOver", { threshold: HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT })}
+                <span className="font-semibold text-slate-900 dark:text-white">
+                  {imageCount}
+                </span>{" "}
+                {t("heavyDialog.warningIfOver", {
+                  threshold: HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT,
+                })}
               </li>
               <li>
                 {t("heavyDialog.combinedArea")}{" "}
                 <span className="font-semibold text-slate-900 dark:text-white">
                   ~{fmtM(totalPixels)}M px²
                 </span>{" "}
-                {t("heavyDialog.warningIfOver", { threshold: `~${fmtM(HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS)}M px²` })}
+                {t("heavyDialog.warningIfOver", {
+                  threshold: `~${fmtM(HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS)}M px²`,
+                })}
               </li>
             </ul>
             <label className="flex items-center gap-2.5 cursor-pointer group w-fit select-none pt-2">
@@ -96,17 +106,21 @@ export function SplicingHeavyPreviewQualityDialog({
           </div>
         </div>
         <div className="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800/80">
-          <Button variant="secondary" onClick={handleClose} className="text-sm px-4">
+          <Button
+            variant="secondary"
+            onClick={handleClose}
+            className="text-sm px-4"
+          >
             {t("heavyDialog.cancel")}
           </Button>
-          <Button onClick={handleConfirm} className="text-sm px-5 bg-sky-600 hover:bg-sky-700 text-white shadow-md shadow-sky-600/20">
+          <Button
+            onClick={handleConfirm}
+            className="text-sm px-5 bg-sky-600 hover:bg-sky-700 text-white shadow-md shadow-sky-600/20"
+          >
             {t("heavyDialog.useQuality", { percent: nextQualityPercent })}
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-
-

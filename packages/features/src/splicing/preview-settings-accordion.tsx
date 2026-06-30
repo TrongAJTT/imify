@@ -19,8 +19,12 @@ export function PreviewSettingsAccordion({
   onPreviewQualityChange,
   onPreviewShowImageNumberChange,
 }: PreviewSettingsAccordionProps) {
-  const { t } = useTranslation("splicing")
-  const sublabel = t("previewFields.quality", { percent: previewQualityPercent }) + (previewShowImageNumber ? t("previewFields.numbersOn") : t("previewFields.numbersOff"));
+  const { t } = useTranslation("splicing");
+  const sublabel =
+    t("previewFields.quality", { percent: previewQualityPercent }) +
+    (previewShowImageNumber
+      ? t("previewFields.numbersOn")
+      : t("previewFields.numbersOff"));
 
   return (
     <AccordionCard

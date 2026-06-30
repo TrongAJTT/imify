@@ -1,21 +1,21 @@
-import React from "react"
-import { RotateCcw } from "lucide-react"
-import type { RefObject } from "react"
-import type { ValueScrubHandlers } from "../shared/use-value-scrubbing"
-import { Tooltip } from "../shared/tooltip"
-import { useTranslation } from "@imify/i18n"
+import React from "react";
+import { RotateCcw } from "lucide-react";
+import type { RefObject } from "react";
+import type { ValueScrubHandlers } from "../shared/use-value-scrubbing";
+import { Tooltip } from "../shared/tooltip";
+import { useTranslation } from "@imify/i18n";
 
 interface PreviewZoomControlProps {
-  editingZoom: boolean
-  zoom: number
-  zoomDraft: string
-  showPreviewReset: boolean
-  zoomInputRef: RefObject<HTMLInputElement>
-  onZoomDraftChange: (next: string) => void
-  onCommitZoomDraft: () => void
-  onCancelZoomEdit: () => void
-  onResetZoom: () => void
-  scrubHandlers: ValueScrubHandlers
+  editingZoom: boolean;
+  zoom: number;
+  zoomDraft: string;
+  showPreviewReset: boolean;
+  zoomInputRef: RefObject<HTMLInputElement>;
+  onZoomDraftChange: (next: string) => void;
+  onCommitZoomDraft: () => void;
+  onCancelZoomEdit: () => void;
+  onResetZoom: () => void;
+  scrubHandlers: ValueScrubHandlers;
 }
 
 export function PreviewZoomControl({
@@ -28,9 +28,9 @@ export function PreviewZoomControl({
   onCommitZoomDraft,
   onCancelZoomEdit,
   onResetZoom,
-  scrubHandlers
+  scrubHandlers,
 }: PreviewZoomControlProps) {
-  const { t } = useTranslation("splicing")
+  const { t } = useTranslation("splicing");
 
   return (
     <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-slate-900/90 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-lg z-10 pointer-events-auto select-text">
@@ -47,12 +47,12 @@ export function PreviewZoomControl({
           onBlur={onCommitZoomDraft}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              e.preventDefault()
-              onCommitZoomDraft()
+              e.preventDefault();
+              onCommitZoomDraft();
             }
             if (e.key === "Escape") {
-              e.preventDefault()
-              onCancelZoomEdit()
+              e.preventDefault();
+              onCancelZoomEdit();
             }
           }}
         />
@@ -83,9 +83,5 @@ export function PreviewZoomControl({
         </button>
       )}
     </div>
-  )
+  );
 }
-
-
-
-
