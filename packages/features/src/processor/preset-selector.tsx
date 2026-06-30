@@ -77,7 +77,8 @@ export function PresetSelector({
     return (
       id.startsWith("preset_background-remover") ||
       id.startsWith("preset_splicing_") ||
-      id.startsWith("preset_image-splitter_")
+      id.startsWith("preset_image-splitter_") ||
+      id.startsWith("preset_pattern-gen_")
     );
   };
 

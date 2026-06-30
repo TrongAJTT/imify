@@ -1,21 +1,21 @@
-import React, { useCallback, useEffect, useMemo } from "react"
-
-import { FeatureBreadcrumb } from "../shared/feature-breadcrumb"
-import { PatternPresetSelectView } from "./pattern-preset-select-view"
+import React, { useCallback, useEffect, useMemo } from "react";
+import { useTranslation } from "@imify/i18n";
+import { FeatureBreadcrumb } from "../shared/feature-breadcrumb";
+import { PatternPresetSelectView } from "./pattern-preset-select-view";
 import {
   clonePatternPresetConfig,
   type PatternPresetConfig,
   usePatternPresetStore,
-} from "@imify/stores/stores/pattern-preset-store"
-import { usePatternStore } from "@imify/stores/stores/pattern-store"
-import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
+} from "@imify/stores/stores/pattern-preset-store";
+import { usePatternStore } from "@imify/stores/stores/pattern-store";
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 
 interface PatternWorkspaceShellProps {
-  workspace: React.ReactNode
+  workspace: React.ReactNode;
 }
 
 function extractPatternPresetConfig(
-  patternState: ReturnType<typeof usePatternStore.getState>
+  patternState: ReturnType<typeof usePatternStore.getState>,
 ): PatternPresetConfig {
   return clonePatternPresetConfig({
     canvas: patternState.canvas,
@@ -35,7 +35,8 @@ function extractPatternPresetConfig(
     exportMozJpegProgressive: patternState.exportMozJpegProgressive,
     exportMozJpegChromaSubsampling: patternState.exportMozJpegChromaSubsampling,
     exportPngTinyMode: patternState.exportPngTinyMode,
-    exportPngCleanTransparentPixels: patternState.exportPngCleanTransparentPixels,
+    exportPngCleanTransparentPixels:
+      patternState.exportPngCleanTransparentPixels,
     exportPngAutoGrayscale: patternState.exportPngAutoGrayscale,
     exportPngDithering: patternState.exportPngDithering,
     exportPngDitheringLevel: patternState.exportPngDitheringLevel,
@@ -50,11 +51,11 @@ function extractPatternPresetConfig(
     exportBmpDithering: patternState.exportBmpDithering,
     exportBmpDitheringLevel: patternState.exportBmpDitheringLevel,
     exportTiffColorMode: patternState.exportTiffColorMode,
-  })
+  });
 }
 
 function applyPatternPresetConfig(config: PatternPresetConfig): void {
-  const nextConfig = clonePatternPresetConfig(config)
+  const nextConfig = clonePatternPresetConfig(config);
 
   usePatternStore.setState((state) => ({
     ...state,
@@ -98,78 +99,122 @@ function applyPatternPresetConfig(config: PatternPresetConfig): void {
     exportBmpDithering: nextConfig.exportBmpDithering,
     exportBmpDitheringLevel: nextConfig.exportBmpDitheringLevel,
     exportTiffColorMode: nextConfig.exportTiffColorMode,
-  }))
+  }));
 }
 
-export function PatternWorkspaceShell({ workspace }: PatternWorkspaceShellProps) {
-  const presets = usePatternPresetStore((state) => state.presets)
-  const presetViewMode = usePatternPresetStore((state) => state.presetViewMode)
-  const activePresetId = usePatternPresetStore((state) => state.activePresetId)
-  const defaultPresetBootstrapped = usePatternPresetStore((state) => state.defaultPresetBootstrapped)
+export function PatternWorkspaceShell({
+  workspace,
+}: PatternWorkspaceShellProps) {
+  const { t } = useTranslation("pattern");
+  const presets = usePatternPresetStore((state) => state.presets);
+  const presetViewMode = usePatternPresetStore((state) => state.presetViewMode);
+  const activePresetId = usePatternPresetStore((state) => state.activePresetId);
+  const defaultPresetBootstrapped = usePatternPresetStore(
+    (state) => state.defaultPresetBootstrapped,
+  );
 
-  const setPresetViewMode = usePatternPresetStore((state) => state.setPresetViewMode)
-  const applyPreset = usePatternPresetStore((state) => state.applyPreset)
-  const ensureDefaultPreset = usePatternPresetStore((state) => state.ensureDefaultPreset)
-  const saveCurrentPreset = usePatternPresetStore((state) => state.saveCurrentPreset)
-  const updatePresetMeta = usePatternPresetStore((state) => state.updatePresetMeta)
-  const togglePresetPin = usePatternPresetStore((state) => state.togglePresetPin)
-  const deletePreset = usePatternPresetStore((state) => state.deletePreset)
+  const setPresetViewMode = usePatternPresetStore(
+    (state) => state.setPresetViewMode,
+  );
+  const applyPreset = usePatternPresetStore((state) => state.applyPreset);
+  const ensureDefaultPreset = usePatternPresetStore(
+    (state) => state.ensureDefaultPreset,
+  );
+  const saveCurrentPreset = usePatternPresetStore(
+    (state) => state.saveCurrentPreset,
+  );
+  const updatePresetMeta = usePatternPresetStore(
+    (state) => state.updatePresetMeta,
+  );
+  const togglePresetPin = usePatternPresetStore(
+    (state) => state.togglePresetPin,
+  );
+  const deletePreset = usePatternPresetStore((state) => state.deletePreset);
+  const syncActivePresetConfig = usePatternPresetStore(
+    (state) => state.syncActivePresetConfig,
+  );
 
-  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
-  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
-  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack)
-  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection);
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore(
+    (state) => state.setBreadcrumb,
+  );
+  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack);
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader);
 
-  const patternState = usePatternStore()
+  const patternState = usePatternStore();
 
   const activePreset = useMemo(
     () => presets.find((preset) => preset.id === activePresetId) ?? null,
-    [presets, activePresetId]
-  )
+    [presets, activePresetId],
+  );
 
   useEffect(() => {
     if (presets.length === 0 && !defaultPresetBootstrapped) {
-      ensureDefaultPreset()
+      ensureDefaultPreset();
     }
-  }, [presets.length, defaultPresetBootstrapped, ensureDefaultPreset])
+  }, [presets.length, defaultPresetBootstrapped, ensureDefaultPreset]);
 
   useEffect(() => {
-    setHeaderSection("Pattern Generator")
+    setHeaderSection(t("title"));
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
         rootToolId="pattern-generator"
-        activeLabel={presetViewMode === "workspace" ? activePreset?.name ?? null : null}
+        activeLabel={
+          presetViewMode === "workspace" ? activePreset?.name ?? null : null
+        }
         onRootClick={
           presetViewMode === "workspace"
             ? () => {
-                setPresetViewMode("select")
+                setPresetViewMode("select");
               }
             : undefined
         }
-      />
-    )
+      />,
+    );
     setHeaderOnBack(
-      presetViewMode === "workspace" ? () => setPresetViewMode("select") : null
-    )
+      presetViewMode === "workspace" ? () => setPresetViewMode("select") : null,
+    );
 
     return () => {
-      resetHeader()
+      resetHeader();
+    };
+  }, [
+    activePreset?.name,
+    presetViewMode,
+    resetHeader,
+    setHeaderBreadcrumb,
+    setHeaderSection,
+    setPresetViewMode,
+    t,
+  ]);
+
+  useEffect(() => {
+    if (presetViewMode !== "workspace" || !activePresetId) {
+      return;
     }
-  }, [activePreset?.name, presetViewMode, resetHeader, setHeaderBreadcrumb, setHeaderSection, setPresetViewMode])
+    const timeout = window.setTimeout(() => {
+      syncActivePresetConfig(
+        extractPatternPresetConfig(usePatternStore.getState()),
+      );
+    }, 1000);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [activePresetId, presetViewMode, patternState, syncActivePresetConfig]);
 
   const openPresetWorkspace = useCallback(
     (presetId: string) => {
-      const preset = presets.find((entry) => entry.id === presetId)
+      const preset = presets.find((entry) => entry.id === presetId);
       if (!preset) {
-        return
+        return;
       }
 
-      applyPatternPresetConfig(preset.config)
-      applyPreset(presetId)
+      applyPatternPresetConfig(preset.config);
+      applyPreset(presetId);
     },
-    [applyPreset, presets]
-  )
+    [applyPreset, presets],
+  );
 
   if (presetViewMode === "select") {
     return (
@@ -178,18 +223,15 @@ export function PatternWorkspaceShell({ workspace }: PatternWorkspaceShellProps)
         activePresetId={activePresetId}
         onOpenPreset={openPresetWorkspace}
         onCreatePreset={(name, color) => {
-          const config = extractPatternPresetConfig(patternState)
-          saveCurrentPreset({ name, highlightColor: color, config })
+          const config = extractPatternPresetConfig(patternState);
+          saveCurrentPreset({ name, highlightColor: color, config });
         }}
         onUpdatePresetMeta={updatePresetMeta}
         onTogglePresetPin={togglePresetPin}
         onDeletePreset={deletePreset}
       />
-    )
+    );
   }
 
-  return <>{workspace}</>
+  return <>{workspace}</>;
 }
-
-
-
