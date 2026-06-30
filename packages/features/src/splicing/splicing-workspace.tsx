@@ -15,6 +15,8 @@ import { ImageStrip } from "./image-strip"
 import { EmptyDropCard } from "@imify/ui"
 import { COMMON_IMAGE_ACCEPT } from "../shared/image-file-utils"
 
+import { useTranslation } from "@imify/i18n"
+
 interface SplicingWorkspaceProps {
   hasImages: boolean
   fileInputRef: React.RefObject<HTMLInputElement>
@@ -66,6 +68,8 @@ export function SplicingWorkspace({
   onPreviewQualityChange,
   onPreviewShowImageNumberChange
 }: SplicingWorkspaceProps) {
+  const { t } = useTranslation("splicing")
+
   return (
     <>
       <input
@@ -81,8 +85,8 @@ export function SplicingWorkspace({
         <EmptyDropCard
           icon={<ImagePlus size={28} className="text-sky-500" />}
           iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none"
-          title="Drop images here or click to browse"
-          subtitle="Supports JPG, PNG, WebP, AVIF, and more"
+          title={t("workspace.dropZoneTitle")}
+          subtitle={t("workspace.dropZoneSubtitle")}
           onDropFiles={(files) => {
             const event = {
               preventDefault: () => {},

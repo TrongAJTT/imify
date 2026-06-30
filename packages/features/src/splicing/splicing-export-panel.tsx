@@ -53,6 +53,8 @@ interface SplicingExportPanelProps {
  * Export controls for Image Splicing, focusing on Splicing-specific settings.
  * Designed to be embedded within the standardized PresetSelector.
  */
+import { useTranslation } from "@imify/i18n"
+
 export function SplicingExportPanel({
   targetFormat,
   concurrency,
@@ -67,6 +69,8 @@ export function SplicingExportPanel({
   onOpenSettings,
   disabled = false
 }: Omit<SplicingExportPanelProps, "fileNamePattern" | "onFileRenamingClick">) {
+  const { t } = useTranslation("splicing")
+
   const handleExportModeChange = (mode: SplicingExportMode) => {
     onExportModeChange(mode)
     // Reset trim when switching to single mode
@@ -76,10 +80,21 @@ export function SplicingExportPanel({
   }
   const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat
 
-  // Filter options if availableExportModes is provided
-  const modeOptions = availableExportModes
-    ? EXPORT_MODE_OPTIONS.filter((opt) => availableExportModes.includes(opt.value as any))
-    : EXPORT_MODE_OPTIONS
+  // Filter and translate options
+  const modeOptions = useMemo(() => {
+    const rawOptions = availableExportModes
+      ? EXPORT_MODE_OPTIONS.filter((opt) => availableExportModes.includes(opt.value as any))
+      : EXPORT_MODE_OPTIONS
+    return rawOptions.map((opt) => ({
+      value: opt.value,
+      label: opt.value === "single"
+        ? t("preset.modeSingle")
+        : opt.value === "per_row"
+        ? t("preset.modePerRow")
+        : t("preset.modePerCol")
+    }))
+  }, [availableExportModes, t])
+
   const advisor = useMemo(
     () =>
       calculateConcurrencyAdvisor({
@@ -102,7 +117,7 @@ export function SplicingExportPanel({
   return (
     <div className="space-y-3">
       <SelectField
-        label="Export mode"
+        label={t("exportFields.exportMode")}
         value={exportMode}
         options={modeOptions}
         onChange={(v) => handleExportModeChange(v as SplicingExportMode)}
@@ -132,11 +147,11 @@ export function SplicingExportPanel({
       )}
       <CheckboxCard
         icon={<Crop size={16} />}
-        title="Trim background"
+        title={t("exportFields.trimBackground")}
         subtitle={
           exportMode === "per_col"
-            ? "Remove top and bottom padding"
-            : "Remove left and right padding"
+            ? t("exportFields.trimDescCol")
+            : t("exportFields.trimDescRow")
         }
         checked={exportTrimBackground}
         onChange={onExportTrimBackgroundChange}

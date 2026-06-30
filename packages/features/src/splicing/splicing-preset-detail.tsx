@@ -1,5 +1,6 @@
 import React from "react"
 import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store"
+import { useTranslation } from "@imify/i18n"
 
 interface PresetDetailLineProps {
   label: string
@@ -22,22 +23,23 @@ interface SplicingPresetDetailProps {
 }
 
 export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
+  const { t } = useTranslation("splicing")
   const config = preset.config
 
   const layoutLabel = (() => {
-    if (config.preset === "stitch_vertical") return "Stitch V"
-    if (config.preset === "stitch_horizontal") return "Stitch H"
-    if (config.preset === "grid") return `Grid (${config.gridCount} cols)`
+    if (config.preset === "stitch_vertical") return t("preset.stitchV")
+    if (config.preset === "stitch_horizontal") return t("preset.stitchH")
+    if (config.preset === "grid") return `${t("preset.grid")} (${t("preset.layoutColumns", { count: config.gridCount })})`
     if (config.preset === "bento") {
       const modeLabel =
         config.primaryDirection === "vertical" && config.secondaryDirection === "vertical"
-          ? "Vert"
+          ? t("preset.bentoVert")
           : config.primaryDirection === "horizontal" && config.secondaryDirection === "vertical"
-            ? "Fixed Vert"
+            ? t("preset.bentoFixedVert")
             : config.primaryDirection === "horizontal" && config.secondaryDirection === "horizontal"
-              ? "Horiz"
-              : "Fixed Horiz"
-      return `Bento (${modeLabel})`
+              ? t("preset.bentoHoriz")
+              : t("preset.bentoFixedHoriz")
+      return `${t("preset.bento")} (${modeLabel})`
     }
     return "—"
   })()
@@ -52,7 +54,11 @@ export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
 
   // Resize display
   let resizeLabel = config.imageResize
-    ? config.imageResize.replace("_", " ").charAt(0).toUpperCase() + config.imageResize.replace("_", " ").slice(1)
+    ? config.imageResize === "original"
+      ? t("imageFields.original")
+      : config.imageResize === "fit_width"
+      ? t("imageFields.fitWidth")
+      : t("imageFields.fitHeight")
     : "—"
 
   // Export format
@@ -61,21 +67,18 @@ export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
   // Export mode
   let modeLabel = config.exportMode
     ? config.exportMode === "single"
-      ? "Single"
+      ? t("preset.modeSingle")
       : config.exportMode === "per_row"
-      ? "Per Row"
-      : "Per Col"
+      ? t("preset.modePerRow")
+      : t("preset.modePerCol")
     : "—"
 
   return (
     <div className="space-y-2 rounded-md bg-slate-50/50 p-2 dark:bg-slate-900/20">
-      <PresetDetailLine label="Layout" value={layoutLabel} />
-      <PresetDetailLine label="Canvas" value={canvasLabel} />
-      <PresetDetailLine label="Export Format" value={formatLabel} />
-      <PresetDetailLine label="Export Mode" value={modeLabel} />
+      <PresetDetailLine label={t("sidebar.layout")} value={layoutLabel} />
+      <PresetDetailLine label={t("sidebar.canvas")} value={canvasLabel} />
+      <PresetDetailLine label={t("preset.exportFormat", { defaultValue: "Export Format" })} value={formatLabel} />
+      <PresetDetailLine label={t("exportFields.exportMode")} value={modeLabel} />
     </div>
   )
 }
-
-
-

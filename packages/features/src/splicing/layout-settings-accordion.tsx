@@ -49,6 +49,8 @@ interface LayoutSettingsAccordionProps {
  * Accordion for Layout Settings (Preset, Direction, Grid Controls)
  * Dynamically shows sublabel based on current preset
  */
+import { useTranslation } from "@imify/i18n"
+
 export function LayoutSettingsAccordion({
   preset,
   primaryDirection,
@@ -70,25 +72,65 @@ export function LayoutSettingsAccordion({
   onImageAppearanceDirectionChange,
   onImageAppearanceDirectionChangeFromPreset
 }: LayoutSettingsAccordionProps) {
+  const { t } = useTranslation("splicing")
+
+  const translateOption = (opt: { value: string; label: string }) => {
+    const key = opt.value.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+    return {
+      value: opt.value,
+      label: t(`layoutFields.${key}`, { defaultValue: opt.label })
+    }
+  }
+
+  const bentoModeText = (() => {
+    if (bentoLayoutMode === "vertical") return t("preset.bentoVert")
+    if (bentoLayoutMode === "horizontal") return t("preset.bentoHoriz")
+    if (bentoLayoutMode === "fixed_vertical") return t("preset.bentoFixedVert")
+    return t("preset.bentoFixedHoriz")
+  })()
+
   // Dynamic sublabel based on preset
   const sublabelMap: Record<SplicingPreset, string> = {
-    stitch_vertical: "Vertical stitching",
-    stitch_horizontal: "Horizontal stitching",
-    grid: `${gridCount} columns`,
-    bento: `Layout: ${bentoLayoutMode}`
+    stitch_vertical: t("preset.layoutVert"),
+    stitch_horizontal: t("preset.layoutHoriz"),
+    grid: `${gridCount} ${t("workspace.statsColumns")}`,
+    bento: t("preset.layoutBento", { mode: bentoModeText })
   }
+
+  const localizedPresetOptions = PRESET_OPTIONS.map((opt) => {
+    let title = ""
+    let subtitle = ""
+    if (opt.value === "stitch_vertical") {
+      title = t("preset.stitchV")
+      subtitle = t("preset.stitchVDesc")
+    } else if (opt.value === "stitch_horizontal") {
+      title = t("preset.stitchH")
+      subtitle = t("preset.stitchHDesc")
+    } else if (opt.value === "grid") {
+      title = t("preset.grid")
+      subtitle = t("preset.gridDesc")
+    } else if (opt.value === "bento") {
+      title = t("preset.bento")
+      subtitle = t("preset.bentoDesc")
+    }
+    return { ...opt, title, subtitle }
+  })
+
+  const localizedGridDirectionOptions = GRID_DIRECTION_OPTIONS.map(translateOption)
+  const localizedStitchVDirectionOptions = STITCH_V_DIRECTION_OPTIONS.map(translateOption)
+  const localizedStitchHDirectionOptions = STITCH_H_DIRECTION_OPTIONS.map(translateOption)
 
   return (
     <AccordionCard
       icon={<Rows size={16} />}
-      label="Layout Settings"
+      label={t("sidebar.layout")}
       sublabel={sublabelMap[preset]}
       colorTheme="sky"
       defaultOpen={true}
     >
       <div className="space-y-3 pt-1">
         <div className="grid grid-cols-2 gap-1.5">
-          {PRESET_OPTIONS.map((opt) => (
+          {localizedPresetOptions.map((opt) => (
             <RadioCard
               key={opt.value}
               icon={opt.icon}
@@ -142,7 +184,7 @@ export function LayoutSettingsAccordion({
               <div className="flex gap-2 items-start">
                 <div className="min-w-0 shrink-0 flex-[1]">
                   <NumberInput
-                    label="Columns"
+                    label={t("layoutFields.columns")}
                     value={gridCount}
                     onChangeValue={onGridCountChange}
                     min={1}
@@ -151,9 +193,9 @@ export function LayoutSettingsAccordion({
                 </div>
                 <div className="min-w-0 flex-[2]">
                   <SelectField
-                    label="Image Direction"
+                    label={t("layoutFields.imageDirection")}
                     value={imageAppearanceDirection}
-                    options={GRID_DIRECTION_OPTIONS}
+                    options={localizedGridDirectionOptions}
                     onChange={(v) => onImageAppearanceDirectionChange(v as SplicingImageAppearanceDirection)}
                   />
                 </div>
@@ -164,18 +206,18 @@ export function LayoutSettingsAccordion({
 
         {preset === "stitch_vertical" && (
           <SelectField
-            label="Image Direction"
+            label={t("layoutFields.imageDirection")}
             value={imageAppearanceDirection}
-            options={STITCH_V_DIRECTION_OPTIONS}
+            options={localizedStitchVDirectionOptions}
             onChange={(v) => onImageAppearanceDirectionChange(v as SplicingImageAppearanceDirection)}
           />
         )}
 
         {preset === "stitch_horizontal" && (
           <SelectField
-            label="Image Direction"
+            label={t("layoutFields.imageDirection")}
             value={imageAppearanceDirection}
-            options={STITCH_H_DIRECTION_OPTIONS}
+            options={localizedStitchHDirectionOptions}
             onChange={(v) => onImageAppearanceDirectionChange(v as SplicingImageAppearanceDirection)}
           />
         )}

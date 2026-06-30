@@ -3,7 +3,7 @@ import { RotateCcw } from "lucide-react"
 import type { RefObject } from "react"
 import type { ValueScrubHandlers } from "../shared/use-value-scrubbing"
 import { Tooltip } from "../shared/tooltip"
-import { SPLICING_TOOLTIPS } from "./splicing-tooltips"
+import { useTranslation } from "@imify/i18n"
 
 interface PreviewZoomControlProps {
   editingZoom: boolean
@@ -30,6 +30,8 @@ export function PreviewZoomControl({
   onResetZoom,
   scrubHandlers
 }: PreviewZoomControlProps) {
+  const { t } = useTranslation("splicing")
+
   return (
     <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-slate-900/90 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-lg z-10 pointer-events-auto select-text">
       {editingZoom ? (
@@ -38,7 +40,7 @@ export function PreviewZoomControl({
           type="text"
           inputMode="numeric"
           autoComplete="off"
-          aria-label="Zoom percent"
+          aria-label={t("tooltips.previewZoom.label")}
           className="w-14 rounded bg-slate-800 px-1.5 py-0.5 text-right tabular-nums text-white outline-none ring-1 ring-sky-500"
           value={zoomDraft}
           onChange={(e) => onZoomDraftChange(e.target.value.replace(/\D/g, ""))}
@@ -57,8 +59,8 @@ export function PreviewZoomControl({
       ) : (
         <Tooltip
           variant="wide1"
-          label={SPLICING_TOOLTIPS.previewZoom.label}
-          content={SPLICING_TOOLTIPS.previewZoom.controlsHelp}
+          label={t("tooltips.previewZoom.label")}
+          content={t("tooltips.previewZoom.controlsHelp")}
         >
           <button
             type="button"

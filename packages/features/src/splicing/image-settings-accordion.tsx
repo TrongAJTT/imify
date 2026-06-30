@@ -30,6 +30,8 @@ interface ImageSettingsAccordionProps {
  * Accordion for Image Settings (Resize, Padding, Border)
  * Dynamically shows sublabel based on resize and padding values
  */
+import { useTranslation } from "@imify/i18n"
+
 export function ImageSettingsAccordion({
   imageResize,
   imageFitValue,
@@ -49,14 +51,15 @@ export function ImageSettingsAccordion({
   onImageBorderColorChange,
   onImageResizeOpenChange
 }: ImageSettingsAccordionProps) {
+  const { t } = useTranslation("splicing")
   // Dynamic sublabel showing resize mode and padding
-  const resizeLabel = imageResize === "original" ? "Original" : imageResize === "fit_width" ? "Fit Width" : "Fit Height"
-  const sublabel = `Mode: ${resizeLabel}, Padding: ${imagePadding}`
+  const resizeLabel = imageResize === "original" ? t("imageFields.original") : imageResize === "fit_width" ? t("imageFields.fitWidth") : t("imageFields.fitHeight")
+  const sublabel = t("imageFields.mode", { mode: resizeLabel }) + `, ${t("imageFields.padding")}: ${imagePadding}`
 
   return (
     <AccordionCard
       icon={<ImageIcon size={16} />}
-      label="Image Settings"
+      label={t("sidebar.image")}
       sublabel={sublabel}
       colorTheme="orange"
       defaultOpen={true}
@@ -94,13 +97,13 @@ export function ImageSettingsAccordion({
         />
 
         <div className="grid grid-cols-3 gap-2">
-          <NumberInput label="Padding" value={imagePadding} onChangeValue={onImagePaddingChange} min={0} max={100} />
-          <NumberInput label="Radius" value={imageBorderRadius} onChangeValue={onImageBorderRadiusChange} min={0} max={100} />
-          <NumberInput label="Border" value={imageBorderWidth} onChangeValue={onImageBorderWidthChange} min={0} max={20} />
+          <NumberInput label={t("imageFields.padding")} value={imagePadding} onChangeValue={onImagePaddingChange} min={0} max={100} />
+          <NumberInput label={t("imageFields.radius")} value={imageBorderRadius} onChangeValue={onImageBorderRadiusChange} min={0} max={100} />
+          <NumberInput label={t("imageFields.border")} value={imageBorderWidth} onChangeValue={onImageBorderWidthChange} min={0} max={20} />
         </div>
         {imagePadding > 0 && (
           <ColorPickerPopover
-            label="Padding Color"
+            label={t("imageFields.paddingColor")}
             value={imagePaddingColor}
             onChange={onImagePaddingColorChange}
             enableAlpha={false}
@@ -109,7 +112,7 @@ export function ImageSettingsAccordion({
         )}
         {imageBorderWidth > 0 && (
           <ColorPickerPopover
-            label="Border Color"
+            label={t("imageFields.borderColor")}
             value={imageBorderColor}
             onChange={onImageBorderColorChange}
             enableAlpha={false}

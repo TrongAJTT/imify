@@ -24,6 +24,8 @@ interface CanvasSettingsAccordionProps {
  * Accordion for Canvas Settings
  * Dynamically shows sublabel based on padding and spacing values
  */
+import { useTranslation } from "@imify/i18n"
+
 export function CanvasSettingsAccordion({
   canvasPadding,
   mainSpacing,
@@ -40,29 +42,30 @@ export function CanvasSettingsAccordion({
   onCanvasBorderColorChange,
   onBackgroundColorChange
 }: CanvasSettingsAccordionProps) {
+  const { t } = useTranslation("splicing")
   // Dynamic sublabel showing padding and spacing values
-  const sublabel = `Padding: ${canvasPadding}, Gaps: ${mainSpacing}/${crossSpacing}`
+  const sublabel = t("canvasFields.sublabel", { padding: canvasPadding, main: mainSpacing, cross: crossSpacing })
 
   return (
     <AccordionCard
       icon={<Square size={16} />}
-      label="Canvas Settings"
+      label={t("sidebar.canvas")}
       sublabel={sublabel}
       colorTheme="purple"
       defaultOpen={true}
     >
       <div className="space-y-3 pt-1">
         <div className="grid grid-cols-2 gap-2">
-          <NumberInput label="Main Gap" value={mainSpacing} onChangeValue={onMainSpacingChange} min={0} max={200} />
-          <NumberInput label="Cross Gap" value={crossSpacing} onChangeValue={onCrossSpacingChange} min={0} max={200} />
+          <NumberInput label={t("canvasFields.mainGap")} value={mainSpacing} onChangeValue={onMainSpacingChange} min={0} max={200} />
+          <NumberInput label={t("canvasFields.crossGap")} value={crossSpacing} onChangeValue={onCrossSpacingChange} min={0} max={200} />
         </div>
         <div className="grid grid-cols-3 gap-2">
-          <NumberInput label="Padding" value={canvasPadding} onChangeValue={onCanvasPaddingChange} min={0} max={200} />
-          <NumberInput label="Radius" value={canvasBorderRadius} onChangeValue={onCanvasBorderRadiusChange} min={0} max={200} />
-          <NumberInput label="Border" value={canvasBorderWidth} onChangeValue={onCanvasBorderWidthChange} min={0} max={50} />
+          <NumberInput label={t("canvasFields.padding")} value={canvasPadding} onChangeValue={onCanvasPaddingChange} min={0} max={200} />
+          <NumberInput label={t("canvasFields.radius")} value={canvasBorderRadius} onChangeValue={onCanvasBorderRadiusChange} min={0} max={200} />
+          <NumberInput label={t("canvasFields.border")} value={canvasBorderWidth} onChangeValue={onCanvasBorderWidthChange} min={0} max={50} />
         </div>
         <ColorPickerPopover
-          label="Background"
+          label={t("canvasFields.background")}
           value={backgroundColor}
           onChange={onBackgroundColorChange}
           enableAlpha
@@ -70,7 +73,7 @@ export function CanvasSettingsAccordion({
         />
         {canvasBorderWidth > 0 && (
           <ColorPickerPopover
-            label="Border Color"
+            label={t("canvasFields.borderColor")}
             value={canvasBorderColor}
             onChange={onCanvasBorderColorChange}
             enableAlpha={false}

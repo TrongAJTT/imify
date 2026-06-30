@@ -7,6 +7,7 @@ import { SavePresetDialog } from "../processor/save-preset-dialog"
 import { SplicingPresetDetail } from "./splicing-preset-detail"
 import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store"
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors"
+import { useTranslation } from "@imify/i18n"
 
 interface SplicingPresetSelectViewProps {
   presets: SavedSplicingPreset[]
@@ -30,6 +31,8 @@ function SplicingPresetCard({
   onEdit: () => void
   onDelete: () => void
 }) {
+  const { t } = useTranslation("splicing")
+
   return (
     <div
       role="button"
@@ -70,7 +73,7 @@ function SplicingPresetCard({
             {isActive ? (
               <span className="inline-flex items-center gap-1 font-semibold text-orange-600 dark:text-orange-400">
                 <Check size={12} />
-                Active
+                {t("select.active")}
               </span>
             ) : null}
           </div>
@@ -124,6 +127,7 @@ export function SplicingPresetSelectView({
   onUpdatePresetMeta,
   onDeletePreset
 }: SplicingPresetSelectViewProps) {
+  const { t } = useTranslation("splicing")
   const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false)
   const [editingPreset, setEditingPreset] = useState<SavedSplicingPreset | null>(null)
 
@@ -159,7 +163,7 @@ export function SplicingPresetSelectView({
   }
 
   const confirmDeletePreset = (preset: SavedSplicingPreset) => {
-    const shouldDelete = window.confirm(`Delete preset "${preset.name}"?`)
+    const shouldDelete = window.confirm(t("select.deleteConfirm", { name: preset.name }))
     if (!shouldDelete) {
       return
     }
@@ -174,16 +178,16 @@ export function SplicingPresetSelectView({
           <EmptyDropCard
             icon={<Plus size={28} className="text-orange-500" />}
             iconWrapperClassName="bg-orange-100 dark:bg-orange-900/30 border-transparent shadow-none"
-            title="No splicing presets yet"
-            subtitle="Create your first preset to start working"
+            title={t("select.noPresetsTitle")}
+            subtitle={t("select.noPresetsSubtitle")}
             onClick={openCreateDialog}
           />
         </>
       ) : (
         <>
           <WorkspaceSelectHeader
-            title="Splicing Presets"
-            createLabel="New Preset"
+            title={t("select.title")}
+            createLabel={t("select.newPreset")}
             onCreate={openCreateDialog}
             createIcon={<Plus size={14} />}
           />
@@ -211,19 +215,18 @@ export function SplicingPresetSelectView({
         }}
         onSave={handleSavePreset}
         highlightColors={[...PRESET_HIGHLIGHT_COLORS]}
-        title={editingPreset ? "Edit Splicing Preset" : "Save Splicing Preset"}
+        title={editingPreset ? t("select.editPreset") : t("select.savePreset")}
         defaultName={
           editingPreset
             ? editingPreset.name
-            : `Splicing Preset ${new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit"
-              })}`
+            : t("select.presetDefaultName", {
+                time: new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })
+              })
         }
       />
     </div>
   )
 }
-
-
-
