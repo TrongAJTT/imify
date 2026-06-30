@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
 import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
+import { useTranslation } from "@imify/i18n";
 import { FillLayerCard } from "@imify/features/filling/fill/layer-card";
 import { FillLayerCustomizationAccordion } from "@imify/features/filling/fill/layer-customization-accordion";
 import { FillCanvasAccordion } from "@imify/features/filling/fill/canvas-accordion";
@@ -59,6 +60,7 @@ export function FillSidebar({
   template,
   enableWideSidebarGrid = false,
 }: FillSidebarProps) {
+  const { t } = useTranslation("filling");
   const layerFillStates = useFillingStore((s) => s.layerFillStates);
   const sessionTemplate = useFillUiStore((s) => s.sessionTemplate);
   const initializeFillSession = useFillUiStore((s) => s.initializeFillSession);
@@ -205,12 +207,12 @@ export function FillSidebar({
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "layers",
-      label: "Layers",
+      label: t("manualEditor.layers"),
       content: (
         <ResizableAccordionCard
           icon={<ImagePlus size={16} />}
-          label="Layers"
-          sublabel={`${runtimeItems.length} visible`}
+          label={t("manualEditor.layers")}
+          sublabel={t("fill.visibleCount", { count: runtimeItems.length })}
           colorTheme="sky"
           defaultOpen={true}
           height={layersAccordionHeight}
@@ -247,23 +249,27 @@ export function FillSidebar({
     },
     {
       id: "layer-customization",
-      label: "Layer Customization",
+      label: t("fill.layerCustomization"),
       content: <FillLayerCustomizationAccordion template={activeTemplate} />,
     },
-    { id: "canvas", label: "Canvas", content: <FillCanvasAccordion /> },
+    {
+      id: "canvas",
+      label: t("manualEditor.canvas"),
+      content: <FillCanvasAccordion />,
+    },
     {
       id: "output-settings",
       label: "",
       content: (
         <PresetSelector
-          label="Output Settings"
+          label={t("fill.outputSettings")}
           theme="amber"
           identifiedPreset={fillingIdentifiedPreset}
           formatFilter={FILLING_TARGET_FORMATS}
           activePresetId={activePresetId}
           onSelect={applyPreset}
           onReset={resetToDefault}
-          tooltipContent="Select an export preset for Image Filling."
+          tooltipContent={t("fill.presetSelectorTooltip")}
         />
       ),
     },

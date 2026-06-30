@@ -39,7 +39,7 @@ import type {
   FillingTemplate,
   VectorLayer,
   LayerFillState,
-  ImageTransform
+  ImageTransform,
 } from "@imify/features/filling/types";
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
@@ -86,6 +86,7 @@ import {
 } from "../../shared/image-file-utils";
 import { exportFilledTemplate } from "../filling-export-utils";
 import { templateStorage } from "../template-storage";
+import { useTranslation } from "@imify/i18n";
 
 const CANVAS_PADDING = 40;
 const ROTATE_CURSOR = "crosshair";
@@ -120,6 +121,7 @@ interface FillWorkspaceProps {
 }
 
 export function FillWorkspace({ template }: FillWorkspaceProps) {
+  const { t } = useTranslation("filling");
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -1483,11 +1485,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       fontSize,
       text: isDragOverSelectedEmptyTarget
         ? compact
-          ? "Drop"
-          : "Drop image"
+          ? t("fill.emptyDropShort")
+          : t("fill.emptyDropLong")
         : compact
-          ? "+"
-          : "+ Select image",
+          ? t("fill.emptySelectShort")
+          : t("fill.emptySelectLong"),
       isDragOver: isDragOverSelectedEmptyTarget,
       clipPolygons: clipPolygons.map((polygon) =>
         flattenPoints(polygon).map(
@@ -1542,11 +1544,14 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     <div className="space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <Subheading>Fill Images</Subheading>
+          <Subheading>{t("dialog.fillTitle")}</Subheading>
           <MutedText className="text-xs mt-0.5 truncate">
             {template.canvasWidth} x {template.canvasHeight} px &middot;{" "}
-            {template.layers.length} layer
-            {template.layers.length !== 1 ? "s" : ""}
+            {template.layers.length === 1
+              ? t("templateList.layersCount", { count: 1 })
+              : t("templateList.layersCountPlural", {
+                  count: template.layers.length,
+                })}
           </MutedText>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -1568,12 +1573,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
             {isExporting ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                Exporting...
+                {t("fill.exporting")}
               </>
             ) : (
               <>
                 <Download size={14} />
-                Export {exportFormat.toUpperCase()}
+                {t("fill.exportButton", { format: exportFormat.toUpperCase() })}
               </>
             )}
           </Button>
