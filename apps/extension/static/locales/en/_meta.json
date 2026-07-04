@@ -1,0 +1,12 @@
+{
+  "languageName": "English",
+  "languageCode": "en",
+  "version": "2.2.0",
+  "maintainers": [
+    {
+      "name": "TrongAJTT",
+      "github": "https://github.com/trongajtt",
+      "role": "Core Maintainer"
+    }
+  ]
+}

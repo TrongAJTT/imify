@@ -75,7 +75,8 @@ export const NAMESPACES = [
   "backgroundRemover",
   "upscaler",
   "qrGenerator",
-  "qrReader"
+  "qrReader",
+  "shared"
 ] as const
 
 export function calculateOverallCompletionDetails(

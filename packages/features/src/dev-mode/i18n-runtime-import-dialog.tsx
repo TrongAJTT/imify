@@ -64,7 +64,7 @@ export function I18nRuntimeImportDialog({
           "common", "workspace", "settings", "devMode", "about", "homepage",
           "processor", "splitter", "splicing", "filling", "pattern",
           "diffchecker", "inspector", "backgroundRemover", "upscaler",
-          "qrGenerator", "qrReader"
+          "qrGenerator", "qrReader", "shared"
         ]
 
         let totalKeys = 0

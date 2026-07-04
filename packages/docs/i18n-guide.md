@@ -1,115 +1,215 @@
 # Internationalization (i18n) & Localization Guide
 
-This document explains how to add new localization files (namespaces) or integrate new bundled languages into the `@imify/i18n` package.
+This document explains how the `@imify/i18n` package works and how to add new localization files, namespaces, or bundled languages.
 
 ---
 
-## 1. Adding a New Localization File (Namespace)
+## Architecture Overview
 
-Each functional category (e.g., `splicing`, `filling`, `shared`) in the app corresponds to a translation namespace represented by a JSON file.
+The i18n system uses **lazy loading** (Method 3): locale JSON files are fetched on demand rather than being statically bundled into the JavaScript bundle.
 
-### Step 1: Create the JSON Files
-Create a new JSON file under each language directory:
-- **English**: `packages/i18n/src/locales/en/myNamespace.json`
-- **Vietnamese**: `packages/i18n/src/locales/vi/myNamespace.json`
+| Environment | Locale Source | Fetch Method |
+|---|---|---|
+| **Chrome Extension** | `apps/extension/static/locales/` | `chrome.runtime.getURL("locales/{lang}/{ns}.json")` |
+| **Web App (Next.js)** | `apps/web/public/locales/` | `fetch("/locales/{lang}/{ns}.json")` |
 
-Ensure they have matching keys. For example:
+Both outputs are populated by sync scripts before `dev` or `build` commands run. The source of truth is always `packages/i18n/src/locales/`.
+
+### Loading Priority
+
+| Priority | Namespaces | Strategy |
+|---|---|---|
+| **Eager (inline bundle)** | `common`, `shared`, `_meta` | Always available — bundled into JS at build time |
+| **Lazy (on demand)** | All other namespaces | Fetched via `LocaleBackend` when first accessed |
+
+---
+
+## File Structure
+
+```
+packages/i18n/src/locales/
+  en/
+    _meta.json          ← Language metadata (name, code, version, maintainers)
+    common.json         ← Core UI strings (always eagerly bundled)
+    shared.json         ← Cross-feature shared strings (always eagerly bundled)
+    about.json          ← Lazy loaded
+    homepage.json       ← Lazy loaded
+    ... (other namespaces)
+  vi/
+    _meta.json
+    common.json
+    shared.json
+    ... (matching structure)
+```
+
+### `_meta.json` Format
 ```json
 {
-  "myFeature": {
-    "title": "My Feature Title"
-  }
+  "languageName": "English",
+  "languageCode": "en",
+  "version": "2.2.0",
+  "maintainers": [
+    { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+  ]
 }
 ```
 
-### Step 2: Register the Namespace in `i18n-instance.ts`
-Open [i18n-instance.ts](file:///g:/BrowserExtensions/imify/packages/i18n/src/i18n-instance.ts) and register the new namespace:
+> [!IMPORTANT]
+> `_meta` is **not** stored inside individual namespace files anymore. It lives in its own `_meta.json` per language directory and is registered in i18next as the `"_meta"` namespace.
 
-1. **Import the JSON files**:
-   ```typescript
-   import enMyNamespace from "./locales/en/myNamespace.json"
-   import viMyNamespace from "./locales/vi/myNamespace.json"
-   ```
-2. **Add to `ALL_NAMESPACES`**:
-   ```typescript
-   export const ALL_NAMESPACES = [
-     // ... other namespaces
-     "myNamespace"
-   ] as const
-   ```
-3. **Register in `buildResources()`**:
-   ```typescript
-   function buildResources() {
-     return {
-       en: {
-         // ...
-         myNamespace: enMyNamespace
-       },
-       vi: {
-         // ...
-         myNamespace: viMyNamespace
-       }
-     }
-   }
-   ```
+---
 
-### Step 3: Use the Namespace in Components
-Import `useTranslation` from `@imify/i18n` (never `@imify/i18n/index`) and specify your namespace:
+## 1. Adding a New Namespace (Localization File)
+
+### Step 1: Create JSON Files
+
+Create the namespace file under each language directory:
+```
+packages/i18n/src/locales/en/myFeature.json
+packages/i18n/src/locales/vi/myFeature.json
+```
+
+Example content:
+```json
+{
+  "title": "My Feature Title",
+  "description": "What this feature does"
+}
+```
+
+> [!NOTE]
+> Do **not** add a `_meta` block inside namespace files. Metadata lives only in `_meta.json`.
+
+### Step 2: Register in `ALL_NAMESPACES`
+
+Open [i18n-instance.ts](file:///g:/BrowserExtensions/imify/packages/i18n/src/i18n-instance.ts) and add the namespace name to `ALL_NAMESPACES`:
+
+```typescript
+export const ALL_NAMESPACES = [
+  "common",
+  // ...
+  "myFeature"  // ← Add this
+] as const
+```
+
+No additional imports or `buildResources()` changes are needed — the `LocaleBackend` will automatically fetch `myFeature.json` from the filesystem when a component first calls `useTranslation("myFeature")`.
+
+### Step 3: Add to Completion Calculator
+
+Open [completion-calculator.ts](file:///g:/BrowserExtensions/imify/packages/i18n/src/completion-calculator.ts) and add the namespace to the `NAMESPACES` constant:
+
+```typescript
+export const NAMESPACES = [
+  // ...
+  "myFeature"  // ← Add this
+] as const
+```
+
+### Step 4: Add to Runtime Template
+
+Open [runtime-import.ts](file:///g:/BrowserExtensions/imify/packages/i18n/src/runtime-import.ts) and add the namespace to the list inside `generateEmptyLanguageTemplate()`:
+
+```typescript
+const namespaces = [
+  // ...
+  "myFeature"  // ← Add this
+]
+```
+
+### Step 5: Use in Components
+
 ```tsx
 import { useTranslation } from "@imify/i18n"
 
 export function MyComponent() {
-  const { t } = useTranslation("myNamespace")
-  return <h1>{t("myFeature.title")}</h1>
+  const { t } = useTranslation("myFeature")
+  return <h1>{t("title")}</h1>
 }
 ```
+
+> [!IMPORTANT]
+> Always import `useTranslation` from `@imify/i18n` — never from `@imify/i18n/index`.
 
 ---
 
 ## 2. Adding a New Bundled Language
 
-To integrate a new default language (e.g., Japanese - `ja`) statically:
+### Step 1: Create Locale Directory
 
-### Step 1: Create the Locale Directory
-1. Create a new directory `packages/i18n/src/locales/ja/`.
-2. Copy the JSON files from `en/` or `vi/` as a template and translate all of them.
+1. Create `packages/i18n/src/locales/{langCode}/`.
+2. Create `_meta.json` with the language metadata.
+3. Copy all namespace JSON files from `en/` and translate them.
 
-### Step 2: Import & Bundle in `i18n-instance.ts`
-1. **Import all JSON files** for the new language:
-   ```typescript
-   import jaCommon from "./locales/ja/common.json"
-   import jaWorkspace from "./locales/ja/workspace.json"
-   // ... import the rest
-   ```
-2. **Register in `buildResources()`**:
-   ```typescript
-   function buildResources() {
-     return {
-       en: { ... },
-       vi: { ... },
-       ja: {
-         common: jaCommon,
-         workspace: jaWorkspace,
-         // ... map the rest of the imported files
-       }
-     }
-   }
-   ```
+### Step 2: Register in `language-info.ts`
 
-### Step 3: Update `language-info.ts`
-Open [language-info.ts](file:///g:/BrowserExtensions/imify/packages/i18n/src/language-info.ts) and add the new language to the `bundled` array inside `getAvailableLanguages()`:
+Open [language-info.ts](file:///g:/BrowserExtensions/imify/packages/i18n/src/language-info.ts) and add the language to the `bundled` array:
+
 ```typescript
 const bundled = [
   { code: "en", name: "English" },
   { code: "vi", name: "Tiếng Việt" },
-  { code: "ja", name: "日本語" } // Add this
+  { code: "ja", name: "日本語" }  // ← Add this
 ]
 ```
 
+### Step 3: Inline-bundle `common` + `shared` + `_meta`
+
+Open [i18n-instance.ts](file:///g:/BrowserExtensions/imify/packages/i18n/src/i18n-instance.ts) and add the three eagerly-bundled namespaces for the new language:
+
+```typescript
+import jaCommon from "./locales/ja/common.json"
+import jaShared from "./locales/ja/shared.json"
+import jaMeta from "./locales/ja/_meta.json"
+
+function buildEagerResources() {
+  return {
+    en: { common: enCommon, shared: enShared, _meta: enMeta },
+    vi: { common: viCommon, shared: viShared, _meta: viMeta },
+    ja: { common: jaCommon, shared: jaShared, _meta: jaMeta }  // ← Add this
+  }
+}
+```
+
+All other namespaces for the new language are fetched lazily by the backend — no further registration needed.
+
+### Step 4: Sync Locale Files
+
+Run the sync scripts to copy the new locale files to both output directories:
+```bash
+node scripts/sync-locales.mjs
+node scripts/sync-locales-extension.mjs
+```
+
+Or simply run `pnpm dev` / `pnpm build` in either app — the sync runs automatically.
+
 ---
 
-## 🚨 Crucial Caveats & Best Practices
+## 3. Runtime Language Import (Community Languages)
 
-1. **Import Path Warning**: Always import `useTranslation` from `@imify/i18n` rather than `@imify/i18n/index`. Importing from `/index` causes build/typechecking issues in bundlers like Next.js and Webpack because of unresolved package exports.
-2. **Synchronize All Namespaces**: If you add a new namespace, you **must** create the JSON files in all supported languages and register them under all keys in `buildResources()`. Failing to do so causes type errors or missing fallback behaviors.
-3. **Completion Calculation**: The `completionRate` is calculated automatically against the English translation keys by comparing missing keys. Ensure English always serves as the primary base keys structure.
+The system supports importing community-contributed language files at runtime via the developer settings dialog. The import format is a single JSON file with `_meta` at the root alongside all namespace keys:
+
+```json
+{
+  "_meta": {
+    "languageName": "Français",
+    "languageCode": "fr",
+    "version": "1.0.0",
+    "maintainers": [{ "name": "Contributor", "github": "...", "role": "Translator" }]
+  },
+  "common": { "save": "Sauvegarder", ... },
+  "about": { ... },
+  "shared": { ... }
+}
+```
+
+The file is validated, stored in IndexedDB, and registered in i18next at runtime. `_meta` is registered as its own namespace (`"_meta"`) consistent with the bundled language behavior.
+
+---
+
+## 🚨 Crucial Caveats
+
+1. **Import path**: Always `import { useTranslation } from "@imify/i18n"` — never from `@imify/i18n/index`.
+2. **No `_meta` in namespace files**: Never add `_meta` back to individual namespace files. This causes the completion calculator to double-count and will break validation.
+3. **Sync scripts**: After adding/changing any locale JSON file, re-run the sync scripts (or `pnpm dev`/`pnpm build`) so both Web and Extension targets receive the updated files.
+4. **`common` + `shared` must be complete**: These are eagerly bundled and never lazy-loaded. They must be fully translated in all supported languages — missing keys here cause visible UI fallbacks at startup.
+5. **Completion rate**: Calculated by comparing each namespace against the English baseline. The `_meta` namespace is excluded from completion calculations automatically.

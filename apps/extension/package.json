@@ -9,12 +9,13 @@
     "check:media-assets": "node ../../scripts/check-media-asset-paths.mjs",
     "sync:features": "node ../../scripts/sync-shared-assets.mjs",
     "sync:wasm": "node ../../scripts/sync-wasm.mjs",
-    "sync:assets": "pnpm sync:wasm && pnpm sync:features && pnpm check:media-assets",
-    "dev": "node ../../scripts/with-root-metadata.mjs plasmo dev",
+    "sync:locales": "node ../../scripts/sync-locales-extension.mjs",
+    "sync:assets": "pnpm sync:wasm && pnpm sync:locales && pnpm sync:features && pnpm check:media-assets",
+    "dev": "node ../../scripts/sync-locales-extension.mjs && node ../../scripts/with-root-metadata.mjs plasmo dev",
     "typecheck": "tsc --noEmit",
-    "dev:chrome": "node ../../scripts/with-root-metadata.mjs plasmo dev --target=chrome-mv3",
-    "dev:firefox": "node ../../scripts/with-root-metadata.mjs plasmo dev --target=firefox-mv3",
-    "build": "node ../../scripts/with-root-metadata.mjs plasmo build",
+    "dev:chrome": "node ../../scripts/sync-locales-extension.mjs && node ../../scripts/with-root-metadata.mjs plasmo dev --target=chrome-mv3",
+    "dev:firefox": "node ../../scripts/sync-locales-extension.mjs && node ../../scripts/with-root-metadata.mjs plasmo dev --target=firefox-mv3",
+    "build": "node ../../scripts/sync-locales-extension.mjs && node ../../scripts/with-root-metadata.mjs plasmo build",
     "build:ci": "pnpm sync:assets && pnpm build:chrome && pnpm build:firefox && pnpm verify:manifests",
     "build:chrome": "node ../../scripts/with-root-metadata.mjs plasmo build --target=chrome-mv3",
     "build:edge": "node ../../scripts/with-root-metadata.mjs plasmo build --target=edge-mv3",
@@ -110,7 +111,8 @@
           "assets/WHATS_NEW.md",
           "assets/*.png",
           "assets/images/*",
-          "assets/features/*"
+          "assets/features/*",
+          "locales/**/*.json"
         ],
         "matches": [
           "http://*/*",

@@ -105,14 +105,13 @@ export async function loadRuntimeLanguages(): Promise<void> {
         runtimeLanguages[idx] = meta
       }
 
-      // Add bundles to i18n
+      // Add bundles to i18n — _meta is now its own namespace
       const namespaces = Object.keys(data).filter((k) => k !== "_meta")
       for (const ns of namespaces) {
         i18n.addResourceBundle(langCode, ns, data[ns], true, true)
       }
-      if (!namespaces.includes("common")) {
-        i18n.addResourceBundle(langCode, "common", { _meta: meta }, true, true)
-      }
+      // Register _meta as its own namespace so language-info.ts can read it
+      i18n.addResourceBundle(langCode, "_meta", meta, true, true)
     }
 
     // Force language update if the current language matches a loaded custom language
@@ -144,26 +143,16 @@ export function importLanguageAtRuntime(file: File): Promise<LanguageMeta> {
 
         const langCode = meta.languageCode
 
-        // Process namespaces
+        // Process namespaces (everything except the top-level _meta key)
         const namespaces = Object.keys(data).filter((k) => k !== "_meta")
-
-        // Ensure common namespace exists and contains the meta block
-        if (!data.common) {
-          data.common = {}
-        }
-        data.common._meta = meta
 
         // Save to IndexedDB
         await saveLanguageToStorage(meta, data)
 
-        // Add bundles to i18n
+        // Add bundles to i18n — _meta becomes its own namespace
+        i18n.addResourceBundle(langCode, "_meta", meta, true, true)
         for (const ns of namespaces) {
           i18n.addResourceBundle(langCode, ns, data[ns], true, true)
-        }
-
-        // Add common namespace if not in list
-        if (!namespaces.includes("common")) {
-          i18n.addResourceBundle(langCode, "common", data.common, true, true)
         }
 
         // Update in-memory list
@@ -204,6 +193,7 @@ function createEmptyClone(obj: any): any {
 }
 
 export function generateEmptyLanguageTemplate(meta: LanguageMeta): string {
+  // _meta is at the root of the exported file (alongside namespace keys)
   const template: any = {
     _meta: meta
   }
@@ -225,17 +215,14 @@ export function generateEmptyLanguageTemplate(meta: LanguageMeta): string {
     "backgroundRemover",
     "upscaler",
     "qrGenerator",
-    "qrReader"
+    "qrReader",
+    "shared"
   ]
 
   for (const ns of namespaces) {
     const enNs = i18n.getResourceBundle("en", ns)
     if (enNs) {
-      const cloned = createEmptyClone(enNs)
-      if (cloned && cloned._meta) {
-        delete cloned._meta
-      }
-      template[ns] = cloned
+      template[ns] = createEmptyClone(enNs)
     } else {
       template[ns] = {}
     }

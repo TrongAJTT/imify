@@ -20,21 +20,22 @@ export function getAvailableLanguages(): LanguageInfo[] {
   ]
 
   for (const lang of bundled) {
-    const commonBundle = i18n.getResourceBundle(lang.code, "common")
-    const meta = commonBundle?._meta
-    const maintainers = meta?.maintainers || [
+    // _meta is now a dedicated namespace (from _meta.json), not inside common
+    const metaBundle = i18n.getResourceBundle(lang.code, "_meta") as LanguageMeta | undefined
+    const maintainers = metaBundle?.maintainers ?? [
       { name: "TrongAJTT", github: "https://github.com/trongajtt", role: "Core Maintainer" }
     ]
     const completionRate = calculateOverallCompletionRate(lang.code, "en")
 
     list.push({
       code: lang.code,
-      name: lang.name,
+      name: metaBundle?.languageName ?? lang.name,
       completionRate,
       maintainers,
       isRuntime: false
     })
   }
+
 
   // 2. Runtime imported languages
   const runtimeLangs = getRuntimeLanguages()

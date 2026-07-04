@@ -2,46 +2,16 @@ import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
 import { devModePostProcessor } from "./dev-mode-processor"
 import { resolveInitialLanguage } from "./language-resolution"
+import { LocaleBackend } from "./locale-backend"
 
-// Import all English JSON files
+// Inline bundles for "common" and "shared" namespaces across all supported languages.
+// These are eagerly bundled to guarantee the UI shell never shows key fallbacks.
 import enCommon from "./locales/en/common.json"
-import enWorkspace from "./locales/en/workspace.json"
-import enSettings from "./locales/en/settings.json"
-import enDevMode from "./locales/en/devMode.json"
-import enAbout from "./locales/en/about.json"
-import enHomepage from "./locales/en/homepage.json"
-import enProcessor from "./locales/en/processor.json"
-import enSplitter from "./locales/en/splitter.json"
-import enSplicing from "./locales/en/splicing.json"
-import enFilling from "./locales/en/filling.json"
-import enPattern from "./locales/en/pattern.json"
-import enDiffchecker from "./locales/en/diffchecker.json"
-import enInspector from "./locales/en/inspector.json"
-import enBackgroundRemover from "./locales/en/backgroundRemover.json"
-import enUpscaler from "./locales/en/upscaler.json"
-import enQrGenerator from "./locales/en/qrGenerator.json"
-import enQrReader from "./locales/en/qrReader.json"
 import enShared from "./locales/en/shared.json"
-
-// Import all Vietnamese JSON files
+import enMeta from "./locales/en/_meta.json"
 import viCommon from "./locales/vi/common.json"
-import viWorkspace from "./locales/vi/workspace.json"
-import viSettings from "./locales/vi/settings.json"
-import viDevMode from "./locales/vi/devMode.json"
-import viAbout from "./locales/vi/about.json"
-import viHomepage from "./locales/vi/homepage.json"
-import viProcessor from "./locales/vi/processor.json"
-import viSplitter from "./locales/vi/splitter.json"
-import viSplicing from "./locales/vi/splicing.json"
-import viFilling from "./locales/vi/filling.json"
-import viPattern from "./locales/vi/pattern.json"
-import viDiffchecker from "./locales/vi/diffchecker.json"
-import viInspector from "./locales/vi/inspector.json"
-import viBackgroundRemover from "./locales/vi/backgroundRemover.json"
-import viUpscaler from "./locales/vi/upscaler.json"
-import viQrGenerator from "./locales/vi/qrGenerator.json"
-import viQrReader from "./locales/vi/qrReader.json"
 import viShared from "./locales/vi/shared.json"
+import viMeta from "./locales/vi/_meta.json"
 
 export const ALL_NAMESPACES = [
   "common",
@@ -64,47 +34,21 @@ export const ALL_NAMESPACES = [
   "shared"
 ] as const
 
-function buildResources() {
+/**
+ * Inline resources for the two eagerly-bundled namespaces.
+ * All other namespaces are loaded on demand via LocaleBackend.
+ */
+function buildEagerResources() {
   return {
     en: {
       common: enCommon,
-      workspace: enWorkspace,
-      settings: enSettings,
-      devMode: enDevMode,
-      about: enAbout,
-      homepage: enHomepage,
-      processor: enProcessor,
-      splitter: enSplitter,
-      splicing: enSplicing,
-      filling: enFilling,
-      pattern: enPattern,
-      diffchecker: enDiffchecker,
-      inspector: enInspector,
-      backgroundRemover: enBackgroundRemover,
-      upscaler: enUpscaler,
-      qrGenerator: enQrGenerator,
-      qrReader: enQrReader,
-      shared: enShared
+      shared: enShared,
+      _meta: enMeta
     },
     vi: {
       common: viCommon,
-      workspace: viWorkspace,
-      settings: viSettings,
-      devMode: viDevMode,
-      about: viAbout,
-      homepage: viHomepage,
-      processor: viProcessor,
-      splitter: viSplitter,
-      splicing: viSplicing,
-      filling: viFilling,
-      pattern: viPattern,
-      diffchecker: viDiffchecker,
-      inspector: viInspector,
-      backgroundRemover: viBackgroundRemover,
-      upscaler: viUpscaler,
-      qrGenerator: viQrGenerator,
-      qrReader: viQrReader,
-      shared: viShared
+      shared: viShared,
+      _meta: viMeta
     }
   }
 }
@@ -113,17 +57,27 @@ import { loadRuntimeLanguages } from "./runtime-import"
 
 export function initI18n(): typeof i18n {
   if (i18n.isInitialized) return i18n
+
   i18n
+    .use(LocaleBackend)
     .use(devModePostProcessor)
     .use(initReactI18next)
     .init({
-      resources: buildResources(),
+      // Eagerly bundled namespaces — always available without network fetch
+      resources: buildEagerResources(),
+      // The backend will be used for all other namespaces not in `resources`
+      partialBundledLanguages: true,
       lng: resolveInitialLanguage(),
       fallbackLng: "en",
-      ns: ALL_NAMESPACES,
+      // Default namespaces to load at startup — backend fetches these lazily
+      ns: ["common", "shared"],
       defaultNS: "common",
       interpolation: { escapeValue: false },
-      postProcess: ["imifyDevMode"]
+      postProcess: ["imifyDevMode"],
+      // Don't suspend on missing namespaces — we handle loading states ourselves
+      react: {
+        useSuspense: true
+      }
     })
 
   if (typeof window !== "undefined") {
