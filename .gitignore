@@ -48,6 +48,11 @@ _old/
 apps/extension/assets/
 apps/web/public/assets/
 
+# Generated synced locales
+apps/web/public/locales/
+apps/extension/static/locales/
+
+
 # Generated shared wasm source-of-truth
 assets/wasm/
 

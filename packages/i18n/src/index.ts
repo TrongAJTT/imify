@@ -57,8 +57,17 @@ export function useTranslation(ns?: any, options?: any) {
 
   const customT = useCallback(
     (key: any, ...args: any[]) => {
-      // Force 'en' for initial SSR render to match server-side HTML.
       if (!isMounted) {
+        // During SSR / pre-hydration: only translate if the namespace is eagerly bundled
+        // (common, shared, _meta). For all lazy-loaded namespaces, we return "" on both server
+        // and client sides to guarantee no hydration mismatch occurs. Once mounted, the client
+        // will re-render with the fully loaded translations.
+        const nsToCheck = Array.isArray(ns) ? ns[0] : (ns ?? "common")
+        const isEager = nsToCheck === "common" || nsToCheck === "shared" || nsToCheck === "_meta"
+        if (!isEager) {
+          return ""
+        }
+        // Eagerly bundled namespace — safe to translate; force lng:"en" to match SSR output.
         let tOptions: any = {}
         if (args.length > 0) {
           if (typeof args[0] === "string") {
@@ -73,7 +82,7 @@ export function useTranslation(ns?: any, options?: any) {
       }
       return (t as any)(key, ...args)
     },
-    [t, isMounted]
+    [t, isMounted, ns]
   )
 
   return { t: customT, i18n, ready }

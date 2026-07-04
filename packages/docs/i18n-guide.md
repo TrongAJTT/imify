@@ -19,7 +19,7 @@ Both outputs are populated by sync scripts before `dev` or `build` commands run.
 
 | Priority | Namespaces | Strategy |
 |---|---|---|
-| **Eager (inline bundle)** | `common`, `shared`, `_meta` | Always available — bundled into JS at build time |
+| **Eager (inline bundle)** | `common`, `_meta` | Always available — bundled into JS at build time |
 | **Lazy (on demand)** | All other namespaces | Fetched via `LocaleBackend` when first accessed |
 
 ---
@@ -31,14 +31,12 @@ packages/i18n/src/locales/
   en/
     _meta.json          ← Language metadata (name, code, version, maintainers)
     common.json         ← Core UI strings (always eagerly bundled)
-    shared.json         ← Cross-feature shared strings (always eagerly bundled)
     about.json          ← Lazy loaded
     homepage.json       ← Lazy loaded
     ... (other namespaces)
   vi/
     _meta.json
     common.json
-    shared.json
     ... (matching structure)
 ```
 
@@ -152,20 +150,19 @@ const bundled = [
 ]
 ```
 
-### Step 3: Inline-bundle `common` + `shared` + `_meta`
+### Step 3: Inline-bundle `common` + `_meta`
 
-Open [i18n-instance.ts](file:///g:/BrowserExtensions/imify/packages/i18n/src/i18n-instance.ts) and add the three eagerly-bundled namespaces for the new language:
+Open [i18n-instance.ts](file:///g:/BrowserExtensions/imify/packages/i18n/src/i18n-instance.ts) and add the eagerly-bundled namespaces for the new language:
 
 ```typescript
 import jaCommon from "./locales/ja/common.json"
-import jaShared from "./locales/ja/shared.json"
 import jaMeta from "./locales/ja/_meta.json"
 
 function buildEagerResources() {
   return {
-    en: { common: enCommon, shared: enShared, _meta: enMeta },
-    vi: { common: viCommon, shared: viShared, _meta: viMeta },
-    ja: { common: jaCommon, shared: jaShared, _meta: jaMeta }  // ← Add this
+    en: { common: enCommon, _meta: enMeta },
+    vi: { common: viCommon, _meta: viMeta },
+    ja: { common: jaCommon, _meta: jaMeta }  // ← Add this
   }
 }
 ```
@@ -211,5 +208,5 @@ The file is validated, stored in IndexedDB, and registered in i18next at runtime
 1. **Import path**: Always `import { useTranslation } from "@imify/i18n"` — never from `@imify/i18n/index`.
 2. **No `_meta` in namespace files**: Never add `_meta` back to individual namespace files. This causes the completion calculator to double-count and will break validation.
 3. **Sync scripts**: After adding/changing any locale JSON file, re-run the sync scripts (or `pnpm dev`/`pnpm build`) so both Web and Extension targets receive the updated files.
-4. **`common` + `shared` must be complete**: These are eagerly bundled and never lazy-loaded. They must be fully translated in all supported languages — missing keys here cause visible UI fallbacks at startup.
+4. **`common` must be complete**: This is eagerly bundled and never lazy-loaded. It must be fully translated in all supported languages — missing keys here cause visible UI fallbacks at startup.
 5. **Completion rate**: Calculated by comparing each namespace against the English baseline. The `_meta` namespace is excluded from completion calculations automatically.

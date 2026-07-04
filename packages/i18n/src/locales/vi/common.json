@@ -12,5 +12,8 @@
   "error": "Lỗi",
   "warning": "Cảnh báo",
   "noFileSelected": "Chưa chọn tệp nào",
-  "chooseFile": "Chọn tệp"
+  "chooseFile": "Chọn tệp",
+  "presetInfoShowcasePanel": {
+    "tipOfTheDay": "Mẹo hôm nay"
+  }
 }

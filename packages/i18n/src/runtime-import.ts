@@ -215,8 +215,7 @@ export function generateEmptyLanguageTemplate(meta: LanguageMeta): string {
     "backgroundRemover",
     "upscaler",
     "qrGenerator",
-    "qrReader",
-    "shared"
+    "qrReader"
   ]
 
   for (const ns of namespaces) {

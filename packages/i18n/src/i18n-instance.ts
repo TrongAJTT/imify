@@ -4,13 +4,11 @@ import { devModePostProcessor } from "./dev-mode-processor"
 import { resolveInitialLanguage } from "./language-resolution"
 import { LocaleBackend } from "./locale-backend"
 
-// Inline bundles for "common" and "shared" namespaces across all supported languages.
+// Inline bundles for "common" namespace across all supported languages.
 // These are eagerly bundled to guarantee the UI shell never shows key fallbacks.
 import enCommon from "./locales/en/common.json"
-import enShared from "./locales/en/shared.json"
 import enMeta from "./locales/en/_meta.json"
 import viCommon from "./locales/vi/common.json"
-import viShared from "./locales/vi/shared.json"
 import viMeta from "./locales/vi/_meta.json"
 
 export const ALL_NAMESPACES = [
@@ -30,24 +28,21 @@ export const ALL_NAMESPACES = [
   "backgroundRemover",
   "upscaler",
   "qrGenerator",
-  "qrReader",
-  "shared"
+  "qrReader"
 ] as const
 
 /**
- * Inline resources for the two eagerly-bundled namespaces.
+ * Inline resources for the eagerly-bundled namespace.
  * All other namespaces are loaded on demand via LocaleBackend.
  */
 function buildEagerResources() {
   return {
     en: {
       common: enCommon,
-      shared: enShared,
       _meta: enMeta
     },
     vi: {
       common: viCommon,
-      shared: viShared,
       _meta: viMeta
     }
   }
@@ -70,7 +65,7 @@ export function initI18n(): typeof i18n {
       lng: resolveInitialLanguage(),
       fallbackLng: "en",
       // Default namespaces to load at startup — backend fetches these lazily
-      ns: ["common", "shared"],
+      ns: ["common"],
       defaultNS: "common",
       interpolation: { escapeValue: false },
       postProcess: ["imifyDevMode"],

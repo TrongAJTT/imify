@@ -46,7 +46,7 @@ export function PresetInfoShowcasePanel({
   padding = 0,
   maxHeight = 240,
 }: PresetInfoShowcasePanelProps) {
-  const { t } = useTranslation("shared");
+  const { t } = useTranslation("common");
 
   const IMAGE_AUTO_ADVANCE_MS = 6000;
   const tipOfTheDay =
@@ -337,9 +337,9 @@ export function PresetInfoShowcasePanel({
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        {featureChips.map((chip) => (
+        {featureChips.map((chip, index) => (
           <span
-            key={chip}
+            key={`${chip}_${index}`}
             className="rounded-md border border-sky-200 bg-sky-50 px-2 py-1 text-[11px] font-medium text-sky-700 dark:border-sky-800 dark:bg-sky-900/30 dark:text-sky-200"
           >
             {chip}
@@ -356,15 +356,15 @@ export function PresetInfoShowcasePanel({
           {faqs.map((item, index) => {
             const isOpen = openFaqIndex === index;
             return (
-              <div key={item.question} className="py-1">
+              <div key={`${item.question}_${index}`} className="py-1">
                 <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-3 py-2 text-left"
-                  onClick={() =>
-                    setOpenFaqIndex((current) =>
-                      current === index ? null : index,
-                    )
-                  }
+                   type="button"
+                   className="flex w-full items-center justify-between gap-3 py-2 text-left"
+                   onClick={() =>
+                     setOpenFaqIndex((current) =>
+                       current === index ? null : index,
+                     )
+                   }
                 >
                   <span className="text-xs font-medium text-slate-800 dark:text-slate-100">
                     {item.question}
