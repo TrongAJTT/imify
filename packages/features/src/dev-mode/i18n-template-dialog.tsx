@@ -1,37 +1,36 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import { Download, AlertCircle, Languages } from "lucide-react"
-import { BaseDialog } from "@imify/ui/ui/base-dialog"
-import { Button } from "@imify/ui/ui/button"
-import {
-  generateEmptyLanguageTemplate,
-  type LanguageMeta
-} from "@imify/i18n"
+import React, { useState } from "react";
+import { Download, AlertCircle, Languages } from "lucide-react";
+import { BaseDialog } from "@imify/ui/ui/base-dialog";
+import { Button } from "@imify/ui/ui/button";
+import { generateEmptyLanguageZip, type LanguageMeta } from "@imify/i18n";
 
 interface I18nTemplateDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess?: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
 }
 
 export function I18nTemplateDialog({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
 }: I18nTemplateDialogProps) {
-  const [languageName, setLanguageName] = useState("")
-  const [languageCode, setLanguageCode] = useState("")
-  const [authorName, setAuthorName] = useState("")
-  const [authorGithub, setAuthorGithub] = useState("")
-  const [metaError, setMetaError] = useState<string | null>(null)
+  const [languageName, setLanguageName] = useState("");
+  const [languageCode, setLanguageCode] = useState("");
+  const [authorName, setAuthorName] = useState("");
+  const [authorGithub, setAuthorGithub] = useState("");
+  const [metaError, setMetaError] = useState<string | null>(null);
 
   const handleDownloadTemplate = () => {
     if (!languageName.trim() || !languageCode.trim()) {
-      setMetaError("Language Name and Language Code are required to download template.")
-      return
+      setMetaError(
+        "Language Name and Language Code are required to download template.",
+      );
+      return;
     }
-    setMetaError(null)
+    setMetaError(null);
 
     const meta: LanguageMeta = {
       languageName: languageName.trim(),
@@ -42,39 +41,39 @@ export function I18nTemplateDialog({
             {
               name: authorName.trim(),
               github: authorGithub.trim() || "https://github.com",
-              role: "Contributor"
-            }
+              role: "Contributor",
+            },
           ]
-        : []
-    }
+        : [],
+    };
 
     try {
-      const templateContent = generateEmptyLanguageTemplate(meta)
-      const blob = new Blob([templateContent], { type: "application/json" })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `imify_locale_${meta.languageCode}.json`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-      
-      onSuccess?.()
-      handleClose()
+      const zipData = generateEmptyLanguageZip(meta);
+      const blob = new Blob([zipData as BlobPart], { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `imify_locale_${meta.languageCode}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      onSuccess?.();
+      handleClose();
     } catch (err: any) {
-      setMetaError(err.message || "Failed to generate template.")
+      setMetaError(err.message || "Failed to generate template.");
     }
-  }
+  };
 
   const handleClose = () => {
-    setLanguageName("")
-    setLanguageCode("")
-    setAuthorName("")
-    setAuthorGithub("")
-    setMetaError(null)
-    onClose()
-  }
+    setLanguageName("");
+    setLanguageCode("");
+    setAuthorName("");
+    setAuthorGithub("");
+    setMetaError(null);
+    onClose();
+  };
 
   return (
     <BaseDialog
@@ -90,7 +89,8 @@ export function I18nTemplateDialog({
             <span>Generate Language Template</span>
           </h2>
           <p className="text-sm text-slate-500 mt-1">
-            Configure language metadata and download a skeleton JSON translation file.
+            Configure language metadata and download a skeleton ZIP translation
+            archive.
           </p>
         </div>
 
@@ -175,5 +175,5 @@ export function I18nTemplateDialog({
         </div>
       </div>
     </BaseDialog>
-  )
+  );
 }

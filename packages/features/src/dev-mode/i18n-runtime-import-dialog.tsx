@@ -6,7 +6,7 @@ import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { Button } from "@imify/ui/ui/button";
 import {
   importLanguageAtRuntime,
-  calculateCompletionDetails,
+  calculateImportedStats,
   type LanguageMeta,
 } from "@imify/i18n";
 import i18n from "i18next";
@@ -109,41 +109,11 @@ export function I18nRuntimeImportDialog({
             };
             setParsedData(mockParsedData);
 
-            const namespaces = [
-              "common",
-              "workspace",
-              "settings",
-              "devMode",
-              "about",
-              "homepage",
-              "processor",
-              "splitter",
-              "splicing",
-              "filling",
-              "pattern",
-              "diffchecker",
-              "inspector",
-              "backgroundRemover",
-              "upscaler",
-              "qrGenerator",
-              "qrReader",
-            ];
-
-            let totalKeys = 0;
-            let completedKeys = 0;
-
-            for (const ns of namespaces) {
-              const baseNs = i18n.getResourceBundle("en", ns);
-              const targetNs = data[ns];
-              const details = calculateCompletionDetails(targetNs, baseNs);
-              totalKeys += details.total;
-              completedKeys += details.completed;
-            }
-
-            const rate = totalKeys === 0 ? 1.0 : completedKeys / totalKeys;
+            const stats = calculateImportedStats(data);
+            const rate = stats.total === 0 ? 1.0 : stats.completed / stats.total;
             setCompletionStats({
-              completed: completedKeys,
-              total: totalKeys,
+              completed: stats.completed,
+              total: stats.total,
               rate,
             });
           } catch (innerErr: any) {

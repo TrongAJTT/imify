@@ -19,10 +19,11 @@ export {
 } from "./completion-calculator"
 export {
   importLanguageAtRuntime,
-  generateEmptyLanguageTemplate,
+  generateEmptyLanguageZip,
   getRuntimeLanguages,
   loadRuntimeLanguages,
   deleteRuntimeLanguage,
+  calculateImportedStats,
   type LanguageMeta
 } from "./runtime-import"
 export {

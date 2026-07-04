@@ -11,6 +11,118 @@ export interface LanguageMeta {
   }
 }
 
+import enCommon from "./locales/en/common.json"
+import enWorkspace from "./locales/en/workspace.json"
+import enSettings from "./locales/en/settings.json"
+import enDevMode from "./locales/en/devMode.json"
+import enAbout from "./locales/en/about.json"
+import enHomepage from "./locales/en/homepage.json"
+import enProcessor from "./locales/en/processor.json"
+import enSplitter from "./locales/en/splitter.json"
+import enSplicing from "./locales/en/splicing.json"
+import enFilling from "./locales/en/filling.json"
+import enPattern from "./locales/en/pattern.json"
+import enDiffchecker from "./locales/en/diffchecker.json"
+import enInspector from "./locales/en/inspector.json"
+import enBackgroundRemover from "./locales/en/backgroundRemover.json"
+import enUpscaler from "./locales/en/upscaler.json"
+import enQrGenerator from "./locales/en/qrGenerator.json"
+import enQrReader from "./locales/en/qrReader.json"
+
+const EN_RESOURCES: Record<string, any> = {
+  common: enCommon,
+  workspace: enWorkspace,
+  settings: enSettings,
+  devMode: enDevMode,
+  about: enAbout,
+  homepage: enHomepage,
+  processor: enProcessor,
+  splitter: enSplitter,
+  splicing: enSplicing,
+  filling: enFilling,
+  pattern: enPattern,
+  diffchecker: enDiffchecker,
+  inspector: enInspector,
+  backgroundRemover: enBackgroundRemover,
+  upscaler: enUpscaler,
+  qrGenerator: enQrGenerator,
+  qrReader: enQrReader
+}
+
+export const NAMESPACES = [
+  "common",
+  "workspace",
+  "settings",
+  "devMode",
+  "about",
+  "homepage",
+  "processor",
+  "splitter",
+  "splicing",
+  "filling",
+  "pattern",
+  "diffchecker",
+  "inspector",
+  "backgroundRemover",
+  "upscaler",
+  "qrGenerator",
+  "qrReader"
+] as const
+
+function countKeys(obj: any): number {
+  let count = 0
+  if (obj == null) return 0
+  function traverse(current: any) {
+    if (current == null) return
+    if (typeof current !== "object") { count++; return }
+    for (const key of Object.keys(current)) { traverse(current[key]) }
+  }
+  traverse(obj)
+  return count
+}
+
+function countMatchingKeys(target: any, base: any): number {
+  let count = 0
+  if (base == null) return 0
+  function getNestedValue(obj: any, path: string[]) {
+    let current = obj
+    for (const part of path) {
+      if (current == null || typeof current !== "object") return undefined
+      current = current[part]
+    }
+    return current
+  }
+  function traverse(currentBase: any, currentPath: string[]) {
+    if (currentBase == null) return
+    if (typeof currentBase !== "object") {
+      if (target) {
+        const targetVal = getNestedValue(target, currentPath)
+        if (typeof targetVal === "string" && targetVal.trim() !== "") {
+          count++
+        }
+      }
+      return
+    }
+    for (const key of Object.keys(currentBase)) {
+      traverse(currentBase[key], [...currentPath, key])
+    }
+  }
+  traverse(base, [])
+  return count
+}
+
+export function calculateImportedStats(data: Record<string, any>): { total: number; completed: number } {
+  let total = 0
+  let completed = 0
+  for (const ns of NAMESPACES) {
+    const baseNs = EN_RESOURCES[ns]
+    const targetNs = data[ns]
+    total += countKeys(baseNs)
+    completed += countMatchingKeys(targetNs, baseNs)
+  }
+  return { total, completed }
+}
+
 // In-memory registry for runtime imported languages
 const runtimeLanguages: LanguageMeta[] = []
 
@@ -128,7 +240,7 @@ export async function loadRuntimeLanguages(): Promise<void> {
   }
 }
 
-import { unzip } from "fflate"
+import { unzip, zipSync, strToU8 } from "fflate"
 
 export function importLanguageAtRuntime(file: File): Promise<LanguageMeta> {
   return new Promise((resolve, reject) => {
@@ -179,71 +291,7 @@ export function importLanguageAtRuntime(file: File): Promise<LanguageMeta> {
               }
             }
 
-            // Calculate stats for the imported custom language dynamically
-            const namespaces = [
-              "common", "workspace", "settings", "devMode", "about", "homepage",
-              "processor", "splitter", "splicing", "filling", "pattern",
-              "diffchecker", "inspector", "backgroundRemover", "upscaler",
-              "qrGenerator", "qrReader"
-            ]
-
-            let totalKeys = 0
-            let completedKeys = 0
-
-            for (const ns of namespaces) {
-              const baseNs = i18n.getResourceBundle("en", ns)
-              const targetNs = data[ns]
-              
-              function countKeys(obj: any) {
-                let count = 0
-                if (obj == null) return 0
-                function traverse(current: any) {
-                  if (current == null) return
-                  if (typeof current !== "object") { count++; return }
-                  for (const key of Object.keys(current)) { traverse(current[key]) }
-                }
-                traverse(obj)
-                return count
-              }
-
-              function countMatchingKeys(target: any, base: any) {
-                let count = 0
-                if (base == null) return 0
-                function getNestedValue(obj: any, pathPath: string[]) {
-                  let current = obj
-                  for (const part of pathPath) {
-                    if (current == null || typeof current !== "object") return undefined
-                    current = current[part]
-                  }
-                  return current
-                }
-                function traverse(currentBase: any, currentPath: string[]) {
-                  if (currentBase == null) return
-                  if (typeof currentBase !== "object") {
-                    if (target) {
-                      const targetVal = getNestedValue(target, currentPath)
-                      if (typeof targetVal === "string" && targetVal.trim() !== "") {
-                        count++
-                      }
-                    }
-                    return
-                  }
-                  for (const key of Object.keys(currentBase)) {
-                    traverse(currentBase[key], [...currentPath, key])
-                  }
-                }
-                traverse(base, [])
-                return count
-              }
-
-              totalKeys += countKeys(baseNs)
-              completedKeys += countMatchingKeys(targetNs, baseNs)
-            }
-
-            meta.stats = {
-              total: totalKeys,
-              completed: completedKeys
-            }
+            meta.stats = calculateImportedStats(data)
 
             // Save to IndexedDB
             saveLanguageToStorage(meta, data)
@@ -298,12 +346,7 @@ function createEmptyClone(obj: any): any {
   return clone
 }
 
-export function generateEmptyLanguageTemplate(meta: LanguageMeta): string {
-  // _meta is at the root of the exported file (alongside namespace keys)
-  const template: any = {
-    _meta: meta
-  }
-
+export function generateEmptyLanguageZip(meta: LanguageMeta): Uint8Array {
   const namespaces = [
     "common",
     "workspace",
@@ -324,14 +367,15 @@ export function generateEmptyLanguageTemplate(meta: LanguageMeta): string {
     "qrReader"
   ]
 
-  for (const ns of namespaces) {
-    const enNs = i18n.getResourceBundle("en", ns)
-    if (enNs) {
-      template[ns] = createEmptyClone(enNs)
-    } else {
-      template[ns] = {}
-    }
+  const files: Record<string, Uint8Array> = {
+    "_meta.json": strToU8(JSON.stringify(meta, null, 2) + "\n")
   }
 
-  return JSON.stringify(template, null, 2)
+  for (const ns of namespaces) {
+    const enNs = EN_RESOURCES[ns]
+    const emptyNs = enNs ? createEmptyClone(enNs) : {}
+    files[`${ns}.json`] = strToU8(JSON.stringify(emptyNs, null, 2) + "\n")
+  }
+
+  return zipSync(files)
 }
