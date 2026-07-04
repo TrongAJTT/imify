@@ -5,6 +5,7 @@ import type {
 } from "@imify/stores/stores/batch-store";
 import { Shield, Tooltip } from "@imify/ui";
 import { FileCode, Gauge, Maximize, Type, Pointer } from "lucide-react";
+import { useTranslation } from "@imify/i18n";
 
 export function ProcessorPresetDetail({
   preset,
@@ -16,6 +17,7 @@ export function ProcessorPresetDetail({
   alwaysVibrant?: boolean;
   onClick?: () => void;
 }) {
+  const { t } = useTranslation("processor");
   const config = preset.config;
   const rawFormat =
     config.targetFormat === "mozjpeg" ? "jpg" : config.targetFormat;
@@ -72,7 +74,7 @@ export function ProcessorPresetDetail({
       {/* Name Pattern Shield (Icon + Tooltip) */}
       <Tooltip variant="wide1" content={namePattern}>
         <Shield
-          left="Name"
+          left={t("rename")}
           right={<Pointer size={13} className="my-0.5" />}
           icon={<Type size={13} />}
           rightBg={rightBgClassName}

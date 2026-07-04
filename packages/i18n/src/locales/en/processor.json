@@ -19,6 +19,7 @@
   "original": "Original",
   "result": "Result",
   "impact": "Impact",
+  "rename": "Rename",
   "previewUnavailable": "Result preview is unavailable for this output type. You can still download the processed file.",
   "processing": "Processing...",
   "processingComplete": "Processing completed in {{time}}s",

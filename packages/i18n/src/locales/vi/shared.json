@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "languageName": "Tiếng Việt",
+    "languageCode": "vi",
+    "version": "2.2.0",
+    "maintainers": [
+      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+    ]
+  },
+  "presetInfoShowcasePanel": {
+    "tipOfTheDay": "Mẹo hôm nay"
+  }
+}

@@ -21,6 +21,7 @@ import enBackgroundRemover from "./locales/en/backgroundRemover.json"
 import enUpscaler from "./locales/en/upscaler.json"
 import enQrGenerator from "./locales/en/qrGenerator.json"
 import enQrReader from "./locales/en/qrReader.json"
+import enShared from "./locales/en/shared.json"
 
 // Import all Vietnamese JSON files
 import viCommon from "./locales/vi/common.json"
@@ -40,6 +41,7 @@ import viBackgroundRemover from "./locales/vi/backgroundRemover.json"
 import viUpscaler from "./locales/vi/upscaler.json"
 import viQrGenerator from "./locales/vi/qrGenerator.json"
 import viQrReader from "./locales/vi/qrReader.json"
+import viShared from "./locales/vi/shared.json"
 
 export const ALL_NAMESPACES = [
   "common",
@@ -58,7 +60,8 @@ export const ALL_NAMESPACES = [
   "backgroundRemover",
   "upscaler",
   "qrGenerator",
-  "qrReader"
+  "qrReader",
+  "shared"
 ] as const
 
 function buildResources() {
@@ -80,7 +83,8 @@ function buildResources() {
       backgroundRemover: enBackgroundRemover,
       upscaler: enUpscaler,
       qrGenerator: enQrGenerator,
-      qrReader: enQrReader
+      qrReader: enQrReader,
+      shared: enShared
     },
     vi: {
       common: viCommon,
@@ -99,7 +103,8 @@ function buildResources() {
       backgroundRemover: viBackgroundRemover,
       upscaler: viUpscaler,
       qrGenerator: viQrGenerator,
-      qrReader: viQrReader
+      qrReader: viQrReader,
+      shared: viShared
     }
   }
 }

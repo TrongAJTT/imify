@@ -4,7 +4,11 @@
     "languageCode": "vi",
     "version": "2.2.0",
     "maintainers": [
-      { "name": "TrongAJTT", "github": "https://github.com/trongajtt", "role": "Core Maintainer" }
+      {
+        "name": "TrongAJTT",
+        "github": "https://github.com/trongajtt",
+        "role": "Core Maintainer"
+      }
     ]
   },
   "title": "Bộ xử lý Ảnh Đơn & Hàng loạt",
@@ -19,6 +23,7 @@
   "original": "Gốc",
   "result": "Kết quả",
   "impact": "Dung lượng giảm",
+  "rename": "Đổi tên",
   "previewUnavailable": "Không thể xem trước kết quả cho định dạng đầu ra này. Bạn vẫn có thể tải xuống tệp đã xử lý.",
   "processing": "Đang xử lý...",
   "processingComplete": "Đã xử lý xong trong {{time}} giây",
