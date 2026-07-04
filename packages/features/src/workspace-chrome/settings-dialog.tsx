@@ -35,6 +35,7 @@ import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog"
 import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter"
 import { SettingsShortcutsPanel } from "./settings-shortcuts-panel"
 import { LanguageSettingsTab } from "./language-settings-tab"
+import { useTranslation } from "@imify/i18n"
 
 const DEFAULT_ACTIVE_CLASS = "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-slate-300 dark:ring-slate-700"
 const DEFAULT_INACTIVE_CLASS = "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
@@ -121,9 +122,9 @@ export function WorkspaceSettingsDialog({
   const handleMigrateSchema = () => {
     try {
       migrateSchemaToV2()
-      success("Schema migration successful", "Your presets have been unified under Schema v2.0.", 3000)
+      success(t("data.migrateSuccessTitle", "Schema migration successful"), t("data.migrateSuccessDesc", "Your presets have been unified under Schema v2.0."), 3000)
     } catch (err: any) {
-      error("Migration failed", err.message || "An unexpected error occurred.", 15000)
+      error(t("data.migrateErrorTitle", "Migration failed"), err.message || t("data.migrateErrorDesc", "An unexpected error occurred."), 15000)
     }
   }
   const [isMobileDialog, setIsMobileDialog] = useState(false)
@@ -164,6 +165,8 @@ export function WorkspaceSettingsDialog({
   }, [])
 
 
+
+  const { t } = useTranslation(["settings", "common"])
 
   const navigationWidthSliderOptions = useMemo<DiscreteSliderOption[]>(
     () =>
@@ -217,8 +220,8 @@ export function WorkspaceSettingsDialog({
   const tabs = [
     {
       id: "general" as const,
-      label: "General",
-      description: "Core application behavior and interface defaults",
+      label: t("tabs.general"),
+      description: t("general.sectionDesc"),
       icon: ListTree,
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
@@ -227,8 +230,8 @@ export function WorkspaceSettingsDialog({
     },
     {
       id: "language" as const,
-      label: "Language",
-      description: "Select display language and localization options",
+      label: t("tabs.language"),
+      description: t("language.sectionDesc"),
       icon: Globe,
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
@@ -237,8 +240,8 @@ export function WorkspaceSettingsDialog({
     },
     {
       id: "shortcuts" as const,
-      label: "Shortkeys",
-      description: "Keyboard shortcuts for faster navigation",
+      label: t("tabs.shortcuts"),
+      description: t("shortcuts.sectionDesc"),
       icon: Keyboard,
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
@@ -247,8 +250,8 @@ export function WorkspaceSettingsDialog({
     },
     {
       id: "performance" as const,
-      label: "Performance",
-      description: "Engine configuration and hardware utilization",
+      label: t("tabs.performance"),
+      description: t("performance.sectionDesc"),
       icon: Gauge,
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
@@ -257,8 +260,8 @@ export function WorkspaceSettingsDialog({
     },
     {
       id: "warnings" as const,
-      label: "Warnings",
-      description: "Notification and error reporting preferences",
+      label: t("tabs.warnings"),
+      description: t("warnings.sectionDesc"),
       icon: ShieldAlert,
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
@@ -267,8 +270,8 @@ export function WorkspaceSettingsDialog({
     },
     {
       id: "usage" as const,
-      label: "Usage Stats",
-      description: "Anonymous data collection for improvements",
+      label: t("tabs.usage"),
+      description: t("usage.sectionDesc"),
       icon: BarChart3,
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
@@ -278,8 +281,8 @@ export function WorkspaceSettingsDialog({
     },
     {
       id: "data" as const,
-      label: "Data Management",
-      description: "Statistics, backup imports/exports, and schema migration",
+      label: t("tabs.data"),
+      description: t("data.sectionDesc"),
       icon: Database,
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
@@ -322,7 +325,7 @@ export function WorkspaceSettingsDialog({
                 size="icon"
                 onClick={() => setActiveTab(null)}
                 className="rounded-full text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 shrink-0"
-                aria-label="Back to settings list"
+                aria-label={t("common:back", "Back")}
               >
                 <ArrowLeft size={20} />
               </Button>
@@ -337,7 +340,7 @@ export function WorkspaceSettingsDialog({
               </div>
             ) : (
               <div className={isMobileDialog ? "h-10 flex items-center" : ""}>
-                <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">Settings</Subheading>
+                <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">{t("title", "Settings")}</Subheading>
               </div>
             )}
           </div>
@@ -389,25 +392,25 @@ export function WorkspaceSettingsDialog({
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
                     <SettingsSectionHeader
-                      title="General"
-                      description="Control default behavior and workspace layout preferences."
+                      title={t("general.sectionTitle", "General")}
+                      description={t("general.sectionDesc", "Control default behavior and workspace layout preferences.")}
                     />
                   )}
                   <section className="space-y-4">
                     <SettingsItemHeader
-                      title="DEFAULT OPEN SCREEN"
-                      description="Choose which workspace opens by default."
+                      title={t("general.defaultScreen", "DEFAULT OPEN SCREEN")}
+                      description={t("general.defaultScreenDesc", "Choose which workspace opens by default.")}
                     />
                     <SelectInput
-                      label="Default workspace (Ext only)"
+                      label={t("general.defaultScreenLabel", "Default workspace (Ext only)")}
                       value={defaultScreenValue}
                       options={defaultScreenOptions}
                       onChange={onChangeDefaultScreenValue}
                       disabled={!showExtensionOnlyOptions}
                     />
                     <CheckboxCard
-                      title="Prefer recently used preset"
-                      subtitle="Open the most recently used preset when entering preset-based tools, if available."
+                      title={t("general.preferRecentPreset", "Prefer recently used preset")}
+                      subtitle={t("general.preferRecentPresetDesc", "Open the most recently used preset when entering preset-based tools, if available.")}
                       checked={preferRecentPresetEntry}
                       onChange={onChangePreferRecentPresetEntry}
                     />
@@ -415,12 +418,12 @@ export function WorkspaceSettingsDialog({
 
                   <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
-                      title="WORKSPACE SIDEBAR WIDTHS"
-                      description="Tune left and right sidebar width with preset steps."
+                      title={t("general.layoutTitle", "WORKSPACE SIDEBAR WIDTHS")}
+                      description={t("general.layoutDesc", "Tune left and right sidebar width with preset steps.")}
                     />
                     {showExtensionOnlyOptions && (
                       <DiscreteSlider
-                        label="Navigation sidebar width (Ext only)"
+                        label={t("general.navWidthLabel", "Navigation sidebar width (Ext only)")}
                         value={layoutPreferences.navigationSidebarLevel}
                         options={navigationWidthSliderOptions}
                         onChange={(value) => onChangeNavigationSidebarLevel(value as SidebarWidthLevel)}
@@ -429,14 +432,14 @@ export function WorkspaceSettingsDialog({
                       />
                     )}
                     <DiscreteSlider
-                      label="Configuration sidebar width"
+                      label={t("general.configWidthLabel", "Configuration sidebar width")}
                       value={layoutPreferences.configurationSidebarLevel}
                       options={configurationWidthSliderOptions}
                       onChange={(value) => onChangeConfigurationSidebarLevel(value as SidebarWidthLevel)}
                       valueFormatter={(option) =>
                         isMobileDialog
-                          ? `${option.label} (${configurationWidthPx}px)`
-                          : `${option.label} (${configurationWidthPx}px, ${CONFIGURATION_SIDEBAR_MAX_PERCENT}%)`
+                          ? t("general.configWidthFormatter", { label: option.label, width: configurationWidthPx })
+                          : t("general.configWidthFormatterPercent", { label: option.label, width: configurationWidthPx, percent: CONFIGURATION_SIDEBAR_MAX_PERCENT })
                       }
                     />
                   </section>
@@ -451,21 +454,21 @@ export function WorkspaceSettingsDialog({
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
                     <SettingsSectionHeader
-                      title="Performance"
-                      description="Smart Concurrency Advisor helps simulate safe worker counts using your hardware profile and active format settings."
+                      title={t("performance.sectionTitle", "Performance")}
+                      description={t("performance.sectionDesc", "Smart Concurrency Advisor helps simulate safe worker counts using your hardware profile and active format settings.")}
                     />
                   )}
                   <section className="space-y-4">
                     <SettingsItemHeader
-                      title="SMART CONCURRENCY ADVISOR"
-                      description="Modern encoders like AVIF and JXL can consume high CPU and memory in browser workers. Enable advisor to get dynamic recommendations based on machine profile and current format options."
+                      title={t("performance.advisorTitle", "SMART CONCURRENCY ADVISOR")}
+                      description={t("performance.advisorDesc", "Modern encoders like AVIF and JXL can consume high CPU and memory in browser workers. Enable advisor to get dynamic recommendations based on machine profile and current format options.")}
                     />
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
-                      Privacy note: hardware data is only read and processed locally in your browser. No telemetry or external upload.
+                      {t("performance.privacyNote", "Privacy note: hardware data is only read and processed locally in your browser. No telemetry or external upload.")}
                     </div>
                     <ToggleSwitchLabel
-                      label="Enable Smart Concurrency Advisor"
-                      description="Keep manual concurrency free (1-90), but show contextual safe recommendations under Export Settings."
+                      label={t("performance.enableAdvisor", "Enable Smart Concurrency Advisor")}
+                      description={t("performance.enableAdvisorDesc", "Keep manual concurrency free (1-90), but show contextual safe recommendations under Export Settings.")}
                       checked={advisorEnabled}
                       onChange={(checked) =>
                         updatePerformancePreferences({
@@ -475,8 +478,8 @@ export function WorkspaceSettingsDialog({
                       }
                     />
                     <ToggleSwitchLabel
-                      label="Unlock max concurrency (Overclock)"
-                      description="Allow values up to 90 and bypass Advisor hard lock. This can increase crash risk on heavy formats."
+                      label={t("performance.unlockConcurrency", "Unlock max concurrency (Overclock)")}
+                      description={t("performance.unlockConcurrencyDesc", "Allow values up to 90 and bypass Advisor hard lock. This can increase crash risk on heavy formats.")}
                       checked={overclockEnabled}
                       onChange={(checked) =>
                         updatePerformancePreferences({
@@ -490,14 +493,15 @@ export function WorkspaceSettingsDialog({
                       <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <BodyText className="font-semibold text-slate-800 dark:text-slate-200">Hardware Profile</BodyText>
+                            <BodyText className="font-semibold text-slate-800 dark:text-slate-200">{t("performance.hardwareProfile", "Hardware Profile")}</BodyText>
                             <MutedText className="text-xs">
-                              Source:{" "}
-                              {hardwareProfile.source === "detected"
-                                ? "Auto-detected"
-                                : hardwareProfile.source === "manual"
-                                  ? "Manual override"
-                                  : "Fallback"}
+                              {t("performance.sourceLabel", {
+                                source: hardwareProfile.source === "detected"
+                                  ? t("performance.sourceAuto", "Auto-detected")
+                                  : hardwareProfile.source === "manual"
+                                    ? t("performance.sourceManual", "Manual override")
+                                    : t("performance.sourceFallback", "Fallback")
+                              })}
                             </MutedText>
                           </div>
 
@@ -513,13 +517,13 @@ export function WorkspaceSettingsDialog({
                               })
                             }}
                           >
-                            Auto-Detect Hardware
+                            {t("performance.autoDetect", "Auto-Detect Hardware")}
                           </Button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           <NumberInput
-                            label="CPU Cores (logical threads)"
+                            label={t("performance.cpuCores", "CPU Cores (logical threads)")}
                             value={hardwareProfile.cpuCores}
                             min={1}
                             max={64}
@@ -530,7 +534,7 @@ export function WorkspaceSettingsDialog({
                           />
 
                           <NumberInput
-                            label="RAM Budget (GB)"
+                            label={t("performance.ramBudget", "RAM Budget (GB)")}
                             value={hardwareProfile.ramBudgetGb}
                             min={0.5}
                             max={64}
@@ -542,26 +546,27 @@ export function WorkspaceSettingsDialog({
                         </div>
 
                         <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
-                          Detected hardware:{" "}
-                          {hardwareProfile.detectedLogicalCores ?? hardwareProfile.cpuCores} threads, ~
-                          {hardwareProfile.detectedDeviceMemoryGb ?? "unknown"}GB device memory.
+                          {t("performance.detectedHardware", {
+                            cores: hardwareProfile.detectedLogicalCores ?? hardwareProfile.cpuCores,
+                            ram: hardwareProfile.detectedDeviceMemoryGb ?? t("performance.detectedHardwareUnknown", "unknown")
+                          })}
                         </div>
                       </div>
                     )}
 
                     {!advisorEnabled && (
                       <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-relaxed text-sky-800 dark:border-sky-900/50 dark:bg-slate-950/30 dark:text-sky-300">
-                        Smart mode is off. Concurrency Advisor is running in static fallback mode using default profile (4 threads, 4GB RAM budget).
+                        {t("performance.modeStatic", "Smart mode is off. Concurrency Advisor is running in static fallback mode using default profile (4 threads, 4GB RAM budget).")}
                       </div>
                     )}
 
                     {overclockEnabled ? (
                       <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800 dark:border-rose-900/50 dark:bg-slate-950/30 dark:text-rose-300">
-                        Danger mode: overclock is enabled. Heavy formats (AVIF/JXL/PNG tiny+OxiPNG) can hit OOM if you push concurrency too high.
+                        {t("performance.modeDanger", "Danger mode: overclock is enabled. Heavy formats (AVIF/JXL/PNG tiny+OxiPNG) can hit OOM if you push concurrency too high.")}
                       </div>
                     ) : (
                       <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-800 dark:border-emerald-900/50 dark:bg-slate-950/30 dark:text-emerald-300">
-                        Safe mode: concurrency max is hard-locked by Advisor calculations to reduce crash risk.
+                        {t("performance.modeSafe", "Safe mode: concurrency max is hard-locked by Advisor calculations to reduce crash risk.")}
                       </div>
                     )}
                   </section>
@@ -572,31 +577,34 @@ export function WorkspaceSettingsDialog({
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
                     <SettingsSectionHeader
-                      title="Warnings"
-                      description="Customize which validation warnings and confirmation dialogs appear during workspace transitions."
+                      title={t("warnings.sectionTitle", "Warnings")}
+                      description={t("warnings.sectionDesc", "Customize which validation warnings and confirmation dialogs appear during workspace transitions.")}
                     />
                   )}
                   <section className="space-y-4">
                     <SettingsItemHeader
-                      title="PREFERENCES"
-                      description="These preferences are saved automatically."
+                      title={t("warnings.preferencesTitle", "PREFERENCES")}
+                      description={t("warnings.preferencesDesc", "These preferences are saved automatically.")}
                     />
                     <div className="space-y-2">
                       <ToggleSwitchLabel
-                        label="Show download confirmation dialog"
-                        description={`Warn before downloading more than ${APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD} images one by one.`}
+                        label={t("warnings.downloadConfirm", "Show download confirmation dialog")}
+                        description={t("warnings.downloadConfirmDesc", { threshold: APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD })}
                         checked={!skipDownloadConfirm}
                         onChange={(checked) => setSkipDownloadConfirm(!checked)}
                       />
                       <ToggleSwitchLabel
-                        label="Show memory (OOM) warning dialog"
-                        description={`Warn when selected batch size exceeds ~${APP_CONFIG.BATCH.OOM_WARNING_MB} MB.`}
+                        label={t("warnings.oomWarning", "Show memory (OOM) warning dialog")}
+                        description={t("warnings.oomWarningDesc", { threshold: APP_CONFIG.BATCH.OOM_WARNING_MB })}
                         checked={!skipOomWarning}
                         onChange={(checked) => setSkipOomWarning(!checked)}
                       />
                       <ToggleSwitchLabel
-                        label="Show Image Splicing high preview quality warning"
-                        description={`Warn if there are more than ${APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT} images or total area exceeds ~${APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS / 1_000_000}M px².`}
+                        label={t("warnings.heavyPreviewWarning", "Show Image Splicing high preview quality warning")}
+                        description={t("warnings.heavyPreviewWarningDesc", {
+                          count: APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT,
+                          pixels: APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS / 1_000_000
+                        })}
                         checked={!skipSplicingHeavyPreviewQualityWarning}
                         onChange={(checked) => setSkipSplicingHeavyPreviewQualityWarning(!checked)}
                       />
@@ -609,15 +617,15 @@ export function WorkspaceSettingsDialog({
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
                     <SettingsSectionHeader
-                      title="Usage Stats"
-                      description="Help us improve Imify by allowing anonymous performance metrics and error reporting."
+                      title={t("usage.sectionTitle", "Usage Stats")}
+                      description={t("usage.sectionDesc", "Help us improve Imify by allowing anonymous performance metrics and error reporting.")}
                     />
                   )}
                   <section className="space-y-4">
                     <div className="flex items-center justify-between gap-3">
                       <SettingsItemHeader
-                        title="FREQUENCY DATA"
-                        description='These counters drive the "Most used (stable)" sorting mode.'
+                        title={t("usage.frequencyTitle", "FREQUENCY DATA")}
+                        description={t("usage.frequencyDesc", 'These counters drive the "Most used (stable)" sorting mode.')}
                       />
                       <Button
                         variant="outline"
@@ -625,7 +633,7 @@ export function WorkspaceSettingsDialog({
                         onClick={onResetUsageStats}
                       >
                         <RotateCcw size={14} />
-                        Reset
+                        {t("usage.reset", "Reset")}
                       </Button>
                     </div>
                     <div className="overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700">
@@ -643,7 +651,7 @@ export function WorkspaceSettingsDialog({
                           ))}
                         </div>
                       ) : (
-                        <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">No usage data yet.</div>
+                        <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">{t("usage.noData", "No usage data yet.")}</div>
                       )}
                     </div>
                   </section>
@@ -654,20 +662,20 @@ export function WorkspaceSettingsDialog({
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
                     <SettingsSectionHeader
-                      title="Data Management"
-                      description="Manage presets, template definitions, preferences, and database schema version."
+                      title={t("data.sectionTitle", "Data Management")}
+                      description={t("data.sectionDesc", "Manage presets, template definitions, preferences, and database schema version.")}
                     />
                   )}
 
                   <section className="space-y-4">
                     <SettingsItemHeader
-                      title="DATA STATISTICS"
-                      description="Overview of your persistent browser storage allocation for Imify presets and store preferences."
+                      title={t("data.statsTitle", "DATA STATISTICS")}
+                      description={t("data.statsDesc", "Overview of your persistent browser storage allocation for Imify presets and store preferences.")}
                     />
                     <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          TOTAL PRESETS
+                          {t("data.totalPresets", "TOTAL PRESETS")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {stats.presetCount}
@@ -675,7 +683,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          PERSISTED STORES
+                          {t("data.persistedStores", "PERSISTED STORES")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {stats.storeCount}
@@ -683,7 +691,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          STORAGE USED
+                          {t("data.storageUsed", "STORAGE USED")}
                         </span>
                         <span className="text-2xl font-bold text-slate-850 dark:text-slate-100">
                           {stats.sizeKb} <span className="text-xs font-semibold text-slate-500">KB</span>
@@ -694,13 +702,13 @@ export function WorkspaceSettingsDialog({
 
                   <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
-                      title="ASSET STATISTICS"
-                      description="Detailed view of saved watermarks, downloaded offline AI models, and offline fonts."
+                      title={t("data.assetStatsTitle", "ASSET STATISTICS")}
+                      description={t("data.assetStatsDesc", "Detailed view of saved watermarks, downloaded offline AI models, and offline fonts.")}
                     />
                     <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          SAVED WATERMARKS
+                          {t("data.savedWatermarks", "SAVED WATERMARKS")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {assetStats.watermarkCount}
@@ -708,7 +716,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          CACHED AI MODELS
+                          {t("data.cachedModels", "CACHED AI MODELS")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {assetStats.cachedModelCount}
@@ -716,7 +724,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          STORAGE OCCUPIED
+                          {t("data.storageOccupied", "STORAGE OCCUPIED")}
                         </span>
                         <span className="text-2xl font-bold text-slate-850 dark:text-slate-100">
                           {assetStats.totalSizeFormatted}
@@ -727,7 +735,7 @@ export function WorkspaceSettingsDialog({
                     <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          GOOGLE FONTS
+                          {t("data.googleFonts", "GOOGLE FONTS")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {assetStats.googleFontCount}
@@ -735,7 +743,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          CUSTOM FONTS
+                          {t("data.customFonts", "CUSTOM FONTS")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {assetStats.customFontCount}
@@ -743,7 +751,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          STORAGE OCCUPIED
+                          {t("data.storageOccupied", "STORAGE OCCUPIED")}
                         </span>
                         <span className="text-2xl font-bold text-slate-850 dark:text-slate-100">
                           {assetStats.fontSizeFormatted}
@@ -754,8 +762,8 @@ export function WorkspaceSettingsDialog({
 
                   <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
-                      title="BACKUP & RESTORE"
-                      description="Backup presets, templates, settings, and workspace preferences to a JSON file, or restore them from a backup."
+                      title={t("data.backupRestoreTitle", "BACKUP & RESTORE")}
+                      description={t("data.backupRestoreDesc", "Backup presets, templates, settings, and workspace preferences to a JSON file, or restore them from a backup.")}
                     />
                     {devModeSettingsAdapter && (
                       <div className="grid grid-cols-2 gap-3 pt-1">
@@ -765,7 +773,7 @@ export function WorkspaceSettingsDialog({
                           onClick={() => setIsExportDialogOpen(true)}
                         >
                           <Download size={14} />
-                          Export Data
+                          {t("data.exportData", "Export Data")}
                         </Button>
                         <Button
                           variant="outline"
@@ -773,7 +781,7 @@ export function WorkspaceSettingsDialog({
                           onClick={() => setIsImportDialogOpen(true)}
                         >
                           <Download size={14} className="rotate-180" />
-                          Import Data
+                          {t("data.importData", "Import Data")}
                         </Button>
                       </div>
                     )}
@@ -781,17 +789,21 @@ export function WorkspaceSettingsDialog({
 
                   <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
-                      title="SCHEMA MIGRATION"
-                      description="Manage and migrate the version of your local database schema."
+                      title={t("data.schemaTitle", "SCHEMA MIGRATION")}
+                      description={t("data.schemaDesc", "Manage and migrate the version of your local database schema.")}
                     />
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-705 dark:bg-slate-900/40">
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <BodyText className="font-semibold text-slate-800 dark:text-slate-200">
-                            Database Version
+                            {t("data.dbVersion", "Database Version")}
                           </BodyText>
                           <MutedText className="text-xs">
-                            Current schema version: {schemaVersion === 2 ? "v2.0 (Unified)" : "v1.0 (Legacy)"}
+                            {t("data.dbVersionDesc", {
+                              version: schemaVersion === 2
+                                ? t("data.dbVersionV2", "v2.0 (Unified)")
+                                : t("data.dbVersionV1", "v1.0 (Legacy)")
+                            })}
                           </MutedText>
                         </div>
                         {schemaVersion === 1 ? (
@@ -801,11 +813,11 @@ export function WorkspaceSettingsDialog({
                             className="bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-4"
                             onClick={handleMigrateSchema}
                           >
-                            Migrate to Schema v2
+                            {t("data.migrateBtn", "Migrate to Schema v2")}
                           </Button>
                         ) : (
                           <span className="text-xs font-semibold px-2.5 py-1 rounded bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50">
-                            Schema is Up to Date
+                            {t("data.schemaUpToDate", "Schema is Up to Date")}
                           </span>
                         )}
                       </div>
@@ -827,8 +839,8 @@ export function WorkspaceSettingsDialog({
             performancePreferences={safePerformancePreferences}
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
-            title="Export Data"
-            description="Select the features you want to export. This file can be used to restore your settings and presets."
+            title={t("data.exportTitle", "Export Data")}
+            description={t("data.exportDesc", "Select the features you want to export. This file can be used to restore your settings and presets.")}
           />
           <DevModeImportDialog
             isOpen={isImportDialogOpen}
@@ -837,9 +849,9 @@ export function WorkspaceSettingsDialog({
             performancePreferences={safePerformancePreferences}
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
-            onSuccess={() => success("Import successful", "State has been restored.", 3000)}
-            title="Import Data"
-            description="Select a previously exported data file to restore your settings and presets."
+            onSuccess={() => success(t("data.importSuccessTitle", "Import successful"), t("data.importSuccessDesc", "State has been restored."), 3000)}
+            title={t("data.importTitle", "Import Data")}
+            description={t("data.importDesc", "Select a previously exported data file to restore your settings and presets.")}
           />
         </>
       )}

@@ -6,7 +6,7 @@ export interface LanguageMeta {
   version: string
   maintainers: Array<{ name: string; github: string; role: string }>
   stats?: {
-    total: number
+    total?: number
     completed: number
   }
 }

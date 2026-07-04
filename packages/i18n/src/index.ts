@@ -28,6 +28,7 @@ export {
 } from "./runtime-import"
 export {
   getAvailableLanguages,
+  getAppI18nVersion,
   type LanguageInfo
 } from "./language-info"
 
