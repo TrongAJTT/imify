@@ -1,62 +1,72 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from "react"
-import { Check, ChevronDown, ChevronRight, Globe, User, Trash2 } from "lucide-react"
-import { Button } from "@imify/ui/ui/button"
-import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header"
-import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header"
-import { useI18nStore } from "@imify/stores"
+import React, { useState, useEffect } from "react";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Globe,
+  User,
+  Trash2,
+} from "lucide-react";
+import { Button } from "@imify/ui/ui/button";
+import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header";
+import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header";
+import { useI18nStore } from "@imify/stores";
 import {
   getAvailableLanguages,
-  calculateOverallCompletionDetails,
   deleteRuntimeLanguage,
   useTranslation,
-  type LanguageInfo
-} from "@imify/i18n"
+  type LanguageInfo,
+} from "@imify/i18n";
 
 interface LanguageSettingsTabProps {
-  isMobile?: boolean
+  isMobile?: boolean;
 }
 
-export function LanguageSettingsTab({ isMobile = false }: LanguageSettingsTabProps) {
-  const activeLanguage = useI18nStore((state) => state.language)
-  const setLanguage = useI18nStore((state) => state.setLanguage)
-  const { i18n } = useTranslation()
+export function LanguageSettingsTab({
+  isMobile = false,
+}: LanguageSettingsTabProps) {
+  const activeLanguage = useI18nStore((state) => state.language);
+  const setLanguage = useI18nStore((state) => state.setLanguage);
+  const { i18n } = useTranslation();
 
-  const [languages, setLanguages] = useState<LanguageInfo[]>([])
-  const [expandedLangCode, setExpandedLangCode] = useState<string | null>(activeLanguage)
+  const [languages, setLanguages] = useState<LanguageInfo[]>([]);
+  const [expandedLangCode, setExpandedLangCode] = useState<string | null>(
+    activeLanguage,
+  );
 
   // Load languages info from i18n
   useEffect(() => {
-    setLanguages(getAvailableLanguages())
-  }, [activeLanguage, i18n.language])
+    setLanguages(getAvailableLanguages());
+  }, [activeLanguage, i18n.language]);
 
   // Ensure active language is auto-expanded by default when activeLanguage changes
   useEffect(() => {
-    setExpandedLangCode(activeLanguage)
-  }, [activeLanguage])
+    setExpandedLangCode(activeLanguage);
+  }, [activeLanguage]);
 
   const handleToggleExpand = (code: string) => {
-    setExpandedLangCode((prev) => (prev === code ? null : code))
-  }
+    setExpandedLangCode((prev) => (prev === code ? null : code));
+  };
 
   const handleApplyLanguage = (code: string) => {
-    setLanguage(code)
-  }
+    setLanguage(code);
+  };
 
   const handleDeleteLanguage = async (code: string, e: React.MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
     try {
-      await deleteRuntimeLanguage(code)
+      await deleteRuntimeLanguage(code);
       if (activeLanguage === code) {
-        setLanguage("en")
+        setLanguage("en");
       } else {
-        setLanguages(getAvailableLanguages())
+        setLanguages(getAvailableLanguages());
       }
     } catch (err) {
-      console.error("Failed to delete custom language:", err)
+      console.error("Failed to delete custom language:", err);
     }
-  }
+  };
 
   return (
     <div className="animate-in fade-in duration-300 space-y-5">
@@ -75,12 +85,13 @@ export function LanguageSettingsTab({ isMobile = false }: LanguageSettingsTabPro
 
         <div className="space-y-2 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/20 dark:bg-slate-950/20">
           {languages.map((lang) => {
-            const isActive = lang.code === activeLanguage
-            const isExpanded = expandedLangCode === lang.code
+            const isActive = lang.code === activeLanguage;
+            const isExpanded = expandedLangCode === lang.code;
 
             // Get completion rate details
-            const stats = calculateOverallCompletionDetails(lang.code, "en")
-            const completionPercent = Math.round(stats.rate * 100)
+            const totalKeys = lang.stats?.total ?? 0;
+            const completedKeys = lang.stats?.completed ?? 0;
+            const completionPercent = Math.round(lang.completionRate * 100);
 
             return (
               <div
@@ -127,7 +138,11 @@ export function LanguageSettingsTab({ isMobile = false }: LanguageSettingsTabPro
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
-                    {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    {isExpanded ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )}
                   </div>
                 </div>
 
@@ -138,7 +153,8 @@ export function LanguageSettingsTab({ isMobile = false }: LanguageSettingsTabPro
                       <div className="flex justify-between text-xs font-semibold text-slate-650 dark:text-slate-400">
                         <span>Completion Rate</span>
                         <span>
-                          {completionPercent}% ({stats.completed}/{stats.total} keys)
+                          {completionPercent}% ({completedKeys}/{totalKeys}{" "}
+                          keys)
                         </span>
                       </div>
                       <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -156,7 +172,10 @@ export function LanguageSettingsTab({ isMobile = false }: LanguageSettingsTabPro
                         </span>
                         <div className="flex flex-col gap-1.5">
                           {lang.maintainers.map((m, idx) => (
-                            <div key={idx} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                            <div
+                              key={idx}
+                              className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400"
+                            >
                               <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                               <span className="truncate">
                                 <span className="font-semibold text-slate-800 dark:text-slate-200">
@@ -192,10 +211,10 @@ export function LanguageSettingsTab({ isMobile = false }: LanguageSettingsTabPro
                   </div>
                 )}
               </div>
-            )
+            );
           })}
         </div>
       </section>
     </div>
-  )
+  );
 }

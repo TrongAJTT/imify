@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "i18next": "^23.11.5",
-    "react-i18next": "^14.1.2"
+    "react-i18next": "^14.1.2",
+    "fflate": "^0.8.2"
   },
   "peerDependencies": {
     "react": ">=18"

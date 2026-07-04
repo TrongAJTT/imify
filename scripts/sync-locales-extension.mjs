@@ -37,5 +37,10 @@ function copyDir(src, dest) {
   return count
 }
 
+import { updateLocaleStats } from "./update-locale-stats.mjs"
+
+// Update locale stats before syncing
+updateLocaleStats()
+
 const count = copyDir(srcDir, destDir)
 console.log(`[sync-locales-extension] Synced ${count} locale files → ${destDir}`)

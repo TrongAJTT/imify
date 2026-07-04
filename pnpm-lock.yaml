@@ -431,6 +431,9 @@ importers:
 
   packages/i18n:
     dependencies:
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.2
       i18next:
         specifier: ^23.11.5
         version: 23.16.8

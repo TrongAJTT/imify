@@ -5,6 +5,10 @@ export interface LanguageMeta {
   languageCode: string
   version: string
   maintainers: Array<{ name: string; github: string; role: string }>
+  stats?: {
+    total: number
+    completed: number
+  }
 }
 
 // In-memory registry for runtime imported languages
@@ -124,56 +128,158 @@ export async function loadRuntimeLanguages(): Promise<void> {
   }
 }
 
+import { unzip } from "fflate"
+
 export function importLanguageAtRuntime(file: File): Promise<LanguageMeta> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = async (event) => {
+    reader.onload = (event) => {
       try {
-        const text = event.target?.result as string
-        const data = JSON.parse(text)
+        const buffer = new Uint8Array(event.target?.result as ArrayBuffer)
+        unzip(buffer, (err, unzipped) => {
+          if (err) {
+            reject(new Error(`Failed to unzip file: ${err.message}`))
+            return
+          }
 
-        if (!data._meta) {
-          throw new Error("Missing _meta block in language file.")
-        }
+          try {
+            let meta: LanguageMeta | null = null
+            const data: Record<string, any> = {}
+            const decoder = new TextDecoder("utf-8")
 
-        const meta = data._meta as LanguageMeta
-        if (!meta.languageCode || !meta.languageName) {
-          throw new Error("Invalid metadata: languageCode and languageName are required.")
-        }
+            // 1. Find and parse _meta.json
+            for (const filePath of Object.keys(unzipped)) {
+              if (filePath.endsWith("_meta.json")) {
+                const text = decoder.decode(unzipped[filePath])
+                meta = JSON.parse(text)
+                break
+              }
+            }
 
-        const langCode = meta.languageCode
+            if (!meta) {
+              throw new Error("Missing _meta.json file inside zip.")
+            }
+            if (!meta.languageCode || !meta.languageName) {
+              throw new Error("Invalid metadata: languageCode and languageName are required in _meta.json.")
+            }
 
-        // Process namespaces (everything except the top-level _meta key)
-        const namespaces = Object.keys(data).filter((k) => k !== "_meta")
+            const langCode = meta.languageCode
 
-        // Save to IndexedDB
-        await saveLanguageToStorage(meta, data)
+            // 2. Parse all other namespace JSON files
+            for (const filePath of Object.keys(unzipped)) {
+              if (filePath.includes("__MACOSX") || filePath.includes(".DS_Store")) {
+                continue
+              }
+              if (filePath.endsWith(".json") && !filePath.endsWith("_meta.json")) {
+                const baseName = filePath.split("/").pop()?.replace(".json", "")
+                if (baseName) {
+                  const text = decoder.decode(unzipped[filePath])
+                  data[baseName] = JSON.parse(text)
+                }
+              }
+            }
 
-        // Add bundles to i18n — _meta becomes its own namespace
-        i18n.addResourceBundle(langCode, "_meta", meta, true, true)
-        for (const ns of namespaces) {
-          i18n.addResourceBundle(langCode, ns, data[ns], true, true)
-        }
+            // Calculate stats for the imported custom language dynamically
+            const namespaces = [
+              "common", "workspace", "settings", "devMode", "about", "homepage",
+              "processor", "splitter", "splicing", "filling", "pattern",
+              "diffchecker", "inspector", "backgroundRemover", "upscaler",
+              "qrGenerator", "qrReader"
+            ]
 
-        // Update in-memory list
-        const exists = runtimeLanguages.some((l) => l.languageCode === langCode)
-        if (!exists) {
-          runtimeLanguages.push(meta)
-        } else {
-          const idx = runtimeLanguages.findIndex((l) => l.languageCode === langCode)
-          runtimeLanguages[idx] = meta
-        }
+            let totalKeys = 0
+            let completedKeys = 0
 
-        // Change active language
-        await i18n.changeLanguage(langCode)
+            for (const ns of namespaces) {
+              const baseNs = i18n.getResourceBundle("en", ns)
+              const targetNs = data[ns]
+              
+              function countKeys(obj: any) {
+                let count = 0
+                if (obj == null) return 0
+                function traverse(current: any) {
+                  if (current == null) return
+                  if (typeof current !== "object") { count++; return }
+                  for (const key of Object.keys(current)) { traverse(current[key]) }
+                }
+                traverse(obj)
+                return count
+              }
 
-        resolve(meta)
+              function countMatchingKeys(target: any, base: any) {
+                let count = 0
+                if (base == null) return 0
+                function getNestedValue(obj: any, pathPath: string[]) {
+                  let current = obj
+                  for (const part of pathPath) {
+                    if (current == null || typeof current !== "object") return undefined
+                    current = current[part]
+                  }
+                  return current
+                }
+                function traverse(currentBase: any, currentPath: string[]) {
+                  if (currentBase == null) return
+                  if (typeof currentBase !== "object") {
+                    if (target) {
+                      const targetVal = getNestedValue(target, currentPath)
+                      if (typeof targetVal === "string" && targetVal.trim() !== "") {
+                        count++
+                      }
+                    }
+                    return
+                  }
+                  for (const key of Object.keys(currentBase)) {
+                    traverse(currentBase[key], [...currentPath, key])
+                  }
+                }
+                traverse(base, [])
+                return count
+              }
+
+              totalKeys += countKeys(baseNs)
+              completedKeys += countMatchingKeys(targetNs, baseNs)
+            }
+
+            meta.stats = {
+              total: totalKeys,
+              completed: completedKeys
+            }
+
+            // Save to IndexedDB
+            saveLanguageToStorage(meta, data)
+              .then(() => {
+                // Add bundles to i18n
+                i18n.addResourceBundle(langCode, "_meta", meta, true, true)
+                for (const ns of Object.keys(data)) {
+                  i18n.addResourceBundle(langCode, ns, data[ns], true, true)
+                }
+
+                // Update in-memory list
+                const exists = runtimeLanguages.some((l) => l.languageCode === langCode)
+                if (!exists) {
+                  runtimeLanguages.push(meta!)
+                } else {
+                  const idx = runtimeLanguages.findIndex((l) => l.languageCode === langCode)
+                  runtimeLanguages[idx] = meta!
+                }
+
+                // Change active language
+                return i18n.changeLanguage(langCode)
+              })
+              .then(() => {
+                resolve(meta!)
+              })
+              .catch(reject)
+          } catch (innerErr) {
+            reject(innerErr)
+          }
+        })
       } catch (err) {
         reject(err)
       }
     }
     reader.onerror = () => reject(new Error("File reading error."))
-    reader.readAsText(file)
+    reader.readAsArrayBuffer(file)
   })
 }
 

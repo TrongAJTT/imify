@@ -1,122 +1,189 @@
-"use client"
+"use client";
 
-import React, { useState, useRef, type ChangeEvent } from "react"
-import { Upload, AlertCircle, Languages } from "lucide-react"
-import { BaseDialog } from "@imify/ui/ui/base-dialog"
-import { Button } from "@imify/ui/ui/button"
+import React, { useState, useRef, type ChangeEvent } from "react";
+import { Upload, AlertCircle, Languages } from "lucide-react";
+import { BaseDialog } from "@imify/ui/ui/base-dialog";
+import { Button } from "@imify/ui/ui/button";
 import {
   importLanguageAtRuntime,
   calculateCompletionDetails,
-  type LanguageMeta
-} from "@imify/i18n"
-import i18n from "i18next"
-import { useI18nStore } from "@imify/stores"
+  type LanguageMeta,
+} from "@imify/i18n";
+import i18n from "i18next";
+import { useI18nStore } from "@imify/stores";
+import { unzip } from "fflate";
 
 interface I18nRuntimeImportDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess?: (meta: LanguageMeta) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: (meta: LanguageMeta) => void;
 }
 
 export function I18nRuntimeImportDialog({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
 }: I18nRuntimeImportDialogProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const [parsedData, setParsedData] = useState<any>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [parsedData, setParsedData] = useState<any>(null);
   const [completionStats, setCompletionStats] = useState<{
-    completed: number
-    total: number
-    rate: number
-  } | null>(null)
-  const [isApplying, setIsApplying] = useState(false)
+    completed: number;
+    total: number;
+    rate: number;
+  } | null>(null);
+  const [isApplying, setIsApplying] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    setSelectedFile(file)
-    setUploadError(null)
-    setParsedData(null)
-    setCompletionStats(null)
+    setSelectedFile(file);
+    setUploadError(null);
+    setParsedData(null);
+    setCompletionStats(null);
 
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const text = event.target?.result as string
-        const parsed = JSON.parse(text)
+        const buffer = new Uint8Array(event.target?.result as ArrayBuffer);
+        unzip(buffer, (err, unzipped) => {
+          if (err) {
+            setUploadError("Failed to unzip file. Please upload a valid zip.");
+            setSelectedFile(null);
+            return;
+          }
 
-        if (!parsed._meta) {
-          throw new Error("Invalid format: Missing _meta block at root.")
-        }
-        if (!parsed._meta.languageCode || !parsed._meta.languageName) {
-          throw new Error("Invalid format: _meta must contain languageCode and languageName.")
-        }
+          try {
+            let meta: LanguageMeta | null = null;
+            const data: Record<string, any> = {};
+            const decoder = new TextDecoder("utf-8");
 
-        setParsedData(parsed)
+            // 1. Find and parse _meta.json
+            for (const filePath of Object.keys(unzipped)) {
+              if (filePath.endsWith("_meta.json")) {
+                const text = decoder.decode(unzipped[filePath]);
+                meta = JSON.parse(text);
+                break;
+              }
+            }
 
-        // Calculate preview completion rate based on English source bundles in i18n
-        const namespaces = [
-          "common", "workspace", "settings", "devMode", "about", "homepage",
-          "processor", "splitter", "splicing", "filling", "pattern",
-          "diffchecker", "inspector", "backgroundRemover", "upscaler",
-          "qrGenerator", "qrReader"
-        ]
+            if (!meta) {
+              throw new Error("Missing _meta.json file inside zip.");
+            }
+            if (!meta.languageCode || !meta.languageName) {
+              throw new Error(
+                "Invalid metadata: languageCode and languageName are required in _meta.json.",
+              );
+            }
 
-        let totalKeys = 0
-        let completedKeys = 0
+            // 2. Parse all other namespace JSON files
+            for (const filePath of Object.keys(unzipped)) {
+              if (
+                filePath.includes("__MACOSX") ||
+                filePath.includes(".DS_Store")
+              ) {
+                continue;
+              }
+              if (
+                filePath.endsWith(".json") &&
+                !filePath.endsWith("_meta.json")
+              ) {
+                const baseName = filePath
+                  .split("/")
+                  .pop()
+                  ?.replace(".json", "");
+                if (baseName) {
+                  const text = decoder.decode(unzipped[filePath]);
+                  data[baseName] = JSON.parse(text);
+                }
+              }
+            }
 
-        for (const ns of namespaces) {
-          const baseNs = i18n.getResourceBundle("en", ns)
-          const targetNs = parsed[ns]
-          const details = calculateCompletionDetails(targetNs, baseNs)
-          totalKeys += details.total
-          completedKeys += details.completed
-        }
+            // Set parsed data mimicking the original structure for dialog preview
+            const mockParsedData = {
+              _meta: meta,
+              ...data,
+            };
+            setParsedData(mockParsedData);
 
-        const rate = totalKeys === 0 ? 1.0 : completedKeys / totalKeys
-        setCompletionStats({
-          completed: completedKeys,
-          total: totalKeys,
-          rate
-        })
+            const namespaces = [
+              "common",
+              "workspace",
+              "settings",
+              "devMode",
+              "about",
+              "homepage",
+              "processor",
+              "splitter",
+              "splicing",
+              "filling",
+              "pattern",
+              "diffchecker",
+              "inspector",
+              "backgroundRemover",
+              "upscaler",
+              "qrGenerator",
+              "qrReader",
+            ];
+
+            let totalKeys = 0;
+            let completedKeys = 0;
+
+            for (const ns of namespaces) {
+              const baseNs = i18n.getResourceBundle("en", ns);
+              const targetNs = data[ns];
+              const details = calculateCompletionDetails(targetNs, baseNs);
+              totalKeys += details.total;
+              completedKeys += details.completed;
+            }
+
+            const rate = totalKeys === 0 ? 1.0 : completedKeys / totalKeys;
+            setCompletionStats({
+              completed: completedKeys,
+              total: totalKeys,
+              rate,
+            });
+          } catch (innerErr: any) {
+            setUploadError(innerErr.message || "Failed to parse zip files.");
+            setSelectedFile(null);
+          }
+        });
       } catch (err: any) {
-        setUploadError(err.message || "Failed to parse JSON file.")
-        setSelectedFile(null)
+        setUploadError(err.message || "Failed to read zip file.");
+        setSelectedFile(null);
       }
-    }
-    reader.readAsText(file)
-  }
+    };
+    reader.readAsArrayBuffer(file);
+  };
 
   const handleApply = async () => {
-    if (!selectedFile) return
-    setIsApplying(true)
-    setUploadError(null)
+    if (!selectedFile) return;
+    setIsApplying(true);
+    setUploadError(null);
     try {
-      const meta = await importLanguageAtRuntime(selectedFile)
-      useI18nStore.getState().setLanguage(meta.languageCode)
-      onSuccess?.(meta)
-      handleClose()
+      const meta = await importLanguageAtRuntime(selectedFile);
+      useI18nStore.getState().setLanguage(meta.languageCode);
+      onSuccess?.(meta);
+      handleClose();
     } catch (err: any) {
-      setUploadError(err.message || "Failed to import language bundle.")
+      setUploadError(err.message || "Failed to import language bundle.");
     } finally {
-      setIsApplying(false)
+      setIsApplying(false);
     }
-  }
+  };
 
   const handleClose = () => {
-    if (isApplying) return
-    setSelectedFile(null)
-    setUploadError(null)
-    setParsedData(null)
-    setCompletionStats(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
-    onClose()
-  }
+    if (isApplying) return;
+    setSelectedFile(null);
+    setUploadError(null);
+    setParsedData(null);
+    setCompletionStats(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    onClose();
+  };
 
   return (
     <BaseDialog
@@ -132,14 +199,15 @@ export function I18nRuntimeImportDialog({
             <span>Import Custom Translation</span>
           </h2>
           <p className="text-sm text-slate-500 mt-1">
-            Upload a translated JSON file to apply it at runtime.
+            Upload a translated ZIP file containing JSON files to apply it at
+            runtime.
           </p>
         </div>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-              Select Translation JSON
+              Select Translation ZIP
             </label>
             <div className="flex items-center gap-3">
               <Button
@@ -148,14 +216,14 @@ export function I18nRuntimeImportDialog({
                 className="shrink-0 gap-2 border-slate-200 dark:border-slate-800"
               >
                 <Upload className="w-4 h-4" />
-                <span>Choose JSON</span>
+                <span>Choose ZIP</span>
               </Button>
               <span className="text-xs text-slate-500 truncate">
                 {selectedFile ? selectedFile.name : "No file selected"}
               </span>
               <input
                 type="file"
-                accept=".json"
+                accept=".zip"
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 className="hidden"
@@ -173,7 +241,8 @@ export function I18nRuntimeImportDialog({
             <div className="mt-2 p-4 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 space-y-3 animate-in fade-in duration-200">
               <div className="flex justify-between items-baseline">
                 <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                  {parsedData._meta.languageName} ({parsedData._meta.languageCode})
+                  {parsedData._meta.languageName} (
+                  {parsedData._meta.languageCode})
                 </span>
                 <span className="text-xs text-slate-500">
                   Version {parsedData._meta.version || "1.0.0"}
@@ -184,8 +253,8 @@ export function I18nRuntimeImportDialog({
                 <div className="flex justify-between text-xs font-medium text-slate-600 dark:text-slate-400">
                   <span>Completion Progress</span>
                   <span>
-                    {Math.round(completionStats.rate * 100)}% ({completionStats.completed}/
-                    {completionStats.total} keys)
+                    {Math.round(completionStats.rate * 100)}% (
+                    {completionStats.completed}/{completionStats.total} keys)
                   </span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
@@ -196,18 +265,27 @@ export function I18nRuntimeImportDialog({
                 </div>
               </div>
 
-              {parsedData._meta.maintainers && parsedData._meta.maintainers.length > 0 && (
-                <div className="text-xs text-slate-500">
-                  <span className="font-semibold block mb-0.5 text-slate-600 dark:text-slate-400">
-                    Maintainers:
-                  </span>
-                  {parsedData._meta.maintainers.map((m: any, idx: number) => (
-                    <div key={idx}>
-                      • {m.name} ({m.role}) - <a href={m.github} target="_blank" rel="noreferrer" className="text-sky-500 hover:underline">{m.github}</a>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {parsedData._meta.maintainers &&
+                parsedData._meta.maintainers.length > 0 && (
+                  <div className="text-xs text-slate-500">
+                    <span className="font-semibold block mb-0.5 text-slate-600 dark:text-slate-400">
+                      Maintainers:
+                    </span>
+                    {parsedData._meta.maintainers.map((m: any, idx: number) => (
+                      <div key={idx}>
+                        • {m.name} ({m.role}) -{" "}
+                        <a
+                          href={m.github}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sky-500 hover:underline"
+                        >
+                          {m.github}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                )}
             </div>
           )}
         </div>
@@ -226,11 +304,13 @@ export function I18nRuntimeImportDialog({
             disabled={!selectedFile || isApplying}
             className="bg-sky-500 hover:bg-sky-600 text-white gap-2"
           >
-            {isApplying && <span className="animate-spin w-3 h-3 border-2 border-white border-t-transparent rounded-full" />}
+            {isApplying && (
+              <span className="animate-spin w-3 h-3 border-2 border-white border-t-transparent rounded-full" />
+            )}
             <span>Apply Language</span>
           </Button>
         </div>
       </div>
     </BaseDialog>
-  )
+  );
 }

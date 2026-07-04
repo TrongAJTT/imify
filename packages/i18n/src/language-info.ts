@@ -1,5 +1,4 @@
 import i18n from "i18next"
-import { calculateOverallCompletionRate } from "./completion-calculator"
 import { getRuntimeLanguages, type LanguageMeta } from "./runtime-import"
 
 export interface LanguageInfo {
@@ -8,6 +7,10 @@ export interface LanguageInfo {
   completionRate: number // 0.0 -> 1.0
   maintainers: LanguageMeta["maintainers"]
   isRuntime?: boolean
+  stats?: {
+    total: number
+    completed: number
+  }
 }
 
 export function getAvailableLanguages(): LanguageInfo[] {
@@ -25,28 +28,34 @@ export function getAvailableLanguages(): LanguageInfo[] {
     const maintainers = metaBundle?.maintainers ?? [
       { name: "TrongAJTT", github: "https://github.com/trongajtt", role: "Core Maintainer" }
     ]
-    const completionRate = calculateOverallCompletionRate(lang.code, "en")
+    const total = metaBundle?.stats?.total ?? 0
+    const completed = metaBundle?.stats?.completed ?? 0
+    const completionRate = total === 0 ? 1.0 : completed / total
 
     list.push({
       code: lang.code,
       name: metaBundle?.languageName ?? lang.name,
       completionRate,
       maintainers,
-      isRuntime: false
+      isRuntime: false,
+      stats: { total, completed }
     })
   }
-
 
   // 2. Runtime imported languages
   const runtimeLangs = getRuntimeLanguages()
   for (const lang of runtimeLangs) {
-    const completionRate = calculateOverallCompletionRate(lang.languageCode, "en")
+    const total = lang.stats?.total ?? 0
+    const completed = lang.stats?.completed ?? 0
+    const completionRate = total === 0 ? 1.0 : completed / total
+    
     list.push({
       code: lang.languageCode,
       name: lang.languageName,
       completionRate,
       maintainers: lang.maintainers,
-      isRuntime: true
+      isRuntime: true,
+      stats: { total, completed }
     })
   }
 

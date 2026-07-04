@@ -62,17 +62,20 @@ export function DevToolsDialog({
   performancePreferences,
 }: DevToolsDialogProps) {
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
-  const [activeTab, setActiveTab] = useState<"system" | "console" | "capabilities" | "language" | null>(
-    "system",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "system" | "console" | "capabilities" | "language" | null
+  >("system");
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isI18nImportDialogOpen, setIsI18nImportDialogOpen] = useState(false);
-  const [isI18nTemplateDialogOpen, setIsI18nTemplateDialogOpen] = useState(false);
+  const [isI18nTemplateDialogOpen, setIsI18nTemplateDialogOpen] =
+    useState(false);
   const [isMobileDialog, setIsMobileDialog] = useState(false);
 
   const showI18nDebugKeys = useDevModeStore((state) => state.showI18nDebugKeys);
-  const setShowI18nDebugKeys = useDevModeStore((state) => state.setShowI18nDebugKeys);
+  const setShowI18nDebugKeys = useDevModeStore(
+    (state) => state.setShowI18nDebugKeys,
+  );
   const { toasts, hide, success } = useToast();
 
   const safePerformancePreferences = normalizePerformancePreferences(
@@ -125,14 +128,14 @@ export function DevToolsDialog({
       bgClassName: "bg-violet-50 dark:bg-violet-900/40",
     },
     {
-      id: "capabilities" as const,
-      label: "Capabilities",
-      description: "Browser feature detection and API support",
-      icon: Gauge,
+      id: "console" as const,
+      label: "Console Monitor",
+      description: "Real-time console logging and debugger",
+      icon: Terminal,
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
-      iconClassName: "text-sky-600 dark:text-sky-400",
-      bgClassName: "bg-sky-50 dark:bg-sky-900/40",
+      iconClassName: "text-indigo-650 dark:text-indigo-400",
+      bgClassName: "bg-indigo-50 dark:bg-indigo-900/40",
     },
     {
       id: "language" as const,
@@ -145,14 +148,14 @@ export function DevToolsDialog({
       bgClassName: "bg-teal-50 dark:bg-teal-900/40",
     },
     {
-      id: "console" as const,
-      label: "Console Monitor",
-      description: "Real-time console logging and debugger",
-      icon: Terminal,
+      id: "capabilities" as const,
+      label: "Capabilities",
+      description: "Browser feature detection and API support",
+      icon: Gauge,
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
-      iconClassName: "text-indigo-650 dark:text-indigo-400",
-      bgClassName: "bg-indigo-50 dark:bg-indigo-900/40",
+      iconClassName: "text-sky-600 dark:text-sky-400",
+      bgClassName: "bg-sky-50 dark:bg-sky-900/40",
     },
   ];
 
@@ -447,7 +450,7 @@ export function DevToolsDialog({
               success(
                 "Language loaded successfully",
                 `Loaded custom language ${meta.languageName} (${meta.languageCode}) at runtime.`,
-                3000
+                3000,
               )
             }
           />
@@ -458,7 +461,7 @@ export function DevToolsDialog({
               success(
                 "Template generated",
                 "Empty translation JSON template has been downloaded.",
-                3000
+                3000,
               )
             }
           />

@@ -14,9 +14,7 @@ export {
 } from "./dev-mode-processor"
 export {
   calculateCompletionRate,
-  calculateOverallCompletionRate,
   calculateCompletionDetails,
-  calculateOverallCompletionDetails,
   type CompletionDetails
 } from "./completion-calculator"
 export {

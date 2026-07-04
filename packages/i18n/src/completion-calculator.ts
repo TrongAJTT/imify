@@ -1,5 +1,3 @@
-import i18n from "i18next"
-
 export interface CompletionDetails {
   rate: number
   completed: number
@@ -77,30 +75,3 @@ export const NAMESPACES = [
   "qrGenerator",
   "qrReader"
 ] as const
-
-export function calculateOverallCompletionDetails(
-  targetLang: string,
-  baseLang: string = "en"
-): CompletionDetails {
-  let total = 0
-  let completed = 0
-
-  for (const ns of NAMESPACES) {
-    const targetNs = i18n.getResourceBundle(targetLang, ns)
-    const baseNs = i18n.getResourceBundle(baseLang, ns)
-
-    const details = calculateCompletionDetails(targetNs, baseNs)
-    total += details.total
-    completed += details.completed
-  }
-
-  const rate = total === 0 ? 1.0 : completed / total
-  return { rate, completed, total }
-}
-
-export function calculateOverallCompletionRate(
-  targetLang: string,
-  baseLang: string = "en"
-): number {
-  return calculateOverallCompletionDetails(targetLang, baseLang).rate
-}
