@@ -28,6 +28,7 @@ import {
 } from "../shared/image-file-utils";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { useTranslation } from "@imify/i18n";
+import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 
 // Helper function to extract and crop the QR code image from a source canvas
 function extractQrImage(
@@ -83,7 +84,11 @@ function extractQrImage(
 
 function scanQrCodeWithPreprocessing(
   canvas: HTMLCanvasElement,
-  inversionAttempts: "dontInvert" | "onlyInvert" | "attemptBoth" | "invertFirst" = "attemptBoth"
+  inversionAttempts:
+    | "dontInvert"
+    | "onlyInvert"
+    | "attemptBoth"
+    | "invertFirst" = "attemptBoth",
 ) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
@@ -178,7 +183,9 @@ export function QrReaderWorkspace() {
   const { t } = useTranslation("qrReader");
   const { hasCamera, setHasCamera, lastScanResult, setLastScanResult } =
     useQrReaderStore();
-  const setIsMobileSidebarOpen = useWorkspaceHeaderStore((s) => s.setIsMobileSidebarOpen);
+  const setIsMobileSidebarOpen = useWorkspaceHeaderStore(
+    (s) => s.setIsMobileSidebarOpen,
+  );
 
   const { toasts, success, error, hide } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -299,7 +306,10 @@ export function QrReaderWorkspace() {
           if (result && result.code && result.code.data) {
             const { code, canvas: decodedCanvas } = result;
             setLastScanResult(code.data);
-            success(t("workspace.scannedSuccess"), t("workspace.decodedSuccess"));
+            success(
+              t("workspace.scannedSuccess"),
+              t("workspace.decodedSuccess"),
+            );
 
             // Extract QR image using helper function
             setScannedQrImage(extractQrImage(decodedCanvas, code.location));
@@ -351,7 +361,10 @@ export function QrReaderWorkspace() {
           if (result && result.code && result.code.data) {
             const { code, canvas: decodedCanvas } = result;
             setLastScanResult(code.data);
-            success(t("workspace.scannedSuccess"), t("workspace.decodedFileSuccess"));
+            success(
+              t("workspace.scannedSuccess"),
+              t("workspace.decodedFileSuccess"),
+            );
 
             // Extract QR image using helper function
             setScannedQrImage(extractQrImage(decodedCanvas, code.location));
@@ -359,10 +372,7 @@ export function QrReaderWorkspace() {
               setIsMobileSidebarOpen(true);
             }, 1000);
           } else {
-            error(
-              t("workspace.scanFailed"),
-              t("workspace.noQrDetected"),
-            );
+            error(t("workspace.scanFailed"), t("workspace.noQrDetected"));
           }
         }
         setIsAnalyzing(false);
@@ -386,6 +396,19 @@ export function QrReaderWorkspace() {
       error(t("workspace.unsupportedFormat"), t("workspace.uploadValid"));
     }
   };
+
+  useClipboardImageIntake({
+    onImages: (images) => {
+      if (images.length > 0) {
+        handleScanFile(images[0]);
+      }
+    },
+    onError: (msg) => {
+      error(t("workspace.errorHeader"), msg);
+    },
+    mode: "single",
+    enabled: !cameraStream,
+  });
 
   const copyRawContent = () => {
     if (!lastScanResult) return;
