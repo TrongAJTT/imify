@@ -16,15 +16,16 @@ Arguments:
   <target-lang>     Target language code (e.g., 'vi'). Folder must exist in packages/i18n/src/locales/
   <file-name>       Name of the JSON file to sync (e.g., 'inspector' or 'inspector.json')
                     or '-all' to sync all translation files.
-  [use-case-flag]   Optional. Specify the sync action (default is 3):
+  [use-case-flag]   Optional. Specify the sync action (default is 4):
                     1: Check source keys and insert missing keys with empty/blank values into target.
-                    2: Re-order/sort target file keys to match source file key structure/order.
-                    3: Run use case 1 first, then use case 2 (recommended).
+                    2: Remove keys from the target language file that do not exist in the source file.
+                    3: Re-order/sort target file keys to match source file key structure/order.
+                    4: Run use case 1 first, then use case 2, then use case 3 (recommended).
 
 Examples:
   npm run sync:lang vi inspector
   npm run sync:lang vi -all 1
-  npm run sync:lang vi settings.json --case=2
+  npm run sync:lang vi settings.json --case=3
 `);
 }
 
@@ -60,7 +61,24 @@ function insertMissingKeys(src, tgt) {
   return result;
 }
 
-// Use case 2: Sort target keys to match source keys order recursively
+// Use case 2: Remove target keys that do not exist in source recursively
+function removeObsoleteKeys(src, tgt) {
+  const result = {};
+  for (const key in tgt) {
+    if (Object.prototype.hasOwnProperty.call(tgt, key)) {
+      if (key in src) {
+        if (isPlainObject(tgt[key]) && isPlainObject(src[key])) {
+          result[key] = removeObsoleteKeys(src[key], tgt[key]);
+        } else {
+          result[key] = tgt[key];
+        }
+      }
+    }
+  }
+  return result;
+}
+
+// Use case 3: Sort target keys to match source keys order recursively
 function sortKeysToMatch(src, tgt) {
   const sorted = {};
   
@@ -76,7 +94,7 @@ function sortKeysToMatch(src, tgt) {
     }
   }
   
-  // Preserve target-only keys at the end
+  // Preserve target-only keys at the end (only useful if case 2 was not run)
   for (const key in tgt) {
     if (Object.prototype.hasOwnProperty.call(tgt, key) && !(key in src)) {
       sorted[key] = tgt[key];
@@ -96,17 +114,17 @@ if (args.includes('--help') || args.includes('-h') || args.length === 0) {
 
 let targetLang = null;
 let fileName = null;
-let useCase = 3;
+let useCase = 4;
 
 const positionalArgs = [];
 for (let i = 0; i < args.length; i++) {
   const arg = args[i];
   if (arg.startsWith('--case=')) {
     const val = parseInt(arg.split('=')[1], 10);
-    if ([1, 2, 3].includes(val)) {
+    if ([1, 2, 3, 4].includes(val)) {
       useCase = val;
     } else {
-      console.error(`Error: Invalid use case value "${val}". Must be 1, 2, or 3.`);
+      console.error(`Error: Invalid use case value "${val}". Must be 1, 2, 3, or 4.`);
       printHelp();
       process.exit(1);
     }
@@ -114,11 +132,11 @@ for (let i = 0; i < args.length; i++) {
     const nextArg = args[i + 1];
     if (nextArg) {
       const val = parseInt(nextArg, 10);
-      if ([1, 2, 3].includes(val)) {
+      if ([1, 2, 3, 4].includes(val)) {
         useCase = val;
         i++;
       } else {
-        console.error(`Error: Invalid use case value "${nextArg}". Must be 1, 2, or 3.`);
+        console.error(`Error: Invalid use case value "${nextArg}". Must be 1, 2, 3, or 4.`);
         printHelp();
         process.exit(1);
       }
@@ -127,6 +145,8 @@ for (let i = 0; i < args.length; i++) {
       printHelp();
       process.exit(1);
     }
+  } else if (arg === '-all') {
+    positionalArgs.push(arg);
   } else if (!arg.startsWith('-')) {
     positionalArgs.push(arg);
   }
@@ -143,10 +163,10 @@ fileName = positionalArgs[1];
 
 if (positionalArgs[2]) {
   const val = parseInt(positionalArgs[2], 10);
-  if ([1, 2, 3].includes(val)) {
+  if ([1, 2, 3, 4].includes(val)) {
     useCase = val;
   } else {
-    console.error(`Error: Invalid positional use case "${positionalArgs[2]}". Must be 1, 2, or 3.`);
+    console.error(`Error: Invalid positional use case "${positionalArgs[2]}". Must be 1, 2, 3, or 4.`);
     printHelp();
     process.exit(1);
   }
@@ -202,10 +222,13 @@ for (const file of filesToSync) {
     if (useCase === 1) {
       resultData = insertMissingKeys(srcData, tgtData);
     } else if (useCase === 2) {
-      resultData = sortKeysToMatch(srcData, tgtData);
+      resultData = removeObsoleteKeys(srcData, tgtData);
     } else if (useCase === 3) {
-      const merged = insertMissingKeys(srcData, tgtData);
-      resultData = sortKeysToMatch(srcData, merged);
+      resultData = sortKeysToMatch(srcData, tgtData);
+    } else if (useCase === 4) {
+      const step1 = insertMissingKeys(srcData, tgtData);
+      const step2 = removeObsoleteKeys(srcData, step1);
+      resultData = sortKeysToMatch(srcData, step2);
     }
 
     fs.writeFileSync(tgtPath, JSON.stringify(resultData, null, 2) + '\n', 'utf-8');

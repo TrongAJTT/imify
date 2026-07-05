@@ -45,14 +45,14 @@
   },
   "performance": {
     "sectionTitle": "Hiệu năng",
-    "sectionDesc": "Cố vấn Concurrency thông minh giúp giả lập số lượng worker an toàn bằng cách sử dụng cấu hình phần cứng của bạn và cài đặt định dạng đang hoạt động.",
-    "advisorTitle": "CỐ VẤN CONCURRENCY THÔNG MINH",
+    "sectionDesc": "Trình tư vấn luồng xử lý thông minh giúp giả lập số lượng worker an toàn bằng cách sử dụng cấu hình phần cứng của bạn và cài đặt định dạng đang hoạt động.",
+    "advisorTitle": "TRÌNH TƯ VẤN LUỒNG XỬ LÝ THÔNG MINH",
     "advisorDesc": "Các bộ mã hóa hiện đại như AVIF và JXL có thể tiêu thụ nhiều CPU và bộ nhớ trong các worker trình duyệt. Kích hoạt cố vấn để nhận các đề xuất động dựa trên cấu hình máy và tùy chọn định dạng hiện tại.",
     "privacyNote": "Lưu ý riêng tư: dữ liệu phần cứng chỉ được đọc và xử lý cục bộ trên trình duyệt của bạn. Không có telemetry hoặc tải lên bên ngoài.",
-    "enableAdvisor": "Kích hoạt Cố vấn Concurrency thông minh",
-    "enableAdvisorDesc": "Giữ nguyên việc chỉnh concurrency thủ công (1-90), nhưng hiển thị các đề xuất an toàn theo ngữ cảnh bên dưới Cấu hình Xuất.",
-    "unlockConcurrency": "Mở khóa concurrency tối đa (Overclock)",
-    "unlockConcurrencyDesc": "Cho phép các giá trị lên tới 90 và bỏ qua khóa cứng của Cố vấn. Điều này có thể tăng nguy cơ crash trên các định dạng nặng.",
+    "enableAdvisor": "Kích hoạt Trình tư vấn luồng xử lý thông minh",
+    "enableAdvisorDesc": "Giữ nguyên việc chỉnh luồng xử lý thủ công (1-90), nhưng hiển thị các đề xuất an toàn theo ngữ cảnh bên dưới Cấu hình Xuất.",
+    "unlockConcurrency": "Mở khóa luồng xử lý tối đa (Overclock)",
+    "unlockConcurrencyDesc": "Cho phép các giá trị lên tới 90 và bỏ qua khóa cứng của Trình tư vấn. Điều này có thể tăng nguy cơ crash trên các định dạng nặng.",
     "hardwareProfile": "Cấu hình phần cứng",
     "sourceAuto": "Tự động phát hiện",
     "sourceManual": "Ghi đè thủ công",
@@ -63,9 +63,9 @@
     "ramBudget": "Giới hạn RAM (GB)",
     "detectedHardware": "Phần cứng được phát hiện: {{cores}} luồng, ~{{ram}}GB bộ nhớ thiết bị.",
     "detectedHardwareUnknown": "không rõ",
-    "modeStatic": "Chế độ thông minh đang tắt. Concurrency Advisor đang chạy ở chế độ dự phòng tĩnh sử dụng cấu hình mặc định (4 luồng, giới hạn 4GB RAM).",
-    "modeDanger": "Chế độ nguy hiểm: overclock đã được kích hoạt. Các định dạng nặng (AVIF/JXL/PNG tiny+OxiPNG) có thể bị hết bộ nhớ (OOM) nếu bạn đẩy concurrency quá cao.",
-    "modeSafe": "Chế độ an toàn: concurrency tối đa được khóa cứng theo tính toán của Cố vấn để giảm nguy cơ crash."
+    "modeStatic": "Chế độ thông minh đang tắt. Trình tư vấn luồng xử lý thông minh đang chạy ở chế độ dự phòng tĩnh sử dụng cấu hình mặc định (4 luồng, giới hạn 4GB RAM).",
+    "modeDanger": "Chế độ nguy hiểm: overclock đã được kích hoạt. Các định dạng nặng (AVIF/JXL/PNG tiny+OxiPNG) có thể bị hết bộ nhớ (OOM) nếu bạn đẩy luồng xử lý quá cao.",
+    "modeSafe": "Chế độ an toàn: luồng xử lý tối đa được khóa cứng theo tính toán của Trình tư vấn để giảm nguy cơ crash."
   },
   "warnings": {
     "sectionTitle": "Cảnh báo",

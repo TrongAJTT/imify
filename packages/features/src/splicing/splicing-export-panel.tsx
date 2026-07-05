@@ -66,7 +66,7 @@ export function SplicingExportPanel({
   onOpenSettings,
   disabled = false,
 }: Omit<SplicingExportPanelProps, "fileNamePattern" | "onFileRenamingClick">) {
-  const { t } = useTranslation("splicing");
+  const { t } = useTranslation(["splicing", "processor"]);
 
   const handleExportModeChange = (mode: SplicingExportMode) => {
     onExportModeChange(mode);
@@ -102,8 +102,15 @@ export function SplicingExportPanel({
         selectedConcurrency: concurrency,
         formatOptions: advisorFormatOptions,
         preferences: performancePreferences,
+        t,
       }),
-    [targetFormat, concurrency, advisorFormatOptions, performancePreferences],
+    [
+      targetFormat,
+      concurrency,
+      advisorFormatOptions,
+      performancePreferences,
+      t,
+    ],
   );
   const concurrencyLockState = useMemo(
     () =>

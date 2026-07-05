@@ -249,8 +249,5 @@
     "gradientModeLabel": "Chế độ dải màu",
     "borderColor": "Màu viền",
     "cornerRadius": "Bo góc"
-  },
-  "paddingSettings": "Thiết lập Đệm",
-  "aspectRatio": "Tỷ lệ khung hình",
-  "fillColor": "Màu lấp đầy"
+  }
 }
