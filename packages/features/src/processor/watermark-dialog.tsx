@@ -1,35 +1,62 @@
-import React, { useEffect, useMemo, useState } from "react"
-import { CheckCircle2, FolderOpen, ImagePlus, RotateCcw, Save, Sparkles, Stamp, Type, UploadCloud, X } from "lucide-react"
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  CheckCircle2,
+  FolderOpen,
+  ImagePlus,
+  RotateCcw,
+  Save,
+  Sparkles,
+  Stamp,
+  Type,
+  UploadCloud,
+  X,
+} from "lucide-react";
 
-import { Button, SecondaryButton, NumberInput, TextInput, BaseDialog, ColorPickerPopover } from "@imify/ui"
-import { Tooltip } from "@imify/ui"
-import { LabelText } from "@imify/ui"
-import type { BatchWatermarkConfig } from "@imify/stores/stores/batch-types"
+import {
+  Button,
+  SecondaryButton,
+  NumberInput,
+  TextInput,
+  BaseDialog,
+  ColorPickerPopover,
+  SelectInput,
+} from "@imify/ui";
+import { Tooltip } from "@imify/ui";
+import { LabelText } from "@imify/ui";
+import type { BatchWatermarkConfig } from "@imify/stores/stores/batch-types";
 import {
   DEFAULT_BATCH_WATERMARK,
   WATERMARK_POSITION_OPTIONS,
   WATERMARK_PREVIEW_DATA_URL,
   applyWatermarkToImageBlob,
-  toDataUrl
-} from "./watermark"
-import { watermarkStorage } from "@imify/core/indexed-db"
-import { WatermarkOpenSavedDialog } from "./watermark-open-saved-dialog"
-import { WatermarkSaveDialog, type WatermarkSaveAction } from "./watermark-save-dialog"
-import { useTranslation } from "@imify/i18n"
+  toDataUrl,
+} from "./watermark";
+import { watermarkStorage } from "@imify/core/indexed-db";
+import { WatermarkOpenSavedDialog } from "./watermark-open-saved-dialog";
+import {
+  WatermarkSaveDialog,
+  type WatermarkSaveAction,
+} from "./watermark-save-dialog";
+import { useTranslation } from "@imify/i18n";
 import {
   buildWatermarkSummary,
   cloneWatermarkConfig,
   findMatchingSavedWatermarkId,
-  isWatermarkConfigEqual
-} from "./watermark-config"
-import { useWatermarkStore, type SavedWatermarkItem, type WatermarkContext } from "@imify/stores/stores/watermark-store"
+  isWatermarkConfigEqual,
+} from "./watermark-config";
+import {
+  useWatermarkStore,
+  type SavedWatermarkItem,
+  type WatermarkContext,
+} from "@imify/stores/stores/watermark-store";
+import { useFontStore } from "@imify/stores/stores/font-store";
 
 interface BatchWatermarkDialogProps {
-  isOpen: boolean
-  setupContext: WatermarkContext
-  initialConfig: BatchWatermarkConfig
-  onClose: () => void
-  onSave: (next: BatchWatermarkConfig) => void
+  isOpen: boolean;
+  setupContext: WatermarkContext;
+  initialConfig: BatchWatermarkConfig;
+  onClose: () => void;
+  onSave: (next: BatchWatermarkConfig) => void;
 }
 
 export function BatchWatermarkDialog({
@@ -37,257 +64,296 @@ export function BatchWatermarkDialog({
   setupContext,
   initialConfig,
   onClose,
-  onSave
+  onSave,
 }: BatchWatermarkDialogProps) {
-  const { t } = useTranslation("processor")
-  const [draft, setDraft] = useState<BatchWatermarkConfig>(cloneWatermarkConfig(initialConfig))
-  const [previewUrl, setPreviewUrl] = useState<string>(WATERMARK_PREVIEW_DATA_URL)
-  const [isLogoLoading, setIsLogoLoading] = useState(false)
-  const [isFilePickerInteracting, setIsFilePickerInteracting] = useState(false)
-  const [isOpenSavedDialogOpen, setIsOpenSavedDialogOpen] = useState(false)
-  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
-  const [isOverwritePickerOpen, setIsOverwritePickerOpen] = useState(false)
-  const [saveAction, setSaveAction] = useState<WatermarkSaveAction>("save_new")
-  const [saveName, setSaveName] = useState("")
-  const [overwriteTarget, setOverwriteTarget] = useState<SavedWatermarkItem | null>(null)
+  const { t } = useTranslation("processor");
+  const [draft, setDraft] = useState<BatchWatermarkConfig>(
+    cloneWatermarkConfig(initialConfig),
+  );
+  const [previewUrl, setPreviewUrl] = useState<string>(
+    WATERMARK_PREVIEW_DATA_URL,
+  );
+  const [isLogoLoading, setIsLogoLoading] = useState(false);
+  const [isFilePickerInteracting, setIsFilePickerInteracting] = useState(false);
+  const [isOpenSavedDialogOpen, setIsOpenSavedDialogOpen] = useState(false);
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [isOverwritePickerOpen, setIsOverwritePickerOpen] = useState(false);
+  const [saveAction, setSaveAction] = useState<WatermarkSaveAction>("save_new");
+  const [saveName, setSaveName] = useState("");
+  const [overwriteTarget, setOverwriteTarget] =
+    useState<SavedWatermarkItem | null>(null);
 
-  const savedWatermarks = useWatermarkStore((state) => state.savedWatermarks)
-  const saveNewWatermark = useWatermarkStore((state) => state.saveNewWatermark)
-  const overwriteSavedWatermark = useWatermarkStore((state) => state.overwriteSavedWatermark)
-  const deleteSavedWatermark = useWatermarkStore((state) => state.deleteSavedWatermark)
+  const savedWatermarks = useWatermarkStore((state) => state.savedWatermarks);
+  const saveNewWatermark = useWatermarkStore((state) => state.saveNewWatermark);
+  const overwriteSavedWatermark = useWatermarkStore(
+    (state) => state.overwriteSavedWatermark,
+  );
+  const deleteSavedWatermark = useWatermarkStore(
+    (state) => state.deleteSavedWatermark,
+  );
 
-  const savedMatchId = useMemo(() => findMatchingSavedWatermarkId(savedWatermarks, draft), [savedWatermarks, draft])
-
-  const isDirty = useMemo(() => !isWatermarkConfigEqual(draft, initialConfig), [draft, initialConfig])
+  const installedFonts = useFontStore((state) => state.installedFonts);
+  const loadInstalledFonts = useFontStore((state) => state.loadInstalledFonts);
 
   useEffect(() => {
     if (isOpen) {
-      setDraft(cloneWatermarkConfig(initialConfig))
-      setIsOpenSavedDialogOpen(false)
-      setIsSaveDialogOpen(false)
-      setIsOverwritePickerOpen(false)
+      loadInstalledFonts();
     }
-  }, [isOpen, initialConfig])
+  }, [isOpen, loadInstalledFonts]);
+
+  const savedMatchId = useMemo(
+    () => findMatchingSavedWatermarkId(savedWatermarks, draft),
+    [savedWatermarks, draft],
+  );
+
+  const isDirty = useMemo(
+    () => !isWatermarkConfigEqual(draft, initialConfig),
+    [draft, initialConfig],
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      setDraft(cloneWatermarkConfig(initialConfig));
+      setIsOpenSavedDialogOpen(false);
+      setIsSaveDialogOpen(false);
+      setIsOverwritePickerOpen(false);
+    }
+  }, [isOpen, initialConfig]);
 
   useEffect(() => {
     if (!overwriteTarget) {
-      return
+      return;
     }
 
-    const refreshedTarget = savedWatermarks.find((entry) => entry.id === overwriteTarget.id) ?? null
+    const refreshedTarget =
+      savedWatermarks.find((entry) => entry.id === overwriteTarget.id) ?? null;
     if (!refreshedTarget) {
-      setOverwriteTarget(null)
-      return
+      setOverwriteTarget(null);
+      return;
     }
 
-    if (refreshedTarget.updatedAt !== overwriteTarget.updatedAt || refreshedTarget.name !== overwriteTarget.name) {
-      setOverwriteTarget(refreshedTarget)
+    if (
+      refreshedTarget.updatedAt !== overwriteTarget.updatedAt ||
+      refreshedTarget.name !== overwriteTarget.name
+    ) {
+      setOverwriteTarget(refreshedTarget);
     }
-  }, [overwriteTarget, savedWatermarks])
+  }, [overwriteTarget, savedWatermarks]);
 
   useEffect(() => {
     if (!isFilePickerInteracting) {
-      return
+      return;
     }
 
     const releaseInteraction = () => {
       window.setTimeout(() => {
-        setIsFilePickerInteracting(false)
-      }, 250)
-    }
+        setIsFilePickerInteracting(false);
+      }, 250);
+    };
 
-    window.addEventListener("focus", releaseInteraction)
+    window.addEventListener("focus", releaseInteraction);
 
     return () => {
-      window.removeEventListener("focus", releaseInteraction)
-    }
-  }, [isFilePickerInteracting])
+      window.removeEventListener("focus", releaseInteraction);
+    };
+  }, [isFilePickerInteracting]);
 
-  const summary = useMemo(() => buildWatermarkSummary(draft), [draft])
-  const summaryWithSavedState = savedMatchId ? `${summary} · Saved` : summary
+  const summary = useMemo(() => buildWatermarkSummary(draft), [draft]);
+  const summaryWithSavedState = savedMatchId ? `${summary} · Saved` : summary;
 
   // Load logo from IndexedDB if it exists but DataURL is missing (after refresh)
   useEffect(() => {
-    if (isOpen && draft.type === "logo" && draft.logoBlobId && !draft.logoDataUrl) {
+    if (
+      isOpen &&
+      draft.type === "logo" &&
+      draft.logoBlobId &&
+      !draft.logoDataUrl
+    ) {
       void (async () => {
         try {
-          const blob = await watermarkStorage.get(draft.logoBlobId!)
+          const blob = await watermarkStorage.get(draft.logoBlobId!);
           if (blob) {
-            const dataUrl = await toDataUrl(blob as File)
-            setDraft(c => ({ ...c, logoDataUrl: dataUrl }))
+            const dataUrl = await toDataUrl(blob as File);
+            setDraft((c) => ({ ...c, logoDataUrl: dataUrl }));
           }
         } catch (err) {
-          console.error("Failed to load logo from storage", err)
+          console.error("Failed to load logo from storage", err);
         }
-      })()
+      })();
     }
-  }, [isOpen, draft.type, draft.logoBlobId, draft.logoDataUrl])
+  }, [isOpen, draft.type, draft.logoBlobId, draft.logoDataUrl]);
 
   useEffect(() => {
     if (!isOpen) {
-      return
+      return;
     }
 
-    let active = true
+    let active = true;
 
     const renderPreview = async () => {
       try {
-        // We need a stable preview base. If draft has a logo but it's not loaded yet, 
+        // We need a stable preview base. If draft has a logo but it's not loaded yet,
         // wait for it unless we have the DataUrl.
-        if (draft.type === "logo" && !draft.logoDataUrl) return
+        if (draft.type === "logo" && !draft.logoDataUrl) return;
 
         // Create an Image object to handle SVG decoding safely
-        const img = new Image()
+        const img = new Image();
         const ready = new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve()
-          img.onerror = () => reject(new Error("SVG Decode Failed"))
-        })
-        img.src = WATERMARK_PREVIEW_DATA_URL
-        await ready
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("SVG Decode Failed"));
+        });
+        img.src = WATERMARK_PREVIEW_DATA_URL;
+        await ready;
 
         // Create canvas to get a clean bitmap from SVG
-        const canvas = document.createElement("canvas")
-        canvas.width = 1200
-        canvas.height = 800
-        const ctx = canvas.getContext("2d")
-        if (!ctx) throw new Error("No context")
-        ctx.drawImage(img, 0, 0)
+        const canvas = document.createElement("canvas");
+        canvas.width = 1200;
+        canvas.height = 800;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("No context");
+        ctx.drawImage(img, 0, 0);
 
         // Convert canvas to blob for processing
-        const sampleBlob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png"))
-        
-        const watermarked = await applyWatermarkToImageBlob(sampleBlob, draft)
-        if (!active) return
+        const sampleBlob = await new Promise<Blob>((resolve) =>
+          canvas.toBlob((b) => resolve(b!), "image/png"),
+        );
 
-        const nextUrl = URL.createObjectURL(watermarked)
+        const watermarked = await applyWatermarkToImageBlob(sampleBlob, draft);
+        if (!active) return;
+
+        const nextUrl = URL.createObjectURL(watermarked);
 
         setPreviewUrl((current) => {
           if (current.startsWith("blob:")) {
-            URL.revokeObjectURL(current)
+            URL.revokeObjectURL(current);
           }
-          return nextUrl
-        })
+          return nextUrl;
+        });
       } catch (err) {
-        console.error("Failed to render preview", err)
-        if (!active) return
-        setPreviewUrl(WATERMARK_PREVIEW_DATA_URL)
+        console.error("Failed to render preview", err);
+        if (!active) return;
+        setPreviewUrl(WATERMARK_PREVIEW_DATA_URL);
       }
-    }
+    };
 
     // Small debounce to avoid rendering too many frames while moving sliders
     const timeout = setTimeout(() => {
-      void renderPreview()
-    }, 150)
+      void renderPreview();
+    }, 150);
 
     return () => {
-      active = false
-      clearTimeout(timeout)
-    }
-  }, [draft, isOpen])
+      active = false;
+      clearTimeout(timeout);
+    };
+  }, [draft, isOpen]);
 
   useEffect(() => {
     return () => {
       if (previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl)
+        URL.revokeObjectURL(previewUrl);
       }
-    }
-  }, [previewUrl])
+    };
+  }, [previewUrl]);
 
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsFilePickerInteracting(false)
-    const file = event.target.files?.[0]
-    if (!file) return
+  const handleLogoUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setIsFilePickerInteracting(false);
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    setIsLogoLoading(true)
+    setIsLogoLoading(true);
     try {
-      const blobId = `logo_${Date.now()}`
-      await watermarkStorage.save(blobId, file)
-      const dataUrl = await toDataUrl(file)
-      
-      setDraft(c => ({
+      const blobId = `logo_${Date.now()}`;
+      await watermarkStorage.save(blobId, file);
+      const dataUrl = await toDataUrl(file);
+
+      setDraft((c) => ({
         ...c,
         logoDataUrl: dataUrl,
-        logoBlobId: blobId
-      }))
+        logoBlobId: blobId,
+      }));
     } catch (err) {
-      console.error("Failed to upload logo", err)
+      console.error("Failed to upload logo", err);
     } finally {
-      setIsLogoLoading(false)
+      setIsLogoLoading(false);
     }
-  }
+  };
 
   const markFilePickerInteraction = () => {
-    setIsFilePickerInteracting(true)
-  }
+    setIsFilePickerInteracting(true);
+  };
 
   const defaultSaveName = useMemo(() => {
-    const linkedEntry = savedWatermarks.find((entry) => entry.id === savedMatchId)
+    const linkedEntry = savedWatermarks.find(
+      (entry) => entry.id === savedMatchId,
+    );
     if (linkedEntry) {
-      return linkedEntry.name
+      return linkedEntry.name;
     }
 
-    const contextLabel = setupContext === "single" ? "Single" : "Batch"
+    const contextLabel = setupContext === "single" ? "Single" : "Batch";
     return `${contextLabel} Watermark ${new Date().toLocaleTimeString([], {
       hour: "2-digit",
-      minute: "2-digit"
-    })}`
-  }, [savedMatchId, savedWatermarks, setupContext])
+      minute: "2-digit",
+    })}`;
+  }, [savedMatchId, savedWatermarks, setupContext]);
 
   const openSaveDialog = () => {
-    setSaveAction("save_new")
-    setSaveName(defaultSaveName)
-    setOverwriteTarget(null)
-    setIsSaveDialogOpen(true)
-  }
+    setSaveAction("save_new");
+    setSaveName(defaultSaveName);
+    setOverwriteTarget(null);
+    setIsSaveDialogOpen(true);
+  };
 
   const handleSaveActionChange = (nextAction: WatermarkSaveAction) => {
     if (nextAction === "overwrite" && !savedWatermarks.length) {
-      return
+      return;
     }
 
-    setSaveAction(nextAction)
+    setSaveAction(nextAction);
     if (nextAction === "overwrite") {
-      setOverwriteTarget(null)
-      setSaveName("")
-      return
+      setOverwriteTarget(null);
+      setSaveName("");
+      return;
     }
 
-    setSaveName(defaultSaveName)
-  }
+    setSaveName(defaultSaveName);
+  };
 
   const handleSaveWatermark = () => {
-    const trimmedName = saveName.trim()
+    const trimmedName = saveName.trim();
     if (!trimmedName) {
-      return
+      return;
     }
 
     if (saveAction === "save_new") {
-      saveNewWatermark(trimmedName, draft)
-      setIsSaveDialogOpen(false)
-      return
+      saveNewWatermark(trimmedName, draft);
+      setIsSaveDialogOpen(false);
+      return;
     }
 
     if (!overwriteTarget) {
-      return
+      return;
     }
 
-    overwriteSavedWatermark(overwriteTarget.id, trimmedName, draft)
-    setIsSaveDialogOpen(false)
-  }
+    overwriteSavedWatermark(overwriteTarget.id, trimmedName, draft);
+    setIsSaveDialogOpen(false);
+  };
 
   const handleCloseMainDialog = () => {
-    setIsSaveDialogOpen(false)
-    setIsOpenSavedDialogOpen(false)
-    setIsOverwritePickerOpen(false)
-    onClose()
-  }
+    setIsSaveDialogOpen(false);
+    setIsOpenSavedDialogOpen(false);
+    setIsOverwritePickerOpen(false);
+    onClose();
+  };
 
   if (!isOpen) {
-    return null
+    return null;
   }
 
   if (typeof document === "undefined") {
-    return null
+    return null;
   }
 
   return (
@@ -296,7 +362,9 @@ export function BatchWatermarkDialog({
         isOpen={isOpen}
         onClose={handleCloseMainDialog}
         isDirty={isDirty}
-        shouldBlockCloseAttempt={(eventType) => eventType === "cancel" && isFilePickerInteracting}
+        shouldBlockCloseAttempt={(eventType) =>
+          eventType === "cancel" && isFilePickerInteracting
+        }
         contentClassName="w-full max-w-3xl rounded-xl overflow-hidden flex flex-col"
       >
         <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
@@ -305,8 +373,12 @@ export function BatchWatermarkDialog({
               <Stamp className="w-5 h-5 text-sky-600 dark:text-sky-400" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">Watermarking</h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">{summaryWithSavedState}</p>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                {t("watermarkDialog.title", "Watermarking")}
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {summaryWithSavedState}
+              </p>
             </div>
           </div>
           <button
@@ -332,7 +404,12 @@ export function BatchWatermarkDialog({
                   {WATERMARK_POSITION_OPTIONS.map((pos) => (
                     <button
                       key={pos.value}
-                      onClick={() => setDraft((current) => ({ ...current, position: pos.value }))}
+                      onClick={() =>
+                        setDraft((current) => ({
+                          ...current,
+                          position: pos.value,
+                        }))
+                      }
                       className={`pointer-events-auto rounded transition-all flex items-center justify-center
                         ${
                           draft.position === pos.value
@@ -343,7 +420,9 @@ export function BatchWatermarkDialog({
                     >
                       <div
                         className={`w-1.5 h-1.5 rounded-full ${
-                          draft.position === pos.value ? "bg-white scale-125" : "bg-white/30"
+                          draft.position === pos.value
+                            ? "bg-white scale-125"
+                            : "bg-white/30"
                         }`}
                       />
                     </button>
@@ -352,10 +431,18 @@ export function BatchWatermarkDialog({
               )}
             </div>
             <div className="mt-4 flex flex-col items-center gap-1">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Preview Image (1200x800 px)</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                {t(
+                  "watermarkDialog.previewImage",
+                  "Preview Image (1200x800 px)",
+                )}
+              </span>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-sky-500 animate-pulse" />
-                Hover preview to change position
+                {t(
+                  "watermarkDialog.hoverToChangePosition",
+                  "Hover preview to change position",
+                )}
               </p>
             </div>
           </div>
@@ -364,36 +451,42 @@ export function BatchWatermarkDialog({
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => setDraft((current) => ({ ...current, type: "none" }))}
+                onClick={() =>
+                  setDraft((current) => ({ ...current, type: "none" }))
+                }
                 className={`rounded-lg border px-2 py-2 text-xs font-semibold ${
                   draft.type === "none"
                     ? "border-sky-500 bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300"
                     : "border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                 }`}
               >
-                None
+                {t("watermarkDialog.tabs.none", "None")}
               </button>
               <button
                 type="button"
-                onClick={() => setDraft((current) => ({ ...current, type: "text" }))}
+                onClick={() =>
+                  setDraft((current) => ({ ...current, type: "text" }))
+                }
                 className={`rounded-lg border px-2 py-2 text-xs font-semibold inline-flex items-center justify-center gap-1 ${
                   draft.type === "text"
                     ? "border-sky-500 bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300"
                     : "border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                 }`}
               >
-                <Type size={12} /> Text
+                <Type size={12} /> {t("watermarkDialog.tabs.text", "Text")}
               </button>
               <button
                 type="button"
-                onClick={() => setDraft((current) => ({ ...current, type: "logo" }))}
+                onClick={() =>
+                  setDraft((current) => ({ ...current, type: "logo" }))
+                }
                 className={`rounded-lg border px-2 py-2 text-xs font-semibold inline-flex items-center justify-center gap-1 ${
                   draft.type === "logo"
                     ? "border-sky-500 bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300"
                     : "border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                 }`}
               >
-                <ImagePlus size={12} /> Logo
+                <ImagePlus size={12} /> {t("watermarkDialog.tabs.logo", "Logo")}
               </button>
             </div>
 
@@ -402,9 +495,14 @@ export function BatchWatermarkDialog({
                 <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
                   <Sparkles size={16} />
                 </div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">No watermark applied</p>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  {t("watermarkDialog.noWatermark", "No watermark applied")}
+                </p>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Select Text or Logo tab to configure your watermark placeholder.
+                  {t(
+                    "watermarkDialog.noWatermarkDesc",
+                    "Select Text or Logo tab to configure your watermark placeholder.",
+                  )}
                 </p>
               </div>
             ) : null}
@@ -413,20 +511,27 @@ export function BatchWatermarkDialog({
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <NumberInput
-                    label="Opacity (%)"
+                    label={t("watermarkDialog.opacity", "Opacity (%)")}
                     className="w-full"
                     min={1}
                     max={100}
                     step={1}
                     value={draft.opacity}
-                    onChangeValue={(value) => setDraft((current) => ({ ...current, opacity: value }))}
+                    onChangeValue={(value) =>
+                      setDraft((current) => ({ ...current, opacity: value }))
+                    }
                   />
 
                   <NumberInput
-                    label="Padding (px)"
+                    label={t("watermarkDialog.padding", "Padding (px)")}
                     min={0}
                     value={draft.paddingPx}
-                    onChangeValue={(value) => setDraft((current) => ({ ...current, paddingPx: Math.max(0, value || 0) }))}
+                    onChangeValue={(value) =>
+                      setDraft((current) => ({
+                        ...current,
+                        paddingPx: Math.max(0, value || 0),
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -436,40 +541,83 @@ export function BatchWatermarkDialog({
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <TextInput
-                    label="Watermark text"
+                    label={t("watermarkDialog.watermarkText", "Watermark text")}
                     value={draft.text}
-                    onChange={(nextText) => setDraft((current) => ({ ...current, text: nextText }))}
+                    onChange={(nextText) =>
+                      setDraft((current) => ({ ...current, text: nextText }))
+                    }
                     placeholder="Your brand name"
                   />
                   <NumberInput
-                    label="Padding (px)"
+                    label={t("watermarkDialog.padding", "Padding (px)")}
                     min={0}
                     value={draft.paddingPx}
-                    onChangeValue={(value) => setDraft((current) => ({ ...current, paddingPx: Math.max(0, value || 0) }))}
+                    onChangeValue={(value) =>
+                      setDraft((current) => ({
+                        ...current,
+                        paddingPx: Math.max(0, value || 0),
+                      }))
+                    }
                   />
                   <NumberInput
-                    label="Text scale (%)"
+                    label={t("watermarkDialog.textScale", "Text scale (%)")}
                     min={2}
                     max={20}
                     value={draft.textScalePercent}
                     onChangeValue={(value) =>
-                      setDraft((current) => ({ ...current, textScalePercent: Math.max(2, Math.min(20, value || 2)) }))
+                      setDraft((current) => ({
+                        ...current,
+                        textScalePercent: Math.max(2, Math.min(20, value || 2)),
+                      }))
                     }
                   />
                   <NumberInput
-                    label="Text rotation (deg)"
+                    label={t(
+                      "watermarkDialog.textRotation",
+                      "Text rotation (deg)",
+                    )}
                     min={-180}
                     max={180}
                     value={draft.textRotationDeg ?? 0}
                     onChangeValue={(value) =>
-                      setDraft((current) => ({ ...current, textRotationDeg: Math.max(-180, Math.min(180, value || 0)) }))
+                      setDraft((current) => ({
+                        ...current,
+                        textRotationDeg: Math.max(
+                          -180,
+                          Math.min(180, value || 0),
+                        ),
+                      }))
                     }
                   />
+                  <div className="col-span-2">
+                    <SelectInput
+                      label={t("watermarkDialog.fontFamily", "Font family")}
+                      value={draft.fontFamily || "sans-serif"}
+                      options={[
+                        { value: "sans-serif", label: "System Sans-Serif" },
+                        ...installedFonts.map((f) => ({
+                          value: f.name,
+                          label: f.name,
+                        })),
+                      ]}
+                      onChange={(family) =>
+                        setDraft((current) => ({
+                          ...current,
+                          fontFamily: family,
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
                 <ColorPickerPopover
-                  label="Text color"
+                  label={t("watermarkDialog.textColor", "Text color")}
                   value={draft.textColor}
-                  onChange={(nextColor) => setDraft((current) => ({ ...current, textColor: nextColor }))}
+                  onChange={(nextColor) =>
+                    setDraft((current) => ({
+                      ...current,
+                      textColor: nextColor,
+                    }))
+                  }
                   enableAlpha
                   enableGradient
                 />
@@ -480,7 +628,9 @@ export function BatchWatermarkDialog({
               <div className="pt-2 animate-in fade-in duration-200">
                 <div className="space-y-4">
                   <div>
-                    <LabelText className="text-xs">Logo image (PNG)</LabelText>
+                    <LabelText className="text-xs">
+                      {t("watermarkDialog.logoImagePng", "Logo image (PNG)")}
+                    </LabelText>
                     <div className="mt-1 flex items-center gap-2 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                       <input
                         type="file"
@@ -505,7 +655,9 @@ export function BatchWatermarkDialog({
                         ) : (
                           <UploadCloud size={14} />
                         )}
-                        {draft.logoDataUrl ? "Change logo" : "Upload logo"}
+                        {draft.logoDataUrl
+                          ? t("watermarkDialog.changeLogo", "Change logo")
+                          : t("watermarkDialog.uploadLogo", "Upload logo")}
                       </label>
                       {draft.logoDataUrl && !isLogoLoading && (
                         <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
@@ -518,21 +670,36 @@ export function BatchWatermarkDialog({
 
                   <div className="grid grid-cols-2 gap-3">
                     <NumberInput
-                      label="Logo width (%)"
+                      label={t("watermarkDialog.logoWidth", "Logo width (%)")}
                       min={2}
                       max={40}
                       value={draft.logoScalePercent}
                       onChangeValue={(value) =>
-                        setDraft((current) => ({ ...current, logoScalePercent: Math.max(2, Math.min(40, value || 2)) }))
+                        setDraft((current) => ({
+                          ...current,
+                          logoScalePercent: Math.max(
+                            2,
+                            Math.min(40, value || 2),
+                          ),
+                        }))
                       }
                     />
                     <NumberInput
-                      label="Logo rotation (deg)"
+                      label={t(
+                        "watermarkDialog.logoRotation",
+                        "Logo rotation (deg)",
+                      )}
                       min={-180}
                       max={180}
                       value={draft.logoRotationDeg ?? 0}
                       onChangeValue={(value) =>
-                        setDraft((current) => ({ ...current, logoRotationDeg: Math.max(-180, Math.min(180, value || 0)) }))
+                        setDraft((current) => ({
+                          ...current,
+                          logoRotationDeg: Math.max(
+                            -180,
+                            Math.min(180, value || 0),
+                          ),
+                        }))
                       }
                     />
                   </div>
@@ -544,10 +711,12 @@ export function BatchWatermarkDialog({
 
         <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="grid w-full grid-cols-[auto_1fr_1fr] gap-2 sm:flex sm:w-auto sm:items-center">
-          <Tooltip content={t("tooltipResetToDefaults")}>
+            <Tooltip content={t("tooltipResetToDefaults")}>
               <button
                 type="button"
-                onClick={() => setDraft(cloneWatermarkConfig(DEFAULT_BATCH_WATERMARK))}
+                onClick={() =>
+                  setDraft(cloneWatermarkConfig(DEFAULT_BATCH_WATERMARK))
+                }
                 className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-50 transition-all dark:text-slate-400 dark:hover:bg-red-500/10"
                 aria-label="Reset watermark settings"
               >
@@ -562,27 +731,37 @@ export function BatchWatermarkDialog({
               className="px-3 w-full sm:w-auto"
             >
               <FolderOpen size={14} />
-              Open Saved
+              {t("watermarkDialog.openSaved", "Open Saved")}
             </Button>
 
-            <Button variant="secondary" size="sm" onClick={openSaveDialog} className="px-3 w-full sm:w-auto">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={openSaveDialog}
+              className="px-3 w-full sm:w-auto"
+            >
               <Save size={14} />
-              Save
+              {t("watermarkDialog.save", "Save")}
             </Button>
           </div>
 
           <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
-            <SecondaryButton onClick={handleCloseMainDialog} className="px-6 font-semibold w-full sm:w-auto">Cancel</SecondaryButton>
+            <SecondaryButton
+              onClick={handleCloseMainDialog}
+              className="px-6 font-semibold w-full sm:w-auto"
+            >
+              {t("watermarkDialog.cancel", "Cancel")}
+            </SecondaryButton>
             <Button
               onClick={() => {
-                onSave(cloneWatermarkConfig(draft))
-                handleCloseMainDialog()
+                onSave(cloneWatermarkConfig(draft));
+                handleCloseMainDialog();
               }}
               disabled={!isDirty}
               className="px-6 w-full sm:w-auto flex items-center gap-2 shadow-lg shadow-sky-500/10 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4" />
-              Apply Pattern
+              {t("watermarkDialog.applyPattern", "Apply Pattern")}
             </Button>
           </div>
         </div>
@@ -594,14 +773,14 @@ export function BatchWatermarkDialog({
         items={savedWatermarks}
         initialSelectedId={savedMatchId}
         onDelete={(id) => {
-          deleteSavedWatermark(id)
+          deleteSavedWatermark(id);
         }}
         onConfirm={(item) => {
-          setDraft(cloneWatermarkConfig(item.config))
-          setIsOpenSavedDialogOpen(false)
+          setDraft(cloneWatermarkConfig(item.config));
+          setIsOpenSavedDialogOpen(false);
         }}
-        title="Open Saved Watermark"
-        confirmLabel="Open"
+        title={t("watermarkDialog.openSavedTitle", "Open Saved Watermark")}
+        confirmLabel={t("watermarkDialog.openSavedBtn", "Open")}
       />
 
       <WatermarkSaveDialog
@@ -614,8 +793,8 @@ export function BatchWatermarkDialog({
         overwriteTarget={overwriteTarget}
         hasSavedItems={savedWatermarks.length > 0}
         onChooseOverwriteTarget={() => {
-          setIsSaveDialogOpen(false)
-          setIsOverwritePickerOpen(true)
+          setIsSaveDialogOpen(false);
+          setIsOverwritePickerOpen(true);
         }}
         onSave={handleSaveWatermark}
       />
@@ -623,23 +802,25 @@ export function BatchWatermarkDialog({
       <WatermarkOpenSavedDialog
         isOpen={isOverwritePickerOpen}
         onClose={() => {
-          setIsOverwritePickerOpen(false)
-          setIsSaveDialogOpen(true)
+          setIsOverwritePickerOpen(false);
+          setIsSaveDialogOpen(true);
         }}
         items={savedWatermarks}
         allowDelete={false}
         initialSelectedId={overwriteTarget?.id ?? null}
         onConfirm={(item) => {
-          setOverwriteTarget(item)
-          setSaveAction("overwrite")
-          setSaveName(item.name)
-          setIsOverwritePickerOpen(false)
-          setIsSaveDialogOpen(true)
+          setOverwriteTarget(item);
+          setSaveAction("overwrite");
+          setSaveName(item.name);
+          setIsOverwritePickerOpen(false);
+          setIsSaveDialogOpen(true);
         }}
-        title="Select Watermark to Overwrite"
-        confirmLabel="Select"
+        title={t(
+          "watermarkDialog.selectOverwriteTitle",
+          "Select Watermark to Overwrite",
+        )}
+        confirmLabel={t("watermarkDialog.selectBtn", "Select")}
       />
     </>
-  )
+  );
 }
-
