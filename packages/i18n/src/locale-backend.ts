@@ -23,12 +23,25 @@ function buildLocaleUrl(lang: string, ns: string): string {
  *
  * - Extension: fetches from the extension bundle via chrome.runtime.getURL
  * - Web: fetches from /locales/ (copied to public/ via sync-locales script)
+ *
+ * NOTE: During SSR/SSG (Next.js static export), `window` is undefined and there
+ * is no local server to serve locale files. We short-circuit and return null so
+ * i18next falls back to the eagerly-bundled `common` namespace and English fallback
+ * keys, preventing page generation from hanging until the 60-second timeout.
+ * Namespaces will be fetched and hydrated correctly on the client side.
  */
 export const LocaleBackend: BackendModule = {
   type: "backend",
   init() {},
 
   read(language: string, namespace: string, callback: ReadCallback) {
+    // SSR / Next.js static generation context — no browser, no server to fetch from.
+    // Return null immediately; i18next will use fallbackLng (English bundled resources).
+    if (typeof window === "undefined") {
+      callback(null, null)
+      return
+    }
+
     const url = buildLocaleUrl(language, namespace)
 
     fetch(url)
