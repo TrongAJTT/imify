@@ -39,7 +39,7 @@
     "deleteConfirmDesc": "This will permanently remove this custom language. This action cannot be undone.",
     "cancel": "Cancel",
     "confirm": "Delete",
-    "tooltipActive": "Currently active language",
+    "tooltipActive": "Currently used language",
     "tooltipRuntime": "Imported at runtime",
     "tooltipDeprecated": "Translation version {{langVersion}} is outdated (app: {{appVersion}}). Some strings may be missing or fall back to English."
   },

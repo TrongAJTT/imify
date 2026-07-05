@@ -39,7 +39,7 @@
     "deleteConfirmDesc": "Thao tác này sẽ xóa vĩnh viễn ngôn ngữ được thêm vào lúc chạy này. Không thể hoàn tác.",
     "cancel": "Hủy",
     "confirm": "Xóa",
-    "tooltipActive": "Ngôn ngữ đang hoạt động",
+    "tooltipActive": "Ngôn ngữ đang được sử dụng",
     "tooltipRuntime": "Được thêm vào lúc chạy",
     "tooltipDeprecated": "Phiên bản dịch {{langVersion}} đã lỗi thời (app: {{appVersion}}). Một số chuỗi có thể bị thiếu hoặc hiển thị bằng tiếng Anh."
   },
@@ -112,7 +112,7 @@
     "importDesc": "Chọn tệp dữ liệu đã xuất trước đó để khôi phục cài đặt và preset của bạn.",
     "importSuccessTitle": "Nhập thành công",
     "importSuccessDesc": "Trạng thái đã được khôi phục.",
-    "schemaTitle": "DI CƯ CẤU TRÚC (SCHEMA MIGRATION)",
+    "schemaTitle": "CHUYỂN ĐỔI LƯỢC ĐỒ CƠ SỞ DỮ LIỆU",
     "schemaDesc": "Quản lý và di chuyển phiên bản cấu trúc cơ sở dữ liệu cục bộ của bạn.",
     "dbVersion": "Phiên bản Cơ sở dữ liệu",
     "dbVersionDesc": "Phiên bản cấu trúc hiện tại: {{version}}",
@@ -120,8 +120,8 @@
     "dbVersionV1": "v1.0 (Kế thừa)",
     "migrateBtn": "Di cư sang Cấu trúc v2",
     "schemaUpToDate": "Cấu trúc đã được cập nhật mới nhất",
-    "migrateSuccessTitle": "Di cư cấu trúc thành công",
-    "migrateSuccessDesc": "Các preset của bạn đã được hợp nhất dưới Cấu trúc v2.0.",
+    "migrateSuccessTitle": "Chuyển đổi lược đồ cấu trúc cơ sở dữ liệu thành công",
+    "migrateSuccessDesc": "Các preset của bạn đã được hợp nhất dưới Cấu trúc thành công",
     "migrateErrorTitle": "Di cư thất bại",
     "migrateErrorDesc": "Đã xảy ra lỗi không xác định."
   },

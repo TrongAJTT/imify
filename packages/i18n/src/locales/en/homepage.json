@@ -140,7 +140,7 @@
   "contextMenuBullet3": "Send images to Imify workspaces with one click",
   "seoAuditTitle": "In-Page Image SEO Audit",
   "seoAuditDesc": "Run a comprehensive SEO audit on all images within your active tab. Detect missing alt texts, oversized images, and inefficient formats instantly. Review detailed snapshots right in your browser's sidepanel.",
-  "firefoxWarning": "This feature is currently available for Chrome and Edge only because it requires Side Panel API support. We will be support Firefox as soon as Mozilla add Side Panel API support for Firefox.",
+  "firefoxWarning": "This feature is currently available for Chrome and Edge only because it requires Side Panel API support and Firefox uses a different API. We are currently researching integration methods and will provide updates as soon as possible.",
   "seoAuditBullet1": "Scan active pages for common image SEO issues",
   "seoAuditBullet2": "Save audit snapshots for later review",
   "seoAuditBullet3": "Analyze image rendering sizes vs. intrinsic sizes",

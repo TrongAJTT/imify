@@ -1,73 +1,91 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, BarChart3, ChevronRight, Database, Download, Gauge, Globe, Keyboard, ListTree, RotateCcw, ShieldAlert, X } from "lucide-react"
-import { APP_CONFIG } from "@imify/core/config"
-import { useToast } from "@imify/core/hooks/use-toast"
-import { useBatchStore } from "@imify/stores/stores/batch-store"
-import { useAssetStatistics } from "./asset-management-dialog"
-import { ToastContainer } from "@imify/ui/components/toast-container"
-import { BaseDialog } from "@imify/ui/ui/base-dialog"
-import { Button } from "@imify/ui/ui/button"
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
-import { DiscreteSlider, type DiscreteSliderOption } from "@imify/ui/ui/discrete-slider"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { SelectInput } from "@imify/ui/ui/select-input"
-import { ToggleSwitchLabel } from "@imify/ui/ui/toggle-switch-label"
-import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header"
-import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header"
-import { Subheading, BodyText, MutedText } from "@imify/ui/ui/typography"
+import React from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  BarChart3,
+  ChevronRight,
+  Database,
+  Download,
+  Gauge,
+  Globe,
+  Keyboard,
+  ListTree,
+  RotateCcw,
+  ShieldAlert,
+  X,
+} from "lucide-react";
+import { APP_CONFIG } from "@imify/core/config";
+import { useToast } from "@imify/core/hooks/use-toast";
+import { useBatchStore } from "@imify/stores/stores/batch-store";
+import { useAssetStatistics } from "./asset-management-dialog";
+import { ToastContainer } from "@imify/ui/components/toast-container";
+import { BaseDialog } from "@imify/ui/ui/base-dialog";
+import { Button } from "@imify/ui/ui/button";
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card";
+import {
+  DiscreteSlider,
+  type DiscreteSliderOption,
+} from "@imify/ui/ui/discrete-slider";
+import { NumberInput } from "@imify/ui/ui/number-input";
+import { SelectInput } from "@imify/ui/ui/select-input";
+import { ToggleSwitchLabel } from "@imify/ui/ui/toggle-switch-label";
+import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header";
+import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header";
+import { Subheading, BodyText, MutedText } from "@imify/ui/ui/typography";
 import {
   CONFIGURATION_SIDEBAR_MAX_PERCENT,
   CONFIGURATION_SIDEBAR_WIDTH_OPTIONS,
   NAVIGATION_SIDEBAR_WIDTH_OPTIONS,
   type SidebarWidthLevel,
-  type WorkspaceLayoutPreferences
-} from "./layout-preferences"
+  type WorkspaceLayoutPreferences,
+} from "./layout-preferences";
 import {
   detectHardwareProfile,
   normalizePerformancePreferences,
-  type PerformancePreferences
-} from "../processor/performance-preferences"
-import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog"
-import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog"
-import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter"
-import { SettingsShortcutsPanel } from "./settings-shortcuts-panel"
-import { LanguageSettingsTab } from "./language-settings-tab"
-import { useTranslation } from "@imify/i18n"
+  type PerformancePreferences,
+} from "../processor/performance-preferences";
+import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog";
+import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog";
+import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter";
+import { SettingsShortcutsPanel } from "./settings-shortcuts-panel";
+import { LanguageSettingsTab } from "./language-settings-tab";
+import { useTranslation } from "@imify/i18n";
 
-const DEFAULT_ACTIVE_CLASS = "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-slate-300 dark:ring-slate-700"
-const DEFAULT_INACTIVE_CLASS = "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
-import type { WorkspaceSettingsDialogTab } from "@imify/stores/stores/workspace-settings-dialog-store"
-import { SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX } from "./desktop-layout"
+const DEFAULT_ACTIVE_CLASS =
+  "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-slate-300 dark:ring-slate-700";
+const DEFAULT_INACTIVE_CLASS =
+  "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200";
+import type { WorkspaceSettingsDialogTab } from "@imify/stores/stores/workspace-settings-dialog-store";
+import { SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX } from "./desktop-layout";
 
-export type SettingsDialogTab = WorkspaceSettingsDialogTab
+export type SettingsDialogTab = WorkspaceSettingsDialogTab;
 
 export interface WorkspaceDefaultScreenOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 interface WorkspaceSettingsDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  initialTab?: SettingsDialogTab | null
-  defaultScreenValue: string
-  defaultScreenOptions: WorkspaceDefaultScreenOption[]
-  onChangeDefaultScreenValue: (value: string) => void
-  showExtensionOnlyOptions?: boolean
-  preferRecentPresetEntry: boolean
-  onChangePreferRecentPresetEntry: (checked: boolean) => void
-  usageEntries: Array<{ id: string; name: string; count: number }>
-  onResetUsageStats: () => void
-  layoutPreferences: WorkspaceLayoutPreferences
-  onChangeNavigationSidebarLevel: (level: SidebarWidthLevel) => void
-  onChangeConfigurationSidebarLevel: (level: SidebarWidthLevel) => void
-  performancePreferences: PerformancePreferences
-  onChangePerformancePreferences: (value: PerformancePreferences) => void
-  enableUsageStatsTab?: boolean
-  devModeSettingsAdapter?: DevModeSettingsAdapter
+  isOpen: boolean;
+  onClose: () => void;
+  initialTab?: SettingsDialogTab | null;
+  defaultScreenValue: string;
+  defaultScreenOptions: WorkspaceDefaultScreenOption[];
+  onChangeDefaultScreenValue: (value: string) => void;
+  showExtensionOnlyOptions?: boolean;
+  preferRecentPresetEntry: boolean;
+  onChangePreferRecentPresetEntry: (checked: boolean) => void;
+  usageEntries: Array<{ id: string; name: string; count: number }>;
+  onResetUsageStats: () => void;
+  layoutPreferences: WorkspaceLayoutPreferences;
+  onChangeNavigationSidebarLevel: (level: SidebarWidthLevel) => void;
+  onChangeConfigurationSidebarLevel: (level: SidebarWidthLevel) => void;
+  performancePreferences: PerformancePreferences;
+  onChangePerformancePreferences: (value: PerformancePreferences) => void;
+  enableUsageStatsTab?: boolean;
+  devModeSettingsAdapter?: DevModeSettingsAdapter;
 }
 
 export function WorkspaceSettingsDialog({
@@ -88,134 +106,153 @@ export function WorkspaceSettingsDialog({
   performancePreferences,
   onChangePerformancePreferences,
   enableUsageStatsTab = true,
-  devModeSettingsAdapter
+  devModeSettingsAdapter,
 }: WorkspaceSettingsDialogProps) {
-  const [activeTab, setActiveTab] = useState<SettingsDialogTab | null>(initialTab)
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<SettingsDialogTab | null>(
+    initialTab,
+  );
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
-  const presets = useBatchStore((state) => state.presets)
-  const schemaVersion = useBatchStore((state) => state.schemaVersion ?? 1)
-  const migrateSchemaToV2 = useBatchStore((state) => state.migrateSchemaToV2)
-  const assetStats = useAssetStatistics(isOpen)
+  const presets = useBatchStore((state) => state.presets);
+  const schemaVersion = useBatchStore((state) => state.schemaVersion ?? 1);
+  const migrateSchemaToV2 = useBatchStore((state) => state.migrateSchemaToV2);
+  const assetStats = useAssetStatistics(isOpen);
 
-  const [stats, setStats] = useState({ sizeKb: 0, presetCount: 0, storeCount: 0 })
+  const [stats, setStats] = useState({
+    sizeKb: 0,
+    presetCount: 0,
+    storeCount: 0,
+  });
 
   useEffect(() => {
-    if (typeof window === "undefined") return
-    let size = 0
-    let storeCount = 0
+    if (typeof window === "undefined") return;
+    let size = 0;
+    let storeCount = 0;
     for (let i = 0; i < window.localStorage.length; i++) {
-      const key = window.localStorage.key(i)
+      const key = window.localStorage.key(i);
       if (key && key.startsWith("imify-")) {
-        size += (window.localStorage.getItem(key) ?? "").length * 2
-        storeCount++
+        size += (window.localStorage.getItem(key) ?? "").length * 2;
+        storeCount++;
       }
     }
     setStats({
       sizeKb: Math.round((size / 1024) * 10) / 10,
       presetCount: presets.length,
-      storeCount
-    })
-  }, [presets])
+      storeCount,
+    });
+  }, [presets]);
 
   const handleMigrateSchema = () => {
     try {
-      migrateSchemaToV2()
-      success(t("data.migrateSuccessTitle", "Schema migration successful"), t("data.migrateSuccessDesc", "Your presets have been unified under Schema v2.0."), 3000)
+      migrateSchemaToV2();
+      success(
+        t("data.migrateSuccessTitle"),
+        t("data.migrateSuccessDesc"),
+        3000,
+      );
     } catch (err: any) {
-      error(t("data.migrateErrorTitle", "Migration failed"), err.message || t("data.migrateErrorDesc", "An unexpected error occurred."), 15000)
+      error(
+        t("data.migrateErrorTitle"),
+        err.message || t("data.migrateErrorDesc"),
+        15000,
+      );
     }
-  }
-  const [isMobileDialog, setIsMobileDialog] = useState(false)
-  const { toasts, hide, success, error } = useToast()
+  };
+  const [isMobileDialog, setIsMobileDialog] = useState(false);
+  const { toasts, hide, success, error } = useToast();
 
-  const skipDownloadConfirm = useBatchStore((state) => state.skipDownloadConfirm)
-  const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
-  const skipOomWarning = useBatchStore((state) => state.skipOomWarning)
-  const setSkipOomWarning = useBatchStore((state) => state.setSkipOomWarning)
+  const skipDownloadConfirm = useBatchStore(
+    (state) => state.skipDownloadConfirm,
+  );
+  const setSkipDownloadConfirm = useBatchStore(
+    (state) => state.setSkipDownloadConfirm,
+  );
+  const skipOomWarning = useBatchStore((state) => state.skipOomWarning);
+  const setSkipOomWarning = useBatchStore((state) => state.setSkipOomWarning);
   const skipSplicingHeavyPreviewQualityWarning = useBatchStore(
-    (state) => state.skipSplicingHeavyPreviewQualityWarning
-  )
+    (state) => state.skipSplicingHeavyPreviewQualityWarning,
+  );
   const setSkipSplicingHeavyPreviewQualityWarning = useBatchStore(
-    (state) => state.setSkipSplicingHeavyPreviewQualityWarning
-  )
+    (state) => state.setSkipSplicingHeavyPreviewQualityWarning,
+  );
 
   useEffect(() => {
     if (!isOpen) {
-      if (isMobileDialog) setActiveTab(null)
-      return
+      if (isMobileDialog) setActiveTab(null);
+      return;
     }
     if (initialTab) {
-      setActiveTab(initialTab)
+      setActiveTab(initialTab);
     } else if (!isMobileDialog) {
-      setActiveTab("general")
+      setActiveTab("general");
     } else {
-      setActiveTab(null)
+      setActiveTab(null);
     }
-  }, [initialTab, isOpen, isMobileDialog])
+  }, [initialTab, isOpen, isMobileDialog]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return
-    const mediaQuery = window.matchMedia(`(max-width: ${SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX}px)`)
-    const update = () => setIsMobileDialog(mediaQuery.matches)
-    update()
-    mediaQuery.addEventListener("change", update)
-    return () => mediaQuery.removeEventListener("change", update)
-  }, [])
+    if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia(
+      `(max-width: ${SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX}px)`,
+    );
+    const update = () => setIsMobileDialog(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener("change", update);
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
 
-
-
-  const { t } = useTranslation(["settings", "common"])
+  const { t } = useTranslation(["settings", "common"]);
 
   const navigationWidthSliderOptions = useMemo<DiscreteSliderOption[]>(
     () =>
       NAVIGATION_SIDEBAR_WIDTH_OPTIONS.map((option) => ({
         value: option.level,
-        label: option.label
+        label: option.label,
       })),
-    []
-  )
+    [],
+  );
   const configurationWidthSliderOptions = useMemo<DiscreteSliderOption[]>(
     () =>
       CONFIGURATION_SIDEBAR_WIDTH_OPTIONS.map((option) => ({
         value: option.level,
-        label: option.label
+        label: option.label,
       })),
-    []
-  )
+    [],
+  );
 
   const navigationWidthPx =
     NAVIGATION_SIDEBAR_WIDTH_OPTIONS.find(
-      (option) => option.level === layoutPreferences.navigationSidebarLevel
-    )?.widthPx ?? NAVIGATION_SIDEBAR_WIDTH_OPTIONS[1].widthPx
+      (option) => option.level === layoutPreferences.navigationSidebarLevel,
+    )?.widthPx ?? NAVIGATION_SIDEBAR_WIDTH_OPTIONS[1].widthPx;
   const configurationWidthPx =
     CONFIGURATION_SIDEBAR_WIDTH_OPTIONS.find(
-      (option) => option.level === layoutPreferences.configurationSidebarLevel
-    )?.widthPx ?? CONFIGURATION_SIDEBAR_WIDTH_OPTIONS[1].widthPx
+      (option) => option.level === layoutPreferences.configurationSidebarLevel,
+    )?.widthPx ?? CONFIGURATION_SIDEBAR_WIDTH_OPTIONS[1].widthPx;
 
-  const safePerformancePreferences = normalizePerformancePreferences(performancePreferences)
-  const advisorEnabled = safePerformancePreferences.smartAdvisorEnabled
-  const overclockEnabled = safePerformancePreferences.allowConcurrencyOverclock
-  const hardwareProfile = safePerformancePreferences.hardwareProfile
+  const safePerformancePreferences = normalizePerformancePreferences(
+    performancePreferences,
+  );
+  const advisorEnabled = safePerformancePreferences.smartAdvisorEnabled;
+  const overclockEnabled = safePerformancePreferences.allowConcurrencyOverclock;
+  const hardwareProfile = safePerformancePreferences.hardwareProfile;
 
   const updatePerformancePreferences = (next: PerformancePreferences) => {
-    onChangePerformancePreferences(normalizePerformancePreferences(next))
-  }
+    onChangePerformancePreferences(normalizePerformancePreferences(next));
+  };
 
   const updateHardwareProfile = (
-    updates: Partial<PerformancePreferences["hardwareProfile"]>
+    updates: Partial<PerformancePreferences["hardwareProfile"]>,
   ) => {
     updatePerformancePreferences({
       ...safePerformancePreferences,
       hardwareProfile: {
         ...safePerformancePreferences.hardwareProfile,
         ...updates,
-        source: "manual"
-      }
-    })
-  }
-
+        source: "manual",
+      },
+    });
+  };
 
   const tabs = [
     {
@@ -226,7 +263,7 @@ export function WorkspaceSettingsDialog({
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-sky-600 dark:text-sky-400",
-      bgClassName: "bg-sky-50 dark:bg-sky-500/10"
+      bgClassName: "bg-sky-50 dark:bg-sky-500/10",
     },
     {
       id: "language" as const,
@@ -236,7 +273,7 @@ export function WorkspaceSettingsDialog({
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-teal-600 dark:text-teal-400",
-      bgClassName: "bg-teal-50 dark:bg-teal-500/10"
+      bgClassName: "bg-teal-50 dark:bg-teal-500/10",
     },
     {
       id: "shortcuts" as const,
@@ -246,7 +283,7 @@ export function WorkspaceSettingsDialog({
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-indigo-600 dark:text-indigo-400",
-      bgClassName: "bg-indigo-50 dark:bg-indigo-500/10"
+      bgClassName: "bg-indigo-50 dark:bg-indigo-500/10",
     },
     {
       id: "performance" as const,
@@ -256,7 +293,7 @@ export function WorkspaceSettingsDialog({
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-emerald-600 dark:text-emerald-400",
-      bgClassName: "bg-emerald-50 dark:bg-emerald-500/10"
+      bgClassName: "bg-emerald-50 dark:bg-emerald-500/10",
     },
     {
       id: "warnings" as const,
@@ -266,7 +303,7 @@ export function WorkspaceSettingsDialog({
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-amber-600 dark:text-amber-400",
-      bgClassName: "bg-amber-50 dark:bg-amber-500/10"
+      bgClassName: "bg-amber-50 dark:bg-amber-500/10",
     },
     {
       id: "usage" as const,
@@ -277,7 +314,7 @@ export function WorkspaceSettingsDialog({
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-cyan-600 dark:text-cyan-400",
       bgClassName: "bg-cyan-50 dark:bg-cyan-500/10",
-      hidden: !enableUsageStatsTab
+      hidden: !enableUsageStatsTab,
     },
     {
       id: "data" as const,
@@ -287,9 +324,9 @@ export function WorkspaceSettingsDialog({
       activeClassName: DEFAULT_ACTIVE_CLASS,
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-teal-600 dark:text-teal-400",
-      bgClassName: "bg-teal-50 dark:bg-teal-900/40"
-    }
-  ].filter((tab) => !tab.hidden)
+      bgClassName: "bg-teal-50 dark:bg-teal-900/40",
+    },
+  ].filter((tab) => !tab.hidden);
 
   return (
     <>
@@ -312,64 +349,78 @@ export function WorkspaceSettingsDialog({
           <X size={18} />
         </Button>
         <div
-          className={`shrink-0 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 ${isMobileDialog
+          className={`shrink-0 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 ${
+            isMobileDialog
               ? "w-full border-b border-r-0 pb-2 pt-2"
               : "w-56 border-r pt-6 pb-4"
-            }`}
+          }`}
         >
           <div className={`px-4 ${isMobileDialog ? "mb-1" : "mb-6"}`}>
             {isMobileDialog && activeTab ? (
               <div className="flex items-center gap-3 py-1">
                 <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setActiveTab(null)}
-                className="rounded-full text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 shrink-0"
-                aria-label={t("common:back", "Back")}
-              >
-                <ArrowLeft size={20} />
-              </Button>
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setActiveTab(null)}
+                  className="rounded-full text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 shrink-0"
+                  aria-label={t("common:back")}
+                >
+                  <ArrowLeft size={20} />
+                </Button>
                 <div className="flex flex-col min-w-0">
                   <Subheading className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight truncate">
-                    {tabs.find(t => t.id === activeTab)?.label}
+                    {tabs.find((t) => t.id === activeTab)?.label}
                   </Subheading>
                   <MutedText className="text-[10px] leading-tight truncate pr-4">
-                    {tabs.find(t => t.id === activeTab)?.description}
+                    {tabs.find((t) => t.id === activeTab)?.description}
                   </MutedText>
                 </div>
               </div>
             ) : (
               <div className={isMobileDialog ? "h-10 flex items-center" : ""}>
-                <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">{t("title", "Settings")}</Subheading>
+                <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                  {t("title")}
+                </Subheading>
               </div>
             )}
           </div>
 
           {(!isMobileDialog || !activeTab) && (
             <nav
-              className={`flex-1 px-3 ${isMobileDialog
-                  ? "space-y-3 pb-6 pt-2"
-                  : "space-y-1"
-                }`}
+              className={`flex-1 px-3 ${
+                isMobileDialog ? "space-y-3 pb-6 pt-2" : "space-y-1"
+              }`}
             >
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center rounded-lg transition-all ${isMobileDialog
+                  className={`flex items-center rounded-lg transition-all ${
+                    isMobileDialog
                       ? "w-full gap-3 p-4 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 shadow-sm"
                       : "w-full gap-3 px-3 py-2"
-                    } ${activeTab === tab.id ? tab.activeClassName : tab.inactiveClassName
-                    }`}
+                  } ${
+                    activeTab === tab.id
+                      ? tab.activeClassName
+                      : tab.inactiveClassName
+                  }`}
                 >
-                  <div className={`${isMobileDialog ? `rounded-lg ${tab.bgClassName} p-2 shadow-sm ${tab.iconClassName}` : tab.iconClassName}`}>
+                  <div
+                    className={`${isMobileDialog ? `rounded-lg ${tab.bgClassName} p-2 shadow-sm ${tab.iconClassName}` : tab.iconClassName}`}
+                  >
                     <tab.icon size={isMobileDialog ? 18 : 16} />
                   </div>
                   <div className="flex-1 text-left">
-                    <BodyText className={`font-semibold ${activeTab === tab.id
-                        ? isMobileDialog ? "" : "text-slate-900 dark:text-slate-50"
-                        : (tab as any).labelClassName || "!text-slate-800 dark:!text-slate-100"
-                      }`}>
+                    <BodyText
+                      className={`font-semibold ${
+                        activeTab === tab.id
+                          ? isMobileDialog
+                            ? ""
+                            : "text-slate-900 dark:text-slate-50"
+                          : (tab as any).labelClassName ||
+                            "!text-slate-800 dark:!text-slate-100"
+                      }`}
+                    >
                       {tab.label}
                     </BodyText>
                     {isMobileDialog && (
@@ -378,7 +429,9 @@ export function WorkspaceSettingsDialog({
                       </MutedText>
                     )}
                   </div>
-                  {isMobileDialog && <ChevronRight size={16} className="text-slate-300" />}
+                  {isMobileDialog && (
+                    <ChevronRight size={16} className="text-slate-300" />
+                  )}
                 </button>
               ))}
             </nav>
@@ -387,30 +440,32 @@ export function WorkspaceSettingsDialog({
 
         {(!isMobileDialog || activeTab) && (
           <div className="flex-1 min-h-0 min-w-0 flex flex-col bg-white dark:bg-slate-900">
-            <div className={`flex-1 min-h-0 min-w-0 overflow-y-auto ${isMobileDialog ? "p-4 pt-5 pb-10" : "p-8 pt-12"}`}>
+            <div
+              className={`flex-1 min-h-0 min-w-0 overflow-y-auto ${isMobileDialog ? "p-4 pt-5 pb-10" : "p-8 pt-12"}`}
+            >
               {activeTab === "general" ? (
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
                     <SettingsSectionHeader
-                      title={t("general.sectionTitle", "General")}
-                      description={t("general.sectionDesc", "Control default behavior and workspace layout preferences.")}
+                      title={t("general.sectionTitle")}
+                      description={t("general.sectionDesc")}
                     />
                   )}
                   <section className="space-y-4">
                     <SettingsItemHeader
-                      title={t("general.defaultScreen", "DEFAULT OPEN SCREEN")}
-                      description={t("general.defaultScreenDesc", "Choose which workspace opens by default.")}
+                      title={t("general.defaultScreen")}
+                      description={t("general.defaultScreenDesc")}
                     />
                     <SelectInput
-                      label={t("general.defaultScreenLabel", "Default workspace (Ext only)")}
+                      label={t("general.defaultScreenLabel")}
                       value={defaultScreenValue}
                       options={defaultScreenOptions}
                       onChange={onChangeDefaultScreenValue}
                       disabled={!showExtensionOnlyOptions}
                     />
                     <CheckboxCard
-                      title={t("general.preferRecentPreset", "Prefer recently used preset")}
-                      subtitle={t("general.preferRecentPresetDesc", "Open the most recently used preset when entering preset-based tools, if available.")}
+                      title={t("general.preferRecentPreset")}
+                      subtitle={t("general.preferRecentPresetDesc")}
                       checked={preferRecentPresetEntry}
                       onChange={onChangePreferRecentPresetEntry}
                     />
@@ -418,73 +473,94 @@ export function WorkspaceSettingsDialog({
 
                   <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
-                      title={t("general.layoutTitle", "WORKSPACE SIDEBAR WIDTHS")}
-                      description={t("general.layoutDesc", "Tune left and right sidebar width with preset steps.")}
+                      title={t("general.layoutTitle")}
+                      description={t("general.layoutDesc")}
                     />
                     {showExtensionOnlyOptions && (
                       <DiscreteSlider
-                        label={t("general.navWidthLabel", "Navigation sidebar width (Ext only)")}
+                        label={t("general.navWidthLabel")}
                         value={layoutPreferences.navigationSidebarLevel}
                         options={navigationWidthSliderOptions}
-                        onChange={(value) => onChangeNavigationSidebarLevel(value as SidebarWidthLevel)}
-                        valueFormatter={(option) => `${option.label} (${navigationWidthPx}px)`}
+                        onChange={(value) =>
+                          onChangeNavigationSidebarLevel(
+                            value as SidebarWidthLevel,
+                          )
+                        }
+                        valueFormatter={(option) =>
+                          `${option.label} (${navigationWidthPx}px)`
+                        }
                         disabled={!showExtensionOnlyOptions}
                       />
                     )}
                     <DiscreteSlider
-                      label={t("general.configWidthLabel", "Configuration sidebar width")}
+                      label={t("general.configWidthLabel")}
                       value={layoutPreferences.configurationSidebarLevel}
                       options={configurationWidthSliderOptions}
-                      onChange={(value) => onChangeConfigurationSidebarLevel(value as SidebarWidthLevel)}
+                      onChange={(value) =>
+                        onChangeConfigurationSidebarLevel(
+                          value as SidebarWidthLevel,
+                        )
+                      }
                       valueFormatter={(option) =>
                         isMobileDialog
-                          ? t("general.configWidthFormatter", { label: option.label, width: configurationWidthPx })
-                          : t("general.configWidthFormatterPercent", { label: option.label, width: configurationWidthPx, percent: CONFIGURATION_SIDEBAR_MAX_PERCENT })
+                          ? t("general.configWidthFormatter", {
+                              label: option.label,
+                              width: configurationWidthPx,
+                            })
+                          : t("general.configWidthFormatterPercent", {
+                              label: option.label,
+                              width: configurationWidthPx,
+                              percent: CONFIGURATION_SIDEBAR_MAX_PERCENT,
+                            })
                       }
                     />
                   </section>
                 </div>
               ) : null}
 
-              {activeTab === "language" && <LanguageSettingsTab isMobile={isMobileDialog} />}
+              {activeTab === "language" && (
+                <LanguageSettingsTab isMobile={isMobileDialog} />
+              )}
 
-              {activeTab === "shortcuts" && <SettingsShortcutsPanel isMobile={isMobileDialog} />}
+              {activeTab === "shortcuts" && (
+                <SettingsShortcutsPanel isMobile={isMobileDialog} />
+              )}
 
               {activeTab === "performance" && (
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
                     <SettingsSectionHeader
                       title={t("performance.sectionTitle", "Performance")}
-                      description={t("performance.sectionDesc", "Smart Concurrency Advisor helps simulate safe worker counts using your hardware profile and active format settings.")}
+                      description={t("performance.sectionDesc")}
                     />
                   )}
                   <section className="space-y-4">
                     <SettingsItemHeader
-                      title={t("performance.advisorTitle", "SMART CONCURRENCY ADVISOR")}
-                      description={t("performance.advisorDesc", "Modern encoders like AVIF and JXL can consume high CPU and memory in browser workers. Enable advisor to get dynamic recommendations based on machine profile and current format options.")}
+                      title={t("performance.advisorTitle")}
+                      description={t("performance.advisorDesc")}
                     />
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
-                      {t("performance.privacyNote", "Privacy note: hardware data is only read and processed locally in your browser. No telemetry or external upload.")}
+                      {t("performance.privacyNote")}
                     </div>
                     <ToggleSwitchLabel
-                      label={t("performance.enableAdvisor", "Enable Smart Concurrency Advisor")}
-                      description={t("performance.enableAdvisorDesc", "Keep manual concurrency free (1-90), but show contextual safe recommendations under Export Settings.")}
+                      label={t("performance.enableAdvisor")}
+                      description={t("performance.enableAdvisorDesc")}
                       checked={advisorEnabled}
                       onChange={(checked) =>
                         updatePerformancePreferences({
                           ...safePerformancePreferences,
-                          smartAdvisorEnabled: checked
+                          smartAdvisorEnabled: checked,
                         })
                       }
                     />
                     <ToggleSwitchLabel
-                      label={t("performance.unlockConcurrency", "Unlock max concurrency (Overclock)")}
-                      description={t("performance.unlockConcurrencyDesc", "Allow values up to 90 and bypass Advisor hard lock. This can increase crash risk on heavy formats.")}
+                      label={t("performance.unlockConcurrency")}
+                      description={t("performance.unlockConcurrencyDesc")}
                       checked={overclockEnabled}
                       onChange={(checked) =>
                         updatePerformancePreferences({
                           ...safePerformancePreferences,
-                          allowConcurrencyOverclock: checked
+                          allowConcurrencyOverclock: checked,
                         })
                       }
                       colorWhenEnabled="amber"
@@ -493,14 +569,17 @@ export function WorkspaceSettingsDialog({
                       <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <BodyText className="font-semibold text-slate-800 dark:text-slate-200">{t("performance.hardwareProfile", "Hardware Profile")}</BodyText>
+                            <BodyText className="font-semibold text-slate-800 dark:text-slate-200">
+                              {t("performance.hardwareProfile")}
+                            </BodyText>
                             <MutedText className="text-xs">
                               {t("performance.sourceLabel", {
-                                source: hardwareProfile.source === "detected"
-                                  ? t("performance.sourceAuto", "Auto-detected")
-                                  : hardwareProfile.source === "manual"
-                                    ? t("performance.sourceManual", "Manual override")
-                                    : t("performance.sourceFallback", "Fallback")
+                                source:
+                                  hardwareProfile.source === "detected"
+                                    ? t("performance.sourceAuto")
+                                    : hardwareProfile.source === "manual"
+                                      ? t("performance.sourceManual")
+                                      : t("performance.sourceFallback"),
                               })}
                             </MutedText>
                           </div>
@@ -510,45 +589,49 @@ export function WorkspaceSettingsDialog({
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              const detected = detectHardwareProfile()
+                              const detected = detectHardwareProfile();
                               updatePerformancePreferences({
                                 ...safePerformancePreferences,
-                                hardwareProfile: detected
-                              })
+                                hardwareProfile: detected,
+                              });
                             }}
                           >
-                            {t("performance.autoDetect", "Auto-Detect Hardware")}
+                            {t("performance.autoDetect")}
                           </Button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           <NumberInput
-                            label={t("performance.cpuCores", "CPU Cores (logical threads)")}
+                            label={t("performance.cpuCores")}
                             value={hardwareProfile.cpuCores}
                             min={1}
                             max={64}
                             step={1}
                             onChangeValue={(nextValue) => {
-                              updateHardwareProfile({ cpuCores: nextValue })
+                              updateHardwareProfile({ cpuCores: nextValue });
                             }}
                           />
 
                           <NumberInput
-                            label={t("performance.ramBudget", "RAM Budget (GB)")}
+                            label={t("performance.ramBudget")}
                             value={hardwareProfile.ramBudgetGb}
                             min={0.5}
                             max={64}
                             step={0.5}
                             onChangeValue={(nextValue) => {
-                              updateHardwareProfile({ ramBudgetGb: nextValue })
+                              updateHardwareProfile({ ramBudgetGb: nextValue });
                             }}
                           />
                         </div>
 
                         <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
                           {t("performance.detectedHardware", {
-                            cores: hardwareProfile.detectedLogicalCores ?? hardwareProfile.cpuCores,
-                            ram: hardwareProfile.detectedDeviceMemoryGb ?? t("performance.detectedHardwareUnknown", "unknown")
+                            cores:
+                              hardwareProfile.detectedLogicalCores ??
+                              hardwareProfile.cpuCores,
+                            ram:
+                              hardwareProfile.detectedDeviceMemoryGb ??
+                              t("performance.detectedHardwareUnknown"),
                           })}
                         </div>
                       </div>
@@ -556,17 +639,17 @@ export function WorkspaceSettingsDialog({
 
                     {!advisorEnabled && (
                       <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-relaxed text-sky-800 dark:border-sky-900/50 dark:bg-slate-950/30 dark:text-sky-300">
-                        {t("performance.modeStatic", "Smart mode is off. Concurrency Advisor is running in static fallback mode using default profile (4 threads, 4GB RAM budget).")}
+                        {t("performance.modeStatic")}
                       </div>
                     )}
 
                     {overclockEnabled ? (
                       <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800 dark:border-rose-900/50 dark:bg-slate-950/30 dark:text-rose-300">
-                        {t("performance.modeDanger", "Danger mode: overclock is enabled. Heavy formats (AVIF/JXL/PNG tiny+OxiPNG) can hit OOM if you push concurrency too high.")}
+                        {t("performance.modeDanger")}
                       </div>
                     ) : (
                       <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-800 dark:border-emerald-900/50 dark:bg-slate-950/30 dark:text-emerald-300">
-                        {t("performance.modeSafe", "Safe mode: concurrency max is hard-locked by Advisor calculations to reduce crash risk.")}
+                        {t("performance.modeSafe")}
                       </div>
                     )}
                   </section>
@@ -578,35 +661,47 @@ export function WorkspaceSettingsDialog({
                   {!isMobileDialog && (
                     <SettingsSectionHeader
                       title={t("warnings.sectionTitle", "Warnings")}
-                      description={t("warnings.sectionDesc", "Customize which validation warnings and confirmation dialogs appear during workspace transitions.")}
+                      description={t("warnings.sectionDesc")}
                     />
                   )}
                   <section className="space-y-4">
                     <SettingsItemHeader
                       title={t("warnings.preferencesTitle", "PREFERENCES")}
-                      description={t("warnings.preferencesDesc", "These preferences are saved automatically.")}
+                      description={t("warnings.preferencesDesc")}
                     />
                     <div className="space-y-2">
                       <ToggleSwitchLabel
-                        label={t("warnings.downloadConfirm", "Show download confirmation dialog")}
-                        description={t("warnings.downloadConfirmDesc", { threshold: APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD })}
+                        label={t("warnings.downloadConfirm")}
+                        description={t("warnings.downloadConfirmDesc", {
+                          threshold:
+                            APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD,
+                        })}
                         checked={!skipDownloadConfirm}
                         onChange={(checked) => setSkipDownloadConfirm(!checked)}
                       />
                       <ToggleSwitchLabel
-                        label={t("warnings.oomWarning", "Show memory (OOM) warning dialog")}
-                        description={t("warnings.oomWarningDesc", { threshold: APP_CONFIG.BATCH.OOM_WARNING_MB })}
+                        label={t("warnings.oomWarning")}
+                        description={t("warnings.oomWarningDesc", {
+                          threshold: APP_CONFIG.BATCH.OOM_WARNING_MB,
+                        })}
                         checked={!skipOomWarning}
                         onChange={(checked) => setSkipOomWarning(!checked)}
                       />
                       <ToggleSwitchLabel
-                        label={t("warnings.heavyPreviewWarning", "Show Image Splicing high preview quality warning")}
+                        label={t("warnings.heavyPreviewWarning")}
                         description={t("warnings.heavyPreviewWarningDesc", {
-                          count: APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT,
-                          pixels: APP_CONFIG.SPLICING.HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS / 1_000_000
+                          count:
+                            APP_CONFIG.SPLICING
+                              .HEAVY_PREVIEW_QUALITY_WARNING_IMAGE_COUNT,
+                          pixels:
+                            APP_CONFIG.SPLICING
+                              .HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS /
+                            1_000_000,
                         })}
                         checked={!skipSplicingHeavyPreviewQualityWarning}
-                        onChange={(checked) => setSkipSplicingHeavyPreviewQualityWarning(!checked)}
+                        onChange={(checked) =>
+                          setSkipSplicingHeavyPreviewQualityWarning(!checked)
+                        }
                       />
                     </div>
                   </section>
@@ -618,14 +713,14 @@ export function WorkspaceSettingsDialog({
                   {!isMobileDialog && (
                     <SettingsSectionHeader
                       title={t("usage.sectionTitle", "Usage Stats")}
-                      description={t("usage.sectionDesc", "Help us improve Imify by allowing anonymous performance metrics and error reporting.")}
+                      description={t("usage.sectionDesc")}
                     />
                   )}
                   <section className="space-y-4">
                     <div className="flex items-center justify-between gap-3">
                       <SettingsItemHeader
                         title={t("usage.frequencyTitle", "FREQUENCY DATA")}
-                        description={t("usage.frequencyDesc", 'These counters drive the "Most used (stable)" sorting mode.')}
+                        description={t("usage.frequencyDesc")}
                       />
                       <Button
                         variant="outline"
@@ -640,7 +735,10 @@ export function WorkspaceSettingsDialog({
                       {usageEntries.length ? (
                         <div className="divide-y divide-slate-200 dark:divide-slate-700">
                           {usageEntries.map((entry) => (
-                            <div key={entry.id} className="flex items-center justify-between px-4 py-3">
+                            <div
+                              key={entry.id}
+                              className="flex items-center justify-between px-4 py-3"
+                            >
                               <span className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate pr-3">
                                 {entry.name}
                               </span>
@@ -651,7 +749,9 @@ export function WorkspaceSettingsDialog({
                           ))}
                         </div>
                       ) : (
-                        <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">{t("usage.noData", "No usage data yet.")}</div>
+                        <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">
+                          {t("usage.noData", "No usage data yet.")}
+                        </div>
                       )}
                     </div>
                   </section>
@@ -663,19 +763,19 @@ export function WorkspaceSettingsDialog({
                   {!isMobileDialog && (
                     <SettingsSectionHeader
                       title={t("data.sectionTitle", "Data Management")}
-                      description={t("data.sectionDesc", "Manage presets, template definitions, preferences, and database schema version.")}
+                      description={t("data.sectionDesc")}
                     />
                   )}
 
                   <section className="space-y-4">
                     <SettingsItemHeader
                       title={t("data.statsTitle", "DATA STATISTICS")}
-                      description={t("data.statsDesc", "Overview of your persistent browser storage allocation for Imify presets and store preferences.")}
+                      description={t("data.statsDesc")}
                     />
                     <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {t("data.totalPresets", "TOTAL PRESETS")}
+                          {t("data.totalPresets")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {stats.presetCount}
@@ -683,7 +783,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {t("data.persistedStores", "PERSISTED STORES")}
+                          {t("data.persistedStores")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {stats.storeCount}
@@ -691,10 +791,13 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {t("data.storageUsed", "STORAGE USED")}
+                          {t("data.storageUsed")}
                         </span>
                         <span className="text-2xl font-bold text-slate-850 dark:text-slate-100">
-                          {stats.sizeKb} <span className="text-xs font-semibold text-slate-500">KB</span>
+                          {stats.sizeKb}{" "}
+                          <span className="text-xs font-semibold text-slate-500">
+                            KB
+                          </span>
                         </span>
                       </div>
                     </div>
@@ -702,13 +805,13 @@ export function WorkspaceSettingsDialog({
 
                   <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
-                      title={t("data.assetStatsTitle", "ASSET STATISTICS")}
-                      description={t("data.assetStatsDesc", "Detailed view of saved watermarks, downloaded offline AI models, and offline fonts.")}
+                      title={t("data.assetStatsTitle")}
+                      description={t("data.assetStatsDesc")}
                     />
                     <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {t("data.savedWatermarks", "SAVED WATERMARKS")}
+                          {t("data.savedWatermarks")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {assetStats.watermarkCount}
@@ -716,7 +819,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {t("data.cachedModels", "CACHED AI MODELS")}
+                          {t("data.cachedModels")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {assetStats.cachedModelCount}
@@ -724,7 +827,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {t("data.storageOccupied", "STORAGE OCCUPIED")}
+                          {t("data.storageOccupied")}
                         </span>
                         <span className="text-2xl font-bold text-slate-850 dark:text-slate-100">
                           {assetStats.totalSizeFormatted}
@@ -735,7 +838,7 @@ export function WorkspaceSettingsDialog({
                     <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {t("data.googleFonts", "GOOGLE FONTS")}
+                          {t("data.googleFonts")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {assetStats.googleFontCount}
@@ -743,7 +846,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {t("data.customFonts", "CUSTOM FONTS")}
+                          {t("data.customFonts")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                           {assetStats.customFontCount}
@@ -751,7 +854,7 @@ export function WorkspaceSettingsDialog({
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {t("data.storageOccupied", "STORAGE OCCUPIED")}
+                          {t("data.storageOccupied")}
                         </span>
                         <span className="text-2xl font-bold text-slate-850 dark:text-slate-100">
                           {assetStats.fontSizeFormatted}
@@ -763,7 +866,7 @@ export function WorkspaceSettingsDialog({
                   <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
                       title={t("data.backupRestoreTitle", "BACKUP & RESTORE")}
-                      description={t("data.backupRestoreDesc", "Backup presets, templates, settings, and workspace preferences to a JSON file, or restore them from a backup.")}
+                      description={t("data.backupRestoreDesc")}
                     />
                     {devModeSettingsAdapter && (
                       <div className="grid grid-cols-2 gap-3 pt-1">
@@ -781,7 +884,7 @@ export function WorkspaceSettingsDialog({
                           onClick={() => setIsImportDialogOpen(true)}
                         >
                           <Download size={14} className="rotate-180" />
-                          {t("data.importData", "Import Data")}
+                          {t("data.importData")}
                         </Button>
                       </div>
                     )}
@@ -789,20 +892,21 @@ export function WorkspaceSettingsDialog({
 
                   <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
                     <SettingsItemHeader
-                      title={t("data.schemaTitle", "SCHEMA MIGRATION")}
-                      description={t("data.schemaDesc", "Manage and migrate the version of your local database schema.")}
+                      title={t("data.schemaTitle")}
+                      description={t("data.schemaDesc")}
                     />
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-705 dark:bg-slate-900/40">
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <BodyText className="font-semibold text-slate-800 dark:text-slate-200">
-                            {t("data.dbVersion", "Database Version")}
+                            {t("data.dbVersion")}
                           </BodyText>
                           <MutedText className="text-xs">
                             {t("data.dbVersionDesc", {
-                              version: schemaVersion === 2
-                                ? t("data.dbVersionV2", "v2.0 (Unified)")
-                                : t("data.dbVersionV1", "v1.0 (Legacy)")
+                              version:
+                                schemaVersion === 2
+                                  ? t("data.dbVersionV2")
+                                  : t("data.dbVersionV1"),
                             })}
                           </MutedText>
                         </div>
@@ -813,11 +917,11 @@ export function WorkspaceSettingsDialog({
                             className="bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-4"
                             onClick={handleMigrateSchema}
                           >
-                            {t("data.migrateBtn", "Migrate to Schema v2")}
+                            {t("data.migrateBtn")}
                           </Button>
                         ) : (
                           <span className="text-xs font-semibold px-2.5 py-1 rounded bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50">
-                            {t("data.schemaUpToDate", "Schema is Up to Date")}
+                            {t("data.schemaUpToDate")}
                           </span>
                         )}
                       </div>
@@ -839,8 +943,8 @@ export function WorkspaceSettingsDialog({
             performancePreferences={safePerformancePreferences}
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
-            title={t("data.exportTitle", "Export Data")}
-            description={t("data.exportDesc", "Select the features you want to export. This file can be used to restore your settings and presets.")}
+            title={t("data.exportTitle")}
+            description={t("data.exportDesc")}
           />
           <DevModeImportDialog
             isOpen={isImportDialogOpen}
@@ -849,12 +953,18 @@ export function WorkspaceSettingsDialog({
             performancePreferences={safePerformancePreferences}
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
-            onSuccess={() => success(t("data.importSuccessTitle", "Import successful"), t("data.importSuccessDesc", "State has been restored."), 3000)}
-            title={t("data.importTitle", "Import Data")}
-            description={t("data.importDesc", "Select a previously exported data file to restore your settings and presets.")}
+            onSuccess={() =>
+              success(
+                t("data.importSuccessTitle"),
+                t("data.importSuccessDesc"),
+                3000,
+              )
+            }
+            title={t("data.importTitle")}
+            description={t("data.importDesc")}
           />
         </>
       )}
     </>
-  )
+  );
 }

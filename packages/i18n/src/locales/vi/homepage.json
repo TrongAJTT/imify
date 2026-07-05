@@ -140,7 +140,7 @@
   "contextMenuBullet3": "Gửi hình ảnh đến không gian làm việc của Imify chỉ với một cú nhấp chuột",
   "seoAuditTitle": "Kiểm định SEO hình ảnh trên trang",
   "seoAuditDesc": "Chạy kiểm định SEO toàn diện trên tất cả hình ảnh trong tab hoạt động của bạn. Phát hiện văn bản thay thế (alt) bị thiếu, hình ảnh quá khổ và các định dạng không hiệu quả ngay lập tức. Xem xét các snapshot chi tiết ngay trong bảng điều khiển bên của trình duyệt.",
-  "firefoxWarning": "Tính năng này hiện chỉ khả dụng cho Chrome và Edge vì nó yêu cầu hỗ trợ Side Panel API. Chúng tôi sẽ hỗ trợ Firefox ngay khi Mozilla bổ sung hỗ trợ Side Panel API cho Firefox.",
+  "firefoxWarning": "Tính năng này hiện chỉ khả dụng cho Chrome và Edge vì nó yêu cầu hỗ trợ Side Panel API và Firefox đang sử dụng một loại API riêng. Chúng tôi đang nghiên cứu cách tích hợp nó cho Firefox và sẽ cập nhật trong thời gian tới.",
   "seoAuditBullet1": "Quét các trang đang hoạt động để tìm các sự cố SEO hình ảnh phổ biến",
   "seoAuditBullet2": "Lưu snapshot kiểm định để xem lại sau",
   "seoAuditBullet3": "Phân tích kích thước hiển thị hình ảnh so với kích thước gốc",

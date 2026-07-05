@@ -1,31 +1,35 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import { Trash2 } from "lucide-react"
-import { Button, BodyText, MutedText } from "@imify/ui"
-import { useWatermarkStore } from "@imify/stores/stores/watermark-store"
+import React, { useState } from "react";
+import { Trash2 } from "lucide-react";
+import { Button, BodyText, MutedText } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
+import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
 import {
   WatermarkPreviewCard,
   EmptySavedWatermarkState,
   // buildWatermarkMetadata
-} from "../../processor/watermark-open-saved-dialog"
+} from "../../processor/watermark-open-saved-dialog";
 
 export function AssetWatermarkTab() {
-  const savedItems = useWatermarkStore((s) => s.savedWatermarks)
-  const deleteSavedWatermark = useWatermarkStore((s) => s.deleteSavedWatermark)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const { t } = useTranslation("workspace");
+  const savedItems = useWatermarkStore((s) => s.savedWatermarks);
+  const deleteSavedWatermark = useWatermarkStore((s) => s.deleteSavedWatermark);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const selectedItem = savedItems.find((item) => item.id === selectedId)
+  const selectedItem = savedItems.find((item) => item.id === selectedId);
 
   const handleDelete = () => {
-    if (!selectedId || !selectedItem) return
+    if (!selectedId || !selectedItem) return;
 
-    const shouldDelete = window.confirm(`Delete saved watermark "${selectedItem.name}"?`)
-    if (!shouldDelete) return
+    const shouldDelete = window.confirm(
+      t("assets.deleteConfirm", { name: selectedItem.name }),
+    );
+    if (!shouldDelete) return;
 
-    deleteSavedWatermark(selectedId)
-    setSelectedId(null)
-  }
+    deleteSavedWatermark(selectedId);
+    setSelectedId(null);
+  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -59,7 +63,7 @@ export function AssetWatermarkTab() {
             </div>
           ) : (
             <MutedText className="text-xs italic">
-              Select a watermark to manage
+              {t("assets.selectToManage")}
             </MutedText>
           )}
         </div>
@@ -72,9 +76,9 @@ export function AssetWatermarkTab() {
           className="gap-2 px-4 shrink-0"
         >
           <Trash2 size={14} />
-          Delete
+          {t("assets.delete")}
         </Button>
       </div>
     </div>
-  )
+  );
 }

@@ -15,6 +15,7 @@ import {
   Star,
 } from "lucide-react";
 import { Tooltip } from "../shared/tooltip";
+import { useTranslation } from "@imify/i18n";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import {
   FEATURE_MEDIA_ASSETS,
@@ -111,6 +112,7 @@ export function WorkspaceOptionsHeader({
   isDevModeEnabled = false,
   isExtension = false,
 }: WorkspaceOptionsHeaderProps) {
+  const { t } = useTranslation("workspace");
   const breadcrumb = useWorkspaceHeaderStore((s) => s.breadcrumb);
   const onBack = useWorkspaceHeaderStore((s) => s.onBack);
   const stars = useGithubStars();
@@ -346,7 +348,7 @@ export function WorkspaceOptionsHeader({
             {isExtension ? (
               <TitleBarButton
                 onClick={onOpenDonate}
-                tooltipText="Support the dev"
+                tooltipText={t("header.tooltips.donate")}
                 isDonate
                 label={undefined}
               >
@@ -358,7 +360,9 @@ export function WorkspaceOptionsHeader({
             <TitleBarButton
               onClick={onToggleDark}
               tooltipText={
-                isDark ? "Switch to light mode" : "Switch to dark mode"
+                isDark
+                  ? t("header.tooltips.lightMode")
+                  : t("header.tooltips.darkMode")
               }
               className="ml-2 text-amber-500/90 hover:text-amber-600 dark:text-amber-400/50 dark:hover:text-amber-300"
             >
@@ -366,7 +370,7 @@ export function WorkspaceOptionsHeader({
             </TitleBarButton>
             <TitleBarButton
               onClick={onOpenAssetManagement}
-              tooltipText="Asset Management"
+              tooltipText={t("header.tooltips.assetManagement")}
               className="text-emerald-500/90 hover:text-emerald-600 dark:text-emerald-400/50 dark:hover:text-emerald-300"
             >
               <Library size={18} />
@@ -374,7 +378,7 @@ export function WorkspaceOptionsHeader({
             {isDevModeEnabled && onOpenDevTools && (
               <TitleBarButton
                 onClick={onOpenDevTools}
-                tooltipText="Developer Tools"
+                tooltipText={t("header.tooltips.devTools")}
                 className="text-violet-500/90 hover:text-violet-600 dark:text-violet-400/50 dark:hover:text-violet-300"
               >
                 <Code2 size={18} />
@@ -382,14 +386,14 @@ export function WorkspaceOptionsHeader({
             )}
             <TitleBarButton
               onClick={onOpenAbout}
-              tooltipText="About Imify"
+              tooltipText={t("header.tooltips.about")}
               className="text-sky-500/90 hover:text-sky-600 dark:text-sky-400/50 dark:hover:text-sky-300"
             >
               <Info size={18} />
             </TitleBarButton>
             <TitleBarButton
               onClick={onOpenSettings}
-              tooltipText="Settings"
+              tooltipText={t("header.tooltips.settings")}
               className="text-slate-500/90 hover:text-slate-700 dark:text-slate-400/50 dark:hover:text-slate-200"
             >
               <Settings size={18} />
@@ -399,7 +403,7 @@ export function WorkspaceOptionsHeader({
           <div className="relative">
             <TitleBarButton
               onClick={() => setIsMoreMenuOpen((prev) => !prev)}
-              tooltipText="More actions"
+              tooltipText={t("header.tooltips.moreActions")}
               className="border border-slate-200 dark:border-slate-700"
             >
               <Menu size={18} />
@@ -416,9 +420,9 @@ export function WorkspaceOptionsHeader({
                   <Star
                     size={16}
                     fill="currentColor"
-                    className="text-amber-400 dark:text-amber-500 fill-amber-400 dark:fill-amber-500"
+                    className="text-amber-400 dark:text-amber-500 fill-amber-400 dark:fill-amber-500 shrink-0"
                   />
-                  <span>Github stars: {stars}</span>
+                  <span>{t("header.menu.github", { count: stars })}</span>
                 </a>
                 <div className="h-px bg-slate-100 dark:bg-slate-800" />
                 <button
@@ -434,7 +438,7 @@ export function WorkspaceOptionsHeader({
                     fill="currentColor"
                     className="text-rose-600 dark:text-rose-450"
                   />
-                  <span>Donate</span>
+                  <span>{t("header.menu.donate")}</span>
                 </button>
                 <div className="h-px bg-slate-100 dark:bg-slate-800" />
                 <button
@@ -456,7 +460,11 @@ export function WorkspaceOptionsHeader({
                       className="text-amber-500/90 dark:text-amber-400/50"
                     />
                   )}
-                  <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+                  <span>
+                    {isDark
+                      ? t("header.menu.lightMode")
+                      : t("header.menu.darkMode")}
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -470,7 +478,7 @@ export function WorkspaceOptionsHeader({
                     size={16}
                     className="text-emerald-500/90 dark:text-emerald-400/50"
                   />
-                  <span>Assets</span>
+                  <span>{t("header.menu.assets")}</span>
                 </button>
                 {isDevModeEnabled && onOpenDevTools && (
                   <button
@@ -485,7 +493,7 @@ export function WorkspaceOptionsHeader({
                       size={16}
                       className="text-violet-500/90 dark:text-violet-400/50"
                     />
-                    <span>Developer Tools</span>
+                    <span>{t("header.menu.devTools")}</span>
                   </button>
                 )}
                 <button
@@ -500,7 +508,7 @@ export function WorkspaceOptionsHeader({
                     size={16}
                     className="text-sky-500/90 dark:text-sky-400/50"
                   />
-                  <span>About</span>
+                  <span>{t("header.menu.about")}</span>
                 </button>
                 <button
                   type="button"
@@ -514,7 +522,7 @@ export function WorkspaceOptionsHeader({
                     size={16}
                     className="text-slate-500/90 dark:text-slate-400/50"
                   />
-                  <span>Settings</span>
+                  <span>{t("header.menu.settings")}</span>
                 </button>
               </div>
             ) : null}
