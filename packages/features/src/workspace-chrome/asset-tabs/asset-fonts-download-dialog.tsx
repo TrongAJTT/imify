@@ -1,9 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { CloudDownload, ShieldCheck, Wifi, ExternalLink, Info } from "lucide-react";
+import {
+  CloudDownload,
+  ShieldCheck,
+  Wifi,
+  ExternalLink,
+  Info,
+} from "lucide-react";
 import { Button, BodyText, MutedText, Subheading, BaseDialog } from "@imify/ui";
 import { type GoogleFontCurated } from "../../shared/font-service";
+import { useTranslation } from "@imify/i18n";
 
 interface DownloadFontDialogProps {
   isOpen: boolean;
@@ -18,6 +25,7 @@ export function DownloadFontDialog({
   onConfirm,
   font,
 }: DownloadFontDialogProps) {
+  const { t } = useTranslation("workspace");
   const [agreed, setAgreed] = useState(false);
   const licenseUrl = `https://fonts.google.com/specimen/${font.family.replace(/\s+/g, "+")}/license`;
 
@@ -34,7 +42,9 @@ export function DownloadFontDialog({
             <CloudDownload size={32} />
           </div>
           <div className="space-y-1">
-            <Subheading className="text-xl font-bold">Download Font</Subheading>
+            <Subheading className="text-xl font-bold">
+              {t("assets.downloadDialog.title")}
+            </Subheading>
             <MutedText className="text-sm">
               {font.family} (
               {font.defaultWeight === 700 ? "Bold 700" : "Regular 400"})
@@ -47,15 +57,15 @@ export function DownloadFontDialog({
           <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 space-y-3">
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-500 font-medium tracking-tight">
-                Source
+                {t("assets.downloadDialog.source")}
               </span>
               <span className="font-semibold text-slate-700 dark:text-slate-200">
-                Google Fonts Library
+                {t("assets.downloadDialog.library")}
               </span>
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-500 font-medium tracking-tight">
-                Download Size
+                {t("assets.downloadDialog.size")}
               </span>
               <span className="font-semibold text-slate-700 dark:text-slate-200">
                 ~20 KB - 50 KB
@@ -63,7 +73,7 @@ export function DownloadFontDialog({
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-500 font-medium tracking-tight">
-                License
+                {t("assets.downloadDialog.license")}
               </span>
               <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-200">
                 {font.license}
@@ -82,8 +92,7 @@ export function DownloadFontDialog({
           <div className="flex items-start gap-2 px-1">
             <Info size={12} className="text-violet-400 mt-0.5 shrink-0" />
             <p className="text-[11px] text-slate-500 italic leading-relaxed">
-              You are downloading this static font file directly from Google
-              Fonts servers.
+              {t("assets.downloadDialog.directDownloadNote")}
             </p>
           </div>
         </div>
@@ -94,13 +103,10 @@ export function DownloadFontDialog({
             <ShieldCheck className="text-amber-500 shrink-0 mt-0.5" size={16} />
             <div className="space-y-1">
               <BodyText className="text-[11px] font-semibold !text-amber-800 dark:!text-amber-400">
-                Privacy & Data
+                {t("assets.downloadDialog.privacyTitle")}
               </BodyText>
               <MutedText className="text-[10px] leading-relaxed !text-amber-700/80 dark:!text-amber-400/80">
-                Imify is not the distributor and does not hold responsibilities
-                for font licensing. You are downloading this font directly from
-                Google Fonts servers and agreeing to the author's terms. Your
-                text rendering runs locally.
+                {t("assets.downloadDialog.privacyDesc")}
               </MutedText>
             </div>
           </div>
@@ -109,12 +115,10 @@ export function DownloadFontDialog({
             <Wifi className="text-sky-500 shrink-0 mt-0.5" size={16} />
             <div className="space-y-1">
               <BodyText className="text-[11px] font-semibold !text-sky-800 dark:!text-sky-400">
-                Internet Connection
+                {t("assets.downloadDialog.connectionTitle")}
               </BodyText>
               <MutedText className="text-[10px] leading-relaxed !text-sky-700/80 dark:!text-sky-400/80">
-                An active internet connection is required for the initial
-                download. Once downloaded and stored in IndexedDB, the font will
-                be loaded at startup for offline use.
+                {t("assets.downloadDialog.connectionDesc")}
               </MutedText>
             </div>
           </div>
@@ -140,14 +144,14 @@ export function DownloadFontDialog({
               </svg>
             </div>
             <span className="text-xs text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
-              I agree to the{" "}
+              {t("assets.downloadDialog.agreementPrefix")}
               <a
                 href={licenseUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="text-violet-500 hover:underline"
               >
-                Font Terms of Use and License
+                {t("assets.downloadDialog.agreementLink")}
               </a>
               .
             </span>
@@ -157,7 +161,7 @@ export function DownloadFontDialog({
 
       <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex gap-3">
         <Button variant="ghost" onClick={onClose} className="flex-1">
-          Cancel
+          {t("assets.downloadDialog.cancel")}
         </Button>
         <Button
           variant="default"
@@ -165,7 +169,7 @@ export function DownloadFontDialog({
           disabled={!agreed}
           className="flex-1 bg-violet-600 hover:bg-violet-700 text-white"
         >
-          Download
+          {t("assets.downloadDialog.download")}
         </Button>
       </div>
     </BaseDialog>

@@ -1,58 +1,57 @@
-import React, { useMemo } from "react"
-import { Crop, FileEdit, Stamp } from "lucide-react"
-import { CheckboxCard, SidebarCard, AccordionCard } from "@imify/ui"
-import { ConcurrencySelector } from "../processor/concurrency-selector"
-import { SmartConcurrencyAdvisorCard } from "../processor/smart-concurrency-advisor-card"
+import React, { useMemo } from "react";
+import { Crop } from "lucide-react";
+import { CheckboxCard } from "@imify/ui";
+import { ConcurrencySelector } from "../processor/concurrency-selector";
+import { SmartConcurrencyAdvisorCard } from "../processor/smart-concurrency-advisor-card";
 import {
   calculateConcurrencyAdvisor,
   resolveConcurrencyLockState,
-  type PerformancePreferences
-} from "../processor/performance-preferences"
-import {
-  EXPORT_MODE_OPTIONS,
-  SelectField
-} from "./splicing-sidebar-fields"
-import type { FormatCodecOptions } from "@imify/core/types"
-import type { SplicingExportFormat, SplicingExportMode } from "./types"
+  type PerformancePreferences,
+} from "../processor/performance-preferences";
+import { EXPORT_MODE_OPTIONS, SelectField } from "./splicing-sidebar-fields";
+import type { FormatCodecOptions } from "@imify/core/types";
+import type { SplicingExportFormat, SplicingExportMode } from "./types";
 
 interface SplicingExportPanelProps {
   /** Format being exported (for concurrency limits) */
-  targetFormat: SplicingExportFormat
+  targetFormat: SplicingExportFormat;
   /** Current concurrency value */
-  concurrency: number
+  concurrency: number;
   /** File name pattern (displays as sublabel) */
-  fileNamePattern: string
+  fileNamePattern: string;
   /** Current export mode (single/per_row/per_col) */
-  exportMode: SplicingExportMode
+  exportMode: SplicingExportMode;
   /** Whether to trim background */
-  exportTrimBackground: boolean
+  exportTrimBackground: boolean;
   /** Available export modes based on current preset */
-  availableExportModes?: Array<SplicingExportMode>
+  availableExportModes?: Array<SplicingExportMode>;
   /** Active format options for advisor simulation */
   advisorFormatOptions: Pick<
     FormatCodecOptions,
     "bmp" | "png" | "jxl" | "avif" | "mozjpeg" | "tiff" | "webp"
-  >
+  >;
   /** Callback when concurrency changes */
-  onConcurrencyChange: (value: number) => void
+  onConcurrencyChange: (value: number) => void;
   /** Callback when file renaming is opened */
-  onFileRenamingClick: () => void
+  onFileRenamingClick: () => void;
   /** Callback when export mode changes */
-  onExportModeChange: (mode: SplicingExportMode) => void
+  onExportModeChange: (mode: SplicingExportMode) => void;
   /** Callback when trim background is toggled */
-  onExportTrimBackgroundChange: (enabled: boolean) => void
+  onExportTrimBackgroundChange: (enabled: boolean) => void;
   /** Performance preferences for concurrency limits */
-  performancePreferences: PerformancePreferences
+  performancePreferences: PerformancePreferences;
   /** Open settings dialog callback */
-  onOpenSettings: () => void
+  onOpenSettings: () => void;
   /** Whether inputs are disabled */
-  disabled?: boolean
+  disabled?: boolean;
 }
 
 /**
  * Export controls for Image Splicing, focusing on Splicing-specific settings.
  * Designed to be embedded within the standardized PresetSelector.
  */
+import { useTranslation } from "@imify/i18n";
+
 export function SplicingExportPanel({
   targetFormat,
   concurrency,
@@ -65,44 +64,67 @@ export function SplicingExportPanel({
   onExportTrimBackgroundChange,
   performancePreferences,
   onOpenSettings,
-  disabled = false
+  disabled = false,
 }: Omit<SplicingExportPanelProps, "fileNamePattern" | "onFileRenamingClick">) {
+  const { t } = useTranslation(["splicing", "processor"]);
+
   const handleExportModeChange = (mode: SplicingExportMode) => {
-    onExportModeChange(mode)
+    onExportModeChange(mode);
     // Reset trim when switching to single mode
     if (mode === "single" && exportTrimBackground) {
-      onExportTrimBackgroundChange(false)
+      onExportTrimBackgroundChange(false);
     }
-  }
-  const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat
+  };
+  const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat;
 
-  // Filter options if availableExportModes is provided
-  const modeOptions = availableExportModes
-    ? EXPORT_MODE_OPTIONS.filter((opt) => availableExportModes.includes(opt.value as any))
-    : EXPORT_MODE_OPTIONS
+  // Filter and translate options
+  const modeOptions = useMemo(() => {
+    const rawOptions = availableExportModes
+      ? EXPORT_MODE_OPTIONS.filter((opt) =>
+          availableExportModes.includes(opt.value as any),
+        )
+      : EXPORT_MODE_OPTIONS;
+    return rawOptions.map((opt) => ({
+      value: opt.value,
+      label:
+        opt.value === "single"
+          ? t("preset.modeSingle")
+          : opt.value === "per_row"
+            ? t("preset.modePerRow")
+            : t("preset.modePerCol"),
+    }));
+  }, [availableExportModes, t]);
+
   const advisor = useMemo(
     () =>
       calculateConcurrencyAdvisor({
         targetFormat,
         selectedConcurrency: concurrency,
         formatOptions: advisorFormatOptions,
-        preferences: performancePreferences
+        preferences: performancePreferences,
+        t,
       }),
-    [targetFormat, concurrency, advisorFormatOptions, performancePreferences]
-  )
+    [
+      targetFormat,
+      concurrency,
+      advisorFormatOptions,
+      performancePreferences,
+      t,
+    ],
+  );
   const concurrencyLockState = useMemo(
     () =>
       resolveConcurrencyLockState({
         preferences: performancePreferences,
-        advisor
+        advisor,
       }),
-    [performancePreferences, advisor]
-  )
+    [performancePreferences, advisor],
+  );
 
   return (
     <div className="space-y-3">
       <SelectField
-        label="Export mode"
+        label={t("exportFields.exportMode")}
         value={exportMode}
         options={modeOptions}
         onChange={(v) => handleExportModeChange(v as SplicingExportMode)}
@@ -132,11 +154,11 @@ export function SplicingExportPanel({
       )}
       <CheckboxCard
         icon={<Crop size={16} />}
-        title="Trim background"
+        title={t("exportFields.trimBackground")}
         subtitle={
           exportMode === "per_col"
-            ? "Remove top and bottom padding"
-            : "Remove left and right padding"
+            ? t("exportFields.trimDescCol")
+            : t("exportFields.trimDescRow")
         }
         checked={exportTrimBackground}
         onChange={onExportTrimBackgroundChange}
@@ -144,8 +166,5 @@ export function SplicingExportPanel({
         theme="amber"
       />
     </div>
-  )
+  );
 }
-
-
-

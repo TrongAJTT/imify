@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Stamp, X, Brain, ChevronRight, ArrowLeft, Type } from "lucide-react";
 import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
 import { AssetWatermarkTab } from "./asset-tabs/asset-watermark-tab";
 import { AssetAIModelsTab } from "./asset-tabs/asset-ai-models-tab";
 import { AssetFontsTab } from "@imify/features/workspace-chrome/asset-tabs/asset-fonts-tab";
@@ -20,10 +21,10 @@ const DEFAULT_INACTIVE_CLASS =
 
 type AssetTabId = "watermark" | "ai-models" | "fonts";
 
-interface AssetTabDefinition {
+interface AssetTabRawDefinition {
   id: AssetTabId;
-  label: string;
-  description: string;
+  labelKey: string;
+  descKey: string;
   icon: React.ElementType;
   colors: {
     activeBg: string;
@@ -33,11 +34,11 @@ interface AssetTabDefinition {
   };
 }
 
-const ASSET_TABS: AssetTabDefinition[] = [
+const ASSET_TABS_RAW: AssetTabRawDefinition[] = [
   {
     id: "watermark",
-    label: "Watermark",
-    description: "Manage your saved watermark cards and patterns",
+    labelKey: "assets.tabs.watermark.label",
+    descKey: "assets.tabs.watermark.desc",
     icon: Stamp,
     colors: {
       activeBg: "bg-sky-50 dark:bg-sky-500/10",
@@ -48,8 +49,8 @@ const ASSET_TABS: AssetTabDefinition[] = [
   },
   {
     id: "ai-models",
-    label: "AI Models",
-    description: "Manage downloaded AI models for offline features",
+    labelKey: "assets.tabs.aiModels.label",
+    descKey: "assets.tabs.aiModels.desc",
     icon: Brain,
     colors: {
       activeBg: "bg-pink-50 dark:bg-pink-500/10",
@@ -60,8 +61,8 @@ const ASSET_TABS: AssetTabDefinition[] = [
   },
   {
     id: "fonts",
-    label: "Fonts",
-    description: "Manage installed fonts for QR codes and text features",
+    labelKey: "assets.tabs.fonts.label",
+    descKey: "assets.tabs.fonts.desc",
     icon: Type,
     colors: {
       activeBg: "bg-violet-50 dark:bg-violet-500/10",
@@ -76,8 +77,17 @@ export function AssetManagementDialog({
   isOpen,
   onClose,
 }: AssetManagementDialogProps) {
+  const { t } = useTranslation("workspace");
   const [activeTab, setActiveTab] = useState<AssetTabId | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  const tabs = React.useMemo(() => {
+    return ASSET_TABS_RAW.map((tab) => ({
+      ...tab,
+      label: t(tab.labelKey),
+      description: t(tab.descKey),
+    }));
+  }, [t]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -85,8 +95,6 @@ export function AssetManagementDialog({
       return;
     }
 
-    // On desktop, we can default to the first tab, but the user wants "select section" first.
-    // However, for consistency with Settings on desktop, we'll default to watermark if not mobile.
     if (!isMobile && activeTab === null) {
       setActiveTab("watermark");
     }
@@ -137,12 +145,12 @@ export function AssetManagementDialog({
           <div className="flex flex-col min-w-0">
             <Subheading className="text-base font-bold leading-tight truncate">
               {isMobile && activeTab
-                ? ASSET_TABS.find((t) => t.id === activeTab)?.label
-                : "Asset Management"}
+                ? tabs.find((t) => t.id === activeTab)?.label
+                : t("assets.title")}
             </Subheading>
             {isMobile && activeTab && (
               <MutedText className="text-[10px] leading-tight truncate pr-4">
-                {ASSET_TABS.find((t) => t.id === activeTab)?.description}
+                {tabs.find((t) => t.id === activeTab)?.description}
               </MutedText>
             )}
           </div>
@@ -165,7 +173,7 @@ export function AssetManagementDialog({
             className={`${isMobile ? "w-full p-4" : "w-64 border-r border-slate-100 p-3"} bg-white dark:border-slate-800 dark:bg-slate-900`}
           >
             <div className={isMobile ? "space-y-3" : "space-y-1"}>
-              {ASSET_TABS.map((tab) => (
+              {tabs.map((tab) => (
                 <Button
                   key={tab.id}
                   variant="ghost"

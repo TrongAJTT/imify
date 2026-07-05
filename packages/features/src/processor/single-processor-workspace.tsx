@@ -17,6 +17,7 @@ import {
 } from "@imify/engine/image-pipeline/decode-image-data";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
+import { useTranslation } from "@imify/i18n";
 import {
   Button,
   EmptyDropCard,
@@ -102,6 +103,7 @@ export function SingleProcessorWorkspace({
   consumePendingOptimizeFile?: () => File | null;
   consumePendingImportUrl?: () => string | null;
 } = {}) {
+  const { t } = useTranslation("processor");
   const targetFormat = useBatchStore((state) => state.targetFormat);
   const quality = useBatchStore((state) => state.quality);
   const formatOptions = useBatchStore((state) => state.formatOptions);
@@ -230,7 +232,7 @@ export function SingleProcessorWorkspace({
   const attachSingleFile = async (file: File) => {
     const attachSequence = ++attachSequenceRef.current;
     if (!isCommonImageFile(file)) {
-      setErrorText("Please choose an image file.");
+      setErrorText(t("chooseImageError"));
       return;
     }
     clearAll();
@@ -246,7 +248,7 @@ export function SingleProcessorWorkspace({
       if (attachSequenceRef.current !== attachSequence) return;
       clearAll();
       setErrorText(
-        toUserFacingConversionError(error, "Unable to decode source image"),
+        toUserFacingConversionError(error, t("decodeError")),
       );
     }
   };
@@ -269,7 +271,7 @@ export function SingleProcessorWorkspace({
       setErrorText(
         error instanceof Error && error.message.trim()
           ? error.message
-          : "Unable to import image URL",
+          : t("importError"),
       );
     } finally {
       setIsImportingUrl(false);
@@ -420,7 +422,7 @@ export function SingleProcessorWorkspace({
           setResultNameDimensions(null);
           setResultFileName("");
           setErrorText(
-            toUserFacingConversionError(error, "Unable to process image"),
+            toUserFacingConversionError(error, t("processError")),
           );
         } finally {
           if (requestSequenceRef.current === currentSequence) {
@@ -445,7 +447,7 @@ export function SingleProcessorWorkspace({
   const resultDimensionLabel = resultMeta
     ? `${resultMeta.width} x ${resultMeta.height}`
     : isProcessing
-      ? "Processing..."
+      ? t("processing")
       : "-";
 
   return (
@@ -459,8 +461,8 @@ export function SingleProcessorWorkspace({
                 className="text-sky-500/80 dark:text-sky-400"
               />
             }
-            title="Drop one image here, click to browse, or paste from clipboard"
-            subtitle="Single Processor with live preview, debounce, and image URL import"
+            title={t("dropZonePlaceholder")}
+            subtitle={t("dropZoneSubtitle")}
             onDropFiles={onAppendFiles}
             fileInput={{
               accept: COMMON_IMAGE_ACCEPT,
@@ -500,20 +502,20 @@ export function SingleProcessorWorkspace({
                   <MutedText className="text-xs">
                     {isProcessing ? (
                       <span className="text-amber-600 dark:text-amber-400 font-medium">
-                        Processing...
+                        {t("processing")}
                       </span>
                     ) : resultBlob && processTime !== null ? (
                       <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                        Processing completed in {processTime.toFixed(2)}s
+                        {t("processingComplete", { time: processTime.toFixed(2) })}
                       </span>
                     ) : (
-                      `Live preview updates after ${PREVIEW_DEBOUNCE_MS}ms idle.`
+                      t("livePreviewNotice", { time: PREVIEW_DEBOUNCE_MS })
                     )}
                   </MutedText>
                 </div>
                 <div className="flex flex-row items-center gap-2 shrink-0">
                   <Button variant="secondary" onClick={clearAll} type="button">
-                    Clear
+                    {t("clear")}
                   </Button>
                   <Button
                     disabled={!resultBlob || !resultFileName}
@@ -554,7 +556,7 @@ export function SingleProcessorWorkspace({
                     type="button"
                     variant="primary"
                   >
-                    Download
+                    {t("download")}
                   </Button>
                 </div>
               </div>
@@ -567,7 +569,7 @@ export function SingleProcessorWorkspace({
                   <div className="mb-1 flex items-center gap-1.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      Original
+                      {t("original")}
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1.5">
@@ -592,7 +594,7 @@ export function SingleProcessorWorkspace({
                       className={`h-1.5 w-1.5 rounded-full ${isProcessing ? "animate-pulse bg-amber-400" : "bg-blue-500"}`}
                     />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      Result
+                      {t("result")}
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1.5">
@@ -621,7 +623,7 @@ export function SingleProcessorWorkspace({
                   } ${showImpactChip ? "hidden" : "flex"}`}
                 >
                   <span className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Impact
+                    {t("impact")}
                   </span>
                   <div
                     className={`text-2xl font-black tracking-tight tabular-nums ${delta.className}`}
@@ -652,8 +654,8 @@ export function SingleProcessorWorkspace({
                 mode={viewMode}
                 imageDataA={sourceImageData}
                 imageDataB={resultImageData}
-                labelA="Original"
-                labelB="Result"
+                labelA={t("original")}
+                labelB={t("result")}
                 splitPosition={splitPosition}
                 onSplitChange={setSplitPosition}
                 zoom={zoom}
@@ -670,8 +672,7 @@ export function SingleProcessorWorkspace({
                 isProcessing={isProcessing}
                 emptyFallback={
                   <MutedText>
-                    Result preview is unavailable for this output type. You can
-                    still download the processed file.
+                    {t("previewUnavailable")}
                   </MutedText>
                 }
               />

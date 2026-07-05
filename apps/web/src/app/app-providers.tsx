@@ -8,6 +8,7 @@ import {
   ensureRuntimeLogCaptureInstalled,
   setRuntimeLogCaptureEnabled
 } from "@imify/features/dev-mode/runtime-log-collector"
+import { initI18n } from "@imify/i18n"
 import { localStorageAdapter } from "../adapters/local-storage-adapter"
 
 interface AppProvidersProps {
@@ -62,11 +63,13 @@ if (typeof window !== "undefined") {
   ensureWebAdaptersRegistered()
   ensureRuntimeLogCaptureInstalled()
   setRuntimeLogCaptureEnabled(getDevModeEnabled())
+  initI18n()
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
   ensureWebAdaptersRegistered()
   ensureRuntimeLogCaptureInstalled()
   setRuntimeLogCaptureEnabled(getDevModeEnabled())
+  initI18n()
   return <>{children}</>
 }

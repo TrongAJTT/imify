@@ -16,12 +16,18 @@ import {
   BACKGROUND_REMOVAL_MODELS,
   type AIModelMetadata,
 } from "../../background-removal/models";
-import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from "../../upscaler/models";
+import {
+  IMAGE_UPSCALER_MODELS,
+  resolveHuggingFaceRepoId,
+} from "../../upscaler/models";
 import { ModelDownloadDialog } from "../../background-removal/model-download-dialog";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
 
+import { useTranslation } from "@imify/i18n";
+
 export function AssetAIModelsTab() {
+  const { t } = useTranslation(["workspace", "common"]);
   const [cachedModelIds, setCachedModelIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [modelToDownload, setModelToDownload] =
@@ -35,16 +41,16 @@ export function AssetAIModelsTab() {
   const MODEL_CATEGORIES = [
     {
       id: "background-remover",
-      label: "Background Remover",
+      label: t("tools.backgroundRemover.label"),
       icon: <Image size={16} className="text-pink-500" />,
       models: BACKGROUND_REMOVAL_MODELS,
     },
     {
       id: "upscaler",
-      label: "Upscaler",
+      label: t("tools.upscaler.label"),
       icon: <Sparkles size={16} className="text-indigo-500" />,
       models: IMAGE_UPSCALER_MODELS,
-    }
+    },
   ];
 
   const allModels = MODEL_CATEGORIES.flatMap((cat) => cat.models);
@@ -57,10 +63,10 @@ export function AssetAIModelsTab() {
       const cachedIds = new Set<string>();
 
       for (const model of allModels) {
-        const isUpscaler = IMAGE_UPSCALER_MODELS.some((m) => m.id === model.id)
+        const isUpscaler = IMAGE_UPSCALER_MODELS.some((m) => m.id === model.id);
         const repoId = isUpscaler
           ? resolveHuggingFaceRepoId(model.id).toLowerCase()
-          : model.id.toLowerCase()
+          : model.id.toLowerCase();
 
         for (const variant of model.variants) {
           // A variant is considered cached ONLY if its primary ONNX weights file exists.
@@ -99,7 +105,10 @@ export function AssetAIModelsTab() {
 
   const handleDelete = async (model: AIModelMetadata, variant: any) => {
     const shouldDelete = window.confirm(
-      `Delete cached files for "${model.name} (${variant.label})"?`,
+      t("assets.aiModels.deleteConfirm", {
+        name: model.name,
+        variant: variant.label,
+      }),
     );
     if (!shouldDelete) return;
 
@@ -107,10 +116,10 @@ export function AssetAIModelsTab() {
       const cache = await caches.open("transformers-cache");
       const keys = await cache.keys();
 
-      const isUpscaler = IMAGE_UPSCALER_MODELS.some((m) => m.id === model.id)
+      const isUpscaler = IMAGE_UPSCALER_MODELS.some((m) => m.id === model.id);
       const repoId = isUpscaler
         ? resolveHuggingFaceRepoId(model.id).toLowerCase()
-        : model.id.toLowerCase()
+        : model.id.toLowerCase();
 
       for (const request of keys) {
         const url = request.url.toLowerCase();
@@ -135,12 +144,18 @@ export function AssetAIModelsTab() {
 
       await checkCache();
       success(
-        "Model deleted",
-        `Successfully cleared ${variant.label} for ${model.name}.`,
+        t("assets.aiModels.deletedTitle"),
+        t("assets.aiModels.deletedDesc", {
+          variant: variant.label,
+          name: model.name,
+        }),
       );
     } catch (err) {
       console.error("Failed to delete model cache:", err);
-      error("Delete failed", "Failed to delete model files.");
+      error(
+        t("assets.aiModels.deleteFailedTitle"),
+        t("assets.aiModels.deleteFailedDesc"),
+      );
     }
   };
 
@@ -153,15 +168,21 @@ export function AssetAIModelsTab() {
     const variant =
       model.variants.find((v) => v.id === variantId) || model.variants[0];
     success(
-      "Download started",
-      `Preparing to download ${model.name} (${variant.label}).`,
+      t("assets.aiModels.downloadStartedTitle"),
+      t("assets.aiModels.downloadStartedDesc", {
+        name: model.name,
+        variant: variant.label,
+      }),
     );
 
     try {
       const isUpscaler = IMAGE_UPSCALER_MODELS.some((m) => m.id === model.id);
       const workerUrl = isUpscaler
         ? new URL("../../upscaler/image-upscaler.worker.ts", import.meta.url)
-        : new URL("../../background-removal/background-removal.worker.ts", import.meta.url);
+        : new URL(
+            "../../background-removal/background-removal.worker.ts",
+            import.meta.url,
+          );
 
       const worker = new Worker(workerUrl, { type: "module" });
 
@@ -182,15 +203,21 @@ export function AssetAIModelsTab() {
         worker.onmessage = async (e) => {
           if (e.data.action === "warm-up-complete") {
             success(
-              "Model ready",
-              `${model.name} ${variant.label} cached successfully.`,
+              t("assets.aiModels.readyTitle"),
+              t("assets.aiModels.readyDesc", {
+                name: model.name,
+                variant: variant.label,
+              }),
             );
             setTimeout(async () => {
               await checkCache();
             }, 500);
             worker.terminate();
           } else if (e.data.action === "error") {
-            error("Download failed", `Failed to download ${model.name}.`);
+            error(
+              t("assets.aiModels.downloadFailedTitle"),
+              t("assets.aiModels.downloadFailedDesc", { name: model.name }),
+            );
             worker.terminate();
           }
         };
@@ -210,22 +237,31 @@ export function AssetAIModelsTab() {
         worker.onmessage = async (e) => {
           if (e.data.action === "warm-up-complete") {
             success(
-              "Model ready",
-              `${model.name} ${variant.label} cached successfully.`,
+              t("assets.aiModels.readyTitle"),
+              t("assets.aiModels.readyDesc", {
+                name: model.name,
+                variant: variant.label,
+              }),
             );
             setTimeout(async () => {
               await checkCache();
             }, 500);
             worker.terminate();
           } else if (e.data.action === "error") {
-            error("Download failed", `Failed to download ${model.name}.`);
+            error(
+              t("assets.aiModels.downloadFailedTitle"),
+              t("assets.aiModels.downloadFailedDesc", { name: model.name }),
+            );
             worker.terminate();
           }
         };
       }
     } catch (err) {
       console.error("Failed to start download:", err);
-      error("Download failed", "Failed to initialize background downloader.");
+      error(
+        t("assets.aiModels.downloadFailedTitle"),
+        t("assets.aiModels.downloadInitFailedDesc"),
+      );
     }
   };
 
@@ -247,7 +283,7 @@ export function AssetAIModelsTab() {
             <div className="space-y-2 flex-1">
               <div className="flex items-center justify-between">
                 <BodyText className="text-sm font-bold text-slate-800 dark:text-indigo-300">
-                  About AI Models & Engine
+                  {t("assets.aboutAiTitle")}
                 </BodyText>
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-700">
                   <div
@@ -255,16 +291,13 @@ export function AssetAIModelsTab() {
                   />
                   <span className="text-[9px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-tight">
                     {typeof SharedArrayBuffer !== "undefined"
-                      ? "Multi-thread Active"
-                      : "Asyncify Fallback"}
+                      ? t("assets.multiThreadActive")
+                      : t("assets.asyncifyFallback")}
                   </span>
                 </div>
               </div>
               <MutedText className="text-xs text-slate-600 dark:text-indigo-400/80 leading-relaxed">
-                Imify uses <strong>ONNX Runtime Web</strong> to run lightweight
-                AI models 100% locally. These models are downloaded once and
-                cached for offline use, ensuring your data never leaves your
-                device.
+                {t("assets.aiDesc")}
               </MutedText>
             </div>
           </div>
@@ -432,14 +465,14 @@ export function AssetAIModelsTab() {
             onConfirm={handleDownloadConfirm}
             model={modelToDownload}
             variantId={selectedVariantId}
-            confirmLabel="Download"
+            confirmLabel={t("common:download")}
           />
         )}
       </div>
 
       <div className="px-4 py-3 border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50 flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
         <MutedText className="text-xs italic font-medium text-slate-500">
-          AI models are stored securely in your browser's Cache Storage.
+          {t("assets.aiModels.cacheNote")}
         </MutedText>
         <Button
           variant="outline"
@@ -447,7 +480,7 @@ export function AssetAIModelsTab() {
           onClick={checkCache}
           className="h-9 px-4 text-xs font-bold border-slate-200 hover:bg-slate-50 transition-colors"
         >
-          Refresh Status
+          {t("common:refresh")}
         </Button>
       </div>
 

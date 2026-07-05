@@ -186,6 +186,9 @@ importers:
       '@imify/features':
         specifier: workspace:*
         version: link:../../packages/features
+      '@imify/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@imify/stores':
         specifier: workspace:*
         version: link:../../packages/stores
@@ -322,6 +325,9 @@ importers:
       '@imify/features':
         specifier: workspace:*
         version: link:../../packages/features
+      '@imify/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@imify/stores':
         specifier: workspace:*
         version: link:../../packages/stores
@@ -389,12 +395,18 @@ importers:
       '@huggingface/transformers':
         specifier: ^4.2.0
         version: 4.2.0
+      '@imify/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@imify/stores':
         specifier: workspace:*
         version: link:../stores
       '@imify/ui':
         specifier: workspace:*
         version: link:../ui
+      i18next:
+        specifier: ^23.11.5
+        version: 23.16.8
       jsqr:
         specifier: ^1.4.0
         version: 1.4.0
@@ -407,6 +419,9 @@ importers:
       qr-code-styling:
         specifier: ^1.8.4
         version: 1.9.2
+      react-i18next:
+        specifier: ^14.1.2
+        version: 14.1.3(i18next@23.16.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-konva:
         specifier: ^18.2.14
         version: 18.2.14(@types/react@18.2.48)(konva@10.2.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -414,7 +429,29 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
 
-  packages/stores: {}
+  packages/i18n:
+    dependencies:
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.2
+      i18next:
+        specifier: ^23.11.5
+        version: 23.16.8
+      react:
+        specifier: 18.3.1
+        version: 18.3.1
+      react-i18next:
+        specifier: ^14.1.2
+        version: 14.1.3(i18next@23.16.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+
+  packages/stores:
+    dependencies:
+      '@imify/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      i18next:
+        specifier: ^23.11.5
+        version: 23.16.8
 
   packages/ui: {}
 
@@ -4022,6 +4059,9 @@ packages:
   html-entities@2.6.0:
     resolution: {integrity: sha512-kig+rMn/QOVRvr7c86gQ8lWXq+Hkv6CbAH1hLu+RG338StTpE8Z0b44SDVaqVu7HGKf27frdmUYEs9hTUX/cLQ==}
 
+  html-parse-stringify@3.0.1:
+    resolution: {integrity: sha512-KknJ50kTInJ7qIScF3jeaFRpMpE8/lfiTdzf/twXyPBLAGrLRTmkz3AdTnKeh40X8k9L2fdYwEp/42WGXIRGcg==}
+
   htmlnano@2.1.5:
     resolution: {integrity: sha512-IXffzXq1beGQN2rsr03aIPK/rVU1jR2uwHymlAIEf97Tl5WdpG50IsQ5nWGvSGQJ+x6U7S6yac9rRiFgAg4/xQ==}
     peerDependencies:
@@ -4064,6 +4104,9 @@ packages:
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
+
+  i18next@23.16.8:
+    resolution: {integrity: sha512-06r/TitrM88Mg5FdUXAKL96dJMzgqLE5dv3ryBAra4KCwD9mJ4ndOTS95ZuymIGoE+2hzfdaMak2X11/es7ZWg==}
 
   iconv-lite@0.6.3:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
@@ -5093,6 +5136,19 @@ packages:
   react-error-overlay@6.0.9:
     resolution: {integrity: sha512-nQTTcUu+ATDbrSD1BZHr5kgSD4oF8OFjxun8uAaL8RwPBacGBNPf/yAuVVdx17N8XNzRDMrZ9XcKZHCjPW+9ew==}
 
+  react-i18next@14.1.3:
+    resolution: {integrity: sha512-wZnpfunU6UIAiJ+bxwOiTmBOAaB14ha97MjOEnLGac2RJ+h/maIYXZuTHlmyqQVX1UVHmU1YDTQ5vxLmwfXTjw==}
+    peerDependencies:
+      i18next: '>= 23.2.3'
+      react: 18.3.1
+      react-dom: '*'
+      react-native: '*'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
+
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -5713,6 +5769,10 @@ packages:
 
   vimeo-video-element@1.7.1:
     resolution: {integrity: sha512-GSlKdqPoa133f2YbuO4JObPWuZ/3+ShIesXhpqtli4p0+STL4YsZ73ixolLK49+VHkOFMfnjeN9Cghh+bGjkhA==}
+
+  void-elements@3.1.0:
+    resolution: {integrity: sha512-Dhxzh5HZuiHQhbvTW9AMetFfBHDMYpo23Uo9btPXgdYP+3T5S+p+jgNy7spra+veYhBP2dCSgxR/i2Y02h5/6w==}
+    engines: {node: '>=0.10.0'}
 
   vue@3.3.4:
     resolution: {integrity: sha512-VTyEYn3yvIeY1Py0WaYGZsXnz3y5UnGi62GjVEqvEGPl6nxbOrCXbVOTQWBEJUqAyTUk2uJ5JLVnYJ6ZzGbrSw==}
@@ -9728,6 +9788,10 @@ snapshots:
 
   html-entities@2.6.0: {}
 
+  html-parse-stringify@3.0.1:
+    dependencies:
+      void-elements: 3.1.0
+
   htmlnano@2.1.5(postcss@8.5.8)(svgo@2.8.2)(typescript@5.8.2):
     dependencies:
       '@types/relateurl': 0.2.33
@@ -9754,6 +9818,10 @@ snapshots:
       resolve-alpn: 1.2.1
 
   human-signals@2.1.0: {}
+
+  i18next@23.16.8:
+    dependencies:
+      '@babel/runtime': 7.29.2
 
   iconv-lite@0.6.3:
     dependencies:
@@ -10808,6 +10876,15 @@ snapshots:
 
   react-error-overlay@6.0.9: {}
 
+  react-i18next@14.1.3(i18next@23.16.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      '@babel/runtime': 7.29.2
+      html-parse-stringify: 3.0.1
+      i18next: 23.16.8
+      react: 18.3.1
+    optionalDependencies:
+      react-dom: 18.3.1(react@18.3.1)
+
   react-is@16.13.1: {}
 
   react-konva@18.2.14(@types/react@18.2.48)(konva@10.2.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
@@ -11586,6 +11663,8 @@ snapshots:
     dependencies:
       '@vimeo/player': 2.29.0
       media-played-ranges-mixin: 0.1.0
+
+  void-elements@3.1.0: {}
 
   vue@3.3.4:
     dependencies:

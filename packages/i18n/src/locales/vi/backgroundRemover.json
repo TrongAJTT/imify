@@ -1,0 +1,152 @@
+{
+  "title": "Tách nền ảnh",
+  "configuration": "CẤU HÌNH XỬ LÝ",
+  "removerSettings": "Tùy chọn Mô hình",
+  "removeAction": "Tách nền ngay",
+  "loading": "Đang tải mô hình tách nền ảnh...",
+  "dropZone": {
+    "title": "Tách nền bằng AI",
+    "description": "Kéo & thả ảnh vào đây để tự động tách chủ thể bằng AI"
+  },
+  "hardwareNotice": {
+    "title": "Tính năng này xử lý các mô hình AI trực tiếp trong trình duyệt của bạn.",
+    "req1": "• Yêu cầu phần cứng thay đổi tùy theo mô hình; các mô hình lớn hơn yêu cầu hiệu năng cao hơn. Khuyến nghị thiết bị có CPU mạnh và tối thiểu 8GB RAM.",
+    "req2": "• Tính năng này được thiết kế để tách nền nhanh chóng và không thay thế hoàn toàn cho việc xử lý các trường hợp viền ảnh cực kỳ phức tạp.",
+    "req3": "• Bạn phải tự tải xuống các mô hình AI để sử dụng, vì chúng tôi không phân phối các mô hình này."
+  },
+  "sidebar": {
+    "aiEngine": "AI Engine",
+    "currentSelection": "Lựa chọn hiện tại",
+    "modelLabel": "Mô hình:",
+    "variantLabel": "Biến thể:",
+    "suitableForLabel": "Phù hợp cho:",
+    "autoUnload": "Tự giải phóng mô hình",
+    "autoUnloadDesc": "Giải phóng bộ nhớ RAM ngay sau khi xử lý xong.",
+    "outputPreset": "Preset đầu ra",
+    "presetTooltip": "Chọn preset xuất ảnh từ Bộ xử lý đơn ảnh.",
+    "processingOutput": "Xử lý & Đầu ra",
+    "edgeRefinement": "Làm mịn cạnh viền",
+    "backgroundType": "Loại nền",
+    "transparent": "Trong suốt",
+    "solidColor": "Màu đơn sắc",
+    "formatTransparent": "Định dạng: Trong suốt",
+    "formatSolidColor": "Định dạng: Màu nền đơn sắc",
+    "aboutThisTool": "GIỚI THIỆU CÔNG CỤ"
+  },
+  "dialog": {
+    "title": "Cấu hình AI Engine",
+    "description": "Lựa chọn kiến trúc mạng nơ-ron và biến thể độ chính xác phần cứng phù hợp nhất với cấu hình thiết bị của bạn.",
+    "selectModel": "Chọn mô hình AI",
+    "hardwareVariant": "Biến thể phần cứng",
+    "variantDesc": "Độ chính xác dấu phẩy động (precision) của mô hình.",
+    "author": "Bởi {{author}}",
+    "close": "Hoàn tất",
+    "descriptionLabel": "Mô tả:",
+    "storageSizeLabel": "Dung lượng:",
+    "licenseLabel": "Giấy phép:"
+  },
+  "models": {
+    "birefnet": {
+      "name": "BiRefNet Lite",
+      "description": "Mô hình Swin-Transformer tiên tiến mang lại chất lượng tách nền ảnh cực kỳ sắc nét.",
+      "usecase": "Tách nền chung"
+    },
+    "ormbg": {
+      "name": "ORMBG v1.0",
+      "description": "Phiên bản cộng đồng của Open RMBG. Hoạt động cực kỳ ổn định và cân bằng.",
+      "usecase": "Tách nền chung"
+    },
+    "modnet": {
+      "name": "MODNet",
+      "description": "Nhanh và được tối ưu hóa cho trình duyệt web. Rất phù hợp tách nền ảnh chân dung.",
+      "usecase": "Ảnh chân dung"
+    },
+    "selfie": {
+      "name": "Selfie Segmenter",
+      "description": "Mô hình của Google MediaPipe giúp tách nền ảnh chân dung cực kỳ nhanh.",
+      "usecase": "Ảnh chân dung"
+    }
+  },
+  "variants": {
+    "fp16": {
+      "label": "FP16 (Chất lượng cao)",
+      "description": "Độ chính xác cao ban đầu. Cân bằng tốt nhất giữa chất lượng và tốc độ."
+    },
+    "full": {
+      "label": "Độ chính xác đầy đủ",
+      "description": "Mô hình 32-bit tiêu chuẩn. Kích thước lớn nhất, độ tương thích tối đa."
+    },
+    "quantized": {
+      "label": "Quantized (Tiết kiệm RAM)",
+      "description": "Trọng số số nguyên 4-bit. Sử dụng ít RAM hơn nhưng có thể chạy chậm hơn một chút."
+    },
+    "standard": {
+      "label": "Tiêu chuẩn",
+      "description": "Trọng số tiêu chuẩn để bảo toàn các đường viền cạnh tốt nhất."
+    }
+  },
+  "workspace": {
+    "encodingImage": "Đang mã hóa hình ảnh",
+    "preparingFile": "Đang chuẩn bị tệp {{format}}...",
+    "downloadReady": "Tải xuống sẵn sàng",
+    "imageExported": "Xuất ảnh thành công",
+    "downloadFailed": "Tải xuống thất bại",
+    "unableEncode": "Không thể mã hóa hình ảnh",
+    "processingTime": "Đang xử lý... ({{time}} giây)",
+    "processCompleted": "Xử lý hoàn thành trong {{time}} giây",
+    "adjustSettingsPrompt": "Điều chỉnh các thông số cấu hình ở sidebar và nhấn Tách nền ngay để bắt đầu",
+    "clear": "Xóa ảnh",
+    "update": "Cập nhật",
+    "download": "Tải xuống",
+    "encoding": "Đang mã hóa...",
+    "removeBackground": "Tách nền ngay",
+    "processing": "Đang xử lý...",
+    "loadFailed": "Tải ảnh thất bại",
+    "loadFailedDesc": "Không thể đọc dữ liệu tệp hình ảnh này."
+  },
+  "showcase": {
+    "title": "Tách nền ảnh bằng AI",
+    "subtitle": "Tách chủ thể ra khỏi nền ảnh ngay lập tức bằng công nghệ AI tiên tiến chạy hoàn toàn cục bộ 100% trên thiết bị của bạn.",
+    "previewAlt": "Trực quan hóa tính năng tách nền ảnh",
+    "chips": {
+      "aiPowered": "Công nghệ AI",
+      "local": "Chạy Cục Bộ 105%",
+      "privacy": "Bảo Mật Tuyệt Đối",
+      "edges": "Tách Viền Khéo"
+    },
+    "tips": {
+      "quantized": "Hãy chọn biến thể **Quantized** để tiết kiệm RAM và tránh sự cố crash trình duyệt trên các máy cấu hình yếu.",
+      "fp16": "Biến thể **FP16** thường cho **tốc độ xử lý nhanh nhất** nếu máy tính của bạn có đủ dung lượng bộ nhớ RAM.",
+      "unload": "Bật tùy chọn 'Tự giải phóng mô hình' để giải phóng bộ nhớ trình duyệt ngay sau khi hoàn thành tác vụ.",
+      "refinement": "Sử dụng thanh trượt 'Làm mịn cạnh viền' để điều chỉnh độ hòa trộn viền của chủ thể với hình nền mới.",
+      "batch": "Bạn có thể kéo và thả cùng lúc nhiều ảnh để bắt đầu quá trình xử lý hàng loạt.",
+      "hover": "Di chuột qua phần lựa chọn biến thể mô hình để xem thông tin kỹ thuật chi tiết."
+    },
+    "faqs": {
+      "q1": "Những loại ảnh nào hoạt động tốt nhất với công cụ này?",
+      "a1": "Công cụ hoạt động tốt nhất đối với những ảnh có chủ thể rõ ràng ở tiền cảnh như ảnh chân dung, ảnh sản phẩm, thú cưng hoặc đồ vật có góc cạnh rõ nét.",
+      "q2": "Công cụ này có yêu cầu phần cứng mạnh không?",
+      "a2": "Có, việc xử lý AI tiêu tốn nhiều tài nguyên thiết bị. Khuyên dùng máy tính cấu hình trung bình đến cao có card đồ họa rời và tối thiểu 8GB RAM để có trải nghiệm tốt nhất. Đối với các thiết bị yếu hơn, hãy sử dụng các biến thể *Quantized*.",
+      "q3": "Có cần kết nối mạng Internet để sử dụng không?",
+      "a3": "Chỉ cần kết nối mạng trong lần đầu tiên tải xuống các mô hình AI. Khi mô hình đã được lưu vào bộ nhớ cache của trình duyệt, công cụ hoạt động ngoại tuyến (offline) hoàn toàn 100%.",
+      "q4": "Tại sao lần xử lý đầu tiên lại diễn ra chậm hơn?",
+      "a4": "Lần chạy đầu tiên cần khởi tạo AI engine và tải mô hình từ cache cục bộ vào bộ nhớ RAM thiết bị, có thể mất vài giây tùy thuộc vào cấu hình phần cứng của bạn.",
+      "q5": "Hỗ trợ xuất sang những định dạng hình ảnh nào?",
+      "a5": "Bạn có thể tải ảnh đã tách nền dưới định dạng **PNG** (có nền trong suốt), **WebP**, **AVIF**, **JXL** hoặc **JPG** (với nền màu đơn sắc)."
+    }
+  },
+  "downloadDialog": {
+    "title": "Tải xuống Mô hình AI",
+    "modelSource": "Nguồn mô hình",
+    "downloadSize": "Dung lượng tải xuống",
+    "license": "Giấy phép",
+    "privacyTitle": "Quyền riêng tư & Dữ liệu",
+    "privacyDesc": "Mô hình này chạy cục bộ ngay trên trình duyệt của bạn. Hình ảnh của bạn không bao giờ bị gửi đi bất cứ đâu. Imify cung cấp giao diện để khởi chạy mô hình và không phải là bên phân phối trực tiếp.",
+    "internetTitle": "Kết nối Internet",
+    "internetDesc": "Bạn cần có kết nối mạng ổn định cho lần tải đầu tiên. Khi mô hình đã lưu vào cache, bạn có thể sử dụng ngoại tuyến hoàn toàn.",
+    "agreePrompt": "Tôi đồng ý với ",
+    "termsAndLicense": "Điều khoản sử dụng và Giấy phép",
+    "cancel": "Hủy bỏ",
+    "confirmDefault": "Tải xuống & Bắt đầu"
+  }
+}

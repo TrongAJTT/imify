@@ -1,20 +1,26 @@
-import React, { useMemo, useState } from "react"
-import { Check, Edit2, Plus, Trash2 } from "lucide-react"
+import React, { useMemo, useState } from "react";
+import { Check, Edit2, Plus, Trash2, Pin } from "lucide-react";
+import { useTranslation } from "@imify/i18n";
 
-import { SavePresetDialog } from "../processor/save-preset-dialog"
-import { WorkspaceSelectHeader } from "../processor/workspace-select-header"
-import { EmptyDropCard } from "@imify/ui"
-import { SplitterPresetDetail } from "./splitter-preset-detail"
-import type { SavedSplitterPreset } from "@imify/stores/stores/splitter-preset-store"
-import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors"
+import { SavePresetDialog } from "../processor/save-preset-dialog";
+import { WorkspaceSelectHeader } from "../processor/workspace-select-header";
+import { EmptyDropCard } from "@imify/ui";
+import { SplitterPresetDetail } from "./splitter-preset-detail";
+import type { SavedSplitterPreset } from "@imify/stores/stores/splitter-preset-store";
+import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store";
+import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 
 interface SplitterPresetSelectViewProps {
-  presets: SavedSplitterPreset[]
-  activePresetId: string | null
-  onOpenPreset: (presetId: string) => void
-  onCreatePreset: (name: string, color: string) => void
-  onUpdatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
-  onDeletePreset: (presetId: string) => void
+  presets: SavedSplitterPreset[];
+  activePresetId: string | null;
+  onOpenPreset: (presetId: string) => void;
+  onCreatePreset: (name: string, color: string) => void;
+  onUpdatePresetMeta: (payload: {
+    id: string;
+    name: string;
+    highlightColor: string;
+  }) => void;
+  onDeletePreset: (presetId: string) => void;
 }
 
 function SplitterPresetCard({
@@ -22,13 +28,15 @@ function SplitterPresetCard({
   isActive,
   onOpen,
   onEdit,
-  onDelete
+  onDelete,
+  onTogglePin,
 }: {
-  preset: SavedSplitterPreset
-  isActive: boolean
-  onOpen: () => void
-  onEdit: () => void
-  onDelete: () => void
+  preset: SavedSplitterPreset;
+  isActive: boolean;
+  onOpen: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onTogglePin: () => void;
 }) {
   return (
     <div
@@ -37,8 +45,8 @@ function SplitterPresetCard({
       onClick={onOpen}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault()
-          onOpen()
+          event.preventDefault();
+          onOpen();
         }
       }}
       className={`group relative flex flex-col overflow-hidden rounded-lg border text-left transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
@@ -60,11 +68,16 @@ function SplitterPresetCard({
             <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
               {preset.name}
             </span>
+            {preset.pinned && (
+              <Pin size={12} className="mt-0.5 fill-amber-500 text-amber-500 rotate-45 shrink-0" />
+            )}
           </div>
 
           <div className="flex items-center justify-between gap-2 text-[11px]">
             <span className="font-medium text-slate-400 dark:text-slate-500">
-              {new Date(preset.updatedAt || preset.createdAt).toLocaleDateString()}
+              {new Date(
+                preset.updatedAt || preset.createdAt,
+              ).toLocaleDateString()}
             </span>
             {isActive ? (
               <span className="inline-flex items-center gap-1 font-semibold text-cyan-600 dark:text-cyan-400">
@@ -78,15 +91,31 @@ function SplitterPresetCard({
 
       <div
         className="absolute right-2 top-2 z-10 translate-y-1 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
-        style={{ opacity: isActive ? 1 : undefined }}
+        style={{ opacity: isActive || preset.pinned ? 1 : undefined }}
       >
         <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white/90 px-1 py-1 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90">
           <button
             type="button"
             onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onEdit()
+              event.preventDefault();
+              event.stopPropagation();
+              onTogglePin();
+            }}
+            className={`rounded p-1 transition-colors ${
+              preset.pinned
+                ? "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/20"
+                : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+            }`}
+            aria-label={preset.pinned ? "Unpin preset" : "Pin preset"}
+          >
+            <Pin size={12} className={preset.pinned ? "fill-amber-500 rotate-45" : ""} />
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onEdit();
             }}
             className="rounded p-1 text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
             aria-label="Edit preset"
@@ -96,9 +125,9 @@ function SplitterPresetCard({
           <button
             type="button"
             onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onDelete()
+              event.preventDefault();
+              event.stopPropagation();
+              onDelete();
             }}
             className="rounded p-1 text-red-600 transition-colors hover:bg-red-50/90 dark:text-red-400 dark:hover:bg-red-500/20"
             aria-label="Delete preset"
@@ -112,7 +141,7 @@ function SplitterPresetCard({
         <SplitterPresetDetail preset={preset} />
       </div>
     </div>
-  )
+  );
 }
 
 export function SplitterPresetSelectView({
@@ -121,50 +150,61 @@ export function SplitterPresetSelectView({
   onOpenPreset,
   onCreatePreset,
   onUpdatePresetMeta,
-  onDeletePreset
+  onDeletePreset,
 }: SplitterPresetSelectViewProps) {
-  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false)
-  const [editingPreset, setEditingPreset] = useState<SavedSplitterPreset | null>(null)
+  const { t } = useTranslation("splitter");
+  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
+  const [editingPreset, setEditingPreset] =
+    useState<SavedSplitterPreset | null>(null);
+
+  const togglePinPreset = useSplitterPresetStore((state) => state.togglePinPreset);
 
   const sortedPresets = useMemo(
-    () => [...presets].sort((a, b) => b.updatedAt - a.updatedAt),
-    [presets]
-  )
+    () => [...presets].sort((a, b) => {
+      const pinA = a.pinned ? 1 : 0;
+      const pinB = b.pinned ? 1 : 0;
+      if (pinA !== pinB) {
+        return pinB - pinA;
+      }
+      return b.updatedAt - a.updatedAt;
+    }),
+    [presets],
+  );
 
   const openCreateDialog = () => {
-    setEditingPreset(null)
-    setIsSavePresetDialogOpen(true)
-  }
+    setEditingPreset(null);
+    setIsSavePresetDialogOpen(true);
+  };
 
   const openEditDialog = (preset: SavedSplitterPreset) => {
-    setEditingPreset(preset)
-    setIsSavePresetDialogOpen(true)
-  }
+    setEditingPreset(preset);
+    setIsSavePresetDialogOpen(true);
+  };
 
   const handleSavePreset = (name: string, color: string) => {
     if (editingPreset) {
       onUpdatePresetMeta({
         id: editingPreset.id,
         name,
-        highlightColor: color
-      })
-      setEditingPreset(null)
-      setIsSavePresetDialogOpen(false)
-      return
+        highlightColor: color,
+      });
+      setEditingPreset(null);
+      setIsSavePresetDialogOpen(false);
+      return;
     }
 
-    onCreatePreset(name, color)
-    setIsSavePresetDialogOpen(false)
-  }
+    onCreatePreset(name, color);
+    setIsSavePresetDialogOpen(false);
+  };
 
   const confirmDeletePreset = (preset: SavedSplitterPreset) => {
-    const shouldDelete = window.confirm(`Delete preset "${preset.name}"?`)
+    const shouldDelete = window.confirm(t("deleteConfirm", { name: preset.name }));
     if (!shouldDelete) {
-      return
+      return;
     }
 
-    onDeletePreset(preset.id)
-  }
+    onDeletePreset(preset.id);
+  };
 
   return (
     <div className="p-0">
@@ -172,15 +212,15 @@ export function SplitterPresetSelectView({
         <EmptyDropCard
           icon={<Plus size={28} className="text-cyan-500" />}
           iconWrapperClassName="bg-cyan-100 dark:bg-cyan-900/30 border-transparent shadow-none"
-          title="No splitter presets yet"
-          subtitle="Create your first preset to start splitting images"
+          title={t("noPresetsTitle")}
+          subtitle={t("noPresetsSubtitle")}
           onClick={openCreateDialog}
         />
       ) : (
         <>
           <WorkspaceSelectHeader
-            title="Image Splitter Presets"
-            createLabel="New Preset"
+            title={t("title")}
+            createLabel={t("newPreset")}
             onCreate={openCreateDialog}
             createIcon={<Plus size={14} />}
           />
@@ -194,6 +234,7 @@ export function SplitterPresetSelectView({
                 onOpen={() => onOpenPreset(preset.id)}
                 onEdit={() => openEditDialog(preset)}
                 onDelete={() => confirmDeletePreset(preset)}
+                onTogglePin={() => togglePinPreset(preset.id)}
               />
             ))}
           </div>
@@ -203,24 +244,21 @@ export function SplitterPresetSelectView({
       <SavePresetDialog
         isOpen={isSavePresetDialogOpen}
         onClose={() => {
-          setIsSavePresetDialogOpen(false)
-          setEditingPreset(null)
+          setIsSavePresetDialogOpen(false);
+          setEditingPreset(null);
         }}
         onSave={handleSavePreset}
         highlightColors={[...PRESET_HIGHLIGHT_COLORS]}
-        title={editingPreset ? "Edit Splitter Preset" : "Save Splitter Preset"}
+        title={editingPreset ? t("editSplitterPreset") : t("saveSplitterPreset")}
         defaultName={
           editingPreset
             ? editingPreset.name
-            : `Splitter Preset ${new Date().toLocaleTimeString([], {
+            : `${t("splitterPresetPrefix")} ${new Date().toLocaleTimeString([], {
                 hour: "2-digit",
-                minute: "2-digit"
+                minute: "2-digit",
               })}`
         }
       />
     </div>
-  )
+  );
 }
-
-
-

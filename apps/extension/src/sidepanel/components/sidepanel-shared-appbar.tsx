@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "@imify/ui/ui/button"
 import { MutedText, Subheading } from "@imify/ui/ui/typography"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
+import { useTranslation } from "@imify/i18n"
 
 export type SidepanelView = "inspector" | "audit"
 
@@ -26,6 +27,7 @@ export function SidepanelSharedAppbar({
   title,
   subtitle
 }: SidepanelSharedAppbarProps) {
+  const { t } = useTranslation("workspace")
   const [isViewMenuOpen, setIsViewMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
 
@@ -60,7 +62,7 @@ export function SidepanelSharedAppbar({
                 type="button"
                 onClick={() => setIsViewMenuOpen((current) => !current)}
                 className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                aria-label="Change sidepanel view"
+                aria-label={t("sidepanel.changeView", "Change sidepanel view")}
               >
                 <ChevronDown size={13} />
               </button>
@@ -77,7 +79,7 @@ export function SidepanelSharedAppbar({
                     setIsViewMenuOpen(false)
                   }}
                 >
-                  Lite Inspector
+                  {t("sidepanel.menuInspector", "Lite Inspector")}
                   {activeView === "inspector" ? <Check size={12} /> : null}
                 </button>
                 <button
@@ -88,7 +90,7 @@ export function SidepanelSharedAppbar({
                     setIsViewMenuOpen(false)
                   }}
                 >
-                  SEO Audit
+                  {t("sidepanel.menuAudit", "SEO Audit")}
                   {activeView === "audit" ? <Check size={12} /> : null}
                 </button>
               </div>
@@ -102,8 +104,8 @@ export function SidepanelSharedAppbar({
             size="icon"
             className="h-8 w-8"
             onClick={onToggleDarkMode}
-            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            title={isDark ? t("popup.lightMode", "Switch to light mode") : t("popup.darkMode", "Switch to dark mode")}
+            aria-label={isDark ? t("popup.lightMode", "Switch to light mode") : t("popup.darkMode", "Switch to dark mode")}
           >
             {isDark ? <Sun size={15} /> : <Moon size={15} />}
           </Button>
@@ -113,8 +115,8 @@ export function SidepanelSharedAppbar({
             size="icon"
             className="h-8 w-8"
             onClick={onOpenOptions}
-            title="Open full feature list"
-            aria-label="Open full feature list"
+            title={t("popup.fullList", "Open full feature list")}
+            aria-label={t("popup.fullList", "Open full feature list")}
           >
             <Expand size={15} />
           </Button>

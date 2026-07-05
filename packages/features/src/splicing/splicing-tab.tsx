@@ -13,6 +13,7 @@ import { buildResizeQuickStatsFromDimensions } from "@imify/core/resize-quick-st
 import { ToastContainer, useRenameInputPrompt } from "@imify/ui";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
+import { useTranslation } from "@imify/i18n";
 import { useSplicingExport } from "./use-splicing-export";
 import type {
   SplicingImageItem,
@@ -89,6 +90,7 @@ function buildGridStatsLabel(
   primary: SplicingDirection,
   secondary: SplicingDirection,
   layout: LayoutResult | null,
+  t: (key: string, options?: any) => string,
 ): string | null {
   if (!layout || layout.groups.length === 0) return null;
 
@@ -100,21 +102,39 @@ function buildGridStatsLabel(
     const isFixedVertical =
       primary === "horizontal" && secondary === "vertical";
     if (isVerticalFlow || isFixedVertical) {
-      return `${groupCount} column${groupCount === 1 ? "" : "s"}`;
+      return groupCount === 1
+        ? `1 ${t("workspace.statsColumn")}`
+        : `${groupCount} ${t("workspace.statsColumns")}`;
     }
-    return `${groupCount} row${groupCount === 1 ? "" : "s"} × ${perGroupMax} column${perGroupMax === 1 ? "" : "s"}`;
+    const rowText =
+      groupCount === 1 ? t("workspace.statsRow") : t("workspace.statsRows");
+    const colText =
+      perGroupMax === 1
+        ? t("workspace.statsColumn")
+        : t("workspace.statsColumns");
+    return `${groupCount} ${rowText} × ${perGroupMax} ${colText}`;
   }
 
   if (preset === "stitch_vertical") {
-    return `${perGroupMax} row${perGroupMax === 1 ? "" : "s"}`;
+    return perGroupMax === 1
+      ? `1 ${t("workspace.statsRow")}`
+      : `${perGroupMax} ${t("workspace.statsRows")}`;
   }
 
   if (preset === "stitch_horizontal") {
-    return `${perGroupMax} column${perGroupMax === 1 ? "" : "s"}`;
+    return perGroupMax === 1
+      ? `1 ${t("workspace.statsColumn")}`
+      : `${perGroupMax} ${t("workspace.statsColumns")}`;
   }
 
   if (preset === "grid") {
-    return `${groupCount} row${groupCount === 1 ? "" : "s"} × ${perGroupMax} column${perGroupMax === 1 ? "" : "s"}`;
+    const rowText =
+      groupCount === 1 ? t("workspace.statsRow") : t("workspace.statsRows");
+    const colText =
+      perGroupMax === 1
+        ? t("workspace.statsColumn")
+        : t("workspace.statsColumns");
+    return `${groupCount} ${rowText} × ${perGroupMax} ${colText}`;
   }
 
   return null;
@@ -147,6 +167,7 @@ export function SplicingTab({
   onRegisterPreviewQualityChangeHandler,
   onRootClick,
 }: SplicingTabProps) {
+  const { t } = useTranslation("splicing");
   const [images, setImages] = useState<SplicingImageItem[]>([]);
   const [isExporting, setIsExporting] = useState(false);
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
@@ -374,11 +395,11 @@ export function SplicingTab({
       };
       pushPreviewQualityToast({
         id: toastId,
-        fileName: `Preview quality ${next}%`,
+        fileName: t("toasts.previewQualityToast", { percent: next }),
         targetFormat: exportSettings.targetFormat,
         status: "processing",
         percent: 5,
-        message: "Rebuilding preview images...",
+        message: t("toasts.previewQualityMsg"),
       });
     },
     [
@@ -478,11 +499,11 @@ export function SplicingTab({
       if (shouldShowProgress) {
         pushImportToast({
           id: toastId,
-          fileName: `Importing ${imageFiles.length} images`,
+          fileName: t("toasts.importing", { count: imageFiles.length }),
           targetFormat: exportSettings.targetFormat,
           status: "processing",
           percent: 5,
-          message: "Preparing image import...",
+          message: t("toasts.importPrep"),
         });
       }
 
@@ -511,11 +532,14 @@ export function SplicingTab({
           );
           pushImportToast({
             id: toastId,
-            fileName: `Importing ${imageFiles.length} images`,
+            fileName: t("toasts.importing", { count: imageFiles.length }),
             targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent,
-            message: `Creating thumbnails ${processedCount}/${imageFiles.length}...`,
+            message: t("toasts.importThumb", {
+              completed: processedCount,
+              total: imageFiles.length,
+            }),
           });
         }
       }
@@ -524,11 +548,11 @@ export function SplicingTab({
         if (shouldShowProgress) {
           pushImportToast({
             id: toastId,
-            fileName: "Image import failed",
+            fileName: t("toasts.importFailed"),
             targetFormat: exportSettings.targetFormat,
             status: "error",
             percent: 100,
-            message: "No valid images were imported.",
+            message: t("toasts.importFailedDesc"),
           });
           importToastHideTimerRef.current = setTimeout(() => {
             setImportToastPayload((current) =>
@@ -543,11 +567,11 @@ export function SplicingTab({
       if (shouldShowProgress) {
         pushImportToast({
           id: toastId,
-          fileName: `Importing ${imageFiles.length} images`,
+          fileName: t("toasts.importing", { count: imageFiles.length }),
           targetFormat: exportSettings.targetFormat,
           status: "processing",
           percent: 85,
-          message: "Rendering preview canvas...",
+          message: t("toasts.importRender"),
         });
       }
 
@@ -568,7 +592,7 @@ export function SplicingTab({
         pendingRenderRef.current = null;
       }
     },
-    [exportSettings.targetFormat, previewShowImageNumber, pushImportToast],
+    [exportSettings.targetFormat, previewShowImageNumber, pushImportToast, t],
   );
 
   const finalizeImportToast = useCallback(
@@ -576,11 +600,11 @@ export function SplicingTab({
       pendingRenderRef.current = null;
       pushImportToast({
         id: toastId,
-        fileName: "Image import complete",
+        fileName: t("toasts.importComplete"),
         targetFormat: exportSettings.targetFormat,
         status: "success",
         percent: 100,
-        message: `Imported and rendered ${imageCount} images.`,
+        message: t("toasts.importCompleteDesc", { count: imageCount }),
       });
 
       importToastHideTimerRef.current = setTimeout(() => {
@@ -590,7 +614,7 @@ export function SplicingTab({
         importToastHideTimerRef.current = null;
       }, 2500);
     },
-    [exportSettings.targetFormat, pushImportToast],
+    [exportSettings.targetFormat, pushImportToast, t],
   );
 
   const finalizePreviewQualityToast = useCallback(
@@ -598,11 +622,11 @@ export function SplicingTab({
       previewQualityRenderRef.current = null;
       pushPreviewQualityToast({
         id: toastId,
-        fileName: `Preview quality ${qualityPercent}%`,
+        fileName: t("toasts.previewQualityToast", { percent: qualityPercent }),
         targetFormat: exportSettings.targetFormat,
         status: "success",
         percent: 100,
-        message: "Preview updated.",
+        message: t("toasts.previewUpdated"),
       });
 
       previewQualityToastHideTimerRef.current = setTimeout(() => {
@@ -612,7 +636,7 @@ export function SplicingTab({
         previewQualityToastHideTimerRef.current = null;
       }, 2500);
     },
-    [exportSettings.targetFormat, pushPreviewQualityToast],
+    [exportSettings.targetFormat, pushPreviewQualityToast, t],
   );
 
   const handlePreviewSourcesProgress = useCallback(
@@ -625,17 +649,22 @@ export function SplicingTab({
       const percent = Math.min(88, 5 + Math.round(ratio * 83));
       pushPreviewQualityToast({
         id: pending.toastId,
-        fileName: `Preview quality ${pending.qualityPercent}%`,
+        fileName: t("toasts.previewQualityToast", {
+          percent: pending.qualityPercent,
+        }),
         targetFormat: exportSettings.targetFormat,
         status: "processing",
         percent,
         message:
           p.total > 0
-            ? `Scaling images ${p.completed}/${p.total}...`
-            : "Rebuilding preview images...",
+            ? t("toasts.previewScale", {
+                completed: p.completed,
+                total: p.total,
+              })
+            : t("toasts.previewQualityMsg"),
       });
     },
-    [exportSettings.targetFormat, pushPreviewQualityToast],
+    [exportSettings.targetFormat, pushPreviewQualityToast, t],
   );
 
   const handlePreviewRendered = useCallback(
@@ -648,11 +677,13 @@ export function SplicingTab({
         } else {
           pushImportToast({
             id: importPending.toastId,
-            fileName: `Importing ${importPending.expectedCount} images`,
+            fileName: t("toasts.importing", {
+              count: importPending.expectedCount,
+            }),
             targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent: 90,
-            message: "Preparing image numbers...",
+            message: t("toasts.importNumbers"),
           });
         }
       }
@@ -668,11 +699,13 @@ export function SplicingTab({
         } else {
           pushPreviewQualityToast({
             id: qualityPending.toastId,
-            fileName: `Preview quality ${qualityPending.qualityPercent}%`,
+            fileName: t("toasts.previewQualityToast", {
+              percent: qualityPending.qualityPercent,
+            }),
             targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent: 90,
-            message: "Preparing image numbers...",
+            message: t("toasts.importNumbers"),
           });
         }
       }
@@ -683,6 +716,7 @@ export function SplicingTab({
       finalizePreviewQualityToast,
       pushImportToast,
       pushPreviewQualityToast,
+      t,
     ],
   );
 
@@ -700,11 +734,16 @@ export function SplicingTab({
           const percent = Math.min(99, 90 + Math.round(ratio * 9));
           pushImportToast({
             id: importPending.toastId,
-            fileName: `Importing ${importPending.expectedCount} images`,
+            fileName: t("toasts.importing", {
+              count: importPending.expectedCount,
+            }),
             targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent,
-            message: `Preparing image numbers ${payload.completed}/${payload.total}...`,
+            message: t("toasts.importNumbersProg", {
+              completed: payload.completed,
+              total: payload.total,
+            }),
           });
         } else {
           importPending.numberingDone = true;
@@ -725,11 +764,16 @@ export function SplicingTab({
           const percent = Math.min(99, 90 + Math.round(ratio * 9));
           pushPreviewQualityToast({
             id: qualityPending.toastId,
-            fileName: `Preview quality ${qualityPending.qualityPercent}%`,
+            fileName: t("toasts.previewQualityToast", {
+              percent: qualityPending.qualityPercent,
+            }),
             targetFormat: exportSettings.targetFormat,
             status: "processing",
             percent,
-            message: `Preparing image numbers ${payload.completed}/${payload.total}...`,
+            message: t("toasts.importNumbersProg", {
+              completed: payload.completed,
+              total: payload.total,
+            }),
           });
         } else {
           qualityPending.numberingDone = true;
@@ -842,8 +886,9 @@ export function SplicingTab({
         primaryDirection,
         secondaryDirection,
         layoutResult,
+        t,
       ),
-    [preset, primaryDirection, secondaryDirection, layoutResult],
+    [preset, primaryDirection, secondaryDirection, layoutResult, t],
   );
   const dimensionLabel = layoutResult
     ? `${layoutResult.canvasWidth} x ${layoutResult.canvasHeight} px${
@@ -855,7 +900,7 @@ export function SplicingTab({
       {hasImages ? (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
           <div className="min-w-0">
-            <Subheading className="truncate">Image Splicing</Subheading>
+            <Subheading className="truncate">{t("workspace.title")}</Subheading>
             {dimensionLabel && (
               <MutedText className="text-xs mt-0.5 truncate">
                 {dimensionLabel}
@@ -878,7 +923,7 @@ export function SplicingTab({
                 disabled={isExporting}
               >
                 <Trash2 size={14} />
-                Clear
+                {t("workspace.clear")}
               </Button>
               <ExportSplitButton
                 onExport={handleExportAction}

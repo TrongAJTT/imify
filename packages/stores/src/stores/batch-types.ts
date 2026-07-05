@@ -42,6 +42,7 @@ export interface BatchWatermarkConfig {
   textColor: string
   textScalePercent: number
   textRotationDeg?: number
+  fontFamily?: string
   logoDataUrl?: string
   logoBlobId?: string
   logoScalePercent: number

@@ -10,8 +10,10 @@ import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { Expand, Moon, Sun, X } from "lucide-react"
 import { Button } from "@imify/ui/ui/button"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
+import { initI18n, useTranslation } from "@imify/i18n"
 
 bootstrapExtensionAdapters()
+initI18n()
 
 function toErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message.trim().length > 0) {
@@ -41,6 +43,7 @@ async function openSidePanelLite(panel: "inspector" | "audit"): Promise<void> {
 }
 
 export function PopupApp() {
+  const { t } = useTranslation("workspace")
   const { isDark, toggleDarkMode } = useImifyDarkMode()
   const { isRunning, error, runAudit } = useSeoAudit()
   const [actionError, setActionError] = useState<string | null>(null)
@@ -55,7 +58,7 @@ export function PopupApp() {
       await openSidePanelLite("audit")
       window.close()
     } catch (error) {
-      setActionError(toErrorMessage(error, "Failed to scan current page for SEO audit."))
+      setActionError(toErrorMessage(error, t("popup.scanError", "Failed to scan current page for SEO audit.")))
     }
   }
 
@@ -66,7 +69,7 @@ export function PopupApp() {
       await openSidePanelLite("inspector")
       window.close()
     } catch (error) {
-      setActionError(toErrorMessage(error, "Failed to open Side Panel Lite Inspector."))
+      setActionError(toErrorMessage(error, t("popup.inspectorError", "Failed to open Side Panel Lite Inspector.")))
     }
   }
 
@@ -77,7 +80,7 @@ export function PopupApp() {
       await chrome.runtime.openOptionsPage()
       window.close()
     } catch (error) {
-      setActionError(toErrorMessage(error, "Failed to open settings page."))
+      setActionError(toErrorMessage(error, t("popup.settingsError", "Failed to open settings page.")))
     }
   }
 
@@ -93,7 +96,7 @@ export function PopupApp() {
             />
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">Imify</div>
-              <div className="truncate text-[11px] text-slate-500 dark:text-slate-400">Powerful Image Toolkit</div>
+              <div className="truncate text-[11px] text-slate-500 dark:text-slate-400">{t("popup.subtitle", "Powerful Image Toolkit")}</div>
             </div>
           </div>
 
@@ -103,8 +106,8 @@ export function PopupApp() {
               size="icon"
               className="h-8 w-8"
               onClick={toggleDarkMode}
-              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              title={isDark ? t("popup.lightMode", "Switch to light mode") : t("popup.darkMode", "Switch to dark mode")}
+              aria-label={isDark ? t("popup.lightMode", "Switch to light mode") : t("popup.darkMode", "Switch to dark mode")}
             >
               {isDark ? <Sun size={15} /> : <Moon size={15} />}
             </Button>
@@ -114,8 +117,8 @@ export function PopupApp() {
               size="icon"
               className="h-8 w-8"
               onClick={() => void handleOpenSettings()}
-              title="Open full feature list"
-              aria-label="Open full feature list"
+              title={t("popup.fullList", "Open full feature list")}
+              aria-label={t("popup.fullList", "Open full feature list")}
             >
               <Expand size={15} />
             </Button>
@@ -125,8 +128,8 @@ export function PopupApp() {
               size="icon"
               className="h-8 w-8"
               onClick={() => window.close()}
-              title="Close popup"
-              aria-label="Close popup"
+              title={t("popup.close", "Close popup")}
+              aria-label={t("popup.close", "Close popup")}
             >
               <X size={15} />
             </Button>
@@ -135,7 +138,7 @@ export function PopupApp() {
 
         <div className="px-2.5 pt-2.5">
           <p className="px-1 text-[18px] text-slate-500 dark:text-slate-400">
-            Choose an action for this page.
+            {t("popup.chooseAction", "Choose an action for this page.")}
           </p>
         </div>
 

@@ -21,12 +21,13 @@ import {
   Tooltip,
   cn,
 } from "@imify/ui";
-import { useQrReaderStore } from "@imify/stores";
+import { useQrReaderStore, useWorkspaceHeaderStore } from "@imify/stores";
 import {
   COMMON_IMAGE_ACCEPT_WITH_SVG,
   isCommonImageFile,
 } from "../shared/image-file-utils";
 import { useToast } from "@imify/core/hooks/use-toast";
+import { useTranslation } from "@imify/i18n";
 
 // Helper function to extract and crop the QR code image from a source canvas
 function extractQrImage(
@@ -80,9 +81,104 @@ function extractQrImage(
   return canvas.toDataURL("image/png");
 }
 
+function scanQrCodeWithPreprocessing(
+  canvas: HTMLCanvasElement,
+  inversionAttempts: "dontInvert" | "onlyInvert" | "attemptBoth" | "invertFirst" = "attemptBoth"
+) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Attempt 1: Raw Scan
+  let imageData = ctx.getImageData(0, 0, w, h);
+  let code = jsQR(imageData.data, w, h, { inversionAttempts });
+  if (code && code.data) {
+    return { code, canvas };
+  }
+
+  // Attempt 2: Scale Down if too large (> 1000px)
+  if (w > 1000 || h > 1000) {
+    const maxDim = 800;
+    const scale = Math.min(maxDim / w, maxDim / h);
+    const scaledW = Math.round(w * scale);
+    const scaledH = Math.round(h * scale);
+
+    const scaledCanvas = document.createElement("canvas");
+    scaledCanvas.width = scaledW;
+    scaledCanvas.height = scaledH;
+    const scaledCtx = scaledCanvas.getContext("2d");
+    if (scaledCtx) {
+      scaledCtx.drawImage(canvas, 0, 0, scaledW, scaledH);
+      const scaledData = scaledCtx.getImageData(0, 0, scaledW, scaledH);
+      code = jsQR(scaledData.data, scaledW, scaledH, { inversionAttempts });
+      if (code && code.data) {
+        return { code, canvas: scaledCanvas };
+      }
+    }
+  }
+
+  const applyThreshold = (imgData: ImageData, thresh: number) => {
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i];
+      const g = d[i + 1];
+      const b = d[i + 2];
+      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+      const v = gray >= thresh ? 255 : 0;
+      d[i] = v;
+      d[i + 1] = v;
+      d[i + 2] = v;
+    }
+  };
+
+  // Attempt 3: Binarization (Threshold 128)
+  const prepCanvas = document.createElement("canvas");
+  prepCanvas.width = w;
+  prepCanvas.height = h;
+  const prepCtx = prepCanvas.getContext("2d");
+  if (prepCtx) {
+    prepCtx.putImageData(imageData, 0, 0);
+    const prepData = prepCtx.getImageData(0, 0, w, h);
+    applyThreshold(prepData, 128);
+    prepCtx.putImageData(prepData, 0, 0);
+    code = jsQR(prepData.data, w, h, { inversionAttempts });
+    if (code && code.data) {
+      return { code, canvas: prepCanvas };
+    }
+  }
+
+  // Attempt 4: Binarization (Threshold 180)
+  if (prepCtx) {
+    const prepData = ctx.getImageData(0, 0, w, h);
+    applyThreshold(prepData, 180);
+    prepCtx.putImageData(prepData, 0, 0);
+    code = jsQR(prepData.data, w, h, { inversionAttempts });
+    if (code && code.data) {
+      return { code, canvas: prepCanvas };
+    }
+  }
+
+  // Attempt 5: Binarization (Threshold 80)
+  if (prepCtx) {
+    const prepData = ctx.getImageData(0, 0, w, h);
+    applyThreshold(prepData, 80);
+    prepCtx.putImageData(prepData, 0, 0);
+    code = jsQR(prepData.data, w, h, { inversionAttempts });
+    if (code && code.data) {
+      return { code, canvas: prepCanvas };
+    }
+  }
+
+  return null;
+}
+
 export function QrReaderWorkspace() {
+  const { t } = useTranslation("qrReader");
   const { hasCamera, setHasCamera, lastScanResult, setLastScanResult } =
     useQrReaderStore();
+  const setIsMobileSidebarOpen = useWorkspaceHeaderStore((s) => s.setIsMobileSidebarOpen);
 
   const { toasts, success, error, hide } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -154,17 +250,12 @@ export function QrReaderWorkspace() {
       .then((stream) => {
         setCameraStream(stream);
         setIsScreenShare(false);
-        success("Camera Scan Started", "Align QR code to scan.");
+        success(t("workspace.cameraStarted"), t("workspace.cameraAlign"));
       })
       .catch((err) => {
         console.error("Camera access failed:", err);
-        setCameraError(
-          "Camera access denied or unavailable. Please check permissions.",
-        );
-        error(
-          "Camera Error",
-          "Could not access the camera. Please check permissions.",
-        );
+        setCameraError(t("workspace.cameraDenied"));
+        error(t("workspace.cameraError"), t("workspace.cameraFail"));
       });
   };
 
@@ -179,13 +270,10 @@ export function QrReaderWorkspace() {
 
       setCameraStream(stream);
       setIsScreenShare(true);
-      success(
-        "Screen Capture Started",
-        "Select the window or screen containing a QR code.",
-      );
+      success(t("workspace.screenStarted"), t("workspace.screenSelect"));
     } catch (err) {
       console.error("DisplayMedia capture failed:", err);
-      error("Capture Failed", "Could not start screen capture.");
+      error(t("workspace.captureFailed"), t("workspace.captureError"));
     }
   };
 
@@ -206,18 +294,19 @@ export function QrReaderWorkspace() {
 
         if (ctx) {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: "dontInvert",
-          });
+          const result = scanQrCodeWithPreprocessing(canvas, "dontInvert");
 
-          if (code && code.data) {
+          if (result && result.code && result.code.data) {
+            const { code, canvas: decodedCanvas } = result;
             setLastScanResult(code.data);
-            success("Scanned successfully", "QR Code decoded!");
+            success(t("workspace.scannedSuccess"), t("workspace.decodedSuccess"));
 
             // Extract QR image using helper function
-            setScannedQrImage(extractQrImage(canvas, code.location));
+            setScannedQrImage(extractQrImage(decodedCanvas, code.location));
             stopCamera();
+            setTimeout(() => {
+              setIsMobileSidebarOpen(true);
+            }, 1000);
             return; // Stop loop
           }
         }
@@ -257,26 +346,29 @@ export function QrReaderWorkspace() {
 
         if (ctx) {
           ctx.drawImage(img, 0, 0);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
+          const result = scanQrCodeWithPreprocessing(canvas, "attemptBoth");
 
-          if (code && code.data) {
+          if (result && result.code && result.code.data) {
+            const { code, canvas: decodedCanvas } = result;
             setLastScanResult(code.data);
-            success("Scanned successfully", "QR Code decoded from image file!");
+            success(t("workspace.scannedSuccess"), t("workspace.decodedFileSuccess"));
 
             // Extract QR image using helper function
-            setScannedQrImage(extractQrImage(canvas, code.location));
+            setScannedQrImage(extractQrImage(decodedCanvas, code.location));
+            setTimeout(() => {
+              setIsMobileSidebarOpen(true);
+            }, 1000);
           } else {
             error(
-              "Scan Failed",
-              "No valid QR code was detected in the uploaded image.",
+              t("workspace.scanFailed"),
+              t("workspace.noQrDetected"),
             );
           }
         }
         setIsAnalyzing(false);
       };
       img.onerror = () => {
-        error("Error", "Could not load image file.");
+        error(t("workspace.errorHeader"), t("workspace.loadFailed"));
         setIsAnalyzing(false);
       };
       img.src = result;
@@ -291,7 +383,7 @@ export function QrReaderWorkspace() {
     if (isCommonImageFile(file) || file.name.toLowerCase().endsWith(".svg")) {
       handleScanFile(file);
     } else {
-      error("Unsupported Format", "Please upload a valid image or SVG file.");
+      error(t("workspace.unsupportedFormat"), t("workspace.uploadValid"));
     }
   };
 
@@ -301,11 +393,11 @@ export function QrReaderWorkspace() {
       .writeText(lastScanResult)
       .then(() => {
         setCopied(true);
-        success("Copied", "Copied raw data to clipboard");
+        success(t("workspace.copied"), t("workspace.copiedSuccess"));
         setTimeout(() => setCopied(false), 2000);
       })
       .catch(() => {
-        error("Error", "Failed to copy to clipboard");
+        error(t("workspace.errorHeader"), t("workspace.copyFailed"));
       });
   };
 
@@ -321,9 +413,8 @@ export function QrReaderWorkspace() {
   const cardItems = [
     {
       id: "import",
-      title: "File Import",
-      description:
-        "Drag & drop or click to upload PNG, JPG, or SVG images containing a QR code",
+      title: t("workspace.import.title"),
+      description: t("workspace.import.description"),
       icon: <Upload size={32} />,
       styles: {
         borderHover: "hover:border-blue-500/50 hover:shadow-blue-500/5",
@@ -336,11 +427,11 @@ export function QrReaderWorkspace() {
     },
     {
       id: "camera",
-      title: "Camera Scan",
+      title: t("workspace.camera.title"),
       description:
         hasCamera === false
-          ? "No camera device detected on this system"
-          : "Use your webcam or device camera to scan in real-time",
+          ? t("workspace.camera.noDevice")
+          : t("workspace.camera.description"),
       icon: <Camera size={32} />,
       styles: {
         borderHover: "hover:border-emerald-500/50 hover:shadow-emerald-500/5",
@@ -352,9 +443,8 @@ export function QrReaderWorkspace() {
     },
     {
       id: "screen",
-      title: "Screen Capture",
-      description:
-        "Scan a QR code from another active window, application or screen",
+      title: t("workspace.screen.title"),
+      description: t("workspace.screen.description"),
       icon: <Monitor size={32} />,
       styles: {
         borderHover: "hover:border-indigo-500/50 hover:shadow-indigo-500/5",
@@ -370,14 +460,14 @@ export function QrReaderWorkspace() {
       {/* Workspace Header Actions */}
       <div className="shrink-0 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Subheading>QR Code Reader</Subheading>
+          <Subheading>{t("workspace.heading")}</Subheading>
           {!lastScanResult && cameraStream && (
             <SecondaryButton
               onClick={stopCamera}
               className="text-xs h-8 flex items-center gap-1.5 px-3 animate-in fade-in-50 slide-in-from-left-4 duration-300"
             >
               <ArrowLeft size={13} />
-              Stop Scanning
+              {t("workspace.stopScanning")}
             </SecondaryButton>
           )}
         </div>
@@ -391,7 +481,7 @@ export function QrReaderWorkspace() {
               className="text-xs h-8 flex items-center gap-1.5 px-3"
             >
               <RotateCcw size={13} />
-              Scan Again
+              {t("workspace.scanAgain")}
             </SecondaryButton>
           </div>
         )}
@@ -403,7 +493,7 @@ export function QrReaderWorkspace() {
           <div className="w-full max-w-2xl bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 flex flex-col md:flex-row gap-6 items-center animate-in zoom-in-95 duration-200">
             {/* Left: Extracted QR Code Image */}
             <div className="flex flex-col items-center gap-3 shrink-0">
-              <Kicker>Extracted QR Code</Kicker>
+              <Kicker>{t("workspace.extractedCode")}</Kicker>
               <div className="h-40 w-40 border border-slate-200 dark:border-slate-850 bg-slate-50 dark:bg-slate-900 rounded-xl p-3 flex items-center justify-center shadow-inner">
                 {scannedQrImage ? (
                   <img
@@ -425,13 +515,13 @@ export function QrReaderWorkspace() {
               <div className="relative group flex flex-col w-full">
                 <TextArea
                   readOnly
-                  label="Raw Data"
+                  label={t("workspace.rawData")}
                   value={lastScanResult}
                   onChange={() => {}}
                   rows={5}
                   className="w-full font-mono text-xs"
                 />
-                <Tooltip content="Copy Raw Content">
+                <Tooltip content={t("workspace.copyRaw")}>
                   <button
                     type="button"
                     onClick={copyRawContent}
@@ -454,7 +544,7 @@ export function QrReaderWorkspace() {
                   className="text-xs h-9 px-6 flex items-center gap-1.5"
                 >
                   <RotateCcw size={14} />
-                  Scan Another Code
+                  {t("workspace.scanAnother")}
                 </Button>
               </div>
             </div>
@@ -489,8 +579,8 @@ export function QrReaderWorkspace() {
                 <div className="absolute bottom-4 left-0 right-0 text-center">
                   <MutedText className="inline-flex rounded-full bg-black/60 px-3 py-1 text-[11px] font-medium text-white/90 backdrop-blur-sm border-0">
                     {isScreenShare
-                      ? "Align the window with QR code within frame"
-                      : "Align QR code within the dashed frame to scan"}
+                      ? t("workspace.alignWindow")
+                      : t("workspace.alignQr")}
                   </MutedText>
                 </div>
               </>

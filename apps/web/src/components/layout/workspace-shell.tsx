@@ -10,6 +10,7 @@ import {
   WORKSPACE_LAYOUT_PREFERENCES_KEY
 } from "@imify/features/workspace-shell"
 import { BottomSheet } from "@imify/ui"
+import { useWorkspaceHeaderStore } from "@imify/stores"
 
 interface WorkspaceShellProps {
   children: React.ReactNode
@@ -38,7 +39,8 @@ export function WorkspaceShell({ children, rightSidebar, title = "Configuration"
   const [sidebarWidth, setSidebarWidth] = useState<number>(
     getConfigurationSidebarWidthPx(DEFAULT_WORKSPACE_LAYOUT_PREFERENCES.configurationSidebarLevel)
   )
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
+  const isMobileSidebarOpen = useWorkspaceHeaderStore((s) => s.isMobileSidebarOpen)
+  const setIsMobileSidebarOpen = useWorkspaceHeaderStore((s) => s.setIsMobileSidebarOpen)
   const hasRightSidebar = Boolean(rightSidebar)
   
   const showMainPanel = true 
@@ -53,6 +55,7 @@ export function WorkspaceShell({ children, rightSidebar, title = "Configuration"
     update()
     window.addEventListener(LAYOUT_PREFERENCES_EVENT, update)
     window.addEventListener("storage", update)
+
     return () => {
       window.removeEventListener(LAYOUT_PREFERENCES_EVENT, update)
       window.removeEventListener("storage", update)
@@ -93,8 +96,8 @@ export function WorkspaceShell({ children, rightSidebar, title = "Configuration"
       {!isDesktop && hasRightSidebar && (
         <>
           <BottomSheet 
-            isOpen={isBottomSheetOpen} 
-            onClose={() => setIsBottomSheetOpen(false)}
+            isOpen={isMobileSidebarOpen} 
+            onClose={() => setIsMobileSidebarOpen(false)}
             title={title}
           >
             <div className="h-full overflow-auto">
@@ -112,7 +115,7 @@ export function WorkspaceShell({ children, rightSidebar, title = "Configuration"
           {/* Persistent Trigger Bar at bottom - Compact Version */}
           <button
             type="button"
-            onClick={() => setIsBottomSheetOpen(true)}
+            onClick={() => setIsMobileSidebarOpen(true)}
             className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 rounded-t-2xl px-6 pb-2 pt-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] transition-transform active:translate-y-0.5"
           >
             <div className="w-8 h-1 rounded-full bg-slate-200 dark:bg-slate-800 mb-1.5" />

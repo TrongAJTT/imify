@@ -1,0 +1,20 @@
+{
+  "title": "Imify",
+  "subtitle": "Bộ công cụ xử lý ảnh mạnh mẽ",
+  "devModeOn": "DEV MODE BẬT",
+  "aboutTitle": "Về dự án",
+  "aboutText1": "Imify được ra đời từ một nhu cầu đơn giản: Xử lý ảnh <1>Ưu tiên Quyền riêng tư</1>. Không giống như các trình chuyển đổi trực tuyến tải dữ liệu của bạn lên máy chủ từ xa, Imify xử lý mọi byte dữ liệu <2>cục bộ</2> ngay trong bộ nhớ trình duyệt của bạn.",
+  "aboutText2": "Được xây dựng cho các nhà phát triển, nhà thiết kế và những người đam mê quyền riêng tư cần định dạng hình ảnh nhanh chóng, đáng tin cậy và an toàn mà không phải đánh đổi.",
+  "techTitle": "Công nghệ cốt lõi",
+  "linksTitle": "Liên kết nhanh & Hỗ trợ",
+  "officialWebsite": "Trang web chính thức",
+  "githubRepository": "Kho lưu trữ GitHub",
+  "sponsorAuthor": "Tài trợ Tác giả",
+  "attribution": "Ghi nhận công lao",
+  "moreApps": "Ứng dụng khác",
+  "reportBug": "Báo cáo lỗi",
+  "craftedBy": "Được thiết kế với tâm huyết bởi",
+  "whatsNew": "Có gì mới",
+  "termsOfUse": "Điều khoản sử dụng",
+  "privacyPolicy": "Chính sách bảo mật"
+}

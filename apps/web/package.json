@@ -9,9 +9,10 @@
   "scripts": {
     "check:media-assets": "node ../../scripts/check-media-asset-paths.mjs",
     "sync:features": "node ../../scripts/sync-shared-assets.mjs",
-    "sync:assets": "pnpm sync:features && pnpm check:media-assets",
-    "dev": "node ../../scripts/with-root-metadata.mjs next dev",
-    "build": "node ../../scripts/with-root-metadata.mjs next build",
+    "sync:locales": "node ../../scripts/sync-locales.mjs",
+    "sync:assets": "pnpm sync:features && pnpm sync:locales && pnpm check:media-assets",
+    "dev": "node ../../scripts/sync-locales.mjs && node ../../scripts/with-root-metadata.mjs next dev",
+    "build": "node ../../scripts/sync-locales.mjs && node ../../scripts/with-root-metadata.mjs next build",
     "start": "node ../../scripts/with-root-metadata.mjs next start",
     "lint": "next lint",
     "typecheck": "tsc --project tsconfig.json --noEmit"
@@ -22,6 +23,7 @@
     "@imify/features": "workspace:*",
     "@imify/stores": "workspace:*",
     "@imify/ui": "workspace:*",
+    "@imify/i18n": "workspace:*",
     "konva": "^10.2.5",
     "next": "^15.0.0",
     "react": "19.2.5",

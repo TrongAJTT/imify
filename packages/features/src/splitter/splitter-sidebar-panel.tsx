@@ -19,6 +19,7 @@ import {
   SidebarCard,
 } from "@imify/ui";
 import { ArrowUpDown } from "lucide-react";
+import { useTranslation } from "@imify/i18n";
 
 interface SplitterSidebarPanelProps {
   enableWideSidebarGrid?: boolean;
@@ -38,6 +39,8 @@ const SPLITTER_TARGET_FORMATS: SplitterExportFormat[] = [
 export function SplitterSidebarPanel({
   enableWideSidebarGrid = false,
 }: SplitterSidebarPanelProps) {
+  const { t } = useTranslation("splitter");
+
   const splitSettings = useSplitterStore((state) => state.splitSettings);
   const exportSettings = useSplitterStore((state) => state.exportSettings);
   const uiState = useSplitterStore((state) => state.uiState);
@@ -107,12 +110,12 @@ export function SplitterSidebarPanel({
   const splitOrderSummary = useMemo(() => {
     const horizontalLabel =
       splitSettings.horizontalOrder === "left_to_right"
-        ? "Left->Right"
-        : "Right->Left";
+        ? t("leftArrowRight")
+        : t("rightArrowLeft");
     const verticalLabel =
       splitSettings.verticalOrder === "top_to_bottom"
-        ? "Top->Bottom"
-        : "Bottom->Top";
+        ? t("topArrowBottom")
+        : t("bottomArrowTop");
 
     return splitSettings.gridTraversal === "column_first"
       ? `(${verticalLabel}) -> (${horizontalLabel})`
@@ -121,6 +124,7 @@ export function SplitterSidebarPanel({
     splitSettings.gridTraversal,
     splitSettings.horizontalOrder,
     splitSettings.verticalOrder,
+    t,
   ]);
 
   const formatAdvancedLabel = useMemo(
@@ -132,7 +136,7 @@ export function SplitterSidebarPanel({
     const items: WorkspaceConfigSidebarItem[] = [
       {
         id: "split-options",
-        label: "Split Options",
+        label: t("splitOptions"),
         columnSpan: 2,
         content: (
           <SplitOptionsAccordion
@@ -148,7 +152,7 @@ export function SplitterSidebarPanel({
     if (showColorRuleCard) {
       items.push({
         id: "color-match-rules",
-        label: "Color Match Rules",
+        label: t("colorMatchRules"),
         content: (
           <ColorMatchRulesAccordion
             rules={splitSettings.colorRules}
@@ -165,7 +169,7 @@ export function SplitterSidebarPanel({
     if (showPatternSequenceCard) {
       items.push({
         id: "pattern-sequence",
-        label: "Pattern Sequence",
+        label: t("patternSequence"),
         columnSpan: 2,
         content: (
           <SplitterPatternSequenceAccordion
@@ -181,7 +185,7 @@ export function SplitterSidebarPanel({
     if (showCustomGuidesCard) {
       items.push({
         id: "custom-guides",
-        label: "Custom Guides",
+        label: t("customGuides"),
         columnSpan: 2,
         content: (
           <SplitterCustomGuidesAccordion
@@ -200,7 +204,7 @@ export function SplitterSidebarPanel({
       columnSpan: 2,
       content: (
         <PresetSelector
-          label="Output Settings"
+          label={t("outputSettings")}
           theme="orange"
           identifiedPreset={splitterIdentifiedPreset}
           formatFilter={SPLITTER_TARGET_FORMATS}
@@ -210,7 +214,7 @@ export function SplitterSidebarPanel({
           renderSidebarContent={() => (
             <div className="space-y-3">
               <SidebarCard
-                label="Split Order"
+                label={t("splitOrder")}
                 sublabel={splitOrderSummary}
                 icon={<ArrowUpDown size={14} />}
                 theme="orange"
@@ -218,7 +222,7 @@ export function SplitterSidebarPanel({
               />
             </div>
           )}
-          tooltipContent="Select an export preset for Image Splitter."
+          tooltipContent={t("selectPresetTooltip")}
         />
       ),
     });
@@ -243,6 +247,7 @@ export function SplitterSidebarPanel({
     identifiedPresetColor,
     applyPreset,
     resetToDefault,
+    t,
   ]);
 
   return (

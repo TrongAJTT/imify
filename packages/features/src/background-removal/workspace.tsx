@@ -1,34 +1,39 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from "react"
-import { Eraser, Download, LayoutGrid, Columns } from "lucide-react"
+import React, { useState, useEffect } from "react";
+import { Button, ToastContainer, useRenameInputPrompt } from "@imify/ui";
+import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
+import { useBackgroundRemoverStore } from "@imify/stores";
+import { BACKGROUND_REMOVAL_MODELS } from "./models";
+import { ModelDownloadDialog } from "./model-download-dialog";
+import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
+import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar";
+import type {
+  ConversionProgressPayload,
+  FormatConfig,
+} from "@imify/core/types";
+import { convertImage } from "@imify/engine/converter";
 import {
-  Button,
-  ToastContainer,
-  useRenameInputPrompt
-} from "@imify/ui"
-import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast"
-import { useBackgroundRemoverStore } from "@imify/stores"
-import { BACKGROUND_REMOVAL_MODELS } from "./models"
-import { ModelDownloadDialog } from "./model-download-dialog"
-import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace"
-import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar"
-import type { ConversionProgressPayload, FormatConfig } from "@imify/core/types"
-import { convertImage } from "@imify/engine/converter"
-import { downloadWithFilename, formatBytes } from "../processor/processor-utils"
-import { buildFormatConfigFromPreset, VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils"
-import { useBatchStore } from "@imify/stores/stores/batch-store"
-import { buildSmartOutputFileName } from "@imify/core/file-name-pattern"
+  downloadWithFilename,
+  formatBytes,
+} from "../processor/processor-utils";
+import {
+  buildFormatConfigFromPreset,
+  VIRTUAL_DEFAULT_PNG_PRESET,
+} from "../processor/preset-utils";
+import { useBatchStore } from "@imify/stores/stores/batch-store";
+import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
+import { useTranslation } from "@imify/i18n";
 
 interface BackgroundRemoverWorkspaceProps {
-  sourceFile: File
-  sourceImageData: ImageData
-  resultImageData: ImageData | null
-  isProcessing: boolean
-  progressPayload: ConversionProgressPayload | null
-  onClear: () => void
-  onStartProcessing: () => void
-  modelId: string
+  sourceFile: File;
+  sourceImageData: ImageData;
+  resultImageData: ImageData | null;
+  isProcessing: boolean;
+  progressPayload: ConversionProgressPayload | null;
+  onClear: () => void;
+  onStartProcessing: () => void;
+  modelId: string;
 }
 
 export function BackgroundRemoverWorkspace({
@@ -39,22 +44,23 @@ export function BackgroundRemoverWorkspace({
   progressPayload,
   onClear,
   onStartProcessing,
-  modelId
+  modelId,
 }: BackgroundRemoverWorkspaceProps) {
-  const { variantId, setVariantId } = useBackgroundRemoverStore()
-  const [viewMode, setViewMode] = useState<"split" | "side_by_side">("split")
-  const [splitPosition, setSplitPosition] = useState(50)
-  const [zoom, setZoom] = useState(100)
-  const [panX, setPanX] = useState(0)
-  const [panY, setPanY] = useState(0)
-  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false)
-  const [hasAgreedToDownload, setHasAgreedToDownload] = useState(false)
-  const [processTime, setProcessTime] = useState<number | null>(null)
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [timerSeconds, setTimerSeconds] = useState(0)
-  const [isDownloading, setIsDownloading] = useState(false)
-  const [resultBlobSize, setResultBlobSize] = useState<number | null>(null)
-  const [isEncodingPreview, setIsEncodingPreview] = useState(false)
+  const { t } = useTranslation("backgroundRemover");
+  const { variantId, setVariantId } = useBackgroundRemoverStore();
+  const [viewMode, setViewMode] = useState<"split" | "side_by_side">("split");
+  const [splitPosition, setSplitPosition] = useState(50);
+  const [zoom, setZoom] = useState(100);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
+  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+  const [hasAgreedToDownload, setHasAgreedToDownload] = useState(false);
+  const [processTime, setProcessTime] = useState<number | null>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [resultBlobSize, setResultBlobSize] = useState<number | null>(null);
+  const [isEncodingPreview, setIsEncodingPreview] = useState(false);
 
   const {
     targetFormat,
@@ -62,71 +68,80 @@ export function BackgroundRemoverWorkspace({
     codecOptions,
     outputFormat,
     backgroundColor,
-    activePresetId
-  } = useBackgroundRemoverStore()
+    activePresetId,
+  } = useBackgroundRemoverStore();
 
-  const { presets, fileNamePattern } = useBatchStore()
-  const activePreset = presets.find(p => p.id === activePresetId) || VIRTUAL_DEFAULT_PNG_PRESET
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt()
+  const { presets } = useBatchStore();
+  const activePreset =
+    presets.find((p) => p.id === activePresetId) || VIRTUAL_DEFAULT_PNG_PRESET;
+  const fileNamePattern =
+    activePreset.config.fileNamePattern || "[OriginalName]";
+  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
 
-  const { toasts, show, hide } = useToast()
-  const conversionToasts = useConversionToasts([progressPayload])
+  const { toasts, show, hide } = useToast();
+  const conversionToasts = useConversionToasts([progressPayload]);
 
   // Memoize source blob URL to prevent creating a new one on every render
   const sourceFileUrl = React.useMemo(() => {
-    if (!sourceFile) return ""
-    return URL.createObjectURL(sourceFile)
-  }, [sourceFile])
+    if (!sourceFile) return "";
+    return URL.createObjectURL(sourceFile);
+  }, [sourceFile]);
 
   // Cleanup blob URL when component unmounts or sourceFile changes
   useEffect(() => {
     return () => {
-      if (sourceFileUrl) URL.revokeObjectURL(sourceFileUrl)
-    }
-  }, [sourceFileUrl])
+      if (sourceFileUrl) URL.revokeObjectURL(sourceFileUrl);
+    };
+  }, [sourceFileUrl]);
 
   // Check if current model + variant is cached
   useEffect(() => {
     const checkModel = async () => {
-      if (typeof window === 'undefined') return
+      if (typeof window === "undefined") return;
 
-      const selectedModel = BACKGROUND_REMOVAL_MODELS.find(m => m.id === modelId)
-      if (!selectedModel) return
+      const selectedModel = BACKGROUND_REMOVAL_MODELS.find(
+        (m) => m.id === modelId,
+      );
+      if (!selectedModel) return;
 
-      const variant = selectedModel.variants.find(v => v.id === variantId) ?? selectedModel.variants[0]
+      const variant =
+        selectedModel.variants.find((v) => v.id === variantId) ??
+        selectedModel.variants[0];
 
       try {
-        const cache = await caches.open("transformers-cache")
-        const keys = await cache.keys()
+        const cache = await caches.open("transformers-cache");
+        const keys = await cache.keys();
 
-        const isCached = keys.some(request => {
-          const url = request.url.toLowerCase()
+        const isCached = keys.some((request) => {
+          const url = request.url.toLowerCase();
 
           // Must match the model ID and be an ONNX weight file
-          const modelMatch = url.includes(modelId.toLowerCase())
-          const isWeightFile = url.endsWith('.onnx') || url.includes('.onnx?')
+          const modelMatch = url.includes(modelId.toLowerCase());
+          const isWeightFile = url.endsWith(".onnx") || url.includes(".onnx?");
 
-          if (!modelMatch || !isWeightFile) return false
+          if (!modelMatch || !isWeightFile) return false;
 
           if (variant.quantized) {
-            return url.includes('quantized')
-          } else if (variant.dtype === 'fp16') {
-            return url.includes('fp16')
+            return url.includes("quantized");
+          } else if (variant.dtype === "fp16") {
+            return url.includes("fp16");
           } else {
             // Full precision: should NOT contain quantized or fp16 in the filename
-            return !url.includes('quantized') && !url.includes('fp16')
+            return !url.includes("quantized") && !url.includes("fp16");
           }
-        })
+        });
 
-        setHasAgreedToDownload(isCached)
+        setHasAgreedToDownload(isCached);
       } catch (e) {
-        setHasAgreedToDownload(false)
+        setHasAgreedToDownload(false);
       }
-    }
-    checkModel()
-  }, [modelId, variantId])
+    };
+    checkModel();
+  }, [modelId, variantId]);
 
-  const selectedModel = BACKGROUND_REMOVAL_MODELS.find(m => m.id === modelId) ?? BACKGROUND_REMOVAL_MODELS[0]
+  const selectedModel =
+    BACKGROUND_REMOVAL_MODELS.find((m) => m.id === modelId) ??
+    BACKGROUND_REMOVAL_MODELS[0];
 
   // Timer logic for processing feedback
   useEffect(() => {
@@ -179,8 +194,8 @@ export function BackgroundRemoverWorkspace({
         // use the browser's native fast encoder instead of the WASM worker.
         if (targetFormat === "webp" || targetFormat === "jpg") {
           const mime = targetFormat === "webp" ? "image/webp" : "image/jpeg";
-          const nativeBlob = await new Promise<Blob | null>((resolve) => 
-            canvas.toBlob(resolve, mime, quality / 100)
+          const nativeBlob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob(resolve, mime, quality / 100),
           );
           if (isAborted) return;
           if (nativeBlob) {
@@ -192,10 +207,10 @@ export function BackgroundRemoverWorkspace({
         // Fallback to worker for other formats or if native failed
         // Use a faster intermediate format (webp if supported, otherwise jpeg) instead of PNG
         const intermediateMime = "image/webp";
-        const sourceBlob = await new Promise<Blob | null>((resolve) => 
-          canvas.toBlob(resolve, intermediateMime, 0.9)
+        const sourceBlob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, intermediateMime, 0.9),
         );
-        
+
         if (isAborted || !sourceBlob) return;
 
         const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
@@ -203,7 +218,7 @@ export function BackgroundRemoverWorkspace({
 
         const converted = await convertImage({
           sourceBlob,
-          config
+          config,
         });
 
         if (isAborted) return;
@@ -224,92 +239,116 @@ export function BackgroundRemoverWorkspace({
       isAborted = true;
       clearTimeout(debounceTimer);
     };
-  }, [resultImageData, activePreset, outputFormat, backgroundColor, isProcessing, targetFormat, quality]);
+  }, [
+    resultImageData,
+    activePreset,
+    outputFormat,
+    backgroundColor,
+    isProcessing,
+    targetFormat,
+    quality,
+  ]);
 
   const handleStartWithAgreement = () => {
     if (!hasAgreedToDownload) {
-      setIsDownloadDialogOpen(true)
-      return
+      setIsDownloadDialogOpen(true);
+      return;
     }
-    onStartProcessing()
-  }
+    onStartProcessing();
+  };
 
   const handleConfirmDownload = () => {
-    setHasAgreedToDownload(true)
-    setIsDownloadDialogOpen(false)
-    onStartProcessing()
-  }
+    setHasAgreedToDownload(true);
+    setIsDownloadDialogOpen(false);
+    onStartProcessing();
+  };
 
-  const executeDownloadBlobCreationAndSave = async (canvas: HTMLCanvasElement, fileName: string) => {
-    const extension = targetFormat === "jpg" ? "jpg" : targetFormat
-    if (targetFormat === "webp" || targetFormat === "jpg" || targetFormat === "png") {
-      const mime = targetFormat === "webp" ? "image/webp" : targetFormat === "jpg" ? "image/jpeg" : "image/png"
-      
-      let finalCanvas = canvas
-      
+  const executeDownloadBlobCreationAndSave = async (
+    canvas: HTMLCanvasElement,
+    fileName: string,
+  ) => {
+    const extension = targetFormat === "jpg" ? "jpg" : targetFormat;
+    if (
+      targetFormat === "webp" ||
+      targetFormat === "jpg" ||
+      targetFormat === "png"
+    ) {
+      const mime =
+        targetFormat === "webp"
+          ? "image/webp"
+          : targetFormat === "jpg"
+            ? "image/jpeg"
+            : "image/png";
+
+      let finalCanvas = canvas;
+
       if (targetFormat === "jpg" && outputFormat === "transparent") {
-        const bgCanvas = document.createElement("canvas")
-        bgCanvas.width = canvas.width
-        bgCanvas.height = canvas.height
-        const bgCtx = bgCanvas.getContext("2d")
+        const bgCanvas = document.createElement("canvas");
+        bgCanvas.width = canvas.width;
+        bgCanvas.height = canvas.height;
+        const bgCtx = bgCanvas.getContext("2d");
         if (bgCtx) {
-          bgCtx.fillStyle = "#ffffff"
-          bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height)
-          bgCtx.drawImage(canvas, 0, 0)
-          finalCanvas = bgCanvas
+          bgCtx.fillStyle = "#ffffff";
+          bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+          bgCtx.drawImage(canvas, 0, 0);
+          finalCanvas = bgCanvas;
         }
       }
 
-      const finalBlob = await new Promise<Blob | null>((resolve) => 
-        finalCanvas.toBlob(resolve, mime, quality / 100)
-      )
-      
-      if (!finalBlob) throw new Error("Failed to encode image natively")
-      await downloadWithFilename(finalBlob, fileName)
-    } else {
-      const sourceBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.95))
-      if (!sourceBlob) throw new Error("Failed to create source blob")
+      const finalBlob = await new Promise<Blob | null>((resolve) =>
+        finalCanvas.toBlob(resolve, mime, quality / 100),
+      );
 
-      const config: FormatConfig = buildFormatConfigFromPreset(activePreset)
-      config.resize = { mode: "none" }
+      if (!finalBlob) throw new Error("Failed to encode image natively");
+      await downloadWithFilename(finalBlob, fileName);
+    } else {
+      const sourceBlob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/webp", 0.95),
+      );
+      if (!sourceBlob) throw new Error("Failed to create source blob");
+
+      const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
+      config.resize = { mode: "none" };
 
       const converted = await convertImage({
         sourceBlob,
-        config
-      })
+        config,
+      });
 
-      await downloadWithFilename(converted.blob, fileName)
+      await downloadWithFilename(converted.blob, fileName);
     }
-  }
+  };
 
   const handleDownload = async () => {
-    if (!resultImageData) return
+    if (!resultImageData) return;
 
-    setIsDownloading(true)
+    setIsDownloading(true);
     const toastId = show({
-      title: "Encoding Image",
-      message: `Preparing ${targetFormat.toUpperCase()} file...`,
+      title: t("workspace.encodingImage"),
+      message: t("workspace.preparingFile", {
+        format: targetFormat.toUpperCase(),
+      }),
       type: "notification",
-      duration: 60000
-    })
+      duration: 60000,
+    });
 
     try {
-      const canvas = document.createElement("canvas")
-      canvas.width = resultImageData.width
-      canvas.height = resultImageData.height
-      const ctx = canvas.getContext("2d")
-      if (!ctx) throw new Error("Could not get canvas context")
+      const canvas = document.createElement("canvas");
+      canvas.width = resultImageData.width;
+      canvas.height = resultImageData.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not get canvas context");
 
-      const imageBitmap = await createImageBitmap(resultImageData)
+      const imageBitmap = await createImageBitmap(resultImageData);
 
       if (outputFormat === "color") {
-        ctx.fillStyle = backgroundColor
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.fillStyle = backgroundColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
 
-      ctx.drawImage(imageBitmap, 0, 0)
+      ctx.drawImage(imageBitmap, 0, 0);
 
-      const extension = targetFormat === "jpg" ? "jpg" : targetFormat
+      const extension = targetFormat === "jpg" ? "jpg" : targetFormat;
 
       checkAndPrompt(
         fileNamePattern,
@@ -321,29 +360,35 @@ export function BackgroundRemoverWorkspace({
               outputExtension: extension,
               index: 1,
               totalFiles: 1,
-              dimensions: { width: resultImageData.width, height: resultImageData.height },
+              dimensions: {
+                width: resultImageData.width,
+                height: resultImageData.height,
+              },
               now: new Date(),
-              input: inputValue
-            })
+              input: inputValue,
+            });
 
-            await executeDownloadBlobCreationAndSave(canvas, fileName)
-            hide(toastId)
+            await executeDownloadBlobCreationAndSave(canvas, fileName);
+            hide(toastId);
             show({
-              title: "Download Ready",
-              message: "Image exported successfully",
-              type: "success"
-            })
+              title: t("workspace.downloadReady"),
+              message: t("workspace.imageExported"),
+              type: "success",
+            });
           } catch (error) {
-            console.error("Download failed:", error)
-            hide(toastId)
+            console.error("Download failed:", error);
+            hide(toastId);
             show({
-              title: "Download Failed",
-              message: error instanceof Error ? error.message : "Unable to encode image",
+              title: t("workspace.downloadFailed"),
+              message:
+                error instanceof Error
+                  ? error.message
+                  : t("workspace.unableEncode"),
               type: "error",
-              duration: 5000
-            })
+              duration: 5000,
+            });
           } finally {
-            setIsDownloading(false)
+            setIsDownloading(false);
           }
         },
         async () => {
@@ -354,43 +399,50 @@ export function BackgroundRemoverWorkspace({
               outputExtension: extension,
               index: 1,
               totalFiles: 1,
-              dimensions: { width: resultImageData.width, height: resultImageData.height },
-              now: new Date()
-            })
+              dimensions: {
+                width: resultImageData.width,
+                height: resultImageData.height,
+              },
+              now: new Date(),
+            });
 
-            await executeDownloadBlobCreationAndSave(canvas, fileName)
-            hide(toastId)
+            await executeDownloadBlobCreationAndSave(canvas, fileName);
+            hide(toastId);
             show({
-              title: "Download Ready",
-              message: "Image exported successfully",
-              type: "success"
-            })
+              title: t("workspace.downloadReady"),
+              message: t("workspace.imageExported"),
+              type: "success",
+            });
           } catch (error) {
-            console.error("Download failed:", error)
-            hide(toastId)
+            console.error("Download failed:", error);
+            hide(toastId);
             show({
-              title: "Download Failed",
-              message: error instanceof Error ? error.message : "Unable to encode image",
+              title: t("workspace.downloadFailed"),
+              message:
+                error instanceof Error
+                  ? error.message
+                  : t("workspace.unableEncode"),
               type: "error",
-              duration: 5000
-            })
+              duration: 5000,
+            });
           } finally {
-            setIsDownloading(false)
+            setIsDownloading(false);
           }
-        }
-      )
+        },
+      );
     } catch (error) {
-      console.error("Download failed:", error)
-      hide(toastId)
+      console.error("Download failed:", error);
+      hide(toastId);
       show({
-        title: "Download Failed",
-        message: error instanceof Error ? error.message : "Unable to encode image",
+        title: t("workspace.downloadFailed"),
+        message:
+          error instanceof Error ? error.message : t("workspace.unableEncode"),
         type: "error",
-        duration: 5000
-      })
-      setIsDownloading(false)
+        duration: 5000,
+      });
+      setIsDownloading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -405,18 +457,34 @@ export function BackgroundRemoverWorkspace({
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {isProcessing ? (
               <span className="text-amber-600 dark:text-amber-400 font-medium">
-                Processing... ({timerSeconds.toFixed(1)}s)
+                {t("workspace.processingTime", {
+                  time: timerSeconds.toFixed(1),
+                })}
               </span>
             ) : resultImageData && processTime !== null ? (
               <span className="text-emerald-600 dark:text-emerald-400 font-medium flex flex-wrap items-center gap-1.5">
-                <span>Processing completed in {processTime.toFixed(2)}s</span>
+                <span>
+                  {t("workspace.processCompleted", {
+                    time: processTime.toFixed(2),
+                  })}
+                </span>
                 {resultBlobSize !== null && (
                   <>
                     <span className="xs:inline opacity-40">•</span>
                     <span>{formatBytes(resultBlobSize)}</span>
                     <span className="xs:inline opacity-40">•</span>
-                    <span className={((resultBlobSize - sourceFile.size) / sourceFile.size) > 0 ? "text-amber-600" : "text-emerald-600"}>
-                      {((resultBlobSize - sourceFile.size) / sourceFile.size * 100).toFixed(1)}%
+                    <span
+                      className={
+                        (resultBlobSize - sourceFile.size) / sourceFile.size > 0
+                          ? "text-amber-600"
+                          : "text-emerald-600"
+                      }
+                    >
+                      {(
+                        ((resultBlobSize - sourceFile.size) / sourceFile.size) *
+                        100
+                      ).toFixed(1)}
+                      %
                     </span>
                   </>
                 )}
@@ -425,13 +493,17 @@ export function BackgroundRemoverWorkspace({
                 )}
               </span>
             ) : (
-              "Adjust settings in the sidebar then click Remove Background to process"
+              t("workspace.adjustSettingsPrompt")
             )}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <Button variant="secondary" onClick={onClear} className="h-9 px-4 flex-1 sm:flex-none">
-            Clear
+          <Button
+            variant="secondary"
+            onClick={onClear}
+            className="h-9 px-4 flex-1 sm:flex-none"
+          >
+            {t("workspace.clear")}
           </Button>
           {resultImageData && (
             <Button
@@ -440,7 +512,7 @@ export function BackgroundRemoverWorkspace({
               disabled={isProcessing}
               className="h-9 px-4 flex-1 sm:flex-none"
             >
-              Update
+              {t("workspace.update")}
             </Button>
           )}
           {resultImageData ? (
@@ -450,7 +522,9 @@ export function BackgroundRemoverWorkspace({
               disabled={isDownloading}
               className="h-9 px-6 bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-500/20 disabled:bg-pink-400 flex-[2] sm:flex-none"
             >
-              {isDownloading ? "Encoding..." : "Download"}
+              {isDownloading
+                ? t("workspace.encoding")
+                : t("workspace.download")}
             </Button>
           ) : (
             <Button
@@ -459,7 +533,9 @@ export function BackgroundRemoverWorkspace({
               disabled={isProcessing}
               className="h-9 px-6 bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-500/20 border-none flex-[2] sm:flex-none"
             >
-              {isProcessing ? "Processing..." : "Remove Background"}
+              {isProcessing
+                ? t("workspace.processing")
+                : t("workspace.removeBackground")}
             </Button>
           )}
         </div>
@@ -489,8 +565,8 @@ export function BackgroundRemoverWorkspace({
               panY={panY}
               onZoomChange={setZoom}
               onPanChange={(x, y) => {
-                setPanX(x)
-                setPanY(y)
+                setPanX(x);
+                setPanY(y);
               }}
               bgColorB={outputFormat === "color" ? backgroundColor : null}
             />
@@ -505,7 +581,9 @@ export function BackgroundRemoverWorkspace({
                 {isProcessing && (
                   <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center gap-3">
                     <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm font-bold text-pink-600">Processing...</span>
+                    <span className="text-sm font-bold text-pink-600">
+                      {t("workspace.processing")}
+                    </span>
                   </div>
                 )}
               </div>
@@ -522,8 +600,11 @@ export function BackgroundRemoverWorkspace({
         variantId={variantId}
       />
 
-      <ToastContainer toasts={[...toasts, ...conversionToasts]} onRemove={hide} />
+      <ToastContainer
+        toasts={[...toasts, ...conversionToasts]}
+        onRemove={hide}
+      />
       {renameInputPrompt}
     </div>
-  )
+  );
 }

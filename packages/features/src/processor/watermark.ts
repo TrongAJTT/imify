@@ -125,7 +125,10 @@ function resolvePosition(
   }
 }
 
-function parseFontFamily(): string {
+function parseFontFamily(family?: string): string {
+  if (family && family.trim()) {
+    return `"${family}", Segoe UI, Arial, sans-serif`
+  }
   return "Segoe UI, Arial, sans-serif"
 }
 
@@ -197,7 +200,7 @@ export async function applyWatermarkToImageBlob(sourceBlob: Blob, watermark: Bat
       const text = watermark.text.trim()
       const textRotationDeg = Number.isFinite(watermark.textRotationDeg) ? Number(watermark.textRotationDeg) : 0
 
-      ctx.font = `700 ${fontSize}px ${parseFontFamily()}`
+      ctx.font = `700 ${fontSize}px ${parseFontFamily(watermark.fontFamily)}`
       ctx.textBaseline = "top"
 
       const textMetrics = ctx.measureText(text)

@@ -30,13 +30,7 @@ import {
 } from "./types";
 import { resolveLayerShapePoints } from "./shape-generators";
 
-const SORT_OPTIONS: Array<{ value: TemplateSortMode; label: string }> = [
-  { value: "usage_count", label: "Most used" },
-  { value: "recently_created", label: "Recently created" },
-  { value: "recently_used", label: "Recently used" },
-  { value: "name_asc", label: "Name (A-Z)" },
-  { value: "name_desc", label: "Name (Z-A)" },
-];
+import { useTranslation } from "@imify/i18n";
 
 export function sortFillingTemplates(
   templates: FillingTemplate[],
@@ -85,6 +79,16 @@ export function FillingTemplateListPanel({
   onEditTemplate,
   onRefresh,
 }: FillingTemplateListPanelProps) {
+  const { t } = useTranslation("filling");
+
+  const SORT_OPTIONS: Array<{ value: TemplateSortMode; label: string }> = [
+    { value: "usage_count", label: t("templateList.sortUsageCount") },
+    { value: "recently_created", label: t("templateList.sortRecentlyCreated") },
+    { value: "recently_used", label: t("templateList.sortRecentlyUsed") },
+    { value: "name_asc", label: t("templateList.sortNameAsc") },
+    { value: "name_desc", label: t("templateList.sortNameDesc") },
+  ];
+
   const sorted = sortFillingTemplates(templates, sortMode);
 
   const [renameTemplate, setRenameTemplate] = useState<FillingTemplate | null>(
@@ -117,8 +121,8 @@ export function FillingTemplateListPanel({
       <EmptyDropCard
         icon={<Plus size={28} className="text-sky-500" />}
         iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none"
-        title="No templates yet"
-        subtitle="Create your first template to get started"
+        title={t("templateList.noTemplatesTitle")}
+        subtitle={t("templateList.noTemplatesDesc")}
         onClick={onCreate}
       />
     );
@@ -127,17 +131,17 @@ export function FillingTemplateListPanel({
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
-        <Subheading>Templates</Subheading>
+        <Subheading>{t("templateList.title")}</Subheading>
         <Button type="button" variant="primary" size="sm" onClick={onCreate}>
           <Plus size={14} />
-          New Template
+          {t("templateList.newTemplate")}
         </Button>
       </div>
 
       <div className="flex items-center gap-3">
         <div className="w-48">
           <SelectInput
-            label="Sort by"
+            label={t("global.sortBy", { defaultValue: "Sort by" })}
             value={sortMode}
             options={SORT_OPTIONS}
             onChange={(value) => onSortModeChange(value as TemplateSortMode)}
@@ -168,7 +172,7 @@ export function FillingTemplateListPanel({
       >
         <div className="p-4 md:p-6">
           <div className="mb-4 flex items-center justify-between">
-            <Subheading>Rename Template</Subheading>
+            <Subheading>{t("templateList.renameTitle")}</Subheading>
             <button
               type="button"
               onClick={() => setRenameTemplate(null)}
@@ -180,7 +184,7 @@ export function FillingTemplateListPanel({
 
           <div className="mb-5 space-y-4">
             <TextInput
-              label="New Name"
+              label={t("dialog.templateName")}
               value={renameName}
               onChange={setRenameName}
               placeholder="e.g. My Photo Grid"
@@ -194,7 +198,7 @@ export function FillingTemplateListPanel({
               size="sm"
               onClick={() => setRenameTemplate(null)}
             >
-              Cancel
+              {t("dialog.cancel")}
             </Button>
             <Button
               variant="primary"
@@ -202,7 +206,7 @@ export function FillingTemplateListPanel({
               onClick={handleRenameConfirm}
               disabled={!renameName.trim()}
             >
-              Save
+              {t("templateList.save")}
             </Button>
           </div>
         </div>
@@ -247,11 +251,15 @@ function FillingTemplateCard({
     };
   }, [template.id]);
 
+  const { t } = useTranslation("filling");
+
   const usageText =
-    template.usageCount === 1 ? "1 export" : `${template.usageCount} exports`;
+    template.usageCount === 1
+      ? t("templateList.usedTimes", { count: 1 })
+      : t("templateList.usedTimesPlural", { count: template.usageCount });
   const lastUsedText = template.lastUsedAt
-    ? `Last used ${formatRelativeTime(template.lastUsedAt)}`
-    : "Never used";
+    ? `${t("templateList.lastUsed")} ${formatRelativeTime(template.lastUsedAt, t)}`
+    : t("templateList.neverUsed");
   const handleExportPsd = async () => {
     if (isExportingPsd) {
       return;
@@ -312,8 +320,11 @@ function FillingTemplateCard({
           </div>
           <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
             {template.canvasWidth} x {template.canvasHeight} ·{" "}
-            {template.layers.length} layer
-            {template.layers.length !== 1 ? "s" : ""}
+            {template.layers.length === 1
+              ? t("templateList.layersCount", { count: 1 })
+              : t("templateList.layersCountPlural", {
+                  count: template.layers.length,
+                })}
           </p>
           <p className="text-[11px] text-slate-400 dark:text-slate-500">
             {usageText} · {lastUsedText}
@@ -324,38 +335,44 @@ function FillingTemplateCard({
       <div className="absolute right-2 top-2 translate-y-1 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
         <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white/90 px-1 py-1 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90">
           <ActionIconButton
-            title="Edit template"
+            title={t("templateList.editTemplateTooltip")}
             icon={<Edit size={13} />}
             onClick={() => onEditTemplate(template)}
           />
           <ActionIconButton
-            title="Rename template"
+            title={t("templateList.renameTemplateTooltip")}
             icon={<Edit3 size={13} />}
             onClick={() => onRenameTemplate(template)}
           />
           <ActionIconButton
             title={
-              isExportingPsd ? "Exporting PSD..." : "Export template as PSD"
+              isExportingPsd
+                ? t("templateList.exportingPsdTooltip")
+                : t("templateList.exportPsdTooltip")
             }
             icon={<Download size={13} />}
             onClick={() => void handleExportPsd()}
             disabled={isExportingPsd}
           />
           <ActionIconButton
-            title={template.isPinned ? "Unpin template" : "Pin template"}
+            title={
+              template.isPinned
+                ? t("templateList.unpinTooltip")
+                : t("templateList.pinTooltip")
+            }
             icon={template.isPinned ? <PinOff size={13} /> : <Pin size={13} />}
             onClick={() => {
               void templateStorage.togglePin(template.id).then(onRefresh);
             }}
           />
           <ActionIconButton
-            title="Delete template"
+            title={t("templateList.deleteTooltip")}
             icon={<Trash2 size={13} />}
             destructive
             onClick={() => {
               if (
                 !window.confirm(
-                  `Delete template "${template.name}"? This action cannot be undone.`,
+                  t("templateList.deleteConfirm", { name: template.name }),
                 )
               ) {
                 return;
@@ -453,18 +470,18 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
   );
 }
 
-function formatRelativeTime(timestamp: number): string {
+function formatRelativeTime(timestamp: number, t: any): string {
   const diff = Date.now() - timestamp;
   const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return "just now";
+  if (seconds < 60) return t("templateList.timeJustNow");
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return t("templateList.timeMinAgo", { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t("templateList.timeHourAgo", { count: hours });
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return t("templateList.timeDayAgo", { count: days });
   const months = Math.floor(days / 30);
-  return `${months}mo ago`;
+  return t("templateList.timeMonthAgo", { count: months });
 }
 
 function toSafeFileName(value: string): string {

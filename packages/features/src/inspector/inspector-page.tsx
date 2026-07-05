@@ -7,6 +7,7 @@ import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { Button, MutedText, Subheading } from "@imify/ui"
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake"
+import { useTranslation } from "@imify/i18n"
 
 export interface SharedInspectorRenderProps {
   file: File | null
@@ -31,6 +32,7 @@ export function SharedInspectorPage({
   onOpenSingleProcessor,
   renderWorkspace
 }: SharedInspectorPageProps) {
+  const { t } = useTranslation("inspector")
   const [file, setFile] = useState<File | null>(null)
   const [bitmap, setBitmap] = useState<ImageBitmap | null>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
@@ -65,7 +67,7 @@ export function SharedInspectorPage({
       const inspectionResult = await inspectImage(newFile, bmp, buf, { paletteCount })
       setResult(inspectionResult)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to analyze image")
+      setError(err instanceof Error ? err.message : t("failedAnalyze"))
       setFile(null)
       setBitmap(null)
       setImageUrl(null)
@@ -117,14 +119,14 @@ export function SharedInspectorPage({
       {file ? (
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <Subheading>Image Inspector</Subheading>
+            <Subheading>{t("title")}</Subheading>
             {result && !isAnalyzing ? (
               <MutedText className="mt-0.5 text-xs">
-                {result.basic.format} &middot; {result.dimensions.width} x {result.dimensions.height} &middot; {result.exifEntries.length} metadata tags
+                {result.basic.format} &middot; {result.dimensions.width} x {result.dimensions.height} &middot; {t("metadataTagsCount", { count: result.exifEntries.length })}
               </MutedText>
             ) : null}
           </div>
-          <Button variant="secondary" size="sm" onClick={handleClear} disabled={isAnalyzing}><Trash2 size={14} />Clear</Button>
+          <Button variant="secondary" size="sm" onClick={handleClear} disabled={isAnalyzing}><Trash2 size={14} />{t("clear")}</Button>
         </div>
       ) : null}
       {renderWorkspace({

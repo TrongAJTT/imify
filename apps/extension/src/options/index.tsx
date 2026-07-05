@@ -26,7 +26,8 @@ import {
   WhatsNewUpdateNotificationGate,
   useIsDesktopLayout,
   getExtensionSidebarToolGroups,
-  renderWorkspaceToolIcon
+  renderWorkspaceToolIcon,
+  getWorkspaceToolLabel
 } from "@imify/features/workspace-shell"
 import { useDevModeEnabled } from "@imify/features"
 import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
@@ -115,9 +116,12 @@ import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 import { CONTEXT_MENU_SUB_TABS } from "./components/context-menu/context-menu-settings-tab"
 
+import { initI18n, useTranslation } from "@imify/i18n"
+
 bootstrapExtensionAdapters()
 ensureRuntimeLogCaptureInstalled()
 setRuntimeLogCaptureEnabled(getDevModeEnabled())
+initI18n()
 
 const syncStorage = new Storage({
   area: "sync",
@@ -293,6 +297,7 @@ export default function OptionsPage() {
 
   const { isDark, toggleDarkMode } = useImifyDarkMode()
   const isDesktopLayout = useIsDesktopLayout()
+  const { i18n: i18nInstance } = useTranslation("workspace")
 
   const [defaultOptionsTab, setDefaultOptionsTab, { isLoading: isDefaultTabLoading }] = useStorage<OptionsTab>(
     { key: "imify_options_default_tab", instance: syncStorage },
@@ -303,7 +308,8 @@ export default function OptionsPage() {
     "global"
   )
   const [activeTab, setActiveTab] = useState<OptionsTab>("context-menu")
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
+  const isMobileSidebarOpen = useWorkspaceHeaderStore((state) => state.isMobileSidebarOpen)
+  const setIsMobileSidebarOpen = useWorkspaceHeaderStore((state) => state.setIsMobileSidebarOpen)
   const [preferRecentPresetEntry, setPreferRecentPresetEntry, { isLoading: isPreferRecentPresetEntryLoading }] = useStorage<boolean>(
     { key: PREFER_RECENT_PRESET_ENTRY_KEY, instance: syncStorage },
     DEFAULT_PREFER_RECENT_PRESET_ENTRY
@@ -367,9 +373,9 @@ export default function OptionsPage() {
     () =>
       WORKSPACE_TOOLS.filter((tool) => tool.showOnExtSidebar && tool.extTabId).map((tool) => ({
         value: tool.extTabId as OptionsTab,
-        label: tool.label
+        label: getWorkspaceToolLabel(tool.id) ?? tool.label
       })),
-    []
+    [i18nInstance.language]
   )
   const devModeSettingsAdapter = useMemo<DevModeSettingsAdapter>(
     () => ({
@@ -901,8 +907,8 @@ export default function OptionsPage() {
             hasConfigSidebar && (
               <>
                 <BottomSheet 
-                  isOpen={isBottomSheetOpen} 
-                  onClose={() => setIsBottomSheetOpen(false)}
+                  isOpen={isMobileSidebarOpen} 
+                  onClose={() => setIsMobileSidebarOpen(false)}
                   title={getBottomSheetTitle()}
                 >
                   <div className="flex flex-col gap-6">
@@ -969,7 +975,7 @@ export default function OptionsPage() {
                 {/* Persistent Trigger Bar at bottom - Compact Version (Extension) */}
                 <button
                   type="button"
-                  onClick={() => setIsBottomSheetOpen(true)}
+                  onClick={() => setIsMobileSidebarOpen(true)}
                   className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 rounded-t-2xl px-6 pb-2 pt-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] transition-transform active:translate-y-0.5"
                 >
                   <div className="w-8 h-1 rounded-full bg-slate-200 dark:bg-slate-800 mb-1.5" />

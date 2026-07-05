@@ -5,6 +5,8 @@ import { Github, Heart, Star } from "lucide-react";
 import { IMIFY_LINKS } from "@imify/core";
 import { Tooltip } from "../shared/tooltip";
 
+import { useTranslation } from "@imify/i18n";
+
 const GITHUB_STARS_CACHE_KEY = "imify-github-stars-cache";
 const CACHE_DURATION_MS = 3 * 60 * 60 * 1000; // 3 hours
 
@@ -38,62 +40,37 @@ export function useGithubStars() {
     const setCachedStars = (count: string) => {
       if (typeof window === "undefined") return;
       try {
-        const cache: StarsCache = {
-          count,
-          timestamp: Date.now(),
-        };
+        const cache: StarsCache = { count, timestamp: Date.now() };
         localStorage.setItem(GITHUB_STARS_CACHE_KEY, JSON.stringify(cache));
       } catch (e) {
         console.error("Failed to write github stars cache:", e);
       }
     };
 
-    const cached = getCachedStars();
-    if (cached) {
-      setStars(cached);
-      return;
-    }
+    const fetchStars = async () => {
+      const cached = getCachedStars();
+      if (cached) {
+        setStars(cached);
+        return;
+      }
 
-    fetch("https://api.github.com/repos/TrongAJTT/imify")
-      .then((res) => {
-        if (!res.ok) throw new Error("API Limit or Network Error");
-        return res.json();
-      })
-      .then((data) => {
-        if (active && typeof data.stargazers_count === "number") {
-          const targetStars = data.stargazers_count;
-          const targetStarsStr = targetStars.toLocaleString();
-
-          setCachedStars(targetStarsStr);
-
-          const duration = 2000; // 2 seconds
-          const startTime = performance.now();
-
-          const animate = (currentTime: number) => {
-            if (!active) return;
-
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            const easeProgress = 1 - Math.pow(1 - progress, 3);
-            const currentStars = Math.floor(easeProgress * targetStars);
-
-            setStars(currentStars.toLocaleString());
-
-            if (progress < 1) {
-              requestAnimationFrame(animate);
-            }
-          };
-
-          requestAnimationFrame(animate);
-        }
-      })
-      .catch(() => {
+      try {
+        const res = await fetch("https://api.github.com/repos/TrongAJTT/imify");
+        if (!res.ok) throw new Error("Failed to fetch GitHub metadata");
+        const data = await res.json();
+        const count = data.stargazers_count
+          ? String(data.stargazers_count)
+          : "0";
         if (active) {
-          setStars("-");
+          setStars(count);
+          setCachedStars(count);
         }
-      });
+      } catch (err) {
+        console.error("Failed to fetch Github stars:", err);
+      }
+    };
 
+    fetchStars();
     return () => {
       active = false;
     };
@@ -108,11 +85,12 @@ interface GithubStarDonateProps {
 
 export function GithubStarDonate({ onOpenDonate }: GithubStarDonateProps) {
   const stars = useGithubStars();
+  const { t } = useTranslation("workspace");
 
   return (
     <div className="inline-flex items-center h-9 rounded-xl border border-slate-300 bg-slate-50/50 p-0.5 hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-slate-700 transition-colors select-none">
       {/* GitHub Stars */}
-      <Tooltip content="Star us on GitHub">
+      <Tooltip content={t("header.tooltips.github")}>
         <a
           href={IMIFY_LINKS.repository}
           target="_blank"
@@ -137,7 +115,7 @@ export function GithubStarDonate({ onOpenDonate }: GithubStarDonateProps) {
       <div className="w-px h-4 bg-slate-300 dark:bg-slate-800 self-center shrink-0" />
 
       {/* Donate Button */}
-      <Tooltip content="Support the dev">
+      <Tooltip content={t("header.tooltips.donate")}>
         <button
           type="button"
           onClick={onOpenDonate}

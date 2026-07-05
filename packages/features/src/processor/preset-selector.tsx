@@ -21,6 +21,7 @@ import { ProcessorPresetDetail } from "./processor-preset-detail";
 import { PresetCard } from "./preset-card";
 import { BatchSetupSidebarPanel } from "./setup-sidebar-panel";
 import { DEFAULT_PERFORMANCE_PREFERENCES } from "./performance-preferences";
+import { useTranslation } from "@imify/i18n";
 
 interface PresetSelectorProps {
   label?: string;
@@ -51,6 +52,7 @@ export function PresetSelector({
   onSelect,
   onReset,
 }: PresetSelectorProps) {
+  const { t } = useTranslation("processor");
   const { presets, saveCurrentPreset, targetFormat } = useBatchStore();
 
   const isTargetFormatAllowed = useMemo(() => {
@@ -77,7 +79,8 @@ export function PresetSelector({
     return (
       id.startsWith("preset_background-remover") ||
       id.startsWith("preset_splicing_") ||
-      id.startsWith("preset_image-splitter_")
+      id.startsWith("preset_image-splitter_") ||
+      id.startsWith("preset_pattern-gen_")
     );
   };
 
@@ -209,8 +212,8 @@ export function PresetSelector({
           sublabel={
             sublabel ||
             (activePreset
-              ? `Active: ${activePreset.name}`
-              : "No preset selected")
+              ? t("presetSelector.active", { name: activePreset.name })
+              : t("presetSelector.noPresetSelected"))
           }
           icon={icon}
           defaultOpen={true}
@@ -226,11 +229,11 @@ export function PresetSelector({
             }
           >
             <SidebarCard
-              label={activePreset ? activePreset.name : "Choose a Preset..."}
+              label={activePreset ? activePreset.name : t("presetSelector.choosePreset")}
               sublabel={
                 activePreset
                   ? `Format: ${activePreset.config.targetFormat.toUpperCase()}`
-                  : "No preset selected"
+                  : t("presetSelector.noPresetSelected")
               }
               icon={<Bookmark size={14} />}
               theme={theme}
@@ -251,7 +254,7 @@ export function PresetSelector({
                       }
                     />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      Configuration Details
+                      {t("presetSelector.configurationDetails")}
                     </span>
                   </div>
                   {onReset && identifiedPreset && activePresetId !== null && (
@@ -260,7 +263,7 @@ export function PresetSelector({
                       className="text-[10px] font-medium text-slate-500 hover:text-rose-500 transition-colors flex items-center gap-0.5"
                     >
                       <RotateCcw size={10} />
-                      Reset
+                      {t("presetSelector.reset")}
                     </button>
                   )}
                 </div>
@@ -308,7 +311,7 @@ export function PresetSelector({
                     : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
               >
-                Feature Preset
+                {t("presetSelector.featurePreset")}
               </button>
               <button
                 type="button"
@@ -319,7 +322,7 @@ export function PresetSelector({
                     : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
               >
-                Select Preset
+                {t("presetSelector.selectPreset")}
               </button>
             </div>
 
@@ -338,7 +341,7 @@ export function PresetSelector({
                 {/* Type & Format Filter Shields */}
                 <div className="flex flex-wrap items-center gap-2 justify-start">
                   <Shield
-                    left="Type"
+                    left={t("presetSelector.type")}
                     size="sm"
                     leftBg="bg-slate-700 dark:bg-slate-800"
                     leftColor="text-white"
@@ -368,7 +371,7 @@ export function PresetSelector({
                   />
 
                   <Shield
-                    left="Filter"
+                    left={t("presetSelector.filter")}
                     size="sm"
                     leftBg="bg-slate-700 dark:bg-slate-800"
                     leftColor="text-white"
@@ -419,11 +422,10 @@ export function PresetSelector({
                       <Bookmark size={32} className="text-slate-300" />
                     </div>
                     <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-                      No Presets Found
+                      {t("presetSelector.noPresetsFound")}
                     </h3>
                     <MutedText className="max-w-[280px] mb-6">
-                      You haven't saved any Single Processor presets for the
-                      required formats ({formatFilter?.join(", ") || "any"}).
+                      {t("presetSelector.noPresetsDescription", { formats: formatFilter?.join(", ") || "any" })}
                     </MutedText>
                     <Button
                       onClick={handleCreatePreset}
@@ -431,7 +433,7 @@ export function PresetSelector({
                       className="gap-2"
                     >
                       <Plus size={16} />
-                      Create Your First And Refresh
+                      {t("presetSelector.createFirst")}
                     </Button>
                   </div>
                 )}
@@ -444,7 +446,7 @@ export function PresetSelector({
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Preset Name */}
                     <TextInput
-                      label="Preset Name"
+                      label={t("presetSelector.presetName")}
                       value={customName}
                       onChange={(e) => setCustomName(e)}
                       placeholder="e.g., Social WebP High Quality"
@@ -453,7 +455,7 @@ export function PresetSelector({
 
                     {/* Highlight Color */}
                     <div className="space-y-2">
-                      <LabelText className="text-xs">Accent Color</LabelText>
+                      <LabelText className="text-xs">{t("presetSelector.accentColor")}</LabelText>
                       <div className="flex flex-wrap gap-2">
                         {PRESET_HIGHLIGHT_COLORS.map((color) => (
                           <button
@@ -506,7 +508,7 @@ export function PresetSelector({
                   className="gap-2 h-9 shrink-0"
                 >
                   <RotateCcw size={14} />
-                  Reset
+                  {t("presetSelector.reset")}
                 </Button>
               )}
               {activeTab === "select" && (
@@ -516,25 +518,17 @@ export function PresetSelector({
                   className="gap-2 h-9 shrink-0"
                 >
                   <RotateCcw size={14} className="scale-x-[-1]" />
-                  Refresh
+                  {t("refresh")}
                 </Button>
               )}
               {activeTab === "custom" && !isTargetFormatAllowed && (
                 <div className="flex items-center gap-2 text-rose-500 font-medium text-xs animate-in fade-in slide-in-from-left-2 duration-250 truncate">
                   <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
                   <span className="truncate">
-                    Format{" "}
-                    {(targetFormat === "mozjpeg"
-                      ? "MozJPEG"
-                      : targetFormat
-                    ).toUpperCase()}{" "}
-                    is not supported. (Supported:{" "}
-                    {formatFilter
-                      ?.map((f) =>
-                        (f === "mozjpeg" ? "MozJPEG" : f).toUpperCase(),
-                      )
-                      .join(", ")}
-                    )
+                    {t("presetSelector.formatNotSupported", {
+                      format: (targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat).toUpperCase(),
+                      supported: formatFilter?.map((f) => (f === "mozjpeg" ? "MozJPEG" : f).toUpperCase()).join(", ")
+                    })}
                   </span>
                 </div>
               )}
@@ -546,7 +540,7 @@ export function PresetSelector({
                 onClick={() => setIsDialogOpen(false)}
                 className="h-9"
               >
-                Close
+                {t("presetSelector.close")}
               </Button>
               {activeTab === "custom" && (
                 <Button
@@ -555,7 +549,7 @@ export function PresetSelector({
                   disabled={!customName.trim() || !isTargetFormatAllowed}
                   className="h-9 font-bold px-5"
                 >
-                  {identifiedPreset ? "Save & Apply" : "Create & Apply"}
+                  {identifiedPreset ? t("presetSelector.saveApply") : t("presetSelector.createApply")}
                 </Button>
               )}
             </div>

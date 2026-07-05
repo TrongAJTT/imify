@@ -4,13 +4,16 @@ import { Button } from "@imify/ui/ui/button"
 import { Tooltip } from "@imify/features/shared/tooltip"
 import { Github } from "lucide-react"
 import Image from "next/image"
+import { useTranslation } from "@imify/i18n"
 
 export function ExtensionDownloadButtons() {
+  const { t } = useTranslation("homepage")
+
   return (
     <div className="flex flex-wrap items-center justify-center gap-6 pt-8">
       <Tooltip
-        label="Chrome Web Store"
-        content="Install the stable version for Google Chrome. Recommended for most users."
+        label={t("chromeStoreLabel", { defaultValue: "Chrome Web Store" })}
+        content={t("chromeStoreDesc", { defaultValue: "Install the stable version for Google Chrome. Recommended for most users." })}
         variant="wide1"
       >
         <a
@@ -30,8 +33,8 @@ export function ExtensionDownloadButtons() {
       </Tooltip>
 
       <Tooltip
-        label="Microsoft Edge Add-ons"
-        content="Install the stable build for Microsoft Edge with the same core extension features."
+        label={t("edgeStoreLabel", { defaultValue: "Microsoft Edge Add-ons" })}
+        content={t("edgeStoreDesc", { defaultValue: "Install the stable build for Microsoft Edge with the same core extension features." })}
         variant="wide1"
       >
         <a
@@ -51,8 +54,8 @@ export function ExtensionDownloadButtons() {
       </Tooltip>
 
       <Tooltip
-        label="Firefox Add-ons"
-        content="Install the stable version for Firefox to use context menu tools and extension-exclusive workflows."
+        label={t("firefoxStoreLabel", { defaultValue: "Firefox Add-ons" })}
+        content={t("firefoxStoreDesc", { defaultValue: "Install the stable version for Firefox to use context menu tools and extension-exclusive workflows." })}
         variant="wide1"
       >
         <a
@@ -72,16 +75,16 @@ export function ExtensionDownloadButtons() {
       </Tooltip>
 
       <Tooltip
-        label="GitHub Releases"
-        content="Try the newest builds early (including experimental updates if available), or pick any specific version you want from the release list."
+        label={t("githubReleasesLabel", { defaultValue: "GitHub Releases" })}
+        content={t("githubReleasesDesc", { defaultValue: "Try the newest builds early (including experimental updates if available), or pick any specific version you want from the release list." })}
         variant="wide2"
       >
         <Button variant="outline" className="h-14 font-semibold border-slate-200 dark:border-slate-800 transition-transform hover:scale-105 active:scale-95 px-5" asChild>
           <a href="https://github.com/TrongAJTT/imify/releases" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
             <Github className="h-8 w-8 shrink-0" />
             <div className="text-left leading-tight">
-              <div className="text-[10px] uppercase tracking-wider text-slate-500">Download from</div>
-              <div className="text-sm">GitHub Releases</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500">{t("downloadFrom", { defaultValue: "Download from" })}</div>
+              <div className="text-sm">{t("githubReleasesLabel", { defaultValue: "GitHub Releases" })}</div>
             </div>
           </a>
         </Button>

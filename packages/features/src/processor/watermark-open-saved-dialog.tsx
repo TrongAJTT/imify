@@ -1,187 +1,214 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
-import { BookmarkX, Check, FolderOpen, Sparkles, Stamp, Trash2, X } from "lucide-react"
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  BookmarkX,
+  Check,
+  FolderOpen,
+  Sparkles,
+  Stamp,
+  Trash2,
+  X,
+} from "lucide-react";
 
-import { BaseDialog, Button, SecondaryButton, Subheading, BodyText, MutedText } from "@imify/ui"
-import type { BatchWatermarkConfig, BatchWatermarkPosition } from "@imify/stores/stores/batch-types"
-import type { SavedWatermarkItem } from "@imify/stores/stores/watermark-store"
-import { watermarkStorage } from "@imify/core/indexed-db"
+import {
+  BaseDialog,
+  Button,
+  SecondaryButton,
+  Subheading,
+  BodyText,
+  MutedText,
+} from "@imify/ui";
+import type {
+  BatchWatermarkConfig,
+  BatchWatermarkPosition,
+} from "@imify/stores/stores/batch-types";
+import type { SavedWatermarkItem } from "@imify/stores/stores/watermark-store";
+import { watermarkStorage } from "@imify/core/indexed-db";
+import { useTranslation } from "react-i18next";
 
 interface WatermarkOpenSavedDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  items: SavedWatermarkItem[]
-  onConfirm: (item: SavedWatermarkItem) => void
-  onDelete?: (id: string) => void
-  allowDelete?: boolean
-  title?: string
-  confirmLabel?: string
-  initialSelectedId?: string | null
+  isOpen: boolean;
+  onClose: () => void;
+  items: SavedWatermarkItem[];
+  onConfirm: (item: SavedWatermarkItem) => void;
+  onDelete?: (id: string) => void;
+  allowDelete?: boolean;
+  title?: string;
+  confirmLabel?: string;
+  initialSelectedId?: string | null;
 }
 
 function formatSavedDate(item: SavedWatermarkItem): string {
-  const dateValue = item.updatedAt || item.createdAt
+  const dateValue = item.updatedAt || item.createdAt;
 
   return new Date(dateValue).toLocaleString([], {
     year: "numeric",
     month: "short",
     day: "2-digit",
     hour: "2-digit",
-    minute: "2-digit"
-  })
+    minute: "2-digit",
+  });
 }
 
 interface ParsedGradientStop {
-  color: string
-  offset: number
+  color: string;
+  offset: number;
 }
 
 interface ParsedLinearGradient {
-  angleDeg: number
-  stops: ParsedGradientStop[]
+  angleDeg: number;
+  stops: ParsedGradientStop[];
 }
 
 interface RgbColor {
-  r: number
-  g: number
-  b: number
+  r: number;
+  g: number;
+  b: number;
 }
 
 function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
+  return Math.max(min, Math.min(max, value));
 }
 
 function parseHexColor(value: string): RgbColor | null {
-  const hex = value.trim().replace(/^#/, "")
+  const hex = value.trim().replace(/^#/, "");
   if (hex.length !== 3 && hex.length !== 6) {
-    return null
+    return null;
   }
 
   if (hex.length === 3) {
     const expanded = hex
       .split("")
       .map((part) => `${part}${part}`)
-      .join("")
+      .join("");
 
-    const parsed = Number.parseInt(expanded, 16)
+    const parsed = Number.parseInt(expanded, 16);
     if (!Number.isFinite(parsed)) {
-      return null
+      return null;
     }
 
     return {
       r: (parsed >> 16) & 255,
       g: (parsed >> 8) & 255,
-      b: parsed & 255
-    }
+      b: parsed & 255,
+    };
   }
 
-  const parsed = Number.parseInt(hex, 16)
+  const parsed = Number.parseInt(hex, 16);
   if (!Number.isFinite(parsed)) {
-    return null
+    return null;
   }
 
   return {
     r: (parsed >> 16) & 255,
     g: (parsed >> 8) & 255,
-    b: parsed & 255
-  }
+    b: parsed & 255,
+  };
 }
 
 function parseRgbColor(value: string): RgbColor | null {
   const match = value
     .trim()
-    .match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[0-9.]+)?\s*\)$/i)
+    .match(
+      /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[0-9.]+)?\s*\)$/i,
+    );
 
   if (!match) {
-    return null
+    return null;
   }
 
   return {
     r: clamp(Number(match[1]), 0, 255),
     g: clamp(Number(match[2]), 0, 255),
-    b: clamp(Number(match[3]), 0, 255)
-  }
+    b: clamp(Number(match[3]), 0, 255),
+  };
 }
 
 function parseLinearGradientColor(value: string): ParsedLinearGradient | null {
-  const trimmed = value.trim()
-  const match = trimmed.match(/^linear-gradient\(\s*([+-]?\d*\.?\d+)deg\s*,\s*(.+)\s*\)$/i)
+  const trimmed = value.trim();
+  const match = trimmed.match(
+    /^linear-gradient\(\s*([+-]?\d*\.?\d+)deg\s*,\s*(.+)\s*\)$/i,
+  );
   if (!match) {
-    return null
+    return null;
   }
 
-  const angleDeg = Number(match[1])
+  const angleDeg = Number(match[1]);
   if (!Number.isFinite(angleDeg)) {
-    return null
+    return null;
   }
 
   const parts = match[2]
     .split(/,(?![^(]*\))/)
     .map((part) => part.trim())
-    .filter(Boolean)
+    .filter(Boolean);
 
   if (parts.length < 2) {
-    return null
+    return null;
   }
 
   const stops = parts.map((part, index) => {
-    const stopMatch = part.match(/^(.*?)(?:\s+([+-]?\d*\.?\d+)%?)?$/)
-    const color = stopMatch?.[1]?.trim() || part
-    const parsedOffset = Number(stopMatch?.[2])
-    const offsetFallback = (index / Math.max(1, parts.length - 1)) * 100
+    const stopMatch = part.match(/^(.*?)(?:\s+([+-]?\d*\.?\d+)%?)?$/);
+    const color = stopMatch?.[1]?.trim() || part;
+    const parsedOffset = Number(stopMatch?.[2]);
+    const offsetFallback = (index / Math.max(1, parts.length - 1)) * 100;
 
     return {
       color,
       offset:
         stopMatch?.[2] && Number.isFinite(parsedOffset)
           ? Math.max(0, Math.min(100, parsedOffset))
-          : offsetFallback
-    }
-  })
+          : offsetFallback,
+    };
+  });
 
   return {
     angleDeg,
-    stops: stops.sort((a, b) => a.offset - b.offset)
-  }
+    stops: stops.sort((a, b) => a.offset - b.offset),
+  };
 }
 
 function parseColorToRgb(value: string): RgbColor | null {
-  const trimmed = value.trim()
+  const trimmed = value.trim();
   if (!trimmed) {
-    return null
+    return null;
   }
 
   if (trimmed.startsWith("#")) {
-    return parseHexColor(trimmed)
+    return parseHexColor(trimmed);
   }
 
   if (/^rgba?\(/i.test(trimmed)) {
-    return parseRgbColor(trimmed)
+    return parseRgbColor(trimmed);
   }
 
-  return null
+  return null;
 }
 
 function getRelativeLuminance(color: RgbColor): number {
   const normalize = (channel: number) => {
-    const value = channel / 255
-    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
-  }
+    const value = channel / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
 
-  return 0.2126 * normalize(color.r) + 0.7152 * normalize(color.g) + 0.0722 * normalize(color.b)
+  return (
+    0.2126 * normalize(color.r) +
+    0.7152 * normalize(color.g) +
+    0.0722 * normalize(color.b)
+  );
 }
 
 function extractPrimaryColor(value: string): string | null {
-  const trimmed = value.trim()
+  const trimmed = value.trim();
   if (!trimmed) {
-    return null
+    return null;
   }
 
-  const gradient = parseLinearGradientColor(trimmed)
+  const gradient = parseLinearGradientColor(trimmed);
   if (gradient?.stops.length) {
-    return gradient.stops[0].color
+    return gradient.stops[0].color;
   }
 
-  return trimmed
+  return trimmed;
 }
 
 function resolvePosition(
@@ -190,34 +217,34 @@ function resolvePosition(
   canvasHeight: number,
   drawWidth: number,
   drawHeight: number,
-  padding: number
+  padding: number,
 ): { x: number; y: number } {
-  const maxX = canvasWidth - drawWidth - padding
-  const maxY = canvasHeight - drawHeight - padding
-  const centerX = (canvasWidth - drawWidth) / 2
-  const centerY = (canvasHeight - drawHeight) / 2
+  const maxX = canvasWidth - drawWidth - padding;
+  const maxY = canvasHeight - drawHeight - padding;
+  const centerX = (canvasWidth - drawWidth) / 2;
+  const centerY = (canvasHeight - drawHeight) / 2;
 
   switch (position) {
     case "top-left":
-      return { x: padding, y: padding }
+      return { x: padding, y: padding };
     case "top-center":
-      return { x: centerX, y: padding }
+      return { x: centerX, y: padding };
     case "top-right":
-      return { x: maxX, y: padding }
+      return { x: maxX, y: padding };
     case "middle-left":
-      return { x: padding, y: centerY }
+      return { x: padding, y: centerY };
     case "center":
-      return { x: centerX, y: centerY }
+      return { x: centerX, y: centerY };
     case "middle-right":
-      return { x: maxX, y: centerY }
+      return { x: maxX, y: centerY };
     case "bottom-left":
-      return { x: padding, y: maxY }
+      return { x: padding, y: maxY };
     case "bottom-center":
-      return { x: centerX, y: maxY }
+      return { x: centerX, y: maxY };
     case "bottom-right":
-      return { x: maxX, y: maxY }
+      return { x: maxX, y: maxY };
     default:
-      return { x: maxX, y: maxY }
+      return { x: maxX, y: maxY };
   }
 }
 
@@ -225,173 +252,200 @@ function drawPreviewBackground(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  accentColor: string | null
+  accentColor: string | null,
 ): void {
-  const parsed = accentColor ? parseColorToRgb(accentColor) : null
-  const luminance = parsed ? getRelativeLuminance(parsed) : 0.25
-  const useDarkBackground = luminance > 0.58
+  const parsed = accentColor ? parseColorToRgb(accentColor) : null;
+  const luminance = parsed ? getRelativeLuminance(parsed) : 0.25;
+  const useDarkBackground = luminance > 0.58;
 
-  const gradient = ctx.createLinearGradient(0, 0, width, height)
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
   if (useDarkBackground) {
-    gradient.addColorStop(0, "#0f172a")
-    gradient.addColorStop(1, "#1e293b")
+    gradient.addColorStop(0, "#0f172a");
+    gradient.addColorStop(1, "#1e293b");
   } else {
-    gradient.addColorStop(0, "#f8fafc")
-    gradient.addColorStop(1, "#cbd5e1")
+    gradient.addColorStop(0, "#f8fafc");
+    gradient.addColorStop(1, "#cbd5e1");
   }
 
-  ctx.clearRect(0, 0, width, height)
-  ctx.fillStyle = gradient
-  ctx.fillRect(0, 0, width, height)
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
 
-  ctx.fillStyle = useDarkBackground ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)"
-  ctx.beginPath()
-  ctx.arc(width * 0.82, height * 0.28, width * 0.12, 0, Math.PI * 2)
-  ctx.fill()
+  ctx.fillStyle = useDarkBackground
+    ? "rgba(255,255,255,0.08)"
+    : "rgba(15,23,42,0.08)";
+  ctx.beginPath();
+  ctx.arc(width * 0.82, height * 0.28, width * 0.12, 0, Math.PI * 2);
+  ctx.fill();
 
-  ctx.beginPath()
-  ctx.arc(width * 0.18, height * 0.75, width * 0.14, 0, Math.PI * 2)
-  ctx.fill()
+  ctx.beginPath();
+  ctx.arc(width * 0.18, height * 0.75, width * 0.14, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawTextWatermark(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  config: BatchWatermarkConfig
+  config: BatchWatermarkConfig,
 ): void {
-  const text = config.text.trim() || "Text"
-  const shortestEdge = Math.min(width, height)
-  const fontSize = Math.max(12, Math.round(shortestEdge * (Math.max(1, config.textScalePercent) / 100)))
-  const padding = Math.max(0, Math.round(config.paddingPx))
-  const textRotationDeg = Number.isFinite(config.textRotationDeg) ? Number(config.textRotationDeg) : 0
+  const text = config.text.trim() || "Text";
+  const shortestEdge = Math.min(width, height);
+  const fontSize = Math.max(
+    12,
+    Math.round(shortestEdge * (Math.max(1, config.textScalePercent) / 100)),
+  );
+  const padding = Math.max(0, Math.round(config.paddingPx));
+  const textRotationDeg = Number.isFinite(config.textRotationDeg)
+    ? Number(config.textRotationDeg)
+    : 0;
 
-  ctx.font = `700 ${fontSize}px Segoe UI, Arial, sans-serif`
-  ctx.textBaseline = "top"
-  const textMetrics = ctx.measureText(text)
+  ctx.font = `700 ${fontSize}px Segoe UI, Arial, sans-serif`;
+  ctx.textBaseline = "top";
+  const textMetrics = ctx.measureText(text);
 
-  const drawWidth = Math.ceil(textMetrics.width)
-  const drawHeight = fontSize
-  const point = resolvePosition(config.position, width, height, drawWidth, drawHeight, padding)
-  const centerX = point.x + drawWidth / 2
-  const centerY = point.y + drawHeight / 2
+  const drawWidth = Math.ceil(textMetrics.width);
+  const drawHeight = fontSize;
+  const point = resolvePosition(
+    config.position,
+    width,
+    height,
+    drawWidth,
+    drawHeight,
+    padding,
+  );
+  const centerX = point.x + drawWidth / 2;
+  const centerY = point.y + drawHeight / 2;
 
-  const primaryColor = extractPrimaryColor(config.textColor || "")
-  const strokeRgb = primaryColor ? parseColorToRgb(primaryColor) : null
-  const strokeLuminance = strokeRgb ? getRelativeLuminance(strokeRgb) : 1
+  const primaryColor = extractPrimaryColor(config.textColor || "");
+  const strokeRgb = primaryColor ? parseColorToRgb(primaryColor) : null;
+  const strokeLuminance = strokeRgb ? getRelativeLuminance(strokeRgb) : 1;
 
-  ctx.save()
-  ctx.translate(centerX, centerY)
-  ctx.rotate((textRotationDeg * Math.PI) / 180)
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.rotate((textRotationDeg * Math.PI) / 180);
 
-  const gradient = parseLinearGradientColor(config.textColor || "")
+  const gradient = parseLinearGradientColor(config.textColor || "");
   if (gradient) {
-    const radians = ((gradient.angleDeg - 90) * Math.PI) / 180
-    const halfLength = Math.max(1, Math.hypot(drawWidth, drawHeight) / 2)
-    const dx = Math.cos(radians) * halfLength
-    const dy = Math.sin(radians) * halfLength
-    const canvasGradient = ctx.createLinearGradient(-dx, -dy, dx, dy)
+    const radians = ((gradient.angleDeg - 90) * Math.PI) / 180;
+    const halfLength = Math.max(1, Math.hypot(drawWidth, drawHeight) / 2);
+    const dx = Math.cos(radians) * halfLength;
+    const dy = Math.sin(radians) * halfLength;
+    const canvasGradient = ctx.createLinearGradient(-dx, -dy, dx, dy);
 
     for (const stop of gradient.stops) {
-      canvasGradient.addColorStop(stop.offset / 100, stop.color)
+      canvasGradient.addColorStop(stop.offset / 100, stop.color);
     }
 
-    ctx.fillStyle = canvasGradient
+    ctx.fillStyle = canvasGradient;
   } else {
-    ctx.fillStyle = config.textColor || "#ffffff"
+    ctx.fillStyle = config.textColor || "#ffffff";
   }
 
-  ctx.lineWidth = Math.max(1, Math.round(fontSize * 0.08))
-  ctx.strokeStyle = strokeLuminance > 0.55 ? "rgba(15,23,42,0.35)" : "rgba(248,250,252,0.42)"
-  ctx.strokeText(text, -drawWidth / 2, -drawHeight / 2)
-  ctx.fillText(text, -drawWidth / 2, -drawHeight / 2)
-  ctx.restore()
+  ctx.lineWidth = Math.max(1, Math.round(fontSize * 0.08));
+  ctx.strokeStyle =
+    strokeLuminance > 0.55 ? "rgba(15,23,42,0.35)" : "rgba(248,250,252,0.42)";
+  ctx.strokeText(text, -drawWidth / 2, -drawHeight / 2);
+  ctx.fillText(text, -drawWidth / 2, -drawHeight / 2);
+  ctx.restore();
 }
 
-async function loadLogoBlob(config: BatchWatermarkConfig): Promise<Blob | null> {
+async function loadLogoBlob(
+  config: BatchWatermarkConfig,
+): Promise<Blob | null> {
   if (config.logoDataUrl) {
     try {
-      return await (await fetch(config.logoDataUrl)).blob()
+      return await (await fetch(config.logoDataUrl)).blob();
     } catch (error) {
-      console.warn("Failed to read saved logo from DataUrl", error)
+      console.warn("Failed to read saved logo from DataUrl", error);
     }
   }
 
   if (config.logoBlobId) {
     try {
-      return await watermarkStorage.get(config.logoBlobId)
+      return await watermarkStorage.get(config.logoBlobId);
     } catch (error) {
-      console.warn("Failed to read saved logo from IndexedDB", error)
+      console.warn("Failed to read saved logo from IndexedDB", error);
     }
   }
 
-  return null
+  return null;
 }
 
 function extractDominantColor(bitmap: ImageBitmap): string | null {
-  const sampleCanvas = document.createElement("canvas")
-  sampleCanvas.width = 24
-  sampleCanvas.height = 24
+  const sampleCanvas = document.createElement("canvas");
+  sampleCanvas.width = 24;
+  sampleCanvas.height = 24;
 
-  const sampleCtx = sampleCanvas.getContext("2d", { willReadFrequently: true })
+  const sampleCtx = sampleCanvas.getContext("2d", { willReadFrequently: true });
   if (!sampleCtx) {
-    return null
+    return null;
   }
 
-  sampleCtx.clearRect(0, 0, 24, 24)
-  sampleCtx.drawImage(bitmap, 0, 0, 24, 24)
+  sampleCtx.clearRect(0, 0, 24, 24);
+  sampleCtx.drawImage(bitmap, 0, 0, 24, 24);
 
-  const imageData = sampleCtx.getImageData(0, 0, 24, 24)
-  let r = 0
-  let g = 0
-  let b = 0
-  let count = 0
+  const imageData = sampleCtx.getImageData(0, 0, 24, 24);
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let count = 0;
 
   for (let index = 0; index < imageData.data.length; index += 4) {
-    const alpha = imageData.data[index + 3]
+    const alpha = imageData.data[index + 3];
     if (alpha < 20) {
-      continue
+      continue;
     }
 
-    r += imageData.data[index]
-    g += imageData.data[index + 1]
-    b += imageData.data[index + 2]
-    count += 1
+    r += imageData.data[index];
+    g += imageData.data[index + 1];
+    b += imageData.data[index + 2];
+    count += 1;
   }
 
   if (count === 0) {
-    return null
+    return null;
   }
 
-  return `rgb(${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)})`
+  return `rgb(${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)})`;
 }
 
 function drawLogoPlaceholder(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  config: BatchWatermarkConfig
+  config: BatchWatermarkConfig,
 ): void {
-  const targetWidth = Math.max(32, Math.round(width * (Math.max(2, config.logoScalePercent) / 100)))
-  const targetHeight = targetWidth
-  const padding = Math.max(0, Math.round(config.paddingPx))
-  const point = resolvePosition(config.position, width, height, targetWidth, targetHeight, padding)
+  const targetWidth = Math.max(
+    32,
+    Math.round(width * (Math.max(2, config.logoScalePercent) / 100)),
+  );
+  const targetHeight = targetWidth;
+  const padding = Math.max(0, Math.round(config.paddingPx));
+  const point = resolvePosition(
+    config.position,
+    width,
+    height,
+    targetWidth,
+    targetHeight,
+    padding,
+  );
 
-  ctx.save()
-  ctx.globalAlpha = Math.max(0.08, Math.min(1, config.opacity / 100))
-  ctx.fillStyle = "rgba(15,23,42,0.78)"
-  ctx.fillRect(point.x, point.y, targetWidth, targetHeight)
+  ctx.save();
+  ctx.globalAlpha = Math.max(0.08, Math.min(1, config.opacity / 100));
+  ctx.fillStyle = "rgba(15,23,42,0.78)";
+  ctx.fillRect(point.x, point.y, targetWidth, targetHeight);
 
-  ctx.lineWidth = 2
-  ctx.strokeStyle = "rgba(248,250,252,0.85)"
-  ctx.strokeRect(point.x + 1, point.y + 1, targetWidth - 2, targetHeight - 2)
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(248,250,252,0.85)";
+  ctx.strokeRect(point.x + 1, point.y + 1, targetWidth - 2, targetHeight - 2);
 
-  ctx.fillStyle = "rgba(248,250,252,0.9)"
-  ctx.font = `700 ${Math.max(9, Math.round(targetWidth * 0.2))}px Segoe UI, Arial, sans-serif`
-  ctx.textAlign = "center"
-  ctx.textBaseline = "middle"
-  ctx.fillText("LOGO", point.x + targetWidth / 2, point.y + targetHeight / 2)
-  ctx.restore()
+  ctx.fillStyle = "rgba(248,250,252,0.9)";
+  ctx.font = `700 ${Math.max(9, Math.round(targetWidth * 0.2))}px Segoe UI, Arial, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("LOGO", point.x + targetWidth / 2, point.y + targetHeight / 2);
+  ctx.restore();
 }
 
 function drawLogoBitmap(
@@ -399,40 +453,62 @@ function drawLogoBitmap(
   width: number,
   height: number,
   config: BatchWatermarkConfig,
-  logoBitmap: ImageBitmap
+  logoBitmap: ImageBitmap,
 ): void {
-  const targetWidth = Math.max(24, Math.round(width * (Math.max(2, config.logoScalePercent) / 100)))
-  const ratio = logoBitmap.height / Math.max(1, logoBitmap.width)
-  const targetHeight = Math.max(24, Math.round(targetWidth * ratio))
-  const padding = Math.max(0, Math.round(config.paddingPx))
-  const point = resolvePosition(config.position, width, height, targetWidth, targetHeight, padding)
-  const logoRotationDeg = Number.isFinite(config.logoRotationDeg) ? Number(config.logoRotationDeg) : 0
+  const targetWidth = Math.max(
+    24,
+    Math.round(width * (Math.max(2, config.logoScalePercent) / 100)),
+  );
+  const ratio = logoBitmap.height / Math.max(1, logoBitmap.width);
+  const targetHeight = Math.max(24, Math.round(targetWidth * ratio));
+  const padding = Math.max(0, Math.round(config.paddingPx));
+  const point = resolvePosition(
+    config.position,
+    width,
+    height,
+    targetWidth,
+    targetHeight,
+    padding,
+  );
+  const logoRotationDeg = Number.isFinite(config.logoRotationDeg)
+    ? Number(config.logoRotationDeg)
+    : 0;
 
-  ctx.save()
-  ctx.globalAlpha = Math.max(0.08, Math.min(1, config.opacity / 100))
-  ctx.translate(point.x + targetWidth / 2, point.y + targetHeight / 2)
-  ctx.rotate((logoRotationDeg * Math.PI) / 180)
-  ctx.drawImage(logoBitmap, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight)
-  ctx.restore()
+  ctx.save();
+  ctx.globalAlpha = Math.max(0.08, Math.min(1, config.opacity / 100));
+  ctx.translate(point.x + targetWidth / 2, point.y + targetHeight / 2);
+  ctx.rotate((logoRotationDeg * Math.PI) / 180);
+  ctx.drawImage(
+    logoBitmap,
+    -targetWidth / 2,
+    -targetHeight / 2,
+    targetWidth,
+    targetHeight,
+  );
+  ctx.restore();
 }
 
-function drawUnavailableMessage(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-  ctx.fillStyle = "rgba(15,23,42,0.72)"
-  ctx.fillRect(0, height - 28, width, 28)
-  ctx.fillStyle = "rgba(248,250,252,0.92)"
-  ctx.font = "600 11px Segoe UI, Arial, sans-serif"
-  ctx.textAlign = "center"
-  ctx.textBaseline = "middle"
-  ctx.fillText("Preview unavailable", width / 2, height - 14)
+function drawUnavailableMessage(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+): void {
+  ctx.fillStyle = "rgba(15,23,42,0.72)";
+  ctx.fillRect(0, height - 28, width, 28);
+  ctx.fillStyle = "rgba(248,250,252,0.92)";
+  ctx.font = "600 11px Segoe UI, Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("Preview unavailable", width / 2, height - 14);
 }
 
 export function buildWatermarkMetadata(item: SavedWatermarkItem): string {
-  const config = item.config
+  const config = item.config;
   if (config.type === "none") {
-    return "No watermark"
+    return "No watermark";
   }
 
-  const parts: string[] = []
+  const parts: string[] = [];
 
   // Position
   const positionLabel = {
@@ -440,132 +516,209 @@ export function buildWatermarkMetadata(item: SavedWatermarkItem): string {
     "top-center": "↑ Top-Center",
     "top-right": "↗ Top-Right",
     "middle-left": "← Middle-Left",
-    "center": "⦿ Center",
+    center: "⦿ Center",
     "middle-right": "→ Middle-Right",
     "bottom-left": "↙ Bottom-Left",
     "bottom-center": "↓ Bottom-Center",
-    "bottom-right": "↘ Bottom-Right"
-  }
-  parts.push(positionLabel[config.position] || config.position)
+    "bottom-right": "↘ Bottom-Right",
+  };
+  parts.push(positionLabel[config.position] || config.position);
 
   // Size & Padding
   if (config.type === "text") {
-    parts.push(`${config.textScalePercent}% size`)
+    parts.push(`${config.textScalePercent}% size`);
   } else if (config.type === "logo") {
-    parts.push(`${config.logoScalePercent}% scale`)
+    parts.push(`${config.logoScalePercent}% scale`);
   }
 
-  parts.push(`${config.paddingPx}px padding`)
+  parts.push(`${config.paddingPx}px padding`);
 
   // Opacity (for logo)
   if (config.type === "logo") {
-    parts.push(`${config.opacity}% opacity`)
+    parts.push(`${config.opacity}% opacity`);
   }
 
-  return parts.join(" · ")
+  return parts.join(" · ");
 }
 
 export function WatermarkPreviewCard({
   item,
   selected,
-  onSelect
+  onSelect,
 }: {
-  item: SavedWatermarkItem
-  selected: boolean
-  onSelect: (id: string) => void
+  item: SavedWatermarkItem;
+  selected: boolean;
+  onSelect: (id: string) => void;
 }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const { t } = useTranslation("processor");
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    let active = true
+    let active = true;
 
     const renderPreview = async () => {
-      const canvas = canvasRef.current
+      const config = item.config;
+      const canvas = canvasRef.current;
       if (!canvas) {
-        return
+        return;
       }
 
-      const ctx = canvas.getContext("2d")
+      const ctx = canvas.getContext("2d");
       if (!ctx) {
-        return
+        return;
       }
 
-      const width = canvas.width
-      const height = canvas.height
+      const width = canvas.width;
+      const height = canvas.height;
 
       try {
         if (item.config.type === "none") {
-          drawPreviewBackground(ctx, width, height, null)
-          return
+          drawPreviewBackground(ctx, width, height, null);
+          return;
         }
 
         if (item.config.type === "text") {
-          drawPreviewBackground(ctx, width, height, extractPrimaryColor(item.config.textColor || ""))
-          drawTextWatermark(ctx, width, height, item.config)
-          return
+          drawPreviewBackground(
+            ctx,
+            width,
+            height,
+            extractPrimaryColor(item.config.textColor || ""),
+          );
+          drawTextWatermark(ctx, width, height, item.config);
+          return;
         }
 
-        const logoBlob = await loadLogoBlob(item.config)
+        const logoBlob = await loadLogoBlob(item.config);
         if (!active) {
-          return
+          return;
         }
 
         if (!logoBlob) {
-          drawPreviewBackground(ctx, width, height, null)
-          drawLogoPlaceholder(ctx, width, height, item.config)
-          return
+          drawPreviewBackground(ctx, width, height, null);
+          drawLogoPlaceholder(ctx, width, height, item.config);
+          return;
         }
 
-        let logoBitmap: ImageBitmap | null = null
+        let logoBitmap: ImageBitmap | null = null;
         try {
-          logoBitmap = await createImageBitmap(logoBlob)
+          logoBitmap = await createImageBitmap(logoBlob);
         } catch (error) {
-          console.warn("Failed to decode logo for saved watermark preview", error)
+          console.warn(
+            "Failed to decode logo for saved watermark preview",
+            error,
+          );
         }
 
         if (!active) {
-          logoBitmap?.close()
-          return
+          logoBitmap?.close();
+          return;
         }
 
         if (!logoBitmap) {
-          drawPreviewBackground(ctx, width, height, null)
-          drawLogoPlaceholder(ctx, width, height, item.config)
-          return
+          drawPreviewBackground(ctx, width, height, null);
+          drawLogoPlaceholder(ctx, width, height, item.config);
+          drawUnavailableMessage(ctx, width, height);
+          return;
+        }
+
+        if (!active) {
+          return;
         }
 
         try {
-          drawPreviewBackground(ctx, width, height, extractDominantColor(logoBitmap))
-          drawLogoBitmap(ctx, width, height, item.config, logoBitmap)
-        } finally {
-          logoBitmap.close()
-        }
-      } catch (error) {
-        console.error("Failed to render saved watermark preview", error)
-        if (!active) {
-          return
-        }
+          const logoBitmap = await createImageBitmap(logoBlob);
+          try {
+            if (!active) {
+              return;
+            }
 
-        drawPreviewBackground(ctx, width, height, null)
-        drawUnavailableMessage(ctx, width, height)
+            const targetWidth = Math.max(
+              16,
+              Math.round(width * (Math.max(2, config.logoScalePercent) / 100)),
+            );
+            const ratio = logoBitmap.height / Math.max(1, logoBitmap.width);
+            const targetHeight = Math.max(16, Math.round(targetWidth * ratio));
+            const padding = Math.max(0, Math.round(config.paddingPx * 0.25)); // Scale padding down for mini-preview
+            const point = {
+              x: width - targetWidth - padding,
+              y: height - targetHeight - padding,
+            };
+
+            if (config.position === "top-left") {
+              point.x = padding;
+              point.y = padding;
+            } else if (config.position === "top-center") {
+              point.x = (width - targetWidth) / 2;
+              point.y = padding;
+            } else if (config.position === "top-right") {
+              point.x = width - targetWidth - padding;
+              point.y = padding;
+            } else if (config.position === "middle-left") {
+              point.x = padding;
+              point.y = (height - targetHeight) / 2;
+            } else if (config.position === "center") {
+              point.x = (width - targetWidth) / 2;
+              point.y = (height - targetHeight) / 2;
+            } else if (config.position === "middle-right") {
+              point.x = width - targetWidth - padding;
+              point.y = (height - targetHeight) / 2;
+            } else if (config.position === "bottom-left") {
+              point.x = padding;
+              point.y = height - targetHeight - padding;
+            } else if (config.position === "bottom-center") {
+              point.x = (width - targetWidth) / 2;
+              point.y = height - targetHeight - padding;
+            }
+
+            const logoRotationDeg =
+              typeof config.logoRotationDeg === "number"
+                ? config.logoRotationDeg
+                : 0;
+
+            ctx.globalAlpha = Math.max(0.05, Math.min(1, config.opacity / 100));
+            ctx.save();
+            ctx.translate(
+              point.x + targetWidth / 2,
+              point.y + targetHeight / 2,
+            );
+            ctx.rotate((logoRotationDeg * Math.PI) / 180);
+            ctx.drawImage(
+              logoBitmap,
+              -targetWidth / 2,
+              -targetHeight / 2,
+              targetWidth,
+              targetHeight,
+            );
+            ctx.restore();
+          } finally {
+            logoBitmap.close();
+          }
+        } catch (err) {
+          console.error("Failed to render logo card preview", err);
+          drawUnavailableMessage(ctx, width, height);
+        }
+      } catch (outerError) {
+        console.error("Failed to render preview inside card", outerError);
+        drawUnavailableMessage(ctx, width, height);
       }
-    }
+    };
 
-    void renderPreview()
+    void renderPreview();
 
     return () => {
-      active = false
-    }
-  }, [item.id, item.updatedAt, item.config])
+      active = false;
+    };
+  }, [item]);
 
   return (
     <button
       type="button"
       onClick={() => onSelect(item.id)}
-      className={`group overflow-hidden rounded-xl border text-left transition-all ${selected
-        ? "border-sky-500 bg-sky-50/60 shadow-sm shadow-sky-500/20 ring-1 ring-sky-300 dark:bg-sky-500/10 dark:ring-sky-600"
-        : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
-        }`}
+      className={`group overflow-hidden rounded-xl border text-left transition-all ${
+        selected
+          ? "border-sky-500 bg-sky-50/60 shadow-sm shadow-sky-500/20 ring-1 ring-sky-300 dark:bg-sky-500/10 dark:ring-sky-600"
+          : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
+      }`}
     >
       <div className="relative aspect-[3/2] w-full overflow-hidden border-b border-slate-200/70 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
         <canvas
@@ -577,25 +730,28 @@ export function WatermarkPreviewCard({
         {selected ? (
           <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-sky-500/90 px-2 py-1 text-[10px] font-semibold text-white">
             <Check size={12} />
-            Selected
+            {t("watermarkDialog.selected", "Selected")}
           </span>
         ) : null}
       </div>
 
       <div className="space-y-1 px-3 py-3">
-        <div className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">{item.name}</div>
+        <div className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">
+          {item.name}
+        </div>
         <MutedText className="text-[10px] leading-tight truncate">
           {buildWatermarkMetadata(item)}
         </MutedText>
         <MutedText className="text-[10px] opacity-60">
-          Saved on {formatSavedDate(item)}
+          {t("watermarkDialog.savedOn", "Saved on")} {formatSavedDate(item)}
         </MutedText>
       </div>
     </button>
-  )
+  );
 }
 
 export function EmptySavedWatermarkState() {
+  const { t } = useTranslation("processor");
   return (
     <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/40 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-900/40">
       <div className="relative mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
@@ -604,16 +760,21 @@ export function EmptySavedWatermarkState() {
           <BookmarkX size={12} />
         </span>
       </div>
-      <BodyText className="text-sm font-bold text-slate-800 dark:text-slate-100">No saved watermarks yet</BodyText>
+      <BodyText className="text-sm font-bold text-slate-800 dark:text-slate-100">
+        {t("watermarkDialog.noSavedYet", "No saved watermarks yet")}
+      </BodyText>
       <MutedText className="mt-1 max-w-sm text-xs text-center">
-        Save your current watermark pattern first, then reopen it anytime from this library.
+        {t(
+          "watermarkDialog.noSavedYetDesc",
+          "Save your current watermark pattern first, then reopen it anytime from this library.",
+        )}
       </MutedText>
       <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
         <Sparkles size={11} />
-        Client-side only
+        {t("watermarkDialog.clientSideOnly", "Client-side only")}
       </div>
     </div>
-  )
+  );
 }
 
 export function WatermarkOpenSavedDialog({
@@ -625,53 +786,61 @@ export function WatermarkOpenSavedDialog({
   allowDelete = true,
   title = "Open Saved Watermark",
   confirmLabel = "Open",
-  initialSelectedId = null
+  initialSelectedId = null,
 }: WatermarkOpenSavedDialogProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId)
+  const { t } = useTranslation("processor");
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialSelectedId,
+  );
 
   useEffect(() => {
     if (!isOpen) {
-      return
+      return;
     }
 
-    if (initialSelectedId && items.some((item) => item.id === initialSelectedId)) {
-      setSelectedId(initialSelectedId)
-      return
+    if (
+      initialSelectedId &&
+      items.some((item) => item.id === initialSelectedId)
+    ) {
+      setSelectedId(initialSelectedId);
+      return;
     }
 
-    setSelectedId(items[0]?.id ?? null)
-  }, [isOpen, initialSelectedId, items])
+    setSelectedId(items[0]?.id ?? null);
+  }, [isOpen, initialSelectedId, items]);
 
   useEffect(() => {
     if (!selectedId) {
-      return
+      return;
     }
 
     if (!items.some((item) => item.id === selectedId)) {
-      setSelectedId(items[0]?.id ?? null)
+      setSelectedId(items[0]?.id ?? null);
     }
-  }, [items, selectedId])
+  }, [items, selectedId]);
 
   const selectedItem = useMemo(
     () => items.find((item) => item.id === selectedId) ?? null,
-    [items, selectedId]
-  )
+    [items, selectedId],
+  );
 
   const handleDelete = () => {
     if (!allowDelete || !onDelete || !selectedItem) {
-      return
+      return;
     }
 
-    const shouldDelete = window.confirm(`Delete saved watermark \"${selectedItem.name}\"?`)
+    const shouldDelete = window.confirm(
+      `Delete saved watermark \"${selectedItem.name}\"?`,
+    );
     if (!shouldDelete) {
-      return
+      return;
     }
 
-    onDelete(selectedItem.id)
-  }
+    onDelete(selectedItem.id);
+  };
 
   if (!isOpen) {
-    return null
+    return null;
   }
 
   return (
@@ -686,8 +855,15 @@ export function WatermarkOpenSavedDialog({
             <FolderOpen size={18} />
           </div>
           <div className="min-w-0">
-            <Subheading className="text-sm font-bold leading-tight">{title}</Subheading>
-            <MutedText className="text-[11px] leading-tight mt-0.5">Choose a saved watermark card to continue.</MutedText>
+            <Subheading className="text-sm font-bold leading-tight">
+              {title}
+            </Subheading>
+            <MutedText className="text-[11px] leading-tight mt-0.5">
+              {t(
+                "watermarkDialog.chooseToContinue",
+                "Choose a saved watermark card to continue.",
+              )}
+            </MutedText>
           </div>
         </div>
         <button
@@ -721,14 +897,17 @@ export function WatermarkOpenSavedDialog({
         <div className="min-w-0">
           {selectedItem ? (
             <BodyText className="text-xs truncate">
-              Selected: <span className="font-bold text-sky-600 dark:text-sky-400">{selectedItem.name}</span>
+              {t("watermarkDialog.selected", "Selected")}:{" "}
+              <span className="font-bold text-sky-600 dark:text-sky-400">
+                {selectedItem.name}
+              </span>
             </BodyText>
           ) : null}
         </div>
 
         <div className="flex items-center gap-2">
           <SecondaryButton onClick={onClose} className="px-4">
-            Cancel
+            {t("watermarkDialog.cancel", "Cancel")}
           </SecondaryButton>
 
           {allowDelete && onDelete ? (
@@ -740,7 +919,7 @@ export function WatermarkOpenSavedDialog({
               className="px-4"
             >
               <Trash2 size={14} />
-              Delete
+              {t("watermarkDialog.delete", "Delete")}
             </Button>
           ) : null}
 
@@ -748,7 +927,7 @@ export function WatermarkOpenSavedDialog({
             size="sm"
             onClick={() => {
               if (selectedItem) {
-                onConfirm(selectedItem)
+                onConfirm(selectedItem);
               }
             }}
             disabled={!selectedItem}
@@ -760,6 +939,5 @@ export function WatermarkOpenSavedDialog({
         </div>
       </div>
     </BaseDialog>
-  )
+  );
 }
-

@@ -10,15 +10,20 @@ import {
   PowerOff,
   X,
   Gauge,
+  Languages,
 } from "lucide-react";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { Button } from "@imify/ui/ui/button";
+import { ToggleSwitchLabel } from "@imify/ui/ui/toggle-switch-label";
 import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header";
 import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header";
 import { Subheading, BodyText, MutedText } from "@imify/ui/ui/typography";
 import { useDevModeEnabled } from "../dev-mode/dev-mode-storage";
+import { useDevModeStore } from "../dev-mode/dev-mode-store";
+import { I18nRuntimeImportDialog } from "../dev-mode/i18n-runtime-import-dialog";
+import { I18nTemplateDialog } from "../dev-mode/i18n-template-dialog";
 import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog";
 import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog";
 import { DevModeStateViewer } from "../dev-mode/dev-mode-state-viewer";
@@ -57,12 +62,20 @@ export function DevToolsDialog({
   performancePreferences,
 }: DevToolsDialogProps) {
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
-  const [activeTab, setActiveTab] = useState<"system" | "console" | "capabilities" | null>(
-    "system",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "system" | "console" | "capabilities" | "language" | null
+  >("system");
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isI18nImportDialogOpen, setIsI18nImportDialogOpen] = useState(false);
+  const [isI18nTemplateDialogOpen, setIsI18nTemplateDialogOpen] =
+    useState(false);
   const [isMobileDialog, setIsMobileDialog] = useState(false);
+
+  const showI18nDebugKeys = useDevModeStore((state) => state.showI18nDebugKeys);
+  const setShowI18nDebugKeys = useDevModeStore(
+    (state) => state.setShowI18nDebugKeys,
+  );
   const { toasts, hide, success } = useToast();
 
   const safePerformancePreferences = normalizePerformancePreferences(
@@ -115,16 +128,6 @@ export function DevToolsDialog({
       bgClassName: "bg-violet-50 dark:bg-violet-900/40",
     },
     {
-      id: "capabilities" as const,
-      label: "Capabilities",
-      description: "Browser feature detection and API support",
-      icon: Gauge,
-      activeClassName: DEFAULT_ACTIVE_CLASS,
-      inactiveClassName: DEFAULT_INACTIVE_CLASS,
-      iconClassName: "text-sky-600 dark:text-sky-400",
-      bgClassName: "bg-sky-50 dark:bg-sky-900/40",
-    },
-    {
       id: "console" as const,
       label: "Console Monitor",
       description: "Real-time console logging and debugger",
@@ -133,6 +136,26 @@ export function DevToolsDialog({
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-indigo-650 dark:text-indigo-400",
       bgClassName: "bg-indigo-50 dark:bg-indigo-900/40",
+    },
+    {
+      id: "language" as const,
+      label: "Language Tools",
+      description: "i18n debugging and custom locales management",
+      icon: Languages,
+      activeClassName: DEFAULT_ACTIVE_CLASS,
+      inactiveClassName: DEFAULT_INACTIVE_CLASS,
+      iconClassName: "text-teal-650 dark:text-teal-400",
+      bgClassName: "bg-teal-50 dark:bg-teal-900/40",
+    },
+    {
+      id: "capabilities" as const,
+      label: "Capabilities",
+      description: "Browser feature detection and API support",
+      icon: Gauge,
+      activeClassName: DEFAULT_ACTIVE_CLASS,
+      inactiveClassName: DEFAULT_INACTIVE_CLASS,
+      iconClassName: "text-sky-600 dark:text-sky-400",
+      bgClassName: "bg-sky-50 dark:bg-sky-900/40",
     },
   ];
 
@@ -313,6 +336,55 @@ export function DevToolsDialog({
                 </div>
               ) : null}
 
+              {activeTab === "language" ? (
+                <div className="animate-in fade-in duration-300 space-y-5">
+                  {!isMobileDialog && (
+                    <SettingsSectionHeader
+                      title="LANGUAGE TOOLS"
+                      description="Developer tools for internationalization, testing localizations, and managing runtime translations."
+                    />
+                  )}
+
+                  <section className="space-y-4">
+                    <SettingsItemHeader
+                      title="TRANSLATION DEBUGGING"
+                      description="Toggle translation key decoration to locate text strings in locale bundles."
+                    />
+                    <ToggleSwitchLabel
+                      label="Show i18n Debug Keys"
+                      description="Display translation keys next to strings in the UI to assist with localization."
+                      checked={showI18nDebugKeys}
+                      onChange={setShowI18nDebugKeys}
+                    />
+                  </section>
+
+                  <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
+                    <SettingsItemHeader
+                      title="CUSTOM LOCALES"
+                      description="Import new translation files or download a translation template JSON to contribute."
+                    />
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <Button
+                        variant="outline"
+                        className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        onClick={() => setIsI18nImportDialogOpen(true)}
+                      >
+                        <Languages size={14} />
+                        Import Custom Language
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        onClick={() => setIsI18nTemplateDialogOpen(true)}
+                      >
+                        <Download size={14} />
+                        Download Template
+                      </Button>
+                    </div>
+                  </section>
+                </div>
+              ) : null}
+
               {activeTab === "capabilities" ? (
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
@@ -369,6 +441,28 @@ export function DevToolsDialog({
             settingsAdapter={devModeSettingsAdapter}
             onSuccess={() =>
               success("Import successful", "State has been restored.", 3000)
+            }
+          />
+          <I18nRuntimeImportDialog
+            isOpen={isI18nImportDialogOpen}
+            onClose={() => setIsI18nImportDialogOpen(false)}
+            onSuccess={(meta) =>
+              success(
+                "Language loaded successfully",
+                `Loaded custom language ${meta.languageName} (${meta.languageCode}) at runtime.`,
+                3000,
+              )
+            }
+          />
+          <I18nTemplateDialog
+            isOpen={isI18nTemplateDialogOpen}
+            onClose={() => setIsI18nTemplateDialogOpen(false)}
+            onSuccess={() =>
+              success(
+                "Template generated",
+                "Empty translation JSON template has been downloaded.",
+                3000,
+              )
             }
           />
         </>

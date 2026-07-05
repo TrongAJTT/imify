@@ -33,6 +33,7 @@ import {
 import { useQrReaderStore } from "@imify/stores";
 import { parseQrString, formatICalDateForDisplay } from "./qr-parser";
 import { useToast } from "@imify/core/hooks/use-toast";
+import { useTranslation } from "@imify/i18n";
 
 interface QrReaderSidebarProps {
   enableWideSidebarGrid?: boolean;
@@ -108,6 +109,7 @@ export function QrReaderSidebar({
   enableWideSidebarGrid = false,
   autoWideSidebarGridMinWidthPx = null,
 }: QrReaderSidebarProps) {
+  const { t } = useTranslation("qrReader");
   const { lastScanResult } = useQrReaderStore();
   const { toasts, success, error, hide } = useToast();
   const [copied, setCopied] = useState(false);
@@ -118,11 +120,11 @@ export function QrReaderSidebar({
       .writeText(text)
       .then(() => {
         setCopied(true);
-        success("Copied", "Copied to clipboard successfully");
+        success(t("workspace.copied"), t("sidebar.copied"));
         setTimeout(() => setCopied(false), 2000);
       })
       .catch(() => {
-        error("Error", "Failed to copy to clipboard");
+        error(t("workspace.errorHeader"), t("workspace.copyFailed"));
       });
   };
 
@@ -130,7 +132,7 @@ export function QrReaderSidebar({
     return (
       <>
         <WorkspaceConfigSidebarPanel
-          title="SCAN RESULTS"
+          title={t("sidebar.configuration")}
           items={[
             {
               id: "no-result",
@@ -138,11 +140,10 @@ export function QrReaderSidebar({
               content: (
                 <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 text-center space-y-2">
                   <MutedText className="text-xs font-medium">
-                    No scan result yet.
+                    {t("sidebar.noResult")}
                   </MutedText>
                   <MutedText className="text-[10px]">
-                    Scan a QR code using your camera, screen capture, or import an
-                    image file to display decoded information here.
+                    {t("sidebar.noResultDesc")}
                   </MutedText>
                 </div>
               ),
@@ -170,8 +171,8 @@ export function QrReaderSidebar({
             .writeText(cleanUrl)
             .then(() => {
               success(
-                "Copied URL",
-                "Copied URL to clipboard. Redirecting to URLVoid..."
+                t("sidebar.copiedUrl"),
+                t("sidebar.redirectingUrlVoid")
               );
               setTimeout(() => {
                 window.open(
@@ -182,7 +183,7 @@ export function QrReaderSidebar({
               }, 2000);
             })
             .catch(() => {
-              error("Error", "Failed to copy URL to clipboard");
+              error(t("workspace.errorHeader"), t("sidebar.copyUrlFailed"));
             });
         };
 
@@ -195,18 +196,18 @@ export function QrReaderSidebar({
               className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
             >
               <ExternalLink size={14} />
-              <span>Open Link in Browser</span>
+              <span>{t("sidebar.openBrowserLink")}</span>
             </Button>
             <SecondaryButton
               onClick={handleCheckReputation}
               className="w-full text-xs h-9 flex items-center justify-center gap-1.5 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <ShieldCheck size={14} className="text-emerald-500" />
-              <span>Check URL Reputation</span>
+              <span>{t("sidebar.checkReputation")}</span>
               <span onClick={(e) => e.stopPropagation()} className="inline-flex">
                 <Tooltip
                   variant="wide1"
-                  content={`• This action will take you outside to URLVoid to check the website trustworthiness.\n• If the link is shortened (e.g. bit.ly, tinyurl.com), URLVoid cannot scan the actual destination page. Be cautious!`}
+                  content={t("sidebar.urlVoidTooltip")}
                 >
                   <HelpCircle
                     size={13}
@@ -225,9 +226,9 @@ export function QrReaderSidebar({
         if (!email) return null;
         return (
           <div className="space-y-2 text-xs">
-            <FieldRow label="To" value={email.to} />
-            {email.subject && <FieldRow label="Subject" value={email.subject} />}
-            {email.body && <FieldRow label="Message Body" value={email.body} />}
+            <FieldRow label={t("sidebar.fields.to")} value={email.to} />
+            {email.subject && <FieldRow label={t("sidebar.fields.subject")} value={email.subject} />}
+            {email.body && <FieldRow label={t("sidebar.fields.body")} value={email.body} />}
             <Button
               onClick={() =>
                 window.open(
@@ -237,7 +238,7 @@ export function QrReaderSidebar({
               className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
             >
               <Mail size={14} />
-              <span>Draft Email</span>
+              <span>{t("sidebar.draftEmail")}</span>
             </Button>
           </div>
         );
@@ -249,8 +250,8 @@ export function QrReaderSidebar({
         if (!sms) return null;
         return (
           <div className="space-y-2 text-xs">
-            <FieldRow label="Phone Number" value={sms.phone} />
-            {sms.message && <FieldRow label="Message" value={sms.message} />}
+            <FieldRow label={t("sidebar.fields.phone")} value={sms.phone} />
+            {sms.message && <FieldRow label={t("sidebar.fields.message")} value={sms.message} />}
             <Button
               onClick={() =>
                 window.open(
@@ -260,7 +261,7 @@ export function QrReaderSidebar({
               className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
             >
               <MessageSquare size={14} />
-              <span>Send SMS</span>
+              <span>{t("sidebar.sendSms")}</span>
             </Button>
           </div>
         );
@@ -271,13 +272,13 @@ export function QrReaderSidebar({
         const num = parsed.raw.substring(4);
         return (
           <div className="space-y-3">
-            <FieldRow label="Phone" value={num} />
+            <FieldRow label={t("sidebar.fields.phone")} value={num} />
             <Button
               onClick={() => window.open(`tel:${num}`)}
               className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
             >
               <Phone size={14} />
-              <span>Call Number</span>
+              <span>{t("sidebar.callNumber")}</span>
             </Button>
           </div>
         );
@@ -291,13 +292,13 @@ export function QrReaderSidebar({
           <div className="space-y-2 text-xs">
             <FieldRow
               icon={<Wifi size={14} />}
-              label="Network SSID"
+              label={t("sidebar.fields.ssid")}
               value={wifi.ssid}
             />
             {wifi.password && (
               <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850 relative">
                 <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                  Password
+                  {t("sidebar.fields.password")}
                 </span>
                 <span className="font-mono font-medium text-xs text-slate-800 dark:text-slate-250 select-all pr-8">
                   {showPassword ? wifi.password : "••••••••"}
@@ -312,13 +313,13 @@ export function QrReaderSidebar({
               </div>
             )}
             <FieldRow
-              label="Security Type"
-              value={wifi.encryption || "None"}
+              label={t("sidebar.fields.encryption")}
+              value={wifi.encryption || t("sidebar.no")}
             />
             {wifi.hidden !== undefined && (
               <FieldRow
-                label="Hidden SSID"
-                value={wifi.hidden ? "Yes" : "No"}
+                label={t("sidebar.fields.hidden")}
+                value={wifi.hidden ? t("sidebar.yes") : t("sidebar.no")}
               />
             )}
             {wifi.password && (
@@ -327,7 +328,7 @@ export function QrReaderSidebar({
                 className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
               >
                 <Copy size={14} />
-                <span>Copy Password</span>
+                <span>{t("sidebar.copyPassword")}</span>
               </SecondaryButton>
             )}
           </div>
@@ -343,21 +344,21 @@ export function QrReaderSidebar({
             {vcard.name && (
               <FieldRow
                 icon={<User size={14} />}
-                label="Name"
+                label={t("sidebar.fields.name")}
                 value={vcard.name}
               />
             )}
             {(vcard.title || vcard.org) && (
               <FieldRow
                 icon={<FileText size={14} />}
-                label="Company / Title"
+                label={t("sidebar.fields.companyTitle")}
                 value={[vcard.title, vcard.org].filter(Boolean).join(" — ")}
               />
             )}
             {vcard.phoneMobile && (
               <FieldRow
                 icon={<Phone size={14} />}
-                label="Mobile Phone"
+                label={t("sidebar.fields.phoneMobile")}
                 value={vcard.phoneMobile}
                 onClick={() => window.open(`tel:${vcard.phoneMobile}`)}
               />
@@ -365,7 +366,7 @@ export function QrReaderSidebar({
             {vcard.phoneWork && (
               <FieldRow
                 icon={<Phone size={14} />}
-                label="Work Phone"
+                label={t("sidebar.fields.phoneWork")}
                 value={vcard.phoneWork}
                 onClick={() => window.open(`tel:${vcard.phoneWork}`)}
               />
@@ -373,7 +374,7 @@ export function QrReaderSidebar({
             {vcard.phoneHome && (
               <FieldRow
                 icon={<Phone size={14} />}
-                label="Home Phone"
+                label={t("sidebar.fields.phoneHome")}
                 value={vcard.phoneHome}
                 onClick={() => window.open(`tel:${vcard.phoneHome}`)}
               />
@@ -381,14 +382,14 @@ export function QrReaderSidebar({
             {vcard.phoneFax && (
               <FieldRow
                 icon={<Printer size={14} />}
-                label="Fax"
+                label={t("sidebar.fields.phoneFax")}
                 value={vcard.phoneFax}
               />
             )}
             {vcard.email && (
               <FieldRow
                 icon={<Mail size={14} />}
-                label="Email"
+                label={t("sidebar.fields.email")}
                 value={vcard.email}
                 onClick={() => window.open(`mailto:${vcard.email}`)}
               />
@@ -396,7 +397,7 @@ export function QrReaderSidebar({
             {vcard.url && (
               <FieldRow
                 icon={<ExternalLink size={14} />}
-                label="Website"
+                label={t("sidebar.fields.url")}
                 value={vcard.url}
                 onClick={() => window.open(vcard.url, "_blank")}
               />
@@ -404,14 +405,14 @@ export function QrReaderSidebar({
             {vcard.address && (
               <FieldRow
                 icon={<MapPin size={14} />}
-                label="Address"
+                label={t("sidebar.fields.address")}
                 value={vcard.address}
               />
             )}
             {vcard.note && (
               <FieldRow
                 icon={<AlignLeft size={14} />}
-                label="Notes"
+                label={t("sidebar.fields.note")}
                 value={vcard.note}
               />
             )}
@@ -422,7 +423,7 @@ export function QrReaderSidebar({
                   className="flex-1 text-xs h-9 flex items-center justify-center gap-1.5"
                 >
                   <Phone size={14} />
-                  <span>Call</span>
+                  <span>{t("sidebar.call")}</span>
                 </Button>
               )}
               {vcard.email && (
@@ -431,7 +432,7 @@ export function QrReaderSidebar({
                   className="flex-1 text-xs h-9 flex items-center justify-center gap-1.5"
                 >
                   <Mail size={14} />
-                  <span>Email</span>
+                  <span>{t("sidebar.email")}</span>
                 </Button>
               )}
             </div>
@@ -456,7 +457,7 @@ export function QrReaderSidebar({
             {ev.title && (
               <FieldRow
                 icon={<Calendar size={14} />}
-                label="Event Name"
+                label={t("sidebar.fields.eventTitle")}
                 value={ev.title}
               />
             )}
@@ -464,18 +465,18 @@ export function QrReaderSidebar({
               <div className="flex flex-col bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
                 <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide flex items-center gap-1">
                   <Clock size={11} />
-                  Date & Time
+                  {t("sidebar.fields.dateTime")}
                 </span>
                 <div className="mt-1 space-y-0.5">
                   {startDisplay && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 w-8 shrink-0">From</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 w-8 shrink-0">{t("sidebar.fields.from")}</span>
                       <span className="font-medium text-slate-800 dark:text-slate-250">{startDisplay}</span>
                     </div>
                   )}
                   {endDisplay && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 w-8 shrink-0">To</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 w-8 shrink-0">{t("sidebar.fields.to")}</span>
                       <span className="font-medium text-slate-800 dark:text-slate-250">{endDisplay}</span>
                     </div>
                   )}
@@ -485,21 +486,21 @@ export function QrReaderSidebar({
             {ev.location && (
               <FieldRow
                 icon={<MapPin size={14} />}
-                label="Location"
+                label={t("sidebar.fields.location")}
                 value={ev.location}
               />
             )}
             {ev.description && (
               <FieldRow
                 icon={<AlignLeft size={14} />}
-                label="Description"
+                label={t("sidebar.fields.description")}
                 value={ev.description}
               />
             )}
             {ev.url && (
               <FieldRow
                 icon={<ExternalLink size={14} />}
-                label="Event URL"
+                label={t("sidebar.fields.url")}
                 value={ev.url}
                 onClick={() => window.open(ev.url, "_blank")}
               />
@@ -520,7 +521,7 @@ export function QrReaderSidebar({
                 className="flex-1 text-xs h-9 flex items-center justify-center gap-1.5"
               >
                 <Calendar size={14} />
-                <span>Save .ics File</span>
+                <span>{t("sidebar.saveIcs")}</span>
               </Button>
               {ev.url && (
                 <SecondaryButton
@@ -528,7 +529,7 @@ export function QrReaderSidebar({
                   className="flex-1 text-xs h-9 flex items-center justify-center gap-1.5"
                 >
                   <ExternalLink size={14} />
-                  <span>Open URL</span>
+                  <span>{t("sidebar.openUrl")}</span>
                 </SecondaryButton>
               )}
             </div>
@@ -555,13 +556,13 @@ export function QrReaderSidebar({
             </div>
             <FieldRow
               icon={<User size={14} />}
-              label={msg.platform === "telegram" ? "Username" : "Phone Number"}
+              label={msg.platform === "telegram" ? t("sidebar.fields.recipient") : t("sidebar.fields.phone")}
               value={msg.recipient}
             />
             {msg.message && (
               <FieldRow
                 icon={<AlignLeft size={14} />}
-                label="Template Message"
+                label={t("sidebar.fields.message")}
                 value={msg.message}
               />
             )}
@@ -570,7 +571,7 @@ export function QrReaderSidebar({
               className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
             >
               <MessageCircle size={14} />
-              <span>Open in {meta.label}</span>
+              <span>{t("sidebar.openInPlatform", { platform: meta.label })}</span>
             </Button>
           </div>
         );
@@ -586,7 +587,7 @@ export function QrReaderSidebar({
               className="w-full text-xs h-9 flex items-center justify-center gap-1.5"
             >
               <Copy size={14} />
-              <span>Copy Text</span>
+              <span>{t("sidebar.copyText")}</span>
             </Button>
           </div>
         );
@@ -599,8 +600,8 @@ export function QrReaderSidebar({
       label: "",
       content: (
         <AccordionCard
-          label="Parsed Actions"
-          sublabel="Quick shortcuts for parsed data"
+          label={t("sidebar.parsedActions")}
+          sublabel={t("sidebar.parsedActionsDesc")}
           icon={<Sliders size={16} />}
           alwaysOpen={true}
           colorTheme="sky"
@@ -615,7 +616,7 @@ export function QrReaderSidebar({
   return (
     <>
       <WorkspaceConfigSidebarPanel
-        title="SCAN RESULTS"
+        title={t("sidebar.configuration")}
         items={sidebarItems}
         twoColumn={false}
       />

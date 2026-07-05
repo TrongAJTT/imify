@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useRef, useState, type ReactNode } from 
 import { Expand, Shrink } from "lucide-react"
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { Tooltip, ZoomPanControl } from "@imify/ui"
-import { DIFFCHECKER_TOOLTIPS } from "./diffchecker-tooltips"
 import { usePanDrag } from "../shared/use-pan-drag"
 import { useCanvasResizer } from "../shared/use-canvas-resizer"
+import { useTranslation } from "@imify/i18n"
 
 interface ViewerShellProps {
   children: ReactNode
@@ -22,6 +22,7 @@ const ZOOM_FACTOR = 0.15
 const INTERACTIVE_SELECTOR = '[data-viewer-interactive="true"], [class*="pointer-events-auto"]'
 
 export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanChange, className = "" }: ViewerShellProps) {
+  const { t } = useTranslation("diffchecker")
   const ref = useRef<HTMLDivElement>(null)
   const containerHeight = useDiffcheckerStore((s) => s.containerHeight)
   const setContainerHeight = useDiffcheckerStore((s) => s.setContainerHeight)
@@ -148,7 +149,7 @@ export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanCha
     >
       {children}
       <div data-viewer-interactive="true" className="pointer-events-auto absolute top-1/2 right-2 z-20 -translate-y-1/2">
-        <Tooltip content={isFullscreen ? DIFFCHECKER_TOOLTIPS.viewerShell.exitFullscreen : DIFFCHECKER_TOOLTIPS.viewerShell.fullscreen}>
+        <Tooltip content={isFullscreen ? t("tooltips.exitFullscreen") : t("tooltips.fullscreen")}>
           <button
             type="button"
             data-viewer-interactive="true"

@@ -1,229 +1,302 @@
-"use client"
+"use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Stage } from "react-konva"
-import type Konva from "konva"
-import { ArrowLeft, ChevronDown, Image, Pencil } from "lucide-react"
-import { Button, PreviewInteractionModeToggle, ZoomPanControl } from "@imify/ui"
-import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
-import { MutedText, Subheading } from "@imify/ui/ui/typography"
-import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle"
-import { useFillingStore } from "@imify/stores/stores/filling-store"
-import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences"
-import { useShortcutActions } from "../use-shortcut-actions"
-import { parseGridDesign, generateGridLayers } from "./generator"
-import { GridDesignCanvasLayer } from "./canvas-layer"
-import { templateStorage } from "../template-storage"
-import type { FillingTemplate } from "../types"
-import { DEFAULT_GRID_DESIGN_PARAMS } from "../types"
-import { preventWheelEvent } from "../../shared/prevent-wheel-event"
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Stage } from "react-konva";
+import type Konva from "konva";
+import { ArrowLeft, ChevronDown, Image, Pencil } from "lucide-react";
+import {
+  Button,
+  PreviewInteractionModeToggle,
+  ZoomPanControl,
+} from "@imify/ui";
+import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
+import { MutedText, Subheading } from "@imify/ui/ui/typography";
+import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle";
+import { useFillingStore } from "@imify/stores/stores/filling-store";
+import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
+import { useShortcutActions } from "../use-shortcut-actions";
+import { parseGridDesign, generateGridLayers } from "./generator";
+import { GridDesignCanvasLayer } from "./canvas-layer";
+import { templateStorage } from "../template-storage";
+import type { FillingTemplate } from "../types";
+import { DEFAULT_GRID_DESIGN_PARAMS } from "../types";
+import { useTranslation } from "@imify/i18n";
+import { preventWheelEvent } from "../../shared/prevent-wheel-event";
 
-const CANVAS_PADDING = 40
-const PREVIEW_MIN_ZOOM = 50
-const PREVIEW_MAX_ZOOM = 10000
-const PREVIEW_ZOOM_STEP = 10
+const CANVAS_PADDING = 40;
+const PREVIEW_MIN_ZOOM = 50;
+const PREVIEW_MAX_ZOOM = 10000;
+const PREVIEW_ZOOM_STEP = 10;
 // When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
 // Matches DiffChecker's multiplicative approach.
-const PREVIEW_ZOOM_FACTOR = 0.15
+const PREVIEW_ZOOM_FACTOR = 0.15;
 
 interface GridDesignWorkspaceProps {
-  template: FillingTemplate
-  onRefresh: () => Promise<void>
-  onSaved?: (template: FillingTemplate, destination: "fill" | "edit" | "list") => void | Promise<void>
+  template: FillingTemplate;
+  onRefresh: () => Promise<void>;
+  onSaved?: (
+    template: FillingTemplate,
+    destination: "fill" | "edit" | "list",
+  ) => void | Promise<void>;
 }
 
-export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesignWorkspaceProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const stageRef = useRef<Konva.Stage>(null)
-  const [stageSize, setStageSize] = useState({ width: 800, height: 600 })
-  const [previewZoom, setPreviewZoom] = useState(100)
-  const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 })
-  const [previewInteractionMode, setPreviewInteractionMode] = useState<PreviewInteractionMode>("zoom")
-  const params = useFillingStore((state) => state.gridDesignParams)
-  const setGridDesignParams = useFillingStore((state) => state.setGridDesignParams)
-  const setGridLayerCount = useFillingStore((state) => state.setGridLayerCount)
-  const updateTemplate = useFillingStore((state) => state.updateTemplate)
-  const { getShortcutLabel } = useShortcutPreferences()
-  const [isSaving, setIsSaving] = useState(false)
+export function GridDesignWorkspace({
+  template,
+  onRefresh,
+  onSaved,
+}: GridDesignWorkspaceProps) {
+  const { t } = useTranslation("filling");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<Konva.Stage>(null);
+  const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
+  const [previewZoom, setPreviewZoom] = useState(100);
+  const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
+  const [previewInteractionMode, setPreviewInteractionMode] =
+    useState<PreviewInteractionMode>("zoom");
+  const params = useFillingStore((state) => state.gridDesignParams);
+  const setGridDesignParams = useFillingStore(
+    (state) => state.setGridDesignParams,
+  );
+  const setGridLayerCount = useFillingStore((state) => state.setGridLayerCount);
+  const updateTemplate = useFillingStore((state) => state.updateTemplate);
+  const { getShortcutLabel } = useShortcutPreferences();
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    setGridDesignParams(template.gridDesignParams ?? { ...DEFAULT_GRID_DESIGN_PARAMS })
-  }, [setGridDesignParams, template.gridDesignParams, template.id])
+    setGridDesignParams(
+      template.gridDesignParams ?? { ...DEFAULT_GRID_DESIGN_PARAMS },
+    );
+  }, [setGridDesignParams, template.gridDesignParams, template.id]);
 
   useEffect(() => {
-    const container = containerRef.current
+    const container = containerRef.current;
     if (!container) {
-      return
+      return;
     }
 
     const observer = new ResizeObserver((entries) => {
-      const entry = entries[0]
+      const entry = entries[0];
       if (!entry) {
-        return
+        return;
       }
 
       setStageSize({
         width: Math.floor(entry.contentRect.width),
         height: Math.max(400, Math.floor(entry.contentRect.height)),
-      })
-    })
+      });
+    });
 
-    observer.observe(container)
-    return () => observer.disconnect()
-  }, [])
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   useShortcutActions([
-    { actionId: "global.preview.zoom_mode", handler: () => setPreviewInteractionMode("zoom") },
-    { actionId: "global.preview.pan_mode", handler: () => setPreviewInteractionMode("pan") },
-    { actionId: "global.preview.idle_mode", handler: () => setPreviewInteractionMode("idle") },
-  ])
+    {
+      actionId: "global.preview.zoom_mode",
+      handler: () => setPreviewInteractionMode("zoom"),
+    },
+    {
+      actionId: "global.preview.pan_mode",
+      handler: () => setPreviewInteractionMode("pan"),
+    },
+    {
+      actionId: "global.preview.idle_mode",
+      handler: () => setPreviewInteractionMode("idle"),
+    },
+  ]);
 
-  const activeParams = params ?? template.gridDesignParams ?? { ...DEFAULT_GRID_DESIGN_PARAMS }
+  const activeParams = params ??
+    template.gridDesignParams ?? { ...DEFAULT_GRID_DESIGN_PARAMS };
   const parseResult = useMemo(
-    () => parseGridDesign(activeParams, template.canvasWidth, template.canvasHeight),
-    [activeParams, template.canvasHeight, template.canvasWidth]
-  )
+    () =>
+      parseGridDesign(
+        activeParams,
+        template.canvasWidth,
+        template.canvasHeight,
+      ),
+    [activeParams, template.canvasHeight, template.canvasWidth],
+  );
 
   useEffect(() => {
-    setGridLayerCount(parseResult.layoutCells.length)
-  }, [parseResult.layoutCells.length, setGridLayerCount])
+    setGridLayerCount(parseResult.layoutCells.length);
+  }, [parseResult.layoutCells.length, setGridLayerCount]);
 
   const fitScale = useMemo(() => {
-    const availW = stageSize.width - CANVAS_PADDING * 2
-    const availH = stageSize.height - CANVAS_PADDING * 2
-    return Math.min(1, availW / template.canvasWidth, availH / template.canvasHeight)
-  }, [stageSize, template.canvasHeight, template.canvasWidth])
+    const availW = stageSize.width - CANVAS_PADDING * 2;
+    const availH = stageSize.height - CANVAS_PADDING * 2;
+    return Math.min(
+      1,
+      availW / template.canvasWidth,
+      availH / template.canvasHeight,
+    );
+  }, [stageSize, template.canvasHeight, template.canvasWidth]);
 
   const clampPreviewZoom = useCallback((value: number) => {
-    return Math.max(PREVIEW_MIN_ZOOM, Math.min(PREVIEW_MAX_ZOOM, Math.round(value)))
-  }, [])
+    return Math.max(
+      PREVIEW_MIN_ZOOM,
+      Math.min(PREVIEW_MAX_ZOOM, Math.round(value)),
+    );
+  }, []);
 
-  const handlePreviewWheel = useCallback((event: WheelEvent) => {
-    const target = event.target as HTMLElement | null
-    if (target?.closest('[class*="pointer-events-auto"]')) {
-      return
-    }
-    if (previewInteractionMode === "idle") {
-      return
-    }
-    preventWheelEvent(event)
-
-    if (previewInteractionMode === "pan") {
-      const delta = event.deltaY > 0 ? 50 : -50
-      if (event.shiftKey) {
-        setPreviewPan((current) => ({ ...current, x: current.x - delta }))
-      } else {
-        setPreviewPan((current) => ({ ...current, y: current.y - delta }))
+  const handlePreviewWheel = useCallback(
+    (event: WheelEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('[class*="pointer-events-auto"]')) {
+        return;
       }
-      return
-    }
+      if (previewInteractionMode === "idle") {
+        return;
+      }
+      preventWheelEvent(event);
 
-    const oldZoom = previewZoom
-    const dir = event.deltaY > 0 ? -1 : 1
-    const nextZoom = clampPreviewZoom(oldZoom * (1 + PREVIEW_ZOOM_FACTOR * dir))
-    if (nextZoom === oldZoom) {
-      return
-    }
+      if (previewInteractionMode === "pan") {
+        const delta = event.deltaY > 0 ? 50 : -50;
+        if (event.shiftKey) {
+          setPreviewPan((current) => ({ ...current, x: current.x - delta }));
+        } else {
+          setPreviewPan((current) => ({ ...current, y: current.y - delta }));
+        }
+        return;
+      }
 
-    const oldRenderScale = fitScale * (oldZoom / 100)
-    const newRenderScale = fitScale * (nextZoom / 100)
-    const container = containerRef.current
-    if (!container || oldRenderScale <= 0 || newRenderScale <= 0) {
-      setPreviewZoom(nextZoom)
-      return
-    }
+      const oldZoom = previewZoom;
+      const dir = event.deltaY > 0 ? -1 : 1;
+      const nextZoom = clampPreviewZoom(
+        oldZoom * (1 + PREVIEW_ZOOM_FACTOR * dir),
+      );
+      if (nextZoom === oldZoom) {
+        return;
+      }
 
-    const rect = container.getBoundingClientRect()
-    const pointerX = event.clientX - rect.left
-    const pointerY = event.clientY - rect.top
-    const baseOffsetOldX = (stageSize.width - template.canvasWidth * oldRenderScale) / 2
-    const baseOffsetOldY = (stageSize.height - template.canvasHeight * oldRenderScale) / 2
-    const worldX = (pointerX - baseOffsetOldX - previewPan.x) / oldRenderScale
-    const worldY = (pointerY - baseOffsetOldY - previewPan.y) / oldRenderScale
-    const baseOffsetNewX = (stageSize.width - template.canvasWidth * newRenderScale) / 2
-    const baseOffsetNewY = (stageSize.height - template.canvasHeight * newRenderScale) / 2
+      const oldRenderScale = fitScale * (oldZoom / 100);
+      const newRenderScale = fitScale * (nextZoom / 100);
+      const container = containerRef.current;
+      if (!container || oldRenderScale <= 0 || newRenderScale <= 0) {
+        setPreviewZoom(nextZoom);
+        return;
+      }
 
-    setPreviewZoom(nextZoom)
-    setPreviewPan({
-      x: Math.round((pointerX - baseOffsetNewX - worldX * newRenderScale) * 100) / 100,
-      y: Math.round((pointerY - baseOffsetNewY - worldY * newRenderScale) * 100) / 100,
-    })
-  }, [
-    clampPreviewZoom,
-    fitScale,
-    previewInteractionMode,
-    previewPan.x,
-    previewPan.y,
-    previewZoom,
-    stageSize.height,
-    stageSize.width,
-    template.canvasHeight,
-    template.canvasWidth,
-  ])
+      const rect = container.getBoundingClientRect();
+      const pointerX = event.clientX - rect.left;
+      const pointerY = event.clientY - rect.top;
+      const baseOffsetOldX =
+        (stageSize.width - template.canvasWidth * oldRenderScale) / 2;
+      const baseOffsetOldY =
+        (stageSize.height - template.canvasHeight * oldRenderScale) / 2;
+      const worldX =
+        (pointerX - baseOffsetOldX - previewPan.x) / oldRenderScale;
+      const worldY =
+        (pointerY - baseOffsetOldY - previewPan.y) / oldRenderScale;
+      const baseOffsetNewX =
+        (stageSize.width - template.canvasWidth * newRenderScale) / 2;
+      const baseOffsetNewY =
+        (stageSize.height - template.canvasHeight * newRenderScale) / 2;
+
+      setPreviewZoom(nextZoom);
+      setPreviewPan({
+        x:
+          Math.round(
+            (pointerX - baseOffsetNewX - worldX * newRenderScale) * 100,
+          ) / 100,
+        y:
+          Math.round(
+            (pointerY - baseOffsetNewY - worldY * newRenderScale) * 100,
+          ) / 100,
+      });
+    },
+    [
+      clampPreviewZoom,
+      fitScale,
+      previewInteractionMode,
+      previewPan.x,
+      previewPan.y,
+      previewZoom,
+      stageSize.height,
+      stageSize.width,
+      template.canvasHeight,
+      template.canvasWidth,
+    ],
+  );
 
   useEffect(() => {
-    const container = containerRef.current
+    const container = containerRef.current;
     if (!container) {
-      return
+      return;
     }
 
-    container.addEventListener("wheel", handlePreviewWheel, { passive: false })
-    return () => container.removeEventListener("wheel", handlePreviewWheel)
-  }, [handlePreviewWheel])
+    container.addEventListener("wheel", handlePreviewWheel, { passive: false });
+    return () => container.removeEventListener("wheel", handlePreviewWheel);
+  }, [handlePreviewWheel]);
 
-  const renderScale = fitScale * (previewZoom / 100)
-  const offsetX = (stageSize.width - template.canvasWidth * renderScale) / 2 + previewPan.x
-  const offsetY = (stageSize.height - template.canvasHeight * renderScale) / 2 + previewPan.y
+  const renderScale = fitScale * (previewZoom / 100);
+  const offsetX =
+    (stageSize.width - template.canvasWidth * renderScale) / 2 + previewPan.x;
+  const offsetY =
+    (stageSize.height - template.canvasHeight * renderScale) / 2 + previewPan.y;
 
   const buildUpdatedTemplate = useCallback((): FillingTemplate => {
     return {
       ...template,
-      layers: generateGridLayers(activeParams, template.canvasWidth, template.canvasHeight),
+      layers: generateGridLayers(
+        activeParams,
+        template.canvasWidth,
+        template.canvasHeight,
+      ),
       gridDesignParams: activeParams,
       updatedAt: Date.now(),
-    }
-  }, [activeParams, template])
+    };
+  }, [activeParams, template]);
 
   const handleSaveToDestination = useCallback(
     async (destination: "fill" | "edit" | "list") => {
       if (isSaving) {
-        return
+        return;
       }
 
-      setIsSaving(true)
+      setIsSaving(true);
       try {
-        const updated = buildUpdatedTemplate()
-        await templateStorage.save(updated)
-        updateTemplate(updated)
-        await onRefresh()
+        const updated = buildUpdatedTemplate();
+        await templateStorage.save(updated);
+        updateTemplate(updated);
+        await onRefresh();
         if (onSaved) {
-          await onSaved(updated, destination)
+          await onSaved(updated, destination);
         }
       } finally {
-        setIsSaving(false)
+        setIsSaving(false);
       }
     },
-    [buildUpdatedTemplate, isSaving, onRefresh, onSaved, updateTemplate]
-  )
+    [buildUpdatedTemplate, isSaving, onRefresh, onSaved, updateTemplate],
+  );
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      const synced = buildUpdatedTemplate()
-      updateTemplate(synced)
-      void templateStorage.save(synced)
-    }, 350)
+      const synced = buildUpdatedTemplate();
+      updateTemplate(synced);
+      void templateStorage.save(synced);
+    }, 350);
 
-    return () => window.clearTimeout(timeout)
-  }, [buildUpdatedTemplate, updateTemplate])
+    return () => window.clearTimeout(timeout);
+  }, [buildUpdatedTemplate, updateTemplate]);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <Subheading>Grid Designer</Subheading>
+          <Subheading>{t("dialog.gridTitle")}</Subheading>
           <MutedText className="mt-0.5 text-xs truncate">
-            {parseResult.layoutCells.length} cell{parseResult.layoutCells.length !== 1 ? "s" : ""} generated &middot;{" "}
-            {template.canvasWidth} x {template.canvasHeight} px
+            {parseResult.layoutCells.length === 1
+              ? t("gridDesigner.cellsGenerated", { count: 1 })
+              : t("gridDesigner.cellsGeneratedPlural", {
+                  count: parseResult.layoutCells.length,
+                })}{" "}
+            &middot; {template.canvasWidth} x {template.canvasHeight} px
           </MutedText>
         </div>
 
@@ -244,7 +317,7 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
               onClick={() => void handleSaveToDestination("fill")}
             >
               <Image size={14} />
-              Save & Fill
+              {t("gridDesigner.saveFill")}
             </Button>
             <ControlledPopover
               preset="dropdown"
@@ -272,7 +345,7 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
                 onClick={() => void handleSaveToDestination("edit")}
               >
                 <Pencil size={14} />
-                Save & Edit
+                {t("gridDesigner.saveEdit")}
               </button>
               <button
                 type="button"
@@ -280,7 +353,7 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
                 onClick={() => void handleSaveToDestination("list")}
               >
                 <ArrowLeft size={14} />
-                Save & Back to list
+                {t("gridDesigner.saveBack")}
               </button>
             </ControlledPopover>
           </div>
@@ -313,5 +386,5 @@ export function GridDesignWorkspace({ template, onRefresh, onSaved }: GridDesign
         />
       </div>
     </div>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
 import {
@@ -24,6 +24,7 @@ export interface SavedSplitterPreset {
   config: SplitterPresetConfig
   createdAt: number
   updatedAt: number
+  pinned?: boolean
 }
 
 interface SplitterPresetStoreState {
@@ -40,6 +41,7 @@ interface SplitterPresetStoreState {
   updatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
   deletePreset: (presetId: string) => void
   syncActivePresetConfig: (config: SplitterPresetConfig) => void
+  togglePinPreset: (presetId: string) => void
 }
 
 function cloneSplitSettings(settings: SplitterSplitSettings): SplitterSplitSettings {
@@ -237,6 +239,16 @@ export const useSplitterPresetStore = create<SplitterPresetStoreState>()(
             )
           }
         })
+      },
+
+      togglePinPreset: (presetId) => {
+        set((state) => ({
+          presets: state.presets.map((preset) =>
+            preset.id === presetId
+              ? { ...preset, pinned: !preset.pinned }
+              : preset
+          )
+        }))
       }
     }),
     {

@@ -1,18 +1,25 @@
 "use client"
 
+import React from "react"
 import Link from "next/link"
 import { getWorkspaceToolsMenuGroups } from "@imify/features/workspace-shell/workspace-tools"
 import { IMIFY_LINKS } from "@imify/core"
 import { useWebPageMode } from "@/hooks/use-web-page-mode"
 import { useIsDesktopLayout } from "@imify/features/workspace-chrome"
 import { FindOnProductHuntBadge, FindOnUnikornBadge, FindOnJ2TeamLaunchBadge } from "@/features/community/find-us-badges"
-
-const TOOL_GROUPS = getWorkspaceToolsMenuGroups()
-const ALL_TOOLS = TOOL_GROUPS.flatMap((g) => g.items)
+import { useTranslation } from "@imify/i18n"
 
 export function WebFooter() {
   const { isMonolithicPage: isFullFooter } = useWebPageMode()
   const isDesktop = useIsDesktopLayout()
+  const { i18n } = useTranslation("workspace")
+  const [isMounted, setIsMounted] = React.useState(false)
+  React.useEffect(() => { setIsMounted(true) }, [])
+
+  const allTools = React.useMemo(() => {
+    const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en")
+    return groups.flatMap((g) => g.items)
+  }, [i18n.language, isMounted])
 
   // Hide footer ONLY on tool pages AND on mobile interface.
   if (!isFullFooter && !isDesktop) {
@@ -54,7 +61,7 @@ export function WebFooter() {
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Tools</h3>
             <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
-              {ALL_TOOLS.slice(0, 4).map(tool => (
+              {allTools.slice(0, 4).map(tool => (
                 <li key={tool.id}>
                   <Link href={tool.href} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                     {tool.label}
@@ -67,7 +74,7 @@ export function WebFooter() {
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">More Features</h3>
             <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
-              {ALL_TOOLS.slice(4, 8).map(tool => (
+              {allTools.slice(4, 8).map(tool => (
                 <li key={tool.id}>
                   <Link href={tool.href} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                     {tool.label}

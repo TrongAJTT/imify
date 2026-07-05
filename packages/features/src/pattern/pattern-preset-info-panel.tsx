@@ -1,64 +1,65 @@
-import React from "react"
-import { PresetInfoShowcasePanel } from "@imify/features/shared/preset-info-showcase-panel"
-import { FEATURE_MEDIA_ASSET_PATHS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
+import React from "react";
+import { PresetInfoShowcasePanel } from "@imify/features/shared/preset-info-showcase-panel";
+import {
+  FEATURE_MEDIA_ASSET_PATHS,
+  resolveFeatureMediaAssetUrl,
+} from "@imify/features/shared/media-assets";
+import { useTranslation } from "@imify/i18n";
 
 interface PatternPresetInfoPanelProps {
-  compact?: boolean
+  compact?: boolean;
 }
 
-export function PatternPresetInfoPanel({ compact = false }: PatternPresetInfoPanelProps) {
-  const previewAspectRatio = compact ? "16 / 9" : "16 / 9"
+export function PatternPresetInfoPanel({
+  compact = false,
+}: PatternPresetInfoPanelProps) {
+  const { t } = useTranslation("pattern");
+  const previewAspectRatio = compact ? "16 / 9" : "16 / 9";
 
   return (
     <PresetInfoShowcasePanel
-      previewSrc={resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp)}
-      previewAlt="Pattern Generator canvas and sidebar controls preview"
+      previewSrc={resolveFeatureMediaAssetUrl(
+        FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp,
+      )}
+      previewAlt={t("showcase.previewAlt")}
       previewAspectRatio={previewAspectRatio}
-      title="Pattern Generator"
-      subtitle="Build reusable pattern presets, control boundaries and distribution behavior, then export high-quality decorative compositions."
+      title={t("showcase.title")}
+      subtitle={t("showcase.subtitle")}
       tips={[
-        "Use inbound and outbound boundaries together to tightly control where the pattern appears and where it must stay empty.",
-        "Tune jitter, scale variance, and random rotation to make repeated assets feel natural instead of mechanically tiled.",
-        "Workspace changes are auto-synced back into the active preset with debounce, so your latest configuration is retained.",
-        "You can style each asset directly with monochrome, border, and corner radius before export.",
+        t("showcase.tips.tip1"),
+        t("showcase.tips.tip2"),
+        t("showcase.tips.tip3"),
+        t("showcase.tips.tip4"),
       ]}
       featureChips={[
-        "Random Distribution",
-        "Boundary Control",
-        "Asset Layer Styling",
-        "Auto-save Presets",
-        "Advanced Export Codecs",
+        t("showcase.chips.distribution"),
+        t("showcase.chips.boundary"),
+        t("showcase.chips.styling"),
+        t("showcase.chips.autosave"),
+        t("showcase.chips.codecs"),
       ]}
       faqs={[
         {
-          question: "What is Pattern Generator best used for?",
-          answer:
-            "It is ideal for decorative backgrounds such as social post canvases, thumbnails, and mockup backdrops where consistent style and repeatability are important.",
+          question: t("showcase.faqs.q1"),
+          answer: t("showcase.faqs.a1"),
         },
         {
-          question: "How do inbound and outbound boundaries work?",
-          answer:
-            "You can define geometric regions (rectangle or ellipse) where pattern elements must appear (inbound) and exclusion regions where elements must not appear (outbound), giving you precise coverage control.",
+          question: t("showcase.faqs.q2"),
+          answer: t("showcase.faqs.a2"),
         },
         {
-          question: "If I refresh the page, will I lose my setup?",
-          answer:
-            "Your configuration is preserved, but uploaded asset files are not. Settings such as spacing, rotation, and boundaries are synced back to the preset (debounced), while heavy image files are intentionally not persisted across sessions.",
+          question: t("showcase.faqs.q3"),
+          answer: t("showcase.faqs.a3"),
         },
         {
-          question: "Can I recolor assets after uploading them?",
-          answer:
-            "Yes. You can apply monochrome/color override globally or tune each asset individually with color, border, and corner radius controls directly in the workspace.",
+          question: t("showcase.faqs.q4"),
+          answer: t("showcase.faqs.a4"),
         },
         {
-          question: "Why don't I see visual boundary overlays while editing on web?",
-          answer:
-            "The visual boundary overlay is currently optimized for the extension runtime. On web, you still get immediate real-time canvas feedback when changing boundary settings, and full parity is planned in a future update.",
+          question: t("showcase.faqs.q5"),
+          answer: t("showcase.faqs.a5"),
         },
       ]}
     />
-  )
+  );
 }
-
-
-

@@ -16,6 +16,7 @@ import {
   type ShortcutDefinition
 } from "@imify/stores/shortcuts"
 import { BodyText, MutedText } from "@imify/ui/index"
+import { useTranslation } from "@imify/i18n"
 
 export function SettingsShortcutsPanel({ isMobile }: { isMobile?: boolean }) {
   const [searchQuery, setSearchQuery] = useState("")
@@ -105,20 +106,22 @@ export function SettingsShortcutsPanel({ isMobile }: { isMobile?: boolean }) {
     [filteredGroupedDefinitions]
   )
 
+  const { t } = useTranslation(["settings", "common"])
+
   return (
     <div className="animate-in fade-in duration-300 space-y-5">
       {!isMobile && (
         <SettingsSectionHeader
-          title="Shortkeys"
-          description="Review and rebind keyboard shortcuts used across preview workspaces and Pattern Generator tools."
+          title={t("shortcuts.sectionTitle", "Shortkeys")}
+          description={t("shortcuts.sectionDesc", "Review and rebind keyboard shortcuts used across preview workspaces and Pattern Generator tools.")}
         />
       )}
 
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <SettingsItemHeader
-            title="KEYBOARD SHORTCUTS"
-            description="Click a shortcut and press a key combination. Press Esc to cancel or Backspace/Delete to clear."
+            title={t("shortcuts.shortcutsTitle", "KEYBOARD SHORTCUTS")}
+            description={t("shortcuts.shortcutsDesc", "Click a shortcut and press a key combination. Press Esc to cancel or Backspace/Delete to clear.")}
           />
           <Button
             type="button"
@@ -127,16 +130,16 @@ export function SettingsShortcutsPanel({ isMobile }: { isMobile?: boolean }) {
             onClick={resetAllShortcutBindings}
           >
             <RotateCcw size={14} />
-            Reset All
+            {t("shortcuts.resetAll", "Reset All")}
           </Button>
         </div>
 
         <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <TextInput
-            label="Search shortcuts"
+            label={t("shortcuts.searchLabel", "Search shortcuts")}
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search by action name or key combination (e.g. Ctrl+Shift+E)"
+            placeholder={t("shortcuts.searchPlaceholder", "Search by action name or key combination (e.g. Ctrl+Shift+E)")}
           />
           <Button
             type="button"
@@ -145,33 +148,35 @@ export function SettingsShortcutsPanel({ isMobile }: { isMobile?: boolean }) {
             onClick={() => setSearchQuery("")}
             disabled={!searchQuery.trim()}
           >
-            Clear Search
+            {t("shortcuts.clearSearch", "Clear Search")}
           </Button>
         </div>
 
         {!isLoading && searchQuery.trim() ? (
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300">
-            Showing {filteredDefinitionCount} shortcut{filteredDefinitionCount === 1 ? "" : "s"} for "
-            {searchQuery.trim()}".
+            {filteredDefinitionCount === 1
+              ? t("shortcuts.showingResults", { count: filteredDefinitionCount, query: searchQuery.trim() })
+              : t("shortcuts.showingResultsPlural", { count: filteredDefinitionCount, query: searchQuery.trim() })
+            }
           </div>
         ) : null}
 
         {isLoading ? (
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300">
-            Loading shortcut preferences...
+            {t("shortcuts.loading", "Loading shortcut preferences...")}
           </div>
         ) : null}
 
         {!isLoading && filteredDefinitionCount === 0 ? (
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300">
-            No shortcuts matched your search.
+            {t("shortcuts.noResults", "No shortcuts matched your search.")}
           </div>
         ) : null}
 
         {filteredGroupedDefinitions.map(([category, items]) => (
           <div key={category} className="space-y-2">
             <MutedText className="text-xs font-semibold uppercase tracking-wide">
-              {category}
+              {t(`shortcuts.categories.${category}`, category)}
             </MutedText>
             {items.map((definition) => {
               const conflicts = conflictMap.get(definition.id) ?? []
@@ -182,10 +187,10 @@ export function SettingsShortcutsPanel({ isMobile }: { isMobile?: boolean }) {
                 >
                   <div className="grid gap-3 md:grid-cols-2 md:items-start">
                     <div className="space-y-1">
-                      <BodyText className="font-medium">{definition.label}</BodyText>
-                      <MutedText className="text-xs">{definition.description}</MutedText>
+                      <BodyText className="font-medium">{t(`shortcuts.actions.${definition.id}.label`, definition.label)}</BodyText>
+                      <MutedText className="text-xs">{t(`shortcuts.actions.${definition.id}.description`, definition.description)}</MutedText>
                       <MutedText className="text-[11px]">
-                        Default: {formatShortcutBinding(DEFAULT_SHORTCUT_PREFERENCES[definition.id])}
+                        {t("shortcuts.defaultLabel", { binding: formatShortcutBinding(DEFAULT_SHORTCUT_PREFERENCES[definition.id]).replace("Unassigned", t("shortcuts.unassigned", "Unassigned")) })}
                       </MutedText>
                     </div>
 
@@ -204,7 +209,7 @@ export function SettingsShortcutsPanel({ isMobile }: { isMobile?: boolean }) {
                           disabled={!preferences[definition.id]}
                         >
                           <X size={14} />
-                          Clear
+                          {t("shortcuts.clear", "Clear")}
                         </Button>
                         <Button
                           type="button"
@@ -213,14 +218,14 @@ export function SettingsShortcutsPanel({ isMobile }: { isMobile?: boolean }) {
                           className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
                           onClick={() => resetShortcutBinding(definition.id)}
                         >
-                          Reset
+                          {t("shortcuts.reset", "Reset")}
                         </Button>
                       </div>
                     </div>
                   </div>
                   {conflicts.length ? (
                     <MutedText className="mt-2 text-xs !text-amber-700 dark:!text-amber-300">
-                      Conflict with: {conflicts.map((actionId) => definitionMap[actionId]?.label ?? actionId).join(", ")}
+                      {t("shortcuts.conflict", { actions: conflicts.map((actionId) => t(`shortcuts.actions.${actionId}.label`, definitionMap[actionId]?.label ?? actionId)).join(", ") })}
                     </MutedText>
                   ) : null}
                 </div>

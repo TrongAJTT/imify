@@ -13,7 +13,7 @@ import {
 import { InfoSection, InfoRow } from "./info-section"
 import { Tooltip } from "@imify/ui"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
-import { INSPECTOR_TOOLTIPS } from "./inspector-tooltips"
+import { useTranslation } from "@imify/i18n"
 
 function formatColor(c: PaletteColor, format: ColorDisplayFormat): string {
   switch (format) {
@@ -97,6 +97,7 @@ function bestPaletteWcagPair(palette: PaletteColor[]): {
 }
 
 function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplayFormat }) {
+  const { t } = useTranslation("inspector")
   const [copied, setCopied] = useState(false)
   const formatted = formatColor(c, format)
   const name = getColorName(c.hsl)
@@ -104,7 +105,7 @@ function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplay
 
   const contrastTooltip = (
     <div className="space-y-1.5">
-      <div className="font-bold text-[11px]">{INSPECTOR_TOOLTIPS.colorInspector.contrastTitle}</div>
+      <div className="font-bold text-[11px]">{t("tooltips.contrastTitle")}</div>
       <div className="flex items-center gap-2">
         <span
           className="inline-flex items-center justify-center w-7 h-5 rounded text-[11px] font-bold text-white"
@@ -112,7 +113,7 @@ function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplay
         >
           Aa
         </span>
-        <span className="text-[11px]">{INSPECTOR_TOOLTIPS.colorInspector.onDark} &rarr;</span>
+        <span className="text-[11px]">{t("tooltips.onDark")} &rarr;</span>
         {levelBadge(contrast.onBlack.level)}
         <span className="text-slate-400 text-[10px]">({contrast.onBlack.ratio.toFixed(1)}:1)</span>
       </div>
@@ -123,7 +124,7 @@ function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplay
         >
           Aa
         </span>
-        <span className="text-[11px]">{INSPECTOR_TOOLTIPS.colorInspector.onLight} &rarr;</span>
+        <span className="text-[11px]">{t("tooltips.onLight")} &rarr;</span>
         {levelBadge(contrast.onWhite.level)}
         <span className="text-slate-400 text-[10px]">({contrast.onWhite.ratio.toFixed(1)}:1)</span>
       </div>
@@ -139,6 +140,8 @@ function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplay
     } catch { /* ignore */ }
   }
 
+  const copyLabel = t("tooltips.copyColor", { formatted })
+
   return (
     <div className="flex items-center gap-2.5 group">
       <Tooltip content={contrastTooltip} variant="wide1">
@@ -152,12 +155,12 @@ function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplay
           <code className="text-xs font-mono text-slate-700 dark:text-slate-200 truncate">
             {formatted}
           </code>
-          <Tooltip content={INSPECTOR_TOOLTIPS.colorInspector.copyColor(formatted)}>
+          <Tooltip content={copyLabel}>
             <button
               type="button"
               onClick={handleCopy}
               className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
-              aria-label={INSPECTOR_TOOLTIPS.colorInspector.copyColor(formatted)}
+              aria-label={copyLabel}
             >
               {copied ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
             </button>
@@ -174,6 +177,7 @@ function PaletteColorItem({ c, format }: { c: PaletteColor; format: ColorDisplay
 }
 
 function ExportDropdown({ palette }: { palette: PaletteColor[] }) {
+  const { t } = useTranslation("inspector")
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
@@ -204,7 +208,7 @@ function ExportDropdown({ palette }: { palette: PaletteColor[] }) {
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-1 text-xs text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors font-medium"
       >
-        Export Palette
+        {t("exportPalette")}
         <ChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
@@ -237,6 +241,7 @@ function ExportDropdown({ palette }: { palette: PaletteColor[] }) {
 }
 
 function GradientPreview({ palette }: { palette: PaletteColor[] }) {
+  const { t } = useTranslation("inspector")
   const [copied, setCopied] = useState(false)
   const suggestion = getSuggestedGradient(palette)
   const css = buildGradientCss(palette)
@@ -253,7 +258,7 @@ function GradientPreview({ palette }: { palette: PaletteColor[] }) {
   return (
     <div className="mt-1 space-y-1.5">
       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-        Suggested Gradient
+        {t("suggestedGradient")}
       </span>
       <button
         type="button"
@@ -265,7 +270,7 @@ function GradientPreview({ palette }: { palette: PaletteColor[] }) {
         <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
           <span className="bg-black/50 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
             {copied ? <Check size={10} /> : <Copy size={10} />}
-            {copied ? "Copied!" : "Copy CSS"}
+            {copied ? t("copied") : t("copyCss", { defaultValue: "Copy CSS" })}
           </span>
         </span>
       </button>
@@ -304,9 +309,11 @@ export function ColorInspectorCard({ color, palette }: { color: ColorInfo; palet
     </div>
   ) : undefined
 
+  const { t } = useTranslation("inspector")
+
   return (
     <InfoSection
-      title="COLOR"
+      title={t("color")}
       icon={<Palette size={13} />}
       badge={formatToggle}
       collapsible={true}
@@ -315,11 +322,11 @@ export function ColorInspectorCard({ color, palette }: { color: ColorInfo; palet
     >
       <div className="space-y-3">
         <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-          <InfoRow label="Color Space" value={color.colorSpace} />
-          {color.bitDepth !== null && <InfoRow label="Bit Depth" value={`${color.bitDepth}-bit`} />}
-          <InfoRow label="Alpha Channel" value={color.hasAlpha ? "Yes" : "No"} />
-          {color.chromaSubsampling && <InfoRow label="Subsampling" value={color.chromaSubsampling} />}
-          {color.iccProfileName && <InfoRow label="ICC Profile" value={color.iccProfileName} />}
+          <InfoRow label={t("colorSpace")} value={color.colorSpace} />
+          {color.bitDepth !== null && <InfoRow label={t("bitDepth")} value={`${color.bitDepth}-bit`} />}
+          <InfoRow label={t("alphaChannel")} value={color.hasAlpha ? t("privacyOn") : t("privacyOff")} />
+          {color.chromaSubsampling && <InfoRow label={t("subsampling")} value={color.chromaSubsampling} />}
+          {color.iccProfileName && <InfoRow label={t("iccProfile")} value={color.iccProfileName} />}
         </div>
 
         {palette.length > 0 && (
@@ -337,7 +344,7 @@ export function ColorInspectorCard({ color, palette }: { color: ColorInfo; palet
             {wcagPair && (
               <div className="space-y-1.5">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  WCAG Auto Pair
+                  {t("wcagAutoPair")}
                 </span>
                 <div className="rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden">
                   <div
@@ -350,7 +357,7 @@ export function ColorInspectorCard({ color, palette }: { color: ColorInfo; palet
                     Sample Text Aa • {wcagPair.foreground.hex} on {wcagPair.background.hex}
                   </div>
                   <div className="px-3 py-1.5 text-[10px] flex items-center justify-between bg-white dark:bg-slate-900/40">
-                    <span className="text-slate-500 dark:text-slate-400">Contrast {wcagPair.ratio.toFixed(2)}:1</span>
+                    <span className="text-slate-500 dark:text-slate-400">{t("contrast")} {wcagPair.ratio.toFixed(2)}:1</span>
                     {levelBadge(wcagPair.level)}
                   </div>
                 </div>

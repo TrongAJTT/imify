@@ -1,59 +1,59 @@
-import React, { useMemo } from "react"
-import { Lock, Stamp } from "lucide-react"
-import type { ResizeConfig } from "@imify/core/types"
-import { CheckboxCard, SidebarCard, AccordionCard } from "@imify/ui"
-import { ExportControlsPanel } from "./export-controls-panel"
-import { SmartConcurrencyAdvisorCard } from "./smart-concurrency-advisor-card"
-import { buildWatermarkSummary } from "./watermark-config"
+import React, { useMemo } from "react";
+import { Lock, Stamp } from "lucide-react";
+import type { ResizeConfig } from "@imify/core/types";
+import { CheckboxCard, SidebarCard, AccordionCard } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
+import { ExportControlsPanel } from "./export-controls-panel";
+import { SmartConcurrencyAdvisorCard } from "./smart-concurrency-advisor-card";
+import { buildWatermarkSummary } from "./watermark-config";
 import {
   calculateConcurrencyAdvisor,
   resolveConcurrencyLockState,
-  type PerformancePreferences
-} from "./performance-preferences"
+  type PerformancePreferences,
+} from "./performance-preferences";
 import type {
   BatchFormatOptions,
   BatchTargetFormat,
-  BatchWatermarkConfig
-} from "@imify/stores/stores/batch-types"
-import { PROCESSOR_TOOLTIPS } from "./processor-tooltips"
+  BatchWatermarkConfig,
+} from "@imify/stores/stores/batch-types";
 
 interface BatchExportPanelProps {
   /** Format being exported (for concurrency limits) */
-  targetFormat: BatchTargetFormat
+  targetFormat: BatchTargetFormat;
   /** Current concurrency value */
-  concurrency: number
+  concurrency: number;
   /** File name pattern (displays as sublabel) */
-  fileNamePattern: string
+  fileNamePattern: string;
   /** Whether EXIF stripping is enabled (Privacy mode) */
-  stripExif: boolean
+  stripExif: boolean;
   /** Whether the format supports EXIF stripping */
-  supportsExif: boolean
+  supportsExif: boolean;
   /** Watermark configuration */
-  watermark: BatchWatermarkConfig
+  watermark: BatchWatermarkConfig;
   /** Whether current watermark matches a saved watermark card */
-  watermarkSaved: boolean
+  watermarkSaved: boolean;
   /** Active format options for advisor simulation */
-  formatOptions: BatchFormatOptions
+  formatOptions: BatchFormatOptions;
   /** Active resize config for advisor simulation */
-  resizeConfigForAdvisor: ResizeConfig
+  resizeConfigForAdvisor: ResizeConfig;
   /** Callback when concurrency changes */
-  onConcurrencyChange: (value: number) => void
+  onConcurrencyChange: (value: number) => void;
   /** Callback when file renaming is opened */
-  onFileRenamingClick: () => void
+  onFileRenamingClick: () => void;
   /** Callback when privacy mode is toggled */
-  onStripExifChange: (enabled: boolean) => void
+  onStripExifChange: (enabled: boolean) => void;
   /** Callback when watermarking dialog is opened */
-  onWatermarkingClick: () => void
+  onWatermarkingClick: () => void;
   /** Performance preferences for concurrency limits */
-  performancePreferences: PerformancePreferences
+  performancePreferences: PerformancePreferences;
   /** Open settings dialog callback */
-  onOpenSettings: () => void
+  onOpenSettings: () => void;
   /** Whether inputs are disabled */
-  disabled?: boolean
+  disabled?: boolean;
   /** Hide concurrency selector for contexts that do not use it */
-  hideConcurrency?: boolean
+  hideConcurrency?: boolean;
   /** Whether batch processor is currently running */
-  isRunning?: boolean
+  isRunning?: boolean;
 }
 
 /**
@@ -78,11 +78,14 @@ export function BatchExportPanel({
   onOpenSettings,
   disabled = false,
   hideConcurrency = false,
-  isRunning = false
+  isRunning = false,
 }: BatchExportPanelProps) {
-  const watermarkSummaryBase = buildWatermarkSummary(watermark)
-  const watermarkSummary = watermarkSaved ? `${watermarkSummaryBase} · Saved` : watermarkSummaryBase
-  const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat
+  const { t } = useTranslation(["processor", "common"]);
+  const watermarkSummaryBase = buildWatermarkSummary(watermark);
+  const watermarkSummary = watermarkSaved
+    ? `${watermarkSummaryBase} · ${t("saved")}`
+    : watermarkSummaryBase;
+  const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat;
   const advisorFormatOptions = useMemo(
     () => ({
       bmp: { ...formatOptions.bmp },
@@ -92,10 +95,10 @@ export function BatchExportPanel({
       mozjpeg: { ...formatOptions.mozjpeg },
       png: { ...formatOptions.png },
       tiff: { ...formatOptions.tiff },
-      ico: { ...formatOptions.ico }
+      ico: { ...formatOptions.ico },
     }),
-    [formatOptions]
-  )
+    [formatOptions],
+  );
   const advisor = useMemo(
     () =>
       calculateConcurrencyAdvisor({
@@ -103,30 +106,32 @@ export function BatchExportPanel({
         selectedConcurrency: concurrency,
         formatOptions: advisorFormatOptions,
         resizeConfig: resizeConfigForAdvisor,
-        preferences: performancePreferences
+        preferences: performancePreferences,
+        t,
       }),
     [
       targetFormat,
       concurrency,
       advisorFormatOptions,
       resizeConfigForAdvisor,
-      performancePreferences
-    ]
-  )
+      performancePreferences,
+      t,
+    ],
+  );
   const concurrencyLockState = useMemo(
     () =>
       resolveConcurrencyLockState({
         preferences: performancePreferences,
-        advisor
+        advisor,
       }),
-    [performancePreferences, advisor]
-  )
+    [performancePreferences, advisor],
+  );
 
   return (
     <AccordionCard
       icon={<Stamp size={16} />}
-      label="Export Settings"
-      sublabel="Performance, privacy, and watermarking"
+      label={t("exportSettings")}
+      sublabel={t("performancePrivacyWatermarking")}
       colorTheme="amber"
       defaultOpen={true}
       alwaysOpen={isRunning}
@@ -135,12 +140,10 @@ export function BatchExportPanel({
         {isRunning && (
           <div className="rounded-md border border-amber-200 bg-amber-50/70 p-2.5 dark:border-amber-900/60 dark:bg-amber-900/20">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
-              NOTICE
+              {t("common:notice")}
             </div>
             <div className="mt-1 text-xs leading-relaxed text-amber-900 dark:text-amber-100">
-              You are not lagging. We intentionally reduce frame update frequency to optimize processing performance.
-              If too many images fail, the tab may be overloaded from previous runs. In that case, close this tab and
-              continue processing in a fresh tab.
+              {t("batchNotice")}
             </div>
           </div>
         )}
@@ -170,25 +173,22 @@ export function BatchExportPanel({
           }
           beforeFileRenaming={
             <>
-              {supportsExif && (<CheckboxCard
-                icon={<Lock size={16} />}
-                title="Privacy mode"
-                subtitle={
-                  stripExif
-                      ? "Strip EXIF data from output images"
-                      : "Keep EXIF data when possible"
-                }
-                checked={stripExif && supportsExif}
-                onChange={onStripExifChange}
-                disabled={disabled || !supportsExif}
-                tooltipContent={PROCESSOR_TOOLTIPS.batch.exportPanel.privacyMode}
-                className={!supportsExif ? "opacity-70" : ""}
-                theme="amber"
-              />
+              {supportsExif && (
+                <CheckboxCard
+                  icon={<Lock size={16} />}
+                  title={t("privacyMode")}
+                  subtitle={stripExif ? t("stripExif") : t("keepExif")}
+                  checked={stripExif && supportsExif}
+                  onChange={onStripExifChange}
+                  disabled={disabled || !supportsExif}
+                  tooltipContent={t("tooltipPrivacyMode")}
+                  className={!supportsExif ? "opacity-70" : ""}
+                  theme="amber"
+                />
               )}
               <SidebarCard
                 icon={<Stamp size={16} />}
-                label="Watermarking"
+                label={t("watermarking")}
                 sublabel={watermarkSummary}
                 onClick={onWatermarkingClick}
                 disabled={disabled}
@@ -199,6 +199,5 @@ export function BatchExportPanel({
         />
       </div>
     </AccordionCard>
-  )
+  );
 }
-

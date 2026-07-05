@@ -20,6 +20,7 @@ import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
 import { useFontStore } from "@imify/stores/stores/font-store";
 import { isLocalFontAccessSupported } from "@imify/core/browser-detection";
+import { useTranslation } from "@imify/i18n";
 import {
   CURATED_GOOGLE_FONTS,
   fetchGoogleFontWoff2,
@@ -32,6 +33,7 @@ import {
 import { DownloadFontDialog } from "./asset-fonts-download-dialog";
 
 export function AssetFontsTab() {
+  const { t } = useTranslation("workspace");
   const { toasts, hide, success, error } = useToast();
 
   const installedFonts = useFontStore((state) => state.installedFonts);
@@ -111,7 +113,10 @@ export function AssetFontsTab() {
     setFontToDownload(null);
     setIsDownloading(font.family);
 
-    success("Download started", `Downloading WOFF2 file for ${font.family}...`);
+    success(
+      t("assets.fonts.downloadStartedTitle"),
+      t("assets.fonts.downloadingWoff", { family: font.family }),
+    );
 
     try {
       const { data, fileName } = await fetchGoogleFontWoff2(
@@ -132,12 +137,16 @@ export function AssetFontsTab() {
       };
 
       await addFont(entry);
-      success("Font installed", `"${font.family}" is now available offline.`);
+      success(
+        t("assets.fonts.installedTitle"),
+        t("assets.fonts.installedDesc", { family: font.family }),
+      );
     } catch (err: any) {
       console.error(`Failed to install ${font.family}:`, err);
       error(
-        "Download failed",
-        err.message || `Failed to fetch "${font.family}".`,
+        t("assets.fonts.downloadFailedTitle"),
+        err.message ||
+          t("assets.fonts.downloadFailedDesc", { family: font.family }),
       );
     } finally {
       setIsDownloading(null);
@@ -148,8 +157,8 @@ export function AssetFontsTab() {
   const handleOpenSystemPicker = async () => {
     if (!isLocalAccessSupported) {
       error(
-        "Not supported",
-        "Your browser does not support Local Font Access API (Chrome/Edge recommended).",
+        t("assets.fonts.notSupportedTitle"),
+        t("assets.fonts.notSupportedDesc"),
       );
       return;
     }
@@ -161,7 +170,10 @@ export function AssetFontsTab() {
       setSystemFonts(fonts);
     } catch (err) {
       console.error("System fonts fetch failed:", err);
-      error("Fetch failed", "Failed to retrieve local system fonts.");
+      error(
+        t("assets.fonts.fetchFailedTitle"),
+        t("assets.fonts.fetchFailedDesc"),
+      );
     } finally {
       setIsLoadingSystemFonts(false);
     }
@@ -199,7 +211,10 @@ export function AssetFontsTab() {
       }) ||
       familyFonts[0];
 
-    success("Importing", `Extracting system font "${preferred.fullName}"...`);
+    success(
+      t("assets.fonts.importingTitle"),
+      t("assets.fonts.extractingSystemFont", { name: preferred.fullName }),
+    );
 
     try {
       const blob = await fetchSystemFontBlob(preferred.postscriptName);
@@ -238,14 +253,14 @@ export function AssetFontsTab() {
 
       await addFont(entry);
       success(
-        "Font imported",
-        `"${preferred.family}" has been successfully imported.`,
+        t("assets.fonts.importedTitle"),
+        t("assets.fonts.importedDesc", { name: preferred.family }),
       );
     } catch (err: any) {
       console.error(`Failed to import system font ${familyName}:`, err);
       error(
-        "Import failed",
-        err.message || `Failed to import system font "${familyName}".`,
+        t("assets.fonts.importFailedTitle"),
+        err.message || t("assets.fonts.importFailedDesc", { name: familyName }),
       );
     }
   };
@@ -259,14 +274,17 @@ export function AssetFontsTab() {
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (ext !== "ttf" && ext !== "otf" && ext !== "woff2") {
       error(
-        "Invalid file format",
-        "Please upload a TTF, OTF, or WOFF2 font file.",
+        t("assets.fonts.invalidFileTitle"),
+        t("assets.fonts.invalidFileDesc"),
       );
       return;
     }
 
     try {
-      success("Importing", `Processing file "${file.name}"...`);
+      success(
+        t("assets.fonts.importingTitle"),
+        t("assets.fonts.processingFile", { name: file.name }),
+      );
       const arrayBuffer = await file.arrayBuffer();
       const isWoff2File =
         arrayBuffer.byteLength >= 4 &&
@@ -313,10 +331,16 @@ export function AssetFontsTab() {
       };
 
       await addFont(entry);
-      success("Font imported", `"${formattedName}" is now available offline.`);
+      success(
+        t("assets.fonts.importedTitle"),
+        t("assets.fonts.installedDesc", { family: formattedName }),
+      );
     } catch (err: any) {
       console.error("File import failed:", err);
-      error("Import failed", err.message || "Failed to process the font file.");
+      error(
+        t("assets.fonts.importFailedTitle"),
+        err.message || t("assets.fonts.importFailedDesc", { name: file.name }),
+      );
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -327,31 +351,41 @@ export function AssetFontsTab() {
   // Handle Font Deletion
   const handleDeleteFont = async (id: string, name: string) => {
     const shouldDelete = window.confirm(
-      `Remove font "${name}"? It will no longer be available offline.`,
+      t("assets.fonts.removeConfirm", { name }),
     );
     if (!shouldDelete) return;
 
     try {
       await removeFont(id);
-      success("Font removed", `"${name}" has been deleted from local storage.`);
+      success(
+        t("assets.fonts.removedTitle"),
+        t("assets.fonts.removedDesc", { name }),
+      );
     } catch (err) {
       console.error(`Failed to delete font ${name}:`, err);
-      error("Delete failed", `Failed to delete "${name}".`);
+      error(
+        t("assets.fonts.clearAllFailedTitle"),
+        t("assets.fonts.deleteFailedDesc", { name }),
+      );
     }
   };
 
   // Clear all custom fonts
   const handleClearAll = async () => {
-    const shouldReset = window.confirm(
-      "Are you sure you want to delete ALL installed fonts?",
-    );
+    const shouldReset = window.confirm(t("assets.fonts.clearAllConfirm"));
     if (!shouldReset) return;
 
     try {
       await resetToDefault();
-      success("Storage cleared", "All installed fonts have been removed.");
+      success(
+        t("assets.fonts.clearAllSuccessTitle"),
+        t("assets.fonts.clearAllSuccessDesc"),
+      );
     } catch (err) {
-      error("Clear failed", "Failed to clear font storage.");
+      error(
+        t("assets.fonts.clearAllFailedTitle"),
+        t("assets.fonts.clearAllFailedDesc"),
+      );
     }
   };
 
@@ -363,13 +397,10 @@ export function AssetFontsTab() {
           <Type className="text-violet-500 shrink-0" size={20} />
           <div className="space-y-1 flex-1">
             <BodyText className="text-sm font-bold text-slate-800 dark:text-violet-300">
-              Font Management & QR Customization
+              {t("assets.fonts.managementTitle")}
             </BodyText>
             <MutedText className="text-xs leading-relaxed">
-              Install custom fonts to style the text printed beneath your QR
-              codes. Google Fonts can be fetched directly, or you can import
-              system-wide local fonts and OTF/TTF files which are converted
-              inline to lightweight WOFF2 format.
+              {t("assets.fonts.managementDesc")}
             </MutedText>
           </div>
         </div>
@@ -383,7 +414,7 @@ export function AssetFontsTab() {
             <div className="flex items-center gap-2.5">
               <Upload size={16} className="text-violet-500" />
               <Subheading className="text-sm font-extrabold tracking-tight uppercase text-slate-800 dark:text-slate-200">
-                Import Custom Fonts
+                {t("assets.fonts.importCustom")}
               </Subheading>
             </div>
             {collapsedSections.has("import-custom") ? (
@@ -400,26 +431,28 @@ export function AssetFontsTab() {
           </button>
 
           {!collapsedSections.has("import-custom") && (
-           <div className={`grid gap-4 animate-in fade-in slide-in-from-top-2 duration-300 ${isLocalFontAccessSupported() ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}>
-             {/* Card 1: System Font */}
-             {isLocalFontAccessSupported() && (
-               <div
-                 onClick={handleOpenSystemPicker}
-                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:border-violet-500 dark:hover:border-violet-500 transition-all cursor-pointer flex gap-4 items-center group"
-               >
-                 <div className="p-3 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-500 group-hover:scale-105 transition-transform">
-                   <Monitor size={22} />
-                 </div>
-                 <div className="flex-1 min-w-0">
-                   <BodyText className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                     Import System Font
-                   </BodyText>
-                   <MutedText className="text-xs truncate">
-                     Import any font installed on your computer
-                   </MutedText>
-                 </div>
-               </div>
-             )}
+            <div
+              className={`grid gap-4 animate-in fade-in slide-in-from-top-2 duration-300 ${isLocalFontAccessSupported() ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}
+            >
+              {/* Card 1: System Font */}
+              {isLocalFontAccessSupported() && (
+                <div
+                  onClick={handleOpenSystemPicker}
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:border-violet-500 dark:hover:border-violet-500 transition-all cursor-pointer flex gap-4 items-center group"
+                >
+                  <div className="p-3 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-500 group-hover:scale-105 transition-transform">
+                    <Monitor size={22} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <BodyText className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                      {t("assets.fonts.importSystem")}
+                    </BodyText>
+                    <MutedText className="text-xs truncate">
+                      {t("assets.fonts.importSystemDesc")}
+                    </MutedText>
+                  </div>
+                </div>
+              )}
 
               {/* Card 2: File Upload */}
               <div
@@ -431,10 +464,10 @@ export function AssetFontsTab() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <BodyText className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                    Upload Font File
+                    {t("assets.fonts.uploadFile")}
                   </BodyText>
                   <MutedText className="text-xs truncate">
-                    Import local .ttf, .otf, or .woff2 files
+                    {t("assets.fonts.uploadFileDesc")}
                   </MutedText>
                 </div>
                 <input
@@ -459,7 +492,7 @@ export function AssetFontsTab() {
               >
                 <CheckCircle2 size={16} className="text-emerald-500" />
                 <Subheading className="text-sm font-extrabold tracking-tight uppercase text-slate-800 dark:text-slate-200">
-                  Installed Offline Fonts
+                  {t("assets.fonts.installedOffline")}
                 </Subheading>
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                   {installedFonts.length}
@@ -484,7 +517,7 @@ export function AssetFontsTab() {
                   onClick={handleClearAll}
                   className="text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
                 >
-                  Clear All
+                  {t("assets.fonts.clearAll")}
                 </Button>
               )}
             </div>
@@ -514,7 +547,7 @@ export function AssetFontsTab() {
                           {font.source}
                         </span>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                          Weight: {font.weight}
+                          {t("assets.fonts.weight", { weight: font.weight })}
                         </span>
                       </div>
                       {/* Live Preview */}
@@ -525,7 +558,7 @@ export function AssetFontsTab() {
                           fontWeight: font.weight,
                         }}
                       >
-                        The quick brown fox jumps over the lazy dog
+                        {t("assets.fonts.sampleText")}
                       </div>
                     </div>
 
@@ -558,7 +591,7 @@ export function AssetFontsTab() {
             >
               <Type size={16} className="text-violet-500" />
               <Subheading className="text-sm font-extrabold tracking-tight uppercase text-slate-800 dark:text-slate-200">
-                Google Fonts Library
+                {t("assets.fonts.googleLibrary")}
               </Subheading>
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                 {CURATED_GOOGLE_FONTS.length}
@@ -586,7 +619,7 @@ export function AssetFontsTab() {
                   />
                   <input
                     type="text"
-                    placeholder="Search Google fonts..."
+                    placeholder={t("assets.fonts.searchGoogle")}
                     value={googleSearch}
                     onChange={(e) => setGoogleSearch(e.target.value)}
                     className="w-full pl-9 pr-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-violet-500"
@@ -597,11 +630,15 @@ export function AssetFontsTab() {
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-violet-500"
                 >
-                  <option value="all">All Styles</option>
-                  <option value="sans-serif">Sans-Serif</option>
-                  <option value="serif">Serif</option>
-                  <option value="handwriting">Handwriting</option>
-                  <option value="display">Display</option>
+                  <option value="all">{t("assets.fonts.allStyles")}</option>
+                  <option value="sans-serif">
+                    {t("assets.fonts.sansSerif")}
+                  </option>
+                  <option value="serif">{t("assets.fonts.serif")}</option>
+                  <option value="handwriting">
+                    {t("assets.fonts.handwriting")}
+                  </option>
+                  <option value="display">{t("assets.fonts.display")}</option>
                 </select>
               </div>
             )}
@@ -639,12 +676,12 @@ export function AssetFontsTab() {
                               fontWeight: font.defaultWeight,
                             }}
                           >
-                            Sample Text
+                            {t("assets.fonts.sampleText")}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mt-3">
                         <span className="text-[10px] text-slate-400">
                           License:{" "}
                           {font.license
@@ -655,7 +692,8 @@ export function AssetFontsTab() {
                         {installed ? (
                           <div className="flex items-center gap-1">
                             <span className="text-[10px] text-emerald-500 font-semibold flex items-center gap-1">
-                              <CheckCircle2 size={12} /> Installed
+                              <CheckCircle2 size={12} />{" "}
+                              {t("assets.fonts.installed")}
                             </span>
                             <Button
                               variant="ghost"
@@ -682,11 +720,12 @@ export function AssetFontsTab() {
                             {downloading ? (
                               <>
                                 <RefreshCw size={13} className="animate-spin" />{" "}
-                                Fetching...
+                                {t("assets.fonts.fetching")}
                               </>
                             ) : (
                               <>
-                                <CloudDownload size={14} /> Download
+                                <CloudDownload size={14} />{" "}
+                                {t("assets.fonts.download")}
                               </>
                             )}
                           </Button>
@@ -698,7 +737,7 @@ export function AssetFontsTab() {
               </div>
             ) : (
               <div className="text-center p-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-400 dark:text-slate-500 text-sm animate-in fade-in duration-300">
-                No fonts match your search criteria.
+                {t("assets.fonts.noMatch")}
               </div>
             ))}
         </div>
@@ -723,12 +762,10 @@ export function AssetFontsTab() {
       >
         <div className="flex flex-col gap-1">
           <Subheading className="text-base font-bold text-slate-800 dark:text-slate-100">
-            Import Local System Font
+            {t("assets.fonts.importLocalTitle")}
           </Subheading>
           <BodyText className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
-            Select an installed font from your system. Imify will automatically
-            convert its Bold (700) or Black (900) style to lightweight WOFF2
-            format for canvas rendering.
+            {t("assets.fonts.importLocalDesc")}
           </BodyText>
         </div>
 
@@ -736,7 +773,9 @@ export function AssetFontsTab() {
         {isLoadingSystemFonts ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3">
             <RefreshCw size={24} className="animate-spin text-violet-500" />
-            <BodyText className="text-sm">Querying system fonts...</BodyText>
+            <BodyText className="text-sm">
+              {t("assets.fonts.querying")}
+            </BodyText>
           </div>
         ) : (
           <>
@@ -747,7 +786,7 @@ export function AssetFontsTab() {
               />
               <input
                 type="text"
-                placeholder="Search system fonts..."
+                placeholder={t("assets.fonts.searchSystem")}
                 value={googleSearch} // Reuse search state temporarily
                 onChange={(e) => setGoogleSearch(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-violet-500"
@@ -781,7 +820,7 @@ export function AssetFontsTab() {
                 <div className="p-8 text-center text-slate-400 flex flex-col items-center gap-2">
                   <AlertCircle size={20} className="text-slate-300" />
                   <BodyText className="text-xs">
-                    No local fonts discovered. Ensure permission is granted.
+                    {t("assets.fonts.noLocalDiscovered")}
                   </BodyText>
                 </div>
               )}
@@ -791,7 +830,7 @@ export function AssetFontsTab() {
 
         <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800/50">
           <Button variant="ghost" onClick={() => setIsSystemPickerOpen(false)}>
-            Close
+            {t("assets.fonts.close")}
           </Button>
         </div>
       </BaseDialog>

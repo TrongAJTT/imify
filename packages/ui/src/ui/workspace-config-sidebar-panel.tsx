@@ -12,7 +12,7 @@ import {
   closestCenter,
   DndContext,
   KeyboardSensor,
-  MouseSensor,
+  PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -83,6 +83,12 @@ function canOpenReorderMenu(target: EventTarget | null): boolean {
     return true
   }
 
+  // Prevent drag and reorder actions if the event target is physically outside the config item
+  // (which happens when events bubble from portals like dialogs/menus)
+  if (!target.closest("[data-workspace-config-item]")) {
+    return false
+  }
+
   // Allow right-click on accordion header even though it's a button.
   if (target.closest("[data-accordion-card-header]")) {
     return true
@@ -100,6 +106,12 @@ function canOpenReorderMenu(target: EventTarget | null): boolean {
 function canStartWorkspaceCardDrag(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) {
     return true
+  }
+
+  // Prevent drag and reorder actions if the event target is physically outside the config item
+  // (which happens when events bubble from portals like dialogs/menus)
+  if (!target.closest("[data-workspace-config-item]")) {
+    return false
   }
 
   const accordionContainer = target.closest("[data-accordion-card-container]") as HTMLElement | null
@@ -125,12 +137,17 @@ class WorkspaceCardTouchSensor extends TouchSensor {
   ]
 }
 
-class WorkspaceCardMouseSensor extends MouseSensor {
+class WorkspaceCardPointerSensor extends PointerSensor {
   static activators = [
     {
-      eventName: "onMouseDown" as const,
-      handler: ({ nativeEvent }: React.MouseEvent<Element>) =>
-        canStartWorkspaceCardDrag(nativeEvent.target),
+      eventName: "onPointerDown" as const,
+      handler: ({ nativeEvent }: React.PointerEvent<Element>) => {
+        // Prevent drag on right click/middle click, and only allow primary pointer
+        if (!nativeEvent.isPrimary || nativeEvent.button !== 0) {
+          return false
+        }
+        return canStartWorkspaceCardDrag(nativeEvent.target)
+      },
     },
   ]
 }
@@ -164,6 +181,7 @@ function SortableWorkspaceConfigItem({
   return (
     <div
       ref={setNodeRef}
+      data-workspace-config-item=""
       {...attributes}
       {...listeners}
       onContextMenu={(event) => onOpenReorderMenu(itemId, event)}
@@ -246,7 +264,7 @@ export function WorkspaceConfigSidebarPanel({
   )
 
   const sensors = useSensors(
-    useSensor(WorkspaceCardMouseSensor, {
+    useSensor(WorkspaceCardPointerSensor, {
       activationConstraint: { distance: 8 },
     }),
     useSensor(WorkspaceCardTouchSensor, {

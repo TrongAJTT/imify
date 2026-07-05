@@ -1,5 +1,5 @@
-import { Plus, X } from "lucide-react"
-import React, { useMemo } from "react"
+import { Plus, X } from "lucide-react";
+import React, { useMemo } from "react";
 import {
   closestCenter,
   DndContext,
@@ -7,22 +7,26 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  type DragEndEvent
-} from "@dnd-kit/core"
-import { SortableContext, horizontalListSortingStrategy, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
 
-import type { SplicingImageItem } from "./types"
-import { SortableQueueItem } from "../shared/sortable-queue-item"
+import type { SplicingImageItem } from "./types";
+import { SortableQueueItem } from "../shared/sortable-queue-item";
 
 interface ImageStripProps {
-  images: SplicingImageItem[]
-  onRemove: (id: string) => void
+  images: SplicingImageItem[];
+  onRemove: (id: string) => void;
   /** Indices from current `images` order (same semantics as batch queue `arrayMove`). */
-  onReorder: (fromIndex: number, toIndex: number) => void
-  onAddMore: () => void
-  selectedImageId?: string | null
-  onSelectImage?: (id: string) => void
-  pinAddButtonRight?: boolean
+  onReorder: (fromIndex: number, toIndex: number) => void;
+  onAddMore: () => void;
+  selectedImageId?: string | null;
+  onSelectImage?: (id: string) => void;
+  pinAddButtonRight?: boolean;
 }
 
 export function ImageStrip({
@@ -32,29 +36,29 @@ export function ImageStrip({
   onAddMore,
   selectedImageId,
   onSelectImage,
-  pinAddButtonRight = false
+  pinAddButtonRight = false,
 }: ImageStripProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 }
+      activationConstraint: { distance: 8 },
     }),
     useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates
-    })
-  )
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
-  const sortableIds = useMemo(() => images.map((i) => i.id), [images])
+  const sortableIds = useMemo(() => images.map((i) => i.id), [images]);
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const oldIndex = sortableIds.indexOf(String(active.id))
-    const newIndex = sortableIds.indexOf(String(over.id))
-    if (oldIndex < 0 || newIndex < 0) return
-    onReorder(oldIndex, newIndex)
-  }
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = sortableIds.indexOf(String(active.id));
+    const newIndex = sortableIds.indexOf(String(over.id));
+    if (oldIndex < 0 || newIndex < 0) return;
+    onReorder(oldIndex, newIndex);
+  };
 
-  if (images.length === 0) return null
+  if (images.length === 0) return null;
 
   return (
     <DndContext
@@ -63,7 +67,10 @@ export function ImageStrip({
       onDragEnd={handleDragEnd}
     >
       <div className="flex items-stretch gap-2 overflow-x-auto py-2 scrollbar-thin">
-        <SortableContext items={sortableIds} strategy={horizontalListSortingStrategy}>
+        <SortableContext
+          items={sortableIds}
+          strategy={horizontalListSortingStrategy}
+        >
           {images.map((img, i) => (
             <SortableQueueItem key={img.id} id={img.id}>
               <div
@@ -123,8 +130,5 @@ export function ImageStrip({
         </div>
       </div>
     </DndContext>
-  )
+  );
 }
-
-
-
