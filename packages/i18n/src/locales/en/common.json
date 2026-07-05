@@ -20,5 +20,16 @@
   "chooseFile": "Choose File",
   "presetInfoShowcasePanel": {
     "tipOfTheDay": "Tip of the day"
+  },
+  "previewModes": {
+    "zoom": "Zoom",
+    "zoomLabel": "Zoom Mode",
+    "zoomTooltip": "Scroll wheel zooms toward cursor.",
+    "pan": "Pan",
+    "panLabel": "Pan Mode",
+    "panTooltip": "Scroll wheel pans vertically. Hold Shift for horizontal pan.",
+    "idle": "Idle",
+    "idleLabel": "Idle Mode",
+    "idleTooltip": "Preview wheel interaction is disabled."
   }
 }

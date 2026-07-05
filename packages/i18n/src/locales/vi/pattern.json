@@ -148,7 +148,7 @@
     "brushColor": "Màu nét vẽ",
     "brushSize": "Kích thước cọ",
     "undoBtn": "Hoàn tác",
-    "clearBtn": "Xóa sạch",
+    "clearBtn": "Dọn",
     "cancelBtn": "Hủy bỏ",
     "saveBtn": "Lưu làm tài nguyên",
     "updateBtn": "Cập nhật tài nguyên"
@@ -191,7 +191,7 @@
     "curveSmoothingContent": "Bật tính năng làm mượt nét vẽ tự do giúp đường nét gọn gàng, giảm thiểu rung rẩy nét vẽ.",
     "brushSizeShortcutsLabel": "Phím tắt cỡ cọ",
     "undoStroke": "Hoàn tác nét vẽ gần đây nhất.",
-    "clearCanvas": "Xóa sạch lớp vẽ nguồn và tất cả nét đã vẽ.",
+    "clearCanvas": "Dọn lớp vẽ nguồn và tất cả nét đã vẽ.",
     "unsavedChangesConfirm": "Bạn có tiến trình vẽ chưa lưu. Đóng bảng vẽ mà không lưu?"
   }
 }

@@ -171,7 +171,7 @@
   "dimensionMismatchText": "{{count}} hình ảnh có kích thước khác với hình đầu tiên ({{width}}x{{height}}). Kết quả cắt hàng loạt có thể không đồng đều.",
   "imageInQueue_one": "1 hình ảnh trong hàng đợi",
   "imageInQueue_other": "{{count}} hình ảnh trong hàng đợi",
-  "clear": "Xóa sạch",
+  "clear": "Dọn",
   "slicesCount_one": "1 lát cắt",
   "slicesCount_other": "{{count}} lát cắt",
   "dropImagesToImport": "Thả hình ảnh vào đây để nhập",
