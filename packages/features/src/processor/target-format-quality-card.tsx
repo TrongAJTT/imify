@@ -1,117 +1,126 @@
-import React from "react"
-import { IcoSizeSelector } from "./ico-size-selector"
-import { useTranslation } from "@imify/i18n"
-import { CheckboxCard, ColoredSliderCard, SliderInput, SelectInput, AccordionCard } from "@imify/ui"
-import { ALL_TARGET_FORMAT_OPTIONS } from "./target-format-options"
-import { normalizeMozJpegChromaSubsampling } from "@imify/core/codec-options"
-import type { BmpColorDepth } from "@imify/core/types"
-import { FileJson, Zap } from "lucide-react"
+import React from "react";
+import { IcoSizeSelector } from "./ico-size-selector";
+import { useTranslation } from "@imify/i18n";
+import {
+  CheckboxCard,
+  ColoredSliderCard,
+  SliderInput,
+  SelectInput,
+  AccordionCard,
+} from "@imify/ui";
+import { ALL_TARGET_FORMAT_OPTIONS } from "./target-format-options";
+import { normalizeMozJpegChromaSubsampling } from "@imify/core/codec-options";
+import type { BmpColorDepth } from "@imify/core/types";
+import { FileJson, Zap } from "lucide-react";
 
 export type TargetFormatQualityCardProps = {
   // Optional label for the card, defaults to "Export Format & Quality" if not provided
-  cardLabel?: string
+  cardLabel?: string;
   /** Selected target format value */
-  targetFormat: string
+  targetFormat: string;
   /** Quality value (1-100) */
-  quality: number
+  quality: number;
   /** Grouped format-specific codec config */
   formatConfig?: {
     bmp?: {
-      colorDepth?: BmpColorDepth
-      dithering?: boolean
-      ditheringLevel?: number
-    }
+      colorDepth?: BmpColorDepth;
+      dithering?: boolean;
+      ditheringLevel?: number;
+    };
     avif?: {
-      speed?: number
-    }
+      speed?: number;
+    };
     webp?: {
-      lossless?: boolean
-      nearLossless?: number
-      effort?: number
-    }
+      lossless?: boolean;
+      nearLossless?: number;
+      effort?: number;
+    };
     mozjpeg?: {
-      progressive?: boolean
-      chromaSubsampling?: 0 | 1 | 2
-    }
+      progressive?: boolean;
+      chromaSubsampling?: 0 | 1 | 2;
+    };
     png?: {
-      tinyMode?: boolean
-      cleanTransparentPixels?: boolean
-      autoGrayscale?: boolean
-      dithering?: boolean
-      ditheringLevel?: number
-      progressiveInterlaced?: boolean
-      oxipngCompression?: boolean
-    }
+      tinyMode?: boolean;
+      cleanTransparentPixels?: boolean;
+      autoGrayscale?: boolean;
+      dithering?: boolean;
+      ditheringLevel?: number;
+      progressiveInterlaced?: boolean;
+      oxipngCompression?: boolean;
+    };
     tiff?: {
-      colorMode?: "color" | "grayscale"
-    }
+      colorMode?: "color" | "grayscale";
+    };
     jxl?: {
-      effort?: number
-      lossless?: boolean
-      progressive?: boolean
-      epf?: 0 | 1 | 2 | 3
-    }
+      effort?: number;
+      lossless?: boolean;
+      progressive?: boolean;
+      epf?: 0 | 1 | 2 | 3;
+    };
     ico?: {
-      sizes?: number[]
-      generateWebIconKit?: boolean
-      optimizeInternalPngLayers?: boolean
-    }
-  }
+      sizes?: number[];
+      generateWebIconKit?: boolean;
+      optimizeInternalPngLayers?: boolean;
+    };
+  };
   /** Available format options for dropdown */
-  formatOptions?: Array<{ value: string; label: string }>
+  formatOptions?: Array<{ value: string; label: string }>;
   /** Whether quality is supported for current format */
-  supportsQuality: boolean
+  supportsQuality: boolean;
   /** Whether tiny mode is supported (PNG only) */
-  supportsTinyMode: boolean
-  onToggleWebIconKit?: (v: boolean) => void
+  supportsTinyMode: boolean;
+  onToggleWebIconKit?: (v: boolean) => void;
   /** Callback when target format changes */
-  onTargetFormatChange: (format: string) => void
+  onTargetFormatChange: (format: string) => void;
   /** Callback when quality changes */
-  onQualityChange: (quality: number) => void
+  onQualityChange: (quality: number) => void;
   /** Callback when AVIF speed changes */
-  onAvifSpeedChange?: (speed: number) => void
+  onAvifSpeedChange?: (speed: number) => void;
   /** Callback when tiny mode toggle changes */
-  onPngTinyModeChange: (enabled: boolean) => void
+  onPngTinyModeChange: (enabled: boolean) => void;
   /** Callback when dithering level changes (0-100) */
-  onPngDitheringLevelChange?: (level: number) => void
+  onPngDitheringLevelChange?: (level: number) => void;
   /** Callback when JXL effort level changes */
-  onJxlEffortChange?: (effort: number) => void
+  onJxlEffortChange?: (effort: number) => void;
   /** Callback when JXL lossless mode changes */
-  onJxlLosslessChange?: (enabled: boolean) => void
+  onJxlLosslessChange?: (enabled: boolean) => void;
   /** Callback when TIFF color mode changes */
-  onTiffColorModeChange?: (mode: "color" | "grayscale") => void
+  onTiffColorModeChange?: (mode: "color" | "grayscale") => void;
   /** Callback when BMP color depth changes */
-  onBmpColorDepthChange?: (depth: BmpColorDepth) => void
+  onBmpColorDepthChange?: (depth: BmpColorDepth) => void;
   /** Callback when BMP dithering level changes (0-100, for 1-bit mode) */
-  onBmpDitheringLevelChange?: (level: number) => void
+  onBmpDitheringLevelChange?: (level: number) => void;
   /** Callback when WebP lossless mode changes */
-  onWebpLosslessChange?: (enabled: boolean) => void
+  onWebpLosslessChange?: (enabled: boolean) => void;
   /** Callback when WebP near-lossless level changes */
-  onWebpNearLosslessChange?: (value: number) => void
+  onWebpNearLosslessChange?: (value: number) => void;
   /** Callback when WebP effort level changes */
-  onWebpEffortChange?: (effort: number) => void
+  onWebpEffortChange?: (effort: number) => void;
   /** Callback when ICO sizes change (optional for ICO handling) */
-  onIcoSizesChange?: (sizes: number[]) => void
+  onIcoSizesChange?: (sizes: number[]) => void;
   /** Callback when ICO internal PNG optimization toggle changes */
-  onIcoOptimizeInternalPngLayersChange?: (enabled: boolean) => void
+  onIcoOptimizeInternalPngLayersChange?: (enabled: boolean) => void;
   /** Disable all inputs */
-  disabled?: boolean
+  disabled?: boolean;
   /** Whether accordion is open */
-  isOpen?: boolean
+  isOpen?: boolean;
   /** Callback when open state changes */
-  onOpenChange?: (open: boolean) => void
+  onOpenChange?: (open: boolean) => void;
   /** If true, accordion is always open, chevron is hidden, and cannot be collapsed */
-  alwaysOpen?: boolean
+  alwaysOpen?: boolean;
   /** Unique ID for mutually exclusive accordion group */
-  groupId?: string
-}
+  groupId?: string;
+};
 
-function normalizeDitheringLevel(level: number | undefined, legacyDithering: boolean | undefined): number {
+function normalizeDitheringLevel(
+  level: number | undefined,
+  legacyDithering: boolean | undefined,
+): number {
   if (typeof level === "number") {
-    return Math.max(0, Math.min(100, Math.round(level)))
+    return Math.max(0, Math.min(100, Math.round(level)));
   }
 
-  return legacyDithering ? 100 : 0
+  return legacyDithering ? 100 : 0;
 }
 
 export function TargetFormatQualityCard({
@@ -144,99 +153,120 @@ export function TargetFormatQualityCard({
   alwaysOpen,
   groupId,
 }: TargetFormatQualityCardProps) {
-  const { t } = useTranslation("processor")
-  const isIcoTarget = targetFormat === "ico"
-  const avifSpeedOption = formatConfig?.avif?.speed
-  const pngTinyModeEnabled = Boolean(formatConfig?.png?.tinyMode)
+  const { t } = useTranslation("processor");
+  const isIcoTarget = targetFormat === "ico";
+  const avifSpeedOption = formatConfig?.avif?.speed;
+  const pngTinyModeEnabled = Boolean(formatConfig?.png?.tinyMode);
   const pngDitheringLevel = normalizeDitheringLevel(
     formatConfig?.png?.ditheringLevel,
-    formatConfig?.png?.dithering
-  )
-  const pngDithering = pngDitheringLevel > 0
-  const rawBmpColorDepth = formatConfig?.bmp?.colorDepth
+    formatConfig?.png?.dithering,
+  );
+  const pngDithering = pngDitheringLevel > 0;
+  const rawBmpColorDepth = formatConfig?.bmp?.colorDepth;
   const bmpColorDepth: BmpColorDepth =
     rawBmpColorDepth === 1 || rawBmpColorDepth === 8 || rawBmpColorDepth === 32
       ? rawBmpColorDepth
-      : 24
-  const bmpDitheringLevel = bmpColorDepth === 1
-    ? normalizeDitheringLevel(formatConfig?.bmp?.ditheringLevel, formatConfig?.bmp?.dithering)
-    : 0
-  const bmpDitheringEnabled = bmpDitheringLevel > 0
-  const jxlEffortOption = formatConfig?.jxl?.effort
-  const jxlLosslessEnabled = Boolean(formatConfig?.jxl?.lossless)
-  const jxlProgressiveEnabled = Boolean(formatConfig?.jxl?.progressive)
+      : 24;
+  const bmpDitheringLevel =
+    bmpColorDepth === 1
+      ? normalizeDitheringLevel(
+          formatConfig?.bmp?.ditheringLevel,
+          formatConfig?.bmp?.dithering,
+        )
+      : 0;
+  const bmpDitheringEnabled = bmpDitheringLevel > 0;
+  const jxlEffortOption = formatConfig?.jxl?.effort;
+  const jxlLosslessEnabled = Boolean(formatConfig?.jxl?.lossless);
+  const jxlProgressiveEnabled = Boolean(formatConfig?.jxl?.progressive);
   const jxlEpf =
     formatConfig?.jxl?.epf === 0 ||
     formatConfig?.jxl?.epf === 1 ||
     formatConfig?.jxl?.epf === 2 ||
     formatConfig?.jxl?.epf === 3
       ? formatConfig.jxl.epf
-      : 1
-  const webpOptions = formatConfig?.webp
-  const webpLosslessEnabled = Boolean(webpOptions?.lossless)
+      : 1;
+  const webpOptions = formatConfig?.webp;
+  const webpLosslessEnabled = Boolean(webpOptions?.lossless);
   const webpNearLossless =
     typeof webpOptions?.nearLossless === "number"
       ? Math.max(0, Math.min(100, Math.round(webpOptions.nearLossless)))
-      : 100
+      : 100;
   const webpEffort =
     typeof webpOptions?.effort === "number"
       ? Math.max(1, Math.min(9, Math.round(webpOptions.effort)))
-      : 5
-  const mozJpegOptions = formatConfig?.mozjpeg
-  const icoSizeOptions = formatConfig?.ico?.sizes
-  const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit
-  const icoOptimizeInternalPngLayers = formatConfig?.ico?.optimizeInternalPngLayers
-  const tiffColorMode = formatConfig?.tiff?.colorMode === "grayscale" ? "grayscale" : "color"
+      : 5;
+  const mozJpegOptions = formatConfig?.mozjpeg;
+  const icoSizeOptions = formatConfig?.ico?.sizes;
+  const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit;
+  const icoOptimizeInternalPngLayers =
+    formatConfig?.ico?.optimizeInternalPngLayers;
+  const tiffColorMode =
+    formatConfig?.tiff?.colorMode === "grayscale" ? "grayscale" : "color";
 
-  const formatLabel = targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat.toUpperCase()
+  const formatLabel =
+    targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat.toUpperCase();
   const qualityLabel = isIcoTarget
     ? `${icoSizeOptions?.length ?? 0} size${(icoSizeOptions?.length ?? 0) !== 1 ? "s" : ""}`
     : targetFormat === "jxl" && jxlLosslessEnabled
-    ? "Lossless"
-    : targetFormat === "webp" && webpLosslessEnabled
-    ? `Near-Lossless ${webpNearLossless}`
-    : supportsQuality
-    ? `Quality ${quality}`
-    : "Default"
-  const showQualityControl = supportsQuality && !(targetFormat === "jxl" && jxlLosslessEnabled)
+      ? "Lossless"
+      : targetFormat === "webp" && webpLosslessEnabled
+        ? `Near-Lossless ${webpNearLossless}`
+        : supportsQuality
+          ? `Quality ${quality}`
+          : "Default";
+  const showQualityControl =
+    supportsQuality && !(targetFormat === "jxl" && jxlLosslessEnabled);
 
   // Add small badges into sublabel for ICO web toolkit or PNG tiny mode
-  const extraFlags: string[] = []
-  if (isIcoTarget && icoWebToolkitEnabled) extraFlags.push("Web Toolkit")
-  if (isIcoTarget && icoOptimizeInternalPngLayers) extraFlags.push("Optimized")
-  if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled) extraFlags.push("Tiny")
-  if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled && pngDithering) {
-    extraFlags.push(`Dither ${pngDitheringLevel}%`)
+  const extraFlags: string[] = [];
+  if (isIcoTarget && icoWebToolkitEnabled) extraFlags.push("Web Toolkit");
+  if (isIcoTarget && icoOptimizeInternalPngLayers) extraFlags.push("Optimized");
+  if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled)
+    extraFlags.push("Tiny");
+  if (
+    !isIcoTarget &&
+    targetFormat === "png" &&
+    pngTinyModeEnabled &&
+    pngDithering
+  ) {
+    extraFlags.push(`Dither ${pngDitheringLevel}%`);
   }
   if (targetFormat === "jxl") {
-    if (jxlLosslessEnabled) extraFlags.push("Lossless")
-    extraFlags.push(`Effort ${jxlEffortOption ?? 7}`)
-    if (jxlProgressiveEnabled) extraFlags.push("Progressive")
-    if (jxlEpf !== 1) extraFlags.push(`EPF ${jxlEpf}`)
+    if (jxlLosslessEnabled) extraFlags.push("Lossless");
+    extraFlags.push(`Effort ${jxlEffortOption ?? 7}`);
+    if (jxlProgressiveEnabled) extraFlags.push("Progressive");
+    if (jxlEpf !== 1) extraFlags.push(`EPF ${jxlEpf}`);
   }
-  if (targetFormat === "avif" && typeof avifSpeedOption === "number") extraFlags.push(`Speed ${avifSpeedOption}`)
+  if (targetFormat === "avif" && typeof avifSpeedOption === "number")
+    extraFlags.push(`Speed ${avifSpeedOption}`);
   if (targetFormat === "webp") {
-    if (webpLosslessEnabled) extraFlags.push("Lossless")
-    extraFlags.push(`Effort ${webpEffort}`)
+    if (webpLosslessEnabled) extraFlags.push("Lossless");
+    extraFlags.push(`Effort ${webpEffort}`);
   }
   if (targetFormat === "mozjpeg") {
-    extraFlags.push(mozJpegOptions?.progressive ?? true ? "Progressive" : "Baseline")
-    const chroma = normalizeMozJpegChromaSubsampling(mozJpegOptions?.chromaSubsampling)
-    extraFlags.push(`Chroma ${chroma === 1 ? "4:2:2" : "4:2:0"}`)
+    extraFlags.push(
+      mozJpegOptions?.progressive ?? true ? "Progressive" : "Baseline",
+    );
+    const chroma = normalizeMozJpegChromaSubsampling(
+      mozJpegOptions?.chromaSubsampling,
+    );
+    extraFlags.push(`Chroma ${chroma === 1 ? "4:2:2" : "4:2:0"}`);
   }
   if (targetFormat === "tiff" && tiffColorMode === "grayscale") {
-    extraFlags.push("Grayscale")
+    extraFlags.push("Grayscale");
   }
   if (targetFormat === "bmp") {
-    extraFlags.push(`${bmpColorDepth}-bit`)
+    extraFlags.push(`${bmpColorDepth}-bit`);
     if (bmpColorDepth === 1 && bmpDitheringEnabled) {
-      extraFlags.push(`Dither ${bmpDitheringLevel}%`)
+      extraFlags.push(`Dither ${bmpDitheringLevel}%`);
     }
   }
 
-  const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
-  const resolvedFormatOptions = formatOptions?.length ? formatOptions : ALL_TARGET_FORMAT_OPTIONS
-  const shouldShowTargetFormatSelector = resolvedFormatOptions.length > 1
+  const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`;
+  const resolvedFormatOptions = formatOptions?.length
+    ? formatOptions
+    : ALL_TARGET_FORMAT_OPTIONS;
+  const shouldShowTargetFormatSelector = resolvedFormatOptions.length > 1;
 
   return (
     <AccordionCard
@@ -265,7 +295,9 @@ export function TargetFormatQualityCard({
 
         {showQualityControl && (
           <>
-            {targetFormat === "webp" && onWebpNearLosslessChange && webpLosslessEnabled ? (
+            {targetFormat === "webp" &&
+            onWebpNearLosslessChange &&
+            webpLosslessEnabled ? (
               <SliderInput
                 label={t("nearLossless")}
                 tooltip={t("tooltipNearLossless")}
@@ -295,12 +327,8 @@ export function TargetFormatQualityCard({
             {onWebpLosslessChange && (
               <CheckboxCard
                 icon={<Zap size={16} />}
-                title="Lossless Mode"
-                subtitle={
-                  webpLosslessEnabled
-                    ? "Enabled: preserves exact pixels (larger file, supports near-lossless tuning)."
-                    : "Disabled: lossy WebP mode (smaller files with quality-based compression)."
-                }
+                title={t("losslessMode")}
+                subtitle={t("webpLosslessModeSub")}
                 checked={webpLosslessEnabled}
                 onChange={onWebpLosslessChange}
                 disabled={disabled}
@@ -310,7 +338,7 @@ export function TargetFormatQualityCard({
 
             {onWebpEffortChange && (
               <SelectInput
-                label="Effort Level"
+                label={t("effortLevel")}
                 tooltipContent={t("tooltipWebpEffort")}
                 disabled={disabled}
                 options={[
@@ -322,7 +350,7 @@ export function TargetFormatQualityCard({
                   { value: "6", label: "6 - Balanced - Optimal" },
                   { value: "7", label: "7 - Optimal" },
                   { value: "8", label: "8 - Very Optimal" },
-                  { value: "9", label: "9 - Maximum (slowest)" }
+                  { value: "9", label: "9 - Maximum (slowest)" },
                 ]}
                 onChange={(v) => onWebpEffortChange(parseInt(v, 10))}
                 value={String(webpEffort)}
@@ -336,12 +364,8 @@ export function TargetFormatQualityCard({
             {onJxlLosslessChange && (
               <CheckboxCard
                 icon={<Zap size={16} />}
-                title="Lossless Mode"
-                subtitle={
-                  jxlLosslessEnabled
-                    ? "Enabled: exact pixels, larger files, quality slider hidden"
-                    : "Disabled: lossy mode with quality slider control"
-                }
+                title={t("losslessMode")}
+                subtitle={t("jxlLosslessModeSub")}
                 tooltipContent={t("tooltipJxlLossless")}
                 checked={jxlLosslessEnabled}
                 onChange={onJxlLosslessChange}
@@ -351,7 +375,7 @@ export function TargetFormatQualityCard({
             )}
 
             <SelectInput
-              label="Effort Level"
+              label={t("effortLevel")}
               tooltipContent={t("tooltipJxlEffort")}
               disabled={disabled}
               options={[
@@ -363,7 +387,7 @@ export function TargetFormatQualityCard({
                 { value: "6", label: "6 - Balanced - Optimal" },
                 { value: "7", label: "7 - Optimal (default)" },
                 { value: "8", label: "8 - Very Optimal" },
-                { value: "9", label: "9 - Maximum (slowest)" }
+                { value: "9", label: "9 - Maximum (slowest)" },
               ]}
               onChange={(v) => onJxlEffortChange?.(parseInt(v, 10))}
               value={String(jxlEffortOption ?? 7)}
@@ -374,7 +398,7 @@ export function TargetFormatQualityCard({
         {targetFormat === "avif" && onAvifSpeedChange && (
           <div>
             <SelectInput
-              label="Speed"
+              label={t("avifSpeed")}
               tooltipContent={t("tooltipAvifSpeed")}
               disabled={disabled}
               options={[
@@ -388,7 +412,7 @@ export function TargetFormatQualityCard({
                 { value: "7", label: "7 - Fast" },
                 { value: "8", label: "8 - Very Fast" },
                 { value: "9", label: "9 - Fastest practical" },
-                { value: "10", label: "10 - Fastest encode" }
+                { value: "10", label: "10 - Fastest encode" },
               ]}
               onChange={(v) => onAvifSpeedChange(parseInt(v, 10))}
               value={String(avifSpeedOption ?? 6)}
@@ -399,16 +423,18 @@ export function TargetFormatQualityCard({
         {targetFormat === "bmp" && onBmpColorDepthChange && (
           <div className="space-y-2">
             <SelectInput
-              label="Color Depth"
+              label={t("bmpColorDepth")}
               tooltipContent={t("tooltipBmpColorDepth")}
               disabled={disabled}
               options={[
                 { value: "24", label: "24-bit RGB (Standard)" },
                 { value: "32", label: "32-bit RGBA (With Transparency)" },
                 { value: "8", label: "8-bit Grayscale" },
-                { value: "1", label: "1-bit Monochrome (Printers/IoT)" }
+                { value: "1", label: "1-bit Monochrome (Printers/IoT)" },
               ]}
-              onChange={(value) => onBmpColorDepthChange(parseInt(value, 10) as BmpColorDepth)}
+              onChange={(value) =>
+                onBmpColorDepthChange(parseInt(value, 10) as BmpColorDepth)
+              }
               value={String(bmpColorDepth)}
             />
 
@@ -431,14 +457,16 @@ export function TargetFormatQualityCard({
         {targetFormat === "tiff" && onTiffColorModeChange && (
           <div>
             <SelectInput
-              label="Color Mode"
+              label={t("tiffColorMode")}
               tooltipContent={t("tooltipTiffColorMode")}
               disabled={disabled}
               options={[
                 { value: "color", label: "RGB (Full Color)" },
-                { value: "grayscale", label: "Grayscale (Black & White)" }
+                { value: "grayscale", label: "Grayscale (Black & White)" },
               ]}
-              onChange={(value) => onTiffColorModeChange(value as "color" | "grayscale")}
+              onChange={(value) =>
+                onTiffColorModeChange(value as "color" | "grayscale")
+              }
               value={tiffColorMode}
             />
           </div>
@@ -451,12 +479,12 @@ export function TargetFormatQualityCard({
               generateWebIconKit={icoWebToolkitEnabled ?? false}
               optimizeInternalPngLayers={icoOptimizeInternalPngLayers ?? false}
               onToggleSize={(size) => {
-                if (!onIcoSizesChange) return
-                const exists = icoSizeOptions?.includes(size)
+                if (!onIcoSizesChange) return;
+                const exists = icoSizeOptions?.includes(size);
                 const next = exists
                   ? (icoSizeOptions || []).filter((entry) => entry !== size)
-                  : [...(icoSizeOptions || []), size].sort((a, b) => a - b)
-                onIcoSizesChange(next.length ? next : [16])
+                  : [...(icoSizeOptions || []), size].sort((a, b) => a - b);
+                onIcoSizesChange(next.length ? next : [16]);
               }}
               onToggleWebKit={(v) => onToggleWebIconKit?.(v)}
               onToggleOptimizeInternalPngLayers={(v) =>
@@ -471,8 +499,8 @@ export function TargetFormatQualityCard({
           <div className="space-y-2">
             <CheckboxCard
               icon={<Zap size={16} />}
-              title="Tiny Mode"
-              subtitle="Quantize to reduce PNG size"
+              title={t("tinyMode")}
+              subtitle={t("pngTinyModeSub")}
               tooltipContent={t("tooltipTinyMode")}
               checked={pngTinyModeEnabled}
               onChange={onPngTinyModeChange}
@@ -482,7 +510,7 @@ export function TargetFormatQualityCard({
 
             {pngTinyModeEnabled && onPngDitheringLevelChange && (
               <SliderInput
-                label="Dithering Level"
+                label={t("ditheringLevel")}
                 tooltip={t("tooltipPngDithering")}
                 value={pngDitheringLevel}
                 min={0}
@@ -497,6 +525,5 @@ export function TargetFormatQualityCard({
         )}
       </div>
     </AccordionCard>
-  )
+  );
 }
-

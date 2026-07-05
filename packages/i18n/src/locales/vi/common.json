@@ -1,9 +1,11 @@
 {
+  "add": "Thêm",
   "save": "Lưu",
   "cancel": "Hủy",
   "close": "Đóng",
   "apply": "Áp dụng",
   "reset": "Đặt lại",
+  "refresh": "Làm mới",
   "delete": "Xóa",
   "upload": "Tải lên",
   "download": "Tải xuống",
@@ -11,6 +13,9 @@
   "done": "Hoàn thành",
   "error": "Lỗi",
   "warning": "Cảnh báo",
+  "name": "Tên",
+  "color": "Màu sắc",
+  "highlightColor": "Màu nổi bật",
   "noFileSelected": "Chưa chọn tệp nào",
   "chooseFile": "Chọn tệp",
   "presetInfoShowcasePanel": {

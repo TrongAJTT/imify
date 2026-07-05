@@ -56,11 +56,7 @@ export function WebpAdvancedSettingsCard({
         <CheckboxCard
           icon={<Palette size={16} />}
           title={t("sharpYuv")}
-          subtitle={
-            sharpYuv
-              ? t("sharpYuvSubtitleEnabled")
-              : t("sharpYuvSubtitleDisabled")
-          }
+          subtitle={t("sharpYuvSub")}
           checked={sharpYuv}
           onChange={onSharpYuvChange}
           disabled={disabled}
@@ -70,11 +66,7 @@ export function WebpAdvancedSettingsCard({
         <CheckboxCard
           icon={<ShieldCheck size={16} />}
           title={t("exactAlpha")}
-          subtitle={
-            preserveExactAlpha
-              ? t("preserveExactAlphaSubtitleEnabled")
-              : t("preserveExactAlphaSubtitleDisabled")
-          }
+          subtitle={t("preserveExactAlphaSub")}
           checked={preserveExactAlpha}
           onChange={onPreserveExactAlphaChange}
           disabled={disabled}

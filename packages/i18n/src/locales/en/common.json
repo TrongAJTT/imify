@@ -1,9 +1,11 @@
 {
+  "add": "Add",
   "save": "Save",
   "cancel": "Cancel",
   "close": "Close",
   "apply": "Apply",
   "reset": "Reset",
+  "refresh": "Refresh",
   "delete": "Delete",
   "upload": "Upload",
   "download": "Download",
@@ -11,6 +13,9 @@
   "done": "Done",
   "error": "Error",
   "warning": "Warning",
+  "name": "Name",
+  "color": "Color",
+  "highlightColor": "Highlight color",
   "noFileSelected": "No file selected",
   "chooseFile": "Choose File",
   "presetInfoShowcasePanel": {

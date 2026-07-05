@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "turbo dev",
     "sync:package": "node scripts/sync-package-versions.mjs",
+    "sync:locales": "node scripts/sync-locales.mjs",
     "sync:lang": "node scripts/sync-lang.mjs",
     "sync:credit": "tsx scripts/sync-credits.ts",
     "sync:assets": "pnpm --filter @imify/extension sync:assets",
