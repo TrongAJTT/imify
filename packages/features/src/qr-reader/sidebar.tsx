@@ -4,16 +4,17 @@ import {
   type WorkspaceConfigSidebarItem,
   AccordionCard,
   Button,
-  SecondaryButton,
-  Tooltip,
   MutedText,
   ToastContainer,
   BaseDialog,
+  SplitButton,
+  type SplitButtonOption,
+  Tooltip,
 } from "@imify/ui";
 import {
   Trash2,
-  Clock,
   ChevronDown,
+  ChevronUp,
   X,
   History,
   ExternalLink,
@@ -25,12 +26,17 @@ import {
   Calendar,
   MessageCircle,
   FileText,
+  Copy,
 } from "lucide-react";
 import { useQrReaderStore } from "@imify/stores";
-import { parseQrString, type ParsedQrResult, type ParsedQrType } from "./qr-parser";
+import {
+  parseQrString,
+  type ParsedQrResult,
+  type ParsedQrType,
+} from "./qr-parser";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { useTranslation } from "@imify/i18n";
-import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
+import { QrActionsPanel } from "./qr-actions-panel";
 
 interface QrReaderSidebarProps {
   enableWideSidebarGrid?: boolean;
@@ -79,7 +85,9 @@ function getHistoryItemSummary(parsed: ParsedQrResult, t: any): string {
     case "email":
       return parsed.emailData?.to || parsed.raw;
     case "phone":
-      return parsed.raw.startsWith("tel:") ? parsed.raw.substring(4) : parsed.raw;
+      return parsed.raw.startsWith("tel:")
+        ? parsed.raw.substring(4)
+        : parsed.raw;
     case "sms":
       return parsed.smsData?.phone || parsed.raw;
     case "wifi":
@@ -92,7 +100,9 @@ function getHistoryItemSummary(parsed: ParsedQrResult, t: any): string {
       return `${parsed.messagingData?.platform.toUpperCase()}: ${parsed.messagingData?.recipient}`;
     case "text":
     default:
-      return parsed.raw.length > 40 ? parsed.raw.substring(0, 37) + "..." : parsed.raw;
+      return parsed.raw.length > 40
+        ? parsed.raw.substring(0, 37) + "..."
+        : parsed.raw;
   }
 }
 
@@ -100,7 +110,7 @@ export function QrReaderSidebar({
   enableWideSidebarGrid = false,
   autoWideSidebarGridMinWidthPx = null,
 }: QrReaderSidebarProps) {
-  const { t } = useTranslation("qrReader");
+  const { t } = useTranslation(["qrReader", "common"]);
   const {
     savedHistory,
     deleteFromHistory,
@@ -111,30 +121,31 @@ export function QrReaderSidebar({
   } = useQrReaderStore();
   const { toasts, success, error, hide } = useToast();
 
-  const [pendingClearMode, setPendingClearMode] = useState<"all" | "3days" | "7days" | "30days" | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
 
   const handleRequestClear = (mode: "all" | "3days" | "7days" | "30days") => {
-    setPendingClearMode(mode);
-  };
+    const title = mode === "all" ? t("history.confirmClearTitle") : t("history.confirmClearOlderTitle");
+    const msg = mode === "all"
+      ? t("history.confirmClearMsg")
+      : t("history.confirmClearOlderMsg", {
+          days: mode === "3days" ? 3 : mode === "7days" ? 7 : 30,
+        });
 
-  const executeClear = () => {
-    if (!pendingClearMode) return;
-
-    if (pendingClearMode === "all") {
-      clearHistory();
-      success(t("history.title"), t("history.clearSuccess"));
-    } else if (pendingClearMode === "3days") {
-      clearHistoryOlderThan(3);
-      success(t("history.title"), t("history.clearOlderSuccess"));
-    } else if (pendingClearMode === "7days") {
-      clearHistoryOlderThan(7);
-      success(t("history.title"), t("history.clearOlderSuccess"));
-    } else if (pendingClearMode === "30days") {
-      clearHistoryOlderThan(30);
-      success(t("history.title"), t("history.clearOlderSuccess"));
+    if (window.confirm(`${title}\n\n${msg}`)) {
+      if (mode === "all") {
+        clearHistory();
+        success(t("history.title"), t("history.clearSuccess"));
+      } else if (mode === "3days") {
+        clearHistoryOlderThan(3);
+        success(t("history.title"), t("history.clearOlderSuccess"));
+      } else if (mode === "7days") {
+        clearHistoryOlderThan(7);
+        success(t("history.title"), t("history.clearOlderSuccess"));
+      } else if (mode === "30days") {
+        clearHistoryOlderThan(30);
+        success(t("history.title"), t("history.clearOlderSuccess"));
+      }
     }
-
-    setPendingClearMode(null);
   };
 
   const handleDeleteItem = (id: string, e: React.MouseEvent) => {
@@ -142,6 +153,44 @@ export function QrReaderSidebar({
     deleteFromHistory(id);
     success(t("history.title"), t("history.deleteSuccess"));
   };
+
+  const handleCopyRaw = (raw: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard
+      .writeText(raw)
+      .then(() => {
+        success(t("workspace.copied"), t("workspace.copiedSuccess"));
+      })
+      .catch(() => {
+        error(t("workspace.errorHeader"), t("workspace.copyFailed"));
+      });
+  };
+
+  const toggleExpand = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const clearOptions: SplitButtonOption[] = [
+    {
+      id: "3days",
+      label: t("history.clearOlderThan3Days"),
+      onClick: () => handleRequestClear("3days"),
+    },
+    {
+      id: "7days",
+      label: t("history.clearOlderThan7Days"),
+      onClick: () => handleRequestClear("7days"),
+    },
+    {
+      id: "30days",
+      label: t("history.clearOlderThan1Month"),
+      onClick: () => handleRequestClear("30days"),
+    },
+  ];
 
   const renderHistoryContent = () => {
     if (savedHistory.length === 0) {
@@ -159,38 +208,90 @@ export function QrReaderSidebar({
         {savedHistory.map((item) => {
           const parsed = parseQrString(item.raw);
           const isSelected = lastScanResult === item.raw;
+          const isExpanded = !!expandedIds[item.id];
           return (
             <div
               key={item.id}
               onClick={() => setLastScanResult(item.raw)}
-              className={`flex items-start justify-between p-2.5 rounded-lg border text-left transition-all duration-200 cursor-pointer group relative ${
+              className={`flex flex-col p-2.5 rounded-lg border text-left transition-all duration-200 cursor-pointer group relative ${
                 isSelected
                   ? "border-sky-500 bg-sky-50/50 dark:bg-sky-950/20"
                   : "border-slate-100 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-slate-100/50 dark:hover:bg-slate-900/80"
               }`}
             >
-              <div className="flex flex-col min-w-0 pr-6 gap-1 select-none">
-                <div className="flex items-center gap-1.5">
-                  {getQrTypeIcon(parsed.type)}
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                    {t(`sidebar.typeLabels.${parsed.type}`)}
+              <div className="flex flex-col min-w-0 gap-1 select-none w-full">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    {getQrTypeIcon(parsed.type)}
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                      {t(`sidebar.typeLabels.${parsed.type}`)}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500">
+                    {formatHistoryTime(item.timestamp, t)}
                   </span>
                 </div>
-                <span className="text-xs font-mono font-medium text-slate-800 dark:text-slate-200 truncate block">
+                <span className="text-xs font-mono font-medium text-slate-800 dark:text-slate-200 truncate block mt-0.5">
                   {getHistoryItemSummary(parsed, t)}
-                </span>
-                <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500">
-                  {formatHistoryTime(item.timestamp, t)}
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={(e) => handleDeleteItem(item.id, e)}
-                className="absolute right-2 top-2 h-5 w-5 rounded-md flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-350 transition-all opacity-0 group-hover:opacity-100"
-              >
-                <X size={12} />
-              </button>
+              {/* Action Toolbar underneath content */}
+              <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-100 dark:border-slate-800/60 w-full">
+                <span className="text-[9px] text-slate-400 font-medium">
+                  {parsed.type.toUpperCase()}
+                </span>
+                <div className="flex items-center gap-1">
+                  {/* Copy button */}
+                  <Tooltip content={t("workspace.copyRaw")}>
+                    <button
+                      type="button"
+                      onClick={(e) => handleCopyRaw(item.raw, e)}
+                      className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
+                    >
+                      <Copy size={11} />
+                    </button>
+                  </Tooltip>
+                  {/* Expand/Collapse button */}
+                  <Tooltip
+                    content={
+                      isExpanded ? t("common:collapse") : t("common:expand")
+                    }
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => toggleExpand(item.id, e)}
+                      className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
+                    >
+                      {isExpanded ? (
+                        <ChevronUp size={11} />
+                      ) : (
+                        <ChevronDown size={11} />
+                      )}
+                    </button>
+                  </Tooltip>
+                  {/* Delete button */}
+                  <Tooltip content={t("common:delete")}>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteItem(item.id, e)}
+                      className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-rose-450 hover:text-rose-600 dark:text-rose-500 dark:hover:text-rose-400 transition-colors"
+                    >
+                      <X size={11} />
+                    </button>
+                  </Tooltip>
+                </div>
+              </div>
+
+              {/* Render expanded actions using reusable QrActionsPanel component */}
+              {isExpanded && (
+                <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 w-full">
+                  <QrActionsPanel
+                    raw={item.raw}
+                    buttonSizeClassName="text-[10px] h-8"
+                  />
+                </div>
+              )}
             </div>
           );
         })}
@@ -210,59 +311,22 @@ export function QrReaderSidebar({
           colorTheme="sky"
           childrenClassName="p-3 space-y-3"
         >
-          {/* Header toolbar */}
+          {/* Header toolbar with SplitButton component */}
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
               {t("history.stats", { count: savedHistory.length })}
             </span>
 
-            {/* Split delete button */}
-            <div className="flex items-center gap-0.5">
-              <Tooltip content={t("history.clearAll")}>
-                <SecondaryButton
-                  onClick={() => handleRequestClear("all")}
-                  disabled={savedHistory.length === 0}
-                  className="h-7 w-7 p-0 flex items-center justify-center border-slate-200 dark:border-slate-800 text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 rounded-r-none border-r-0"
-                >
-                  <Trash2 size={13} />
-                </SecondaryButton>
-              </Tooltip>
-              
-              <ControlledPopover
-                preset="dropdown"
-                align="end"
-                disabled={savedHistory.length === 0}
-                trigger={
-                  <SecondaryButton
-                    disabled={savedHistory.length === 0}
-                    className="h-7 w-5 p-0 flex items-center justify-center border-slate-200 dark:border-slate-800 rounded-l-none"
-                  >
-                    <ChevronDown size={11} />
-                  </SecondaryButton>
-                }
-              >
-                <div className="p-1 flex flex-col min-w-[150px] bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-slate-200 dark:border-slate-800 text-xs select-none">
-                  <button
-                    onClick={() => handleRequestClear("3days")}
-                    className="w-full text-left px-2.5 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-colors text-slate-700 dark:text-slate-200"
-                  >
-                    {t("history.clearOlderThan3Days")}
-                  </button>
-                  <button
-                    onClick={() => handleRequestClear("7days")}
-                    className="w-full text-left px-2.5 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-colors text-slate-700 dark:text-slate-200"
-                  >
-                    {t("history.clearOlderThan7Days")}
-                  </button>
-                  <button
-                    onClick={() => handleRequestClear("30days")}
-                    className="w-full text-left px-2.5 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-colors text-slate-700 dark:text-slate-200"
-                  >
-                    {t("history.clearOlderThan1Month")}
-                  </button>
-                </div>
-              </ControlledPopover>
-            </div>
+            {/* Standardized Reusable SplitButton */}
+            <SplitButton
+              label={t("history.clearAll")}
+              icon={<Trash2 size={12} />}
+              onClick={() => handleRequestClear("all")}
+              options={clearOptions}
+              disabled={savedHistory.length === 0}
+              buttonClassName="text-xs px-2.5 py-1 h-7 text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300"
+              className="h-7"
+            />
           </div>
 
           {/* History list content */}
@@ -280,34 +344,6 @@ export function QrReaderSidebar({
         twoColumn={false}
       />
       <ToastContainer toasts={toasts} onRemove={hide} />
-
-      {/* Confirmation Dialog */}
-      <BaseDialog
-        isOpen={pendingClearMode !== null}
-        onClose={() => setPendingClearMode(null)}
-        contentClassName="w-full max-w-sm rounded-xl p-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col gap-4 shadow-2xl select-none"
-      >
-        <div className="flex flex-col gap-2">
-          <h4 className="text-sm font-bold text-slate-850 dark:text-slate-100">
-            {pendingClearMode === "all" ? t("history.confirmClearTitle") : t("history.confirmClearOlderTitle")}
-          </h4>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            {pendingClearMode === "all"
-              ? t("history.confirmClearMsg")
-              : t("history.confirmClearOlderMsg", {
-                  days: pendingClearMode === "3days" ? 3 : pendingClearMode === "7days" ? 7 : 30,
-                })}
-          </p>
-        </div>
-        <div className="flex justify-end gap-2.5">
-          <SecondaryButton onClick={() => setPendingClearMode(null)} className="text-xs px-3 py-1.5 border border-slate-200 dark:border-slate-800">
-            {t("history.cancel")}
-          </SecondaryButton>
-          <Button onClick={executeClear} className="text-xs px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg">
-            {t("history.confirm")}
-          </Button>
-        </div>
-      </BaseDialog>
     </>
   );
 }

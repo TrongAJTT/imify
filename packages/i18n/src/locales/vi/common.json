@@ -12,6 +12,8 @@
   "processing": "Đang xử lý...",
   "done": "Hoàn thành",
   "result": "Kết quả",
+  "expand": "Mở rộng",
+  "collapse": "Thu gọn",
   "error": "Lỗi",
   "warning": "Cảnh báo",
   "notice": "Chú ý",

@@ -12,6 +12,8 @@
   "processing": "Processing...",
   "done": "Done",
   "result": "Result",
+  "expand": "Expand",
+  "collapse": "Collapse",
   "error": "Error",
   "warning": "Warning",
   "notice": "Notice",

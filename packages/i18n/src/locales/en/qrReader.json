@@ -68,7 +68,7 @@
     "alignQr": "Align QR code within the dashed frame to scan",
     "import": {
       "title": "File Import",
-      "description": "Drag & drop or click to upload PNG, JPG, or SVG images containing a QR code"
+      "description": "Drag & drop or click to upload PNG, JPG, or SVG images containing a QR code.\nSupports Ctrl+V shortcut to quickly paste images on desktop."
     },
     "camera": {
       "title": "Camera Scan",
@@ -180,6 +180,9 @@
     "clearOlderSuccess": "History cleaned up successfully.",
     "cancel": "Cancel",
     "confirm": "Confirm",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "delete": "Delete",
     "time": {
       "justNow": "Just now",
       "minsAgo": "{{count}}m ago",

@@ -68,7 +68,7 @@
     "alignQr": "Căn mã QR vào giữa khung hình nét đứt để quét",
     "import": {
       "title": "Tải tệp lên",
-      "description": "Kéo thả hoặc nhấp để tải ảnh PNG, JPG hoặc SVG chứa mã QR"
+      "description": "Kéo thả hoặc nhấp để tải ảnh PNG, JPG hoặc SVG chứa mã QR.\nHỗ trợ phím tắt Ctrl+V để dán ảnh nhanh trên máy tính."
     },
     "camera": {
       "title": "Quét bằng Camera",
@@ -180,6 +180,9 @@
     "clearOlderSuccess": "Đã dọn dẹp lịch sử thành công.",
     "cancel": "Hủy",
     "confirm": "Xác nhận",
+    "expand": "Mở rộng",
+    "collapse": "Thu gọn",
+    "delete": "Xóa",
     "time": {
       "justNow": "Vừa xong",
       "minsAgo": "{{count}} phút trước",
