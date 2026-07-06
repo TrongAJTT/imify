@@ -136,8 +136,8 @@
     "selectToManage": "Select a watermark to manage",
     "delete": "Delete",
     "aboutAiTitle": "About AI Models & Engine",
-    "multiThreadActive": "Multi-thread Active",
-    "asyncifyFallback": "Asyncify Fallback",
+    "multiThreadActive": "Multi-thread",
+    "asyncifyFallback": "Asyncify",
     "aiDesc": "Imify uses ONNX Runtime Web to run lightweight AI models 100% locally. These models are downloaded once and cached for offline use, ensuring your data never leaves your device.",
     "aiModels": {
       "deleteConfirm": "Delete cached files for \"{{name}} ({{variant}})\"?",

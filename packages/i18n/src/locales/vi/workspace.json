@@ -136,8 +136,8 @@
     "selectToManage": "Chọn một hình mờ để quản lý",
     "delete": "Xóa",
     "aboutAiTitle": "Giới thiệu về Mô hình AI & Động cơ",
-    "multiThreadActive": "Đa luồng hoạt động",
-    "asyncifyFallback": "Dự phòng Asyncify",
+    "multiThreadActive": "Đa luồng",
+    "asyncifyFallback": "Asyncify",
     "aiDesc": "Imify sử dụng ONNX Runtime Web để chạy các mô hình AI nhẹ 100% cục bộ. Các mô hình này được tải xuống một lần và được lưu vào bộ nhớ đệm để sử dụng ngoại tuyến, đảm bảo dữ liệu của bạn không bao giờ rời khỏi thiết bị.",
     "aiModels": {
       "deleteConfirm": "Xóa các tệp được lưu trong bộ nhớ đệm cho \"{{name}} ({{variant}})\"?",
