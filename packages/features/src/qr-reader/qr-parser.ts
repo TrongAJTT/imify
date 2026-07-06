@@ -304,7 +304,7 @@ export function parseQrString(raw: string): ParsedQrResult {
   }
 
   // Zalo: https://zalo.me/phone
-  const zaloMatch = trimmed.match(/^https?:\/\/zalo\.me\/([^?/]+)/i)
+  const zaloMatch = trimmed.match(/^https?:\/\/zalo\.me\/([0-9+]+)/i)
   if (zaloMatch) {
     const recipient = zaloMatch[1] || ""
     return {

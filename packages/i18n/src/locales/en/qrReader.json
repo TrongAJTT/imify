@@ -159,5 +159,32 @@
       "password": "Password",
       "encryption": "Encryption"
     }
+  },
+  "history": {
+    "title": "Saved History",
+    "stats": "{{count}} records",
+    "noHistory": "No saved history yet.",
+    "clearAll": "Clear all",
+    "clearOlderThan3Days": "Older than 3 days",
+    "clearOlderThan7Days": "Older than 7 days",
+    "clearOlderThan1Month": "Older than 1 month",
+    "confirmClearTitle": "Confirm Clear History",
+    "confirmClearMsg": "Are you sure you want to clear the entire scan history?",
+    "confirmClearOlderTitle": "Confirm Clear Older History",
+    "confirmClearOlderMsg": "Are you sure you want to delete history records older than {{days}} days?",
+    "saveToHistory": "Save to History",
+    "saved": "Saved",
+    "saveSuccess": "Saved to history successfully.",
+    "deleteSuccess": "Record deleted successfully.",
+    "clearSuccess": "History cleared successfully.",
+    "clearOlderSuccess": "History cleaned up successfully.",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "time": {
+      "justNow": "Just now",
+      "minsAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
+    }
   }
 }
