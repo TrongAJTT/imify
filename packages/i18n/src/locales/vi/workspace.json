@@ -106,12 +106,12 @@
       "moreActions": "Hành động khác"
     },
     "menu": {
-      "github": "Ngôi sao Github: {{count}}",
-      "donate": "Quyên góp",
+      "github": "Sao Github: {{count}}",
+      "donate": "Ủng hộ",
       "lightMode": "Giao diện sáng",
       "darkMode": "Giao diện tối",
       "assets": "Tài nguyên",
-      "devTools": "Công cụ lập trình viên",
+      "devTools": "Nhà phát triển",
       "about": "Giới thiệu",
       "settings": "Cài đặt"
     }
