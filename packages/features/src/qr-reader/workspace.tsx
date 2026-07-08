@@ -31,6 +31,14 @@ import { useTranslation } from "@imify/i18n";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 import { QrActionsPanel } from "./qr-actions-panel";
 
+function decodeUtf8String(str: string): string {
+  try {
+    return decodeURIComponent(escape(str));
+  } catch (e) {
+    return str;
+  }
+}
+
 // Helper function to extract and crop the QR code image from a source canvas
 function extractQrImage(
   canvas: HTMLCanvasElement,
@@ -309,7 +317,7 @@ export function QrReaderWorkspace() {
 
           if (result && result.code && result.code.data) {
             const { code, canvas: decodedCanvas } = result;
-            setLastScanResult(code.data);
+            setLastScanResult(decodeUtf8String(code.data));
             success(
               t("workspace.scannedSuccess"),
               t("workspace.decodedSuccess"),
@@ -361,7 +369,7 @@ export function QrReaderWorkspace() {
 
           if (result && result.code && result.code.data) {
             const { code, canvas: decodedCanvas } = result;
-            setLastScanResult(code.data);
+            setLastScanResult(decodeUtf8String(code.data));
             success(
               t("workspace.scannedSuccess"),
               t("workspace.decodedFileSuccess"),
