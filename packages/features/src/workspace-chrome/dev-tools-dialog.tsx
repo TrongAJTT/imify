@@ -11,6 +11,7 @@ import {
   X,
   Gauge,
   Languages,
+  HelpCircle,
 } from "lucide-react";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
@@ -72,8 +73,8 @@ export function DevToolsDialog({
 }: DevToolsDialogProps) {
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
   const [activeTab, setActiveTab] = useState<
-    "system" | "console" | "capabilities" | "language" | null
-  >("system");
+    "about" | "system" | "console" | "capabilities" | "language" | null
+  >("about");
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isI18nImportDialogOpen, setIsI18nImportDialogOpen] = useState(false);
@@ -165,7 +166,7 @@ export function DevToolsDialog({
       return;
     }
     if (!isMobileDialog) {
-      setActiveTab("system");
+      setActiveTab("about");
     } else {
       setActiveTab(null);
     }
@@ -194,6 +195,16 @@ export function DevToolsDialog({
   if (!devModeEnabled) return null;
 
   const tabs = [
+    {
+      id: "about" as const,
+      label: "About Dev Tools",
+      description: "Information about developer settings and control switch",
+      icon: HelpCircle,
+      activeClassName: DEFAULT_ACTIVE_CLASS,
+      inactiveClassName: DEFAULT_INACTIVE_CLASS,
+      iconClassName: "text-amber-600 dark:text-amber-400",
+      bgClassName: "bg-amber-50 dark:bg-amber-900/40",
+    },
     {
       id: "system" as const,
       label: "System Monitor",
@@ -351,6 +362,52 @@ export function DevToolsDialog({
             <div
               className={`flex-1 min-h-0 min-w-0 overflow-y-auto ${isMobileDialog ? "p-4 pt-5 pb-10" : "p-8 pt-12"}`}
             >
+              {activeTab === "about" ? (
+                <div className="animate-in fade-in duration-300 space-y-6">
+                  {!isMobileDialog && (
+                    <SettingsSectionHeader
+                      title="ABOUT DEVELOPER TOOLS"
+                      description="Welcome to the developer console. Learn about features and toggle settings."
+                    />
+                  )}
+
+                  <section className="space-y-4">
+                    <SettingsItemHeader
+                      title="What is Developer Mode?"
+                      description="Developer Mode grants access to diagnostics, capabilities mapping, dynamic logs, and custom locale management tools."
+                    />
+                    <div className="prose dark:prose-invert text-sm text-slate-600 dark:text-slate-300 space-y-3 leading-relaxed">
+                      <p>
+                        This dashboard allows you to explore real-time reactive
+                        Zustand stores, inspect live stdout/stderr console
+                        prints, import/export system logs to facilitate
+                        debugging, and test localization templates.
+                      </p>
+                      <p>
+                        Imify handles all operations locally on your machine,
+                        ensuring data privacy is preserved while providing these
+                        developer monitors.
+                      </p>
+                    </div>
+                  </section>
+
+                  <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
+                    <SettingsItemHeader
+                      title="DISABLE DEVELOPER MODE"
+                      description="Hide developer tools and disable debug features. Re-enable via the About dialog Easter Egg."
+                    />
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2 rounded-lg border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      onClick={handleDisableDevMode}
+                    >
+                      <PowerOff size={14} />
+                      Disable Developer Mode
+                    </Button>
+                  </section>
+                </div>
+              ) : null}
+
               {activeTab === "system" ? (
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
@@ -395,21 +452,6 @@ export function DevToolsDialog({
                       </div>
                     </section>
                   )}
-
-                  <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
-                    <SettingsItemHeader
-                      title="DISABLE DEVELOPER MODE"
-                      description="Hide developer tools and disable debug features. Re-enable via the About dialog Easter Egg."
-                    />
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start gap-2 rounded-lg border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      onClick={handleDisableDevMode}
-                    >
-                      <PowerOff size={14} />
-                      Disable Developer Mode
-                    </Button>
-                  </section>
                 </div>
               ) : null}
 
