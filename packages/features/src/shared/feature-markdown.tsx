@@ -4,6 +4,7 @@ import React, { useMemo } from "react"
 import Markdown from "markdown-to-jsx"
 import { BodyText, Heading, LabelText, Subheading } from "@imify/ui/ui/typography"
 import { cn } from "@imify/ui/ui/utils"
+import { resolveFeatureMediaAssetUrl } from "./media-assets"
 
 function resolveMarkdownAssetUrl(src: string, markdownUrl: string): string {
   if (!src) return src
@@ -104,6 +105,12 @@ export function FeatureMarkdown({ markdown, markdownUrl, className }: FeatureMar
           component: (props: { src?: string; alt?: string }) => (
             <MarkdownImage src={props.src} alt={props.alt} markdownUrl={markdownUrl} />
           )
+        },
+        video: {
+          component: (props: any) => {
+            const resolvedSrc = resolveFeatureMediaAssetUrl(props.src ?? "")
+            return <video {...props} src={resolvedSrc} />
+          }
         }
       }
     }),

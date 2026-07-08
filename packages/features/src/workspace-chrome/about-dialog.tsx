@@ -7,7 +7,7 @@ import {
   Github,
   Globe,
   Heart,
-  LayoutGrid,
+  BadgeQuestionMark,
   Library,
   X,
 } from "lucide-react";
@@ -30,6 +30,7 @@ import {
 } from "../shared/media-assets";
 import { BugReportDialog } from "./bug-report-dialog";
 import { WhatsNewDialog } from "./whats-new-dialog";
+import { GuidesDialog } from "./guides-dialog";
 import { useTranslation, Trans } from "@imify/i18n";
 
 const appMetadata = getAppMetadata();
@@ -111,6 +112,7 @@ export function AboutDialog({
   const { toasts, hide, success, warning } = useToast();
   const [isBugReportDialogOpen, setIsBugReportDialogOpen] = useState(false);
   const [isWhatsNewDialogOpen, setIsWhatsNewDialogOpen] = useState(false);
+  const [isGuidesDialogOpen, setIsGuidesDialogOpen] = useState(false);
 
   const activateDevMode = useCallback(async () => {
     if (devModeEnabled) {
@@ -201,21 +203,7 @@ export function AboutDialog({
             <Kicker className="text-xs tracking-widest">
               {t("aboutTitle", "About the project")}
             </Kicker>
-            <BodyText className="leading-relaxed">
-              {/* <Trans i18nKey="about:aboutText1">
-                Imify was born out of a simple need:{" "}
-                <span className="text-slate-900 dark:text-white font-medium">
-                  Privacy-First
-                </span>{" "}
-                image processing. Unlike online converters that upload your data
-                to remote servers, Imify handles every single byte{" "}
-                <span className="text-slate-900 dark:text-white font-medium">
-                  locally
-                </span>{" "}
-                right in your browser memory.
-              </Trans> */}
-              {t("aboutText1")}
-            </BodyText>
+            <BodyText className="leading-relaxed">{t("aboutText1")}</BodyText>
             <BodyText className="leading-relaxed">{t("aboutText2")}</BodyText>
           </div>
           <div className="space-y-4">
@@ -276,10 +264,14 @@ export function AboutDialog({
                 {t("attribution", "Attribution")}
               </button>
 
-              <ActionLink href={IMIFY_LINKS.moreApps}>
-                <LayoutGrid size={16} />
-                {t("moreApps", "More Applications")}
-              </ActionLink>
+              <button
+                type="button"
+                onClick={() => setIsGuidesDialogOpen(true)}
+                className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+              >
+                <BadgeQuestionMark size={16} />
+                {t("guides", "Guides")}
+              </button>
 
               <button
                 type="button"
@@ -345,6 +337,10 @@ export function AboutDialog({
       <WhatsNewDialog
         isOpen={isWhatsNewDialogOpen}
         onClose={() => setIsWhatsNewDialogOpen(false)}
+      />
+      <GuidesDialog
+        isOpen={isGuidesDialogOpen}
+        onClose={() => setIsGuidesDialogOpen(false)}
       />
       <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>
