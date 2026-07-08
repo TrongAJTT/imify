@@ -90,6 +90,12 @@ This list is synchronized with `packages/core/src/attributions.ts` (source of tr
 *   **[ONNX Runtime Web](https://github.com/microsoft/onnxruntime)**
     *   **Author(s):** Microsoft Corporation
     *   **License:** MIT
+*   **[i18next](https://www.i18next.com/)**
+    *   **Author(s):** Jan Mühlemann and i18next contributors
+    *   **License:** MIT
+*   **[react-i18next](https://react.i18next.com/)**
+    *   **Author(s):** Jan Mühlemann and i18next contributors
+    *   **License:** MIT
 
 ## AI Models & Engines
 *   **[Transformers.js](https://github.com/huggingface/transformers.js)**

@@ -55,7 +55,9 @@ export const ATTRIBUTION_CATEGORIES: AttributionCategory[] = [
       { name: "woff2-encoder", author: "Google and contributors (port by itskyedo)", license: "MIT", url: "https://github.com/itskyedo/woff2-encoder" },
       { name: "jsQR", author: "Linus Unnebäck", license: "Apache-2.0", url: "https://github.com/cozmo/jsQR" },
       { name: "QR Code Styling", author: "Denys Kozak", license: "MIT", url: "https://github.com/kozakdenys/qr-code-styling" },
-      { name: "ONNX Runtime Web", author: "Microsoft Corporation", license: "MIT", url: "https://github.com/microsoft/onnxruntime" }
+      { name: "ONNX Runtime Web", author: "Microsoft Corporation", license: "MIT", url: "https://github.com/microsoft/onnxruntime" },
+      { name: "i18next", author: "Jan Mühlemann and i18next contributors", license: "MIT", url: "https://www.i18next.com/" },
+      { name: "react-i18next", author: "Jan Mühlemann and i18next contributors", license: "MIT", url: "https://react.i18next.com/" }
     ]
   },
   {

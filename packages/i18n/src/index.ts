@@ -20,6 +20,7 @@ export {
 export {
   importLanguageAtRuntime,
   generateEmptyLanguageZip,
+  exportLanguageAsZip,
   getRuntimeLanguages,
   loadRuntimeLanguages,
   deleteRuntimeLanguage,

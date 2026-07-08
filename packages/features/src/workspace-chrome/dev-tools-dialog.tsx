@@ -38,6 +38,15 @@ import {
   type PerformancePreferences,
 } from "../processor/performance-preferences";
 import { SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX } from "./desktop-layout";
+import { LanguageItemCard } from "./language-item-card";
+import { useI18nStore } from "@imify/stores";
+import {
+  getAvailableLanguages,
+  getAppI18nVersion,
+  deleteRuntimeLanguage,
+  exportLanguageAsZip,
+  type LanguageInfo,
+} from "@imify/i18n";
 
 const DEFAULT_ACTIVE_CLASS =
   "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-slate-300 dark:ring-slate-700";
@@ -76,7 +85,75 @@ export function DevToolsDialog({
   const setShowI18nDebugKeys = useDevModeStore(
     (state) => state.setShowI18nDebugKeys,
   );
-  const { toasts, hide, success } = useToast();
+  const { toasts, hide, success, error } = useToast();
+
+  const [languages, setLanguages] = useState<LanguageInfo[]>([]);
+  const [expandedLangCode, setExpandedLangCode] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState<string>("");
+  const activeLanguage = useI18nStore((state) => state.language);
+  const setLanguage = useI18nStore((state) => state.setLanguage);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLanguages(getAvailableLanguages());
+      setAppVersion(getAppI18nVersion());
+    }
+  }, [activeLanguage, isOpen]);
+
+  const handleToggleExpand = (code: string) => {
+    setExpandedLangCode((prev) => (prev === code ? null : code));
+  };
+
+  const handleRequestDelete = async (
+    lang: LanguageInfo,
+    e: React.MouseEvent,
+  ) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(
+      `Delete custom language "${lang.name}"?` +
+        "\n\n" +
+        "This will permanently delete it from local storage.",
+    );
+    if (!confirmed) return;
+    try {
+      await deleteRuntimeLanguage(lang.code);
+      if (activeLanguage === lang.code) {
+        setLanguage("en");
+      } else {
+        setLanguages(getAvailableLanguages());
+      }
+      success("Language Deleted", `Successfully removed ${lang.name}.`);
+    } catch (err) {
+      console.error("Failed to delete custom language:", err);
+    }
+  };
+
+  const handleExportLanguage = async (
+    lang: LanguageInfo,
+    e: React.MouseEvent,
+  ) => {
+    e.stopPropagation();
+    try {
+      const zipData = await exportLanguageAsZip(lang.code);
+      if (!zipData) {
+        error("Export Failed", "Language data not found.");
+        return;
+      }
+      const blob = new Blob([zipData as BlobPart], { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `imify-locale-${lang.code}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      success(
+        "Language Exported",
+        `Successfully downloaded ${lang.name} zip file.`,
+      );
+    } catch (err) {
+      console.error("Failed to export language:", err);
+    }
+  };
 
   const safePerformancePreferences = normalizePerformancePreferences(
     performancePreferences,
@@ -381,6 +458,26 @@ export function DevToolsDialog({
                         Download Template
                       </Button>
                     </div>
+
+                    {languages.filter((lang) => lang.isRuntime).length > 0 && (
+                      <div className="space-y-2 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/20 dark:bg-slate-950/20 mt-4">
+                        {languages
+                          .filter((lang) => lang.isRuntime)
+                          .map((lang) => (
+                            <LanguageItemCard
+                              key={lang.code}
+                              lang={lang}
+                              isActive={lang.code === activeLanguage}
+                              appVersion={appVersion}
+                              isExpanded={expandedLangCode === lang.code}
+                              onToggleExpand={handleToggleExpand}
+                              mode="devtools"
+                              onDelete={handleRequestDelete}
+                              onExport={handleExportLanguage}
+                            />
+                          ))}
+                      </div>
+                    )}
                   </section>
                 </div>
               ) : null}
