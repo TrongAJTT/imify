@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { parseQrString, formatICalDateForDisplay } from "./qr-parser";
+import { parseQrString, formatICalDateForDisplay, formatICalTrigger } from "./qr-parser";
 import { Button, Tooltip } from "@imify/ui";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { useTranslation } from "@imify/i18n";
@@ -22,6 +22,7 @@ import {
   AlignLeft,
   Clock,
   FileText,
+  Bell,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -457,7 +458,7 @@ export function QrActionsPanel({
                   {endDisplay && (
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 w-8 shrink-0">
-                        {t("sidebar.fields.to")}
+                        {t("sidebar.fields.toTime", "Đến")}
                       </span>
                       <span className="font-medium text-slate-800 dark:text-slate-200">
                         {endDisplay}
@@ -481,6 +482,13 @@ export function QrActionsPanel({
                 icon={<AlignLeft size={14} />}
                 label={t("sidebar.fields.description")}
                 value={ev.description}
+              />
+            )}
+            {ev.alarm && (
+              <FieldRow
+                icon={<Bell size={14} />}
+                label={t("sidebar.fields.alarm", "Nhắc nhở")}
+                value={formatICalTrigger(ev.alarm, t)}
               />
             )}
           </div>

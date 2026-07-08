@@ -150,7 +150,26 @@
       "startDate": "Thời gian bắt đầu",
       "endDate": "Thời gian kết thúc",
       "location": "Địa điểm",
-      "description": "Mô tả chi tiết"
+      "description": "Mô tả chi tiết",
+      "toTime": "Đến",
+      "alarm": "Nhắc nhở",
+      "alarmOptions": {
+        "atTime": "Vào lúc diễn ra sự kiện",
+        "before": "{{time}} trước",
+        "after": "{{time}} sau",
+        "days_zero": "0 ngày",
+        "days_one": "1 ngày",
+        "days_other": "{{count}} ngày",
+        "hours_zero": "0 giờ",
+        "hours_one": "1 giờ",
+        "hours_other": "{{count}} giờ",
+        "minutes_zero": "0 phút",
+        "minutes_one": "1 phút",
+        "minutes_other": "{{count}} phút",
+        "seconds_zero": "0 giây",
+        "seconds_one": "1 giây",
+        "seconds_other": "{{count}} giây"
+      }
     },
     "wifiCard": {
       "title": "Thẻ Đăng nhập Wi-Fi",

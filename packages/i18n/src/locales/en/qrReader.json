@@ -150,7 +150,26 @@
       "startDate": "Start Date",
       "endDate": "End Date",
       "location": "Location",
-      "description": "Description"
+      "description": "Description",
+      "toTime": "To",
+      "alarm": "Reminder",
+      "alarmOptions": {
+        "atTime": "At time of event",
+        "before": "{{time}} before",
+        "after": "{{time}} after",
+        "days_zero": "0 days",
+        "days_one": "1 day",
+        "days_other": "{{count}} days",
+        "hours_zero": "0 hours",
+        "hours_one": "1 hour",
+        "hours_other": "{{count}} hours",
+        "minutes_zero": "0 minutes",
+        "minutes_one": "1 minute",
+        "minutes_other": "{{count}} minutes",
+        "seconds_zero": "0 seconds",
+        "seconds_one": "1 second",
+        "seconds_other": "{{count}} seconds"
+      }
     },
     "wifiCard": {
       "title": "Wi-Fi Sign-in Card",
