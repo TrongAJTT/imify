@@ -52,8 +52,8 @@ packages/i18n/src/locales/
 }
 ```
 
-> [!IMPORTANT]
-> `_meta` is **not** stored inside individual namespace files anymore. It lives in its own `_meta.json` per language directory and is registered in i18next as the `"_meta"` namespace.
+> [!NOTE]
+> Language metadata lives in its own `_meta.json` per language directory and is registered in i18next as the `"_meta"` namespace.
 
 ---
 
@@ -74,9 +74,6 @@ Example content:
   "description": "What this feature does"
 }
 ```
-
-> [!NOTE]
-> Do **not** add a `_meta` block inside namespace files. Metadata lives only in `_meta.json`.
 
 ### Step 2: Register in `ALL_NAMESPACES`
 
@@ -183,30 +180,33 @@ Or simply run `pnpm dev` / `pnpm build` in either app — the sync runs automati
 
 ## 3. Runtime Language Import (Community Languages)
 
-The system supports importing community-contributed language files at runtime via the developer settings dialog. The import format is a single JSON file with `_meta` at the root alongside all namespace keys:
+The system supports importing community-contributed language files at runtime via the Dev Tools dialog (**Dev Tools > Language Tools**). 
 
-```json
-{
-  "_meta": {
-    "languageName": "Français",
-    "languageCode": "fr",
-    "version": "1.0.0",
-    "maintainers": [{ "name": "Contributor", "github": "...", "role": "Translator" }]
-  },
-  "common": { "save": "Sauvegarder", ... },
-  "about": { ... },
-  "shared": { ... }
-}
+The import package MUST be a **ZIP archive** containing the following structure:
+```
+my-language.zip
+  ├── _meta.json          ← Metadata for the custom language
+  ├── common.json         ← Core UI translations
+  ├── about.json          ← About dialog translations
+  ├── workspace.json      
+  └── ... (other namespace JSON files)
 ```
 
-The file is validated, stored in IndexedDB, and registered in i18next at runtime. `_meta` is registered as its own namespace (`"_meta"`) consistent with the bundled language behavior.
+The `_meta.json` inside the ZIP must adhere to the standard language metadata format (e.g. `languageCode`, `languageName`, `version`, and `maintainers`).
+
+### Dev Tools Integration
+To make custom translation easier:
+- **Download Template**: In the Dev Tools, click **Download Template** to generate an empty translation ZIP containing all active namespaces filled with empty string values.
+- **Export ZIP**: For any custom language already loaded in the workspace, you can expand its accordion menu inside **Dev Tools > Language Tools** and click **Export ZIP** to download its translated files for backup or sharing.
+
+Once imported, the ZIP package is validated, stored locally in `IndexedDB`, and registered to i18next dynamically.
 
 ---
 
 ## 🚨 Crucial Caveats
 
 1. **Import path**: Always `import { useTranslation } from "@imify/i18n"` — never from `@imify/i18n/index`.
-2. **No `_meta` in namespace files**: Never add `_meta` back to individual namespace files. This causes the completion calculator to double-count and will break validation.
-3. **Sync scripts**: After adding/changing any locale JSON file, re-run the sync scripts (or `pnpm dev`/`pnpm build`) so both Web and Extension targets receive the updated files.
-4. **`common` must be complete**: This is eagerly bundled and never lazy-loaded. It must be fully translated in all supported languages — missing keys here cause visible UI fallbacks at startup.
-5. **Completion rate**: Calculated by comparing each namespace against the English baseline. The `_meta` namespace is excluded from completion calculations automatically.
+2. **Keep metadata isolated**: Inside the ZIP package or language directory, do not put metadata keys in individual namespace files. Metadata must live strictly inside `_meta.json`.
+3. **Sync scripts**: After adding or changing any locale JSON file under `packages/i18n/src/locales/`, you must sync them to target apps (e.g. by running `pnpm sync:locales` or restarting `pnpm dev`).
+4. **`common` must be complete**: The `common` namespace is eagerly bundled and must contain all necessary keys to avoid fallback raw key outputs on startup.
+5. **Completion rate**: The completion rate is calculated by matching translation keys against the English baseline files. The `_meta.json` file is automatically excluded from stats.
