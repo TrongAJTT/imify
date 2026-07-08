@@ -20,6 +20,7 @@ import {
   ToastContainer,
   Tooltip,
   cn,
+  LabelText,
 } from "@imify/ui";
 import { useQrReaderStore } from "@imify/stores";
 import {
@@ -588,7 +589,7 @@ export function QrReaderWorkspace() {
                   value={lastScanResult}
                   onChange={() => {}}
                   rows={4}
-                  className="w-full font-mono text-xs"
+                  className="w-full text-xs"
                 />
                 <Tooltip content={t("workspace.copyRaw")}>
                   <button
@@ -606,10 +607,10 @@ export function QrReaderWorkspace() {
               </div>
 
               {/* Available Actions (Moved from sidepanel) */}
-              <div className="mt-2 pt-4 border-t border-slate-100 dark:border-slate-800/80">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2.5">
-                  {t("sidebar.parsedActions")}
-                </span>
+              <div className="mt-1">
+                <LabelText className="text-xs mb-2">
+                  {t("sidebar.detailsAndActions")}
+                </LabelText>
                 <QrActionsPanel raw={lastScanResult} />
               </div>
             </div>
