@@ -54,14 +54,14 @@ const REVERSE_LEVEL_MAP = {
   High: "H",
 } as const;
 
-const RESOLUTION_OPTIONS = [
-  { value: 256, label: "256" },
-  { value: 512, label: "512" },
-  { value: 768, label: "768" },
-  { value: 1024, label: "1K" },
-  { value: 1280, label: "1.25K" },
-  { value: 1536, label: "1.5K" },
-] as const;
+const SELECT_RESOLUTION_OPTIONS = [
+  { value: "256", label: "256 px" },
+  { value: "512", label: "512 px" },
+  { value: "768", label: "768 px" },
+  { value: "1024", label: "1024 px (1K)" },
+  { value: "1280", label: "1280 px (1.25K)" },
+  { value: "1536", label: "1536 px (1.5K)" },
+];
 
 export function QrGeneratorSidebar({
   enableWideSidebarGrid = false,
@@ -393,12 +393,11 @@ export function QrGeneratorSidebar({
         >
           {/* Resolution */}
           <div className="pt-1">
-            <DiscreteSlider
+            <SelectInput
               label={t("sidebar.resolutionSize")}
-              value={size}
-              options={RESOLUTION_OPTIONS}
-              onChange={setSize}
-              valueFormatter={(opt) => `${opt.value} px`}
+              value={size.toString()}
+              options={SELECT_RESOLUTION_OPTIONS}
+              onChange={(val) => setSize(parseInt(val, 10))}
             />
           </div>
 
