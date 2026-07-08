@@ -5,6 +5,8 @@ import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { usePatternStore } from "@imify/stores/stores/pattern-store"
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
+import { useQrGeneratorStore } from "@imify/stores/stores/qr-generator-store"
+import { useBackgroundRemoverStore } from "@imify/stores/stores/background-remover-store"
 import type { StoreApi, UseBoundStore } from "zustand"
 
 export type DevModeFeatureId =
@@ -15,10 +17,13 @@ export type DevModeFeatureId =
   | "pattern"
   | "diffchecker"
   | "inspector"
+  | "qr_generator"
+  | "background_remover"
   | "settings"
   | "performance"
   | "layout"
   | "runtime_logs"
+  | "environment"
 
 export interface DevModeFeatureDef {
   id: DevModeFeatureId
@@ -39,8 +44,11 @@ export const DEV_MODE_FEATURES: DevModeFeatureDef[] = [
   { id: "pattern", label: "Pattern Generator", storeHook: usePatternStore },
   { id: "diffchecker", label: "Difference Checker", storeHook: useDiffcheckerStore },
   { id: "inspector", label: "Image Inspector", storeHook: useInspectorStore },
+  { id: "qr_generator", label: "QR Code Generator", storeHook: useQrGeneratorStore },
+  { id: "background_remover", label: "Background Remover", storeHook: useBackgroundRemoverStore },
   { id: "settings", label: "Settings & Context Menu" },
   { id: "performance", label: "Performance Preferences" },
   { id: "layout", label: "Workspace Layout Preferences" },
   { id: "runtime_logs", label: "Runtime Console Logs" },
+  { id: "environment", label: "Environment Information" },
 ]

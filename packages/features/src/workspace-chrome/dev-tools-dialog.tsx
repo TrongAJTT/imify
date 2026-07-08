@@ -528,6 +528,7 @@ export function DevToolsDialog({
             performancePreferences={safePerformancePreferences}
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
+            isDevMode={true}
           />
           <DevModeImportDialog
             isOpen={isImportDialogOpen}

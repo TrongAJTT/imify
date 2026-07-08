@@ -19,6 +19,7 @@ interface DevModeExportDialogProps {
   settingsAdapter: DevModeSettingsAdapter
   title?: string
   description?: string
+  isDevMode?: boolean
 }
 
 export function DevModeExportDialog({
@@ -29,11 +30,26 @@ export function DevModeExportDialog({
   layoutPreferences,
   settingsAdapter,
   title = "Export System Log",
-  description = "Select the features you want to include in the export. Sensitive data will be automatically sanitized."
+  description = "Select the features you want to include in the export. Sensitive data will be automatically sanitized.",
+  isDevMode = false
 }: DevModeExportDialogProps) {
-  const allFeatureIds = useMemo(() => DEV_MODE_FEATURES.map((feature) => feature.id), [])
+  const visibleFeatures = useMemo(() => {
+    return DEV_MODE_FEATURES.filter((feature) => {
+      if (!isDevMode) {
+        return feature.id !== "environment" && feature.id !== "runtime_logs"
+      }
+      return true
+    })
+  }, [isDevMode])
+
+  const allFeatureIds = useMemo(() => visibleFeatures.map((feature) => feature.id), [visibleFeatures])
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>(allFeatureIds)
   const [isExporting, setIsExporting] = useState(false)
+
+  // Sync selected features if visible features change
+  React.useEffect(() => {
+    setSelectedFeatures(allFeatureIds)
+  }, [allFeatureIds])
 
   const toggleAll = () => {
     setSelectedFeatures((prev) => (prev.length === allFeatureIds.length ? [] : allFeatureIds))
@@ -68,7 +84,7 @@ export function DevModeExportDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-md w-full"
+      className="max-w-2xl w-full"
       contentClassName="p-6 flex flex-col gap-6"
     >
       <div className="contents" onClick={(event) => event.stopPropagation()}>
@@ -89,8 +105,8 @@ export function DevModeExportDialog({
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-6" onClick={(event) => event.stopPropagation()}>
-            {DEV_MODE_FEATURES.map((feature) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6" onClick={(event) => event.stopPropagation()}>
+            {visibleFeatures.map((feature) => (
               <label
                 key={feature.id}
                 className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
