@@ -26,7 +26,7 @@ import {
   FileText,
   Copy,
 } from "lucide-react";
-import { useQrReaderStore } from "@imify/stores";
+import { useQrReaderStore, useWorkspaceHeaderStore } from "@imify/stores";
 import {
   parseQrString,
   type ParsedQrResult,
@@ -118,6 +118,7 @@ export function QrReaderSidebar({
     lastScanResult,
   } = useQrReaderStore();
   const { toasts, success, error, hide } = useToast();
+  const setIsMobileSidebarOpen = useWorkspaceHeaderStore((s) => s.setIsMobileSidebarOpen);
 
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
 
@@ -214,7 +215,10 @@ export function QrReaderSidebar({
           return (
             <div
               key={item.id}
-              onClick={() => setLastScanResult(item.raw)}
+              onClick={() => {
+                setLastScanResult(item.raw);
+                setIsMobileSidebarOpen(false);
+              }}
               className={`flex flex-col p-2.5 rounded-lg border text-left transition-all duration-200 cursor-pointer group relative ${
                 isSelected
                   ? "border-sky-500 bg-sky-50/50 dark:bg-sky-950/20"
