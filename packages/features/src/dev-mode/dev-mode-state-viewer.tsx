@@ -27,7 +27,13 @@ function stripActions(state: Record<string, unknown>): Record<string, unknown> {
   return out;
 }
 
-type StoreFilter = "all" | OptionsTab | "batch_global" | "processor" | "qr_generator" | "background_remover";
+type StoreFilter =
+  | "all"
+  | OptionsTab
+  | "batch_global"
+  | "processor"
+  | "qr_generator"
+  | "background_remover";
 
 interface DevModeStateViewerProps {
   activeTab: OptionsTab | null;
@@ -121,7 +127,9 @@ export function DevModeStateViewer({
         inspectorState as unknown as Record<string, unknown>,
       ),
       qr_generator: (() => {
-        const cleaned = stripActions(qrGeneratorState as unknown as Record<string, unknown>);
+        const cleaned = stripActions(
+          qrGeneratorState as unknown as Record<string, unknown>,
+        );
         const { data, ...rest } = cleaned;
         return rest;
       })(),
