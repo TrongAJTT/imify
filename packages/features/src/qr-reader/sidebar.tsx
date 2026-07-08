@@ -3,10 +3,8 @@ import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
   AccordionCard,
-  Button,
   MutedText,
   ToastContainer,
-  BaseDialog,
   SplitButton,
   type SplitButtonOption,
   Tooltip,
@@ -124,12 +122,16 @@ export function QrReaderSidebar({
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
 
   const handleRequestClear = (mode: "all" | "3days" | "7days" | "30days") => {
-    const title = mode === "all" ? t("history.confirmClearTitle") : t("history.confirmClearOlderTitle");
-    const msg = mode === "all"
-      ? t("history.confirmClearMsg")
-      : t("history.confirmClearOlderMsg", {
-          days: mode === "3days" ? 3 : mode === "7days" ? 7 : 30,
-        });
+    const title =
+      mode === "all"
+        ? t("history.confirmClearTitle")
+        : t("history.confirmClearOlderTitle");
+    const msg =
+      mode === "all"
+        ? t("history.confirmClearMsg")
+        : t("history.confirmClearOlderMsg", {
+            days: mode === "3days" ? 3 : mode === "7days" ? 7 : 30,
+          });
 
     if (window.confirm(`${title}\n\n${msg}`)) {
       if (mode === "all") {

@@ -179,7 +179,9 @@ export function QrGeneratorSidebar({
           {/* Colors */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <LabelText className="text-xs">{t("sidebar.foregroundColor")}</LabelText>
+              <LabelText className="text-xs">
+                {t("sidebar.foregroundColor")}
+              </LabelText>
               <ColorPickerPopover
                 label=""
                 value={fgColor}
@@ -189,7 +191,9 @@ export function QrGeneratorSidebar({
               />
             </div>
             <div className="flex items-center justify-between">
-              <LabelText className="text-xs">{t("sidebar.backgroundColor")}</LabelText>
+              <LabelText className="text-xs">
+                {t("sidebar.backgroundColor")}
+              </LabelText>
               <ColorPickerPopover
                 label=""
                 value={bgColor}
@@ -224,7 +228,11 @@ export function QrGeneratorSidebar({
                   label: t("sidebar.dots.square"),
                   icon: <Icons.DotSquareIcon />,
                 },
-                { value: "dots", label: t("sidebar.dots.dots"), icon: <Icons.DotDotsIcon /> },
+                {
+                  value: "dots",
+                  label: t("sidebar.dots.dots"),
+                  icon: <Icons.DotDotsIcon />,
+                },
                 {
                   value: "rounded",
                   label: t("sidebar.dots.rounded"),
@@ -265,7 +273,9 @@ export function QrGeneratorSidebar({
         >
           {/* Marker Border */}
           <div className="space-y-1.5">
-            <LabelText className="text-xs">{t("sidebar.markerBorder")}</LabelText>
+            <LabelText className="text-xs">
+              {t("sidebar.markerBorder")}
+            </LabelText>
             <GridIconSelector
               value={markerBorderType}
               onChange={setMarkerBorderType}
@@ -293,7 +303,9 @@ export function QrGeneratorSidebar({
 
           {/* Marker Center */}
           <div className="space-y-1.5">
-            <LabelText className="text-xs">{t("sidebar.markerCenter")}</LabelText>
+            <LabelText className="text-xs">
+              {t("sidebar.markerCenter")}
+            </LabelText>
             <GridIconSelector
               value={markerCenterType}
               onChange={setMarkerCenterType}
@@ -326,7 +338,9 @@ export function QrGeneratorSidebar({
               />
               {!syncMarkerBorderColorWithForeground && (
                 <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
-                  <LabelText className="text-xs">{t("sidebar.borderColor")}</LabelText>
+                  <LabelText className="text-xs">
+                    {t("sidebar.borderColor")}
+                  </LabelText>
                   <ColorPickerPopover
                     label=""
                     value={markerBorderColor}
@@ -348,7 +362,9 @@ export function QrGeneratorSidebar({
               />
               {!syncMarkerCenterColorWithForeground && (
                 <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
-                  <LabelText className="text-xs">{t("sidebar.centerColor")}</LabelText>
+                  <LabelText className="text-xs">
+                    {t("sidebar.centerColor")}
+                  </LabelText>
                   <ColorPickerPopover
                     label=""
                     value={markerCenterColor}
@@ -388,16 +404,22 @@ export function QrGeneratorSidebar({
 
           {/* Error Correction */}
           <div className="space-y-2">
-            <LabelText className="text-xs">{t("sidebar.errorCorrection")}</LabelText>
+            <LabelText className="text-xs">
+              {t("sidebar.errorCorrection")}
+            </LabelText>
             <div className="grid grid-cols-2 gap-1">
               {(["Low", "Medium", "Quartile", "High"] as const).map((level) => (
                 <RadioCard
                   key={level}
-                  title={t("sidebar.ecLabels." + level, { defaultValue: level })}
+                  title={t("sidebar.ecLabels." + level, {
+                    defaultValue: level,
+                  })}
                   value={level}
                   selectedValue={
                     errorCorrectionLevel in LEVEL_MAP
-                      ? LEVEL_MAP[errorCorrectionLevel as keyof typeof LEVEL_MAP]
+                      ? LEVEL_MAP[
+                          errorCorrectionLevel as keyof typeof LEVEL_MAP
+                        ]
                       : "Medium"
                   }
                   onChange={(v) =>
@@ -511,14 +533,20 @@ export function QrGeneratorSidebar({
         >
           {/* Template Selector */}
           <div className="space-y-1.5">
-            <LabelText className="text-xs">{t("sidebar.frameTemplate")}</LabelText>
+            <LabelText className="text-xs">
+              {t("sidebar.frameTemplate")}
+            </LabelText>
             <GridIconSelector
               value={frameStyle}
               onChange={setFrameStyle}
               columns={4}
               colorTheme="blue"
               options={[
-                { value: "none", label: t("sidebar.frames.none"), icon: <Icons.FrameNoneIcon /> },
+                {
+                  value: "none",
+                  label: t("sidebar.frames.none"),
+                  icon: <Icons.FrameNoneIcon />,
+                },
                 {
                   value: "border",
                   label: t("sidebar.frames.border"),
@@ -529,7 +557,11 @@ export function QrGeneratorSidebar({
                   label: t("sidebar.frames.bottom"),
                   icon: <Icons.FrameBottomIcon />,
                 },
-                { value: "top", label: t("sidebar.frames.top"), icon: <Icons.FrameTopIcon /> },
+                {
+                  value: "top",
+                  label: t("sidebar.frames.top"),
+                  icon: <Icons.FrameTopIcon />,
+                },
                 {
                   value: "tooltip",
                   label: t("sidebar.frames.tooltip"),
@@ -597,7 +629,9 @@ export function QrGeneratorSidebar({
                 />
                 {!syncFrameColorWithForeground && (
                   <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
-                    <LabelText className="text-xs">{t("sidebar.frameColor")}</LabelText>
+                    <LabelText className="text-xs">
+                      {t("sidebar.frameColor")}
+                    </LabelText>
                     <ColorPickerPopover
                       label=""
                       value={frameColor}
@@ -617,7 +651,9 @@ export function QrGeneratorSidebar({
                 />
                 {!syncTextColorWithBackground && (
                   <div className="flex items-center justify-between pl-6 pr-2 pt-1.5 text-xs">
-                    <LabelText className="text-xs">{t("sidebar.textColor")}</LabelText>
+                    <LabelText className="text-xs">
+                      {t("sidebar.textColor")}
+                    </LabelText>
                     <ColorPickerPopover
                       label=""
                       value={frameTextColor}

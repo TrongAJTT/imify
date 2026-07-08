@@ -22,6 +22,8 @@
   "highlightColor": "Màu nổi bật",
   "noFileSelected": "Chưa chọn tệp nào",
   "chooseFile": "Chọn tệp",
+  "aboutThisTool": "Về công cụ này",
+  "toolSettings": "Thiết lập công cụ",
   "presetInfoShowcasePanel": {
     "tipOfTheDay": "Mẹo hôm nay"
   },

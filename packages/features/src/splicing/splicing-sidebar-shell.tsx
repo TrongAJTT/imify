@@ -24,10 +24,7 @@ export function SplicingSidebarShell({
 
   if (presetViewMode === "select") {
     return (
-      <SidebarPanel
-        title="ABOUT THIS TOOL"
-        childrenClassName="flex flex-col gap-3"
-      >
+      <SidebarPanel childrenClassName="flex flex-col gap-3">
         <SplicingPresetInfoPanel />
       </SidebarPanel>
     );
