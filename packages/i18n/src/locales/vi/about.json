@@ -27,5 +27,9 @@
     "btnInstall": "Cài đặt ngay",
     "btnCancel": "Hủy bỏ",
     "alreadyInstalled": "Ứng dụng PWA đã được cài đặt hoặc thiết bị không hỗ trợ."
+  },
+  "donateDialog": {
+    "title": "Cảm ơn bạn đã lựa chọn Imify!",
+    "desc": "Là một dự án mã nguồn mở dành cho cộng đồng, Imify đã và sẽ luôn miễn phí. Nếu công cụ giúp ích cho công việc của bạn, hãy cân nhắc ủng hộ tác giả để trang trải chi phí vận hành, duy trì tên miền, và tiếp thêm động lực phát triển thêm nhiều tính năng mới cũng như sửa lỗi cho mọi người."
   }
 }

@@ -11,6 +11,7 @@ import {
   FEATURE_MEDIA_ASSETS,
   resolveFeatureMediaAssetUrl,
 } from "../shared/media-assets";
+import { useTranslation } from "@imify/i18n";
 
 interface DonateDialogProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface DonateDialogProps {
 }
 
 export function DonateDialog({ isOpen, onClose }: DonateDialogProps) {
+  const { t } = useTranslation("about");
   const githubLogoSrc = resolveFeatureMediaAssetUrl(
     FEATURE_MEDIA_ASSETS.brand.githubLogoSvg,
   );
@@ -48,13 +50,10 @@ export function DonateDialog({ isOpen, onClose }: DonateDialogProps) {
           <Heart size={30} className="fill-current" />
         </div>
         <Subheading className="mb-3 text-2xl font-bold">
-          Thanks for choosing Imify!
+          {t("donateDialog.title", "Thanks for choosing Imify!")}
         </Subheading>
         <MutedText className="mb-8 max-w-lg leading-relaxed mx-auto">
-          As an open-source project dedicated to the community, Imify has been
-          and will always be free. If it helps your work, please consider
-          supporting the author to help cover living expenses, maintain our
-          domains, and fuel future features and bug fixes for everyone.
+          {t("donateDialog.desc")}
         </MutedText>
 
         <div className="space-y-3">

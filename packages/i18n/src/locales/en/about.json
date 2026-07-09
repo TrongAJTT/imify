@@ -27,5 +27,9 @@
     "btnInstall": "Install Now",
     "btnCancel": "Cancel",
     "alreadyInstalled": "PWA app is already installed or device does not support installation."
+  },
+  "donateDialog": {
+    "title": "Thanks for choosing Imify!",
+    "desc": "As an open-source project dedicated to the community, Imify has been and will always be free. If it helps your work, please consider supporting the author to help cover living expenses, maintain our domains, and fuel future features and bug fixes for everyone."
   }
 }
