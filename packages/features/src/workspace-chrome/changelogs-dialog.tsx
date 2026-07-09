@@ -4,9 +4,18 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, History, X } from "lucide-react";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { Button } from "@imify/ui/ui/button";
-import { Heading, Kicker, BodyText, MutedText, Subheading } from "@imify/ui/ui/typography";
+import {
+  Heading,
+  Kicker,
+  BodyText,
+  MutedText,
+  Subheading,
+} from "@imify/ui/ui/typography";
 import { CHANGELOGS, type ChangelogVersion } from "@imify/core/changelogs";
-import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets";
+import {
+  FEATURE_MEDIA_ASSETS,
+  resolveFeatureMediaAssetUrl,
+} from "../shared/media-assets";
 import { FeatureMarkdown } from "../shared/feature-markdown";
 import { useTranslation } from "@imify/i18n";
 
@@ -19,7 +28,9 @@ const SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX = 599;
 
 export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
   const { t } = useTranslation("about");
-  const [activeVersion, setActiveVersion] = useState<ChangelogVersion | null>(null);
+  const [activeVersion, setActiveVersion] = useState<ChangelogVersion | null>(
+    null,
+  );
   const [markdown, setMarkdown] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +40,7 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const media = window.matchMedia(
-      `(max-width: ${SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX}px)`
+      `(max-width: ${SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX}px)`,
     );
     const handleResize = () => setIsMobileDialog(media.matches);
     handleResize();
@@ -70,7 +81,9 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
       })
       .catch(() => {
         if (!isMounted) return;
-        setError(t("changelogsDialog.loadError", "Could not load changelog content."));
+        setError(
+          t("changelogsDialog.loadError", "Could not load changelog content."),
+        );
       })
       .finally(() => {
         if (!isMounted) return;
@@ -86,7 +99,9 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
     if (isLoading) {
       return (
         <div className="flex h-40 items-center justify-center">
-          <MutedText>{t("changelogsDialog.loadingChangelog", "Loading update logs...")}</MutedText>
+          <MutedText>
+            {t("changelogsDialog.loadingChangelog", "Loading update logs...")}
+          </MutedText>
         </div>
       );
     }
@@ -94,7 +109,9 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
     if (error) {
       return (
         <div className="p-4 text-center">
-          <MutedText className="text-rose-500 dark:text-rose-400">{error}</MutedText>
+          <MutedText className="text-rose-500 dark:text-rose-400">
+            {error}
+          </MutedText>
         </div>
       );
     }
@@ -103,7 +120,10 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
       return (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/30 p-6">
           <MutedText>
-            {t("changelogsDialog.noReleaseNotes", "No release notes available for this version.")}
+            {t(
+              "changelogsDialog.noReleaseNotes",
+              "No release notes available for this version.",
+            )}
           </MutedText>
         </div>
       );
@@ -113,7 +133,7 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
   }, [error, isLoading, markdown, markdownUrl, t]);
 
   const appIconSrc = resolveFeatureMediaAssetUrl(
-    FEATURE_MEDIA_ASSETS.brand.imifyLogoPng
+    FEATURE_MEDIA_ASSETS.brand.imifyLogoPng,
   );
 
   return (
@@ -123,7 +143,7 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
       contentClassName={
         isMobileDialog
           ? "relative flex h-[calc(100dvh-2rem)] w-full overflow-hidden rounded-xl flex-col"
-          : "relative flex h-[620px] w-full max-w-4xl min-h-0 overflow-hidden rounded-xl bg-white dark:bg-slate-900"
+          : "relative flex h-[720px] w-full max-w-4xl min-h-0 overflow-hidden rounded-xl bg-white dark:bg-slate-900"
       }
     >
       {/* Top Close Button (Desktop Only) */}
@@ -145,17 +165,22 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
           className={`shrink-0 border-slate-200 bg-white dark:border-slate-850 dark:bg-slate-900 flex flex-col ${
             isMobileDialog
               ? "w-full h-full border-b-0 overflow-y-auto pb-6 pt-4 px-4"
-              : "w-64 border-r pt-6 pb-4"
+              : "w-56 border-r pt-6 pb-4"
           }`}
         >
-          <div className={`px-4 ${isMobileDialog ? "mb-4 flex items-center justify-between" : "mb-6"}`}>
+          <div
+            className={`px-4 ${isMobileDialog ? "mb-4 flex items-center justify-between" : "mb-6"}`}
+          >
             <div>
               <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">
                 {t("changelogsDialog.title", "Changelogs")}
               </Subheading>
               {!isMobileDialog && (
                 <MutedText className="text-xs">
-                  {t("changelogsDialog.subtitle", "Latest changes and improvements")}
+                  {t(
+                    "changelogsDialog.subtitle",
+                    "Latest changes and improvements",
+                  )}
                 </MutedText>
               )}
             </div>
@@ -189,7 +214,9 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
                 >
                   <History
                     size={16}
-                    className={isSelected ? "text-violet-500" : "text-slate-400"}
+                    className={
+                      isSelected ? "text-violet-500" : "text-slate-400"
+                    }
                   />
                   <div className="flex-1 text-left min-w-0">
                     <BodyText className="font-semibold leading-tight truncate">
@@ -226,7 +253,8 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
                   {activeVersion.version}
                 </Subheading>
                 <MutedText className="text-[10px] leading-tight truncate">
-                  {t("changelogsDialog.releaseDate", "Release Date")}: {activeVersion.date}
+                  {t("changelogsDialog.releaseDate", "Release Date")}:{" "}
+                  {activeVersion.date}
                 </MutedText>
               </div>
             </div>
@@ -237,14 +265,19 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
             <div className="px-8 pt-6 pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center overflow-hidden">
-                  <img src={appIconSrc} alt="Imify" className="h-5 w-5 object-contain" />
+                  <img
+                    src={appIconSrc}
+                    alt="Imify"
+                    className="h-5 w-5 object-contain"
+                  />
                 </div>
                 <div>
                   <Heading className="text-xl leading-tight">
                     {activeVersion.version}
                   </Heading>
                   <Kicker>
-                    {t("changelogsDialog.releaseDate", "Release Date")}: {activeVersion.date}
+                    {t("changelogsDialog.releaseDate", "Release Date")}:{" "}
+                    {activeVersion.date}
                   </Kicker>
                 </div>
               </div>

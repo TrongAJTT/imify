@@ -20,7 +20,7 @@ export function AttributionDialog({ isOpen, onClose }: AttributionDialogProps) {
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-3xl rounded-lg p-6"
+      contentClassName="w-full h-[calc(100dvh-2rem)] max-w-3xl rounded-lg p-6"
     >
       <Button
         variant="outline"
@@ -38,7 +38,7 @@ export function AttributionDialog({ isOpen, onClose }: AttributionDialogProps) {
           {t("attributionDialog.subtitle")}
         </p>
       </div>
-      <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar py-1">
+      <div className="flex flex-col gap-6 h-[calc(100dvh-13.25rem)] overflow-y-auto pr-2 custom-scrollbar py-1">
         {ATTRIBUTION_CATEGORIES.map((category) => (
           <div key={category.id} className="space-y-3">
             {/* Sticky header */}

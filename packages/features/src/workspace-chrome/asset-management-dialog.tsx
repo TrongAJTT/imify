@@ -127,7 +127,7 @@ export function AssetManagementDialog({
       isOpen={isOpen}
       onClose={onClose}
       className="max-w-6xl"
-      contentClassName="w-full max-w-6xl h-[90vh] md:h-[85vh] max-h-[900px] overflow-hidden flex flex-col"
+      contentClassName="w-full max-w-6xl h-[calc(100dvh-2rem)] overflow-hidden flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-100/10 dark:bg-slate-900">
@@ -208,7 +208,10 @@ export function AssetManagementDialog({
                     )}
                   </div>
                   {isMobile && (
-                    <ChevronRight size={16} className="text-slate-300 shrink-0" />
+                    <ChevronRight
+                      size={16}
+                      className="text-slate-300 shrink-0"
+                    />
                   )}
                 </button>
               ))}

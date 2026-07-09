@@ -21,6 +21,7 @@ export {
   importLanguageAtRuntime,
   generateEmptyLanguageZip,
   exportLanguageAsZip,
+  exportEnglishBundleAsZip,
   getRuntimeLanguages,
   loadRuntimeLanguages,
   deleteRuntimeLanguage,

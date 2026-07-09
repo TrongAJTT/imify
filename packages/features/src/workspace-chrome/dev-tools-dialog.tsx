@@ -48,6 +48,7 @@ import {
   getAppI18nVersion,
   deleteRuntimeLanguage,
   exportLanguageAsZip,
+  exportEnglishBundleAsZip,
   type LanguageInfo,
 } from "@imify/i18n";
 
@@ -161,6 +162,26 @@ export function DevToolsDialog({
       );
     } catch (err) {
       console.error("Failed to export language:", err);
+    }
+  };
+
+  const downloadEnglishBundle = () => {
+    try {
+      const zip = exportEnglishBundleAsZip();
+      const blob = new Blob([zip as BlobPart], { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `imify-locale-en-v${appVersion}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      success(
+        "Bundle Downloaded",
+        "English locale bundle downloaded successfully.",
+      );
+    } catch (err) {
+      console.error("Failed to export English bundle:", err);
+      error("Export Failed", "Could not export the English bundle.");
     }
   };
 
@@ -500,22 +521,32 @@ export function DevToolsDialog({
                       title="CUSTOM LOCALES"
                       description="Import new translation files or download a translation template JSON to contribute."
                     />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex-item grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        <Button
+                          variant="outline"
+                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          onClick={() => setIsI18nTemplateDialogOpen(true)}
+                        >
+                          <Download size={14} />
+                          New Empty Bundle
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          onClick={downloadEnglishBundle}
+                        >
+                          <Download size={14} />
+                          Download English Bundle
+                        </Button>
+                      </div>
                       <Button
                         variant="outline"
-                        className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        className="flex-item justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                         onClick={() => setIsI18nImportDialogOpen(true)}
                       >
                         <Languages size={14} />
                         Import Custom Language
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        onClick={() => setIsI18nTemplateDialogOpen(true)}
-                      >
-                        <Download size={14} />
-                        Download Template
                       </Button>
                     </div>
 

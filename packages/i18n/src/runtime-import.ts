@@ -393,3 +393,16 @@ export async function exportLanguageAsZip(langCode: string): Promise<Uint8Array 
   }
   return zipSync(files)
 }
+
+import enMeta from "./locales/en/_meta.json"
+
+export function exportEnglishBundleAsZip(): Uint8Array {
+  const files: Record<string, Uint8Array> = {
+    "_meta.json": strToU8(JSON.stringify(enMeta, null, 2) + "\n")
+  }
+  for (const ns of NAMESPACES) {
+    const data = EN_RESOURCES[ns]
+    files[`${ns}.json`] = strToU8(JSON.stringify(data, null, 2) + "\n")
+  }
+  return zipSync(files)
+}
