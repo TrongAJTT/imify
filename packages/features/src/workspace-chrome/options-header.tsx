@@ -13,6 +13,8 @@ import {
   Sun,
   Code2,
   Star,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { Tooltip } from "../shared/tooltip";
 import { useTranslation } from "@imify/i18n";
@@ -126,6 +128,30 @@ export function WorkspaceOptionsHeader({
   const isDesktop = useIsDesktopLayout();
   const [isToolsMenuOpen, setIsToolsMenuOpen] = React.useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = React.useState(false);
+
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof document === "undefined") return;
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (typeof document === "undefined") return;
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error("Error attempting to enable full-screen mode:", err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
   const closeToolsMenuTimerRef = React.useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -373,6 +399,17 @@ export function WorkspaceOptionsHeader({
               {isDark ? <Moon size={18} /> : <Sun size={18} />}
             </TitleBarButton>
             <TitleBarButton
+              onClick={toggleFullscreen}
+              tooltipText={
+                isFullscreen
+                  ? t("header.tooltips.exitFullscreen")
+                  : t("header.tooltips.enterFullscreen")
+              }
+              className="text-slate-500/90 hover:text-slate-700 dark:text-slate-400/50 dark:hover:text-slate-200"
+            >
+              {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            </TitleBarButton>
+            <TitleBarButton
               onClick={onOpenAssetManagement}
               tooltipText={t("header.tooltips.assetManagement")}
               className="text-emerald-500/90 hover:text-emerald-600 dark:text-emerald-400/50 dark:hover:text-emerald-300"
@@ -436,6 +473,35 @@ export function WorkspaceOptionsHeader({
                     {isDark
                       ? t("header.menu.lightMode")
                       : t("header.menu.darkMode")}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleFullscreen();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                >
+                  {isFullscreen ? (
+                    <Minimize2
+                      size={16}
+                      className="text-slate-500/90 dark:text-slate-400/50"
+                    />
+                  ) : (
+                    <Maximize2
+                      size={16}
+                      className="text-slate-500/90 dark:text-slate-400/50"
+                    />
+                  )}
+                  <span>
+                    {isFullscreen
+                      ? t("header.menu.exitFullscreen", {
+                          defaultValue: "Exit Fullscreen",
+                        })
+                      : t("header.menu.enterFullscreen", {
+                          defaultValue: "Enter Fullscreen",
+                        })}
                   </span>
                 </button>
                 <button
