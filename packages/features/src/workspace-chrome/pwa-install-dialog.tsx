@@ -37,7 +37,8 @@ export function PwaInstallDialog({ isOpen, onClose }: PwaInstallDialogProps) {
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-md rounded-2xl p-6 md:p-8 relative"
+      className="max-w-md"
+      contentClassName="relative w-full rounded-2xl p-6 md:p-8"
     >
       <Button
         variant="outline"
@@ -69,7 +70,10 @@ export function PwaInstallDialog({ isOpen, onClose }: PwaInstallDialogProps) {
 
           <div className="space-y-3">
             <div className="flex gap-3">
-              <ShieldCheck size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+              <ShieldCheck
+                size={16}
+                className="text-emerald-500 shrink-0 mt-0.5"
+              />
               <span className="text-xs text-slate-600 dark:text-slate-300">
                 {t("pwaDialog.benefit1")}
               </span>
