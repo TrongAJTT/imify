@@ -14,9 +14,26 @@
   "guides": "Guides",
   "installApp": "Install App",
   "craftedBy": "Crafted with passion by",
-  "whatsNew": "What's New",
+  "changelogs": "Changelogs",
   "termsOfUse": "Terms of Use",
   "privacyPolicy": "Privacy Policy",
+  "changelogsDialog": {
+    "title": "Changelogs",
+    "subtitle": "Latest changes and improvements",
+    "version": "Version",
+    "releaseDate": "Release Date",
+    "back": "Back",
+    "close": "Close",
+    "noReleaseNotes": "No release notes available for this version.",
+    "loadingChangelog": "Loading update logs...",
+    "loadError": "Could not load changelog content."
+  },
+  "updatedDialog": {
+    "title": "Imify has been updated!",
+    "subtitle": "Discover the latest changes and additions.",
+    "btnChangelogs": "View updates changelog",
+    "btnExplore": "Explore now"
+  },
   "pwaDialog": {
     "title": "Install Imify as App",
     "desc": "Imify can be installed directly as a Progressive Web App (PWA) on your device.",

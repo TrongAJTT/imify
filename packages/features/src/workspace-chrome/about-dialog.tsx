@@ -29,7 +29,7 @@ import {
   resolveFeatureMediaAssetUrl,
 } from "../shared/media-assets";
 import { PwaInstallDialog } from "./pwa-install-dialog";
-import { WhatsNewDialog } from "./whats-new-dialog";
+import { ChangelogsDialog } from "./changelogs-dialog";
 import { GuidesDialog } from "./guides-dialog";
 import { useTranslation, Trans } from "@imify/i18n";
 
@@ -111,7 +111,7 @@ export function AboutDialog({
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
   const { toasts, hide, success, warning } = useToast();
   const [isInstallDialogOpen, setIsInstallDialogOpen] = useState(false);
-  const [isWhatsNewDialogOpen, setIsWhatsNewDialogOpen] = useState(false);
+  const [isChangelogsDialogOpen, setIsChangelogsDialogOpen] = useState(false);
   const [isGuidesDialogOpen, setIsGuidesDialogOpen] = useState(false);
 
   const activateDevMode = useCallback(async () => {
@@ -302,10 +302,10 @@ export function AboutDialog({
             <MutedText className="flex items-center justify-center gap-4 text-[11px] font-semibold">
               <button
                 type="button"
-                onClick={() => setIsWhatsNewDialogOpen(true)}
+                onClick={() => setIsChangelogsDialogOpen(true)}
                 className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
               >
-                {t("whatsNew", "What's New")}
+                {t("changelogs", "Changelogs")}
               </button>
               <span className="text-slate-200 dark:text-slate-800">/</span>
               <a
@@ -334,9 +334,9 @@ export function AboutDialog({
         isOpen={isInstallDialogOpen}
         onClose={() => setIsInstallDialogOpen(false)}
       />
-      <WhatsNewDialog
-        isOpen={isWhatsNewDialogOpen}
-        onClose={() => setIsWhatsNewDialogOpen(false)}
+      <ChangelogsDialog
+        isOpen={isChangelogsDialogOpen}
+        onClose={() => setIsChangelogsDialogOpen(false)}
       />
       <GuidesDialog
         isOpen={isGuidesDialogOpen}

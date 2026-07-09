@@ -14,9 +14,26 @@
   "guides": "Hướng dẫn khác",
   "installApp": "Cài đặt ứng dụng",
   "craftedBy": "Được thiết kế với tâm huyết bởi",
-  "whatsNew": "Có gì mới",
+  "changelogs": "Nhật ký thay đổi",
   "termsOfUse": "Điều khoản sử dụng",
   "privacyPolicy": "Chính sách bảo mật",
+  "changelogsDialog": {
+    "title": "Nhật ký thay đổi",
+    "subtitle": "Lịch sử cập nhật và cải tiến",
+    "version": "Phiên bản",
+    "releaseDate": "Ngày phát hành",
+    "back": "Quay lại",
+    "close": "Đóng",
+    "noReleaseNotes": "Không có nhật ký cập nhật cho phiên bản này.",
+    "loadingChangelog": "Đang tải nhật ký...",
+    "loadError": "Không thể tải nội dung nhật ký thay đổi."
+  },
+  "updatedDialog": {
+    "title": "Imify đã được cập nhật!",
+    "subtitle": "Khám phá những thay đổi trong phiên bản mới nhất.",
+    "btnChangelogs": "Xem nhật ký cập nhật",
+    "btnExplore": "Khám phá ngay"
+  },
   "pwaDialog": {
     "title": "Cài đặt Imify làm ứng dụng",
     "desc": "Imify có thể được cài đặt trực tiếp dưới dạng ứng dụng Progressive Web App (PWA) trên thiết bị của bạn.",

@@ -108,7 +108,7 @@
         "resources": [
           "assets/wasm/*",
           "assets/onnx-engines/*",
-          "assets/WHATS_NEW.md",
+          "assets/changelogs/*",
           "assets/*.png",
           "assets/images/*",
           "assets/features/*",
