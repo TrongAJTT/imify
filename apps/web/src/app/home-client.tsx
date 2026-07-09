@@ -44,56 +44,94 @@ function CapabilityItem({
   );
 }
 
-interface HighlightFeature {
+const TOOL_PREVIEW_IMAGES: Record<string, string> = {
+  "single-processor": FEATURE_MEDIA_ASSET_PATHS.processor.previewSingleWebp,
+  "batch-processor": FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp,
+  splitter: FEATURE_MEDIA_ASSET_PATHS.splitter.preview1Webp,
+  splicing: FEATURE_MEDIA_ASSET_PATHS.splicing.previewWebp,
+  filling: FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
+  "pattern-generator": FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp,
+  diffchecker: FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp,
+  inspector: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp,
+  "background-remover": FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp,
+  upscaler: FEATURE_MEDIA_ASSET_PATHS.upscaler.previewWebp,
+  "context-menu": FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp,
+  "qr-generator": FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
+  "qr-reader": FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
+  "seo-audit": FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
+};
+
+const TOOL_BADGES: Record<string, "highlight" | "new"> = {
+  splicing: "highlight",
+  splitter: "highlight",
+  filling: "highlight",
+  diffchecker: "highlight",
+  inspector: "highlight",
+  "qr-reader": "new",
+  "qr-generator": "new",
+  "background-remover": "new",
+  upscaler: "new",
+};
+
+interface ToolCardProps {
   id: string;
   title: string;
   description: string;
   image: string;
   href: string;
-  accent: string;
-  bg: string;
-  highlightLabel: string;
+  badge?: {
+    label: string;
+    bg: string;
+    accent: string;
+  } | null;
 }
 
-function HighlightFeatureCard({
+function ToolCard({
+  id,
   title,
   description,
   image,
   href,
-  accent,
-  bg,
-  id,
-  highlightLabel,
-}: HighlightFeature) {
+  badge,
+}: ToolCardProps) {
   return (
     <Link
       href={buildToolEntryHref(id, href)}
-      className="group block relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-all hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1"
+      className="group relative flex flex-row sm:flex-col overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 transition-all hover:shadow-lg hover:border-slate-350 dark:hover:border-slate-700"
     >
-      <div className="aspect-[16/10] relative overflow-hidden bg-slate-100 dark:bg-slate-900">
+      {/* Image container */}
+      <div className="relative w-1/3 sm:w-full aspect-[16/9] overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-900 border-r sm:border-r-0 sm:border-b border-slate-200 dark:border-slate-800">
         <Image
           src={resolveFeatureMediaAssetUrl(image)}
           alt={title}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
+        {/* Badge */}
+        {badge && (
+          <div
+            className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${badge.bg} ${badge.accent} shadow-sm z-10`}
+          >
+            {badge.label}
+          </div>
+        )}
       </div>
-      <div className="border-t border-slate-200 dark:border-slate-800 p-5 space-y-3">
-        <div className="flex items-center gap-2">
-          <Subheading className="text-2xl font-bold">{title}</Subheading>
-          <ChevronRight
-            size={16}
-            className={`transition-colors ${accent} transition-transform group-hover:translate-x-1`}
-          />
+
+      {/* Content */}
+      <div className="flex-1 p-3.5 sm:p-5 flex flex-col justify-between min-w-0">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="shrink-0 text-slate-500 dark:text-slate-400">
+              {renderWorkspaceToolIcon(id, 16)}
+            </span>
+            <Subheading className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate">
+              {title}
+            </Subheading>
+          </div>
+          <BodyText className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm line-clamp-2 leading-relaxed">
+            {description}
+          </BodyText>
         </div>
-        <BodyText className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-          {description}
-        </BodyText>
-      </div>
-      <div
-        className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${bg} ${accent}`}
-      >
-        {highlightLabel}
       </div>
     </Link>
   );
@@ -127,6 +165,10 @@ export function HomeClient() {
       inspector: t("tools.inspector.desc"),
       "context-menu": t("tools.contextMenu.desc"),
       "seo-audit": t("tools.seoAudit.desc"),
+      "background-remover": t("tools.backgroundRemover.desc"),
+      upscaler: t("tools.upscaler.desc"),
+      "qr-generator": t("tools.qrGenerator.desc"),
+      "qr-reader": t("tools.qrReader.desc"),
     }),
     [t],
   );
@@ -152,72 +194,6 @@ export function HomeClient() {
         id: "watermark",
         title: t("capabilities.watermarkTitle"),
         description: t("capabilities.watermarkDesc"),
-      },
-    ],
-    [t],
-  );
-
-  const highlightFeatures = useMemo<HighlightFeature[]>(
-    () => [
-      {
-        id: "batch-processor",
-        title: t("features.batchTitle"),
-        description: t("features.batchDesc"),
-        highlightLabel: t("highlightFeatureLabel"),
-        image: FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp,
-        href: "/batch-processor",
-        accent: "text-purple-600 dark:text-purple-400",
-        bg: "bg-purple-50 dark:bg-purple-800",
-      },
-      {
-        id: "splicing",
-        title: t("features.splicingTitle"),
-        description: t("features.splicingDesc"),
-        highlightLabel: t("highlightFeatureLabel"),
-        image: FEATURE_MEDIA_ASSET_PATHS.splicing.previewWebp,
-        href: "/splicing",
-        accent: "text-blue-600 dark:text-blue-400",
-        bg: "bg-blue-50 dark:bg-blue-800",
-      },
-      {
-        id: "splitter",
-        title: t("features.splitterTitle"),
-        description: t("features.splitterDesc"),
-        highlightLabel: t("highlightFeatureLabel"),
-        image: FEATURE_MEDIA_ASSET_PATHS.splitter.preview2Webp,
-        href: "/splitter",
-        accent: "text-pink-600 dark:text-pink-400",
-        bg: "bg-pink-50 dark:bg-pink-800",
-      },
-      {
-        id: "filling",
-        title: t("features.fillingTitle"),
-        description: t("features.fillingDesc"),
-        highlightLabel: t("highlightFeatureLabel"),
-        image: FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
-        href: "/filling",
-        accent: "text-indigo-600 dark:text-indigo-400",
-        bg: "bg-indigo-50 dark:bg-indigo-800",
-      },
-      {
-        id: "diffchecker",
-        title: t("features.diffTitle"),
-        description: t("features.diffDesc"),
-        highlightLabel: t("highlightFeatureLabel"),
-        image: FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp,
-        href: "/diffchecker",
-        accent: "text-orange-600 dark:text-orange-400",
-        bg: "bg-orange-50 dark:bg-orange-800",
-      },
-      {
-        id: "inspector",
-        title: t("features.inspectorTitle"),
-        description: t("features.inspectorDesc"),
-        highlightLabel: t("highlightFeatureLabel"),
-        image: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp,
-        href: "/inspector",
-        accent: "text-emerald-600 dark:text-emerald-400",
-        bg: "bg-emerald-50 dark:bg-emerald-800",
       },
     ],
     [t],
@@ -283,31 +259,49 @@ export function HomeClient() {
       <section id="tools" className="mx-auto max-w-7xl px-4 space-y-10">
         <div className="text-center space-y-3">
           <Heading className="text-3xl md:text-4xl">{t("toolsTitle")}</Heading>
-          <BodyText className="mx-auto max-w-3xl text-slate-500 text-lg">
+          <BodyText className="mx-auto max-w-3xl text-slate-500 text-lg dark:text-slate-400">
             {t("toolsDesc")}
           </BodyText>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-800">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-[1px]">
-            {allTools.map((tool) => (
-              <Link
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {allTools.map((tool) => {
+            const badgeType = TOOL_BADGES[tool.id];
+            let badge = null;
+            if (badgeType === "new") {
+              badge = {
+                label: t("badges.new", "New"),
+                bg: "bg-emerald-50 dark:bg-emerald-950/80",
+                accent:
+                  "text-emerald-600 dark:text-emerald-450 border border-emerald-200/50 dark:border-emerald-800/40",
+              };
+            } else if (badgeType === "highlight") {
+              badge = {
+                label: t("badges.highlight", "Highlight"),
+                bg: "bg-blue-50 dark:bg-blue-950/80",
+                accent:
+                  "text-blue-600 dark:text-blue-450 border border-blue-200/50 dark:border-blue-800/40",
+              };
+            }
+
+            const previewImage =
+              TOOL_PREVIEW_IMAGES[tool.id] ||
+              FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng;
+
+            return (
+              <ToolCard
                 key={tool.id}
-                href={buildToolEntryHref(tool.id, tool.href)}
-                className="group flex flex-col items-center text-center bg-white p-8 transition-colors hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
-              >
-                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50">
-                  {renderWorkspaceToolIcon(tool.id, 28)}
-                </div>
-                <Subheading className="mb-2 text-base font-bold text-slate-900 dark:text-slate-100">
-                  {tool.label}
-                </Subheading>
-                <MutedText className="line-clamp-3 text-xs leading-relaxed opacity-80 font-medium">
-                  {toolDescriptions[tool.id] || `${tool.label} workspace.`}
-                </MutedText>
-              </Link>
-            ))}
-          </div>
+                id={tool.id}
+                title={tool.label}
+                description={
+                  toolDescriptions[tool.id] || `${tool.label} workspace.`
+                }
+                image={previewImage}
+                href={tool.href}
+                badge={badge}
+              />
+            );
+          })}
         </div>
       </section>
 
@@ -417,22 +411,6 @@ export function HomeClient() {
               </BodyText>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Top Features Showcase */}
-      <section className="mx-auto max-w-[1400px] px-4 space-y-12">
-        <div className="text-center space-y-4">
-          <Heading className="text-4xl md:text-5xl">{t("proTitle")}</Heading>
-          <BodyText className="mx-auto max-w-2xl text-slate-500 text-lg">
-            {t("proDesc")}
-          </BodyText>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {highlightFeatures.map((feature) => (
-            <HighlightFeatureCard key={feature.id} {...feature} />
-          ))}
         </div>
       </section>
 

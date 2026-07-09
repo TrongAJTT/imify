@@ -16,23 +16,10 @@
   "openSourceDesc": "Built with transparency and community in mind. All code is publicly available on GitHub for review.",
   "freeTitle": "100% Free",
   "freeDesc": "No limits, no subscriptions. All premium features are available to everyone without paywalls.",
-  "proTitle": "Tools Built for Professionals",
-  "proDesc": "Experience the precision of high-performance image processing with our signature tools.",
-  "features": {
-    "batchTitle": "Batch Processor",
-    "batchDesc": "Scale your workflow by processing thousands of images in parallel. Convert, resize, and optimize in one go with zero server lag.",
-    "splicingTitle": "Image Splicing",
-    "splicingDesc": "Stitch images into beautiful bento grids or vertical strips. Perfect for social media layouts and visual storyboards.",
-    "splitterTitle": "Image Splitter",
-    "splitterDesc": "Slice images into perfect grids or carousels for Instagram and social media. Visual guides help you cut with precision.",
-    "fillingTitle": "Image Filling",
-    "fillingDesc": "Smartly pad or fill images to perfectly match any target aspect ratio without cropping important content.",
-    "diffTitle": "Difference Checker",
-    "diffDesc": "Detect pixel-level variations between images. Compare quality, compression artifacts, and visual changes with precision.",
-    "inspectorTitle": "Image Inspector",
-    "inspectorDesc": "Deep audit of hidden metadata, EXIF data, GPS coordinates, and color palettes. Protect your privacy easily."
+  "badges": {
+    "highlight": "Highlight",
+    "new": "New"
   },
-  "highlightFeatureLabel": "Highlight Feature",
   "compTitle": "Comprehensive Capabilities",
   "compDesc": "Deep dive into what our core modules can do.",
   "capabilities": {
@@ -75,6 +62,18 @@
     },
     "seoAudit": {
       "desc": "Audit and optimize web images for maximum search engine performance."
+    },
+    "backgroundRemover": {
+      "desc": "Remove image backgrounds locally and automatically using state-of-the-art AI models."
+    },
+    "upscaler": {
+      "desc": "Magnify and restore image details locally using super-resolution neural networks."
+    },
+    "qrGenerator": {
+      "desc": "Generate clean, customizable, and privacy-first QR codes with logo support."
+    },
+    "qrReader": {
+      "desc": "Scan and decode QR codes instantly using camera or image files locally."
     }
   },
   "video": {
