@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useCallback, useEffect, useState, type ReactNode } from "react";
-import { useBackgroundRemoverStore } from "@imify/stores";
+import {
+  useBackgroundRemoverStore,
+  useWorkspaceHeaderStore,
+} from "@imify/stores";
 import { useBackgroundRemoval } from "./use-background-removal";
 import { decodeFileToImageData } from "@imify/engine/image-pipeline/decode-image-data";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
@@ -174,6 +177,8 @@ export function SharedBackgroundRemoverPage({
       try {
         const result = await decodeFileToImageData(file);
         setSourceImageData(result.imageData);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        useWorkspaceHeaderStore.getState().setIsMobileSidebarOpen(true);
       } catch (err) {
         error(t("workspace.loadFailed"), t("workspace.loadFailedDesc"));
       }
