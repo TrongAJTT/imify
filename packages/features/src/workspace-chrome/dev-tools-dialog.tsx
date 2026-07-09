@@ -12,6 +12,7 @@ import {
   Gauge,
   Languages,
   HelpCircle,
+  Database,
 } from "lucide-react";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
@@ -29,6 +30,7 @@ import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog";
 import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog";
 import { DevModeStateViewer } from "../dev-mode/dev-mode-state-viewer";
 import { RuntimeConsoleMonitor } from "../dev-mode/runtime-console-monitor";
+import { LocalStorageManager } from "../dev-mode/local-storage-manager";
 import { BrowserCapabilitiesDashboard } from "../dev-mode/browser-capabilities";
 import { setRuntimeLogCaptureEnabled } from "../dev-mode/runtime-log-collector";
 import type { OptionsTab } from "../dev-mode/debug-shared";
@@ -73,7 +75,13 @@ export function DevToolsDialog({
 }: DevToolsDialogProps) {
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
   const [activeTab, setActiveTab] = useState<
-    "about" | "system" | "console" | "capabilities" | "language" | null
+    | "about"
+    | "system"
+    | "console"
+    | "capabilities"
+    | "language"
+    | "storage"
+    | null
   >("about");
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
@@ -224,6 +232,16 @@ export function DevToolsDialog({
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-indigo-650 dark:text-indigo-400",
       bgClassName: "bg-indigo-50 dark:bg-indigo-900/40",
+    },
+    {
+      id: "storage" as const,
+      label: "Storage Manager",
+      description: "Direct Local Storage management and data editing",
+      icon: Database,
+      activeClassName: DEFAULT_ACTIVE_CLASS,
+      inactiveClassName: DEFAULT_INACTIVE_CLASS,
+      iconClassName: "text-emerald-600 dark:text-emerald-400",
+      bgClassName: "bg-emerald-50 dark:bg-emerald-900/40",
     },
     {
       id: "language" as const,
@@ -553,6 +571,19 @@ export function DevToolsDialog({
                     />
                     <RuntimeConsoleMonitor />
                   </section>
+                </div>
+              ) : null}
+
+              {activeTab === "storage" ? (
+                <div className="animate-in fade-in duration-300 space-y-5">
+                  {!isMobileDialog && (
+                    <SettingsSectionHeader
+                      title="LOCALSTORAGE MANAGER"
+                      description="Read, search, add, edit, and delete application settings saved directly in localStorage."
+                    />
+                  )}
+
+                  <LocalStorageManager />
                 </div>
               ) : null}
             </div>
