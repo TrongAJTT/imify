@@ -123,25 +123,9 @@ export function LanguageItemCard({
       {/* Accordion Expanded Panel */}
       {isExpanded && (
         <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800/50 animate-in slide-in-from-top-1 duration-150">
-          <div className="pt-2 grid grid-cols-2 gap-x-4 gap-y-3">
-            {/* Left: Completion Rate */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[10px] font-semibold text-slate-650 dark:text-slate-400 uppercase tracking-wider">
-                <span>{t("language.completionRate")}</span>
-                <span>
-                  {completionPercent}% ({completedKeys}/{totalKeys})
-                </span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div
-                  className="h-full bg-sky-500 rounded-full transition-all duration-300"
-                  style={{ width: `${completionPercent}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Right: Contributors */}
-            {lang.maintainers && lang.maintainers.length > 0 ? (
+          <div className="pt-2 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+            {/* Contributors */}
+            {lang.maintainers && lang.maintainers.length > 0 && (
               <div className="space-y-1">
                 <span className="text-[10px] font-semibold text-slate-450 dark:text-slate-500 uppercase tracking-wider block">
                   {t("language.contributors")}
@@ -178,8 +162,24 @@ export function LanguageItemCard({
                   ))}
                 </div>
               </div>
-            ) : (
-              <div />
+            )}
+
+            {/* Completion Rate */}
+            {completionPercent < 100 && (
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[10px] font-semibold text-slate-650 dark:text-slate-400 uppercase tracking-wider">
+                  <span>{t("language.completionRate")}</span>
+                  <span>
+                    {completionPercent}% ({completedKeys}/{totalKeys})
+                  </span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full bg-sky-500 rounded-full transition-all duration-300"
+                    style={{ width: `${completionPercent}%` }}
+                  />
+                </div>
+              </div>
             )}
           </div>
 
