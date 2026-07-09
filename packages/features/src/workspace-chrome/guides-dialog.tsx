@@ -151,7 +151,9 @@ export function GuidesDialog({ isOpen, onClose }: GuidesDialogProps) {
       isOpen={isOpen}
       onClose={onClose}
       contentClassName={
-        "relative flex h-[calc(100dvh-2rem)] w-full min-h-0 overflow-hidden rounded-xl max-w-4xl"
+        isMobileDialog
+          ? "relative flex h-[calc(100dvh-2rem)] w-full overflow-hidden rounded-xl flex-col"
+          : "relative flex h-[85vh] w-full min-h-0 overflow-hidden rounded-xl max-w-4xl"
       }
     >
       <Button

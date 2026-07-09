@@ -471,7 +471,7 @@ export function DevToolsDialog({
                         title="BACKUP DIAGNOSTIC LOGS"
                         description="Export local settings and store states to a JSON file, or restore from a backup."
                       />
-                      <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                         <Button
                           variant="outline"
                           className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
