@@ -314,7 +314,7 @@ export function QrGeneratorWorkspace() {
                   <div className="w-full h-full flex items-center justify-center">
                     <canvas
                       ref={previewCanvasRef}
-                      className="max-h-full max-w-full object-contain"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 </div>
