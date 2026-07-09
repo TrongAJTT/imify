@@ -181,3 +181,21 @@ This list is synchronized with `packages/core/src/attributions.ts` (source of tr
 *   **[Comfortaa](https://fonts.google.com/specimen/Comfortaa)**
     *   **Author(s):** Johan Aakerlund
     *   **License:** OFL-1.1
+
+## Media & Illustrations
+*   **[QR Generator Illustration](https://www.freepik.com/free-vector/barcode-reading-app-qrcode-reader-epayment-transaction-application-qr-code-scanner-qr-generator-online-qr-code-payment-concept-pinkish-coral-bluevector-isolated-illustration_11667310.htm)**
+    *   **Author(s):** vectorjuice
+    *   **License:** Freepik License
+    *   **Asset Path:** `/assets/images/illustrations/qr-generator.svg`
+*   **[QR Reader Illustration](https://www.freepik.com/free-vector/smartphone-scanning-qr-code-illustration_9543267.htm)**
+    *   **Author(s):** freepik
+    *   **License:** Freepik License
+    *   **Asset Path:** `/assets/images/illustrations/qr-reader.svg`
+*   **[SEO Scanner Illustration](https://www.freepik.com/free-vector/work-office-computer-man-woman-business-character-marketing-online-employee-technology-business-man-cartoon-co-working-flat-design-freelance_13744794.htm)**
+    *   **Author(s):** jcomp
+    *   **License:** Freepik License
+    *   **Asset Path:** `/assets/images/illustrations/seo-audit.svg`
+*   **[Background Remover Demo Image](https://unsplash.com/photos/a-man-with-a-goatee-smiles-at-the-camera-72TE8cWKXRY)**
+    *   **Author(s):** Wellington Ferreira
+    *   **License:** Unsplash License
+    *   **Asset Path:** `/assets/features/preview-background_remover-1.webp`

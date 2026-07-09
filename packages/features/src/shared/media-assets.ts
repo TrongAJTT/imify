@@ -29,6 +29,11 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
     exportStep1Webp: "/assets/images/dev-export-1.webp",
     exportStep2Webp: "/assets/images/dev-export-2.webp"
   },
+  illustrations: {
+    qrGeneratorSvg: "/assets/images/illustrations/qr-generator.svg",
+    qrReaderSvg: "/assets/images/illustrations/qr-reader.svg",
+    seoAuditSvg: "/assets/images/illustrations/seo-audit.svg"
+  },
   filling: {
     previewImageWebp: "/assets/features/preview-image_filling.webp",
     symmetricVisualEditorWebm: "/assets/features/guide-symgen-visual_editor.webm",
@@ -97,6 +102,11 @@ export const FEATURE_MEDIA_ASSETS = {
     enableVideoWebm: FEATURE_MEDIA_ASSET_PATHS.devMode.enableVideoWebm,
     exportStep1Webp: FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep1Webp,
     exportStep2Webp: FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep2Webp
+  },
+  illustrations: {
+    qrGeneratorSvg: FEATURE_MEDIA_ASSET_PATHS.illustrations.qrGeneratorSvg,
+    qrReaderSvg: FEATURE_MEDIA_ASSET_PATHS.illustrations.qrReaderSvg,
+    seoAuditSvg: FEATURE_MEDIA_ASSET_PATHS.illustrations.seoAuditSvg
   },
   filling: {
     previewImageWebp: FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,

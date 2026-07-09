@@ -18,6 +18,9 @@ function generateMarkdown() {
       markdown += `*   **[${item.name}](${item.url})**\n`;
       markdown += `    *   **Author(s):** ${item.author}\n`;
       markdown += `    *   **License:** ${item.license}\n`;
+      if (item.image) {
+        markdown += `    *   **Asset Path:** \`${item.image}\`\n`;
+      }
     }
   }
 

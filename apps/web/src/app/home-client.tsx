@@ -56,9 +56,9 @@ const TOOL_PREVIEW_IMAGES: Record<string, string> = {
   "background-remover": FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp,
   upscaler: FEATURE_MEDIA_ASSET_PATHS.upscaler.previewWebp,
   "context-menu": FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp,
-  "qr-generator": FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
-  "qr-reader": FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
-  "seo-audit": FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
+  "qr-generator": FEATURE_MEDIA_ASSET_PATHS.illustrations.qrGeneratorSvg,
+  "qr-reader": FEATURE_MEDIA_ASSET_PATHS.illustrations.qrReaderSvg,
+  "seo-audit": FEATURE_MEDIA_ASSET_PATHS.illustrations.seoAuditSvg,
 };
 
 const TOOL_BADGES: Record<string, "highlight" | "new"> = {
