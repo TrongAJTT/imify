@@ -25,7 +25,7 @@ function UpscalerHardwareNoticeCard() {
       <div className="mt-2 space-y-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
         <p>
           • This experimental feature is VERY hardware-sensitive, we recommend a
-          machine with a strong CPU, a discrete GPU, and at least 16GB of RAM.
+          machine with a strong CPU and at least 12GB of RAM.
         </p>
         <p>
           • Use it patiently if you only need it occasionally as it may take up

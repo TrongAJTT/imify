@@ -10,7 +10,7 @@
   },
   "hardwareNotice": {
     "title": "This feature brings the power of AI models to your browser.",
-    "req1": "• Hardware requirements vary by model; larger models demand higher performance. We recommend using a device with a powerful CPU and at least 8GB of RAM.",
+    "req1": "• Hardware requirements vary by model; larger models demand higher performance. We recommend using a device with a powerful CPU and at least 6GB of RAM.",
     "req2": "• This feature is designed for quick background removal and is not a complete replacement for handling complex edge cases.",
     "req3": "• You must download the AI models separately to use them, as we do not distribute these models."
   },
@@ -126,7 +126,7 @@
       "q1": "What kinds of images are best for this tool?",
       "a1": "It works best for photos with a clear subject in the foreground, such as portraits, product shots, pets, or objects with well-defined edges.",
       "q2": "Does it require powerful hardware?",
-      "a2": "Yes, AI processing is resource-intensive. A mid-to-high-end machine with a dedicated GPU and at least 8GB of RAM is recommended for the best experience. On lower-end devices, use *Quantized* variants.",
+      "a2": "Yes, AI processing is resource-intensive. A mid-to-high-end machine with a dedicated GPU and at least 6GB of RAM is recommended for the best experience. On lower-end devices, use *Quantized* variants.",
       "q3": "Does it need an internet connection?",
       "a3": "Only for the initial download of the AI models. Once cached in your browser, the tool works 100% offline.",
       "q4": "Why is the first processing slower?",

@@ -10,7 +10,7 @@
   },
   "hardwareNotice": {
     "title": "Tính năng này xử lý các mô hình AI trực tiếp trong trình duyệt của bạn.",
-    "req1": "• Yêu cầu phần cứng thay đổi tùy theo mô hình; các mô hình lớn hơn yêu cầu hiệu năng cao hơn. Khuyến nghị thiết bị có CPU mạnh và tối thiểu 8GB RAM.",
+    "req1": "• Yêu cầu phần cứng thay đổi tùy theo mô hình; các mô hình lớn hơn yêu cầu hiệu năng cao hơn. Khuyến nghị thiết bị có CPU mạnh và tối thiểu 6GB RAM.",
     "req2": "• Tính năng này được thiết kế để tách nền nhanh chóng và không thay thế hoàn toàn cho việc xử lý các trường hợp viền ảnh cực kỳ phức tạp.",
     "req3": "• Bạn phải tự tải xuống các mô hình AI để sử dụng, vì chúng tôi không phân phối các mô hình này."
   },
@@ -126,7 +126,7 @@
       "q1": "Những loại ảnh nào hoạt động tốt nhất với công cụ này?",
       "a1": "Công cụ hoạt động tốt nhất đối với những ảnh có chủ thể rõ ràng ở tiền cảnh như ảnh chân dung, ảnh sản phẩm, thú cưng hoặc đồ vật có góc cạnh rõ nét.",
       "q2": "Công cụ này có yêu cầu phần cứng mạnh không?",
-      "a2": "Có, việc xử lý AI tiêu tốn nhiều tài nguyên thiết bị. Khuyên dùng máy tính cấu hình trung bình đến cao có card đồ họa rời và tối thiểu 8GB RAM để có trải nghiệm tốt nhất. Đối với các thiết bị yếu hơn, hãy sử dụng các biến thể *Quantized*.",
+      "a2": "Có, việc xử lý AI tiêu tốn nhiều tài nguyên thiết bị. Khuyên dùng máy tính cấu hình trung bình đến cao có card đồ họa rời và tối thiểu 6GB RAM để có trải nghiệm tốt nhất. Đối với các thiết bị yếu hơn, hãy sử dụng các biến thể *Quantized*.",
       "q3": "Có cần kết nối mạng Internet để sử dụng không?",
       "a3": "Chỉ cần kết nối mạng trong lần đầu tiên tải xuống các mô hình AI. Khi mô hình đã được lưu vào bộ nhớ cache của trình duyệt, công cụ hoạt động ngoại tuyến (offline) hoàn toàn 100%.",
       "q4": "Tại sao lần xử lý đầu tiên lại diễn ra chậm hơn?",
