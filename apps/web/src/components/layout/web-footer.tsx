@@ -12,7 +12,7 @@ import { useTranslation } from "@imify/i18n"
 export function WebFooter() {
   const { isMonolithicPage: isFullFooter } = useWebPageMode()
   const isDesktop = useIsDesktopLayout()
-  const { i18n } = useTranslation("workspace")
+  const { t, i18n } = useTranslation("homepage")
   const [isMounted, setIsMounted] = React.useState(false)
   React.useEffect(() => { setIsMounted(true) }, [])
 
@@ -33,13 +33,13 @@ export function WebFooter() {
           <div className="flex items-center gap-4">
             <span className="font-semibold text-slate-900 dark:text-slate-100">Imify Web</span>
             <span className="h-3 w-px bg-slate-200 dark:bg-slate-800" />
-            <span className="hidden md:inline">Private & Powerful Client-Side Image Toolkit</span>
+            <span className="hidden md:inline">{t("footer.shortDesc")}</span>
           </div>
           <div className="flex items-center gap-6">
-            <p>© {new Date().getFullYear()} Imify by TrongAJTT</p>
+            <p>{t("footer.copyright", { year: new Date().getFullYear(), defaultValue: `© ${new Date().getFullYear()} Imify by TrongAJTT` })}</p>
             <div className="flex gap-4">
-              <Link href={IMIFY_LINKS.terms} target="_blank" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Terms</Link>
-              <Link href={IMIFY_LINKS.privacy} target="_blank" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Privacy</Link>
+              <Link href={IMIFY_LINKS.terms} target="_blank" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{t("footer.terms")}</Link>
+              <Link href={IMIFY_LINKS.privacy} target="_blank" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{t("footer.privacy")}</Link>
             </div>
           </div>
         </div>
@@ -54,12 +54,12 @@ export function WebFooter() {
           <div className="md:col-span-2 space-y-4">
             <span className="text-xl font-bold text-slate-900 dark:text-white">Imify</span>
             <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
-              The powerful client-side image toolkit. Fast, private, and powerful image processing directly in your browser. No uploads, no waiting.
+              {t("footer.fullDesc")}
             </p>
           </div>
           
           <div>
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Tools</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">{t("footer.tools")}</h3>
             <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
               {allTools.slice(0, 4).map(tool => (
                 <li key={tool.id}>
@@ -72,7 +72,7 @@ export function WebFooter() {
           </div>
           
           <div>
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">More Features</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">{t("footer.moreFeatures")}</h3>
             <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
               {allTools.slice(4, 8).map(tool => (
                 <li key={tool.id}>
@@ -85,7 +85,7 @@ export function WebFooter() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Find us</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">{t("footer.findUs")}</h3>
             <div className="flex flex-col gap-3">
               <FindOnProductHuntBadge />
               <FindOnUnikornBadge />
@@ -95,10 +95,10 @@ export function WebFooter() {
         </div>
         
         <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-          <p>© {new Date().getFullYear()} Imify by TrongAJTT. All rights reserved.</p>
+          <p>{t("footer.copyright", { year: new Date().getFullYear(), defaultValue: `© ${new Date().getFullYear()} Imify by TrongAJTT. All rights reserved.` })}</p>
           <div className="flex gap-4">
-            <Link href={IMIFY_LINKS.privacy} target="_blank" className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href={IMIFY_LINKS.terms} target="_blank" className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms of Service</Link>
+            <Link href={IMIFY_LINKS.privacy} target="_blank" className="hover:text-slate-900 dark:hover:text-white transition-colors">{t("footer.privacyPolicy")}</Link>
+            <Link href={IMIFY_LINKS.terms} target="_blank" className="hover:text-slate-900 dark:hover:text-white transition-colors">{t("footer.termsOfService")}</Link>
           </div>
         </div>
       </div>

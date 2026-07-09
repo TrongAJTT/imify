@@ -33,7 +33,7 @@ function CapabilityItem({
   description: string;
 }) {
   return (
-    <div className="space-y-4 bg-white p-10 dark:bg-slate-950">
+    <div className="space-y-4 bg-white p-5 dark:bg-slate-950">
       <Subheading className="text-xl text-blue-600 dark:text-blue-400">
         {title}
       </Subheading>
@@ -78,7 +78,7 @@ function HighlightFeatureCard({
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
-      <div className="border-t border-slate-200 dark:border-slate-800 p-6 space-y-3">
+      <div className="border-t border-slate-200 dark:border-slate-800 p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Subheading className="text-2xl font-bold">{title}</Subheading>
           <ChevronRight
@@ -433,7 +433,7 @@ export function HomeClient() {
           </BodyText>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-800">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-[1px]">
             {capabilityItems.map((item) => (
               <CapabilityItem

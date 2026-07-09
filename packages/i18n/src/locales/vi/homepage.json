@@ -152,5 +152,17 @@
   "firefoxStoreDesc": "Cài đặt phiên bản ổn định cho Firefox để sử dụng các công cụ menu chuột phải và quy trình làm việc độc quyền của tiện ích.",
   "githubReleasesLabel": "GitHub Releases",
   "githubReleasesDesc": "Trải nghiệm sớm các bản dựng mới nhất (bao gồm cả các bản cập nhật thử nghiệm nếu có), hoặc chọn bất kỳ phiên bản cụ thể nào bạn muốn từ danh sách phát hành.",
-  "downloadFrom": "Tải xuống từ"
+  "downloadFrom": "Tải xuống từ",
+  "footer": {
+    "shortDesc": "Bộ công cụ xử lý ảnh offline an toàn & mạnh mẽ",
+    "terms": "Điều khoản",
+    "privacy": "Bảo mật",
+    "fullDesc": "Bộ công cụ xử lý ảnh offline mạnh mẽ ngay tại trình duyệt của bạn. Tốc độ nhanh, an toàn dữ liệu, không cần tải ảnh lên máy chủ, không cần chờ đợi.",
+    "tools": "Công cụ",
+    "moreFeatures": "Tính năng khác",
+    "findUs": "Liên kết",
+    "copyright": "© {{year}} Imify phát triển bởi TrongAJTT. Bảo lưu mọi quyền.",
+    "privacyPolicy": "Chính sách bảo mật",
+    "termsOfService": "Điều khoản dịch vụ"
+  }
 }

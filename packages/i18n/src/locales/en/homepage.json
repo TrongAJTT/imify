@@ -152,5 +152,17 @@
   "firefoxStoreDesc": "Install the stable version for Firefox to use context menu tools and extension-exclusive workflows.",
   "githubReleasesLabel": "GitHub Releases",
   "githubReleasesDesc": "Try the newest builds early (including experimental updates if available), or pick any specific version you want from the release list.",
-  "downloadFrom": "Download from"
+  "downloadFrom": "Download from",
+  "footer": {
+    "shortDesc": "Private & Powerful Client-Side Image Toolkit",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "fullDesc": "The powerful client-side image toolkit. Fast, private, and powerful image processing directly in your browser. No uploads, no waiting.",
+    "tools": "Tools",
+    "moreFeatures": "More Features",
+    "findUs": "Find us",
+    "copyright": "© {{year}} Imify by TrongAJTT. All rights reserved.",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service"
+  }
 }
