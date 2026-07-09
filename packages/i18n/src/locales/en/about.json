@@ -12,9 +12,20 @@
   "sponsorAuthor": "Sponsor Author",
   "attribution": "Attribution",
   "guides": "Guides",
-  "reportBug": "Report Bug",
+  "installApp": "Install App",
   "craftedBy": "Crafted with passion by",
   "whatsNew": "What's New",
   "termsOfUse": "Terms of Use",
-  "privacyPolicy": "Privacy Policy"
+  "privacyPolicy": "Privacy Policy",
+  "pwaDialog": {
+    "title": "Install Imify as App",
+    "desc": "Imify can be installed directly as a Progressive Web App (PWA) on your device.",
+    "benefitTitle": "Benefits of installing:",
+    "benefit1": "Runs 100% offline without requiring internet access",
+    "benefit2": "Quick launch from your home screen or taskbar",
+    "benefit3": "Standalone desktop window experience with no browser address bar clutter",
+    "btnInstall": "Install Now",
+    "btnCancel": "Cancel",
+    "alreadyInstalled": "PWA app is already installed or device does not support installation."
+  }
 }

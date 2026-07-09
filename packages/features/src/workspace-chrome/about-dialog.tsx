@@ -3,7 +3,7 @@
 import React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Bug,
+  Download,
   Github,
   Globe,
   Heart,
@@ -28,7 +28,7 @@ import {
   FEATURE_MEDIA_ASSETS,
   resolveFeatureMediaAssetUrl,
 } from "../shared/media-assets";
-import { BugReportDialog } from "./bug-report-dialog";
+import { PwaInstallDialog } from "./pwa-install-dialog";
 import { WhatsNewDialog } from "./whats-new-dialog";
 import { GuidesDialog } from "./guides-dialog";
 import { useTranslation, Trans } from "@imify/i18n";
@@ -110,7 +110,7 @@ export function AboutDialog({
   );
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
   const { toasts, hide, success, warning } = useToast();
-  const [isBugReportDialogOpen, setIsBugReportDialogOpen] = useState(false);
+  const [isInstallDialogOpen, setIsInstallDialogOpen] = useState(false);
   const [isWhatsNewDialogOpen, setIsWhatsNewDialogOpen] = useState(false);
   const [isGuidesDialogOpen, setIsGuidesDialogOpen] = useState(false);
 
@@ -275,11 +275,11 @@ export function AboutDialog({
 
               <button
                 type="button"
-                onClick={() => setIsBugReportDialogOpen(true)}
+                onClick={() => setIsInstallDialogOpen(true)}
                 className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
               >
-                <Bug size={16} />
-                {t("reportBug", "Report Bug")}
+                <Download size={16} />
+                {t("installApp", "Install App")}
               </button>
             </div>
           </div>
@@ -330,9 +330,9 @@ export function AboutDialog({
         </div>
       </div>
 
-      <BugReportDialog
-        isOpen={isBugReportDialogOpen}
-        onClose={() => setIsBugReportDialogOpen(false)}
+      <PwaInstallDialog
+        isOpen={isInstallDialogOpen}
+        onClose={() => setIsInstallDialogOpen(false)}
       />
       <WhatsNewDialog
         isOpen={isWhatsNewDialogOpen}

@@ -12,9 +12,20 @@
   "sponsorAuthor": "Tài trợ Tác giả",
   "attribution": "Ghi nhận công lao",
   "guides": "Hướng dẫn khác",
-  "reportBug": "Báo cáo lỗi",
+  "installApp": "Cài đặt ứng dụng",
   "craftedBy": "Được thiết kế với tâm huyết bởi",
   "whatsNew": "Có gì mới",
   "termsOfUse": "Điều khoản sử dụng",
-  "privacyPolicy": "Chính sách bảo mật"
+  "privacyPolicy": "Chính sách bảo mật",
+  "pwaDialog": {
+    "title": "Cài đặt Imify làm ứng dụng",
+    "desc": "Imify có thể được cài đặt trực tiếp dưới dạng ứng dụng Progressive Web App (PWA) trên thiết bị của bạn.",
+    "benefitTitle": "Lợi ích khi cài đặt:",
+    "benefit1": "Chạy ngoại tuyến (offline) hoàn toàn 100% không cần internet",
+    "benefit2": "Khởi động nhanh chóng từ màn hình chính hoặc thanh tác vụ",
+    "benefit3": "Giao diện độc lập và tối ưu không bị vướng thanh địa chỉ trình duyệt",
+    "btnInstall": "Cài đặt ngay",
+    "btnCancel": "Hủy bỏ",
+    "alreadyInstalled": "Ứng dụng PWA đã được cài đặt hoặc thiết bị không hỗ trợ."
+  }
 }

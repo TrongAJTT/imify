@@ -30,6 +30,11 @@ const GUIDES: GuideItem[] = [
     label: "Enable Dev Mode",
     path: "/assets/guides/dev-mode-enable.md",
   },
+  {
+    id: "bug-report",
+    label: "How to Report Bugs",
+    path: "/assets/guides/bug-report.md",
+  },
 ];
 
 interface GuidesDialogProps {

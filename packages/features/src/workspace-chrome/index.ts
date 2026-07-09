@@ -1,6 +1,6 @@
 export * from "./about-dialog"
 export * from "./attribution-dialog"
-export * from "./bug-report-dialog"
+export * from "./pwa-install-dialog"
 export * from "./desktop-layout"
 export * from "./donate-dialog"
 export * from "./layout-preferences"
