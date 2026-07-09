@@ -23,7 +23,7 @@ import {
 import { FindOnProductHuntBadge } from "@/features/community/find-us-badges";
 import { YoutubePlayerSection } from "@/features/community/youtube-player-section";
 import { FaqSection } from "@/features/community/faq-section";
-import { useTranslation } from "@imify/i18n";
+import { useTranslation, Trans } from "@imify/i18n";
 
 function CapabilityItem({
   title,
@@ -228,7 +228,19 @@ export function HomeClient() {
       {/* Hero Section */}
       <section className="mx-auto max-w-4xl text-center space-y-8 px-4">
         <Heading className="text-5xl md:text-6xl font-extrabold tracking-tight">
-          {t("heroTitle")}
+          <Trans
+            i18nKey="heroTitle"
+            ns="homepage"
+            t={t as any}
+            components={{
+              1: (
+                <span
+                  key="hero-highlight"
+                  className="text-blue-600 dark:text-blue-500"
+                />
+              ),
+            }}
+          />
         </Heading>
         <BodyText className="mx-auto max-w-2xl text-lg md:text-xl text-slate-600 dark:text-slate-400">
           {t("heroSubtitle")}
