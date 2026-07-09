@@ -21,13 +21,13 @@ export function BasicInfoCard({ basic, dimensions, resolution, time, imageUrl }:
   return (
     <div className="flex flex-col gap-3">
       <InfoSection title={t("fileInformation")} icon={<FileImage size={13} />} collapsible={false}>
-        <div className="relative mb-3 pt-4" style={{ maxHeight: 280 }}>
-          <div className="w-full h-48 rounded border border-slate-200/80 dark:border-slate-700/70 bg-slate-100/80 dark:bg-slate-900/60 flex items-center justify-center text-slate-400 dark:text-slate-500">
+        <div className="relative mb-3 pt-4">
+          <div className="w-full rounded border border-slate-200/80 dark:border-slate-700/70 bg-slate-100/80 dark:bg-slate-900/60 flex items-center justify-center text-slate-400 dark:text-slate-500 overflow-hidden p-2">
             <img
               src={imageUrl}
               alt={basic.fileName}
-              className="max-w-full max-h-full w-auto h-auto rounded"
-              style={{ maxHeight: 240, maxWidth: "100%" }}
+              className="rounded object-contain"
+              style={{ maxHeight: 280, maxWidth: "100%" }}
             />
           </div>
 
