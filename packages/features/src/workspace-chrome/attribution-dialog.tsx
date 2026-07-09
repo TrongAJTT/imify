@@ -7,6 +7,7 @@ import { Button } from "@imify/ui/ui/button";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { Tooltip } from "../shared/tooltip";
 import { resolveFeatureMediaAssetUrl } from "../shared/media-assets";
+import { useTranslation } from "react-i18next";
 
 interface AttributionDialogProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface AttributionDialogProps {
 }
 
 export function AttributionDialog({ isOpen, onClose }: AttributionDialogProps) {
+  const { t } = useTranslation("about");
   return (
     <BaseDialog
       isOpen={isOpen}
@@ -30,11 +32,10 @@ export function AttributionDialog({ isOpen, onClose }: AttributionDialogProps) {
       </Button>
       <div className="flex flex-col gap-1 mb-6">
         <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-          Acknowledgements
+          {t("attributionDialog.title")}
         </h3>
         <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-          Imify is proud to be built using the following open-source
-          technologies.
+          {t("attributionDialog.subtitle")}
         </p>
       </div>
       <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar py-1">

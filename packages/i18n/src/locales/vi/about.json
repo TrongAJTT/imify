@@ -48,5 +48,9 @@
   "donateDialog": {
     "title": "Cảm ơn bạn đã lựa chọn Imify!",
     "desc": "Là một dự án mã nguồn mở dành cho cộng đồng, Imify đã và sẽ luôn miễn phí. Nếu công cụ giúp ích cho công việc của bạn, hãy cân nhắc ủng hộ tác giả để trang trải chi phí vận hành, duy trì tên miền, và tiếp thêm động lực phát triển thêm nhiều tính năng mới cũng như sửa lỗi cho mọi người."
+  },
+  "attributionDialog": {
+    "title": "Ghi nhận công lao",
+    "subtitle": "Imify tự hào được xây dựng từ các công nghệ mã nguồn mở và giấy phép miễn phí sau."
   }
 }
