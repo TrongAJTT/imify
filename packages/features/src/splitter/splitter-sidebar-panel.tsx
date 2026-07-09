@@ -13,6 +13,7 @@ import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loade
 import { useSplitterStore } from "@imify/stores/stores/splitter-store";
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store";
 import { type SavedSetupPreset } from "@imify/stores/stores/batch-store";
+import { FEATURE_PRESET_PREFIXES } from "@imify/core";
 import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
@@ -61,7 +62,7 @@ export function SplitterSidebarPanel({
     state.presets.find((p) => p.id === activeSplitterPresetId),
   );
 
-  const identifiedPresetId = `preset_image-splitter_${activeSplitterPresetId}`;
+  const identifiedPresetId = `${FEATURE_PRESET_PREFIXES.IMAGE_SPLITTER}_${activeSplitterPresetId}`;
   const identifiedPresetName = `Image Splitter #${activeSplitterPreset?.name || activeSplitterPresetId}`;
   const identifiedPresetColor = activeSplitterPreset?.highlightColor || "#f97316";
 

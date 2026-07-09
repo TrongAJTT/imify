@@ -22,6 +22,7 @@ import { PresetCard } from "./preset-card";
 import { BatchSetupSidebarPanel } from "./setup-sidebar-panel";
 import { DEFAULT_PERFORMANCE_PREFERENCES } from "./performance-preferences";
 import { useTranslation } from "@imify/i18n";
+import { isFeaturePreset } from "@imify/core";
 
 interface PresetSelectorProps {
   label?: string;
@@ -75,14 +76,7 @@ export function PresetSelector({
   const [customName, setCustomName] = useState("");
   const [customColor, setCustomColor] = useState("#0ea5e9");
 
-  const isFeaturePreset = (id: string) => {
-    return (
-      id.startsWith("preset_background-remover") ||
-      id.startsWith("preset_splicing_") ||
-      id.startsWith("preset_image-splitter_") ||
-      id.startsWith("preset_pattern-gen_")
-    );
-  };
+
 
   // Initialize metadata only when the dialog opens
   useEffect(() => {
@@ -229,7 +223,11 @@ export function PresetSelector({
             }
           >
             <SidebarCard
-              label={activePreset ? activePreset.name : t("presetSelector.choosePreset")}
+              label={
+                activePreset
+                  ? activePreset.name
+                  : t("presetSelector.choosePreset")
+              }
               sublabel={
                 activePreset
                   ? `Format: ${activePreset.config.targetFormat.toUpperCase()}`
@@ -425,7 +423,9 @@ export function PresetSelector({
                       {t("presetSelector.noPresetsFound")}
                     </h3>
                     <MutedText className="max-w-[280px] mb-6">
-                      {t("presetSelector.noPresetsDescription", { formats: formatFilter?.join(", ") || "any" })}
+                      {t("presetSelector.noPresetsDescription", {
+                        formats: formatFilter?.join(", ") || "any",
+                      })}
                     </MutedText>
                     <Button
                       onClick={handleCreatePreset}
@@ -455,7 +455,9 @@ export function PresetSelector({
 
                     {/* Highlight Color */}
                     <div className="space-y-2">
-                      <LabelText className="text-xs">{t("presetSelector.accentColor")}</LabelText>
+                      <LabelText className="text-xs">
+                        {t("presetSelector.accentColor")}
+                      </LabelText>
                       <div className="flex flex-wrap gap-2">
                         {PRESET_HIGHLIGHT_COLORS.map((color) => (
                           <button
@@ -526,8 +528,15 @@ export function PresetSelector({
                   <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
                   <span className="truncate">
                     {t("presetSelector.formatNotSupported", {
-                      format: (targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat).toUpperCase(),
-                      supported: formatFilter?.map((f) => (f === "mozjpeg" ? "MozJPEG" : f).toUpperCase()).join(", ")
+                      format: (targetFormat === "mozjpeg"
+                        ? "MozJPEG"
+                        : targetFormat
+                      ).toUpperCase(),
+                      supported: formatFilter
+                        ?.map((f) =>
+                          (f === "mozjpeg" ? "MozJPEG" : f).toUpperCase(),
+                        )
+                        .join(", "),
                     })}
                   </span>
                 </div>
@@ -549,7 +558,9 @@ export function PresetSelector({
                   disabled={!customName.trim() || !isTargetFormatAllowed}
                   className="h-9 font-bold px-5"
                 >
-                  {identifiedPreset ? t("presetSelector.saveApply") : t("presetSelector.createApply")}
+                  {identifiedPreset
+                    ? t("presetSelector.saveApply")
+                    : t("presetSelector.createApply")}
                 </Button>
               )}
             </div>

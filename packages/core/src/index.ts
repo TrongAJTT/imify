@@ -23,6 +23,7 @@ export * from "./storage-adapter"
 export * from "./types"
 export * from "./workspace-entry-preferences"
 export * from "./pwa-install"
+export * from "./presets"
 
 export * from "./hooks/use-toast"
 export * from "./format-utils"

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Plus, RotateCcw } from "lucide-react";
 import { EmptyDropCard, Shield, MutedText, Button } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
+import { isFeaturePreset } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "@imify/stores/stores/preset-colors";
 import {
   useBatchStore,
@@ -44,14 +45,7 @@ export function ProcessorPresetSelectView({
     "processor",
   );
 
-  const isFeaturePreset = (id: string) => {
-    return (
-      id.startsWith("preset_background-remover") ||
-      id.startsWith("preset_splicing_") ||
-      id.startsWith("preset_image-splitter_") ||
-      id.startsWith("preset_filling_")
-    );
-  };
+
 
   const contextLabel = context === "single" ? "Single" : "Batch";
   const formats = useMemo(() => {
