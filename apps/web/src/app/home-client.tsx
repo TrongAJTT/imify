@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -9,13 +9,15 @@ import {
 } from "@imify/features/workspace-shell/workspace-tools";
 import { buildToolEntryHref } from "@/features/presets/tool-entry-route";
 import { Button } from "@imify/ui/ui/button";
+import { BodyText, Heading, Subheading } from "@imify/ui/ui/typography";
 import {
-  BodyText,
-  Heading,
-  MutedText,
-  Subheading,
-} from "@imify/ui/ui/typography";
-import { ChevronRight, Sparkles, Chrome } from "lucide-react";
+  Github,
+  Sparkles,
+  Chrome,
+  Zap,
+  Shield,
+  CircleDollarSign,
+} from "lucide-react";
 import {
   FEATURE_MEDIA_ASSET_PATHS,
   resolveFeatureMediaAssetUrl,
@@ -44,34 +46,104 @@ function CapabilityItem({
   );
 }
 
-const TOOL_PREVIEW_IMAGES: Record<string, string> = {
-  "single-processor": FEATURE_MEDIA_ASSET_PATHS.processor.previewSingleWebp,
-  "batch-processor": FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp,
-  splitter: FEATURE_MEDIA_ASSET_PATHS.splitter.preview1Webp,
-  splicing: FEATURE_MEDIA_ASSET_PATHS.splicing.previewWebp,
-  filling: FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
-  "pattern-generator": FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp,
-  diffchecker: FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp,
-  inspector: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp,
-  "background-remover": FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp,
-  upscaler: FEATURE_MEDIA_ASSET_PATHS.upscaler.previewWebp,
-  "context-menu": FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp,
-  "qr-generator": FEATURE_MEDIA_ASSET_PATHS.illustrations.qrGeneratorSvg,
-  "qr-reader": FEATURE_MEDIA_ASSET_PATHS.illustrations.qrReaderSvg,
-  "seo-audit": FEATURE_MEDIA_ASSET_PATHS.illustrations.seoAuditSvg,
-};
+// Single source of truth: all tools with preview image + optional badge
+const TOOL_DEFINITIONS: {
+  id: string;
+  label: string;
+  src: string;
+  badge?: "highlight" | "new";
+}[] = [
+  {
+    id: "single-processor",
+    label: "Single Processor",
+    src: FEATURE_MEDIA_ASSET_PATHS.processor.previewSingleWebp,
+  },
+  {
+    id: "batch-processor",
+    label: "Batch Processor",
+    src: FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp,
+  },
+  {
+    id: "splicing",
+    label: "Image Splicing",
+    src: FEATURE_MEDIA_ASSET_PATHS.splicing.previewWebp,
+    badge: "highlight",
+  },
+  {
+    id: "splitter",
+    label: "Image Splitter",
+    src: FEATURE_MEDIA_ASSET_PATHS.splitter.preview1Webp,
+    badge: "highlight",
+  },
+  {
+    id: "filling",
+    label: "Image Filling",
+    src: FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
+    badge: "highlight",
+  },
+  {
+    id: "pattern-generator",
+    label: "Pattern Generator",
+    src: FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp,
+  },
+  {
+    id: "diffchecker",
+    label: "Diff Checker",
+    src: FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp,
+    badge: "highlight",
+  },
+  {
+    id: "inspector",
+    label: "Image Inspector",
+    src: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp,
+    badge: "highlight",
+  },
+  {
+    id: "context-menu",
+    label: "Context Menu",
+    src: FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp,
+  },
+  {
+    id: "background-remover",
+    label: "Background Remover",
+    src: FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp,
+    badge: "new",
+  },
+  {
+    id: "upscaler",
+    label: "AI Upscaler",
+    src: FEATURE_MEDIA_ASSET_PATHS.upscaler.previewWebp,
+    badge: "new",
+  },
+  {
+    id: "qr-generator",
+    label: "QR Generator",
+    src: FEATURE_MEDIA_ASSET_PATHS.illustrations.qrGeneratorSvg,
+    badge: "new",
+  },
+  {
+    id: "qr-reader",
+    label: "QR Reader",
+    src: FEATURE_MEDIA_ASSET_PATHS.illustrations.qrReaderSvg,
+    badge: "new",
+  },
+  {
+    id: "seo-audit",
+    label: "SEO Audit",
+    src: FEATURE_MEDIA_ASSET_PATHS.illustrations.seoAuditSvg,
+  },
+];
 
-const TOOL_BADGES: Record<string, "highlight" | "new"> = {
-  splicing: "highlight",
-  splitter: "highlight",
-  filling: "highlight",
-  diffchecker: "highlight",
-  inspector: "highlight",
-  "qr-reader": "new",
-  "qr-generator": "new",
-  "background-remover": "new",
-  upscaler: "new",
-};
+// Lookup maps derived from TOOL_DEFINITIONS
+const TOOL_PREVIEW_IMAGES = Object.fromEntries(
+  TOOL_DEFINITIONS.map((t) => [t.id, t.src]),
+) as Record<string, string>;
+
+const TOOL_BADGES = Object.fromEntries(
+  TOOL_DEFINITIONS.filter((t) => t.badge).map((t) => [t.id, t.badge!]),
+) as Record<string, "highlight" | "new">;
+
+const CAROUSEL_INTERVAL_MS = 3000;
 
 interface ToolCardProps {
   id: string;
@@ -140,9 +212,33 @@ function ToolCard({
 export function HomeClient() {
   const { t, i18n } = useTranslation(["homepage", "workspace"]);
   const [isMounted, setIsMounted] = React.useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [fading, setFading] = useState(false);
+
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const goToSlide = useCallback(
+    (next: number) => {
+      setPrevIndex(carouselIndex);
+      setFading(true);
+      setTimeout(() => {
+        setCarouselIndex(next);
+        setFading(false);
+        setPrevIndex(null);
+      }, 300);
+    },
+    [carouselIndex],
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      goToSlide((carouselIndex + 1) % TOOL_DEFINITIONS.length);
+    }, CAROUSEL_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [carouselIndex, goToSlide]);
 
   const toolGroups = useMemo(
     () => getWorkspaceToolsMenuGroups(isMounted ? undefined : "en"),
@@ -200,57 +296,137 @@ export function HomeClient() {
   );
 
   return (
-    <div className="space-y-24 py-12 pb-24">
+    <div className="space-y-24 py-10 pb-24">
       {/* Hero Section */}
-      <section className="mx-auto max-w-4xl text-center space-y-8 px-4">
-        <Heading className="text-5xl md:text-6xl font-extrabold tracking-tight">
-          <Trans
-            i18nKey="heroTitle"
-            ns="homepage"
-            t={t as any}
-            components={{
-              1: (
-                <span
-                  key="hero-highlight"
-                  className="text-blue-600 dark:text-blue-500"
+      <section className="mx-auto max-w-7xl px-4">
+        <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+          {/* Left: copy + CTA */}
+          <div className="flex-1 min-w-0 text-center lg:text-left space-y-7">
+            <Heading className="text-4xl sm:text-5xl xl:text-6xl font-extrabold tracking-tight leading-[1.1]">
+              <Trans
+                i18nKey="heroTitle"
+                ns="homepage"
+                t={t as any}
+                components={{
+                  1: (
+                    <span
+                      key="hero-highlight"
+                      className="text-blue-600 dark:text-blue-500"
+                    />
+                  ),
+                }}
+              />
+            </Heading>
+
+            <BodyText className="max-w-xl lg:max-w-none text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed mx-auto lg:mx-0">
+              {t("heroSubtitle")}
+            </BodyText>
+
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center lg:justify-start items-center gap-3 pt-2">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto rounded-xl px-8 h-12 text-base shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+                asChild
+              >
+                <Link
+                  href={buildToolEntryHref(
+                    "single-processor",
+                    "/single-processor",
+                  )}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <Sparkles size={18} />
+                  <span>{t("startProcessing")}</span>
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto rounded-xl px-8 h-12 text-base border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:-translate-y-0.5"
+                asChild
+              >
+                <Link
+                  href="/extension"
+                  className="flex items-center justify-center gap-2"
+                >
+                  <Chrome size={18} />
+                  <span>{t("viewExtension")}</span>
+                </Link>
+              </Button>
+              <div className="flex items-center w-full sm:w-auto justify-center">
+                <FindOnProductHuntBadge className="w-full sm:w-auto" />
+              </div>
+            </div>
+          </div>
+
+          {/* Right: image carousel */}
+          <div className="w-full lg:w-[52%] shrink-0 select-none">
+            <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-900/10 dark:shadow-black/40 bg-slate-100 dark:bg-slate-900 aspect-[16/10]">
+              {/* Active image */}
+              {TOOL_DEFINITIONS.map((slide, idx) => (
+                <Image
+                  key={slide.id}
+                  src={resolveFeatureMediaAssetUrl(slide.src)}
+                  alt={slide.label}
+                  fill
+                  priority={idx === 0}
+                  className={`object-cover absolute inset-0 transition-opacity duration-300 ${
+                    idx === carouselIndex
+                      ? fading
+                        ? "opacity-0"
+                        : "opacity-100"
+                      : idx === prevIndex
+                        ? "opacity-0"
+                        : "opacity-0 pointer-events-none"
+                  }`}
                 />
-              ),
-            }}
-          />
-        </Heading>
-        <BodyText className="mx-auto max-w-2xl text-lg md:text-xl text-slate-600 dark:text-slate-400">
-          {t("heroSubtitle")}
-        </BodyText>
-        <div className="flex flex-col md:flex-row flex-wrap justify-center items-center gap-4 pt-4 px-4">
-          <Button
-            size="lg"
-            className="w-full md:w-auto rounded-xl px-8 h-12 text-base shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5"
-            asChild
-          >
-            <Link
-              href={buildToolEntryHref("single-processor", "/single-processor")}
-              className="flex items-center justify-center gap-2"
-            >
-              <Sparkles size={18} />
-              <span>{t("startProcessing")}</span>
-            </Link>
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="w-full md:w-auto rounded-xl px-8 h-12 text-base border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:-translate-y-0.5"
-            asChild
-          >
-            <Link
-              href="/extension"
-              className="flex items-center justify-center gap-2"
-            >
-              <Chrome size={18} />
-              <span>{t("viewExtension")}</span>
-            </Link>
-          </Button>
-          <div className="flex items-center w-full md:w-auto justify-center">
-            <FindOnProductHuntBadge className="w-full md:w-auto" />
+              ))}
+
+              {/* Bottom gradient overlay + label */}
+              <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-950/80 to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                <span className="text-white text-xs font-bold uppercase tracking-widest opacity-90">
+                  {TOOL_DEFINITIONS[carouselIndex]?.label}
+                </span>
+                {/* Dot indicators */}
+                <div className="flex gap-1.5">
+                  {TOOL_DEFINITIONS.map((slide, idx) => (
+                    <button
+                      key={slide.id}
+                      onClick={() => goToSlide(idx)}
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                        idx === carouselIndex
+                          ? "bg-white w-4"
+                          : "bg-white/40 w-1.5 hover:bg-white/70"
+                      }`}
+                      aria-label={`Go to slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Below carousel: thumbnail strip */}
+            <div className="mt-3 grid grid-cols-7 gap-1.5">
+              {TOOL_DEFINITIONS.map((slide, idx) => (
+                <button
+                  key={slide.id}
+                  onClick={() => goToSlide(idx)}
+                  className={`relative aspect-video rounded-md overflow-hidden border-2 transition-all cursor-pointer ${
+                    idx === carouselIndex
+                      ? "border-blue-500 shadow-md shadow-blue-500/20"
+                      : "border-slate-200 dark:border-slate-800 opacity-50 hover:opacity-80"
+                  }`}
+                >
+                  <Image
+                    src={resolveFeatureMediaAssetUrl(slide.src)}
+                    alt={slide.label}
+                    fill
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -258,7 +434,7 @@ export function HomeClient() {
       {/* Tools Grid Section */}
       <section id="tools" className="mx-auto max-w-7xl px-4 space-y-10">
         <div className="text-center space-y-3">
-          <Heading className="text-3xl md:text-4xl">{t("toolsTitle")}</Heading>
+          <Heading className="text-2xl md:text-4xl">{t("toolsTitle")}</Heading>
           <BodyText className="mx-auto max-w-3xl text-slate-500 text-lg dark:text-slate-400">
             {t("toolsDesc")}
           </BodyText>
@@ -311,7 +487,7 @@ export function HomeClient() {
       {/* Features/Highlights Section */}
       <section className="mx-auto max-w-6xl space-y-10 px-4">
         <div className="text-center space-y-4">
-          <Heading className="text-3xl md:text-4xl">{t("whyTitle")}</Heading>
+          <Heading className="text-2xl md:text-4xl">{t("whyTitle")}</Heading>
           <BodyText className="mx-auto max-w-2xl text-slate-500 text-lg">
             {t("whyDesc")}
           </BodyText>
@@ -321,19 +497,7 @@ export function HomeClient() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px]">
             <div className="flex flex-col items-center text-center bg-white p-8 dark:bg-slate-950">
               <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
+                <Shield size={22} />
               </div>
               <Subheading className="text-xl mb-2">
                 {t("privacyTitle")}
@@ -344,19 +508,7 @@ export function HomeClient() {
             </div>
             <div className="flex flex-col items-center text-center bg-white p-8 dark:bg-slate-950">
               <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                </svg>
+                <Zap size={22} />
               </div>
               <Subheading className="text-xl mb-2">
                 {t("experienceTitle")}
@@ -367,18 +519,7 @@ export function HomeClient() {
             </div>
             <div className="flex flex-col items-center text-center bg-white p-8 dark:bg-slate-950">
               <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                <svg
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                </svg>
+                <Github size={22} />
               </div>
               <Subheading className="text-xl mb-2">
                 {t("openSourceTitle")}
@@ -389,21 +530,7 @@ export function HomeClient() {
             </div>
             <div className="flex flex-col items-center text-center bg-white p-8 dark:bg-slate-950">
               <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/xl"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 2v20" />
-                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
+                <CircleDollarSign size={22} />
               </div>
               <Subheading className="text-xl mb-2">{t("freeTitle")}</Subheading>
               <BodyText className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
@@ -417,7 +544,7 @@ export function HomeClient() {
       {/* Detailed Tool Capabilities */}
       <section className="mx-auto max-w-5xl px-4 space-y-10">
         <div className="text-center space-y-4">
-          <Heading className="text-3xl md:text-4xl">{t("compTitle")}</Heading>
+          <Heading className="text-2xl md:text-4xl">{t("compTitle")}</Heading>
           <BodyText className="text-slate-500 text-lg">
             {t("compDesc")}
           </BodyText>

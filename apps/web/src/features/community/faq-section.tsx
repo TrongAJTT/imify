@@ -76,7 +76,7 @@ export function FaqSection() {
   return (
     <section className="mx-auto max-w-4xl px-4 space-y-12 pb-18">
       <div className="text-center space-y-3">
-        <Heading className="text-4xl md:text-5xl">
+        <Heading className="text-2xl md:text-4xl">
           {t("faq.sectionTitle")}
         </Heading>
         <BodyText className="text-slate-500 text-lg md:text-xl">
