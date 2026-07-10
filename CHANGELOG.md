@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### 🪄 AI Background Removal (Beta)
+
 - **State-of-the-Art AI Engines:** Integrated four specialized models (BiRefNet, ORMBG, MODNet, and Selfie Segmenter) to provide the best balance between quality and speed.
 - **WebGPU Acceleration:** Experience up to 10x faster background removal on supported browsers by leveraging your device's GPU power.
 - **Interactive Comparison:** Real-time preview with a side-by-side comparison slider to verify extraction quality instantly.
@@ -15,16 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Showcase Gallery:** Explore available processing presets through a new visual showcase panel in the sidebar.
 
 ### 🎨 UI & Asset Management Polish
+
 - **Modernized Watermark Dialogs:** Completely redesigned Save and Open dialogs for watermark patterns, featuring centered layouts and improved typography.
 - **Vibrant Preset Styling:** Enhanced visual feedback for active presets with improved color syncing and more vibrant card designs.
 - **Organized Asset Manager:** Improved model management with collapsible sections, making it easier to navigate as your AI library grows.
 - **Categorized Acknowledgements:** A new, more professional credits system to honor the open-source contributors powering Imify.
 
 ### 🚀 Performance & Navigation
+
 - **Seamless Refresh:** Replaced full-page reloads with smart store rehydration for a faster and smoother workspace experience.
 - **Responsive Headers:** Optimized navigation headers for better usability on smaller screens.
 - **PWA & Offline Support:**
-  - **Full Offline Capability:** Imify Web now works 100% offline after the first visit. 
+  - **Full Offline Capability:** Imify Web now works 100% offline after the first visit.
   - **WASM Pre-caching:** All core image processing engines (AVIF, JXL, MozJPEG, OxiPNG) are automatically cached for immediate offline use.
   - **Native App Experience:** Added a Web App Manifest, allowing Imify to be installed as a standalone application.
   - **Unified Update Flow:** Integrated Service Worker update detection with the "Imify has been updated" dialog.
@@ -36,11 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Version 2.1.3 focuses on enhancing the landing page with modern interactive elements and unified brand visibility for a better user experience.
 
 ### 🎥 Interactive Video Demo
+
 - **Feature Showcases:** Explore Imify's capabilities through a professional video presentation.
 - **Quick Navigation Milestones:** Jump directly to specific feature demonstrations (like Batch Processing or Pattern Generation) using the new interactive milestone buttons.
 - **Polished Presentation:** Muted autoplay and seamless looping provide a clean, non-distracting preview of the toolkit in action.
 
 ### 🧩 Community & Help Center
+
 - **Interactive FAQ:** A new, sleek accordion system makes it easier than ever to find answers about privacy, performance, and features.
 - **Unified Brand Presence:** Clean, professional badges for **Product Hunt**, **Unikorn**, and **J2TEAM Launch** are now available in the footer, with full support for both light and dark themes.
 
@@ -49,6 +54,7 @@ Version 2.1.3 focuses on enhancing the landing page with modern interactive elem
 Version 2.1.2 transforms Imify into a professional "Image Toolkit," introducing specialized creative workspaces, a diagnostic SEO engine, and a high-performance processing core.
 
 ### ✨ Creative & Diagnostic Workspaces
+
 - **Image Filling Designer:** A powerful layer-based workspace to fill shapes (polygons, stars, circles) with images. Features symmetric grid generators and professional layer management.
 - **Advanced Image Splitter:** Multi-method slicing engine including:
   - **Basic/Advanced:** Grid, pixel-perfect, and pattern-based slicing.
@@ -59,6 +65,7 @@ Version 2.1.2 transforms Imify into a professional "Image Toolkit," introducing 
 - **Extension Command Center:** New quick-access popup for instant Page Scanning and Lite Image Inspection without opening the main dashboard.
 
 ### 🎨 UI/UX & Workflow Efficiency
+
 - **Modernized Sidebar:** Reorganized configuration panels using color-coded **Accordions** (Formats, Resize, Advanced) for a cleaner, more focused workspace.
 - **Unified Preset System:** Robust workflow to save, manage, and reuse favorite configurations across Single, Batch, and Splicing processors.
 - **Professional Viewer Engine:** Upgraded all previewers with **Pointer-Aware Zoom** (zoom to cursor), smooth Pan controls, and high-fidelity rendering.
@@ -68,6 +75,7 @@ Version 2.1.2 transforms Imify into a professional "Image Toolkit," introducing 
   - Accessible dialogs with native Escape-key support and improved dark mode contrast.
 
 ### ⚙️ Engine, Formats & Performance
+
 - **Smart Concurrency Advisor:** Hardware-aware engine that auto-detects CPU/RAM and recommends safe processing limits to prevent browser lag. Includes an "Overclock" mode for power users.
 - **Expert Format Controls:**
   - Added **MozJPEG** target for superior quality-to-size compression ratios.
@@ -76,14 +84,16 @@ Version 2.1.2 transforms Imify into a professional "Image Toolkit," introducing 
 - **High-Performance WASM:** All heavy encoding/decoding operations run 100% client-side via optimized WASM modules, ensuring maximum privacy and offline capability.
 
 ### 🐛 Key Refinements & Fixes
+
 - **Memory Optimization:** Implemented smart thumbnailing for batch queues to prevent OOM (Out of Memory) crashes when handling 4K+ images.
 - **Color Accuracy:** Resolved "washed-out" issues by standardizing color-managed decode paths for wide-gamut source images.
 - **Stability:** Fixed layer coordinate drift in manual editors and resolved intermittent progress-toast overlapping.
 - **Interaction:** Smoother wheel-event handling and refined expand/collapse animations for all collapsible UI elements.
 
-## [1.5.0] - 2024-04-01
+## [1.5.0] - 2026-04-01
 
 ### Added
+
 - **Context Menu (new unified settings page):**
   - Global formats, custom presets, and menu preview are now grouped under one “Context Menu” section with top tabs.
   - Choose how the right‑click menu is sorted, and preview the final menu layout before using it.
@@ -97,22 +107,26 @@ Version 2.1.2 transforms Imify into a professional "Image Toolkit," introducing 
 - **Settings:** New option to choose which feature opens by default when you open the extension page.
 
 ### Changed
+
 - **Context Menu management:** Reordering and enabling/disabling formats/presets is smoother and more consistent, with a clear “Save changes” workflow where needed.
 - **Menus feel more predictable:** Your pinned items stay fixed, while the rest can be sorted without breaking muscle memory.
 - **UI consistency:** Inputs and selectors across dialogs/pages now share a more consistent look and spacing.
 - **Side panels:** Tighter spacing so you can see more controls without scrolling as much.
 
 ### Fixed
+
 - **Context Menu editing:** Fixed cases where “Save changes” could become unresponsive after the first save.
 
-## [1.0.1] - 2024-03-24
+## [1.0.1] - 2026-03-24
 
 ### Fixed
+
 - Move AnimatingSpinner out of contents to fix React type error on all pages
 
-## [1.0.0] - 2024-03-23
+## [1.0.0] - 2026-03-23
 
 ### Added
+
 - **Right-Click Magic (Context Menu)**: Instantly convert and download any web image to formats like JPG, PNG, WEBP, or AVIF with a single right-click.
 - **Customizable Menu**: Full control over your context menu. Choose which formats to show, hide, and reorder.
 - **Batch Processing Dashboard**: Drag & drop multiple heavy images and process them simultaneously using multi-threading (Web Workers).

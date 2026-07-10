@@ -127,7 +127,7 @@ export function AssetManagementDialog({
       isOpen={isOpen}
       onClose={onClose}
       className="max-w-6xl"
-      contentClassName="w-full max-w-6xl h-[90vh] md:h-[85vh] max-h-[900px] overflow-hidden flex flex-col"
+      contentClassName="w-full max-w-6xl h-[calc(100dvh-2rem)] overflow-hidden flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-100/10 dark:bg-slate-900">
@@ -174,11 +174,10 @@ export function AssetManagementDialog({
           >
             <div className={isMobile ? "space-y-3" : "space-y-1"}>
               {tabs.map((tab) => (
-                <Button
+                <button
                   key={tab.id}
-                  variant="ghost"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex w-full items-center justify-start gap-3 rounded-lg transition-all !h-auto ${
+                  className={`flex w-full items-center justify-start gap-3 rounded-lg transition-all text-left whitespace-normal ${
                     isMobile
                       ? "p-4 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40"
                       : `px-4 py-2.5 ${
@@ -189,29 +188,32 @@ export function AssetManagementDialog({
                   }`}
                 >
                   <div
-                    className={`${isMobile ? `rounded-lg ${tab.colors.activeBg} p-2 shadow-sm ${tab.colors.activeText}` : tab.colors.activeIcon}`}
+                    className={`${isMobile ? `rounded-lg ${tab.colors.activeBg} p-2 shadow-sm ${tab.colors.activeText}` : tab.colors.activeIcon} shrink-0`}
                   >
                     <tab.icon
                       size={18}
                       strokeWidth={activeTab === tab.id ? 2.5 : 2}
                     />
                   </div>
-                  <div className="flex-1 text-left">
+                  <div className="flex-1 min-w-0 text-left">
                     <BodyText
                       className={`font-semibold ${!isMobile && activeTab === tab.id ? tab.colors.activeText : "!text-slate-800 dark:!text-slate-100"}`}
                     >
                       {tab.label}
                     </BodyText>
                     {isMobile && (
-                      <MutedText className="text-[10px] leading-tight">
+                      <MutedText className="text-[10px] leading-tight break-words">
                         {tab.description}
                       </MutedText>
                     )}
                   </div>
                   {isMobile && (
-                    <ChevronRight size={16} className="text-slate-300" />
+                    <ChevronRight
+                      size={16}
+                      className="text-slate-300 shrink-0"
+                    />
                   )}
-                </Button>
+                </button>
               ))}
             </div>
           </div>

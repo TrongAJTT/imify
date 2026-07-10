@@ -11,6 +11,8 @@ import {
   X,
   Gauge,
   Languages,
+  HelpCircle,
+  Database,
 } from "lucide-react";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { ToastContainer } from "@imify/ui/components/toast-container";
@@ -28,6 +30,7 @@ import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog";
 import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog";
 import { DevModeStateViewer } from "../dev-mode/dev-mode-state-viewer";
 import { RuntimeConsoleMonitor } from "../dev-mode/runtime-console-monitor";
+import { LocalStorageManager } from "../dev-mode/local-storage-manager";
 import { BrowserCapabilitiesDashboard } from "../dev-mode/browser-capabilities";
 import { setRuntimeLogCaptureEnabled } from "../dev-mode/runtime-log-collector";
 import type { OptionsTab } from "../dev-mode/debug-shared";
@@ -38,6 +41,16 @@ import {
   type PerformancePreferences,
 } from "../processor/performance-preferences";
 import { SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX } from "./desktop-layout";
+import { LanguageItemCard } from "./language-item-card";
+import { useI18nStore } from "@imify/stores";
+import {
+  getAvailableLanguages,
+  getAppI18nVersion,
+  deleteRuntimeLanguage,
+  exportLanguageAsZip,
+  exportEnglishBundleAsZip,
+  type LanguageInfo,
+} from "@imify/i18n";
 
 const DEFAULT_ACTIVE_CLASS =
   "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-slate-300 dark:ring-slate-700";
@@ -63,8 +76,14 @@ export function DevToolsDialog({
 }: DevToolsDialogProps) {
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
   const [activeTab, setActiveTab] = useState<
-    "system" | "console" | "capabilities" | "language" | null
-  >("system");
+    | "about"
+    | "system"
+    | "console"
+    | "capabilities"
+    | "language"
+    | "storage"
+    | null
+  >("about");
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isI18nImportDialogOpen, setIsI18nImportDialogOpen] = useState(false);
@@ -76,7 +95,95 @@ export function DevToolsDialog({
   const setShowI18nDebugKeys = useDevModeStore(
     (state) => state.setShowI18nDebugKeys,
   );
-  const { toasts, hide, success } = useToast();
+  const { toasts, hide, success, error } = useToast();
+
+  const [languages, setLanguages] = useState<LanguageInfo[]>([]);
+  const [expandedLangCode, setExpandedLangCode] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState<string>("");
+  const activeLanguage = useI18nStore((state) => state.language);
+  const setLanguage = useI18nStore((state) => state.setLanguage);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLanguages(getAvailableLanguages());
+      setAppVersion(getAppI18nVersion());
+    }
+  }, [activeLanguage, isOpen]);
+
+  const handleToggleExpand = (code: string) => {
+    setExpandedLangCode((prev) => (prev === code ? null : code));
+  };
+
+  const handleRequestDelete = async (
+    lang: LanguageInfo,
+    e: React.MouseEvent,
+  ) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(
+      `Delete custom language "${lang.name}"?` +
+        "\n\n" +
+        "This will permanently delete it from local storage.",
+    );
+    if (!confirmed) return;
+    try {
+      await deleteRuntimeLanguage(lang.code);
+      if (activeLanguage === lang.code) {
+        setLanguage("en");
+      } else {
+        setLanguages(getAvailableLanguages());
+      }
+      success("Language Deleted", `Successfully removed ${lang.name}.`);
+    } catch (err) {
+      console.error("Failed to delete custom language:", err);
+    }
+  };
+
+  const handleExportLanguage = async (
+    lang: LanguageInfo,
+    e: React.MouseEvent,
+  ) => {
+    e.stopPropagation();
+    try {
+      const zipData = await exportLanguageAsZip(lang.code);
+      if (!zipData) {
+        error("Export Failed", "Language data not found.");
+        return;
+      }
+      const blob = new Blob([zipData as BlobPart], { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `imify-locale-${lang.code}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      success(
+        "Language Exported",
+        `Successfully downloaded ${lang.name} zip file.`,
+      );
+    } catch (err) {
+      console.error("Failed to export language:", err);
+    }
+  };
+
+  const downloadEnglishBundle = () => {
+    try {
+      const zip = exportEnglishBundleAsZip();
+      const blob = new Blob([zip as BlobPart], { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `imify-locale-en-v${appVersion}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      success(
+        "Bundle Downloaded",
+        "English locale bundle downloaded successfully.",
+      );
+    } catch (err) {
+      console.error("Failed to export English bundle:", err);
+      error("Export Failed", "Could not export the English bundle.");
+    }
+  };
 
   const safePerformancePreferences = normalizePerformancePreferences(
     performancePreferences,
@@ -88,7 +195,7 @@ export function DevToolsDialog({
       return;
     }
     if (!isMobileDialog) {
-      setActiveTab("system");
+      setActiveTab("about");
     } else {
       setActiveTab(null);
     }
@@ -118,6 +225,16 @@ export function DevToolsDialog({
 
   const tabs = [
     {
+      id: "about" as const,
+      label: "About Dev Tools",
+      description: "Information about developer settings and control switch",
+      icon: HelpCircle,
+      activeClassName: DEFAULT_ACTIVE_CLASS,
+      inactiveClassName: DEFAULT_INACTIVE_CLASS,
+      iconClassName: "text-amber-600 dark:text-amber-400",
+      bgClassName: "bg-amber-50 dark:bg-amber-900/40",
+    },
+    {
       id: "system" as const,
       label: "System Monitor",
       description: "Live state diagnostics and logs import/export",
@@ -136,6 +253,16 @@ export function DevToolsDialog({
       inactiveClassName: DEFAULT_INACTIVE_CLASS,
       iconClassName: "text-indigo-650 dark:text-indigo-400",
       bgClassName: "bg-indigo-50 dark:bg-indigo-900/40",
+    },
+    {
+      id: "storage" as const,
+      label: "Storage Manager",
+      description: "Direct Local Storage management and data editing",
+      icon: Database,
+      activeClassName: DEFAULT_ACTIVE_CLASS,
+      inactiveClassName: DEFAULT_INACTIVE_CLASS,
+      iconClassName: "text-emerald-600 dark:text-emerald-400",
+      bgClassName: "bg-emerald-50 dark:bg-emerald-900/40",
     },
     {
       id: "language" as const,
@@ -274,6 +401,52 @@ export function DevToolsDialog({
             <div
               className={`flex-1 min-h-0 min-w-0 overflow-y-auto ${isMobileDialog ? "p-4 pt-5 pb-10" : "p-8 pt-12"}`}
             >
+              {activeTab === "about" ? (
+                <div className="animate-in fade-in duration-300 space-y-6">
+                  {!isMobileDialog && (
+                    <SettingsSectionHeader
+                      title="ABOUT DEVELOPER TOOLS"
+                      description="Welcome to the developer console. Learn about features and toggle settings."
+                    />
+                  )}
+
+                  <section className="space-y-4">
+                    <SettingsItemHeader
+                      title="What is Developer Mode?"
+                      description="Developer Mode grants access to diagnostics, capabilities mapping, dynamic logs, and custom locale management tools."
+                    />
+                    <div className="prose dark:prose-invert text-sm text-slate-600 dark:text-slate-300 space-y-3 leading-relaxed">
+                      <p>
+                        This dashboard allows you to explore real-time reactive
+                        Zustand stores, inspect live stdout/stderr console
+                        prints, import/export system logs to facilitate
+                        debugging, and test localization templates.
+                      </p>
+                      <p>
+                        Imify handles all operations locally on your machine,
+                        ensuring data privacy is preserved while providing these
+                        developer monitors.
+                      </p>
+                    </div>
+                  </section>
+
+                  <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
+                    <SettingsItemHeader
+                      title="DISABLE DEVELOPER MODE"
+                      description="Hide developer tools and disable debug features. Re-enable via the About dialog Easter Egg."
+                    />
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2 rounded-lg border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      onClick={handleDisableDevMode}
+                    >
+                      <PowerOff size={14} />
+                      Disable Developer Mode
+                    </Button>
+                  </section>
+                </div>
+              ) : null}
+
               {activeTab === "system" ? (
                 <div className="animate-in fade-in duration-300 space-y-5">
                   {!isMobileDialog && (
@@ -298,7 +471,7 @@ export function DevToolsDialog({
                         title="BACKUP DIAGNOSTIC LOGS"
                         description="Export local settings and store states to a JSON file, or restore from a backup."
                       />
-                      <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                         <Button
                           variant="outline"
                           className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
@@ -318,21 +491,6 @@ export function DevToolsDialog({
                       </div>
                     </section>
                   )}
-
-                  <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
-                    <SettingsItemHeader
-                      title="DISABLE DEVELOPER MODE"
-                      description="Hide developer tools and disable debug features. Re-enable via the About dialog Easter Egg."
-                    />
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start gap-2 rounded-lg border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      onClick={handleDisableDevMode}
-                    >
-                      <PowerOff size={14} />
-                      Disable Developer Mode
-                    </Button>
-                  </section>
                 </div>
               ) : null}
 
@@ -363,24 +521,54 @@ export function DevToolsDialog({
                       title="CUSTOM LOCALES"
                       description="Import new translation files or download a translation template JSON to contribute."
                     />
-                    <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex-item grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        <Button
+                          variant="outline"
+                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          onClick={() => setIsI18nTemplateDialogOpen(true)}
+                        >
+                          <Download size={14} />
+                          New Empty Bundle
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          onClick={downloadEnglishBundle}
+                        >
+                          <Download size={14} />
+                          Download English Bundle
+                        </Button>
+                      </div>
                       <Button
                         variant="outline"
-                        className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        className="flex-item justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                         onClick={() => setIsI18nImportDialogOpen(true)}
                       >
                         <Languages size={14} />
                         Import Custom Language
                       </Button>
-                      <Button
-                        variant="outline"
-                        className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        onClick={() => setIsI18nTemplateDialogOpen(true)}
-                      >
-                        <Download size={14} />
-                        Download Template
-                      </Button>
                     </div>
+
+                    {languages.filter((lang) => lang.isRuntime).length > 0 && (
+                      <div className="space-y-2 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/20 dark:bg-slate-950/20 mt-4">
+                        {languages
+                          .filter((lang) => lang.isRuntime)
+                          .map((lang) => (
+                            <LanguageItemCard
+                              key={lang.code}
+                              lang={lang}
+                              isActive={lang.code === activeLanguage}
+                              appVersion={appVersion}
+                              isExpanded={expandedLangCode === lang.code}
+                              onToggleExpand={handleToggleExpand}
+                              mode="devtools"
+                              onDelete={handleRequestDelete}
+                              onExport={handleExportLanguage}
+                            />
+                          ))}
+                      </div>
+                    )}
                   </section>
                 </div>
               ) : null}
@@ -416,6 +604,19 @@ export function DevToolsDialog({
                   </section>
                 </div>
               ) : null}
+
+              {activeTab === "storage" ? (
+                <div className="animate-in fade-in duration-300 space-y-5">
+                  {!isMobileDialog && (
+                    <SettingsSectionHeader
+                      title="LOCALSTORAGE MANAGER"
+                      description="Read, search, add, edit, and delete application settings saved directly in localStorage."
+                    />
+                  )}
+
+                  <LocalStorageManager />
+                </div>
+              ) : null}
             </div>
           </div>
         )}
@@ -431,6 +632,7 @@ export function DevToolsDialog({
             performancePreferences={safePerformancePreferences}
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
+            isDevMode={true}
           />
           <DevModeImportDialog
             isOpen={isImportDialogOpen}

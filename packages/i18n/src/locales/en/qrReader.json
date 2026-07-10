@@ -68,7 +68,7 @@
     "alignQr": "Align QR code within the dashed frame to scan",
     "import": {
       "title": "File Import",
-      "description": "Drag & drop or click to upload PNG, JPG, or SVG images containing a QR code"
+      "description": "Drag & drop or click to upload PNG, JPG, or SVG images containing a QR code.\nSupports Ctrl+V shortcut to quickly paste images on desktop."
     },
     "camera": {
       "title": "Camera Scan",
@@ -100,8 +100,7 @@
     "saveIcs": "Save .ics File",
     "openInPlatform": "Open in {{platform}}",
     "copyText": "Copy Text",
-    "parsedActions": "Parsed Actions",
-    "parsedActionsDesc": "Quick shortcuts for parsed data",
+    "detailsAndActions": "Details & Actions",
     "yes": "Yes",
     "no": "No",
     "openUrl": "Open Link",
@@ -150,7 +149,26 @@
       "startDate": "Start Date",
       "endDate": "End Date",
       "location": "Location",
-      "description": "Description"
+      "description": "Description",
+      "toTime": "To",
+      "alarm": "Reminder",
+      "alarmOptions": {
+        "atTime": "At time of event",
+        "before": "{{time}} before",
+        "after": "{{time}} after",
+        "days_zero": "0 days",
+        "days_one": "1 day",
+        "days_other": "{{count}} days",
+        "hours_zero": "0 hours",
+        "hours_one": "1 hour",
+        "hours_other": "{{count}} hours",
+        "minutes_zero": "0 minutes",
+        "minutes_one": "1 minute",
+        "minutes_other": "{{count}} minutes",
+        "seconds_zero": "0 seconds",
+        "seconds_one": "1 second",
+        "seconds_other": "{{count}} seconds"
+      }
     },
     "wifiCard": {
       "title": "Wi-Fi Sign-in Card",
@@ -158,6 +176,36 @@
       "network": "Network",
       "password": "Password",
       "encryption": "Encryption"
+    }
+  },
+  "history": {
+    "title": "Saved History",
+    "stats": "{{count}} records",
+    "noHistory": "No saved history yet.",
+    "clearAll": "Clear all",
+    "clearOlderThan3Days": "Older than 3 days",
+    "clearOlderThan7Days": "Older than 7 days",
+    "clearOlderThan1Month": "Older than 1 month",
+    "confirmClearTitle": "Confirm Clear History",
+    "confirmClearMsg": "Are you sure you want to clear the entire scan history?",
+    "confirmClearOlderTitle": "Confirm Clear Older History",
+    "confirmClearOlderMsg": "Are you sure you want to delete history records older than {{days}} days?",
+    "saveToHistory": "Save to History",
+    "saved": "Saved",
+    "saveSuccess": "Saved to history successfully.",
+    "deleteSuccess": "Record deleted successfully.",
+    "clearSuccess": "History cleared successfully.",
+    "clearOlderSuccess": "History cleaned up successfully.",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "delete": "Delete",
+    "time": {
+      "justNow": "Just now",
+      "minsAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
     }
   }
 }

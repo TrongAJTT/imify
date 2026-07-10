@@ -34,7 +34,7 @@ function BackgroundRemoverHardwareNoticeCard() {
 }
 
 export function BackgroundRemoverPage() {
-  const { t } = useTranslation("backgroundRemover");
+  const { t } = useTranslation(["backgroundRemover", "common"]);
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     setHydrated(useBackgroundRemoverStore.persist.hasHydrated());
@@ -66,7 +66,7 @@ export function BackgroundRemoverPage() {
     <BackgroundRemoverSidebarShell
       enableWideSidebarGrid={enableWideSidebarGrid}
     />,
-    t("title"),
+    `${t("common:toolSettings")} - ${t("title")}`,
   );
 
   React.useEffect(() => {

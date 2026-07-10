@@ -1,5 +1,5 @@
 {
-  "heroTitle": "Bộ công cụ xử lý ảnh mạnh mẽ ngay trong trình duyệt của bạn",
+  "heroTitle": "<1>Bộ công cụ xử lý ảnh</1> mạnh mẽ ngay tại trình duyệt của bạn",
   "heroSubtitle": "Nhanh chóng, riêng tư và hoàn toàn cục bộ. Chuyển đổi định dạng, thay đổi kích thước, xử lý hàng loạt, cắt ghép và kiểm tra thông tin ảnh mà không cần tải lên máy chủ.",
   "startProcessing": "Bắt đầu xử lý hình ảnh",
   "viewExtension": "Xem tiện ích mở rộng",
@@ -16,23 +16,10 @@
   "openSourceDesc": "Được xây dựng với tinh thần minh bạch và cộng đồng. Toàn bộ mã nguồn có thể được xem xét công khai trên GitHub.",
   "freeTitle": "Hoàn toàn miễn phí",
   "freeDesc": "Không giới hạn, không đăng ký. Tất cả tính năng cao cấp đều dành cho mọi người mà không có tường thanh toán.",
-  "proTitle": "Công cụ được tạo ra cho dân chuyên nghiệp",
-  "proDesc": "Trải nghiệm độ chính xác của xử lý ảnh hiệu suất cao với các công cụ đặc trưng của chúng tôi.",
-  "features": {
-    "batchTitle": "Xử lý hàng loạt",
-    "batchDesc": "Mở rộng quy trình bằng cách xử lý hàng nghìn ảnh song song. Chuyển đổi, thay đổi kích thước và tối ưu hóa chỉ trong một lần mà không cần chờ máy chủ.",
-    "splicingTitle": "Ghép ảnh",
-    "splicingDesc": "Ghép các ảnh thành lưới bento đẹp mắt hoặc dải dọc. Hoàn hảo cho các bố cục mạng xã hội và bảng câu chuyện trực quan.",
-    "splitterTitle": "Cắt ảnh",
-    "splitterDesc": "Cắt ảnh thành lưới hoặc carousel hoàn hảo cho Instagram và mạng xã hội. Hướng dẫn trực quan giúp bạn cắt chính xác.",
-    "fillingTitle": "Lấp đầy ảnh",
-    "fillingDesc": "Thêm viền hoặc lấp đầy ảnh để khớp hoàn hảo với tỷ lệ khung hình mục tiêu mà không cắt mất nội dung quan trọng.",
-    "diffTitle": "Kiểm tra sự khác biệt",
-    "diffDesc": "Phát hiện sự khác biệt ở cấp độ pixel giữa các ảnh. So sánh chất lượng, hiện tượng nhiễu nén và thay đổi hình ảnh với độ chính xác cao.",
-    "inspectorTitle": "Kiểm tra ảnh",
-    "inspectorDesc": "Kiểm tra sâu metadata ẩn, dữ liệu EXIF, tọa độ GPS và bảng màu. Bảo vệ quyền riêng tư của bạn một cách dễ dàng."
+  "badges": {
+    "highlight": "Nổi bật",
+    "new": "Mới"
   },
-  "highlightFeatureLabel": "Tính năng nổi bật",
   "compTitle": "Khả năng toàn diện",
   "compDesc": "Tìm hiểu sâu về những gì các mô-đun cốt lõi của chúng tôi có thể làm.",
   "capabilities": {
@@ -75,6 +62,18 @@
     },
     "seoAudit": {
       "desc": "Kiểm tra và tối ưu ảnh web để đạt hiệu suất tìm kiếm tối đa."
+    },
+    "backgroundRemover": {
+      "desc": "Tự động tách nền hình ảnh trực tiếp trong trình duyệt bằng các mô hình AI tiên tiến."
+    },
+    "upscaler": {
+      "desc": "Phóng to và phục hồi chi tiết hình ảnh bằng mạng thần kinh siêu phân giải."
+    },
+    "qrGenerator": {
+      "desc": "Tạo mã QR tùy biến, bảo mật thông tin và hỗ trợ chèn logo riêng."
+    },
+    "qrReader": {
+      "desc": "Quét và giải mã QR lập tức qua camera hoặc tải tệp ảnh cục bộ."
     }
   },
   "video": {
@@ -125,7 +124,7 @@
       },
       {
         "question": "Tôi có thể hỗ trợ Imify bằng cách nào?",
-        "answer": "Nếu Imify đã giúp ích cho quy trình làm việc của bạn và bạn đang tự hỏi làm thế nào để tiếp thêm nhiên liệu cho cuộc cách mạng một người này, không cần tìm đâu xa ngoài nút 'Quyên góp' rực rỡ trên thanh ứng dụng! Dù thông qua *PayPal*, *Buy Me A Coffee* hay *GitHub Sponsors* huyền thoại, đóng góp của bạn là nguồn sống giữ cho cỗ máy hiệu suất cao này tiếp tục gầm rú. Hỗ trợ sự sáng tạo, tiếp thêm động lực đổi mới và giúp tôi giữ bộ công cụ này miễn phí cho mọi người, ở khắp mọi nơi. Sự hào phóng của bạn thực sự đáng kinh ngạc!"
+        "answer": "Nếu Imify giúp ích cho quy trình làm việc của bạn, bạn có thể ủng hộ dự án bằng cách nhấp vào nút có hình trái tim trên thanh công cụ (bên cạnh nút hiển thị số sao GitHub). Đóng góp của bạn qua *PayPal*, *Buy Me A Coffee* hoặc *GitHub Sponsors* sẽ giúp trang trải chi phí duy trì tên miền, phát triển mã nguồn và giữ cho dự án luôn miễn phí cho mọi người. Ngoài ra, chia sẻ Imify tới bạn bè cũng là một cách hỗ trợ tuyệt vời!"
       }
     ]
   },
@@ -152,5 +151,17 @@
   "firefoxStoreDesc": "Cài đặt phiên bản ổn định cho Firefox để sử dụng các công cụ menu chuột phải và quy trình làm việc độc quyền của tiện ích.",
   "githubReleasesLabel": "GitHub Releases",
   "githubReleasesDesc": "Trải nghiệm sớm các bản dựng mới nhất (bao gồm cả các bản cập nhật thử nghiệm nếu có), hoặc chọn bất kỳ phiên bản cụ thể nào bạn muốn từ danh sách phát hành.",
-  "downloadFrom": "Tải xuống từ"
+  "downloadFrom": "Tải xuống từ",
+  "footer": {
+    "shortDesc": "Bộ công cụ xử lý ảnh offline an toàn & mạnh mẽ",
+    "terms": "Điều khoản",
+    "privacy": "Bảo mật",
+    "fullDesc": "Bộ công cụ xử lý ảnh offline mạnh mẽ ngay tại trình duyệt của bạn. Tốc độ nhanh, an toàn dữ liệu, không cần tải ảnh lên máy chủ, không cần chờ đợi.",
+    "tools": "Công cụ",
+    "moreFeatures": "Tính năng khác",
+    "findUs": "Liên kết",
+    "copyright": "© {{year}} Imify phát triển bởi TrongAJTT. Bảo lưu mọi quyền.",
+    "privacyPolicy": "Chính sách bảo mật",
+    "termsOfService": "Điều khoản dịch vụ"
+  }
 }

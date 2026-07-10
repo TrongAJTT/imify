@@ -42,8 +42,15 @@ import previewDiffCheckerWebp from "url:@assets/features/preview-difference_chec
 import previewInspectorWebp from "url:@assets/features/preview-image_inspector.webp"
 import previewRemover1Webp from "url:@assets/features/preview-background_remover-1.webp"
 import previewRemover2Webp from "url:@assets/features/preview-background_remover-2.webp"
+import qrGeneratorIllustrationSvg from "url:@assets/images/illustrations/qr-generator.svg"
+import qrReaderIllustrationSvg from "url:@assets/images/illustrations/qr-reader.svg"
+import seoAuditIllustrationSvg from "url:@assets/images/illustrations/seo-audit.svg"
 import j2teamLogoIco from "url:@assets/images/j2tl-logo.ico"
-import whatsNewMd from "url:@assets/WHATS_NEW.md"
+import latestSummaryMd from "url:@assets/changelogs/latest-summary.md"
+import v2_1_3Md from "url:@assets/changelogs/v2-1-3.md"
+import v2_1_2Md from "url:@assets/changelogs/v2-1-2.md"
+import v1_5_0Md from "url:@assets/changelogs/v1-5-0.md"
+import v1_0_0Md from "url:@assets/changelogs/v1-0-0.md"
 import onnxWasm from "url:@assets/onnx-engines/ort-wasm-simd-threaded.wasm"
 import onnxMjs from "url:@assets/onnx-engines/ort-wasm-simd-threaded.mjs"
 import onnxWasmAsyncify from "url:@assets/onnx-engines/ort-wasm-simd-threaded.asyncify.wasm"
@@ -58,6 +65,9 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep1Webp]: devExportStep1Webp,
   [FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep2Webp]: devExportStep2Webp,
   [FEATURE_MEDIA_ASSET_PATHS.devMode.enableVideoWebm]: devModeEnableVideoWebm,
+  [FEATURE_MEDIA_ASSET_PATHS.illustrations.qrGeneratorSvg]: qrGeneratorIllustrationSvg,
+  [FEATURE_MEDIA_ASSET_PATHS.illustrations.qrReaderSvg]: qrReaderIllustrationSvg,
+  [FEATURE_MEDIA_ASSET_PATHS.illustrations.seoAuditSvg]: seoAuditIllustrationSvg,
   [FEATURE_MEDIA_ASSET_PATHS.processor.previewSingleWebp]: previewSingleProcessorWebp,
   [FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp]: previewBatchProcessorWebp,
   [FEATURE_MEDIA_ASSET_PATHS.upscaler.previewWebp]: previewUpscalerWebp,
@@ -78,7 +88,11 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp]: previewRemover1Webp,
   [FEATURE_MEDIA_ASSET_PATHS.remover.preview2Webp]: previewRemover2Webp,
   [FEATURE_MEDIA_ASSET_PATHS.brand.j2teamLogoIco]: j2teamLogoIco,
-  [FEATURE_MEDIA_ASSET_PATHS.common.whatsNewMd]: whatsNewMd,
+  [FEATURE_MEDIA_ASSET_PATHS.common.latestSummaryMd]: latestSummaryMd,
+  [FEATURE_MEDIA_ASSET_PATHS.common.v2_1_3]: v2_1_3Md,
+  [FEATURE_MEDIA_ASSET_PATHS.common.v2_1_2]: v2_1_2Md,
+  [FEATURE_MEDIA_ASSET_PATHS.common.v1_5_0]: v1_5_0Md,
+  [FEATURE_MEDIA_ASSET_PATHS.common.v1_0_0]: v1_0_0Md,
   [FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasm]: onnxWasm,
   [FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjs]: onnxMjs,
   [FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasmAsyncify]: onnxWasmAsyncify,

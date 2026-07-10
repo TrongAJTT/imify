@@ -121,7 +121,7 @@ export interface DebugLogPayload {
   timestamp: string
   export_source: "dev_panel"
   active_tab: OptionsTab | null
-  environment: DebugLogEnvironment
+  environment?: DebugLogEnvironment
   stores: {
     batch?: unknown
     splicing?: unknown
@@ -130,6 +130,8 @@ export interface DebugLogPayload {
     pattern?: unknown
     diffchecker?: unknown
     inspector?: unknown
+    qr_generator?: unknown
+    background_remover?: unknown
   }
   settings?: unknown
   performance?: unknown
@@ -166,15 +168,20 @@ export async function buildDebugLog(params: BuildDebugLogParams): Promise<DebugL
   
   for (const feature of DEV_MODE_FEATURES) {
     if (hasFeature(feature.id) && feature.storeHook) {
+      let stateData = feature.storeHook.getState() as unknown as Record<string, unknown>
+      if (feature.id === "qr_generator") {
+        const { data, ...rest } = stateData
+        stateData = rest
+      }
       stores[feature.id as keyof typeof stores] = sanitizeValue(
-        extractStoreData(feature.storeHook.getState() as unknown as Record<string, unknown>)
+        extractStoreData(stateData)
       )
     }
   }
 
   // Environment (browser info)
   const hasNavigator = typeof navigator !== "undefined"
-  const environment: DebugLogEnvironment = {
+  const environment: DebugLogEnvironment | undefined = hasFeature("environment") ? {
     user_agent: hasNavigator ? navigator.userAgent : "unknown",
     platform: hasNavigator ? navigator.platform : "unknown",
     language: hasNavigator ? navigator.language : "unknown",
@@ -182,7 +189,7 @@ export async function buildDebugLog(params: BuildDebugLogParams): Promise<DebugL
     device_memory: hasNavigator
       ? ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? null)
       : null,
-  }
+  } : undefined
 
   return {
     schema_version: 1,

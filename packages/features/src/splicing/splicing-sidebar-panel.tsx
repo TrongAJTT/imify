@@ -21,6 +21,7 @@ import {
 import { PresetSelector } from "../processor/preset-selector";
 import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
 import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
+import { FEATURE_PRESET_PREFIXES } from "@imify/core";
 import {
   type SavedSetupPreset,
   useBatchStore,
@@ -87,7 +88,7 @@ export function SplicingSidebarPanel({
     s.presets.find((p) => p.id === activeSplicingPresetId),
   );
 
-  const identifiedPresetId = `preset_splicing_${activeSplicingPresetId}`;
+  const identifiedPresetId = `${FEATURE_PRESET_PREFIXES.SPLICING}_${activeSplicingPresetId}`;
   const identifiedPresetName = `Splicing #${activeSplicingPreset?.name || activeSplicingPresetId}`;
   const identifiedPresetColor =
     activeSplicingPreset?.highlightColor || "#f97316";

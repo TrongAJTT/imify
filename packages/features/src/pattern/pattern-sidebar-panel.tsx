@@ -18,6 +18,7 @@ import {
   useBatchStore,
   type SavedSetupPreset,
 } from "@imify/stores/stores/batch-store";
+import { FEATURE_PRESET_PREFIXES } from "@imify/core";
 import type { PatternExportFormat } from "./types";
 
 interface PatternSidebarPanelProps {
@@ -47,7 +48,7 @@ export function PatternSidebarPanel({
     state.presets.find((p) => p.id === activePatternPresetId),
   );
 
-  const identifiedPresetId = `preset_pattern-gen_${activePatternPresetId}`;
+  const identifiedPresetId = `${FEATURE_PRESET_PREFIXES.PATTERN_GEN}_${activePatternPresetId}`;
   const identifiedPresetName = `PatternGen #${activePatternPreset?.name || activePatternPresetId}`;
   const identifiedPresetColor =
     activePatternPreset?.highlightColor || "#f97316";
@@ -216,7 +217,7 @@ export function PatternSidebarPanel({
 
   const applyPreset = (preset: SavedSetupPreset) => {
     const { targetFormat, quality, formatOptions } = preset.config;
-    const isIdentified = preset.id.startsWith("preset_pattern-gen_");
+    const isIdentified = preset.id.startsWith(`${FEATURE_PRESET_PREFIXES.PATTERN_GEN}_`);
 
     setActivePresetId(
       preset.id === VIRTUAL_DEFAULT_PNG_PRESET.id || isIdentified

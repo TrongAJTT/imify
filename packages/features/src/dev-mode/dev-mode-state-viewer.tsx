@@ -10,6 +10,8 @@ import { useFillingStore } from "@imify/stores/stores/filling-store";
 import { usePatternStore } from "@imify/stores/stores/pattern-store";
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store";
 import { useInspectorStore } from "@imify/stores/stores/inspector-store";
+import { useQrGeneratorStore } from "@imify/stores/stores/qr-generator-store";
+import { useBackgroundRemoverStore } from "@imify/stores/stores/background-remover-store";
 import { Button } from "@imify/ui/ui/button";
 import { Tooltip } from "../shared/tooltip";
 import type { OptionsTab } from "./debug-shared";
@@ -25,7 +27,13 @@ function stripActions(state: Record<string, unknown>): Record<string, unknown> {
   return out;
 }
 
-type StoreFilter = "all" | OptionsTab | "batch_global" | "processor";
+type StoreFilter =
+  | "all"
+  | OptionsTab
+  | "batch_global"
+  | "processor"
+  | "qr_generator"
+  | "background_remover";
 
 interface DevModeStateViewerProps {
   activeTab: OptionsTab | null;
@@ -78,6 +86,8 @@ export function DevModeStateViewer({
   const patternState = usePatternStore();
   const diffcheckerState = useDiffcheckerStore();
   const inspectorState = useInspectorStore();
+  const qrGeneratorState = useQrGeneratorStore();
+  const backgroundRemoverState = useBackgroundRemoverStore();
 
   const allStores = useMemo<Record<string, Record<string, unknown>>>(() => {
     const rootBatch = stripActions(
@@ -116,6 +126,16 @@ export function DevModeStateViewer({
       inspector: stripActions(
         inspectorState as unknown as Record<string, unknown>,
       ),
+      qr_generator: (() => {
+        const cleaned = stripActions(
+          qrGeneratorState as unknown as Record<string, unknown>,
+        );
+        const { data, ...rest } = cleaned;
+        return rest;
+      })(),
+      background_remover: stripActions(
+        backgroundRemoverState as unknown as Record<string, unknown>,
+      ),
       "context-menu": (settingsState as any)?.context_menu || {},
     };
   }, [
@@ -127,6 +147,8 @@ export function DevModeStateViewer({
     settingsState,
     splicingState,
     splitterState,
+    qrGeneratorState,
+    backgroundRemoverState,
   ]);
 
   const tabToStoreKey: Partial<Record<StoreFilter, keyof typeof allStores>> = {
@@ -141,6 +163,8 @@ export function DevModeStateViewer({
     pattern: "pattern",
     diffchecker: "diffchecker",
     inspector: "inspector",
+    qr_generator: "qr_generator",
+    background_remover: "background_remover",
   };
 
   const visibleSnapshot = useMemo(() => {
@@ -183,6 +207,8 @@ export function DevModeStateViewer({
     { value: "pattern", label: "Pattern Generator" },
     { value: "diffchecker", label: "Difference Checker" },
     { value: "inspector", label: "Image Inspector" },
+    { value: "qr_generator", label: "QR Code Generator" },
+    { value: "background_remover", label: "Background Remover" },
   ];
 
   return (

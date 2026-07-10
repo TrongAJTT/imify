@@ -8,6 +8,7 @@ export interface AttributionItem {
   author: string
   license: string
   url: string
+  image?: string
 }
 
 export interface AttributionCategory {
@@ -55,7 +56,9 @@ export const ATTRIBUTION_CATEGORIES: AttributionCategory[] = [
       { name: "woff2-encoder", author: "Google and contributors (port by itskyedo)", license: "MIT", url: "https://github.com/itskyedo/woff2-encoder" },
       { name: "jsQR", author: "Linus Unnebäck", license: "Apache-2.0", url: "https://github.com/cozmo/jsQR" },
       { name: "QR Code Styling", author: "Denys Kozak", license: "MIT", url: "https://github.com/kozakdenys/qr-code-styling" },
-      { name: "ONNX Runtime Web", author: "Microsoft Corporation", license: "MIT", url: "https://github.com/microsoft/onnxruntime" }
+      { name: "ONNX Runtime Web", author: "Microsoft Corporation", license: "MIT", url: "https://github.com/microsoft/onnxruntime" },
+      { name: "i18next", author: "Jan Mühlemann and i18next contributors", license: "MIT", url: "https://www.i18next.com/" },
+      { name: "react-i18next", author: "Jan Mühlemann and i18next contributors", license: "MIT", url: "https://react.i18next.com/" }
     ]
   },
   {
@@ -95,6 +98,40 @@ export const ATTRIBUTION_CATEGORIES: AttributionCategory[] = [
       { name: "Lobster", author: "Impallari Type", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Lobster" },
       { name: "Quicksand", author: "Andrew Paglinawan", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Quicksand" },
       { name: "Comfortaa", author: "Johan Aakerlund", license: "OFL-1.1", url: "https://fonts.google.com/specimen/Comfortaa" }
+    ]
+  },
+  {
+    id: "media",
+    label: "Media & Illustrations",
+    items: [
+      {
+        name: "QR Generator Illustration",
+        author: "vectorjuice",
+        license: "Freepik License",
+        url: "https://www.freepik.com/free-vector/barcode-reading-app-qrcode-reader-epayment-transaction-application-qr-code-scanner-qr-generator-online-qr-code-payment-concept-pinkish-coral-bluevector-isolated-illustration_11667310.htm",
+        image: "/assets/images/illustrations/qr-generator.svg"
+      },
+      {
+        name: "QR Reader Illustration",
+        author: "freepik",
+        license: "Freepik License",
+        url: "https://www.freepik.com/free-vector/smartphone-scanning-qr-code-illustration_9543267.htm",
+        image: "/assets/images/illustrations/qr-reader.svg"
+      },
+      {
+        name: "SEO Scanner Illustration",
+        author: "jcomp",
+        license: "Freepik License",
+        url: "https://www.freepik.com/free-vector/work-office-computer-man-woman-business-character-marketing-online-employee-technology-business-man-cartoon-co-working-flat-design-freelance_13744794.htm",
+        image: "/assets/images/illustrations/seo-audit.svg"
+      },
+      {
+        name: "Background Remover Demo Image",
+        author: "Wellington Ferreira",
+        license: "Unsplash License",
+        url: "https://unsplash.com/photos/a-man-with-a-goatee-smiles-at-the-camera-72TE8cWKXRY",
+        image: "/assets/features/preview-background_remover-1.webp"
+      }
     ]
   }
 ]

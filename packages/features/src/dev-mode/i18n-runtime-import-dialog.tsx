@@ -9,7 +9,6 @@ import {
   calculateImportedStats,
   type LanguageMeta,
 } from "@imify/i18n";
-import i18n from "i18next";
 import { useI18nStore } from "@imify/stores";
 import { unzip } from "fflate";
 
@@ -110,7 +109,8 @@ export function I18nRuntimeImportDialog({
             setParsedData(mockParsedData);
 
             const stats = calculateImportedStats(data);
-            const rate = stats.total === 0 ? 1.0 : stats.completed / stats.total;
+            const rate =
+              stats.total === 0 ? 1.0 : stats.completed / stats.total;
             setCompletionStats({
               completed: stats.completed,
               total: stats.total,

@@ -379,3 +379,30 @@ export function generateEmptyLanguageZip(meta: LanguageMeta): Uint8Array {
 
   return zipSync(files)
 }
+
+export async function exportLanguageAsZip(langCode: string): Promise<Uint8Array | null> {
+  const stored = await loadLanguagesFromStorage()
+  const found = stored.find(item => item.meta.languageCode === langCode)
+  if (!found) return null
+
+  const files: Record<string, Uint8Array> = {
+    "_meta.json": strToU8(JSON.stringify(found.meta, null, 2) + "\n")
+  }
+  for (const ns of Object.keys(found.data)) {
+    files[`${ns}.json`] = strToU8(JSON.stringify(found.data[ns], null, 2) + "\n")
+  }
+  return zipSync(files)
+}
+
+import enMeta from "./locales/en/_meta.json"
+
+export function exportEnglishBundleAsZip(): Uint8Array {
+  const files: Record<string, Uint8Array> = {
+    "_meta.json": strToU8(JSON.stringify(enMeta, null, 2) + "\n")
+  }
+  for (const ns of NAMESPACES) {
+    const data = EN_RESOURCES[ns]
+    files[`${ns}.json`] = strToU8(JSON.stringify(data, null, 2) + "\n")
+  }
+  return zipSync(files)
+}

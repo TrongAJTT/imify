@@ -9,9 +9,12 @@
   "delete": "Xóa",
   "upload": "Tải lên",
   "download": "Tải xuống",
+  "export": "Xuất",
   "processing": "Đang xử lý...",
   "done": "Hoàn thành",
   "result": "Kết quả",
+  "expand": "Mở rộng",
+  "collapse": "Thu gọn",
   "error": "Lỗi",
   "warning": "Cảnh báo",
   "notice": "Chú ý",
@@ -20,6 +23,8 @@
   "highlightColor": "Màu nổi bật",
   "noFileSelected": "Chưa chọn tệp nào",
   "chooseFile": "Chọn tệp",
+  "aboutThisTool": "Về công cụ này",
+  "toolSettings": "Thiết lập công cụ",
   "presetInfoShowcasePanel": {
     "tipOfTheDay": "Mẹo hôm nay"
   },

@@ -4,6 +4,7 @@ import React, { useMemo } from "react"
 import Markdown from "markdown-to-jsx"
 import { BodyText, Heading, LabelText, Subheading } from "@imify/ui/ui/typography"
 import { cn } from "@imify/ui/ui/utils"
+import { resolveFeatureMediaAssetUrl } from "./media-assets"
 
 function resolveMarkdownAssetUrl(src: string, markdownUrl: string): string {
   if (!src) return src
@@ -39,6 +40,108 @@ function MarkdownImage({
       loading="lazy"
     />
   )
+}
+
+function getRawText(node: React.ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") {
+    return String(node);
+  }
+  if (Array.isArray(node)) {
+    return node.map(getRawText).join("");
+  }
+  if (React.isValidElement(node) && node.props && node.props.children) {
+    return getRawText(node.props.children);
+  }
+  return "";
+}
+
+function cleanAlertPrefix(node: React.ReactNode): React.ReactNode {
+  if (typeof node === "string") {
+    return node.replace(/^\[!(NOTE|IMPORTANT|WARNING|TIP|CAUTION)\]\s*/i, "");
+  }
+  if (Array.isArray(node)) {
+    const firstCleaned = cleanAlertPrefix(node[0]);
+    return [firstCleaned, ...node.slice(1)];
+  }
+  if (React.isValidElement(node) && node.props && node.props.children) {
+    return React.cloneElement(node as React.ReactElement, {}, cleanAlertPrefix(node.props.children));
+  }
+  return node;
+}
+
+function MarkdownBlockquote({ children }: React.HTMLAttributes<HTMLQuoteElement>) {
+  const rawText = getRawText(children).trim();
+  let alertType: "note" | "important" | "warning" | "tip" | "caution" | null = null;
+
+  if (rawText.startsWith("[!NOTE]")) {
+    alertType = "note";
+  } else if (rawText.startsWith("[!IMPORTANT]")) {
+    alertType = "important";
+  } else if (rawText.startsWith("[!WARNING]")) {
+    alertType = "warning";
+  } else if (rawText.startsWith("[!TIP]")) {
+    alertType = "tip";
+  } else if (rawText.startsWith("[!CAUTION]")) {
+    alertType = "caution";
+  }
+
+  if (alertType) {
+    const cleanChildren = cleanAlertPrefix(children);
+    let borderClass = "";
+    let titleText = "";
+    let titleColorClass = "";
+    let bgClass = "";
+
+    switch (alertType) {
+      case "note":
+        borderClass = "border-blue-500 dark:border-blue-400";
+        titleText = "Note";
+        titleColorClass = "text-blue-600 dark:text-blue-400";
+        bgClass = "bg-blue-50/40 dark:bg-blue-950/10";
+        break;
+      case "important":
+        borderClass = "border-purple-500 dark:border-purple-400";
+        titleText = "Important";
+        titleColorClass = "text-purple-600 dark:text-purple-400";
+        bgClass = "bg-purple-50/40 dark:bg-purple-950/10";
+        break;
+      case "warning":
+        borderClass = "border-amber-500 dark:border-amber-400";
+        titleText = "Warning";
+        titleColorClass = "text-amber-600 dark:text-amber-400";
+        bgClass = "bg-amber-50/40 dark:bg-amber-950/10";
+        break;
+      case "tip":
+        borderClass = "border-emerald-500 dark:border-emerald-400";
+        titleText = "Tip";
+        titleColorClass = "text-emerald-600 dark:text-emerald-400";
+        bgClass = "bg-emerald-50/40 dark:bg-emerald-950/10";
+        break;
+      case "caution":
+        borderClass = "border-red-500 dark:border-red-400";
+        titleText = "Caution";
+        titleColorClass = "text-red-600 dark:text-red-400";
+        bgClass = "bg-red-50/40 dark:bg-red-950/10";
+        break;
+    }
+
+    return (
+      <div className={cn("my-4 border-l-4 pl-4 pr-3 py-3 rounded-r-xl text-sm leading-relaxed", borderClass, bgClass)}>
+        <div className={cn("font-bold text-xs uppercase tracking-wider mb-1", titleColorClass)}>
+          {titleText}
+        </div>
+        <div className="text-slate-700 dark:text-slate-300 font-normal">
+          {cleanChildren}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <blockquote className="my-4 border-l-4 border-violet-300 dark:border-violet-700 pl-3 text-slate-600 dark:text-slate-300 italic">
+      {children}
+    </blockquote>
+  );
 }
 
 interface FeatureMarkdownProps {
@@ -95,15 +198,31 @@ export function FeatureMarkdown({ markdown, markdownUrl, className }: FeatureMar
         },
         hr: { props: { className: "my-6 border-slate-200 dark:border-slate-700" } },
         blockquote: {
-          props: {
-            className:
-              "my-4 border-l-4 border-violet-300 dark:border-violet-700 pl-3 text-slate-600 dark:text-slate-300 italic"
-          }
+          component: MarkdownBlockquote
+        },
+        a: {
+          component: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+            <a
+              {...props}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                "text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 font-semibold underline underline-offset-4 decoration-sky-500/30 hover:decoration-sky-500 transition-colors",
+                props.className
+              )}
+            />
+          )
         },
         img: {
           component: (props: { src?: string; alt?: string }) => (
             <MarkdownImage src={props.src} alt={props.alt} markdownUrl={markdownUrl} />
           )
+        },
+        video: {
+          component: (props: any) => {
+            const resolvedSrc = resolveFeatureMediaAssetUrl(props.src ?? "")
+            return <video {...props} src={resolvedSrc} />
+          }
         }
       }
     }),

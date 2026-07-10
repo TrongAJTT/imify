@@ -68,7 +68,7 @@
     "alignQr": "Căn mã QR vào giữa khung hình nét đứt để quét",
     "import": {
       "title": "Tải tệp lên",
-      "description": "Kéo thả hoặc nhấp để tải ảnh PNG, JPG hoặc SVG chứa mã QR"
+      "description": "Kéo thả hoặc nhấp để tải ảnh PNG, JPG hoặc SVG chứa mã QR.\nHỗ trợ phím tắt Ctrl+V để dán ảnh nhanh trên máy tính."
     },
     "camera": {
       "title": "Quét bằng Camera",
@@ -100,8 +100,7 @@
     "saveIcs": "Lưu tệp lịch (.ics)",
     "openInPlatform": "Mở bằng {{platform}}",
     "copyText": "Sao chép văn bản",
-    "parsedActions": "Hành động khả dụng",
-    "parsedActionsDesc": "Các hành động nhanh cho dữ liệu giải mã",
+    "detailsAndActions": "Chi tiết và Hành động",
     "yes": "Có",
     "no": "Không",
     "openUrl": "Mở liên kết",
@@ -150,7 +149,26 @@
       "startDate": "Thời gian bắt đầu",
       "endDate": "Thời gian kết thúc",
       "location": "Địa điểm",
-      "description": "Mô tả chi tiết"
+      "description": "Mô tả chi tiết",
+      "toTime": "Đến",
+      "alarm": "Nhắc nhở",
+      "alarmOptions": {
+        "atTime": "Vào lúc diễn ra sự kiện",
+        "before": "{{time}} trước",
+        "after": "{{time}} sau",
+        "days_zero": "0 ngày",
+        "days_one": "1 ngày",
+        "days_other": "{{count}} ngày",
+        "hours_zero": "0 giờ",
+        "hours_one": "1 giờ",
+        "hours_other": "{{count}} giờ",
+        "minutes_zero": "0 phút",
+        "minutes_one": "1 phút",
+        "minutes_other": "{{count}} phút",
+        "seconds_zero": "0 giây",
+        "seconds_one": "1 giây",
+        "seconds_other": "{{count}} giây"
+      }
     },
     "wifiCard": {
       "title": "Thẻ Đăng nhập Wi-Fi",
@@ -158,6 +176,36 @@
       "network": "Mạng",
       "password": "Mật khẩu",
       "encryption": "Bảo mật"
+    }
+  },
+  "history": {
+    "title": "Lịch sử đã lưu",
+    "stats": "Số bản ghi: {{count}}",
+    "noHistory": "Chưa có lịch sử đã lưu.",
+    "clearAll": "Xóa tất cả",
+    "clearOlderThan3Days": "Cũ hơn 3 ngày",
+    "clearOlderThan7Days": "Cũ hơn 7 ngày",
+    "clearOlderThan1Month": "Cũ hơn 1 tháng",
+    "confirmClearTitle": "Xác nhận xóa lịch sử",
+    "confirmClearMsg": "Bạn có chắc chắn muốn xóa toàn bộ lịch sử quét không?",
+    "confirmClearOlderTitle": "Xác nhận xóa lịch sử cũ",
+    "confirmClearOlderMsg": "Bạn có chắc chắn muốn xóa các bản ghi lịch sử cũ hơn {{days}} ngày không?",
+    "saveToHistory": "Lưu vào lịch sử",
+    "saved": "Đã lưu",
+    "saveSuccess": "Đã lưu vào lịch sử thành công.",
+    "deleteSuccess": "Đã xóa bản ghi thành công.",
+    "clearSuccess": "Đã xóa toàn bộ lịch sử thành công.",
+    "clearOlderSuccess": "Đã dọn dẹp lịch sử thành công.",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "expand": "Mở rộng",
+    "collapse": "Thu gọn",
+    "delete": "Xóa",
+    "time": {
+      "justNow": "Vừa xong",
+      "minsAgo": "{{count}} phút trước",
+      "hoursAgo": "{{count}} giờ trước",
+      "daysAgo": "{{count}} ngày trước"
     }
   }
 }

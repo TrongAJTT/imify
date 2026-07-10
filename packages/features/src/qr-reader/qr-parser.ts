@@ -48,6 +48,7 @@ export interface ParsedEvent {
   location?: string
   description?: string
   url?: string
+  alarm?: string
 }
 
 export interface ParsedMessaging {
@@ -131,6 +132,44 @@ export function formatICalDateForDisplay(raw: string): string {
   return `${year}-${month}-${day} ${hh}:${mm}`
 }
 
+export function formatICalTrigger(trigger: string, t: any): string {
+  if (!trigger) return "";
+  const clean = trigger.trim();
+  if (/^PT0S$/i.test(clean)) {
+    return t("sidebar.fields.alarmOptions.atTime", "Vào lúc diễn ra sự kiện");
+  }
+
+  const match = clean.match(/^([+-]?)P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/i);
+  if (!match) return clean;
+
+  const sign = match[1];
+  const days = match[2] ? parseInt(match[2], 10) : 0;
+  const hours = match[3] ? parseInt(match[3], 10) : 0;
+  const minutes = match[4] ? parseInt(match[4], 10) : 0;
+  const seconds = match[5] ? parseInt(match[5], 10) : 0;
+
+  const isBefore = sign === "" || sign === "-";
+
+  let timeStr = "";
+  if (days > 0) {
+    timeStr = t("sidebar.fields.alarmOptions.days", { count: days }, `${days} ngày`);
+  } else if (hours > 0) {
+    timeStr = t("sidebar.fields.alarmOptions.hours", { count: hours }, `${hours} giờ`);
+  } else if (minutes > 0) {
+    timeStr = t("sidebar.fields.alarmOptions.minutes", { count: minutes }, `${minutes} phút`);
+  } else if (seconds > 0) {
+    timeStr = t("sidebar.fields.alarmOptions.seconds", { count: seconds }, `${seconds} giây`);
+  }
+
+  if (timeStr) {
+    return isBefore
+      ? t("sidebar.fields.alarmOptions.before", { time: timeStr }, `${timeStr} trước`)
+      : t("sidebar.fields.alarmOptions.after", { time: timeStr }, `${timeStr} sau`);
+  }
+
+  return clean;
+}
+
 // ---------------------------------------------------------------------------
 // Main parser
 // ---------------------------------------------------------------------------
@@ -208,11 +247,14 @@ export function parseQrString(raw: string): ParsedQrResult {
     const lines = unfolded.split(/\r?\n/)
     const result: ParsedEvent = {}
     let inEvent = false
+    let inAlarm = false
 
     for (const line of lines) {
       const upper = line.toUpperCase()
       if (upper === "BEGIN:VEVENT") { inEvent = true; continue }
       if (upper === "END:VEVENT") { inEvent = false; continue }
+      if (upper === "BEGIN:VALARM") { inAlarm = true; continue }
+      if (upper === "END:VALARM") { inAlarm = false; continue }
       if (!inEvent) continue
 
       const colonIdx = line.indexOf(":")
@@ -222,12 +264,18 @@ export function parseQrString(raw: string): ParsedQrResult {
       const val = line.substring(colonIdx + 1).trim()
       const baseKey = stripParams(rawKey)
 
-      if (baseKey === "SUMMARY") result.title = unescapeVCardText(val)
-      else if (baseKey === "DTSTART") result.startDate = val
-      else if (baseKey === "DTEND") result.endDate = val
-      else if (baseKey === "LOCATION") result.location = unescapeVCardText(val)
-      else if (baseKey === "DESCRIPTION") result.description = unescapeVCardText(val)
-      else if (baseKey === "URL") result.url = val
+      if (inAlarm) {
+        if (baseKey === "TRIGGER") {
+          result.alarm = val
+        }
+      } else {
+        if (baseKey === "SUMMARY") result.title = unescapeVCardText(val)
+        else if (baseKey === "DTSTART") result.startDate = val
+        else if (baseKey === "DTEND") result.endDate = val
+        else if (baseKey === "LOCATION") result.location = unescapeVCardText(val)
+        else if (baseKey === "DESCRIPTION") result.description = unescapeVCardText(val)
+        else if (baseKey === "URL") result.url = val
+      }
     }
 
     return {
@@ -304,7 +352,7 @@ export function parseQrString(raw: string): ParsedQrResult {
   }
 
   // Zalo: https://zalo.me/phone
-  const zaloMatch = trimmed.match(/^https?:\/\/zalo\.me\/([^?/]+)/i)
+  const zaloMatch = trimmed.match(/^https?:\/\/zalo\.me\/([0-9+]+)/i)
   if (zaloMatch) {
     const recipient = zaloMatch[1] || ""
     return {

@@ -1,27 +1,36 @@
-import React from "react"
-import { useInspectorStore } from "@imify/stores/stores/inspector-store"
-import { WorkspaceConfigSidebarPanel, type WorkspaceConfigSidebarItem } from "@imify/ui"
-import { DisplayAccordion } from "./display-accordion"
-import { MetadataAccordion } from "./metadata-accordion"
-import { useTranslation } from "@imify/i18n"
+import React from "react";
+import { useInspectorStore } from "@imify/stores/stores/inspector-store";
+import {
+  WorkspaceConfigSidebarPanel,
+  type WorkspaceConfigSidebarItem,
+} from "@imify/ui";
+import { DisplayAccordion } from "./display-accordion";
+import { MetadataAccordion } from "./metadata-accordion";
+import { useTranslation } from "@imify/i18n";
 
-export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enableWideSidebarGrid?: boolean }) {
-  const { t } = useTranslation("inspector")
-  const exifSortMode = useInspectorStore((s) => s.exifSortMode)
-  const showSensitiveOnly = useInspectorStore((s) => s.showSensitiveOnly)
-  const paletteCount = useInspectorStore((s) => s.paletteCount)
-  const previewChannelMode = useInspectorStore((s) => s.previewChannelMode)
-  const colorBlindMode = useInspectorStore((s) => s.colorBlindMode)
-  const loupeEnabled = useInspectorStore((s) => s.loupeEnabled)
-  const loupeZoom = useInspectorStore((s) => s.loupeZoom)
+export function InspectorSidebarPanel({
+  enableWideSidebarGrid = false,
+}: {
+  enableWideSidebarGrid?: boolean;
+}) {
+  const { t } = useTranslation("inspector");
+  const exifSortMode = useInspectorStore((s) => s.exifSortMode);
+  const showSensitiveOnly = useInspectorStore((s) => s.showSensitiveOnly);
+  const paletteCount = useInspectorStore((s) => s.paletteCount);
+  const previewChannelMode = useInspectorStore((s) => s.previewChannelMode);
+  const colorBlindMode = useInspectorStore((s) => s.colorBlindMode);
+  const loupeEnabled = useInspectorStore((s) => s.loupeEnabled);
+  const loupeZoom = useInspectorStore((s) => s.loupeZoom);
 
-  const setExifSortMode = useInspectorStore((s) => s.setExifSortMode)
-  const setShowSensitiveOnly = useInspectorStore((s) => s.setShowSensitiveOnly)
-  const setPaletteCount = useInspectorStore((s) => s.setPaletteCount)
-  const setPreviewChannelMode = useInspectorStore((s) => s.setPreviewChannelMode)
-  const setColorBlindMode = useInspectorStore((s) => s.setColorBlindMode)
-  const setLoupeEnabled = useInspectorStore((s) => s.setLoupeEnabled)
-  const setLoupeZoom = useInspectorStore((s) => s.setLoupeZoom)
+  const setExifSortMode = useInspectorStore((s) => s.setExifSortMode);
+  const setShowSensitiveOnly = useInspectorStore((s) => s.setShowSensitiveOnly);
+  const setPaletteCount = useInspectorStore((s) => s.setPaletteCount);
+  const setPreviewChannelMode = useInspectorStore(
+    (s) => s.setPreviewChannelMode,
+  );
+  const setColorBlindMode = useInspectorStore((s) => s.setColorBlindMode);
+  const setLoupeEnabled = useInspectorStore((s) => s.setLoupeEnabled);
+  const setLoupeZoom = useInspectorStore((s) => s.setLoupeZoom);
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
@@ -40,7 +49,7 @@ export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enabl
           onLoupeEnabledChange={setLoupeEnabled}
           onLoupeZoomChange={setLoupeZoom}
         />
-      )
+      ),
     },
     {
       id: "metadata",
@@ -52,10 +61,14 @@ export function InspectorSidebarPanel({ enableWideSidebarGrid = false }: { enabl
           onExifSortModeChange={setExifSortMode}
           onShowSensitiveOnlyChange={setShowSensitiveOnly}
         />
-      )
-    }
-  ]
+      ),
+    },
+  ];
 
-  return <WorkspaceConfigSidebarPanel title={t("inspectorSettings")} items={sidebarItems} twoColumn={enableWideSidebarGrid} />
+  return (
+    <WorkspaceConfigSidebarPanel
+      items={sidebarItems}
+      twoColumn={enableWideSidebarGrid}
+    />
+  );
 }
-

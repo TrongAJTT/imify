@@ -40,6 +40,7 @@ import {
   useBatchStore,
   type SavedSetupPreset,
 } from "@imify/stores/stores/batch-store";
+import { FEATURE_PRESET_PREFIXES } from "@imify/core";
 
 interface FillSidebarProps {
   template: FillingTemplate;
@@ -74,7 +75,7 @@ export function FillSidebar({
   const applyPreset = useFillingStore((s) => s.applyPreset);
   const resetToDefault = useFillingStore((s) => s.resetToDefault);
 
-  const identifiedPresetId = `preset_filling_${template.id}`;
+  const identifiedPresetId = `${FEATURE_PRESET_PREFIXES.FILLING}_${template.id}`;
   const identifiedPresetName = `Filling #${template.name}`;
   const identifiedPresetColor = "#06b6d4";
 

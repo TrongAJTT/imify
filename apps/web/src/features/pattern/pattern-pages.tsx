@@ -1,46 +1,56 @@
-"use client"
+"use client";
 
-import dynamic from "next/dynamic"
-import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useRef, useState } from "react"
-import { PatternPresetSelectView } from "@imify/features/pattern/pattern-preset-select-view"
-import { PatternSidebarShell } from "@imify/features/pattern/pattern-sidebar-shell"
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { PatternPresetSelectView } from "@imify/features/pattern/pattern-preset-select-view";
+import { PatternSidebarShell } from "@imify/features/pattern/pattern-sidebar-shell";
 import {
   clonePatternPresetConfig,
   type PatternPresetConfig,
   usePatternPresetStore,
-} from "@imify/stores/stores/pattern-preset-store"
-import { usePatternStore } from "@imify/stores/stores/pattern-store"
-import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui"
-import { useWorkspaceSidebar } from "@/components/layout/workspace-layout"
-import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
-import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
-import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid"
-import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action"
+} from "@imify/stores/stores/pattern-preset-store";
+import { usePatternStore } from "@imify/stores/stores/pattern-store";
+import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui";
+import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
+import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb";
+import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid";
+import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action";
+import { useTranslation } from "@imify/i18n/index";
 
-const AUTO_SAVE_DELAY_MS = 420
+const AUTO_SAVE_DELAY_MS = 420;
 const PatternTab = dynamic(
-  () => import("@imify/features/pattern/pattern-tab").then((module) => module.PatternTab),
-  { ssr: false }
-)
+  () =>
+    import("@imify/features/pattern/pattern-tab").then(
+      (module) => module.PatternTab,
+    ),
+  { ssr: false },
+);
 
 function usePatternPresetHydrated(): boolean {
-  const [hydrated, setHydrated] = useState(false)
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setHydrated(usePatternPresetStore.persist.hasHydrated())
-    const unsubStart = usePatternPresetStore.persist.onHydrate(() => setHydrated(false))
-    const unsubFinish = usePatternPresetStore.persist.onFinishHydration(() => setHydrated(true))
+    setHydrated(usePatternPresetStore.persist.hasHydrated());
+    const unsubStart = usePatternPresetStore.persist.onHydrate(() =>
+      setHydrated(false),
+    );
+    const unsubFinish = usePatternPresetStore.persist.onFinishHydration(() =>
+      setHydrated(true),
+    );
     return () => {
-      unsubStart()
-      unsubFinish()
-    }
-  }, [])
+      unsubStart();
+      unsubFinish();
+    };
+  }, []);
 
-  return hydrated
+  return hydrated;
 }
 
-function extractPatternPresetConfig(patternState: ReturnType<typeof usePatternStore.getState>): PatternPresetConfig {
+function extractPatternPresetConfig(
+  patternState: ReturnType<typeof usePatternStore.getState>,
+): PatternPresetConfig {
   return clonePatternPresetConfig({
     canvas: patternState.canvas,
     settings: patternState.settings,
@@ -59,7 +69,8 @@ function extractPatternPresetConfig(patternState: ReturnType<typeof usePatternSt
     exportMozJpegProgressive: patternState.exportMozJpegProgressive,
     exportMozJpegChromaSubsampling: patternState.exportMozJpegChromaSubsampling,
     exportPngTinyMode: patternState.exportPngTinyMode,
-    exportPngCleanTransparentPixels: patternState.exportPngCleanTransparentPixels,
+    exportPngCleanTransparentPixels:
+      patternState.exportPngCleanTransparentPixels,
     exportPngAutoGrayscale: patternState.exportPngAutoGrayscale,
     exportPngDithering: patternState.exportPngDithering,
     exportPngDitheringLevel: patternState.exportPngDitheringLevel,
@@ -74,11 +85,11 @@ function extractPatternPresetConfig(patternState: ReturnType<typeof usePatternSt
     exportBmpDithering: patternState.exportBmpDithering,
     exportBmpDitheringLevel: patternState.exportBmpDitheringLevel,
     exportTiffColorMode: patternState.exportTiffColorMode,
-  })
+  });
 }
 
 function applyPatternPresetConfig(config: PatternPresetConfig): void {
-  const nextConfig = clonePatternPresetConfig(config)
+  const nextConfig = clonePatternPresetConfig(config);
 
   usePatternStore.setState((state) => ({
     ...state,
@@ -122,47 +133,65 @@ function applyPatternPresetConfig(config: PatternPresetConfig): void {
     exportBmpDithering: nextConfig.exportBmpDithering,
     exportBmpDitheringLevel: nextConfig.exportBmpDitheringLevel,
     exportTiffColorMode: nextConfig.exportTiffColorMode,
-  }))
+  }));
 }
 
 export function PatternLandingPage() {
-  const enableWideSidebarGrid = useWideSidebarGridEnabled()
-  const router = useRouter()
-  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
-  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
-  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
-  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
-  const isHydrated = usePatternPresetHydrated()
-  const presets = usePatternPresetStore((state) => state.presets)
-  const ensureDefaultPreset = usePatternPresetStore((state) => state.ensureDefaultPreset)
-  const setPresetViewMode = usePatternPresetStore((state) => state.setPresetViewMode)
-  const applyPreset = usePatternPresetStore((state) => state.applyPreset)
-  const saveCurrentPreset = usePatternPresetStore((state) => state.saveCurrentPreset)
-  const updatePresetMeta = usePatternPresetStore((state) => state.updatePresetMeta)
-  const togglePresetPin = usePatternPresetStore((state) => state.togglePresetPin)
-  const deletePreset = usePatternPresetStore((state) => state.deletePreset)
-  const patternState = usePatternStore()
+  const { t } = useTranslation("common");
+  const enableWideSidebarGrid = useWideSidebarGridEnabled();
+  const router = useRouter();
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection);
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions);
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore(
+    (state) => state.setBreadcrumb,
+  );
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader);
+  const isHydrated = usePatternPresetHydrated();
+  const presets = usePatternPresetStore((state) => state.presets);
+  const ensureDefaultPreset = usePatternPresetStore(
+    (state) => state.ensureDefaultPreset,
+  );
+  const setPresetViewMode = usePatternPresetStore(
+    (state) => state.setPresetViewMode,
+  );
+  const applyPreset = usePatternPresetStore((state) => state.applyPreset);
+  const saveCurrentPreset = usePatternPresetStore(
+    (state) => state.saveCurrentPreset,
+  );
+  const updatePresetMeta = usePatternPresetStore(
+    (state) => state.updatePresetMeta,
+  );
+  const togglePresetPin = usePatternPresetStore(
+    (state) => state.togglePresetPin,
+  );
+  const deletePreset = usePatternPresetStore((state) => state.deletePreset);
+  const patternState = usePatternStore();
 
-  useWorkspaceSidebar(<PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />, "Pattern Settings")
+  useWorkspaceSidebar(
+    <PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
+    t("aboutThisTool"),
+  );
 
   useEffect(() => {
-    setHeaderSection("Pattern Generator")
-    setHeaderActions(null)
-    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="pattern-generator" />)
-    return () => resetHeader()
-  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
+    setHeaderSection("Pattern Generator");
+    setHeaderActions(null);
+    setHeaderBreadcrumb(
+      <FeatureBreadcrumb compact rootToolId="pattern-generator" />,
+    );
+    return () => resetHeader();
+  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
 
   useEffect(() => {
     if (!isHydrated) {
-      return
+      return;
     }
-    ensureDefaultPreset()
+    ensureDefaultPreset();
 
-    setPresetViewMode("select")
-  }, [ensureDefaultPreset, isHydrated, setPresetViewMode])
+    setPresetViewMode("select");
+  }, [ensureDefaultPreset, isHydrated, setPresetViewMode]);
 
   if (!isHydrated) {
-    return <WorkspaceLoadingState title="Loading pattern presets..." />
+    return <WorkspaceLoadingState title="Loading pattern presets..." />;
   }
 
   return (
@@ -170,103 +199,128 @@ export function PatternLandingPage() {
       presets={presets}
       activePresetId={null}
       onOpenPreset={(id) => {
-        const preset = presets.find((entry) => entry.id === id)
-        if (!preset) return
-        applyPatternPresetConfig(preset.config)
-        applyPreset(id)
-        router.push(`/pattern-generator/work?id=${id}`)
+        const preset = presets.find((entry) => entry.id === id);
+        if (!preset) return;
+        applyPatternPresetConfig(preset.config);
+        applyPreset(id);
+        router.push(`/pattern-generator/work?id=${id}`);
       }}
       onCreatePreset={(name, color) => {
         const createdId = saveCurrentPreset({
           name,
           highlightColor: color,
           config: extractPatternPresetConfig(patternState),
-        })
-        router.push(`/pattern-generator/work?id=${createdId}`)
+        });
+        router.push(`/pattern-generator/work?id=${createdId}`);
       }}
       onUpdatePresetMeta={updatePresetMeta}
       onTogglePresetPin={togglePresetPin}
       onDeletePreset={deletePreset}
     />
-  )
+  );
 }
 
 export function PatternWorkPage({ presetId }: { presetId: string }) {
-  const enableWideSidebarGrid = useWideSidebarGridEnabled()
-  const isHydrated = usePatternPresetHydrated()
-  const router = useRouter()
-  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
-  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions)
-  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
-  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
-  const presets = usePatternPresetStore((state) => state.presets)
-  const activePresetId = usePatternPresetStore((state) => state.activePresetId)
-  const applyPreset = usePatternPresetStore((state) => state.applyPreset)
-  const setPresetViewMode = usePatternPresetStore((state) => state.setPresetViewMode)
-  const syncActivePresetConfig = usePatternPresetStore((state) => state.syncActivePresetConfig)
-  const ensureDefaultPreset = usePatternPresetStore((state) => state.ensureDefaultPreset)
-  const appliedPresetIdRef = useRef<string | null>(null)
-  const patternState = usePatternStore()
+  const { t } = useTranslation(["pattern", "common"]);
+  const enableWideSidebarGrid = useWideSidebarGridEnabled();
+  const isHydrated = usePatternPresetHydrated();
+  const router = useRouter();
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection);
+  const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions);
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore(
+    (state) => state.setBreadcrumb,
+  );
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader);
+  const presets = usePatternPresetStore((state) => state.presets);
+  const activePresetId = usePatternPresetStore((state) => state.activePresetId);
+  const applyPreset = usePatternPresetStore((state) => state.applyPreset);
+  const setPresetViewMode = usePatternPresetStore(
+    (state) => state.setPresetViewMode,
+  );
+  const syncActivePresetConfig = usePatternPresetStore(
+    (state) => state.syncActivePresetConfig,
+  );
+  const ensureDefaultPreset = usePatternPresetStore(
+    (state) => state.ensureDefaultPreset,
+  );
+  const appliedPresetIdRef = useRef<string | null>(null);
+  const patternState = usePatternStore();
 
-  useWorkspaceSidebar(<PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />, "Pattern Settings")
+  useWorkspaceSidebar(
+    <PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
+    `${t("common:toolSettings")} - ${t("title")}`,
+  );
 
   const preset = useMemo(
     () => presets.find((entry) => entry.id === presetId) ?? null,
-    [presetId, presets]
-  )
+    [presetId, presets],
+  );
 
   useEffect(() => {
-    setHeaderSection("Pattern Generator")
-    setHeaderActions(null)
+    setHeaderSection("Pattern Generator");
+    setHeaderActions(null);
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
         rootToolId="pattern-generator"
         activeLabel={preset?.name ?? null}
         onRootClick={() => router.push("/pattern-generator")}
-      />
-    )
-    return () => resetHeader()
-  }, [preset?.name, resetHeader, router, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
+      />,
+    );
+    return () => resetHeader();
+  }, [
+    preset?.name,
+    resetHeader,
+    router,
+    setHeaderActions,
+    setHeaderBreadcrumb,
+    setHeaderSection,
+  ]);
 
   useEffect(() => {
     if (!isHydrated) {
-      return
+      return;
     }
     if (presets.length === 0) {
-      ensureDefaultPreset()
+      ensureDefaultPreset();
     }
-  }, [ensureDefaultPreset, isHydrated, presets.length])
+  }, [ensureDefaultPreset, isHydrated, presets.length]);
 
   useEffect(() => {
     if (!isHydrated || !preset) {
-      return
+      return;
     }
     if (appliedPresetIdRef.current === preset.id) {
-      return
+      return;
     }
-    applyPatternPresetConfig(preset.config)
-    applyPreset(preset.id)
-    setPresetViewMode("workspace")
-    appliedPresetIdRef.current = preset.id
-  }, [applyPreset, isHydrated, preset, setPresetViewMode])
+    applyPatternPresetConfig(preset.config);
+    applyPreset(preset.id);
+    setPresetViewMode("workspace");
+    appliedPresetIdRef.current = preset.id;
+  }, [applyPreset, isHydrated, preset, setPresetViewMode]);
 
   useEffect(() => {
     if (!isHydrated || !preset || activePresetId !== preset.id) {
-      return
+      return;
     }
 
     const timeout = window.setTimeout(() => {
-      syncActivePresetConfig(extractPatternPresetConfig(patternState))
-    }, AUTO_SAVE_DELAY_MS)
+      syncActivePresetConfig(extractPatternPresetConfig(patternState));
+    }, AUTO_SAVE_DELAY_MS);
 
     return () => {
-      window.clearTimeout(timeout)
-    }
-  }, [activePresetId, isHydrated, patternState, preset, syncActivePresetConfig])
+      window.clearTimeout(timeout);
+    };
+  }, [
+    activePresetId,
+    isHydrated,
+    patternState,
+    preset,
+    syncActivePresetConfig,
+  ]);
 
   if (!isHydrated) {
-    return <WorkspaceLoadingState title="Loading pattern workspace..." />
+    return <WorkspaceLoadingState title="Loading pattern workspace..." />;
   }
 
   if (!preset) {
@@ -281,12 +335,12 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
           />
         }
       />
-    )
+    );
   }
 
   if (activePresetId !== preset.id) {
-    return <WorkspaceLoadingState title="Loading pattern workspace..." />
+    return <WorkspaceLoadingState title="Loading pattern workspace..." />;
   }
 
-  return <PatternTab />
+  return <PatternTab />;
 }

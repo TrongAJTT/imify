@@ -127,7 +127,7 @@ export function I18nTemplateDialog({
             </label>
             <input
               type="text"
-              placeholder="e.g. Jean Dupont"
+              placeholder="e.g. James Thomas"
               value={authorName}
               onChange={(e) => setAuthorName(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-800 rounded-lg bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500"
@@ -136,11 +136,11 @@ export function I18nTemplateDialog({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-              GitHub Profile URL (Optional)
+              Github URL (Optional)
             </label>
             <input
               type="text"
-              placeholder="e.g. https://github.com/jeandupont"
+              placeholder="e.g. https://github.com/jamesthomas"
               value={authorGithub}
               onChange={(e) => setAuthorGithub(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-800 rounded-lg bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500"

@@ -21,6 +21,7 @@ import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loade
 import { ModelVariantDialog } from "./model-variant-dialog";
 import { useTranslation } from "@imify/i18n";
 import { AiEngineAccordionCard } from "../shared/ai-engine-accordion-card";
+import { FEATURE_PRESET_PREFIXES } from "@imify/core";
 
 import { useBackgroundRemoverShowcaseContent } from "./remover-preset-info-panel";
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
@@ -29,7 +30,7 @@ export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings";
 
 const BG_REMOVER_PRESET: SavedSetupPreset = {
   ...VIRTUAL_DEFAULT_PNG_PRESET,
-  id: "preset_background-remover",
+  id: FEATURE_PRESET_PREFIXES.BACKGROUND_REMOVER,
   name: "Background Remover",
   highlightColor: "#ec4899",
 };

@@ -3,7 +3,7 @@
   "subtitle": "The Powerful Image Toolkit",
   "devModeOn": "DEV MODE ON",
   "aboutTitle": "About the project",
-  "aboutText1": "Imify was born out of a simple need: <1>Privacy-First</1> image processing. Unlike online converters that upload your data to remote servers, Imify handles every single byte <2>locally</2> right in your browser memory.",
+  "aboutText1": "Imify was born out of a simple need: Privacy-First image processing. Unlike online converters that upload your data to remote servers, Imify handles every single byte locally right in your browser memory.",
   "aboutText2": "Built for developers, designers, and privacy enthusiasts who need quick, reliable, and secure image formatting without compromise.",
   "techTitle": "Key Technologies",
   "linksTitle": "Quick Links & Support",
@@ -11,10 +11,46 @@
   "githubRepository": "GitHub Repository",
   "sponsorAuthor": "Sponsor Author",
   "attribution": "Attribution",
-  "moreApps": "More Applications",
-  "reportBug": "Report Bug",
+  "guides": "Guides",
+  "installApp": "Install App",
   "craftedBy": "Crafted with passion by",
-  "whatsNew": "What's New",
+  "changelogs": "Changelogs",
   "termsOfUse": "Terms of Use",
-  "privacyPolicy": "Privacy Policy"
+  "privacyPolicy": "Privacy Policy",
+  "changelogsDialog": {
+    "title": "Changelogs",
+    "subtitle": "Latest changes and improvements",
+    "version": "Version",
+    "releaseDate": "Release Date",
+    "back": "Back",
+    "close": "Close",
+    "noReleaseNotes": "No release notes available for this version.",
+    "loadingChangelog": "Loading update logs...",
+    "loadError": "Could not load changelog content."
+  },
+  "updatedDialog": {
+    "title": "Imify has been updated!",
+    "subtitle": "Discover the latest changes and additions.",
+    "btnChangelogs": "View updates changelog",
+    "btnExplore": "Explore now"
+  },
+  "pwaDialog": {
+    "title": "Install Imify as App",
+    "desc": "Imify can be installed directly as a Progressive Web App (PWA) on your device.",
+    "benefitTitle": "Benefits of installing:",
+    "benefit1": "Runs 100% offline without requiring internet access",
+    "benefit2": "Quick launch from your home screen or taskbar",
+    "benefit3": "Standalone desktop window experience with no browser address bar clutter",
+    "btnInstall": "Install Now",
+    "btnCancel": "Cancel",
+    "alreadyInstalled": "PWA app is already installed or device does not support installation."
+  },
+  "donateDialog": {
+    "title": "Thanks for choosing Imify!",
+    "desc": "As an open-source project dedicated to the community, Imify has been and will always be free. If it helps your work, please consider supporting the author to help cover living expenses, maintain our domains, and fuel future features and bug fixes for everyone."
+  },
+  "attributionDialog": {
+    "title": "Acknowledgements",
+    "subtitle": "Imify is proud to be built using the following open-source technologies and free licenses"
+  }
 }

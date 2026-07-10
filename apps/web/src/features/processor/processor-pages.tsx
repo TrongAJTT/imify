@@ -47,7 +47,7 @@ function getContextToolId(
 }
 
 export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
-  const { t } = useTranslation("processor");
+  const { t } = useTranslation(["processor", "common"]);
   const router = useRouter();
   const setupContext = useBatchStore((state) => state.setupContext);
   const setSetupContext = useBatchStore((state) => state.setSetupContext);
@@ -106,7 +106,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
     setPresetViewMode(context, "select");
   }, [context, isBatchStoreRehydrated, setPresetViewMode]);
 
-  useWorkspaceSidebar(sidebar, "Processor Settings");
+  useWorkspaceSidebar(sidebar, t("common:aboutThisTool"));
 
   useEffect(() => {
     const contextLabel = getContextLabel(context);
@@ -188,7 +188,10 @@ export function ProcessorWorkPage({
       performancePreferences,
     ],
   );
-  useWorkspaceSidebar(sidebar, "Processor Settings");
+  useWorkspaceSidebar(
+    sidebar,
+    `${t("common:toolSettings")} - ${t("processor:title")}`,
+  );
 
   const router = useRouter();
   const setupContext = useBatchStore((state) => state.setupContext);

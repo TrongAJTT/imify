@@ -16,6 +16,7 @@ import { useImageUpscalerStore, type SavedSetupPreset } from "@imify/stores";
 import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
 import { ModelVariantDialog } from "./model-variant-dialog";
 import { AiEngineAccordionCard } from "../shared/ai-engine-accordion-card";
+import { FEATURE_PRESET_PREFIXES } from "@imify/core";
 
 import { UPSCALER_PANEL_CONTENT } from "./upscaler-preset-info-panel";
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
@@ -24,7 +25,7 @@ export const UPSCALER_SIDEBAR_PANEL_ID = "upscaler-settings";
 
 const UPSCALER_PRESET: SavedSetupPreset = {
   ...VIRTUAL_DEFAULT_PNG_PRESET,
-  id: "preset_upscaler",
+  id: FEATURE_PRESET_PREFIXES.IMAGE_UPSCALER,
   name: "Upscaler",
   highlightColor: "#a855f7", // Purple color theme
 };

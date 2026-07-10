@@ -1,70 +1,86 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useCallback, useEffect, useRef, useState } from "react"
-import { Bug, Github, Globe, Heart, LayoutGrid, Library, X } from "lucide-react"
-import { IMIFY_LINKS } from "@imify/core"
-import { getAppMetadata } from "@imify/core/app-metadata"
-import { useDevModeEnabled } from "@imify/features/dev-mode/dev-mode-storage"
-import { useToast } from "@imify/core/hooks/use-toast"
-import { ToastContainer } from "@imify/ui/components/toast-container"
-import { BaseDialog } from "@imify/ui/ui/base-dialog"
-import { Button } from "@imify/ui/ui/button"
-import { BodyText, Kicker, MutedText, Subheading } from "@imify/ui/ui/typography"
-import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
-import { Tooltip } from "../shared/tooltip"
-import { BugReportDialog } from "./bug-report-dialog"
-import { WhatsNewDialog } from "./whats-new-dialog"
-import { useTranslation, Trans } from "@imify/i18n"
+import React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Download,
+  Github,
+  Globe,
+  Heart,
+  BadgeQuestionMark,
+  Library,
+  X,
+} from "lucide-react";
+import { IMIFY_LINKS } from "@imify/core";
+import { getAppMetadata } from "@imify/core/app-metadata";
+import { useDevModeEnabled } from "@imify/features/dev-mode/dev-mode-storage";
+import { useToast } from "@imify/core/hooks/use-toast";
+import { ToastContainer } from "@imify/ui/components/toast-container";
+import { BaseDialog } from "@imify/ui/ui/base-dialog";
+import { Button } from "@imify/ui/ui/button";
+import {
+  BodyText,
+  Kicker,
+  MutedText,
+  Subheading,
+} from "@imify/ui/ui/typography";
+import {
+  FEATURE_MEDIA_ASSETS,
+  resolveFeatureMediaAssetUrl,
+} from "../shared/media-assets";
+import { PwaInstallDialog } from "./pwa-install-dialog";
+import { ChangelogsDialog } from "./changelogs-dialog";
+import { GuidesDialog } from "./guides-dialog";
+import { useTranslation, Trans } from "@imify/i18n";
 
-const appMetadata = getAppMetadata()
-const DEV_MODE_CLICK_TARGET = 7
-const DEV_MODE_CLICK_TIMEOUT_MS = 3000
+const appMetadata = getAppMetadata();
+const DEV_MODE_CLICK_TARGET = 7;
+const DEV_MODE_CLICK_TIMEOUT_MS = 3000;
 
 interface AboutDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onOpenAboutAttribution: () => void
-  onOpenDonate: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  onOpenAboutAttribution: () => void;
+  onOpenDonate: () => void;
 }
 
 function useEasterEggClicker(onActivate: () => void) {
-  const clickCountRef = useRef(0)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const clickCountRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleClick = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    clickCountRef.current += 1
+    if (timerRef.current) clearTimeout(timerRef.current);
+    clickCountRef.current += 1;
     if (clickCountRef.current >= DEV_MODE_CLICK_TARGET) {
-      clickCountRef.current = 0
-      onActivate()
-      return
+      clickCountRef.current = 0;
+      onActivate();
+      return;
     }
     timerRef.current = setTimeout(() => {
-      clickCountRef.current = 0
-      timerRef.current = null
-    }, DEV_MODE_CLICK_TIMEOUT_MS)
-  }, [onActivate])
+      clickCountRef.current = 0;
+      timerRef.current = null;
+    }, DEV_MODE_CLICK_TIMEOUT_MS);
+  }, [onActivate]);
 
   useEffect(
     () => () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
+      if (timerRef.current) clearTimeout(timerRef.current);
     },
-    []
-  )
-  return handleClick
+    [],
+  );
+  return handleClick;
 }
 
 function ActionLink({
   href,
   children,
   emphasized = false,
-  className = ""
+  className = "",
 }: {
-  href: string
-  children: React.ReactNode
-  emphasized?: boolean
-  className?: string
+  href: string;
+  children: React.ReactNode;
+  emphasized?: boolean;
+  className?: string;
 }) {
   return (
     <a
@@ -79,33 +95,43 @@ function ActionLink({
     >
       {children}
     </a>
-  )
+  );
 }
 
 export function AboutDialog({
   isOpen,
   onClose,
   onOpenAboutAttribution,
-  onOpenDonate
+  onOpenDonate,
 }: AboutDialogProps) {
-  const { t } = useTranslation("about")
-  const iconSrc = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.imifyLogoPng)
-  const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled()
-  const { toasts, hide, success, warning } = useToast()
-  const [isBugReportDialogOpen, setIsBugReportDialogOpen] = useState(false)
-  const [isWhatsNewDialogOpen, setIsWhatsNewDialogOpen] = useState(false)
+  const { t } = useTranslation("about");
+  const iconSrc = resolveFeatureMediaAssetUrl(
+    FEATURE_MEDIA_ASSETS.brand.imifyLogoPng,
+  );
+  const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
+  const { toasts, hide, success, warning } = useToast();
+  const [isInstallDialogOpen, setIsInstallDialogOpen] = useState(false);
+  const [isChangelogsDialogOpen, setIsChangelogsDialogOpen] = useState(false);
+  const [isGuidesDialogOpen, setIsGuidesDialogOpen] = useState(false);
 
   const activateDevMode = useCallback(async () => {
     if (devModeEnabled) {
-      warning("Developer Mode", "Already enabled. Go to Settings -> Developer.")
-      return
+      warning(
+        "Developer Mode",
+        "Already enabled. Go to Settings -> Developer.",
+      );
+      return;
     }
-    await setDevModeEnabled(true)
-    success("Developer Mode enabled!", "Open Settings to access the Developer tab.", 4000)
-  }, [devModeEnabled, setDevModeEnabled, success, warning])
+    await setDevModeEnabled(true);
+    success(
+      "Developer Mode enabled!",
+      "Open Settings to access the Developer tab.",
+      4000,
+    );
+  }, [devModeEnabled, setDevModeEnabled, success, warning]);
 
-  const handleIconClick = useEasterEggClicker(activateDevMode)
-  const handleVersionClick = useEasterEggClicker(activateDevMode)
+  const handleIconClick = useEasterEggClicker(activateDevMode);
+  const handleVersionClick = useEasterEggClicker(activateDevMode);
 
   return (
     <BaseDialog
@@ -144,7 +170,9 @@ export function AboutDialog({
             )}
           </button>
           <div>
-            <Subheading className="text-3xl font-black tracking-tight">{t("title", "Imify")}</Subheading>
+            <Subheading className="text-3xl font-black tracking-tight">
+              {t("title", "Imify")}
+            </Subheading>
             <Kicker className="text-sm text-sky-500 dark:text-sky-400 tracking-widest">
               {t("subtitle", "The Powerful Image Toolkit")}
             </Kicker>
@@ -172,25 +200,23 @@ export function AboutDialog({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-600 dark:text-slate-300">
           <div className="space-y-4">
-            <Kicker className="text-xs tracking-widest">{t("aboutTitle", "About the project")}</Kicker>
-            <BodyText className="leading-relaxed">
-              <Trans i18nKey="about:aboutText1">
-                Imify was born out of a simple need: <span className="text-slate-900 dark:text-white font-medium">Privacy-First</span> image processing. Unlike online converters that upload your data to remote servers, Imify handles every single byte <span className="text-slate-900 dark:text-white font-medium">locally</span> right in your browser memory.
-              </Trans>
-            </BodyText>
-            <BodyText className="leading-relaxed">
-              {t("aboutText2", "Built for developers, designers, and privacy enthusiasts who need quick, reliable, and secure image formatting without compromise.")}
-            </BodyText>
+            <Kicker className="text-xs tracking-widest">
+              {t("aboutTitle", "About the project")}
+            </Kicker>
+            <BodyText className="leading-relaxed">{t("aboutText1")}</BodyText>
+            <BodyText className="leading-relaxed">{t("aboutText2")}</BodyText>
           </div>
           <div className="space-y-4">
-            <Kicker className="text-xs tracking-widest">{t("techTitle", "Key Technologies")}</Kicker>
+            <Kicker className="text-xs tracking-widest">
+              {t("techTitle", "Key Technologies")}
+            </Kicker>
             <ul className="grid grid-cols-1 gap-2">
               {[
                 "Plasmo Extension Framework",
                 "OffscreenCanvas API",
                 "Rust/WASM Image Engines",
                 "Modern AVIF & JXL Support",
-                "TypeScript + Tailwind CSS"
+                "TypeScript + Tailwind CSS",
               ].map((label) => (
                 <li key={label} className="flex items-center gap-2 text-sm">
                   <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />
@@ -203,7 +229,9 @@ export function AboutDialog({
 
         <div className="space-y-8 pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
           <div className="space-y-4">
-            <Kicker className="text-xs tracking-widest text-center text-slate-400 uppercase">{t("linksTitle", "Quick Links & Support")}</Kicker>
+            <Kicker className="text-xs tracking-widest text-center text-slate-400 uppercase">
+              {t("linksTitle", "Quick Links & Support")}
+            </Kicker>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <ActionLink
                 href={IMIFY_LINKS.website}
@@ -213,10 +241,7 @@ export function AboutDialog({
                 {t("officialWebsite", "Official Website")}
               </ActionLink>
 
-              <ActionLink
-                href={IMIFY_LINKS.repository}
-                emphasized
-              >
+              <ActionLink href={IMIFY_LINKS.repository} emphasized>
                 <Github size={16} />
                 {t("githubRepository", "GitHub Repository")}
               </ActionLink>
@@ -239,25 +264,31 @@ export function AboutDialog({
                 {t("attribution", "Attribution")}
               </button>
 
-              <ActionLink href={IMIFY_LINKS.moreApps}>
-                <LayoutGrid size={16} />
-                {t("moreApps", "More Applications")}
-              </ActionLink>
+              <button
+                type="button"
+                onClick={() => setIsGuidesDialogOpen(true)}
+                className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+              >
+                <BadgeQuestionMark size={16} />
+                {t("guides", "Guides")}
+              </button>
 
               <button
                 type="button"
-                onClick={() => setIsBugReportDialogOpen(true)}
+                onClick={() => setIsInstallDialogOpen(true)}
                 className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
               >
-                <Bug size={16} />
-                {t("reportBug", "Report Bug")}
+                <Download size={16} />
+                {t("installApp", "Install App")}
               </button>
             </div>
           </div>
 
           <div className="flex flex-col items-center gap-5 text-center">
             <div className="space-y-1 space-x-1">
-              <Kicker className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{t("craftedBy", "Crafted with passion by")}</Kicker>
+              <Kicker className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                {t("craftedBy", "Crafted with passion by")}
+              </Kicker>
               <a
                 href={IMIFY_LINKS.authorProfile}
                 target="_blank"
@@ -271,10 +302,10 @@ export function AboutDialog({
             <MutedText className="flex items-center justify-center gap-4 text-[11px] font-semibold">
               <button
                 type="button"
-                onClick={() => setIsWhatsNewDialogOpen(true)}
+                onClick={() => setIsChangelogsDialogOpen(true)}
                 className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
               >
-                {t("whatsNew", "What's New")}
+                {t("changelogs", "Changelogs")}
               </button>
               <span className="text-slate-200 dark:text-slate-800">/</span>
               <a
@@ -299,15 +330,19 @@ export function AboutDialog({
         </div>
       </div>
 
-      <BugReportDialog
-        isOpen={isBugReportDialogOpen}
-        onClose={() => setIsBugReportDialogOpen(false)}
+      <PwaInstallDialog
+        isOpen={isInstallDialogOpen}
+        onClose={() => setIsInstallDialogOpen(false)}
       />
-      <WhatsNewDialog
-        isOpen={isWhatsNewDialogOpen}
-        onClose={() => setIsWhatsNewDialogOpen(false)}
+      <ChangelogsDialog
+        isOpen={isChangelogsDialogOpen}
+        onClose={() => setIsChangelogsDialogOpen(false)}
+      />
+      <GuidesDialog
+        isOpen={isGuidesDialogOpen}
+        onClose={() => setIsGuidesDialogOpen(false)}
       />
       <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>
-  )
+  );
 }

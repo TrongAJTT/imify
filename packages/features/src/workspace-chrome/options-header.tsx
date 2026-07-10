@@ -13,6 +13,8 @@ import {
   Sun,
   Code2,
   Star,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { Tooltip } from "../shared/tooltip";
 import { useTranslation } from "@imify/i18n";
@@ -68,7 +70,7 @@ function TitleBarButton({
 }: {
   children: React.ReactNode;
   onClick: () => void;
-  tooltipText: string;
+  tooltipText?: string;
   isDonate?: boolean;
   className?: string;
   label?: string;
@@ -89,7 +91,11 @@ function TitleBarButton({
     </button>
   );
 
-  return <Tooltip content={tooltipText}>{button}</Tooltip>;
+  return tooltipText ? (
+    <Tooltip content={tooltipText}>{button}</Tooltip>
+  ) : (
+    button
+  );
 }
 
 export function WorkspaceOptionsHeader({
@@ -122,6 +128,30 @@ export function WorkspaceOptionsHeader({
   const isDesktop = useIsDesktopLayout();
   const [isToolsMenuOpen, setIsToolsMenuOpen] = React.useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = React.useState(false);
+
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof document === "undefined") return;
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (typeof document === "undefined") return;
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error("Error attempting to enable full-screen mode:", err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
   const closeToolsMenuTimerRef = React.useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -232,7 +262,7 @@ export function WorkspaceOptionsHeader({
               />
             </button>
             {isToolsMenuOpen ? (
-              <div className="absolute left-0 top-[calc(100%+8px)] z-30 w-[min(92vw,520px)] rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+              <div className="fixed left-4 right-4 top-14 sm:absolute sm:left-0 sm:right-auto sm:top-[calc(100%+8px)] z-30 sm:w-[520px] w-auto rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
                 <div className="space-y-4">
                   {toolsMenuGroups?.map((group) => (
                     <div key={group.title} className="space-y-2">
@@ -369,6 +399,17 @@ export function WorkspaceOptionsHeader({
               {isDark ? <Moon size={18} /> : <Sun size={18} />}
             </TitleBarButton>
             <TitleBarButton
+              onClick={toggleFullscreen}
+              tooltipText={
+                isFullscreen
+                  ? t("header.tooltips.exitFullscreen")
+                  : t("header.tooltips.enterFullscreen")
+              }
+              className="text-slate-500/90 hover:text-slate-700 dark:text-slate-400/50 dark:hover:text-slate-200"
+            >
+              {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            </TitleBarButton>
+            <TitleBarButton
               onClick={onOpenAssetManagement}
               tooltipText={t("header.tooltips.assetManagement")}
               className="text-emerald-500/90 hover:text-emerald-600 dark:text-emerald-400/50 dark:hover:text-emerald-300"
@@ -403,44 +444,12 @@ export function WorkspaceOptionsHeader({
           <div className="relative">
             <TitleBarButton
               onClick={() => setIsMoreMenuOpen((prev) => !prev)}
-              tooltipText={t("header.tooltips.moreActions")}
               className="border border-slate-200 dark:border-slate-700"
             >
               <Menu size={18} />
             </TitleBarButton>
             {isMoreMenuOpen ? (
               <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-[180px] rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                <a
-                  href={IMIFY_LINKS.repository}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setIsMoreMenuOpen(false)}
-                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-amber-500 transition-colors hover:bg-amber-50/50 dark:text-amber-450 dark:hover:bg-amber-950/15"
-                >
-                  <Star
-                    size={16}
-                    fill="currentColor"
-                    className="text-amber-400 dark:text-amber-500 fill-amber-400 dark:fill-amber-500 shrink-0"
-                  />
-                  <span>{t("header.menu.github", { count: stars })}</span>
-                </a>
-                <div className="h-px bg-slate-100 dark:bg-slate-800" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    onOpenDonate();
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-450 dark:hover:bg-rose-950/30"
-                >
-                  <Heart
-                    size={16}
-                    fill="currentColor"
-                    className="text-rose-600 dark:text-rose-450"
-                  />
-                  <span>{t("header.menu.donate")}</span>
-                </button>
-                <div className="h-px bg-slate-100 dark:bg-slate-800" />
                 <button
                   type="button"
                   onClick={() => {
@@ -464,6 +473,35 @@ export function WorkspaceOptionsHeader({
                     {isDark
                       ? t("header.menu.lightMode")
                       : t("header.menu.darkMode")}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleFullscreen();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                >
+                  {isFullscreen ? (
+                    <Minimize2
+                      size={16}
+                      className="text-slate-500/90 dark:text-slate-400/50"
+                    />
+                  ) : (
+                    <Maximize2
+                      size={16}
+                      className="text-slate-500/90 dark:text-slate-400/50"
+                    />
+                  )}
+                  <span>
+                    {isFullscreen
+                      ? t("header.menu.exitFullscreen", {
+                          defaultValue: "Exit Fullscreen",
+                        })
+                      : t("header.menu.enterFullscreen", {
+                          defaultValue: "Enter Fullscreen",
+                        })}
                   </span>
                 </button>
                 <button
@@ -523,6 +561,41 @@ export function WorkspaceOptionsHeader({
                     className="text-slate-500/90 dark:text-slate-400/50"
                   />
                   <span>{t("header.menu.settings")}</span>
+                </button>
+
+                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+                <a
+                  href={IMIFY_LINKS.repository}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsMoreMenuOpen(false)}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-amber-500 transition-colors hover:bg-amber-50/50 dark:text-amber-450 dark:hover:bg-amber-950/15"
+                >
+                  <Star
+                    size={16}
+                    fill="currentColor"
+                    className="text-amber-400 dark:text-amber-500 fill-amber-400 dark:fill-amber-500 shrink-0"
+                  />
+                  <span>{t("header.menu.github", { count: stars })}</span>
+                </a>
+
+                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenDonate();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-450 dark:hover:bg-rose-950/30"
+                >
+                  <Heart
+                    size={16}
+                    fill="currentColor"
+                    className="text-rose-600 dark:text-rose-450"
+                  />
+                  <span>{t("header.menu.donate")}</span>
                 </button>
               </div>
             ) : null}

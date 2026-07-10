@@ -38,7 +38,7 @@ const QR_TYPE_OPTIONS = [
   { value: "wifi", label: "Wi-Fi" },
   { value: "event", label: "Event" },
   { value: "messaging", label: "Messaging" },
-  // { value: "vcard", label: "vCard" }, // TODO: Add Full vCard support
+  { value: "vcard", label: "vCard" },
 ] as const;
 
 const QR_TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -197,7 +197,10 @@ export function QrGeneratorWorkspace() {
       canvas.toBlob(async (blob) => {
         if (blob) {
           await downloadWithFilename(blob, `imify-qr-${type}.png`);
-          success(t("workspace.exportSuccess"), t("workspace.downloadPngSuccess"));
+          success(
+            t("workspace.exportSuccess"),
+            t("workspace.downloadPngSuccess"),
+          );
         } else {
           error(t("workspace.exportFailed"), t("workspace.blobFailed"));
         }
@@ -219,7 +222,10 @@ export function QrGeneratorWorkspace() {
         async (blob) => {
           if (blob) {
             await downloadWithFilename(blob, `imify-qr-${type}.webp`);
-            success(t("workspace.exportSuccess"), t("workspace.downloadWebpSuccess"));
+            success(
+              t("workspace.exportSuccess"),
+              t("workspace.downloadWebpSuccess"),
+            );
           } else {
             error(t("workspace.exportFailed"), t("workspace.blobFailed"));
           }
@@ -249,12 +255,16 @@ export function QrGeneratorWorkspace() {
             </div>
 
             <div className="space-y-2">
-              <LabelText className="text-xs">{t("workspace.selectType")}</LabelText>
+              <LabelText className="text-xs">
+                {t("workspace.selectType")}
+              </LabelText>
               <div className="flex flex-wrap gap-2">
                 {QR_TYPE_OPTIONS.map((opt) => (
                   <SelectChip
                     key={opt.value}
-                    label={t(`qrTypes.${opt.value}`, { defaultValue: opt.label })}
+                    label={t(`qrTypes.${opt.value}`, {
+                      defaultValue: opt.label,
+                    })}
                     isActive={type === opt.value}
                     onClick={() => setType(opt.value as QrType)}
                     icon={QR_TYPE_ICONS[opt.value]}
@@ -304,7 +314,7 @@ export function QrGeneratorWorkspace() {
                   <div className="w-full h-full flex items-center justify-center">
                     <canvas
                       ref={previewCanvasRef}
-                      className="max-h-full max-w-full object-contain"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 </div>

@@ -161,8 +161,7 @@ export const QR_ENCODERS: {
     }
 
     lines.push("END:VCARD");
-    // Use plain \n for broad QR scanner compatibility instead of \r\n
-    return lines.join("\n");
+    return lines.join("\r\n");
   },
   event: (data) => {
     const fields = (data || {}) as EventFields;
@@ -226,8 +225,7 @@ export const QR_ENCODERS: {
     lines.push("END:VEVENT");
     lines.push("END:VCALENDAR");
 
-    // Use plain \n for broad QR scanner compatibility instead of \r\n
-    return lines.join("\n");
+    return lines.join("\r\n");
   },
   messaging: (data) => {
     const fields = (data || {}) as MessagingFields;

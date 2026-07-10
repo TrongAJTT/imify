@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import jsQR from "jsqr";
 import {
   Camera,
@@ -9,10 +9,10 @@ import {
   Monitor,
   Copy,
   ArrowLeft,
+  Clock,
 } from "lucide-react";
 import {
   Button,
-  SecondaryButton,
   Subheading,
   MutedText,
   Kicker,
@@ -20,14 +20,25 @@ import {
   ToastContainer,
   Tooltip,
   cn,
+  LabelText,
 } from "@imify/ui";
-import { useQrReaderStore, useWorkspaceHeaderStore } from "@imify/stores";
+import { useQrReaderStore } from "@imify/stores";
 import {
   COMMON_IMAGE_ACCEPT_WITH_SVG,
   isCommonImageFile,
 } from "../shared/image-file-utils";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { useTranslation } from "@imify/i18n";
+import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
+import { QrActionsPanel } from "./qr-actions-panel";
+
+function decodeUtf8String(str: string): string {
+  try {
+    return decodeURIComponent(escape(str));
+  } catch (e) {
+    return str;
+  }
+}
 
 // Helper function to extract and crop the QR code image from a source canvas
 function extractQrImage(
@@ -83,7 +94,11 @@ function extractQrImage(
 
 function scanQrCodeWithPreprocessing(
   canvas: HTMLCanvasElement,
-  inversionAttempts: "dontInvert" | "onlyInvert" | "attemptBoth" | "invertFirst" = "attemptBoth"
+  inversionAttempts:
+    | "dontInvert"
+    | "onlyInvert"
+    | "attemptBoth"
+    | "invertFirst" = "attemptBoth",
 ) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
@@ -176,9 +191,14 @@ function scanQrCodeWithPreprocessing(
 
 export function QrReaderWorkspace() {
   const { t } = useTranslation("qrReader");
-  const { hasCamera, setHasCamera, lastScanResult, setLastScanResult } =
-    useQrReaderStore();
-  const setIsMobileSidebarOpen = useWorkspaceHeaderStore((s) => s.setIsMobileSidebarOpen);
+  const {
+    hasCamera,
+    setHasCamera,
+    lastScanResult,
+    setLastScanResult,
+    savedHistory,
+    saveToHistory,
+  } = useQrReaderStore();
 
   const { toasts, success, error, hide } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -298,15 +318,15 @@ export function QrReaderWorkspace() {
 
           if (result && result.code && result.code.data) {
             const { code, canvas: decodedCanvas } = result;
-            setLastScanResult(code.data);
-            success(t("workspace.scannedSuccess"), t("workspace.decodedSuccess"));
+            setLastScanResult(decodeUtf8String(code.data));
+            success(
+              t("workspace.scannedSuccess"),
+              t("workspace.decodedSuccess"),
+            );
 
             // Extract QR image using helper function
             setScannedQrImage(extractQrImage(decodedCanvas, code.location));
             stopCamera();
-            setTimeout(() => {
-              setIsMobileSidebarOpen(true);
-            }, 1000);
             return; // Stop loop
           }
         }
@@ -350,19 +370,16 @@ export function QrReaderWorkspace() {
 
           if (result && result.code && result.code.data) {
             const { code, canvas: decodedCanvas } = result;
-            setLastScanResult(code.data);
-            success(t("workspace.scannedSuccess"), t("workspace.decodedFileSuccess"));
+            setLastScanResult(decodeUtf8String(code.data));
+            success(
+              t("workspace.scannedSuccess"),
+              t("workspace.decodedFileSuccess"),
+            );
 
             // Extract QR image using helper function
             setScannedQrImage(extractQrImage(decodedCanvas, code.location));
-            setTimeout(() => {
-              setIsMobileSidebarOpen(true);
-            }, 1000);
           } else {
-            error(
-              t("workspace.scanFailed"),
-              t("workspace.noQrDetected"),
-            );
+            error(t("workspace.scanFailed"), t("workspace.noQrDetected"));
           }
         }
         setIsAnalyzing(false);
@@ -386,6 +403,19 @@ export function QrReaderWorkspace() {
       error(t("workspace.unsupportedFormat"), t("workspace.uploadValid"));
     }
   };
+
+  useClipboardImageIntake({
+    onImages: (images) => {
+      if (images.length > 0) {
+        handleScanFile(images[0]);
+      }
+    },
+    onError: (msg) => {
+      error(t("workspace.errorHeader"), msg);
+    },
+    mode: "single",
+    enabled: !cameraStream,
+  });
 
   const copyRawContent = () => {
     if (!lastScanResult) return;
@@ -455,6 +485,11 @@ export function QrReaderWorkspace() {
     },
   ].filter((item) => item.id !== "screen" || hasDisplayMedia);
 
+  const isAlreadySaved = useMemo(() => {
+    if (!lastScanResult) return false;
+    return savedHistory.some((item) => item.raw === lastScanResult);
+  }, [savedHistory, lastScanResult]);
+
   return (
     <div className="flex-1 flex flex-col h-full gap-3 overflow-hidden animate-in fade-in duration-300">
       {/* Workspace Header Actions */}
@@ -462,18 +497,20 @@ export function QrReaderWorkspace() {
         <div className="flex items-center gap-4">
           <Subheading>{t("workspace.heading")}</Subheading>
           {!lastScanResult && cameraStream && (
-            <SecondaryButton
+            <Button
+              variant="secondary"
               onClick={stopCamera}
               className="text-xs h-8 flex items-center gap-1.5 px-3 animate-in fade-in-50 slide-in-from-left-4 duration-300"
             >
               <ArrowLeft size={13} />
               {t("workspace.stopScanning")}
-            </SecondaryButton>
+            </Button>
           )}
         </div>
         {lastScanResult && (
           <div className="flex items-center gap-2">
-            <SecondaryButton
+            <Button
+              variant="secondary"
               onClick={() => {
                 setLastScanResult(null);
                 setScannedQrImage(null);
@@ -482,7 +519,7 @@ export function QrReaderWorkspace() {
             >
               <RotateCcw size={13} />
               {t("workspace.scanAgain")}
-            </SecondaryButton>
+            </Button>
           </div>
         )}
       </div>
@@ -490,27 +527,60 @@ export function QrReaderWorkspace() {
       {/* Main Workspace Frame */}
       <div className="flex-1 flex flex-col items-center justify-center p-1 min-h-0 overflow-y-auto w-full h-full">
         {lastScanResult ? (
-          <div className="w-full max-w-2xl bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 flex flex-col md:flex-row gap-6 items-center animate-in zoom-in-95 duration-200">
-            {/* Left: Extracted QR Code Image */}
-            <div className="flex flex-col items-center gap-3 shrink-0">
-              <Kicker>{t("workspace.extractedCode")}</Kicker>
-              <div className="h-40 w-40 border border-slate-200 dark:border-slate-850 bg-slate-50 dark:bg-slate-900 rounded-xl p-3 flex items-center justify-center shadow-inner">
-                {scannedQrImage ? (
-                  <img
-                    src={scannedQrImage}
-                    alt="Decoded QR Code"
-                    className="max-h-full max-w-full object-contain rounded-md"
-                  />
-                ) : (
-                  <Scan
-                    size={40}
-                    className="text-slate-300 dark:text-slate-700 animate-pulse"
-                  />
-                )}
+          <div className="w-full max-w-2xl bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 flex flex-col md:flex-row gap-6 items-start animate-in zoom-in-95 duration-200">
+            {/* Left: Extracted QR Code Image & Refresh/Save buttons */}
+            <div className="flex flex-col items-center gap-4 shrink-0 w-full md:w-auto">
+              <div className="flex flex-col items-center gap-2">
+                <Kicker>{t("workspace.extractedCode")}</Kicker>
+                <div className="h-40 w-40 border border-slate-200 dark:border-slate-855 bg-slate-50 dark:bg-slate-900 rounded-xl p-3 flex items-center justify-center shadow-inner">
+                  {scannedQrImage ? (
+                    <img
+                      src={scannedQrImage}
+                      alt="Decoded QR Code"
+                      className="max-h-full max-w-full object-contain rounded-md select-none"
+                    />
+                  ) : (
+                    <Scan
+                      size={40}
+                      className="text-slate-300 dark:text-slate-700 animate-pulse"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons (Strictly aligned heights using Button element) */}
+              <div className="flex flex-row md:flex-col gap-2 w-full">
+                <Button
+                  onClick={() => {
+                    setLastScanResult(null);
+                    setScannedQrImage(null);
+                  }}
+                  className="flex-1 text-xs py-2 px-4 flex items-center justify-center gap-1.5"
+                >
+                  <RotateCcw size={14} />
+                  {t("workspace.scanAnother")}
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    saveToHistory(lastScanResult);
+                    success(t("history.title"), t("history.saveSuccess"));
+                  }}
+                  disabled={isAlreadySaved}
+                  className="flex-1 text-xs py-2 px-4 flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-800"
+                >
+                  <Clock size={14} />
+                  <span>
+                    {isAlreadySaved
+                      ? t("history.saved")
+                      : t("history.saveToHistory")}
+                  </span>
+                </Button>
               </div>
             </div>
 
-            {/* Right: Raw Data and Actions */}
+            {/* Right: Raw Data and Available Actions */}
             <div className="flex-1 flex flex-col gap-4 w-full">
               <div className="relative group flex flex-col w-full">
                 <TextArea
@@ -518,8 +588,8 @@ export function QrReaderWorkspace() {
                   label={t("workspace.rawData")}
                   value={lastScanResult}
                   onChange={() => {}}
-                  rows={5}
-                  className="w-full font-mono text-xs"
+                  rows={4}
+                  className="w-full text-xs"
                 />
                 <Tooltip content={t("workspace.copyRaw")}>
                   <button
@@ -535,17 +605,13 @@ export function QrReaderWorkspace() {
                   </button>
                 </Tooltip>
               </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={() => {
-                    setLastScanResult(null);
-                    setScannedQrImage(null);
-                  }}
-                  className="text-xs h-9 px-6 flex items-center gap-1.5"
-                >
-                  <RotateCcw size={14} />
-                  {t("workspace.scanAnother")}
-                </Button>
+
+              {/* Available Actions (Moved from sidepanel) */}
+              <div className="mt-1">
+                <LabelText className="text-xs mb-2">
+                  {t("sidebar.detailsAndActions")}
+                </LabelText>
+                <QrActionsPanel raw={lastScanResult} />
               </div>
             </div>
           </div>
@@ -617,24 +683,19 @@ export function QrReaderWorkspace() {
                 </MutedText>
               </button>
             ))}
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept={COMMON_IMAGE_ACCEPT_WITH_SVG}
-              onChange={(e) => handleFiles(e.target.files)}
-            />
           </div>
         )}
       </div>
 
-      <style>{`
-        @keyframes scan {
-          0% { top: 0%; opacity: 0.8; }
-          50% { top: 100%; opacity: 1; }
-          100% { top: 0%; opacity: 0.8; }
-        }
-      `}</style>
+      {/* Hidden File Input for Card click triggers */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => handleFiles(e.target.files)}
+        accept={COMMON_IMAGE_ACCEPT_WITH_SVG}
+        className="hidden"
+      />
+
       <ToastContainer toasts={toasts} onRemove={hide} />
     </div>
   );

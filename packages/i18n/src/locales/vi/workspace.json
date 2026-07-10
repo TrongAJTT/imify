@@ -99,6 +99,8 @@
       "donate": "Ủng hộ nhà phát triển",
       "lightMode": "Chuyển sang giao diện sáng",
       "darkMode": "Chuyển sang giao diện tối",
+      "enterFullscreen": "Chuyển sang chế độ toàn màn hình",
+      "exitFullscreen": "Thoát chế độ toàn màn hình",
       "assetManagement": "Quản lý tài nguyên",
       "devTools": "Công cụ lập trình viên",
       "about": "Giới thiệu Imify",
@@ -106,12 +108,14 @@
       "moreActions": "Hành động khác"
     },
     "menu": {
-      "github": "Ngôi sao Github: {{count}}",
-      "donate": "Quyên góp",
+      "github": "Sao Github: {{count}}",
+      "donate": "Ủng hộ",
       "lightMode": "Giao diện sáng",
       "darkMode": "Giao diện tối",
+      "enterFullscreen": "Toàn màn hình",
+      "exitFullscreen": "Thoát toàn màn hình",
       "assets": "Tài nguyên",
-      "devTools": "Công cụ lập trình viên",
+      "devTools": "Nhà phát triển",
       "about": "Giới thiệu",
       "settings": "Cài đặt"
     }
@@ -136,8 +140,8 @@
     "selectToManage": "Chọn một hình mờ để quản lý",
     "delete": "Xóa",
     "aboutAiTitle": "Giới thiệu về Mô hình AI & Động cơ",
-    "multiThreadActive": "Đa luồng hoạt động",
-    "asyncifyFallback": "Dự phòng Asyncify",
+    "multiThreadActive": "Đa luồng",
+    "asyncifyFallback": "Asyncify",
     "aiDesc": "Imify sử dụng ONNX Runtime Web để chạy các mô hình AI nhẹ 100% cục bộ. Các mô hình này được tải xuống một lần và được lưu vào bộ nhớ đệm để sử dụng ngoại tuyến, đảm bảo dữ liệu của bạn không bao giờ rời khỏi thiết bị.",
     "aiModels": {
       "deleteConfirm": "Xóa các tệp được lưu trong bộ nhớ đệm cho \"{{name}} ({{variant}})\"?",
