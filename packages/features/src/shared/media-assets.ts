@@ -77,6 +77,7 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   },
   common: {
     latestSummaryMd: "/assets/changelogs/latest-summary.md",
+    v2_2_0: "/assets/changelogs/v2-2-0.md",
     v2_1_3: "/assets/changelogs/v2-1-3.md",
     v2_1_2: "/assets/changelogs/v2-1-2.md",
     v1_5_0: "/assets/changelogs/v1-5-0.md",

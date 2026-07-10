@@ -23,35 +23,36 @@ export interface AIModelMetadata {
 }
 
 export const BACKGROUND_REMOVAL_MODELS: AIModelMetadata[] = [
-  {
-    id: 'onnx-community/BiRefNet_lite-ONNX',
-    name: 'BiRefNet Lite',
-    description: 'State-of-the-art Swin-Transformer model for high-quality background removal.',
-    source: 'Hugging Face / ONNX Community',
-    license: 'MIT',
-    licenseUrl: 'https://opensource.org/licenses/MIT',
-    termsUrl: 'https://huggingface.co/onnx-community/BiRefNet_lite-ONNX',
-    author: 'ZhengPeng7',
-    authorUrl: 'https://huggingface.co/onnx-community',
-    defaultVariantId: 'fp16',
-    usecase: 'General',
-    variants: [
-      {
-        id: 'fp16',
-        label: 'FP16 (High Quality)',
-        description: 'Original high precision. Best balance of quality and speed.',
-        sizeBytes: 115 * 1024 * 1024,
-        dtype: 'fp16'
-      },
-      {
-        id: 'full',
-        label: 'Full Precision',
-        description: 'Standard 32-bit model. Largest size, maximum compatibility.',
-        sizeBytes: 224 * 1024 * 1024,
-        dtype: 'fp32'
-      }
-    ]
-  },
+  // // BiRefNet, this model is too big, so I manage to hide it at the current release.
+  // {
+  //   id: 'onnx-community/BiRefNet_lite-ONNX',
+  //   name: 'BiRefNet Lite',
+  //   description: 'State-of-the-art Swin-Transformer model for high-quality background removal.',
+  //   source: 'Hugging Face / ONNX Community',
+  //   license: 'MIT',
+  //   licenseUrl: 'https://opensource.org/licenses/MIT',
+  //   termsUrl: 'https://huggingface.co/onnx-community/BiRefNet_lite-ONNX',
+  //   author: 'ZhengPeng7',
+  //   authorUrl: 'https://huggingface.co/onnx-community',
+  //   defaultVariantId: 'fp16',
+  //   usecase: 'General',
+  //   variants: [
+  //     {
+  //       id: 'fp16',
+  //       label: 'FP16 (High Quality)',
+  //       description: 'Original high precision. Best balance of quality and speed.',
+  //       sizeBytes: 115 * 1024 * 1024,
+  //       dtype: 'fp16'
+  //     },
+  //     {
+  //       id: 'full',
+  //       label: 'Full Precision',
+  //       description: 'Standard 32-bit model. Largest size, maximum compatibility.',
+  //       sizeBytes: 224 * 1024 * 1024,
+  //       dtype: 'fp32'
+  //     }
+  //   ]
+  // },
   {
     id: 'onnx-community/ormbg-ONNX',
     name: 'ORMBG v1.0',

@@ -7,30 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### 🪄 AI Background Removal (Beta)
+## [2.2.0] - 2026-07-10
 
-- **State-of-the-Art AI Engines:** Integrated four specialized models (BiRefNet, ORMBG, MODNet, and Selfie Segmenter) to provide the best balance between quality and speed.
-- **WebGPU Acceleration:** Experience up to 10x faster background removal on supported browsers by leveraging your device's GPU power.
+The v2.2.0 update marks a massive leap forward for Imify. In this release, we're bringing the power of Artificial Intelligence directly to your browser with our new Background Removal tool, alongside a highly secure, all-in-one QR Code suite. Most importantly, Imify is now a full-fledged Progressive Web App (PWA), meaning you can install it on your device and work 100% offline. Dive in to explore dozens of performance tweaks, custom locales, and a brand-new dashboard built specifically for developers!
+
+### ✂️ Background Removal
+
+- **State-of-the-Art AI Engines:** Integrated 3 specialized models (ORMBG, MODNet, and Selfie Segmenter) to provide the best balance between quality and speed.
 - **Interactive Comparison:** Real-time preview with a side-by-side comparison slider to verify extraction quality instantly.
 - **Custom Presentation:** Choose custom background colors or keep transparency for professional-grade results.
 - **Showcase Gallery:** Explore available processing presets through a new visual showcase panel in the sidebar.
 
+### 🔍 QR Tools (Generator & Reader)
+
+- **Privacy-First QR Generator:** Generate highly customizable, offline-safe static QR codes with support for logo overlays (with auto-excavation), pattern styles (dots, markers, shapes), custom colors, and loss-less vector SVG exports.
+- **Advanced QR Reader:** Scan QR codes instantly using local device cameras, drag-and-drop file uploads (PNG/SVG), or active screen capture. History management saves scan results locally.
+- **Visual Illustrations:** Added professional SVG illustrations for both QR Generator and QR Reader tools.
+
+### 🌍 Internationalization & Custom Locales
+
+- **Comprehensive Multi-Language Support:** Fully localized the entire workspace, batch processor, creative designer tools, and landing pages in English (EN) and Vietnamese (VI).
+- **Runtime Custom Locales:**
+  - **IndexedDB Persistence:** Import and automatically save custom JSON translation bundles locally across application reloads.
+  - **Locale Tools:** Reusable `LanguageItemCard` component integrated into settings and developer tools. Supports exporting translation bundles as ZIP files or deleting them directly.
+  - **English Bundle Downloader:** Download the baseline English language JSON pack as a ZIP file directly from Dev Tools to simplify translation contributions.
+
+### 🛠️ Developer Mode & Diagnostics
+
+- **About Dev Tools:** Reorganized developer settings, introducing a dedicated dashboard tab detailing diagnostics tools, and moved the "Disable Developer Mode" option to this view.
+- **LocalStorage Manager:** Search, filter (Imify-only toggle), edit, copy, and delete keys dynamically. Includes an inline JSON validator to prevent malformed data from corrupting application state.
+- **State Serialization:** Registers QR Code Generator and Background Remover stores in the serialization registry (with auto-filtering of temporary text/WiFi fields).
+
 ### 🎨 UI & Asset Management Polish
 
+- **Unified Card Grid:** Merged the landing page tools list and pro showcase section into a single, responsive layout card grid featuring dynamic "Highlight" and "New" badges.
+- **Hero Carousel:** Implemented an auto-advancing 14-tool slide presentation with dot indicators and thumbnail controls.
 - **Modernized Watermark Dialogs:** Completely redesigned Save and Open dialogs for watermark patterns, featuring centered layouts and improved typography.
 - **Vibrant Preset Styling:** Enhanced visual feedback for active presets with improved color syncing and more vibrant card designs.
 - **Organized Asset Manager:** Improved model management with collapsible sections, making it easier to navigate as your AI library grows.
-- **Categorized Acknowledgements:** A new, more professional credits system to honor the open-source contributors powering Imify.
+- **Categorized Acknowledgements:** Expanded the credits system to include "Media & Illustrations" alongside dependency libraries, providing authors, licenses, and visual previews.
 
-### 🚀 Performance & Navigation
+### 🚀 Performance, Navigation & Fixes
 
-- **Seamless Refresh:** Replaced full-page reloads with smart store rehydration for a faster and smoother workspace experience.
-- **Responsive Headers:** Optimized navigation headers for better usability on smaller screens.
+- **Document Fullscreen:** Added titlebar controls on desktop appbars and dropdown options on mobile devices to toggle fullscreen view.
 - **PWA & Offline Support:**
   - **Full Offline Capability:** Imify Web now works 100% offline after the first visit.
   - **WASM Pre-caching:** All core image processing engines (AVIF, JXL, MozJPEG, OxiPNG) are automatically cached for immediate offline use.
   - **Native App Experience:** Added a Web App Manifest, allowing Imify to be installed as a standalone application.
   - **Unified Update Flow:** Integrated Service Worker update detection with the "Imify has been updated" dialog.
+- **Smart Rehydration:** Replaced full-page reloads with smart store rehydration for a faster and smoother workspace experience.
+- **Responsive Layout:**
+  - Portrait/tall image overflow issue resolved in the Inspector's `BasicInfoCard` with max-height constraints.
+  - SWAP bg color logic fixed in Palette color contrast tooltips.
+  - Cleaned up obsolete translation assets and synchronized directories.
 
 ## [2.1.3] - 2026-05-03
 

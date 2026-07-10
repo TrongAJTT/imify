@@ -37,9 +37,9 @@ function UpscalerHardwareNoticeCard() {
           distribute these models.
         </p>
         <p>
-          • Note: This is an experimental feature and may be removed in the
-          future before reaching the official Extension release if an optimal
-          solution cannot be found.
+          • NOTE: THIS IS AN EXPERIMENTAL FEATURE AND MAY BE REMOVED IN THE
+          FUTURE BEFORE REACHING THE OFFICIAL EXTENSION RELEASE IF AN OPTIMAL
+          SOLUTION CANNOT BE FOUND.
         </p>
       </div>
     </div>

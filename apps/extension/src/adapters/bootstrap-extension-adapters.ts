@@ -47,6 +47,7 @@ import qrReaderIllustrationSvg from "url:@assets/images/illustrations/qr-reader.
 import seoAuditIllustrationSvg from "url:@assets/images/illustrations/seo-audit.svg"
 import j2teamLogoIco from "url:@assets/images/j2tl-logo.ico"
 import latestSummaryMd from "url:@assets/changelogs/latest-summary.md"
+import v2_2_0Md from "url:@assets/changelogs/v2-2-0.md"
 import v2_1_3Md from "url:@assets/changelogs/v2-1-3.md"
 import v2_1_2Md from "url:@assets/changelogs/v2-1-2.md"
 import v1_5_0Md from "url:@assets/changelogs/v1-5-0.md"
