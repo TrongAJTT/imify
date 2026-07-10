@@ -1,0 +1,202 @@
+{
+  "title": "Cài đặt",
+  "tabs": {
+    "general": "Chung",
+    "performance": "Hiệu năng",
+    "layout": "Bố cục",
+    "shortcuts": "Phím tắt",
+    "language": "Ngôn ngữ",
+    "warnings": "Cảnh báo",
+    "usage": "Thống kê",
+    "data": "Quản lý dữ liệu"
+  },
+  "general": {
+    "sectionTitle": "Chung",
+    "sectionDesc": "Điều khiển hành vi mặc định và tùy chọn bố cục không gian làm việc.",
+    "defaultScreen": "MÀN HÌNH MẶC ĐỊNH KHI MỞ",
+    "defaultScreenDesc": "Chọn không gian làm việc nào sẽ mở theo mặc định.",
+    "defaultScreenLabel": "Không gian làm việc mặc định (chỉ Ext)",
+    "preferRecentPreset": "Ưu tiên preset được dùng gần đây",
+    "preferRecentPresetDesc": "Mở preset được sử dụng gần đây nhất khi truy cập các công cụ dựa trên preset, nếu có.",
+    "layoutTitle": "CHIỀU RỘNG THANH BÊN KHÔNG GIAN LÀM VIỆC",
+    "layoutDesc": "Điều chỉnh chiều rộng thanh bên trái và phải với các bước cài đặt sẵn.",
+    "navWidthLabel": "Chiều rộng thanh bên điều hướng (chỉ Ext)",
+    "configWidthLabel": "Chiều rộng thanh bên cấu hình",
+    "configWidthFormatter": "{{label}} ({{width}}px)",
+    "configWidthFormatterPercent": "{{label}} ({{width}}px, {{percent}}%)"
+  },
+  "language": {
+    "sectionTitle": "Ngôn ngữ",
+    "sectionDesc": "Chọn ngôn ngữ hiển thị cho Imify, hoặc quản lý các bản dịch nhập khẩu.",
+    "displayLanguage": "NGÔN NGỮ HIỂN THỊ",
+    "displayLanguageDesc": "Chọn ngôn ngữ giao diện. Các ngôn ngữ tích hợp sẽ dùng tiếng Anh cho các key còn thiếu.",
+    "completionRate": "Tỷ lệ hoàn thành",
+    "keys": "key",
+    "contributors": "Người đóng góp & Bảo trì",
+    "applyLanguage": "Áp dụng Ngôn ngữ",
+    "deleteLanguage": "Xóa Ngôn ngữ",
+    "deleteConfirm": "Xóa \"{{name}}\"?",
+    "deleteConfirmDesc": "Thao tác này sẽ xóa vĩnh viễn ngôn ngữ được thêm vào lúc chạy này. Không thể hoàn tác.",
+    "cancel": "Hủy",
+    "confirm": "Xóa",
+    "tooltipActive": "Ngôn ngữ đang được sử dụng",
+    "tooltipRuntime": "Được thêm vào lúc chạy",
+    "tooltipDeprecated": "Phiên bản dịch {{langVersion}} đã lỗi thời (app: {{appVersion}}). Một số chuỗi có thể bị thiếu hoặc hiển thị bằng tiếng Anh."
+  },
+  "performance": {
+    "sectionTitle": "Hiệu năng",
+    "sectionDesc": "Trình tư vấn luồng xử lý thông minh giúp giả lập số lượng worker an toàn bằng cách sử dụng cấu hình phần cứng của bạn và cài đặt định dạng đang hoạt động.",
+    "advisorTitle": "TRÌNH TƯ VẤN LUỒNG XỬ LÝ THÔNG MINH",
+    "advisorDesc": "Các bộ mã hóa hiện đại như AVIF và JXL có thể tiêu thụ nhiều CPU và bộ nhớ trong các worker trình duyệt. Kích hoạt cố vấn để nhận các đề xuất động dựa trên cấu hình máy và tùy chọn định dạng hiện tại.",
+    "privacyNote": "Lưu ý riêng tư: dữ liệu phần cứng chỉ được đọc và xử lý cục bộ trên trình duyệt của bạn. Không có telemetry hoặc tải lên bên ngoài.",
+    "enableAdvisor": "Kích hoạt Trình tư vấn luồng xử lý thông minh",
+    "enableAdvisorDesc": "Giữ nguyên việc chỉnh luồng xử lý thủ công (1-90), nhưng hiển thị các đề xuất an toàn theo ngữ cảnh bên dưới Cấu hình Xuất.",
+    "unlockConcurrency": "Mở khóa luồng xử lý tối đa (Overclock)",
+    "unlockConcurrencyDesc": "Cho phép các giá trị lên tới 90 và bỏ qua khóa cứng của Trình tư vấn. Điều này có thể tăng nguy cơ crash trên các định dạng nặng.",
+    "hardwareProfile": "Cấu hình phần cứng",
+    "sourceAuto": "Tự động phát hiện",
+    "sourceManual": "Ghi đè thủ công",
+    "sourceFallback": "Dự phòng",
+    "sourceLabel": "Nguồn: {{source}}",
+    "autoDetect": "Tự động phát hiện phần cứng",
+    "cpuCores": "Nhân CPU (luồng logic)",
+    "ramBudget": "Giới hạn RAM (GB)",
+    "detectedHardware": "Phần cứng được phát hiện: {{cores}} luồng, ~{{ram}}GB bộ nhớ thiết bị.",
+    "detectedHardwareUnknown": "không rõ",
+    "modeStatic": "Chế độ thông minh đang tắt. Trình tư vấn luồng xử lý thông minh đang chạy ở chế độ dự phòng tĩnh sử dụng cấu hình mặc định (4 luồng, giới hạn 4GB RAM).",
+    "modeDanger": "Chế độ nguy hiểm: overclock đã được kích hoạt. Các định dạng nặng (AVIF/JXL/PNG tiny+OxiPNG) có thể bị hết bộ nhớ (OOM) nếu bạn đẩy luồng xử lý quá cao.",
+    "modeSafe": "Chế độ an toàn: luồng xử lý tối đa được khóa cứng theo tính toán của Trình tư vấn để giảm nguy cơ crash."
+  },
+  "warnings": {
+    "sectionTitle": "Cảnh báo",
+    "sectionDesc": "Tùy chỉnh các cảnh báo xác thực và hộp thoại xác nhận nào xuất hiện trong các quá trình chuyển đổi không gian làm việc.",
+    "preferencesTitle": "TÙY CHỌN BẢO MẬT",
+    "preferencesDesc": "Các tùy chọn này được lưu tự động.",
+    "downloadConfirm": "Hiển thị hộp thoại xác nhận tải xuống",
+    "downloadConfirmDesc": "Cảnh báo trước khi tải xuống nhiều hơn {{threshold}} hình ảnh một cách riêng lẻ.",
+    "oomWarning": "Hiển thị hộp thoại cảnh báo bộ nhớ (OOM)",
+    "oomWarningDesc": "Cảnh báo khi kích thước lô đã chọn vượt quá ~{{threshold}} MB.",
+    "heavyPreviewWarning": "Hiển thị cảnh báo chất lượng xem trước cao của Ghép ảnh",
+    "heavyPreviewWarningDesc": "Cảnh báo nếu có nhiều hơn {{count}} hình ảnh hoặc tổng diện tích vượt quá ~{{pixels}}M px²."
+  },
+  "usage": {
+    "sectionTitle": "Thống kê",
+    "sectionDesc": "Giúp chúng tôi cải thiện Imify bằng cách cho phép gửi số liệu hiệu năng ẩn danh và báo cáo lỗi.",
+    "frequencyTitle": "DỮ LIỆU TẦN SUẤT",
+    "frequencyDesc": "Các bộ đếm này thúc đẩy chế độ sắp xếp \"Được sử dụng nhiều nhất (ổn định)\".",
+    "reset": "Đặt lại",
+    "noData": "Chưa có dữ liệu thống kê nào."
+  },
+  "data": {
+    "sectionTitle": "Quản lý dữ liệu",
+    "sectionDesc": "Quản lý các preset, định nghĩa mẫu, tùy chọn và phiên bản cấu trúc cơ sở dữ liệu.",
+    "statsTitle": "THỐNG KÊ DỮ LIỆU",
+    "statsDesc": "Tổng quan về phân bổ lưu trữ trình duyệt liên tục của bạn cho các preset Imify và tùy chọn lưu trữ.",
+    "totalPresets": "TỔNG SỐ PRESET",
+    "persistedStores": "CỬA HÀNG ĐÃ LƯU",
+    "storageUsed": "DUNG LƯỢNG ĐÃ DÙNG",
+    "assetStatsTitle": "THỐNG KÊ TÀI NGUYÊN",
+    "assetStatsDesc": "Xem chi tiết về watermark đã lưu, các mô hình AI ngoại tuyến đã tải xuống và các font ngoại tuyến.",
+    "savedWatermarks": "WATERMARK ĐÃ LƯU",
+    "cachedModels": "MÔ HÌNH AI ĐÃ CACHE",
+    "storageOccupied": "DUNG LƯỢNG CHIẾM DỤNG",
+    "googleFonts": "GOOGLE FONTS",
+    "customFonts": "FONTS TỰ CHỌN",
+    "backupRestoreTitle": "SAO LƯU & KHÔI PHỤC",
+    "backupRestoreDesc": "Sao lưu preset, template, cài đặt và tùy chọn không gian làm việc thành một tệp JSON, hoặc khôi phục chúng từ một bản sao lưu.",
+    "exportData": "Xuất Dữ liệu",
+    "importData": "Nhập Dữ liệu",
+    "exportTitle": "Xuất Dữ liệu",
+    "exportDesc": "Chọn các tính năng bạn muốn xuất. Tệp này có thể được sử dụng để khôi phục cài đặt và preset của bạn.",
+    "importTitle": "Nhập Dữ liệu",
+    "importDesc": "Chọn tệp dữ liệu đã xuất trước đó để khôi phục cài đặt và preset của bạn.",
+    "importSuccessTitle": "Nhập thành công",
+    "importSuccessDesc": "Trạng thái đã được khôi phục.",
+    "schemaTitle": "CHUYỂN ĐỔI LƯỢC ĐỒ CƠ SỞ DỮ LIỆU",
+    "schemaDesc": "Quản lý và di chuyển phiên bản cấu trúc cơ sở dữ liệu cục bộ của bạn.",
+    "dbVersion": "Phiên bản Cơ sở dữ liệu",
+    "dbVersionDesc": "Phiên bản cấu trúc hiện tại: {{version}}",
+    "dbVersionV2": "v2.0 (Hợp nhất)",
+    "dbVersionV1": "v1.0 (Kế thừa)",
+    "migrateBtn": "Di cư sang Cấu trúc v2",
+    "schemaUpToDate": "Cấu trúc đã được cập nhật mới nhất",
+    "migrateSuccessTitle": "Chuyển đổi lược đồ cấu trúc cơ sở dữ liệu thành công",
+    "migrateSuccessDesc": "Các preset của bạn đã được hợp nhất dưới Cấu trúc thành công",
+    "migrateErrorTitle": "Di cư thất bại",
+    "migrateErrorDesc": "Đã xảy ra lỗi không xác định."
+  },
+  "shortcuts": {
+    "sectionTitle": "Phím tắt",
+    "sectionDesc": "Xem và liên kết lại các phím tắt bàn phím được sử dụng trên các không gian làm việc xem trước và các công cụ Tạo Pattern.",
+    "shortcutsTitle": "PHÍM TẮT BÀN PHÍM",
+    "shortcutsDesc": "Nhấp vào một phím tắt và nhấn tổ hợp phím. Nhấn Esc để hủy hoặc Backspace/Delete để xóa.",
+    "resetAll": "Đặt lại Tất cả",
+    "searchLabel": "Tìm kiếm phím tắt",
+    "searchPlaceholder": "Tìm theo tên hành động hoặc tổ hợp phím (ví dụ: Ctrl+Shift+E)",
+    "clearSearch": "Xóa Tìm kiếm",
+    "showingResults": "Đang hiển thị {{count}} phím tắt cho \"{{query}}\".",
+    "showingResultsPlural": "Đang hiển thị {{count}} phím tắt cho \"{{query}}\".",
+    "loading": "Đang tải tùy chọn phím tắt...",
+    "noResults": "Không có phím tắt nào khớp với tìm kiếm của bạn.",
+    "defaultLabel": "Mặc định: {{binding}}",
+    "clear": "Xóa",
+    "reset": "Đặt lại",
+    "conflict": "Xung đột với: {{actions}}",
+    "unassigned": "Chưa gán",
+    "categories": {
+      "Canvas Preview Mode": "Chế độ Xem trước Canvas",
+      "Fill Customization": "Tùy chỉnh Fill",
+      "Pattern Generator": "Tạo Pattern"
+    },
+    "actions": {
+      "global.preview.zoom_mode": {
+        "label": "Chuyển sang chế độ Zoom",
+        "description": "Đặt chế độ tương tác xem trước thành Zoom trên các không gian làm việc được hỗ trợ."
+      },
+      "global.preview.pan_mode": {
+        "label": "Chuyển sang chế độ Pan",
+        "description": "Đặt chế độ tương tác xem trước thành Pan trên các không gian làm việc được hỗ trợ."
+      },
+      "global.preview.idle_mode": {
+        "label": "Chuyển sang chế độ Idle",
+        "description": "Tắt tương tác con lăn xem trước trong các không gian làm việc được hỗ trợ."
+      },
+      "fill.customization.tab_image": {
+        "label": "Mở tab Ảnh",
+        "description": "Hiện các điều khiển chỉnh sửa/tải lên ảnh trong Tùy chỉnh Fill."
+      },
+      "fill.customization.tab_border": {
+        "label": "Mở tab Viền",
+        "description": "Hiện các điều khiển viền trong Tùy chỉnh Fill."
+      },
+      "fill.customization.tab_layer": {
+        "label": "Mở tab Lớp",
+        "description": "Hiện các điều khiển chuyển đổi lớp trong Tùy chỉnh Fill."
+      },
+      "fill.customization.clear_image": {
+        "label": "Xóa Ảnh",
+        "description": "Xóa ảnh khỏi lớp đã chọn."
+      },
+      "fill.customization.deselect": {
+        "label": "Bỏ chọn lớp",
+        "description": "Xóa lựa chọn lớp hiện tại trong không gian làm việc Fill."
+      },
+      "pattern.draw.decrease_brush_size": {
+        "label": "Vẽ Asset: Giảm kích thước cọ",
+        "description": "Giảm kích thước cọ trong hộp thoại Vẽ Asset."
+      },
+      "pattern.draw.increase_brush_size": {
+        "label": "Vẽ Asset: Tăng kích thước cọ",
+        "description": "Tăng kích thước cọ trong hộp thoại Vẽ Asset."
+      },
+      "pattern.draw.undo": {
+        "label": "Vẽ Asset: Hoàn tác",
+        "description": "Hoàn tác nét vẽ mới nhất trong hộp thoại Vẽ Asset."
+      },
+      "pattern.draw.clear": {
+        "label": "Vẽ Asset: Xóa canvas",
+        "description": "Xóa tất cả nét vẽ trong hộp thoại Vẽ Asset."
+      }
+    }
+  }
+}

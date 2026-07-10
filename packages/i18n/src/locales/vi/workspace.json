@@ -1,0 +1,236 @@
+{
+  "title": "Imify",
+  "subtitle": "Bộ Công cụ Ảnh Mạnh mẽ",
+  "allTools": "Tất cả công cụ",
+  "categories": {
+    "imageProcessing": "Xử lý ảnh",
+    "layoutComposition": "Bố cục & Ghép ảnh",
+    "utilities": "Tiện ích",
+    "extensionExclusive": "Dành riêng cho Extension"
+  },
+  "tools": {
+    "singleProcessor": {
+      "label": "Xử lý đơn lẻ"
+    },
+    "batchProcessor": {
+      "label": "Xử lý hàng loạt"
+    },
+    "splicing": {
+      "label": "Ghép ảnh liên tiếp"
+    },
+    "splitter": {
+      "label": "Cắt nhỏ ảnh"
+    },
+    "filling": {
+      "label": "Lấp đầy ảnh"
+    },
+    "patternGenerator": {
+      "label": "Tạo hình nền lặp"
+    },
+    "diffchecker": {
+      "label": "So sánh ảnh"
+    },
+    "inspector": {
+      "label": "Kiểm tra thông tin ảnh"
+    },
+    "contextMenu": {
+      "label": "Menu chuột phải"
+    },
+    "seoAudit": {
+      "label": "Kiểm định SEO"
+    },
+    "backgroundRemover": {
+      "label": "Tách nền ảnh"
+    },
+    "upscaler": {
+      "label": "Phóng to ảnh (Exp)"
+    },
+    "qrGenerator": {
+      "label": "Tạo mã QR"
+    },
+    "qrReader": {
+      "label": "Đọc mã QR"
+    }
+  },
+  "popup": {
+    "subtitle": "Bộ Công cụ Ảnh Mạnh mẽ",
+    "lightMode": "Chuyển sang giao diện sáng",
+    "darkMode": "Chuyển sang giao diện tối",
+    "fullList": "Mở danh sách tính năng đầy đủ",
+    "close": "Đóng cửa sổ",
+    "chooseAction": "Chọn một thao tác cho trang này.",
+    "scanError": "Không thể quét trang hiện tại để kiểm định SEO.",
+    "inspectorError": "Không thể mở Bảng điều khiển kiểm tra nhanh.",
+    "settingsError": "Không thể mở trang cài đặt.",
+    "actions": {
+      "seoTitle": "Quét trang / Kiểm định SEO",
+      "seoDesc": "Chạy chẩn đoán hình ảnh SEO và mở kết quả trong Bảng điều khiển Snapshot.",
+      "inspectorTitle": "Kiểm tra nhanh ở Bảng bên",
+      "inspectorDesc": "Mở các công cụ kiểm tra ảnh nhỏ gọn trong khi vẫn giữ nguyên tab hiện tại.",
+      "settingsTitle": "Danh sách tính năng / Cài đặt",
+      "settingsDesc": "Mở toàn bộ không gian làm việc và cấu hình của Imify."
+    }
+  },
+  "sidepanel": {
+    "inspectorTitle": "Bộ kiểm tra ảnh nhanh Imify",
+    "inspectorSubtitle": "Kéo thả, kiểm tra, tối ưu hóa",
+    "auditTitle": "SEO Audit Snapshot",
+    "auditSubtitle": "Xem lại kết quả quét",
+    "changeView": "Thay đổi chế độ xem bảng bên",
+    "menuInspector": "Kiểm tra nhanh",
+    "menuAudit": "Kiểm định SEO",
+    "invalidImageError": "Vui lòng chọn một tệp ảnh hợp lệ.",
+    "inspectFailedError": "Không thể kiểm tra hình ảnh đã chọn.",
+    "importFailedError": "Không thể nhập URL hình ảnh để kiểm tra.",
+    "analyzingState": "Đang xử lý siêu dữ liệu ảnh và cấu hình màu...",
+    "loadingState": "Đang tải trạng thái snapshot đã lưu.",
+    "noScanState": "Chưa có lượt quét nào được thực hiện.",
+    "neverScanned": "Chưa từng quét",
+    "unknownScanTime": "Không rõ thời gian quét",
+    "scanStatus": "Trạng thái quét",
+    "scanning": "Đang quét...",
+    "scanNow": "Quét ngay",
+    "lastScanned": "Quét lần cuối lúc: {{time}}",
+    "noScanData": "Chưa có dữ liệu quét. Nhấp vào \"Quét ngay\" để tạo snapshot đầu tiên của bạn."
+  },
+  "header": {
+    "tooltips": {
+      "github": "Bình chọn trên GitHub",
+      "donate": "Ủng hộ nhà phát triển",
+      "lightMode": "Chuyển sang giao diện sáng",
+      "darkMode": "Chuyển sang giao diện tối",
+      "enterFullscreen": "Chuyển sang chế độ toàn màn hình",
+      "exitFullscreen": "Thoát chế độ toàn màn hình",
+      "assetManagement": "Quản lý tài nguyên",
+      "devTools": "Công cụ lập trình viên",
+      "about": "Giới thiệu Imify",
+      "settings": "Cài đặt",
+      "moreActions": "Hành động khác"
+    },
+    "menu": {
+      "github": "Sao Github: {{count}}",
+      "donate": "Ủng hộ",
+      "lightMode": "Giao diện sáng",
+      "darkMode": "Giao diện tối",
+      "enterFullscreen": "Toàn màn hình",
+      "exitFullscreen": "Thoát toàn màn hình",
+      "assets": "Tài nguyên",
+      "devTools": "Nhà phát triển",
+      "about": "Giới thiệu",
+      "settings": "Cài đặt"
+    }
+  },
+  "assets": {
+    "title": "Quản lý tài nguyên",
+    "tabs": {
+      "watermark": {
+        "label": "Hình mờ",
+        "desc": "Quản lý các mẫu và thẻ hình mờ đã lưu"
+      },
+      "aiModels": {
+        "label": "Mô hình AI",
+        "desc": "Quản lý các mô hình AI đã tải xuống cho các tính năng ngoại tuyến"
+      },
+      "fonts": {
+        "label": "Phông chữ",
+        "desc": "Quản lý các phông chữ đã cài đặt cho mã QR và tính năng văn bản"
+      }
+    },
+    "deleteConfirm": "Xóa hình mờ đã lưu \"{{name}}\"?",
+    "selectToManage": "Chọn một hình mờ để quản lý",
+    "delete": "Xóa",
+    "aboutAiTitle": "Giới thiệu về Mô hình AI & Động cơ",
+    "multiThreadActive": "Đa luồng",
+    "asyncifyFallback": "Asyncify",
+    "aiDesc": "Imify sử dụng ONNX Runtime Web để chạy các mô hình AI nhẹ 100% cục bộ. Các mô hình này được tải xuống một lần và được lưu vào bộ nhớ đệm để sử dụng ngoại tuyến, đảm bảo dữ liệu của bạn không bao giờ rời khỏi thiết bị.",
+    "aiModels": {
+      "deleteConfirm": "Xóa các tệp được lưu trong bộ nhớ đệm cho \"{{name}} ({{variant}})\"?",
+      "deletedTitle": "Đã xóa mô hình",
+      "deletedDesc": "Đã xóa thành công {{variant}} cho {{name}}.",
+      "deleteFailedTitle": "Xóa thất bại",
+      "deleteFailedDesc": "Không thể xóa các tệp mô hình.",
+      "downloadStartedTitle": "Bắt đầu tải xuống",
+      "downloadStartedDesc": "Đang chuẩn bị tải xuống {{name}} ({{variant}}).",
+      "readyTitle": "Mô hình sẵn sàng",
+      "readyDesc": "{{name}} {{variant}} đã được lưu vào bộ nhớ đệm thành công.",
+      "downloadFailedTitle": "Tải xuống thất bại",
+      "downloadFailedDesc": "Không thể tải xuống {{name}}.",
+      "downloadInitFailedDesc": "Không thể khởi tạo trình tải xuống ngầm.",
+      "cacheNote": "Các mô hình AI được lưu trữ an toàn trong Bộ nhớ đệm (Cache Storage) của trình duyệt."
+    },
+    "fonts": {
+      "downloadStartedTitle": "Bắt đầu tải xuống",
+      "downloadingWoff": "Đang tải xuống tệp WOFF2 cho {{family}}...",
+      "installedTitle": "Đã cài đặt phông chữ",
+      "installedDesc": "\"{{family}}\" hiện đã khả dụng ngoại tuyến.",
+      "downloadFailedTitle": "Tải xuống thất bại",
+      "downloadFailedDesc": "Không thể tải về \"{{family}}\".",
+      "notSupportedTitle": "Không được hỗ trợ",
+      "notSupportedDesc": "Trình duyệt của bạn không hỗ trợ Local Font Access API (khuyên dùng Chrome/Edge).",
+      "fetchFailedTitle": "Lấy phông chữ thất bại",
+      "fetchFailedDesc": "Không thể lấy phông chữ hệ thống cục bộ.",
+      "importingTitle": "Đang nhập",
+      "extractingSystemFont": "Đang giải nén phông chữ hệ thống \"{{name}}\"...",
+      "importedTitle": "Đã nhập phông chữ",
+      "importedDesc": "\"{{name}}\" đã được nhập thành công.",
+      "importFailedTitle": "Nhập thất bại",
+      "importFailedDesc": "Không thể nhập phông chữ \"{{name}}\".",
+      "invalidFileTitle": "Định dạng tệp không hợp lệ",
+      "invalidFileDesc": "Vui lòng tải lên tệp phông chữ TTF, OTF hoặc WOFF2.",
+      "processingFile": "Đang xử lý tệp \"{{name}}\"...",
+      "removeConfirm": "Xóa phông chữ \"{{name}}\"? Phông chữ này sẽ không còn khả dụng ngoại tuyến.",
+      "removedTitle": "Đã xóa phông chữ",
+      "removedDesc": "\"{{name}}\" đã bị xóa khỏi bộ nhớ cục bộ.",
+      "deleteFailedDesc": "Không thể xóa \"{{name}}\".",
+      "clearAllConfirm": "Bạn có chắc chắn muốn xóa TẤT CẢ phông chữ đã cài đặt không?",
+      "clearAllSuccessTitle": "Đã xóa bộ nhớ",
+      "clearAllSuccessDesc": "Tất cả phông chữ đã cài đặt đã bị xóa.",
+      "clearAllFailedTitle": "Xóa thất bại",
+      "clearAllFailedDesc": "Không thể xóa bộ nhớ phông chữ.",
+      "managementTitle": "Quản lý phông chữ & Tùy chỉnh QR",
+      "managementDesc": "Cài đặt phông chữ tùy chỉnh để tạo kiểu cho văn bản in dưới mã QR của bạn. Bạn có thể lấy trực tiếp Google Fonts hoặc nhập các phông chữ cục bộ trên toàn hệ thống và các tệp OTF/TTF được chuyển đổi trực tiếp sang định dạng WOFF2 nhẹ.",
+      "importCustom": "Nhập phông chữ tùy chỉnh",
+      "importSystem": "Nhập phông chữ hệ thống",
+      "importSystemDesc": "Nhập bất kỳ phông chữ nào được cài đặt trên máy tính của bạn",
+      "uploadFile": "Tải lên tệp phông chữ",
+      "uploadFileDesc": "Nhập các tệp .ttf, .otf hoặc .woff2 cục bộ",
+      "installedOffline": "Phông chữ ngoại tuyến đã cài đặt",
+      "clearAll": "Xóa tất cả",
+      "weight": "Độ dày: {{weight}}",
+      "googleLibrary": "Thư viện Google Fonts",
+      "searchGoogle": "Tìm kiếm phông chữ Google...",
+      "allStyles": "Tất cả kiểu",
+      "sansSerif": "Không chân (Sans-Serif)",
+      "serif": "Có chân (Serif)",
+      "handwriting": "Chữ viết tay (Handwriting)",
+      "display": "Trang trí (Display)",
+      "sampleText": "Văn bản mẫu",
+      "installed": "Đã cài đặt",
+      "fetching": "Đang lấy...",
+      "download": "Tải xuống",
+      "noMatch": "Không có phông chữ nào khớp với tiêu chí tìm kiếm.",
+      "importLocalTitle": "Nhập phông chữ hệ thống cục bộ",
+      "importLocalDesc": "Chọn một phông chữ được cài đặt từ hệ thống của bạn. Imify sẽ tự động chuyển đổi kiểu Bold (700) hoặc Black (900) của nó sang định dạng WOFF2 nhẹ để vẽ trên canvas.",
+      "querying": "Đang truy vấn phông chữ hệ thống...",
+      "searchSystem": "Tìm kiếm phông chữ hệ thống...",
+      "noLocalDiscovered": "Không tìm thấy phông chữ cục bộ nào. Đảm bảo quyền đã được cấp.",
+      "close": "Đóng"
+    },
+    "downloadDialog": {
+      "title": "Tải xuống phông chữ",
+      "source": "Nguồn",
+      "library": "Thư viện Google Fonts",
+      "size": "Kích thước tải",
+      "license": "Giấy phép",
+      "directDownloadNote": "Bạn đang tải xuống tệp phông chữ tĩnh này trực tiếp từ máy chủ Google Fonts.",
+      "privacyTitle": "Quyền riêng tư & Dữ liệu",
+      "privacyDesc": "Imify không phải là nhà phân phối và không chịu trách nhiệm về bản quyền phông chữ. Bạn đang tải xuống phông chữ này trực tiếp từ máy chủ Google Fonts và đồng ý với các điều khoản của tác giả. Việc vẽ văn bản của bạn chạy hoàn toàn cục bộ.",
+      "connectionTitle": "Kết nối Internet",
+      "connectionDesc": "Cần có kết nối internet để tải xuống lần đầu. Sau khi được tải xuống và lưu trữ trong IndexedDB, phông chữ sẽ được tải khi khởi động để sử dụng ngoại tuyến.",
+      "agreementPrefix": "Tôi đồng ý với ",
+      "agreementLink": "Điều khoản Sử dụng và Giấy phép Phông chữ",
+      "cancel": "Hủy",
+      "download": "Tải xuống"
+    }
+  }
+}

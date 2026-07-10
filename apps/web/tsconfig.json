@@ -1,7 +1,6 @@
 {
   "extends": "../../packages/config/tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "allowJs": true,
     "noEmit": true,
     "plugins": [
@@ -28,6 +27,9 @@
       "@imify/stores/*": [
         "../../packages/stores/src/*"
       ],
+      "@imify/i18n/*": [
+        "../../packages/i18n/src/*"
+      ],
       "@imify/core": [
         "../../packages/core/src/index.ts"
       ],
@@ -42,6 +44,9 @@
       ],
       "@imify/stores": [
         "../../packages/stores/src/index.ts"
+      ],
+      "@imify/i18n": [
+        "../../packages/i18n/src/index.ts"
       ]
     },
     "jsx": "preserve"
@@ -53,6 +58,8 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "out",
+    ".next"
   ]
 }

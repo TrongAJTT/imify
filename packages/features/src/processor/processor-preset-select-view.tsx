@@ -1,75 +1,268 @@
-import React, { useMemo, useState } from "react"
-import { Check, Edit2, Plus, Trash2 } from "lucide-react"
-import { EmptyDropCard } from "@imify/ui"
-import { PRESET_HIGHLIGHT_COLORS } from "@imify/stores/stores/preset-colors"
-import type { SavedSetupPreset, SetupContext } from "@imify/stores/stores/batch-store"
-import { ProcessorPresetDetail } from "./processor-preset-detail"
-import { SavePresetDialog } from "./save-preset-dialog"
-import { WorkspaceSelectHeader } from "./workspace-select-header"
-
-function ProcessorPresetCard({ preset, context, isActive, onOpen, onEdit, onDelete }: { preset: SavedSetupPreset; context: SetupContext; isActive: boolean; onOpen: () => void; onEdit: () => void; onDelete: () => void }) {
-  return (
-    <div role="button" tabIndex={0} onClick={onOpen} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen() } }} className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-lg border text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 ${isActive ? "border-sky-500 bg-sky-50/70 ring-1 ring-sky-300 dark:border-sky-500 dark:bg-sky-500/10 dark:ring-sky-700" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}>
-      <div className={`pointer-events-none absolute inset-0 z-0 rounded-lg transition-opacity ${isActive ? "opacity-100" : "opacity-30 group-hover:opacity-100"}`} style={{ boxShadow: `inset 0 0 0 1.5px ${preset.highlightColor}` }} />
-      <div className="relative z-10 flex min-h-[84px] w-full overflow-hidden"><div className="flex flex-1 flex-col p-3"><div className="mb-2 flex min-w-0 items-start gap-2"><span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{preset.name}</span></div><div className="flex items-center justify-between gap-2 text-[11px]"><span className="font-medium text-slate-400 dark:text-slate-500">{new Date(preset.updatedAt || preset.createdAt).toLocaleDateString()}</span></div></div></div>
-      <div className="absolute right-2 top-2 z-10 translate-y-1 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
-        <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white/90 px-1 py-1 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90">
-          <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onEdit() }} className="rounded p-1 text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700" aria-label="Edit preset"><Edit2 size={12} /></button>
-          <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onDelete() }} className="rounded p-1 text-red-600 transition-colors hover:bg-red-50/90 dark:text-red-400 dark:hover:bg-red-500/20" aria-label="Delete preset"><Trash2 size={12} /></button>
-        </div>
-      </div>
-      <div className="border-t border-slate-200/50 px-3 py-2 dark:border-slate-700/50"><ProcessorPresetDetail preset={preset} context={context} /></div>
-    </div>
-  )
-}
+import React, { useMemo, useState } from "react";
+import { Plus, RotateCcw } from "lucide-react";
+import { EmptyDropCard, Shield, MutedText, Button } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
+import { isFeaturePreset } from "@imify/core";
+import { PRESET_HIGHLIGHT_COLORS } from "@imify/stores/stores/preset-colors";
+import {
+  useBatchStore,
+  type SavedSetupPreset,
+  type SetupContext,
+} from "@imify/stores/stores/batch-store";
+import { PresetCard } from "./preset-card";
+import { SavePresetDialog } from "./save-preset-dialog";
+import { WorkspaceSelectHeader } from "./workspace-select-header";
 
 export function ProcessorPresetSelectView({
-  context, presets, activePresetId, onOpenPreset, onCreatePreset, onUpdatePresetMeta, onDeletePreset
+  context,
+  presets,
+  activePresetId,
+  onOpenPreset,
+  onCreatePreset,
+  onUpdatePresetMeta,
+  onDeletePreset,
 }: {
-  context: SetupContext
-  presets: SavedSetupPreset[]
-  activePresetId: string | null
-  onOpenPreset: (presetId: string) => void
-  onCreatePreset: (name: string, color: string) => void
-  onUpdatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
-  onDeletePreset: (presetId: string) => void
+  context: SetupContext;
+  presets: SavedSetupPreset[];
+  activePresetId: string | null;
+  onOpenPreset: (presetId: string) => void;
+  onCreatePreset: (name: string, color: string) => void;
+  onUpdatePresetMeta: (payload: {
+    id: string;
+    name: string;
+    highlightColor: string;
+  }) => void;
+  onDeletePreset: (presetId: string) => void;
 }) {
-  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false)
-  const [editingPreset, setEditingPreset] = useState<SavedSetupPreset | null>(null)
-  const contextLabel = context === "single" ? "Single" : "Batch"
-  const sortedPresets = useMemo(() => [...presets].sort((a, b) => b.updatedAt - a.updatedAt), [presets])
-  const openCreateDialog = () => { setEditingPreset(null); setIsSavePresetDialogOpen(true) }
-  const openEditDialog = (preset: SavedSetupPreset) => { setEditingPreset(preset); setIsSavePresetDialogOpen(true) }
+  const { t } = useTranslation(["processor", "common"]);
+  const { togglePinPreset } = useBatchStore();
+  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
+  const [editingPreset, setEditingPreset] = useState<SavedSetupPreset | null>(
+    null,
+  );
+  const [selectedFormat, setSelectedFormat] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<"processor" | "feature">(
+    "processor",
+  );
+
+
+
+  const contextLabel = context === "single" ? "Single" : "Batch";
+  const formats = useMemo(() => {
+    return ["all", "png", "webp", "avif", "jxl", "jpg", "bmp", "ico", "tiff"];
+  }, []);
+
+  const filteredPresets = useMemo(() => {
+    let list = presets;
+
+    if (selectedType === "processor") {
+      list = list.filter((p) => !isFeaturePreset(p.id));
+    } else if (selectedType === "feature") {
+      list = list.filter((p) => isFeaturePreset(p.id));
+    }
+
+    if (selectedFormat !== "all") {
+      list = list.filter((p) => {
+        const fmt =
+          p.config.targetFormat === "mozjpeg" ? "jpg" : p.config.targetFormat;
+        return fmt === selectedFormat;
+      });
+    }
+    return [...list].sort((a, b) => {
+      const pinA = a.pinned ? 1 : 0;
+      const pinB = b.pinned ? 1 : 0;
+      if (pinA !== pinB) {
+        return pinB - pinA;
+      }
+      return b.updatedAt - a.updatedAt;
+    });
+  }, [presets, selectedFormat, selectedType]);
+
+  const sortedPresets = filteredPresets; // Use filtered ones for display
+  const openCreateDialog = () => {
+    setEditingPreset(null);
+    setIsSavePresetDialogOpen(true);
+  };
+  const openEditDialog = (preset: SavedSetupPreset) => {
+    setEditingPreset(preset);
+    setIsSavePresetDialogOpen(true);
+  };
+
+  const refreshPresets = async () => {
+    if ((useBatchStore as any).persist?.rehydrate) {
+      await (useBatchStore as any).persist.rehydrate();
+    }
+  };
+
   const handleSavePreset = (name: string, color: string) => {
-    if (editingPreset) { onUpdatePresetMeta({ id: editingPreset.id, name, highlightColor: color }); setEditingPreset(null); setIsSavePresetDialogOpen(false); return }
-    onCreatePreset(name, color); setIsSavePresetDialogOpen(false)
-  }
+    if (editingPreset) {
+      onUpdatePresetMeta({ id: editingPreset.id, name, highlightColor: color });
+      setEditingPreset(null);
+      setIsSavePresetDialogOpen(false);
+      return;
+    }
+    onCreatePreset(name, color);
+    setIsSavePresetDialogOpen(false);
+  };
   const confirmDeletePreset = (preset: SavedSetupPreset) => {
-    if (!window.confirm(`Delete preset "${preset.name}"?`)) return
-    onDeletePreset(preset.id)
-  }
+    if (
+      !window.confirm(
+        t("presetSelector.deleteConfirm", {
+          defaultValue: `Delete preset "${preset.name}"?`,
+          name: preset.name,
+        }),
+      )
+    )
+      return;
+    onDeletePreset(preset.id);
+  };
+
+  const filterControl = (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+      <Shield
+        left={t("presetSelector.type", "Type")}
+        size="sm"
+        leftBg="bg-slate-700 dark:bg-slate-800"
+        leftColor="text-white"
+        rightBg="bg-slate-100 dark:bg-slate-800"
+        rightColor="text-slate-600 dark:text-slate-400"
+        className="border border-slate-200 dark:border-slate-700 w-full sm:w-auto"
+        right={
+          <div className="flex items-center gap-1.5 h-full">
+            {(["processor", "feature"] as const).map((tVal, i, arr) => (
+              <React.Fragment key={tVal}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedType(tVal)}
+                  className={`transition-colors hover:text-sky-500 py-1 ${selectedType === tVal ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
+                >
+                  {tVal === "processor" ? "Processor" : "Features"}
+                </button>
+                {i < arr.length - 1 && <span className="opacity-30">•</span>}
+              </React.Fragment>
+            ))}
+          </div>
+        }
+      />
+      <Shield
+        left={t("presetSelector.filter", "Filter")}
+        size="sm"
+        leftBg="bg-slate-700 dark:bg-slate-800"
+        leftColor="text-white"
+        rightBg="bg-slate-100 dark:bg-slate-800"
+        rightColor="text-slate-600 dark:text-slate-400"
+        className="border border-slate-200 dark:border-slate-700 w-full sm:w-auto"
+        right={
+          <div className="flex items-center gap-1.5 h-full overflow-x-auto no-scrollbar">
+            {formats.map((f, i) => (
+              <React.Fragment key={f}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFormat(f)}
+                  className={`transition-colors hover:text-sky-500 py-1 shrink-0 ${selectedFormat === f ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
+                >
+                  {f.toUpperCase()}
+                </button>
+                {i < formats.length - 1 && (
+                  <span className="opacity-30">•</span>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        }
+      />
+    </div>
+  );
 
   return (
     <div className="p-0">
-      {sortedPresets.length === 0 ? (
-        <EmptyDropCard icon={<Plus size={28} className="text-sky-500" />} iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none" title={`No ${contextLabel.toLowerCase()} presets yet`} subtitle="Create your first preset to start working" onClick={openCreateDialog} />
+      {presets.length === 0 ? (
+        <EmptyDropCard
+          icon={<Plus size={28} className="text-sky-500" />}
+          iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none"
+          title={t("presetSelector.noPresetsYet", {
+            defaultValue: `No ${contextLabel.toLowerCase()} presets yet`,
+            context: contextLabel.toLowerCase(),
+          })}
+          subtitle={t("presetSelector.createFirstMessage")}
+          onClick={openCreateDialog}
+        />
       ) : (
         <>
-          <WorkspaceSelectHeader title={`${contextLabel} Presets`} createLabel="New Preset" onCreate={openCreateDialog} createIcon={<Plus size={14} />} />
+          <WorkspaceSelectHeader
+            title={t("presetSelector.contextPresets", {
+              defaultValue: `${contextLabel} Presets`,
+              context: contextLabel,
+            })}
+            createLabel={t("common:add")}
+            onCreate={openCreateDialog}
+            createIcon={<Plus size={14} />}
+            extraActions={
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={refreshPresets}
+                className="gap-2 h-8 px-3"
+              >
+                <RotateCcw size={12} className="scale-x-[-1]" />
+                <span className="hidden sm:inline">{t("common:refresh")}</span>
+              </Button>
+            }
+          />
+          <div className="mb-4 flex justify-start">{filterControl}</div>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3">
-            {sortedPresets.map((preset) => <ProcessorPresetCard key={preset.id} preset={preset} context={context} isActive={preset.id === activePresetId} onOpen={() => onOpenPreset(preset.id)} onEdit={() => openEditDialog(preset)} onDelete={() => confirmDeletePreset(preset)} />)}
+            {sortedPresets.length === 0 ? (
+              <div className="col-span-full py-12 text-center">
+                <MutedText>
+                  {t(
+                    "presetSelector.noPresetsMatchFilter",
+                    "No presets match the selected filter.",
+                  )}
+                </MutedText>
+              </div>
+            ) : (
+              sortedPresets.map((preset) => (
+                <PresetCard
+                  key={preset.id}
+                  preset={preset}
+                  context={context}
+                  isActive={preset.id === activePresetId}
+                  onSelect={() => onOpenPreset(preset.id)}
+                  onEdit={() => openEditDialog(preset)}
+                  onDelete={() => confirmDeletePreset(preset)}
+                  onTogglePin={() => togglePinPreset(preset.id)}
+                />
+              ))
+            )}
           </div>
         </>
       )}
       <SavePresetDialog
         isOpen={isSavePresetDialogOpen}
-        onClose={() => { setIsSavePresetDialogOpen(false); setEditingPreset(null) }}
+        onClose={() => {
+          setIsSavePresetDialogOpen(false);
+          setEditingPreset(null);
+        }}
         onSave={handleSavePreset}
         highlightColors={PRESET_HIGHLIGHT_COLORS}
-        title={editingPreset ? "Edit Configuration Preset" : "Save Configuration Preset"}
-        defaultName={editingPreset ? editingPreset.name : `${contextLabel} Preset ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+        title={
+          editingPreset
+            ? t("presetSelector.editPresetTitle")
+            : t("presetSelector.savePresetTitle")
+        }
+        defaultName={
+          editingPreset
+            ? editingPreset.name
+            : t("presetSelector.defaultPresetName", {
+                defaultValue: `${contextLabel} Preset ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+                context: contextLabel,
+                time: new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+              })
+        }
       />
     </div>
-  )
+  );
 }
-

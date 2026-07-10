@@ -10,6 +10,7 @@ import { PaperConfig } from "@/options/components/paper-config"
 import { AccordionCard } from "@imify/ui/ui/accordion-card"
 import { NumberInput } from "@imify/ui/ui/number-input"
 import { SelectInput } from "@imify/ui/ui/select-input"
+import { useTranslation } from "@imify/i18n"
 
 export type ResizeCardProps = {
   resizeMode: string
@@ -119,18 +120,19 @@ export function ResizeCard({
   alwaysOpen,
   groupId,
 }: ResizeCardProps) {
+  const { t } = useTranslation("processor")
   const batchModeMap: Record<string, string> = {
-    none: "No resize",
-    change_width: "Fit width",
-    change_height: "Fit height",
-    set_size: "Set size",
-    scale: "Scale",
-    page_size: "Paper size"
+    none: t("resizeNone"),
+    change_width: t("resizeFitWidth"),
+    change_height: t("resizeFitHeight"),
+    set_size: t("resizeSetSize"),
+    scale: t("resizeScale"),
+    page_size: t("resizePaperSize")
   }
   const splicingModeMap: Record<string, string> = {
-    none: "No resize",
-    fit_width: "Fit width",
-    fit_height: "Fit height"
+    none: t("resizeNone"),
+    fit_width: t("resizeFitWidth"),
+    fit_height: t("resizeFitHeight")
   }
 
   const modeOptions =
@@ -153,7 +155,7 @@ export function ResizeCard({
   return (
     <AccordionCard
       icon={<Maximize2 size={14} />}
-      label="Resize"
+      label={t("resize")}
       sublabel={sublabel}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
@@ -164,7 +166,7 @@ export function ResizeCard({
     >
       <div className="space-y-3">
         <SelectInput
-          label="Resize type"
+          label={t("resizeType")}
           value={resizeMode}
           disabled={disabled}
           options={modeOptions}
@@ -177,7 +179,7 @@ export function ResizeCard({
           resizeMode === "fit_height" ||
           resizeMode === "scale") && (
           <NumberInput
-            label={resizeMode === "scale" ? "Scale (%)" : "Value (px)"}
+            label={resizeMode === "scale" ? t("scalePercent") : t("valuePx")}
             disabled={disabled}
             min={1}
             value={resizeValue}
@@ -219,7 +221,7 @@ export function ResizeCard({
 
         {showResamplingAlgorithm && (
           <SelectInput
-            label="Resampling Algorithm"
+            label={t("resamplingAlgorithm")}
             value={safeResamplingAlgorithm}
             disabled={disabled}
             options={RESAMPLING_ALGORITHM_OPTIONS}

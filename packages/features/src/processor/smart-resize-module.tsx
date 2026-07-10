@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { Link2, RotateCcw, Unlink2, Maximize2, Crop, Minimize } from "lucide-react"
 
 import { Tooltip } from "@imify/ui"
-import { PROCESSOR_TOOLTIPS } from "./processor-tooltips"
+import { useTranslation } from "@imify/i18n"
 import { ColorPickerPopover, NumberInput, RadioCard, SelectInput, LabelText } from "@imify/ui"
 
 const ASPECT_RATIO_OPTIONS = [
@@ -118,6 +118,7 @@ export function SmartResizeModule({
   originalHeight?: number
   lockSignal?: number
 }) {
+  const { t } = useTranslation("processor")
   const initialWidthRef = useRef(Math.max(1, Math.round(originalWidth ?? width)))
   const initialHeightRef = useRef(Math.max(1, Math.round(originalHeight ?? height)))
   const lastLockSignalRef = useRef<number | undefined>(lockSignal)
@@ -254,8 +255,8 @@ export function SmartResizeModule({
           <Tooltip
             content={
               isRatioLocked
-                ? PROCESSOR_TOOLTIPS.shared.smartResize.ratioLock.unlockRatio
-                : PROCESSOR_TOOLTIPS.shared.smartResize.ratioLock.lockCurrentRatio
+                ? t("tooltipUnlockRatio")
+                : t("tooltipLockCurrentRatio")
             }
             variant="nowrap"
           >
@@ -392,7 +393,7 @@ export function SmartResizeModule({
             selectedValue={fitMode}
             onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
             disabled={disabled || !isFitModeEnabled}
-            tooltipContent={PROCESSOR_TOOLTIPS.shared.smartResize.fitMode.fill}
+            tooltipContent={t("tooltipFitModeFill")}
           />
           <RadioCard
             icon={<Crop size={14} />}
@@ -402,7 +403,7 @@ export function SmartResizeModule({
             selectedValue={fitMode}
             onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
             disabled={disabled || !isFitModeEnabled}
-            tooltipContent={PROCESSOR_TOOLTIPS.shared.smartResize.fitMode.cover}
+            tooltipContent={t("tooltipFitModeCover")}
           />
           <RadioCard
             icon={<Minimize size={14} />}
@@ -412,7 +413,7 @@ export function SmartResizeModule({
             selectedValue={fitMode}
             onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
             disabled={disabled || !isFitModeEnabled}
-            tooltipContent={PROCESSOR_TOOLTIPS.shared.smartResize.fitMode.contain}
+            tooltipContent={t("tooltipFitModeContain")}
             rightSlot={
               <ColorPickerPopover
                 label=""

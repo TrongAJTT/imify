@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { getAppMetadata } from "@imify/core/app-metadata"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import { WhatsNewDialog } from "./whats-new-dialog"
+import { ChangelogsDialog } from "./changelogs-dialog"
 import { WhatsNewUpdateSummaryDialog } from "./whats-new-update-summary-dialog"
 
 const STORAGE_KEY = "imify_whats_new_seen_v1"
@@ -140,7 +140,7 @@ export function WhatsNewUpdateNotificationGate() {
           }}
           version={currentVersion}
         />
-        <WhatsNewDialog
+        <ChangelogsDialog
           isOpen={isWhatsNewOpen}
           onClose={() => {
             void markSeen()
@@ -149,8 +149,7 @@ export function WhatsNewUpdateNotificationGate() {
         />
       </>
     )
-  }, [isSummaryOpen, isWhatsNewOpen, shouldRender])
+  }, [isSummaryOpen, isWhatsNewOpen, shouldRender, currentVersion])
 
   return content
 }
-

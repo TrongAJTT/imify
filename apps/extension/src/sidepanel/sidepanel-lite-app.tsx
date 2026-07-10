@@ -13,8 +13,10 @@ import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { useImifyDarkMode } from "@/options/shared/use-imify-dark-mode"
 import { SidepanelDropInputCard } from "@/sidepanel/components/sidepanel-drop-input-card"
 import { SidepanelSharedAppbar } from "@/sidepanel/components/sidepanel-shared-appbar"
+import { initI18n, useTranslation } from "@imify/i18n"
 
 bootstrapExtensionAdapters()
+initI18n()
 
 async function switchSidepanel(view: "inspector" | "audit"): Promise<void> {
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })
@@ -31,6 +33,7 @@ async function switchSidepanel(view: "inspector" | "audit"): Promise<void> {
 }
 
 export default function SidePanelLiteApp() {
+  const { t } = useTranslation("workspace")
   const { isDark, toggleDarkMode } = useImifyDarkMode()
   const paletteCount = useInspectorStore((state) => state.paletteCount)
 
@@ -76,7 +79,7 @@ export default function SidePanelLiteApp() {
       setSelectedFile(null)
       setPreviewUrl(null)
       setResult(null)
-      setError("Please select a valid image file.")
+      setError(t("sidepanel.invalidImageError", "Please select a valid image file."))
       return
     }
 
@@ -101,11 +104,11 @@ export default function SidePanelLiteApp() {
       setSelectedFile(null)
       setPreviewUrl(null)
       setResult(null)
-      setError("Failed to inspect the selected image.")
+      setError(t("sidepanel.inspectFailedError", "Failed to inspect the selected image."))
     } finally {
       setIsAnalyzing(false)
     }
-  }, [cleanupResources, paletteCount])
+  }, [cleanupResources, paletteCount, t])
 
   const handleOpenSettings = useCallback(async () => {
     await chrome.runtime.openOptionsPage()
@@ -129,10 +132,10 @@ export default function SidePanelLiteApp() {
         const file = await fetchRemoteImageAsFile(importUrl)
         await handlePickFile(file)
       } catch {
-        setError("Unable to import image URL for inspection.")
+        setError(t("sidepanel.importFailedError", "Unable to import image URL for inspection."))
       }
     })()
-  }, [handlePickFile])
+  }, [handlePickFile, t])
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
@@ -143,8 +146,8 @@ export default function SidePanelLiteApp() {
           onOpenOptions={() => void handleOpenSettings()}
           activeView="inspector"
           onSwitchView={(view) => void switchSidepanel(view)}
-          title="Imify Lite Inspector"
-          subtitle="Drag, inspect, optimize"
+          title={t("sidepanel.inspectorTitle", "Imify Lite Inspector")}
+          subtitle={t("sidepanel.inspectorSubtitle", "Drag, inspect, optimize")}
         />
 
         <SidepanelDropInputCard
@@ -163,7 +166,7 @@ export default function SidePanelLiteApp() {
           <div className="flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-700 dark:border-sky-900/50 dark:bg-sky-900/20 dark:text-sky-300">
             <Loader2 size={14} className="animate-spin" />
             <BodyText className="text-xs text-sky-700 dark:text-sky-300">
-              Processing image metadata and color profile...
+              {t("sidepanel.analyzingState", "Processing image metadata and color profile...")}
             </BodyText>
           </div>
         ) : null}

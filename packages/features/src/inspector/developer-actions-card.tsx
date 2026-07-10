@@ -15,7 +15,7 @@ import {
 } from "./index"
 import { InfoSection } from "./info-section"
 import { Tooltip } from "@imify/ui"
-import { INSPECTOR_TOOLTIPS } from "./inspector-tooltips"
+import { useTranslation } from "@imify/i18n"
 
 interface DeveloperActionsCardProps {
   bitmap: ImageBitmap
@@ -37,6 +37,7 @@ function ActionButton({
   tooltip: string
   getValue: () => string | null | Promise<string | null>
 }) {
+  const { t } = useTranslation("inspector")
   const [state, setState] = useState<"idle" | "copied" | "error">("idle")
 
   const handleCopy = async () => {
@@ -66,7 +67,7 @@ function ActionButton({
         {state === "copied" ? <Check size={14} className="text-emerald-500" /> : icon}
       </span>
       <span className="flex-1 truncate">
-        {state === "copied" ? "Copied!" : state === "error" ? "Failed" : label}
+        {state === "copied" ? t("copied") : state === "error" ? t("failed") : label}
       </span>
       <Tooltip content={tooltip} variant="wide1">
         <span className="text-slate-400 dark:text-slate-500 flex-shrink-0">
@@ -86,6 +87,7 @@ export function DeveloperActionsCard({
   palette,
   file
 }: DeveloperActionsCardProps) {
+  const { t } = useTranslation("inspector")
   const baseName = useMemo(() => {
     const idx = file.name.lastIndexOf(".")
     return idx > 0 ? file.name.slice(0, idx) : file.name
@@ -111,23 +113,23 @@ export function DeveloperActionsCard({
   )
 
   return (
-    <InfoSection title="DEVELOPER TOOLS" icon={<Code size={13} />} defaultOpen={false}>
+    <InfoSection title={t("developerTools")} icon={<Code size={13} />} defaultOpen={true}>
       <div className="space-y-3">
         <div>
           <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            UI / Frontend
+            {t("uiFrontend")}
           </div>
           <div className="space-y-2">
             <ActionButton
-              label="Copy as Base64 Data URI"
+              label={t("copyBase64DataUri")}
               icon={<Code size={14} />}
-              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyBase64DataUri}
+              tooltip={t("tooltips.copyBase64DataUri")}
               getValue={() => imageToBase64(bitmap, mimeType)}
             />
             <ActionButton
-              label="Copy as CSS Data URI"
+              label={t("copyCssDataUri")}
               icon={<Code size={14} />}
-              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyCssDataUri}
+              tooltip={t("tooltips.copyCssDataUri")}
               getValue={() => {
                 const dataUri = imageToBase64(bitmap, mimeType)
                 return dataUri ? toCssDataUri(dataUri) : null
@@ -135,28 +137,28 @@ export function DeveloperActionsCard({
             />
             {thumbHash && (
               <ActionButton
-                label="Copy ThumbHash"
+                label={t("copyThumbHash")}
                 icon={<Hash size={14} />}
-                tooltip={INSPECTOR_TOOLTIPS.developerActions.copyThumbHash}
+                tooltip={t("tooltips.copyThumbHash")}
                 getValue={() => thumbHash}
               />
             )}
             <ActionButton
-              label={"Copy <picture> Tag"}
+              label={t("copyPictureTag")}
               icon={<Image size={14} />}
-              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyPictureTag}
+              tooltip={t("tooltips.copyPictureTag")}
               getValue={() => buildPictureTag(baseName, "Description")}
             />
             <ActionButton
-              label="Copy CSS Aspect-Ratio"
+              label={t("copyCssAspectRatio")}
               icon={<Code size={14} />}
-              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyCssAspectRatio}
+              tooltip={t("tooltips.copyCssAspectRatio")}
               getValue={() => buildAspectRatioCss(result.dimensions.width, result.dimensions.height)}
             />
             <ActionButton
-              label="Copy Palette as CSS Variables"
+              label={t("copyPaletteCssVariables")}
               icon={<Code size={14} />}
-              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyPaletteCssVariables}
+              tooltip={t("tooltips.copyPaletteCssVariables")}
               getValue={() => buildPaletteCssVariables(palette)}
             />
           </div>
@@ -164,40 +166,40 @@ export function DeveloperActionsCard({
 
         <div>
           <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            System / Security
+            {t("systemSecurity")}
           </div>
           <div className="space-y-2">
             <ActionButton
-              label="Copy SHA-256 Hash"
+              label={t("copySha256Hash")}
               icon={<Fingerprint size={14} />}
-              tooltip={INSPECTOR_TOOLTIPS.developerActions.copySha256Hash}
+              tooltip={t("tooltips.copySha256Hash")}
               getValue={async () => {
                 const buffer = await file.arrayBuffer()
                 return getSha256(buffer)
               }}
             />
             <ActionButton
-              label="Copy MD5 Hash"
+              label={t("copyMd5Hash")}
               icon={<Fingerprint size={14} />}
-              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyMd5Hash}
+              tooltip={t("tooltips.copyMd5Hash")}
               getValue={async () => {
                 const buffer = await file.arrayBuffer()
                 return getMd5(buffer)
               }}
             />
             <ActionButton
-              label="Copy Magic Number Signature"
+              label={t("copyMagicNumberSignature")}
               icon={<Shield size={14} />}
-              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyMagicNumberSignature}
+              tooltip={t("tooltips.copyMagicNumberSignature")}
               getValue={async () => {
                 const buffer = await file.arrayBuffer()
                 return getMagicNumber(buffer)
               }}
             />
             <ActionButton
-              label="Copy Inspection JSON"
+              label={t("copyInspectionJson")}
               icon={<Code size={14} />}
-              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyInspectionJson}
+              tooltip={t("tooltips.copyInspectionJson")}
               getValue={() => inspectionJson}
             />
           </div>
@@ -205,13 +207,13 @@ export function DeveloperActionsCard({
 
         <div>
           <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            Optimization
+            {t("optimization")}
           </div>
           <div className="space-y-2">
             <ActionButton
-              label="Copy Base64 (Optimized / Minified)"
+              label={t("copyOptimizedBase64")}
               icon={<Code size={14} />}
-              tooltip={INSPECTOR_TOOLTIPS.developerActions.copyOptimizedBase64}
+              tooltip={t("tooltips.copyOptimizedBase64")}
               getValue={() => buildOptimizedDataUri(bitmap, mimeType)}
             />
           </div>

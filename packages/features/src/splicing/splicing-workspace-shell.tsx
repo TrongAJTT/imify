@@ -1,219 +1,318 @@
-import React, { useEffect, useMemo } from "react"
+import React, { useEffect, useMemo } from "react";
 
-import { FeatureBreadcrumb } from "../shared/feature-breadcrumb"
-import { SplicingPresetSelectView } from "./splicing-preset-select-view"
-import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
-import { useSplicingStore } from "@imify/stores/stores/splicing-store"
-import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
-import type { SplicingPresetConfig } from "@imify/stores/stores/splicing-preset-store"
+import { FeatureBreadcrumb } from "../shared/feature-breadcrumb";
+import { SplicingPresetSelectView } from "./splicing-preset-select-view";
+import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store";
+import {
+  useSplicingStore,
+  type SplicingStoreState,
+} from "@imify/stores/stores/splicing-store";
+import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
+import type { SplicingPresetConfig } from "@imify/stores/stores/splicing-preset-store";
 
 interface SplicingWorkspaceShellProps {
-  workspace: React.ReactNode
+  workspace: React.ReactNode;
+  onRootClick?: () => void;
 }
 
-const AUTO_SAVE_DELAY_MS = 420
+const AUTO_SAVE_DELAY_MS = 420;
 
-function extractSplicingPresetConfig(splicingState: any): SplicingPresetConfig {
+function extractSplicingPresetConfig(
+  splicingState: SplicingStoreState,
+): SplicingPresetConfig {
+  const {
+    layout,
+    canvas,
+    image,
+    exportSettings,
+    previewQualityPercent,
+    previewShowImageNumber,
+  } = splicingState;
   return {
-    preset: splicingState.preset,
-    primaryDirection: splicingState.primaryDirection,
-    secondaryDirection: splicingState.secondaryDirection,
-    gridCount: splicingState.gridCount,
-    flowMaxSize: splicingState.flowMaxSize,
-    flowSplitOverflow: splicingState.flowSplitOverflow,
-    alignment: splicingState.alignment,
-    imageAppearanceDirection: splicingState.imageAppearanceDirection,
-    canvasPadding: splicingState.canvasPadding,
-    mainSpacing: splicingState.mainSpacing,
-    crossSpacing: splicingState.crossSpacing,
-    canvasBorderRadius: splicingState.canvasBorderRadius,
-    canvasBorderWidth: splicingState.canvasBorderWidth,
-    canvasBorderColor: splicingState.canvasBorderColor,
-    backgroundColor: splicingState.backgroundColor,
-    imageResize: splicingState.imageResize,
-    imageFitValue: splicingState.imageFitValue,
-    imagePadding: splicingState.imagePadding,
-    imagePaddingColor: splicingState.imagePaddingColor,
-    imageBorderRadius: splicingState.imageBorderRadius,
-    imageBorderWidth: splicingState.imageBorderWidth,
-    imageBorderColor: splicingState.imageBorderColor,
-    exportFormat: splicingState.exportFormat,
-    exportQuality: splicingState.exportQuality,
-    exportJxlEffort: splicingState.exportJxlEffort,
-    exportJxlLossless: splicingState.exportJxlLossless,
-    exportJxlProgressive: splicingState.exportJxlProgressive,
-    exportJxlEpf: splicingState.exportJxlEpf,
-    exportWebpLossless: splicingState.exportWebpLossless,
-    exportWebpNearLossless: splicingState.exportWebpNearLossless,
-    exportWebpEffort: splicingState.exportWebpEffort,
-    exportWebpSharpYuv: splicingState.exportWebpSharpYuv,
-    exportWebpPreserveExactAlpha: splicingState.exportWebpPreserveExactAlpha,
-    exportAvifSpeed: splicingState.exportAvifSpeed,
-    exportAvifQualityAlpha: splicingState.exportAvifQualityAlpha,
-    exportAvifLossless: splicingState.exportAvifLossless,
-    exportAvifSubsample: splicingState.exportAvifSubsample,
-    exportAvifTune: splicingState.exportAvifTune,
-    exportAvifHighAlphaQuality: splicingState.exportAvifHighAlphaQuality,
-    exportMozJpegProgressive: splicingState.exportMozJpegProgressive,
-    exportMozJpegChromaSubsampling: splicingState.exportMozJpegChromaSubsampling,
-    exportPngTinyMode: splicingState.exportPngTinyMode,
-    exportPngCleanTransparentPixels: splicingState.exportPngCleanTransparentPixels,
-    exportPngAutoGrayscale: splicingState.exportPngAutoGrayscale,
-    exportPngDithering: splicingState.exportPngDithering,
-    exportPngDitheringLevel: splicingState.exportPngDitheringLevel,
-    exportPngProgressiveInterlaced: splicingState.exportPngProgressiveInterlaced,
-    exportPngOxiPngCompression: splicingState.exportPngOxiPngCompression,
-    exportBmpColorDepth: splicingState.exportBmpColorDepth,
-    exportBmpDithering: splicingState.exportBmpDithering,
-    exportBmpDitheringLevel: splicingState.exportBmpDitheringLevel,
-    exportTiffColorMode: splicingState.exportTiffColorMode,
-    exportMode: splicingState.exportMode,
-    exportTrimBackground: splicingState.exportTrimBackground,
-    exportConcurrency: splicingState.exportConcurrency,
-    exportFileNamePattern: splicingState.exportFileNamePattern,
-    previewQualityPercent: splicingState.previewQualityPercent,
-    previewShowImageNumber: splicingState.previewShowImageNumber
-  }
+    preset: layout.preset,
+    primaryDirection: layout.primaryDirection,
+    secondaryDirection: layout.secondaryDirection,
+    gridCount: layout.gridCount,
+    flowMaxSize: layout.flowMaxSize,
+    flowSplitOverflow: layout.flowSplitOverflow,
+    alignment: layout.alignment,
+    imageAppearanceDirection: layout.imageAppearanceDirection,
+    canvasPadding: canvas.padding,
+    mainSpacing: canvas.mainSpacing,
+    crossSpacing: canvas.crossSpacing,
+    canvasBorderRadius: canvas.borderRadius,
+    canvasBorderWidth: canvas.borderWidth,
+    canvasBorderColor: canvas.borderColor,
+    backgroundColor: canvas.backgroundColor,
+    imageResize: image.resizeMode,
+    imageFitValue: image.fitValue,
+    imagePadding: image.padding,
+    imagePaddingColor: image.paddingColor,
+    imageBorderRadius: image.borderRadius,
+    imageBorderWidth: image.borderWidth,
+    imageBorderColor: image.borderColor,
+    exportFormat: exportSettings.targetFormat,
+    exportQuality: exportSettings.quality,
+    exportJxlEffort: exportSettings.codecOptions.jxl?.effort ?? 7,
+    exportJxlLossless: exportSettings.codecOptions.jxl?.lossless ?? false,
+    exportJxlProgressive: exportSettings.codecOptions.jxl?.progressive ?? false,
+    exportJxlEpf: exportSettings.codecOptions.jxl?.epf ?? 1,
+    exportWebpLossless: exportSettings.codecOptions.webp?.lossless ?? false,
+    exportWebpNearLossless:
+      exportSettings.codecOptions.webp?.nearLossless ?? 100,
+    exportWebpEffort: exportSettings.codecOptions.webp?.effort ?? 5,
+    exportWebpSharpYuv: exportSettings.codecOptions.webp?.sharpYuv ?? false,
+    exportWebpPreserveExactAlpha:
+      exportSettings.codecOptions.webp?.preserveExactAlpha ?? false,
+    exportAvifSpeed: exportSettings.codecOptions.avif?.speed ?? 6,
+    exportAvifQualityAlpha: exportSettings.codecOptions.avif?.qualityAlpha,
+    exportAvifLossless: exportSettings.codecOptions.avif?.lossless ?? false,
+    exportAvifSubsample: exportSettings.codecOptions.avif?.subsample ?? 1,
+    exportAvifTune: exportSettings.codecOptions.avif?.tune ?? "auto",
+    exportAvifHighAlphaQuality:
+      exportSettings.codecOptions.avif?.highAlphaQuality ?? false,
+    exportMozJpegProgressive:
+      exportSettings.codecOptions.mozjpeg?.progressive ?? true,
+    exportMozJpegChromaSubsampling:
+      exportSettings.codecOptions.mozjpeg?.chromaSubsampling ?? 2,
+    exportPngTinyMode: exportSettings.codecOptions.png?.tinyMode ?? false,
+    exportPngCleanTransparentPixels:
+      exportSettings.codecOptions.png?.cleanTransparentPixels ?? false,
+    exportPngAutoGrayscale:
+      exportSettings.codecOptions.png?.autoGrayscale ?? false,
+    exportPngDithering: exportSettings.codecOptions.png?.dithering ?? false,
+    exportPngDitheringLevel:
+      exportSettings.codecOptions.png?.ditheringLevel ?? 0,
+    exportPngProgressiveInterlaced:
+      exportSettings.codecOptions.png?.progressiveInterlaced ?? false,
+    exportPngOxiPngCompression:
+      exportSettings.codecOptions.png?.oxipngCompression ?? false,
+    exportBmpColorDepth: exportSettings.codecOptions.bmp?.colorDepth ?? 24,
+    exportBmpDithering: exportSettings.codecOptions.bmp?.dithering ?? false,
+    exportBmpDitheringLevel:
+      exportSettings.codecOptions.bmp?.ditheringLevel ?? 0,
+    exportTiffColorMode: exportSettings.codecOptions.tiff?.colorMode ?? "color",
+    exportMode: exportSettings.exportMode,
+    exportTrimBackground: exportSettings.trimBackground,
+    exportConcurrency: exportSettings.concurrency,
+    exportFileNamePattern: exportSettings.fileNamePattern,
+    previewQualityPercent,
+    previewShowImageNumber,
+  };
 }
 
 function applySplicingPresetConfig(config: SplicingPresetConfig): void {
   useSplicingStore.setState({
-    preset: config.preset ?? "stitch_vertical",
-    primaryDirection: config.primaryDirection,
-    secondaryDirection: config.secondaryDirection,
-    gridCount: config.gridCount,
-    flowMaxSize: config.flowMaxSize,
-    flowSplitOverflow: config.flowSplitOverflow ?? false,
-    alignment: config.alignment,
-    imageAppearanceDirection: config.imageAppearanceDirection,
-    canvasPadding: config.canvasPadding,
-    mainSpacing: config.mainSpacing,
-    crossSpacing: config.crossSpacing,
-    canvasBorderRadius: config.canvasBorderRadius,
-    canvasBorderWidth: config.canvasBorderWidth,
-    canvasBorderColor: config.canvasBorderColor,
-    backgroundColor: config.backgroundColor,
-    imageResize: config.imageResize,
-    imageFitValue: config.imageFitValue,
-    imagePadding: config.imagePadding,
-    imagePaddingColor: config.imagePaddingColor,
-    imageBorderRadius: config.imageBorderRadius,
-    imageBorderWidth: config.imageBorderWidth,
-    imageBorderColor: config.imageBorderColor,
-    exportFormat: config.exportFormat,
-    exportQuality: config.exportQuality,
-    exportJxlEffort: config.exportJxlEffort,
-    exportJxlLossless: config.exportJxlLossless,
-    exportJxlProgressive: config.exportJxlProgressive,
-    exportJxlEpf: config.exportJxlEpf,
-    exportWebpLossless: config.exportWebpLossless,
-    exportWebpNearLossless: config.exportWebpNearLossless,
-    exportWebpEffort: config.exportWebpEffort ?? 5,
-    exportWebpSharpYuv: config.exportWebpSharpYuv ?? false,
-    exportWebpPreserveExactAlpha: config.exportWebpPreserveExactAlpha ?? false,
-    exportAvifSpeed: config.exportAvifSpeed ?? 6,
-    exportAvifQualityAlpha: config.exportAvifQualityAlpha,
-    exportAvifLossless: config.exportAvifLossless ?? false,
-    exportAvifSubsample: config.exportAvifSubsample ?? 1,
-    exportAvifTune: config.exportAvifTune ?? "auto",
-    exportAvifHighAlphaQuality: config.exportAvifHighAlphaQuality ?? false,
-    exportMozJpegProgressive: config.exportMozJpegProgressive ?? true,
-    exportMozJpegChromaSubsampling: config.exportMozJpegChromaSubsampling ?? 2,
-    exportPngTinyMode: config.exportPngTinyMode ?? false,
-    exportPngCleanTransparentPixels: config.exportPngCleanTransparentPixels ?? false,
-    exportPngAutoGrayscale: config.exportPngAutoGrayscale ?? false,
-    exportPngDithering: config.exportPngDithering ?? false,
-    exportPngDitheringLevel: config.exportPngDitheringLevel ?? 0,
-    exportPngProgressiveInterlaced: config.exportPngProgressiveInterlaced ?? false,
-    exportPngOxiPngCompression: config.exportPngOxiPngCompression ?? false,
-    exportBmpColorDepth: config.exportBmpColorDepth,
-    exportBmpDithering: config.exportBmpDithering,
-    exportBmpDitheringLevel: config.exportBmpDitheringLevel,
-    exportTiffColorMode: config.exportTiffColorMode,
-    exportMode: config.exportMode,
-    exportTrimBackground: config.exportTrimBackground,
-    exportConcurrency: config.exportConcurrency,
-    exportFileNamePattern: config.exportFileNamePattern,
+    layout: {
+      preset: config.preset ?? "stitch_vertical",
+      primaryDirection: config.primaryDirection,
+      secondaryDirection: config.secondaryDirection,
+      gridCount: config.gridCount,
+      flowMaxSize: config.flowMaxSize,
+      flowSplitOverflow: config.flowSplitOverflow ?? false,
+      alignment: config.alignment,
+      imageAppearanceDirection: config.imageAppearanceDirection,
+    },
+    canvas: {
+      padding: config.canvasPadding,
+      mainSpacing: config.mainSpacing,
+      crossSpacing: config.crossSpacing,
+      borderRadius: config.canvasBorderRadius,
+      borderWidth: config.canvasBorderWidth,
+      borderColor: config.canvasBorderColor,
+      backgroundColor: config.backgroundColor,
+    },
+    image: {
+      resizeMode: config.imageResize,
+      fitValue: config.imageFitValue,
+      padding: config.imagePadding,
+      paddingColor: config.imagePaddingColor,
+      borderRadius: config.imageBorderRadius,
+      borderWidth: config.imageBorderWidth,
+      borderColor: config.imageBorderColor,
+    },
+    exportSettings: {
+      targetFormat: config.exportFormat,
+      quality: config.exportQuality,
+      exportMode: config.exportMode,
+      trimBackground: config.exportTrimBackground,
+      concurrency: config.exportConcurrency,
+      fileNamePattern: config.exportFileNamePattern,
+      codecOptions: {
+        jxl: {
+          effort: config.exportJxlEffort,
+          lossless: config.exportJxlLossless,
+          progressive: config.exportJxlProgressive,
+          epf: config.exportJxlEpf,
+        },
+        webp: {
+          lossless: config.exportWebpLossless,
+          nearLossless: config.exportWebpNearLossless,
+          effort: config.exportWebpEffort,
+          sharpYuv: config.exportWebpSharpYuv,
+          preserveExactAlpha: config.exportWebpPreserveExactAlpha,
+        },
+        avif: {
+          speed: config.exportAvifSpeed,
+          qualityAlpha: config.exportAvifQualityAlpha,
+          lossless: config.exportAvifLossless,
+          subsample: config.exportAvifSubsample,
+          tune: config.exportAvifTune,
+          highAlphaQuality: config.exportAvifHighAlphaQuality,
+        },
+        mozjpeg: {
+          enabled: true,
+          progressive: config.exportMozJpegProgressive,
+          chromaSubsampling: config.exportMozJpegChromaSubsampling as any,
+        },
+        png: {
+          tinyMode: config.exportPngTinyMode,
+          cleanTransparentPixels: config.exportPngCleanTransparentPixels,
+          autoGrayscale: config.exportPngAutoGrayscale,
+          dithering: config.exportPngDithering,
+          ditheringLevel: config.exportPngDitheringLevel,
+          progressiveInterlaced: config.exportPngProgressiveInterlaced,
+          oxipngCompression: config.exportPngOxiPngCompression,
+        },
+        bmp: {
+          colorDepth: config.exportBmpColorDepth,
+          dithering: config.exportBmpDithering,
+          ditheringLevel: config.exportBmpDitheringLevel,
+        },
+        tiff: { colorMode: config.exportTiffColorMode },
+      },
+    },
     previewQualityPercent: config.previewQualityPercent ?? 20,
-    previewShowImageNumber: config.previewShowImageNumber ?? false
-  })
+    previewShowImageNumber: config.previewShowImageNumber ?? false,
+  });
 }
 
-export function SplicingWorkspaceShell({ workspace }: SplicingWorkspaceShellProps) {
-  const presets = useSplicingPresetStore((state) => state.presets)
-  const presetViewMode = useSplicingPresetStore((state) => state.presetViewMode)
-  const activePresetId = useSplicingPresetStore((state) => state.activePresetId)
-  const defaultPresetBootstrapped = useSplicingPresetStore((state) => state.defaultPresetBootstrapped)
+export function SplicingWorkspaceShell({
+  workspace,
+  onRootClick,
+}: SplicingWorkspaceShellProps) {
+  const presets = useSplicingPresetStore((state) => state.presets);
+  const presetViewMode = useSplicingPresetStore(
+    (state) => state.presetViewMode,
+  );
+  const activePresetId = useSplicingPresetStore(
+    (state) => state.activePresetId,
+  );
+  const defaultPresetBootstrapped = useSplicingPresetStore(
+    (state) => state.defaultPresetBootstrapped,
+  );
 
-  const setPresetViewMode = useSplicingPresetStore((state) => state.setPresetViewMode)
-  const applyPreset = useSplicingPresetStore((state) => state.applyPreset)
-  const ensureDefaultPreset = useSplicingPresetStore((state) => state.ensureDefaultPreset)
-  const saveCurrentPreset = useSplicingPresetStore((state) => state.saveCurrentPreset)
-  const updatePresetMeta = useSplicingPresetStore((state) => state.updatePresetMeta)
-  const deletePreset = useSplicingPresetStore((state) => state.deletePreset)
-  const syncActivePresetConfig = useSplicingPresetStore((state) => state.syncActivePresetConfig)
+  const setPresetViewMode = useSplicingPresetStore(
+    (state) => state.setPresetViewMode,
+  );
+  const applyPreset = useSplicingPresetStore((state) => state.applyPreset);
+  const ensureDefaultPreset = useSplicingPresetStore(
+    (state) => state.ensureDefaultPreset,
+  );
+  const saveCurrentPreset = useSplicingPresetStore(
+    (state) => state.saveCurrentPreset,
+  );
+  const updatePresetMeta = useSplicingPresetStore(
+    (state) => state.updatePresetMeta,
+  );
+  const deletePreset = useSplicingPresetStore((state) => state.deletePreset);
+  const syncActivePresetConfig = useSplicingPresetStore(
+    (state) => state.syncActivePresetConfig,
+  );
 
-  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection)
-  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb)
-  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack)
-  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader)
+  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection);
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore(
+    (state) => state.setBreadcrumb,
+  );
+  const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack);
+  const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader);
 
-  const splicingState = useSplicingStore()
+  const splicingState = useSplicingStore();
 
   const activePreset = useMemo(
     () => presets.find((p) => p.id === activePresetId) ?? null,
-    [presets, activePresetId]
-  )
+    [presets, activePresetId],
+  );
 
   useEffect(() => {
     if (presets.length === 0 && !defaultPresetBootstrapped) {
-      ensureDefaultPreset()
+      ensureDefaultPreset();
     }
-  }, [presets.length, defaultPresetBootstrapped, ensureDefaultPreset])
+  }, [presets.length, defaultPresetBootstrapped, ensureDefaultPreset]);
 
   useEffect(() => {
-    setHeaderSection("Image Splicing")
+    setHeaderSection("Image Splicing");
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
         rootToolId="splicing"
-        activeLabel={presetViewMode === "workspace" ? activePreset?.name ?? null : null}
+        activeLabel={
+          presetViewMode === "workspace" ? activePreset?.name ?? null : null
+        }
         onRootClick={
           presetViewMode === "workspace"
             ? () => {
-                setPresetViewMode("select")
+                setPresetViewMode("select");
+                onRootClick?.();
               }
             : undefined
         }
-      />
-    )
+      />,
+    );
     setHeaderOnBack(
-      presetViewMode === "workspace" ? () => setPresetViewMode("select") : null
-    )
+      presetViewMode === "workspace" ? () => setPresetViewMode("select") : null,
+    );
 
     return () => {
-      resetHeader()
-    }
-  }, [activePreset?.name, presetViewMode, resetHeader, setHeaderBreadcrumb, setHeaderSection, setPresetViewMode])
+      resetHeader();
+    };
+  }, [
+    activePreset?.name,
+    presetViewMode,
+    resetHeader,
+    setHeaderBreadcrumb,
+    setHeaderSection,
+    setPresetViewMode,
+    onRootClick,
+  ]);
 
   useEffect(() => {
     if (presetViewMode !== "workspace" || !activePreset) {
-      return
+      return;
     }
-    applySplicingPresetConfig(activePreset.config)
-  }, [activePreset, presetViewMode])
+    applySplicingPresetConfig(activePreset.config);
+  }, [activePreset, presetViewMode]);
+
+  const layoutJson = JSON.stringify(splicingState.layout);
+  const canvasJson = JSON.stringify(splicingState.canvas);
+  const imageJson = JSON.stringify(splicingState.image);
+  const exportSettingsJson = JSON.stringify(splicingState.exportSettings);
+  const previewQualityPercent = splicingState.previewQualityPercent;
+  const previewShowImageNumber = splicingState.previewShowImageNumber;
 
   useEffect(() => {
     if (presetViewMode !== "workspace" || !activePresetId) {
-      return
+      return;
     }
     const timeout = window.setTimeout(() => {
-      syncActivePresetConfig(extractSplicingPresetConfig(useSplicingStore.getState()))
-    }, AUTO_SAVE_DELAY_MS)
+      syncActivePresetConfig(
+        extractSplicingPresetConfig(useSplicingStore.getState()),
+      );
+    }, AUTO_SAVE_DELAY_MS);
     return () => {
-      window.clearTimeout(timeout)
-    }
-  }, [activePresetId, presetViewMode, splicingState, syncActivePresetConfig])
+      window.clearTimeout(timeout);
+    };
+  }, [
+    activePresetId,
+    presetViewMode,
+    layoutJson,
+    canvasJson,
+    imageJson,
+    exportSettingsJson,
+    previewQualityPercent,
+    previewShowImageNumber,
+    syncActivePresetConfig,
+  ]);
 
   if (presetViewMode === "select") {
     return (
@@ -222,17 +321,14 @@ export function SplicingWorkspaceShell({ workspace }: SplicingWorkspaceShellProp
         activePresetId={activePresetId}
         onOpenPreset={applyPreset}
         onCreatePreset={(name, color) => {
-          const config = extractSplicingPresetConfig(splicingState)
-          saveCurrentPreset({ name, highlightColor: color, config })
+          const config = extractSplicingPresetConfig(splicingState);
+          saveCurrentPreset({ name, highlightColor: color, config });
         }}
         onUpdatePresetMeta={updatePresetMeta}
         onDeletePreset={deletePreset}
       />
-    )
+    );
   }
 
-  return <>{workspace}</>
+  return <>{workspace}</>;
 }
-
-
-

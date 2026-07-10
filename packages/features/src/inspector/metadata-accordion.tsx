@@ -1,12 +1,7 @@
-import React from "react"
+import React, { useMemo } from "react"
 import { Eye, Tags } from "lucide-react"
 import { AccordionCard, CheckboxCard, SelectInput } from "@imify/ui"
-
-const EXIF_SORT_OPTIONS = [
-  { value: "group", label: "Group by category" },
-  { value: "name", label: "Sort by tag name" },
-  { value: "tag", label: "Sort by tag ID" }
-]
+import { useTranslation } from "@imify/i18n"
 
 interface MetadataAccordionProps {
   exifSortMode: "group" | "name" | "tag"
@@ -16,13 +11,23 @@ interface MetadataAccordionProps {
 }
 
 export function MetadataAccordion(props: MetadataAccordionProps) {
-  const sortModeLabel = EXIF_SORT_OPTIONS.find((o) => o.value === props.exifSortMode)?.label || "Group by category"
-  const sublabel = `${sortModeLabel}, Privacy: ${props.showSensitiveOnly ? "On" : "Off"}`
+  const { t } = useTranslation("inspector")
+
+  const exifSortOptions = useMemo(() => [
+    { value: "group", label: t("exifGroup") },
+    { value: "name", label: t("exifName") },
+    { value: "tag", label: t("exifTag") }
+  ], [t])
+
+  const sortModeLabel = exifSortOptions.find((o) => o.value === props.exifSortMode)?.label || t("exifGroup")
+  const privacyText = props.showSensitiveOnly ? t("privacyOn") : t("privacyOff")
+  const sublabel = `${sortModeLabel}, Privacy: ${privacyText}`
+
   return (
-    <AccordionCard icon={<Tags size={16} />} label="Metadata" sublabel={sublabel} colorTheme="purple" alwaysOpen>
+    <AccordionCard icon={<Tags size={16} />} label={t("metadata")} sublabel={sublabel} colorTheme="purple" alwaysOpen>
       <div className="space-y-3">
-        <SelectInput label="Sort Mode" value={props.exifSortMode} options={EXIF_SORT_OPTIONS} onChange={(v) => props.onExifSortModeChange(v as "group" | "name" | "tag")} />
-        <CheckboxCard icon={<Eye size={16} />} title="Sensitive Only" subtitle="Show only privacy-relevant tags" checked={props.showSensitiveOnly} onChange={props.onShowSensitiveOnlyChange} theme="amber" />
+        <SelectInput label={t("sortMode")} value={props.exifSortMode} options={exifSortOptions} onChange={(v) => props.onExifSortModeChange(v as "group" | "name" | "tag")} />
+        <CheckboxCard icon={<Eye size={16} />} title={t("sensitiveOnly")} subtitle={t("sensitiveOnlySubtitle")} checked={props.showSensitiveOnly} onChange={props.onShowSensitiveOnlyChange} theme="amber" />
       </div>
     </AccordionCard>
   )

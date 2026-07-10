@@ -1,49 +1,54 @@
-import React from "react"
-import { Sparkles, Layers, Scissors } from "lucide-react"
+import React from "react";
+import { Sparkles, Layers, Scissors } from "lucide-react";
 
-import { AccordionCard, CheckboxCard, NumberInput, SelectInput } from "@imify/ui"
-import { PROCESSOR_TOOLTIPS } from "./processor-tooltips"
+import {
+  AccordionCard,
+  CheckboxCard,
+  NumberInput,
+  SelectInput,
+} from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
 
 export interface AvifAdvancedSettingsCardProps {
-  qualityAlpha?: number
-  lossless: boolean
-  subsample: 1 | 2 | 3
-  tune: "auto" | "ssim" | "psnr"
-  highAlphaQuality: boolean
-  onQualityAlphaChange: (value: number) => void
-  onLosslessChange: (value: boolean) => void
-  onSubsampleChange: (value: 1 | 2 | 3) => void
-  onTuneChange: (value: "auto" | "ssim" | "psnr") => void
-  onHighAlphaQualityChange: (value: boolean) => void
-  disabled?: boolean
-  isOpen?: boolean
-  onOpenChange?: (open: boolean) => void
-  alwaysOpen?: boolean
-  groupId?: string
+  qualityAlpha?: number;
+  lossless: boolean;
+  subsample: 1 | 2 | 3;
+  tune: "auto" | "ssim" | "psnr";
+  highAlphaQuality: boolean;
+  onQualityAlphaChange: (value: number) => void;
+  onLosslessChange: (value: boolean) => void;
+  onSubsampleChange: (value: 1 | 2 | 3) => void;
+  onTuneChange: (value: "auto" | "ssim" | "psnr") => void;
+  onHighAlphaQualityChange: (value: boolean) => void;
+  disabled?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  alwaysOpen?: boolean;
+  groupId?: string;
 }
 
-function getSubsampleLabel(value: 1 | 2 | 3): string {
+function getSubsampleLabel(value: 1 | 2 | 3, t?: any): string {
   if (value === 3) {
-    return "4:4:4"
+    return "4:4:4";
   }
 
   if (value === 2) {
-    return "4:2:2"
+    return "4:2:2";
   }
 
-  return "4:2:0"
+  return "4:2:0";
 }
 
-function getTuneLabel(value: "auto" | "ssim" | "psnr"): string {
+function getTuneLabel(value: "auto" | "ssim" | "psnr", t?: any): string {
   if (value === "ssim") {
-    return "SSIM"
+    return "SSIM";
   }
 
   if (value === "psnr") {
-    return "PSNR"
+    return "PSNR";
   }
 
-  return "Auto"
+  return t ? t("advanced.avif.tuneAuto", "Auto") : "Auto";
 }
 
 export function AvifAdvancedSettingsCard({
@@ -61,20 +66,21 @@ export function AvifAdvancedSettingsCard({
   isOpen,
   onOpenChange,
   alwaysOpen,
-  groupId
+  groupId,
 }: AvifAdvancedSettingsCardProps) {
+  const { t } = useTranslation("processor");
   const alphaLabel = highAlphaQuality
-    ? "High Alpha"
+    ? t("advanced.avif.highAlpha")
     : typeof qualityAlpha === "number"
-      ? `Alpha ${qualityAlpha}`
-      : "Alpha Auto"
+      ? t("advanced.avif.alpha")
+      : t("advanced.avif.alphaAuto");
 
-  const sublabel = `${alphaLabel} • ${getSubsampleLabel(subsample)} • ${getTuneLabel(tune)}${lossless ? " • Lossless" : ""}`
+  const sublabel = `${alphaLabel} • ${getSubsampleLabel(subsample, t)} • ${getTuneLabel(tune, t)}${lossless ? ` • ${t("advanced.avif.lossless")}` : ""}`;
 
   return (
     <AccordionCard
       icon={<Sparkles size={14} />}
-      label="AVIF Advanced"
+      label={t("avifAdvanced")}
       sublabel={sublabel}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
@@ -86,14 +92,10 @@ export function AvifAdvancedSettingsCard({
       <div className="space-y-3">
         <CheckboxCard
           icon={<Scissors size={16} />}
-          title="Keep sharp edges for transparent images"
-          subtitle={
-            highAlphaQuality
-              ? "Enabled: alpha quality forced to 100"
-              : "Use this when logos or soft shadows lose edge clarity"
-          }
-          tooltipLabel="Keep sharp edges for transparent images"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.keepSharpEdges}
+          title={t("advanced.avif.keepSharpEdges")}
+          subtitle={t("advanced.avif.keepSharpEdgesSub")}
+          tooltipLabel={t("advanced.avif.keepSharpEdges")}
+          tooltipContent={t("tooltipKeepSharpEdges")}
           checked={highAlphaQuality}
           onChange={onHighAlphaQualityChange}
           disabled={disabled}
@@ -101,8 +103,8 @@ export function AvifAdvancedSettingsCard({
         />
 
         <NumberInput
-          label="Alpha Quality"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.alphaQuality}
+          label={t("advanced.avif.alphaQuality")}
+          tooltipContent={t("tooltipAlphaQuality")}
           value={typeof qualityAlpha === "number" ? qualityAlpha : 90}
           min={0}
           max={100}
@@ -112,35 +114,50 @@ export function AvifAdvancedSettingsCard({
         />
 
         <SelectInput
-          label="Chroma Subsampling"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.chromaSubsampling}
+          label={t("advanced.avif.chromaSubsampling")}
+          tooltipContent={t("tooltipChromaSubsampling")}
           value={String(subsample)}
           onChange={(value) => onSubsampleChange(Number(value) as 1 | 2 | 3)}
           disabled={disabled}
           options={[
-            { value: "1", label: "4:2:0 - Smallest file (default)" },
-            { value: "2", label: "4:2:2 - Balanced chroma detail" },
-            { value: "3", label: "4:4:4 - Full chroma detail" }
+            {
+              value: "1",
+              label: t("advanced.avif.chromaSubsampling1"),
+            },
+            {
+              value: "2",
+              label: t("advanced.avif.chromaSubsampling2"),
+            },
+            {
+              value: "3",
+              label: t("advanced.avif.chromaSubsampling3"),
+            },
           ]}
         />
 
         <SelectInput
-          label="Tune"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.tune}
+          label={t("advanced.avif.tune")}
+          tooltipContent={t("tooltipTune")}
           value={tune}
           onChange={(value) => onTuneChange(value as "auto" | "ssim" | "psnr")}
           disabled={disabled}
           options={[
-            { value: "auto", label: "Auto" },
-            { value: "ssim", label: "SSIM - Perceptual quality" },
-            { value: "psnr", label: "PSNR - Signal fidelity" }
+            { value: "auto", label: t("advanced.avif.tuneAuto") },
+            {
+              value: "ssim",
+              label: t("advanced.avif.tuneSsim"),
+            },
+            {
+              value: "psnr",
+              label: t("advanced.avif.tunePsnr"),
+            },
           ]}
         />
 
         <CheckboxCard
           icon={<Layers size={16} />}
-          title="Lossless"
-          subtitle="Preserve exact pixels (larger files, best for PNG-like assets)"
+          title={t("advanced.avif.losslessTitle")}
+          subtitle={t("advanced.avif.losslessSub")}
           checked={lossless}
           onChange={onLosslessChange}
           disabled={disabled}
@@ -148,6 +165,5 @@ export function AvifAdvancedSettingsCard({
         />
       </div>
     </AccordionCard>
-  )
+  );
 }
-

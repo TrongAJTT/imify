@@ -1,4 +1,4 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
 import {
@@ -29,12 +29,13 @@ export type ProcessorPresetViewMode = "select" | "workspace"
 
 export interface SavedSetupPreset {
   id: string
-  context: SetupContext
+  context?: SetupContext
   name: string
   highlightColor: string
   config: BatchSetupState
   createdAt: number
   updatedAt: number
+  pinned?: boolean
 }
 
 function toAspectRatioLabel(width: number, height: number): string {
@@ -238,8 +239,8 @@ function createDefaultSourceState(): Record<SetupContext, { width: number; heigh
 
 function createDefaultUIState(): Record<SetupContext, { isTargetFormatQualityOpen: boolean; isResizeOpen: boolean }> {
   return {
-    single: { isTargetFormatQualityOpen: false, isResizeOpen: false },
-    batch: { isTargetFormatQualityOpen: false, isResizeOpen: false }
+    single: { isTargetFormatQualityOpen: true, isResizeOpen: true },
+    batch: { isTargetFormatQualityOpen: true, isResizeOpen: true }
   }
 }
 
@@ -264,12 +265,11 @@ function getRecentPresetIdForContext(
 ): string | null {
   const preferredId = recentPresetIds[context]
 
-  if (preferredId && presets.some((preset) => preset.id === preferredId && preset.context === context)) {
+  if (preferredId && presets.some((preset) => preset.id === preferredId)) {
     return preferredId
   }
 
   const latestPreset = presets
-    .filter((preset) => preset.context === context)
     .sort((a, b) => b.updatedAt - a.updatedAt)[0]
 
   return latestPreset?.id ?? null
@@ -290,6 +290,8 @@ interface BatchStoreState extends BatchSetupState {
   isRunning: boolean
   presets: SavedSetupPreset[]
   recentPresetIds: Partial<Record<SetupContext, string>>
+  schemaVersion: number
+  migrateSchemaToV2: () => void
   setSetupContext: (context: SetupContext) => void
   setIsRunning: (value: boolean) => void
   setTargetFormat: (value: BatchTargetFormat) => void
@@ -356,12 +358,13 @@ interface BatchStoreState extends BatchSetupState {
   isResizeOpen: boolean
   setIsResizeOpen: (value: boolean) => void
   setPresetViewMode: (context: SetupContext, mode: ProcessorPresetViewMode) => void
-  saveCurrentPreset: (payload: { name: string; highlightColor: string }) => string
+  saveCurrentPreset: (payload: { id?: string; name: string; highlightColor: string }) => string
   applyPresetToCurrentContext: (presetId: string) => void
   ensureDefaultPresetForContext: (context: SetupContext) => string | null
   syncActivePresetConfig: (context: SetupContext) => void
   updatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
   deletePreset: (presetId: string) => void
+  togglePinPreset: (presetId: string) => void
 }
 
 function cloneContextConfig(state: BatchStoreState, context: SetupContext): BatchSetupState {
@@ -519,8 +522,8 @@ export const useBatchStore = create<BatchStoreState>()(
       skipOomWarning: false,
       skipSplicingHeavyPreviewQualityWarning: false,
       heavyFormatToast: null,
-      isTargetFormatQualityOpen: false,
-      isResizeOpen: false,
+      isTargetFormatQualityOpen: true,
+      isResizeOpen: true,
       contextConfigs: createDefaultContextConfigs(),
       sourceStateByContext: createDefaultSourceState(),
       uiStates: createDefaultUIState(),
@@ -543,7 +546,7 @@ export const useBatchStore = create<BatchStoreState>()(
           if (presetViewByContext[context] === "workspace") {
             const activePresetId = activePresetIds[context]
             const resolvedPreset = state.presets.find(
-              (preset) => preset.id === activePresetId && preset.context === context
+              (preset) => preset.id === activePresetId
             )
 
             if (resolvedPreset) {
@@ -552,7 +555,7 @@ export const useBatchStore = create<BatchStoreState>()(
               const fallbackPresetId = getRecentPresetIdForContext(context, state.recentPresetIds, state.presets)
               if (fallbackPresetId) {
                 const fallbackPreset = state.presets.find(
-                  (preset) => preset.id === fallbackPresetId && preset.context === context
+                  (preset) => preset.id === fallbackPresetId
                 )
                 if (fallbackPreset) {
                   activePresetIds[context] = fallbackPreset.id
@@ -1087,13 +1090,46 @@ export const useBatchStore = create<BatchStoreState>()(
             activePresetIds: nextActivePresetIds
           }
         }),
-      saveCurrentPreset: ({ name, highlightColor }) => {
+      saveCurrentPreset: ({ id, name, highlightColor }) => {
         const timestamp = Date.now()
-        const presetId = `preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
+        const presetId = id || `preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
 
         set((state) => {
           const setupContext = state.setupContext
           const currentConfig = cloneContextConfig(state, setupContext)
+          const nextPresetViewByContext = {
+            ...(state.presetViewByContext ?? createDefaultPresetViewByContext()),
+            [setupContext]: "workspace" as ProcessorPresetViewMode
+          }
+
+          const existingPresetIndex = id ? state.presets.findIndex((p) => p.id === id) : -1
+
+          if (existingPresetIndex !== -1) {
+            const existingPreset = state.presets[existingPresetIndex]
+            const updatedPreset: SavedSetupPreset = {
+              ...existingPreset,
+              name: name.trim() || existingPreset.name,
+              highlightColor: highlightColor || existingPreset.highlightColor,
+              config: currentConfig,
+              updatedAt: timestamp
+            }
+
+            const nextPresets = [...state.presets]
+            nextPresets[existingPresetIndex] = updatedPreset
+
+            return {
+              presets: nextPresets,
+              recentPresetIds: {
+                ...state.recentPresetIds,
+                [setupContext]: presetId
+              },
+              activePresetIds: {
+                ...state.activePresetIds,
+                [setupContext]: presetId
+              },
+              presetViewByContext: nextPresetViewByContext
+            }
+          }
 
           const nextPreset: SavedSetupPreset = {
             id: presetId,
@@ -1102,12 +1138,8 @@ export const useBatchStore = create<BatchStoreState>()(
             highlightColor,
             config: currentConfig,
             createdAt: timestamp,
-            updatedAt: timestamp
-          }
-
-          const nextPresetViewByContext = {
-            ...(state.presetViewByContext ?? createDefaultPresetViewByContext()),
-            [setupContext]: "workspace" as ProcessorPresetViewMode
+            updatedAt: timestamp,
+            pinned: false
           }
 
           return {
@@ -1130,7 +1162,7 @@ export const useBatchStore = create<BatchStoreState>()(
         set((state) => {
           const setupContext = state.setupContext
           const preset = state.presets.find((entry) => entry.id === presetId)
-          if (!preset || preset.context !== setupContext) {
+          if (!preset) {
             return state
           }
 
@@ -1162,8 +1194,7 @@ export const useBatchStore = create<BatchStoreState>()(
         let ensuredPresetId: string | null = null
 
         set((state) => {
-          const scopedPresets = state.presets.filter((preset) => preset.context === context)
-          if (scopedPresets.length > 0) {
+          if (state.presets.length > 0) {
             ensuredPresetId = getRecentPresetIdForContext(context, state.recentPresetIds, state.presets)
             if (state.defaultPresetBootstrappedByContext[context]) {
               return state
@@ -1193,7 +1224,8 @@ export const useBatchStore = create<BatchStoreState>()(
             highlightColor: DEFAULT_PRESET_HIGHLIGHT_COLOR,
             config: defaultConfig,
             createdAt: timestamp,
-            updatedAt: timestamp
+            updatedAt: timestamp,
+            pinned: false
           }
 
           return {
@@ -1222,7 +1254,7 @@ export const useBatchStore = create<BatchStoreState>()(
           let didUpdate = false
 
           const nextPresets = state.presets.map((preset) => {
-            if (preset.id !== activePresetId || preset.context !== context) {
+            if (preset.id !== activePresetId) {
               return preset
             }
 
@@ -1298,7 +1330,7 @@ export const useBatchStore = create<BatchStoreState>()(
                 nextActivePresetIds[context] = fallbackId
 
                 const fallbackPreset = nextPresets.find(
-                  (preset) => preset.id === fallbackId && preset.context === context
+                  (preset) => preset.id === fallbackId
                 )
                 if (fallbackPreset) {
                   const fallbackConfig = cloneSetupState(fallbackPreset.config)
@@ -1326,7 +1358,48 @@ export const useBatchStore = create<BatchStoreState>()(
             presetViewByContext: nextPresetViewByContext,
             contextConfigs: nextContextConfigs
           }
-        })
+        }),
+      schemaVersion: 2,
+      migrateSchemaToV2: () =>
+        set((state) => {
+          if (state.schemaVersion === 2) return state
+          const unifiedConfig = cloneSetupState(state.contextConfigs?.single ?? state)
+          const nextContextConfigs = {
+            single: unifiedConfig,
+            batch: unifiedConfig
+          }
+          
+          // Deduplicate presets
+          const uniquePresets: SavedSetupPreset[] = []
+          const configHashes = new Set<string>()
+          for (const preset of state.presets) {
+            const configStr = JSON.stringify(preset.config)
+            const hashKey = `${preset.name}_${configStr}`
+            if (!configHashes.has(hashKey)) {
+              configHashes.add(hashKey)
+              uniquePresets.push(preset)
+            }
+          }
+
+          return {
+            ...unifiedConfig,
+            contextConfigs: nextContextConfigs,
+            presets: uniquePresets,
+            schemaVersion: 2
+          }
+        }),
+      togglePinPreset: (presetId) =>
+        set((state) => ({
+          presets: state.presets.map((preset) =>
+            preset.id === presetId
+              ? {
+                  ...preset,
+                  pinned: !preset.pinned,
+                  updatedAt: Date.now()
+                }
+              : preset
+          )
+        }))
     }),
     {
       name: "imify-batch-setup",
@@ -1363,20 +1436,16 @@ export const useBatchStore = create<BatchStoreState>()(
         const defaultPresetBootstrappedByContext = {
           ...(state.defaultPresetBootstrappedByContext ?? createDefaultPresetBootstrapState())
         }
-        const hasSinglePreset = presets.some((preset) => preset.context === "single")
-        const hasBatchPreset = presets.some((preset) => preset.context === "batch")
+        const hasPresets = presets.length > 0
 
-        if (hasSinglePreset) {
+        if (hasPresets) {
           defaultPresetBootstrappedByContext.single = true
-        }
-
-        if (hasBatchPreset) {
           defaultPresetBootstrappedByContext.batch = true
         }
 
         ;(["single", "batch"] as SetupContext[]).forEach((context) => {
           const activePresetId = activePresetIds[context]
-          if (!activePresetId || !presets.some((preset) => preset.id === activePresetId && preset.context === context)) {
+          if (!activePresetId || !presets.some((preset) => preset.id === activePresetId)) {
             delete activePresetIds[context]
             if (normalizedPresetViewByContext[context] === "workspace") {
               normalizedPresetViewByContext[context] = "select"
@@ -1391,7 +1460,8 @@ export const useBatchStore = create<BatchStoreState>()(
           presets,
           activePresetIds,
           defaultPresetBootstrappedByContext,
-          presetViewByContext: normalizedPresetViewByContext
+          presetViewByContext: normalizedPresetViewByContext,
+          schemaVersion: state.schemaVersion ?? 2
         }
       },
       onRehydrateStorage: (state) => {
@@ -1405,35 +1475,48 @@ export const useBatchStore = create<BatchStoreState>()(
           }
 
           useBatchStore.setState((state) => {
-            const setupContext = state.setupContext ?? "single"
-            const contextConfigs = state.contextConfigs
-            const presets = state.presets.map((preset) => ({
+            let presets = state.presets.map((preset) => ({
               ...preset,
               config: cloneSetupState(preset.config)
             }))
+            const setupContext = state.setupContext ?? "single"
+            const contextConfigs = state.contextConfigs
             const presetViewByContext = {
               ...(state.presetViewByContext ?? createDefaultPresetViewByContext())
             }
             const defaultPresetBootstrappedByContext = {
               ...(state.defaultPresetBootstrappedByContext ?? createDefaultPresetBootstrapState())
             }
-            const hasSinglePreset = presets.some((preset) => preset.context === "single")
-            const hasBatchPreset = presets.some((preset) => preset.context === "batch")
-
-            if (hasSinglePreset) {
-              defaultPresetBootstrappedByContext.single = true
-            }
-
-            if (hasBatchPreset) {
-              defaultPresetBootstrappedByContext.batch = true
-            }
             const activePresetIds = {
               ...state.activePresetIds
             }
 
+            // Schema version v1 -> v2 automatic migration
+            let schemaVersion = state.schemaVersion ?? 1
+            let nextContextConfigs = contextConfigs
+            if (schemaVersion < 2) {
+              const unifiedConfig = cloneSetupState(contextConfigs?.single ?? state)
+              nextContextConfigs = {
+                single: unifiedConfig,
+                batch: unifiedConfig
+              }
+              const uniquePresets: SavedSetupPreset[] = []
+              const configHashes = new Set<string>()
+              for (const preset of presets) {
+                const configStr = JSON.stringify(preset.config)
+                const hashKey = `${preset.name}_${configStr}`
+                if (!configHashes.has(hashKey)) {
+                  configHashes.add(hashKey)
+                  uniquePresets.push(preset)
+                }
+              }
+              presets = uniquePresets
+              schemaVersion = 2
+            }
+
             ;(["single", "batch"] as SetupContext[]).forEach((context) => {
               const activePresetId = activePresetIds[context]
-              if (!activePresetId || !presets.some((preset) => preset.id === activePresetId && preset.context === context)) {
+              if (!activePresetId || !presets.some((preset) => preset.id === activePresetId)) {
                 delete activePresetIds[context]
               }
 
@@ -1447,28 +1530,35 @@ export const useBatchStore = create<BatchStoreState>()(
               }
             })
 
-            if (contextConfigs?.single && contextConfigs?.batch) {
-              const migratedContextConfigs = migrateContextConfigs(contextConfigs)
+            const hasPresets = presets.length > 0
+            if (hasPresets) {
+              defaultPresetBootstrappedByContext.single = true
+              defaultPresetBootstrappedByContext.batch = true
+            }
+
+            if (nextContextConfigs?.single && nextContextConfigs?.batch) {
+              const migratedContextConfigs = migrateContextConfigs(nextContextConfigs)
               const activePresetId = activePresetIds[setupContext]
               const activePreset = activePresetId
-                ? presets.find((preset) => preset.id === activePresetId && preset.context === setupContext)
+                ? presets.find((preset) => preset.id === activePresetId)
                 : null
               const activeConfig = activePreset
                 ? cloneSetupState(activePreset.config)
                 : cloneSetupState(migratedContextConfigs[setupContext])
 
-              const nextContextConfigs = {
+              const finalContextConfigs = {
                 ...migratedContextConfigs,
                 [setupContext]: activeConfig
               }
 
               return {
                 ...activeConfig,
-                contextConfigs: nextContextConfigs,
+                contextConfigs: finalContextConfigs,
                 presets,
                 activePresetIds,
                 defaultPresetBootstrappedByContext,
                 presetViewByContext,
+                schemaVersion,
                 _hasHydrated: true
               } as any
             }
@@ -1481,6 +1571,7 @@ export const useBatchStore = create<BatchStoreState>()(
               activePresetIds,
               defaultPresetBootstrappedByContext,
               presetViewByContext,
+              schemaVersion,
               _hasHydrated: true
             } as any
           })

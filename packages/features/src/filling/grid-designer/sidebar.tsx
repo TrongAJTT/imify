@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import React, { useCallback, useMemo } from "react"
-import { LayoutGrid } from "lucide-react"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
-import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { TextInput } from "@imify/ui/ui/text-input"
-import { useFillingStore } from "@imify/stores/stores/filling-store"
-import type { FillingTemplate, GridDesignParams } from "../types"
-import { DEFAULT_GRID_DESIGN_PARAMS } from "../types"
-import { GRID_DESIGN_TOOLTIPS } from "./tooltips"
-import { parseGridDesign } from "./generator"
-import { usePopoverTriggerBehavior } from "../../shared/use-popover-trigger-behavior"
+import React, { useCallback, useMemo } from "react";
+import { LayoutGrid } from "lucide-react";
+import { AccordionCard } from "@imify/ui/ui/accordion-card";
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card";
+import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
+import { NumberInput } from "@imify/ui/ui/number-input";
+import { TextInput } from "@imify/ui/ui/text-input";
+import { useFillingStore } from "@imify/stores/stores/filling-store";
+import type { FillingTemplate, GridDesignParams } from "../types";
+import { DEFAULT_GRID_DESIGN_PARAMS } from "../types";
+import { useTranslation } from "@imify/i18n";
+import { parseGridDesign } from "./generator";
+import { usePopoverTriggerBehavior } from "../../shared/use-popover-trigger-behavior";
 
 interface GridDesignSidebarProps {
-  template: FillingTemplate
+  template: FillingTemplate;
 }
 
 interface GridTemplatePreset {
-  id: string
-  label: string
-  rowDefinitions: [string, string, string]
+  id: string;
+  label: string;
+  rowDefinitions: string[];
 }
 
 const GRID_TEMPLATE_PRESETS: GridTemplatePreset[] = [
@@ -33,7 +33,7 @@ const GRID_TEMPLATE_PRESETS: GridTemplatePreset[] = [
   {
     id: "vertical-3",
     label: "3 vertical columns",
-    rowDefinitions: ["1a 1b 1c", "1a 1b 1c", "1a 1b 1c"],
+    rowDefinitions: ["3"],
   },
   {
     id: "row3-col2",
@@ -55,19 +55,28 @@ const GRID_TEMPLATE_PRESETS: GridTemplatePreset[] = [
     label: "Top-Left Merge",
     rowDefinitions: ["2a 1", "2a 1", "1 2"],
   },
-]
+];
 
-const PRESET_ROWS = 3
-const PRESET_OUTER_PADDING = 16
-const PRESET_GAP = 16
-const PREVIEW_CANVAS_SIZE = 240
+const PRESET_ROWS = 3;
+const PRESET_OUTER_PADDING = 16;
+const PRESET_GAP = 16;
+const PREVIEW_CANVAS_SIZE = 240;
 
 function normalizeGridDesignParams(params: GridDesignParams): GridDesignParams {
-  const rowCount = Math.max(1, Math.round(params.rowCount))
-  const rowDefinitions = Array.from({ length: rowCount }, (_, index) => params.rowDefinitions[index] ?? "")
-  const legacyGap = typeof params.gap === "number" ? params.gap : 0
-  const gapX = Math.max(0, Math.round(typeof params.gapX === "number" ? params.gapX : legacyGap))
-  const gapY = Math.max(0, Math.round(typeof params.gapY === "number" ? params.gapY : legacyGap))
+  const rowCount = Math.max(1, Math.round(params.rowCount));
+  const rowDefinitions = Array.from(
+    { length: rowCount },
+    (_, index) => params.rowDefinitions[index] ?? "",
+  );
+  const legacyGap = typeof params.gap === "number" ? params.gap : 0;
+  const gapX = Math.max(
+    0,
+    Math.round(typeof params.gapX === "number" ? params.gapX : legacyGap),
+  );
+  const gapY = Math.max(
+    0,
+    Math.round(typeof params.gapY === "number" ? params.gapY : legacyGap),
+  );
 
   return {
     rowCount,
@@ -78,13 +87,13 @@ function normalizeGridDesignParams(params: GridDesignParams): GridDesignParams {
     rowDefinitions,
     uniformColumns: Boolean(params.uniformColumns),
     uniformColumnsDef: params.uniformColumnsDef ?? "",
-  }
+  };
 }
 
 function GridTemplatePreview({ preset }: { preset: GridTemplatePreset }) {
   const previewParams: GridDesignParams = {
     ...DEFAULT_GRID_DESIGN_PARAMS,
-    rowCount: PRESET_ROWS,
+    rowCount: preset.rowDefinitions.length,
     outerPadding: PRESET_OUTER_PADDING,
     gap: PRESET_GAP,
     gapX: PRESET_GAP,
@@ -92,8 +101,12 @@ function GridTemplatePreview({ preset }: { preset: GridTemplatePreset }) {
     uniformColumns: false,
     uniformColumnsDef: "",
     rowDefinitions: [...preset.rowDefinitions],
-  }
-  const preview = parseGridDesign(previewParams, PREVIEW_CANVAS_SIZE, PREVIEW_CANVAS_SIZE)
+  };
+  const preview = parseGridDesign(
+    previewParams,
+    PREVIEW_CANVAS_SIZE,
+    PREVIEW_CANVAS_SIZE,
+  );
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
@@ -110,58 +123,66 @@ function GridTemplatePreview({ preset }: { preset: GridTemplatePreset }) {
         />
       ))}
     </div>
-  )
+  );
 }
 
 export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
-  const storeParams = useFillingStore((state) => state.gridDesignParams)
-  const layerCount = useFillingStore((state) => state.gridLayerCount)
-  const setGridDesignParams = useFillingStore((state) => state.setGridDesignParams)
-  const popoverBehavior = usePopoverTriggerBehavior()
+  const { t } = useTranslation("filling");
+  const storeParams = useFillingStore((state) => state.gridDesignParams);
+  const layerCount = useFillingStore((state) => state.gridLayerCount);
+  const setGridDesignParams = useFillingStore(
+    (state) => state.setGridDesignParams,
+  );
+  const popoverBehavior = usePopoverTriggerBehavior();
 
   const params = useMemo(
-    () => normalizeGridDesignParams(storeParams ?? template.gridDesignParams ?? { ...DEFAULT_GRID_DESIGN_PARAMS }),
-    [storeParams, template.gridDesignParams]
-  )
+    () =>
+      normalizeGridDesignParams(
+        storeParams ??
+          template.gridDesignParams ?? { ...DEFAULT_GRID_DESIGN_PARAMS },
+      ),
+    [storeParams, template.gridDesignParams],
+  );
 
   const update = useCallback(
     (partial: Partial<GridDesignParams>) => {
-      const next = normalizeGridDesignParams({ ...params, ...partial })
-      setGridDesignParams(next)
+      const next = normalizeGridDesignParams({ ...params, ...partial });
+      setGridDesignParams(next);
     },
-    [params, setGridDesignParams]
-  )
+    [params, setGridDesignParams],
+  );
 
   const updateRowCount = useCallback(
     (value: number) => {
-      const nextRowCount = Math.max(1, Math.round(value))
+      const nextRowCount = Math.max(1, Math.round(value));
       const nextDefinitions = Array.from(
         { length: nextRowCount },
-        (_, index) => params.rowDefinitions[index] ?? params.uniformColumnsDef ?? ""
-      )
+        (_, index) =>
+          params.rowDefinitions[index] ?? params.uniformColumnsDef ?? "",
+      );
 
       update({
         rowCount: nextRowCount,
         rowDefinitions: nextDefinitions,
-      })
+      });
     },
-    [params.rowDefinitions, params.uniformColumnsDef, update]
-  )
+    [params.rowDefinitions, params.uniformColumnsDef, update],
+  );
 
   const updateRowDefinition = useCallback(
     (rowIndex: number, value: string) => {
-      const nextDefinitions = [...params.rowDefinitions]
-      nextDefinitions[rowIndex] = value
-      update({ rowDefinitions: nextDefinitions })
+      const nextDefinitions = [...params.rowDefinitions];
+      nextDefinitions[rowIndex] = value;
+      update({ rowDefinitions: nextDefinitions });
     },
-    [params.rowDefinitions, update]
-  )
+    [params.rowDefinitions, update],
+  );
 
   const applyTemplatePreset = useCallback(
     (preset: GridTemplatePreset) => {
-      const rowDefinitions = [...preset.rowDefinitions]
+      const rowDefinitions = [...preset.rowDefinitions];
       update({
-        rowCount: PRESET_ROWS,
+        rowCount: rowDefinitions.length,
         outerPadding: PRESET_OUTER_PADDING,
         gap: PRESET_GAP,
         gapX: PRESET_GAP,
@@ -169,23 +190,30 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
         uniformColumns: false,
         uniformColumnsDef: "",
         rowDefinitions,
-      })
+      });
     },
-    [update]
-  )
+    [update],
+  );
 
-  const sublabel = `${params.rowCount} rows, ${layerCount} cells`
+  const sublabel = t("gridDesigner.sublabel", {
+    rows: params.rowCount,
+    cells: layerCount,
+  });
 
   const validation = useMemo(() => {
-    const result = parseGridDesign(params, template.canvasWidth, template.canvasHeight)
-    const errorsByRow = new Map<number, string>()
+    const result = parseGridDesign(
+      params,
+      template.canvasWidth,
+      template.canvasHeight,
+    );
+    const errorsByRow = new Map<number, string>();
 
     for (const row of result.cells) {
       for (const cell of row) {
-        if (!cell.hasError) continue
-        const message = cell.errorMessage ?? "Invalid syntax."
+        if (!cell.hasError) continue;
+        const message = cell.errorMessage ?? t("gridDesigner.invalidSyntax");
         if (!errorsByRow.has(cell.rowIndex)) {
-          errorsByRow.set(cell.rowIndex, message)
+          errorsByRow.set(cell.rowIndex, message);
         }
       }
     }
@@ -193,15 +221,23 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
     return {
       errorsByRow,
       sharedError: result.cells.some((row) => row.some((cell) => cell.hasError))
-        ? result.cells.flat().find((cell) => cell.hasError)?.errorMessage ?? "Invalid syntax."
+        ? result.cells.flat().find((cell) => cell.hasError)?.errorMessage ??
+          t("gridDesigner.invalidSyntax")
         : null,
-    }
-  }, [params, template.canvasHeight, template.canvasWidth])
+    };
+  }, [params, template.canvasHeight, template.canvasWidth, t]);
+
+  const localizedPresets = useMemo(() => {
+    return GRID_TEMPLATE_PRESETS.map((preset) => ({
+      ...preset,
+      label: t(`gridPresets.${preset.id}`, { defaultValue: preset.label }),
+    }));
+  }, [t]);
 
   return (
     <AccordionCard
       icon={<LayoutGrid size={16} />}
-      label="Grid Designer"
+      label={t("dialog.gridTitle")}
       sublabel={sublabel}
       colorTheme="sky"
       alwaysOpen={true}
@@ -209,56 +245,56 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
       <div className="space-y-3">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <NumberInput
-            label="Rows"
+            label={t("gridDesigner.rows")}
             value={params.rowCount}
             onChangeValue={updateRowCount}
             min={1}
             max={50}
-            tooltipContent={GRID_DESIGN_TOOLTIPS.rowCount}
+            tooltipContent={t("tooltips.rowCount")}
           />
           <NumberInput
-            label="Outer Padding"
+            label={t("gridDesigner.outerPadding")}
             value={params.outerPadding}
             onChangeValue={(value) => update({ outerPadding: value })}
             min={0}
             max={2000}
-            tooltipContent={GRID_DESIGN_TOOLTIPS.outerPadding}
+            tooltipContent={t("tooltips.outerPadding")}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <NumberInput
-            label="Horizontal Gap"
+            label={t("gridDesigner.gapX")}
             value={params.gapX}
             onChangeValue={(value) => update({ gapX: value, gap: value })}
             min={0}
             max={1000}
-            tooltipContent={GRID_DESIGN_TOOLTIPS.gapX}
+            tooltipContent={t("tooltips.gapX")}
           />
           <NumberInput
-            label="Vertical Gap"
+            label={t("gridDesigner.gapY")}
             value={params.gapY}
             onChangeValue={(value) => update({ gapY: value, gap: value })}
             min={0}
             max={1000}
-            tooltipContent={GRID_DESIGN_TOOLTIPS.gapY}
+            tooltipContent={t("tooltips.gapY")}
           />
         </div>
 
         <CheckboxCard
-          title="Use Same Columns For All Rows"
-          subtitle="Apply one shared row definition to every row."
+          title={t("gridDesigner.uniformColumns")}
+          subtitle={t("gridDesigner.uniformColumnsDesc")}
           checked={params.uniformColumns}
           onChange={(checked) => update({ uniformColumns: checked })}
-          tooltipContent={GRID_DESIGN_TOOLTIPS.uniformColumns}
+          tooltipContent={t("tooltips.uniformColumns")}
         />
 
         {params.uniformColumns ? (
           <TextInput
-            label="Shared Row Definition"
+            label={t("gridDesigner.sharedDef")}
             value={params.uniformColumnsDef}
             onChange={(value) => update({ uniformColumnsDef: value })}
-            placeholder='Examples: "3", "2 1", "1# 1"'
+            placeholder={t("gridDesigner.placeholderExamples")}
             errorMessage={validation.sharedError ?? undefined}
           />
         ) : (
@@ -266,10 +302,10 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
             {params.rowDefinitions.map((definition, rowIndex) => (
               <TextInput
                 key={`grid-row-${rowIndex}`}
-                label={`Row ${rowIndex + 1} Columns`}
+                label={t("gridDesigner.rowDefLabel", { index: rowIndex + 1 })}
                 value={definition}
                 onChange={(value) => updateRowDefinition(rowIndex, value)}
-                placeholder='Examples: "3", "2 1", "1# 1"'
+                placeholder={t("gridDesigner.placeholderExamples")}
                 errorMessage={validation.errorsByRow.get(rowIndex)}
               />
             ))}
@@ -277,7 +313,7 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
         )}
 
         <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-          {GRID_DESIGN_TOOLTIPS.rowDefinition}
+          {t("tooltips.rowDefinition")}
         </p>
 
         <ControlledPopover
@@ -295,14 +331,16 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
               className="flex w-full items-center gap-1.5 rounded-md border border-dashed border-sky-300 bg-sky-50 px-3 py-2 text-left text-xs font-semibold text-sky-700 transition-colors hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-300 dark:hover:bg-sky-900/50"
             >
               <LayoutGrid size={14} />
-              Use templates
+              {t("gridDesigner.useTemplates")}
             </button>
           }
           contentClassName="z-[9999] w-[min(400px,calc(100vw-24px))] rounded-lg border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
         >
-          <div className="mb-2 text-xs font-semibold text-slate-700 dark:text-slate-200">Quick templates</div>
+          <div className="mb-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
+            {t("gridDesigner.quickTemplates")}
+          </div>
           <div className="grid grid-cols-3 justify-items-center gap-2">
-            {GRID_TEMPLATE_PRESETS.map((preset) => (
+            {localizedPresets.map((preset) => (
               <button
                 key={preset.id}
                 type="button"
@@ -321,10 +359,10 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
             ))}
           </div>
           <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-            Applies rows=3, outer padding=16, horizontal gap=16, vertical gap=16.
+            {t("gridDesigner.appliesPresetStats")}
           </p>
         </ControlledPopover>
       </div>
     </AccordionCard>
-  )
+  );
 }

@@ -4,11 +4,11 @@ import type { DiffViewMode } from "./types"
 import { renderImageDataPreview, type RenderImageDataPreviewResult } from "@imify/engine/image-pipeline/render-image-data"
 import { createImagePreviewInWorker, isImagePreviewWorkerSupported } from "@imify/engine/converter/preview-worker-client"
 import { MutedText, Tooltip } from "@imify/ui"
-import { DIFFCHECKER_TOOLTIPS } from "./diffchecker-tooltips"
 import { ViewerOverlay } from "./viewer-overlay"
 import { ViewerShell } from "./viewer-shell"
 import { ViewerSideBySide } from "./viewer-side-by-side"
 import { ViewerSplit } from "./viewer-split"
+import { useTranslation } from "@imify/i18n"
 
 type CompareWorkspaceMode = Extract<DiffViewMode, "split" | "side_by_side" | "overlay">
 
@@ -32,14 +32,16 @@ interface PixelCompareWorkspaceProps {
   maxPreviewDimension?: number
   isProcessing?: boolean
   emptyFallback?: ReactNode
+  bgColorB?: string | null
 }
 
 function PreviewLoadingOverlay() {
+  const { t } = useTranslation("diffchecker")
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/15">
       <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 shadow-md dark:border-slate-600 dark:bg-slate-900">
         <Loader2 size={18} className="animate-spin text-sky-500" />
-        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Rendering preview...</span>
+        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t("renderingPreview")}</span>
       </div>
     </div>
   )
@@ -62,7 +64,8 @@ async function imageDataToPreviewSourceBlob(imageData: ImageData, mimeTypeHint?:
 
 export function PixelCompareWorkspace({
   mode, imageDataA, imageDataB, zoom, panX, panY, onZoomChange, onPanChange, splitPosition = 50, onSplitChange, overlayOpacity = 75,
-  className, labelA = "A", labelB = "B", preferredMimeTypeA, preferredMimeTypeB, maxPreviewDimension, isProcessing = false, emptyFallback
+  className, labelA = "A", labelB = "B", preferredMimeTypeA, preferredMimeTypeB, maxPreviewDimension, isProcessing = false, emptyFallback,
+  bgColorB = null
 }: PixelCompareWorkspaceProps) {
   const [previewA, setPreviewA] = useState<RenderImageDataPreviewResult | null>(null)
   const [previewB, setPreviewB] = useState<RenderImageDataPreviewResult | null>(null)
@@ -115,18 +118,22 @@ export function PixelCompareWorkspace({
     return () => { cancelled = true }
   }, [imageDataA, imageDataB, maxPreviewDimension, preferredMimeTypeA, preferredMimeTypeB])
 
+  const { t } = useTranslation("diffchecker")
   const hasPreviews = Boolean(previewA?.objectUrl && previewB?.objectUrl)
   const isBusy = isProcessing || isRendering
 
+  const displayLabelA = labelA === "A" ? t("imageA") : labelA
+  const displayLabelB = labelB === "B" ? t("imageB") : labelB
+
   return (
     <ViewerShell className={className} zoom={zoom} panX={panX} panY={panY} onZoomChange={onZoomChange} onPanChange={onPanChange}>
-      {hasPreviews && mode === "split" && previewA && previewB ? <ViewerSplit urlA={previewA.objectUrl} urlB={previewB.objectUrl} labelA={labelA} labelB={labelB} splitPosition={splitPosition} onSplitChange={onSplitChange ?? (() => undefined)} zoom={zoom} panX={panX} panY={panY} /> : null}
-      {hasPreviews && mode === "side_by_side" && previewA && previewB ? <ViewerSideBySide urlA={previewA.objectUrl} urlB={previewB.objectUrl} labelA={labelA} labelB={labelB} zoom={zoom} panX={panX} panY={panY} /> : null}
+      {hasPreviews && mode === "split" && previewA && previewB ? <ViewerSplit urlA={previewA.objectUrl} urlB={previewB.objectUrl} labelA={displayLabelA} labelB={displayLabelB} splitPosition={splitPosition} onSplitChange={onSplitChange ?? (() => undefined)} zoom={zoom} panX={panX} panY={panY} bgColorB={bgColorB} /> : null}
+      {hasPreviews && mode === "side_by_side" && previewA && previewB ? <ViewerSideBySide urlA={previewA.objectUrl} urlB={previewB.objectUrl} labelA={displayLabelA} labelB={displayLabelB} zoom={zoom} panX={panX} panY={panY} bgColorB={bgColorB} /> : null}
       {hasPreviews && mode === "overlay" && previewA && previewB ? <ViewerOverlay urlA={previewA.objectUrl} urlB={previewB.objectUrl} opacity={overlayOpacity} zoom={zoom} panX={panX} panY={panY} /> : null}
-      {!hasPreviews && !isBusy ? <div className="absolute inset-0 z-10 flex items-center justify-center px-6 text-center">{emptyFallback ?? <MutedText>Result preview is unavailable for this output type. You can still download the processed file.</MutedText>}</div> : null}
+      {!hasPreviews && !isBusy ? <div className="absolute inset-0 z-10 flex items-center justify-center px-6 text-center">{emptyFallback ?? <MutedText>{t("previewUnavailable")}</MutedText>}</div> : null}
       {fallbackUsed && hasPreviews && (
         <div className="absolute bottom-4 left-3 z-30 rounded-md bg-white p-1 dark:bg-slate-900">
-          <Tooltip content={DIFFCHECKER_TOOLTIPS.pixelCompareWorkspace.fallbackPreviewWarning}>
+          <Tooltip content={t("tooltips.fallbackPreviewWarning")}>
             <div className="flex h-5 w-5 items-center justify-center rounded-full text-rose-500"><AlertCircle size={16} /></div>
           </Tooltip>
         </div>

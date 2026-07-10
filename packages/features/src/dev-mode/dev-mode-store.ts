@@ -1,11 +1,15 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
+import { setShowI18nDebugKeys as syncShowI18nDebugKeys } from "@imify/i18n"
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface DevModeState {
   enabled: boolean
   setEnabled: (value: boolean) => void
+  showI18nDebugKeys: boolean
+  setShowI18nDebugKeys: (value: boolean) => void
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -20,6 +24,8 @@ export const useDevModeStore = create<DevModeState>()(
     (set) => ({
       enabled: false,
       setEnabled: (value: boolean) => set({ enabled: value }),
+      showI18nDebugKeys: false,
+      setShowI18nDebugKeys: (value: boolean) => set({ showI18nDebugKeys: value }),
     }),
     {
       name: "imify_dev_mode_enabled",
@@ -28,6 +34,23 @@ export const useDevModeStore = create<DevModeState>()(
     }
   )
 )
+
+import i18n from "i18next"
+
+// Sync singleton debug flag with current persisted state
+syncShowI18nDebugKeys(
+  useDevModeStore.getState().enabled && useDevModeStore.getState().showI18nDebugKeys
+)
+
+// Subscribe to store changes to keep the singleton synced
+useDevModeStore.subscribe((state) => {
+  syncShowI18nDebugKeys(state.enabled && state.showI18nDebugKeys)
+  if (i18n.isInitialized) {
+    i18n.changeLanguage(i18n.language).catch((err) => {
+      console.error("Failed to refresh language dev mode:", err)
+    })
+  }
+})
 
 // ─── Convenience API (drop-in replacement for old useDevModeEnabled) ──────────
 

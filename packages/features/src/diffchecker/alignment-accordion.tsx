@@ -1,17 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import type { DiffAlignAnchor, DiffAlignMode } from "./types";
 import { Maximize2 } from "lucide-react";
 import { AccordionCard, SelectInput } from "@imify/ui";
-
-const ALIGN_MODE_OPTIONS = [
-  { value: "fit-larger", label: "Match Larger" },
-  { value: "fit-smaller", label: "Match Smaller" },
-  { value: "original", label: "Original Size" },
-];
-const ANCHOR_OPTIONS = [
-  { value: "center", label: "Center" },
-  { value: "top-left", label: "Top-Left" },
-];
+import { useTranslation } from "@imify/i18n";
 
 export function AlignmentAccordion({
   alignMode,
@@ -24,25 +15,38 @@ export function AlignmentAccordion({
   onAlignModeChange: (mode: DiffAlignMode) => void;
   onAlignAnchorChange: (anchor: DiffAlignAnchor) => void;
 }) {
+  const { t } = useTranslation("diffchecker");
+
+  const alignModeOptions = useMemo(() => [
+    { value: "fit-larger", label: t("matchLarger") },
+    { value: "fit-smaller", label: t("matchSmaller") },
+    { value: "original", label: t("originalSize") },
+  ], [t]);
+
+  const anchorOptions = useMemo(() => [
+    { value: "center", label: t("center") },
+    { value: "top-left", label: t("topLeft") },
+  ], [t]);
+
   return (
     <AccordionCard
       icon={<Maximize2 size={16} />}
-      label="Alignment"
+      label={t("alignment")}
       sublabel={`Scale: ${alignMode}, Anchor: ${alignAnchor}`}
       colorTheme="orange"
       alwaysOpen
     >
       <div className="space-y-3 pt-1">
         <SelectInput
-          label="Scale Mode"
+          label={t("scaleLabel")}
           value={alignMode}
-          options={ALIGN_MODE_OPTIONS}
+          options={alignModeOptions}
           onChange={(v) => onAlignModeChange(v as DiffAlignMode)}
         />
         <SelectInput
-          label="Anchor"
+          label={t("anchorLabel")}
           value={alignAnchor}
-          options={ANCHOR_OPTIONS}
+          options={anchorOptions}
           onChange={(v) => onAlignAnchorChange(v as DiffAlignAnchor)}
         />
       </div>

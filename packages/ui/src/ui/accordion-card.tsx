@@ -42,7 +42,7 @@ export function AccordionCard({
   groupId,
   colorTheme = "sky",
 }: AccordionCardProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen ?? false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen ?? true)
   const groupContext = groupId ? useAccordionGroup() : null
 
   // Determine if this accordion should be open

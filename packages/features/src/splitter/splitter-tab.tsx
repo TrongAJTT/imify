@@ -1,10 +1,11 @@
 import { arrayMove } from "@dnd-kit/sortable"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AlertTriangle, ImagePlus, Trash2 } from "lucide-react"
+import { useTranslation } from "@imify/i18n"
 
 import { APP_CONFIG } from "@imify/core/config"
 import { buildSmartOutputFileName, reserveUniqueFileName } from "@imify/core/file-name-pattern"
-import { ToastContainer } from "@imify/ui"
+import { ToastContainer, useRenameInputPrompt } from "@imify/ui"
 import { useConversionToasts } from "@imify/core/hooks/use-toast"
 import type { ConversionProgressPayload } from "@imify/core/types"
 import { BatchDownloadConfirmDialog } from "../shared/download-confirm-dialog"
@@ -86,7 +87,12 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
-export function SplitterTab() {
+interface SplitterTabProps {
+  onRootClick?: () => void
+}
+
+export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
+  const { t } = useTranslation("splitter")
   const splitSettings = useSplitterStore((state) => state.splitSettings)
   const setSplitSettings = useSplitterStore((state) => state.setSplitSettings)
   const exportSettings = useSplitterStore((state) => state.exportSettings)
@@ -104,6 +110,7 @@ export function SplitterTab() {
   const [exportToastPayload, setExportToastPayload] = useState<ConversionProgressPayload | null>(null)
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
   const [pendingExportMode, setPendingExportMode] = useState<"one_by_one" | null>(null)
+  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt()
   const conversionToasts = useConversionToasts([importToastPayload, exportToastPayload])
   const { getShortcutLabel } = useShortcutPreferences()
 
@@ -155,7 +162,11 @@ export function SplitterTab() {
       return null
     }
 
-    return `${mismatchCount} image(s) have dimensions different from the first image (${first.originalWidth}x${first.originalHeight}). Split results may vary across the batch.`
+    return t("dimensionMismatchText", {
+      count: mismatchCount,
+      width: first.originalWidth,
+      height: first.originalHeight
+    })
   }, [images])
   const estimatedExportFileCount = useMemo(() => {
     const slicesPerImage = Math.max(1, previewPlan?.rects.length ?? 1)
@@ -454,7 +465,8 @@ export function SplitterTab() {
 
   const handleExport = async (
     downloadMode: "zip" | "one_by_one" = "zip",
-    forceDownloadConfirm: boolean = false
+    forceDownloadConfirm: boolean = false,
+    inputValue?: string
   ) => {
     if (images.length === 0 || isExporting) {
       return
@@ -538,7 +550,8 @@ export function SplitterTab() {
               width: segment.rect.width,
               height: segment.rect.height
             },
-            now: new Date()
+            now: new Date(),
+            input: inputValue
           })
 
           const uniqueName = reserveUniqueFileName(rawFileName, usedNames)
@@ -617,10 +630,13 @@ export function SplitterTab() {
   const handleExportAction = useCallback(
     async (mode: ExportSplitMode) => {
       if (mode === "zip" || mode === "one_by_one") {
-        await handleExport(mode)
+        checkAndPrompt(
+          exportSettings.fileNamePattern,
+          (inputValue) => void handleExport(mode, false, inputValue)
+        )
       }
     },
-    [handleExport]
+    [handleExport, exportSettings.fileNamePattern, checkAndPrompt]
   )
 
   const workspaceContent = (
@@ -638,8 +654,8 @@ export function SplitterTab() {
         <EmptyDropCard
           icon={<ImagePlus size={28} className="text-cyan-500" />}
           iconWrapperClassName="bg-cyan-100 dark:bg-cyan-900/30 border-transparent shadow-none"
-          title="Drop images to start splitting"
-          subtitle="Supports batch splitting with preset-based settings"
+          title={t("dropImagesToStartSplitting")}
+          subtitle={t("supportsBatchSplitting")}
           onClick={openFilePicker}
           onDropFiles={handleDropFiles}
         />
@@ -648,18 +664,18 @@ export function SplitterTab() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <Subheading className="truncate">Image Splitter Workspace</Subheading>
+                <Subheading className="truncate">{t("workspaceTitle")}</Subheading>
                 {splitSettings.mode === "basic" ? (
                   <VisualHelpTooltip
-                    label="Visual guide controls"
-                    description="In Basic mode, drag the first vertical and/or horizontal guide directly on the preview. The matching split values update automatically in Split Options."
+                    label={t("visualGuideControls")}
+                    description={t("visualGuideDescription")}
                     webmSrc={splitterGuideHelpVideo}
-                    buttonAriaLabel="Image Splitter visual guide controls help"
-                    mediaAlt="Image Splitter visual guide controls"
+                    buttonAriaLabel={t("visualGuideButtonAriaLabel")}
+                    mediaAlt={t("visualGuideMediaAlt")}
                   />
                 ) : null}
                 {mismatchWarningText ? (
-                  <Tooltip label="Dimension mismatch warning" content={mismatchWarningText} variant="wide2">
+                  <Tooltip label={t("dimensionMismatchLabel")} content={mismatchWarningText} variant="wide2">
                     <span className="inline-flex items-center">
                       <AlertTriangle size={16} className="shrink-0 text-rose-500 dark:text-rose-400" />
                     </span>
@@ -667,7 +683,9 @@ export function SplitterTab() {
                 ) : null}
               </div>
               <MutedText className="text-xs">
-                {images.length} image{images.length === 1 ? "" : "s"} in queue
+                {images.length === 1
+                  ? t("imageInQueue_one")
+                  : t("imageInQueue_other", { count: images.length })}
               </MutedText>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -681,7 +699,7 @@ export function SplitterTab() {
               <div className="flex items-center gap-2">
                 <Button variant="secondary" size="sm" onClick={handleClearAll} disabled={isExporting}>
                   <Trash2 size={14} />
-                  Clear
+                  {t("clear")}
                 </Button>
                 <ExportSplitButton
                   onExport={handleExportAction}
@@ -742,6 +760,7 @@ export function SplitterTab() {
 
   return (
     <SplitterWorkspaceShell
+      onRootClick={onRootClick}
       workspace={
         <>
           {workspaceContent}
@@ -756,11 +775,15 @@ export function SplitterTab() {
             onConfirm={() => {
               setShowDownloadConfirm(false)
               if (pendingExportMode) {
-                void handleExport(pendingExportMode, true)
+                checkAndPrompt(
+                  exportSettings.fileNamePattern,
+                  (inputValue) => void handleExport(pendingExportMode, true, inputValue)
+                )
               }
               setPendingExportMode(null)
             }}
           />
+          {renameInputPrompt}
         </>
       }
     />

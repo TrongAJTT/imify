@@ -1,3 +1,5 @@
+export { formatFileSize } from "@imify/core"
+
 import type { BasicInfo, DimensionInfo, PrivacyAlert } from "./types"
 import { SENSITIVE_TAGS, AI_SOFTWARE_SIGNATURES } from "./exif-tags"
 import type { ExifEntry, GpsInfo } from "./types"
@@ -75,21 +77,21 @@ const STANDARD_RATIOS: Array<{
   name: string
   uses: string
 }> = [
-  { ratio: 1, name: "1:1", uses: "Instagram Square, Profile Pictures" },
-  { ratio: 4 / 5, name: "4:5", uses: "Instagram Portrait, Facebook Feed" },
-  { ratio: 9 / 16, name: "9:16", uses: "Stories, Reels, TikTok" },
-  { ratio: 2 / 3, name: "2:3", uses: "Pinterest Pin, 35mm Film" },
-  { ratio: 3 / 4, name: "3:4", uses: "iPad, Tablets, Standard Photo" },
-  { ratio: 3 / 2, name: "3:2", uses: "DSLR Photo, 35mm Film" },
-  { ratio: 4 / 3, name: "4:3", uses: "Standard Monitor, iPad" },
-  { ratio: 16 / 10, name: "16:10", uses: "MacBook Display, Widescreen" },
-  { ratio: 16 / 9, name: "16:9", uses: "Full HD, YouTube, TV" },
-  { ratio: 21 / 9, name: "21:9", uses: "Ultrawide Monitor, Cinema" },
-  { ratio: 5 / 4, name: "5:4", uses: "Large Format Photo" },
-  { ratio: 1.414, name: "1:1.414", uses: "A4/A3 Paper (ISO 216)" },
-  { ratio: 1.91, name: "1.91:1", uses: "Open Graph Image, Twitter Card" },
-  { ratio: 2 / 1, name: "2:1", uses: "Panoramic, Hero Banner" }
-]
+    { ratio: 1, name: "1:1", uses: "Instagram Square, Profile Pictures" },
+    { ratio: 4 / 5, name: "4:5", uses: "Instagram Portrait, Facebook Feed" },
+    { ratio: 9 / 16, name: "9:16", uses: "Stories, Reels, TikTok" },
+    { ratio: 2 / 3, name: "2:3", uses: "Pinterest Pin, 35mm Film" },
+    { ratio: 3 / 4, name: "3:4", uses: "iPad, Tablets, Standard Photo" },
+    { ratio: 3 / 2, name: "3:2", uses: "DSLR Photo, 35mm Film" },
+    { ratio: 4 / 3, name: "4:3", uses: "Standard Monitor, iPad" },
+    { ratio: 16 / 10, name: "16:10", uses: "MacBook Display, Widescreen" },
+    { ratio: 16 / 9, name: "16:9", uses: "Full HD, YouTube, TV" },
+    { ratio: 21 / 9, name: "21:9", uses: "Ultrawide Monitor, Cinema" },
+    { ratio: 5 / 4, name: "5:4", uses: "Large Format Photo" },
+    { ratio: 1.414, name: "1:1.414", uses: "A4/A3 Paper (ISO 216)" },
+    { ratio: 1.91, name: "1.91:1", uses: "Open Graph Image, Twitter Card" },
+    { ratio: 2 / 1, name: "2:1", uses: "Panoramic, Hero Banner" }
+  ]
 
 function matchAspectRatio(ratio: number): string[] {
   const threshold = 0.03
@@ -105,14 +107,6 @@ function matchAspectRatio(ratio: number): string[] {
   }
 
   return matches
-}
-
-export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 B"
-  const units = ["B", "KB", "MB", "GB"]
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  const size = bytes / Math.pow(1024, i)
-  return `${size < 10 ? size.toFixed(2) : size < 100 ? size.toFixed(1) : Math.round(size)} ${units[i]}`
 }
 
 export function detectPrivacyAlerts(

@@ -1,5 +1,5 @@
-import React from "react"
-import { ImagePlus } from "lucide-react"
+import React from "react";
+import { ImagePlus } from "lucide-react";
 
 import type {
   LayoutResult,
@@ -7,38 +7,47 @@ import type {
   SplicingImageItem,
   SplicingImageResize,
   SplicingImageStyle,
-  SplicingLayoutConfig
-} from "./types"
-import type { PreviewInteractionMode } from "@imify/ui"
-import { CanvasPreview } from "./canvas-preview"
-import { ImageStrip } from "./image-strip"
-import { EmptyDropCard } from "@imify/ui"
-import { COMMON_IMAGE_ACCEPT } from "../shared/image-file-utils"
+  SplicingLayoutConfig,
+} from "./types";
+import type { PreviewInteractionMode } from "@imify/ui";
+import { CanvasPreview } from "./canvas-preview";
+import { ImageStrip } from "./image-strip";
+import { EmptyDropCard } from "@imify/ui";
+import { COMMON_IMAGE_ACCEPT } from "../shared/image-file-utils";
+
+import { useTranslation } from "@imify/i18n";
 
 interface SplicingWorkspaceProps {
-  hasImages: boolean
-  fileInputRef: React.RefObject<HTMLInputElement>
-  images: SplicingImageItem[]
-  layoutConfig: SplicingLayoutConfig
-  canvasStyle: SplicingCanvasStyle
-  imageStyle: SplicingImageStyle
-  imageResize: SplicingImageResize
-  imageFitValue: number
-  previewInteractionMode: PreviewInteractionMode
-  previewQualityPercent: number
-  previewShowImageNumber: boolean
-  onLayoutComputed: (layout: LayoutResult | null) => void
-  onPreviewRendered: (imageCount: number) => void
-  onPreviewSourcesProgress: (payload: { completed: number; total: number }) => void
-  onPreviewNumberingProgress: (payload: { status: "processing" | "done"; completed: number; total: number }) => void
-  onOpenFilePicker: () => void
-  onDropFiles: (e: React.DragEvent) => void
-  onFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void
-  onRemoveImage: (id: string) => void
-  onReorderImage: (fromIndex: number, toIndex: number) => void
-  onAddMore: () => void
-  onPreviewQualityChange: (next: number) => void
-  onPreviewShowImageNumberChange: (next: boolean) => void
+  hasImages: boolean;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  images: SplicingImageItem[];
+  layoutConfig: SplicingLayoutConfig;
+  canvasStyle: SplicingCanvasStyle;
+  imageStyle: SplicingImageStyle;
+  imageResize: SplicingImageResize;
+  imageFitValue: number;
+  previewInteractionMode: PreviewInteractionMode;
+  previewQualityPercent: number;
+  previewShowImageNumber: boolean;
+  onLayoutComputed: (layout: LayoutResult | null) => void;
+  onPreviewRendered: (imageCount: number) => void;
+  onPreviewSourcesProgress: (payload: {
+    completed: number;
+    total: number;
+  }) => void;
+  onPreviewNumberingProgress: (payload: {
+    status: "processing" | "done";
+    completed: number;
+    total: number;
+  }) => void;
+  onOpenFilePicker: () => void;
+  onDropFiles: (e: React.DragEvent) => void;
+  onFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemoveImage: (id: string) => void;
+  onReorderImage: (fromIndex: number, toIndex: number) => void;
+  onAddMore: () => void;
+  onPreviewQualityChange: (next: number) => void;
+  onPreviewShowImageNumberChange: (next: boolean) => void;
 }
 
 export function SplicingWorkspace({
@@ -51,8 +60,6 @@ export function SplicingWorkspace({
   imageResize,
   imageFitValue,
   previewInteractionMode,
-  previewQualityPercent,
-  previewShowImageNumber,
   onLayoutComputed,
   onPreviewRendered,
   onPreviewSourcesProgress,
@@ -63,9 +70,9 @@ export function SplicingWorkspace({
   onRemoveImage,
   onReorderImage,
   onAddMore,
-  onPreviewQualityChange,
-  onPreviewShowImageNumberChange
 }: SplicingWorkspaceProps) {
+  const { t } = useTranslation("splicing");
+
   return (
     <>
       <input
@@ -81,14 +88,14 @@ export function SplicingWorkspace({
         <EmptyDropCard
           icon={<ImagePlus size={28} className="text-sky-500" />}
           iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none"
-          title="Drop images here or click to browse"
-          subtitle="Supports JPG, PNG, WebP, AVIF, and more"
+          title={t("workspace.dropZoneTitle")}
+          subtitle={t("workspace.dropZoneSubtitle")}
           onDropFiles={(files) => {
             const event = {
               preventDefault: () => {},
-              dataTransfer: { files }
-            } as any
-            onDropFiles(event)
+              dataTransfer: { files },
+            } as any;
+            onDropFiles(event);
           }}
           onClick={onOpenFilePicker}
         />
@@ -120,9 +127,5 @@ export function SplicingWorkspace({
         </div>
       )}
     </>
-  )
+  );
 }
-
-
-
-

@@ -29,6 +29,11 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
     exportStep1Webp: "/assets/images/dev-export-1.webp",
     exportStep2Webp: "/assets/images/dev-export-2.webp"
   },
+  illustrations: {
+    qrGeneratorSvg: "/assets/images/illustrations/qr-generator.svg",
+    qrReaderSvg: "/assets/images/illustrations/qr-reader.svg",
+    seoAuditSvg: "/assets/images/illustrations/seo-audit.svg"
+  },
   filling: {
     previewImageWebp: "/assets/features/preview-image_filling.webp",
     symmetricVisualEditorWebm: "/assets/features/guide-symgen-visual_editor.webm",
@@ -37,6 +42,9 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   processor: {
     previewSingleWebp: "/assets/features/preview-single_processor.webp",
     previewBatchWebp: "/assets/features/preview-batch_processor.webp"
+  },
+  upscaler: {
+    previewWebp: "/assets/features/preview-upscaler.webp"
   },
   splitter: {
     preview1Webp: "/assets/features/preview-image_splitter-1.webp",
@@ -58,10 +66,28 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   inspector: {
     previewWebp: "/assets/features/preview-image_inspector.webp"
   },
+  remover: {
+    preview1Webp: "/assets/features/preview-background_remover-1.webp",
+    preview2Webp: "/assets/features/preview-background_remover-2.webp"
+  },
   downloadHints: {
     chromeWebp: "/assets/images/img-download-not-ask-chrome.webp",
     edgeWebp: "/assets/images/img-download-not-ask-edge.webp",
     firefoxWebp: "/assets/images/img-download-not-ask-firefox.webp"
+  },
+  common: {
+    latestSummaryMd: "/assets/changelogs/latest-summary.md",
+    v2_2_0: "/assets/changelogs/v2-2-0.md",
+    v2_1_3: "/assets/changelogs/v2-1-3.md",
+    v2_1_2: "/assets/changelogs/v2-1-2.md",
+    v1_5_0: "/assets/changelogs/v1-5-0.md",
+    v1_0_0: "/assets/changelogs/v1-0-0.md"
+  },
+  ai: {
+    onnxWasm: "/assets/onnx-engines/ort-wasm-simd-threaded.wasm",
+    onnxMjs: "/assets/onnx-engines/ort-wasm-simd-threaded.mjs",
+    onnxWasmAsyncify: "/assets/onnx-engines/ort-wasm-simd-threaded.asyncify.wasm",
+    onnxMjsAsyncify: "/assets/onnx-engines/ort-wasm-simd-threaded.asyncify.mjs"
   }
 } as const
 
@@ -78,6 +104,11 @@ export const FEATURE_MEDIA_ASSETS = {
     exportStep1Webp: FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep1Webp,
     exportStep2Webp: FEATURE_MEDIA_ASSET_PATHS.devMode.exportStep2Webp
   },
+  illustrations: {
+    qrGeneratorSvg: FEATURE_MEDIA_ASSET_PATHS.illustrations.qrGeneratorSvg,
+    qrReaderSvg: FEATURE_MEDIA_ASSET_PATHS.illustrations.qrReaderSvg,
+    seoAuditSvg: FEATURE_MEDIA_ASSET_PATHS.illustrations.seoAuditSvg
+  },
   filling: {
     previewImageWebp: FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
     symmetricVisualEditorWebm: FEATURE_MEDIA_ASSET_PATHS.filling.symmetricVisualEditorWebm,
@@ -86,6 +117,9 @@ export const FEATURE_MEDIA_ASSETS = {
   processor: {
     previewSingleWebp: FEATURE_MEDIA_ASSET_PATHS.processor.previewSingleWebp,
     previewBatchWebp: FEATURE_MEDIA_ASSET_PATHS.processor.previewBatchWebp
+  },
+  upscaler: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.upscaler.previewWebp
   },
   splitter: {
     preview1Webp: FEATURE_MEDIA_ASSET_PATHS.splitter.preview1Webp,
@@ -107,9 +141,26 @@ export const FEATURE_MEDIA_ASSETS = {
   inspector: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp
   },
+  remover: {
+    preview1Webp: FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp,
+    preview2Webp: FEATURE_MEDIA_ASSET_PATHS.remover.preview2Webp
+  },
   downloadHints: {
     chromeWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.chromeWebp,
     edgeWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.edgeWebp,
     firefoxWebp: FEATURE_MEDIA_ASSET_PATHS.downloadHints.firefoxWebp
+  },
+  common: {
+    latestSummaryMd: FEATURE_MEDIA_ASSET_PATHS.common.latestSummaryMd,
+    v2_1_3: FEATURE_MEDIA_ASSET_PATHS.common.v2_1_3,
+    v2_1_2: FEATURE_MEDIA_ASSET_PATHS.common.v2_1_2,
+    v1_5_0: FEATURE_MEDIA_ASSET_PATHS.common.v1_5_0,
+    v1_0_0: FEATURE_MEDIA_ASSET_PATHS.common.v1_0_0
+  },
+  ai: {
+    onnxWasm: FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasm,
+    onnxMjs: FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjs,
+    onnxWasmAsyncify: FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasmAsyncify,
+    onnxMjsAsyncify: FEATURE_MEDIA_ASSET_PATHS.ai.onnxMjsAsyncify
   }
 } as const

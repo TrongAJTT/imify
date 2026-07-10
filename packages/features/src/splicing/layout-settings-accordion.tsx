@@ -1,14 +1,14 @@
-import React from "react"
-import { Rows, } from "lucide-react"
-import { NumberInput } from "@imify/ui"
-import { SelectField } from "./splicing-sidebar-fields"
-import { AccordionCard, RadioCard } from "@imify/ui"
+import React from "react";
+import { Rows } from "lucide-react";
+import { NumberInput } from "@imify/ui";
+import { SelectField } from "./splicing-sidebar-fields";
+import { AccordionCard, RadioCard } from "@imify/ui";
 import type {
   SplicingAlignment,
   SplicingDirection,
   SplicingImageAppearanceDirection,
-  SplicingPreset
-} from "./types"
+  SplicingPreset,
+} from "./types";
 import {
   type BentoLayoutMode,
   GRID_DIRECTION_OPTIONS,
@@ -17,38 +17,44 @@ import {
   STITCH_V_DIRECTION_OPTIONS,
   deriveBentoLayoutMode,
   getBentoDefaultImageDirection,
-  mapBentoLayoutModeToDirections
-} from "./splicing-sidebar-fields"
-import { BentoLayoutControls } from "./bento-layout-controls"
+  mapBentoLayoutModeToDirections,
+} from "./splicing-sidebar-fields";
+import { BentoLayoutControls } from "./bento-layout-controls";
 
 interface LayoutSettingsAccordionProps {
-  preset: SplicingPreset
-  primaryDirection: SplicingDirection
-  secondaryDirection: SplicingDirection
-  gridCount: number
-  flowMaxSize: number
-  flowSplitOverflow: boolean
-  alignment: SplicingAlignment
-  imageAppearanceDirection: SplicingImageAppearanceDirection
-  previewBentoFlowGroupCount: number | null
-  bentoLayoutMode: BentoLayoutMode
-  bentoAlignmentOptions: Array<{ value: SplicingAlignment; label: string }>
+  preset: SplicingPreset;
+  primaryDirection: SplicingDirection;
+  secondaryDirection: SplicingDirection;
+  gridCount: number;
+  flowMaxSize: number;
+  flowSplitOverflow: boolean;
+  alignment: SplicingAlignment;
+  imageAppearanceDirection: SplicingImageAppearanceDirection;
+  previewBentoFlowGroupCount: number | null;
+  bentoLayoutMode: BentoLayoutMode;
+  bentoAlignmentOptions: Array<{ value: SplicingAlignment; label: string }>;
 
-  onPresetChange: (preset: SplicingPreset) => void
-  onPrimaryDirectionChange: (direction: SplicingDirection) => void
-  onSecondaryDirectionChange: (direction: SplicingDirection) => void
-  onGridCountChange: (count: number) => void
-  onFlowMaxSizeChange: (size: number) => void
-  onFlowSplitOverflowChange: (enabled: boolean) => void
-  onAlignmentChange: (alignment: SplicingAlignment) => void
-  onImageAppearanceDirectionChange: (direction: SplicingImageAppearanceDirection) => void
-  onImageAppearanceDirectionChangeFromPreset: (direction: SplicingImageAppearanceDirection) => void
+  onPresetChange: (preset: SplicingPreset) => void;
+  onPrimaryDirectionChange: (direction: SplicingDirection) => void;
+  onSecondaryDirectionChange: (direction: SplicingDirection) => void;
+  onGridCountChange: (count: number) => void;
+  onFlowMaxSizeChange: (size: number) => void;
+  onFlowSplitOverflowChange: (enabled: boolean) => void;
+  onAlignmentChange: (alignment: SplicingAlignment) => void;
+  onImageAppearanceDirectionChange: (
+    direction: SplicingImageAppearanceDirection,
+  ) => void;
+  onImageAppearanceDirectionChangeFromPreset: (
+    direction: SplicingImageAppearanceDirection,
+  ) => void;
 }
 
 /**
  * Accordion for Layout Settings (Preset, Direction, Grid Controls)
  * Dynamically shows sublabel based on current preset
  */
+import { useTranslation } from "@imify/i18n";
+
 export function LayoutSettingsAccordion({
   preset,
   primaryDirection,
@@ -68,27 +74,72 @@ export function LayoutSettingsAccordion({
   onFlowSplitOverflowChange,
   onAlignmentChange,
   onImageAppearanceDirectionChange,
-  onImageAppearanceDirectionChangeFromPreset
+  onImageAppearanceDirectionChangeFromPreset,
 }: LayoutSettingsAccordionProps) {
+  const { t } = useTranslation("splicing");
+
+  const translateOption = (opt: { value: string; label: string }) => {
+    const key = opt.value.replace(/_([a-z])/g, (_, letter) =>
+      letter.toUpperCase(),
+    );
+    return {
+      value: opt.value,
+      label: t(`layoutFields.${key}`, { defaultValue: opt.label }),
+    };
+  };
+
+  const bentoModeText = (() => {
+    if (bentoLayoutMode === "vertical") return t("preset.bentoVert");
+    if (bentoLayoutMode === "horizontal") return t("preset.bentoHoriz");
+    if (bentoLayoutMode === "fixed_vertical") return t("preset.bentoFixedVert");
+    return t("preset.bentoFixedHoriz");
+  })();
+
   // Dynamic sublabel based on preset
   const sublabelMap: Record<SplicingPreset, string> = {
-    stitch_vertical: "Vertical stitching",
-    stitch_horizontal: "Horizontal stitching",
-    grid: `${gridCount} columns`,
-    bento: `Layout: ${bentoLayoutMode}`
-  }
+    stitch_vertical: t("preset.layoutVert"),
+    stitch_horizontal: t("preset.layoutHoriz"),
+    grid: `${gridCount} ${t("workspace.statsColumns")}`,
+    bento: t("preset.layoutBento", { mode: bentoModeText }),
+  };
+
+  const localizedPresetOptions = PRESET_OPTIONS.map((opt) => {
+    let title = "";
+    let subtitle = "";
+    if (opt.value === "stitch_vertical") {
+      title = t("preset.stitchV");
+      subtitle = t("preset.stitchVDesc");
+    } else if (opt.value === "stitch_horizontal") {
+      title = t("preset.stitchH");
+      subtitle = t("preset.stitchHDesc");
+    } else if (opt.value === "grid") {
+      title = t("preset.grid");
+      subtitle = t("preset.gridDesc");
+    } else if (opt.value === "bento") {
+      title = t("preset.bento");
+      subtitle = t("preset.bentoDesc");
+    }
+    return { ...opt, title, subtitle };
+  });
+
+  const localizedGridDirectionOptions =
+    GRID_DIRECTION_OPTIONS.map(translateOption);
+  const localizedStitchVDirectionOptions =
+    STITCH_V_DIRECTION_OPTIONS.map(translateOption);
+  const localizedStitchHDirectionOptions =
+    STITCH_H_DIRECTION_OPTIONS.map(translateOption);
 
   return (
     <AccordionCard
       icon={<Rows size={16} />}
-      label="Layout Settings"
+      label={t("sidebar.layout")}
       sublabel={sublabelMap[preset]}
       colorTheme="sky"
-      defaultOpen={false}
+      defaultOpen={true}
     >
       <div className="space-y-3 pt-1">
         <div className="grid grid-cols-2 gap-1.5">
-          {PRESET_OPTIONS.map((opt) => (
+          {localizedPresetOptions.map((opt) => (
             <RadioCard
               key={opt.value}
               icon={opt.icon}
@@ -97,16 +148,21 @@ export function LayoutSettingsAccordion({
               value={opt.value}
               selectedValue={preset}
               onChange={(v) => {
-                onPresetChange(v as SplicingPreset)
+                onPresetChange(v as SplicingPreset);
                 if (v === "stitch_vertical") {
-                  onImageAppearanceDirectionChangeFromPreset("top_to_bottom")
+                  onImageAppearanceDirectionChangeFromPreset("top_to_bottom");
                 } else if (v === "stitch_horizontal") {
-                  onImageAppearanceDirectionChangeFromPreset("left_to_right")
+                  onImageAppearanceDirectionChangeFromPreset("left_to_right");
                 } else if (v === "grid") {
-                  onImageAppearanceDirectionChangeFromPreset("lr_tb")
+                  onImageAppearanceDirectionChangeFromPreset("lr_tb");
                 } else if (v === "bento") {
-                  const mode = deriveBentoLayoutMode(primaryDirection, secondaryDirection)
-                  onImageAppearanceDirectionChangeFromPreset(getBentoDefaultImageDirection(mode))
+                  const mode = deriveBentoLayoutMode(
+                    primaryDirection,
+                    secondaryDirection,
+                  );
+                  onImageAppearanceDirectionChangeFromPreset(
+                    getBentoDefaultImageDirection(mode),
+                  );
                 }
               }}
             />
@@ -125,16 +181,21 @@ export function LayoutSettingsAccordion({
                 alignmentOptions={bentoAlignmentOptions}
                 imageAppearanceDirection={imageAppearanceDirection}
                 onLayoutModeChange={(mode: BentoLayoutMode) => {
-                  const { primary, secondary } = mapBentoLayoutModeToDirections(mode)
-                  onPrimaryDirectionChange(primary)
-                  onSecondaryDirectionChange(secondary)
-                  onImageAppearanceDirectionChange(getBentoDefaultImageDirection(mode))
+                  const { primary, secondary } =
+                    mapBentoLayoutModeToDirections(mode);
+                  onPrimaryDirectionChange(primary);
+                  onSecondaryDirectionChange(secondary);
+                  onImageAppearanceDirectionChange(
+                    getBentoDefaultImageDirection(mode),
+                  );
                 }}
                 onFlowMaxSizeChange={onFlowMaxSizeChange}
                 onFlowSplitOverflowChange={onFlowSplitOverflowChange}
                 onCountChange={onGridCountChange}
                 onAlignmentChange={onAlignmentChange}
-                onImageAppearanceDirectionChange={onImageAppearanceDirectionChange}
+                onImageAppearanceDirectionChange={
+                  onImageAppearanceDirectionChange
+                }
               />
             )}
 
@@ -142,7 +203,7 @@ export function LayoutSettingsAccordion({
               <div className="flex gap-2 items-start">
                 <div className="min-w-0 shrink-0 flex-[1]">
                   <NumberInput
-                    label="Columns"
+                    label={t("layoutFields.columns")}
                     value={gridCount}
                     onChangeValue={onGridCountChange}
                     min={1}
@@ -151,10 +212,14 @@ export function LayoutSettingsAccordion({
                 </div>
                 <div className="min-w-0 flex-[2]">
                   <SelectField
-                    label="Image Direction"
+                    label={t("layoutFields.imageDirection")}
                     value={imageAppearanceDirection}
-                    options={GRID_DIRECTION_OPTIONS}
-                    onChange={(v) => onImageAppearanceDirectionChange(v as SplicingImageAppearanceDirection)}
+                    options={localizedGridDirectionOptions}
+                    onChange={(v) =>
+                      onImageAppearanceDirectionChange(
+                        v as SplicingImageAppearanceDirection,
+                      )
+                    }
                   />
                 </div>
               </div>
@@ -164,25 +229,30 @@ export function LayoutSettingsAccordion({
 
         {preset === "stitch_vertical" && (
           <SelectField
-            label="Image Direction"
+            label={t("layoutFields.imageDirection")}
             value={imageAppearanceDirection}
-            options={STITCH_V_DIRECTION_OPTIONS}
-            onChange={(v) => onImageAppearanceDirectionChange(v as SplicingImageAppearanceDirection)}
+            options={localizedStitchVDirectionOptions}
+            onChange={(v) =>
+              onImageAppearanceDirectionChange(
+                v as SplicingImageAppearanceDirection,
+              )
+            }
           />
         )}
 
         {preset === "stitch_horizontal" && (
           <SelectField
-            label="Image Direction"
+            label={t("layoutFields.imageDirection")}
             value={imageAppearanceDirection}
-            options={STITCH_H_DIRECTION_OPTIONS}
-            onChange={(v) => onImageAppearanceDirectionChange(v as SplicingImageAppearanceDirection)}
+            options={localizedStitchHDirectionOptions}
+            onChange={(v) =>
+              onImageAppearanceDirectionChange(
+                v as SplicingImageAppearanceDirection,
+              )
+            }
           />
         )}
       </div>
     </AccordionCard>
-  )
+  );
 }
-
-
-

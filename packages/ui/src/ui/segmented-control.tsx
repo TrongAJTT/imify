@@ -2,6 +2,7 @@ import React from "react"
 import type { ReactNode } from "react"
 
 import { Tooltip } from "./tooltip"
+import { type ColorTheme } from "./theme-config"
 
 export interface SegmentedControlOption<T extends string> {
   value: T
@@ -20,6 +21,7 @@ interface SegmentedControlProps<T extends string> {
   wrapperClassName?: string
   groupClassName?: string
   buttonClassName?: string
+  colorTheme?: ColorTheme
 }
 
 export function SegmentedControl<T extends string>({
@@ -29,8 +31,19 @@ export function SegmentedControl<T extends string>({
   ariaLabel,
   wrapperClassName = "",
   groupClassName = "",
-  buttonClassName = ""
+  buttonClassName = "",
+  colorTheme = "sky"
 }: SegmentedControlProps<T>) {
+  const themeMap: Record<ColorTheme, string> = {
+    blue: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
+    purple: "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300",
+    amber: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
+    sky: "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300",
+    orange: "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300",
+    pink: "bg-pink-100 text-pink-700 dark:bg-pink-900/50 dark:text-pink-300",
+  }
+  const activeClasses = themeMap[colorTheme]
+
   return (
     <div className={wrapperClassName}>
       <div
@@ -48,9 +61,9 @@ export function SegmentedControl<T extends string>({
               aria-selected={isActive}
               aria-pressed={isActive}
               onClick={() => onChange(option.value)}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-medium transition-colors ${
                 isActive
-                  ? "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300"
+                  ? activeClasses
                   : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
               } ${buttonClassName}`}
             >

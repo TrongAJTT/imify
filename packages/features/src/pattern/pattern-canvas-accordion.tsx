@@ -1,99 +1,110 @@
-import React, { useMemo, useRef, useState } from "react"
-import { ImagePlus, Palette, Ruler, X } from "lucide-react"
+import React, { useMemo, useRef, useState } from "react";
+import { ImagePlus, Palette, Ruler, X } from "lucide-react";
 
-import type { PatternBackgroundType } from "./types"
-import type { CanvasSizePreset } from "@imify/features/filling/types"
-import { CanvasSizeDialog } from "../filling/canvas-size-dialog"
-import { Button } from "@imify/ui"
-import { ColorPickerPopover } from "@imify/ui"
-import { NumberInput } from "@imify/ui"
-import { AccordionCard } from "@imify/ui"
-import { SelectInput } from "@imify/ui"
-import { SliderInput } from "@imify/ui"
-import { usePatternStore } from "@imify/stores/stores/pattern-store"
-import { COMMON_IMAGE_ACCEPT_WITH_SVG } from "../shared/image-file-utils"
+import type { PatternBackgroundType } from "./types";
+import type { CanvasSizePreset } from "@imify/features/filling/types";
+import { CanvasSizeDialog } from "../filling/canvas-size-dialog";
+import { Button } from "@imify/ui";
+import { ColorPickerPopover } from "@imify/ui";
+import { NumberInput } from "@imify/ui";
+import { AccordionCard } from "@imify/ui";
+import { SelectInput } from "@imify/ui";
+import { SliderInput } from "@imify/ui";
+import { usePatternStore } from "@imify/stores/stores/pattern-store";
+import { COMMON_IMAGE_ACCEPT_WITH_SVG } from "../shared/image-file-utils";
+import { useTranslation } from "@imify/i18n";
 
-const BG_TYPE_OPTIONS: Array<{ value: PatternBackgroundType; label: string }> = [
-  { value: "solid", label: "Customized Color" },
-  { value: "transparent", label: "Transparent" },
-  { value: "image", label: "Image" },
-]
-
-const BLOB_URL_PREFIX = "blob:"
+const BLOB_URL_PREFIX = "blob:";
 
 function revokeObjectUrlIfNeeded(url: string | null | undefined): void {
   if (!url || !url.startsWith(BLOB_URL_PREFIX)) {
-    return
+    return;
   }
 
-  URL.revokeObjectURL(url)
+  URL.revokeObjectURL(url);
 }
 
 export function PatternCanvasAccordion() {
-  const canvas = usePatternStore((state) => state.canvas)
-  const setCanvas = usePatternStore((state) => state.setCanvas)
-  const setCanvasSize = usePatternStore((state) => state.setCanvasSize)
+  const { t } = useTranslation("pattern");
+  const canvas = usePatternStore((state) => state.canvas);
+  const setCanvas = usePatternStore((state) => state.setCanvas);
+  const setCanvasSize = usePatternStore((state) => state.setCanvasSize);
 
-  const [isCanvasSizeDialogOpen, setIsCanvasSizeDialogOpen] = useState(false)
-  const imageInputRef = useRef<HTMLInputElement>(null)
+  const [isCanvasSizeDialogOpen, setIsCanvasSizeDialogOpen] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const bgTypeOptions = [
+    { value: "solid", label: t("canvasFields.solid") },
+    { value: "transparent", label: t("canvasFields.transparent") },
+    { value: "image", label: t("canvasFields.image") },
+  ];
 
   const sublabel = useMemo(() => {
-    const sizeLabel = `${canvas.width} x ${canvas.height}`
+    const sizeLabel = `${canvas.width} x ${canvas.height}`;
 
     if (canvas.backgroundType === "transparent") {
-      return `${sizeLabel} • Transparent`
+      return `${sizeLabel} • ${t("canvasFields.transparent")}`;
     }
 
     if (canvas.backgroundType === "image" && canvas.backgroundImageUrl) {
-      return `${sizeLabel} • Image`
+      return `${sizeLabel} • ${t("canvasFields.image")}`;
     }
 
-    return `${sizeLabel} • ${canvas.backgroundColor}`
-  }, [canvas.backgroundColor, canvas.backgroundImageUrl, canvas.backgroundType, canvas.height, canvas.width])
+    return `${sizeLabel} • ${canvas.backgroundColor}`;
+  }, [
+    canvas.backgroundColor,
+    canvas.backgroundImageUrl,
+    canvas.backgroundType,
+    canvas.height,
+    canvas.width,
+    t,
+  ]);
 
-  const handleUploadBackground = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+  const handleUploadBackground = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
 
     if (!file) {
-      return
+      return;
     }
 
-    const nextUrl = URL.createObjectURL(file)
+    const nextUrl = URL.createObjectURL(file);
 
-    revokeObjectUrlIfNeeded(canvas.backgroundImageUrl)
+    revokeObjectUrlIfNeeded(canvas.backgroundImageUrl);
 
     setCanvas({
       backgroundType: "image",
       backgroundImageUrl: nextUrl,
-    })
+    });
 
     if (imageInputRef.current) {
-      imageInputRef.current.value = ""
+      imageInputRef.current.value = "";
     }
-  }
+  };
 
   const handleClearBackgroundImage = () => {
-    revokeObjectUrlIfNeeded(canvas.backgroundImageUrl)
+    revokeObjectUrlIfNeeded(canvas.backgroundImageUrl);
 
     setCanvas({
       backgroundImageUrl: null,
       backgroundType: "solid",
-    })
-  }
+    });
+  };
 
   const handleApplyPreset = (preset: CanvasSizePreset) => {
-    setCanvasSize(preset.width, preset.height)
-    setIsCanvasSizeDialogOpen(false)
-  }
+    setCanvasSize(preset.width, preset.height);
+    setIsCanvasSizeDialogOpen(false);
+  };
 
   return (
     <>
       <AccordionCard
         icon={<Palette size={16} />}
-        label="Canvas"
+        label={t("sidebar.canvas")}
         sublabel={sublabel}
         colorTheme="purple"
-        defaultOpen={false}
+        defaultOpen={true}
       >
         <div className="space-y-3">
           <input
@@ -106,7 +117,7 @@ export function PatternCanvasAccordion() {
 
           <div className="grid grid-cols-2 gap-2 items-end">
             <NumberInput
-              label="Width"
+              label={t("canvasFields.width")}
               value={canvas.width}
               min={16}
               max={12000}
@@ -114,7 +125,7 @@ export function PatternCanvasAccordion() {
               onChangeValue={(value) => setCanvasSize(value, canvas.height)}
             />
             <NumberInput
-              label="Height"
+              label={t("canvasFields.height")}
               value={canvas.height}
               min={16}
               max={12000}
@@ -123,21 +134,28 @@ export function PatternCanvasAccordion() {
             />
           </div>
 
-          <Button variant="secondary" size="sm" onClick={() => setIsCanvasSizeDialogOpen(true)} className="w-full">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsCanvasSizeDialogOpen(true)}
+            className="w-full"
+          >
             <Ruler size={14} />
-            Choose Popular Size
+            {t("canvasFields.popularSize")}
           </Button>
 
           <SelectInput
-            label="Background"
+            label={t("canvasFields.background")}
             value={canvas.backgroundType}
-            options={BG_TYPE_OPTIONS}
-            onChange={(value) => setCanvas({ backgroundType: value as PatternBackgroundType })}
+            options={bgTypeOptions}
+            onChange={(value) =>
+              setCanvas({ backgroundType: value as PatternBackgroundType })
+            }
           />
 
           {canvas.backgroundType !== "transparent" && (
             <ColorPickerPopover
-              label="Background Color"
+              label={t("canvasFields.backgroundColor")}
               value={canvas.backgroundColor}
               onChange={(value) => setCanvas({ backgroundColor: value })}
               outputMode="rgba"
@@ -155,7 +173,7 @@ export function PatternCanvasAccordion() {
                   onClick={() => imageInputRef.current?.click()}
                 >
                   <ImagePlus size={14} />
-                  Upload Background Image
+                  {t("canvasFields.uploadBackground")}
                 </Button>
               ) : (
                 <div className="flex gap-1.5">
@@ -165,22 +183,28 @@ export function PatternCanvasAccordion() {
                     className="flex-1"
                     onClick={() => imageInputRef.current?.click()}
                   >
-                    Change Image
+                    {t("canvasFields.changeImage")}
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={handleClearBackgroundImage}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleClearBackgroundImage}
+                  >
                     <X size={12} />
                   </Button>
                 </div>
               )}
 
               <SliderInput
-                label="Image Opacity"
+                label={t("canvasFields.imageOpacity")}
                 value={Math.round(canvas.backgroundImageOpacity * 100)}
                 min={0}
                 max={100}
                 step={1}
                 suffix="%"
-                onChange={(value) => setCanvas({ backgroundImageOpacity: value / 100 })}
+                onChange={(value) =>
+                  setCanvas({ backgroundImageOpacity: value / 100 })
+                }
               />
             </div>
           )}
@@ -195,8 +219,5 @@ export function PatternCanvasAccordion() {
         onConfirm={handleApplyPreset}
       />
     </>
-  )
+  );
 }
-
-
-

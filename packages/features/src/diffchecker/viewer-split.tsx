@@ -10,6 +10,7 @@ interface ViewerSplitProps {
   panY: number
   labelA?: string
   labelB?: string
+  bgColorB?: string | null
 }
 
 export function ViewerSplit({
@@ -21,7 +22,8 @@ export function ViewerSplit({
   panX,
   panY,
   labelA = "A",
-  labelB = "B"
+  labelB = "B",
+  bgColorB = null
 }: ViewerSplitProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -60,7 +62,9 @@ export function ViewerSplit({
 
   return (
     <div ref={containerRef} className="absolute inset-0">
-      <div className="absolute inset-0 overflow-hidden"><img src={urlB} alt="Image B" style={imgStyle} draggable={false} /></div>
+      <div className="absolute inset-0 overflow-hidden" style={{ backgroundColor: bgColorB || "transparent" }}>
+        <img src={urlB} alt="Image B" style={imgStyle} draggable={false} />
+      </div>
       <div className="absolute inset-0 overflow-hidden" style={{ clipPath: `inset(0 ${100 - splitPosition}% 0 0)` }}>
         <img src={urlA} alt="Image A" style={imgStyle} draggable={false} />
       </div>

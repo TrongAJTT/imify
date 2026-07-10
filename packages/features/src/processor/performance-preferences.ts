@@ -540,17 +540,37 @@ function buildStatusText(
   selectedConcurrency: number,
   recommended: number,
   recommendedMin: number,
-  recommendedMax: number
+  recommendedMax: number,
+  t?: any
 ): string {
   if (riskLevel === "danger") {
-    return `High crash risk: selected ${selectedConcurrency} exceeds safe range ${recommendedMin}-${recommendedMax}.`
+    return t
+      ? t("concurrencyAdvisor.statusDanger", {
+          selected: selectedConcurrency,
+          min: recommendedMin,
+          max: recommendedMax,
+        })
+      : `High crash risk: selected ${selectedConcurrency} exceeds safe range ${recommendedMin}-${recommendedMax}.`
   }
 
   if (riskLevel === "caution") {
-    return `Pushing limits: selected ${selectedConcurrency}, recommended around ${recommended} (${recommendedMin}-${recommendedMax}).`
+    return t
+      ? t("concurrencyAdvisor.statusCaution", {
+          selected: selectedConcurrency,
+          recommended,
+          min: recommendedMin,
+          max: recommendedMax,
+        })
+      : `Pushing limits: selected ${selectedConcurrency}, recommended around ${recommended} (${recommendedMin}-${recommendedMax}).`
   }
 
-  return `Optimal: selected ${selectedConcurrency} is within safe range ${recommendedMin}-${recommendedMax}.`
+  return t
+    ? t("concurrencyAdvisor.statusOptimal", {
+        selected: selectedConcurrency,
+        min: recommendedMin,
+        max: recommendedMax,
+      })
+    : `Optimal: selected ${selectedConcurrency} is within safe range ${recommendedMin}-${recommendedMax}.`
 }
 
 export function calculateConcurrencyAdvisor(input: {
@@ -560,6 +580,7 @@ export function calculateConcurrencyAdvisor(input: {
   resizeConfig?: ResizeConfig
   preferences: PerformancePreferences
   estimatedMegapixels?: number
+  t?: any
 }): ConcurrencyAdvisorResult {
   const preferences = normalizePerformancePreferences(input.preferences)
   const selectedConcurrency = clampConcurrencyValue(input.selectedConcurrency)
@@ -599,7 +620,9 @@ export function calculateConcurrencyAdvisor(input: {
 
   return {
     enabled: true,
-    advisorName: usingFallbackProfile ? "Concurrency Advisor" : "Smart Concurrency Advisor",
+    advisorName: usingFallbackProfile
+      ? (input.t ? input.t("concurrencyAdvisor.advisorName") : "Concurrency Advisor")
+      : (input.t ? input.t("concurrencyAdvisor.smartAdvisorName") : "Smart Concurrency Advisor"),
     advisorNameShort: usingFallbackProfile ? "CA" : "SCA",
     usingFallbackProfile,
     recommended,
@@ -614,12 +637,30 @@ export function calculateConcurrencyAdvisor(input: {
       selectedConcurrency,
       recommended,
       recommendedMin,
-      recommendedMax
+      recommendedMax,
+      input.t
     ),
-    detailText: `CPU limit ${cpuLimit}, RAM limit ${memoryLimit}, estimated ${cost.memoryMB}MB per worker.`,
+    detailText: input.t
+      ? input.t("concurrencyAdvisor.detailText", {
+          cpuLimit,
+          memoryLimit,
+          memoryMB: cost.memoryMB,
+        })
+      : `CPU limit ${cpuLimit}, RAM limit ${memoryLimit}, estimated ${cost.memoryMB}MB per worker.`,
     summaryText: usingFallbackProfile
-      ? `Default profile: ${profile.cpuCores} threads, ${profile.ramBudgetGb}GB RAM budget.`
-      : `${sourceLabel} profile: ${profile.cpuCores} threads, ${profile.ramBudgetGb}GB RAM budget.`,
+      ? (input.t
+          ? input.t("concurrencyAdvisor.defaultProfile", {
+              cores: profile.cpuCores,
+              ram: profile.ramBudgetGb,
+            })
+          : `Default profile: ${profile.cpuCores} threads, ${profile.ramBudgetGb}GB RAM budget.`)
+      : (input.t
+          ? input.t("concurrencyAdvisor.sourceProfile", {
+              source: input.t(`concurrencyAdvisor.profile${sourceLabel}`),
+              cores: profile.cpuCores,
+              ram: profile.ramBudgetGb,
+            })
+          : `${sourceLabel} profile: ${profile.cpuCores} threads, ${profile.ramBudgetGb}GB RAM budget.`),
     reasons: cost.reasons
   }
 }

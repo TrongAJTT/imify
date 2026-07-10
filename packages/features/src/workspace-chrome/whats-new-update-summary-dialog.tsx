@@ -1,13 +1,13 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
-import { BookOpenText, X } from "lucide-react"
+import { BookOpenText, X, Sparkles } from "lucide-react"
 import { BaseDialog } from "@imify/ui/ui/base-dialog"
 import { Button } from "@imify/ui/ui/button"
 import { Heading, Kicker, MutedText } from "@imify/ui/ui/typography"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "../shared/media-assets"
 import { FeatureMarkdown } from "../shared/feature-markdown"
-import { extractWhatsNewSummaryAbove } from "./whats-new-markdown-split"
+import { useTranslation } from "@imify/i18n"
 
 interface WhatsNewUpdateSummaryDialogProps {
   isOpen: boolean
@@ -16,7 +16,7 @@ interface WhatsNewUpdateSummaryDialogProps {
   version: string
 }
 
-const WHATS_NEW_MARKDOWN_PATH = "/assets/WHATS_NEW.md"
+const LATEST_SUMMARY_MARKDOWN_PATH = FEATURE_MEDIA_ASSETS.common.latestSummaryMd
 
 export function WhatsNewUpdateSummaryDialog({
   isOpen,
@@ -24,10 +24,11 @@ export function WhatsNewUpdateSummaryDialog({
   onOpenWhatsNew,
   version
 }: WhatsNewUpdateSummaryDialogProps) {
+  const { t } = useTranslation("about")
   const [markdown, setMarkdown] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const markdownUrl = resolveFeatureMediaAssetUrl(WHATS_NEW_MARKDOWN_PATH)
+  const markdownUrl = resolveFeatureMediaAssetUrl(LATEST_SUMMARY_MARKDOWN_PATH)
   const appIconSrc = resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.brand.imifyLogoPng)
 
   useEffect(() => {
@@ -40,17 +41,17 @@ export function WhatsNewUpdateSummaryDialog({
     void fetch(markdownUrl)
       .then(async (response) => {
         if (!response.ok) {
-          throw new Error(`Failed to load What's New summary: ${response.status}`)
+          throw new Error(`Failed to load update summary: ${response.status}`)
         }
         return response.text()
       })
       .then((text) => {
         if (!isMounted) return
-        setMarkdown(extractWhatsNewSummaryAbove(text))
+        setMarkdown(text)
       })
       .catch(() => {
         if (!isMounted) return
-        setError("Could not load update summary.")
+        setError(t("changelogsDialog.loadError", "Could not load changelog content."))
       })
       .finally(() => {
         if (!isMounted) return
@@ -60,11 +61,11 @@ export function WhatsNewUpdateSummaryDialog({
     return () => {
       isMounted = false
     }
-  }, [isOpen, markdownUrl])
+  }, [isOpen, markdownUrl, t])
 
   const content = useMemo(() => {
     if (isLoading) {
-      return <MutedText>Loading updates...</MutedText>
+      return <MutedText>{t("changelogsDialog.loadingChangelog", "Loading update logs...")}</MutedText>
     }
 
     if (error) {
@@ -74,13 +75,13 @@ export function WhatsNewUpdateSummaryDialog({
     if (!markdown.trim()) {
       return (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/30 p-6">
-          <MutedText>There's no summary for this update.</MutedText>
+          <MutedText>{t("changelogsDialog.noReleaseNotes", "No release notes available for this version.")}</MutedText>
         </div>
       )
     }
 
     return <FeatureMarkdown markdown={markdown} markdownUrl={markdownUrl} />
-  }, [error, isLoading, markdown, markdownUrl])
+  }, [error, isLoading, markdown, markdownUrl, t])
 
   return (
     <BaseDialog
@@ -95,8 +96,12 @@ export function WhatsNewUpdateSummaryDialog({
             <img src={appIconSrc} alt="Imify" className="h-8 w-8 object-contain" />
           </div>
           <div>
-            <Heading className="text-xl leading-tight">Imify has been updated</Heading>
-            <Kicker>{`See what's new in v${version}.`}</Kicker>
+            <Heading className="text-xl leading-tight">
+              {t("updatedDialog.title", "Imify has been updated!")}
+            </Heading>
+            <Kicker>
+              {t("updatedDialog.subtitle", "Discover the latest changes and additions.")} {`(v${version})`}
+            </Kicker>
           </div>
         </div>
         <Button
@@ -104,7 +109,7 @@ export function WhatsNewUpdateSummaryDialog({
           size="icon"
           className="rounded-full border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
           onClick={onClose}
-          aria-label="Close what's new update summary dialog"
+          aria-label="Close update summary dialog"
         >
           <X size={18} />
         </Button>
@@ -112,13 +117,16 @@ export function WhatsNewUpdateSummaryDialog({
 
       <div className="flex-1 overflow-y-auto px-6 pt-3 bg-slate-50/50 dark:bg-slate-900/50">{content}</div>
 
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <Button variant="primary" size="default" className="w-full" onClick={onOpenWhatsNew}>
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex gap-3">
+        <Button variant="outline" className="flex-1" onClick={onClose}>
+          <Sparkles size={16} />
+          {t("updatedDialog.btnExplore", "Explore now")}
+        </Button>
+        <Button variant="primary" className="flex-1" onClick={onOpenWhatsNew}>
           <BookOpenText size={16} />
-          See full changelog
+          {t("updatedDialog.btnChangelogs", "View updates changelog")}
         </Button>
       </div>
     </BaseDialog>
   )
 }
-

@@ -1,34 +1,36 @@
-import React from "react"
-import { Scissors } from "lucide-react"
+import React from "react";
+import { Scissors } from "lucide-react";
 import type {
   SplicingAlignment,
-  SplicingImageAppearanceDirection
-} from "./types"
-import { CheckboxCard, NumberInput } from "@imify/ui"
-import { SPLICING_TOOLTIPS } from "./splicing-tooltips"
+  SplicingImageAppearanceDirection,
+} from "./types";
+import { CheckboxCard, NumberInput } from "@imify/ui";
 import {
   BENTO_LAYOUT_OPTIONS,
   getBentoDirectionOptions,
-  getBentoFlowSizeLabel,
   isBentoFlowLayoutMode,
   SelectField,
-  type BentoLayoutMode
-} from "./splicing-sidebar-fields"
+  type BentoLayoutMode,
+} from "./splicing-sidebar-fields";
+
+import { useTranslation } from "@imify/i18n";
 
 interface BentoLayoutControlsProps {
-  mode: BentoLayoutMode
-  flowMaxSize: number
-  flowSplitOverflow: boolean
-  count: number
-  alignment: SplicingAlignment
-  alignmentOptions: Array<{ value: SplicingAlignment; label: string }>
-  imageAppearanceDirection: SplicingImageAppearanceDirection
-  onLayoutModeChange: (mode: BentoLayoutMode) => void
-  onFlowMaxSizeChange: (value: number) => void
-  onFlowSplitOverflowChange: (value: boolean) => void
-  onCountChange: (value: number) => void
-  onAlignmentChange: (value: SplicingAlignment) => void
-  onImageAppearanceDirectionChange: (value: SplicingImageAppearanceDirection) => void
+  mode: BentoLayoutMode;
+  flowMaxSize: number;
+  flowSplitOverflow: boolean;
+  count: number;
+  alignment: SplicingAlignment;
+  alignmentOptions: Array<{ value: SplicingAlignment; label: string }>;
+  imageAppearanceDirection: SplicingImageAppearanceDirection;
+  onLayoutModeChange: (mode: BentoLayoutMode) => void;
+  onFlowMaxSizeChange: (value: number) => void;
+  onFlowSplitOverflowChange: (value: boolean) => void;
+  onCountChange: (value: number) => void;
+  onAlignmentChange: (value: SplicingAlignment) => void;
+  onImageAppearanceDirectionChange: (
+    value: SplicingImageAppearanceDirection,
+  ) => void;
 }
 
 export function BentoLayoutControls({
@@ -44,23 +46,47 @@ export function BentoLayoutControls({
   onFlowSplitOverflowChange,
   onCountChange,
   onAlignmentChange,
-  onImageAppearanceDirectionChange
+  onImageAppearanceDirectionChange,
 }: BentoLayoutControlsProps) {
-  const isFlow = isBentoFlowLayoutMode(mode)
-  const countLabel = mode === "fixed_horizontal" ? "Max/row" : "Max/column"
+  const { t } = useTranslation("splicing");
+  const isFlow = isBentoFlowLayoutMode(mode);
+  const countLabel =
+    mode === "fixed_horizontal"
+      ? t("preset.bentoMaxRow")
+      : t("preset.bentoMaxCol");
+
+  const translateOption = (opt: { value: string; label: string }) => {
+    const key = opt.value.replace(/_([a-z])/g, (_, letter) =>
+      letter.toUpperCase(),
+    );
+    return {
+      value: opt.value,
+      label: t(`layoutFields.${key}`, { defaultValue: opt.label }),
+    };
+  };
+
+  const localizedBentoOptions = BENTO_LAYOUT_OPTIONS.map(translateOption);
+  const localizedAlignmentOptions = alignmentOptions.map(translateOption);
+  const localizedDirectionOptions =
+    getBentoDirectionOptions(mode).map(translateOption);
+
+  const flowSizeLabel =
+    mode === "vertical"
+      ? t("preset.bentoMaxHeight")
+      : t("preset.bentoMaxWidth");
 
   return (
     <>
       <div className="grid grid-cols-2 gap-2 items-start">
         <SelectField
-          label="Layout"
+          label={t("sidebar.layout")}
           value={mode}
-          options={BENTO_LAYOUT_OPTIONS}
+          options={localizedBentoOptions}
           onChange={(value) => onLayoutModeChange(value as BentoLayoutMode)}
         />
         {isFlow ? (
           <NumberInput
-            label={getBentoFlowSizeLabel(mode)}
+            label={flowSizeLabel}
             value={flowMaxSize}
             onChangeValue={onFlowMaxSizeChange}
             min={100}
@@ -80,34 +106,35 @@ export function BentoLayoutControls({
 
       <div className="grid grid-cols-2 gap-2 items-start">
         <SelectField
-          label="Image Alignment"
+          label={t("layoutFields.imageAlignment")}
           value={alignment}
-          options={alignmentOptions}
+          options={localizedAlignmentOptions}
           onChange={(value) => onAlignmentChange(value as SplicingAlignment)}
         />
         <SelectField
-          label="Image Direction"
+          label={t("layoutFields.imageDirection")}
           value={imageAppearanceDirection}
-          options={getBentoDirectionOptions(mode)}
-          onChange={(value) => onImageAppearanceDirectionChange(value as SplicingImageAppearanceDirection)}
+          options={localizedDirectionOptions}
+          onChange={(value) =>
+            onImageAppearanceDirectionChange(
+              value as SplicingImageAppearanceDirection,
+            )
+          }
         />
       </div>
 
       {isFlow && (
         <CheckboxCard
           icon={<Scissors size={14} />}
-          title="Split Overflow Across Columns"
-          subtitle="Split overflow and continue in the next column/row."
+          title={t("layoutFields.splitOverflowTitle")}
+          subtitle={t("layoutFields.splitOverflowSubtitle")}
           checked={flowSplitOverflow}
           onChange={onFlowSplitOverflowChange}
-          tooltipLabel={SPLICING_TOOLTIPS.layout.splitOverflow.label}
-          tooltipContent={SPLICING_TOOLTIPS.layout.splitOverflow.content}
+          tooltipLabel={t("layoutFields.splitOverflowTitle")}
+          tooltipContent={t("tooltips.splitOverflow.content")}
           variant="sky"
         />
       )}
     </>
-  )
+  );
 }
-
-
-

@@ -2,8 +2,9 @@ import React, { useCallback, useEffect, useRef, useState, type ReactNode } from 
 import { Expand, Shrink } from "lucide-react"
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { Tooltip, ZoomPanControl } from "@imify/ui"
-import { DIFFCHECKER_TOOLTIPS } from "./diffchecker-tooltips"
 import { usePanDrag } from "../shared/use-pan-drag"
+import { useCanvasResizer } from "../shared/use-canvas-resizer"
+import { useTranslation } from "@imify/i18n"
 
 interface ViewerShellProps {
   children: ReactNode
@@ -21,14 +22,20 @@ const ZOOM_FACTOR = 0.15
 const INTERACTIVE_SELECTOR = '[data-viewer-interactive="true"], [class*="pointer-events-auto"]'
 
 export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanChange, className = "" }: ViewerShellProps) {
+  const { t } = useTranslation("diffchecker")
   const ref = useRef<HTMLDivElement>(null)
   const containerHeight = useDiffcheckerStore((s) => s.containerHeight)
   const setContainerHeight = useDiffcheckerStore((s) => s.setContainerHeight)
   const activePointerIdRef = useRef<number | null>(null)
   const panRef = useRef<{ sx: number; sy: number; px: number; py: number } | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [isResizing, setIsResizing] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+
+  const { isResizing, handleResizeStart } = useCanvasResizer({
+    containerRef: ref,
+    onHeightChange: setContainerHeight,
+    minHeight: 200
+  })
 
   useEffect(() => {
     const el = ref.current
@@ -89,20 +96,6 @@ export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanCha
     }
   }, [])
 
-  const handleResizeStart = useCallback((e: React.MouseEvent) => { e.preventDefault(); setIsResizing(true) }, [])
-  useEffect(() => {
-    if (!isResizing) return
-    const handleMouseMove = (e: MouseEvent) => {
-      const container = ref.current
-      if (!container) return
-      const rect = container.getBoundingClientRect()
-      setContainerHeight(Math.max(200, Math.round(e.clientY - rect.top)))
-    }
-    const handleMouseUp = () => setIsResizing(false)
-    document.addEventListener("mousemove", handleMouseMove)
-    document.addEventListener("mouseup", handleMouseUp)
-    return () => { document.removeEventListener("mousemove", handleMouseMove); document.removeEventListener("mouseup", handleMouseUp) }
-  }, [isResizing, setContainerHeight])
 
   const {
     pan,
@@ -156,7 +149,7 @@ export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanCha
     >
       {children}
       <div data-viewer-interactive="true" className="pointer-events-auto absolute top-1/2 right-2 z-20 -translate-y-1/2">
-        <Tooltip content={isFullscreen ? DIFFCHECKER_TOOLTIPS.viewerShell.exitFullscreen : DIFFCHECKER_TOOLTIPS.viewerShell.fullscreen}>
+        <Tooltip content={isFullscreen ? t("tooltips.exitFullscreen") : t("tooltips.fullscreen")}>
           <button
             type="button"
             data-viewer-interactive="true"
@@ -172,7 +165,13 @@ export function ViewerShell({ children, zoom, panX, panY, onZoomChange, onPanCha
         </Tooltip>
       </div>
       <ZoomPanControl zoom={zoom} panX={panX} panY={panY} onZoomChange={onZoomChange} onPanChange={onPanChange} minZoom={MIN_ZOOM} maxZoom={MAX_ZOOM} />
-      <div onMouseDown={handleResizeStart} className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 transition-colors hover:bg-sky-400 dark:bg-slate-600 dark:hover:bg-sky-500 ${isResizing ? "bg-sky-400 dark:bg-sky-500" : ""} ${isFullscreen ? "hidden" : ""}`} style={{ cursor: "ns-resize" }} />
+      <div
+        onPointerDown={handleResizeStart}
+        className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 transition-colors z-20 hover:bg-sky-400 dark:bg-slate-600 dark:hover:bg-sky-500 ${isResizing ? "bg-sky-400 dark:bg-sky-500" : ""} ${isFullscreen ? "hidden" : ""}`}
+        style={{ cursor: "ns-resize", touchAction: "none" }}
+      >
+        <div className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${isResizing ? "bg-sky-400 dark:bg-sky-500" : ""}`} />
+      </div>
     </div>
   )
 }

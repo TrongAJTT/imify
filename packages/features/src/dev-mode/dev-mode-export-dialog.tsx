@@ -1,22 +1,25 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useMemo, useState } from "react"
-import { Check } from "lucide-react"
-import { BaseDialog } from "@imify/ui/ui/base-dialog"
-import { Button } from "@imify/ui/ui/button"
-import { DEV_MODE_FEATURES } from "./dev-mode-registry"
-import { buildDebugLog, downloadDebugLog } from "./debug-log-builder"
-import type { OptionsTab } from "./debug-shared"
-import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter"
+import React from "react";
+import { useMemo, useState } from "react";
+import { Check } from "lucide-react";
+import { BaseDialog } from "@imify/ui/ui/base-dialog";
+import { Button } from "@imify/ui/ui/button";
+import { DEV_MODE_FEATURES } from "./dev-mode-registry";
+import { buildDebugLog, downloadDebugLog } from "./debug-log-builder";
+import type { OptionsTab } from "./debug-shared";
+import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter";
 
 interface DevModeExportDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  activeTab: OptionsTab | null
-  performancePreferences: unknown | null
-  layoutPreferences: unknown | null
-  settingsAdapter: DevModeSettingsAdapter
+  isOpen: boolean;
+  onClose: () => void;
+  activeTab: OptionsTab | null;
+  performancePreferences: unknown | null;
+  layoutPreferences: unknown | null;
+  settingsAdapter: DevModeSettingsAdapter;
+  title?: string;
+  description?: string;
+  isDevMode?: boolean;
 }
 
 export function DevModeExportDialog({
@@ -25,25 +28,50 @@ export function DevModeExportDialog({
   activeTab,
   performancePreferences,
   layoutPreferences,
-  settingsAdapter
+  settingsAdapter,
+  title = "Export System Log",
+  description = "Select the features you want to include in the export. Sensitive data will be automatically sanitized.",
+  isDevMode = false,
 }: DevModeExportDialogProps) {
-  const allFeatureIds = useMemo(() => DEV_MODE_FEATURES.map((feature) => feature.id), [])
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(allFeatureIds)
-  const [isExporting, setIsExporting] = useState(false)
+  const visibleFeatures = useMemo(() => {
+    return DEV_MODE_FEATURES.filter((feature) => {
+      if (!isDevMode) {
+        return feature.id !== "environment" && feature.id !== "runtime_logs";
+      }
+      return true;
+    });
+  }, [isDevMode]);
+
+  const allFeatureIds = useMemo(
+    () => visibleFeatures.map((feature) => feature.id),
+    [visibleFeatures],
+  );
+  const [selectedFeatures, setSelectedFeatures] =
+    useState<string[]>(allFeatureIds);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Sync selected features if visible features change
+  React.useEffect(() => {
+    setSelectedFeatures(allFeatureIds);
+  }, [allFeatureIds]);
 
   const toggleAll = () => {
-    setSelectedFeatures((prev) => (prev.length === allFeatureIds.length ? [] : allFeatureIds))
-  }
+    setSelectedFeatures((prev) =>
+      prev.length === allFeatureIds.length ? [] : allFeatureIds,
+    );
+  };
 
   const toggleFeature = (featureId: string) => {
     setSelectedFeatures((prev) =>
-      prev.includes(featureId) ? prev.filter((id) => id !== featureId) : [...prev, featureId]
-    )
-  }
+      prev.includes(featureId)
+        ? prev.filter((id) => id !== featureId)
+        : [...prev, featureId],
+    );
+  };
 
   const handleExport = async () => {
-    if (selectedFeatures.length === 0) return
-    setIsExporting(true)
+    if (selectedFeatures.length === 0) return;
+    setIsExporting(true);
     try {
       const payload = await buildDebugLog({
         activeTab,
@@ -51,28 +79,28 @@ export function DevModeExportDialog({
         layoutPreferences,
         getStorageState: settingsAdapter.getSettingsState,
         exportType: "normal",
-        exportedFeatures: selectedFeatures
-      })
-      downloadDebugLog(payload)
-      onClose()
+        exportedFeatures: selectedFeatures,
+      });
+      downloadDebugLog(payload);
+      onClose();
     } finally {
-      setIsExporting(false)
+      setIsExporting(false);
     }
-  }
+  };
 
   return (
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-md w-full"
+      className="max-w-2xl w-full"
       contentClassName="p-6 flex flex-col gap-6"
     >
       <div className="contents" onClick={(event) => event.stopPropagation()}>
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Export System Log</h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Select the features you want to include in the export. Sensitive data will be automatically sanitized.
-          </p>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            {title}
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">{description}</p>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -80,22 +108,38 @@ export function DevModeExportDialog({
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {selectedFeatures.length} of {allFeatureIds.length} selected
             </span>
-            <Button variant="ghost" size="sm" onClick={toggleAll} className="h-8 text-xs">
-              {selectedFeatures.length === allFeatureIds.length ? "Deselect All" : "Select All"}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleAll}
+              className="h-8 text-xs"
+            >
+              {selectedFeatures.length === allFeatureIds.length
+                ? "Deselect All"
+                : "Select All"}
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-6" onClick={(event) => event.stopPropagation()}>
-            {DEV_MODE_FEATURES.map((feature) => (
+          <div
+            className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {visibleFeatures.map((feature) => (
               <label
                 key={feature.id}
                 className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
                 onClick={() => toggleFeature(feature.id)}
               >
-                <div className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${selectedFeatures.includes(feature.id) ? "bg-sky-500 border-sky-500 text-white" : "border-slate-300 dark:border-slate-600 bg-transparent"}`}>
-                  {selectedFeatures.includes(feature.id) ? <Check size={14} /> : null}
+                <div
+                  className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${selectedFeatures.includes(feature.id) ? "bg-sky-500 border-sky-500 text-white" : "border-slate-300 dark:border-slate-600 bg-transparent"}`}
+                >
+                  {selectedFeatures.includes(feature.id) ? (
+                    <Check size={14} />
+                  ) : null}
                 </div>
-                <span className="text-sm text-slate-700 dark:text-slate-300 select-none">{feature.label}</span>
+                <span className="text-sm text-slate-700 dark:text-slate-300 select-none">
+                  {feature.label}
+                </span>
               </label>
             ))}
           </div>
@@ -115,5 +159,5 @@ export function DevModeExportDialog({
         </div>
       </div>
     </BaseDialog>
-  )
+  );
 }

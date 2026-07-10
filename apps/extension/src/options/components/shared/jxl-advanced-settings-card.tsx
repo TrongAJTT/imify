@@ -1,6 +1,6 @@
 import { Sparkles, ScanLine } from "lucide-react"
 
-import { TARGET_FORMAT_TOOLTIPS } from "@/options/constants/target-format-tooltips"
+import { useTranslation } from "@imify/i18n"
 import { AccordionCard } from "@imify/ui/ui/accordion-card"
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { SelectInput } from "@imify/ui/ui/select-input"
@@ -35,7 +35,8 @@ export function JxlAdvancedSettingsCard({
   onOpenChange,
   alwaysOpen,
   groupId
-}: JxlAdvancedSettingsCardProps) {
+ }: JxlAdvancedSettingsCardProps) {
+  const { t } = useTranslation("processor")
   const sublabel = `${progressive ? "Progressive" : "Single-pass"} • ${getEpfLabel(epf)}`
 
   return (
@@ -59,7 +60,7 @@ export function JxlAdvancedSettingsCard({
               ? "Enabled: previews quickly and sharpens in additional passes"
               : "Disabled: encode a single-pass codestream"
           }
-          tooltipContent={TARGET_FORMAT_TOOLTIPS.jxlProgressive}
+          tooltipContent={t("tooltipJxlProgressive")}
           checked={progressive}
           onChange={onProgressiveChange}
           disabled={disabled}
@@ -68,7 +69,7 @@ export function JxlAdvancedSettingsCard({
 
         <SelectInput
           label="Artifact Smoothing (EPF)"
-          tooltipContent={TARGET_FORMAT_TOOLTIPS.jxlEpf}
+          tooltipContent={t("tooltipJxlEpf")}
           value={String(epf)}
           onChange={(value) => onEpfChange(Number(value) as 0 | 1 | 2 | 3)}
           disabled={disabled}

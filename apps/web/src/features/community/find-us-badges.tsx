@@ -1,4 +1,5 @@
 import React from "react"
+import Image from "next/image"
 import { cn } from "@imify/ui/ui/utils"
 import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "@imify/features/shared/media-assets"
 import { IMIFY_LINKS } from "@imify/core/links"
@@ -28,14 +29,20 @@ export const CustomBadge: React.FC<CustomBadgeProps> = ({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "flex items-center h-[48px] w-[222px] rounded-xl border-2 transition-all hover:-translate-y-0.5 overflow-hidden group mx-auto md:mx-0",
+        "flex items-center h-[48px] w-[222px] rounded-xl border transition-all hover:-translate-y-0.5 overflow-hidden group mx-auto md:mx-0",
         "bg-white dark:bg-slate-950",
         colorClassName,
         className
       )}
     >
       <div className="flex items-center justify-center h-full aspect-square shrink-0">
-        <img src={icon} alt={brandName} className={cn("w-6 h-6 object-contain", iconClassName)} />
+        <Image
+          src={icon}
+          alt={brandName}
+          width={24}
+          height={24}
+          className={cn("object-contain", iconClassName)}
+        />
       </div>
       <div className="flex flex-col px-1 justify-center min-w-0">
         <span className="text-[10px] font-bold uppercase tracking-wider opacity-80 leading-none mb-1 truncate">
@@ -58,18 +65,18 @@ export const FindOnProductHuntBadge: React.FC<{ className?: string }> = ({ class
         rel="noopener noreferrer"
         className="transition-all hover:-translate-y-0.5 block h-12 w-[222px]"
       >
-        <img
+        <Image
           src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1136860&theme=light&t=1777818024037"
           alt="Imiy - The powerful image toolkit for designers | Product Hunt"
-          style={{ height: "48px" }}
-          height="48"
+          width={222}
+          height={48}
           className="block dark:hidden h-12 w-[222px] object-contain"
         />
-        <img
+        <Image
           src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1136860&theme=dark&t=1777818034186"
           alt="Imiy - The powerful image toolkit for designers | Product Hunt"
-          style={{ height: "48px" }}
-          height="48"
+          width={222}
+          height={48}
           className="hidden dark:block h-12 w-[222px] object-contain"
         />
       </a>

@@ -16,6 +16,7 @@ import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store";
 import { Button, MutedText, Subheading } from "@imify/ui";
 import { isCommonImageFile } from "../shared/image-file-utils";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
+import { useTranslation } from "@imify/i18n";
 
 export interface SharedDiffcheckerRenderProps {
   imageA: DiffImageItem | null;
@@ -68,6 +69,7 @@ async function createImageItemWithDecodedData(
 export function SharedDiffcheckerPage({
   renderWorkspace,
 }: SharedDiffcheckerPageProps) {
+  const { t } = useTranslation("diffchecker");
   const [imageA, setImageA] = useState<DiffImageItem | null>(null);
   const [imageB, setImageB] = useState<DiffImageItem | null>(null);
   const [imageDataA, setImageDataA] = useState<ImageData | null>(null);
@@ -294,9 +296,9 @@ export function SharedDiffcheckerPage({
     <div className="p-0">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <Subheading>Difference Checker</Subheading>
+          <Subheading>{t("title")}</Subheading>
           <MutedText className="mt-0.5 text-xs">
-            {dimensionLabel ? dimensionLabel : "You can drag and drop 2 images in one single card and the tool will automatically put the other image in the other slot."}
+            {dimensionLabel ? dimensionLabel : t("dragDropTip")}
           </MutedText>
         </div>
         {hasBoth ? (
@@ -308,7 +310,7 @@ export function SharedDiffcheckerPage({
               disabled={isExporting}
             >
               <Trash2 size={14} />
-              Clear
+              {t("clear")}
             </Button>
             <Button
               variant="primary"
@@ -317,7 +319,7 @@ export function SharedDiffcheckerPage({
               disabled={isExporting || isComputing}
             >
               <Download size={14} />
-              {isExporting ? "Exporting..." : "Export"}
+              {isExporting ? t("exporting") : t("export")}
             </Button>
           </div>
         ) : null}

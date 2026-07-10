@@ -1,26 +1,27 @@
-import React from "react"
-import { SidebarPanel } from "@imify/ui"
-import { SplitterPresetInfoPanel } from "./splitter-preset-info-panel"
-import { SplitterSidebarPanel } from "./splitter-sidebar-panel"
-import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
+import React from "react";
+import { SidebarPanel } from "@imify/ui";
+import { SplitterPresetInfoPanel } from "./splitter-preset-info-panel";
+import { SplitterSidebarPanel } from "./splitter-sidebar-panel";
+import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store";
 
 interface SplitterSidebarShellProps {
-  enableWideSidebarGrid?: boolean
+  enableWideSidebarGrid?: boolean;
 }
 
-export function SplitterSidebarShell({ enableWideSidebarGrid = false }: SplitterSidebarShellProps) {
-  const presetViewMode = useSplitterPresetStore((state) => state.presetViewMode)
+export function SplitterSidebarShell({
+  enableWideSidebarGrid = false,
+}: SplitterSidebarShellProps) {
+  const presetViewMode = useSplitterPresetStore(
+    (state) => state.presetViewMode,
+  );
 
   if (presetViewMode === "select") {
     return (
-      <SidebarPanel title="ABOUT THIS TOOL" childrenClassName="flex flex-col gap-3">
+      <SidebarPanel childrenClassName="flex flex-col gap-3">
         <SplitterPresetInfoPanel />
       </SidebarPanel>
-    )
+    );
   }
 
-  return <SplitterSidebarPanel enableWideSidebarGrid={enableWideSidebarGrid} />
+  return <SplitterSidebarPanel enableWideSidebarGrid={enableWideSidebarGrid} />;
 }
-
-
-

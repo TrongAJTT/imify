@@ -1,0 +1,42 @@
+{
+  "add": "Thêm",
+  "save": "Lưu",
+  "cancel": "Hủy",
+  "close": "Đóng",
+  "apply": "Áp dụng",
+  "reset": "Đặt lại",
+  "refresh": "Làm mới",
+  "delete": "Xóa",
+  "upload": "Tải lên",
+  "download": "Tải xuống",
+  "export": "Xuất",
+  "processing": "Đang xử lý...",
+  "done": "Hoàn thành",
+  "result": "Kết quả",
+  "expand": "Mở rộng",
+  "collapse": "Thu gọn",
+  "error": "Lỗi",
+  "warning": "Cảnh báo",
+  "notice": "Chú ý",
+  "name": "Tên",
+  "color": "Màu sắc",
+  "highlightColor": "Màu nổi bật",
+  "noFileSelected": "Chưa chọn tệp nào",
+  "chooseFile": "Chọn tệp",
+  "aboutThisTool": "Về công cụ này",
+  "toolSettings": "Thiết lập công cụ",
+  "presetInfoShowcasePanel": {
+    "tipOfTheDay": "Mẹo hôm nay"
+  },
+  "previewModes": {
+    "zoom": "Thu phóng",
+    "zoomLabel": "Chế độ thu phóng",
+    "zoomTooltip": "Cuộn chuột hoặc kéo bằng hai ngón tay để phóng to/thu nhỏ",
+    "pan": "Kéo ảnh",
+    "panLabel": "Chế độ kéo ảnh",
+    "panTooltip": "Cuộn chuột để di chuyển dọc. Giữ Shift để di chuyển ngang.",
+    "idle": "Chờ",
+    "idleLabel": "Chế độ chờ",
+    "idleTooltip": "Đã tắt tương tác cuộn chuột xem trước."
+  }
+}

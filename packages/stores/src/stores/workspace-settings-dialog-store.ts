@@ -6,19 +6,20 @@ export type WorkspaceSettingsDialogTab =
   | "performance"
   | "warnings"
   | "usage"
-  | "developer"
+  | "data"
+  | "language"
 
 interface WorkspaceSettingsDialogState {
   isOpen: boolean
-  initialTab: WorkspaceSettingsDialogTab
+  initialTab: WorkspaceSettingsDialogTab | null
   openSettingsDialog: (tab?: WorkspaceSettingsDialogTab) => void
   closeSettingsDialog: () => void
 }
 
 export const useWorkspaceSettingsDialogStore = create<WorkspaceSettingsDialogState>((set) => ({
   isOpen: false,
-  initialTab: "general",
-  openSettingsDialog: (tab = "general") =>
+  initialTab: null,
+  openSettingsDialog: (tab = null as any) =>
     set({
       isOpen: true,
       initialTab: tab

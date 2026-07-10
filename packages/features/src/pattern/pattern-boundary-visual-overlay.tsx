@@ -1,51 +1,64 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
-import { Ellipse, Group, Layer, Rect, Stage, Text, Transformer } from "react-konva"
-import type Konva from "konva"
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Ellipse,
+  Group,
+  Layer,
+  Rect,
+  Stage,
+  Text,
+  Transformer,
+} from "react-konva";
+import type Konva from "konva";
 
-import type { PatternBoundarySettings } from "./types"
-import type { PatternVisualBoundaryTarget } from "@imify/stores/stores/pattern-store"
+import type { PatternBoundarySettings } from "./types";
+import type { PatternVisualBoundaryTarget } from "@imify/stores/stores/pattern-store";
+import { useTranslation } from "@imify/i18n";
 
-const MIN_BOUNDARY_SIZE = 8
+const MIN_BOUNDARY_SIZE = 8;
 
 const BOUNDARY_COLOR: Record<PatternVisualBoundaryTarget, string> = {
   inbound: "#0ea5e9",
   outbound: "#f97316",
-}
-
-const BOUNDARY_LABEL: Record<PatternVisualBoundaryTarget, string> = {
-  inbound: "Inbound",
-  outbound: "Outbound",
-}
+};
 
 interface PatternBoundaryVisualOverlayProps {
-  renderScale: number
-  displayWidth: number
-  displayHeight: number
-  inboundBoundary: PatternBoundarySettings
-  outboundBoundary: PatternBoundarySettings
-  activeTarget: PatternVisualBoundaryTarget | null
-  onBoundaryChange: (target: PatternVisualBoundaryTarget, partial: Partial<PatternBoundarySettings>) => void
-  onActiveTargetChange: (target: PatternVisualBoundaryTarget | null) => void
+  renderScale: number;
+  displayWidth: number;
+  displayHeight: number;
+  inboundBoundary: PatternBoundarySettings;
+  outboundBoundary: PatternBoundarySettings;
+  activeTarget: PatternVisualBoundaryTarget | null;
+  onBoundaryChange: (
+    target: PatternVisualBoundaryTarget,
+    partial: Partial<PatternBoundarySettings>,
+  ) => void;
+  onActiveTargetChange: (target: PatternVisualBoundaryTarget | null) => void;
 }
 
 interface DisplayBoundary {
-  target: PatternVisualBoundaryTarget
-  x: number
-  y: number
-  width: number
-  height: number
-  rotation: number
-  cornerRadius: number
+  target: PatternVisualBoundaryTarget;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  cornerRadius: number;
 }
 
 function toDisplayBoundary(
   target: PatternVisualBoundaryTarget,
   boundary: PatternBoundarySettings,
-  renderScale: number
+  renderScale: number,
 ): DisplayBoundary {
-  const width = Math.max(MIN_BOUNDARY_SIZE * renderScale, boundary.width * renderScale)
-  const height = Math.max(MIN_BOUNDARY_SIZE * renderScale, boundary.height * renderScale)
-  const cornerRadius = Math.max(0, (boundary.cornerRadius ?? 0) * renderScale)
+  const width = Math.max(
+    MIN_BOUNDARY_SIZE * renderScale,
+    boundary.width * renderScale,
+  );
+  const height = Math.max(
+    MIN_BOUNDARY_SIZE * renderScale,
+    boundary.height * renderScale,
+  );
+  const cornerRadius = Math.max(0, (boundary.cornerRadius ?? 0) * renderScale);
 
   return {
     target,
@@ -55,15 +68,15 @@ function toDisplayBoundary(
     height,
     rotation: boundary.rotation,
     cornerRadius: Math.min(cornerRadius, width / 2, height / 2),
-  }
+  };
 }
 
 function clampPositive(value: number, fallback: number): number {
   if (!Number.isFinite(value) || value <= 0) {
-    return fallback
+    return fallback;
   }
 
-  return value
+  return value;
 }
 
 export function PatternBoundaryVisualOverlay({
@@ -76,103 +89,119 @@ export function PatternBoundaryVisualOverlay({
   onBoundaryChange,
   onActiveTargetChange,
 }: PatternBoundaryVisualOverlayProps) {
-  const stageRef = useRef<Konva.Stage>(null)
-  const transformerRef = useRef<Konva.Transformer>(null)
-  const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false)
+  const { t } = useTranslation("pattern");
+  const stageRef = useRef<Konva.Stage>(null);
+  const transformerRef = useRef<Konva.Transformer>(null);
+  const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false);
 
   const activeBoundary = useMemo<DisplayBoundary | null>(() => {
     if (activeTarget === "inbound") {
       if (!inboundBoundary.enabled) {
-        return null
+        return null;
       }
 
-      return toDisplayBoundary("inbound", inboundBoundary, renderScale)
+      return toDisplayBoundary("inbound", inboundBoundary, renderScale);
     }
 
     if (activeTarget === "outbound") {
       if (!outboundBoundary.enabled) {
-        return null
+        return null;
       }
 
-      return toDisplayBoundary("outbound", outboundBoundary, renderScale)
+      return toDisplayBoundary("outbound", outboundBoundary, renderScale);
     }
 
-    return null
-  }, [activeTarget, inboundBoundary, outboundBoundary, renderScale])
+    return null;
+  }, [activeTarget, inboundBoundary, outboundBoundary, renderScale]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!event.ctrlKey && !event.shiftKey) {
-        return
+        return;
       }
 
-      setIsFreeAspectRatio(true)
+      setIsFreeAspectRatio(true);
       if (transformerRef.current) {
-        transformerRef.current.keepRatio(false)
+        transformerRef.current.keepRatio(false);
       }
-    }
+    };
 
     const handleKeyUp = () => {
-      setIsFreeAspectRatio(false)
+      setIsFreeAspectRatio(false);
       if (transformerRef.current) {
-        transformerRef.current.keepRatio(true)
+        transformerRef.current.keepRatio(true);
       }
-    }
+    };
 
-    window.addEventListener("keydown", handleKeyDown)
-    window.addEventListener("keyup", handleKeyUp)
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-      window.removeEventListener("keyup", handleKeyUp)
-    }
-  }, [])
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
 
   useEffect(() => {
-    const transformer = transformerRef.current
-    const stage = stageRef.current
+    const transformer = transformerRef.current;
+    const stage = stageRef.current;
 
     if (!transformer || !stage) {
-      return
+      return;
     }
 
     if (!activeTarget) {
-      transformer.nodes([])
-      transformer.getLayer()?.batchDraw()
-      return
+      transformer.nodes([]);
+      transformer.getLayer()?.batchDraw();
+      return;
     }
 
-    const node = stage.findOne(`#pattern-boundary-${activeTarget}`)
+    const node = stage.findOne(`#pattern-boundary-${activeTarget}`);
     if (!node) {
-      transformer.nodes([])
-      transformer.getLayer()?.batchDraw()
-      return
+      transformer.nodes([]);
+      transformer.getLayer()?.batchDraw();
+      return;
     }
 
-    transformer.nodes([node])
-    transformer.keepRatio(!isFreeAspectRatio)
-    transformer.getLayer()?.batchDraw()
-  }, [activeBoundary, activeTarget, isFreeAspectRatio])
+    transformer.nodes([node]);
+    transformer.keepRatio(!isFreeAspectRatio);
+    transformer.getLayer()?.batchDraw();
+  }, [activeBoundary, activeTarget, isFreeAspectRatio]);
 
-  const applyNodeToBoundary = (target: PatternVisualBoundaryTarget, node: Konva.Shape) => {
+  const applyNodeToBoundary = (
+    target: PatternVisualBoundaryTarget,
+    node: Konva.Shape,
+  ) => {
     const normalizedDisplayWidth = clampPositive(
-      Math.max(MIN_BOUNDARY_SIZE * renderScale, Math.abs(node.width() * node.scaleX())),
-      MIN_BOUNDARY_SIZE * renderScale
-    )
+      Math.max(
+        MIN_BOUNDARY_SIZE * renderScale,
+        Math.abs(node.width() * node.scaleX()),
+      ),
+      MIN_BOUNDARY_SIZE * renderScale,
+    );
     const normalizedDisplayHeight = clampPositive(
-      Math.max(MIN_BOUNDARY_SIZE * renderScale, Math.abs(node.height() * node.scaleY())),
-      MIN_BOUNDARY_SIZE * renderScale
-    )
+      Math.max(
+        MIN_BOUNDARY_SIZE * renderScale,
+        Math.abs(node.height() * node.scaleY()),
+      ),
+      MIN_BOUNDARY_SIZE * renderScale,
+    );
 
-    node.width(normalizedDisplayWidth)
-    node.height(normalizedDisplayHeight)
-    node.scaleX(1)
-    node.scaleY(1)
+    node.width(normalizedDisplayWidth);
+    node.height(normalizedDisplayHeight);
+    node.scaleX(1);
+    node.scaleY(1);
 
-    const nextWidth = clampPositive(normalizedDisplayWidth / renderScale, MIN_BOUNDARY_SIZE)
-    const nextHeight = clampPositive(normalizedDisplayHeight / renderScale, MIN_BOUNDARY_SIZE)
-    const centerX = node.x() / renderScale
-    const centerY = node.y() / renderScale
+    const nextWidth = clampPositive(
+      normalizedDisplayWidth / renderScale,
+      MIN_BOUNDARY_SIZE,
+    );
+    const nextHeight = clampPositive(
+      normalizedDisplayHeight / renderScale,
+      MIN_BOUNDARY_SIZE,
+    );
+    const centerX = node.x() / renderScale;
+    const centerY = node.y() / renderScale;
 
     onBoundaryChange(target, {
       x: centerX - nextWidth / 2,
@@ -180,18 +209,22 @@ export function PatternBoundaryVisualOverlay({
       width: nextWidth,
       height: nextHeight,
       rotation: node.rotation(),
-    })
-  }
+    });
+  };
 
   if (!activeBoundary) {
-    return null
+    return null;
   }
 
-  const strokeColor = BOUNDARY_COLOR[activeBoundary.target]
-  const label = BOUNDARY_LABEL[activeBoundary.target]
-  const isEllipse = activeBoundary.target === "inbound"
-    ? inboundBoundary.shape === "ellipse"
-    : outboundBoundary.shape === "ellipse"
+  const strokeColor = BOUNDARY_COLOR[activeBoundary.target];
+  const label =
+    activeBoundary.target === "inbound"
+      ? t("boundaryFields.inbound")
+      : t("boundaryFields.outbound");
+  const isEllipse =
+    activeBoundary.target === "inbound"
+      ? inboundBoundary.shape === "ellipse"
+      : outboundBoundary.shape === "ellipse";
 
   const commonProps = {
     id: `pattern-boundary-${activeBoundary.target}`,
@@ -207,12 +240,12 @@ export function PatternBoundaryVisualOverlay({
     onTap: () => onActiveTargetChange(activeBoundary.target),
     onDragStart: () => onActiveTargetChange(activeBoundary.target),
     onDragEnd: (event: Konva.KonvaEventObject<DragEvent>) => {
-      applyNodeToBoundary(activeBoundary.target, event.target as Konva.Shape)
+      applyNodeToBoundary(activeBoundary.target, event.target as Konva.Shape);
     },
     onTransformEnd: (event: Konva.KonvaEventObject<Event>) => {
-      applyNodeToBoundary(activeBoundary.target, event.target as Konva.Shape)
+      applyNodeToBoundary(activeBoundary.target, event.target as Konva.Shape);
     },
-  }
+  };
 
   return (
     <Stage
@@ -220,9 +253,9 @@ export function PatternBoundaryVisualOverlay({
       width={displayWidth}
       height={displayHeight}
       className="pointer-events-auto"
-      onMouseDown={(event) => {
+      onPointerDown={(event) => {
         if (event.target === event.target.getStage()) {
-          onActiveTargetChange(null)
+          onActiveTargetChange(null);
         }
       }}
     >
@@ -259,21 +292,26 @@ export function PatternBoundaryVisualOverlay({
           ref={transformerRef}
           rotateEnabled
           keepRatio={!isFreeAspectRatio}
-          enabledAnchors={["top-left", "top-right", "bottom-left", "bottom-right"]}
+          enabledAnchors={[
+            "top-left",
+            "top-right",
+            "bottom-left",
+            "bottom-right",
+          ]}
           anchorSize={8}
           borderStrokeWidth={1.2}
           boundBoxFunc={(oldBox, newBox) => {
-            const minSize = MIN_BOUNDARY_SIZE * renderScale
-            if (Math.abs(newBox.width) < minSize || Math.abs(newBox.height) < minSize) {
-              return oldBox
+            const minSize = MIN_BOUNDARY_SIZE * renderScale;
+            if (
+              Math.abs(newBox.width) < minSize ||
+              Math.abs(newBox.height) < minSize
+            ) {
+              return oldBox;
             }
-            return newBox
+            return newBox;
           }}
         />
       </Layer>
     </Stage>
-  )
+  );
 }
-
-
-

@@ -62,6 +62,31 @@ async function syncVersions() {
     }
   }
 
+  // 3. Sync Web PWA Manifest
+  const webManifestPath = path.join(ROOT_DIR, "apps/web/public/manifest.json")
+  try {
+    const manifestRaw = await readFile(webManifestPath, "utf8")
+    const manifest = JSON.parse(manifestRaw)
+    
+    let manifestChanged = false
+    if (meta.displayName && manifest.name !== meta.displayName) {
+      console.log(`[sync-package-versions] Updating Web Manifest name: ${manifest.name} -> ${meta.displayName}`)
+      manifest.name = meta.displayName
+      manifestChanged = true
+    }
+    if (meta.description && manifest.description !== meta.description) {
+      console.log(`[sync-package-versions] Updating Web Manifest description`)
+      manifest.description = meta.description
+      manifestChanged = true
+    }
+
+    if (manifestChanged) {
+      await writeFile(webManifestPath, JSON.stringify(manifest, null, 2) + "\n")
+    }
+  } catch (err) {
+    console.log("[sync-package-versions] Web manifest not found or could not be updated, skipping.")
+  }
+
   console.log("[sync-package-versions] Done.")
 }
 

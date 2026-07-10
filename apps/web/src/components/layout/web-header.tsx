@@ -12,12 +12,14 @@ import { useWebPageMode } from "@/hooks/use-web-page-mode"
 import { buildToolEntryHref } from "@/features/presets/tool-entry-route"
 import {
   AboutDialog,
+  AssetManagementDialog,
   AttributionDialog,
   DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
   DonateDialog,
   type WorkspaceLayoutPreferences,
   WorkspaceOptionsHeader,
   WorkspaceSettingsDialog,
+  DevToolsDialog,
   WhatsNewUpdateNotificationGate,
   getWorkspaceToolsMenuGroups,
   renderWorkspaceToolIcon,
@@ -32,15 +34,8 @@ import {
   PERFORMANCE_PREFERENCES_KEY,
   normalizePerformancePreferences
 } from "@imify/features/processor/performance-preferences"
-
-const WEB_TOOLS_MENU_GROUPS = getWorkspaceToolsMenuGroups()
-const NAV_LINKS = Array.from(
-  new Map(
-    WEB_TOOLS_MENU_GROUPS.flatMap((group) =>
-      group.items.map((item) => [item.href, { href: item.href, label: item.label }])
-    )
-  ).values()
-)
+import { useDevModeEnabled } from "@imify/features"
+import { useTranslation } from "@imify/i18n"
 
 const WEB_DEFAULT_ROUTE_KEY = "imify_web_default_route"
 const LAYOUT_PREFERENCES_EVENT = "imify:layout-preferences-changed"
@@ -97,15 +92,26 @@ export function WebHeader() {
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
+  const [isAssetManagementDialogOpen, setIsAssetManagementDialogOpen] = useState(false)
+  const [isDevToolsDialogOpen, setIsDevToolsDialogOpen] = useState(false)
+  const [devModeEnabled] = useDevModeEnabled()
+  const { t, i18n } = useTranslation(["workspace", "common"])
+  const [isMounted, setIsMounted] = useState(false)
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
+  
   const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
   const settingsInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
   const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
   const closeSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.closeSettingsDialog)
 
   const [defaultRoute, setDefaultRoute] = useState<string>(() => {
-    if (typeof window === "undefined") return NAV_LINKS[0].href
+    if (typeof window === "undefined") return "/single-processor"
     const saved = window.localStorage.getItem(WEB_DEFAULT_ROUTE_KEY)
-    return saved && NAV_LINKS.some((item) => item.href === saved) ? saved : NAV_LINKS[0].href
+    const groups = getWorkspaceToolsMenuGroups()
+    const links = groups.flatMap((group) => group.items.map((item) => item.href))
+    return saved && links.includes(saved) ? saved : "/single-processor"
   })
   const [preferRecentPresetEntry, setPreferRecentPresetEntry] = useState<boolean>(() =>
     safeRead(
@@ -127,8 +133,8 @@ export function WebHeader() {
   const devModeActiveTab = useMemo(() => toDevModeActiveTab(pathname ?? "/"), [pathname])
   const readDevModeSettingsSnapshot = useCallback(
     () => ({
-      defaultRoute: safeRead(WEB_DEFAULT_ROUTE_KEY, NAV_LINKS[0].href, (value) =>
-        typeof value === "string" ? value : NAV_LINKS[0].href
+      defaultRoute: safeRead(WEB_DEFAULT_ROUTE_KEY, "/single-processor", (value) =>
+        typeof value === "string" ? value : "/single-processor"
       ),
       darkMode: safeRead(DARK_MODE_KEY, "system", (value) => (typeof value === "string" ? value : "system")),
       layoutPreferences: safeRead(
@@ -187,46 +193,66 @@ export function WebHeader() {
   )
 
   const defaultScreenOptions = useMemo(
-    () => NAV_LINKS.map((item) => ({ value: item.href, label: item.label })),
-    []
+    () => {
+      const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en")
+      const links = Array.from(
+        new Map(
+          groups.flatMap((group) =>
+            group.items.map((item) => [item.href, { href: item.href, label: item.label }])
+          )
+        ).values()
+      )
+      return links.map((item) => ({ value: item.href, label: item.label }))
+    },
+    [i18n.language, isMounted]
   )
 
   const headerNode = (
     <WorkspaceOptionsHeader
       isLoading={false}
       isDark={isDark}
-      title="Imify"
-      subtitle="Powerful Image Toolkit"
-      toolsMenuGroups={WEB_TOOLS_MENU_GROUPS.map((group) => ({
-        title: group.title,
-        items: group.items.map((item) => ({
-          id: item.id,
-          href: buildToolEntryHref(item.id, item.href),
-          label: item.label,
-          icon: renderWorkspaceToolIcon(item.id, 14)
+      title={t("workspace:title", { lng: isMounted ? undefined : "en", defaultValue: "Imify" })}
+      subtitle={t("workspace:subtitle", { lng: isMounted ? undefined : "en", defaultValue: "Powerful Image Toolkit" })}
+      toolsMenuGroups={useMemo(() => {
+        const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en")
+        return groups.map((group) => ({
+          title: group.title,
+          items: group.items.map((item) => ({
+            id: item.id,
+            href: buildToolEntryHref(item.id, item.href),
+            label: item.label,
+            icon: renderWorkspaceToolIcon(item.id, 14)
+          }))
         }))
-      }))}
-      toolsMenuLabel="All Tools"
+      }, [i18n.language, isMounted])}
+      toolsMenuLabel={t("workspace:allTools", { lng: isMounted ? undefined : "en", defaultValue: "All Tools" })}
       onNavigateHome={() => router.push("/")}
       onNavigate={(href) => router.push(href)}
       onToggleDark={toggleDarkMode}
       onOpenAbout={() => setIsAboutDialogOpen(true)}
-      onOpenSettings={() => openSettingsDialog("general")}
+      onOpenSettings={() => openSettingsDialog()}
       onOpenDonate={() => setIsDonateDialogOpen(true)}
+      onOpenAssetManagement={() => setIsAssetManagementDialogOpen(true)}
+      onOpenDevTools={() => setIsDevToolsDialogOpen(true)}
+      isDevModeEnabled={devModeEnabled}
     />
   )
 
   return (
     <>
-      {isStickyHeader ? (
-        <div className="sticky top-0 z-40 px-4 pt-3 md:px-6">
-          <div className="mx-auto w-full max-w-6xl rounded-2xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 [&>header]:rounded-2xl">
+      <div className="sticky top-0 z-40 transition-all duration-300">
+        {isStickyHeader ? (
+          <div className="px-4 pt-3 md:px-6">
+            <div className="mx-auto w-full max-w-6xl rounded-2xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 [&>header]:rounded-2xl">
+              {headerNode}
+            </div>
+          </div>
+        ) : (
+          <div className="w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-900/80 [&>header]:bg-transparent [&>header]:border-none">
             {headerNode}
           </div>
-        </div>
-      ) : (
-        headerNode
-      )}
+        )}
+      </div>
 
       <AboutDialog
         isOpen={isAboutDialogOpen}
@@ -242,6 +268,18 @@ export function WebHeader() {
       <DonateDialog
         isOpen={isDonateDialogOpen}
         onClose={() => setIsDonateDialogOpen(false)}
+      />
+      <AssetManagementDialog
+        isOpen={isAssetManagementDialogOpen}
+        onClose={() => setIsAssetManagementDialogOpen(false)}
+      />
+      <DevToolsDialog
+        isOpen={isDevToolsDialogOpen}
+        onClose={() => setIsDevToolsDialogOpen(false)}
+        devModeSettingsAdapter={devModeSettingsAdapter}
+        devModeActiveTab={devModeActiveTab}
+        layoutPreferences={layoutPreferences}
+        performancePreferences={performancePreferences}
       />
       <WorkspaceSettingsDialog
         isOpen={isSettingsDialogOpen}
@@ -283,7 +321,6 @@ export function WebHeader() {
         showExtensionOnlyOptions={false}
         enableUsageStatsTab={false}
         devModeSettingsAdapter={devModeSettingsAdapter}
-        devModeActiveTab={devModeActiveTab}
       />
     </>
   )

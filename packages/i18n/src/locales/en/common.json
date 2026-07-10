@@ -1,0 +1,42 @@
+{
+  "add": "Add",
+  "save": "Save",
+  "cancel": "Cancel",
+  "close": "Close",
+  "apply": "Apply",
+  "reset": "Reset",
+  "refresh": "Refresh",
+  "delete": "Delete",
+  "upload": "Upload",
+  "download": "Download",
+  "export": "Export",
+  "processing": "Processing...",
+  "done": "Done",
+  "result": "Result",
+  "expand": "Expand",
+  "collapse": "Collapse",
+  "error": "Error",
+  "warning": "Warning",
+  "notice": "Notice",
+  "name": "Name",
+  "color": "Color",
+  "highlightColor": "Highlight color",
+  "noFileSelected": "No file selected",
+  "chooseFile": "Choose File",
+  "aboutThisTool": "About this tool",
+  "toolSettings": "Tool settings",
+  "presetInfoShowcasePanel": {
+    "tipOfTheDay": "Tip of the day"
+  },
+  "previewModes": {
+    "zoom": "Zoom",
+    "zoomLabel": "Zoom Mode",
+    "zoomTooltip": "Scroll wheel zooms toward cursor.",
+    "pan": "Pan",
+    "panLabel": "Pan Mode",
+    "panTooltip": "Scroll wheel pans vertically. Hold Shift for horizontal pan.",
+    "idle": "Idle",
+    "idleLabel": "Idle Mode",
+    "idleTooltip": "Preview wheel interaction is disabled."
+  }
+}

@@ -5,6 +5,8 @@ export type ShortcutActionId =
   | "fill.customization.tab_image"
   | "fill.customization.tab_border"
   | "fill.customization.tab_layer"
+  | "fill.customization.clear_image"
+  | "fill.customization.deselect"
   | "pattern.draw.decrease_brush_size"
   | "pattern.draw.increase_brush_size"
   | "pattern.draw.undo"
@@ -74,6 +76,20 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     description: "Show layer transform controls in Fill customization."
   },
   {
+    id: "fill.customization.clear_image",
+    scope: "fill",
+    category: "Fill Customization",
+    label: "Clear Image",
+    description: "Remove the image from the selected layer."
+  },
+  {
+    id: "fill.customization.deselect",
+    scope: "fill",
+    category: "Fill Customization",
+    label: "Deselect layer",
+    description: "Clear the current layer selection in Fill workspace."
+  },
+  {
     id: "pattern.draw.decrease_brush_size",
     scope: "global",
     category: "Pattern Generator",
@@ -116,6 +132,8 @@ export const DEFAULT_SHORTCUT_PREFERENCES: ShortcutPreferences = {
   "fill.customization.tab_image": { key: "1" },
   "fill.customization.tab_border": { key: "2" },
   "fill.customization.tab_layer": { key: "3" },
+  "fill.customization.clear_image": { key: "Delete" },
+  "fill.customization.deselect": { key: "Escape" },
   "pattern.draw.decrease_brush_size": { key: "[" },
   "pattern.draw.increase_brush_size": { key: "]" },
   "pattern.draw.undo": { key: "z", ctrlKey: true },

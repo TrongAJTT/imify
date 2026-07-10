@@ -5,7 +5,7 @@ import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
-import { SidebarPanel } from "@imify/ui"
+import { SidebarPanel, BottomSheet } from "@imify/ui"
 import { PopupApp } from "@/popup/popup-app"
 import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
 import SidepanelAuditSnapshotApp from "@/sidepanel/sidepanel-audit-snapshot-app"
@@ -17,15 +17,19 @@ import {
 } from "@imify/core"
 import {
   AboutDialog,
+  AssetManagementDialog,
   DonateDialog,
   WORKSPACE_TOOLS,
   WorkspaceSettingsDialog,
   WorkspaceOptionsHeader,
+  DevToolsDialog,
   WhatsNewUpdateNotificationGate,
   useIsDesktopLayout,
   getExtensionSidebarToolGroups,
-  renderWorkspaceToolIcon
+  renderWorkspaceToolIcon,
+  getWorkspaceToolLabel
 } from "@imify/features/workspace-shell"
+import { useDevModeEnabled } from "@imify/features"
 import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
 import { getDevModeEnabled } from "@imify/features/dev-mode/dev-mode-store"
 import {
@@ -53,8 +57,24 @@ import { ProcessorWorkspaceShell, ProcessorSidebarShellWrapper } from "@/options
 import { EditorProvider } from "@/options/components/filling/editor-context"
 import { DiffcheckerTab } from "@/options/components/diffchecker"
 import { InspectorTab } from "@/options/components/inspector"
+import { 
+  SharedBackgroundRemoverPage,
+  BackgroundRemoverWorkspace, 
+  BackgroundRemoverDropZone,
+  BackgroundRemoverSidebarShell 
+} from "@imify/features/background-removal"
 import { DiffcheckerSidebarShell } from "@imify/features/diffchecker"
 import { InspectorSidebarShell } from "@imify/features/inspector"
+import {
+  SharedQrGeneratorPage,
+  QrGeneratorWorkspace,
+  QrGeneratorSidebarShell
+} from "@imify/features/qr-generator"
+import {
+  SharedQrReaderPage,
+  QrReaderWorkspace,
+  QrReaderSidebarShell
+} from "@imify/features/qr-reader"
 import { ContextMenuSettingsTab } from "@/options/components/context-menu/context-menu-settings-tab"
 import { ContextMenuInfoPanel } from "@/options/components/context-menu/context-menu-info-panel"
 import { SingleProcessorTab } from "@/options/components/single-processor-tab"
@@ -79,6 +99,7 @@ import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
 import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
+import { useFontStore } from "@imify/stores/stores/font-store"
 import { useSplicingStore } from "@imify/stores/stores/splicing-store"
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store"
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
@@ -95,9 +116,12 @@ import { useKeyPress } from "./hooks/use-key-press"
 import type { ContextMenuSubTab } from "./components/context-menu/context-menu-settings-tab"
 import { CONTEXT_MENU_SUB_TABS } from "./components/context-menu/context-menu-settings-tab"
 
+import { initI18n, useTranslation } from "@imify/i18n"
+
 bootstrapExtensionAdapters()
 ensureRuntimeLogCaptureInstalled()
 setRuntimeLogCaptureEnabled(getDevModeEnabled())
+initI18n()
 
 const syncStorage = new Storage({
   area: "sync",
@@ -273,6 +297,7 @@ export default function OptionsPage() {
 
   const { isDark, toggleDarkMode } = useImifyDarkMode()
   const isDesktopLayout = useIsDesktopLayout()
+  const { i18n: i18nInstance } = useTranslation("workspace")
 
   const [defaultOptionsTab, setDefaultOptionsTab, { isLoading: isDefaultTabLoading }] = useStorage<OptionsTab>(
     { key: "imify_options_default_tab", instance: syncStorage },
@@ -283,6 +308,8 @@ export default function OptionsPage() {
     "global"
   )
   const [activeTab, setActiveTab] = useState<OptionsTab>("context-menu")
+  const isMobileSidebarOpen = useWorkspaceHeaderStore((state) => state.isMobileSidebarOpen)
+  const setIsMobileSidebarOpen = useWorkspaceHeaderStore((state) => state.setIsMobileSidebarOpen)
   const [preferRecentPresetEntry, setPreferRecentPresetEntry, { isLoading: isPreferRecentPresetEntryLoading }] = useStorage<boolean>(
     { key: PREFER_RECENT_PRESET_ENTRY_KEY, instance: syncStorage },
     DEFAULT_PREFER_RECENT_PRESET_ENTRY
@@ -294,6 +321,9 @@ export default function OptionsPage() {
   const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
+  const [isAssetManagementDialogOpen, setIsAssetManagementDialogOpen] = useState(false)
+  const [isDevToolsDialogOpen, setIsDevToolsDialogOpen] = useState(false)
+  const [devModeEnabled] = useDevModeEnabled()
   const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
   const settingsDialogInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
   const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
@@ -317,12 +347,16 @@ export default function OptionsPage() {
     { key: PERFORMANCE_PREFERENCES_KEY, instance: syncStorage },
     DEFAULT_PERFORMANCE_PREFERENCES
   )
-  // Keep a "live" copy so Export UI updates immediately after Settings changes,
-  // instead of waiting for storage re-hydration.
   const [livePerformancePreferences, setLivePerformancePreferences] = useState(performancePreferences)
   useEffect(() => {
     setLivePerformancePreferences(performancePreferences)
   }, [performancePreferences])
+
+  const loadInstalledFonts = useFontStore((state) => state.loadInstalledFonts)
+  useEffect(() => {
+    loadInstalledFonts()
+  }, [loadInstalledFonts])
+
   const initialTabFromQueryRef = useRef<OptionsTab | null>(null)
 
   const isLoading =
@@ -339,9 +373,9 @@ export default function OptionsPage() {
     () =>
       WORKSPACE_TOOLS.filter((tool) => tool.showOnExtSidebar && tool.extTabId).map((tool) => ({
         value: tool.extTabId as OptionsTab,
-        label: tool.label
+        label: getWorkspaceToolLabel(tool.id) ?? tool.label
       })),
-    []
+    [i18nInstance.language]
   )
   const devModeSettingsAdapter = useMemo<DevModeSettingsAdapter>(
     () => ({
@@ -389,7 +423,7 @@ export default function OptionsPage() {
       const context = nextTab
       setSetupContext(context)
       const batchState = useBatchStore.getState()
-      const scopedPresets = batchState.presets.filter((preset) => preset.context === context)
+      const scopedPresets = batchState.presets
       const recentPresetId = batchState.recentPresetIds[context] ?? null
       const canOpenRecentPreset =
         preferRecentPresetEntry &&
@@ -469,18 +503,31 @@ export default function OptionsPage() {
   }, [activeTab, handleToolTabActivation])
 
   useEffect(() => {
-    if (activeTab !== "context-menu") {
-      return
+    if (activeTab === "context-menu") {
+      setHeaderSection("Context Menu")
+      setHeaderActions(null)
+      setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="context-menu" />)
+      return () => resetHeader()
     }
-    setHeaderSection("Context Menu")
-    setHeaderActions(null)
-    setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="context-menu" />)
-    return () => resetHeader()
+    if (activeTab === "qr-generator") {
+      setHeaderSection("QR Generator")
+      setHeaderActions(null)
+      setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="qr-generator" />)
+      return () => resetHeader()
+    }
+    if (activeTab === "qr-reader") {
+      setHeaderSection("QR Reader")
+      setHeaderActions(null)
+      setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="qr-reader" />)
+      return () => resetHeader()
+    }
   }, [activeTab, resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection])
 
   useKeyPress("Escape", () => {
     if (isAttributionDialogOpen) {
       setIsAttributionDialogOpen(false)
+    } else if (isAssetManagementDialogOpen) {
+      setIsAssetManagementDialogOpen(false)
     } else if (isSettingsDialogOpen) {
       closeSettingsDialog()
     } else if (isAboutDialogOpen) {
@@ -488,7 +535,7 @@ export default function OptionsPage() {
     } else if (isDonateDialogOpen) {
       setIsDonateDialogOpen(false)
     }
-  }, isAboutDialogOpen || isAttributionDialogOpen || isDonateDialogOpen || isSettingsDialogOpen)
+  }, isAboutDialogOpen || isAttributionDialogOpen || isDonateDialogOpen || isSettingsDialogOpen || isAssetManagementDialogOpen)
 
   const state = normalizeExtensionState(persistedState?.state ?? DEFAULT_STORAGE_STATE)
   const {
@@ -557,6 +604,48 @@ export default function OptionsPage() {
         return (
           <InspectorTab onOpenSingleProcessor={() => void setActiveTab("single")} />
         )
+      case "background-remover":
+        return (
+          <ProcessorWorkspaceShell
+            context="single"
+            workspace={
+              <SharedBackgroundRemoverPage
+                renderWorkspace={(props) => (
+                  <>
+                    {!props.sourceFile ? (
+                      <BackgroundRemoverDropZone onLoadFile={(file) => void props.onLoadFile(file)} />
+                    ) : (
+                      props.sourceImageData ? (
+                        <BackgroundRemoverWorkspace
+                          sourceFile={props.sourceFile}
+                          sourceImageData={props.sourceImageData}
+                          resultImageData={props.resultImageData}
+                          isProcessing={props.isProcessing}
+                          progressPayload={props.progressPayload}
+                          onClear={props.onClear}
+                          onStartProcessing={props.onStartProcessing}
+                          modelId={props.modelId}
+                        />
+                      ) : null
+                    )}
+                  </>
+                )}
+              />
+            }
+          />
+        )
+      case "qr-generator":
+        return (
+          <SharedQrGeneratorPage
+            renderWorkspace={() => <QrGeneratorWorkspace />}
+          />
+        )
+      case "qr-reader":
+        return (
+          <SharedQrReaderPage
+            renderWorkspace={() => <QrReaderWorkspace />}
+          />
+        )
       default:
         return null
     }
@@ -569,6 +658,19 @@ export default function OptionsPage() {
     state
   ])
 
+  const hasConfigSidebar = activeTab !== "context-menu"
+
+  const getBottomSheetTitle = () => {
+    switch (activeTab) {
+      case "qr-reader": return "Scan Results"
+      case "qr-generator": return "QR Generator"
+      case "background-remover": return "Background Remover"
+      case "single": return "Processor"
+      case "batch": return "Batch Processor"
+      default: return "Configuration"
+    }
+  }
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50">
       {/* Title bar */}
@@ -577,8 +679,11 @@ export default function OptionsPage() {
         isLoading={isLoading}
         onOpenAbout={() => setIsAboutDialogOpen(true)}
         onOpenSettings={() => openSettingsDialog("general")}
+        onOpenAssetManagement={() => setIsAssetManagementDialogOpen(true)}
         onOpenDonate={() => setIsDonateDialogOpen(true)}
         onToggleDark={toggleDarkMode}
+        onOpenDevTools={() => setIsDevToolsDialogOpen(true)}
+        isDevModeEnabled={devModeEnabled}
         isExtension={true}
       />
 
@@ -590,6 +695,15 @@ export default function OptionsPage() {
         onOpenDonate={() => setIsDonateDialogOpen(true)}
       />
       <WhatsNewUpdateNotificationGate />
+
+      <DevToolsDialog
+        isOpen={isDevToolsDialogOpen}
+        onClose={() => setIsDevToolsDialogOpen(false)}
+        devModeSettingsAdapter={devModeSettingsAdapter}
+        devModeActiveTab={activeTab}
+        layoutPreferences={safeLayoutPreferences}
+        performancePreferences={safePerformancePreferences}
+      />
 
       <WorkspaceSettingsDialog
         isOpen={isSettingsDialogOpen}
@@ -623,16 +737,20 @@ export default function OptionsPage() {
             configurationSidebarLevel: level
           })
         }}
-        performancePreferences={safePerformancePreferences}
+        performancePreferences={performancePreferences}
         onChangePerformancePreferences={(value) => {
           setLivePerformancePreferences(value)
           void setPerformancePreferences(value)
         }}
         devModeSettingsAdapter={devModeSettingsAdapter}
-        devModeActiveTab={activeTab}
       />
 
       <DonateDialog isOpen={isDonateDialogOpen} onClose={() => setIsDonateDialogOpen(false)} />
+
+      <AssetManagementDialog
+        isOpen={isAssetManagementDialogOpen}
+        onClose={() => setIsAssetManagementDialogOpen(false)}
+      />
 
       <AttributionDialogWrapper
         isOpen={isAttributionDialogOpen}
@@ -691,60 +809,6 @@ export default function OptionsPage() {
                 </div>
               ))}
             </div>
-
-            {/* Right panel content collapsed into left sidebar on smaller screens */}
-            {!isDesktopLayout && !isNavCollapsed ? (
-              <div className="border-t border-slate-200 dark:border-slate-800 mt-2 flex flex-col">
-                {activeTab === "single" && (
-                  <ProcessorSidebarShellWrapper
-                    context="single"
-                    performancePreferences={safePerformancePreferences}
-                    onOpenSettings={() => openSettingsDialog("performance")}
-                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-                  />
-                )}
-
-                {activeTab === "batch" && (
-                  <ProcessorSidebarShellWrapper
-                    context="batch"
-                    performancePreferences={safePerformancePreferences}
-                    onOpenSettings={() => openSettingsDialog("performance")}
-                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-                  />
-                )}
-
-                {activeTab === "splicing" && (
-                  <SplicingSidebarShell
-                    performancePreferences={safePerformancePreferences}
-                    onPreviewQualityChange={handleSidebarPreviewQualityChange}
-                    onOpenSettings={() => openSettingsDialog("performance")}
-                    enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
-                  />
-                )}
-
-                {activeTab === "splitter" && (
-                  <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-
-                {activeTab === "filling" && (
-                  <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-
-                {activeTab === "pattern" && (
-                  <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-
-                {activeTab === "diffchecker" && (
-                  <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-
-                {activeTab === "inspector" && (
-                  <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
-                )}
-
-                <TabInfoPanel activeTab={activeTab} />
-              </div>
-            ) : null}
           </nav>
 
           {/* Content column */}
@@ -770,12 +834,12 @@ export default function OptionsPage() {
             )}
 
             {/* Scrollable content */}
-            <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-950 p-6">
+            <main className={`flex-1 overflow-y-auto md:bg-white md:dark:bg-slate-950 p-2 md:p-6 ${!isDesktopLayout && hasConfigSidebar ? "pb-14" : ""}`}>
               {tabContent}
             </main>
           </div>
 
-          {/* Right panel */}
+          {/* Right panel (Desktop) */}
           {isDesktopLayout ? (
             <aside
               className="shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col overflow-y-auto"
@@ -826,13 +890,106 @@ export default function OptionsPage() {
               {activeTab === "inspector" && (
                 <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
               )}
+              {activeTab === "background-remover" && (
+                <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+              {activeTab === "qr-generator" && (
+                <QrGeneratorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
+              {activeTab === "qr-reader" && (
+                <QrReaderSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+              )}
 
               <TabInfoPanel activeTab={activeTab} />
             </aside>
-          ) : null}
+          ) : (
+            /* Mobile Bottom Sheet for Configuration */
+            hasConfigSidebar && (
+              <>
+                <BottomSheet 
+                  isOpen={isMobileSidebarOpen} 
+                  onClose={() => setIsMobileSidebarOpen(false)}
+                  title={getBottomSheetTitle()}
+                >
+                  <div className="flex flex-col gap-6">
+                    {activeTab === "single" && (
+                      <ProcessorSidebarShellWrapper
+                        context="single"
+                        performancePreferences={safePerformancePreferences}
+                        onOpenSettings={() => openSettingsDialog("performance")}
+                        enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                      />
+                    )}
+
+                    {activeTab === "batch" && (
+                      <ProcessorSidebarShellWrapper
+                        context="batch"
+                        performancePreferences={safePerformancePreferences}
+                        onOpenSettings={() => openSettingsDialog("performance")}
+                        enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                      />
+                    )}
+
+                    {activeTab === "splicing" && (
+                      <SplicingSidebarShell
+                        performancePreferences={safePerformancePreferences}
+                        onPreviewQualityChange={handleSidebarPreviewQualityChange}
+                        onOpenSettings={() => openSettingsDialog("performance")}
+                        enableWideSidebarGrid={enableWideWorkspaceSidebarGrid}
+                      />
+                    )}
+
+                    {activeTab === "splitter" && (
+                      <SplitterSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+
+                    {activeTab === "filling" && (
+                      <FillingSidebarPanel enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+
+                    {activeTab === "pattern" && (
+                      <PatternSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+
+                    {activeTab === "diffchecker" && (
+                      <DiffcheckerSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+
+                    {activeTab === "inspector" && (
+                      <InspectorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+                    {activeTab === "background-remover" && (
+                      <BackgroundRemoverSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+                    {activeTab === "qr-generator" && (
+                      <QrGeneratorSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+                    {activeTab === "qr-reader" && (
+                      <QrReaderSidebarShell enableWideSidebarGrid={enableWideWorkspaceSidebarGrid} />
+                    )}
+
+                    <TabInfoPanel activeTab={activeTab} />
+                  </div>
+                </BottomSheet>
+
+                {/* Persistent Trigger Bar at bottom - Compact Version (Extension) */}
+                <button
+                  type="button"
+                  onClick={() => setIsMobileSidebarOpen(true)}
+                  className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 rounded-t-2xl px-6 pb-2 pt-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] transition-transform active:translate-y-0.5"
+                >
+                  <div className="w-8 h-1 rounded-full bg-slate-200 dark:bg-slate-800 mb-1.5" />
+                  <div className="w-full flex items-center justify-center">
+                    <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em]">
+                      Configuration
+                    </h3>
+                  </div>
+                </button>
+              </>
+            )
+          )}
         </div>
       </EditorProvider>
     </div>
   )
 }
-

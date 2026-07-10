@@ -50,10 +50,19 @@ No direct `innerHTML` assignments exist in our source code. These originate from
 
 **File flagged:** `dist.*.js`
 
-The `Function()` constructor usage originates from the **`get-intrinsics`** package (a transitive dependency of `ag-psd`, our PSD file parser). It is used to detect built-in JavaScript constructors at runtime (e.g., `AsyncFunction`, `GeneratorFunction`) via fixed string literals:
-
-```js
-$Function('"use strict"; return (async function () {}).constructor;')()
-```
-
 Only hard-coded string literals are ever evaluated — no user input or dynamic strings are involved. This is a well-known pattern used by many popular libraries (including `sinon`, `chai`, `lodash`) for ES intrinsic detection. It does not represent an XSS or code injection risk.
+
+---
+
+## 5. Local WASM-based AI Inference (Transformers.js)
+
+**Files flagged:** `background-remover.worker.js`, `transformers.js`
+
+This extension performs background removal and image analysis using **WASM-based AI engines**. This approach is chosen for both performance and user privacy, as all inference happens **entirely on the user's device** without sending any data to a remote server.
+
+### Library Patching (`scripts/patch-transformers.mjs`)
+We use a custom build-time script to patch the `@huggingface/transformers` library. This is done for two reasons:
+1. **MV3 Compatibility**: The library contains Node.js-specific code (e.g., `await import("worker_threads")`) that causes syntax errors in browser environments. Our patch neutralizes these paths.
+2. **Path Resolution**: To ensure the extension remains **100% offline-capable**, we obfuscate the engine filenames during build. This prevents the bundler from attempting to resolve them as static assets and allows our runtime loader to point specifically to the local binaries bundled within the extension (`assets/onnx-engines/`).
+
+All AI processing is local, privacy-first, and does not require internet access once the extension is installed.

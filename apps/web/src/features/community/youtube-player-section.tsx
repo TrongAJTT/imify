@@ -1,71 +1,84 @@
-"use client"
+"use client";
 
-import React, { useRef, useState } from "react"
-import ReactPlayer from "react-player"
-import { IMIFY_LINKS } from "@imify/core"
-import { Heading, BodyText } from "@imify/ui/ui/typography"
-import { cn } from "@imify/ui/ui/utils"
-import { Play } from "lucide-react"
-
-const MILESTONES = [
-  { id: "single", label: "Single Processor", seconds: 0 },
-  { id: "batch", label: "Batch Processor", seconds: 8 },
-  { id: "splitter", label: "Image Splitter", seconds: 21 },
-  { id: "splicing", label: "Image Splicing", seconds: 41 },
-  { id: "filling", label: "Image Filling", seconds: 51 },
-  { id: "pattern", label: "Pattern Generator", seconds: 85 },
-  { id: "diffchecker", label: "Diff Checker", seconds: 119 },
-  { id: "inspector", label: "Image Inspector", seconds: 151 },
-]
+import React, { useRef, useState } from "react";
+import ReactPlayer from "react-player";
+import { IMIFY_LINKS } from "@imify/core";
+import { Heading, BodyText } from "@imify/ui/ui/typography";
+import { cn } from "@imify/ui/ui/utils";
+import { Play } from "lucide-react";
+import { useTranslation } from "@imify/i18n";
 
 export function YoutubePlayerSection() {
-  const playerRef = useRef<any>(null)
-  const [playing, setPlaying] = useState(true)
-  const [isMounted, setIsMounted] = useState(false)
+  const { t } = useTranslation("homepage");
+  const playerRef = useRef<any>(null);
+  const [playing, setPlaying] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   React.useEffect(() => {
-    setIsMounted(true)
-  }, [])
+    setIsMounted(true);
+  }, []);
+
+  const milestones = React.useMemo(
+    () => [
+      { id: "single", label: t("video.milestones.single"), seconds: 0 },
+      { id: "batch", label: t("video.milestones.batch"), seconds: 8 },
+      { id: "splitter", label: t("video.milestones.splitter"), seconds: 21 },
+      { id: "splicing", label: t("video.milestones.splicing"), seconds: 41 },
+      { id: "filling", label: t("video.milestones.filling"), seconds: 51 },
+      { id: "pattern", label: t("video.milestones.pattern"), seconds: 85 },
+      {
+        id: "diffchecker",
+        label: t("video.milestones.diffchecker"),
+        seconds: 119,
+      },
+      { id: "inspector", label: t("video.milestones.inspector"), seconds: 151 },
+    ],
+    [t],
+  );
 
   const handleSeek = (seconds: number) => {
     if (playerRef.current) {
-      playerRef.current.currentTime = seconds
-      setPlaying(true)
+      playerRef.current.currentTime = seconds;
+      setPlaying(true);
     }
-  }
+  };
 
   if (!isMounted) {
     return (
       <section className="mx-auto max-w-5xl px-4 py-12 space-y-8">
         <div className="text-center space-y-3">
-          <Heading className="text-3xl md:text-4xl">See Imify in Action</Heading>
+          <Heading className="text-2xl md:text-4xl">
+            {t("video.sectionTitle")}
+          </Heading>
           <BodyText className="mx-auto max-w-2xl text-slate-500 text-lg">
-            Watch a brief showcase of all features available in Imify v2.1.
+            {t("video.sectionDesc")}
           </BodyText>
         </div>
         <div className="aspect-video w-full rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse" />
       </section>
-    )
+    );
   }
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-12 space-y-8">
       <div className="text-center space-y-3">
-        <Heading className="text-3xl md:text-4xl">See Imify in Action</Heading>
+        <Heading className="text-3xl md:text-4xl">
+          {t("video.sectionTitle")}
+        </Heading>
         <BodyText className="mx-auto max-w-2xl text-slate-500 text-lg">
-          Watch a brief showcase of all features available in Imify v2.1.
+          {t("video.sectionDesc")}
         </BodyText>
       </div>
 
       <div className="flex flex-wrap justify-center gap-2">
-        {MILESTONES.map((milestone) => (
+        {milestones.map((milestone) => (
           <button
             key={milestone.id}
             onClick={() => handleSeek(milestone.seconds)}
             className={cn(
               "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all",
               "bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-blue-900/40 dark:hover:text-blue-400",
-              "border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+              "border border-transparent hover:border-blue-200 dark:hover:border-blue-800",
             )}
           >
             <Play size={12} fill="currentColor" />
@@ -88,14 +101,20 @@ export function YoutubePlayerSection() {
             config={{
               youtube: {
                 // @ts-ignore
-                autoplay: 1,
-                modestbranding: 1,
-                rel: 0,
-                controls: 0,
-                disablekb: 1,
-                iv_load_policy: 3,
-                vq: 'highres' // Hint for high resolution
-              }
+                playerVars: {
+                  autoplay: 1,
+                  modestbranding: 1,
+                  rel: 0,
+                  controls: 0,
+                  disablekb: 1,
+                  iv_load_policy: 3,
+                  enablejsapi: 1,
+                  origin:
+                    typeof window !== "undefined"
+                      ? window.location.origin
+                      : undefined,
+                } as any,
+              },
             }}
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
@@ -103,5 +122,5 @@ export function YoutubePlayerSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

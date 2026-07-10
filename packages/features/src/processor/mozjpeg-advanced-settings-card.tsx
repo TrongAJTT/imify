@@ -1,27 +1,27 @@
-import React from "react"
-import { Sparkles, ScanLine, Palette } from "lucide-react"
+import React from "react";
+import { Sparkles, ScanLine, Palette } from "lucide-react";
 
-import { AccordionCard, CheckboxCard, SelectInput } from "@imify/ui"
-import { PROCESSOR_TOOLTIPS } from "./processor-tooltips"
+import { AccordionCard, CheckboxCard, SelectInput } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
 
 export interface MozJpegAdvancedSettingsCardProps {
-  progressive: boolean
-  chromaSubsampling: 0 | 1 | 2
-  onProgressiveChange: (value: boolean) => void
-  onChromaSubsamplingChange: (value: 0 | 1 | 2) => void
-  disabled?: boolean
-  isOpen?: boolean
-  onOpenChange?: (open: boolean) => void
-  alwaysOpen?: boolean
-  groupId?: string
+  progressive: boolean;
+  chromaSubsampling: 0 | 1 | 2;
+  onProgressiveChange: (value: boolean) => void;
+  onChromaSubsamplingChange: (value: 0 | 1 | 2) => void;
+  disabled?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  alwaysOpen?: boolean;
+  groupId?: string;
 }
 
-function chromaSubsamplingLabel(value: 0 | 1 | 2): string {
+function chromaSubsamplingLabel(value: 0 | 1 | 2, t?: any): string {
   if (value === 1) {
-    return "4:2:2"
+    return "4:2:2";
   }
 
-  return "4:2:0"
+  return "4:2:0";
 }
 
 export function MozJpegAdvancedSettingsCard({
@@ -33,14 +33,15 @@ export function MozJpegAdvancedSettingsCard({
   isOpen,
   onOpenChange,
   alwaysOpen,
-  groupId
+  groupId,
 }: MozJpegAdvancedSettingsCardProps) {
-  const sublabel = `${progressive ? "Progressive" : "Baseline"} • Chroma ${chromaSubsamplingLabel(chromaSubsampling)}`
+  const { t } = useTranslation("processor");
+  const sublabel = `${progressive ? t("advanced.mozjpeg.progressive") : t("advanced.mozjpeg.baseline")} • ${t("advanced.mozjpeg.chroma", { defaultValue: `Chroma ${chromaSubsamplingLabel(chromaSubsampling)}`, value: chromaSubsamplingLabel(chromaSubsampling) })}`;
 
   return (
     <AccordionCard
       icon={<Sparkles size={14} />}
-      label="MozJPEG Advanced"
+      label={t("mozjpegAdvanced")}
       sublabel={sublabel}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
@@ -52,13 +53,9 @@ export function MozJpegAdvancedSettingsCard({
       <div className="space-y-3">
         <CheckboxCard
           icon={<ScanLine size={16} />}
-          title="Progressive Loading"
-          subtitle={
-            progressive
-              ? "Enabled: loads blurry-to-sharp in multiple scans"
-              : "Disabled: baseline JPEG scan"
-          }
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.mozjpegAdvanced.progressiveLoading}
+          title={t("advanced.mozjpeg.progressiveLoading")}
+          subtitle={t("advanced.mozjpeg.progressiveLoadingSub")}
+          tooltipContent={t("tooltipProgressiveLoading")}
           checked={progressive}
           onChange={onProgressiveChange}
           disabled={disabled}
@@ -66,18 +63,25 @@ export function MozJpegAdvancedSettingsCard({
         />
 
         <SelectInput
-          label="Color Resolution (Chroma)"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.mozjpegAdvanced.colorResolution}
+          label={t("advanced.mozjpeg.colorResolution")}
+          tooltipContent={t("tooltipColorResolution")}
           value={String(chromaSubsampling)}
-          onChange={(value) => onChromaSubsamplingChange(Number(value) as 0 | 1 | 2)}
+          onChange={(value) =>
+            onChromaSubsamplingChange(Number(value) as 0 | 1 | 2)
+          }
           disabled={disabled}
           options={[
-            { value: "2", label: "Standard (4:2:0) - Smallest file size" },
-            { value: "1", label: "Balanced (4:2:2) - Better color accuracy" }
+            {
+              value: "2",
+              label: t("advanced.mozjpeg.colorResolution2"),
+            },
+            {
+              value: "1",
+              label: t("advanced.mozjpeg.colorResolution1"),
+            },
           ]}
         />
       </div>
     </AccordionCard>
-  )
+  );
 }
-

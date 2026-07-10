@@ -1,0 +1,202 @@
+{
+  "title": "Settings",
+  "tabs": {
+    "general": "General",
+    "performance": "Performance",
+    "layout": "Layout",
+    "shortcuts": "Shortkeys",
+    "language": "Language",
+    "warnings": "Warnings",
+    "usage": "Usage Stats",
+    "data": "Data Management"
+  },
+  "general": {
+    "sectionTitle": "General",
+    "sectionDesc": "Control default behavior and workspace layout preferences.",
+    "defaultScreen": "DEFAULT OPEN SCREEN",
+    "defaultScreenDesc": "Choose which workspace opens by default.",
+    "defaultScreenLabel": "Default workspace (Ext only)",
+    "preferRecentPreset": "Prefer recently used preset",
+    "preferRecentPresetDesc": "Open the most recently used preset when entering preset-based tools, if available.",
+    "layoutTitle": "WORKSPACE SIDEBAR WIDTHS",
+    "layoutDesc": "Tune left and right sidebar width with preset steps.",
+    "navWidthLabel": "Navigation sidebar width (Ext only)",
+    "configWidthLabel": "Configuration sidebar width",
+    "configWidthFormatter": "{{label}} ({{width}}px)",
+    "configWidthFormatterPercent": "{{label}} ({{width}}px, {{percent}}%)"
+  },
+  "language": {
+    "sectionTitle": "Language",
+    "sectionDesc": "Choose your display language for Imify, or manage custom runtime translations.",
+    "displayLanguage": "DISPLAY LANGUAGE",
+    "displayLanguageDesc": "Select the interface language. Bundled languages fallback to English for missing keys.",
+    "completionRate": "Completion Rate",
+    "keys": "keys",
+    "contributors": "Contributors & Maintainers",
+    "applyLanguage": "Apply Language",
+    "deleteLanguage": "Delete Language",
+    "deleteConfirm": "Delete \"{{name}}\"?",
+    "deleteConfirmDesc": "This will permanently remove this custom language. This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete",
+    "tooltipActive": "Currently used language",
+    "tooltipRuntime": "Imported at runtime",
+    "tooltipDeprecated": "Translation version {{langVersion}} is outdated (app: {{appVersion}}). Some strings may be missing or fall back to English."
+  },
+  "performance": {
+    "sectionTitle": "Performance",
+    "sectionDesc": "Smart Concurrency Advisor helps simulate safe worker counts using your hardware profile and active format settings.",
+    "advisorTitle": "SMART CONCURRENCY ADVISOR",
+    "advisorDesc": "Modern encoders like AVIF and JXL can consume high CPU and memory in browser workers. Enable advisor to get dynamic recommendations based on machine profile and current format options.",
+    "privacyNote": "Privacy note: hardware data is only read and processed locally in your browser. No telemetry or external upload.",
+    "enableAdvisor": "Enable Smart Concurrency Advisor",
+    "enableAdvisorDesc": "Keep manual concurrency free (1-90), but show contextual safe recommendations under Export Settings.",
+    "unlockConcurrency": "Unlock max concurrency (Overclock)",
+    "unlockConcurrencyDesc": "Allow values up to 90 and bypass Advisor hard lock. This can increase crash risk on heavy formats.",
+    "hardwareProfile": "Hardware Profile",
+    "sourceAuto": "Auto-detected",
+    "sourceManual": "Manual override",
+    "sourceFallback": "Fallback",
+    "sourceLabel": "Source: {{source}}",
+    "autoDetect": "Auto-Detect Hardware",
+    "cpuCores": "CPU Cores (logical threads)",
+    "ramBudget": "RAM Budget (GB)",
+    "detectedHardware": "Detected hardware: {{cores}} threads, ~{{ram}}GB device memory.",
+    "detectedHardwareUnknown": "unknown",
+    "modeStatic": "Smart mode is off. Concurrency Advisor is running in static fallback mode using default profile (4 threads, 4GB RAM budget).",
+    "modeDanger": "Danger mode: overclock is enabled. Heavy formats (AVIF/JXL/PNG tiny+OxiPNG) can hit OOM if you push concurrency too high.",
+    "modeSafe": "Safe mode: concurrency max is hard-locked by Advisor calculations to reduce crash risk."
+  },
+  "warnings": {
+    "sectionTitle": "Warnings",
+    "sectionDesc": "Customize which validation warnings and confirmation dialogs appear during workspace transitions.",
+    "preferencesTitle": "PREFERENCES",
+    "preferencesDesc": "These preferences are saved automatically.",
+    "downloadConfirm": "Show download confirmation dialog",
+    "downloadConfirmDesc": "Warn before downloading more than {{threshold}} images one by one.",
+    "oomWarning": "Show memory (OOM) warning dialog",
+    "oomWarningDesc": "Warn when selected batch size exceeds ~{{threshold}} MB.",
+    "heavyPreviewWarning": "Show Image Splicing high preview quality warning",
+    "heavyPreviewWarningDesc": "Warn if there are more than {{count}} images or total area exceeds ~{{pixels}}M px²."
+  },
+  "usage": {
+    "sectionTitle": "Usage Stats",
+    "sectionDesc": "Help us improve Imify by allowing anonymous performance metrics and error reporting.",
+    "frequencyTitle": "FREQUENCY DATA",
+    "frequencyDesc": "These counters drive the \"Most used (stable)\" sorting mode.",
+    "reset": "Reset",
+    "noData": "No usage data yet."
+  },
+  "data": {
+    "sectionTitle": "Data Management",
+    "sectionDesc": "Manage presets, template definitions, preferences, and database schema version.",
+    "statsTitle": "DATA STATISTICS",
+    "statsDesc": "Overview of your persistent browser storage allocation for Imify presets and store preferences.",
+    "totalPresets": "TOTAL PRESETS",
+    "persistedStores": "PERSISTED STORES",
+    "storageUsed": "STORAGE USED",
+    "assetStatsTitle": "ASSET STATISTICS",
+    "assetStatsDesc": "Detailed view of saved watermarks, downloaded offline AI models, and offline fonts.",
+    "savedWatermarks": "SAVED WATERMARKS",
+    "cachedModels": "CACHED AI MODELS",
+    "storageOccupied": "STORAGE OCCUPIED",
+    "googleFonts": "GOOGLE FONTS",
+    "customFonts": "CUSTOM FONTS",
+    "backupRestoreTitle": "BACKUP & RESTORE",
+    "backupRestoreDesc": "Backup presets, templates, settings, and workspace preferences to a JSON file, or restore them from a backup.",
+    "exportData": "Export Data",
+    "importData": "Import Data",
+    "exportTitle": "Export Data",
+    "exportDesc": "Select the features you want to export. This file can be used to restore your settings and presets.",
+    "importTitle": "Import Data",
+    "importDesc": "Select a previously exported data file to restore your settings and presets.",
+    "importSuccessTitle": "Import successful",
+    "importSuccessDesc": "State has been restored.",
+    "schemaTitle": "SCHEMA MIGRATION",
+    "schemaDesc": "Manage and migrate the version of your local database schema.",
+    "dbVersion": "Database Version",
+    "dbVersionDesc": "Current schema version: {{version}}",
+    "dbVersionV2": "v2.0 (Unified)",
+    "dbVersionV1": "v1.0 (Legacy)",
+    "migrateBtn": "Migrate to Schema v2",
+    "schemaUpToDate": "Schema is Up to Date",
+    "migrateSuccessTitle": "Schema migration successful",
+    "migrateSuccessDesc": "Your presets have been unified under Schema v2.0.",
+    "migrateErrorTitle": "Migration failed",
+    "migrateErrorDesc": "An unexpected error occurred."
+  },
+  "shortcuts": {
+    "sectionTitle": "Shortkeys",
+    "sectionDesc": "Review and rebind keyboard shortcuts used across preview workspaces and Pattern Generator tools.",
+    "shortcutsTitle": "KEYBOARD SHORTCUTS",
+    "shortcutsDesc": "Click a shortcut and press a key combination. Press Esc to cancel or Backspace/Delete to clear.",
+    "resetAll": "Reset All",
+    "searchLabel": "Search shortcuts",
+    "searchPlaceholder": "Search by action name or key combination (e.g. Ctrl+Shift+E)",
+    "clearSearch": "Clear Search",
+    "showingResults": "Showing {{count}} shortcut for \"{{query}}\".",
+    "showingResultsPlural": "Showing {{count}} shortcuts for \"{{query}}\".",
+    "loading": "Loading shortcut preferences...",
+    "noResults": "No shortcuts matched your search.",
+    "defaultLabel": "Default: {{binding}}",
+    "clear": "Clear",
+    "reset": "Reset",
+    "conflict": "Conflict with: {{actions}}",
+    "unassigned": "Unassigned",
+    "categories": {
+      "Canvas Preview Mode": "Canvas Preview Mode",
+      "Fill Customization": "Fill Customization",
+      "Pattern Generator": "Pattern Generator"
+    },
+    "actions": {
+      "global.preview.zoom_mode": {
+        "label": "Switch to Zoom mode",
+        "description": "Set preview interaction mode to Zoom across supported workspaces."
+      },
+      "global.preview.pan_mode": {
+        "label": "Switch to Pan mode",
+        "description": "Set preview interaction mode to Pan across supported workspaces."
+      },
+      "global.preview.idle_mode": {
+        "label": "Switch to Idle mode",
+        "description": "Disable preview wheel interaction in supported workspaces."
+      },
+      "fill.customization.tab_image": {
+        "label": "Open Image tab",
+        "description": "Show image transform/upload controls in Fill customization."
+      },
+      "fill.customization.tab_border": {
+        "label": "Open Border tab",
+        "description": "Show border controls in Fill customization."
+      },
+      "fill.customization.tab_layer": {
+        "label": "Open Layer tab",
+        "description": "Show layer transform controls in Fill customization."
+      },
+      "fill.customization.clear_image": {
+        "label": "Clear Image",
+        "description": "Remove the image from the selected layer."
+      },
+      "fill.customization.deselect": {
+        "label": "Deselect layer",
+        "description": "Clear the current layer selection in Fill workspace."
+      },
+      "pattern.draw.decrease_brush_size": {
+        "label": "Draw Asset: Decrease brush size",
+        "description": "Decrease brush size in Draw Asset dialog."
+      },
+      "pattern.draw.increase_brush_size": {
+        "label": "Draw Asset: Increase brush size",
+        "description": "Increase brush size in Draw Asset dialog."
+      },
+      "pattern.draw.undo": {
+        "label": "Draw Asset: Undo",
+        "description": "Undo the latest stroke in Draw Asset dialog."
+      },
+      "pattern.draw.clear": {
+        "label": "Draw Asset: Clear canvas",
+        "description": "Clear all strokes in Draw Asset dialog."
+      }
+    }
+  }
+}

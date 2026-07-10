@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Download, ImagePlus, Move } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import { toUserFacingConversionError } from "@imify/core/error-utils";
 import {
   buildSmartOutputFileName,
@@ -17,8 +17,16 @@ import {
 } from "@imify/engine/image-pipeline/decode-image-data";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
-import { Button, EmptyDropCard, Heading, MutedText } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
+import {
+  Button,
+  EmptyDropCard,
+  Heading,
+  MutedText,
+  useRenameInputPrompt,
+} from "@imify/ui";
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
+import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar";
 import {
   COMMON_IMAGE_ACCEPT,
   isCommonImageFile,
@@ -92,9 +100,10 @@ export function SingleProcessorWorkspace({
   consumePendingOptimizeFile,
   consumePendingImportUrl,
 }: {
-  consumePendingOptimizeFile?: () => File | null
-  consumePendingImportUrl?: () => string | null
+  consumePendingOptimizeFile?: () => File | null;
+  consumePendingImportUrl?: () => string | null;
 } = {}) {
+  const { t } = useTranslation("processor");
   const targetFormat = useBatchStore((state) => state.targetFormat);
   const quality = useBatchStore((state) => state.quality);
   const formatOptions = useBatchStore((state) => state.formatOptions);
@@ -140,15 +149,15 @@ export function SingleProcessorWorkspace({
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isImportingUrl, setIsImportingUrl] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [compareViewMode, setCompareViewMode] = useState<
-    "split" | "side_by_side"
-  >("split");
+  const [viewMode, setViewMode] = useState<"split" | "side_by_side">("split");
   const [splitPosition, setSplitPosition] = useState(50);
   const [zoom, setZoom] = useState(100);
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
   const [showImpactChip, setShowImpactChip] = useState(false);
   const [stackStatsCards, setStackStatsCards] = useState(false);
+  const [processTime, setProcessTime] = useState<number | null>(null);
+  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
   const requestSequenceRef = useRef(0);
   const attachSequenceRef = useRef(0);
 
@@ -223,7 +232,7 @@ export function SingleProcessorWorkspace({
   const attachSingleFile = async (file: File) => {
     const attachSequence = ++attachSequenceRef.current;
     if (!isCommonImageFile(file)) {
-      setErrorText("Please choose an image file.");
+      setErrorText(t("chooseImageError"));
       return;
     }
     clearAll();
@@ -239,14 +248,16 @@ export function SingleProcessorWorkspace({
       if (attachSequenceRef.current !== attachSequence) return;
       clearAll();
       setErrorText(
-        toUserFacingConversionError(error, "Unable to decode source image"),
+        toUserFacingConversionError(error, t("decodeError")),
       );
     }
   };
 
   const onAppendFiles = (files: FileList | null) => {
     if (!files?.length) return;
-    const firstImageFile = Array.from(files).find((file) => isCommonImageFile(file));
+    const firstImageFile = Array.from(files).find((file) =>
+      isCommonImageFile(file),
+    );
     if (firstImageFile) void attachSingleFile(firstImageFile);
   };
   const importFromImageUrls = async (urls: string[]) => {
@@ -260,7 +271,7 @@ export function SingleProcessorWorkspace({
       setErrorText(
         error instanceof Error && error.message.trim()
           ? error.message
-          : "Unable to import image URL",
+          : t("importError"),
       );
     } finally {
       setIsImportingUrl(false);
@@ -304,10 +315,10 @@ export function SingleProcessorWorkspace({
       resultOutputExtension === "zip"
         ? smartName || "favicon_kit.zip"
         : smartName ||
-        toOutputFilenameWithExtension(
-          sourceFile.name,
-          resultOutputExtension,
-        ),
+            toOutputFilenameWithExtension(
+              sourceFile.name,
+              resultOutputExtension,
+            ),
     );
   }, [
     fileNamePattern,
@@ -336,6 +347,9 @@ export function SingleProcessorWorkspace({
     const currentSequence = ++requestSequenceRef.current;
     setIsProcessing(true);
     setErrorText(null);
+    setProcessTime(null);
+    const start = performance.now();
+
     const timer = setTimeout(() => {
       void (async () => {
         try {
@@ -374,10 +388,10 @@ export function SingleProcessorWorkspace({
             outputExtension === "zip"
               ? smartName || "favicon_kit.zip"
               : smartName ||
-              toOutputFilenameWithExtension(
-                sourceFile.name,
-                outputExtension,
-              ),
+                  toOutputFilenameWithExtension(
+                    sourceFile.name,
+                    outputExtension,
+                  ),
           );
           if (normalizedBlob.type.startsWith("image/")) {
             try {
@@ -408,11 +422,16 @@ export function SingleProcessorWorkspace({
           setResultNameDimensions(null);
           setResultFileName("");
           setErrorText(
-            toUserFacingConversionError(error, "Unable to process image"),
+            toUserFacingConversionError(error, t("processError")),
           );
         } finally {
-          if (requestSequenceRef.current === currentSequence)
+          if (requestSequenceRef.current === currentSequence) {
             setIsProcessing(false);
+            const end = performance.now();
+            if (start) {
+              setProcessTime((end - start) / 1000);
+            }
+          }
         }
       })();
     }, PREVIEW_DEBOUNCE_MS);
@@ -428,7 +447,7 @@ export function SingleProcessorWorkspace({
   const resultDimensionLabel = resultMeta
     ? `${resultMeta.width} x ${resultMeta.height}`
     : isProcessing
-      ? "Processing..."
+      ? t("processing")
       : "-";
 
   return (
@@ -442,10 +461,13 @@ export function SingleProcessorWorkspace({
                 className="text-sky-500/80 dark:text-sky-400"
               />
             }
-            title="Drop one image here, click to browse, or paste from clipboard"
-            subtitle="Single Processor with live preview, debounce, and image URL import"
+            title={t("dropZonePlaceholder")}
+            subtitle={t("dropZoneSubtitle")}
             onDropFiles={onAppendFiles}
-            fileInput={{ accept: COMMON_IMAGE_ACCEPT, onInputFiles: onAppendFiles }}
+            fileInput={{
+              accept: COMMON_IMAGE_ACCEPT,
+              onInputFiles: onAppendFiles,
+            }}
             topRightSlot={
               <ImageUrlImportControl
                 allowMultiple={false}
@@ -478,33 +500,76 @@ export function SingleProcessorWorkspace({
                     )}
                   </div>
                   <MutedText className="text-xs">
-                    Live preview updates after {PREVIEW_DEBOUNCE_MS}ms idle.
+                    {isProcessing ? (
+                      <span className="text-amber-600 dark:text-amber-400 font-medium">
+                        {t("processing")}
+                      </span>
+                    ) : resultBlob && processTime !== null ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                        {t("processingComplete", { time: processTime.toFixed(2) })}
+                      </span>
+                    ) : (
+                      t("livePreviewNotice", { time: PREVIEW_DEBOUNCE_MS })
+                    )}
                   </MutedText>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-row items-center gap-2 shrink-0">
                   <Button variant="secondary" onClick={clearAll} type="button">
-                    Clear
+                    {t("clear")}
                   </Button>
                   <Button
                     disabled={!resultBlob || !resultFileName}
-                    onClick={async () => {
-                      if (resultBlob && resultFileName)
-                        await downloadWithFilename(resultBlob, resultFileName);
+                    onClick={() => {
+                      if (
+                        resultBlob &&
+                        resultFileName &&
+                        sourceFile &&
+                        resultOutputExtension
+                      ) {
+                        checkAndPrompt(
+                          fileNamePattern,
+                          async (inputValue) => {
+                            const finalFileName = buildSmartOutputFileName({
+                              pattern: fileNamePattern,
+                              originalFileName: sourceFile.name,
+                              outputExtension: resultOutputExtension,
+                              index: 1,
+                              totalFiles: 1,
+                              dimensions: resultNameDimensions,
+                              now: new Date(),
+                              input: inputValue,
+                            });
+                            await downloadWithFilename(
+                              resultBlob,
+                              finalFileName,
+                            );
+                          },
+                          async () => {
+                            await downloadWithFilename(
+                              resultBlob,
+                              resultFileName,
+                            );
+                          },
+                        );
+                      }
                     }}
                     type="button"
                     variant="primary"
                   >
-                    <Download size={16} />
-                    Download
+                    {t("download")}
                   </Button>
                 </div>
               </div>
-              <div className={`flex items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900/50 ${stackStatsCards ? "flex-col divide-y divide-slate-200" : "flex-row divide-x divide-slate-200"}`}>
-                <div className={`flex w-full flex-1 flex-col p-4 transition-colors hover:bg-white dark:hover:bg-slate-900 ${stackStatsCards ? "items-center text-center" : "items-start text-left"}`}>
+              <div
+                className={`flex items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900/50 ${stackStatsCards ? "flex-col divide-y divide-slate-200" : "flex-row divide-x divide-slate-200"}`}
+              >
+                <div
+                  className={`flex w-full flex-1 flex-col p-4 transition-colors hover:bg-white dark:hover:bg-slate-900 ${stackStatsCards ? "items-center text-center" : "items-start text-left"}`}
+                >
                   <div className="mb-1 flex items-center gap-1.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      Original
+                      {t("original")}
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1.5">
@@ -521,13 +586,15 @@ export function SingleProcessorWorkspace({
                     </span>
                   </div>
                 </div>
-                <div className={`flex w-full flex-1 flex-col p-4 transition-colors hover:bg-white dark:hover:bg-slate-900 ${stackStatsCards ? "items-center text-center border-t" : "items-start text-left border-t-0"}`}>
+                <div
+                  className={`flex w-full flex-1 flex-col p-4 transition-colors hover:bg-white dark:hover:bg-slate-900 ${stackStatsCards ? "items-center text-center border-t" : "items-start text-left border-t-0"}`}
+                >
                   <div className="mb-1 flex items-center gap-1.5">
                     <div
                       className={`h-1.5 w-1.5 rounded-full ${isProcessing ? "animate-pulse bg-amber-400" : "bg-blue-500"}`}
                     />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      Result
+                      {t("result")}
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1.5">
@@ -553,12 +620,10 @@ export function SingleProcessorWorkspace({
                 <div
                   className={`w-full min-w-[120px] flex-1 flex-col items-center justify-center bg-white/50 p-4 text-center dark:bg-slate-900/30 ${
                     stackStatsCards ? "border-t" : "border-t-0"
-                  } ${
-                    showImpactChip ? "hidden" : "flex"
-                  }`}
+                  } ${showImpactChip ? "hidden" : "flex"}`}
                 >
                   <span className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Impact
+                    {t("impact")}
                   </span>
                   <div
                     className={`text-2xl font-black tracking-tight tabular-nums ${delta.className}`}
@@ -574,48 +639,23 @@ export function SingleProcessorWorkspace({
               ) : null}
             </div>
           </div>
-          <div className="pt-4">
+          <div className="pt-2">
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="inline-flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={compareViewMode === "split" ? "primary" : "ghost"}
-                    className="h-8"
-                    onClick={() => setCompareViewMode("split")}
-                  >
-                    Split View
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={
-                      compareViewMode === "side_by_side" ? "primary" : "ghost"
-                    }
-                    className="h-8"
-                    onClick={() => setCompareViewMode("side_by_side")}
-                  >
-                    Side by Side
-                  </Button>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                    <Move size={12} />
-                    Drag to pan
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    • Scroll to zoom
-                  </span>
-                </div>
-              </div>
+              {/* View Mode Toolbar (Centralized Component) */}
+              {resultImageData && (
+                <CompareViewModeToolbar
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  showGuide={true}
+                />
+              )}
               <PixelCompareWorkspace
                 className="h-[480px]"
-                mode={compareViewMode}
+                mode={viewMode}
                 imageDataA={sourceImageData}
                 imageDataB={resultImageData}
-                labelA="Original"
-                labelB="Result"
+                labelA={t("original")}
+                labelB={t("result")}
                 splitPosition={splitPosition}
                 onSplitChange={setSplitPosition}
                 zoom={zoom}
@@ -632,8 +672,7 @@ export function SingleProcessorWorkspace({
                 isProcessing={isProcessing}
                 emptyFallback={
                   <MutedText>
-                    Result preview is unavailable for this output type. You can
-                    still download the processed file.
+                    {t("previewUnavailable")}
                   </MutedText>
                 }
               />
@@ -641,6 +680,8 @@ export function SingleProcessorWorkspace({
           </div>
         </>
       )}
+
+      {renameInputPrompt}
     </div>
   );
 }

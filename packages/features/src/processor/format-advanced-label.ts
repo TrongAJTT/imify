@@ -1,4 +1,20 @@
-export function getFormatAdvancedLabel(format: string): string {
+export function getFormatAdvancedLabel(format: string, t?: (key: string) => string): string {
+  if (t) {
+    switch (format) {
+      case "png":
+        return t("pngAdvanced")
+      case "mozjpeg":
+        return t("mozjpegAdvanced")
+      case "webp":
+        return t("webpAdvanced")
+      case "avif":
+        return t("avifAdvanced")
+      case "jxl":
+        return t("jxlAdvanced")
+      default:
+        return t("formatAdvancedSettings")
+    }
+  }
   switch (format) {
     case "png":
       return "PNG Advanced"

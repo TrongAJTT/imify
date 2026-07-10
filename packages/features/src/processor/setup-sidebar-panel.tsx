@@ -15,6 +15,7 @@ import {
 import { buildResizeOverrideFromState } from "@imify/core/resize-state"
 import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store"
+import { useTranslation } from "@imify/i18n"
 import type { PerformancePreferences } from "./performance-preferences"
 import { BatchRenameDialog } from "./rename-dialog"
 import { BatchWatermarkDialog } from "./watermark-dialog"
@@ -39,6 +40,7 @@ export function BatchSetupSidebarPanel({
   enableWideSidebarGrid = false,
   autoWideSidebarGridMinWidthPx = null,
 }: BatchSetupSidebarPanelProps) {
+  const { t } = useTranslation("processor")
   const setupContext = useBatchStore((state) => state.setupContext)
   const isRunning = useBatchStore((state) => state.isRunning)
   const isTargetFormatQualityOpen = useBatchStore((state) => state.isTargetFormatQualityOpen)
@@ -131,7 +133,7 @@ export function BatchSetupSidebarPanel({
   const supportsTinyMode = supportsTargetFormatTinyMode(targetFormat)
   const supportsExif = ["jpg", "webp", "avif", "mozjpeg"].includes(targetFormat)
   const isIcoTarget = targetFormat === "ico"
-  const formatAdvancedLabel = useMemo(() => getFormatAdvancedLabel(targetFormat), [targetFormat])
+  const formatAdvancedLabel = useMemo(() => getFormatAdvancedLabel(targetFormat, t), [targetFormat, t])
 
   const advisorResizeConfig = useMemo(
     () =>
@@ -168,10 +170,11 @@ export function BatchSetupSidebarPanel({
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "target-format-quality",
-      label: "Export Format & Quality",
+      label: t("exportFormatAndQuality"),
       columnSpan: 2,
       content: (
         <TargetFormatQualityCard
+          cardLabel={t("exportFormatAndQuality")}
           targetFormat={targetFormat}
           quality={quality}
           formatConfig={buildTargetFormatQualityCardConfig(formatOptions)}
@@ -251,7 +254,7 @@ export function BatchSetupSidebarPanel({
     },
     {
       id: "resize",
-      label: "Resize",
+      label: t("resize"),
       content: (
         <ResizeCard
           resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
@@ -299,7 +302,7 @@ export function BatchSetupSidebarPanel({
     },
     {
       id: "export-settings",
-      label: "Export Settings",
+      label: t("exportSettings"),
       columnSpan: 2,
       content: (
         <BatchExportPanel

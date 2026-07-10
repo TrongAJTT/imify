@@ -17,11 +17,36 @@ module.exports = {
         "collapsible-up": {
           from: { height: "var(--radix-collapsible-content-height)", opacity: 1 },
           to: { height: 0, opacity: 0 }
+        },
+        "fade-in": {
+          from: { opacity: 0 },
+          to: { opacity: 1 }
+        },
+        "fade-out": {
+          from: { opacity: 1 },
+          to: { opacity: 0 }
+        },
+        "slide-in-from-bottom": {
+          from: { transform: "translateY(100%)" },
+          to: { transform: "translateY(0)" }
+        },
+        "slide-out-to-bottom": {
+          from: { transform: "translateY(0)" },
+          to: { transform: "translateY(100%)" }
+        },
+        "zoom-in": {
+          from: { opacity: 0, transform: "scale(0.95)" },
+          to: { opacity: 1, transform: "scale(1)" }
         }
       },
       animation: {
         "collapsible-down": "collapsible-down 200ms ease-out",
-        "collapsible-up": "collapsible-up 200ms ease-out"
+        "collapsible-up": "collapsible-up 200ms ease-out",
+        "fade-in": "fade-in 200ms ease-out",
+        "fade-out": "fade-out 200ms ease-in",
+        "slide-in-from-bottom": "slide-in-from-bottom 300ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-out-to-bottom": "slide-out-to-bottom 300ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "zoom-in": "zoom-in 200ms ease-out"
       }
     }
   },

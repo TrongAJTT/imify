@@ -1,5 +1,4 @@
-import React from "react"
-import { HelpCircle } from "lucide-react"
+import { HelpCircle, type LucideIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
 import { ControlledPopover } from "./controlled-popover"
@@ -7,6 +6,8 @@ import { ControlledPopover } from "./controlled-popover"
 interface InfoPopoverProps {
   label: string
   children: ReactNode
+  icon?: LucideIcon
+  iconSize?: number
   iconClassName?: string
   side?: "top" | "right" | "bottom" | "left"
   align?: "start" | "center" | "end"
@@ -15,6 +16,8 @@ interface InfoPopoverProps {
 export function InfoPopover({
   label,
   children,
+  icon: Icon = HelpCircle,
+  iconSize = 12,
   iconClassName,
   side = "top",
   align = "center"
@@ -23,8 +26,8 @@ export function InfoPopover({
     <ControlledPopover
       trigger={
         <span className="inline-flex items-center justify-center">
-          <HelpCircle
-            size={12}
+          <Icon
+            size={iconSize}
             className={
               iconClassName ??
               "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help"

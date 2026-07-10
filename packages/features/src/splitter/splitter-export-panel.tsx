@@ -29,7 +29,7 @@ export function SplitterExportPanel({
       colorTheme="amber"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      defaultOpen={false}
+      defaultOpen={true}
     >
       <div className="space-y-3">
         <SidebarCard

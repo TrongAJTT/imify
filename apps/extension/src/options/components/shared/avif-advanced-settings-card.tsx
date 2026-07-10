@@ -4,7 +4,7 @@ import { AccordionCard } from "@imify/ui/ui/accordion-card"
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
 import { NumberInput } from "@imify/ui/ui/number-input"
 import { SelectInput } from "@imify/ui/ui/select-input"
-import { PROCESSOR_TOOLTIPS } from "@/options/constants/processor-tooltips"
+import { useTranslation } from "@imify/i18n"
 
 export interface AvifAdvancedSettingsCardProps {
   qualityAlpha?: number
@@ -65,6 +65,7 @@ export function AvifAdvancedSettingsCard({
   alwaysOpen,
   groupId
 }: AvifAdvancedSettingsCardProps) {
+  const { t } = useTranslation("processor")
   const alphaLabel = highAlphaQuality
     ? "High Alpha"
     : typeof qualityAlpha === "number"
@@ -95,7 +96,7 @@ export function AvifAdvancedSettingsCard({
               : "Use this when logos or soft shadows lose edge clarity"
           }
           tooltipLabel="Keep sharp edges for transparent images"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.keepSharpEdges}
+          tooltipContent={t("tooltipKeepSharpEdges")}
           checked={highAlphaQuality}
           onChange={onHighAlphaQualityChange}
           disabled={disabled}
@@ -104,7 +105,7 @@ export function AvifAdvancedSettingsCard({
 
         <NumberInput
           label="Alpha Quality"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.alphaQuality}
+          tooltipContent={t("tooltipAlphaQuality")}
           value={typeof qualityAlpha === "number" ? qualityAlpha : 90}
           min={0}
           max={100}
@@ -115,7 +116,7 @@ export function AvifAdvancedSettingsCard({
 
         <SelectInput
           label="Chroma Subsampling"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.chromaSubsampling}
+          tooltipContent={t("tooltipChromaSubsampling")}
           value={String(subsample)}
           onChange={(value) => onSubsampleChange(Number(value) as 1 | 2 | 3)}
           disabled={disabled}
@@ -128,7 +129,7 @@ export function AvifAdvancedSettingsCard({
 
         <SelectInput
           label="Tune"
-          tooltipContent={PROCESSOR_TOOLTIPS.shared.avifAdvanced.tune}
+          tooltipContent={t("tooltipTune")}
           value={tune}
           onChange={(value) => onTuneChange(value as "auto" | "ssim" | "psnr")}
           disabled={disabled}

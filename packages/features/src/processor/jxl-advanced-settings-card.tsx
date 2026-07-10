@@ -1,27 +1,29 @@
-import React from "react"
-import { Sparkles, ScanLine } from "lucide-react"
+import React from "react";
+import { Sparkles, ScanLine } from "lucide-react";
 
-import { TARGET_FORMAT_TOOLTIPS } from "./target-format-tooltips"
-import { AccordionCard, CheckboxCard, SelectInput } from "@imify/ui"
+import { useTranslation } from "@imify/i18n";
+import { AccordionCard, CheckboxCard, SelectInput } from "@imify/ui";
 
 export interface JxlAdvancedSettingsCardProps {
-  progressive: boolean
-  epf: 0 | 1 | 2 | 3
-  onProgressiveChange: (value: boolean) => void
-  onEpfChange: (value: 0 | 1 | 2 | 3) => void
-  disabled?: boolean
-  isOpen?: boolean
-  onOpenChange?: (open: boolean) => void
-  alwaysOpen?: boolean
-  groupId?: string
+  progressive: boolean;
+  epf: 0 | 1 | 2 | 3;
+  onProgressiveChange: (value: boolean) => void;
+  onEpfChange: (value: 0 | 1 | 2 | 3) => void;
+  disabled?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  alwaysOpen?: boolean;
+  groupId?: string;
 }
 
-function getEpfLabel(epf: 0 | 1 | 2 | 3): string {
+function getEpfLabel(epf: 0 | 1 | 2 | 3, t?: any): string {
   if (epf === 0) {
-    return "EPF Off"
+    return t ? t("advanced.jxl.epfOff", "EPF Off") : "EPF Off";
   }
 
-  return `EPF ${epf}`
+  return t
+    ? t("advanced.jxl.epf", { defaultValue: `EPF ${epf}`, value: epf })
+    : `EPF ${epf}`;
 }
 
 export function JxlAdvancedSettingsCard({
@@ -33,14 +35,15 @@ export function JxlAdvancedSettingsCard({
   isOpen,
   onOpenChange,
   alwaysOpen,
-  groupId
+  groupId,
 }: JxlAdvancedSettingsCardProps) {
-  const sublabel = `${progressive ? "Progressive" : "Single-pass"} • ${getEpfLabel(epf)}`
+  const { t } = useTranslation("processor");
+  const sublabel = `${progressive ? t("advanced.jxl.progressive") : t("advanced.jxl.singlePass")} • ${getEpfLabel(epf, t)}`;
 
   return (
     <AccordionCard
       icon={<Sparkles size={14} />}
-      label="JXL Advanced"
+      label={t("jxlAdvanced")}
       sublabel={sublabel}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
@@ -52,13 +55,9 @@ export function JxlAdvancedSettingsCard({
       <div className="space-y-3">
         <CheckboxCard
           icon={<ScanLine size={16} />}
-          title="Progressive Loading"
-          subtitle={
-            progressive
-              ? "Enabled: previews quickly and sharpens in additional passes"
-              : "Disabled: encode a single-pass codestream"
-          }
-          tooltipContent={TARGET_FORMAT_TOOLTIPS.jxlProgressive}
+          title={t("advanced.jxl.progressiveLoading")}
+          subtitle={t("advanced.jxl.progressiveLoadingSub")}
+          tooltipContent={t("tooltipJxlProgressive")}
           checked={progressive}
           onChange={onProgressiveChange}
           disabled={disabled}
@@ -66,20 +65,31 @@ export function JxlAdvancedSettingsCard({
         />
 
         <SelectInput
-          label="Artifact Smoothing (EPF)"
-          tooltipContent={TARGET_FORMAT_TOOLTIPS.jxlEpf}
+          label={t("advanced.jxl.artifactSmoothing")}
+          tooltipContent={t("tooltipJxlEpf")}
           value={String(epf)}
           onChange={(value) => onEpfChange(Number(value) as 0 | 1 | 2 | 3)}
           disabled={disabled}
           options={[
-            { value: "0", label: "0 - Off (maximum detail)" },
-            { value: "1", label: "1 - Balanced (default)" },
-            { value: "2", label: "2 - Medium smoothing" },
-            { value: "3", label: "3 - Strong smoothing" }
+            {
+              value: "0",
+              label: t("advanced.jxl.artifactSmoothing0"),
+            },
+            {
+              value: "1",
+              label: t("advanced.jxl.artifactSmoothing1"),
+            },
+            {
+              value: "2",
+              label: t("advanced.jxl.artifactSmoothing2"),
+            },
+            {
+              value: "3",
+              label: t("advanced.jxl.artifactSmoothing3"),
+            },
           ]}
         />
       </div>
     </AccordionCard>
-  )
+  );
 }
-

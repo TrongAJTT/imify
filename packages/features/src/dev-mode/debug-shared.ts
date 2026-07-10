@@ -10,7 +10,11 @@ export type OptionsTab =
   | "pattern"
   | "diffchecker"
   | "inspector"
+  | "background-remover"
+  | "upscaler"
   | "context-menu"
+  | "qr-generator"
+  | "qr-reader"
 
 export interface PerformancePreferences {
   [key: string]: unknown
