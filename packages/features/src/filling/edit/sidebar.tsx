@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Layers, Settings2, Ruler } from "lucide-react";
+import { Layers, Settings2, Ruler, ArrowLeftRight } from "lucide-react";
 
 import type {
   CanvasSizePreset,
@@ -633,42 +633,60 @@ export function ManualEditorSidebar({
           defaultOpen={true}
         >
           <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <NumberInput
-                label={t("dialog.width")}
-                value={displayCanvasWidth}
-                onChangeValue={handleCanvasWidthChange}
-                min={1}
-                max={canvasUnit === "px" ? 16384 : 9999}
-                step={canvasUnit === "px" ? 1 : 0.1}
-              />
-              <NumberInput
-                label={t("dialog.height")}
-                value={displayCanvasHeight}
-                onChangeValue={handleCanvasHeightChange}
-                min={1}
-                max={canvasUnit === "px" ? 16384 : 9999}
-                step={canvasUnit === "px" ? 1 : 0.1}
-              />
+            <div className="flex flex-col gap-2.5">
+              <div className="flex flex-row gap-3 md:gap-1 items-end">
+                <div className="flex-1 w-full min-w-0">
+                  <NumberInput
+                    label={t("dialog.width")}
+                    value={displayCanvasWidth}
+                    onChangeValue={handleCanvasWidthChange}
+                    min={1}
+                    max={canvasUnit === "px" ? 16384 : 9999}
+                    step={canvasUnit === "px" ? 1 : 0.1}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    onCanvasSizeChange(canvasHeight, canvasWidth);
+                  }}
+                >
+                  <ArrowLeftRight size={14} className="rotate-90 sm:rotate-0" />
+                </Button>
+                <div className="flex-1 w-full min-w-0">
+                  <NumberInput
+                    label={t("dialog.height")}
+                    value={displayCanvasHeight}
+                    onChangeValue={handleCanvasHeightChange}
+                    min={1}
+                    max={canvasUnit === "px" ? 16384 : 9999}
+                    step={canvasUnit === "px" ? 1 : 0.1}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-row gap-3">
               <SelectInput
                 label={t("dialog.unit")}
                 value={canvasUnit}
                 options={UNIT_OPTIONS}
                 onChange={(value) => setCanvasUnit(value as CanvasSizeUnit)}
+                className="flex-1 w-full"
               />
-            </div>
 
-            {canvasUnit !== "px" && (
-              <div className="w-36">
-                <NumberInput
-                  label="DPI"
-                  value={canvasDpi}
-                  onChangeValue={setCanvasDpi}
-                  min={72}
-                  max={600}
-                />
-              </div>
-            )}
+              {canvasUnit !== "px" && (
+                <div className="flex-1 w-full">
+                  <NumberInput
+                    label="DPI"
+                    value={canvasDpi}
+                    onChangeValue={setCanvasDpi}
+                    min={72}
+                    max={600}
+                  />
+                </div>
+              )}
+            </div>
 
             <div className="text-[11px] text-slate-500 dark:text-slate-400">
               {t("dialog.finalSize")} {canvasWidth} x {canvasHeight} px

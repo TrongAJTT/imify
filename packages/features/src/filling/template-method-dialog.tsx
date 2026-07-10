@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Grid3x3, LayoutGrid, PenTool, Ruler, X } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Grid3x3,
+  LayoutGrid,
+  PenTool,
+  Ruler,
+  X,
+} from "lucide-react";
 import {
   BaseDialog,
   Button,
@@ -207,42 +214,70 @@ export function TemplateMethodDialog({
                 </Button>
               </div>
 
-              <div className="mb-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                <NumberInput
-                  label={t("dialog.width")}
-                  value={displayWidth}
-                  onChangeValue={handleWidthChange}
-                  min={1}
-                  max={unit === "px" ? 16384 : 9999}
-                  step={unit === "px" ? 1 : 0.1}
-                />
-                <NumberInput
-                  label={t("dialog.height")}
-                  value={displayHeight}
-                  onChangeValue={handleHeightChange}
-                  min={1}
-                  max={unit === "px" ? 16384 : 9999}
-                  step={unit === "px" ? 1 : 0.1}
-                />
-                <SelectInput
-                  label={t("dialog.unit")}
-                  value={unit}
-                  options={UNIT_OPTIONS}
-                  onChange={(value) => setUnit(value as CanvasSizeUnit)}
-                />
-              </div>
+              <div className="mb-3 flex flex-col sm:flex-row items-center gap-3 md:gap-5">
+                {/* Khối Chiều rộng + Đổi chỗ + Chiều cao (Full width trên mobile, flex-1 trên desktop) */}
+                <div className="w-full min-w-0 flex flex-row gap-2 sm:gap-3 items-end">
+                  <div className="flex-1 w-full min-w-0">
+                    <NumberInput
+                      label={t("dialog.width")}
+                      value={displayWidth}
+                      onChangeValue={handleWidthChange}
+                      min={1}
+                      max={unit === "px" ? 16384 : 9999}
+                      step={unit === "px" ? 1 : 0.1}
+                    />
+                  </div>
 
-              {unit !== "px" && (
-                <div className="mb-3 w-36">
-                  <NumberInput
-                    label="DPI"
-                    value={dpi}
-                    onChangeValue={setDpi}
-                    min={72}
-                    max={600}
-                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      const temp = widthPx;
+                      setWidthPx(heightPx);
+                      setHeightPx(temp);
+                      setSelectedPresetLabel(null);
+                    }}
+                  >
+                    <ArrowLeftRight
+                      size={14}
+                      className="rotate-90 sm:rotate-0"
+                    />
+                  </Button>
+
+                  <div className="flex-1 w-full min-w-0">
+                    <NumberInput
+                      label={t("dialog.height")}
+                      value={displayHeight}
+                      onChangeValue={handleHeightChange}
+                      min={1}
+                      max={unit === "px" ? 16384 : 9999}
+                      step={unit === "px" ? 1 : 0.1}
+                    />
+                  </div>
                 </div>
-              )}
+
+                {/* Khối Đơn vị (Unit) (Full dòng trên mobile, fix cứng w-32 trên desktop) */}
+                <div className="flex flex-row gap-3">
+                  <SelectInput
+                    label={t("dialog.unit")}
+                    value={unit}
+                    options={UNIT_OPTIONS}
+                    onChange={(value) => setUnit(value as CanvasSizeUnit)}
+                    className="flex-1 w-40"
+                  />
+                  {unit !== "px" && (
+                    <div className="flex-1 w-full">
+                      <NumberInput
+                        label="DPI"
+                        value={dpi}
+                        onChangeValue={setDpi}
+                        min={72}
+                        max={600}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
                 {t("dialog.finalSize", { defaultValue: "Final size:" })}{" "}

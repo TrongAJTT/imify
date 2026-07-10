@@ -3,6 +3,7 @@ import { Link, Unlink2 } from "lucide-react"
 
 import type { LayerGroup, VectorLayer } from "./types"
 import { AccordionCard, Button, CheckboxCard, TextInput } from "@imify/ui"
+import { useTranslation } from "@imify/i18n"
 
 interface GroupLayerPanelProps {
   group: LayerGroup | null
@@ -23,6 +24,8 @@ export function GroupLayerPanel({
   onToggleCloseLoop,
   onToggleFillInterior,
 }: GroupLayerPanelProps) {
+  const { t } = useTranslation("filling")
+
   if (!group) {
     return null
   }
@@ -34,30 +37,34 @@ export function GroupLayerPanel({
   return (
     <AccordionCard
       icon={<Link size={16} />}
-      label="Layer Group"
-      sublabel={`${members.length} layer${members.length !== 1 ? "s" : ""}`}
+      label={t("manualEditor.groupTitle", { defaultValue: "Layer Group" })}
+      sublabel={
+        members.length === 1
+          ? t("manualEditor.groupMemberSingular", { count: 1, defaultValue: "1 layer" })
+          : t("manualEditor.groupMemberPlural", { count: members.length, defaultValue: `${members.length} layers` })
+      }
       colorTheme="orange"
       defaultOpen={true}
     >
       <div className="space-y-3">
         <div className="flex gap-2 items-end">
           <TextInput
-            label="Group Name"
+            label={t("manualEditor.groupNameLabel", { defaultValue: "Group Name" })}
             value={group.name}
             onChange={onRenameGroup}
-            placeholder="Group name"
+            placeholder={t("manualEditor.groupNamePlaceholder", { defaultValue: "Group name" })}
             className="flex-1"
           />
 
           <Button variant="secondary" size="sm" onClick={onUngroupSelectedLayer} className="w-full flex-1">
             <Unlink2 size={12} />
-            Ungroup
+            {t("manualEditor.ungroup", { defaultValue: "Ungroup" })}
           </Button>
         </div>
 
         <CheckboxCard
-          title="Combine into one convex hull"
-          subtitle="Creates one merged hull from all members (includes close loop + fill interior behavior)."
+          title={t("manualEditor.combineHullTitle", { defaultValue: "Combine into one convex hull" })}
+          subtitle={t("manualEditor.combineHullDesc", { defaultValue: "Creates one merged hull from all members (includes close loop + fill interior behavior)." })}
           checked={combineAsConvexHull}
           onChange={onToggleCombineAsConvexHull}
           disabled={!hasEnoughMembers}
@@ -65,8 +72,8 @@ export function GroupLayerPanel({
         />
 
         <CheckboxCard
-          title="Close loop (connect last to first)"
-          subtitle="Adds a connector hull between the last and first layer."
+          title={t("manualEditor.closeLoopTitle", { defaultValue: "Close loop (connect last to first)" })}
+          subtitle={t("manualEditor.closeLoopDesc", { defaultValue: "Adds a connector hull between the last and first layer." })}
           checked={group.closeLoop}
           onChange={onToggleCloseLoop}
           disabled={disableConnectorOptions}
@@ -74,8 +81,8 @@ export function GroupLayerPanel({
         />
 
         <CheckboxCard
-          title="Fill interior (solid enclosed area)"
-          subtitle="Fills enclosed regions created by connector hull intersections."
+          title={t("manualEditor.fillInteriorTitle", { defaultValue: "Fill interior (solid enclosed area)" })}
+          subtitle={t("manualEditor.fillInteriorDesc", { defaultValue: "Fills enclosed regions created by connector hull intersections." })}
           checked={group.fillInterior}
           onChange={onToggleFillInterior}
           disabled={disableConnectorOptions}

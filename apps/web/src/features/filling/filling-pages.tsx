@@ -601,7 +601,7 @@ export function FillingFlowPage({
                 router.push(routeBase);
                 return;
               }
-              router.push(`${routeBase}/fill?id=${savedTemplate.id}`);
+              window.location.href = `${routeBase}/fill?id=${savedTemplate.id}`;
             } finally {
               setIsSavingTemplate(false);
             }
@@ -632,7 +632,7 @@ export function FillingFlowPage({
               router.push(`${routeBase}/edit?id=${savedTemplate.id}`);
               return;
             }
-            router.push(`${routeBase}/fill?id=${savedTemplate.id}`);
+            window.location.href = `${routeBase}/fill?id=${savedTemplate.id}`;
           }}
         />
       )}
@@ -650,7 +650,7 @@ export function FillingFlowPage({
               router.push(`${routeBase}/edit?id=${savedTemplate.id}`);
               return;
             }
-            router.push(`${routeBase}/fill?id=${savedTemplate.id}`);
+            window.location.href = `${routeBase}/fill?id=${savedTemplate.id}`;
           }}
         />
       )}
