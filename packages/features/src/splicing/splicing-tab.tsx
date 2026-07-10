@@ -588,6 +588,12 @@ export function SplicingTab({
 
       setImages((prev) => [...prev, ...newItems]);
 
+      // Bug fixed: Automatically open the mobile configuration bottom sheet when images are loaded
+      if (typeof window !== "undefined") {
+        const { useWorkspaceHeaderStore } = require("@imify/stores");
+        useWorkspaceHeaderStore.getState().setIsMobileSidebarOpen(true);
+      }
+
       if (!shouldShowProgress) {
         pendingRenderRef.current = null;
       }

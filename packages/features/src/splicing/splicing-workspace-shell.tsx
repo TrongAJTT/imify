@@ -283,6 +283,13 @@ export function SplicingWorkspaceShell({
     applySplicingPresetConfig(activePreset.config);
   }, [activePreset, presetViewMode]);
 
+  const layoutJson = JSON.stringify(splicingState.layout);
+  const canvasJson = JSON.stringify(splicingState.canvas);
+  const imageJson = JSON.stringify(splicingState.image);
+  const exportSettingsJson = JSON.stringify(splicingState.exportSettings);
+  const previewQualityPercent = splicingState.previewQualityPercent;
+  const previewShowImageNumber = splicingState.previewShowImageNumber;
+
   useEffect(() => {
     if (presetViewMode !== "workspace" || !activePresetId) {
       return;
@@ -295,7 +302,17 @@ export function SplicingWorkspaceShell({
     return () => {
       window.clearTimeout(timeout);
     };
-  }, [activePresetId, presetViewMode, splicingState, syncActivePresetConfig]);
+  }, [
+    activePresetId,
+    presetViewMode,
+    layoutJson,
+    canvasJson,
+    imageJson,
+    exportSettingsJson,
+    previewQualityPercent,
+    previewShowImageNumber,
+    syncActivePresetConfig,
+  ]);
 
   if (presetViewMode === "select") {
     return (
