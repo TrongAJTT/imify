@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.2.0] - 2026-07-10
+## [2.2.0] - 2026-07-10 - Web App only
 
-The v2.2.0 update marks a massive leap forward for Imify. In this release, we're bringing the power of Artificial Intelligence directly to your browser with our new Background Removal tool, alongside a highly secure, all-in-one QR Code suite. Most importantly, Imify is now a full-fledged Progressive Web App (PWA), meaning you can install it on your device and work 100% offline. Dive in to explore dozens of performance tweaks, custom locales, and a brand-new dashboard built specifically for developers!
+**The v2.2.0 update marks a massive leap forward for Imify.** In this release, we're bringing the power of Artificial Intelligence directly to your browser with our new **Background Removal** tool, alongside a highly secure, all-in-one **QR Code suite**. Most importantly, Imify is now a full-fledged Progressive Web App (PWA), meaning you can install it on your device and work 100% offline. Dive in to explore dozens of performance tweaks, custom locales, and a brand-new **Dashboard** built specifically for developers!
 
 ### ✂️ Background Removal
 
@@ -61,7 +61,7 @@ The v2.2.0 update marks a massive leap forward for Imify. In this release, we're
   - SWAP bg color logic fixed in Palette color contrast tooltips.
   - Cleaned up obsolete translation assets and synchronized directories.
 
-## [2.1.3] - 2026-05-03
+## [2.1.3] - 2026-05-03 - Web App only
 
 **Web App Only**
 

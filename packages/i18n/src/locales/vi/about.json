@@ -38,7 +38,7 @@
     "title": "Cài đặt Imify làm ứng dụng",
     "desc": "Imify có thể được cài đặt trực tiếp dưới dạng ứng dụng Progressive Web App (PWA) trên thiết bị của bạn.",
     "benefitTitle": "Lợi ích khi cài đặt:",
-    "benefit1": "Chạy ngoại tuyến (offline) hoàn toàn 100% không cần internet",
+    "benefit1": "Chạy ngoại tuyến hoàn toàn 100% không cần internet (trừ việc xem changelog, tải các model AI và font chữ từ Google)",
     "benefit2": "Khởi động nhanh chóng từ màn hình chính hoặc thanh tác vụ",
     "benefit3": "Giao diện độc lập và tối ưu không bị vướng thanh địa chỉ trình duyệt",
     "btnInstall": "Cài đặt ngay",

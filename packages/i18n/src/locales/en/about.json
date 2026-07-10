@@ -38,7 +38,7 @@
     "title": "Install Imify as App",
     "desc": "Imify can be installed directly as a Progressive Web App (PWA) on your device.",
     "benefitTitle": "Benefits of installing:",
-    "benefit1": "Runs 100% offline without requiring internet access",
+    "benefit1": "Runs 100% offline without requiring internet access (except for loading the changelog, downloading AI models, or fetching Google Fonts)",
     "benefit2": "Quick launch from your home screen or taskbar",
     "benefit3": "Standalone desktop window experience with no browser address bar clutter",
     "btnInstall": "Install Now",

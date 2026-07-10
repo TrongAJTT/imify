@@ -1,6 +1,6 @@
 🎉 Welcome to Imify v2.2.0!
 
-Our biggest update yet has arrived, packed with powerful new features built right for your browser:
+The big update has arrived, packed with powerful new features built right for your browser:
 
 ✨ AI Background Removal: Powered by 3 specialized AI models (including ORMBG and MODNet). Enjoy fast, precise, and privacy-first background extraction performed entirely locally on your device.
 

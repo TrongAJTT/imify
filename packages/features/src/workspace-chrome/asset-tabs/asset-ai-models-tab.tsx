@@ -391,30 +391,19 @@ export function AssetAIModelsTab() {
                                     : "bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.15)] hover:border-pink-300 dark:hover:border-pink-500/40"
                                 }`}
                               >
-                                {/* Absolute Action Button */}
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    if (isCached) {
+                                {/* Absolute Action Button (Only show delete button when cached; hide download button since loading is managed inline inside tools) */}
+                                {isCached && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
                                       handleDelete(model, variant);
-                                    } else {
-                                      setSelectedVariantId(variant.id);
-                                      setModelToDownload(model);
-                                    }
-                                  }}
-                                  className={`absolute top-2.5 right-2.5 h-8 w-8 rounded-xl shrink-0 border transition-all z-10 ${
-                                    isCached
-                                      ? "bg-emerald-50 border-emerald-100 text-emerald-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 dark:hover:bg-red-500/20 shadow-sm"
-                                      : "bg-slate-50 border-slate-100 text-slate-400 hover:text-pink-600 hover:bg-pink-50 hover:border-pink-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 dark:hover:bg-pink-500/10 shadow-sm"
-                                  }`}
-                                >
-                                  {isCached ? (
+                                    }}
+                                    className="absolute top-2.5 right-2.5 h-8 w-8 rounded-xl shrink-0 border transition-all z-10 bg-emerald-50 border-emerald-100 text-emerald-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 dark:hover:bg-red-500/20 shadow-sm"
+                                  >
                                     <Trash2 size={14} />
-                                  ) : (
-                                    <Download size={14} />
-                                  )}
-                                </Button>
+                                  </Button>
+                                )}
 
                                 {/* Variant Header: Label & Size */}
                                 <div className="flex items-start justify-between gap-3 pr-10">
