@@ -24,6 +24,8 @@ import { DEFAULT_PERFORMANCE_PREFERENCES } from "./performance-preferences";
 import { useTranslation } from "@imify/i18n";
 import { isFeaturePreset } from "@imify/core";
 
+import { useIsDesktopLayout } from "../workspace-chrome/desktop-layout";
+
 interface PresetSelectorProps {
   label?: string;
   sublabel?: string;
@@ -55,6 +57,7 @@ export function PresetSelector({
 }: PresetSelectorProps) {
   const { t } = useTranslation("processor");
   const { presets, saveCurrentPreset, targetFormat } = useBatchStore();
+  const isDesktop = useIsDesktopLayout();
 
   const isTargetFormatAllowed = useMemo(() => {
     if (!formatFilter) return true;
@@ -490,7 +493,7 @@ export function PresetSelector({
                   <BatchSetupSidebarPanel
                     performancePreferences={DEFAULT_PERFORMANCE_PREFERENCES}
                     onOpenSettings={() => {}}
-                    enableWideSidebarGrid={true}
+                    enableWideSidebarGrid={isDesktop}
                   />
                 </div>
               </div>
