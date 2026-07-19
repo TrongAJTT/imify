@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import type { FormatCodecOptions } from "@imify/core/types"
+import type { FormatCodecOptions, ResizeApplyTo } from "@imify/core/types"
 import type { ResizeQuickStats } from "@imify/core/resize-quick-stats"
 import type {
   SplicingAlignment,
@@ -69,6 +69,7 @@ export interface SplicingCanvasState {
 export interface SplicingImageState {
   resizeMode: SplicingImageResize
   fitValue: number
+  applyTo: ResizeApplyTo
   padding: number
   paddingColor: string
   borderRadius: number
@@ -167,8 +168,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
       },
 
       image: {
-        resizeMode: "original",
+        resizeMode: "inherit",
         fitValue: 800,
+        applyTo: "width",
         padding: 0,
         paddingColor: "#ffffff",
         borderRadius: 0,
@@ -272,6 +274,25 @@ export const useSplicingStore = create<SplicingStoreState>()(
       storage: createJSONStorage(() => deferredStorage),
       merge: (persistedState, currentState) => {
         const p = persistedState as Partial<SplicingStoreState>
+        if (p && p.image) {
+          const image = { ...p.image }
+          let mode = image.resizeMode
+          let applyTo = (image as any).applyTo ?? "width"
+
+          if ((mode as any) === "original" || (mode as any) === "none") {
+            mode = "inherit"
+          } else if ((mode as any) === "fit_width") {
+            mode = "fit_value"
+            applyTo = "width"
+          } else if ((mode as any) === "fit_height") {
+            mode = "fit_value"
+            applyTo = "height"
+          }
+
+          image.resizeMode = mode
+          ;(image as any).applyTo = applyTo
+          p.image = image
+        }
         return { ...currentState, ...p }
       },
       partialize: (state) => {

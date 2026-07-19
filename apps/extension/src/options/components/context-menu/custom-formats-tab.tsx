@@ -75,7 +75,7 @@ function createDefaultCustomPresetForm(): CustomFormatInput {
         optimizeInternalPngLayers: false
       }
     },
-    resize: { mode: "none" }
+    resize: { mode: "inherit" }
   }
 }
 
@@ -267,20 +267,30 @@ export function CustomFormatsTab({
 
   const getResizeLabel = (mode: string, value: unknown, resize?: FormatConfig["resize"]) => {
     switch (mode) {
+      case "inherit":
       case "none":
         return "No resize"
-      case "change_width":
-        return `Width ${typeof value === "number" ? value : 0}px`
-      case "change_height":
-        return `Height ${typeof value === "number" ? value : 0}px`
+      case "fit_value": {
+        const applyTo = resize?.applyTo ?? "width"
+        return `Fit ${applyTo} ${typeof value === "number" ? value : 0}px`
+      }
+      case "zoom_min": {
+        const applyTo = resize?.applyTo ?? "width"
+        return `Zoom min ${applyTo} ${typeof value === "number" ? value : 0}px`
+      }
+      case "zoom_max": {
+        const applyTo = resize?.applyTo ?? "width"
+        return `Zoom max ${applyTo} ${typeof value === "number" ? value : 0}px`
+      }
       case "set_size": {
         const width = typeof resize?.width === "number" ? resize.width : 1280
         const height = typeof resize?.height === "number" ? resize.height : 960
         const fitMode = resize?.fitMode ?? "fill"
-        return `${height}x${width}px ${fitMode}`
+        return `${width}x${height}px ${fitMode}`
       }
       case "scale":
         return `Scale ${typeof value === "number" ? value : 100}%`
+      case "paper_size":
       case "page_size":
         return `Paper ${typeof value === "string" ? value : "A4"}`
       default:

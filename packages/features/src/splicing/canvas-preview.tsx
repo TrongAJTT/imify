@@ -7,6 +7,7 @@ import { usePointerZoom } from "../shared/use-pointer-zoom";
 import { useCanvasResizer } from "../shared/use-canvas-resizer";
 import { useSplicingStore } from "@imify/stores/stores/splicing-store";
 import { ZoomPanControl, type PreviewInteractionMode } from "@imify/ui";
+import type { ResizeApplyTo } from "@imify/core/types";
 import type {
   LayoutResult,
   SplicingCanvasStyle,
@@ -26,6 +27,7 @@ interface CanvasPreviewProps {
   imageStyle: SplicingImageStyle;
   imageResize: SplicingImageResize;
   fitValue: number;
+  imageApplyTo: ResizeApplyTo;
   previewInteractionMode?: PreviewInteractionMode;
   onLayoutComputed?: (result: LayoutResult) => void;
   onPreviewRendered?: (imageCount: number) => void;
@@ -48,6 +50,7 @@ export function CanvasPreview({
   imageStyle,
   imageResize,
   fitValue,
+  imageApplyTo,
   previewInteractionMode = "zoom",
   onLayoutComputed,
   onPreviewRendered,
@@ -323,6 +326,7 @@ export function CanvasPreview({
       imageStyle,
       imageResize,
       fitValue,
+      imageApplyTo
     );
 
     setLayoutResult(layoutResult);

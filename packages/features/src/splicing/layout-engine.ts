@@ -11,6 +11,8 @@ import type {
   SplicingImageStyle,
   SplicingLayoutConfig
 } from "./types"
+import { calculateDimensions } from "@imify/core"
+import type { ResizeApplyTo } from "@imify/core/types"
 
 interface ImageSize {
   width: number
@@ -28,23 +30,32 @@ export function calculateProcessedSize(
   originalWidth: number,
   originalHeight: number,
   imageResize: SplicingImageResize,
-  fitValue: number
+  fitValue: number,
+  applyTo?: ResizeApplyTo
 ): ImageSize {
-  const w = Math.max(1, originalWidth)
-  const h = Math.max(1, originalHeight)
+  // Support legacy modes fit_width / fit_height during conversion/fallback
+  let mode = (imageResize as any) === "original" ? "inherit" : imageResize
+  let effectiveApplyTo: ResizeApplyTo = applyTo ?? "width"
 
-  switch (imageResize) {
-    case "fit_width": {
-      const target = Math.max(1, Math.round(fitValue))
-      return { width: target, height: Math.max(1, Math.round(h * (target / w))) }
-    }
-    case "fit_height": {
-      const target = Math.max(1, Math.round(fitValue))
-      return { width: Math.max(1, Math.round(w * (target / h))), height: target }
-    }
-    default:
-      return { width: w, height: h }
+  if ((mode as any) === "fit_width") {
+    mode = "fit_value"
+    effectiveApplyTo = "width"
+  } else if ((mode as any) === "fit_height") {
+    mode = "fit_value"
+    effectiveApplyTo = "height"
   }
+
+  const { targetWidth, targetHeight } = calculateDimensions(
+    originalWidth,
+    originalHeight,
+    {
+      mode: mode as any,
+      value: fitValue,
+      applyTo: effectiveApplyTo
+    }
+  )
+
+  return { width: targetWidth, height: targetHeight }
 }
 
 function calculateOuterSize(cw: number, ch: number, style: SplicingImageStyle): ImageSize {
@@ -56,10 +67,11 @@ function processImages(
   images: ImageSize[],
   style: SplicingImageStyle,
   resize: SplicingImageResize,
-  fitValue: number
+  fitValue: number,
+  applyTo?: ResizeApplyTo
 ): ProcessedImage[] {
   return images.map((img) => {
-    const content = calculateProcessedSize(img.width, img.height, resize, fitValue)
+    const content = calculateProcessedSize(img.width, img.height, resize, fitValue, applyTo)
     const outer = calculateOuterSize(content.width, content.height, style)
     return {
       contentWidth: content.width,
@@ -532,14 +544,15 @@ export function calculateLayout(
   canvasStyle: SplicingCanvasStyle,
   imageStyle: SplicingImageStyle,
   imageResize: SplicingImageResize,
-  fitValue: number
+  fitValue: number,
+  applyTo?: ResizeApplyTo
 ): LayoutResult {
   if (images.length === 0) {
     const edge = (canvasStyle.padding + canvasStyle.borderWidth) * 2
     return { groups: [], canvasWidth: Math.max(1, edge), canvasHeight: Math.max(1, edge) }
   }
 
-  const processed = processImages(images, imageStyle, imageResize, fitValue)
+  const processed = processImages(images, imageStyle, imageResize, fitValue, applyTo)
   const edgePadding = canvasStyle.padding + canvasStyle.borderWidth
   const isGrid = layout.primaryDirection !== layout.secondaryDirection
 

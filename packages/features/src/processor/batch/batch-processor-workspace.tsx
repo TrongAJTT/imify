@@ -54,6 +54,7 @@ export function BatchProcessorWorkspace() {
   const formatOptions = useBatchStore((s) => s.formatOptions);
   const resizeMode = useBatchStore((s) => s.resizeMode);
   const resizeValue = useBatchStore((s) => s.resizeValue);
+  const resizeApplyTo = useBatchStore((s) => s.resizeApplyTo);
   const resizeWidth = useBatchStore((s) => s.resizeWidth);
   const resizeHeight = useBatchStore((s) => s.resizeHeight);
   const resizeAspectMode = useBatchStore((s) => s.resizeAspectMode);
@@ -107,7 +108,7 @@ export function BatchProcessorWorkspace() {
         targetFormat,
         formatOptions,
       ),
-      resize: { mode: "none" },
+      resize: { mode: "inherit" },
     };
     return withBatchResize(
       baseConfig,
@@ -115,6 +116,7 @@ export function BatchProcessorWorkspace() {
       quality,
       formatOptions,
       resizeValue,
+      resizeApplyTo,
       resizeWidth,
       resizeHeight,
       resizeAspectMode,
@@ -132,6 +134,7 @@ export function BatchProcessorWorkspace() {
     quality,
     formatOptions,
     resizeValue,
+    resizeApplyTo,
     resizeWidth,
     resizeHeight,
     resizeAspectMode,

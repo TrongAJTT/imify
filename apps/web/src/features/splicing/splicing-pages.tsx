@@ -62,6 +62,7 @@ function extractSplicingPresetConfig(splicingState: any): SplicingPresetConfig {
     backgroundColor: splicingState.backgroundColor,
     imageResize: splicingState.imageResize,
     imageFitValue: splicingState.imageFitValue,
+    imageApplyTo: splicingState.imageApplyTo,
     imagePadding: splicingState.imagePadding,
     imagePaddingColor: splicingState.imagePaddingColor,
     imageBorderRadius: splicingState.imageBorderRadius,

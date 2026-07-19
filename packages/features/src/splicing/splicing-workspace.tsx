@@ -9,6 +9,7 @@ import type {
   SplicingImageStyle,
   SplicingLayoutConfig,
 } from "./types";
+import type { ResizeApplyTo } from "@imify/core/types";
 import type { PreviewInteractionMode } from "@imify/ui";
 import { CanvasPreview } from "./canvas-preview";
 import { ImageStrip } from "./image-strip";
@@ -26,6 +27,7 @@ interface SplicingWorkspaceProps {
   imageStyle: SplicingImageStyle;
   imageResize: SplicingImageResize;
   imageFitValue: number;
+  imageApplyTo: ResizeApplyTo;
   previewInteractionMode: PreviewInteractionMode;
   previewQualityPercent: number;
   previewShowImageNumber: boolean;
@@ -59,6 +61,7 @@ export function SplicingWorkspace({
   imageStyle,
   imageResize,
   imageFitValue,
+  imageApplyTo,
   previewInteractionMode,
   onLayoutComputed,
   onPreviewRendered,
@@ -109,6 +112,7 @@ export function SplicingWorkspace({
               imageStyle={imageStyle}
               imageResize={imageResize}
               fitValue={imageFitValue}
+              imageApplyTo={imageApplyTo}
               previewInteractionMode={previewInteractionMode}
               onLayoutComputed={(layout) => onLayoutComputed(layout)}
               onPreviewRendered={onPreviewRendered}

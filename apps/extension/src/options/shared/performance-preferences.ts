@@ -209,7 +209,7 @@ function normalizeTargetFormat(format: AdvisorTargetFormat): ImageFormat {
 function estimateResizeCost(
   resizeConfig: ResizeConfig | undefined
 ): { memoryMultiplier: number; cpuMultiplier: number; reasons: string[] } {
-  if (!resizeConfig || resizeConfig.mode === "none") {
+  if (!resizeConfig || (resizeConfig.mode as any) === "none" || resizeConfig.mode === "inherit") {
     return {
       memoryMultiplier: 1,
       cpuMultiplier: 1,
@@ -236,7 +236,8 @@ function estimateResizeCost(
       }
       break
     }
-    case "page_size": {
+    case "paper_size":
+    case "page_size" as any: {
       memoryMultiplier *= 1.12
       cpuMultiplier *= 1.18
       reasons.push("Paper-size resize")

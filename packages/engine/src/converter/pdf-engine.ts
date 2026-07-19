@@ -38,7 +38,7 @@ function getMimeKind(blob: Blob): "jpg" | "png" | null {
 async function prepareImageForPdf(params: PdfConvertParams): Promise<PreparedImage> {
   const sourceMime = getMimeKind(params.sourceBlob)
 
-  if (sourceMime && (params.resize.mode === "none" || params.resize.mode === "page_size")) {
+  if (sourceMime && ((params.resize.mode as any) === "inherit" || (params.resize.mode as any) === "none" || (params.resize.mode as any) === "paper_size" || (params.resize.mode as any) === "page_size")) {
     const bytes = new Uint8Array(await params.sourceBlob.arrayBuffer())
 
     return {
@@ -74,7 +74,7 @@ export async function convertImageToPdf(params: PdfConvertParams): Promise<Blob>
   const imageWidth = prepared.width ?? embeddedImage.width
   const imageHeight = prepared.height ?? embeddedImage.height
 
-  if (params.resize.mode === "page_size") {
+  if ((params.resize.mode as any) === "paper_size" || (params.resize.mode as any) === "page_size") {
     const paperSize = typeof params.resize.value === "string" ? params.resize.value : "A4"
     const page = PAPER_DIMENSIONS[paperSize][72]
     const placement = calculateContainPlacement(
@@ -112,7 +112,7 @@ export async function mergeImagesToPdf(sourceBlobs: Blob[]): Promise<Blob> {
   for (const sourceBlob of sourceBlobs) {
     const prepared = await prepareImageForPdf({
       sourceBlob,
-      resize: { mode: "none" }
+      resize: { mode: "inherit" }
     })
 
     const embeddedImage =

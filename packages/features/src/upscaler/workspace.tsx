@@ -191,7 +191,7 @@ export function UpscalerWorkspace({
         if (isAborted || !sourceBlob) return;
 
         const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
-        config.resize = { mode: "none" };
+        config.resize = { mode: "inherit" };
 
         const converted = await convertImage({
           sourceBlob,
@@ -259,7 +259,7 @@ export function UpscalerWorkspace({
       if (!sourceBlob) throw new Error("Failed to create source blob");
 
       const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
-      config.resize = { mode: "none" };
+      config.resize = { mode: "inherit" };
 
       const converted = await convertImage({
         sourceBlob,

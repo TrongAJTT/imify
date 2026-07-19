@@ -299,6 +299,7 @@ export function SplicingTab({
   const {
     resizeMode: imageResize,
     fitValue: imageFitValue,
+    applyTo: imageApplyTo,
     padding: imagePadding,
     paddingColor: imagePaddingColor,
     borderRadius: imageBorderRadius,
@@ -952,6 +953,7 @@ export function SplicingTab({
         imageStyle={imageStyle}
         imageResize={imageResize}
         imageFitValue={imageFitValue}
+        imageApplyTo={imageApplyTo}
         previewInteractionMode={previewInteractionMode}
         previewQualityPercent={previewQualityPercent}
         previewShowImageNumber={previewShowImageNumber}

@@ -118,9 +118,10 @@ export const RESIZE_OPTIONS: Array<{
   value: SplicingImageResize;
   label: string;
 }> = [
-  { value: "original", label: "Original" },
-  { value: "fit_width", label: "Fit Width" },
-  { value: "fit_height", label: "Fit Height" },
+  { value: "inherit", label: "Original" },
+  { value: "fit_value", label: "Fit Value" },
+  { value: "zoom_min", label: "Zoom Min" },
+  { value: "zoom_max", label: "Zoom Max" },
 ];
 
 const SPLICING_TARGET_FORMATS: SplicingExportFormat[] = [

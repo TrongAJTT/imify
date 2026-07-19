@@ -75,7 +75,7 @@ export class PackagerWorkerClient {
       for (let i = 0; i < params.entries.length; i += 1) {
         if (this.terminated) throw new Error("Packager worker terminated")
         const entry = params.entries[i]
-        const pdfBlob = await convertImageToPdf({ sourceBlob: entry.blob, resize: { mode: "none" } })
+        const pdfBlob = await convertImageToPdf({ sourceBlob: entry.blob, resize: { mode: "inherit" } })
         const name = toUniqueName(`${sanitizeBaseName(entry.name)}.pdf`, usedNames)
         archive[name] = new Uint8Array(await pdfBlob.arrayBuffer())
         report(Math.min(76, 10 + Math.round(((i + 1) / total) * 66)), `Created ${i + 1}/${total} PDF files...`)
@@ -83,7 +83,7 @@ export class PackagerWorkerClient {
       }
       report(88, "Compressing PDF ZIP archive...")
       const bytes = zipSync(archive, { level: zipLevel })
-      return { outputBlob: new Blob([bytes], { type: "application/zip" }), outputFileName: params.exportFileName }
+      return { outputBlob: new Blob([bytes as BlobPart], { type: "application/zip" }), outputFileName: params.exportFileName }
     }
 
     report(6, "Collecting converted files...")
@@ -97,7 +97,7 @@ export class PackagerWorkerClient {
     }
     report(82, "Compressing ZIP archive...")
     const bytes = zipSync(archive, { level: zipLevel })
-    return { outputBlob: new Blob([bytes], { type: "application/zip" }), outputFileName: params.exportFileName }
+    return { outputBlob: new Blob([bytes as BlobPart], { type: "application/zip" }), outputFileName: params.exportFileName }
   }
 
   terminate(): void {

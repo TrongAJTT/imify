@@ -14,12 +14,15 @@ export type SupportedDPI = 72 | 150 | 300
 export type PaperSize = "A3" | "A4" | "A5" | "B5" | "Letter" | "Legal"
 
 export type ResizeMode =
-  | "none"
+  | "inherit"
+  | "fit_value"
+  | "zoom_min"
+  | "zoom_max"
   | "set_size"
-  | "change_width"
-  | "change_height"
   | "scale"
-  | "page_size"
+  | "paper_size"
+
+export type ResizeApplyTo = "width" | "height" | "shortest" | "longest"
 
 export type ResizeAspectMode = "free" | "original" | "fixed"
 export type ResizeFitMode = "fill" | "cover" | "contain"
@@ -33,6 +36,7 @@ export type ResizeResamplingAlgorithm =
 export interface ResizeConfig {
   mode: ResizeMode
   value?: number | PaperSize
+  applyTo?: ResizeApplyTo
   dpi?: SupportedDPI
   width?: number
   height?: number

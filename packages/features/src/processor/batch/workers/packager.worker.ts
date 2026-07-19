@@ -63,7 +63,7 @@ async function onAdd(message: PackagerAddMessage): Promise<void> {
     postProgress(message.id, job.totalFiles > 0 ? Math.min(52, 10 + Math.round((job.receivedFiles / job.totalFiles) * 42)) : 52, `Prepared ${job.receivedFiles}/${job.totalFiles} pages...`)
     return
   }
-  const pdfBlob = await convertImageToPdf({ sourceBlob: blob, resize: { mode: "none" } })
+  const pdfBlob = await convertImageToPdf({ sourceBlob: blob, resize: { mode: "inherit" } })
   job.receivedFiles += 1
   job.entries.push({ name: ensureUniqueEntryName(`${sanitizeBaseName(message.name)}.pdf`, job.entryNames), data: new Uint8Array(await pdfBlob.arrayBuffer()) })
   postProgress(message.id, job.totalFiles > 0 ? Math.min(76, 10 + Math.round((job.receivedFiles / job.totalFiles) * 66)) : 76, `Created ${job.receivedFiles}/${job.totalFiles} PDF files...`)

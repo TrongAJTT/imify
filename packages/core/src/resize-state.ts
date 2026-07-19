@@ -3,6 +3,7 @@ import type {
   PaperSize,
   ResizeConfig,
   ResizeMode,
+  ResizeApplyTo,
   ResizeResamplingAlgorithm,
   SupportedDPI
 } from "@imify/core/types"
@@ -39,7 +40,14 @@ function normalizeDpi(dpi: ResizeConfig["dpi"]): SupportedDPI {
 }
 
 function normalizeLinearResizeValue(mode: ResizeMode, value: ResizeConfig["value"]): number | undefined {
-  if (mode === "change_width" || mode === "change_height" || mode === "scale") {
+  if (
+    mode === "fit_value" ||
+    mode === "zoom_min" ||
+    mode === "zoom_max" ||
+    (mode as any) === "change_width" ||
+    (mode as any) === "change_height" ||
+    mode === "scale"
+  ) {
     return normalizePositiveInteger(value, 100)
   }
 
@@ -50,11 +58,11 @@ export function normalizeCustomResizeConfig(
   config: ResizeConfig,
   format: FormatConfig["format"]
 ): ResizeConfig {
-  const normalizedMode: ResizeMode = format === "ico" ? "none" : config.mode
+  const normalizedMode: ResizeMode = format === "ico" ? "inherit" : config.mode
 
-  if (normalizedMode === "none") {
+  if (normalizedMode === "inherit" || (normalizedMode as any) === "none") {
     return {
-      mode: "none",
+      mode: "inherit",
       resamplingAlgorithm: undefined
     }
   }
@@ -75,9 +83,9 @@ export function normalizeCustomResizeConfig(
     }
   }
 
-  if (normalizedMode === "page_size") {
+  if (normalizedMode === "paper_size" || (normalizedMode as any) === "page_size") {
     return {
-      mode: "page_size",
+      mode: "paper_size",
       value: normalizePaperSize(config.value),
       dpi: normalizeDpi(config.dpi),
       resamplingAlgorithm: normalizedResamplingAlgorithm
@@ -89,6 +97,7 @@ export function normalizeCustomResizeConfig(
     return {
       mode: normalizedMode,
       value: normalizedLinearValue,
+      applyTo: config.applyTo ?? "width",
       resamplingAlgorithm: normalizedResamplingAlgorithm
     }
   }
@@ -96,6 +105,7 @@ export function normalizeCustomResizeConfig(
   return {
     mode: normalizedMode,
     value: config.value,
+    applyTo: config.applyTo,
     dpi: config.dpi,
     width: config.width,
     height: config.height,
@@ -111,6 +121,7 @@ export function normalizeCustomResizeConfig(
 export function buildResizeOverrideFromState(params: {
   mode: ResizeMode | "inherit"
   value: number
+  applyTo?: ResizeApplyTo
   width: number
   height: number
   aspectMode: "free" | "original" | "fixed"
@@ -122,26 +133,22 @@ export function buildResizeOverrideFromState(params: {
   paperSize: string
   dpi: SupportedDPI
 }): ResizeConfig | null {
-  if (params.mode === "inherit") {
-    return null
-  }
-
-  if (params.mode === "none") {
+  if (params.mode === "inherit" || (params.mode as any) === "none") {
     return {
-      mode: "none",
+      mode: "inherit",
       resamplingAlgorithm: undefined
     }
   }
 
   const normalizedResamplingAlgorithm = normalizeResizeResamplingAlgorithm(params.resamplingAlgorithm)
 
-  if (params.mode === "page_size") {
+  if (params.mode === "paper_size" || (params.mode as any) === "page_size") {
     const paper = PAPER_OPTIONS.includes(params.paperSize as PaperSize)
       ? (params.paperSize as PaperSize)
       : PAPER_OPTIONS[0]
 
     return {
-      mode: "page_size",
+      mode: "paper_size",
       dpi: params.dpi,
       value: paper,
       resamplingAlgorithm: normalizedResamplingAlgorithm
@@ -165,6 +172,7 @@ export function buildResizeOverrideFromState(params: {
   return {
     mode: params.mode,
     value: normalizePositiveInteger(params.value, 100),
+    applyTo: params.applyTo ?? "width",
     resamplingAlgorithm: normalizedResamplingAlgorithm
   }
 }

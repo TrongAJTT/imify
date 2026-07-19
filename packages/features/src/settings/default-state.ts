@@ -64,7 +64,7 @@ function createDefaultFormatConfig(format: ImageFormat): FormatConfig {
           : undefined
     },
     resize: {
-      mode: "none"
+      mode: "inherit"
     }
   }
 }

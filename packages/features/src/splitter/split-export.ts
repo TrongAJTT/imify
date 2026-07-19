@@ -216,7 +216,7 @@ export async function convertSplitterSegments(args: {
         enabled: true,
         quality,
         formatOptions,
-        resize: { mode: "none" }
+        resize: { mode: "inherit" }
       }
     })
 

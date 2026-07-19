@@ -170,7 +170,7 @@ async function drawSourceImageWithAdvancedResampling(
 ): Promise<boolean> {
   const algorithm = normalizeResizeResamplingAlgorithm(resize.resamplingAlgorithm)
 
-  if (algorithm === "browser-default" || resize.mode === "none") {
+  if (algorithm === "browser-default" || (resize.mode as any) === "none" || resize.mode === "inherit") {
     return false
   }
 
@@ -183,7 +183,7 @@ async function drawSourceImageWithAdvancedResampling(
   let drawOffsetX = 0
   let drawOffsetY = 0
 
-  if (resize.mode === "page_size") {
+  if ((resize.mode as any) === "page_size" || resize.mode === "paper_size") {
     const contain = calculateContainPlacement(
       imageBitmap.width,
       imageBitmap.height,
@@ -255,7 +255,7 @@ async function drawSourceImage(
   resize: ResizeConfig,
   targetFormat: RasterPipelineFormat
 ): Promise<void> {
-  const requiresWhiteBackground = targetFormat === "jpg" || resize.mode === "page_size"
+  const requiresWhiteBackground = targetFormat === "jpg" || (resize.mode as any) === "page_size" || resize.mode === "paper_size"
 
   if (requiresWhiteBackground) {
     ctx.fillStyle = "#FFFFFF"
@@ -284,7 +284,7 @@ async function drawSourceImage(
     return
   }
 
-  if (resize.mode === "page_size") {
+  if ((resize.mode as any) === "page_size" || resize.mode === "paper_size") {
     const contain = calculateContainPlacement(
       imageBitmap.width,
       imageBitmap.height,

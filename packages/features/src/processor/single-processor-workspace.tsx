@@ -109,6 +109,7 @@ export function SingleProcessorWorkspace({
   const formatOptions = useBatchStore((state) => state.formatOptions);
   const resizeMode = useBatchStore((state) => state.resizeMode);
   const resizeValue = useBatchStore((state) => state.resizeValue);
+  const resizeApplyTo = useBatchStore((state) => state.resizeApplyTo);
   const resizeWidth = useBatchStore((state) => state.resizeWidth);
   const resizeHeight = useBatchStore((state) => state.resizeHeight);
   const resizeAspectMode = useBatchStore((state) => state.resizeAspectMode);
@@ -128,6 +129,7 @@ export function SingleProcessorWorkspace({
   const watermark = useWatermarkStore(
     (state) => state.contextWatermarks.single,
   );
+
   const syncResizeToSource = useBatchStore((state) => state.syncResizeToSource);
 
   const [sourceFile, setSourceFile] = useState<File | null>(null);
@@ -173,7 +175,7 @@ export function SingleProcessorWorkspace({
         targetFormat,
         formatOptions,
       ),
-      resize: { mode: "none" },
+      resize: { mode: "inherit" },
     };
     return withBatchResize(
       baseConfig,
@@ -181,6 +183,7 @@ export function SingleProcessorWorkspace({
       quality,
       formatOptions,
       resizeValue,
+      resizeApplyTo,
       resizeWidth,
       resizeHeight,
       resizeAspectMode,
@@ -198,6 +201,7 @@ export function SingleProcessorWorkspace({
     quality,
     formatOptions,
     resizeValue,
+    resizeApplyTo,
     resizeWidth,
     resizeHeight,
     resizeAspectMode,

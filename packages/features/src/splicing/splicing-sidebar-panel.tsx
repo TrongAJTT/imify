@@ -248,6 +248,7 @@ export function SplicingSidebarPanel({
         <ImageSettingsAccordion
           imageResize={image.resizeMode}
           imageFitValue={image.fitValue}
+          imageApplyTo={image.applyTo}
           imagePadding={image.padding}
           imagePaddingColor={image.paddingColor}
           imageBorderRadius={image.borderRadius}
@@ -257,12 +258,11 @@ export function SplicingSidebarPanel({
           isImageResizeOpen={isImageResizeOpen}
           onImageResizeChange={(mode) =>
             setImage({
-              resizeMode: (mode === "original"
-                ? "original"
-                : mode) as SplicingImageResize,
+              resizeMode: mode as SplicingImageResize,
             })
           }
           onImageFitValueChange={(v) => setImage({ fitValue: v })}
+          onImageApplyToChange={(v) => setImage({ applyTo: v })}
           onImagePaddingChange={(v) => setImage({ padding: v })}
           onImagePaddingColorChange={(v) => setImage({ paddingColor: v })}
           onImageBorderRadiusChange={(v) => setImage({ borderRadius: v })}

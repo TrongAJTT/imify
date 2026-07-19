@@ -59,12 +59,17 @@ function isResizeConfig(value: unknown): value is ResizeConfig {
   const resize = value as ResizeConfig
 
   return (
-    resize.mode === "none" ||
+    (resize.mode as any) === "none" ||
+    resize.mode === "inherit" ||
+    resize.mode === "fit_value" ||
+    resize.mode === "zoom_min" ||
+    resize.mode === "zoom_max" ||
     resize.mode === "set_size" ||
-    resize.mode === "change_width" ||
-    resize.mode === "change_height" ||
+    (resize.mode as any) === "change_width" ||
+    (resize.mode as any) === "change_height" ||
     resize.mode === "scale" ||
-    resize.mode === "page_size"
+    (resize.mode as any) === "page_size" ||
+    resize.mode === "paper_size"
   )
 }
 

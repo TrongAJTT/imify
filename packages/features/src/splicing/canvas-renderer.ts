@@ -9,6 +9,7 @@ import { encodePngFromImageData } from "@imify/engine/converter/png-tiny"
 import { encodeImageDataToTiff } from "@imify/engine/converter/tiff-encoder"
 import { encodeWebp, shouldUseWebpWasm } from "@imify/engine/converter/webp-encoder"
 import { calculateLayout, calculateProcessedSize } from "./layout-engine"
+import type { ResizeApplyTo } from "@imify/core/types"
 import type {
   LayoutResult,
   LayoutPlacement,
@@ -518,6 +519,7 @@ export async function exportSplicedImage(
   imageStyle: SplicingImageStyle,
   imageResize: SplicingImageResize,
   fitValue: number,
+  imageApplyTo: ResizeApplyTo,
   exportConfig: SplicingExportConfig,
   options?: {
     concurrency?: number
@@ -546,7 +548,7 @@ export async function exportSplicedImage(
     }
 
     const imageSizes = bitmaps.map((bm) => {
-      const processed = calculateProcessedSize(bm.width, bm.height, imageResize, fitValue)
+      const processed = calculateProcessedSize(bm.width, bm.height, imageResize, fitValue, imageApplyTo)
       return { width: processed.width, height: processed.height }
     })
 
@@ -556,7 +558,8 @@ export async function exportSplicedImage(
       canvasStyle,
       imageStyle,
       imageResize,
-      fitValue
+      fitValue,
+      imageApplyTo
     )
 
     if (exportConfig.exportMode === "single") {

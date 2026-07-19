@@ -6,7 +6,8 @@ import type {
   PaperSize,
   ResizeResamplingAlgorithm,
   SupportedDPI,
-  TiffColorMode
+  TiffColorMode,
+  ResizeApplyTo
 } from "@imify/core/types"
 
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
@@ -14,12 +15,13 @@ export type BatchRunMode = "all" | "failed"
 export type BatchExportAction = "zip" | "one_by_one" | "merge_pdf" | "individual_pdf"
 export type BatchResizeMode =
   | "inherit"
-  | "none"
+  | "fit_value"
+  | "zoom_min"
+  | "zoom_max"
   | "set_size"
-  | "change_width"
-  | "change_height"
   | "scale"
-  | "page_size"
+  | "paper_size"
+export type { ResizeApplyTo }
 export type BatchResizeAspectMode = "free" | "original" | "fixed"
 export type BatchResizeAnchor = "width" | "height"
 export type BatchResizeFitMode = "fill" | "cover" | "contain"
@@ -173,6 +175,7 @@ export interface BatchSetupHandlers {
   onIcoOptimizeInternalPngLayersChange: (value: boolean) => void
   onResizeModeChange: (value: BatchResizeMode) => void
   onResizeValueChange: (value: number) => void
+  onResizeApplyToChange: (value: ResizeApplyTo) => void
   onResizeWidthChange: (value: number) => void
   onResizeHeightChange: (value: number) => void
   onResizeAspectModeChange: (value: BatchResizeAspectMode) => void

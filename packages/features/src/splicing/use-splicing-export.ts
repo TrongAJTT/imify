@@ -131,6 +131,7 @@ export function useSplicingExport({
           imgStyle,
           store.image.resizeMode,
           store.image.fitValue,
+          store.image.applyTo,
           config,
           {
             concurrency: exportSettings.concurrency,
@@ -156,10 +157,10 @@ export function useSplicingExport({
         const ext = getCanonicalExtension(exportSettings.targetFormat)
 
         const imageSizes = images.map((img) => {
-          const processed = calculateProcessedSize(img.originalWidth, img.originalHeight, store.image.resizeMode, store.image.fitValue)
+          const processed = calculateProcessedSize(img.originalWidth, img.originalHeight, store.image.resizeMode, store.image.fitValue, store.image.applyTo)
           return { width: processed.width, height: processed.height }
         })
-        const exportLayout = calculateLayout(imageSizes, layout, canvas, imgStyle, store.image.resizeMode, store.image.fitValue)
+        const exportLayout = calculateLayout(imageSizes, layout, canvas, imgStyle, store.image.resizeMode, store.image.fitValue, store.image.applyTo)
 
         const pattern = exportSettings.fileNamePattern.trim() || "spliced-[Index]"
         const now = new Date(exportTsMs)

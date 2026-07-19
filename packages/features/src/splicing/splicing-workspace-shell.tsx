@@ -46,6 +46,7 @@ function extractSplicingPresetConfig(
     backgroundColor: canvas.backgroundColor,
     imageResize: image.resizeMode,
     imageFitValue: image.fitValue,
+    imageApplyTo: image.applyTo,
     imagePadding: image.padding,
     imagePaddingColor: image.paddingColor,
     imageBorderRadius: image.borderRadius,
@@ -125,6 +126,7 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
     image: {
       resizeMode: config.imageResize,
       fitValue: config.imageFitValue,
+      applyTo: config.imageApplyTo,
       padding: config.imagePadding,
       paddingColor: config.imagePaddingColor,
       borderRadius: config.imageBorderRadius,

@@ -66,8 +66,9 @@ export const VIRTUAL_DEFAULT_PNG_PRESET: SavedSetupPreset = {
         colorMode: "color"
       }
     },
-    resizeMode: "none",
+    resizeMode: "inherit",
     resizeValue: 100,
+    resizeApplyTo: "width",
     resizeWidth: 1280,
     resizeHeight: 960,
     resizeAspectMode: "original",
@@ -88,7 +89,7 @@ export const VIRTUAL_DEFAULT_PNG_PRESET: SavedSetupPreset = {
  * This config can be passed directly to the convertImage engine.
  */
 export function buildFormatConfigFromPreset(preset: SavedSetupPreset): FormatConfig {
-  const { targetFormat, quality, formatOptions, resizeMode, resizeValue, resizeWidth, resizeHeight, resizeAspectMode, resizeAspectRatio, resizeAnchor, resizeFitMode, resizeContainBackground, resizeResamplingAlgorithm, paperSize, dpi } = preset.config
+  const { targetFormat, quality, formatOptions, resizeMode, resizeValue, resizeApplyTo, resizeWidth, resizeHeight, resizeAspectMode, resizeAspectRatio, resizeAnchor, resizeFitMode, resizeContainBackground, resizeResamplingAlgorithm, paperSize, dpi } = preset.config
   
   const baseConfig: FormatConfig = {
     id: `preset_${preset.id}`,
@@ -97,7 +98,7 @@ export function buildFormatConfigFromPreset(preset: SavedSetupPreset): FormatCon
     enabled: true,
     quality,
     formatOptions: formatOptions as any,
-    resize: { mode: "none" }
+    resize: { mode: "inherit" }
   }
 
   return withBatchResize(
@@ -106,6 +107,7 @@ export function buildFormatConfigFromPreset(preset: SavedSetupPreset): FormatCon
     quality,
     formatOptions,
     resizeValue,
+    resizeApplyTo || "width",
     resizeWidth,
     resizeHeight,
     resizeAspectMode,

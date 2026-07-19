@@ -53,6 +53,7 @@ export function BatchSetupSidebarPanel({
   const formatOptions = useBatchStore((state) => state.formatOptions)
   const resizeMode = useBatchStore((state) => state.resizeMode)
   const resizeValue = useBatchStore((state) => state.resizeValue)
+  const resizeApplyTo = useBatchStore((state) => state.resizeApplyTo)
   const resizeWidth = useBatchStore((state) => state.resizeWidth)
   const resizeHeight = useBatchStore((state) => state.resizeHeight)
   const resizeAspectMode = useBatchStore((state) => state.resizeAspectMode)
@@ -97,6 +98,7 @@ export function BatchSetupSidebarPanel({
   const onIcoOptimizeInternalPngLayersChange = useBatchStore((state) => state.setIcoOptimizeInternalPngLayers)
   const onResizeModeChange = useBatchStore((state) => state.setResizeMode)
   const onResizeValueChange = useBatchStore((state) => state.setResizeValue)
+  const onResizeApplyToChange = useBatchStore((state) => state.setResizeApplyTo)
   const onResizeWidthChange = useBatchStore((state) => state.setResizeWidth)
   const onResizeHeightChange = useBatchStore((state) => state.setResizeHeight)
   const onResizeAspectModeChange = useBatchStore((state) => state.setResizeAspectMode)
@@ -140,6 +142,7 @@ export function BatchSetupSidebarPanel({
       buildResizeOverrideFromState({
         mode: resizeMode,
         value: resizeValue,
+        applyTo: resizeApplyTo,
         width: resizeWidth,
         height: resizeHeight,
         aspectMode: resizeAspectMode,
@@ -150,10 +153,11 @@ export function BatchSetupSidebarPanel({
         resamplingAlgorithm: resizeResamplingAlgorithm,
         paperSize,
         dpi
-      }) ?? ({ mode: "none" } as const),
+      }) ?? ({ mode: "inherit" } as const),
     [
       resizeMode,
       resizeValue,
+      resizeApplyTo,
       resizeWidth,
       resizeHeight,
       resizeAspectMode,
@@ -259,6 +263,7 @@ export function BatchSetupSidebarPanel({
         <ResizeCard
           resizeMode={resizeMode === "inherit" ? "none" : resizeMode}
           resizeValue={resizeValue}
+          resizeApplyTo={resizeApplyTo}
           resizeWidth={resizeWidth}
           resizeHeight={resizeHeight}
           resizeAspectMode={resizeAspectMode}
@@ -285,6 +290,7 @@ export function BatchSetupSidebarPanel({
             }
           }}
           onResizeValueChange={onResizeValueChange}
+          onResizeApplyToChange={onResizeApplyToChange}
           onResizeWidthChange={onResizeWidthChange}
           onResizeHeightChange={onResizeHeightChange}
           onResizeAspectModeChange={(mode) => onResizeAspectModeChange(mode as any)}
