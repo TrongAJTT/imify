@@ -4,7 +4,7 @@ import React from "react";
 import { useCallback, useMemo, useState } from "react";
 import { Check, Copy, Download, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@imify/ui/ui/button";
-import { Tooltip } from "../shared/tooltip";
+import { Tooltip } from "@imify/ui/ui/tooltip";
 import { useRuntimeLogStore } from "./runtime-log-collector";
 
 export function RuntimeConsoleMonitor() {

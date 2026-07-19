@@ -1,6 +1,6 @@
 {
   "title": "Bộ xử lý ảnh",
-  "concurrencyTooltip": "Kiểm soát số lượng hình ảnh được xử lý đồng thời (1-90).\n- Giá trị cao hơn xử lý nhanh hơn nhưng tăng áp lực lên CPU và RAM.\n- Định dạng hiện tại: {{format}}.\n- Sử dụng Trình tư vấn luồng xử lý thông minh bên dưới để có khuyến nghị phù hợp phần cứng.",
+  "concurrencyTooltip": "Kiểm soát số lượng hình ảnh được xử lý đồng thời (1-90).\n• Giá trị cao hơn xử lý nhanh hơn nhưng tăng áp lực lên CPU và RAM.\n• Định dạng hiện tại: {{format}}.\n• Sử dụng Trình tư vấn luồng xử lý thông minh bên dưới để có khuyến nghị phù hợp phần cứng.",
   "batchProcessorTitle": "Bộ xử lý hàng loạt",
   "singleProcessorTitle": "Bộ xử lý đơn lẻ",
   "dropZonePlaceholder": "Kéo thả ảnh của bạn vào đây, hoặc click để chọn",

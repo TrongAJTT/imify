@@ -1,17 +1,16 @@
-import { HelpCircle, Lock } from "lucide-react"
-import { useEffect, type ReactNode } from "react"
-
-import type { ImageFormat } from "@imify/core/types"
-import { NumberInput } from "@imify/ui/ui/number-input"
-import { Tooltip } from "@/options/components/tooltip"
-import { Button } from "@imify/ui/ui/button"
-import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
-import { LabelText } from "@imify/ui/ui/typography"
 import {
   clampConcurrencyValue,
   MAX_CONCURRENCY
 } from "@/options/shared/performance-preferences"
+import type { ImageFormat } from "@imify/core/types"
 import { useTranslation } from "@imify/i18n"
+import { Button } from "@imify/ui/ui/button"
+import { ControlledPopover } from "@imify/ui/ui/controlled-popover"
+import { NumberInput } from "@imify/ui/ui/number-input"
+import { Tooltip } from "@imify/ui/ui/tooltip"
+import { LabelText } from "@imify/ui/ui/typography"
+import { HelpCircle, Lock } from "lucide-react"
+import { useEffect, type ReactNode } from "react"
 
 interface ConcurrencySelectorProps {
   format: ImageFormat
@@ -46,15 +45,17 @@ export function ConcurrencySelector({
     }
   }, [safeValue, value, onChange])
 
-  const tooltip = <div style={{ whiteSpace: "pre-line" }}>{t("concurrencyTooltip", { format: format.toUpperCase() })}</div>
-
   return (
     <div className={`space-y-1 ${className}`.trim()}>
       <div className="flex items-center justify-between gap-2">
         <LabelText className="text-xs">
           <div className="flex items-center gap-1">
             <span>{t("concurrency")}</span>
-            <Tooltip content={tooltip}>
+            <Tooltip
+              variant="wide2"
+              content={t("concurrencyTooltip", {
+                format: format.toUpperCase()
+              })}>
               <HelpCircle
                 size={12}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help"
@@ -71,8 +72,7 @@ export function ConcurrencySelector({
                 <button
                   type="button"
                   aria-label="Concurrency lock is enabled"
-                  className="h-6 w-6 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-sky-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
-                >
+                  className="h-6 w-6 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-sky-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center">
                   <Lock size={12} />
                 </button>
               }
@@ -80,8 +80,7 @@ export function ConcurrencySelector({
               behavior="hover"
               side="top"
               closeDelayMs={120}
-              contentClassName="z-[9999] w-64 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-2.5"
-            >
+              contentClassName="z-[9999] w-64 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-2.5">
               <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
                 {t("concurrencyLockedByAdvisor", { max: safeMaxValue })}
               </p>
@@ -91,8 +90,7 @@ export function ConcurrencySelector({
                   size="sm"
                   variant="outline"
                   className="mt-2 w-full"
-                  onClick={onUnlockInSettings}
-                >
+                  onClick={onUnlockInSettings}>
                   {t("unlockInPerformanceSettings")}
                 </Button>
               )}
@@ -107,7 +105,9 @@ export function ConcurrencySelector({
         min={1}
         max={safeMaxValue}
         step={1}
-        onChangeValue={(nextValue) => onChange(clampConcurrencyValue(nextValue, safeMaxValue))}
+        onChangeValue={(nextValue) =>
+          onChange(clampConcurrencyValue(nextValue, safeMaxValue))
+        }
       />
     </div>
   )

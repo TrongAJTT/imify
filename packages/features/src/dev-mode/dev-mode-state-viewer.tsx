@@ -13,7 +13,7 @@ import { useInspectorStore } from "@imify/stores/stores/inspector-store";
 import { useQrGeneratorStore } from "@imify/stores/stores/qr-generator-store";
 import { useBackgroundRemoverStore } from "@imify/stores/stores/background-remover-store";
 import { Button } from "@imify/ui/ui/button";
-import { Tooltip } from "../shared/tooltip";
+import { Tooltip } from "@imify/ui/ui/tooltip";
 import type { OptionsTab } from "./debug-shared";
 import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter";
 

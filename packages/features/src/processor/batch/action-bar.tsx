@@ -9,8 +9,7 @@ import {
   Trash2,
   RotateCw,
 } from "lucide-react";
-import { Button } from "@imify/ui";
-import { Tooltip } from "../../shared/tooltip";
+import { Button, Tooltip } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 
 export interface QueueStats {

@@ -5,7 +5,7 @@ import { ExternalLink, X } from "lucide-react";
 import { ATTRIBUTION_CATEGORIES } from "@imify/core/attributions";
 import { Button } from "@imify/ui/ui/button";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
-import { Tooltip } from "../shared/tooltip";
+import { Tooltip } from "@imify/ui/ui/tooltip";
 import { resolveFeatureMediaAssetUrl } from "../shared/media-assets";
 import { useTranslation } from "react-i18next";
 

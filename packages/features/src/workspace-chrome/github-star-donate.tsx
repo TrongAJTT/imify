@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Github, Heart, Star } from "lucide-react";
 import { IMIFY_LINKS } from "@imify/core";
-import { Tooltip } from "../shared/tooltip";
+import { Tooltip } from "@imify/ui";
 
 import { useTranslation } from "@imify/i18n";
 

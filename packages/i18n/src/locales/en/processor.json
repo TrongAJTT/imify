@@ -1,6 +1,6 @@
 {
   "title": "Image Processor",
-  "concurrencyTooltip": "Controls how many images are processed simultaneously (1-90).\n- Higher values process faster but increase CPU and RAM pressure.\n- Current format: {{format}}.\n- Use Smart Concurrency Advisor below for hardware-aware recommendations.",
+  "concurrencyTooltip": "Controls how many images are processed simultaneously (1-90).\n• Higher values process faster but increase CPU and RAM pressure.\n• Current format: {{format}}.\n• Use Smart Concurrency Advisor below for hardware-aware recommendations.",
   "batchProcessorTitle": "Batch Processor",
   "singleProcessorTitle": "Single Processor",
   "dropZonePlaceholder": "Drag and drop your images here, or click to browse",

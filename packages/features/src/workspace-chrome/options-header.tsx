@@ -16,7 +16,7 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import { Tooltip } from "../shared/tooltip";
+import { Tooltip } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import {

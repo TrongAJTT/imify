@@ -105,7 +105,7 @@ import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-s
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb"
 import { useContextMenuStateActions } from "@/options/hooks/use-context-menu-state-actions"
-import { Tooltip } from "@/options/components/tooltip"
+import { Tooltip } from "@imify/ui/ui/tooltip"
 import {
   PanelLeftClose,
   PanelLeftOpen,

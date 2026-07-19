@@ -8,13 +8,15 @@ import {
   type Stroke,
   type StrokeSmoothingSettings,
 } from "@imify/features/pattern/pattern-drawing-utils";
-import { Tooltip } from "../shared/tooltip";
-import { BaseDialog } from "@imify/ui";
-import { Button } from "@imify/ui";
-import { CheckboxCard } from "@imify/ui";
-import { ColorPickerPopover } from "@imify/ui";
-import { NumberInput } from "@imify/ui";
-import { TextInput } from "@imify/ui";
+import {
+  BaseDialog,
+  Button,
+  CheckboxCard,
+  ColorPickerPopover,
+  NumberInput,
+  TextInput,
+  Tooltip,
+} from "@imify/ui";
 import { useShortcutActions } from "../filling/use-shortcut-actions";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
 import { Brush, Eraser, RotateCcw, Trash2, X } from "lucide-react";

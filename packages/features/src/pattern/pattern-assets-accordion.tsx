@@ -23,10 +23,8 @@ import {
 } from "./types";
 import { PatternAssetDrawingDialog } from "./pattern-asset-drawing-dialog";
 import { PatternAssetListItem } from "./pattern-asset-list-item";
-import { Button } from "@imify/ui";
-import { ResizableAccordionCard } from "@imify/ui";
+import { Button, ResizableAccordionCard, Tooltip } from "@imify/ui";
 import { usePatternStore } from "@imify/stores/stores/pattern-store";
-import { Tooltip } from "../shared/tooltip";
 import { COMMON_IMAGE_ACCEPT_WITH_SVG } from "../shared/image-file-utils";
 import { useTranslation } from "@imify/i18n";
 
