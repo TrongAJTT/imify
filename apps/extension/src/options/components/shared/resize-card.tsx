@@ -1,17 +1,21 @@
-import React from "react"
-import { Maximize2 } from "lucide-react"
+import { PaperConfig } from "@/options/components/paper-config"
+import { SmartResizeModule } from "@/options/components/smart-resize-module"
 import {
   DEFAULT_RESAMPLING_ALGORITHM,
-  RESAMPLING_ALGORITHM_OPTIONS,
-  normalizeResizeResamplingAlgorithm
+  normalizeResizeResamplingAlgorithm,
+  RESAMPLING_ALGORITHM_OPTIONS
 } from "@imify/core/resize-resampling"
-import type { ResizeResamplingAlgorithm, ResizeApplyTo } from "@imify/core/types"
-import { SmartResizeModule } from "@/options/components/smart-resize-module"
-import { PaperConfig } from "@/options/components/paper-config"
+import type {
+  ResizeApplyTo,
+  ResizeResamplingAlgorithm
+} from "@imify/core/types"
+import { useTranslation } from "@imify/i18n"
 import { AccordionCard } from "@imify/ui/ui/accordion-card"
 import { NumberInput } from "@imify/ui/ui/number-input"
 import { SelectInput } from "@imify/ui/ui/select-input"
-import { useTranslation } from "@imify/i18n"
+import { TooltipTableContent } from "@imify/ui/ui/tooltip"
+import { Maximize2 } from "lucide-react"
+import React from "react"
 
 export type ResizeCardProps = {
   resizeMode: string
@@ -82,13 +86,18 @@ function generateSublabel(
     }
   })()
 
-  if (mode === "none" || mode === "inherit" || resamplingAlgorithm === DEFAULT_RESAMPLING_ALGORITHM) {
+  if (
+    mode === "none" ||
+    mode === "inherit" ||
+    resamplingAlgorithm === DEFAULT_RESAMPLING_ALGORITHM
+  ) {
     return baseLabel
   }
 
   const algorithmLabel =
-    RESAMPLING_ALGORITHM_OPTIONS.find((option) => option.value === resamplingAlgorithm)?.label ??
-    resamplingAlgorithm
+    RESAMPLING_ALGORITHM_OPTIONS.find(
+      (option) => option.value === resamplingAlgorithm
+    )?.label ?? resamplingAlgorithm
   return `${baseLabel} • ${algorithmLabel}`
 }
 
@@ -127,7 +136,7 @@ export function ResizeCard({
   alwaysOpen,
   groupId
 }: ResizeCardProps) {
-  const { t } = useTranslation("processor")
+  const { t } = useTranslation(["processor", "common"])
 
   const batchModeMap: Record<string, string> = {
     inherit: t("resizeNone"),
@@ -140,7 +149,10 @@ export function ResizeCard({
   }
 
   const modeOptions = availableModes
-    ? availableModes.map((mode) => ({ value: mode, label: batchModeMap[mode] || mode }))
+    ? availableModes.map((mode) => ({
+        value: mode,
+        label: batchModeMap[mode] || mode
+      }))
     : Object.entries(batchModeMap).map(([value, label]) => ({ value, label }))
 
   const applyToOptions = [
@@ -150,7 +162,8 @@ export function ResizeCard({
     { value: "longest", label: t("applyToLongest") }
   ]
 
-  const safeResamplingAlgorithm = normalizeResizeResamplingAlgorithm(resamplingAlgorithm)
+  const safeResamplingAlgorithm =
+    normalizeResizeResamplingAlgorithm(resamplingAlgorithm)
   const sublabel = generateSublabel(
     resizeMode,
     resizeValue,
@@ -162,7 +175,10 @@ export function ResizeCard({
     safeResamplingAlgorithm
   )
 
-  const showResamplingAlgorithm = Boolean(onResamplingAlgorithmChange) && resizeMode !== "none" && resizeMode !== "inherit"
+  const showResamplingAlgorithm =
+    Boolean(onResamplingAlgorithmChange) &&
+    resizeMode !== "none" &&
+    resizeMode !== "inherit"
 
   const isLinearMode =
     resizeMode === "fit_value" ||
@@ -179,8 +195,7 @@ export function ResizeCard({
       disabled={disabled}
       alwaysOpen={alwaysOpen}
       groupId={groupId}
-      colorTheme="purple"
-    >
+      colorTheme="purple">
       <div className="space-y-3">
         <SelectInput
           label={t("resizeType")}
@@ -188,6 +203,18 @@ export function ResizeCard({
           disabled={disabled}
           options={modeOptions}
           onChange={(val) => onResizeModeChange?.(val)}
+          tooltipContent={
+            <TooltipTableContent
+              rows={
+                t("tooltipResizeTypes", { returnObjects: true }) as Array<{
+                  method: string
+                  description: string
+                }>
+              }
+              firstColumnHeader={t("common:option")}
+              secondColumnHeader={t("common:whatItDoes")}
+            />
+          }
         />
 
         {isLinearMode && (
@@ -217,10 +244,16 @@ export function ResizeCard({
             fitMode={resizeFitMode as "fill" | "cover" | "contain"}
             height={resizeHeight}
             aspectMode={resizeAspectMode as "fixed" | "original" | "free"}
-            aspectRatio={typeof resizeAspectRatio === "string" ? resizeAspectRatio : String(resizeAspectRatio)}
+            aspectRatio={
+              typeof resizeAspectRatio === "string"
+                ? resizeAspectRatio
+                : String(resizeAspectRatio)
+            }
             onAspectModeChange={(mode) => onResizeAspectModeChange?.(mode)}
             onAspectRatioChange={(ratio) => onResizeAspectRatioChange?.(ratio)}
-            onContainBackgroundChange={(color) => onResizeContainBackgroundChange?.(color)}
+            onContainBackgroundChange={(color) =>
+              onResizeContainBackgroundChange?.(color)
+            }
             onFitModeChange={(mode) => onResizeFitModeChange?.(mode)}
             onHeightChange={(height) => onResizeHeightChange?.(height)}
             onSizeAnchorChange={() => {}}
@@ -232,7 +265,8 @@ export function ResizeCard({
           />
         )}
 
-        {(resizeMode === "paper_size" || (resizeMode as any) === "page_size") && (
+        {(resizeMode === "paper_size" ||
+          (resizeMode as any) === "page_size") && (
           <PaperConfig
             disabled={disabled}
             dpi={dpi as any}
@@ -249,7 +283,9 @@ export function ResizeCard({
             disabled={disabled}
             options={RESAMPLING_ALGORITHM_OPTIONS}
             onChange={(nextValue) =>
-              onResamplingAlgorithmChange?.(normalizeResizeResamplingAlgorithm(nextValue))
+              onResamplingAlgorithmChange?.(
+                normalizeResizeResamplingAlgorithm(nextValue)
+              )
             }
           />
         )}

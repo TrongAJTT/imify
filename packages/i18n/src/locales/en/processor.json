@@ -267,6 +267,15 @@
   "applyToHeight": "Height",
   "applyToShortest": "Shortest",
   "applyToLongest": "Longest",
+  "tooltipResizeTypes": [
+    { "method": "No resize", "description": "Keeps the original dimensions of the image." },
+    { "method": "Fit value", "description": "Resizes the selected dimension to match the exact value, preserving aspect ratio." },
+    { "method": "Zoom min", "description": "Ensures the selected dimension is at most the specified value. Downscales larger images." },
+    { "method": "Zoom max", "description": "Ensures the selected dimension is at least the specified value. Upscales smaller images." },
+    { "method": "Set size", "description": "Resizes to a specific width and height with optional crop/pad fit options." },
+    { "method": "Scale", "description": "Resizes the image by a percentage multiplier." },
+    { "method": "Paper size", "description": "Resizes to fit standard paper size dimensions (e.g. A4) at a target DPI." }
+  ],
   "concurrency": "Concurrency",
   "showcaseSingle": {
     "title": "Single Processor in one view",

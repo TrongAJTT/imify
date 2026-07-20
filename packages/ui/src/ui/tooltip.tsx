@@ -36,3 +36,39 @@ export function Tooltip({
     </ControlledPopover>
   );
 }
+
+export function TooltipTableContent({
+  rows,
+  firstColumnHeader = "Option",
+  secondColumnHeader = "What it does",
+}: {
+  rows: ReadonlyArray<{ method: string; description: string }>;
+  firstColumnHeader?: string;
+  secondColumnHeader?: string;
+}) {
+  return (
+    <table className="w-full border-collapse text-[11px] text-slate-700 dark:text-slate-200">
+      <thead>
+        <tr className="border-b border-slate-200 dark:border-white/15">
+          <th className="w-36 px-2 py-1 text-left font-semibold">
+            {firstColumnHeader}
+          </th>
+          <th className="px-2 py-1 text-left font-semibold">
+            {secondColumnHeader}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr
+            key={row.method}
+            className="border-b border-slate-100 last:border-b-0 dark:border-white/10"
+          >
+            <td className="px-2 py-1.5 align-top font-medium">{row.method}</td>
+            <td className="px-2 py-1.5 align-top">{row.description}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}

@@ -239,7 +239,6 @@
     "spriteMinArea": "Ignore tiny islands smaller than this area to reduce noise.",
     "spritePadding": "Expand each detected sprite bounding box by this padding.",
     "orderDialogLiveSequence": "This text reflects current horizontal/vertical direction and priority axis.",
-    "whatItDoes": "What it does",
     "basicMethods": [
       {
         "method": "Count",

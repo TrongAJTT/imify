@@ -112,7 +112,7 @@ export function calculateDimensions(
 
     case "zoom_min": {
       const targetDimValue = getTargetDimension(safeOriginalWidth, safeOriginalHeight, applyTo)
-      if (targetDimValue < val) {
+      if (targetDimValue > val) {
         return performFitValue(safeOriginalWidth, safeOriginalHeight, val, applyTo)
       }
       return {
@@ -123,7 +123,7 @@ export function calculateDimensions(
 
     case "zoom_max": {
       const targetDimValue = getTargetDimension(safeOriginalWidth, safeOriginalHeight, applyTo)
-      if (targetDimValue > val) {
+      if (targetDimValue < val) {
         return performFitValue(safeOriginalWidth, safeOriginalHeight, val, applyTo)
       }
       return {

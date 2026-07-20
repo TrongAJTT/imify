@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import type { SplitterSplitSettings } from "./types";
 import {
   Tooltip,
+  TooltipTableContent,
   AccordionCard,
   ColorPickerPopover,
   NumberInput,
@@ -19,47 +20,13 @@ interface SplitOptionsAccordionProps {
   onChange: (patch: Partial<SplitterSplitSettings>) => void;
 }
 
-function MethodTooltipTable({
-  rows,
-  t,
-}: {
-  rows: ReadonlyArray<{ method: string; description: string }>;
-  t: (key: string) => string;
-}) {
-  return (
-    <table className="w-full border-collapse text-[11px] text-slate-700 dark:text-slate-200">
-      <thead>
-        <tr className="border-b border-slate-200 dark:border-white/15">
-          <th className="w-36 px-2 py-1 text-left font-semibold">
-            {t("method")}
-          </th>
-          <th className="px-2 py-1 text-left font-semibold">
-            {t("tooltips.whatItDoes")}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => (
-          <tr
-            key={row.method}
-            className="border-b border-slate-100 last:border-b-0 dark:border-white/10"
-          >
-            <td className="px-2 py-1.5 align-top font-medium">{row.method}</td>
-            <td className="px-2 py-1.5 align-top">{row.description}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
 export function SplitOptionsAccordion({
   settings,
   isOpen,
   onOpenChange,
   onChange,
 }: SplitOptionsAccordionProps) {
-  const { t } = useTranslation("splitter");
+  const { t } = useTranslation(["splitter", "common"]);
 
   const usesGrid = settings.direction === "grid";
   const isBasic = settings.mode === "basic";
@@ -240,13 +207,14 @@ export function SplitOptionsAccordion({
             <SelectInput
               label={t("basicMethod")}
               tooltipContent={
-                <MethodTooltipTable
+                <TooltipTableContent
                   rows={
                     Array.isArray(basicMethodTableRows)
                       ? basicMethodTableRows
                       : []
                   }
-                  t={t}
+                  firstColumnHeader={t("common:option")}
+                  secondColumnHeader={t("common:whatItDoes")}
                 />
               }
               value={settings.basicMethod}
@@ -332,13 +300,14 @@ export function SplitOptionsAccordion({
             <SelectInput
               label={t("advancedMethod")}
               tooltipContent={
-                <MethodTooltipTable
+                <TooltipTableContent
                   rows={
                     Array.isArray(advancedMethodTableRows)
                       ? advancedMethodTableRows
                       : []
                   }
-                  t={t}
+                  firstColumnHeader={t("common:option")}
+                  secondColumnHeader={t("common:whatItDoes")}
                 />
               }
               value={settings.advancedMethod}

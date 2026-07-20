@@ -6,7 +6,10 @@ import {
   RESAMPLING_ALGORITHM_OPTIONS,
   normalizeResizeResamplingAlgorithm,
 } from "@imify/core/resize-resampling";
-import type { ResizeResamplingAlgorithm, ResizeApplyTo } from "@imify/core/types";
+import type {
+  ResizeResamplingAlgorithm,
+  ResizeApplyTo,
+} from "@imify/core/types";
 import { SmartResizeModule } from "./smart-resize-module";
 import { PaperConfig } from "./paper-config";
 import { usePopoverTriggerBehavior } from "./use-popover-trigger-behavior";
@@ -16,6 +19,7 @@ import {
   LabelText,
   NumberInput,
   SelectInput,
+  TooltipTableContent,
 } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 
@@ -140,7 +144,7 @@ export function ResizeCard({
   alwaysOpen,
   groupId,
 }: ResizeCardProps) {
-  const { t } = useTranslation("processor");
+  const { t } = useTranslation(["processor", "common"]);
   const quickStatsPopoverBehavior = usePopoverTriggerBehavior();
 
   const batchModeMap: Record<string, string> = {
@@ -179,7 +183,7 @@ export function ResizeCard({
     dpi,
     safeResamplingAlgorithm,
   );
-  
+
   const showResamplingAlgorithm =
     Boolean(onResamplingAlgorithmChange) &&
     resizeMode !== "none" &&
@@ -191,8 +195,11 @@ export function ResizeCard({
     resizeMode === "zoom_max";
 
   const showQuickResizePopover = isLinearMode;
-  
-  const isWidthTarget = resizeApplyTo === "width" || resizeApplyTo === "shortest" || resizeApplyTo === "longest";
+
+  const isWidthTarget =
+    resizeApplyTo === "width" ||
+    resizeApplyTo === "shortest" ||
+    resizeApplyTo === "longest";
   const isHeightTarget = resizeApplyTo === "height";
   const sourceEdge = isWidthTarget
     ? resizeSourceWidth
@@ -273,6 +280,18 @@ export function ResizeCard({
           disabled={disabled}
           options={modeOptions}
           onChange={(val) => onResizeModeChange?.(val)}
+          tooltipContent={
+            <TooltipTableContent
+              rows={
+                t("tooltipResizeTypes", { returnObjects: true }) as Array<{
+                  method: string;
+                  description: string;
+                }>
+              }
+              firstColumnHeader={t("common:option")}
+              secondColumnHeader={t("common:whatItDoes")}
+            />
+          }
         />
 
         {isLinearMode && (
@@ -357,7 +376,9 @@ export function ResizeCard({
             }
             onAspectModeChange={(mode) => onResizeAspectModeChange?.(mode)}
             onAspectRatioChange={(ratio) => onResizeAspectRatioChange?.(ratio)}
-            onContainBackgroundChange={(color) => onResizeContainBackgroundChange?.(color)}
+            onContainBackgroundChange={(color) =>
+              onResizeContainBackgroundChange?.(color)
+            }
             onFitModeChange={(mode) => onResizeFitModeChange?.(mode)}
             onHeightChange={(height) => onResizeHeightChange?.(height)}
             onSizeAnchorChange={() => {}}
@@ -369,7 +390,8 @@ export function ResizeCard({
           />
         )}
 
-        {(resizeMode === "paper_size" || (resizeMode as any) === "page_size") && (
+        {(resizeMode === "paper_size" ||
+          (resizeMode as any) === "page_size") && (
           <PaperConfig
             disabled={disabled}
             dpi={dpi as any}

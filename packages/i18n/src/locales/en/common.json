@@ -25,6 +25,8 @@
   "chooseFile": "Choose File",
   "aboutThisTool": "About this tool",
   "toolSettings": "Tool settings",
+  "option": "Option",
+  "whatItDoes": "What it does",
   "presetInfoShowcasePanel": {
     "tipOfTheDay": "Tip of the day"
   },
