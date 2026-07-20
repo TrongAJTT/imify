@@ -77,11 +77,10 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   },
   common: {
     latestSummaryMd: "/assets/changelogs/latest-summary.md",
-    v2_2_0: "/assets/changelogs/v2-2-0.md",
-    v2_1_3: "/assets/changelogs/v2-1-3.md",
-    v2_1_2: "/assets/changelogs/v2-1-2.md",
-    v1_5_0: "/assets/changelogs/v1-5-0.md",
-    v1_0_0: "/assets/changelogs/v1-0-0.md"
+    v2_2: "/assets/changelogs/v2-2.md",
+    v2_1: "/assets/changelogs/v2-1.md",
+    v1_5: "/assets/changelogs/v1-5.md",
+    v1_0: "/assets/changelogs/v1-0.md"
   },
   ai: {
     onnxWasm: "/assets/onnx-engines/ort-wasm-simd-threaded.wasm",
@@ -152,10 +151,10 @@ export const FEATURE_MEDIA_ASSETS = {
   },
   common: {
     latestSummaryMd: FEATURE_MEDIA_ASSET_PATHS.common.latestSummaryMd,
-    v2_1_3: FEATURE_MEDIA_ASSET_PATHS.common.v2_1_3,
-    v2_1_2: FEATURE_MEDIA_ASSET_PATHS.common.v2_1_2,
-    v1_5_0: FEATURE_MEDIA_ASSET_PATHS.common.v1_5_0,
-    v1_0_0: FEATURE_MEDIA_ASSET_PATHS.common.v1_0_0
+    v2_2: FEATURE_MEDIA_ASSET_PATHS.common.v2_2,
+    v2_1: FEATURE_MEDIA_ASSET_PATHS.common.v2_1,
+    v1_5: FEATURE_MEDIA_ASSET_PATHS.common.v1_5,
+    v1_0: FEATURE_MEDIA_ASSET_PATHS.common.v1_0
   },
   ai: {
     onnxWasm: FEATURE_MEDIA_ASSET_PATHS.ai.onnxWasm,
