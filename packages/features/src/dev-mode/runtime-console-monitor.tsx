@@ -85,7 +85,7 @@ export function RuntimeConsoleMonitor() {
     <div className="flex flex-col gap-3 pt-0.5 w-full max-w-full overflow-hidden">
       <AccordionCard
         label="Filter levels"
-        defaultOpen={true}
+        defaultOpen={false}
         icon={<SlidersHorizontal size={16} />}
         childrenClassName="py-2 pl-5 w-full"
       >
@@ -113,8 +113,6 @@ export function RuntimeConsoleMonitor() {
             setEnabledLevels((prev) => ({ ...prev, error: val }))
           }
         />
-        {/* <div className="flex flex-col  items-stretch pb-1">
-        </div> */}
       </AccordionCard>
 
       <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -199,10 +197,10 @@ export function RuntimeConsoleMonitor() {
           </div>
         </div>
         <pre
-          className={`text-[11px] font-mono text-slate-300 leading-relaxed p-3 ${
+          className={`text-[11px] font-mono text-slate-300 leading-relaxed p-3 overflow-y-auto ${
             wordWrap
               ? "whitespace-pre-wrap break-all"
-              : "whitespace-pre overflow-auto"
+              : "whitespace-pre overflow-x-auto"
           }`}
           style={{ maxHeight: "560px" }}
         >
