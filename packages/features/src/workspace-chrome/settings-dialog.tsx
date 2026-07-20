@@ -23,17 +23,19 @@ import { useAssetStatistics } from "./asset-management-dialog";
 import { ToastContainer } from "@imify/ui/components/toast-container";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { Button } from "@imify/ui/ui/button";
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card";
 import {
+  CheckboxCard,
   DiscreteSlider,
   type DiscreteSliderOption,
-} from "@imify/ui/ui/discrete-slider";
-import { NumberInput } from "@imify/ui/ui/number-input";
-import { SelectInput } from "@imify/ui/ui/select-input";
-import { ToggleSwitchLabel } from "@imify/ui/ui/toggle-switch-label";
-import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header";
-import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header";
-import { Subheading, BodyText, MutedText } from "@imify/ui/ui/typography";
+  NumberInput,
+  SelectInput,
+  ToggleSwitch,
+  SettingsItemHeader,
+  SettingsSectionHeader,
+  Subheading,
+  BodyText,
+  MutedText,
+} from "@imify/ui";
 import {
   CONFIGURATION_SIDEBAR_MAX_PERCENT,
   CONFIGURATION_SIDEBAR_WIDTH_OPTIONS,
@@ -542,7 +544,7 @@ export function WorkspaceSettingsDialog({
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
                       {t("performance.privacyNote")}
                     </div>
-                    <ToggleSwitchLabel
+                    <ToggleSwitch
                       label={t("performance.enableAdvisor")}
                       description={t("performance.enableAdvisorDesc")}
                       checked={advisorEnabled}
@@ -553,7 +555,7 @@ export function WorkspaceSettingsDialog({
                         })
                       }
                     />
-                    <ToggleSwitchLabel
+                    <ToggleSwitch
                       label={t("performance.unlockConcurrency")}
                       description={t("performance.unlockConcurrencyDesc")}
                       checked={overclockEnabled}
@@ -670,7 +672,7 @@ export function WorkspaceSettingsDialog({
                       description={t("warnings.preferencesDesc")}
                     />
                     <div className="space-y-2">
-                      <ToggleSwitchLabel
+                      <ToggleSwitch
                         label={t("warnings.downloadConfirm")}
                         description={t("warnings.downloadConfirmDesc", {
                           threshold:
@@ -679,7 +681,7 @@ export function WorkspaceSettingsDialog({
                         checked={!skipDownloadConfirm}
                         onChange={(checked) => setSkipDownloadConfirm(!checked)}
                       />
-                      <ToggleSwitchLabel
+                      <ToggleSwitch
                         label={t("warnings.oomWarning")}
                         description={t("warnings.oomWarningDesc", {
                           threshold: APP_CONFIG.BATCH.OOM_WARNING_MB,
@@ -687,7 +689,7 @@ export function WorkspaceSettingsDialog({
                         checked={!skipOomWarning}
                         onChange={(checked) => setSkipOomWarning(!checked)}
                       />
-                      <ToggleSwitchLabel
+                      <ToggleSwitch
                         label={t("warnings.heavyPreviewWarning")}
                         description={t("warnings.heavyPreviewWarningDesc", {
                           count:

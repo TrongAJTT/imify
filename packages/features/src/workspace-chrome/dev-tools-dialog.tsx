@@ -15,13 +15,17 @@ import {
   Database,
 } from "lucide-react";
 import { useToast } from "@imify/core/hooks/use-toast";
-import { ToastContainer } from "@imify/ui/components/toast-container";
-import { BaseDialog } from "@imify/ui/ui/base-dialog";
-import { Button } from "@imify/ui/ui/button";
-import { ToggleSwitchLabel } from "@imify/ui/ui/toggle-switch-label";
-import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header";
-import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header";
-import { Subheading, BodyText, MutedText } from "@imify/ui/ui/typography";
+import {
+  ToastContainer,
+  BaseDialog,
+  ToggleSwitch,
+  Button,
+  SettingsItemHeader,
+  SettingsSectionHeader,
+  Subheading,
+  BodyText,
+  MutedText,
+} from "@imify/ui";
 import { useDevModeEnabled } from "../dev-mode/dev-mode-storage";
 import { useDevModeStore } from "../dev-mode/dev-mode-store";
 import { I18nRuntimeImportDialog } from "../dev-mode/i18n-runtime-import-dialog";
@@ -508,7 +512,7 @@ export function DevToolsDialog({
                       title="TRANSLATION DEBUGGING"
                       description="Toggle translation key decoration to locate text strings in locale bundles."
                     />
-                    <ToggleSwitchLabel
+                    <ToggleSwitch
                       label="Show i18n Debug Keys"
                       description="Display translation keys next to strings in the UI to assist with localization."
                       checked={showI18nDebugKeys}

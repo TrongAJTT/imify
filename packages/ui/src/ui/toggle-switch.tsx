@@ -1,32 +1,32 @@
-import React from "react"
-import { MutedText } from "./typography"
+import React from "react";
+import { MutedText } from "./typography";
 
-interface ToggleSwitchLabelProps {
-  label: string
-  description: string
-  checked: boolean
-  onChange: (checked: boolean) => void
-  colorWhenEnabled?: "sky" | "amber"
+interface ToggleSwitchProps {
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  colorWhenEnabled?: "sky" | "amber";
 }
 
-export function ToggleSwitchLabel({
+export function ToggleSwitch({
   label,
   description,
   checked,
   onChange,
-  colorWhenEnabled = "sky"
-}: ToggleSwitchLabelProps) {
+  colorWhenEnabled = "sky",
+}: ToggleSwitchProps) {
   const bgColor =
     checked && colorWhenEnabled === "amber"
       ? "bg-amber-500"
       : checked
         ? "bg-sky-500"
-        : "bg-slate-300 dark:bg-slate-600"
+        : "bg-slate-300 dark:bg-slate-600";
 
   return (
-    <label className="flex items-center justify-between gap-4 py-2 rounded-lg transition-colors cursor-pointer select-none group">
+    <label className="flex w-full items-center justify-between gap-4 py-2 px-3 -mx-3 rounded-lg transition-colors cursor-pointer select-none group hover:bg-slate-50 dark:hover:bg-slate-800/30">
       <div className="flex-1 pr-6">
-        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-900 transition-colors">
+        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-950 dark:group-hover:text-white transition-colors">
           {label}
         </p>
         <MutedText className="text-sm mt-0.5 leading-relaxed">
@@ -50,6 +50,5 @@ export function ToggleSwitchLabel({
         </button>
       </div>
     </label>
-  )
+  );
 }
-
