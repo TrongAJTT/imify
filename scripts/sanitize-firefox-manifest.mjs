@@ -26,13 +26,13 @@ const sanitizePermissions = (manifest) => {
 const sanitizeManifestFields = (manifest) => {
   let changed = false
 
-  // TODO: remove this after FF officially supports sidepanel
+  // @TODO: remove this after FF officially supports sidepanel
   if (manifest.side_panel) {
     delete manifest.side_panel
     changed = true
   }
 
-  // TODO: remove this after FF officially supports sidepanel
+  // @TODO: remove this after FF officially supports sidepanel
   if (manifest.action?.default_popup) {
     delete manifest.action.default_popup
     changed = true

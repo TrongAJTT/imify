@@ -30,6 +30,7 @@ import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar";
 import {
   COMMON_IMAGE_ACCEPT,
   isCommonImageFile,
+  sanitizeFile,
 } from "../shared/image-file-utils";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 import { ImageUrlImportControl } from "./image-url-import-control";
@@ -233,13 +234,18 @@ export function SingleProcessorWorkspace({
     resetViewport();
   };
 
-  const attachSingleFile = async (file: File) => {
+  const attachSingleFile = async (rawFile: File) => {
     const attachSequence = ++attachSequenceRef.current;
-    if (!isCommonImageFile(file)) {
+    if (!isCommonImageFile(rawFile)) {
       setErrorText(t("chooseImageError"));
       return;
     }
     clearAll();
+
+    // Eagerly materialize and sanitize the Android content:// URI File immediately.
+    const file = await sanitizeFile(rawFile);
+    if (attachSequenceRef.current !== attachSequence) return;
+
     setSourceFile(file);
     try {
       const decodedSource = await decodeFileToImageData(file);
@@ -251,9 +257,7 @@ export function SingleProcessorWorkspace({
     } catch (error) {
       if (attachSequenceRef.current !== attachSequence) return;
       clearAll();
-      setErrorText(
-        toUserFacingConversionError(error, t("decodeError")),
-      );
+      setErrorText(toUserFacingConversionError(error, t("decodeError")));
     }
   };
 
@@ -425,9 +429,7 @@ export function SingleProcessorWorkspace({
           setResultOutputExtension(null);
           setResultNameDimensions(null);
           setResultFileName("");
-          setErrorText(
-            toUserFacingConversionError(error, t("processError")),
-          );
+          setErrorText(toUserFacingConversionError(error, t("processError")));
         } finally {
           if (requestSequenceRef.current === currentSequence) {
             setIsProcessing(false);
@@ -510,7 +512,9 @@ export function SingleProcessorWorkspace({
                       </span>
                     ) : resultBlob && processTime !== null ? (
                       <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                        {t("processingComplete", { time: processTime.toFixed(2) })}
+                        {t("processingComplete", {
+                          time: processTime.toFixed(2),
+                        })}
                       </span>
                     ) : (
                       t("livePreviewNotice", { time: PREVIEW_DEBOUNCE_MS })
@@ -674,11 +678,7 @@ export function SingleProcessorWorkspace({
                 preferredMimeTypeB={resultBlob?.type}
                 maxPreviewDimension={PREVIEW_MAX_DIMENSION}
                 isProcessing={isProcessing}
-                emptyFallback={
-                  <MutedText>
-                    {t("previewUnavailable")}
-                  </MutedText>
-                }
+                emptyFallback={<MutedText>{t("previewUnavailable")}</MutedText>}
               />
             </div>
           </div>

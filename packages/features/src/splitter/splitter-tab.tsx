@@ -51,6 +51,8 @@ import { SplitterWorkspaceShell } from "./splitter-workspace-shell";
 import {
   COMMON_IMAGE_ACCEPT,
   isCommonImageFile,
+  sanitizeFile,
+  decodeFileToImageSource,
 } from "../shared/image-file-utils";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 import {
@@ -77,23 +79,29 @@ const COLOR_MATCH_GRID_FALLBACK_WARNING =
 async function createThumbnail(
   file: File,
 ): Promise<{ thumbnailUrl: string; width: number; height: number }> {
-  const bitmap = await createImageBitmap(file);
-  const { width, height } = bitmap;
+  const img = await decodeFileToImageSource(file);
+  const width = img.naturalWidth;
+  const height = img.naturalHeight;
   const scale = Math.min(1, THUMB_MAX / Math.max(width, height));
   const thumbnailWidth = Math.max(1, Math.round(width * scale));
   const thumbnailHeight = Math.max(1, Math.round(height * scale));
 
-  const canvas = new OffscreenCanvas(thumbnailWidth, thumbnailHeight);
+  const canvas = document.createElement("canvas");
+  canvas.width = thumbnailWidth;
+  canvas.height = thumbnailHeight;
   const context = canvas.getContext("2d");
   if (!context) {
-    bitmap.close();
     throw new Error("Unable to initialize thumbnail context.");
   }
 
-  context.drawImage(bitmap, 0, 0, thumbnailWidth, thumbnailHeight);
-  bitmap.close();
+  context.drawImage(img, 0, 0, thumbnailWidth, thumbnailHeight);
 
-  const blob = await canvas.convertToBlob({ type: "image/png" });
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((b) => {
+      if (b) resolve(b);
+      else reject(new Error("Canvas toBlob failed"));
+    }, "image/png");
+  });
   const thumbnailUrl = URL.createObjectURL(blob);
 
   return {
@@ -372,8 +380,9 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       const preparedItems: SplitterImageItem[] = [];
 
       for (let index = 0; index < imageFiles.length; index += 1) {
-        const file = imageFiles[index];
+        const rawFile = imageFiles[index];
         try {
+          const file = await sanitizeFile(rawFile);
           const thumbnail = await createThumbnail(file);
           preparedItems.push({
             id: `splitter_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,

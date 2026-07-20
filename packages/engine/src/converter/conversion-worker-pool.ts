@@ -99,13 +99,32 @@ class ConversionWorkerPool {
     this.flushQueue()
   }
 
-  execute(sourceBlob: Blob, config: FormatConfig): Promise<ConvertImageResult> {
+  async execute(sourceBlob: Blob, config: FormatConfig): Promise<ConvertImageResult> {
+    // Pre-materialise bytes on the main thread before sending to the worker.
+    //
+    // On Android Chrome/WebView, a File from the file picker is backed by a
+    // content:// URI.  When the blob is postMessage'd to a Worker, Chrome
+    // transfers the content URI reference — not the raw bytes.  Worker threads
+    // do NOT have Android ContentResolver access, so createImageBitmap() inside
+    // the worker will always fail for such blobs.
+    //
+    // Calling arrayBuffer() here forces a full read on the main thread.  The
+    // resulting Blob is backed by a plain in-memory ArrayBuffer with no content
+    // URI, so the worker can decode it without any Android restrictions.
+    let materializedBlob = sourceBlob
+    try {
+      const buffer = await sourceBlob.arrayBuffer()
+      materializedBlob = new Blob([buffer], { type: sourceBlob.type || "image/jpeg" })
+    } catch {
+      // use original blob if the pre-read fails
+    }
+
     const taskId = this.nextTaskId++
 
     return new Promise<ConvertImageResult>((resolve, reject) => {
       const task: WorkerTask = {
         id: taskId,
-        sourceBlob,
+        sourceBlob: materializedBlob,
         config,
         resolve,
         reject

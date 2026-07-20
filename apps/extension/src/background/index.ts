@@ -308,7 +308,7 @@ chrome.runtime.onMessage.addListener((message) => {
   })
 })
 
-// TODO: remove this after FF officially supports sidepanel
+// @TODO: remove this after FF officially supports sidepanel
 chrome.action.onClicked.addListener(() => {
   void chrome.runtime.openOptionsPage()
 })

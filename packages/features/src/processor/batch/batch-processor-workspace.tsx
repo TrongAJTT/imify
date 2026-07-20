@@ -15,7 +15,12 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { ToastContainer, BodyText, RenameInputDialog, useRenameInputPrompt } from "@imify/ui";
+import {
+  ToastContainer,
+  BodyText,
+  RenameInputDialog,
+  useRenameInputPrompt,
+} from "@imify/ui";
 import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
 import type {
   ConversionProgressPayload,
@@ -45,7 +50,7 @@ import {
 } from "./utils";
 import { useBatchExecution } from "./hooks/use-batch-execution";
 import { useBatchExportActions } from "./hooks/use-batch-export-actions";
-import { isCommonImageFile } from "../../shared/image-file-utils";
+import { isCommonImageFile, sanitizeFile } from "../../shared/image-file-utils";
 
 export function BatchProcessorWorkspace() {
   const targetFormat = useBatchStore((s) => s.targetFormat);
@@ -266,20 +271,27 @@ export function BatchProcessorWorkspace() {
   );
   const removeItem = (id: string) =>
     setQueue((current) => current.filter((item) => item.id !== id));
-  const appendImageFiles = (inputFiles: File[]) => {
+  const appendImageFiles = async (inputFiles: File[]) => {
     if (!inputFiles.length) return;
-    const nextItems: BatchQueueItem[] = inputFiles
-      .filter((file) => isCommonImageFile(file))
-      .map((file) => ({
-        id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        file,
-        status: file.size > MAX_FILE_SIZE_BYTES ? "error" : "queued",
-        percent: file.size > MAX_FILE_SIZE_BYTES ? 100 : 0,
-        message:
-          file.size > MAX_FILE_SIZE_BYTES
-            ? `Skipped: file is larger than ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB limit`
-            : undefined,
-      }));
+
+    const imageFiles = inputFiles.filter((file) => isCommonImageFile(file));
+    if (!imageFiles.length) return;
+
+    const sanitizedFiles = await Promise.all(
+      imageFiles.map((file) => sanitizeFile(file)),
+    );
+
+    const nextItems: BatchQueueItem[] = sanitizedFiles.map((file) => ({
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      file,
+      status: file.size > MAX_FILE_SIZE_BYTES ? "error" : "queued",
+      percent: file.size > MAX_FILE_SIZE_BYTES ? 100 : 0,
+      message:
+        file.size > MAX_FILE_SIZE_BYTES
+          ? `Skipped: file is larger than ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB limit`
+          : undefined,
+    }));
+
     if (!nextItems.length) return;
     setQueue((current) => [...current, ...nextItems]);
     void Promise.all(
@@ -422,22 +434,16 @@ export function BatchProcessorWorkspace() {
           clearSummary();
         }}
         onRunAll={() => {
-          checkAndPrompt(
-            fileNamePattern,
-            (inputValue) => {
-              setBatchInputValue(inputValue);
-              void runBatch("all", inputValue);
-            }
-          );
+          checkAndPrompt(fileNamePattern, (inputValue) => {
+            setBatchInputValue(inputValue);
+            void runBatch("all", inputValue);
+          });
         }}
         onRunFailed={() => {
-          checkAndPrompt(
-            fileNamePattern,
-            (inputValue) => {
-              setBatchInputValue(inputValue);
-              void runBatch("failed", inputValue);
-            }
-          );
+          checkAndPrompt(fileNamePattern, (inputValue) => {
+            setBatchInputValue(inputValue);
+            void runBatch("failed", inputValue);
+          });
         }}
         onTogglePause={togglePause}
         paused={paused}

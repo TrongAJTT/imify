@@ -8,7 +8,7 @@ import { normalizeResizeResamplingAlgorithm } from "@imify/core/resize-resamplin
 import type { ImageFormat, ResizeConfig } from "@imify/core/types"
 import { resizeImageDataWithAlgorithm } from "./advanced-resize"
 import {
-  decodeImageBitmapForEncoding,
+  decodeImageSourceForEncoding,
   getOffscreen2DContext
 } from "./color-managed-pipeline"
 
@@ -114,7 +114,7 @@ function fillContainBackground(
 }
 
 function extractBitmapRegion(
-  imageBitmap: ImageBitmap,
+  imageBitmap: CanvasImageSource,
   sourceX: number,
   sourceY: number,
   sourceWidth: number,
@@ -163,7 +163,9 @@ function drawImageDataWithCompositing(
 
 async function drawSourceImageWithAdvancedResampling(
   ctx: OffscreenCanvasRenderingContext2D,
-  imageBitmap: ImageBitmap,
+  imageBitmap: CanvasImageSource,
+  sourceWidth: number,
+  sourceHeight: number,
   targetWidth: number,
   targetHeight: number,
   resize: ResizeConfig
@@ -176,61 +178,61 @@ async function drawSourceImageWithAdvancedResampling(
 
   let sourceX = 0
   let sourceY = 0
-  let sourceWidth = imageBitmap.width
-  let sourceHeight = imageBitmap.height
+  let currentSourceWidth = sourceWidth
+  let currentSourceHeight = sourceHeight
   let drawWidth = targetWidth
   let drawHeight = targetHeight
   let drawOffsetX = 0
   let drawOffsetY = 0
-
+ 
   if ((resize.mode as any) === "page_size" || resize.mode === "paper_size") {
     const contain = calculateContainPlacement(
-      imageBitmap.width,
-      imageBitmap.height,
+      sourceWidth,
+      sourceHeight,
       targetWidth,
       targetHeight
     )
-
+ 
     drawWidth = contain.drawWidth
     drawHeight = contain.drawHeight
     drawOffsetX = contain.offsetX
     drawOffsetY = contain.offsetY
   } else if (resize.mode === "set_size") {
     const fitMode = resize.fitMode ?? "fill"
-
+ 
     if (fitMode === "cover") {
       const cover = calculateCoverSourceRect(
-        imageBitmap.width,
-        imageBitmap.height,
+        sourceWidth,
+        sourceHeight,
         targetWidth,
         targetHeight
       )
-
+ 
       sourceX = cover.sourceX
       sourceY = cover.sourceY
-      sourceWidth = cover.sourceWidth
-      sourceHeight = cover.sourceHeight
+      currentSourceWidth = cover.sourceWidth
+      currentSourceHeight = cover.sourceHeight
     } else if (fitMode === "contain") {
       const contain = calculateContainPlacement(
-        imageBitmap.width,
-        imageBitmap.height,
+        sourceWidth,
+        sourceHeight,
         targetWidth,
         targetHeight
       )
-
+ 
       drawWidth = contain.drawWidth
       drawHeight = contain.drawHeight
       drawOffsetX = contain.offsetX
       drawOffsetY = contain.offsetY
     }
   }
-
+ 
   const sourceImageData = extractBitmapRegion(
     imageBitmap,
     sourceX,
     sourceY,
-    sourceWidth,
-    sourceHeight
+    currentSourceWidth,
+    currentSourceHeight
   )
   const resizedImageData = await resizeImageDataWithAlgorithm(
     sourceImageData,
@@ -249,7 +251,9 @@ async function drawSourceImageWithAdvancedResampling(
 
 async function drawSourceImage(
   ctx: OffscreenCanvasRenderingContext2D,
-  imageBitmap: ImageBitmap,
+  imageBitmap: CanvasImageSource,
+  sourceWidth: number,
+  sourceHeight: number,
   targetWidth: number,
   targetHeight: number,
   resize: ResizeConfig,
@@ -275,6 +279,8 @@ async function drawSourceImage(
   const usedAdvancedResampling = await drawSourceImageWithAdvancedResampling(
     ctx,
     imageBitmap,
+    sourceWidth,
+    sourceHeight,
     targetWidth,
     targetHeight,
     resize
@@ -286,8 +292,8 @@ async function drawSourceImage(
 
   if ((resize.mode as any) === "page_size" || resize.mode === "paper_size") {
     const contain = calculateContainPlacement(
-      imageBitmap.width,
-      imageBitmap.height,
+      sourceWidth,
+      sourceHeight,
       targetWidth,
       targetHeight
     )
@@ -306,8 +312,8 @@ async function drawSourceImage(
   if (resize.mode === "set_size") {
     if (fitMode === "cover") {
       const cover = calculateCoverSourceRect(
-        imageBitmap.width,
-        imageBitmap.height,
+        sourceWidth,
+        sourceHeight,
         targetWidth,
         targetHeight
       )
@@ -336,8 +342,8 @@ async function drawSourceImage(
       }
 
       const contain = calculateContainPlacement(
-        imageBitmap.width,
-        imageBitmap.height,
+        sourceWidth,
+        sourceHeight,
         targetWidth,
         targetHeight
       )
@@ -365,32 +371,41 @@ export async function extractRasterFrame(
     targetFormat,
     resize
   } = params
-
-  const imageBitmap = await decodeImageBitmapForEncoding(sourceBlob)
-
+ 
+  const imageSource = await decodeImageSourceForEncoding(sourceBlob)
+ 
   try {
     const { targetWidth, targetHeight } = calculateDimensions(
-      imageBitmap.width,
-      imageBitmap.height,
+      imageSource.width,
+      imageSource.height,
       resize
     )
-
+ 
     const canvas = new OffscreenCanvas(targetWidth, targetHeight)
     const ctx = getOffscreen2DContext(canvas)
-
+ 
     if (!ctx) {
       throw new Error("Cannot acquire 2D context from OffscreenCanvas")
     }
-
-    await drawSourceImage(ctx, imageBitmap, targetWidth, targetHeight, resize, targetFormat)
-
+ 
+    await drawSourceImage(
+      ctx,
+      imageSource.image,
+      imageSource.width,
+      imageSource.height,
+      targetWidth,
+      targetHeight,
+      resize,
+      targetFormat
+    )
+ 
     return {
       imageData: ctx.getImageData(0, 0, targetWidth, targetHeight),
       width: targetWidth,
       height: targetHeight
     }
   } finally {
-    imageBitmap.close()
+    imageSource.close()
   }
 }
 
