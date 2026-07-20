@@ -14,6 +14,7 @@ import { ToastContainer, useRenameInputPrompt } from "@imify/ui";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import { useTranslation } from "@imify/i18n";
+import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useSplicingExport } from "./use-splicing-export";
 import type {
   SplicingImageItem,
@@ -978,6 +979,11 @@ export function SplicingTab({
         onAddMore={handleAddMore}
         onPreviewQualityChange={handlePreviewQualitySelectChange}
         onPreviewShowImageNumberChange={setPreviewShowImageNumber}
+        onPasteFiles={addFiles}
+        onProcessUrls={async (urls) => {
+          const { files } = await fetchRemoteImagesFromUrls(urls);
+          if (files.length) await addFiles(files);
+        }}
       />
       <ToastContainer toasts={conversionToasts} onRemove={handleRemoveToast} />
       <BatchDownloadConfirmDialog

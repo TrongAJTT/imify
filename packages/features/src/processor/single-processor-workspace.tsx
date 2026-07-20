@@ -33,7 +33,6 @@ import {
   sanitizeFile,
 } from "../shared/image-file-utils";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
-import { ImageUrlImportControl } from "./image-url-import-control";
 import {
   withBatchResize,
   downloadWithFilename,
@@ -474,13 +473,11 @@ export function SingleProcessorWorkspace({
               accept: COMMON_IMAGE_ACCEPT,
               onInputFiles: onAppendFiles,
             }}
-            topRightSlot={
-              <ImageUrlImportControl
-                allowMultiple={false}
-                disabled={isImportingUrl}
-                onProcessUrls={importFromImageUrls}
-              />
-            }
+            onProcessUrls={importFromImageUrls}
+            onPasteFiles={(files) => {
+              if (files[0]) void attachSingleFile(files[0]);
+            }}
+            allowMultipleUrls={false}
           />
         </div>
       ) : (

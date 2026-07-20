@@ -50,6 +50,8 @@ interface SplicingWorkspaceProps {
   onAddMore: () => void;
   onPreviewQualityChange: (next: number) => void;
   onPreviewShowImageNumberChange: (next: boolean) => void;
+  onPasteFiles?: (files: File[]) => void;
+  onProcessUrls?: (urls: string[]) => Promise<void>;
 }
 
 export function SplicingWorkspace({
@@ -73,6 +75,8 @@ export function SplicingWorkspace({
   onRemoveImage,
   onReorderImage,
   onAddMore,
+  onPasteFiles,
+  onProcessUrls,
 }: SplicingWorkspaceProps) {
   const { t } = useTranslation("splicing");
 
@@ -101,6 +105,9 @@ export function SplicingWorkspace({
             onDropFiles(event);
           }}
           onClick={onOpenFilePicker}
+          onPasteFiles={onPasteFiles}
+          onProcessUrls={onProcessUrls}
+          allowMultipleUrls={true}
         />
       ) : (
         <div className="space-y-4">

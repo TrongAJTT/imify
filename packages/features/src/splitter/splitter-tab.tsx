@@ -44,6 +44,7 @@ import {
 } from "./split-export";
 import { buildSplitterSplitPlan } from "./split-engine";
 import { decodeFileToImageData } from "@imify/engine/image-pipeline/decode-image-data";
+import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { buildActiveSplitterFormatOptions } from "@imify/stores/stores/splitter-format-options";
 import { useSplitterStore } from "@imify/stores/stores/splitter-store";
@@ -768,6 +769,12 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
           subtitle={t("supportsBatchSplitting")}
           onClick={openFilePicker}
           onDropFiles={handleDropFiles}
+          onPasteFiles={appendFiles}
+          onProcessUrls={async (urls) => {
+            const { files } = await fetchRemoteImagesFromUrls(urls);
+            if (files.length) await appendFiles(files);
+          }}
+          allowMultipleUrls={true}
         />
       ) : (
         <div className="space-y-4">

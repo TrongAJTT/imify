@@ -32,7 +32,6 @@ import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
 import { useClipboardImageIntake } from "../../shared/use-clipboard-image-intake";
 import { BatchDownloadConfirmDialog } from "../../shared/download-confirm-dialog";
-import { ImageUrlImportControl } from "../image-url-import-control";
 import { buildActiveCodecOptionsForTarget } from "../target-format-state";
 import { BatchActionBar } from "./action-bar";
 import { BatchQueueGrid } from "./queue-grid";
@@ -497,13 +496,8 @@ export function BatchProcessorWorkspace() {
       ) : !isRunning ? (
         <BatchUploadDropzone
           onAppendFiles={appendFiles}
-          urlImportControl={
-            <ImageUrlImportControl
-              allowMultiple
-              disabled={isImportingUrls}
-              onProcessUrls={importFromImageUrls}
-            />
-          }
+          onProcessUrls={importFromImageUrls}
+          onPasteFiles={appendImageFiles}
         />
       ) : null}
       <DndContext
