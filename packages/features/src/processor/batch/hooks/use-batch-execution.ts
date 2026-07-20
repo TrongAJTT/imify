@@ -140,7 +140,24 @@ export function useBatchExecution({
 
   const runBatch = async (mode: BatchRunMode = "all", inputValue?: string) => {
     if (isRunning) return
-    const itemsToProcess = mode === "failed" ? queue.filter((item) => item.status === "error") : queue.filter((item) => item.status === "queued" || item.status === "error")
+    let itemsToProcess: BatchQueueItem[] = []
+    if (mode === "failed") {
+      itemsToProcess = queue.filter((item) => item.status === "error")
+    } else if (mode === "all_retry") {
+      const resetItems = queue.map((item) => ({
+        ...item,
+        status: "queued" as const,
+        percent: 0,
+        message: undefined,
+        outputBlob: undefined,
+        outputFileName: undefined
+      }))
+      setQueue(resetItems)
+      itemsToProcess = resetItems
+    } else {
+      itemsToProcess = queue.filter((item) => item.status === "queued" || item.status === "error")
+    }
+
     if (!itemsToProcess.length) return
     const selectedBytes = itemsToProcess.reduce((sum, item) => sum + item.file.size, 0)
     if (selectedBytes > MAX_TOTAL_QUEUE_BYTES && !skipOomWarning) {
@@ -158,7 +175,25 @@ export function useBatchExecution({
     if (dontShowAgain) onPersistSkipOomWarning()
     const mode = oomWarning.mode
     setOomWarning(null)
-    const itemsToProcess = mode === "failed" ? queue.filter((item) => item.status === "error") : queue.filter((item) => item.status === "queued" || item.status === "error")
+    
+    let itemsToProcess: BatchQueueItem[] = []
+    if (mode === "failed") {
+      itemsToProcess = queue.filter((item) => item.status === "error")
+    } else if (mode === "all_retry") {
+      const resetItems = queue.map((item) => ({
+        ...item,
+        status: "queued" as const,
+        percent: 0,
+        message: undefined,
+        outputBlob: undefined,
+        outputFileName: undefined
+      }))
+      setQueue(resetItems)
+      itemsToProcess = resetItems
+    } else {
+      itemsToProcess = queue.filter((item) => item.status === "queued" || item.status === "error")
+    }
+
     await startBatchExecution(itemsToProcess, mode, inputValue)
   }
   const clearSummary = () => setSummary(null)

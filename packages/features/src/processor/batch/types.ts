@@ -4,7 +4,7 @@ import type { ImageFormat } from "@imify/core/types"
 import type { BatchFormatOptions, BatchResizeMode, BatchWatermarkConfig } from "@imify/stores/stores/batch-types"
 
 export type BatchItemStatus = "queued" | "processing" | "success" | "error"
-export type BatchRunMode = "all" | "failed"
+export type BatchRunMode = "all" | "failed" | "all_retry"
 export type BatchExportAction = "zip" | "one_by_one" | "merge_pdf" | "individual_pdf"
 export type BatchTargetFormat = Exclude<ImageFormat, "pdf"> | "mozjpeg"
 

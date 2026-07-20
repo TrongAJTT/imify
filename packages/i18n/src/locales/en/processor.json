@@ -175,6 +175,8 @@
   "tooltipPngDithering": "Controls error-diffusion strength during PNG quantization.\n● 0% disables dithering\n● Higher values smooth gradients with stronger diffusion.",
   "batchDropzoneTitle": "Drop images here, click to browse, or paste from clipboard",
   "batchDropzoneSubtitle": "Supports JPG, PNG, WebP, AVIF, JXL, BMP and image URLs",
+  "batchConfirmRetryAll": "Are you sure to retry all the images in the batch?",
+  "batchConfirmClearAll": "Are you sure to clear all the images in the batch?",
   "noFilesInQueue": "No files in queue",
   "startBatch": "Start Batch",
   "continueBatch": "Continue Batch",

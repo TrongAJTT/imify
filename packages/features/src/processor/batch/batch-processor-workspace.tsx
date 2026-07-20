@@ -433,10 +433,10 @@ export function BatchProcessorWorkspace() {
           setQueue([]);
           clearSummary();
         }}
-        onRunAll={() => {
+        onRunAll={(mode = "all") => {
           checkAndPrompt(fileNamePattern, (inputValue) => {
             setBatchInputValue(inputValue);
-            void runBatch("all", inputValue);
+            void runBatch(mode, inputValue);
           });
         }}
         onRunFailed={() => {
