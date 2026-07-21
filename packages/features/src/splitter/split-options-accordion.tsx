@@ -9,8 +9,9 @@ import {
   SegmentedControl,
   SelectInput,
   LabelText,
+  CheckboxCard,
 } from "@imify/ui";
-import { Scissors } from "lucide-react";
+import { Scan, Scissors } from "lucide-react";
 import { useTranslation } from "@imify/i18n";
 
 interface SplitOptionsAccordionProps {
@@ -226,74 +227,81 @@ export function SplitOptionsAccordion({
               }
             />
 
-            {settings.basicMethod === "count" ? (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {showXAxisFields ? (
+            {settings.basicMethod === "count" && (
+              <div className="flex flex-row gap-2">
+                {showXAxisFields && (
                   <NumberInput
                     label={t("columns")}
                     value={settings.countX}
                     min={1}
                     max={4096}
                     onChangeValue={(value) => onChange({ countX: value })}
+                    className="flex-1"
                   />
-                ) : null}
-                {showYAxisFields ? (
+                )}
+                {showYAxisFields && (
                   <NumberInput
                     label={t("rows")}
                     value={settings.countY}
                     min={1}
                     max={4096}
                     onChangeValue={(value) => onChange({ countY: value })}
+                    className="flex-1"
                   />
-                ) : null}
+                )}
               </div>
-            ) : null}
+            )}
 
-            {settings.basicMethod === "percent" ? (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {showXAxisFields ? (
+            {settings.basicMethod === "percent" && (
+              <div className="flex flex-row gap-2">
+                {showXAxisFields && (
                   <NumberInput
                     label={t("columnSizePercent")}
                     value={settings.percentX}
                     min={1}
                     max={100}
                     onChangeValue={(value) => onChange({ percentX: value })}
+                    className="flex-1"
                   />
-                ) : null}
-                {showYAxisFields ? (
+                )}
+
+                {showYAxisFields && (
                   <NumberInput
                     label={t("rowSizePercent")}
                     value={settings.percentY}
                     min={1}
                     max={100}
                     onChangeValue={(value) => onChange({ percentY: value })}
+                    className="flex-1"
                   />
-                ) : null}
+                )}
               </div>
-            ) : null}
+            )}
 
-            {settings.basicMethod === "pixel" ? (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {showXAxisFields ? (
+            {settings.basicMethod === "pixel" && (
+              <div className="flex flex-row gap-2">
+                {showXAxisFields && (
                   <NumberInput
                     label={t("columnSizePx")}
                     value={settings.pixelX}
                     min={1}
                     max={100000}
                     onChangeValue={(value) => onChange({ pixelX: value })}
+                    className="flex-1"
                   />
-                ) : null}
-                {showYAxisFields ? (
+                )}
+                {showYAxisFields && (
                   <NumberInput
                     label={t("rowSizePx")}
                     value={settings.pixelY}
                     min={1}
                     max={100000}
                     onChangeValue={(value) => onChange({ pixelY: value })}
+                    className="flex-1"
                   />
-                ) : null}
+                )}
               </div>
-            ) : null}
+            )}
           </>
         ) : (
           <>
@@ -323,9 +331,9 @@ export function SplitOptionsAccordion({
               }
             />
 
-            {isColorMatch ? (
+            {isColorMatch && (
               <div className="space-y-2">
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-2 items-end">
                   <NumberInput
                     label={t("offset")}
                     tooltipContent={t("tooltips.colorMatchOffset")}
@@ -368,22 +376,20 @@ export function SplitOptionsAccordion({
                   />
                 </div>
 
-                <label className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-200">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500/20"
-                    checked={settings.colorMatchSafeZoneEnabled}
-                    onChange={(event) =>
-                      onChange({
-                        colorMatchSafeZoneEnabled: event.target.checked,
-                      })
-                    }
-                  />
-                  <span>{t("safeZoneLowVariance")}</span>
-                </label>
+                <CheckboxCard
+                  icon={<Scan size={14} />}
+                  title={t("safeZoneLowVariance")}
+                  subtitle={t("safeZoneLowVarianceDesc")}
+                  checked={settings.colorMatchSafeZoneEnabled}
+                  onChange={(event) =>
+                    onChange({
+                      colorMatchSafeZoneEnabled: event,
+                    })
+                  }
+                />
 
-                {settings.colorMatchSafeZoneEnabled ? (
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {settings.colorMatchSafeZoneEnabled && (
+                  <div className="grid grid-cols-2 gap-2 items-end">
                     <NumberInput
                       label={t("varianceThreshold")}
                       tooltipContent={t("tooltips.safeZoneVarianceThreshold")}
@@ -426,36 +432,43 @@ export function SplitOptionsAccordion({
                       }
                     />
                   </div>
-                ) : null}
+                )}
               </div>
-            ) : null}
+            )}
 
-            {isSocialCarousel ? (
+            {isSocialCarousel && (
               <div className="space-y-2">
-                <SelectInput
-                  label={t("targetRatio")}
-                  value={settings.socialTargetRatio}
-                  options={socialTargetRatioOptions}
-                  onChange={(value) =>
-                    onChange({
-                      socialTargetRatio:
-                        value as SplitterSplitSettings["socialTargetRatio"],
-                    })
-                  }
-                />
-                <SelectInput
-                  label={t("remainderHandling")}
-                  tooltipContent={t("tooltips.remainderHandling")}
-                  value={settings.socialOverflowMode}
-                  options={socialOverflowOptions}
-                  onChange={(value) =>
-                    onChange({
-                      socialOverflowMode:
-                        value as SplitterSplitSettings["socialOverflowMode"],
-                    })
-                  }
-                />
-                {settings.socialOverflowMode === "pad" ? (
+                <div className="flex flex-row md:flex-col gap-2">
+                  <SelectInput
+                    className="flex-1"
+                    label={t("targetRatio")}
+                    value={settings.socialTargetRatio}
+                    options={socialTargetRatioOptions}
+                    onChange={(value) =>
+                      onChange({
+                        socialTargetRatio:
+                          value as SplitterSplitSettings["socialTargetRatio"],
+                      })
+                    }
+                  />
+
+                  <SelectInput
+                    className="flex-1"
+                    label={t("remainderHandling")}
+                    tooltipContent={t("tooltips.remainderHandling")}
+                    value={settings.socialOverflowMode}
+                    options={socialOverflowOptions}
+                    onChange={(value) =>
+                      onChange({
+                        socialOverflowMode:
+                          value as SplitterSplitSettings["socialOverflowMode"],
+                      })
+                    }
+                  />
+                  {/* <div className="flex-1">
+                  </div> */}
+                </div>
+                {settings.socialOverflowMode === "pad" && (
                   <ColorPickerPopover
                     label={t("padColor")}
                     value={settings.socialPadColor || "#ffffff"}
@@ -463,13 +476,13 @@ export function SplitOptionsAccordion({
                     enableGradient={false}
                     outputMode="hex"
                   />
-                ) : null}
+                )}
               </div>
-            ) : null}
+            )}
 
-            {isGutterMarginGrid ? (
+            {isGutterMarginGrid && (
               <div className="space-y-2">
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-2 items-end">
                   <NumberInput
                     label={t("columns")}
                     value={settings.gridColumns}
@@ -525,11 +538,11 @@ export function SplitOptionsAccordion({
                   }
                 />
               </div>
-            ) : null}
+            )}
 
-            {isAutoSprite ? (
+            {isAutoSprite && (
               <div className="space-y-2">
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-2 items-end">
                   <NumberInput
                     label={t("alphaThreshold")}
                     tooltipContent={t("tooltips.spriteAlphaThreshold")}
@@ -581,7 +594,7 @@ export function SplitOptionsAccordion({
                   }
                 />
               </div>
-            ) : null}
+            )}
           </>
         )}
 

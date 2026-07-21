@@ -129,7 +129,7 @@
     "numbersOff": ", Ẩn STT",
     "qualityLabel": "Chất lượng ảnh xem trước (%)",
     "qualityDesc": "Chất lượng càng cao thì thời gian tải ảnh xem trước càng lâu.",
-    "showNumbers": "Hiển thị STT ảnh xem trước",
+    "showNumbers": "Hiện STT ảnh xem trước",
     "showNumbersDesc": "Khớp số thứ tự với thanh quản lý danh sách ảnh bên dưới."
   },
   "exportFields": {

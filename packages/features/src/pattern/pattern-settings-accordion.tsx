@@ -60,7 +60,7 @@ export function PatternSettingsAccordion() {
           }
         />
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 items-end">
           <NumberInput
             label={t("patternFields.density")}
             tooltipContent={t("tooltips.density")}

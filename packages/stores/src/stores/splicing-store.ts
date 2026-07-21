@@ -114,9 +114,6 @@ export interface SplicingStoreState {
   setPreviewShowImageNumber: (v: boolean) => void
   setPreviewBentoFlowGroupCount: (v: number | null) => void
   
-  /** Accordion open/close state for Image Resize */
-  isImageResizeOpen: boolean
-  setIsImageResizeOpen: (v: boolean) => void
   /** Accordion open/close state for Export Format & Quality */
   isExportFormatQualityOpen: boolean
   setIsExportFormatQualityOpen: (v: boolean) => void
@@ -211,7 +208,6 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setPreviewQualityPercent: (v) => set({ previewQualityPercent: normalizePreviewQualityPercent(v) }),
       setPreviewShowImageNumber: (v) => set({ previewShowImageNumber: v }),
       setPreviewBentoFlowGroupCount: (v) => set({ previewBentoFlowGroupCount: v }),
-      setIsImageResizeOpen: (v) => set({ isImageResizeOpen: v }),
       setIsExportFormatQualityOpen: (v) => set({ isExportFormatQualityOpen: v }),
 
       applyPreset: (preset) => {

@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { Frame, RefreshCcw } from "lucide-react";
+import {
+  Frame,
+  RefreshCcw,
+  SquaresExclude,
+  SquaresIntersect,
+} from "lucide-react";
 
 import { PatternBoundaryControls } from "./pattern-boundary-controls";
 import { AccordionCard } from "@imify/ui";
@@ -114,6 +119,7 @@ export function PatternBoundaryAccordion() {
 
           <PatternBoundaryControls
             target="inbound"
+            icon={<SquaresIntersect size={14} />}
             label={t("boundaryFields.inboundLabel")}
             boundary={inboundBoundary}
             visualActive={activeVisualBoundary === "inbound"}
@@ -123,6 +129,7 @@ export function PatternBoundaryAccordion() {
 
           <PatternBoundaryControls
             target="outbound"
+            icon={<SquaresExclude size={14} />}
             label={t("boundaryFields.outboundLabel")}
             boundary={outboundBoundary}
             visualActive={activeVisualBoundary === "outbound"}

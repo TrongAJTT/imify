@@ -16,7 +16,6 @@ interface ImageSettingsAccordionProps {
   imageBorderWidth: number;
   imageBorderColor: string;
   resizeQuickStats: ResizeQuickStats;
-  isImageResizeOpen: boolean;
 
   onImageResizeChange: (mode: SplicingImageResize) => void;
   onImageFitValueChange: (value: number) => void;
@@ -45,7 +44,6 @@ export function ImageSettingsAccordion({
   imageBorderWidth,
   imageBorderColor,
   resizeQuickStats,
-  isImageResizeOpen,
   onImageResizeChange,
   onImageFitValueChange,
   onImageApplyToChange,
@@ -72,7 +70,7 @@ export function ImageSettingsAccordion({
         return t("imageFields.original");
     }
   })();
-  
+
   const sublabel =
     t("imageFields.mode", { mode: resizeLabel }) +
     `, ${t("imageFields.padding")}: ${imagePadding}`;
@@ -92,7 +90,9 @@ export function ImageSettingsAccordion({
           resizeValue={imageFitValue}
           resizeApplyTo={imageApplyTo}
           resizeQuickStats={resizeQuickStats}
-          onResizeModeChange={(mode) => onImageResizeChange(mode as SplicingImageResize)}
+          onResizeModeChange={(mode) =>
+            onImageResizeChange(mode as SplicingImageResize)
+          }
           onResizeValueChange={onImageFitValueChange}
           onResizeApplyToChange={onImageApplyToChange}
           availableModes={["inherit", "fit_value", "zoom_min", "zoom_max"]}
@@ -100,7 +100,7 @@ export function ImageSettingsAccordion({
           onOpenChange={onImageResizeOpenChange}
         />
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 items-end">
           <NumberInput
             label={t("imageFields.padding")}
             value={imagePadding}

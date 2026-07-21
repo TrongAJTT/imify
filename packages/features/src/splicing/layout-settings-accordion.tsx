@@ -138,7 +138,7 @@ export function LayoutSettingsAccordion({
       defaultOpen={true}
     >
       <div className="space-y-3 pt-1">
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 md:grid-cols-1 gap-1.5">
           {localizedPresetOptions.map((opt) => (
             <RadioCard
               key={opt.value}

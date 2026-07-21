@@ -11,6 +11,7 @@
   "upload": "Tải lên",
   "download": "Tải xuống",
   "export": "Xuất",
+  "exporting": "Đang xuất...",
   "processing": "Đang xử lý...",
   "done": "Hoàn thành",
   "result": "Kết quả",
@@ -22,6 +23,8 @@
   "name": "Tên",
   "color": "Màu sắc",
   "highlightColor": "Màu nổi bật",
+  "files": "Tệp tin",
+  "countFiles": "{{count}} tệp tin",
   "noFileSelected": "Chưa chọn tệp nào",
   "chooseFile": "Chọn tệp",
   "pasteFromClipboard": "Dán từ bộ nhớ tạm",
@@ -34,6 +37,12 @@
   "whatItDoes": "Chức năng",
   "presetInfoShowcasePanel": {
     "tipOfTheDay": "Mẹo hôm nay"
+  },
+  "exportModes": {
+    "oneByOne": "Từng tệp",
+    "singlePdf": "Gộp vào 1 PDF",
+    "individualPdf": "Từng PDF riêng lẻ",
+    "openExportOptions": "Mở tùy chọn xuất"
   },
   "previewModes": {
     "zoom": "Thu phóng",

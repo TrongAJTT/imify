@@ -11,6 +11,7 @@
   "upload": "Upload",
   "download": "Download",
   "export": "Export",
+  "exporting": "Exporting...",
   "processing": "Processing...",
   "done": "Done",
   "result": "Result",
@@ -22,6 +23,8 @@
   "name": "Name",
   "color": "Color",
   "highlightColor": "Highlight color",
+  "files": "Files",
+  "countFiles": "{{count}} files",
   "noFileSelected": "No file selected",
   "chooseFile": "Choose File",
   "pasteFromClipboard": "Paste from clipboard",
@@ -34,6 +37,12 @@
   "whatItDoes": "What it does",
   "presetInfoShowcasePanel": {
     "tipOfTheDay": "Tip of the day"
+  },
+  "exportModes": {
+    "oneByOne": "One by one",
+    "singlePdf": "Single PDF",
+    "individualPdf": "Individual PDF",
+    "openExportOptions": "Open export options"
   },
   "previewModes": {
     "zoom": "Zoom",

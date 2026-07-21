@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye } from "lucide-react";
+import { Eye, ListOrdered } from "lucide-react";
 import { AccordionCard, SelectInput, MutedText } from "@imify/ui";
 import { PREVIEW_QUALITY_PERCENTS } from "@imify/stores/stores/splicing-store";
 import { CheckboxCard } from "@imify/ui";
@@ -51,6 +51,7 @@ export function PreviewSettingsAccordion({
         </div>
 
         <CheckboxCard
+          icon={<ListOrdered size={14} />}
           title={t("previewFields.showNumbers")}
           subtitle={t("previewFields.showNumbersDesc")}
           checked={previewShowImageNumber}

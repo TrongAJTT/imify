@@ -59,7 +59,7 @@ export function CanvasSettingsAccordion({
       defaultOpen={true}
     >
       <div className="space-y-3 pt-1">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 items-end">
           <NumberInput
             label={t("canvasFields.mainGap")}
             value={mainSpacing}
@@ -75,7 +75,7 @@ export function CanvasSettingsAccordion({
             max={200}
           />
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 items-end">
           <NumberInput
             label={t("canvasFields.padding")}
             value={canvasPadding}

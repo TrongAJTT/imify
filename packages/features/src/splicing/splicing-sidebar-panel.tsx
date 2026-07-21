@@ -55,7 +55,6 @@ export function SplicingSidebarPanel({
   const canvas = useSplicingStore((s) => s.canvas);
   const image = useSplicingStore((s) => s.image);
   const resizeQuickStats = useSplicingStore((s) => s.resizeQuickStats);
-  const isImageResizeOpen = useSplicingStore((s) => s.isImageResizeOpen);
 
   const exportSettings = useSplicingStore((s) => s.exportSettings);
   const activePresetId = useSplicingStore((s) => s.activePresetId);
@@ -74,7 +73,6 @@ export function SplicingSidebarPanel({
   const setCanvas = useSplicingStore((s) => s.setCanvas);
   const setImage = useSplicingStore((s) => s.setImage);
   const setExportSettings = useSplicingStore((s) => s.setExportSettings);
-  const setIsImageResizeOpen = useSplicingStore((s) => s.setIsImageResizeOpen);
   const setPreviewShowImageNumber = useSplicingStore(
     (s) => s.setPreviewShowImageNumber,
   );
@@ -255,7 +253,6 @@ export function SplicingSidebarPanel({
           imageBorderWidth={image.borderWidth}
           imageBorderColor={image.borderColor}
           resizeQuickStats={resizeQuickStats}
-          isImageResizeOpen={isImageResizeOpen}
           onImageResizeChange={(mode) =>
             setImage({
               resizeMode: mode as SplicingImageResize,
@@ -268,7 +265,7 @@ export function SplicingSidebarPanel({
           onImageBorderRadiusChange={(v) => setImage({ borderRadius: v })}
           onImageBorderWidthChange={(v) => setImage({ borderWidth: v })}
           onImageBorderColorChange={(v) => setImage({ borderColor: v })}
-          onImageResizeOpenChange={setIsImageResizeOpen}
+          onImageResizeOpenChange={() => {}}
         />
       ),
     },
