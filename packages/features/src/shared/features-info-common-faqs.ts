@@ -1,3 +1,5 @@
+import { useTranslation } from "@imify/i18n";
+
 export interface ShowcaseFaqItem {
   question: string
   answer: string
@@ -13,4 +15,17 @@ export const FEATURES_INFO_COMMON_FAQS: ShowcaseFaqItem[] = [
       • **Browser Resource Policy**: The browser may terminate the process if it consumes too much CPU for too long.
       Note: *Quantized* models are great for saving RAM, but **FP16** is usually faster on modern machines.`
   }
-] as const
+] as const;
+
+export function getCommonFaqs(tFunc?: (key: string, options?: any) => any): ShowcaseFaqItem[] {
+  if (tFunc) {
+    const items = tFunc("common:commonFaqs", { returnObjects: true });
+    if (Array.isArray(items)) return items;
+  }
+  return FEATURES_INFO_COMMON_FAQS as unknown as ShowcaseFaqItem[];
+}
+
+export function useCommonFaqs(): ShowcaseFaqItem[] {
+  const { t } = useTranslation("common");
+  return getCommonFaqs(t);
+}

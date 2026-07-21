@@ -14,39 +14,27 @@ import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
 import { useRouter } from "next/navigation";
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid";
 import { WorkspaceLoadingState } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
 import { useImageUpscalerStore } from "@imify/stores/stores/image-upscaler-store";
 
 function UpscalerHardwareNoticeCard() {
+  const { t } = useTranslation("upscaler");
   return (
     <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 p-4 dark:border-indigo-500/20 dark:bg-indigo-500/5">
       <div className="text-sm font-bold text-slate-900 dark:text-slate-100">
-        This experimental feature brings the power of AI models to your browser.
+        {t("hardwareNotice.title")}
       </div>
       <div className="mt-2 space-y-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-        <p>
-          • This experimental feature is VERY hardware-sensitive, we recommend a
-          machine with a strong CPU and at least 12GB of RAM.
-        </p>
-        <p>
-          • Use it patiently if you only need it occasionally as it may take up
-          to minutes of processing. For frequent and efficient use, we recommend
-          using dedicated software such as Upscayl.
-        </p>
-        <p>
-          • You must download the AI models separately to use them, as we do not
-          distribute these models.
-        </p>
-        <p>
-          • NOTE: THIS IS AN EXPERIMENTAL FEATURE AND MAY BE REMOVED IN THE
-          FUTURE BEFORE REACHING THE OFFICIAL EXTENSION RELEASE IF AN OPTIMAL
-          SOLUTION CANNOT BE FOUND.
-        </p>
+        <p>{t("hardwareNotice.item1")}</p>
+        <p>{t("hardwareNotice.item2")}</p>
+        <p>{t("hardwareNotice.item3")}</p>
       </div>
     </div>
   );
 }
 
 export function UpscalerPage() {
+  const { t } = useTranslation("upscaler");
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     setHydrated(useImageUpscalerStore.persist.hasHydrated());
@@ -76,7 +64,7 @@ export function UpscalerPage() {
   // Register sidebar shell
   useWorkspaceSidebar(
     <UpscalerSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
-    "Upscaler Settings",
+    t("sidebar.title"),
   );
 
   React.useEffect(() => {
@@ -86,7 +74,7 @@ export function UpscalerPage() {
   }, [resetHeader]);
 
   React.useEffect(() => {
-    setHeaderSection("Upscaler");
+    setHeaderSection(t("title"));
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
         compact
@@ -94,10 +82,10 @@ export function UpscalerPage() {
         onRootClick={() => router.push("/upscaler")}
       />,
     );
-  }, [router, setHeaderBreadcrumb, setHeaderSection]);
+  }, [router, setHeaderBreadcrumb, setHeaderSection, t]);
 
   if (!hydrated) {
-    return <WorkspaceLoadingState title="Loading upscaler..." />;
+    return <WorkspaceLoadingState title={t("loading")} />;
   }
 
   return (

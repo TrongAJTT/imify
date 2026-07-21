@@ -17,7 +17,10 @@ export interface UseImageUpscalerOptions {
   unloadAfterSuccess?: boolean;
 }
 
+import { useTranslation } from '@imify/i18n';
+
 export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
+  const { t } = useTranslation("upscaler");
   const { 
     modelId = 'swin2sr_lightweight', 
     variantId = 'quantized',
@@ -50,34 +53,34 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
         if (payload.status === 'initiate') {
           setProgressPayload({
             id: 'image-upscaler-task',
-            fileName: 'Image Upscaling',
+            fileName: t('progress.taskName'),
             status: 'processing',
             percent: 0,
-            message: `Initializing ${payload.file}...`
+            message: t('progress.initializing', { file: payload.file })
           });
         } else if (payload.status === 'progress') {
           setProgressPayload({
             id: 'image-upscaler-task',
-            fileName: 'Image Upscaling',
+            fileName: t('progress.taskName'),
             status: 'processing',
             percent: payload.progress,
-            message: `Downloading model: ${Math.round(payload.progress)}%`
+            message: t('progress.downloading', { progress: Math.round(payload.progress) })
           });
         } else if (payload.status === 'done') {
           setProgressPayload({
             id: 'image-upscaler-task',
-            fileName: 'Image Upscaling',
+            fileName: t('progress.taskName'),
             status: 'processing',
             percent: 100,
-            message: `Loaded ${payload.file}`
+            message: t('progress.loaded', { file: payload.file })
           });
         } else if (payload.status === 'ready') {
           setProgressPayload({
             id: 'image-upscaler-task',
-            fileName: 'Image Upscaling',
+            fileName: t('progress.taskName'),
             status: 'processing',
             percent: 100,
-            message: 'AI Model Ready'
+            message: t('progress.modelReady')
           });
         }
         break;
@@ -85,7 +88,7 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
       case 'processing-progress':
         setProgressPayload({
           id: 'image-upscaler-task',
-          fileName: 'Image Upscaling',
+          fileName: t('progress.taskName'),
           status: 'processing',
           percent: payload.percent,
           message: payload.message
@@ -96,10 +99,10 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
         setIsProcessing(false);
         setProgressPayload({
           id: 'image-upscaler-task',
-          fileName: 'Image Upscaling',
+          fileName: t('progress.taskName'),
           status: 'success',
           percent: 100,
-          message: 'Image upscaled successfully'
+          message: t('progress.upscaledSuccess')
         });
         // Clear success toast after 3s
         setTimeout(() => setProgressPayload(null), 3000);
@@ -123,7 +126,7 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
         setIsProcessing(false);
         setProgressPayload({
           id: 'image-upscaler-task',
-          fileName: 'Image Upscaling',
+          fileName: t('progress.taskName'),
           status: 'error',
           percent: 100,
           message: payload.message
@@ -133,7 +136,7 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
         setTimeout(() => setProgressPayload(null), 10000);
         break;
     }
-  }, [terminateWorker]);
+  }, [terminateWorker, t]);
 
   const initWorker = useCallback(() => {
     if (workerRef.current) return workerRef.current;
@@ -145,15 +148,15 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
       setIsProcessing(false);
       setProgressPayload({
         id: 'image-upscaler-task',
-        fileName: 'Image Upscaling',
+        fileName: t('progress.taskName'),
         status: 'error',
         percent: 100,
-        message: 'AI Worker failed. Please refresh.'
+        message: t('progress.workerFailed')
       });
     };
     workerRef.current = worker;
     return worker;
-  }, [handleMessage]);
+  }, [handleMessage, t]);
 
   useEffect(() => {
     return () => terminateWorker();
@@ -165,10 +168,10 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
     setIsProcessing(true);
     setProgressPayload({
       id: 'image-upscaler-task',
-      fileName: 'Image Upscaling',
+      fileName: t('progress.taskName'),
       status: 'processing',
       percent: 0,
-      message: 'Preparing AI pipeline...'
+      message: t('progress.preparingPipeline')
     });
 
     const modelMeta = IMAGE_UPSCALER_MODELS.find(m => m.id === modelId);

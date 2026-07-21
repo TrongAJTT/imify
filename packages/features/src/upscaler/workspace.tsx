@@ -24,6 +24,8 @@ import {
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
 
+import { useTranslation } from "@imify/i18n";
+
 interface UpscalerWorkspaceProps {
   sourceFile: File;
   sourceImageData: ImageData;
@@ -45,6 +47,7 @@ export function UpscalerWorkspace({
   onStartProcessing,
   modelId,
 }: UpscalerWorkspaceProps) {
+  const { t } = useTranslation(["upscaler", "common"]);
   const { variantId } = useImageUpscalerStore();
   const [viewMode, setViewMode] = useState<"split" | "side_by_side">("split");
   const [splitPosition, setSplitPosition] = useState(50);
@@ -275,8 +278,10 @@ export function UpscalerWorkspace({
 
     setIsDownloading(true);
     const toastId = show({
-      title: "Encoding Image",
-      message: `Preparing ${targetFormat.toUpperCase()} file...`,
+      title: t("workspace.toastEncodingTitle"),
+      message: t("workspace.toastEncodingMessage", {
+        format: targetFormat.toUpperCase(),
+      }),
       type: "notification",
       duration: 60000,
     });
@@ -314,19 +319,19 @@ export function UpscalerWorkspace({
             await executeDownloadBlobCreationAndSave(canvas, fileName);
             hide(toastId);
             show({
-              title: "Download Ready",
-              message: "Image upscaled and exported successfully",
+              title: t("workspace.toastDownloadReadyTitle"),
+              message: t("workspace.toastDownloadReadyMessage"),
               type: "success",
             });
           } catch (error) {
             console.error("Download failed:", error);
             hide(toastId);
             show({
-              title: "Download Failed",
+              title: t("workspace.toastDownloadFailedTitle"),
               message:
                 error instanceof Error
                   ? error.message
-                  : "Unable to encode image",
+                  : t("workspace.toastDownloadFailedMessage"),
               type: "error",
               duration: 5000,
             });
@@ -352,19 +357,19 @@ export function UpscalerWorkspace({
             await executeDownloadBlobCreationAndSave(canvas, fileName);
             hide(toastId);
             show({
-              title: "Download Ready",
-              message: "Image upscaled and exported successfully",
+              title: t("workspace.toastDownloadReadyTitle"),
+              message: t("workspace.toastDownloadReadyMessage"),
               type: "success",
             });
           } catch (error) {
             console.error("Download failed:", error);
             hide(toastId);
             show({
-              title: "Download Failed",
+              title: t("workspace.toastDownloadFailedTitle"),
               message:
                 error instanceof Error
                   ? error.message
-                  : "Unable to encode image",
+                  : t("workspace.toastDownloadFailedMessage"),
               type: "error",
               duration: 5000,
             });
@@ -377,9 +382,11 @@ export function UpscalerWorkspace({
       console.error("Download failed:", error);
       hide(toastId);
       show({
-        title: "Download Failed",
+        title: t("workspace.toastDownloadFailedTitle"),
         message:
-          error instanceof Error ? error.message : "Unable to encode image",
+          error instanceof Error
+            ? error.message
+            : t("workspace.toastDownloadFailedMessage"),
         type: "error",
         duration: 5000,
       });
@@ -400,13 +407,18 @@ export function UpscalerWorkspace({
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {isProcessing ? (
               <span className="text-amber-600 dark:text-amber-400 font-medium">
-                Upscaling... ({timerSeconds.toFixed(1)}s)
+                {t("workspace.upscalingStatus", {
+                  seconds: timerSeconds.toFixed(1),
+                })}
               </span>
             ) : resultImageData && processTime !== null ? (
               <span className="text-emerald-600 dark:text-emerald-400 font-medium flex flex-wrap items-center gap-1.5">
                 <span>
-                  Upscaled to {resultImageData.width}x{resultImageData.height}{" "}
-                  in {processTime.toFixed(2)}s
+                  {t("workspace.upscaledSuccess", {
+                    width: resultImageData.width,
+                    height: resultImageData.height,
+                    seconds: processTime.toFixed(2),
+                  })}
                 </span>
                 {resultBlobSize !== null && (
                   <>
@@ -419,7 +431,7 @@ export function UpscalerWorkspace({
                 )}
               </span>
             ) : (
-              "Configure upscale preferences in the sidebar then click Upscale Image"
+              t("workspace.configureHint")
             )}
           </p>
         </div>
@@ -429,7 +441,7 @@ export function UpscalerWorkspace({
             onClick={onClear}
             className="h-9 px-4 flex-1 sm:flex-none"
           >
-            Clear
+            {t("workspace.clear")}
           </Button>
           {resultImageData && (
             <Button
@@ -438,7 +450,7 @@ export function UpscalerWorkspace({
               disabled={isProcessing}
               className="h-9 px-4 flex-1 sm:flex-none"
             >
-              Re-Process
+              {t("workspace.reprocess")}
             </Button>
           )}
           {resultImageData ? (
@@ -448,7 +460,9 @@ export function UpscalerWorkspace({
               disabled={isDownloading}
               className="h-9 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-500/20 disabled:bg-indigo-400 flex-[2] sm:flex-none"
             >
-              {isDownloading ? "Encoding..." : "Download"}
+              {isDownloading
+                ? t("workspace.encoding")
+                : t("workspace.download")}
             </Button>
           ) : (
             <Button
@@ -457,7 +471,9 @@ export function UpscalerWorkspace({
               disabled={isProcessing}
               className="h-9 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-500/20 border-none flex-[2] sm:flex-none"
             >
-              {isProcessing ? "Processing..." : "Upscale Image"}
+              {isProcessing
+                ? t("workspace.processing")
+                : t("workspace.upscaleAction")}
             </Button>
           )}
         </div>
@@ -503,7 +519,7 @@ export function UpscalerWorkspace({
                   <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center gap-3">
                     <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                     <span className="text-sm font-bold text-indigo-600">
-                      Processing...
+                      {t("workspace.processing")}
                     </span>
                   </div>
                 )}

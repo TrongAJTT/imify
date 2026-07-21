@@ -186,7 +186,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   },
   {
     id: "upscaler",
-    label: "Upscaler (Exp)",
+    label: "Upscaler",
     href: "/upscaler",
     categoryId: "image-processing",
     iconColorClassName: "text-indigo-500",

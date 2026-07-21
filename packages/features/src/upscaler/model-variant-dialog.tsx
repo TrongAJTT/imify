@@ -1,19 +1,21 @@
-"use client"
+"use client";
 
-import React from "react"
-import { Check, Cpu, Brain, Award, Info, Scale } from "lucide-react"
-import { BaseDialog, Button } from "@imify/ui"
-import { IMAGE_UPSCALER_MODELS } from "./models"
-import { formatFileSize } from "@imify/core"
+import React from "react";
+import { Check, Cpu, Brain, Award, Info, Scale } from "lucide-react";
+import { BaseDialog, Button } from "@imify/ui";
+import { IMAGE_UPSCALER_MODELS } from "./models";
+import { formatFileSize } from "@imify/core";
 
 interface ModelVariantDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  modelId: string
-  setModelId: (id: string) => void
-  variantId: string
-  setVariantId: (id: string) => void
+  isOpen: boolean;
+  onClose: () => void;
+  modelId: string;
+  setModelId: (id: string) => void;
+  variantId: string;
+  setVariantId: (id: string) => void;
 }
+
+import { useTranslation } from "@imify/i18n";
 
 export function ModelVariantDialog({
   isOpen,
@@ -21,17 +23,22 @@ export function ModelVariantDialog({
   modelId,
   setModelId,
   variantId,
-  setVariantId
+  setVariantId,
 }: ModelVariantDialogProps) {
-  const selectedModel = IMAGE_UPSCALER_MODELS.find((m) => m.id === modelId) ?? IMAGE_UPSCALER_MODELS[0]
-  const selectedVariant = selectedModel.variants.find(v => v.id === variantId) ?? selectedModel.variants[0]
+  const { t } = useTranslation(["upscaler", "common"]);
+  const selectedModel =
+    IMAGE_UPSCALER_MODELS.find((m) => m.id === modelId) ??
+    IMAGE_UPSCALER_MODELS[0];
+  const selectedVariant =
+    selectedModel.variants.find((v) => v.id === variantId) ??
+    selectedModel.variants[0];
 
   const handleModelSelect = (id: string) => {
-    const model = IMAGE_UPSCALER_MODELS.find(m => m.id === id)
-    if (!model) return
-    setModelId(id)
-    setVariantId(model.defaultVariantId || model.variants[0]?.id)
-  }
+    const model = IMAGE_UPSCALER_MODELS.find((m) => m.id === id);
+    if (!model) return;
+    setModelId(id);
+    setVariantId(model.defaultVariantId || model.variants[0]?.id);
+  };
 
   return (
     <BaseDialog
@@ -45,10 +52,12 @@ export function ModelVariantDialog({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Brain className="text-indigo-500" size={20} />
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">AI Upscaler Configuration</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              {t("modelDialog.title")}
+            </h2>
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Select the neural network model and floating point precision optimized for upscaling performance.
+            {t("modelDialog.subtitle")}
           </p>
         </div>
 
@@ -56,11 +65,13 @@ export function ModelVariantDialog({
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Cpu size={15} className="text-indigo-500" />
-            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Select AI Model</span>
+            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              {t("modelDialog.selectModel")}
+            </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {IMAGE_UPSCALER_MODELS.map((model) => {
-              const isActive = model.id === modelId
+              const isActive = model.id === modelId;
               return (
                 <button
                   key={model.id}
@@ -90,11 +101,11 @@ export function ModelVariantDialog({
                       {model.usecase}
                     </span>
                     <span className="text-[10px] text-slate-400 truncate max-w-[150px]">
-                      By {model.author}
+                      {t("modelDialog.byAuthor", { author: model.author })}
                     </span>
                   </div>
                 </button>
-              )
+              );
             })}
           </div>
         </div>
@@ -103,11 +114,13 @@ export function ModelVariantDialog({
         <div className="space-y-3 pt-1 border-t border-slate-100 dark:border-slate-800/60">
           <div className="flex items-center gap-2">
             <Info size={15} className="text-indigo-500" />
-            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Select Precision Variant</span>
+            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              {t("modelDialog.selectVariant")}
+            </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {selectedModel.variants.map((v) => {
-              const isActive = v.id === variantId
+              const isActive = v.id === variantId;
               return (
                 <button
                   key={v.id}
@@ -133,7 +146,7 @@ export function ModelVariantDialog({
                     </p>
                   )}
                 </button>
-              )
+              );
             })}
           </div>
         </div>
@@ -143,44 +156,62 @@ export function ModelVariantDialog({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Award className="text-indigo-500" size={16} />
-              <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Current Selection Details</span>
+              <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                {t("modelDialog.currentDetails")}
+              </span>
             </div>
             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
-              Ready to Load
+              {t("modelDialog.readyToLoad")}
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div className="space-y-2">
               <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">AI Model:</span>
-                <span className="font-medium text-indigo-600 dark:text-indigo-400">{selectedModel.name}</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("modelDialog.modelLabel")}
+                </span>
+                <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                  {selectedModel.name}
+                </span>
               </div>
               <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">Suitable for:</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("modelDialog.suitableForLabel")}
+                </span>
                 <span className="font-medium text-slate-700 dark:text-slate-200">
                   {selectedModel.suitableFor}
                 </span>
               </div>
               <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">Description:</span>
-                <span className="leading-relaxed">{selectedModel.description}</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("modelDialog.descriptionLabel")}
+                </span>
+                <span className="leading-relaxed">
+                  {selectedModel.description}
+                </span>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">Precision:</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("modelDialog.precisionLabel")}
+                </span>
                 <span>{selectedVariant.label}</span>
               </div>
               <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">Storage Size:</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("modelDialog.storageSizeLabel")}
+                </span>
                 <span className="font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                   ~{formatFileSize(selectedVariant.sizeBytes)}
                 </span>
               </div>
               <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">License:</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[90px] shrink-0">
+                  {t("modelDialog.licenseLabel")}
+                </span>
                 <a
                   href={selectedModel.licenseUrl}
                   target="_blank"
@@ -201,10 +232,10 @@ export function ModelVariantDialog({
             onClick={onClose}
             className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg px-6 font-semibold shrink-0 shadow-md shadow-indigo-500/10"
           >
-            Apply & Close
+            {t("modelDialog.applyAndClose")}
           </Button>
         </div>
       </div>
     </BaseDialog>
-  )
+  );
 }
