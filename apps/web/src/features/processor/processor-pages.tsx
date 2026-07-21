@@ -109,6 +109,12 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
   useWorkspaceSidebar(sidebar, t("common:aboutThisTool"));
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     const contextLabel = getContextLabel(context);
     setHeaderSection(contextLabel);
     setHeaderActions(null);
@@ -116,10 +122,8 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
       <FeatureBreadcrumb compact rootToolId={getContextToolId(context)} />,
     );
     setHeaderOnBack(() => router.push(getRoutePrefix(context)));
-    return () => resetHeader();
   }, [
     context,
-    resetHeader,
     router,
     setHeaderActions,
     setHeaderBreadcrumb,
@@ -222,6 +226,12 @@ export function ProcessorWorkPage({
   );
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     const contextLabel = getContextLabel(context);
     setHeaderSection(contextLabel);
     setHeaderActions(null);
@@ -234,11 +244,9 @@ export function ProcessorWorkPage({
       />,
     );
     setHeaderOnBack(() => router.push(getRoutePrefix(context)));
-    return () => resetHeader();
   }, [
     context,
     preset?.name,
-    resetHeader,
     router,
     setHeaderActions,
     setHeaderBreadcrumb,

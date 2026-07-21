@@ -167,11 +167,16 @@ export function SplicingLandingPage() {
   useWorkspaceSidebar(sidebar, t("common:aboutThisTool"));
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Image Splicing");
     setHeaderActions(null);
     setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="splicing" />);
-    return () => resetHeader();
-  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
+  }, [setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
 
   useEffect(() => {
     if (!isRehydrated) {
@@ -260,6 +265,12 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
   );
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Image Splicing");
     setHeaderActions(null);
     setHeaderBreadcrumb(
@@ -270,10 +281,8 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
         onRootClick={() => router.push("/splicing")}
       />,
     );
-    return () => resetHeader();
   }, [
     preset?.name,
-    resetHeader,
     router,
     setHeaderActions,
     setHeaderBreadcrumb,

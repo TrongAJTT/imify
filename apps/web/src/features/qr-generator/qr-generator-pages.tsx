@@ -53,6 +53,12 @@ export function QrGeneratorPage() {
   );
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("QR Generator");
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
@@ -61,8 +67,7 @@ export function QrGeneratorPage() {
         onRootClick={() => router.push("/qr-generator")}
       />,
     );
-    return () => resetHeader();
-  }, [resetHeader, router, setHeaderBreadcrumb, setHeaderSection]);
+  }, [router, setHeaderBreadcrumb, setHeaderSection]);
 
   if (!hydrated) {
     return <WorkspaceLoadingState title="Loading QR generator..." />;

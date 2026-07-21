@@ -173,13 +173,18 @@ export function PatternLandingPage() {
   );
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Pattern Generator");
     setHeaderActions(null);
     setHeaderBreadcrumb(
       <FeatureBreadcrumb compact rootToolId="pattern-generator" />,
     );
-    return () => resetHeader();
-  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
+  }, [setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -257,6 +262,12 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
   );
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Pattern Generator");
     setHeaderActions(null);
     setHeaderBreadcrumb(
@@ -267,10 +278,8 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
         onRootClick={() => router.push("/pattern-generator")}
       />,
     );
-    return () => resetHeader();
   }, [
     preset?.name,
-    resetHeader,
     router,
     setHeaderActions,
     setHeaderBreadcrumb,

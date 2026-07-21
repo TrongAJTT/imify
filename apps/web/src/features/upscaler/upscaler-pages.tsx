@@ -80,6 +80,12 @@ export function UpscalerPage() {
   );
 
   React.useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  React.useEffect(() => {
     setHeaderSection("Upscaler");
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
@@ -88,8 +94,7 @@ export function UpscalerPage() {
         onRootClick={() => router.push("/upscaler")}
       />,
     );
-    return () => resetHeader();
-  }, [resetHeader, router, setHeaderBreadcrumb, setHeaderSection]);
+  }, [router, setHeaderBreadcrumb, setHeaderSection]);
 
   if (!hydrated) {
     return <WorkspaceLoadingState title="Loading upscaler..." />;
