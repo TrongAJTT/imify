@@ -38,8 +38,6 @@ import type {
   CanvasFillState,
   FillingTemplate,
   VectorLayer,
-  LayerFillState,
-  ImageTransform,
 } from "@imify/features/filling/types";
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
@@ -68,11 +66,7 @@ import {
 } from "@imify/features/filling/layer-visual-highlight";
 import { Subheading, MutedText } from "@imify/ui/ui/typography";
 import { Button } from "@imify/ui/ui/button";
-import {
-  AnimatingSpinner,
-  useRenameInputPrompt,
-  ZoomPanControl,
-} from "@imify/ui";
+import { useRenameInputPrompt, ZoomPanControl } from "@imify/ui";
 import { useCanvasResizer } from "../../shared/use-canvas-resizer";
 import {
   PreviewInteractionModeToggle,
@@ -85,16 +79,15 @@ import {
   isCommonImageFile,
 } from "../../shared/image-file-utils";
 import { exportFilledTemplate } from "../filling-export-utils";
-import { templateStorage } from "../template-storage";
 import { useTranslation } from "@imify/i18n";
-
-const CANVAS_PADDING = 40;
-const ROTATE_CURSOR = "crosshair";
-const PREVIEW_MIN_ZOOM = 50;
-const PREVIEW_MAX_ZOOM = 10000;
-const PREVIEW_ZOOM_STEP = 10;
-const PREVIEW_ZOOM_FACTOR = 0.15;
-const IMAGE_HITBOX_PADDING = 50;
+import {
+  CANVAS_PADDING,
+  PREVIEW_MIN_ZOOM,
+  PREVIEW_MAX_ZOOM,
+  PREVIEW_ZOOM_FACTOR,
+  ROTATE_CURSOR,
+  IMAGE_HITBOX_PADDING,
+} from "../config";
 
 function safeRevokeObjectUrl(value: string | null | undefined) {
   if (!value || !value.startsWith("blob:")) {

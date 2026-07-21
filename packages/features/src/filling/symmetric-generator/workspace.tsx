@@ -36,22 +36,16 @@ import {
 } from "../../shared/media-assets";
 import { useShortcutActions } from "../use-shortcut-actions";
 import { preventWheelEvent } from "../../shared/prevent-wheel-event";
-
-const CANVAS_PADDING = 40;
-const PREVIEW_MIN_ZOOM = 50;
-const PREVIEW_MAX_ZOOM = 10000;
-const PREVIEW_ZOOM_STEP = 10;
-// When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
-// Matches DiffChecker's multiplicative approach.
-const PREVIEW_ZOOM_FACTOR = 0.15;
-const FIRST_CONTROL_ID = "first_axis_first_shape";
-const SECOND_CONTROL_ID = "first_axis_second_shape";
-const THIRD_CONTROL_ID = "second_axis_first_shape";
-
-type SymmetricControlId =
-  | typeof FIRST_CONTROL_ID
-  | typeof SECOND_CONTROL_ID
-  | typeof THIRD_CONTROL_ID;
+import {
+  SymmetricControlId,
+  PREVIEW_MIN_ZOOM,
+  PREVIEW_MAX_ZOOM,
+  CANVAS_PADDING,
+  PREVIEW_ZOOM_FACTOR,
+  FIRST_CONTROL_ID,
+  SECOND_CONTROL_ID,
+  THIRD_CONTROL_ID,
+} from "../config";
 
 interface SymmetricControl {
   id: SymmetricControlId;

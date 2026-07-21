@@ -1,3 +1,4 @@
+export * from "./config"
 export * from "./pattern-asset-drawing-dialog"
 export * from "./pattern-asset-list-item"
 export * from "./pattern-asset-settings-accordion"

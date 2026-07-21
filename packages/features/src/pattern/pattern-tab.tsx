@@ -29,6 +29,12 @@ import {
 } from "@imify/ui";
 import { preventWheelEvent } from "../shared/prevent-wheel-event";
 import { useTranslation } from "@imify/i18n";
+import {
+  PREVIEW_MIN_ZOOM,
+  PREVIEW_MAX_ZOOM,
+  PREVIEW_PADDING,
+  PREVIEW_ZOOM_FACTOR,
+} from "./config";
 
 const PatternBoundaryVisualOverlay = lazy(() =>
   import("./pattern-boundary-visual-overlay").then((module) => ({
@@ -36,12 +42,7 @@ const PatternBoundaryVisualOverlay = lazy(() =>
   })),
 );
 
-const PREVIEW_PADDING = 16;
-const PREVIEW_MIN_ZOOM = 50;
-const PREVIEW_MAX_ZOOM = 2000;
-const PREVIEW_ZOOM_STEP = 10;
 // When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
-const PREVIEW_ZOOM_FACTOR = 0.15;
 
 function closeBitmapMap(map: Map<string, ImageBitmap>): void {
   for (const bitmap of map.values()) {

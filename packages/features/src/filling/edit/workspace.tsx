@@ -34,6 +34,7 @@ import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle";
 import { preventWheelEvent } from "../../shared/prevent-wheel-event";
 import { useTranslation } from "@imify/i18n";
+import { PREVIEW_MIN_ZOOM, PREVIEW_MAX_ZOOM, CANVAS_PADDING } from "../config";
 
 export interface ManualEditorVisualHelp {
   label: string;
@@ -61,10 +62,6 @@ interface ManualEditorWorkspaceProps {
   showHeader?: boolean;
 }
 
-const CANVAS_PADDING = 40;
-const PREVIEW_MIN_ZOOM = 50;
-const PREVIEW_MAX_ZOOM = 10000;
-const PREVIEW_ZOOM_STEP = 10;
 // When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
 // Matches DiffChecker's multiplicative approach.
 const PREVIEW_ZOOM_FACTOR = 0.15;

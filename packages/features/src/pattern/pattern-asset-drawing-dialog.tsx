@@ -29,6 +29,16 @@ import React, {
 } from "react";
 import { flushSync } from "react-dom";
 import { useTranslation } from "@imify/i18n";
+import {
+  DEFAULT_BRUSH_SIZE_BY_TOOL,
+  CanvasSize,
+  DEFAULT_CANVAS_SIZE,
+  DEFAULT_STREAMLINE_PERCENT,
+  DEFAULT_SMOOTHING_PERCENT,
+  MIN_BRUSH_SIZE,
+  MAX_BRUSH_SIZE,
+  BRUSH_SIZE_STEP,
+} from "./config";
 
 interface PatternAssetDrawingDialogProps {
   isOpen: boolean;
@@ -38,28 +48,6 @@ interface PatternAssetDrawingDialogProps {
   onClose: () => void;
   onSave: (payload: { blob: Blob; suggestedName: string }) => void;
 }
-
-interface CanvasSize {
-  width: number;
-  height: number;
-}
-
-const DEFAULT_CANVAS_SIZE: CanvasSize = {
-  width: 1024,
-  height: 640,
-};
-
-const DEFAULT_BRUSH_SIZE_BY_TOOL: Record<DrawingTool, number> = {
-  brush: 10,
-  eraser: 18,
-};
-
-const MIN_BRUSH_SIZE = 1;
-const MAX_BRUSH_SIZE = 120;
-const BRUSH_SIZE_STEP = 1;
-
-const DEFAULT_STREAMLINE_PERCENT = 65;
-const DEFAULT_SMOOTHING_PERCENT = 55;
 
 function normalizeSuggestedName(input: string | null | undefined): string {
   const trimmed = input?.trim();

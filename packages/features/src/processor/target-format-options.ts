@@ -2,19 +2,11 @@ import { FORMAT_LABELS } from "@imify/core/format-config"
 import { getCanonicalExtension } from "@imify/core/download-utils"
 import type { FormatCodecOptions, ImageFormat } from "@imify/core/types"
 
+import { PROCESSOR_TARGET_FORMATS } from "./config"
+
 export type TargetFormatOptionValue = Exclude<ImageFormat, "pdf"> | "mozjpeg"
 
-const ALL_TARGET_FORMAT_VALUES: TargetFormatOptionValue[] = [
-  "jpg",
-  "mozjpeg",
-  "png",
-  "webp",
-  "avif",
-  "jxl",
-  "bmp",
-  "ico",
-  "tiff"
-]
+export const ALL_TARGET_FORMAT_VALUES: TargetFormatOptionValue[] = PROCESSOR_TARGET_FORMATS
 
 export function resolveEffectiveTargetFormat(
   format: Exclude<ImageFormat, "pdf">,

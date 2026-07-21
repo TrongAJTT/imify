@@ -10,6 +10,7 @@ import {
   Download,
   Gauge,
   Globe,
+  History,
   Keyboard,
   ListTree,
   RotateCcw,
@@ -468,6 +469,7 @@ export function WorkspaceSettingsDialog({
                     <CheckboxCard
                       title={t("general.preferRecentPreset")}
                       subtitle={t("general.preferRecentPresetDesc")}
+                      icon={<History size={14} />}
                       checked={preferRecentPresetEntry}
                       onChange={onChangePreferRecentPresetEntry}
                     />
