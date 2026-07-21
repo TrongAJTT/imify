@@ -5,7 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+[Unreleased]
+
+## [2.2.1] - 2026-07-22 - Web App only
+
+### Added
+
+- **Upscaler Enhancements:** Added an advisory/warning card for high-resolution images (> 1000px) detailing hardware/browser ONNX memory constraints.
+- **Retry Capability:** Added a "Retry All" option to batch processing queues for failed tasks.
+- **Descriptive Tooltips:** Included a visual matrix/table tooltip describing available resizing policies (Crop, Contain, etc.).
+
+### Fixed
+
+- **Next.js PWA Offline Support:** Resolved static route redirect/404 issues on offline Next.js app pages (e.g. `/splicing/work` or `/inspector`) by updating Service Worker precaching patterns for `.html`/`.txt` pairs and handling RSC content headers properly.
+- **Mobile Compatibility:** Fixed Android image decoding and file object URL resource leaks. Prevented mobile bottom sheets from auto-closing during Grid Design interactions.
+- **Splicing Stability:** Resolved naming inconsistencies and enhanced UI stability in the splicing editor.
+
+### Changed
+
+- **Unified Dialogs:** Removed redundant/duplicate dialog variants in `apps/extension` in favor of shared package dialogs (`BatchDownloadConfirmDialog` and `OOMWarningDialog`) with complete EN/VI internationalization support.
+- **Developer Tools Dashboard:** Segmented "About" and "Language Settings" into dedicated tabs. Added state viewer word-wrap, filters, and log counts.
+- **Centralized Configurations:** Consolidated internal presets, step parameters, zoom levels, boundaries, and brush thresholds into uniform `config.ts` modules for Splitter, Splicing, Filling, and Pattern Generator features.
 
 ## [2.2.0] - 2026-07-10 - Web App only
 
