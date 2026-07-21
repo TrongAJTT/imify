@@ -1,6 +1,6 @@
 {
   "name": "@imify/web",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "displayName": "Imify - Powerful Image Toolkit",
   "versionType": "Stable",
   "author": "TrongAJTT <trong.ajtt.dev@gmail.com>",
@@ -14,6 +14,7 @@
     "dev": "node ../../scripts/sync-locales.mjs && node ../../scripts/with-root-metadata.mjs next dev",
     "build": "node ../../scripts/sync-locales.mjs && node ../../scripts/with-root-metadata.mjs next build",
     "start": "node ../../scripts/with-root-metadata.mjs next start",
+    "preview": "pnpm build && npx serve out -p 3000 -s",
     "lint": "next lint",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },

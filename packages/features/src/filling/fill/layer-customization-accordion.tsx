@@ -39,7 +39,7 @@ import { AccordionCard } from "@imify/ui/ui/accordion-card";
 import { Button } from "@imify/ui/ui/button";
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover";
 import { NumberInput } from "@imify/ui/ui/number-input";
-import { Tooltip } from "@imify/features/shared/tooltip";
+import { Tooltip } from "@imify/ui/ui/tooltip";
 import {
   SHORTCUT_DEFINITION_MAP,
   type ShortcutActionId,

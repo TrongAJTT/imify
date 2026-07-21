@@ -173,13 +173,18 @@ export function PatternLandingPage() {
   );
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Pattern Generator");
     setHeaderActions(null);
     setHeaderBreadcrumb(
       <FeatureBreadcrumb compact rootToolId="pattern-generator" />,
     );
-    return () => resetHeader();
-  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
+  }, [setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -246,8 +251,13 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
   const appliedPresetIdRef = useRef<string | null>(null);
   const patternState = usePatternStore();
 
+  const sidebarContent = useMemo(
+    () => <PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
+    [enableWideSidebarGrid],
+  );
+
   useWorkspaceSidebar(
-    <PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
+    sidebarContent,
     `${t("common:toolSettings")} - ${t("title")}`,
   );
 
@@ -255,6 +265,12 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
     () => presets.find((entry) => entry.id === presetId) ?? null,
     [presetId, presets],
   );
+
+  useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
 
   useEffect(() => {
     setHeaderSection("Pattern Generator");
@@ -267,10 +283,8 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
         onRootClick={() => router.push("/pattern-generator")}
       />,
     );
-    return () => resetHeader();
   }, [
     preset?.name,
-    resetHeader,
     router,
     setHeaderActions,
     setHeaderBreadcrumb,

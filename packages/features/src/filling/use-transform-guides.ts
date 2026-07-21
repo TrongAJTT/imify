@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react"
+import { DEFAULT_POSITION_TOLERANCE, DEFAULT_ROTATION_STEP, DEFAULT_ROTATION_TOLERANCE } from "./config"
 
 export interface RectBounds {
   x: number
@@ -35,10 +36,6 @@ interface SnapRectPositionResult {
   snappedRect: RectBounds
   guides: AxisGuide[]
 }
-
-const DEFAULT_ROTATION_STEP = 45
-const DEFAULT_ROTATION_TOLERANCE = 4
-const DEFAULT_POSITION_TOLERANCE = 8
 
 function normalizeAngle(angle: number): number {
   return ((angle % 360) + 360) % 360

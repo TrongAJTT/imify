@@ -1,4 +1,4 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
 import type {
@@ -10,7 +10,7 @@ import type {
   SplicingExportFormat,
   SplicingExportMode
 } from "@imify/features/splicing/types"
-import type { TiffColorMode, BmpColorDepth } from "@imify/core/types"
+import type { TiffColorMode, BmpColorDepth, ResizeApplyTo } from "@imify/core/types"
 
 
 
@@ -34,6 +34,7 @@ export interface SplicingPresetConfig {
   backgroundColor: string
   imageResize: SplicingImageResize
   imageFitValue: number
+  imageApplyTo: ResizeApplyTo
   imagePadding: number
   imagePaddingColor: string
   imageBorderRadius: number
@@ -121,8 +122,9 @@ function createDefaultConfig(): SplicingPresetConfig {
     canvasBorderWidth: 0,
     canvasBorderColor: "#000000",
     backgroundColor: "#ffffff",
-    imageResize: "original",
+    imageResize: "inherit",
     imageFitValue: 800,
+    imageApplyTo: "width",
     imagePadding: 0,
     imagePaddingColor: "#ffffff",
     imageBorderRadius: 0,
@@ -307,6 +309,31 @@ export const useSplicingPresetStore = create<SplicingPresetStoreState>()(
     {
       name: "imify-splicing-preset",
       storage: createJSONStorage(() => deferredStorage),
+      merge: (persistedState, currentState) => {
+        const p = persistedState as Partial<SplicingPresetStoreState>
+        if (p && p.presets) {
+          p.presets = p.presets.map((preset) => {
+            const config = { ...preset.config }
+            let mode = config.imageResize
+            let applyTo = config.imageApplyTo ?? "width"
+
+            if ((mode as any) === "original" || (mode as any) === "none") {
+              mode = "inherit"
+            } else if ((mode as any) === "fit_width") {
+              mode = "fit_value"
+              applyTo = "width"
+            } else if ((mode as any) === "fit_height") {
+              mode = "fit_value"
+              applyTo = "height"
+            }
+
+            config.imageResize = mode
+            config.imageApplyTo = applyTo
+            return { ...preset, config }
+          })
+        }
+        return { ...currentState, ...p }
+      },
       partialize: (state) => ({
         presets: state.presets,
         activePresetId: state.activePresetId,

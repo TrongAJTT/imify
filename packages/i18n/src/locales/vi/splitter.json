@@ -117,7 +117,8 @@
   "offset": "Độ lệch (px)",
   "skipBefore": "Bỏ qua trước (px)",
   "breakAfter": "Ngắt sau (px)",
-  "safeZoneLowVariance": "Vùng an toàn (Độ biến động thấp)",
+  "safeZoneLowVariance": "Vùng an toàn",
+  "safeZoneLowVarianceDesc": "Độ biến động thấp",
   "varianceThreshold": "Ngưỡng biến động",
   "searchRadius": "Bán kính tìm kiếm (px)",
   "searchStep": "Bước tìm kiếm (px)",
@@ -239,7 +240,6 @@
     "spriteMinArea": "Bỏ qua các đảo nhỏ hơn diện tích này để giảm nhiễu.",
     "spritePadding": "Mở rộng từng hộp giới hạn sprite phát hiện được thêm khoảng đệm này.",
     "orderDialogLiveSequence": "Văn bản này phản ánh hướng ngang/dọc và trục ưu tiên hiện tại.",
-    "whatItDoes": "Công dụng",
     "basicMethods": [
       {
         "method": "Số lượng",

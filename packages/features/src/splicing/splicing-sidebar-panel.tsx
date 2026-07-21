@@ -3,7 +3,6 @@ import React, { useEffect, useMemo } from "react";
 import type { PerformancePreferences } from "../processor/performance-preferences";
 import type { SplicingImageResize } from "./types";
 import { useSplicingStore } from "@imify/stores/stores/splicing-store";
-import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store";
 import {
   ALIGNMENT_OPTIONS,
   deriveBentoLayoutMode,
@@ -20,12 +19,9 @@ import {
 } from "@imify/ui";
 import { PresetSelector } from "../processor/preset-selector";
 import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
-import { FEATURE_PRESET_PREFIXES } from "@imify/core";
-import {
-  type SavedSetupPreset,
-  useBatchStore,
-} from "@imify/stores/stores/batch-store";
+import { useBatchStore } from "@imify/stores/stores/batch-store";
+
+import { SPLICING_TARGET_FORMATS, useSplicingIdentifiedPreset } from "./config";
 
 interface SplicingSidebarPanelProps {
   performancePreferences: PerformancePreferences;
@@ -33,17 +29,6 @@ interface SplicingSidebarPanelProps {
   onOpenSettings: () => void;
   enableWideSidebarGrid?: boolean;
 }
-
-const SPLICING_TARGET_FORMATS: string[] = [
-  "png",
-  "webp",
-  "avif",
-  "jxl",
-  "jpg",
-  "mozjpeg",
-  "bmp",
-  "tiff",
-];
 
 export function SplicingSidebarPanel({
   performancePreferences,
@@ -55,10 +40,8 @@ export function SplicingSidebarPanel({
   const canvas = useSplicingStore((s) => s.canvas);
   const image = useSplicingStore((s) => s.image);
   const resizeQuickStats = useSplicingStore((s) => s.resizeQuickStats);
-  const isImageResizeOpen = useSplicingStore((s) => s.isImageResizeOpen);
 
   const exportSettings = useSplicingStore((s) => s.exportSettings);
-  const activePresetId = useSplicingStore((s) => s.activePresetId);
 
   const previewQualityPercent = useSplicingStore(
     (s) => s.previewQualityPercent,
@@ -74,46 +57,14 @@ export function SplicingSidebarPanel({
   const setCanvas = useSplicingStore((s) => s.setCanvas);
   const setImage = useSplicingStore((s) => s.setImage);
   const setExportSettings = useSplicingStore((s) => s.setExportSettings);
-  const setIsImageResizeOpen = useSplicingStore((s) => s.setIsImageResizeOpen);
   const setPreviewShowImageNumber = useSplicingStore(
     (s) => s.setPreviewShowImageNumber,
   );
   const applyPreset = useSplicingStore((s) => s.applyPreset);
   const resetToDefault = useSplicingStore((s) => s.resetToDefault);
 
-  const activeSplicingPresetId = useSplicingPresetStore(
-    (s) => s.activePresetId,
-  );
-  const activeSplicingPreset = useSplicingPresetStore((s) =>
-    s.presets.find((p) => p.id === activeSplicingPresetId),
-  );
-
-  const identifiedPresetId = `${FEATURE_PRESET_PREFIXES.SPLICING}_${activeSplicingPresetId}`;
-  const identifiedPresetName = `Splicing #${activeSplicingPreset?.name || activeSplicingPresetId}`;
-  const identifiedPresetColor =
-    activeSplicingPreset?.highlightColor || "#f97316";
-
-  const splicingIdentifiedPreset: SavedSetupPreset = useMemo(
-    () => ({
-      ...VIRTUAL_DEFAULT_PNG_PRESET,
-      id: identifiedPresetId,
-      name: identifiedPresetName,
-      highlightColor: identifiedPresetColor,
-      config: {
-        ...VIRTUAL_DEFAULT_PNG_PRESET.config,
-        targetFormat: exportSettings.targetFormat as any,
-        quality: exportSettings.quality,
-        formatOptions: exportSettings.codecOptions as any,
-        fileNamePattern: exportSettings.fileNamePattern,
-      },
-    }),
-    [
-      identifiedPresetId,
-      identifiedPresetName,
-      identifiedPresetColor,
-      exportSettings,
-    ],
-  );
+  const { splicingIdentifiedPreset, activePresetId } =
+    useSplicingIdentifiedPreset();
 
   useIdentifiedPresetLoader(
     splicingIdentifiedPreset,
@@ -157,18 +108,14 @@ export function SplicingSidebarPanel({
   useEffect(() => {
     if (activePresetId === null) {
       applyPreset({
-        id: identifiedPresetId,
-        name: identifiedPresetName,
-        highlightColor: identifiedPresetColor,
+        ...splicingIdentifiedPreset,
         config: {
-          ...VIRTUAL_DEFAULT_PNG_PRESET.config,
+          ...splicingIdentifiedPreset.config,
           targetFormat: batchTargetFormat,
           quality: batchQuality,
           fileNamePattern: batchFileNamePattern,
           formatOptions: batchFormatOptions,
         },
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       });
     }
   }, [
@@ -177,9 +124,7 @@ export function SplicingSidebarPanel({
     batchQuality,
     batchFileNamePattern,
     batchFormatOptions,
-    identifiedPresetId,
-    identifiedPresetName,
-    identifiedPresetColor,
+    splicingIdentifiedPreset,
     applyPreset,
   ]);
 
@@ -248,27 +193,26 @@ export function SplicingSidebarPanel({
         <ImageSettingsAccordion
           imageResize={image.resizeMode}
           imageFitValue={image.fitValue}
+          imageApplyTo={image.applyTo}
           imagePadding={image.padding}
           imagePaddingColor={image.paddingColor}
           imageBorderRadius={image.borderRadius}
           imageBorderWidth={image.borderWidth}
           imageBorderColor={image.borderColor}
           resizeQuickStats={resizeQuickStats}
-          isImageResizeOpen={isImageResizeOpen}
           onImageResizeChange={(mode) =>
             setImage({
-              resizeMode: (mode === "original"
-                ? "original"
-                : mode) as SplicingImageResize,
+              resizeMode: mode as SplicingImageResize,
             })
           }
           onImageFitValueChange={(v) => setImage({ fitValue: v })}
+          onImageApplyToChange={(v) => setImage({ applyTo: v })}
           onImagePaddingChange={(v) => setImage({ padding: v })}
           onImagePaddingColorChange={(v) => setImage({ paddingColor: v })}
           onImageBorderRadiusChange={(v) => setImage({ borderRadius: v })}
           onImageBorderWidthChange={(v) => setImage({ borderWidth: v })}
           onImageBorderColorChange={(v) => setImage({ borderColor: v })}
-          onImageResizeOpenChange={setIsImageResizeOpen}
+          onImageResizeOpenChange={() => {}}
         />
       ),
     },

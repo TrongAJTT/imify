@@ -35,27 +35,17 @@ import {
 } from "@imify/ui/ui/workspace-config-sidebar-panel";
 import { PresetSelector } from "@imify/features/processor/preset-selector";
 import { useIdentifiedPresetLoader } from "@imify/features/shared/use-identified-preset-loader";
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils";
+import { useBatchStore } from "@imify/stores/stores/batch-store";
+
 import {
-  useBatchStore,
-  type SavedSetupPreset,
-} from "@imify/stores/stores/batch-store";
-import { FEATURE_PRESET_PREFIXES } from "@imify/core";
+  FILLING_TARGET_FORMATS,
+  useFillingIdentifiedPreset,
+} from "@imify/features/filling/config";
 
 interface FillSidebarProps {
   template: FillingTemplate;
   enableWideSidebarGrid?: boolean;
 }
-
-const FILLING_TARGET_FORMATS = [
-  "png",
-  "webp",
-  "avif",
-  "jxl",
-  "jpg",
-  "bmp",
-  "tiff",
-];
 
 export function FillSidebar({
   template,
@@ -70,36 +60,11 @@ export function FillSidebar({
   const resetFillSessionState = useFillUiStore((s) => s.resetFillSessionState);
   const [layersAccordionHeight, setLayersAccordionHeight] = useState(320);
 
-  const exportSettings = useFillingStore((s) => s.exportSettings);
-  const activePresetId = useFillingStore((s) => s.activePresetId);
   const applyPreset = useFillingStore((s) => s.applyPreset);
   const resetToDefault = useFillingStore((s) => s.resetToDefault);
 
-  const identifiedPresetId = `${FEATURE_PRESET_PREFIXES.FILLING}_${template.id}`;
-  const identifiedPresetName = `Filling #${template.name}`;
-  const identifiedPresetColor = "#06b6d4";
-
-  const fillingIdentifiedPreset: SavedSetupPreset = useMemo(
-    () => ({
-      ...VIRTUAL_DEFAULT_PNG_PRESET,
-      id: identifiedPresetId,
-      name: identifiedPresetName,
-      highlightColor: identifiedPresetColor,
-      config: {
-        ...VIRTUAL_DEFAULT_PNG_PRESET.config,
-        targetFormat: exportSettings.targetFormat as any,
-        quality: exportSettings.quality,
-        formatOptions: exportSettings.codecOptions as any,
-        fileNamePattern: exportSettings.fileNamePattern,
-      },
-    }),
-    [
-      identifiedPresetId,
-      identifiedPresetName,
-      identifiedPresetColor,
-      exportSettings,
-    ],
-  );
+  const { fillingIdentifiedPreset, activePresetId } =
+    useFillingIdentifiedPreset(template.id, template.name);
 
   useIdentifiedPresetLoader(
     fillingIdentifiedPreset,
@@ -116,18 +81,14 @@ export function FillSidebar({
   useEffect(() => {
     if (activePresetId === null) {
       applyPreset({
-        id: identifiedPresetId,
-        name: identifiedPresetName,
-        highlightColor: identifiedPresetColor,
+        ...fillingIdentifiedPreset,
         config: {
-          ...VIRTUAL_DEFAULT_PNG_PRESET.config,
+          ...fillingIdentifiedPreset.config,
           targetFormat: batchTargetFormat,
           quality: batchQuality,
           fileNamePattern: batchFileNamePattern,
           formatOptions: batchFormatOptions,
         },
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       });
     }
   }, [
@@ -136,9 +97,7 @@ export function FillSidebar({
     batchQuality,
     batchFileNamePattern,
     batchFormatOptions,
-    identifiedPresetId,
-    identifiedPresetName,
-    identifiedPresetColor,
+    fillingIdentifiedPreset,
     applyPreset,
   ]);
 

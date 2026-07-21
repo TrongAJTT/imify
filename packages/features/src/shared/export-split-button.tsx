@@ -1,23 +1,21 @@
-import React from "react"
-import { ChevronDown, Download, FileText, Files, Save } from "lucide-react"
+import React from "react";
+import { ChevronDown, Download, FileText, Files, Save } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-import { Button, ControlledPopover } from "@imify/ui"
+import { Button, ControlledPopover } from "@imify/ui";
 
-export type ExportSplitMode = "zip" | "one_by_one" | "pdf" | "individual_pdf"
+export type ExportSplitMode = "zip" | "one_by_one" | "pdf" | "individual_pdf";
 
 interface ExportSplitButtonProps {
-  onExport: (mode: ExportSplitMode) => void | Promise<void>
-  isLoading?: boolean
-  primaryMode?: "zip" | "one_by_one"
-  oneByOneCount?: number
-  showPdfOptions?: boolean
-  label?: string
-  loadingLabel?: string
-  ariaLabel?: string
+  onExport: (mode: ExportSplitMode) => void | Promise<void>;
+  isLoading?: boolean;
+  primaryMode?: "zip" | "one_by_one";
+  oneByOneCount?: number;
+  showPdfOptions?: boolean;
 }
 
 const BASE_ITEM_CLASS =
-  "flex w-full items-center justify-between rounded-md px-2.5 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+  "flex w-full items-center justify-between rounded-md px-2.5 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed";
 
 export function ExportSplitButton({
   onExport,
@@ -25,19 +23,21 @@ export function ExportSplitButton({
   primaryMode = "zip",
   oneByOneCount,
   showPdfOptions = false,
-  label = "Export",
-  loadingLabel = "Exporting...",
-  ariaLabel = "Open export options"
 }: ExportSplitButtonProps) {
-  const dropdownModes: ExportSplitMode[] = ["one_by_one", "pdf", "individual_pdf"].filter((mode) => {
+  const { t } = useTranslation("common");
+  const dropdownModes: ExportSplitMode[] = [
+    "one_by_one",
+    "pdf",
+    "individual_pdf",
+  ].filter((mode) => {
     if (mode === primaryMode) {
-      return false
+      return false;
     }
     if (!showPdfOptions && (mode === "pdf" || mode === "individual_pdf")) {
-      return false
+      return false;
     }
-    return true
-  }) as ExportSplitMode[]
+    return true;
+  }) as ExportSplitMode[];
 
   return (
     <div className="inline-flex">
@@ -46,9 +46,14 @@ export function ExportSplitButton({
         size="sm"
         onClick={() => void onExport(primaryMode)}
         disabled={isLoading}
-        className={dropdownModes.length > 0 ? "rounded-r-none border-r border-sky-500/60" : undefined}>
+        className={
+          dropdownModes.length > 0
+            ? "rounded-r-none border-r border-sky-500/60"
+            : undefined
+        }
+      >
         <Download size={14} />
-        {isLoading ? loadingLabel : label}
+        {isLoading ? t("exporting") : t("export")}
       </Button>
 
       {dropdownModes.length > 0 ? (
@@ -59,13 +64,15 @@ export function ExportSplitButton({
               size="sm"
               disabled={isLoading}
               className="rounded-l-none px-2"
-              aria-label={ariaLabel}>
+              aria-label={t("exportModes.openExportOptions")}
+            >
               <ChevronDown size={14} />
             </Button>
           }
           preset="dropdown"
           align="end"
-          contentClassName="z-[9999] min-w-[240px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1.5">
+          contentClassName="z-[9999] min-w-[240px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1.5"
+        >
           {dropdownModes.map((mode) => {
             if (mode === "one_by_one") {
               return (
@@ -74,16 +81,19 @@ export function ExportSplitButton({
                   type="button"
                   className={BASE_ITEM_CLASS}
                   onClick={() => void onExport("one_by_one")}
-                  disabled={isLoading}>
+                  disabled={isLoading}
+                >
                   <span className="inline-flex items-center gap-2">
                     <Save size={14} />
-                    One by one
+                    {t("exportModes.oneByOne")}
                   </span>
-                  {typeof oneByOneCount === "number" ? (
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{oneByOneCount} files</span>
-                  ) : null}
+                  {typeof oneByOneCount === "number" && (
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {t("countFiles", { count: oneByOneCount })}
+                    </span>
+                  )}
                 </button>
-              )
+              );
             }
 
             if (mode === "pdf") {
@@ -93,13 +103,14 @@ export function ExportSplitButton({
                   type="button"
                   className={BASE_ITEM_CLASS}
                   onClick={() => void onExport("pdf")}
-                  disabled={isLoading}>
+                  disabled={isLoading}
+                >
                   <span className="inline-flex items-center gap-2">
                     <FileText size={14} />
-                    Single PDF
+                    {t("exportModes.singlePdf")}
                   </span>
                 </button>
-              )
+              );
             }
 
             return (
@@ -108,20 +119,22 @@ export function ExportSplitButton({
                 type="button"
                 className={BASE_ITEM_CLASS}
                 onClick={() => void onExport("individual_pdf")}
-                disabled={isLoading}>
+                disabled={isLoading}
+              >
                 <span className="inline-flex items-center gap-2">
                   <Files size={14} />
-                  Individual PDF
+                  {t("exportModes.individualPdf")}
                 </span>
-                {typeof oneByOneCount === "number" ? (
-                  <span className="text-xs text-slate-500 dark:text-slate-400">{oneByOneCount} files</span>
-                ) : null}
+                {typeof oneByOneCount === "number" && (
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    {t("countFiles", { count: oneByOneCount })}
+                  </span>
+                )}
               </button>
-            )
+            );
           })}
         </ControlledPopover>
       ) : null}
     </div>
-  )
+  );
 }
-

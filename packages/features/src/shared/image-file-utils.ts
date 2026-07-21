@@ -61,3 +61,59 @@ export function getFirstCommonImageFileFromDataTransfer(dataTransfer: DataTransf
 
   return null
 }
+
+export async function sanitizeFile(file: File): Promise<File> {
+  const extMatch = /\.([a-z0-9]+)$/i.exec(file.name)
+  const ext = extMatch ? extMatch[1].toLowerCase() : ""
+  const mimeMap: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    avif: "image/avif",
+    bmp: "image/bmp",
+    gif: "image/gif",
+    tif: "image/tiff",
+    tiff: "image/tiff"
+  }
+  const resolvedMime = mimeMap[ext] || file.type || "image/jpeg"
+
+  try {
+    const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (reader.result instanceof ArrayBuffer) resolve(reader.result)
+        else reject(new Error("Empty buffer result"))
+      }
+      reader.onerror = () => reject(reader.error || new Error("Read error"))
+      reader.readAsArrayBuffer(file)
+    })
+
+    return new File([buffer], file.name, {
+      type: resolvedMime,
+      lastModified: file.lastModified
+    })
+  } catch (e) {
+    console.warn("Failed to sanitize file, returning original", e)
+    return file
+  }
+}
+
+// @TODO: investigate GPU allocation limits and silent black texture failure on Chromium Android WebView.
+export async function decodeFileToImageSource(file: File): Promise<HTMLImageElement> {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      resolve(img)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error("Failed to decode image source"))
+    }
+    img.src = url
+  })
+}
+
+

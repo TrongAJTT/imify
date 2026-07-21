@@ -4,17 +4,20 @@ import type {
   PaperSize,
   ResizeResamplingAlgorithm,
   SupportedDPI,
-  TiffColorMode
+  TiffColorMode,
+  ResizeApplyTo
 } from "@imify/core/types"
 
 export type BatchResizeMode =
   | "inherit"
-  | "none"
+  | "fit_value"
+  | "zoom_min"
+  | "zoom_max"
   | "set_size"
-  | "change_width"
-  | "change_height"
   | "scale"
-  | "page_size"
+  | "paper_size"
+
+export type { ResizeApplyTo }
 
 export type BatchResizeAspectMode = "free" | "original" | "fixed"
 export type BatchResizeAnchor = "width" | "height"
@@ -106,6 +109,7 @@ export interface BatchSetupState {
   formatOptions: BatchFormatOptions
   resizeMode: BatchResizeMode
   resizeValue: number
+  resizeApplyTo: ResizeApplyTo
   resizeWidth: number
   resizeHeight: number
   resizeAspectMode: BatchResizeAspectMode

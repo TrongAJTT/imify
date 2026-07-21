@@ -20,6 +20,7 @@ function clampBoundaryCornerRadius(
 interface PatternBoundaryControlsProps {
   target: PatternVisualBoundaryTarget;
   label: string;
+  icon: React.ReactNode;
   boundary: PatternBoundarySettings;
   visualActive: boolean;
   onChange: (partial: Partial<PatternBoundarySettings>) => void;
@@ -29,6 +30,7 @@ interface PatternBoundaryControlsProps {
 export function PatternBoundaryControls({
   target,
   label,
+  icon,
   boundary,
   visualActive,
   onChange,
@@ -45,6 +47,7 @@ export function PatternBoundaryControls({
     <div className="border-t-2 border-slate-200 dark:border-slate-700 pt-3 space-y-2">
       <CheckboxCard
         title={label}
+        icon={icon}
         subtitle={
           boundary.enabled
             ? t("common.enabled", { defaultValue: "Enabled" })

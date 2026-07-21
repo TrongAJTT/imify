@@ -2,7 +2,7 @@ import React from "react";
 import { RotateCcw } from "lucide-react";
 import type { RefObject } from "react";
 import type { ValueScrubHandlers } from "../shared/use-value-scrubbing";
-import { Tooltip } from "../shared/tooltip";
+import { Tooltip } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 
 interface PreviewZoomControlProps {

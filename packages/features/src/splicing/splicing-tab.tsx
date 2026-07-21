@@ -14,6 +14,7 @@ import { ToastContainer, useRenameInputPrompt } from "@imify/ui";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import { useTranslation } from "@imify/i18n";
+import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useSplicingExport } from "./use-splicing-export";
 import type {
   SplicingImageItem,
@@ -50,6 +51,8 @@ import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 import {
   hasFileDragPayload,
   isCommonImageFile,
+  sanitizeFile,
+  decodeFileToImageSource,
 } from "../shared/image-file-utils";
 import type { SplicingExportMode } from "./use-splicing-export";
 
@@ -58,23 +61,29 @@ const THUMB_MAX = 256;
 async function generateThumbnail(
   file: File,
 ): Promise<{ url: string; width: number; height: number }> {
-  const bitmap = await createImageBitmap(file);
-  const { width, height } = bitmap;
+  const img = await decodeFileToImageSource(file);
+  const width = img.naturalWidth;
+  const height = img.naturalHeight;
   const scale = Math.min(1, THUMB_MAX / Math.max(width, height));
   const tw = Math.max(1, Math.round(width * scale));
   const th = Math.max(1, Math.round(height * scale));
 
-  const canvas = new OffscreenCanvas(tw, th);
+  const canvas = document.createElement("canvas");
+  canvas.width = tw;
+  canvas.height = th;
   const ctx = canvas.getContext("2d");
   if (!ctx) {
-    bitmap.close();
     throw new Error("Cannot create thumbnail canvas context");
   }
 
-  ctx.drawImage(bitmap, 0, 0, tw, th);
-  bitmap.close();
+  ctx.drawImage(img, 0, 0, tw, th);
 
-  const blob = await canvas.convertToBlob({ type: "image/png" });
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((b) => {
+      if (b) resolve(b);
+      else reject(new Error("Canvas toBlob failed"));
+    }, "image/png");
+  });
   const url = URL.createObjectURL(blob);
 
   return { url, width, height };
@@ -299,6 +308,7 @@ export function SplicingTab({
   const {
     resizeMode: imageResize,
     fitValue: imageFitValue,
+    applyTo: imageApplyTo,
     padding: imagePadding,
     paddingColor: imagePaddingColor,
     borderRadius: imageBorderRadius,
@@ -510,8 +520,9 @@ export function SplicingTab({
       const newItems: SplicingImageItem[] = [];
       let processedCount = 0;
       for (let i = 0; i < imageFiles.length; i++) {
-        const file = imageFiles[i];
+        const rawFile = imageFiles[i];
         try {
+          const file = await sanitizeFile(rawFile);
           const thumb = await generateThumbnail(file);
           newItems.push({
             id: `splice_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -952,6 +963,7 @@ export function SplicingTab({
         imageStyle={imageStyle}
         imageResize={imageResize}
         imageFitValue={imageFitValue}
+        imageApplyTo={imageApplyTo}
         previewInteractionMode={previewInteractionMode}
         previewQualityPercent={previewQualityPercent}
         previewShowImageNumber={previewShowImageNumber}
@@ -967,6 +979,11 @@ export function SplicingTab({
         onAddMore={handleAddMore}
         onPreviewQualityChange={handlePreviewQualitySelectChange}
         onPreviewShowImageNumberChange={setPreviewShowImageNumber}
+        onPasteFiles={addFiles}
+        onProcessUrls={async (urls) => {
+          const { files } = await fetchRemoteImagesFromUrls(urls);
+          if (files.length) await addFiles(files);
+        }}
       />
       <ToastContainer toasts={conversionToasts} onRemove={handleRemoveToast} />
       <BatchDownloadConfirmDialog

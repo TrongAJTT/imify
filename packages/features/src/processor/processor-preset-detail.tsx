@@ -27,15 +27,24 @@ export function ProcessorPresetDetail({
   const namePattern = config.fileNamePattern || "[OriginalName]";
 
   let resizeLabel = "—";
-  if (config.resizeMode === "none") resizeLabel = "Original";
+  if (((config.resizeMode as any) === "none" || config.resizeMode === "inherit")) resizeLabel = "Original";
   else if (config.resizeMode === "set_size")
     resizeLabel = `${config.resizeWidth}×${config.resizeHeight}px`;
-  else if (config.resizeMode === "page_size") resizeLabel = config.paperSize;
+  else if (((config.resizeMode as any) === "page_size" || config.resizeMode === "paper_size")) resizeLabel = config.paperSize;
   else if (config.resizeMode === "scale")
     resizeLabel = `${config.resizeValue}%`;
-  else if (config.resizeMode === "change_width")
+  else if (config.resizeMode === "fit_value") {
+    const applyToLabel = (config.resizeApplyTo ?? "width").toUpperCase();
+    resizeLabel = `Fit ${applyToLabel}:${config.resizeValue}px`;
+  } else if (config.resizeMode === "zoom_min") {
+    const applyToLabel = (config.resizeApplyTo ?? "width").toUpperCase();
+    resizeLabel = `Min ${applyToLabel}:${config.resizeValue}px`;
+  } else if (config.resizeMode === "zoom_max") {
+    const applyToLabel = (config.resizeApplyTo ?? "width").toUpperCase();
+    resizeLabel = `Max ${applyToLabel}:${config.resizeValue}px`;
+  } else if ((config.resizeMode as any) === "change_width")
     resizeLabel = `W:${config.resizeValue}px`;
-  else if (config.resizeMode === "change_height")
+  else if ((config.resizeMode as any) === "change_height")
     resizeLabel = `H:${config.resizeValue}px`;
   else resizeLabel = config.resizeMode;
 

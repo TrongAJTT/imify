@@ -1,6 +1,6 @@
 {
   "name": "imify-monorepo",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "private": true,
   "imifyMetadata": {
     "displayName": "Imify - Powerful Image Toolkit",
@@ -20,6 +20,7 @@
     "dev:chrome": "pnpm sync:assets && pnpm --filter @imify/extension dev:chrome",
     "dev:firefox": "pnpm sync:assets && pnpm --filter @imify/extension dev:firefox",
     "dev:web": "pnpm sync:assets && pnpm --filter @imify/web dev",
+    "preview:web": "pnpm sync:assets && pnpm --filter @imify/web preview",
     "build:web": "pnpm sync:assets && pnpm --filter @imify/web build",
     "build:ext": "pnpm sync:assets && pnpm --filter @imify/extension build",
     "build:chrome": "pnpm sync:assets && pnpm --filter @imify/extension build:chrome",

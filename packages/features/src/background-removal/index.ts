@@ -1,3 +1,4 @@
+export * from "./config"
 export * from "./workspace"
 export * from "./drop-zone"
 export * from "./page"

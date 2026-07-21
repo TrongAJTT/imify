@@ -131,6 +131,7 @@ export function useSplicingExport({
           imgStyle,
           store.image.resizeMode,
           store.image.fitValue,
+          store.image.applyTo,
           config,
           {
             concurrency: exportSettings.concurrency,
@@ -156,20 +157,22 @@ export function useSplicingExport({
         const ext = getCanonicalExtension(exportSettings.targetFormat)
 
         const imageSizes = images.map((img) => {
-          const processed = calculateProcessedSize(img.originalWidth, img.originalHeight, store.image.resizeMode, store.image.fitValue)
+          const processed = calculateProcessedSize(img.originalWidth, img.originalHeight, store.image.resizeMode, store.image.fitValue, store.image.applyTo)
           return { width: processed.width, height: processed.height }
         })
-        const exportLayout = calculateLayout(imageSizes, layout, canvas, imgStyle, store.image.resizeMode, store.image.fitValue)
+        const exportLayout = calculateLayout(imageSizes, layout, canvas, imgStyle, store.image.resizeMode, store.image.fitValue, store.image.applyTo)
 
         const pattern = exportSettings.fileNamePattern.trim() || "spliced-[Index]"
         const now = new Date(exportTsMs)
         const usedExportNames = new Set<string>()
 
+        const originalFileName = `imify-splicing-${exportTsMs}`
+
         const buildImageFileName = (i: number) => {
           const dims = computeSplicingExportCanvasDimensions(exportLayout, canvas, config, i)
           const raw = buildSmartOutputFileName({
             pattern,
-            originalFileName: "image",
+            originalFileName,
             dimensions: dims,
             index: i + 1,
             totalFiles: blobs.length,
@@ -184,7 +187,7 @@ export function useSplicingExport({
           const dims = computeSplicingExportCanvasDimensions(exportLayout, canvas, config, i)
           const raw = buildSmartOutputFileName({
             pattern,
-            originalFileName: "image",
+            originalFileName,
             dimensions: dims,
             index: i + 1,
             totalFiles: blobs.length,
@@ -195,7 +198,7 @@ export function useSplicingExport({
           return reserveUniqueFileName(raw, usedExportNames)
         }
 
-        // Note: merged PDF filename is always `spliced-image-<timestamp>.pdf`
+        // Note: merged PDF filename is always `imify-splicing-<timestamp>.pdf`
         // (as required by current UX), so we don't apply the pattern to the merged PDF filename.
 
         if (downloadMode === "one_by_one") {

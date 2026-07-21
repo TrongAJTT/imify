@@ -54,11 +54,16 @@ export function InspectorPage() {
   useWorkspaceSidebar(sidebar, t("toolSettings"));
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Image Inspector");
     setHeaderActions(null);
     setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="inspector" />);
-    return () => resetHeader();
-  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
+  }, [setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
 
   if (!isHydrated) {
     return <WorkspaceLoadingState title="Loading image inspector..." />;

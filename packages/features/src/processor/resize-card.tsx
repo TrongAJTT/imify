@@ -6,47 +6,52 @@ import {
   RESAMPLING_ALGORITHM_OPTIONS,
   normalizeResizeResamplingAlgorithm,
 } from "@imify/core/resize-resampling";
-import type { ResizeResamplingAlgorithm } from "@imify/core/types";
+import type {
+  ResizeResamplingAlgorithm,
+  ResizeApplyTo,
+} from "@imify/core/types";
 import { SmartResizeModule } from "./smart-resize-module";
 import { PaperConfig } from "./paper-config";
 import { usePopoverTriggerBehavior } from "./use-popover-trigger-behavior";
 import {
   AccordionCard,
   ControlledPopover,
-  Kicker,
   LabelText,
   NumberInput,
   SelectInput,
+  TooltipTableContent,
 } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 
 export type ResizeCardProps = {
   resizeMode: string;
-  resizeValue: number;
-  resizeWidth: number;
-  resizeHeight: number;
-  resizeAspectMode: string;
-  resizeAspectRatio: number | string;
-  resizeFitMode: string;
-  resizeContainBackground: string;
+  resizeValue?: number;
+  resizeApplyTo?: ResizeApplyTo;
+  resizeWidth?: number;
+  resizeHeight?: number;
+  resizeAspectMode?: string;
+  resizeAspectRatio?: number | string;
+  resizeFitMode?: string;
+  resizeContainBackground?: string;
   resamplingAlgorithm?: ResizeResamplingAlgorithm;
-  resizeSourceWidth: number;
-  resizeSourceHeight: number;
-  resizeSyncVersion: number;
+  resizeSourceWidth?: number;
+  resizeSourceHeight?: number;
+  resizeSyncVersion?: number;
   resizeQuickStats?: ResizeQuickStats;
-  paperSize: string;
-  dpi: number;
-  onResizeModeChange: (mode: string) => void;
-  onResizeValueChange: (value: number) => void;
-  onResizeWidthChange: (value: number) => void;
-  onResizeHeightChange: (value: number) => void;
-  onResizeAspectModeChange: (mode: string) => void;
-  onResizeAspectRatioChange: (ratio: string | number) => void;
-  onResizeFitModeChange: (mode: string) => void;
-  onResizeContainBackgroundChange: (color: string) => void;
+  paperSize?: string;
+  dpi?: number;
+  onResizeModeChange?: (mode: string) => void;
+  onResizeValueChange?: (value: number) => void;
+  onResizeApplyToChange?: (value: ResizeApplyTo) => void;
+  onResizeWidthChange?: (value: number) => void;
+  onResizeHeightChange?: (value: number) => void;
+  onResizeAspectModeChange?: (mode: string) => void;
+  onResizeAspectRatioChange?: (ratio: string | number) => void;
+  onResizeFitModeChange?: (mode: string) => void;
+  onResizeContainBackgroundChange?: (color: string) => void;
   onResamplingAlgorithmChange?: (algorithm: ResizeResamplingAlgorithm) => void;
-  onPaperSizeChange: (size: string) => void;
-  onDpiChange: (dpi: number) => void;
+  onPaperSizeChange?: (size: string) => void;
+  onDpiChange?: (dpi: number) => void;
   disabled?: boolean;
   availableModes?: string[];
   isOpen?: boolean;
@@ -58,6 +63,7 @@ export type ResizeCardProps = {
 function generateSublabel(
   mode: string,
   resizeValue: number,
+  resizeApplyTo: string,
   resizeWidth: number,
   resizeHeight: number,
   paperSize: string,
@@ -69,16 +75,17 @@ function generateSublabel(
       case "none":
       case "inherit":
         return "No resize";
-      case "change_width":
-      case "fit_width":
-        return `Fit width • ${resizeValue}px`;
-      case "change_height":
-      case "fit_height":
-        return `Fit height • ${resizeValue}px`;
+      case "fit_value":
+        return `Fit ${resizeApplyTo} • ${resizeValue}px`;
+      case "zoom_min":
+        return `Zoom min ${resizeApplyTo} • ${resizeValue}px`;
+      case "zoom_max":
+        return `Zoom max ${resizeApplyTo} • ${resizeValue}px`;
       case "set_size":
         return `Set size • ${resizeWidth}×${resizeHeight}`;
       case "scale":
         return `Scale • ${resizeValue}%`;
+      case "paper_size":
       case "page_size":
         return `${paperSize} @ ${dpi}dpi`;
       default:
@@ -102,23 +109,25 @@ function generateSublabel(
 }
 
 export function ResizeCard({
-  resizeMode,
-  resizeValue,
-  resizeWidth,
-  resizeHeight,
-  resizeAspectMode,
-  resizeAspectRatio,
-  resizeFitMode,
-  resizeContainBackground,
+  resizeMode = "inherit",
+  resizeValue = 1280,
+  resizeApplyTo = "width",
+  resizeWidth = 1280,
+  resizeHeight = 960,
+  resizeAspectMode = "original",
+  resizeAspectRatio = "16:9",
+  resizeFitMode = "fill",
+  resizeContainBackground = "#000000",
   resamplingAlgorithm = DEFAULT_RESAMPLING_ALGORITHM,
-  resizeSourceWidth,
-  resizeSourceHeight,
-  resizeSyncVersion,
+  resizeSourceWidth = 0,
+  resizeSourceHeight = 0,
+  resizeSyncVersion = 0,
   resizeQuickStats,
-  paperSize,
-  dpi,
+  paperSize = "A4",
+  dpi = 300,
   onResizeModeChange,
   onResizeValueChange,
+  onResizeApplyToChange,
   onResizeWidthChange,
   onResizeHeightChange,
   onResizeAspectModeChange,
@@ -135,61 +144,75 @@ export function ResizeCard({
   alwaysOpen,
   groupId,
 }: ResizeCardProps) {
-  const { t } = useTranslation("processor");
+  const { t } = useTranslation(["processor", "common"]);
   const quickStatsPopoverBehavior = usePopoverTriggerBehavior();
 
   const batchModeMap: Record<string, string> = {
-    none: t("resizeNone"),
-    change_width: t("resizeFitWidth"),
-    change_height: t("resizeFitHeight"),
+    inherit: t("resizeNone"),
+    fit_value: t("resizeFitValue"),
+    zoom_min: t("resizeZoomMin"),
+    zoom_max: t("resizeZoomMax"),
     set_size: t("resizeSetSize"),
     scale: t("resizeScale"),
-    page_size: t("resizePaperSize"),
-  };
-  const splicingModeMap: Record<string, string> = {
-    none: t("resizeNone"),
-    fit_width: t("resizeFitWidth"),
-    fit_height: t("resizeFitHeight"),
+    paper_size: t("resizePaperSize"),
   };
 
   const modeOptions = availableModes
     ? availableModes.map((mode) => ({
         value: mode,
-        label: splicingModeMap[mode] || mode,
+        label: batchModeMap[mode] || mode,
       }))
     : Object.entries(batchModeMap).map(([value, label]) => ({ value, label }));
+
+  const applyToOptions = [
+    { value: "width", label: t("applyToWidth") },
+    { value: "height", label: t("applyToHeight") },
+    { value: "shortest", label: t("applyToShortest") },
+    { value: "longest", label: t("applyToLongest") },
+  ];
 
   const safeResamplingAlgorithm =
     normalizeResizeResamplingAlgorithm(resamplingAlgorithm);
   const sublabel = generateSublabel(
     resizeMode,
     resizeValue,
+    resizeApplyTo,
     resizeWidth,
     resizeHeight,
     paperSize,
     dpi,
     safeResamplingAlgorithm,
   );
+
   const showResamplingAlgorithm =
     Boolean(onResamplingAlgorithmChange) &&
     resizeMode !== "none" &&
     resizeMode !== "inherit";
-  const isFitWidthMode =
-    resizeMode === "fit_width" || resizeMode === "change_width";
-  const isFitHeightMode =
-    resizeMode === "fit_height" || resizeMode === "change_height";
-  const showQuickResizePopover = isFitWidthMode || isFitHeightMode;
-  const sourceEdge = isFitWidthMode
+
+  const isLinearMode =
+    resizeMode === "fit_value" ||
+    resizeMode === "zoom_min" ||
+    resizeMode === "zoom_max";
+
+  const showQuickResizePopover = isLinearMode;
+
+  const isWidthTarget =
+    resizeApplyTo === "width" ||
+    resizeApplyTo === "shortest" ||
+    resizeApplyTo === "longest";
+  const isHeightTarget = resizeApplyTo === "height";
+  const sourceEdge = isWidthTarget
     ? resizeSourceWidth
-    : isFitHeightMode
+    : isHeightTarget
       ? resizeSourceHeight
       : 0;
   const hasSourceEdge = sourceEdge > 0;
-  const quickStatsFromQueue = isFitWidthMode
+  const quickStatsFromQueue = isWidthTarget
     ? resizeQuickStats?.width
-    : isFitHeightMode
+    : isHeightTarget
       ? resizeQuickStats?.height
       : null;
+
   const quickResizeValues = quickStatsFromQueue
     ? [
         {
@@ -256,21 +279,39 @@ export function ResizeCard({
           value={resizeMode}
           disabled={disabled}
           options={modeOptions}
-          onChange={onResizeModeChange}
+          onChange={(val) => onResizeModeChange?.(val)}
+          tooltipContent={
+            <TooltipTableContent
+              rows={
+                t("tooltipResizeTypes", { returnObjects: true }) as Array<{
+                  method: string;
+                  description: string;
+                }>
+              }
+              firstColumnHeader={t("common:option")}
+              secondColumnHeader={t("common:whatItDoes")}
+            />
+          }
         />
 
-        {(resizeMode === "change_width" ||
-          resizeMode === "fit_width" ||
-          resizeMode === "change_height" ||
-          resizeMode === "fit_height" ||
-          resizeMode === "scale") && (
+        {isLinearMode && (
+          <SelectInput
+            label={t("resizeApplyTo")}
+            value={resizeApplyTo}
+            disabled={disabled}
+            options={applyToOptions}
+            onChange={(val) => onResizeApplyToChange?.(val as ResizeApplyTo)}
+          />
+        )}
+
+        {(isLinearMode || resizeMode === "scale") && (
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-2">
               <LabelText className="text-xs">
                 {resizeMode === "scale" ? t("scalePercent") : t("valuePx")}
               </LabelText>
 
-              {showQuickResizePopover ? (
+              {showQuickResizePopover && onResizeValueChange ? (
                 <ControlledPopover
                   trigger={
                     <button
@@ -316,7 +357,7 @@ export function ResizeCard({
               disabled={disabled}
               min={1}
               value={resizeValue}
-              onChangeValue={onResizeValueChange}
+              onChangeValue={(val) => onResizeValueChange?.(val)}
             />
           </div>
         )}
@@ -333,13 +374,15 @@ export function ResizeCard({
                 ? resizeAspectRatio
                 : String(resizeAspectRatio)
             }
-            onAspectModeChange={onResizeAspectModeChange}
-            onAspectRatioChange={onResizeAspectRatioChange}
-            onContainBackgroundChange={onResizeContainBackgroundChange}
-            onFitModeChange={onResizeFitModeChange}
-            onHeightChange={onResizeHeightChange}
+            onAspectModeChange={(mode) => onResizeAspectModeChange?.(mode)}
+            onAspectRatioChange={(ratio) => onResizeAspectRatioChange?.(ratio)}
+            onContainBackgroundChange={(color) =>
+              onResizeContainBackgroundChange?.(color)
+            }
+            onFitModeChange={(mode) => onResizeFitModeChange?.(mode)}
+            onHeightChange={(height) => onResizeHeightChange?.(height)}
             onSizeAnchorChange={() => {}}
-            onWidthChange={onResizeWidthChange}
+            onWidthChange={(width) => onResizeWidthChange?.(width)}
             originalHeight={resizeSourceHeight}
             originalWidth={resizeSourceWidth}
             lockSignal={resizeSyncVersion}
@@ -347,12 +390,13 @@ export function ResizeCard({
           />
         )}
 
-        {resizeMode === "page_size" && (
+        {(resizeMode === "paper_size" ||
+          (resizeMode as any) === "page_size") && (
           <PaperConfig
             disabled={disabled}
             dpi={dpi as any}
-            onDpiChange={onDpiChange}
-            onPaperSizeChange={onPaperSizeChange}
+            onDpiChange={(d) => onDpiChange?.(d)}
+            onPaperSizeChange={(size) => onPaperSizeChange?.(size)}
             paperSize={paperSize as any}
           />
         )}

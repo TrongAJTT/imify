@@ -57,13 +57,25 @@ export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
   ].join("/");
 
   // Resize display
-  let resizeLabel = config.imageResize
-    ? config.imageResize === "original"
-      ? t("imageFields.original")
-      : config.imageResize === "fit_width"
-        ? t("imageFields.fitWidth")
-        : t("imageFields.fitHeight")
-    : "—";
+  let resizeLabel = "—";
+  if (config.imageResize) {
+    if ((config.imageResize as any) === "original" || (config.imageResize as any) === "inherit") {
+      resizeLabel = t("imageFields.original");
+    } else if (config.imageResize === "fit_value") {
+      const applyToLabel = (config.imageApplyTo ?? "width").toUpperCase();
+      resizeLabel = `Fit ${applyToLabel}:${config.imageFitValue}px`;
+    } else if (config.imageResize === "zoom_min") {
+      const applyToLabel = (config.imageApplyTo ?? "width").toUpperCase();
+      resizeLabel = `Min ${applyToLabel}:${config.imageFitValue}px`;
+    } else if (config.imageResize === "zoom_max") {
+      const applyToLabel = (config.imageApplyTo ?? "width").toUpperCase();
+      resizeLabel = `Max ${applyToLabel}:${config.imageFitValue}px`;
+    } else if ((config.imageResize as any) === "fit_width") {
+      resizeLabel = t("imageFields.fitWidth");
+    } else if ((config.imageResize as any) === "fit_height") {
+      resizeLabel = t("imageFields.fitHeight");
+    }
+  }
 
   // Export format
   const formatLabel = config.exportFormat

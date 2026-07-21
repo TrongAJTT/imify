@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   ChevronRight,
   Download,
-  PowerOff,
   X,
   Gauge,
   Languages,
@@ -15,13 +14,16 @@ import {
   Database,
 } from "lucide-react";
 import { useToast } from "@imify/core/hooks/use-toast";
-import { ToastContainer } from "@imify/ui/components/toast-container";
-import { BaseDialog } from "@imify/ui/ui/base-dialog";
-import { Button } from "@imify/ui/ui/button";
-import { ToggleSwitchLabel } from "@imify/ui/ui/toggle-switch-label";
-import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header";
-import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header";
-import { Subheading, BodyText, MutedText } from "@imify/ui/ui/typography";
+import {
+  ToastContainer,
+  BaseDialog,
+  Button,
+  SettingsItemHeader,
+  SettingsSectionHeader,
+  Subheading,
+  BodyText,
+  MutedText,
+} from "@imify/ui";
 import { useDevModeEnabled } from "../dev-mode/dev-mode-storage";
 import { useDevModeStore } from "../dev-mode/dev-mode-store";
 import { I18nRuntimeImportDialog } from "../dev-mode/i18n-runtime-import-dialog";
@@ -32,6 +34,8 @@ import { DevModeStateViewer } from "../dev-mode/dev-mode-state-viewer";
 import { RuntimeConsoleMonitor } from "../dev-mode/runtime-console-monitor";
 import { LocalStorageManager } from "../dev-mode/local-storage-manager";
 import { BrowserCapabilitiesDashboard } from "../dev-mode/browser-capabilities";
+import { AboutDevTools } from "../dev-mode/about-dev-tools";
+import { LanguageToolsTab } from "../dev-mode/language-tools-tab";
 import { setRuntimeLogCaptureEnabled } from "../dev-mode/runtime-log-collector";
 import type { OptionsTab } from "../dev-mode/debug-shared";
 import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter";
@@ -41,7 +45,6 @@ import {
   type PerformancePreferences,
 } from "../processor/performance-preferences";
 import { SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX } from "./desktop-layout";
-import { LanguageItemCard } from "./language-item-card";
 import { useI18nStore } from "@imify/stores";
 import {
   getAvailableLanguages,
@@ -402,49 +405,10 @@ export function DevToolsDialog({
               className={`flex-1 min-h-0 min-w-0 overflow-y-auto ${isMobileDialog ? "p-4 pt-5 pb-10" : "p-8 pt-12"}`}
             >
               {activeTab === "about" ? (
-                <div className="animate-in fade-in duration-300 space-y-6">
-                  {!isMobileDialog && (
-                    <SettingsSectionHeader
-                      title="ABOUT DEVELOPER TOOLS"
-                      description="Welcome to the developer console. Learn about features and toggle settings."
-                    />
-                  )}
-
-                  <section className="space-y-4">
-                    <SettingsItemHeader
-                      title="What is Developer Mode?"
-                      description="Developer Mode grants access to diagnostics, capabilities mapping, dynamic logs, and custom locale management tools."
-                    />
-                    <div className="prose dark:prose-invert text-sm text-slate-600 dark:text-slate-300 space-y-3 leading-relaxed">
-                      <p>
-                        This dashboard allows you to explore real-time reactive
-                        Zustand stores, inspect live stdout/stderr console
-                        prints, import/export system logs to facilitate
-                        debugging, and test localization templates.
-                      </p>
-                      <p>
-                        Imify handles all operations locally on your machine,
-                        ensuring data privacy is preserved while providing these
-                        developer monitors.
-                      </p>
-                    </div>
-                  </section>
-
-                  <section className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-5">
-                    <SettingsItemHeader
-                      title="DISABLE DEVELOPER MODE"
-                      description="Hide developer tools and disable debug features. Re-enable via the About dialog Easter Egg."
-                    />
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start gap-2 rounded-lg border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      onClick={handleDisableDevMode}
-                    >
-                      <PowerOff size={14} />
-                      Disable Developer Mode
-                    </Button>
-                  </section>
-                </div>
+                <AboutDevTools
+                  isMobileDialog={isMobileDialog}
+                  onDisableDevMode={handleDisableDevMode}
+                />
               ) : null}
 
               {activeTab === "system" ? (
@@ -495,82 +459,21 @@ export function DevToolsDialog({
               ) : null}
 
               {activeTab === "language" ? (
-                <div className="animate-in fade-in duration-300 space-y-5">
-                  {!isMobileDialog && (
-                    <SettingsSectionHeader
-                      title="LANGUAGE TOOLS"
-                      description="Developer tools for internationalization, testing localizations, and managing runtime translations."
-                    />
-                  )}
-
-                  <section className="space-y-4">
-                    <SettingsItemHeader
-                      title="TRANSLATION DEBUGGING"
-                      description="Toggle translation key decoration to locate text strings in locale bundles."
-                    />
-                    <ToggleSwitchLabel
-                      label="Show i18n Debug Keys"
-                      description="Display translation keys next to strings in the UI to assist with localization."
-                      checked={showI18nDebugKeys}
-                      onChange={setShowI18nDebugKeys}
-                    />
-                  </section>
-
-                  <section className="space-y-4 border-t border-slate-200 dark:border-slate-800 pt-5">
-                    <SettingsItemHeader
-                      title="CUSTOM LOCALES"
-                      description="Import new translation files or download a translation template JSON to contribute."
-                    />
-                    <div className="flex flex-col gap-3">
-                      <div className="flex-item grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                        <Button
-                          variant="outline"
-                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                          onClick={() => setIsI18nTemplateDialogOpen(true)}
-                        >
-                          <Download size={14} />
-                          New Empty Bundle
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                          onClick={downloadEnglishBundle}
-                        >
-                          <Download size={14} />
-                          Download English Bundle
-                        </Button>
-                      </div>
-                      <Button
-                        variant="outline"
-                        className="flex-item justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        onClick={() => setIsI18nImportDialogOpen(true)}
-                      >
-                        <Languages size={14} />
-                        Import Custom Language
-                      </Button>
-                    </div>
-
-                    {languages.filter((lang) => lang.isRuntime).length > 0 && (
-                      <div className="space-y-2 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/20 dark:bg-slate-950/20 mt-4">
-                        {languages
-                          .filter((lang) => lang.isRuntime)
-                          .map((lang) => (
-                            <LanguageItemCard
-                              key={lang.code}
-                              lang={lang}
-                              isActive={lang.code === activeLanguage}
-                              appVersion={appVersion}
-                              isExpanded={expandedLangCode === lang.code}
-                              onToggleExpand={handleToggleExpand}
-                              mode="devtools"
-                              onDelete={handleRequestDelete}
-                              onExport={handleExportLanguage}
-                            />
-                          ))}
-                      </div>
-                    )}
-                  </section>
-                </div>
+                <LanguageToolsTab
+                  isMobileDialog={isMobileDialog}
+                  showI18nDebugKeys={showI18nDebugKeys}
+                  setShowI18nDebugKeys={setShowI18nDebugKeys}
+                  setIsI18nTemplateDialogOpen={setIsI18nTemplateDialogOpen}
+                  downloadEnglishBundle={downloadEnglishBundle}
+                  setIsI18nImportDialogOpen={setIsI18nImportDialogOpen}
+                  languages={languages}
+                  activeLanguage={activeLanguage}
+                  appVersion={appVersion}
+                  expandedLangCode={expandedLangCode}
+                  handleToggleExpand={handleToggleExpand}
+                  handleRequestDelete={handleRequestDelete}
+                  handleExportLanguage={handleExportLanguage}
+                />
               ) : null}
 
               {activeTab === "capabilities" ? (

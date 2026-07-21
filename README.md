@@ -13,6 +13,8 @@
 * **100% Client-Side Processing**: Zero server dependencies. Complete data privacy using WebAssembly and Web Workers.
 * **Rich Format Support**: Read and convert to `JPG`, `PNG` (Tiny mode, Floyd-Steinberg dithering, and OxiPNG WASM optimization), `WebP`, `AVIF`, `JXL` (JPEG XL), `TIFF`, `ICO`, `BMP`, and `PDF`.
 * **Advanced Processing Tools (Available in both the web application and the browser extension)**:
+  * **AI Background Removal**: 100% local, high-precision background extraction powered by ORMBG, MODNet, and Selfie AI models.
+  * **QR Station**: Offline QR Code Generator (with logo overlays, custom styles, and vector SVG exports) & Advanced QR Reader (scan via active screen, camera, or files).
   * **Batch Processor**: Drag-and-drop multiple files to convert them in bulk. Includes ZIP packaging.
   * **Image Splitter**: Slice images via grid systems or custom percentage/pixel sequences with a reorderable guide UI.
   * **Image Splicing**: Vertically or horizontally stitch multiple images together with gap controls.
@@ -23,6 +25,8 @@
   * **Right-Click Context Menu**: Instantly convert and download any web image using your preferred presets.
   * **SEO Audit (Chrome & Edge)**: Deep DOM scanning to detect oversized images, missing alt text, and potential bandwidth savings via modern formats. (Note: Currently unavailable on Firefox because this feature requires Side Panel API).
 * **Smart Resizing Engine**: Scale by dimension, percentage, or match standard physical paper sizes (A4, Letter) with DPI controls.
+* **Installable PWA & Offline Support**: Install Imify as a standalone desktop or mobile application. All image processing assets are cached for 100% offline use.
+* **Custom Locales**: Import, export, and manage your own custom translation JSON bundles (with default English and Vietnamese support).
 * **Modern Workspace UI**: A unified, desktop-like layout with collapsible navigation, reorderable sidebar configurations (`dnd-kit`), and dark mode support.
 
 ## 📸 Screenshots

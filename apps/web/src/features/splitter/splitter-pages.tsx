@@ -87,11 +87,16 @@ export function SplitterLandingPage() {
   }, [ensureDefaultPreset, isHydrated, setPresetViewMode]);
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Image Splitter");
     setHeaderActions(null);
     setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="splitter" />);
-    return () => resetHeader();
-  }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
+  }, [setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
 
   if (!isHydrated) {
     return <WorkspaceLoadingState title="Loading splitter presets..." />;
@@ -153,6 +158,12 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
   );
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Image Splitter");
     setHeaderActions(null);
     setHeaderBreadcrumb(
@@ -163,10 +174,8 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
         onRootClick={() => router.push("/splitter")}
       />,
     );
-    return () => resetHeader();
   }, [
     preset?.name,
-    resetHeader,
     router,
     setHeaderActions,
     setHeaderBreadcrumb,

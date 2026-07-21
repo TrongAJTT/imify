@@ -9,6 +9,7 @@ import type {
   SplicingImageStyle,
   SplicingLayoutConfig,
 } from "./types";
+import type { ResizeApplyTo } from "@imify/core/types";
 import type { PreviewInteractionMode } from "@imify/ui";
 import { CanvasPreview } from "./canvas-preview";
 import { ImageStrip } from "./image-strip";
@@ -26,6 +27,7 @@ interface SplicingWorkspaceProps {
   imageStyle: SplicingImageStyle;
   imageResize: SplicingImageResize;
   imageFitValue: number;
+  imageApplyTo: ResizeApplyTo;
   previewInteractionMode: PreviewInteractionMode;
   previewQualityPercent: number;
   previewShowImageNumber: boolean;
@@ -48,6 +50,8 @@ interface SplicingWorkspaceProps {
   onAddMore: () => void;
   onPreviewQualityChange: (next: number) => void;
   onPreviewShowImageNumberChange: (next: boolean) => void;
+  onPasteFiles?: (files: File[]) => void;
+  onProcessUrls?: (urls: string[]) => Promise<void>;
 }
 
 export function SplicingWorkspace({
@@ -59,6 +63,7 @@ export function SplicingWorkspace({
   imageStyle,
   imageResize,
   imageFitValue,
+  imageApplyTo,
   previewInteractionMode,
   onLayoutComputed,
   onPreviewRendered,
@@ -70,6 +75,8 @@ export function SplicingWorkspace({
   onRemoveImage,
   onReorderImage,
   onAddMore,
+  onPasteFiles,
+  onProcessUrls,
 }: SplicingWorkspaceProps) {
   const { t } = useTranslation("splicing");
 
@@ -98,6 +105,9 @@ export function SplicingWorkspace({
             onDropFiles(event);
           }}
           onClick={onOpenFilePicker}
+          onPasteFiles={onPasteFiles}
+          onProcessUrls={onProcessUrls}
+          allowMultipleUrls={true}
         />
       ) : (
         <div className="space-y-4">
@@ -109,6 +119,7 @@ export function SplicingWorkspace({
               imageStyle={imageStyle}
               imageResize={imageResize}
               fitValue={imageFitValue}
+              imageApplyTo={imageApplyTo}
               previewInteractionMode={previewInteractionMode}
               onLayoutComputed={(layout) => onLayoutComputed(layout)}
               onPreviewRendered={onPreviewRendered}

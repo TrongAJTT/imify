@@ -171,7 +171,7 @@ async function onAdd(message: PackagerAddMessage): Promise<void> {
     )
     return
   }
-  const pdfBlob = await convertImageToPdf({ sourceBlob: blob, resize: { mode: "none" } })
+  const pdfBlob = await convertImageToPdf({ sourceBlob: blob, resize: { mode: "inherit" } })
   job.receivedFiles += 1
   job.entries.push({
     name: ensureUniqueEntryName(`${sanitizeBaseName(message.name)}.pdf`, job.entryNames),

@@ -46,6 +46,7 @@ function extractSplicingPresetConfig(
     backgroundColor: canvas.backgroundColor,
     imageResize: image.resizeMode,
     imageFitValue: image.fitValue,
+    imageApplyTo: image.applyTo,
     imagePadding: image.padding,
     imagePaddingColor: image.paddingColor,
     imageBorderRadius: image.borderRadius,
@@ -125,6 +126,7 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
     image: {
       resizeMode: config.imageResize,
       fitValue: config.imageFitValue,
+      applyTo: config.imageApplyTo,
       padding: config.imagePadding,
       paddingColor: config.imagePaddingColor,
       borderRadius: config.imageBorderRadius,
@@ -241,6 +243,12 @@ export function SplicingWorkspaceShell({
   }, [presets.length, defaultPresetBootstrapped, ensureDefaultPreset]);
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Image Splicing");
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
@@ -262,16 +270,12 @@ export function SplicingWorkspaceShell({
     setHeaderOnBack(
       presetViewMode === "workspace" ? () => setPresetViewMode("select") : null,
     );
-
-    return () => {
-      resetHeader();
-    };
   }, [
     activePreset?.name,
     presetViewMode,
-    resetHeader,
     setHeaderBreadcrumb,
     setHeaderSection,
+    setHeaderOnBack,
     setPresetViewMode,
     onRootClick,
   ]);

@@ -43,7 +43,7 @@ export function CheckboxCard({
 
   return (
     <label
-      className={`flex items-start justify-between rounded border px-2.5 py-1.5 pb-2 transition-all ${activeClasses} ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className}`}
+      className={`relative flex items-start justify-between rounded border px-2.5 py-1.5 pb-2 transition-all ${activeClasses} ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className}`}
     >
       <div className="flex items-start gap-2.5 min-w-0 flex-1">
         {icon && (

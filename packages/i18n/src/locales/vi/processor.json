@@ -1,6 +1,6 @@
 {
   "title": "Bộ xử lý ảnh",
-  "concurrencyTooltip": "Kiểm soát số lượng hình ảnh được xử lý đồng thời (1-90).\n- Giá trị cao hơn xử lý nhanh hơn nhưng tăng áp lực lên CPU và RAM.\n- Định dạng hiện tại: {{format}}.\n- Sử dụng Trình tư vấn luồng xử lý thông minh bên dưới để có khuyến nghị phù hợp phần cứng.",
+  "concurrencyTooltip": "Kiểm soát số lượng hình ảnh được xử lý đồng thời (1-90).\n• Giá trị cao hơn xử lý nhanh hơn nhưng tăng áp lực lên CPU và RAM.\n• Định dạng hiện tại: {{format}}.\n• Sử dụng Trình tư vấn luồng xử lý thông minh bên dưới để có khuyến nghị phù hợp phần cứng.",
   "batchProcessorTitle": "Bộ xử lý hàng loạt",
   "singleProcessorTitle": "Bộ xử lý đơn lẻ",
   "dropZonePlaceholder": "Kéo thả ảnh của bạn vào đây, hoặc click để chọn",
@@ -175,6 +175,8 @@
   "tooltipPngDithering": "Kiểm soát cường độ khuếch tán lỗi trong quá trình lượng tử hóa PNG.\n● 0% tắt tính năng hòa sắc\n● Giá trị cao hơn làm mượt các dải màu với sự khuếch tán mạnh hơn.",
   "batchDropzoneTitle": "Thả hình ảnh vào đây, nhấp để chọn hoặc dán từ bộ nhớ tạm",
   "batchDropzoneSubtitle": "Hỗ trợ JPG, PNG, WebP, AVIF, JXL, BMP và liên kết hình ảnh",
+  "batchConfirmRetryAll": "Bạn có chắc muốn xử lý lại toàn bộ ảnh?",
+  "batchConfirmClearAll": "Bạn có chắc muốn xóa toàn bộ ảnh?",
   "noFilesInQueue": "Không có tệp nào trong hàng đợi",
   "startBatch": "Bắt đầu xử lý",
   "continueBatch": "Tiếp tục xử lý",
@@ -256,11 +258,47 @@
     }
   },
   "resizeNone": "Không thay đổi kích thước",
-  "resizeFitWidth": "Khớp chiều rộng",
-  "resizeFitHeight": "Khớp chiều cao",
+  "resizeFitValue": "Khớp giá trị",
+  "resizeZoomMin": "Thu nhỏ tối đa",
+  "resizeZoomMax": "Phóng to tối thiểu",
   "resizeSetSize": "Đặt kích thước",
   "resizeScale": "Tỷ lệ",
   "resizePaperSize": "Khổ giấy",
+  "resizeApplyTo": "Áp dụng cho",
+  "applyToWidth": "Chiều rộng",
+  "applyToHeight": "Chiều cao",
+  "applyToShortest": "Cạnh ngắn nhất",
+  "applyToLongest": "Cạnh dài nhất",
+  "tooltipResizeTypes": [
+    {
+      "method": "Không thay đổi kích thước",
+      "description": "Giữ nguyên kích thước gốc của hình ảnh."
+    },
+    {
+      "method": "Khớp giá trị",
+      "description": "Thay đổi kích thước của cạnh được chọn để khớp chính xác với giá trị, bảo toàn tỷ lệ khung hình."
+    },
+    {
+      "method": "Thu nhỏ tối đa",
+      "description": "Đảm bảo kích thước cạnh được chọn tối đa bằng giá trị đã đặt. Chỉ thu nhỏ các ảnh lớn hơn."
+    },
+    {
+      "method": "Phóng to tối thiểu",
+      "description": "Đảm bảo kích thước cạnh được chọn tối thiểu bằng giá trị đã đặt. Chỉ phóng to các ảnh nhỏ hơn."
+    },
+    {
+      "method": "Đặt kích thước",
+      "description": "Thay đổi kích thước theo chiều rộng và chiều cao cụ thể với các tùy chọn cắt/đệm."
+    },
+    {
+      "method": "Tỷ lệ",
+      "description": "Thay đổi kích thước hình ảnh theo tỷ lệ phần trăm nhân lên."
+    },
+    {
+      "method": "Khổ giấy",
+      "description": "Thay đổi kích thước để khớp với kích thước khổ giấy tiêu chuẩn (ví dụ: A4) ở mức DPI mục tiêu."
+    }
+  ],
   "concurrency": "Số luồng xử lý",
   "showcaseSingle": {
     "title": "Bộ xử lý đơn lẻ trong một giao diện",

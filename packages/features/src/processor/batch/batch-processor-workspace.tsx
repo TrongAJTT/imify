@@ -15,7 +15,12 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { ToastContainer, BodyText, RenameInputDialog, useRenameInputPrompt } from "@imify/ui";
+import {
+  ToastContainer,
+  BodyText,
+  RenameInputDialog,
+  useRenameInputPrompt,
+} from "@imify/ui";
 import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
 import type {
   ConversionProgressPayload,
@@ -27,7 +32,6 @@ import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
 import { useClipboardImageIntake } from "../../shared/use-clipboard-image-intake";
 import { BatchDownloadConfirmDialog } from "../../shared/download-confirm-dialog";
-import { ImageUrlImportControl } from "../image-url-import-control";
 import { buildActiveCodecOptionsForTarget } from "../target-format-state";
 import { BatchActionBar } from "./action-bar";
 import { BatchQueueGrid } from "./queue-grid";
@@ -45,7 +49,7 @@ import {
 } from "./utils";
 import { useBatchExecution } from "./hooks/use-batch-execution";
 import { useBatchExportActions } from "./hooks/use-batch-export-actions";
-import { isCommonImageFile } from "../../shared/image-file-utils";
+import { isCommonImageFile, sanitizeFile } from "../../shared/image-file-utils";
 
 export function BatchProcessorWorkspace() {
   const targetFormat = useBatchStore((s) => s.targetFormat);
@@ -54,6 +58,7 @@ export function BatchProcessorWorkspace() {
   const formatOptions = useBatchStore((s) => s.formatOptions);
   const resizeMode = useBatchStore((s) => s.resizeMode);
   const resizeValue = useBatchStore((s) => s.resizeValue);
+  const resizeApplyTo = useBatchStore((s) => s.resizeApplyTo);
   const resizeWidth = useBatchStore((s) => s.resizeWidth);
   const resizeHeight = useBatchStore((s) => s.resizeHeight);
   const resizeAspectMode = useBatchStore((s) => s.resizeAspectMode);
@@ -107,7 +112,7 @@ export function BatchProcessorWorkspace() {
         targetFormat,
         formatOptions,
       ),
-      resize: { mode: "none" },
+      resize: { mode: "inherit" },
     };
     return withBatchResize(
       baseConfig,
@@ -115,6 +120,7 @@ export function BatchProcessorWorkspace() {
       quality,
       formatOptions,
       resizeValue,
+      resizeApplyTo,
       resizeWidth,
       resizeHeight,
       resizeAspectMode,
@@ -132,6 +138,7 @@ export function BatchProcessorWorkspace() {
     quality,
     formatOptions,
     resizeValue,
+    resizeApplyTo,
     resizeWidth,
     resizeHeight,
     resizeAspectMode,
@@ -263,20 +270,27 @@ export function BatchProcessorWorkspace() {
   );
   const removeItem = (id: string) =>
     setQueue((current) => current.filter((item) => item.id !== id));
-  const appendImageFiles = (inputFiles: File[]) => {
+  const appendImageFiles = async (inputFiles: File[]) => {
     if (!inputFiles.length) return;
-    const nextItems: BatchQueueItem[] = inputFiles
-      .filter((file) => isCommonImageFile(file))
-      .map((file) => ({
-        id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        file,
-        status: file.size > MAX_FILE_SIZE_BYTES ? "error" : "queued",
-        percent: file.size > MAX_FILE_SIZE_BYTES ? 100 : 0,
-        message:
-          file.size > MAX_FILE_SIZE_BYTES
-            ? `Skipped: file is larger than ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB limit`
-            : undefined,
-      }));
+
+    const imageFiles = inputFiles.filter((file) => isCommonImageFile(file));
+    if (!imageFiles.length) return;
+
+    const sanitizedFiles = await Promise.all(
+      imageFiles.map((file) => sanitizeFile(file)),
+    );
+
+    const nextItems: BatchQueueItem[] = sanitizedFiles.map((file) => ({
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      file,
+      status: file.size > MAX_FILE_SIZE_BYTES ? "error" : "queued",
+      percent: file.size > MAX_FILE_SIZE_BYTES ? 100 : 0,
+      message:
+        file.size > MAX_FILE_SIZE_BYTES
+          ? `Skipped: file is larger than ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB limit`
+          : undefined,
+    }));
+
     if (!nextItems.length) return;
     setQueue((current) => [...current, ...nextItems]);
     void Promise.all(
@@ -418,23 +432,17 @@ export function BatchProcessorWorkspace() {
           setQueue([]);
           clearSummary();
         }}
-        onRunAll={() => {
-          checkAndPrompt(
-            fileNamePattern,
-            (inputValue) => {
-              setBatchInputValue(inputValue);
-              void runBatch("all", inputValue);
-            }
-          );
+        onRunAll={(mode = "all") => {
+          checkAndPrompt(fileNamePattern, (inputValue) => {
+            setBatchInputValue(inputValue);
+            void runBatch(mode, inputValue);
+          });
         }}
         onRunFailed={() => {
-          checkAndPrompt(
-            fileNamePattern,
-            (inputValue) => {
-              setBatchInputValue(inputValue);
-              void runBatch("failed", inputValue);
-            }
-          );
+          checkAndPrompt(fileNamePattern, (inputValue) => {
+            setBatchInputValue(inputValue);
+            void runBatch("failed", inputValue);
+          });
         }}
         onTogglePause={togglePause}
         paused={paused}
@@ -488,13 +496,8 @@ export function BatchProcessorWorkspace() {
       ) : !isRunning ? (
         <BatchUploadDropzone
           onAppendFiles={appendFiles}
-          urlImportControl={
-            <ImageUrlImportControl
-              allowMultiple
-              disabled={isImportingUrls}
-              onProcessUrls={importFromImageUrls}
-            />
-          }
+          onProcessUrls={importFromImageUrls}
+          onPasteFiles={appendImageFiles}
         />
       ) : null}
       <DndContext

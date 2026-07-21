@@ -124,13 +124,17 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
   useWorkspaceSidebar(sidebar, t("aboutThisTool"));
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Image Filling");
     setHeaderActions(null);
     setHeaderBreadcrumb(<FeatureBreadcrumb compact rootToolId="filling" />);
     setHeaderOnBack(null);
-    return () => resetHeader();
   }, [
-    resetHeader,
     setHeaderActions,
     setHeaderBreadcrumb,
     setHeaderOnBack,
@@ -320,6 +324,12 @@ export function FillingFlowPage({
   useWorkspaceSidebar(sidebar, `${t("common:toolSettings")} - ${t("title")}`);
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     const modeLabel =
       mode === "fill"
         ? "Fill"
@@ -345,10 +355,8 @@ export function FillingFlowPage({
       />,
     );
     setHeaderOnBack(() => router.push(routeBase));
-    return () => resetHeader();
   }, [
     mode,
-    resetHeader,
     routeBase,
     router,
     setHeaderActions,

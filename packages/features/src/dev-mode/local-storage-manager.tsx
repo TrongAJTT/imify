@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@imify/ui/ui/button";
 import { Subheading, BodyText, MutedText } from "@imify/ui/ui/typography";
+import { AccordionCard } from "@imify/ui/index";
 
 interface StorageItem {
   key: string;
@@ -29,7 +30,7 @@ type SearchTarget = "key" | "value" | "both";
 export function LocalStorageManager() {
   const [items, setItems] = useState<StorageItem[]>([]);
   const [search, setSearch] = useState("");
-  const [searchTarget, setSearchTarget] = useState<SearchTarget>("key");
+  const [searchTarget, setSearchTarget] = useState<SearchTarget>("both");
   const [filterImifyOnly, setFilterImifyOnly] = useState(true);
   const [showValues, setShowValues] = useState(true);
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -255,15 +256,19 @@ export function LocalStorageManager() {
       </div>
 
       {/* Warning for Reactivity Caveat */}
-      <div className="flex items-start gap-2.5 p-3 rounded-lg border border-amber-200 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/20 text-xs text-amber-800 dark:text-amber-300 leading-relaxed shadow-sm">
-        <AlertTriangle size={15} className="shrink-0 text-amber-500 mt-0.5" />
+      <AccordionCard
+        icon={<AlertTriangle size={15} />}
+        colorTheme="amber"
+        defaultOpen={true}
+        label="Reactivity Caveat"
+        childrenClassName="py-2 px-3 bg-amber-50/50 dark:bg-amber-950/20 text-xs text-amber-800 dark:text-amber-300 leading-relaxed"
+      >
         <div>
-          <span className="font-bold">Reactivity Caveat:</span> Zustand stores
-          running in memory won't immediately reflect changes edited here. After
-          saving, please reload the page via the browser refresh button or click
-          the reload shortcut button.
+          Zustand stores running in memory won't immediately reflect changes
+          edited here. After saving, please reload the page via the browser
+          refresh button or click the reload shortcut button.
         </div>
-      </div>
+      </AccordionCard>
 
       {/* Main Action Bar */}
       <div className="flex flex-col gap-3.5 p-4 rounded-xl border border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-950/40">
@@ -278,7 +283,7 @@ export function LocalStorageManager() {
                 placeholder={`Search by ${searchTarget === "both" ? "key or value" : searchTarget}...`}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-sky-500 text-slate-800 dark:text-slate-100"
               />
             </div>
 
@@ -286,7 +291,7 @@ export function LocalStorageManager() {
             <select
               value={searchTarget}
               onChange={(e) => setSearchTarget(e.target.value as SearchTarget)}
-              className="text-xs px-2 py-1.5 rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-sky-500 text-slate-700 dark:text-slate-350 cursor-pointer"
+              className="text-xs px-2 py-1.5 rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-sky-500 text-slate-700 dark:text-slate-200 cursor-pointer"
             >
               <option value="key">Search keys</option>
               <option value="value">Search values</option>
@@ -377,7 +382,7 @@ export function LocalStorageManager() {
               placeholder="Key name (e.g. imify-my-key)"
               value={newKey}
               onChange={(e) => setNewKey(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-sky-500 font-mono"
+              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-sky-500 font-mono text-slate-800 dark:text-slate-100"
             />
             <textarea
               placeholder="Value (Plain string or JSON)"
@@ -385,7 +390,7 @@ export function LocalStorageManager() {
               onChange={(e) =>
                 handleValueChange(e.target.value, setNewValue, setNewJsonError)
               }
-              className={`w-full h-20 px-3 py-2 text-xs rounded-lg border bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 font-mono ${
+              className={`w-full h-20 px-3 py-2 text-xs rounded-lg border bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 font-mono text-slate-800 dark:text-slate-100 ${
                 newJsonError
                   ? "border-red-500 focus:ring-red-500"
                   : "border-slate-200 dark:border-slate-700 focus:ring-sky-500"
@@ -511,7 +516,7 @@ export function LocalStorageManager() {
                           setJsonError,
                         )
                       }
-                      className={`w-full h-36 px-3 py-2 text-xs rounded-lg border bg-white dark:bg-slate-950 focus:outline-none focus:ring-1 font-mono leading-relaxed ${
+                      className={`w-full h-36 px-3 py-2 text-xs rounded-lg border bg-white dark:bg-slate-950 focus:outline-none focus:ring-1 font-mono leading-relaxed text-slate-800 dark:text-slate-100 ${
                         jsonError
                           ? "border-red-500 focus:ring-red-500"
                           : "border-slate-200 dark:border-slate-700 focus:ring-sky-500"

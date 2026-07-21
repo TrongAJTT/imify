@@ -22,7 +22,7 @@ export type SplicingAlignment =
 
 export type SplicingPreset = "stitch_vertical" | "stitch_horizontal" | "grid" | "bento"
 
-export type SplicingImageResize = "original" | "fit_width" | "fit_height"
+export type SplicingImageResize = "inherit" | "fit_value" | "zoom_min" | "zoom_max"
 
 export type SplicingExportMode = "single" | "per_row" | "per_col"
 

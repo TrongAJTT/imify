@@ -53,6 +53,12 @@ export function QrReaderPage() {
   );
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("QR Reader");
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
@@ -61,8 +67,7 @@ export function QrReaderPage() {
         onRootClick={() => router.push("/qr-reader")}
       />,
     );
-    return () => resetHeader();
-  }, [resetHeader, router, setHeaderBreadcrumb, setHeaderSection]);
+  }, [router, setHeaderBreadcrumb, setHeaderSection]);
 
   if (!hydrated) {
     return <WorkspaceLoadingState title="Loading QR reader..." />;

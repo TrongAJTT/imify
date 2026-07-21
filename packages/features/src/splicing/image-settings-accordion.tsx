@@ -1,6 +1,7 @@
 import React from "react";
 import { Image as ImageIcon } from "lucide-react";
 import type { ResizeQuickStats } from "@imify/core/resize-quick-stats";
+import type { ResizeApplyTo } from "@imify/core/types";
 import { NumberInput, ColorPickerPopover, AccordionCard } from "@imify/ui";
 import { ResizeCard } from "../processor/resize-card";
 import type { SplicingImageResize } from "./types";
@@ -8,16 +9,17 @@ import type { SplicingImageResize } from "./types";
 interface ImageSettingsAccordionProps {
   imageResize: SplicingImageResize;
   imageFitValue: number;
+  imageApplyTo: ResizeApplyTo;
   imagePadding: number;
   imagePaddingColor: string;
   imageBorderRadius: number;
   imageBorderWidth: number;
   imageBorderColor: string;
   resizeQuickStats: ResizeQuickStats;
-  isImageResizeOpen: boolean;
 
   onImageResizeChange: (mode: SplicingImageResize) => void;
   onImageFitValueChange: (value: number) => void;
+  onImageApplyToChange: (value: ResizeApplyTo) => void;
   onImagePaddingChange: (value: number) => void;
   onImagePaddingColorChange: (value: string) => void;
   onImageBorderRadiusChange: (value: number) => void;
@@ -35,15 +37,16 @@ import { useTranslation } from "@imify/i18n";
 export function ImageSettingsAccordion({
   imageResize,
   imageFitValue,
+  imageApplyTo,
   imagePadding,
   imagePaddingColor,
   imageBorderRadius,
   imageBorderWidth,
   imageBorderColor,
   resizeQuickStats,
-  isImageResizeOpen,
   onImageResizeChange,
   onImageFitValueChange,
+  onImageApplyToChange,
   onImagePaddingChange,
   onImagePaddingColorChange,
   onImageBorderRadiusChange,
@@ -53,12 +56,21 @@ export function ImageSettingsAccordion({
 }: ImageSettingsAccordionProps) {
   const { t } = useTranslation("splicing");
   // Dynamic sublabel showing resize mode and padding
-  const resizeLabel =
-    imageResize === "original"
-      ? t("imageFields.original")
-      : imageResize === "fit_width"
-        ? t("imageFields.fitWidth")
-        : t("imageFields.fitHeight");
+  const resizeLabel = (() => {
+    switch (imageResize) {
+      case "inherit":
+        return t("imageFields.original");
+      case "fit_value":
+        return t("imageFields.fitValue");
+      case "zoom_min":
+        return t("imageFields.zoomMin");
+      case "zoom_max":
+        return t("imageFields.zoomMax");
+      default:
+        return t("imageFields.original");
+    }
+  })();
+
   const sublabel =
     t("imageFields.mode", { mode: resizeLabel }) +
     `, ${t("imageFields.padding")}: ${imagePadding}`;
@@ -74,40 +86,21 @@ export function ImageSettingsAccordion({
       <div className="space-y-3 pt-1">
         {/* Image Resize Card */}
         <ResizeCard
-          resizeMode={imageResize === "original" ? "none" : imageResize}
+          resizeMode={imageResize}
           resizeValue={imageFitValue}
-          resizeWidth={0}
-          resizeHeight={0}
-          resizeAspectMode="fixed"
-          resizeAspectRatio={0}
-          resizeFitMode="contain"
-          resizeContainBackground="#000000"
-          resizeSourceWidth={0}
-          resizeSourceHeight={0}
-          resizeSyncVersion={0}
+          resizeApplyTo={imageApplyTo}
           resizeQuickStats={resizeQuickStats}
-          paperSize="A4"
-          dpi={300}
           onResizeModeChange={(mode) =>
-            onImageResizeChange(
-              (mode === "none" ? "original" : mode) as SplicingImageResize,
-            )
+            onImageResizeChange(mode as SplicingImageResize)
           }
           onResizeValueChange={onImageFitValueChange}
-          onResizeWidthChange={() => {}}
-          onResizeHeightChange={() => {}}
-          onResizeAspectModeChange={() => {}}
-          onResizeAspectRatioChange={() => {}}
-          onResizeFitModeChange={() => {}}
-          onResizeContainBackgroundChange={() => {}}
-          onPaperSizeChange={() => {}}
-          onDpiChange={() => {}}
-          availableModes={["none", "fit_width", "fit_height"]}
+          onResizeApplyToChange={onImageApplyToChange}
+          availableModes={["inherit", "fit_value", "zoom_min", "zoom_max"]}
           alwaysOpen
           onOpenChange={onImageResizeOpenChange}
         />
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 items-end">
           <NumberInput
             label={t("imageFields.padding")}
             value={imagePadding}

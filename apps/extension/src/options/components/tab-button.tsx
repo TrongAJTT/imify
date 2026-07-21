@@ -1,5 +1,5 @@
+import { Tooltip } from "@imify/ui/ui/tooltip"
 import type { ReactNode } from "react"
-import { Tooltip } from "./tooltip"
 
 export function TabButton({
   active,

@@ -134,7 +134,7 @@ export function CustomFormatForm({
                 quality: QUALITY_FORMATS.includes(nextFormat) ? value.quality ?? 90 : value.quality,
                 formatOptions: buildFormatOptionsForTargetChange(nextFormat, nextTargetFormat),
                 resize:
-                  value.resize.mode === "page_size"
+                  ((value.resize.mode as any) === "page_size" || value.resize.mode === "paper_size")
                     ? { ...value.resize, dpi: value.resize.dpi ?? 72 }
                     : value.resize
               })
@@ -220,6 +220,7 @@ export function CustomFormatForm({
             <ResizeCard
               resizeMode={value.resize.mode}
               resizeValue={typeof value.resize.value === "number" ? value.resize.value : 1280}
+              resizeApplyTo={value.resize.applyTo}
               resizeWidth={typeof value.resize.width === "number" ? value.resize.width : 1280}
               resizeHeight={typeof value.resize.height === "number" ? value.resize.height : 960}
               resizeAspectMode={value.resize.aspectMode ?? "free"}
@@ -278,6 +279,15 @@ export function CustomFormatForm({
                   resize: {
                     ...value.resize,
                     value: Math.max(1, next || 1)
+                  }
+                })
+              }
+              onResizeApplyToChange={(next) =>
+                onChange({
+                  ...value,
+                  resize: {
+                    ...value.resize,
+                    applyTo: next
                   }
                 })
               }

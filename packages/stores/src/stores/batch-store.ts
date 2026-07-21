@@ -19,7 +19,7 @@ import { DEFAULT_ICO_SIZES } from "@imify/core/format-config"
 import { normalizeResizeResamplingAlgorithm } from "@imify/core/resize-resampling"
 import type { ResizeQuickStats } from "@imify/core/resize-quick-stats"
 import type { BmpColorDepth, PaperSize, SupportedDPI, TiffColorMode } from "@imify/core/types"
-import type { BatchResizeMode, BatchSetupState, BatchTargetFormat } from "./batch-types"
+import type { BatchResizeMode, BatchSetupState, BatchTargetFormat, ResizeApplyTo } from "./batch-types"
 import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "./preset-colors"
 
 
@@ -113,6 +113,7 @@ const DEFAULT_BATCH_STATE: BatchSetupState = {
   },
   resizeMode: "inherit",
   resizeValue: 1280,
+  resizeApplyTo: "width",
   resizeWidth: 1280,
   resizeHeight: 960,
   resizeAspectMode: "original",
@@ -195,8 +196,26 @@ function cloneSetupState(state: BatchSetupState | undefined): BatchSetupState {
     colorMode: rawTiffOptions.colorMode === "grayscale" ? "grayscale" : "color"
   }
 
+  // Migrate legacy resizeMode
+  let mode: BatchResizeMode = state.resizeMode
+  let applyTo = state.resizeApplyTo ?? "width"
+
+  if ((mode as any) === "none") {
+    mode = "inherit"
+  } else if ((mode as any) === "fit_width" || (mode as any) === "change_width") {
+    mode = "fit_value"
+    applyTo = "width"
+  } else if ((mode as any) === "fit_height" || (mode as any) === "change_height") {
+    mode = "fit_value"
+    applyTo = "height"
+  } else if ((mode as any) === "page_size") {
+    mode = "paper_size"
+  }
+
   return {
     ...stateWithoutLegacyWatermark,
+    resizeMode: mode,
+    resizeApplyTo: applyTo,
     formatOptions: {
       ...formatOptions,
       bmp: bmpOptions,
@@ -319,6 +338,7 @@ interface BatchStoreState extends BatchSetupState {
   setIcoOptimizeInternalPngLayers: (value: boolean) => void
   setResizeMode: (value: BatchResizeMode) => void
   setResizeValue: (value: number) => void
+  setResizeApplyTo: (value: ResizeApplyTo) => void
   setResizeWidth: (value: number) => void
   setResizeHeight: (value: number) => void
   setResizeAspectMode: (value: BatchSetupState["resizeAspectMode"]) => void
@@ -731,7 +751,7 @@ export const useBatchStore = create<BatchStoreState>()(
             }
           } as Partial<BatchStoreState>
         }),
-      setResizeValue: (value) =>
+       setResizeValue: (value) =>
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
@@ -742,6 +762,23 @@ export const useBatchStore = create<BatchStoreState>()(
 
           return {
             resizeValue: value,
+            contextConfigs: {
+              ...contextConfigs,
+              [setupContext]: nextConfig
+            }
+          } as Partial<BatchStoreState>
+        }),
+      setResizeApplyTo: (value) =>
+        set((state) => {
+          const setupContext = state.setupContext
+          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+          const nextConfig = {
+            ...contextConfigs[setupContext],
+            resizeApplyTo: value
+          }
+
+          return {
+            resizeApplyTo: value,
             contextConfigs: {
               ...contextConfigs,
               [setupContext]: nextConfig

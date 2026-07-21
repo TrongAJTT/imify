@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Check, Copy, RefreshCw } from "lucide-react";
+import { Check, Copy, RefreshCw, AlignLeft } from "lucide-react";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useSplicingStore } from "@imify/stores/stores/splicing-store";
 import { useSplitterStore } from "@imify/stores/stores/splitter-store";
@@ -13,7 +13,7 @@ import { useInspectorStore } from "@imify/stores/stores/inspector-store";
 import { useQrGeneratorStore } from "@imify/stores/stores/qr-generator-store";
 import { useBackgroundRemoverStore } from "@imify/stores/stores/background-remover-store";
 import { Button } from "@imify/ui/ui/button";
-import { Tooltip } from "../shared/tooltip";
+import { Tooltip } from "@imify/ui/ui/tooltip";
 import type { OptionsTab } from "./debug-shared";
 import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter";
 
@@ -51,6 +51,7 @@ export function DevModeStateViewer({
     return activeTab ?? "all";
   });
   const [copied, setCopied] = useState(false);
+  const [wordWrap, setWordWrap] = useState(false);
   const [settingsState, setSettingsState] = useState<unknown>(null);
 
   useEffect(() => {
@@ -229,6 +230,18 @@ export function DevModeStateViewer({
           ))}
         </select>
         <div className="ml-auto flex items-center gap-1.5">
+          <Tooltip content="Toggle word wrap">
+            <Button
+              type="button"
+              variant={wordWrap ? "default" : "outline"}
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 border-slate-200 dark:border-slate-700"
+              onClick={() => setWordWrap(!wordWrap)}
+            >
+              <AlignLeft size={11} />
+              Wrap
+            </Button>
+          </Tooltip>
           <Tooltip content="Copy current view to clipboard">
             <Button
               type="button"
@@ -265,7 +278,11 @@ export function DevModeStateViewer({
           </span>
         </div>
         <pre
-          className="text-[11px] font-mono text-slate-300 leading-relaxed overflow-auto p-3 whitespace-pre-wrap break-all"
+          className={`text-[11px] font-mono text-slate-300 leading-relaxed p-3 overflow-y-auto ${
+            wordWrap
+              ? "whitespace-pre-wrap break-all"
+              : "whitespace-pre overflow-x-auto"
+          }`}
           style={{ maxHeight: "480px" }}
         >
           {jsonText}

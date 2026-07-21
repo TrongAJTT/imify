@@ -15,7 +15,7 @@ import {
 } from "./debug-log-builder";
 import type { OptionsTab } from "./debug-shared";
 import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter";
-import { Tooltip } from "../shared/tooltip";
+import { Tooltip } from "@imify/ui/ui/tooltip";
 
 interface SchemaMigration {
   fromVersion: number;

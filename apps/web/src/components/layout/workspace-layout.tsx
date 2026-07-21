@@ -65,9 +65,15 @@ export function useWorkspaceSidebar(
     }
     context.setRightSidebar(sidebar);
     context.setRightSidebarTitle(title);
+  }, [context, sidebar, title]);
+
+  useEffect(() => {
+    if (!context) {
+      return;
+    }
     return () => {
       context.setRightSidebar(null);
       context.setRightSidebarTitle(null);
     };
-  }, [context, sidebar, title]);
+  }, [context]);
 }

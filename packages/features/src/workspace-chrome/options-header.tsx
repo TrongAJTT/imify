@@ -16,7 +16,7 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import { Tooltip } from "../shared/tooltip";
+import { Tooltip } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import {
@@ -375,6 +375,7 @@ export function WorkspaceOptionsHeader({
       <div className="flex items-center gap-1 shrink-0">
         {isDesktop ? (
           <div className="flex items-center gap-1">
+            {/* Donate Button */}
             {isExtension ? (
               <TitleBarButton
                 onClick={onOpenDonate}
@@ -387,6 +388,8 @@ export function WorkspaceOptionsHeader({
             ) : (
               <GithubStarDonate onOpenDonate={onOpenDonate} />
             )}
+
+            {/* Toggle Dark Mode Button */}
             <TitleBarButton
               onClick={onToggleDark}
               tooltipText={
@@ -398,6 +401,8 @@ export function WorkspaceOptionsHeader({
             >
               {isDark ? <Moon size={18} /> : <Sun size={18} />}
             </TitleBarButton>
+
+            {/* Toggle Fullscreen Button */}
             <TitleBarButton
               onClick={toggleFullscreen}
               tooltipText={
@@ -409,13 +414,8 @@ export function WorkspaceOptionsHeader({
             >
               {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
             </TitleBarButton>
-            <TitleBarButton
-              onClick={onOpenAssetManagement}
-              tooltipText={t("header.tooltips.assetManagement")}
-              className="text-emerald-500/90 hover:text-emerald-600 dark:text-emerald-400/50 dark:hover:text-emerald-300"
-            >
-              <Library size={18} />
-            </TitleBarButton>
+
+            {/* Dev Tools Button */}
             {isDevModeEnabled && onOpenDevTools && (
               <TitleBarButton
                 onClick={onOpenDevTools}
@@ -425,6 +425,17 @@ export function WorkspaceOptionsHeader({
                 <Code2 size={18} />
               </TitleBarButton>
             )}
+
+            {/* Asset Management Button */}
+            <TitleBarButton
+              onClick={onOpenAssetManagement}
+              tooltipText={t("header.tooltips.assetManagement")}
+              className="text-emerald-500/90 hover:text-emerald-600 dark:text-emerald-400/50 dark:hover:text-emerald-300"
+            >
+              <Library size={18} />
+            </TitleBarButton>
+
+            {/* About Button */}
             <TitleBarButton
               onClick={onOpenAbout}
               tooltipText={t("header.tooltips.about")}
@@ -432,6 +443,8 @@ export function WorkspaceOptionsHeader({
             >
               <Info size={18} />
             </TitleBarButton>
+
+            {/* Settings Button */}
             <TitleBarButton
               onClick={onOpenSettings}
               tooltipText={t("header.tooltips.settings")}
@@ -458,6 +471,7 @@ export function WorkspaceOptionsHeader({
                   }}
                   className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                 >
+                  {/* Toggle Dark Mode Button */}
                   {isDark ? (
                     <Moon
                       size={16}
@@ -475,6 +489,8 @@ export function WorkspaceOptionsHeader({
                       : t("header.menu.darkMode")}
                   </span>
                 </button>
+
+                {/* Toggle Fullscreen Button */}
                 <button
                   type="button"
                   onClick={() => {
@@ -504,20 +520,8 @@ export function WorkspaceOptionsHeader({
                         })}
                   </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onOpenAssetManagement();
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                >
-                  <Library
-                    size={16}
-                    className="text-emerald-500/90 dark:text-emerald-400/50"
-                  />
-                  <span>{t("header.menu.assets")}</span>
-                </button>
+
+                {/* Dev Tools Button */}
                 {isDevModeEnabled && onOpenDevTools && (
                   <button
                     type="button"
@@ -534,6 +538,24 @@ export function WorkspaceOptionsHeader({
                     <span>{t("header.menu.devTools")}</span>
                   </button>
                 )}
+
+                {/* Asset Management Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenAssetManagement();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                >
+                  <Library
+                    size={16}
+                    className="text-emerald-500/90 dark:text-emerald-400/50"
+                  />
+                  <span>{t("header.menu.assets")}</span>
+                </button>
+
+                {/* About Button */}
                 <button
                   type="button"
                   onClick={() => {
@@ -548,6 +570,8 @@ export function WorkspaceOptionsHeader({
                   />
                   <span>{t("header.menu.about")}</span>
                 </button>
+
+                {/* Settings Button */}
                 <button
                   type="button"
                   onClick={() => {
@@ -565,6 +589,7 @@ export function WorkspaceOptionsHeader({
 
                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
 
+                {/* GitHub Button */}
                 <a
                   href={IMIFY_LINKS.repository}
                   target="_blank"
@@ -582,6 +607,7 @@ export function WorkspaceOptionsHeader({
 
                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
 
+                {/* Donate Button */}
                 <button
                   type="button"
                   onClick={() => {

@@ -30,9 +30,9 @@ import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar";
 import {
   COMMON_IMAGE_ACCEPT,
   isCommonImageFile,
+  sanitizeFile,
 } from "../shared/image-file-utils";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
-import { ImageUrlImportControl } from "./image-url-import-control";
 import {
   withBatchResize,
   downloadWithFilename,
@@ -109,6 +109,7 @@ export function SingleProcessorWorkspace({
   const formatOptions = useBatchStore((state) => state.formatOptions);
   const resizeMode = useBatchStore((state) => state.resizeMode);
   const resizeValue = useBatchStore((state) => state.resizeValue);
+  const resizeApplyTo = useBatchStore((state) => state.resizeApplyTo);
   const resizeWidth = useBatchStore((state) => state.resizeWidth);
   const resizeHeight = useBatchStore((state) => state.resizeHeight);
   const resizeAspectMode = useBatchStore((state) => state.resizeAspectMode);
@@ -128,6 +129,7 @@ export function SingleProcessorWorkspace({
   const watermark = useWatermarkStore(
     (state) => state.contextWatermarks.single,
   );
+
   const syncResizeToSource = useBatchStore((state) => state.syncResizeToSource);
 
   const [sourceFile, setSourceFile] = useState<File | null>(null);
@@ -173,7 +175,7 @@ export function SingleProcessorWorkspace({
         targetFormat,
         formatOptions,
       ),
-      resize: { mode: "none" },
+      resize: { mode: "inherit" },
     };
     return withBatchResize(
       baseConfig,
@@ -181,6 +183,7 @@ export function SingleProcessorWorkspace({
       quality,
       formatOptions,
       resizeValue,
+      resizeApplyTo,
       resizeWidth,
       resizeHeight,
       resizeAspectMode,
@@ -198,6 +201,7 @@ export function SingleProcessorWorkspace({
     quality,
     formatOptions,
     resizeValue,
+    resizeApplyTo,
     resizeWidth,
     resizeHeight,
     resizeAspectMode,
@@ -229,13 +233,18 @@ export function SingleProcessorWorkspace({
     resetViewport();
   };
 
-  const attachSingleFile = async (file: File) => {
+  const attachSingleFile = async (rawFile: File) => {
     const attachSequence = ++attachSequenceRef.current;
-    if (!isCommonImageFile(file)) {
+    if (!isCommonImageFile(rawFile)) {
       setErrorText(t("chooseImageError"));
       return;
     }
     clearAll();
+
+    // Eagerly materialize and sanitize the Android content:// URI File immediately.
+    const file = await sanitizeFile(rawFile);
+    if (attachSequenceRef.current !== attachSequence) return;
+
     setSourceFile(file);
     try {
       const decodedSource = await decodeFileToImageData(file);
@@ -247,9 +256,7 @@ export function SingleProcessorWorkspace({
     } catch (error) {
       if (attachSequenceRef.current !== attachSequence) return;
       clearAll();
-      setErrorText(
-        toUserFacingConversionError(error, t("decodeError")),
-      );
+      setErrorText(toUserFacingConversionError(error, t("decodeError")));
     }
   };
 
@@ -421,9 +428,7 @@ export function SingleProcessorWorkspace({
           setResultOutputExtension(null);
           setResultNameDimensions(null);
           setResultFileName("");
-          setErrorText(
-            toUserFacingConversionError(error, t("processError")),
-          );
+          setErrorText(toUserFacingConversionError(error, t("processError")));
         } finally {
           if (requestSequenceRef.current === currentSequence) {
             setIsProcessing(false);
@@ -468,13 +473,11 @@ export function SingleProcessorWorkspace({
               accept: COMMON_IMAGE_ACCEPT,
               onInputFiles: onAppendFiles,
             }}
-            topRightSlot={
-              <ImageUrlImportControl
-                allowMultiple={false}
-                disabled={isImportingUrl}
-                onProcessUrls={importFromImageUrls}
-              />
-            }
+            onProcessUrls={importFromImageUrls}
+            onPasteFiles={(files) => {
+              if (files[0]) void attachSingleFile(files[0]);
+            }}
+            allowMultipleUrls={false}
           />
         </div>
       ) : (
@@ -506,7 +509,9 @@ export function SingleProcessorWorkspace({
                       </span>
                     ) : resultBlob && processTime !== null ? (
                       <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                        {t("processingComplete", { time: processTime.toFixed(2) })}
+                        {t("processingComplete", {
+                          time: processTime.toFixed(2),
+                        })}
                       </span>
                     ) : (
                       t("livePreviewNotice", { time: PREVIEW_DEBOUNCE_MS })
@@ -670,11 +675,7 @@ export function SingleProcessorWorkspace({
                 preferredMimeTypeB={resultBlob?.type}
                 maxPreviewDimension={PREVIEW_MAX_DIMENSION}
                 isProcessing={isProcessing}
-                emptyFallback={
-                  <MutedText>
-                    {t("previewUnavailable")}
-                  </MutedText>
-                }
+                emptyFallback={<MutedText>{t("previewUnavailable")}</MutedText>}
               />
             </div>
           </div>

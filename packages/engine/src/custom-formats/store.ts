@@ -86,8 +86,11 @@ export function validateCustomFormatInput(input: CustomFormatInput): string | nu
   }
 
   if (
-    (input.resize.mode === "change_width" ||
-      input.resize.mode === "change_height" ||
+    ((input.resize.mode as any) === "change_width" ||
+      (input.resize.mode as any) === "change_height" ||
+      input.resize.mode === "fit_value" ||
+      input.resize.mode === "zoom_min" ||
+      input.resize.mode === "zoom_max" ||
       input.resize.mode === "scale") &&
     typeof input.resize.value !== "number"
   ) {
@@ -101,7 +104,7 @@ export function validateCustomFormatInput(input: CustomFormatInput): string | nu
     return "Set size mode requires width and height"
   }
 
-  if (input.resize.mode === "page_size" && typeof input.resize.value !== "string") {
+  if (((input.resize.mode as any) === "page_size" || input.resize.mode === "paper_size") && typeof input.resize.value !== "string") {
     return "Paper size is required for page size mode"
   }
 

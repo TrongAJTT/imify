@@ -117,7 +117,8 @@
   "offset": "Offset (px)",
   "skipBefore": "Skip Before (px)",
   "breakAfter": "Break After (px)",
-  "safeZoneLowVariance": "Safe Zone (Low Variance)",
+  "safeZoneLowVariance": "Safe Zone",
+  "safeZoneLowVarianceDesc": "Low Variance",
   "varianceThreshold": "Variance Threshold",
   "searchRadius": "Search Radius (px)",
   "searchStep": "Search Step (px)",
@@ -239,7 +240,6 @@
     "spriteMinArea": "Ignore tiny islands smaller than this area to reduce noise.",
     "spritePadding": "Expand each detected sprite bounding box by this padding.",
     "orderDialogLiveSequence": "This text reflects current horizontal/vertical direction and priority axis.",
-    "whatItDoes": "What it does",
     "basicMethods": [
       {
         "method": "Count",

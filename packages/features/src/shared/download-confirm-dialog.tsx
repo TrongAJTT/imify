@@ -1,52 +1,69 @@
-import React, { useState } from "react"
-import { AlertCircle, Download, X } from "lucide-react"
-import { detectBrowser, type SupportedBrowser } from "@imify/core/browser-detection"
-import { Button, BodyText, Subheading, MutedText } from "@imify/ui"
-import { useBatchStore } from "@imify/stores/stores/batch-store"
-import { FEATURE_MEDIA_ASSETS, resolveFeatureMediaAssetUrl } from "./media-assets"
+import React, { useState } from "react";
+import { AlertCircle, Download, X } from "lucide-react";
+import {
+  detectBrowser,
+  type SupportedBrowser,
+} from "@imify/core/browser-detection";
+import { Button, BodyText, Subheading, MutedText } from "@imify/ui";
+import { useBatchStore } from "@imify/stores/stores/batch-store";
+import {
+  FEATURE_MEDIA_ASSETS,
+  resolveFeatureMediaAssetUrl,
+} from "./media-assets";
+
+import { useTranslation, Trans } from "@imify/i18n";
 
 const DOWNLOAD_HINT_IMAGE_BY_BROWSER: Record<SupportedBrowser, string> = {
-  chrome: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.downloadHints.chromeWebp),
-  edge: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.downloadHints.edgeWebp),
-  firefox: resolveFeatureMediaAssetUrl(FEATURE_MEDIA_ASSETS.downloadHints.firefoxWebp)
-}
+  chrome: resolveFeatureMediaAssetUrl(
+    FEATURE_MEDIA_ASSETS.downloadHints.chromeWebp,
+  ),
+  edge: resolveFeatureMediaAssetUrl(
+    FEATURE_MEDIA_ASSETS.downloadHints.edgeWebp,
+  ),
+  firefox: resolveFeatureMediaAssetUrl(
+    FEATURE_MEDIA_ASSETS.downloadHints.firefoxWebp,
+  ),
+};
 
 interface BatchDownloadConfirmDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  count: number
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  count: number;
 }
 
 export function BatchDownloadConfirmDialog({
   isOpen,
   onClose,
   onConfirm,
-  count
+  count,
 }: BatchDownloadConfirmDialogProps) {
-  const setSkipDownloadConfirm = useBatchStore((state) => state.setSkipDownloadConfirm)
-  const [localSkip, setLocalSkip] = useState(false)
-  const browser = detectBrowser()
-  const downloadHintImg = DOWNLOAD_HINT_IMAGE_BY_BROWSER[browser]
+  const { t } = useTranslation("common");
+  const setSkipDownloadConfirm = useBatchStore(
+    (state) => state.setSkipDownloadConfirm,
+  );
+  const [localSkip, setLocalSkip] = useState(false);
+  const browser = detectBrowser();
+  const downloadHintImg = DOWNLOAD_HINT_IMAGE_BY_BROWSER[browser];
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const handleConfirm = () => {
     if (localSkip) {
-      setSkipDownloadConfirm(true)
+      setSkipDownloadConfirm(true);
     }
-    onConfirm()
-    onClose()
-  }
+    onConfirm();
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       {/* Overlay */}
-      <div 
+      <div
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200"
         onClick={onClose}
       />
-      
+
       {/* Dialog */}
       <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-6">
@@ -56,22 +73,46 @@ export function BatchDownloadConfirmDialog({
                 <AlertCircle size={26} />
               </div>
               <Subheading className="text-xl">
-                Download Confirmation
+                {t("downloadConfirmDialog.title")}
               </Subheading>
             </div>
-            
+
             <div className="space-y-3">
               <BodyText className="text-slate-600 dark:text-slate-400">
-                You are about to download <span className="font-bold text-slate-900 dark:text-white">{count} files</span> at the same time.
+                <Trans
+                  ns="common"
+                  i18nKey="downloadConfirmDialog.message"
+                  values={{ count }}
+                  components={{
+                    bold: (
+                      <span
+                        key={1}
+                        className="font-bold text-slate-900 dark:text-white"
+                      />
+                    ),
+                  }}
+                />
               </BodyText>
-              
+
               <div className="space-y-3">
                 <MutedText className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-400">
-                  HINT
+                  {t("downloadConfirmDialog.hintTitle")}
                 </MutedText>
-                
+
                 <BodyText className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                  Make sure you have <span className="font-bold text-slate-900 dark:text-slate-100">disabled</span> the option <b>"Ask where to save each file before downloading"</b> in your browser settings.
+                  <Trans
+                    ns="common"
+                    i18nKey="downloadConfirmDialog.hintBody"
+                    components={{
+                      bold: (
+                        <span
+                          key={2}
+                          className="font-bold text-slate-900 dark:text-slate-100"
+                        />
+                      ),
+                      b: <b />,
+                    }}
+                  />
                 </BodyText>
 
                 <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 shadow-sm">
@@ -83,7 +124,7 @@ export function BatchDownloadConfirmDialog({
                 </div>
 
                 <MutedText className="text-[12px] italic">
-                  Otherwise, you will encounter {count} popups asking for the save location.
+                  {t("downloadConfirmDialog.popupsWarning", { count })}
                 </MutedText>
               </div>
 
@@ -95,7 +136,7 @@ export function BatchDownloadConfirmDialog({
                   className="rounded border-slate-300 text-sky-500 focus:ring-sky-500/20 w-4 h-4 cursor-pointer transition-all"
                 />
                 <MutedText className="text-xs group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">
-                  Don't show this warning again
+                  {t("downloadConfirmDialog.dontShowAgain")}
                 </MutedText>
               </label>
             </div>
@@ -103,23 +144,23 @@ export function BatchDownloadConfirmDialog({
         </div>
 
         <div className="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800/80">
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             onClick={onClose}
             className="text-sm px-4"
           >
-            Cancel
+            {t("cancel")}
           </Button>
-          <Button 
+          <Button
             onClick={handleConfirm}
             className="text-sm px-5 bg-sky-600 hover:bg-sky-700 text-white gap-2 shadow-md shadow-sky-600/20"
           >
             <Download size={16} />
-            Download Now
+            {t("downloadConfirmDialog.downloadNow")}
           </Button>
         </div>
 
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
@@ -127,6 +168,5 @@ export function BatchDownloadConfirmDialog({
         </button>
       </div>
     </div>
-  )
+  );
 }
-

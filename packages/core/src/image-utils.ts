@@ -56,8 +56,76 @@ export function calculateDimensions(
   const safeOriginalWidth = clampDimension(originalWidth)
   const safeOriginalHeight = clampDimension(originalHeight)
 
+  const applyTo = config.applyTo ?? "width"
+  const val = typeof config.value === "number" ? config.value : 100
+
+  const getTargetDimension = (w: number, h: number, opt: typeof applyTo): number => {
+    switch (opt) {
+      case "width":
+        return w
+      case "height":
+        return h
+      case "shortest":
+        return Math.min(w, h)
+      case "longest":
+        return Math.max(w, h)
+      default:
+        return w
+    }
+  }
+
+  const performFitValue = (w: number, h: number, targetVal: number, opt: typeof applyTo): TargetDimensions => {
+    let mode: "width" | "height"
+    if (opt === "width") {
+      mode = "width"
+    } else if (opt === "height") {
+      mode = "height"
+    } else if (opt === "shortest") {
+      mode = w <= h ? "width" : "height"
+    } else {
+      mode = w >= h ? "width" : "height"
+    }
+
+    if (mode === "width") {
+      const targetWidth = clampDimension(targetVal)
+      const targetHeight = clampDimension(h * (targetWidth / w))
+      return { targetWidth, targetHeight }
+    } else {
+      const targetHeight = clampDimension(targetVal)
+      const targetWidth = clampDimension(w * (targetHeight / h))
+      return { targetWidth, targetHeight }
+    }
+  }
+
   switch (config.mode) {
-    case "none": {
+    case "inherit":
+    case "none" as any: {
+      return {
+        targetWidth: safeOriginalWidth,
+        targetHeight: safeOriginalHeight
+      }
+    }
+
+    case "fit_value": {
+      return performFitValue(safeOriginalWidth, safeOriginalHeight, val, applyTo)
+    }
+
+    case "zoom_min": {
+      const targetDimValue = getTargetDimension(safeOriginalWidth, safeOriginalHeight, applyTo)
+      if (targetDimValue > val) {
+        return performFitValue(safeOriginalWidth, safeOriginalHeight, val, applyTo)
+      }
+      return {
+        targetWidth: safeOriginalWidth,
+        targetHeight: safeOriginalHeight
+      }
+    }
+
+    case "zoom_max": {
+      const targetDimValue = getTargetDimension(safeOriginalWidth, safeOriginalHeight, applyTo)
+      if (targetDimValue < val) {
+        return performFitValue(safeOriginalWidth, safeOriginalHeight, val, applyTo)
+      }
       return {
         targetWidth: safeOriginalWidth,
         targetHeight: safeOriginalHeight
@@ -94,22 +162,12 @@ export function calculateDimensions(
       }
     }
 
-    case "change_width": {
-      const targetWidth = clampDimension(typeof config.value === "number" ? config.value : safeOriginalWidth)
-      const targetHeight = clampDimension(
-        safeOriginalHeight * (targetWidth / safeOriginalWidth)
-      )
-
-      return { targetWidth, targetHeight }
+    case "change_width" as any: {
+      return performFitValue(safeOriginalWidth, safeOriginalHeight, val, "width")
     }
 
-    case "change_height": {
-      const targetHeight = clampDimension(typeof config.value === "number" ? config.value : safeOriginalHeight)
-      const targetWidth = clampDimension(
-        safeOriginalWidth * (targetHeight / safeOriginalHeight)
-      )
-
-      return { targetWidth, targetHeight }
+    case "change_height" as any: {
+      return performFitValue(safeOriginalWidth, safeOriginalHeight, val, "height")
     }
 
     case "scale": {
@@ -123,7 +181,8 @@ export function calculateDimensions(
       }
     }
 
-    case "page_size": {
+    case "paper_size":
+    case "page_size" as any: {
       const paperSize = typeof config.value === "string" ? config.value : "A4"
       const dpi = config.dpi ?? 72
       const dimensions = PAPER_DIMENSIONS[paperSize]?.[dpi]

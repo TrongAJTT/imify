@@ -43,7 +43,7 @@
       "label": "Background Remover"
     },
     "upscaler": {
-      "label": "Upscaler (Exp)"
+      "label": "Upscaler"
     },
     "qrGenerator": {
       "label": "QR Generator"

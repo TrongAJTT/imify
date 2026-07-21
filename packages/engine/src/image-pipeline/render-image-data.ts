@@ -85,18 +85,6 @@ function resolveRenderSize(width: number, height: number, maxDimension: number):
   }
 }
 
-function createContext(canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2D {
-  const ctx = canvas.getContext("2d", {
-    alpha: true,
-    willReadFrequently: true
-  })
-
-  if (!ctx) {
-    throw new Error("Cannot acquire 2D context from OffscreenCanvas")
-  }
-
-  return ctx
-}
 
 function buildEncodeOptions(mimeType: string, quality: number): ImageEncodeOptions {
   if (mimeType === "image/png") {
@@ -107,6 +95,39 @@ function buildEncodeOptions(mimeType: string, quality: number): ImageEncodeOptio
     type: mimeType,
     quality
   }
+}
+
+function createCanvasHelper(width: number, height: number): HTMLCanvasElement | OffscreenCanvas {
+  if (typeof document !== "undefined" && typeof window !== "undefined") {
+    const el = document.createElement("canvas")
+    el.width = width
+    el.height = height
+    if (!(el as any).convertToBlob) {
+      ;(el as any).convertToBlob = function (options?: { type?: string; quality?: number }) {
+        return new Promise<Blob>((resolve, reject) => {
+          el.toBlob((blob) => {
+            if (blob) resolve(blob)
+            else reject(new Error("Canvas toBlob failed"))
+          }, options?.type || "image/png", options?.quality)
+        })
+      }
+    }
+    return el
+  }
+  return new OffscreenCanvas(width, height)
+}
+
+function createContext(canvas: HTMLCanvasElement | OffscreenCanvas): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
+  const ctx = canvas.getContext("2d", {
+    alpha: true,
+    willReadFrequently: true
+  })
+
+  if (!ctx) {
+    throw new Error("Cannot acquire 2D context from Canvas")
+  }
+
+  return ctx as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 }
 
 export async function renderImageDataPreview(
@@ -123,22 +144,22 @@ export async function renderImageDataPreview(
   const candidates = buildMimeCandidates(requestedMimeType, options.fallbackMimeTypes)
   const targetSize = resolveRenderSize(imageData.width, imageData.height, maxDimension)
 
-  const sourceCanvas = new OffscreenCanvas(imageData.width, imageData.height)
+  const sourceCanvas = createCanvasHelper(imageData.width, imageData.height)
   const sourceCtx = createContext(sourceCanvas)
   sourceCtx.putImageData(imageData, 0, 0)
 
-  const targetCanvas = new OffscreenCanvas(targetSize.width, targetSize.height)
+  const targetCanvas = createCanvasHelper(targetSize.width, targetSize.height)
   const targetCtx = createContext(targetCanvas)
   targetCtx.imageSmoothingEnabled = true
   targetCtx.imageSmoothingQuality = "high"
   targetCtx.clearRect(0, 0, targetSize.width, targetSize.height)
-  targetCtx.drawImage(sourceCanvas, 0, 0, targetSize.width, targetSize.height)
+  targetCtx.drawImage(sourceCanvas as any, 0, 0, targetSize.width, targetSize.height)
 
   let lastError: unknown = null
 
   for (const mimeType of candidates) {
     try {
-      const blob = await targetCanvas.convertToBlob(buildEncodeOptions(mimeType, quality))
+      const blob = await (targetCanvas as any).convertToBlob(buildEncodeOptions(mimeType, quality))
 
       if (!blob || blob.size <= 0) {
         continue

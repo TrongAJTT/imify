@@ -45,12 +45,13 @@ export const CONTEXT_MENU_SORT_OPTIONS: Array<{ value: MenuSortMode; label: stri
 ]
 
 export const RESIZE_MODE_OPTIONS: Array<{ value: ResizeMode; label: string }> = [
-  { value: "none", label: "No resize" },
-  { value: "change_width", label: "Set width" },
-  { value: "change_height", label: "Set height" },
+  { value: "inherit", label: "No resize" },
+  { value: "fit_value", label: "Fit value" },
+  { value: "zoom_min", label: "Zoom min" },
+  { value: "zoom_max", label: "Zoom max" },
   { value: "set_size", label: "Set size" },
   { value: "scale", label: "Scale" },
-  { value: "page_size", label: "Paper size" }
+  { value: "paper_size", label: "Paper size" }
 ]
 
 export function getAllTargetConfigs(state: ExtensionStorageState): FormatConfig[] {

@@ -77,7 +77,7 @@ export function BentoLayoutControls({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 items-start">
+      <div className="grid grid-cols-2 gap-2 items-end">
         <SelectField
           label={t("sidebar.layout")}
           value={mode}
@@ -104,7 +104,7 @@ export function BentoLayoutControls({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 items-start">
+      <div className="grid grid-cols-2 gap-2 items-end">
         <SelectField
           label={t("layoutFields.imageAlignment")}
           value={alignment}

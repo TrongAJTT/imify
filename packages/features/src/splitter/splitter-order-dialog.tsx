@@ -9,9 +9,7 @@ import {
 
 import type { SplitterSplitSettings } from "./types";
 import { SPLITTER_TOOLTIPS } from "./splitter-tooltips";
-import { Tooltip } from "../shared/tooltip";
-import { BaseDialog, Button } from "@imify/ui";
-import { SelectInput } from "@imify/ui";
+import { BaseDialog, Button, SelectInput, Tooltip } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 
 interface SplitterOrderDialogProps {
@@ -78,15 +76,21 @@ export function SplitterOrderDialog({
 }: SplitterOrderDialogProps) {
   const { t } = useTranslation("splitter");
 
-  const horizontalOrderOptions = useMemo(() => [
-    { value: "left_to_right", label: t("leftToRight") },
-    { value: "right_to_left", label: t("rightToLeft") },
-  ], [t]);
+  const horizontalOrderOptions = useMemo(
+    () => [
+      { value: "left_to_right", label: t("leftToRight") },
+      { value: "right_to_left", label: t("rightToLeft") },
+    ],
+    [t],
+  );
 
-  const verticalOrderOptions = useMemo(() => [
-    { value: "top_to_bottom", label: t("topToBottom") },
-    { value: "bottom_to_top", label: t("bottomToTop") },
-  ], [t]);
+  const verticalOrderOptions = useMemo(
+    () => [
+      { value: "top_to_bottom", label: t("topToBottom") },
+      { value: "bottom_to_top", label: t("bottomToTop") },
+    ],
+    [t],
+  );
 
   const axisItems = useMemo<AxisItem[]>(
     () =>
@@ -219,7 +223,8 @@ export function SplitterOrderDialog({
               options={verticalOrderOptions}
               onChange={(value) =>
                 onChange({
-                  verticalOrder: value as SplitterSplitSettings["verticalOrder"],
+                  verticalOrder:
+                    value as SplitterSplitSettings["verticalOrder"],
                 })
               }
             />

@@ -26,14 +26,14 @@ import { FEATURE_PRESET_PREFIXES } from "@imify/core";
 import { useBackgroundRemoverShowcaseContent } from "./remover-preset-info-panel";
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
 
-export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings";
+import {
+  BACKGROUND_REMOVER_PRESET as BG_REMOVER_PRESET,
+  BACKGROUND_REMOVER_TARGET_FORMATS,
+  EDGE_REFINEMENT_MIN,
+  EDGE_REFINEMENT_MAX,
+} from "./config";
 
-const BG_REMOVER_PRESET: SavedSetupPreset = {
-  ...VIRTUAL_DEFAULT_PNG_PRESET,
-  id: FEATURE_PRESET_PREFIXES.BACKGROUND_REMOVER,
-  name: "Background Remover",
-  highlightColor: "#ec4899",
-};
+export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings";
 
 interface BackgroundRemoverSidebarProps {
   enableWideSidebarGrid?: boolean;
@@ -165,7 +165,7 @@ export function BackgroundRemoverSidebar({
           label={t("sidebar.outputPreset")}
           theme="pink"
           identifiedPreset={BG_REMOVER_PRESET}
-          formatFilter={["png", "webp", "avif", "jxl", "jpg"]}
+          formatFilter={BACKGROUND_REMOVER_TARGET_FORMATS}
           activePresetId={activePresetId}
           onSelect={applyPreset}
           onReset={resetToDefault}
@@ -192,8 +192,8 @@ export function BackgroundRemoverSidebar({
           <SliderInput
             label={t("sidebar.edgeRefinement")}
             value={edgeSmoothing}
-            min={-10}
-            max={20}
+            min={EDGE_REFINEMENT_MIN}
+            max={EDGE_REFINEMENT_MAX}
             step={1}
             onChange={setEdgeSmoothing}
           />

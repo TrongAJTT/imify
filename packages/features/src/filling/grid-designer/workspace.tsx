@@ -28,14 +28,15 @@ import type { FillingTemplate } from "../types";
 import { DEFAULT_GRID_DESIGN_PARAMS } from "../types";
 import { useTranslation } from "@imify/i18n";
 import { preventWheelEvent } from "../../shared/prevent-wheel-event";
+import {
+  CANVAS_PADDING,
+  PREVIEW_MAX_ZOOM,
+  PREVIEW_MIN_ZOOM,
+  PREVIEW_ZOOM_FACTOR,
+} from "../config";
 
-const CANVAS_PADDING = 40;
-const PREVIEW_MIN_ZOOM = 50;
-const PREVIEW_MAX_ZOOM = 10000;
-const PREVIEW_ZOOM_STEP = 10;
 // When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
 // Matches DiffChecker's multiplicative approach.
-const PREVIEW_ZOOM_FACTOR = 0.15;
 
 interface GridDesignWorkspaceProps {
   template: FillingTemplate;

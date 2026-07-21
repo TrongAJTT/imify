@@ -8,13 +8,15 @@ import {
   type Stroke,
   type StrokeSmoothingSettings,
 } from "@imify/features/pattern/pattern-drawing-utils";
-import { Tooltip } from "../shared/tooltip";
-import { BaseDialog } from "@imify/ui";
-import { Button } from "@imify/ui";
-import { CheckboxCard } from "@imify/ui";
-import { ColorPickerPopover } from "@imify/ui";
-import { NumberInput } from "@imify/ui";
-import { TextInput } from "@imify/ui";
+import {
+  BaseDialog,
+  Button,
+  CheckboxCard,
+  ColorPickerPopover,
+  NumberInput,
+  TextInput,
+  Tooltip,
+} from "@imify/ui";
 import { useShortcutActions } from "../filling/use-shortcut-actions";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
 import { Brush, Eraser, RotateCcw, Trash2, X } from "lucide-react";
@@ -27,6 +29,16 @@ import React, {
 } from "react";
 import { flushSync } from "react-dom";
 import { useTranslation } from "@imify/i18n";
+import {
+  DEFAULT_BRUSH_SIZE_BY_TOOL,
+  type CanvasSize,
+  DEFAULT_CANVAS_SIZE,
+  DEFAULT_STREAMLINE_PERCENT,
+  DEFAULT_SMOOTHING_PERCENT,
+  MIN_BRUSH_SIZE,
+  MAX_BRUSH_SIZE,
+  BRUSH_SIZE_STEP,
+} from "./config";
 
 interface PatternAssetDrawingDialogProps {
   isOpen: boolean;
@@ -36,28 +48,6 @@ interface PatternAssetDrawingDialogProps {
   onClose: () => void;
   onSave: (payload: { blob: Blob; suggestedName: string }) => void;
 }
-
-interface CanvasSize {
-  width: number;
-  height: number;
-}
-
-const DEFAULT_CANVAS_SIZE: CanvasSize = {
-  width: 1024,
-  height: 640,
-};
-
-const DEFAULT_BRUSH_SIZE_BY_TOOL: Record<DrawingTool, number> = {
-  brush: 10,
-  eraser: 18,
-};
-
-const MIN_BRUSH_SIZE = 1;
-const MAX_BRUSH_SIZE = 120;
-const BRUSH_SIZE_STEP = 1;
-
-const DEFAULT_STREAMLINE_PERCENT = 65;
-const DEFAULT_SMOOTHING_PERCENT = 55;
 
 function normalizeSuggestedName(input: string | null | undefined): string {
   const trimmed = input?.trim();
@@ -483,7 +473,8 @@ export function PatternAssetDrawingDialog({
       isOpen={isOpen}
       onClose={onClose}
       isDirty={hasUndoHistory}
-      contentClassName="w-[980px] max-w-[96vw] rounded-2xl"
+      className="max-w-5xl"
+      contentClassName="w-full max-w-[96vw] rounded-2xl"
     >
       <div onWheel={stopEventAndPreventDefault}>
         <div className="border-b border-slate-200 dark:border-slate-800 px-5 py-4 flex items-center justify-between">

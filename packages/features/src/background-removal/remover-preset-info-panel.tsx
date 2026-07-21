@@ -4,7 +4,7 @@ import {
   resolveFeatureMediaAssetUrl,
 } from "../shared/media-assets";
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
-import { FEATURES_INFO_COMMON_FAQS } from "../shared/features-info-common-faqs";
+import { getCommonFaqs } from "../shared/features-info-common-faqs";
 import { useTranslation } from "@imify/i18n";
 
 export function useBackgroundRemoverShowcaseContent() {
@@ -49,7 +49,7 @@ export function useBackgroundRemoverShowcaseContent() {
         question: t("showcase.faqs.q3"),
         answer: t("showcase.faqs.a3"),
       },
-      ...FEATURES_INFO_COMMON_FAQS,
+      ...getCommonFaqs(t),
       {
         question: t("showcase.faqs.q4"),
         answer: t("showcase.faqs.a4"),

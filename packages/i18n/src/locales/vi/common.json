@@ -6,10 +6,12 @@
   "apply": "Áp dụng",
   "reset": "Đặt lại",
   "refresh": "Làm mới",
+  "retry": "Thử lại",
   "delete": "Xóa",
   "upload": "Tải lên",
   "download": "Tải xuống",
   "export": "Xuất",
+  "exporting": "Đang xuất...",
   "processing": "Đang xử lý...",
   "done": "Hoàn thành",
   "result": "Kết quả",
@@ -21,12 +23,26 @@
   "name": "Tên",
   "color": "Màu sắc",
   "highlightColor": "Màu nổi bật",
+  "files": "Tệp tin",
+  "countFiles": "{{count}} tệp tin",
   "noFileSelected": "Chưa chọn tệp nào",
   "chooseFile": "Chọn tệp",
+  "pasteFromClipboard": "Dán từ bộ nhớ tạm",
+  "importFromUrl": "Nhập từ URL",
+  "noImageInClipboard": "Không tìm thấy ảnh trong bộ nhớ tạm.",
+  "clipboardPermissionError": "Lỗi truy cập bộ nhớ tạm.",
   "aboutThisTool": "Về công cụ này",
   "toolSettings": "Thiết lập công cụ",
+  "option": "Tùy chọn",
+  "whatItDoes": "Chức năng",
   "presetInfoShowcasePanel": {
     "tipOfTheDay": "Mẹo hôm nay"
+  },
+  "exportModes": {
+    "oneByOne": "Từng tệp",
+    "singlePdf": "Gộp vào 1 PDF",
+    "individualPdf": "Từng PDF riêng lẻ",
+    "openExportOptions": "Mở tùy chọn xuất"
   },
   "previewModes": {
     "zoom": "Thu phóng",
@@ -38,5 +54,28 @@
     "idle": "Chờ",
     "idleLabel": "Chế độ chờ",
     "idleTooltip": "Đã tắt tương tác cuộn chuột xem trước."
+  },
+  "commonFaqs": [
+    {
+      "question": "Các lỗi thường gặp trong quá trình xử lý là gì?",
+      "answer": "Các sự cố kỹ thuật phổ biến nhất bao gồm:\n• **bad_alloc** (Tràn bộ nhớ): Xảy ra khi hệ thống của bạn không đủ RAM để tải mô hình AI. Hãy thử tải lại trang (nếu tab hiện tại tiêu tốn quá nhiều bộ nhớ) hoặc sử dụng biến thể *Quantized* (Lượng hóa).\n• **Giới hạn bộ nhớ WASM**: Trình duyệt giới hạn WebAssembly ở mức 4GB bất kể dung lượng RAM trên hệ thống của bạn.\n• **QuotaExceededError**: Bộ nhớ cục bộ hoặc bộ nhớ đệm của trình duyệt đã đầy.\n• **Chính sách tài nguyên trình duyệt**: Trình duyệt có thể tự động ngắt tiến trình nếu nó tiêu tốn quá nhiều CPU trong thời gian dài.\nLưu ý: Mô hình *Quantized* rất tốt để tiết kiệm RAM, nhưng **FP16** thường nhanh hơn trên các máy tính đời mới."
+    }
+  ],
+  "downloadConfirmDialog": {
+    "title": "Xác nhận tải xuống",
+    "message": "Bạn chuẩn bị tải xuống <bold>{{count}} tệp</bold> cùng một lúc.",
+    "hintTitle": "GỢI Ý",
+    "hintBody": "Hãy đảm bảo bạn đã <bold>tắt</bold> tùy chọn <b>\"Hỏi vị trí lưu từng tệp trước khi tải xuống\"</b> trong cài đặt trình duyệt của bạn.",
+    "popupsWarning": "Nếu không, bạn sẽ gặp {{count}} hộp thoại cửa sổ bật lên yêu cầu chọn vị trí lưu.",
+    "dontShowAgain": "Không hiển thị cảnh báo này nữa",
+    "downloadNow": "Tải xuống ngay"
+  },
+  "oomWarningDialog": {
+    "title": "Cảnh báo bộ nhớ",
+    "selectedBatchSize": "Kích thước lô đã chọn là <bold>{{totalSize}} MB</bold>. Mức này vượt quá giới hạn khuyến nghị <bold>{{recommendedSize}} MB</bold>.",
+    "warningDetail": "Xử lý lô dung lượng quá lớn có thể khiến thẻ trình duyệt bị tràn bộ nhớ (OOM) và tự đóng, đặc biệt khi chuyển đổi sang các định dạng nặng như AVIF hoặc JXL.",
+    "areYouSure": "Bạn có chắc chắn muốn tiếp tục không?",
+    "dontShowAgain": "Không hiển thị cảnh báo này nữa",
+    "continueAnyway": "Vẫn tiếp tục"
   }
 }

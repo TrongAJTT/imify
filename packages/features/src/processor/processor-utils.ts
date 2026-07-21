@@ -1,6 +1,6 @@
 import { buildResizeOverrideFromState } from "@imify/core/resize-state"
 import type { ConversionProgressPayload, FormatCodecOptions, FormatConfig, ImageFormat, ResizeConfig, ResizeResamplingAlgorithm, SupportedDPI } from "@imify/core/types"
-import type { BatchFormatOptions, BatchResizeMode } from "@imify/stores/stores/batch-types"
+import type { BatchFormatOptions, BatchResizeMode, ResizeApplyTo } from "@imify/stores/stores/batch-types"
 import { resolveEffectiveTargetFormat } from "./target-format-options"
 import { buildActiveCodecOptionsForTarget, normalizeTargetCodecOptions, supportsTargetFormatQuality } from "./target-format-state"
 
@@ -23,6 +23,7 @@ export function withBatchResize(
   quality: number,
   formatOptions: BatchFormatOptions,
   value: number,
+  applyTo: ResizeApplyTo,
   width: number,
   height: number,
   aspectMode: "free" | "original" | "fixed",
@@ -37,6 +38,7 @@ export function withBatchResize(
   const override = buildResizeOverrideFromState({
     mode,
     value,
+    applyTo,
     width,
     height,
     aspectMode,

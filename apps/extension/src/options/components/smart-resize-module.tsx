@@ -1,13 +1,19 @@
-import { useEffect, useRef, useState } from "react"
-import { Link2, RotateCcw, Unlink2, Maximize2, Crop, Minimize } from "lucide-react"
-
-import { Tooltip } from "@/options/components/tooltip"
 import { useTranslation } from "@imify/i18n"
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
 import { NumberInput } from "@imify/ui/ui/number-input"
 import { RadioCard } from "@imify/ui/ui/radio-card"
 import { SelectInput } from "@imify/ui/ui/select-input"
+import { Tooltip } from "@imify/ui/ui/tooltip"
 import { LabelText } from "@imify/ui/ui/typography"
+import {
+  Crop,
+  Link2,
+  Maximize2,
+  Minimize,
+  RotateCcw,
+  Unlink2
+} from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 
 const ASPECT_RATIO_OPTIONS = [
   { value: "free", label: "Free" },
@@ -38,7 +44,12 @@ function parseAspectRatio(value: string): number | null {
   const width = Number(matched[1])
   const height = Number(matched[2])
 
-  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
     return null
   }
 
@@ -123,8 +134,12 @@ export function SmartResizeModule({
   lockSignal?: number
 }) {
   const { t } = useTranslation("processor")
-  const initialWidthRef = useRef(Math.max(1, Math.round(originalWidth ?? width)))
-  const initialHeightRef = useRef(Math.max(1, Math.round(originalHeight ?? height)))
+  const initialWidthRef = useRef(
+    Math.max(1, Math.round(originalWidth ?? width))
+  )
+  const initialHeightRef = useRef(
+    Math.max(1, Math.round(originalHeight ?? height))
+  )
   const lastLockSignalRef = useRef<number | undefined>(lockSignal)
 
   const isFreeOnlyMode = Boolean(forceFreeAspect)
@@ -137,10 +152,16 @@ export function SmartResizeModule({
         : null
   )
 
-  const originalRatio = ratioFromDimensions(initialWidthRef.current, initialHeightRef.current)
+  const originalRatio = ratioFromDimensions(
+    initialWidthRef.current,
+    initialHeightRef.current
+  )
 
   useEffect(() => {
-    if (typeof originalWidth !== "number" || typeof originalHeight !== "number") {
+    if (
+      typeof originalWidth !== "number" ||
+      typeof originalHeight !== "number"
+    ) {
       return
     }
 
@@ -170,7 +191,9 @@ export function SmartResizeModule({
     setIsRatioLocked(true)
     setLockedRatio(ratio)
     onAspectModeChange("original")
-    onAspectRatioChange(toAspectRatioLabel(initialWidthRef.current, initialHeightRef.current))
+    onAspectRatioChange(
+      toAspectRatioLabel(initialWidthRef.current, initialHeightRef.current)
+    )
   }, [height, lockSignal, onAspectModeChange, onAspectRatioChange, width])
 
   useEffect(() => {
@@ -196,10 +219,19 @@ export function SmartResizeModule({
       return
     }
 
-    const ratio = parseAspectRatio(aspectRatio) ?? ratioFromDimensions(width, height)
+    const ratio =
+      parseAspectRatio(aspectRatio) ?? ratioFromDimensions(width, height)
     setIsRatioLocked(Boolean(ratio))
     setLockedRatio(ratio)
-  }, [aspectMode, aspectRatio, isFreeOnlyMode, onAspectModeChange, originalRatio, width, height])
+  }, [
+    aspectMode,
+    aspectRatio,
+    isFreeOnlyMode,
+    onAspectModeChange,
+    originalRatio,
+    width,
+    height
+  ])
 
   const selectedAspectSelect = (() => {
     if (aspectMode === "free") {
@@ -231,13 +263,14 @@ export function SmartResizeModule({
   const isFitModeEnabled = isFreeOnlyMode
     ? true
     : !isSameRatio(
-      ratioFromDimensions(width, height),
-      ratioFromDimensions(initialWidthRef.current, initialHeightRef.current)
-    )
+        ratioFromDimensions(width, height),
+        ratioFromDimensions(initialWidthRef.current, initialHeightRef.current)
+      )
 
   return (
     <div className="space-y-3">
-      <div className={`grid items-end gap-1 ${hideRatioControls ? "grid-cols-2" : "grid-cols-[1fr_auto_1fr]"}`}>
+      <div
+        className={`grid items-end gap-1 ${hideRatioControls ? "grid-cols-2" : "grid-cols-[1fr_auto_1fr]"}`}>
         <NumberInput
           label="Width"
           disabled={disabled}
@@ -262,8 +295,7 @@ export function SmartResizeModule({
                 ? t("tooltipUnlockRatio")
                 : t("tooltipLockCurrentRatio")
             }
-            variant="nowrap"
-          >
+            variant="nowrap">
             <button
               type="button"
               disabled={disabled}
@@ -285,7 +317,12 @@ export function SmartResizeModule({
 
                 if (isSameRatio(ratio, originalRatio)) {
                   onAspectModeChange("original")
-                  onAspectRatioChange(toAspectRatioLabel(initialWidthRef.current, initialHeightRef.current))
+                  onAspectRatioChange(
+                    toAspectRatioLabel(
+                      initialWidthRef.current,
+                      initialHeightRef.current
+                    )
+                  )
                   return
                 }
 
@@ -317,26 +354,47 @@ export function SmartResizeModule({
       </div>
 
       {!hideRatioControls ? (
-      <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1">
-          <SelectInput
-            label="Ratio"
-            value={selectedAspectSelect}
-            disabled={disabled}
-            options={ASPECT_RATIO_OPTIONS.map((option) => ({
-              value: option.value,
-              label: option.label
-            }))}
-            onChange={(nextValue) => {
-              if (nextValue === "free") {
-                setIsRatioLocked(false)
-                setLockedRatio(null)
-                onAspectModeChange("free")
-                return
-              }
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <SelectInput
+              label="Ratio"
+              value={selectedAspectSelect}
+              disabled={disabled}
+              options={ASPECT_RATIO_OPTIONS.map((option) => ({
+                value: option.value,
+                label: option.label
+              }))}
+              onChange={(nextValue) => {
+                if (nextValue === "free") {
+                  setIsRatioLocked(false)
+                  setLockedRatio(null)
+                  onAspectModeChange("free")
+                  return
+                }
 
-              if (nextValue === "original") {
-                const ratio = originalRatio ?? ratioFromDimensions(width, height)
+                if (nextValue === "original") {
+                  const ratio =
+                    originalRatio ?? ratioFromDimensions(width, height)
+                  if (!ratio) {
+                    return
+                  }
+
+                  const nextHeight = Math.max(1, Math.round(width / ratio))
+                  onSizeAnchorChange("width")
+                  onHeightChange(nextHeight)
+                  setIsRatioLocked(true)
+                  setLockedRatio(ratio)
+                  onAspectModeChange("original")
+                  onAspectRatioChange(
+                    toAspectRatioLabel(
+                      initialWidthRef.current,
+                      initialHeightRef.current
+                    )
+                  )
+                  return
+                }
+
+                const ratio = parseAspectRatio(nextValue)
                 if (!ratio) {
                   return
                 }
@@ -346,44 +404,29 @@ export function SmartResizeModule({
                 onHeightChange(nextHeight)
                 setIsRatioLocked(true)
                 setLockedRatio(ratio)
-                onAspectModeChange("original")
-                onAspectRatioChange(toAspectRatioLabel(initialWidthRef.current, initialHeightRef.current))
-                return
-              }
+                onAspectModeChange("fixed")
+                onAspectRatioChange(nextValue)
+              }}
+            />
+          </div>
 
-              const ratio = parseAspectRatio(nextValue)
-              if (!ratio) {
-                return
-              }
-
-              const nextHeight = Math.max(1, Math.round(width / ratio))
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => {
+              onWidthChange(initialWidthRef.current)
+              onHeightChange(initialHeightRef.current)
+              onAspectModeChange("original")
               onSizeAnchorChange("width")
-              onHeightChange(nextHeight)
-              setIsRatioLocked(true)
-              setLockedRatio(ratio)
-              onAspectModeChange("fixed")
-              onAspectRatioChange(nextValue)
+              setIsRatioLocked(false)
+              setLockedRatio(null)
             }}
-          />
+            className="mt-5 inline-flex h-8 items-center gap-1 rounded-md border border-slate-300 px-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
+            title="Reset to original size">
+            <RotateCcw size={12} />
+            Reset
+          </button>
         </div>
-
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => {
-            onWidthChange(initialWidthRef.current)
-            onHeightChange(initialHeightRef.current)
-            onAspectModeChange("original")
-            onSizeAnchorChange("width")
-            setIsRatioLocked(false)
-            setLockedRatio(null)
-          }}
-          className="mt-5 inline-flex h-8 items-center gap-1 rounded-md border border-slate-300 px-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
-          title="Reset to original size">
-          <RotateCcw size={12} />
-          Reset
-        </button>
-      </div>
       ) : null}
 
       <div className="space-y-2">
@@ -395,7 +438,9 @@ export function SmartResizeModule({
             subtitle="Stretch to exact size"
             value="fill"
             selectedValue={fitMode}
-            onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
+            onChange={(value) =>
+              onFitModeChange(value as "fill" | "cover" | "contain")
+            }
             disabled={disabled || !isFitModeEnabled}
             tooltipContent={t("tooltipFitModeFill")}
           />
@@ -405,7 +450,9 @@ export function SmartResizeModule({
             subtitle="Keep ratio, crop overflow"
             value="cover"
             selectedValue={fitMode}
-            onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
+            onChange={(value) =>
+              onFitModeChange(value as "fill" | "cover" | "contain")
+            }
             disabled={disabled || !isFitModeEnabled}
             tooltipContent={t("tooltipFitModeCover")}
           />
@@ -415,7 +462,9 @@ export function SmartResizeModule({
             subtitle="Keep ratio, add padding"
             value="contain"
             selectedValue={fitMode}
-            onChange={(value) => onFitModeChange(value as "fill" | "cover" | "contain")}
+            onChange={(value) =>
+              onFitModeChange(value as "fill" | "cover" | "contain")
+            }
             disabled={disabled || !isFitModeEnabled}
             tooltipContent={t("tooltipFitModeContain")}
             rightSlot={
@@ -425,7 +474,11 @@ export function SmartResizeModule({
                 onChange={onContainBackgroundChange}
                 outputMode="hex"
                 enableAlpha={false}
-                className={disabled || !isFitModeEnabled || fitMode !== "contain" ? "pointer-events-none opacity-50" : undefined}
+                className={
+                  disabled || !isFitModeEnabled || fitMode !== "contain"
+                    ? "pointer-events-none opacity-50"
+                    : undefined
+                }
               />
             }
           />

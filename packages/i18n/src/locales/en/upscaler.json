@@ -1,6 +1,130 @@
 {
   "title": "Upscaler",
+  "loading": "Loading upscaler...",
   "scaleFactor": "Scale Factor",
   "denoiseLevel": "Denoise Level",
-  "upscaleAction": "Upscale Image"
+  "upscaleAction": "Upscale Image",
+  "hardwareNotice": {
+    "title": "This feature brings the power of AI models to your browser.",
+    "item1": "• This feature is VERY hardware-sensitive, we recommend a machine with a strong CPU and at least 12GB of RAM.",
+    "item2": "• Recommended only for small images under 1000 pixels. For larger images or batch upscaling, we recommend using dedicated software such as Upscayl.",
+    "item3": "• You must download the AI models separately to use them, as we do not distribute these models."
+  },
+  "largeImageWarning": {
+    "title": "Large Image Performance Warning",
+    "description": "This image is {{width}}x{{height}}px, exceeding the recommended {{threshold}}px limit. The browser ONNX environment is not designed to upscale large images like this. Please switch to dedicated software such as Upscayl, or you will waste tens of minutes processing a single image."
+  },
+  "dropZone": {
+    "title": "Image Upscaler",
+    "subtitle": "Drop an image to upscale it using super-resolution AI"
+  },
+  "sidebar": {
+    "panelTitle": "CONFIGURATION",
+    "title": "Upscaler Settings",
+    "aiEngine": "AI Engine",
+    "unloadModelTitle": "Auto-unload Model",
+    "unloadModelSubtitle": "Free up RAM immediately after processing.",
+    "currentSelection": "Current Selection",
+    "modelLabel": "Model:",
+    "variantLabel": "Variant:",
+    "suitableForLabel": "Suitable for:",
+    "optionsLabel": "Upscaling Options",
+    "sublabelSafe": "{{scale}}x Upscale (Safe Mode)",
+    "sublabelFast": "{{scale}}x Upscale (Fast Mode)",
+    "scaleFactor": "Scale Factor",
+    "scaleFixed": "Fixed at {{scale}}x by this model",
+    "magnify2x": "2x Magnify",
+    "magnify2xDesc": "High detail, fast processing.",
+    "magnify4x": "4x Magnify",
+    "magnify4xDesc": "Maximum upscale resolution.",
+    "denoiseStrength": "Denoise Strength",
+    "safeMode": "Safe Mode (Tiling)",
+    "safeModeDesc": "Processes in small tiles to prevent browser crash on large files.",
+    "outputPreset": "Output Preset",
+    "outputPresetTooltip": "Select an export preset from the Single Processor."
+  },
+  "workspace": {
+    "upscalingStatus": "Upscaling... ({{seconds}}s)",
+    "upscaledSuccess": "Upscaled to {{width}}x{{height}} in {{seconds}}s",
+    "configureHint": "Configure upscale preferences in the sidebar then click Upscale Image",
+    "clear": "Clear",
+    "reprocess": "Re-Process",
+    "encoding": "Encoding...",
+    "download": "Download",
+    "processing": "Processing...",
+    "upscaleAction": "Upscale Image",
+    "toastEncodingTitle": "Encoding Image",
+    "toastEncodingMessage": "Preparing {{format}} file...",
+    "toastDownloadReadyTitle": "Download Ready",
+    "toastDownloadReadyMessage": "Image upscaled and exported successfully",
+    "toastDownloadFailedTitle": "Download Failed",
+    "toastDownloadFailedMessage": "Unable to encode image"
+  },
+  "dialog": {
+    "downloadTitle": "Download AI Model",
+    "modelSource": "Model Source",
+    "downloadSize": "Download Size",
+    "license": "License",
+    "privacyTitle": "Privacy & Data",
+    "privacyDesc": "This model runs locally in your browser. Your images never leave your device. Imify provides the interface to run these models but is not the distributor.",
+    "connectionTitle": "Internet Connection",
+    "connectionDesc": "A stable internet connection is required for the initial download. Once cached, the model will be available for offline use.",
+    "agreeText": "I agree to the ",
+    "termsAndLicense": "Terms of Use and License",
+    "downloadAndStart": "Download & Start"
+  },
+  "modelDialog": {
+    "title": "AI Upscaler Configuration",
+    "subtitle": "Select the neural network model and floating point precision optimized for upscaling performance.",
+    "selectModel": "Select AI Model",
+    "byAuthor": "By {{author}}",
+    "selectVariant": "Select Precision Variant",
+    "currentDetails": "Current Selection Details",
+    "readyToLoad": "Ready to Load",
+    "modelLabel": "AI Model:",
+    "suitableForLabel": "Suitable for:",
+    "descriptionLabel": "Description:",
+    "precisionLabel": "Precision:",
+    "storageSizeLabel": "Storage Size:",
+    "licenseLabel": "License:",
+    "applyAndClose": "Apply & Close"
+  },
+  "showcase": {
+    "title": "AI Upscaler",
+    "subtitle": "Magnify and restore your images locally in your web browser using state-of-the-art super-resolution neural networks.",
+    "previewAlt": "Upscaling Showcase",
+    "chips": {
+      "aiSuperResolution": "AI-Super-Resolution",
+      "local": "100% Local",
+      "privacyProtected": "Privacy Protected",
+      "safeModeTiling": "Safe Mode Tiling"
+    },
+    "tips": [
+      "The selected model now locks the scale factor automatically, so choose the 2x or 4x model first.",
+      "Use **Safe Mode (Tiling)** for large images to keep memory usage stable.",
+      "Raise **Denoise Strength** only when you need stronger restoration; low values preserve more detail.",
+      "Choose the **Quantized** variant if your machine has less than 8GB of RAM or you want faster model loading.",
+      "Enable 'Auto-unload Model' to free up VRAM/RAM immediately after processing."
+    ],
+    "faqs": {
+      "q1": "What is Safe Mode (Tiling)?",
+      "a1": "Safe Mode splits large images into smaller tiles (e.g. 256x256), processes them sequentially, and stitches them back together. This keeps RAM usage low and constant, preventing browser crashes on high-res images.",
+      "q2": "Does it need an internet connection?",
+      "a2": "Only to download the model files on the very first run. After that, they are cached in your browser and run fully offline.",
+      "q3": "Why is the first run slower?",
+      "a3": "The first run downloads the weights (if not cached) and compiles the ONNX execution engine, which takes a few seconds depending on your hardware.",
+      "q4": "What is the maximum supported scale?",
+      "a4": "Each model has its own fixed scale factor. Upscaling 4x on an already large image creates a massive file, so we recommend keeping outputs under 4096x4096px to avoid browser canvas limits."
+    }
+  },
+  "progress": {
+    "taskName": "Image Upscaling",
+    "initializing": "Initializing {{file}}...",
+    "downloading": "Downloading model: {{progress}}%",
+    "loaded": "Loaded {{file}}",
+    "modelReady": "AI Model Ready",
+    "upscaledSuccess": "Image upscaled successfully",
+    "workerFailed": "AI Worker failed. Please refresh.",
+    "preparingPipeline": "Preparing AI pipeline..."
+  }
 }

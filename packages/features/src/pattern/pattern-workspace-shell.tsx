@@ -155,6 +155,12 @@ export function PatternWorkspaceShell({
   }, [presets.length, defaultPresetBootstrapped, ensureDefaultPreset]);
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection(t("title"));
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
@@ -175,16 +181,12 @@ export function PatternWorkspaceShell({
     setHeaderOnBack(
       presetViewMode === "workspace" ? () => setPresetViewMode("select") : null,
     );
-
-    return () => {
-      resetHeader();
-    };
   }, [
     activePreset?.name,
     presetViewMode,
-    resetHeader,
     setHeaderBreadcrumb,
     setHeaderSection,
+    setHeaderOnBack,
     setPresetViewMode,
     t,
   ]);
