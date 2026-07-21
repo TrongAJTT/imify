@@ -243,6 +243,12 @@ export function SplicingWorkspaceShell({
   }, [presets.length, defaultPresetBootstrapped, ensureDefaultPreset]);
 
   useEffect(() => {
+    return () => {
+      resetHeader();
+    };
+  }, [resetHeader]);
+
+  useEffect(() => {
     setHeaderSection("Image Splicing");
     setHeaderBreadcrumb(
       <FeatureBreadcrumb
@@ -264,16 +270,12 @@ export function SplicingWorkspaceShell({
     setHeaderOnBack(
       presetViewMode === "workspace" ? () => setPresetViewMode("select") : null,
     );
-
-    return () => {
-      resetHeader();
-    };
   }, [
     activePreset?.name,
     presetViewMode,
-    resetHeader,
     setHeaderBreadcrumb,
     setHeaderSection,
+    setHeaderOnBack,
     setPresetViewMode,
     onRootClick,
   ]);

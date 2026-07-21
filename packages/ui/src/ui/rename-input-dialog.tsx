@@ -27,11 +27,13 @@ export function RenameInputDialog({
   initialValue = "",
   renamePattern,
 }: RenameInputDialogProps) {
-  console.log("[RenameInputDialog] render - isOpen:", isOpen, "renamePattern:", renamePattern);
+  // State tracking
+  // console.log("[RenameInputDialog] render - isOpen:", isOpen, "renamePattern:", renamePattern);
   const [value, setValue] = useState(initialValue);
 
   useEffect(() => {
-    console.log("[RenameInputDialog] useEffect isOpen:", isOpen, "initialValue:", initialValue);
+    // State tracking
+    // console.log("[RenameInputDialog] useEffect isOpen:", isOpen, "initialValue:", initialValue);
     if (isOpen) {
       setValue(initialValue);
     }

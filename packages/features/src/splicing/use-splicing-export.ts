@@ -166,11 +166,13 @@ export function useSplicingExport({
         const now = new Date(exportTsMs)
         const usedExportNames = new Set<string>()
 
+        const originalFileName = `imify-splicing-${exportTsMs}`
+
         const buildImageFileName = (i: number) => {
           const dims = computeSplicingExportCanvasDimensions(exportLayout, canvas, config, i)
           const raw = buildSmartOutputFileName({
             pattern,
-            originalFileName: "image",
+            originalFileName,
             dimensions: dims,
             index: i + 1,
             totalFiles: blobs.length,
@@ -185,7 +187,7 @@ export function useSplicingExport({
           const dims = computeSplicingExportCanvasDimensions(exportLayout, canvas, config, i)
           const raw = buildSmartOutputFileName({
             pattern,
-            originalFileName: "image",
+            originalFileName,
             dimensions: dims,
             index: i + 1,
             totalFiles: blobs.length,
@@ -196,7 +198,7 @@ export function useSplicingExport({
           return reserveUniqueFileName(raw, usedExportNames)
         }
 
-        // Note: merged PDF filename is always `spliced-image-<timestamp>.pdf`
+        // Note: merged PDF filename is always `imify-splicing-<timestamp>.pdf`
         // (as required by current UX), so we don't apply the pattern to the merged PDF filename.
 
         if (downloadMode === "one_by_one") {

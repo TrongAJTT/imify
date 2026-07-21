@@ -690,7 +690,9 @@ export async function exportSplicedImage(
     return results
   } finally {
     for (const bm of bitmaps) {
-      bm.close()
+      if (bm && typeof (bm as any).close === "function") {
+        (bm as any).close();
+      }
     }
   }
 }
