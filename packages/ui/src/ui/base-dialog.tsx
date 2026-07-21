@@ -41,33 +41,19 @@ export function BaseDialog({
   // Sync React's isOpen state with Native Dialog API
   useEffect(() => {
     const dialog = dialogRef.current;
-    console.log(
-      "[BaseDialog] useEffect sync - isOpen:",
-      isOpen,
-      "mounted:",
-      mounted,
-      "dialogRef exists:",
-      !!dialog,
-      "dialog.open:",
-      dialog?.open,
-    );
     if (isOpen) {
-      if (!dialog) {
-        console.warn("[BaseDialog] dialogRef is null on isOpen = true!");
-        return;
-      }
+      if (!dialog) return;
       if (!dialog.open) {
-        console.log("[BaseDialog] calling dialog.showModal()");
         dialog.showModal();
-        // Prevent body scroll when dialog is open
+        // Prevent page scroll when dialog is open
         document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
       }
     } else {
-      // Always restore body scroll when closed, even if the dialog node
-      // was unmounted/replaced before this effect runs.
+      // Always restore page scroll when closed
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
       if (dialog?.open) {
-        console.log("[BaseDialog] calling dialog.close()");
         dialog.close();
       }
     }
@@ -77,6 +63,7 @@ export function BaseDialog({
   useEffect(() => {
     return () => {
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     };
   }, []);
 
@@ -114,6 +101,13 @@ export function BaseDialog({
     }
   };
 
+  const handleTouchMove = (e: React.TouchEvent<HTMLDialogElement>) => {
+    // Prevent dragging/swiping on the backdrop overlay from scrolling the underlying page
+    if (e.target === e.currentTarget) {
+      e.preventDefault();
+    }
+  };
+
   // Keep SSR output and first client render identical to avoid hydration mismatch.
   if (!mounted) return null;
 
@@ -122,12 +116,13 @@ export function BaseDialog({
       ref={dialogRef}
       onCancel={handleCloseAttempt}
       onClick={handleBackdropClick}
+      onTouchMove={handleTouchMove}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
       className={cn(
         // m-auto centers it; adding w/max-w for mobile safety
-        "m-auto p-0 rounded-xl border-none select-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden",
+        "m-auto p-0 rounded-xl border-none select-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden overscroll-contain",
         "w-[calc(100%-2rem)] max-w-3xl",
         className,
       )}
@@ -136,7 +131,7 @@ export function BaseDialog({
         className={cn(
           // inner container handles scrolling when content is tall
           // use dvh (dynamic viewport height) for better mobile browser support
-          "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto max-h-[calc(100dvh-4rem)]",
+          "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto overscroll-contain max-h-[calc(100dvh-4rem)]",
           contentClassName,
         )}
       >

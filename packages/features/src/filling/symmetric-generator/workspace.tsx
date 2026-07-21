@@ -37,7 +37,7 @@ import {
 import { useShortcutActions } from "../use-shortcut-actions";
 import { preventWheelEvent } from "../../shared/prevent-wheel-event";
 import {
-  SymmetricControlId,
+  type SymmetricControlId,
   PREVIEW_MIN_ZOOM,
   PREVIEW_MAX_ZOOM,
   CANVAS_PADDING,

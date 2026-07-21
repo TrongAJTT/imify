@@ -59,7 +59,7 @@ export function RadioCard({
 
   return (
     <label
-      className={`flex items-center justify-between rounded border px-2.5 py-2 transition-all ${
+      className={`relative flex items-center justify-between rounded border px-2.5 py-2 transition-all ${
         checked ? activeClasses : inactiveClasses
       } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className} ${focusRingMap[colorTheme]}`}>
       <div className="flex items-start gap-2 min-w-0">

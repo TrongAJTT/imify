@@ -31,7 +31,7 @@ import { flushSync } from "react-dom";
 import { useTranslation } from "@imify/i18n";
 import {
   DEFAULT_BRUSH_SIZE_BY_TOOL,
-  CanvasSize,
+  type CanvasSize,
   DEFAULT_CANVAS_SIZE,
   DEFAULT_STREAMLINE_PERCENT,
   DEFAULT_SMOOTHING_PERCENT,
@@ -473,7 +473,8 @@ export function PatternAssetDrawingDialog({
       isOpen={isOpen}
       onClose={onClose}
       isDirty={hasUndoHistory}
-      contentClassName="w-[980px] max-w-[96vw] rounded-2xl"
+      className="max-w-5xl"
+      contentClassName="w-full max-w-[96vw] rounded-2xl"
     >
       <div onWheel={stopEventAndPreventDefault}>
         <div className="border-b border-slate-200 dark:border-slate-800 px-5 py-4 flex items-center justify-between">

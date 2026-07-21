@@ -5,7 +5,7 @@ import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store
 import { usePatternStore } from "@imify/stores/stores/pattern-store";
 import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
 import type { PatternExportFormat } from "./types";
-import { DrawingTool } from "./pattern-drawing-utils";
+import type { DrawingTool } from "./pattern-drawing-utils";
 
 export const PATTERN_TARGET_FORMATS: PatternExportFormat[] = [
   "jpg",

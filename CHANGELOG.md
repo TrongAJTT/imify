@@ -20,12 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Next.js PWA Offline Support:** Resolved static route redirect/404 issues on offline Next.js app pages (e.g. `/splicing/work` or `/inspector`) by updating Service Worker precaching patterns for `.html`/`.txt` pairs and handling RSC content headers properly.
 - **Mobile Compatibility:** Fixed Android image decoding and file object URL resource leaks. Prevented mobile bottom sheets from auto-closing during Grid Design interactions.
 - **Splicing Stability:** Resolved naming inconsistencies and enhanced UI stability in the splicing editor.
+- Fix UI issues in the Dev Tools dialog when using dark mode.
+- Fix background page scrolling when interacting with the "Imify has been updated" dialog.
+- Fix a bug causing a blank bottom sheet when selecting options via checkbox cards on mobile in the Pattern Generator.
+- Fix an issue where the left side of the UI was cut off in the Draw Asset dialog within the Pattern Generator.
 
 ### Changed
 
 - **Unified Dialogs:** Removed redundant/duplicate dialog variants in `apps/extension` in favor of shared package dialogs (`BatchDownloadConfirmDialog` and `OOMWarningDialog`) with complete EN/VI internationalization support.
 - **Developer Tools Dashboard:** Segmented "About" and "Language Settings" into dedicated tabs. Added state viewer word-wrap, filters, and log counts.
 - **Centralized Configurations:** Consolidated internal presets, step parameters, zoom levels, boundaries, and brush thresholds into uniform `config.ts` modules for Splitter, Splicing, Filling, and Pattern Generator features.
+- **Changelog**: Merge patch versions into minor version docs.
+- Update the sidebar layout for better visual consistency across multiple features.
+- Swap the positions of the "Developer Tools" and "Asset Management" buttons on the appbar.
 
 ## [2.2.0] - 2026-07-10 - Web App only
 

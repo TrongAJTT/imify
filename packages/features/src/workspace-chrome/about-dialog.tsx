@@ -233,6 +233,7 @@ export function AboutDialog({
               {t("linksTitle", "Quick Links & Support")}
             </Kicker>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Official Website button */}
               <ActionLink
                 href={IMIFY_LINKS.website}
                 className="bg-sky-50 text-sky-600 border-sky-100 hover:bg-sky-100 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-900/50"
@@ -241,11 +242,16 @@ export function AboutDialog({
                 {t("officialWebsite", "Official Website")}
               </ActionLink>
 
-              <ActionLink href={IMIFY_LINKS.repository} emphasized>
+              {/* GitHub Repository button */}
+              <ActionLink
+                href={IMIFY_LINKS.repository}
+                className="bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-900/50"
+              >
                 <Github size={16} />
                 {t("githubRepository", "GitHub Repository")}
               </ActionLink>
 
+              {/* Sponsor Author button */}
               <button
                 type="button"
                 onClick={onOpenDonate}
@@ -255,6 +261,7 @@ export function AboutDialog({
                 {t("sponsorAuthor", "Sponsor Author")}
               </button>
 
+              {/* Attribution button */}
               <button
                 type="button"
                 onClick={onOpenAboutAttribution}
@@ -264,6 +271,7 @@ export function AboutDialog({
                 {t("attribution", "Attribution")}
               </button>
 
+              {/* Guides button */}
               <button
                 type="button"
                 onClick={() => setIsGuidesDialogOpen(true)}
@@ -273,6 +281,7 @@ export function AboutDialog({
                 {t("guides", "Guides")}
               </button>
 
+              {/* Install App button */}
               <button
                 type="button"
                 onClick={() => setIsInstallDialogOpen(true)}

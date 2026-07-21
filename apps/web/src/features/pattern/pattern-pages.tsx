@@ -251,8 +251,13 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
   const appliedPresetIdRef = useRef<string | null>(null);
   const patternState = usePatternStore();
 
+  const sidebarContent = useMemo(
+    () => <PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
+    [enableWideSidebarGrid],
+  );
+
   useWorkspaceSidebar(
-    <PatternSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
+    sidebarContent,
     `${t("common:toolSettings")} - ${t("title")}`,
   );
 
