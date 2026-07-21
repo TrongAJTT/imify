@@ -36,7 +36,7 @@ export function WebFooter() {
   if (!isFullFooter) {
     return (
       <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex w-full items-center justify-between px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-4">
             <span className="font-semibold text-slate-900 dark:text-slate-100">
               Imify Web v{appMetadata.version}
