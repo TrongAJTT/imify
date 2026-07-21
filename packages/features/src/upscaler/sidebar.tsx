@@ -23,14 +23,12 @@ import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
 
 import { useTranslation } from "@imify/i18n";
 
-export const UPSCALER_SIDEBAR_PANEL_ID = "upscaler-settings";
-
-const UPSCALER_PRESET: SavedSetupPreset = {
-  ...VIRTUAL_DEFAULT_PNG_PRESET,
-  id: FEATURE_PRESET_PREFIXES.IMAGE_UPSCALER,
-  name: "Upscaler",
-  highlightColor: "#a855f7", // Purple color theme
-};
+import {
+  UPSCALER_PRESET,
+  DENOISE_STRENGTH_MIN,
+  DENOISE_STRENGTH_MAX,
+  DENOISE_STRENGTH_STEP,
+} from "./config";
 
 interface UpscalerSidebarProps {
   enableWideSidebarGrid?: boolean;
@@ -184,9 +182,9 @@ export function UpscalerSidebar({
           <SliderInput
             label={t("sidebar.denoiseStrength")}
             value={denoiseLevel}
-            min={0}
-            max={100}
-            step={1}
+            min={DENOISE_STRENGTH_MIN}
+            max={DENOISE_STRENGTH_MAX}
+            step={DENOISE_STRENGTH_STEP}
             onChange={setDenoiseLevel}
           />
 

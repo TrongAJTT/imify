@@ -24,6 +24,8 @@ import {
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
 
+import { AlertTriangle } from "lucide-react";
+import { IMAGE_DIMENSION_THRESHOLD } from "./config";
 import { useTranslation } from "@imify/i18n";
 
 interface UpscalerWorkspaceProps {
@@ -528,6 +530,26 @@ export function UpscalerWorkspace({
           )}
         </div>
       </div>
+
+      {sourceImageData &&
+        (sourceImageData.width > IMAGE_DIMENSION_THRESHOLD ||
+          sourceImageData.height > IMAGE_DIMENSION_THRESHOLD) && (
+          <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50/90 p-4 dark:border-red-500/30 dark:bg-red-500/10">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+            <div className="space-y-1">
+              <div className="text-sm font-bold text-red-900 dark:text-red-200">
+                {t("largeImageWarning.title")}
+              </div>
+              <div className="text-xs leading-relaxed text-red-800/90 dark:text-red-300/90">
+                {t("largeImageWarning.description", {
+                  width: sourceImageData.width,
+                  height: sourceImageData.height,
+                  threshold: IMAGE_DIMENSION_THRESHOLD,
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
       <ModelDownloadDialog
         isOpen={isDownloadDialogOpen}

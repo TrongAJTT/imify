@@ -10,6 +10,10 @@
     "item2": "• Recommended only for small images under 1000 pixels. For larger images or batch upscaling, we recommend using dedicated software such as Upscayl.",
     "item3": "• You must download the AI models separately to use them, as we do not distribute these models."
   },
+  "largeImageWarning": {
+    "title": "Large Image Performance Warning",
+    "description": "This image is {{width}}x{{height}}px, exceeding the recommended {{threshold}}px limit. The browser ONNX environment is not designed to upscale large images like this. Please switch to dedicated software such as Upscayl, or you will waste tens of minutes processing a single image."
+  },
   "dropZone": {
     "title": "Image Upscaler",
     "subtitle": "Drop an image to upscale it using super-resolution AI"

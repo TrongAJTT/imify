@@ -10,6 +10,10 @@
     "item2": "• Chỉ nên sử dụng cho các bức ảnh nhỏ từ 1000 pixel đổ lại. Đối với nhu cầu xử lý ảnh lớn hơn hay hàng loạt, chúng tôi khuyến nghị sử dụng phần mềm chuyên dụng như Upscayl.",
     "item3": "• Bạn cần tải xuống các mô hình AI riêng để sử dụng, vì chúng tôi không phân phối trực tiếp các mô hình này."
   },
+  "largeImageWarning": {
+    "title": "Cảnh báo hiệu năng trên ảnh kích thước lớn",
+    "description": "Hình ảnh này có kích thước {{width}}x{{height}}px, vượt quá ngưỡng {{threshold}}px khuyến nghị. Môi trường ONNX trình duyệt không được thiết kế để xử lý upscale ảnh lớn như này, vui lòng chuyển sang phần mềm chuyên dụng như Upscayl hoặc bạn sẽ lãng phí hàng chục phút cho việc xử lý 1 bức ảnh."
+  },
   "dropZone": {
     "title": "Phóng to ảnh AI",
     "subtitle": "Kéo thả ảnh để phóng to và làm nét bằng mô hình AI siêu phân giải"
