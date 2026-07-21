@@ -60,5 +60,22 @@
       "question": "What are common errors during processing?",
       "answer": "The most common technical challenges include:\n• **bad_alloc** (Out of Memory): Occurs when your system lacks sufficient RAM to load the AI model. Try reloading the tab (if the current tab consumes too much memory) or using *Quantized* variants.\n• **WASM Memory Limit**: Browsers limit WebAssembly to 4GB regardless of your system RAM.\n• **QuotaExceededError**: Your browser's local storage or cache is full.\n• **Browser Resource Policy**: The browser may terminate the process if it consumes too much CPU for too long.\nNote: *Quantized* models are great for saving RAM, but **FP16** is usually faster on modern machines."
     }
-  ]
+  ],
+  "downloadConfirmDialog": {
+    "title": "Download Confirmation",
+    "message": "You are about to download <bold>{{count}} files</bold> at the same time.",
+    "hintTitle": "HINT",
+    "hintBody": "Make sure you have <bold>disabled</bold> the option <b>\"Ask where to save each file before downloading\"</b> in your browser settings.",
+    "popupsWarning": "Otherwise, you will encounter {{count}} popups asking for the save location.",
+    "dontShowAgain": "Don't show this warning again",
+    "downloadNow": "Download Now"
+  },
+  "oomWarningDialog": {
+    "title": "Memory Warning",
+    "selectedBatchSize": "Selected batch size is <bold>{{totalSize}} MB</bold>. This exceeds the recommended limit of <bold>{{recommendedSize}} MB</bold>.",
+    "warningDetail": "Processing very large batches may cause the browser tab to run out of memory (OOM) and crash, especially when converting to heavy formats like AVIF or JXL.",
+    "areYouSure": "Are you sure you want to continue?",
+    "dontShowAgain": "Don't show this warning again",
+    "continueAnyway": "Continue anyway"
+  }
 }
