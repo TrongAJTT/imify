@@ -6,6 +6,14 @@ export type DiffAlignMode = "original" | "fit-larger" | "fit-smaller"
 
 export type DiffAlignAnchor = "top-left" | "center"
 
+export type MultiImageLayout2 = "2_cols" | "2_rows"
+
+export type MultiImageLayout3 = "3_cols" | "3_rows"
+
+export type MultiImageLayout4 = "2x2_grid" | "4_cols" | "4_rows"
+
+export type MultiImageLayout = MultiImageLayout2 | MultiImageLayout3 | MultiImageLayout4
+
 export interface DiffImageItem {
   id: string
   file: File

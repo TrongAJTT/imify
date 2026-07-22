@@ -5,7 +5,10 @@ import type {
   DiffAlgorithm,
   DiffAlignAnchor,
   DiffAlignMode,
-  DiffViewMode
+  DiffViewMode,
+  MultiImageLayout2,
+  MultiImageLayout3,
+  MultiImageLayout4
 } from "@imify/features/diffchecker/types"
 
 interface DiffcheckerState {
@@ -19,6 +22,10 @@ interface DiffcheckerState {
   /** Viewer container height in px (Difference Checker tab). */
   containerHeight: number
   hasImage: boolean
+  imageCount: number
+  multiImageLayout2: MultiImageLayout2
+  multiImageLayout3: MultiImageLayout3
+  multiImageLayout4: MultiImageLayout4
 
   setViewMode: (mode: DiffViewMode) => void
   setAlgorithm: (algo: DiffAlgorithm) => void
@@ -29,9 +36,11 @@ interface DiffcheckerState {
   setDiffThreshold: (threshold: number) => void
   setContainerHeight: (height: number) => void
   setHasImage: (hasImage: boolean) => void
+  setImageCount: (count: number) => void
+  setMultiImageLayout2: (layout: MultiImageLayout2) => void
+  setMultiImageLayout3: (layout: MultiImageLayout3) => void
+  setMultiImageLayout4: (layout: MultiImageLayout4) => void
 }
-
-
 
 const DEFAULT_CONTAINER_HEIGHT = 384 // Tailwind `h-96`
 
@@ -47,6 +56,10 @@ export const useDiffcheckerStore = create<DiffcheckerState>()(
       diffThreshold: 0,
       containerHeight: DEFAULT_CONTAINER_HEIGHT,
       hasImage: false,
+      imageCount: 0,
+      multiImageLayout2: "2_cols",
+      multiImageLayout3: "3_cols",
+      multiImageLayout4: "2x2_grid",
 
       setViewMode: (viewMode) => set({ viewMode }),
       setAlgorithm: (algorithm) => set({ algorithm }),
@@ -56,7 +69,11 @@ export const useDiffcheckerStore = create<DiffcheckerState>()(
       setSplitPosition: (splitPosition) => set({ splitPosition }),
       setDiffThreshold: (diffThreshold) => set({ diffThreshold }),
       setContainerHeight: (containerHeight) => set({ containerHeight }),
-      setHasImage: (hasImage) => set({ hasImage })
+      setHasImage: (hasImage) => set({ hasImage }),
+      setImageCount: (imageCount) => set({ imageCount }),
+      setMultiImageLayout2: (multiImageLayout2) => set({ multiImageLayout2 }),
+      setMultiImageLayout3: (multiImageLayout3) => set({ multiImageLayout3 }),
+      setMultiImageLayout4: (multiImageLayout4) => set({ multiImageLayout4 }),
     }),
     {
       name: "imify_diffchecker",
@@ -69,7 +86,10 @@ export const useDiffcheckerStore = create<DiffcheckerState>()(
         overlayOpacity: state.overlayOpacity,
         splitPosition: state.splitPosition,
         diffThreshold: state.diffThreshold,
-        containerHeight: state.containerHeight
+        containerHeight: state.containerHeight,
+        multiImageLayout2: state.multiImageLayout2,
+        multiImageLayout3: state.multiImageLayout3,
+        multiImageLayout4: state.multiImageLayout4,
       })
     }
   )
