@@ -106,24 +106,57 @@ export function RenamePatternDialog({
       onClose={onClose}
       isDirty={isDirty}
       contentClassName="w-full max-w-2xl rounded-xl overflow-hidden flex flex-col"
-    >
-      <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-sky-100 dark:bg-sky-500/10 rounded-xl">
-            <FileEdit className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+      header={
+        <div className="px-5 py-4 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-sky-100 dark:bg-sky-500/10 rounded-xl">
+              <FileEdit className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+              {title}
+            </h3>
           </div>
-          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
-            {title}
-          </h3>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
+      }
+      stickyHeader={true}
+      footer={
+        <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-rose-500 font-medium text-xs">
+            {hasTooManyInputs && (
+              <>
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                {inputWarningLabel}
+              </>
+            )}
+          </div>
 
+          <div className="flex justify-end gap-3 shrink-0">
+            <SecondaryButton onClick={onClose} className="px-6">
+              {cancelLabel}
+            </SecondaryButton>
+            <Button
+              onClick={() => {
+                const finalPattern = pattern.trim() || emptyPatternFallback;
+                onSave(finalPattern);
+                onClose();
+              }}
+              disabled={!isDirty || hasTooManyInputs}
+              className="px-6 flex items-center gap-2 shadow-lg shadow-sky-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="w-4 h-4" />
+              {applyLabel}
+            </Button>
+          </div>
+        </div>
+      }
+      stickyFooter={true}
+    >
       <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x dark:divide-slate-800 flex-1 overflow-hidden">
         <div className="flex-1 p-6 space-y-6 overflow-y-auto">
           <TextInput
@@ -208,35 +241,6 @@ export function RenamePatternDialog({
               </button>
             ))}
           </div>
-        </div>
-      </div>
-
-      <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-rose-500 font-medium text-xs">
-          {hasTooManyInputs && (
-            <>
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-              {inputWarningLabel}
-            </>
-          )}
-        </div>
-
-        <div className="flex justify-end gap-3 shrink-0">
-          <SecondaryButton onClick={onClose} className="px-6">
-            {cancelLabel}
-          </SecondaryButton>
-          <Button
-            onClick={() => {
-              const finalPattern = pattern.trim() || emptyPatternFallback;
-              onSave(finalPattern);
-              onClose();
-            }}
-            disabled={!isDirty || hasTooManyInputs}
-            className="px-6 flex items-center gap-2 shadow-lg shadow-sky-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="w-4 h-4" />
-            {applyLabel}
-          </Button>
         </div>
       </div>
     </BaseDialog>

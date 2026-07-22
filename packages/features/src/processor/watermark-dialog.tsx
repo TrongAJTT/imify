@@ -365,31 +365,92 @@ export function BatchWatermarkDialog({
         shouldBlockCloseAttempt={(eventType) =>
           eventType === "cancel" && isFilePickerInteracting
         }
-        contentClassName="w-full max-w-3xl rounded-xl overflow-hidden flex flex-col"
-      >
-        <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-sky-100 dark:bg-sky-500/10 rounded-xl">
-              <Stamp className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+        stickyHeader={true}
+        header={
+          <div className="px-5 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-sky-100 dark:bg-sky-500/10 rounded-xl">
+                <Stamp className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                  {t("watermarkDialog.title", "Watermarking")}
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {summaryWithSavedState}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
-                {t("watermarkDialog.title", "Watermarking")}
-              </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {summaryWithSavedState}
-              </p>
+            <button
+              onClick={handleCloseMainDialog}
+              className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
+              aria-label="Close watermark dialog"
+            >
+              <X className="w-4 h-4 text-slate-500 dark:text-slate-300" />
+            </button>
+          </div>
+        }
+        stickyFooter={true}
+        footer={
+          <div className="p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="grid grid-cols-[auto_1fr_1fr] gap-2 sm:flex sm:w-auto sm:items-center">
+              <Tooltip content={t("tooltipResetToDefaults")}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft(cloneWatermarkConfig(DEFAULT_BATCH_WATERMARK))
+                  }
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-50 transition-all dark:text-slate-400 dark:hover:bg-red-500/10"
+                  aria-label="Reset watermark settings"
+                >
+                  <RotateCcw size={15} />
+                </button>
+              </Tooltip>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsOpenSavedDialogOpen(true)}
+                className="px-3 w-full sm:w-auto"
+              >
+                <FolderOpen size={14} />
+                {t("watermarkDialog.openSaved", "Open Saved")}
+              </Button>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={openSaveDialog}
+                className="px-3 w-full sm:w-auto"
+              >
+                <Save size={14} />
+                {t("watermarkDialog.save", "Save")}
+              </Button>
+            </div>
+
+            <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
+              <SecondaryButton
+                onClick={handleCloseMainDialog}
+                className="px-6 font-semibold w-full sm:w-auto"
+              >
+                {t("watermarkDialog.cancel", "Cancel")}
+              </SecondaryButton>
+              <Button
+                onClick={() => {
+                  onSave(cloneWatermarkConfig(draft));
+                  handleCloseMainDialog();
+                }}
+                disabled={!isDirty}
+                className="px-6 w-full sm:w-auto flex items-center gap-2 shadow-lg shadow-sky-500/10 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-4 h-4" />
+                {t("watermarkDialog.applyPattern", "Apply Pattern")}
+              </Button>
             </div>
           </div>
-          <button
-            onClick={handleCloseMainDialog}
-            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
-            aria-label="Close watermark dialog"
-          >
-            <X className="w-4 h-4 text-slate-500 dark:text-slate-300" />
-          </button>
-        </div>
-
+        }
+        contentClassName="w-full max-w-3xl rounded-xl overflow-hidden flex flex-col"
+      >
         <div className="grid grid-cols-1 md:grid-cols-[1fr_340px] gap-0 overflow-hidden flex-1">
           <div className="p-5 border-r border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center bg-slate-100/30 dark:bg-slate-950/20 overflow-y-auto">
             <div className="relative w-full group overflow-hidden">
@@ -706,63 +767,6 @@ export function BatchWatermarkDialog({
                 </div>
               </div>
             ) : null}
-          </div>
-        </div>
-
-        <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="grid w-full grid-cols-[auto_1fr_1fr] gap-2 sm:flex sm:w-auto sm:items-center">
-            <Tooltip content={t("tooltipResetToDefaults")}>
-              <button
-                type="button"
-                onClick={() =>
-                  setDraft(cloneWatermarkConfig(DEFAULT_BATCH_WATERMARK))
-                }
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-50 transition-all dark:text-slate-400 dark:hover:bg-red-500/10"
-                aria-label="Reset watermark settings"
-              >
-                <RotateCcw size={15} />
-              </button>
-            </Tooltip>
-
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setIsOpenSavedDialogOpen(true)}
-              className="px-3 w-full sm:w-auto"
-            >
-              <FolderOpen size={14} />
-              {t("watermarkDialog.openSaved", "Open Saved")}
-            </Button>
-
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={openSaveDialog}
-              className="px-3 w-full sm:w-auto"
-            >
-              <Save size={14} />
-              {t("watermarkDialog.save", "Save")}
-            </Button>
-          </div>
-
-          <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
-            <SecondaryButton
-              onClick={handleCloseMainDialog}
-              className="px-6 font-semibold w-full sm:w-auto"
-            >
-              {t("watermarkDialog.cancel", "Cancel")}
-            </SecondaryButton>
-            <Button
-              onClick={() => {
-                onSave(cloneWatermarkConfig(draft));
-                handleCloseMainDialog();
-              }}
-              disabled={!isDirty}
-              className="px-6 w-full sm:w-auto flex items-center gap-2 shadow-lg shadow-sky-500/10 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="w-4 h-4" />
-              {t("watermarkDialog.applyPattern", "Apply Pattern")}
-            </Button>
           </div>
         </div>
       </BaseDialog>

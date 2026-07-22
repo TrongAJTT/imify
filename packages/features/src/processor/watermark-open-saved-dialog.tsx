@@ -848,35 +848,85 @@ export function WatermarkOpenSavedDialog({
       isOpen={isOpen}
       onClose={onClose}
       contentClassName="w-full max-w-4xl mx-auto rounded-xl overflow-hidden flex flex-col"
-    >
-      <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/40">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-sky-100 p-2 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
-            <FolderOpen size={18} />
+      header={
+        <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-sky-100 p-2 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
+              <FolderOpen size={18} />
+            </div>
+            <div className="min-w-0">
+              <Subheading className="text-sm font-bold leading-tight">
+                {title}
+              </Subheading>
+              <MutedText className="text-[11px] leading-tight mt-0.5">
+                {t(
+                  "watermarkDialog.chooseToContinue",
+                  "Choose a saved watermark card to continue.",
+                )}
+              </MutedText>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-1 text-slate-500 transition-colors hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
+            aria-label="Close saved watermark dialog"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      }
+      stickyHeader={true}
+      footer={
+        <div className="flex flex-wrap items-center justify-between px-5 py-4 gap-3 bg-slate-50/70 dark:bg-slate-800/40">
           <div className="min-w-0">
-            <Subheading className="text-sm font-bold leading-tight">
-              {title}
-            </Subheading>
-            <MutedText className="text-[11px] leading-tight mt-0.5">
-              {t(
-                "watermarkDialog.chooseToContinue",
-                "Choose a saved watermark card to continue.",
-              )}
-            </MutedText>
+            {selectedItem && (
+              <BodyText className="text-xs truncate">
+                {t("watermarkDialog.selected", "Selected")}:{" "}
+                <span className="font-bold text-sky-600 dark:text-sky-400">
+                  {selectedItem.name}
+                </span>
+              </BodyText>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <SecondaryButton onClick={onClose} className="px-4">
+              {t("watermarkDialog.cancel", "Cancel")}
+            </SecondaryButton>
+
+            {allowDelete && onDelete && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDelete}
+                disabled={!selectedItem}
+                className="px-4"
+              >
+                <Trash2 size={14} />
+                {t("watermarkDialog.delete", "Delete")}
+              </Button>
+            )}
+
+            <Button
+              size="sm"
+              onClick={() => {
+                if (selectedItem) {
+                  onConfirm(selectedItem);
+                }
+              }}
+              disabled={!selectedItem}
+              className="px-5"
+            >
+              <FolderOpen size={14} />
+              {confirmLabel}
+            </Button>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-full p-1 text-slate-500 transition-colors hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
-          aria-label="Close saved watermark dialog"
-        >
-          <X size={16} />
-        </button>
-      </div>
-
-      <div className="max-h-[58vh] overflow-y-auto p-5">
+      }
+      stickyFooter={true}
+    >
+      <div className="min-h-[35vh] overflow-y-auto p-5">
         {items.length === 0 ? (
           <EmptySavedWatermarkState />
         ) : (
@@ -891,52 +941,6 @@ export function WatermarkOpenSavedDialog({
             ))}
           </div>
         )}
-      </div>
-
-      <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/40">
-        <div className="min-w-0">
-          {selectedItem ? (
-            <BodyText className="text-xs truncate">
-              {t("watermarkDialog.selected", "Selected")}:{" "}
-              <span className="font-bold text-sky-600 dark:text-sky-400">
-                {selectedItem.name}
-              </span>
-            </BodyText>
-          ) : null}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <SecondaryButton onClick={onClose} className="px-4">
-            {t("watermarkDialog.cancel", "Cancel")}
-          </SecondaryButton>
-
-          {allowDelete && onDelete ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDelete}
-              disabled={!selectedItem}
-              className="px-4"
-            >
-              <Trash2 size={14} />
-              {t("watermarkDialog.delete", "Delete")}
-            </Button>
-          ) : null}
-
-          <Button
-            size="sm"
-            onClick={() => {
-              if (selectedItem) {
-                onConfirm(selectedItem);
-              }
-            }}
-            disabled={!selectedItem}
-            className="px-5"
-          >
-            <FolderOpen size={14} />
-            {confirmLabel}
-          </Button>
-        </div>
       </div>
     </BaseDialog>
   );
