@@ -5,7 +5,10 @@ import type {
   DiffAlignMode,
   DiffComputeResult,
   DiffViewMode,
-  DiffStats
+  DiffStats,
+  MultiImageLayout2,
+  MultiImageLayout3,
+  MultiImageLayout4,
 } from "./types"
 import { renderImageDataPreview } from "@imify/engine"
 
@@ -444,4 +447,299 @@ export async function exportCompositeView(
   }
 
   return out.convertToBlob({ type: "image/png" })
+}
+
+function loadImageElement(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(e);
+    img.src = url;
+  });
+}
+
+export interface ExportMultiImageOptions {
+  images: { label: string; url: string; width: number; height: number }[];
+  mode: "real_canvas" | "side_by_side_template";
+  viewMode: DiffViewMode;
+  multiImageLayout2?: MultiImageLayout2;
+  multiImageLayout3?: MultiImageLayout3;
+  multiImageLayout4?: MultiImageLayout4;
+  splitPosition?: number;
+  overlayOpacity?: number;
+  diffResultUrl?: string | null;
+}
+
+export async function exportMultiImageComposite(
+  options: ExportMultiImageOptions,
+): Promise<Blob> {
+  const {
+    images,
+    mode,
+    viewMode,
+    multiImageLayout2 = "2_cols",
+    multiImageLayout3 = "3_cols",
+    multiImageLayout4 = "2x2_grid",
+    splitPosition = 50,
+    overlayOpacity = 75,
+    diffResultUrl,
+  } = options;
+
+  if (images.length === 0) {
+    throw new Error("No images to export");
+  }
+
+  const loadedImages = await Promise.all(
+    images.map(async (item) => ({
+      ...item,
+      img: await loadImageElement(item.url),
+    })),
+  );
+
+  if (mode === "side_by_side_template") {
+    return exportSideBySideTemplate(loadedImages);
+  }
+
+  const count = loadedImages.length;
+  const isMulti = count >= 3;
+  const effectiveViewMode = isMulti ? "side_by_side" : viewMode;
+
+  if (effectiveViewMode === "difference" && diffResultUrl) {
+    const diffImg = await loadImageElement(diffResultUrl);
+    const canvas = document.createElement("canvas");
+    canvas.width = diffImg.naturalWidth || diffImg.width;
+    canvas.height = diffImg.naturalHeight || diffImg.height;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(diffImg, 0, 0);
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Failed blob"))),
+        "image/png",
+      );
+    });
+  }
+
+  if (effectiveViewMode === "split" && count >= 2) {
+    const imgA = loadedImages[0].img;
+    const imgB = loadedImages[1].img;
+    const w = Math.max(imgA.width, imgB.width);
+    const h = Math.max(imgA.height, imgB.height);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+    const sx = Math.round((w * splitPosition) / 100);
+
+    ctx.drawImage(imgB, 0, 0, w, h);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, sx, h);
+    ctx.clip();
+    ctx.drawImage(imgA, 0, 0, w, h);
+    ctx.restore();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(sx - 1, 0, 2, h);
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Failed blob"))),
+        "image/png",
+      );
+    });
+  }
+
+  if (effectiveViewMode === "overlay" && count >= 2) {
+    const imgA = loadedImages[0].img;
+    const imgB = loadedImages[1].img;
+    const w = Math.max(imgA.width, imgB.width);
+    const h = Math.max(imgA.height, imgB.height);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+
+    ctx.drawImage(imgA, 0, 0, w, h);
+    ctx.globalAlpha = overlayOpacity / 100;
+    ctx.drawImage(imgB, 0, 0, w, h);
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Failed blob"))),
+        "image/png",
+      );
+    });
+  }
+
+  let cols = 2;
+  let rows = 1;
+
+  if (count === 2) {
+    if (multiImageLayout2 === "2_rows") {
+      cols = 1;
+      rows = 2;
+    } else {
+      cols = 2;
+      rows = 1;
+    }
+  } else if (count === 3) {
+    if (multiImageLayout3 === "3_rows") {
+      cols = 1;
+      rows = 3;
+    } else {
+      cols = 3;
+      rows = 1;
+    }
+  } else if (count >= 4) {
+    if (multiImageLayout4 === "4_cols") {
+      cols = 4;
+      rows = 1;
+    } else if (multiImageLayout4 === "4_rows") {
+      cols = 1;
+      rows = 4;
+    } else {
+      cols = 2;
+      rows = 2;
+    }
+  }
+
+  const maxW = Math.max(...loadedImages.map((i) => i.width || i.img.width));
+  const maxH = Math.max(...loadedImages.map((i) => i.height || i.img.height));
+
+  const totalW = maxW * cols;
+  const totalH = maxH * rows;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = totalW;
+  canvas.height = totalH;
+  const ctx = canvas.getContext("2d")!;
+
+  loadedImages.forEach((item, idx) => {
+    const col = idx % cols;
+    const row = Math.floor(idx / cols);
+    const x = col * maxW;
+    const y = row * maxH;
+
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(x, y, maxW, maxH);
+
+    const imgW = item.img.width;
+    const imgH = item.img.height;
+    const scale = Math.min(maxW / imgW, maxH / imgH);
+    const drawW = imgW * scale;
+    const drawH = imgH * scale;
+    const drawX = x + (maxW - drawW) / 2;
+    const drawY = y + (maxH - drawH) / 2;
+
+    ctx.drawImage(item.img, drawX, drawY, drawW, drawH);
+
+    if (col < cols - 1) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.fillRect(x + maxW - 1, y, 2, maxH);
+    }
+    if (row < rows - 1) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.fillRect(x, y + maxH - 1, maxW, 2);
+    }
+
+    drawBadge(ctx, item.label, x + 16, y + 16);
+  });
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Failed blob"))),
+      "image/png",
+    );
+  });
+}
+
+async function exportSideBySideTemplate(
+  loadedImages: {
+    label: string;
+    url: string;
+    width: number;
+    height: number;
+    img: HTMLImageElement;
+  }[],
+): Promise<Blob> {
+  const count = loadedImages.length;
+  const cols = count === 4 ? 2 : count;
+  const rows = count === 4 ? 2 : 1;
+
+  const maxW = Math.max(800, ...loadedImages.map((i) => i.width || i.img.width));
+  const maxH = Math.max(600, ...loadedImages.map((i) => i.height || i.img.height));
+
+  const totalW = maxW * cols;
+  const totalH = maxH * rows;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = totalW;
+  canvas.height = totalH;
+  const ctx = canvas.getContext("2d")!;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, totalW, totalH);
+
+  loadedImages.forEach((item, idx) => {
+    const col = idx % cols;
+    const row = Math.floor(idx / cols);
+    const x = col * maxW;
+    const y = row * maxH;
+
+    const imgW = item.img.width;
+    const imgH = item.img.height;
+    const scale = Math.min(maxW / imgW, maxH / imgH);
+    const drawW = imgW * scale;
+    const drawH = imgH * scale;
+    const drawX = x + (maxW - drawW) / 2;
+    const drawY = y + (maxH - drawH) / 2;
+
+    ctx.drawImage(item.img, drawX, drawY, drawW, drawH);
+
+    if (col < cols - 1) {
+      ctx.fillStyle = "#cbd5e1";
+      ctx.fillRect(x + maxW - 1, y, 2, maxH);
+    }
+    if (row < rows - 1) {
+      ctx.fillStyle = "#cbd5e1";
+      ctx.fillRect(x, y + maxH - 1, maxW, 2);
+    }
+
+    drawBadge(ctx, item.label, x + 20, y + 20);
+  });
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Failed blob"))),
+      "image/png",
+    );
+  });
+}
+
+function drawBadge(
+  ctx: CanvasRenderingContext2D,
+  label: string,
+  x: number,
+  y: number,
+) {
+  ctx.save();
+  ctx.font = "bold 14px sans-serif";
+  const metrics = ctx.measureText(label);
+  const padX = 10;
+  const padY = 6;
+  const bgW = metrics.width + padX * 2;
+  const bgH = 24;
+
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.beginPath();
+  if (typeof ctx.roundRect === "function") {
+    ctx.roundRect(x, y, bgW, bgH, 6);
+  } else {
+    ctx.rect(x, y, bgW, bgH);
+  }
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(label, x + padX, y + padY + 11);
+  ctx.restore();
 }

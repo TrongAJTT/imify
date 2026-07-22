@@ -1,6 +1,13 @@
 import React, { useEffect, useState, type ReactNode } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
-import type { DiffViewMode } from "./types";
+import type {
+  DiffAlignAnchor,
+  DiffAlignMode,
+  DiffViewMode,
+  MultiImageLayout2,
+  MultiImageLayout3,
+  MultiImageLayout4,
+} from "./types";
 import {
   renderImageDataPreview,
   type RenderImageDataPreviewResult,
@@ -12,7 +19,7 @@ import {
 import { MutedText, Tooltip } from "@imify/ui";
 import { ViewerOverlay } from "./viewer-overlay";
 import { ViewerShell } from "./viewer-shell";
-import { ViewerSideBySide } from "./viewer-side-by-side";
+import { ViewerSideBySide, type MultiImageItem } from "./viewer-side-by-side";
 import { ViewerSplit } from "./viewer-split";
 import { useTranslation } from "@imify/i18n";
 
@@ -42,6 +49,12 @@ interface PixelCompareWorkspaceProps {
   isProcessing?: boolean;
   emptyFallback?: ReactNode;
   bgColorB?: string | null;
+  multiImages?: MultiImageItem[];
+  alignAnchor?: DiffAlignAnchor;
+  alignMode?: DiffAlignMode;
+  multiImageLayout2?: MultiImageLayout2;
+  multiImageLayout3?: MultiImageLayout3;
+  multiImageLayout4?: MultiImageLayout4;
 }
 
 function PreviewLoadingOverlay() {
@@ -103,6 +116,12 @@ export function PixelCompareWorkspace({
   isProcessing = false,
   emptyFallback,
   bgColorB = null,
+  multiImages,
+  alignAnchor,
+  alignMode,
+  multiImageLayout2,
+  multiImageLayout3,
+  multiImageLayout4,
 }: PixelCompareWorkspaceProps) {
   const [previewA, setPreviewA] = useState<RenderImageDataPreviewResult | null>(
     null,
@@ -247,17 +266,37 @@ export function PixelCompareWorkspace({
           bgColorB={bgColorB}
         />
       ) : null}
-      {hasPreviews && mode === "side_by_side" && previewA && previewB ? (
-        <ViewerSideBySide
-          urlA={previewA.objectUrl}
-          urlB={previewB.objectUrl}
-          labelA={displayLabelA}
-          labelB={displayLabelB}
-          zoom={zoom}
-          panX={panX}
-          panY={panY}
-          bgColorB={bgColorB}
-        />
+      {mode === "side_by_side" ? (
+        multiImages && multiImages.length >= 2 ? (
+          <ViewerSideBySide
+            images={multiImages}
+            zoom={zoom}
+            panX={panX}
+            panY={panY}
+            alignAnchor={alignAnchor}
+            alignMode={alignMode}
+            multiImageLayout2={multiImageLayout2}
+            multiImageLayout3={multiImageLayout3}
+            multiImageLayout4={multiImageLayout4}
+          />
+        ) : hasPreviews && previewA && previewB ? (
+          <ViewerSideBySide
+            images={[
+              { label: displayLabelA, url: previewA.objectUrl },
+              {
+                label: displayLabelB,
+                url: previewB.objectUrl,
+                bgColor: bgColorB,
+              },
+            ]}
+            zoom={zoom}
+            panX={panX}
+            panY={panY}
+            alignAnchor={alignAnchor}
+            alignMode={alignMode}
+            multiImageLayout2={multiImageLayout2}
+          />
+        ) : null
       ) : null}
       {hasPreviews && mode === "overlay" && previewA && previewB ? (
         <ViewerOverlay

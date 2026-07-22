@@ -219,7 +219,8 @@ export function WorkspaceConfigSidebarPanel({
   const { t } = useTranslation("common");
   title = title ?? t("toolSettings");
   const dndContextId = React.useId();
-  const itemIds = useMemo(() => items.map((item) => item.id), [items]);
+  const itemIdsKey = items.map((item) => item.id).join(",");
+  const itemIds = useMemo(() => items.map((item) => item.id), [itemIdsKey]);
   const itemMap = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
     [items],
@@ -231,8 +232,18 @@ export function WorkspaceConfigSidebarPanel({
   const contentRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setOrderedIds((previousOrder) => mergeOrderedIds(previousOrder, itemIds));
-  }, [itemIds]);
+    const nextIds = items.map((item) => item.id);
+    setOrderedIds((previousOrder) => {
+      const merged = mergeOrderedIds(previousOrder, nextIds);
+      if (
+        merged.length === previousOrder.length &&
+        merged.every((id, idx) => id === previousOrder[idx])
+      ) {
+        return previousOrder;
+      }
+      return merged;
+    });
+  }, [itemIdsKey]);
 
   useEffect(() => {
     if (

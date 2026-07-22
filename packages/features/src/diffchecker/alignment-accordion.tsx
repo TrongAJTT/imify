@@ -17,16 +17,22 @@ export function AlignmentAccordion({
 }) {
   const { t } = useTranslation("diffchecker");
 
-  const alignModeOptions = useMemo(() => [
-    { value: "fit-larger", label: t("matchLarger") },
-    { value: "fit-smaller", label: t("matchSmaller") },
-    { value: "original", label: t("originalSize") },
-  ], [t]);
+  const alignModeOptions = useMemo(
+    () => [
+      { value: "fit-larger", label: t("matchLarger") },
+      { value: "fit-smaller", label: t("matchSmaller") },
+      { value: "original", label: t("originalSize") },
+    ],
+    [t],
+  );
 
-  const anchorOptions = useMemo(() => [
-    { value: "center", label: t("center") },
-    { value: "top-left", label: t("topLeft") },
-  ], [t]);
+  const anchorOptions = useMemo(
+    () => [
+      { value: "center", label: t("center") },
+      { value: "top-left", label: t("topLeft") },
+    ],
+    [t],
+  );
 
   return (
     <AccordionCard
@@ -36,7 +42,7 @@ export function AlignmentAccordion({
       colorTheme="orange"
       alwaysOpen
     >
-      <div className="space-y-3 pt-1">
+      <div className="grid grid-cols-2 md:grid-cols-1 gap-3 pt-1">
         <SelectInput
           label={t("scaleLabel")}
           value={alignMode}

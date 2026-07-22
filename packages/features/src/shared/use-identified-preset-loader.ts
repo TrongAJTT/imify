@@ -1,5 +1,5 @@
-import { useEffect } from "react"
-import { useBatchStore, type SavedSetupPreset } from "@imify/stores/stores/batch-store"
+import { useEffect, useRef } from "react";
+import { useBatchStore, type SavedSetupPreset } from "@imify/stores/stores/batch-store";
 
 /**
  * Hook to automatically apply a feature-specific identified preset on mount.
@@ -9,21 +9,29 @@ import { useBatchStore, type SavedSetupPreset } from "@imify/stores/stores/batch
 export function useIdentifiedPresetLoader(
   identifiedPreset: SavedSetupPreset | undefined,
   activePresetId: string | null,
-  applyPreset: (preset: SavedSetupPreset) => void
+  applyPreset: (preset: SavedSetupPreset) => void,
 ) {
-  const { presets } = useBatchStore()
-  const isHydrated = useBatchStore((s) => (s as any)._hasHydrated)
+  const { presets } = useBatchStore();
+  const isHydrated = useBatchStore((s) => (s as any)._hasHydrated);
+  const appliedIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Wait for store to hydrate to avoid applying template if a saved version exists
-    if (!isHydrated) return
+    if (!isHydrated || !identifiedPreset) return;
 
-    // If we have an identified preset and no preset is currently active,
-    // try to find it in the store, otherwise use the provided template.
-    if (identifiedPreset && !activePresetId) {
-      const storePreset = presets.find((p) => p.id === identifiedPreset.id)
-      applyPreset(storePreset || identifiedPreset)
+    if (activePresetId && activePresetId !== identifiedPreset.id) {
+      // User selected a custom preset; reset ref so identified preset can reload if cleared
+      appliedIdRef.current = null;
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, identifiedPreset?.id])
+
+    if (appliedIdRef.current === identifiedPreset.id) {
+      return;
+    }
+
+    if (!activePresetId) {
+      appliedIdRef.current = identifiedPreset.id;
+      const storePreset = presets.find((p) => p.id === identifiedPreset.id);
+      applyPreset(storePreset || identifiedPreset);
+    }
+  }, [isHydrated, identifiedPreset?.id, activePresetId, applyPreset, presets]);
 }
