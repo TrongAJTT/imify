@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]
 
-## [2.2.1] - 2026-07-22 - Web App only
+## [2.2.2] - 2026-07-22 - Web App only
+
+### Added
+
+- **Multi-Image Difference Checker (Up to 4 Images):** Added support for comparing up to 4 images simultaneously (Images A, B, C, D) with multi-file drag-and-drop intake across all 4 slots and responsive mobile support.
+- **Custom Comparison Layouts:** Introduced visual grid layout selectors for 2 images (2 vertical columns, 2 horizontal rows), 3 images (3 columns, 3 rows), and 4 images (2x2 grid, 4 columns, 4 rows) with filled SVG icons.
+
+### Fixed
+
+- **Full Resolution Rendering:** Resolved image quality degradation in Difference Checker by removing downscaled 320px previews and preserving 100% loss-free original resolution object URLs.
+- **Offline PWA Sub-Route Navigation:** Fixed Next.js client-side navigation errors when loading preset sub-routes (e.g., `/splicing/work` or `/filling/fill`).
+
+## [2.2.1] - 2026-07-21 - Web App only
 
 ### Added
 
