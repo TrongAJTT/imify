@@ -1,63 +1,65 @@
-import React from "react"
-import { SliderInput } from "./slider-input"
-import { LabelText } from "./typography"
+import React from "react";
+import { SliderInput } from "./slider-input";
 
-type ColorTheme = "sky" | "amber" | "blue" | "purple" | "orange"
+type ColorTheme = "sky" | "amber" | "blue" | "purple" | "orange";
 
 interface ColoredSliderCardProps {
   /** Label/title for the slider */
-  label: string
+  label: string;
   /** Current slider value */
-  value: number
+  value: number;
   /** Callback when slider changes */
-  onChange: (value: number) => void
+  onChange: (value: number) => void;
   /** Minimum slider value (default: 0) */
-  min?: number
+  min?: number;
   /** Maximum slider value (default: 100) */
-  max?: number
+  max?: number;
   /** Step value for slider (default: 1) */
-  step?: number
+  step?: number;
   /** Suffix to display after value (e.g., '%') */
-  suffix?: string
+  suffix?: string;
   /** Optional tooltip shown next to the slider label */
-  tooltip?: string
+  tooltip?: string;
   /** Optional subtitle/description text shown below slider */
-  subtitle?: string
+  subtitle?: string;
   /** Color theme for the container (default: 'sky') */
-  theme?: ColorTheme
+  theme?: ColorTheme;
   /** Whether to disable the input */
-  disabled?: boolean
+  disabled?: boolean;
   /** Additional CSS class names */
-  className?: string
+  className?: string;
 }
 
-const THEME_CLASSES: Record<ColorTheme, { border: string; bg: string; text: string }> = {
+const THEME_CLASSES: Record<
+  ColorTheme,
+  { border: string; bg: string; text: string }
+> = {
   sky: {
     border: "border-sky-200 dark:border-sky-800",
     bg: "bg-sky-50/60 dark:bg-sky-900/20",
-    text: "text-sky-700 dark:text-sky-300"
+    text: "text-sky-700 dark:text-sky-300",
   },
   amber: {
     border: "border-amber-200 dark:border-amber-800",
     bg: "bg-amber-50/60 dark:bg-amber-900/20",
-    text: "text-amber-700 dark:text-amber-300"
+    text: "text-amber-700 dark:text-amber-300",
   },
   blue: {
     border: "border-blue-200 dark:border-blue-800",
     bg: "bg-blue-50/60 dark:bg-blue-900/20",
-    text: "text-blue-700 dark:text-blue-300"
+    text: "text-blue-700 dark:text-blue-300",
   },
   purple: {
     border: "border-purple-200 dark:border-purple-800",
     bg: "bg-purple-50/60 dark:bg-purple-900/20",
-    text: "text-purple-700 dark:text-purple-300"
+    text: "text-purple-700 dark:text-purple-300",
   },
   orange: {
     border: "border-orange-200 dark:border-orange-800",
     bg: "bg-orange-50/60 dark:bg-orange-900/20",
-    text: "text-orange-700 dark:text-orange-300"
-  }
-}
+    text: "text-orange-700 dark:text-orange-300",
+  },
+};
 
 export function ColoredSliderCard({
   label,
@@ -71,9 +73,9 @@ export function ColoredSliderCard({
   subtitle,
   theme = "sky",
   disabled = false,
-  className = ""
+  className = "",
 }: ColoredSliderCardProps) {
-  const themeClasses = THEME_CLASSES[theme]
+  const themeClasses = THEME_CLASSES[theme];
 
   return (
     <div
@@ -81,7 +83,7 @@ export function ColoredSliderCard({
     >
       <SliderInput
         label={label}
-        tooltip={tooltip}
+        tooltipContent={tooltip}
         value={value}
         onChange={onChange}
         min={min}
@@ -96,5 +98,5 @@ export function ColoredSliderCard({
         </p>
       )}
     </div>
-  )
+  );
 }

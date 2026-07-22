@@ -300,7 +300,7 @@ export function TargetFormatQualityCard({
             webpLosslessEnabled ? (
               <SliderInput
                 label={t("nearLossless")}
-                tooltip={t("tooltipNearLossless")}
+                tooltipContent={t("tooltipNearLossless")}
                 disabled={disabled || !webpLosslessEnabled}
                 min={0}
                 max={100}
@@ -441,7 +441,7 @@ export function TargetFormatQualityCard({
             {bmpColorDepth === 1 && onBmpDitheringLevelChange && (
               <SliderInput
                 label="Dithering Level"
-                tooltip={t("tooltipBmpDithering")}
+                tooltipContent={t("tooltipBmpDithering")}
                 value={bmpDitheringLevel}
                 min={0}
                 max={100}
@@ -511,7 +511,7 @@ export function TargetFormatQualityCard({
             {pngTinyModeEnabled && onPngDitheringLevelChange && (
               <SliderInput
                 label={t("ditheringLevel")}
-                tooltip={t("tooltipPngDithering")}
+                tooltipContent={t("tooltipPngDithering")}
                 value={pngDitheringLevel}
                 min={0}
                 max={100}
