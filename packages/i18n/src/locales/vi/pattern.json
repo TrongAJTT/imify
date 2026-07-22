@@ -139,7 +139,6 @@
   },
   "drawingDialog": {
     "title": "Vẽ tài nguyên",
-    "subtitle": "Phác thảo trực tiếp trên trình duyệt. Kết quả lưu lại là ảnh PNG trong suốt đã tự động xén biên.",
     "brush": "Bút vẽ",
     "eraser": "Tẩy",
     "smoothBrush": "Làm mượt nét vẽ",

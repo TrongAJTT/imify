@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
-import { ImagePlus, Palette, Ruler, X } from "lucide-react";
+import { ArrowLeftRight, ImagePlus, Palette, Ruler, X } from "lucide-react";
 
 import type { PatternBackgroundType } from "./types";
 import type { CanvasSizePreset } from "@imify/features/filling/types";
@@ -115,8 +115,9 @@ export function PatternCanvasAccordion() {
             onChange={(event) => void handleUploadBackground(event)}
           />
 
-          <div className="grid grid-cols-2 gap-2 items-end">
+          <div className="flex items-end gap-2">
             <NumberInput
+              className="flex-1"
               label={t("canvasFields.width")}
               value={canvas.width}
               min={16}
@@ -124,7 +125,16 @@ export function PatternCanvasAccordion() {
               step={1}
               onChangeValue={(value) => setCanvasSize(value, canvas.height)}
             />
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={() => setCanvasSize(canvas.height, canvas.width)}
+              className="px-2"
+            >
+              <ArrowLeftRight size={12} />
+            </Button>
             <NumberInput
+              className="flex-1"
               label={t("canvasFields.height")}
               value={canvas.height}
               min={16}

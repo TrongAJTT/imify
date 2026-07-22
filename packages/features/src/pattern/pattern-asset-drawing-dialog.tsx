@@ -14,6 +14,7 @@ import {
   CheckboxCard,
   ColorPickerPopover,
   NumberInput,
+  SliderInput,
   TextInput,
   Tooltip,
 } from "@imify/ui";
@@ -39,6 +40,7 @@ import {
   MAX_BRUSH_SIZE,
   BRUSH_SIZE_STEP,
 } from "./config";
+import { useBreakpoint } from "../shared/use-break-point";
 
 interface PatternAssetDrawingDialogProps {
   isOpen: boolean;
@@ -87,6 +89,7 @@ export function PatternAssetDrawingDialog({
 }: PatternAssetDrawingDialogProps) {
   const { t } = useTranslation("pattern");
   const { getShortcutLabel } = useShortcutPreferences();
+  const isMd = useBreakpoint("md");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -475,16 +478,14 @@ export function PatternAssetDrawingDialog({
       isDirty={hasUndoHistory}
       className="max-w-5xl"
       contentClassName="w-full max-w-[96vw] rounded-2xl"
-    >
-      <div onWheel={stopEventAndPreventDefault}>
-        <div className="border-b border-slate-200 dark:border-slate-800 px-5 py-4 flex items-center justify-between">
+      stickyHeader
+      stickyFooter
+      header={
+        <div className="px-5 py-3 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
               {t("drawingDialog.title")}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {t("drawingDialog.subtitle")}
-            </p>
           </div>
           <button
             type="button"
@@ -495,216 +496,58 @@ export function PatternAssetDrawingDialog({
             <X size={16} />
           </button>
         </div>
-
-        <div className="p-4 space-y-3">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
-            <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/20 p-3">
-              <div className="relative rounded-lg border border-slate-200 dark:border-slate-700 bg-[linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc),linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc)] dark:bg-[linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a),linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a)] bg-[length:20px_20px] bg-[position:0_0,10px_10px]">
-                <canvas
-                  ref={canvasRef}
-                  width={canvasSize.width}
-                  height={canvasSize.height}
-                  className="w-full h-auto rounded-lg touch-none cursor-none"
-                  onPointerDown={(event) => {
-                    stopEventAndPreventDefault(event);
-                    beginStroke(event);
-                  }}
-                  onPointerMove={(event) => {
-                    stopEventAndPreventDefault(event);
-                    continueStroke(event);
-                  }}
-                  onPointerUp={(event) => {
-                    stopEventAndPreventDefault(event);
-                    finishStroke(event);
-                  }}
-                  onPointerCancel={(event) => {
-                    stopEventAndPreventDefault(event);
-                    finishStroke(event);
-                  }}
-                  onPointerEnter={(event) => {
-                    stopEvent(event);
-                    const canvas = canvasRef.current;
-                    if (!canvas) {
-                      return;
-                    }
-
-                    setBrushPreview(
-                      toBrushPreview(canvas, event, activeBrushSize),
-                    );
-                  }}
-                  onPointerLeave={() => {
-                    if (!isDrawing) {
-                      setBrushPreview(null);
-                    }
-                  }}
-                  onWheel={stopEventAndPreventDefault}
-                />
-
-                {brushPreview && (
-                  <div
-                    className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border ${
-                      tool === "eraser"
-                        ? "border-rose-400/90 bg-rose-300/10"
-                        : "border-sky-500/90 bg-sky-300/10"
-                    }`}
-                    style={{
-                      left: `${brushPreview.x}px`,
-                      top: `${brushPreview.y}px`,
-                      width: `${brushPreview.radius * 2}px`,
-                      height: `${brushPreview.radius * 2}px`,
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 space-y-3">
-              <TextInput
-                label={
-                  t("assetListItem.editInDraw").split(" ").pop() === "Draw"
-                    ? "Asset Name"
-                    : "Tên tài nguyên"
-                }
-                value={suggestedName}
-                onChange={setSuggestedName}
-                placeholder="drawn-asset"
-                maxLength={80}
-              />
-
-              <div className="grid grid-cols-2 gap-2">
+      }
+      footer={
+        <div className="flex justify-between p-4">
+          <div className="flex gap-2">
+            {/* Undo button */}
+            <Tooltip
+              label={`${t("drawingDialog.undoBtn")} (${getShortcutLabel("pattern.draw.undo")})`}
+              content={t("tooltips.undoStroke")}
+              variant="nowrap"
+            >
+              <span className="block">
                 <Button
-                  variant={tool === "brush" ? "primary" : "secondary"}
+                  variant="secondary"
                   size="sm"
-                  onClick={() => setTool("brush")}
+                  onClick={handleUndo}
+                  disabled={!canUndo}
                   className="w-full"
                 >
-                  <Brush size={14} />
-                  {t("drawingDialog.brush")}
+                  <RotateCcw size={14} />
+                  {isMd && t("drawingDialog.undoBtn")}
                 </Button>
+              </span>
+            </Tooltip>
+
+            {/* Clear button */}
+            <Tooltip
+              label={`${t("drawingDialog.clearBtn")} (${getShortcutLabel("pattern.draw.clear")})`}
+              content={t("tooltips.clearCanvas")}
+              variant="nowrap"
+            >
+              <span className="block">
                 <Button
-                  variant={tool === "eraser" ? "primary" : "secondary"}
+                  variant="secondary"
                   size="sm"
-                  onClick={() => setTool("eraser")}
+                  onClick={handleClear}
+                  disabled={!hasContent}
                   className="w-full"
                 >
-                  <Eraser size={14} />
-                  {t("drawingDialog.eraser")}
+                  <Trash2 size={14} />
+                  {isMd && t("drawingDialog.clearBtn")}
                 </Button>
-              </div>
-
-              {tool === "brush" && (
-                <div className="space-y-2">
-                  <CheckboxCard
-                    title={t("drawingDialog.smoothBrush")}
-                    subtitle={
-                      smoothBrushStroke
-                        ? t("common.enabled", { defaultValue: "Enabled" })
-                        : t("common.disabled", { defaultValue: "Disabled" })
-                    }
-                    checked={smoothBrushStroke}
-                    onChange={setSmoothBrushStroke}
-                    tooltipLabel={t("tooltips.curveSmoothingLabel")}
-                    tooltipContent={t("tooltips.curveSmoothingContent")}
-                    className="px-2 py-1.5"
-                  />
-
-                  {smoothBrushStroke && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <NumberInput
-                        label={t("drawingDialog.streamline")}
-                        value={sanitizePercent(streamlinePercent)}
-                        min={0}
-                        max={100}
-                        step={1}
-                        onChangeValue={(value) =>
-                          setStreamlinePercent(sanitizePercent(value))
-                        }
-                      />
-                      <NumberInput
-                        label={t("drawingDialog.smoothing")}
-                        value={sanitizePercent(smoothingPercent)}
-                        min={0}
-                        max={100}
-                        step={1}
-                        onChangeValue={(value) =>
-                          setSmoothingPercent(sanitizePercent(value))
-                        }
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {tool === "brush" && (
-                <ColorPickerPopover
-                  label={t("drawingDialog.brushColor")}
-                  value={color}
-                  onChange={setColor}
-                  enableGradient={false}
-                  enableAlpha={false}
-                  outputMode="hex"
-                />
-              )}
-
-              <div className="space-y-3">
-                <NumberInput
-                  label={t("drawingDialog.brushSize")}
-                  tooltipLabel={t("tooltips.brushSizeShortcutsLabel")}
-                  tooltipContent={brushSizeTooltipContent}
-                  value={activeBrushSize}
-                  min={MIN_BRUSH_SIZE}
-                  max={MAX_BRUSH_SIZE}
-                  step={BRUSH_SIZE_STEP}
-                  onChangeValue={updateBrushSizeForActiveTool}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <Tooltip
-                  label={`${t("drawingDialog.undoBtn")} (${getShortcutLabel("pattern.draw.undo")})`}
-                  content={t("tooltips.undoStroke")}
-                  variant="nowrap"
-                >
-                  <span className="block">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleUndo}
-                      disabled={!canUndo}
-                      className="w-full"
-                    >
-                      <RotateCcw size={14} />
-                      {t("drawingDialog.undoBtn")}
-                    </Button>
-                  </span>
-                </Tooltip>
-
-                <Tooltip
-                  label={`${t("drawingDialog.clearBtn")} (${getShortcutLabel("pattern.draw.clear")})`}
-                  content={t("tooltips.clearCanvas")}
-                  variant="nowrap"
-                >
-                  <span className="block">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleClear}
-                      disabled={!hasContent}
-                      className="w-full"
-                    >
-                      <Trash2 size={14} />
-                      {t("drawingDialog.clearBtn")}
-                    </Button>
-                  </span>
-                </Tooltip>
-              </div>
-            </div>
+              </span>
+            </Tooltip>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <div className="flex gap-2">
+            {/* Cancel button */}
             <Button variant="secondary" size="sm" onClick={handleManualClose}>
-              {t("common.cancel", { defaultValue: "Cancel" })}
+              {t("common:cancel")}
             </Button>
+
+            {/* Save button */}
             <Button
               variant="primary"
               size="sm"
@@ -713,6 +556,172 @@ export function PatternAssetDrawingDialog({
             >
               {saveButtonLabel}
             </Button>
+          </div>
+        </div>
+      }
+    >
+      <div className="p-4 space-y-3" onWheel={stopEventAndPreventDefault}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/20 p-3">
+            <div className="relative rounded-lg border border-slate-200 dark:border-slate-700 bg-[linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc),linear-gradient(45deg,#f8fafc_25%,transparent_25%,transparent_75%,#f8fafc_75%,#f8fafc)] dark:bg-[linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a),linear-gradient(45deg,#0f172a_25%,transparent_25%,transparent_75%,#0f172a_75%,#0f172a)] bg-[length:20px_20px] bg-[position:0_0,10px_10px]">
+              <canvas
+                ref={canvasRef}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                className="w-full h-auto rounded-lg touch-none cursor-none"
+                onPointerDown={(event) => {
+                  stopEventAndPreventDefault(event);
+                  beginStroke(event);
+                }}
+                onPointerMove={(event) => {
+                  stopEventAndPreventDefault(event);
+                  continueStroke(event);
+                }}
+                onPointerUp={(event) => {
+                  stopEventAndPreventDefault(event);
+                  finishStroke(event);
+                }}
+                onPointerCancel={(event) => {
+                  stopEventAndPreventDefault(event);
+                  finishStroke(event);
+                }}
+                onPointerEnter={(event) => {
+                  stopEvent(event);
+                  const canvas = canvasRef.current;
+                  if (!canvas) {
+                    return;
+                  }
+
+                  setBrushPreview(
+                    toBrushPreview(canvas, event, activeBrushSize),
+                  );
+                }}
+                onPointerLeave={() => {
+                  if (!isDrawing) {
+                    setBrushPreview(null);
+                  }
+                }}
+                onWheel={stopEventAndPreventDefault}
+              />
+
+              {brushPreview && (
+                <div
+                  className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border ${
+                    tool === "eraser"
+                      ? "border-rose-400/90 bg-rose-300/10"
+                      : "border-sky-500/90 bg-sky-300/10"
+                  }`}
+                  style={{
+                    left: `${brushPreview.x}px`,
+                    top: `${brushPreview.y}px`,
+                    width: `${brushPreview.radius * 2}px`,
+                    height: `${brushPreview.radius * 2}px`,
+                  }}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 space-y-3">
+            <TextInput
+              label={
+                t("assetListItem.editInDraw").split(" ").pop() === "Draw"
+                  ? "Asset Name"
+                  : "Tên tài nguyên"
+              }
+              value={suggestedName}
+              onChange={setSuggestedName}
+              placeholder="drawn-asset"
+              maxLength={80}
+            />
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={tool === "brush" ? "primary" : "secondary"}
+                size="sm"
+                onClick={() => setTool("brush")}
+                className="w-full"
+              >
+                <Brush size={14} />
+                {t("drawingDialog.brush")}
+              </Button>
+              <Button
+                variant={tool === "eraser" ? "primary" : "secondary"}
+                size="sm"
+                onClick={() => setTool("eraser")}
+                className="w-full"
+              >
+                <Eraser size={14} />
+                {t("drawingDialog.eraser")}
+              </Button>
+            </div>
+
+            {tool === "brush" && (
+              <div className="space-y-2">
+                <CheckboxCard
+                  title={t("drawingDialog.smoothBrush")}
+                  subtitle={
+                    smoothBrushStroke
+                      ? t("common.enabled", { defaultValue: "Enabled" })
+                      : t("common.disabled", { defaultValue: "Disabled" })
+                  }
+                  checked={smoothBrushStroke}
+                  onChange={setSmoothBrushStroke}
+                  tooltipLabel={t("tooltips.curveSmoothingLabel")}
+                  tooltipContent={t("tooltips.curveSmoothingContent")}
+                  className="px-2 py-1.5"
+                />
+
+                {smoothBrushStroke && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <NumberInput
+                      label={t("drawingDialog.streamline")}
+                      value={sanitizePercent(streamlinePercent)}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onChangeValue={(value) =>
+                        setStreamlinePercent(sanitizePercent(value))
+                      }
+                    />
+                    <NumberInput
+                      label={t("drawingDialog.smoothing")}
+                      value={sanitizePercent(smoothingPercent)}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onChangeValue={(value) =>
+                        setSmoothingPercent(sanitizePercent(value))
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tool === "brush" && (
+              <ColorPickerPopover
+                label={t("drawingDialog.brushColor")}
+                value={color}
+                onChange={setColor}
+                enableGradient={false}
+                enableAlpha={false}
+                outputMode="hex"
+              />
+            )}
+
+            <div className="space-y-3">
+              <SliderInput
+                label={t("drawingDialog.brushSize")}
+                value={activeBrushSize}
+                onChange={updateBrushSizeForActiveTool}
+                tooltipLabel={t("tooltips.brushSizeShortcutsLabel")}
+                tooltipContent={brushSizeTooltipContent}
+                min={MIN_BRUSH_SIZE}
+                max={MAX_BRUSH_SIZE}
+                step={BRUSH_SIZE_STEP}
+              />
+            </div>
           </div>
         </div>
       </div>

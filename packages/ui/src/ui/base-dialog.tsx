@@ -12,6 +12,20 @@ interface BaseDialogProps {
   className?: string;
   /** The container class for the inner content wrapper */
   contentClassName?: string;
+  /** Optional header node */
+  header?: React.ReactNode;
+  /** Optional footer node */
+  footer?: React.ReactNode;
+  /** Whether the header should be sticky at the top when content scrolls */
+  stickyHeader?: boolean;
+  /** Whether the footer should be sticky at the bottom when content scrolls */
+  stickyFooter?: boolean;
+  /** Class name for header wrapper */
+  headerClassName?: string;
+  /** Class name for footer wrapper */
+  footerClassName?: string;
+  /** Class name for body content wrapper */
+  bodyClassName?: string;
 }
 
 /**
@@ -30,6 +44,13 @@ export function BaseDialog({
   children,
   className = "",
   contentClassName = "",
+  header,
+  footer,
+  stickyHeader,
+  stickyFooter,
+  headerClassName = "",
+  footerClassName = "",
+  bodyClassName = "",
 }: BaseDialogProps): React.ReactElement | null {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [mounted, setMounted] = React.useState(false);
@@ -111,6 +132,10 @@ export function BaseDialog({
   // Keep SSR output and first client render identical to avoid hydration mismatch.
   if (!mounted) return null;
 
+  const hasStructuredLayout = Boolean(
+    header || footer || stickyHeader !== undefined || stickyFooter !== undefined,
+  );
+
   return createPortal(
     <dialog
       ref={dialogRef}
@@ -127,16 +152,58 @@ export function BaseDialog({
         className,
       )}
     >
-      <div
-        className={cn(
-          // inner container handles scrolling when content is tall
-          // use dvh (dynamic viewport height) for better mobile browser support
-          "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto overscroll-contain max-h-[calc(100dvh-4rem)]",
-          contentClassName,
-        )}
-      >
-        {children}
-      </div>
+      {hasStructuredLayout ? (
+        <div
+          className={cn(
+            "flex flex-col max-h-[calc(100dvh-4rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden rounded-xl",
+            contentClassName,
+          )}
+        >
+          {header && (
+            <div
+              className={cn(
+                "shrink-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800",
+                stickyHeader !== false && "sticky top-0",
+                headerClassName,
+              )}
+            >
+              {header}
+            </div>
+          )}
+
+          <div
+            className={cn(
+              "flex-1 overflow-y-auto overscroll-contain min-h-0",
+              bodyClassName,
+            )}
+          >
+            {children}
+          </div>
+
+          {footer && (
+            <div
+              className={cn(
+                "shrink-0 z-10 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800",
+                stickyFooter !== false && "sticky bottom-0",
+                footerClassName,
+              )}
+            >
+              {footer}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div
+          className={cn(
+            // inner container handles scrolling when content is tall
+            // use dvh (dynamic viewport height) for better mobile browser support
+            "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto overscroll-contain max-h-[calc(100dvh-4rem)]",
+            contentClassName,
+          )}
+        >
+          {children}
+        </div>
+      )}
     </dialog>,
     document.body,
   ) as unknown as React.ReactElement;
