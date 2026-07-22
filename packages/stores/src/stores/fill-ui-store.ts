@@ -24,7 +24,9 @@ interface FillUiStoreState {
   hiddenLayerIds: string[]
   sessionTemplate: FillingTemplate | null
   groupRuntimeTransforms: Record<string, ImageTransform>
+  highlightedGridIndex: number | null
   setActiveCustomizationTab: (tab: FillCustomizationTab) => void
+  setHighlightedGridIndex: (index: number | null) => void
   initializeFillSession: (template: FillingTemplate) => void
   updateSessionTemplate: (updater: (template: FillingTemplate) => FillingTemplate) => void
   setGroupRuntimeTransform: (id: string, transform: ImageTransform) => void
@@ -39,7 +41,9 @@ export const useFillUiStore = create<FillUiStoreState>()((set) => ({
   hiddenLayerIds: [],
   sessionTemplate: null,
   groupRuntimeTransforms: {},
+  highlightedGridIndex: null,
   setActiveCustomizationTab: (tab) => set({ activeCustomizationTab: tab }),
+  setHighlightedGridIndex: (index) => set({ highlightedGridIndex: index }),
   initializeFillSession: (template) =>
     set(() => {
       const clonedTemplate = cloneFillingTemplate(template)

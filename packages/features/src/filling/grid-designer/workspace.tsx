@@ -19,6 +19,7 @@ import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
 import { MutedText, Subheading } from "@imify/ui/ui/typography";
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
+import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
 import { useShortcutActions } from "../use-shortcut-actions";
 import { parseGridDesign, generateGridLayers } from "./generator";
@@ -65,6 +66,9 @@ export function GridDesignWorkspace({
     (state) => state.setGridDesignParams,
   );
   const setGridLayerCount = useFillingStore((state) => state.setGridLayerCount);
+  const highlightedGridIndex = useFillUiStore(
+    (state) => state.highlightedGridIndex,
+  );
   const updateTemplate = useFillingStore((state) => state.updateTemplate);
   const { getShortcutLabel } = useShortcutPreferences();
   const [isSaving, setIsSaving] = useState(false);
@@ -374,6 +378,8 @@ export function GridDesignWorkspace({
             offsetY={offsetY}
             renderScale={renderScale}
             cells={parseResult.layoutCells}
+            direction={activeParams.direction ?? "rows"}
+            highlightedIndex={highlightedGridIndex}
           />
         </Stage>
         <ZoomPanControl

@@ -62,13 +62,29 @@ function clampPositiveInt(value: number, fallback: number): number {
   return Math.max(1, Math.round(value))
 }
 
-function normalizeRowDefinitions(params: GridDesignParams): string[] {
-  const rowCount = clampPositiveInt(params.rowCount, 1)
+function normalizeDefinitions(params: GridDesignParams): string[] {
+  const count = clampPositiveInt(params.rowCount, 1)
   const source = params.uniformColumns
-    ? Array.from({ length: rowCount }, () => params.uniformColumnsDef)
-    : Array.from({ length: rowCount }, (_, index) => params.rowDefinitions[index] ?? "")
+    ? Array.from({ length: count }, () => params.uniformColumnsDef)
+    : Array.from({ length: count }, (_, index) => params.rowDefinitions[index] ?? "")
 
-  return source.map((definition) => definition.trim())
+  const resolved: string[] = []
+  let lastResolved = "1"
+
+  for (let i = 0; i < source.length; i++) {
+    const raw = (source[i] ?? "").trim()
+    if (raw === "-") {
+      resolved.push(lastResolved)
+    } else {
+      const def = raw || "1"
+      resolved.push(def)
+      if (def !== "-") {
+        lastResolved = def
+      }
+    }
+  }
+
+  return resolved
 }
 
 function resolveGapX(params: GridDesignParams): number {
@@ -94,17 +110,39 @@ function expandUniformToken(token: string): string[] {
   return Array.from({ length: count }, () => "1")
 }
 
-function parseRowDefinition(definition: string, rowIndex: number): ParsedGridCell[] {
+function parseSingleDefinition(
+  definition: string,
+  primaryIndex: number,
+  isColsMode: boolean,
+): ParsedGridCell[] {
   const rawTokens = definition.trim().split(/\s+/).filter(Boolean)
-  const tokens =
-    rawTokens.length === 1
-      ? expandUniformToken(rawTokens[0])
-      : rawTokens
+  const tokens: string[] = []
+  let lastToken = "1"
+
+  for (const rawToken of rawTokens) {
+    if (rawToken === "-") {
+      tokens.push(lastToken)
+    } else if (rawTokens.length === 1) {
+      const expanded = expandUniformToken(rawToken)
+      tokens.push(...expanded)
+      lastToken = expanded[expanded.length - 1] ?? "1"
+    } else {
+      tokens.push(rawToken)
+      lastToken = rawToken
+    }
+  }
+
+  const makeCellIndices = (subIndex: number) => {
+    return isColsMode
+      ? { colIndex: primaryIndex, rowIndex: subIndex }
+      : { rowIndex: primaryIndex, colIndex: subIndex }
+  }
+
+  const emptyError = isColsMode ? "Enter a column definition." : "Enter a row definition."
 
   if (tokens.length === 0) {
     return [{
-      rowIndex,
-      colIndex: 0,
+      ...makeCellIndices(0),
       ratio: 1,
       indicator: null,
       token: "",
@@ -114,16 +152,15 @@ function parseRowDefinition(definition: string, rowIndex: number): ParsedGridCel
       rowSpan: 1,
       isMerged: false,
       rootCell: null,
-      errorMessage: "Enter a row definition.",
+      errorMessage: emptyError,
     }]
   }
 
-  const parsed = tokens.map<ParsedGridCell>((token, colIndex) => {
+  const parsed = tokens.map<ParsedGridCell>((token, subIndex) => {
     const match = token.match(CELL_TOKEN_REGEX)
     if (!match) {
       return {
-        rowIndex,
-        colIndex,
+        ...makeCellIndices(subIndex),
         ratio: 1,
         indicator: null,
         token,
@@ -139,8 +176,7 @@ function parseRowDefinition(definition: string, rowIndex: number): ParsedGridCel
 
     const ratio = Number.parseFloat(match[1])
     return {
-      rowIndex,
-      colIndex,
+      ...makeCellIndices(subIndex),
       ratio,
       indicator: match[2] || null,
       token,
@@ -185,19 +221,20 @@ function parseRowDefinition(definition: string, rowIndex: number): ParsedGridCel
   })
 }
 
-function mergeRows(grid: ParsedGridCell[][]): string[] {
+function mergeAdjacentSections(grid: ParsedGridCell[][], isColsMode: boolean): string[] {
   const errors: string[] = []
+  const sectionName = isColsMode ? "Column" : "Row"
 
-  for (let rowIndex = 1; rowIndex < grid.length; rowIndex += 1) {
-    const currentRow = grid[rowIndex]
-    const previousRow = grid[rowIndex - 1]
+  for (let primaryIndex = 1; primaryIndex < grid.length; primaryIndex += 1) {
+    const currentSection = grid[primaryIndex]
+    const previousSection = grid[primaryIndex - 1]
 
-    for (const currentCell of currentRow) {
+    for (const currentCell of currentSection) {
       if (!currentCell.indicator || currentCell.errorMessage) {
         continue
       }
 
-      const candidate = previousRow.find(
+      const candidate = previousSection.find(
         (cell) => cell.indicator === currentCell.indicator && !cell.errorMessage
       )
 
@@ -208,7 +245,7 @@ function mergeRows(grid: ParsedGridCell[][]): string[] {
       const sameStart = nearlyEqual(currentCell.startPct, candidate.startPct)
       const sameEnd = nearlyEqual(currentCell.endPct, candidate.endPct)
       if (!sameStart || !sameEnd) {
-        const message = `Row ${rowIndex + 1}: indicator "${currentCell.indicator}" must align with the previous row.`
+        const message = `${sectionName} ${primaryIndex + 1}: indicator "${currentCell.indicator}" must align with the previous ${sectionName.toLowerCase()}.`
         currentCell.errorMessage = message
         errors.push(message)
         continue
@@ -242,39 +279,71 @@ function buildGridCell(cell: ParsedGridCell): GridCell {
 }
 
 function buildLayoutCells(cells: GridCell[][], params: GridDesignParams, canvasWidth: number, canvasHeight: number): GridLayoutCell[] {
-  const rowCount = clampPositiveInt(params.rowCount, cells.length || 1)
+  const isColsMode = params.direction === "cols"
+  const primaryCount = clampPositiveInt(params.rowCount, cells.length || 1)
   const outerPadding = Math.max(0, Math.round(params.outerPadding))
   const gapX = resolveGapX(params)
   const gapY = resolveGapY(params)
   const innerWidth = Math.max(1, canvasWidth - outerPadding * 2)
   const innerHeight = Math.max(1, canvasHeight - outerPadding * 2)
-  const rowGapTotal = gapY * Math.max(0, rowCount - 1)
-  const rowHeight = Math.max(1, (innerHeight - rowGapTotal) / rowCount)
 
   const layoutCells: GridLayoutCell[] = []
 
-  for (const row of cells) {
-    for (const cell of row) {
-      if (cell.isMerged) {
-        continue
+  if (isColsMode) {
+    const colGapTotal = gapX * Math.max(0, primaryCount - 1)
+    const colWidth = Math.max(1, (innerWidth - colGapTotal) / primaryCount)
+
+    for (const col of cells) {
+      for (const cell of col) {
+        if (cell.isMerged) {
+          continue
+        }
+
+        const colLeft = outerPadding + cell.colIndex * (colWidth + gapX)
+        const baseStartY = outerPadding + (cell.startPct / 100) * innerHeight
+        const baseEndY = outerPadding + (cell.endPct / 100) * innerHeight
+        const startInset = nearlyEqual(cell.startPct, 0) ? 0 : gapY / 2
+        const endInset = nearlyEqual(cell.endPct, 100) ? 0 : gapY / 2
+        const cellY = baseStartY + startInset
+        const cellHeight = Math.max(1, baseEndY - endInset - cellY)
+        const cellWidth = Math.max(1, colWidth * cell.rowSpan + gapX * Math.max(0, cell.rowSpan - 1))
+
+        layoutCells.push({
+          ...cell,
+          x: Math.round(colLeft * 1000) / 1000,
+          y: Math.round(cellY * 1000) / 1000,
+          width: Math.round(cellWidth * 1000) / 1000,
+          height: Math.round(cellHeight * 1000) / 1000,
+        })
       }
+    }
+  } else {
+    const rowGapTotal = gapY * Math.max(0, primaryCount - 1)
+    const rowHeight = Math.max(1, (innerHeight - rowGapTotal) / primaryCount)
 
-      const rowTop = outerPadding + cell.rowIndex * (rowHeight + gapY)
-      const baseStartX = outerPadding + (cell.startPct / 100) * innerWidth
-      const baseEndX = outerPadding + (cell.endPct / 100) * innerWidth
-      const startInset = nearlyEqual(cell.startPct, 0) ? 0 : gapX / 2
-      const endInset = nearlyEqual(cell.endPct, 100) ? 0 : gapX / 2
-      const cellX = baseStartX + startInset
-      const cellWidth = Math.max(1, baseEndX - endInset - cellX)
-      const cellHeight = Math.max(1, rowHeight * cell.rowSpan + gapY * Math.max(0, cell.rowSpan - 1))
+    for (const row of cells) {
+      for (const cell of row) {
+        if (cell.isMerged) {
+          continue
+        }
 
-      layoutCells.push({
-        ...cell,
-        x: Math.round(cellX * 1000) / 1000,
-        y: Math.round(rowTop * 1000) / 1000,
-        width: Math.round(cellWidth * 1000) / 1000,
-        height: Math.round(cellHeight * 1000) / 1000,
-      })
+        const rowTop = outerPadding + cell.rowIndex * (rowHeight + gapY)
+        const baseStartX = outerPadding + (cell.startPct / 100) * innerWidth
+        const baseEndX = outerPadding + (cell.endPct / 100) * innerWidth
+        const startInset = nearlyEqual(cell.startPct, 0) ? 0 : gapX / 2
+        const endInset = nearlyEqual(cell.endPct, 100) ? 0 : gapX / 2
+        const cellX = baseStartX + startInset
+        const cellWidth = Math.max(1, baseEndX - endInset - cellX)
+        const cellHeight = Math.max(1, rowHeight * cell.rowSpan + gapY * Math.max(0, cell.rowSpan - 1))
+
+        layoutCells.push({
+          ...cell,
+          x: Math.round(cellX * 1000) / 1000,
+          y: Math.round(rowTop * 1000) / 1000,
+          width: Math.round(cellWidth * 1000) / 1000,
+          height: Math.round(cellHeight * 1000) / 1000,
+        })
+      }
     }
   }
 
@@ -282,13 +351,15 @@ function buildLayoutCells(cells: GridCell[][], params: GridDesignParams, canvasW
 }
 
 export function parseGridDesign(params: GridDesignParams, canvasWidth: number, canvasHeight: number): GridParseResult {
-  const definitions = normalizeRowDefinitions(params)
-  const parsedGrid = definitions.map((definition, rowIndex) => parseRowDefinition(definition, rowIndex))
-  const mergeErrors = mergeRows(parsedGrid)
-  const cells = parsedGrid.map((row) => row.map(buildGridCell))
+  const isColsMode = params.direction === "cols"
+  const definitions = normalizeDefinitions(params)
+  const parsedGrid = definitions.map((definition, primaryIndex) => parseSingleDefinition(definition, primaryIndex, isColsMode))
+  const mergeErrors = mergeAdjacentSections(parsedGrid, isColsMode)
+  const cells = parsedGrid.map((section) => section.map(buildGridCell))
 
-  const inlineErrors = cells.flatMap((row) =>
-    row.filter((cell) => cell.hasError).map((cell) => `Row ${cell.rowIndex + 1}: ${cell.errorMessage}`)
+  const sectionLabel = isColsMode ? "Column" : "Row"
+  const inlineErrors = cells.flatMap((section, sectionIdx) =>
+    section.filter((cell) => cell.hasError).map((cell) => `${sectionLabel} ${sectionIdx + 1}: ${cell.errorMessage}`)
   )
 
   return {

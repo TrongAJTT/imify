@@ -146,21 +146,22 @@ export interface SymmetricParams {
   firstAxisPosition: number
 }
 
-// ── Grid Designer Params ──
+export type GridPrimaryDirection = "rows" | "cols";
 
 export interface GridDesignParams {
-  rowCount: number
-  outerPadding: number
+  direction?: GridPrimaryDirection;
+  rowCount: number;
+  outerPadding: number;
   /**
    * Legacy single gap value (persisted by older versions).
    * New code should prefer `gapX` and `gapY`.
    */
-  gap?: number
-  gapX: number
-  gapY: number
-  rowDefinitions: string[]
-  uniformColumns: boolean
-  uniformColumnsDef: string
+  gap?: number;
+  gapX: number;
+  gapY: number;
+  rowDefinitions: string[];
+  uniformColumns: boolean;
+  uniformColumnsDef: string;
 }
 
 // ── Template Sort ──
@@ -220,6 +221,7 @@ export const DEFAULT_SYMMETRIC_PARAMS: SymmetricParams = {
 }
 
 export const DEFAULT_GRID_DESIGN_PARAMS: GridDesignParams = {
+  direction: "rows",
   rowCount: 3,
   outerPadding: 24,
   gap: 16,
