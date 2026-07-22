@@ -87,6 +87,7 @@ import {
   PREVIEW_ZOOM_FACTOR,
   ROTATE_CURSOR,
   IMAGE_HITBOX_PADDING,
+  LAYER_SWAP_HOVER_RADIUS,
 } from "../config";
 
 function safeRevokeObjectUrl(value: string | null | undefined) {
@@ -153,6 +154,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId);
   const setCanvasFillState = useFillingStore((s) => s.setCanvasFillState);
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState);
+  const swapLayerFillStates = useFillingStore((s) => s.swapLayerFillStates);
   const exportSettings = useFillingStore((s) => s.exportSettings);
   const { targetFormat: exportFormat, quality: exportQuality } = exportSettings;
   const { getShortcutLabel } = useShortcutPreferences();
@@ -170,6 +172,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false);
   const [isDragOverSelectedEmptyTarget, setIsDragOverSelectedEmptyTarget] =
     useState(false);
+  const [hoveredSwapTargetLayerId, setHoveredSwapTargetLayerId] = useState<
+    string | null
+  >(null);
   const [cursor, setCursor] = useState("default");
   const [rotationGuideLine, setRotationGuideLine] = useState<number[] | null>(
     null,
@@ -855,6 +860,44 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     },
     [fillRuntimeItems, getRuntimeItemBounds],
   );
+
+  const findSwapTargetLayerIdAtPoint = useCallback(
+    (worldPoint: { x: number; y: number }, sourceLayerId: string) => {
+      for (const item of fillRuntimeItems) {
+        if (item.id === sourceLayerId) continue;
+        const bounds = getRuntimeItemBounds(item);
+        const centerX = bounds.x + bounds.width / 2;
+        const centerY = bounds.y + bounds.height / 2;
+        const dist = Math.hypot(worldPoint.x - centerX, worldPoint.y - centerY);
+        if (dist <= LAYER_SWAP_HOVER_RADIUS) {
+          return item.id;
+        }
+      }
+      return null;
+    },
+    [fillRuntimeItems, getRuntimeItemBounds],
+  );
+
+  const hoveredSwapTargetItem = useMemo(() => {
+    if (!hoveredSwapTargetLayerId) return null;
+    return (
+      fillRuntimeItems.find((item) => item.id === hoveredSwapTargetLayerId) ??
+      null
+    );
+  }, [fillRuntimeItems, hoveredSwapTargetLayerId]);
+
+  const hoveredSwapTargetPolygons = useMemo(() => {
+    if (!hoveredSwapTargetItem) return [];
+    if (hoveredSwapTargetItem.kind === "group") {
+      return applyRuntimeTransformToPolygons(
+        hoveredSwapTargetItem.polygons,
+        groupRuntimeTransforms[hoveredSwapTargetItem.id] ?? {
+          ...DEFAULT_IMAGE_TRANSFORM,
+        },
+      );
+    }
+    return [toWorldLayerPoints(hoveredSwapTargetItem.layer)];
+  }, [groupRuntimeTransforms, hoveredSwapTargetItem]);
 
   useEffect(() => {
     const tr = transformerRef.current;
@@ -2026,6 +2069,20 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                           );
                         }
 
+                        const stage = node.getStage();
+                        const pointerPos = stage?.getPointerPosition();
+                        if (pointerPos) {
+                          const worldPointer = {
+                            x: (pointerPos.x - offsetX) / renderScale,
+                            y: (pointerPos.y - offsetY) / renderScale,
+                          };
+                          const swapTargetId = findSwapTargetLayerIdAtPoint(
+                            worldPointer,
+                            layer.id,
+                          );
+                          setHoveredSwapTargetLayerId(swapTargetId);
+                        }
+
                         updateLayerFillState(layer.id, {
                           imageTransform: {
                             ...fillState.imageTransform,
@@ -2037,6 +2094,14 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                         setPositionGuideLines(toStageGuideLines(guides));
                       }}
                       onDragEnd={(e) => {
+                        if (hoveredSwapTargetLayerId) {
+                          swapLayerFillStates(layer.id, hoveredSwapTargetLayerId);
+                          setHoveredSwapTargetLayerId(null);
+                          setPositionGuideLines([]);
+                          setCursor("grab");
+                          return;
+                        }
+
                         const node = e.target;
                         const nextTransformX =
                           (node.x() - layerX + IMAGE_HITBOX_PADDING) /
@@ -2188,6 +2253,20 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                         groupRuntimeTransform,
                       );
 
+                      const stage = node.getStage();
+                      const pointerPos = stage?.getPointerPosition();
+                      if (pointerPos) {
+                        const worldPointer = {
+                          x: (pointerPos.x - offsetX) / renderScale,
+                          y: (pointerPos.y - offsetY) / renderScale,
+                        };
+                        const swapTargetId = findSwapTargetLayerIdAtPoint(
+                          worldPointer,
+                          selectedRuntimeItem.id,
+                        );
+                        setHoveredSwapTargetLayerId(swapTargetId);
+                      }
+
                       updateLayerFillState(selectedRuntimeItem.id, {
                         imageTransform: {
                           ...fillState.imageTransform,
@@ -2199,6 +2278,17 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                       setPositionGuideLines(toStageGuideLines(guides));
                     }}
                     onDragEnd={(e) => {
+                      if (hoveredSwapTargetLayerId) {
+                        swapLayerFillStates(
+                          selectedRuntimeItem.id,
+                          hoveredSwapTargetLayerId,
+                        );
+                        setHoveredSwapTargetLayerId(null);
+                        setPositionGuideLines([]);
+                        setCursor("grab");
+                        return;
+                      }
+
                       const node = e.target;
                       const nextWorldX =
                         (node.x() + IMAGE_HITBOX_PADDING - offsetX) /
@@ -2291,6 +2381,58 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                 return newBox;
               }}
             />
+
+            {hoveredSwapTargetItem && hoveredSwapTargetPolygons.length > 0 && (
+              <Group key="swap-hover-overlay" listening={false}>
+                {hoveredSwapTargetPolygons.map((polygon, index) => (
+                  <Line
+                    key={`swap-poly-${index}`}
+                    points={flattenPoints(polygon).map(
+                      (val) => val * renderScale,
+                    )}
+                    x={offsetX}
+                    y={offsetY}
+                    fill="rgba(6, 182, 212, 0.25)"
+                    stroke="#06b6d4"
+                    strokeWidth={3}
+                    dash={[8, 6]}
+                    closed
+                  />
+                ))}
+                {(() => {
+                  const bounds = getRuntimeItemBounds(hoveredSwapTargetItem);
+                  const centerX =
+                    offsetX + (bounds.x + bounds.width / 2) * renderScale;
+                  const centerY =
+                    offsetY + (bounds.y + bounds.height / 2) * renderScale;
+                  return (
+                    <Group x={centerX} y={centerY}>
+                      <Rect
+                        x={-56}
+                        y={-18}
+                        width={112}
+                        height={36}
+                        cornerRadius={18}
+                        fill="#06b6d4"
+                        shadowColor="#000000"
+                        shadowBlur={12}
+                        shadowOpacity={0.35}
+                      />
+                      <Text
+                        text="⇄ Swap"
+                        x={-52}
+                        y={-7}
+                        width={104}
+                        align="center"
+                        fill="#ffffff"
+                        fontSize={13}
+                        fontStyle="bold"
+                      />
+                    </Group>
+                  );
+                })()}
+              </Group>
+            )}
           </Layer>
         </Stage>
 

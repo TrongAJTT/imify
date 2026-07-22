@@ -65,6 +65,7 @@ export interface FillingStoreState {
   setCanvasFillState: (state: CanvasFillState) => void
   setLayerFillStates: (states: LayerFillState[]) => void
   updateLayerFillState: (layerId: string, partial: Partial<LayerFillState>) => void
+  swapLayerFillStates: (sourceLayerId: string, targetLayerId: string) => void
   setSelectedLayerId: (id: string | null) => void
   setSymmetricParams: (params: SymmetricParams | ((previous: SymmetricParams) => SymmetricParams)) => void
   setSymmetricLayerCount: (count: number) => void
@@ -138,6 +139,29 @@ export const useFillingStore = create<FillingStoreState>()(
             lf.layerId === layerId ? { ...lf, ...partial } : lf
           ),
         })),
+      swapLayerFillStates: (sourceLayerId, targetLayerId) =>
+        set((state) => {
+          const sourceState = state.layerFillStates.find((s) => s.layerId === sourceLayerId)
+          const targetState = state.layerFillStates.find((s) => s.layerId === targetLayerId)
+          if (!sourceState || !targetState) return state
+
+          const sourceUrl = sourceState.imageUrl
+          const sourceTransform = { ...sourceState.imageTransform, x: 0, y: 0 }
+          const targetUrl = targetState.imageUrl
+          const targetTransform = { ...targetState.imageTransform, x: 0, y: 0 }
+
+          return {
+            layerFillStates: state.layerFillStates.map((lf) => {
+              if (lf.layerId === sourceLayerId) {
+                return { ...lf, imageUrl: targetUrl, imageTransform: targetTransform }
+              }
+              if (lf.layerId === targetLayerId) {
+                return { ...lf, imageUrl: sourceUrl, imageTransform: sourceTransform }
+              }
+              return lf
+            }),
+          }
+        }),
       setSelectedLayerId: (id) => set({ selectedLayerId: id }),
       setSymmetricParams: (params) =>
         set((state) => ({

@@ -77,3 +77,6 @@ export type SymmetricControlId =
 export const DEFAULT_ROTATION_STEP = 45;
 export const DEFAULT_ROTATION_TOLERANCE = 4;
 export const DEFAULT_POSITION_TOLERANCE = 8;
+
+// Drag swap threshold constant
+export const LAYER_SWAP_HOVER_RADIUS = 80;
