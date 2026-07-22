@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { FillingTemplate } from "@imify/features/filling/types";
 import {
   closestCenter,
@@ -77,20 +77,31 @@ export function FillSidebar({
   const batchFileNamePattern = useBatchStore((s) => s.fileNamePattern);
   const batchFormatOptions = useBatchStore((s) => s.formatOptions);
 
+  const lastSyncedBatchConfigRef = useRef<string | null>(null);
+
   // Sync global batch store changes to local store when in "Custom" mode (activePresetId is null)
   useEffect(() => {
-    if (activePresetId === null) {
-      applyPreset({
-        ...fillingIdentifiedPreset,
-        config: {
-          ...fillingIdentifiedPreset.config,
-          targetFormat: batchTargetFormat,
-          quality: batchQuality,
-          fileNamePattern: batchFileNamePattern,
-          formatOptions: batchFormatOptions,
-        },
-      });
+    if (activePresetId !== null) {
+      lastSyncedBatchConfigRef.current = null;
+      return;
     }
+
+    const configKey = `${batchTargetFormat}-${batchQuality}-${batchFileNamePattern}-${JSON.stringify(batchFormatOptions)}`;
+    if (lastSyncedBatchConfigRef.current === configKey) {
+      return;
+    }
+
+    lastSyncedBatchConfigRef.current = configKey;
+    applyPreset({
+      ...fillingIdentifiedPreset,
+      config: {
+        ...fillingIdentifiedPreset.config,
+        targetFormat: batchTargetFormat,
+        quality: batchQuality,
+        fileNamePattern: batchFileNamePattern,
+        formatOptions: batchFormatOptions,
+      },
+    });
   }, [
     activePresetId,
     batchTargetFormat,

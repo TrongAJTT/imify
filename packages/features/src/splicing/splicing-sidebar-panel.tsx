@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 
 import type { PerformancePreferences } from "../processor/performance-preferences";
 import type { SplicingImageResize } from "./types";
@@ -104,20 +104,31 @@ export function SplicingSidebarPanel({
   const batchFileNamePattern = useBatchStore((s) => s.fileNamePattern);
   const batchFormatOptions = useBatchStore((s) => s.formatOptions);
 
+  const lastSyncedBatchConfigRef = useRef<string | null>(null);
+
   // Sync global batch store changes to local store when in "Custom" mode (activePresetId is null)
   useEffect(() => {
-    if (activePresetId === null) {
-      applyPreset({
-        ...splicingIdentifiedPreset,
-        config: {
-          ...splicingIdentifiedPreset.config,
-          targetFormat: batchTargetFormat,
-          quality: batchQuality,
-          fileNamePattern: batchFileNamePattern,
-          formatOptions: batchFormatOptions,
-        },
-      });
+    if (activePresetId !== null) {
+      lastSyncedBatchConfigRef.current = null;
+      return;
     }
+
+    const configKey = `${batchTargetFormat}-${batchQuality}-${batchFileNamePattern}-${JSON.stringify(batchFormatOptions)}`;
+    if (lastSyncedBatchConfigRef.current === configKey) {
+      return;
+    }
+
+    lastSyncedBatchConfigRef.current = configKey;
+    applyPreset({
+      ...splicingIdentifiedPreset,
+      config: {
+        ...splicingIdentifiedPreset.config,
+        targetFormat: batchTargetFormat,
+        quality: batchQuality,
+        fileNamePattern: batchFileNamePattern,
+        formatOptions: batchFormatOptions,
+      },
+    });
   }, [
     activePresetId,
     batchTargetFormat,
