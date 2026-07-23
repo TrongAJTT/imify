@@ -126,6 +126,15 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
     showOnExtSidebar: true,
   },
   {
+    id: "collage-maker",
+    label: "Collage Maker",
+    href: "/collage-maker",
+    categoryId: "layout-composition",
+    iconColorClassName: "text-amber-500",
+    showOnWebToolsMenu: true,
+    showOnExtSidebar: true,
+  },
+  {
     id: "pattern-generator",
     label: "Pattern Generator",
     href: "/pattern-generator",
@@ -242,6 +251,8 @@ export function renderWorkspaceToolIcon(
       return <Scissors size={size} className={className} />;
     case "filling":
       return <Layers size={size} className={className} />;
+    case "collage-maker":
+      return <LayoutGrid size={size} className={className} />;
     case "pattern-generator":
       return <Stamp size={size} className={className} />;
     case "diffchecker":
@@ -294,6 +305,8 @@ function getToolIdKey(id: string): string {
       return "tools.splitter.label";
     case "filling":
       return "tools.filling.label";
+    case "collage-maker":
+      return "tools.collageMaker.label";
     case "pattern-generator":
       return "tools.patternGenerator.label";
     case "diffchecker":

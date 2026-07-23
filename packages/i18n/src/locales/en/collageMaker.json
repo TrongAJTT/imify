@@ -1,0 +1,42 @@
+{
+  "title": "Collage Maker",
+  "showcase": {
+    "title": "Quick Collage Maker",
+    "subtitle": "Upload your photos, pick a custom layout template, adjust canvas dimensions and spacing, and export high-quality collages instantly.",
+    "tips": {
+      "tip1": "Upload 2 to 10 photos to start assembling your custom collage layout.",
+      "tip2": "Reorder your photos in Stage 1 to control which image goes into which cell.",
+      "tip3": "Adjust outer padding and inner cell gaps in Stage 2 to style your grid.",
+      "tip4": "Fine-tune individual photo zoom, panning, and frame borders in Stage 3."
+    }
+  },
+  "stage1": {
+    "title": "Prepare Images",
+    "subtitle": "{{count}} of {{max}} photos uploaded • Canvas {{width}} x {{height}} px",
+    "createCollage": "Create Collage",
+    "clearAll": "Clear All",
+    "dropzoneTitle": "Drop photos here to create collage",
+    "dropzoneSubtitle": "Upload 2 to {{max}} images (JPEG, PNG, WebP, AVIF, GIF)",
+    "browseFiles": "Browse Files",
+    "queueTitle": "Uploaded Photos",
+    "reorderHelp": "Drag items to reorder photo position in grid layout."
+  },
+  "stage2": {
+    "title": "Choose Layout",
+    "imageSize": "Output Image Size",
+    "spacingPadding": "Spacing & Margin",
+    "outerPadding": "Outer Margin",
+    "gapX": "Horizontal Gap",
+    "gapY": "Vertical Gap",
+    "layoutSelector": "Layout Templates",
+    "layoutsForImages": "Layouts for {{count}} photos",
+    "nextToEdit": "Proceed to Fine-Tuning"
+  },
+  "stage3": {
+    "title": "Adjust Photos & Export",
+    "layerCustomization": "Layer Customization",
+    "backgroundColor": "Canvas & Background Color",
+    "outputSettings": "Export Settings",
+    "exportCollage": "Export Collage"
+  }
+}

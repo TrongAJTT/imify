@@ -8,7 +8,8 @@ export const FEATURE_PRESET_PREFIXES = {
   IMAGE_SPLITTER: "preset_image-splitter",
   PATTERN_GEN: "preset_pattern-gen",
   FILLING: "preset_filling",
-  IMAGE_UPSCALER: "preset_upscaler"
+  IMAGE_UPSCALER: "preset_upscaler",
+  COLLAGE_MAKER: "preset_collage-maker",
 } as const;
 
 /**

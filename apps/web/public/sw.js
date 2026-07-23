@@ -80,6 +80,10 @@ if (workbox) {
     { url: '/pattern-generator/work.html',          revision: '6' },
     { url: '/pattern-generator/work.txt',           revision: '6' },
 
+    // ── Collage Maker ───────────────────────────────────────────────────────────
+    { url: '/collage-maker.html',                  revision: '6' },
+    { url: '/collage-maker.txt',                   revision: '6' },
+
     // ── Filling ─────────────────────────────────────────────────────────────────
     { url: '/filling.html',                        revision: '6' },
     { url: '/filling.txt',                         revision: '6' },
@@ -96,6 +100,7 @@ if (workbox) {
     { url: '/locales/en/_meta.json',               revision: '5' },
     { url: '/locales/en/about.json',               revision: '5' },
     { url: '/locales/en/backgroundRemover.json',   revision: '5' },
+    { url: '/locales/en/collageMaker.json',         revision: '5' },
     { url: '/locales/en/common.json',              revision: '5' },
     { url: '/locales/en/devMode.json',             revision: '5' },
     { url: '/locales/en/diffchecker.json',         revision: '5' },
@@ -116,6 +121,7 @@ if (workbox) {
     { url: '/locales/vi/_meta.json',               revision: '5' },
     { url: '/locales/vi/about.json',               revision: '5' },
     { url: '/locales/vi/backgroundRemover.json',   revision: '5' },
+    { url: '/locales/vi/collageMaker.json',         revision: '5' },
     { url: '/locales/vi/common.json',              revision: '5' },
     { url: '/locales/vi/devMode.json',             revision: '5' },
     { url: '/locales/vi/diffchecker.json',         revision: '5' },

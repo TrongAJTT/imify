@@ -24,6 +24,9 @@
     "filling": {
       "label": "Image Filling"
     },
+    "collageMaker": {
+      "label": "Collage Maker"
+    },
     "patternGenerator": {
       "label": "Pattern Generator"
     },

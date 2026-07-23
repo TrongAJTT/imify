@@ -5,6 +5,7 @@ import {
   Download,
   Edit,
   Edit3,
+  LayoutGrid,
   Pin,
   PinOff,
   Plus,
@@ -118,13 +119,26 @@ export function FillingTemplateListPanel({
 
   if (templates.length === 0) {
     return (
-      <EmptyDropCard
-        icon={<Plus size={28} className="text-sky-500" />}
-        iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none"
-        title={t("templateList.noTemplatesTitle")}
-        subtitle={t("templateList.noTemplatesDesc")}
-        onClick={onCreate}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <EmptyDropCard
+          icon={<Plus size={28} className="text-sky-500" />}
+          iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none"
+          title={t("templateList.noTemplatesTitle")}
+          subtitle={t("templateList.noTemplatesDesc")}
+          onClick={onCreate}
+        />
+        <EmptyDropCard
+          icon={<LayoutGrid size={28} className="text-amber-500" />}
+          iconWrapperClassName="bg-amber-100 dark:bg-amber-900/30 border-transparent shadow-none"
+          title={t("collageMaker.title", { defaultValue: "Ghép ảnh nhanh" })}
+          subtitle={t("collageMaker.subtitle", {
+            defaultValue: "Tạo ảnh ghép tức thì từ 2 đến 10 bức ảnh",
+          })}
+          onClick={() => {
+            window.location.href = "/collage-maker";
+          }}
+        />
+      </div>
     );
   }
 
@@ -132,10 +146,25 @@ export function FillingTemplateListPanel({
     <>
       <div className="mb-4 flex items-center justify-between">
         <Subheading>{t("templateList.title")}</Subheading>
-        <Button type="button" variant="primary" size="sm" onClick={onCreate}>
-          <Plus size={14} />
-          {t("templateList.newTemplate")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Tooltip content={t("collageMaker.title", { defaultValue: "Ghép ảnh nhanh" })}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                window.location.href = "/collage-maker";
+              }}
+            >
+              <LayoutGrid size={14} className="text-amber-500" />
+              {t("collageMaker.title", { defaultValue: "Ghép ảnh nhanh" })}
+            </Button>
+          </Tooltip>
+          <Button type="button" variant="primary" size="sm" onClick={onCreate}>
+            <Plus size={14} />
+            {t("templateList.newTemplate")}
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

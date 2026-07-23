@@ -24,6 +24,9 @@
     "filling": {
       "label": "Lấp đầy ảnh"
     },
+    "collageMaker": {
+      "label": "Ghép ảnh nhanh"
+    },
     "patternGenerator": {
       "label": "Tạo hình nền lặp"
     },
