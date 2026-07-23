@@ -1,4 +1,12 @@
+import {
+  ASPECT_RATIO_OPTIONS,
+  isSameRatio,
+  parseAspectRatio,
+  ratioFromDimensions,
+  toAspectRatioLabel
+} from "@imify/features/shared/use-aspect-ratio"
 import { useTranslation } from "@imify/i18n"
+import { Button } from "@imify/ui/index"
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover"
 import { NumberInput } from "@imify/ui/ui/number-input"
 import { RadioCard } from "@imify/ui/ui/radio-card"
@@ -14,83 +22,6 @@ import {
   Unlink2
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-
-const ASPECT_RATIO_OPTIONS = [
-  { value: "free", label: "Free" },
-  { value: "original", label: "Original" },
-  { value: "1:1", label: "1:1" },
-  { value: "9:16", label: "9:16" },
-  { value: "16:9", label: "16:9" },
-  { value: "4:5", label: "4:5" },
-  { value: "5:4", label: "5:4" },
-  { value: "3:4", label: "3:4" },
-  { value: "4:3", label: "4:3" },
-  { value: "2:3", label: "2:3" },
-  { value: "3:2", label: "3:2" },
-  { value: "5:7", label: "5:7" },
-  { value: "6:5", label: "6:5" },
-  { value: "1:2", label: "1:2" },
-  { value: "2:1", label: "2:1" }
-] as const
-
-const RATIO_EPSILON = 0.0025
-
-function parseAspectRatio(value: string): number | null {
-  const matched = /^(\d+)\s*:\s*(\d+)$/.exec(value)
-  if (!matched) {
-    return null
-  }
-
-  const width = Number(matched[1])
-  const height = Number(matched[2])
-
-  if (
-    !Number.isFinite(width) ||
-    !Number.isFinite(height) ||
-    width <= 0 ||
-    height <= 0
-  ) {
-    return null
-  }
-
-  return width / height
-}
-
-function ratioFromDimensions(width: number, height: number): number | null {
-  if (width <= 0 || height <= 0) {
-    return null
-  }
-
-  return width / height
-}
-
-function isSameRatio(a: number | null, b: number | null): boolean {
-  if (!a || !b) {
-    return false
-  }
-
-  return Math.abs(a - b) <= RATIO_EPSILON
-}
-
-function toAspectRatioLabel(width: number, height: number): string {
-  if (width <= 0 || height <= 0) {
-    return "16:9"
-  }
-
-  const gcd = (a: number, b: number): number => {
-    if (!b) {
-      return a
-    }
-
-    return gcd(b, a % b)
-  }
-
-  const safeWidth = Math.max(1, Math.round(width))
-  const safeHeight = Math.max(1, Math.round(height))
-  const divisor = gcd(safeWidth, safeHeight)
-
-  return `${Math.round(safeWidth / divisor)}:${Math.round(safeHeight / divisor)}`
-}
 
 export function SmartResizeModule({
   width,
@@ -133,7 +64,7 @@ export function SmartResizeModule({
   originalHeight?: number
   lockSignal?: number
 }) {
-  const { t } = useTranslation("processor")
+  const { t } = useTranslation(["processor", "common"])
   const initialWidthRef = useRef(
     Math.max(1, Math.round(originalWidth ?? width))
   )
@@ -355,46 +286,26 @@ export function SmartResizeModule({
 
       {!hideRatioControls ? (
         <div className="flex items-center gap-2">
-          <div className="min-w-0 flex-1">
-            <SelectInput
-              label="Ratio"
-              value={selectedAspectSelect}
-              disabled={disabled}
-              options={ASPECT_RATIO_OPTIONS.map((option) => ({
-                value: option.value,
-                label: option.label
-              }))}
-              onChange={(nextValue) => {
-                if (nextValue === "free") {
-                  setIsRatioLocked(false)
-                  setLockedRatio(null)
-                  onAspectModeChange("free")
-                  return
-                }
+          <SelectInput
+            label="Ratio"
+            className="w-full flex-1"
+            value={selectedAspectSelect}
+            disabled={disabled}
+            options={ASPECT_RATIO_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label
+            }))}
+            onChange={(nextValue) => {
+              if (nextValue === "free") {
+                setIsRatioLocked(false)
+                setLockedRatio(null)
+                onAspectModeChange("free")
+                return
+              }
 
-                if (nextValue === "original") {
-                  const ratio =
-                    originalRatio ?? ratioFromDimensions(width, height)
-                  if (!ratio) {
-                    return
-                  }
-
-                  const nextHeight = Math.max(1, Math.round(width / ratio))
-                  onSizeAnchorChange("width")
-                  onHeightChange(nextHeight)
-                  setIsRatioLocked(true)
-                  setLockedRatio(ratio)
-                  onAspectModeChange("original")
-                  onAspectRatioChange(
-                    toAspectRatioLabel(
-                      initialWidthRef.current,
-                      initialHeightRef.current
-                    )
-                  )
-                  return
-                }
-
-                const ratio = parseAspectRatio(nextValue)
+              if (nextValue === "original") {
+                const ratio =
+                  originalRatio ?? ratioFromDimensions(width, height)
                 if (!ratio) {
                   return
                 }
@@ -404,14 +315,34 @@ export function SmartResizeModule({
                 onHeightChange(nextHeight)
                 setIsRatioLocked(true)
                 setLockedRatio(ratio)
-                onAspectModeChange("fixed")
-                onAspectRatioChange(nextValue)
-              }}
-            />
-          </div>
+                onAspectModeChange("original")
+                onAspectRatioChange(
+                  toAspectRatioLabel(
+                    initialWidthRef.current,
+                    initialHeightRef.current
+                  )
+                )
+                return
+              }
 
-          <button
-            type="button"
+              const ratio = parseAspectRatio(nextValue)
+              if (!ratio) {
+                return
+              }
+
+              const nextHeight = Math.max(1, Math.round(width / ratio))
+              onSizeAnchorChange("width")
+              onHeightChange(nextHeight)
+              setIsRatioLocked(true)
+              setLockedRatio(ratio)
+              onAspectModeChange("fixed")
+              onAspectRatioChange(nextValue)
+            }}
+          />
+
+          <Button
+            variant="secondary"
+            size="sm"
             disabled={disabled}
             onClick={() => {
               onWidthChange(initialWidthRef.current)
@@ -424,8 +355,8 @@ export function SmartResizeModule({
             className="mt-5 inline-flex h-8 items-center gap-1 rounded-md border border-slate-300 px-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
             title="Reset to original size">
             <RotateCcw size={12} />
-            Reset
-          </button>
+            {t("common:reset")}
+          </Button>
         </div>
       ) : null}
 

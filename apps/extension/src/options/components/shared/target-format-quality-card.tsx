@@ -1,13 +1,13 @@
 import { IcoSizeSelector } from "@/options/components/ico-size-selector"
-import { useTranslation } from "@imify/i18n"
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
-import { ColoredSliderCard } from "@imify/ui/ui/colored-slider-card"
-import { SliderInput } from "@imify/ui/ui/slider-input"
-import { SelectInput } from "@imify/ui/ui/select-input"
-import { AccordionCard } from "@imify/ui/ui/accordion-card"
 import { ALL_TARGET_FORMAT_OPTIONS } from "@/options/shared/target-format-options"
 import { normalizeMozJpegChromaSubsampling } from "@imify/core/codec-options"
 import type { BmpColorDepth } from "@imify/core/types"
+import { useTranslation } from "@imify/i18n"
+import { AccordionCard } from "@imify/ui/ui/accordion-card"
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card"
+import { ColoredSliderCard } from "@imify/ui/ui/colored-slider-card"
+import { SelectInput } from "@imify/ui/ui/select-input"
+import { SliderInput } from "@imify/ui/ui/slider-input"
 import { FileJson, Zap } from "lucide-react"
 
 export type TargetFormatQualityCardProps = {
@@ -109,7 +109,10 @@ export type TargetFormatQualityCardProps = {
   groupId?: string
 }
 
-function normalizeDitheringLevel(level: number | undefined, legacyDithering: boolean | undefined): number {
+function normalizeDitheringLevel(
+  level: number | undefined,
+  legacyDithering: boolean | undefined
+): number {
   if (typeof level === "number") {
     return Math.max(0, Math.min(100, Math.round(level)))
   }
@@ -145,7 +148,7 @@ export function TargetFormatQualityCard({
   isOpen,
   onOpenChange,
   alwaysOpen,
-  groupId,
+  groupId
 }: TargetFormatQualityCardProps) {
   const { t } = useTranslation("processor")
   const isIcoTarget = targetFormat === "ico"
@@ -161,9 +164,13 @@ export function TargetFormatQualityCard({
     rawBmpColorDepth === 1 || rawBmpColorDepth === 8 || rawBmpColorDepth === 32
       ? rawBmpColorDepth
       : 24
-  const bmpDitheringLevel = bmpColorDepth === 1
-    ? normalizeDitheringLevel(formatConfig?.bmp?.ditheringLevel, formatConfig?.bmp?.dithering)
-    : 0
+  const bmpDitheringLevel =
+    bmpColorDepth === 1
+      ? normalizeDitheringLevel(
+          formatConfig?.bmp?.ditheringLevel,
+          formatConfig?.bmp?.dithering
+        )
+      : 0
   const bmpDitheringEnabled = bmpDitheringLevel > 0
   const jxlEffortOption = formatConfig?.jxl?.effort
   const jxlLosslessEnabled = Boolean(formatConfig?.jxl?.lossless)
@@ -188,27 +195,37 @@ export function TargetFormatQualityCard({
   const mozJpegOptions = formatConfig?.mozjpeg
   const icoSizeOptions = formatConfig?.ico?.sizes
   const icoWebToolkitEnabled = formatConfig?.ico?.generateWebIconKit
-  const icoOptimizeInternalPngLayers = formatConfig?.ico?.optimizeInternalPngLayers
-  const tiffColorMode = formatConfig?.tiff?.colorMode === "grayscale" ? "grayscale" : "color"
+  const icoOptimizeInternalPngLayers =
+    formatConfig?.ico?.optimizeInternalPngLayers
+  const tiffColorMode =
+    formatConfig?.tiff?.colorMode === "grayscale" ? "grayscale" : "color"
 
-  const formatLabel = targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat.toUpperCase()
+  const formatLabel =
+    targetFormat === "mozjpeg" ? "MozJPEG" : targetFormat.toUpperCase()
   const qualityLabel = isIcoTarget
     ? `${icoSizeOptions?.length ?? 0} size${(icoSizeOptions?.length ?? 0) !== 1 ? "s" : ""}`
     : targetFormat === "jxl" && jxlLosslessEnabled
-    ? "Lossless"
-    : targetFormat === "webp" && webpLosslessEnabled
-    ? `Near-Lossless ${webpNearLossless}`
-    : supportsQuality
-    ? `Quality ${quality}`
-    : "Default"
-  const showQualityControl = supportsQuality && !(targetFormat === "jxl" && jxlLosslessEnabled)
+      ? "Lossless"
+      : targetFormat === "webp" && webpLosslessEnabled
+        ? `Near-Lossless ${webpNearLossless}`
+        : supportsQuality
+          ? `Quality ${quality}`
+          : "Default"
+  const showQualityControl =
+    supportsQuality && !(targetFormat === "jxl" && jxlLosslessEnabled)
 
   // Add small badges into sublabel for ICO web toolkit or PNG tiny mode
   const extraFlags: string[] = []
   if (isIcoTarget && icoWebToolkitEnabled) extraFlags.push("Web Toolkit")
   if (isIcoTarget && icoOptimizeInternalPngLayers) extraFlags.push("Optimized")
-  if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled) extraFlags.push("Tiny")
-  if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled && pngDithering) {
+  if (!isIcoTarget && targetFormat === "png" && pngTinyModeEnabled)
+    extraFlags.push("Tiny")
+  if (
+    !isIcoTarget &&
+    targetFormat === "png" &&
+    pngTinyModeEnabled &&
+    pngDithering
+  ) {
     extraFlags.push(`Dither ${pngDitheringLevel}%`)
   }
   if (targetFormat === "jxl") {
@@ -217,14 +234,19 @@ export function TargetFormatQualityCard({
     if (jxlProgressiveEnabled) extraFlags.push("Progressive")
     if (jxlEpf !== 1) extraFlags.push(`EPF ${jxlEpf}`)
   }
-  if (targetFormat === "avif" && typeof avifSpeedOption === "number") extraFlags.push(`Speed ${avifSpeedOption}`)
+  if (targetFormat === "avif" && typeof avifSpeedOption === "number")
+    extraFlags.push(`Speed ${avifSpeedOption}`)
   if (targetFormat === "webp") {
     if (webpLosslessEnabled) extraFlags.push("Lossless")
     extraFlags.push(`Effort ${webpEffort}`)
   }
   if (targetFormat === "mozjpeg") {
-    extraFlags.push(mozJpegOptions?.progressive ?? true ? "Progressive" : "Baseline")
-    const chroma = normalizeMozJpegChromaSubsampling(mozJpegOptions?.chromaSubsampling)
+    extraFlags.push(
+      mozJpegOptions?.progressive ?? true ? "Progressive" : "Baseline"
+    )
+    const chroma = normalizeMozJpegChromaSubsampling(
+      mozJpegOptions?.chromaSubsampling
+    )
     extraFlags.push(`Chroma ${chroma === 1 ? "4:2:2" : "4:2:0"}`)
   }
   if (targetFormat === "tiff" && tiffColorMode === "grayscale") {
@@ -238,7 +260,9 @@ export function TargetFormatQualityCard({
   }
 
   const sublabel = `${formatLabel} • ${qualityLabel}${extraFlags.length ? ` • ${extraFlags.join(", ")}` : ""}`
-  const resolvedFormatOptions = formatOptions?.length ? formatOptions : ALL_TARGET_FORMAT_OPTIONS
+  const resolvedFormatOptions = formatOptions?.length
+    ? formatOptions
+    : ALL_TARGET_FORMAT_OPTIONS
   const shouldShowTargetFormatSelector = resolvedFormatOptions.length > 1
 
   return (
@@ -251,8 +275,7 @@ export function TargetFormatQualityCard({
       disabled={disabled}
       alwaysOpen={alwaysOpen}
       groupId={groupId}
-      colorTheme="blue"
-    >
+      colorTheme="blue">
       <div className="space-y-3">
         {shouldShowTargetFormatSelector && (
           <div>
@@ -268,10 +291,12 @@ export function TargetFormatQualityCard({
 
         {showQualityControl && (
           <>
-            {targetFormat === "webp" && onWebpNearLosslessChange && webpLosslessEnabled ? (
+            {targetFormat === "webp" &&
+            onWebpNearLosslessChange &&
+            webpLosslessEnabled ? (
               <SliderInput
                 label={t("nearLossless")}
-                tooltip={t("tooltipNearLossless")}
+                tooltipContent={t("tooltipNearLossless")}
                 disabled={disabled || !webpLosslessEnabled}
                 min={0}
                 max={100}
@@ -411,14 +436,16 @@ export function TargetFormatQualityCard({
                 { value: "8", label: "8-bit Grayscale" },
                 { value: "1", label: "1-bit Monochrome (Printers/IoT)" }
               ]}
-              onChange={(value) => onBmpColorDepthChange(parseInt(value, 10) as BmpColorDepth)}
+              onChange={(value) =>
+                onBmpColorDepthChange(parseInt(value, 10) as BmpColorDepth)
+              }
               value={String(bmpColorDepth)}
             />
 
             {bmpColorDepth === 1 && onBmpDitheringLevelChange && (
               <SliderInput
                 label="Dithering Level"
-                tooltip={t("tooltipBmpDithering")}
+                tooltipContent={t("tooltipBmpDithering")}
                 value={bmpDitheringLevel}
                 min={0}
                 max={100}
@@ -441,7 +468,9 @@ export function TargetFormatQualityCard({
                 { value: "color", label: "RGB (Full Color)" },
                 { value: "grayscale", label: "Grayscale (Black & White)" }
               ]}
-              onChange={(value) => onTiffColorModeChange(value as "color" | "grayscale")}
+              onChange={(value) =>
+                onTiffColorModeChange(value as "color" | "grayscale")
+              }
               value={tiffColorMode}
             />
           </div>
@@ -486,7 +515,7 @@ export function TargetFormatQualityCard({
             {pngTinyModeEnabled && onPngDitheringLevelChange && (
               <SliderInput
                 label="Dithering Level"
-                tooltip={t("tooltipPngDithering")}
+                tooltipContent={t("tooltipPngDithering")}
                 value={pngDitheringLevel}
                 min={0}
                 max={100}

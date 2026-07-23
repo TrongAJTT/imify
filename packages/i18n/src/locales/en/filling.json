@@ -62,7 +62,10 @@
     "unitLabel": "Unit: {{unit}}",
     "untitledTemplate": "Untitled Template",
     "finalSize": "Final size:",
-    "presetSelected": "Preset selected:"
+    "presetSelected": "Preset selected:",
+    "ratio": "Ratio",
+    "lockRatio": "Lock ratio",
+    "lockRatioDesc": "Maintain width & height ratio when resizing."
   },
   "templateList": {
     "title": "Templates",

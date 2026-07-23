@@ -81,6 +81,9 @@ export const DEFAULT_POSITION_TOLERANCE = 8;
 // Drag swap threshold constant
 export const LAYER_SWAP_HOVER_RADIUS = 80;
 
+// Aspect ratio options & helpers
+
+
 // Grid designer presets
 export interface GridTemplatePreset {
   id: string;

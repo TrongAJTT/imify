@@ -62,7 +62,10 @@
     "unitLabel": "Đơn vị: {{unit}}",
     "untitledTemplate": "Mẫu chưa đặt tên",
     "finalSize": "Kích thước cuối:",
-    "presetSelected": "Đã chọn preset:"
+    "presetSelected": "Đã chọn preset:",
+    "ratio": "Tỷ lệ (Ratio)",
+    "lockRatio": "Khóa tỷ lệ (Lock ratio)",
+    "lockRatioDesc": "Giữ nguyên tỷ lệ giữa chiều rộng và chiều cao khi thay đổi kích thước."
   },
   "templateList": {
     "title": "Mẫu thiết kế",

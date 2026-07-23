@@ -1,5 +1,12 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Layers, Settings2, Ruler, ArrowLeftRight } from "lucide-react";
+import {
+  Layers,
+  Settings2,
+  Ruler,
+  ArrowLeftRight,
+  Lock,
+  Unlock,
+} from "lucide-react";
 
 import type {
   CanvasSizePreset,
@@ -22,11 +29,16 @@ import { GroupLayerPanel } from "../group-layer-panel";
 import {
   AccordionCard,
   Button,
+  CheckboxCard,
   NumberInput,
   SelectInput,
   ResizableAccordionCard,
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
+  Tooltip,
+  Kicker,
+  Subheading,
+  LabelText,
 } from "@imify/ui";
 
 interface ManualEditorSidebarProps {
@@ -46,6 +58,12 @@ interface ManualEditorSidebarProps {
 }
 
 import { useTranslation } from "@imify/i18n";
+import {
+  ASPECT_RATIO_OPTIONS,
+  isSameRatio,
+  parseAspectRatio,
+  ratioFromDimensions,
+} from "@imify/features/shared/use-aspect-ratio";
 
 const DPI_DEFAULT = 300;
 
@@ -589,22 +607,97 @@ export function ManualEditorSidebar({
     [selectedLayerId, layers, onLayersChange],
   );
 
+  const [lockRatio, setLockRatio] = useState(false);
+
+  const CANVAS_RATIO_OPTIONS = useMemo(
+    () => ASPECT_RATIO_OPTIONS.filter((option) => option.value !== "original"),
+    [],
+  );
+
+  const currentRatioValue = useMemo(() => {
+    const currentRatio = ratioFromDimensions(canvasWidth, canvasHeight);
+    if (!currentRatio) {
+      return "free";
+    }
+
+    for (const option of CANVAS_RATIO_OPTIONS) {
+      if (option.value === "free") {
+        continue;
+      }
+
+      const optionRatio = parseAspectRatio(option.value);
+      if (isSameRatio(currentRatio, optionRatio)) {
+        return option.value;
+      }
+    }
+
+    return "free";
+  }, [canvasHeight, canvasWidth, CANVAS_RATIO_OPTIONS]);
+
+  const handleRatioChange = useCallback(
+    (ratioValue: string) => {
+      if (ratioValue === "free") {
+        return;
+      }
+
+      const ratio = parseAspectRatio(ratioValue);
+      if (!ratio || ratio <= 0) {
+        return;
+      }
+
+      const newHeightPx = Math.max(1, Math.round(canvasWidth / ratio));
+      onCanvasSizeChange(canvasWidth, newHeightPx);
+    },
+    [canvasWidth, onCanvasSizeChange],
+  );
+
   const handleCanvasWidthChange = useCallback(
     (value: number) => {
-      onCanvasSizeChange(toPixels(value, canvasUnit, canvasDpi), canvasHeight);
+      const newWidthPx = toPixels(value, canvasUnit, canvasDpi);
+
+      if (lockRatio && canvasWidth > 0 && canvasHeight > 0) {
+        const ratio = canvasWidth / canvasHeight;
+        const newHeightPx = Math.max(1, Math.round(newWidthPx / ratio));
+        onCanvasSizeChange(newWidthPx, newHeightPx);
+      } else {
+        onCanvasSizeChange(newWidthPx, canvasHeight);
+      }
     },
-    [canvasDpi, canvasHeight, canvasUnit, onCanvasSizeChange],
+    [
+      canvasDpi,
+      canvasHeight,
+      canvasUnit,
+      canvasWidth,
+      lockRatio,
+      onCanvasSizeChange,
+    ],
   );
 
   const handleCanvasHeightChange = useCallback(
     (value: number) => {
-      onCanvasSizeChange(canvasWidth, toPixels(value, canvasUnit, canvasDpi));
+      const newHeightPx = toPixels(value, canvasUnit, canvasDpi);
+
+      if (lockRatio && canvasWidth > 0 && canvasHeight > 0) {
+        const ratio = canvasWidth / canvasHeight;
+        const newWidthPx = Math.max(1, Math.round(newHeightPx * ratio));
+        onCanvasSizeChange(newWidthPx, newHeightPx);
+      } else {
+        onCanvasSizeChange(canvasWidth, newHeightPx);
+      }
     },
-    [canvasDpi, canvasUnit, canvasWidth, onCanvasSizeChange],
+    [
+      canvasDpi,
+      canvasHeight,
+      canvasUnit,
+      canvasWidth,
+      lockRatio,
+      onCanvasSizeChange,
+    ],
   );
 
   const handleCanvasPresetConfirm = useCallback(
     (preset: CanvasSizePreset) => {
+      setLockRatio(false);
       onCanvasSizeChange(preset.width, preset.height);
       setCanvasSizeDialogOpen(false);
     },
@@ -633,6 +726,27 @@ export function ManualEditorSidebar({
           defaultOpen={true}
         >
           <div className="space-y-3">
+            <div className="flex flex-row items-center gap-3">
+              <div className="flex flex-col flex-1">
+                <Kicker>{t("dialog.finalSize")}</Kicker>
+                <LabelText className="text-xs">
+                  {canvasWidth} x {canvasHeight} px
+                </LabelText>
+              </div>
+
+              <Tooltip content={t("dialog.popularSizes")}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCanvasSizeDialogOpen(true)}
+                  className="w-full px-2.5"
+                >
+                  <Ruler size={12} />
+                </Button>
+              </Tooltip>
+            </div>
+
             <div className="flex flex-col gap-2.5">
               <div className="flex flex-row gap-3 md:gap-1 items-end">
                 <div className="flex-1 w-full min-w-0">
@@ -645,6 +759,7 @@ export function ManualEditorSidebar({
                     step={canvasUnit === "px" ? 1 : 0.1}
                   />
                 </div>
+
                 <Button
                   variant="outline"
                   size="icon"
@@ -654,6 +769,7 @@ export function ManualEditorSidebar({
                 >
                   <ArrowLeftRight size={14} className="rotate-90 sm:rotate-0" />
                 </Button>
+
                 <div className="flex-1 w-full min-w-0">
                   <NumberInput
                     label={t("dialog.height")}
@@ -666,6 +782,27 @@ export function ManualEditorSidebar({
                 </div>
               </div>
             </div>
+
+            <div className="flex items-end gap-3">
+              <SelectInput
+                label={t("dialog.ratio")}
+                value={currentRatioValue}
+                options={CANVAS_RATIO_OPTIONS}
+                onChange={handleRatioChange}
+                className="w-full flex-1"
+              />
+
+              <Button
+                variant={lockRatio ? "primary" : "secondary"}
+                size="sm"
+                className="w-full flex-1"
+                onClick={() => setLockRatio(!lockRatio)}
+              >
+                {lockRatio ? <Lock size={14} /> : <Unlock size={14} />}
+                {t("dialog.lockRatio")}
+              </Button>
+            </div>
+
             <div className="flex flex-row gap-3">
               <SelectInput
                 label={t("dialog.unit")}
@@ -687,20 +824,6 @@ export function ManualEditorSidebar({
                 </div>
               )}
             </div>
-
-            <div className="text-[11px] text-slate-500 dark:text-slate-400">
-              {t("dialog.finalSize")} {canvasWidth} x {canvasHeight} px
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCanvasSizeDialogOpen(true)}
-              className="w-full"
-            >
-              {t("dialog.popularSizes")}
-            </Button>
           </div>
         </AccordionCard>
       ),
