@@ -103,21 +103,21 @@ export function ImageSettingsAccordion({
         <div className="grid grid-cols-3 gap-2 items-end">
           <NumberInput
             label={t("imageFields.padding")}
-            value={imagePadding}
+            value={imagePadding ?? 0}
             onChangeValue={onImagePaddingChange}
             min={0}
             max={100}
           />
           <NumberInput
             label={t("imageFields.radius")}
-            value={imageBorderRadius}
+            value={imageBorderRadius ?? 0}
             onChangeValue={onImageBorderRadiusChange}
             min={0}
             max={100}
           />
           <NumberInput
             label={t("imageFields.border")}
-            value={imageBorderWidth}
+            value={imageBorderWidth ?? 0}
             onChangeValue={onImageBorderWidthChange}
             min={0}
             max={20}
