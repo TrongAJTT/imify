@@ -68,6 +68,7 @@ import { FillWorkspace } from "@imify/features/filling/fill/workspace";
 import { FillSidebar } from "@imify/features/filling/fill/sidebar";
 import { SortableQueueItem } from "@imify/features/shared/sortable-queue-item";
 
+import { CollageMakerInfoPanel } from "./collage-maker-info-panel";
 import {
   COLLAGE_DEFAULT_NAME_PREFIX,
   COLLAGE_LAYOUT_PRESETS,
@@ -83,11 +84,7 @@ export interface QueueImageItem {
   previewUrl: string;
 }
 
-export interface CollageMakerWorkspaceProps {
-  onSidebarChange?: (sidebar: React.ReactNode) => void;
-}
-
-export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspaceProps = {}) {
+export function CollageMakerWorkspace() {
   const { t } = useTranslation(["collageMaker", "filling", "common"]);
 
   // Stage Management: 1 = Prepare, 2 = Layout, 3 = Fill & Export
@@ -284,37 +281,7 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
   // Configure Sidebar based on current stage
   const sidebarContent = useMemo(() => {
     if (stage === 1) {
-      return (
-        <div className="space-y-4 p-2">
-          <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-900/40 dark:bg-amber-900/10">
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-2">
-              <LayoutGrid size={18} />
-              <Subheading className="text-sm font-bold">
-                {t("collageMaker.showcase.title", { defaultValue: "Ghép ảnh nhanh (Collage Maker)" })}
-              </Subheading>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-              {t("collageMaker.showcase.subtitle", {
-                defaultValue: "Tải ảnh trực tiếp, chọn layout phù hợp với số lượng ảnh, tùy chỉnh kích thước & khoảng cách tức thì.",
-              })}
-            </p>
-            <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
-              <li className="flex items-start gap-1.5">
-                <span className="font-semibold text-amber-500">•</span>
-                <span>{t("collageMaker.showcase.tips.tip1", { defaultValue: "Tải lên từ 2 đến 10 bức ảnh để bắt đầu." })}</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <span className="font-semibold text-amber-500">•</span>
-                <span>{t("collageMaker.showcase.tips.tip2", { defaultValue: "Kéo sắp xếp thứ tự ảnh để đổi vị trí hiển thị ô." })}</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <span className="font-semibold text-amber-500">•</span>
-                <span>{t("collageMaker.showcase.tips.tip3", { defaultValue: "Điều chỉnh lề ngoài và khoảng cách giữa các khung." })}</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      );
+      return <CollageMakerInfoPanel />;
     }
 
     if (stage === 2) {
@@ -328,7 +295,7 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
             defaultOpen={true}
           >
             <div className="space-y-3">
-              <div className="flex flex-row gap-3 md:gap-1 items-end">
+              <div className="flex gap-2">
                 <div className="flex-1 w-full min-w-0">
                   <NumberInput
                     label={t("filling:dialog.width", { defaultValue: "Width" })}
@@ -348,6 +315,17 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
                   />
                 </div>
               </div>
+
+              <SelectInput
+                label={t("common:units", { defaultValue: "Unit" })}
+                value={canvasUnit}
+                onChange={(v) => setCanvasUnit(v as CanvasSizeUnit)}
+                options={[
+                  { label: "Pixel (px)", value: "px" },
+                  { label: "Millimeter (mm)", value: "mm" },
+                  { label: "Inch (in)", value: "in" },
+                ]}
+              />
             </div>
           </AccordionCard>
 
@@ -446,11 +424,7 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
 
     // Stage 3 Sidebar
     return <FillSidebar template={generatedTemplate} />;
-  }, [stage, queueImages.length, canvasWidth, canvasHeight, gridParams, matchingPresets, selectedLayoutId, generatedTemplate, t]);
-
-  useEffect(() => {
-    onSidebarChange?.(sidebarContent);
-  }, [sidebarContent, onSidebarChange]);
+  }, [stage, queueImages.length, canvasWidth, canvasHeight, canvasUnit, gridParams, matchingPresets, selectedLayoutId, generatedTemplate, t]);
 
   return (
     <div className="space-y-4 p-0">

@@ -1,13 +1,11 @@
-"use client";
-
-import React, { useState } from "react";
 import type { Metadata } from "next";
-import { CollageMakerWorkspace } from "@imify/features/collage-maker/workspace";
-import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
+import { CollageMakerLandingPage } from "@/features/collage-maker/collage-maker-page";
+
+export const metadata: Metadata = {
+  title: "Collage Maker - Imify",
+  description: "Create quick photo collages with customizable layouts, spacing, and output formats.",
+};
 
 export default function CollageMakerPage() {
-  const [sidebarNode, setSidebarNode] = useState<React.ReactNode>(null);
-  useWorkspaceSidebar(sidebarNode, "Ghép ảnh nhanh (Collage Maker)");
-
-  return <CollageMakerWorkspace onSidebarChange={setSidebarNode} />;
+  return <CollageMakerLandingPage />;
 }
