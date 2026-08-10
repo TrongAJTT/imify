@@ -8,6 +8,7 @@ import type {
   ResizeApplyTo
 } from "@imify/core/types"
 
+export type SetupContext = "single" | "batch"
 export type BatchResizeMode =
   | "inherit"
   | "fit_value"
