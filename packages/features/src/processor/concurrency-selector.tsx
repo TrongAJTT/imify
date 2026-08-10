@@ -45,7 +45,11 @@ export function ConcurrencySelector({
     }
   }, [safeValue, value, onChange])
 
-  const tooltip = <div style={{ whiteSpace: "pre-line" }}>{t("concurrencyTooltip", { format: format.toUpperCase() })}</div>
+  const tooltip = (
+    <div style={{ whiteSpace: "pre-line" }}>
+      {t("concurrencyTooltip", { format: (format || "png").toUpperCase() })}
+    </div>
+  )
   const popoverBehavior = usePopoverTriggerBehavior()
 
   return (

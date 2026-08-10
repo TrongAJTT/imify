@@ -233,7 +233,7 @@ export function PresetSelector({
               }
               sublabel={
                 activePreset
-                  ? `Format: ${activePreset.config.targetFormat.toUpperCase()}`
+                  ? `Format: ${(activePreset.config?.targetFormat || "png").toUpperCase()}`
                   : t("presetSelector.noPresetSelected")
               }
               icon={<Bookmark size={14} />}

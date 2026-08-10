@@ -61,3 +61,4 @@ assets/wasm/
 
 # Internal docs
 docs/knowledge/
+.codegraph/

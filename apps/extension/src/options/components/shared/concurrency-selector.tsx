@@ -54,7 +54,7 @@ export function ConcurrencySelector({
             <Tooltip
               variant="wide2"
               content={t("concurrencyTooltip", {
-                format: format.toUpperCase()
+                format: (format || "png").toUpperCase()
               })}>
               <HelpCircle
                 size={12}
