@@ -13,7 +13,7 @@ import {
 import { usePopoverTriggerBehavior } from "./use-popover-trigger-behavior"
 
 interface ConcurrencySelectorProps {
-  format: ImageFormat
+  format?: ImageFormat
   value: number
   onChange: (value: number) => void
   maxValue?: number
@@ -25,7 +25,7 @@ interface ConcurrencySelectorProps {
 }
 
 export function ConcurrencySelector({
-  format,
+  format = "png",
   value,
   onChange,
   maxValue = MAX_CONCURRENCY,
@@ -45,7 +45,11 @@ export function ConcurrencySelector({
     }
   }, [safeValue, value, onChange])
 
-  const tooltip = <div style={{ whiteSpace: "pre-line" }}>{t("concurrencyTooltip", { format: format.toUpperCase() })}</div>
+  const tooltip = (
+    <div style={{ whiteSpace: "pre-line" }}>
+      {t("concurrencyTooltip", { format: format.toUpperCase() })}
+    </div>
+  )
   const popoverBehavior = usePopoverTriggerBehavior()
 
   return (

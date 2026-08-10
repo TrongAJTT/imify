@@ -1,7 +1,7 @@
 import type { FormatCodecOptions } from "@imify/core/types"
 import type { CustomFormatInput } from "@imify/engine/custom-formats"
 import { FormatOptionsEmptyState } from "@/options/components/shared/format-options-empty-state"
-import { FormatAdvancedSettingsCard } from "@/options/components/shared/format-advanced-settings-card"
+import { FormatAdvancedSettingsCard } from "@imify/features"
 import {
   mergeCodecOptions,
   type NormalizedTargetCodecOptions,
