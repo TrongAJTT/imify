@@ -8,9 +8,11 @@ import type {
   SplicingImageAppearanceDirection,
   SplicingImageResize,
   SplicingExportFormat,
-  SplicingExportMode
-} from "@imify/features/splicing/types"
-import type { TiffColorMode, BmpColorDepth, ResizeApplyTo } from "@imify/core/types"
+  SplicingExportMode,
+  TiffColorMode,
+  BmpColorDepth,
+  ResizeApplyTo
+} from "@imify/core"
 
 
 

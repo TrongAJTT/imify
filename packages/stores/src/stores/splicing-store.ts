@@ -14,7 +14,7 @@ import type {
   SplicingImageStyle,
   SplicingLayoutConfig,
   SplicingPreset
-} from "@imify/features/splicing/types"
+} from "@imify/core"
 import { useBatchStore, type SavedSetupPreset } from "./batch-store"
 import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
 
