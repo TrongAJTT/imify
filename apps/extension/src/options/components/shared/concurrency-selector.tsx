@@ -13,7 +13,7 @@ import { HelpCircle, Lock } from "lucide-react"
 import { useEffect, type ReactNode } from "react"
 
 interface ConcurrencySelectorProps {
-  format: ImageFormat
+  format?: ImageFormat
   value: number
   onChange: (value: number) => void
   maxValue?: number
@@ -25,7 +25,7 @@ interface ConcurrencySelectorProps {
 }
 
 export function ConcurrencySelector({
-  format,
+  format = "png",
   value,
   onChange,
   maxValue = MAX_CONCURRENCY,
@@ -54,7 +54,7 @@ export function ConcurrencySelector({
             <Tooltip
               variant="wide2"
               content={t("concurrencyTooltip", {
-                format: (format || "png").toUpperCase()
+                format: format.toUpperCase()
               })}>
               <HelpCircle
                 size={12}
