@@ -20,6 +20,7 @@ import {
 import { APP_CONFIG } from "@imify/core/config";
 import { useToast } from "@imify/core/hooks/use-toast";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
+import { useUnifiedPresetStats } from "../shared/use-unified-preset-stats";
 import { useAssetStatistics } from "./asset-management-dialog";
 import { ToastContainer } from "@imify/ui/components/toast-container";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
@@ -117,14 +118,14 @@ export function WorkspaceSettingsDialog({
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
-  const presets = useBatchStore((state) => state.presets);
+  const unifiedPresetStats = useUnifiedPresetStats();
+
   const schemaVersion = useBatchStore((state) => state.schemaVersion ?? 1);
   const migrateSchemaToV2 = useBatchStore((state) => state.migrateSchemaToV2);
   const assetStats = useAssetStatistics(isOpen);
 
   const [stats, setStats] = useState({
     sizeKb: 0,
-    presetCount: 0,
     storeCount: 0,
   });
 
@@ -139,12 +140,12 @@ export function WorkspaceSettingsDialog({
         storeCount++;
       }
     }
+
     setStats({
       sizeKb: Math.round((size / 1024) * 10) / 10,
-      presetCount: presets.length,
       storeCount,
     });
-  }, [presets]);
+  }, []);
 
   const handleMigrateSchema = () => {
     try {
@@ -782,7 +783,7 @@ export function WorkspaceSettingsDialog({
                           {t("data.totalPresets")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                          {stats.presetCount}
+                          {unifiedPresetStats.totalCount}
                         </span>
                       </div>
                       <div className="flex flex-col gap-1">
