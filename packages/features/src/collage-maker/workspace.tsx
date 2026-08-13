@@ -1,15 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft,
   ArrowRight,
-  Check,
-  ChevronRight,
-  Grid,
-  ImagePlus,
   LayoutGrid,
-  Layers,
-  Palette,
-  Plus,
   Ruler,
   Sliders,
   Trash2,
@@ -18,16 +10,11 @@ import {
 import {
   AccordionCard,
   Button,
-  CheckboxCard,
   EmptyDropCard,
-  Kicker,
   LabelText,
   NumberInput,
-  RadioCard,
   SelectInput,
   Subheading,
-  Tooltip,
-  WorkspaceLoadingState,
 } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import {
@@ -50,18 +37,20 @@ import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-s
 import { useFillingStore } from "@imify/stores/stores/filling-store";
 import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb";
-import { PresetSelector } from "@imify/features/processor/preset-selector";
 
 import {
-  ASPECT_RATIO_OPTIONS,
-  parseAspectRatio,
-  ratioFromDimensions,
-  isSameRatio,
-} from "@imify/features/shared/use-aspect-ratio";
-import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "@imify/features/shared/image-file-utils";
+  COMMON_IMAGE_ACCEPT,
+  isCommonImageFile,
+} from "@imify/features/shared/image-file-utils";
 
-import type { CanvasSizeUnit, FillingTemplate, GridDesignParams, VectorLayer, LayerFillState } from "@imify/features/filling/types";
-import { DEFAULT_CANVAS_FILL_STATE, createLayerFillState } from "@imify/features/filling/types";
+import type {
+  CanvasSizeUnit,
+  FillingTemplate,
+  GridDesignParams,
+  VectorLayer,
+  LayerFillState,
+} from "@imify/features/filling/types";
+import { createLayerFillState } from "@imify/features/filling/types";
 import { generateGridLayers } from "@imify/features/filling/grid-designer/generator";
 import { GridDesignWorkspace } from "@imify/features/filling/grid-designer/workspace";
 import { FillWorkspace } from "@imify/features/filling/fill/workspace";
@@ -74,7 +63,6 @@ import {
   COLLAGE_LAYOUT_PRESETS,
   MAX_COLLAGE_IMAGES,
   MIN_COLLAGE_IMAGES,
-  type CollageLayoutPreset,
 } from "./config";
 
 export interface QueueImageItem {
@@ -111,16 +99,18 @@ export function CollageMakerWorkspace() {
   // Header Store
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection);
   const setHeaderActions = useWorkspaceHeaderStore((state) => state.setActions);
-  const setHeaderBreadcrumb = useWorkspaceHeaderStore((state) => state.setBreadcrumb);
+  const setHeaderBreadcrumb = useWorkspaceHeaderStore(
+    (state) => state.setBreadcrumb,
+  );
   const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack);
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader);
-
-
 
   // Handle Drag Sensors for Queue Item Reordering
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   // Filter presets matching current queue count
@@ -187,7 +177,8 @@ export function CollageMakerWorkspace() {
 
   // Generated Filling Template based on current Grid Params & Canvas Size
   const templateId = useMemo(
-    () => `collage-${canvasWidth}x${canvasHeight}-${gridParams.direction}-${gridParams.rowCount}-${gridParams.outerPadding}-${gridParams.gapX}-${gridParams.gapY}`,
+    () =>
+      `collage-${canvasWidth}x${canvasHeight}-${gridParams.direction}-${gridParams.rowCount}-${gridParams.outerPadding}-${gridParams.gapX}-${gridParams.gapY}`,
     [canvasWidth, canvasHeight, gridParams],
   );
 
@@ -222,14 +213,16 @@ export function CollageMakerWorkspace() {
     useFillUiStore.getState().initializeFillSession(generatedTemplate);
 
     const defaultStates = useFillingStore.getState().layerFillStates;
-    const nextStates: LayerFillState[] = generatedTemplate.layers.map((layer, idx) => {
-      const imgItem = queueImages[idx];
-      const existing = defaultStates.find((s) => s.layerId === layer.id);
-      return {
-        ...(existing ?? createLayerFillState(layer.id)),
-        imageUrl: imgItem ? imgItem.previewUrl : null,
-      };
-    });
+    const nextStates: LayerFillState[] = generatedTemplate.layers.map(
+      (layer, idx) => {
+        const imgItem = queueImages[idx];
+        const existing = defaultStates.find((s) => s.layerId === layer.id);
+        return {
+          ...(existing ?? createLayerFillState(layer.id)),
+          imageUrl: imgItem ? imgItem.previewUrl : null,
+        };
+      },
+    );
 
     useFillingStore.getState().setLayerFillStates(nextStates);
   }, [stage, generatedTemplate, queueImages]);
@@ -242,11 +235,18 @@ export function CollageMakerWorkspace() {
   }, [resetHeader]);
 
   const title = t("collageMaker.title", { defaultValue: "Ghép ảnh nhanh" });
-  const stage1Title = t("collageMaker.stage1.title", { defaultValue: "Chuẩn bị ảnh" });
-  const stage2Title = t("collageMaker.stage2.title", { defaultValue: "Chọn layout" });
-  const stage3Title = t("collageMaker.stage3.title", { defaultValue: "Chỉnh ảnh" });
+  const stage1Title = t("collageMaker.stage1.title", {
+    defaultValue: "Chuẩn bị ảnh",
+  });
+  const stage2Title = t("collageMaker.stage2.title", {
+    defaultValue: "Chọn layout",
+  });
+  const stage3Title = t("collageMaker.stage3.title", {
+    defaultValue: "Chỉnh ảnh",
+  });
 
-  const middleLabel = stage === 1 ? stage1Title : stage === 2 ? stage2Title : stage3Title;
+  const middleLabel =
+    stage === 1 ? stage1Title : stage === 2 ? stage2Title : stage3Title;
 
   const handleRootClick = useCallback(() => {
     setStage(1);
@@ -274,7 +274,16 @@ export function CollageMakerWorkspace() {
     setHeaderBreadcrumb(headerBreadcrumbNode);
     setHeaderActions(null);
     setHeaderOnBack(stage > 1 ? handleBackClick : null);
-  }, [stage, title, headerBreadcrumbNode, handleBackClick, setHeaderActions, setHeaderBreadcrumb, setHeaderOnBack, setHeaderSection]);
+  }, [
+    stage,
+    title,
+    headerBreadcrumbNode,
+    handleBackClick,
+    setHeaderActions,
+    setHeaderBreadcrumb,
+    setHeaderOnBack,
+    setHeaderSection,
+  ]);
 
   // Configure Sidebar based on current stage
   const sidebarContent = useMemo(() => {
@@ -287,7 +296,9 @@ export function CollageMakerWorkspace() {
         <div className="space-y-4 p-0">
           <AccordionCard
             icon={<Ruler size={16} />}
-            label={t("collageMaker.stage2.imageSize", { defaultValue: "Output Image Size" })}
+            label={t("collageMaker.stage2.imageSize", {
+              defaultValue: "Output Image Size",
+            })}
             sublabel={`${canvasWidth} x ${canvasHeight} px`}
             colorTheme="amber"
             defaultOpen={true}
@@ -298,16 +309,22 @@ export function CollageMakerWorkspace() {
                   <NumberInput
                     label={t("filling:dialog.width", { defaultValue: "Width" })}
                     value={canvasWidth}
-                    onChangeValue={(v) => setCanvasWidth(Math.max(100, Math.round(v)))}
+                    onChangeValue={(v) =>
+                      setCanvasWidth(Math.max(100, Math.round(v)))
+                    }
                     min={100}
                     max={16384}
                   />
                 </div>
                 <div className="flex-1 w-full min-w-0">
                   <NumberInput
-                    label={t("filling:dialog.height", { defaultValue: "Height" })}
+                    label={t("filling:dialog.height", {
+                      defaultValue: "Height",
+                    })}
                     value={canvasHeight}
-                    onChangeValue={(v) => setCanvasHeight(Math.max(100, Math.round(v)))}
+                    onChangeValue={(v) =>
+                      setCanvasHeight(Math.max(100, Math.round(v)))
+                    }
                     min={100}
                     max={16384}
                   />
@@ -329,36 +346,53 @@ export function CollageMakerWorkspace() {
 
           <AccordionCard
             icon={<Sliders size={16} />}
-            label={t("collageMaker.stage2.spacingPadding", { defaultValue: "Spacing & Margin" })}
+            label={t("collageMaker.stage2.spacingPadding", {
+              defaultValue: "Spacing & Margin",
+            })}
             sublabel={`Pad: ${gridParams.outerPadding}px • Gap: ${gridParams.gapX}x${gridParams.gapY}px`}
             colorTheme="amber"
             defaultOpen={true}
           >
             <div className="space-y-3">
               <NumberInput
-                label={t("collageMaker.stage2.outerPadding", { defaultValue: "Outer Margin" })}
+                label={t("collageMaker.stage2.outerPadding", {
+                  defaultValue: "Outer Margin",
+                })}
                 value={gridParams.outerPadding}
                 onChangeValue={(v) =>
-                  setGridParams((prev) => ({ ...prev, outerPadding: Math.max(0, Math.round(v)) }))
+                  setGridParams((prev) => ({
+                    ...prev,
+                    outerPadding: Math.max(0, Math.round(v)),
+                  }))
                 }
                 min={0}
                 max={200}
               />
               <div className="flex gap-2">
                 <NumberInput
-                  label={t("collageMaker.stage2.gapX", { defaultValue: "Horizontal Gap" })}
+                  label={t("collageMaker.stage2.gapX", {
+                    defaultValue: "Horizontal Gap",
+                  })}
                   value={gridParams.gapX ?? 0}
                   onChangeValue={(v) =>
-                    setGridParams((prev) => ({ ...prev, gapX: Math.max(0, Math.round(v)) }))
+                    setGridParams((prev) => ({
+                      ...prev,
+                      gapX: Math.max(0, Math.round(v)),
+                    }))
                   }
                   min={0}
                   max={200}
                 />
                 <NumberInput
-                  label={t("collageMaker.stage2.gapY", { defaultValue: "Vertical Gap" })}
+                  label={t("collageMaker.stage2.gapY", {
+                    defaultValue: "Vertical Gap",
+                  })}
                   value={gridParams.gapY ?? 0}
                   onChangeValue={(v) =>
-                    setGridParams((prev) => ({ ...prev, gapY: Math.max(0, Math.round(v)) }))
+                    setGridParams((prev) => ({
+                      ...prev,
+                      gapY: Math.max(0, Math.round(v)),
+                    }))
                   }
                   min={0}
                   max={200}
@@ -369,7 +403,9 @@ export function CollageMakerWorkspace() {
 
           <AccordionCard
             icon={<LayoutGrid size={16} />}
-            label={t("collageMaker.stage2.layoutSelector", { defaultValue: "Layout Templates" })}
+            label={t("collageMaker.stage2.layoutSelector", {
+              defaultValue: "Layout Templates",
+            })}
             sublabel={t("collageMaker.stage2.layoutsForImages", {
               count: queueImages.length,
               defaultValue: `Layouts for ${queueImages.length} photos`,
@@ -413,7 +449,11 @@ export function CollageMakerWorkspace() {
             className="w-full gap-2 font-bold py-2.5"
             onClick={() => setStage(3)}
           >
-            <span>{t("collageMaker.stage2.nextToEdit", { defaultValue: "Tiếp tục chỉnh ảnh" })}</span>
+            <span>
+              {t("collageMaker.stage2.nextToEdit", {
+                defaultValue: "Tiếp tục chỉnh ảnh",
+              })}
+            </span>
             <ArrowRight size={16} />
           </Button>
         </div>
@@ -422,7 +462,18 @@ export function CollageMakerWorkspace() {
 
     // Stage 3 Sidebar
     return <FillSidebar template={generatedTemplate} />;
-  }, [stage, queueImages.length, canvasWidth, canvasHeight, canvasUnit, gridParams, matchingPresets, selectedLayoutId, generatedTemplate, t]);
+  }, [
+    stage,
+    queueImages.length,
+    canvasWidth,
+    canvasHeight,
+    canvasUnit,
+    gridParams,
+    matchingPresets,
+    selectedLayoutId,
+    generatedTemplate,
+    t,
+  ]);
 
   return (
     <div className="space-y-4 p-0">
@@ -432,7 +483,9 @@ export function CollageMakerWorkspace() {
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3 dark:border-slate-800">
             <div>
               <Subheading className="text-xl">
-                {t("collageMaker.stage1.title", { defaultValue: "Chuẩn bị ảnh" })}
+                {t("collageMaker.stage1.title", {
+                  defaultValue: "Chuẩn bị ảnh",
+                })}
               </Subheading>
               <LabelText className="text-xs text-slate-500">
                 {t("collageMaker.stage1.subtitle", {
@@ -449,10 +502,16 @@ export function CollageMakerWorkspace() {
               <div className="flex items-center gap-2">
                 <Button variant="secondary" size="sm" onClick={handleClearAll}>
                   <Trash2 size={14} />
-                  {t("collageMaker.stage1.clearAll", { defaultValue: "Xóa tất cả" })}
+                  {t("collageMaker.stage1.clearAll", {
+                    defaultValue: "Xóa tất cả",
+                  })}
                 </Button>
                 <Button variant="primary" size="sm" onClick={() => setStage(2)}>
-                  <span>{t("collageMaker.stage1.createCollage", { defaultValue: "Tạo ảnh ghép" })}</span>
+                  <span>
+                    {t("collageMaker.stage1.createCollage", {
+                      defaultValue: "Tạo ảnh ghép",
+                    })}
+                  </span>
                   <ArrowRight size={14} />
                 </Button>
               </div>
@@ -469,7 +528,9 @@ export function CollageMakerWorkspace() {
             <EmptyDropCard
               icon={<Upload size={28} className="text-amber-500" />}
               iconWrapperClassName="bg-amber-100 dark:bg-amber-900/30 border-transparent shadow-none"
-              title={t("collageMaker.stage1.dropzoneTitle", { defaultValue: "Kéo thả ảnh vào đây để tạo ảnh ghép" })}
+              title={t("collageMaker.stage1.dropzoneTitle", {
+                defaultValue: "Kéo thả ảnh vào đây để tạo ảnh ghép",
+              })}
               subtitle={t("collageMaker.stage1.dropzoneSubtitle", {
                 max: MAX_COLLAGE_IMAGES,
                 defaultValue: `Tải lên từ 2 đến ${MAX_COLLAGE_IMAGES} ảnh (JPEG, PNG, WebP, AVIF)`,
@@ -492,15 +553,26 @@ export function CollageMakerWorkspace() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Subheading className="text-sm font-semibold">
-                  {t("collageMaker.stage1.queueTitle", { defaultValue: "Danh sách ảnh đã chọn" })}
+                  {t("collageMaker.stage1.queueTitle", {
+                    defaultValue: "Danh sách ảnh đã chọn",
+                  })}
                 </Subheading>
                 <LabelText className="text-xs text-slate-400">
-                  {t("collageMaker.stage1.reorderHelp", { defaultValue: "Kéo thẻ ảnh để đổi vị trí trong layout." })}
+                  {t("collageMaker.stage1.reorderHelp", {
+                    defaultValue: "Kéo thẻ ảnh để đổi vị trí trong layout.",
+                  })}
                 </LabelText>
               </div>
 
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={queueImages.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={queueImages.map((i) => i.id)}
+                  strategy={verticalListSortingStrategy}
+                >
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {queueImages.map((item, idx) => (
                       <SortableQueueItem key={item.id} id={item.id}>
@@ -554,9 +626,7 @@ export function CollageMakerWorkspace() {
       )}
 
       {/* STAGE 3: EDIT & FILL */}
-      {stage === 3 && (
-        <FillWorkspace template={generatedTemplate} />
-      )}
+      {stage === 3 && <FillWorkspace template={generatedTemplate} />}
     </div>
   );
 }

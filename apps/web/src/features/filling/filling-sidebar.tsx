@@ -20,7 +20,7 @@ import type {
   VectorLayer,
 } from "@imify/features/filling/types";
 import { QuickExportSelector } from "@imify/features/shared/quick-export-selector";
-import { QuickExportFormat } from "@imify/core";
+import type { QuickExportFormat } from "@imify/core";
 
 type FillingSidebarMode =
   | "select"
@@ -273,9 +273,13 @@ export function FillingWorkflowSidebar({
 
       <QuickExportSelector
         format={exportSettings.format}
-        onFormatChange={(format: QuickExportFormat) => setExportSettings({ format })}
+        onFormatChange={(format: QuickExportFormat) =>
+          setExportSettings({ format })
+        }
         fileNamePattern={exportSettings.fileNamePattern}
-        onFileNamePatternChange={(fileNamePattern: string) => setExportSettings({ fileNamePattern })}
+        onFileNamePatternChange={(fileNamePattern: string) =>
+          setExportSettings({ fileNamePattern })
+        }
         theme="amber"
       />
     </div>

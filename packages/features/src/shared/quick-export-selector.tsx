@@ -1,6 +1,6 @@
 import React from "react";
-import { Download, FileText, Info } from "lucide-react";
-import { AccordionCard, TextInput, MutedText } from "@imify/ui";
+import { Download, Info } from "lucide-react";
+import { AccordionCard, TextInput, Tooltip, TooltipTableContent } from "@imify/ui";
 import type { QuickExportFormat } from "@imify/core";
 
 export interface QuickExportSelectorProps {
@@ -58,28 +58,50 @@ export function QuickExportSelector({
   theme = "sky",
   defaultOpen = true,
 }: QuickExportSelectorProps) {
+  const safeFormat = (format || "png") as QuickExportFormat;
   const visibleOptions = ALL_FORMAT_OPTIONS.filter((opt) =>
     availableFormats.includes(opt.id)
   );
 
-  const activeMeta = ALL_FORMAT_OPTIONS.find((opt) => opt.id === format);
-
   return (
     <AccordionCard
       label={label}
-      sublabel={sublabel || `Đang chọn: ${format.toUpperCase()}`}
+      sublabel={sublabel || `Đang chọn: ${safeFormat.toUpperCase()}`}
       icon={<Download size={16} />}
       defaultOpen={defaultOpen}
       colorTheme={theme}
       childrenClassName="p-3 space-y-3"
     >
       <div>
-        <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1.5 block">
-          Chọn định dạng
-        </label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+            Chọn định dạng
+          </label>
+          <Tooltip
+            label="Thông tin định dạng xuất"
+            variant="wide2"
+            content={
+              <TooltipTableContent
+                firstColumnHeader="Định dạng"
+                secondColumnHeader="Đặc điểm & Sử dụng"
+                rows={ALL_FORMAT_OPTIONS.map((opt) => ({
+                  method: `${opt.label} (${opt.badge || "Mặc định"})`,
+                  description: opt.desc,
+                }))}
+              />
+            }
+          >
+            <button
+              type="button"
+              className="text-slate-400 hover:text-sky-500 dark:text-slate-500 dark:hover:text-sky-400 transition-colors"
+            >
+              <Info size={14} />
+            </button>
+          </Tooltip>
+        </div>
         <div className="grid grid-cols-2 gap-1.5">
           {visibleOptions.map((opt) => {
-            const isSelected = format === opt.id;
+            const isSelected = safeFormat === opt.id;
             return (
               <button
                 key={opt.id}
@@ -108,15 +130,6 @@ export function QuickExportSelector({
           })}
         </div>
       </div>
-
-      {activeMeta && (
-        <div className="flex items-start gap-2 p-2.5 rounded bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50">
-          <Info size={14} className="text-sky-500 shrink-0 mt-0.5" />
-          <MutedText className="text-[11px] leading-tight">
-            {activeMeta.desc}
-          </MutedText>
-        </div>
-      )}
 
       {onFileNamePatternChange && fileNamePattern !== undefined && (
         <div>

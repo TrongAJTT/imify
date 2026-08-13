@@ -59,7 +59,10 @@ export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
   // Resize display
   let resizeLabel = "—";
   if (config.imageResize) {
-    if ((config.imageResize as any) === "original" || (config.imageResize as any) === "inherit") {
+    if (
+      (config.imageResize as any) === "original" ||
+      (config.imageResize as any) === "inherit"
+    ) {
       resizeLabel = t("imageFields.original");
     } else if (config.imageResize === "fit_value") {
       const applyToLabel = (config.imageApplyTo ?? "width").toUpperCase();
@@ -78,9 +81,9 @@ export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
   }
 
   // Export format
-  const formatLabel = config.exportFormat
-    ? `${config.exportFormat.toUpperCase()} (${resizeLabel})`
-    : "—";
+  const rawFormat =
+    config.exportFormat || (config as any).targetFormat || "PNG";
+  const formatLabel = `${rawFormat.toUpperCase()} (${resizeLabel})`;
 
   // Export mode
   let modeLabel = config.exportMode
