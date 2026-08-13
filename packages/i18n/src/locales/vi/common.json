@@ -77,5 +77,18 @@
     "areYouSure": "Bạn có chắc chắn muốn tiếp tục không?",
     "dontShowAgain": "Không hiển thị cảnh báo này nữa",
     "continueAnyway": "Vẫn tiếp tục"
+  },
+  "quickExport": {
+    "cardLabel": "Định Dạng Xuất Tệp",
+    "selected": "Đang chọn: {{format}}",
+    "selectFormat": "Chọn định dạng",
+    "fileNamePattern": "Mẫu tên tệp xuất",
+    "tooltipTitle": "Thông Tin Định Dạng",
+    "tableHeaderFormat": "Định dạng",
+    "tableHeaderUsage": "Đặc điểm & Sử dụng",
+    "pngDesc": "Nét tuyệt đối, hỗ trợ nền trong suốt (Alpha)",
+    "jpgDesc": "Tối ưu dung lượng nhẹ, phù hợp ảnh chụp/chia sẻ",
+    "webpDesc": "Định dạng web hiện đại, dung lượng siêu nhỏ",
+    "webpLosslessDesc": "Nét tuyệt đối 100%, nhẹ hơn PNG, giữ nền trong suốt"
   }
 }

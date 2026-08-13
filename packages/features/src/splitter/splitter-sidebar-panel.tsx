@@ -30,7 +30,9 @@ export function SplitterSidebarPanel({
   const uiState = useSplitterStore((state) => state.uiState);
 
   const setSplitSettings = useSplitterStore((state) => state.setSplitSettings);
-  const setExportSettings = useSplitterStore((state) => state.setExportSettings);
+  const setExportSettings = useSplitterStore(
+    (state) => state.setExportSettings,
+  );
   const setUiState = useSplitterStore((state) => state.setUiState);
   const addColorRule = useSplitterStore((state) => state.addColorRule);
   const updateColorRule = useSplitterStore((state) => state.updateColorRule);
@@ -81,20 +83,6 @@ export function SplitterSidebarPanel({
             isOpen={uiState.isSplitOptionsOpen}
             onOpenChange={(open) => setUiState({ isSplitOptionsOpen: open })}
             onChange={setSplitSettings}
-          />
-        ),
-      },
-      {
-        id: "split-order-card",
-        label: "",
-        columnSpan: 2,
-        content: (
-          <SidebarCard
-            label={t("splitOrder")}
-            sublabel={splitOrderSummary}
-            icon={<ArrowUpDown size={14} />}
-            theme="orange"
-            onClick={() => setIsSplitOrderDialogOpen(true)}
           />
         ),
       },
@@ -156,11 +144,23 @@ export function SplitterSidebarPanel({
       content: (
         <QuickExportSelector
           format={exportSettings.format}
-          onFormatChange={(format: QuickExportFormat) => setExportSettings({ format })}
+          onFormatChange={(format: QuickExportFormat) =>
+            setExportSettings({ format })
+          }
           fileNamePattern={exportSettings.fileNamePattern}
-          onFileNamePatternChange={(fileNamePattern: string) => setExportSettings({ fileNamePattern })}
+          onFileNamePatternChange={(fileNamePattern: string) =>
+            setExportSettings({ fileNamePattern })
+          }
           theme="orange"
-        />
+        >
+          <SidebarCard
+            label={t("splitOrder")}
+            sublabel={splitOrderSummary}
+            icon={<ArrowUpDown size={14} />}
+            theme="orange"
+            onClick={() => setIsSplitOrderDialogOpen(true)}
+          />
+        </QuickExportSelector>
       ),
     });
 

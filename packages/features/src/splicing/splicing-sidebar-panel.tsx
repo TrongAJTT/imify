@@ -177,14 +177,13 @@ export function SplicingSidebarPanel({
       label: "",
       columnSpan: 2,
       content: (
-        <div className="space-y-3">
-          <QuickExportSelector
-            format={exportSettings.format}
-            onFormatChange={(format: QuickExportFormat) => setExportSettings({ format })}
-            fileNamePattern={exportSettings.fileNamePattern}
-            onFileNamePatternChange={(fileNamePattern: string) => setExportSettings({ fileNamePattern })}
-            theme="amber"
-          />
+        <QuickExportSelector
+          format={exportSettings.format}
+          onFormatChange={(format: QuickExportFormat) => setExportSettings({ format })}
+          fileNamePattern={exportSettings.fileNamePattern}
+          onFileNamePatternChange={(fileNamePattern: string) => setExportSettings({ fileNamePattern })}
+          theme="amber"
+        >
           <SplicingExportPanel
             targetFormat={exportSettings.format}
             concurrency={exportSettings.concurrency}
@@ -203,7 +202,7 @@ export function SplicingSidebarPanel({
             onOpenSettings={onOpenSettings}
             disabled={false}
           />
-        </div>
+        </QuickExportSelector>
       ),
     },
     {

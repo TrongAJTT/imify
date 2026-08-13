@@ -77,5 +77,18 @@
     "areYouSure": "Are you sure you want to continue?",
     "dontShowAgain": "Don't show this warning again",
     "continueAnyway": "Continue anyway"
+  },
+  "quickExport": {
+    "cardLabel": "File Export Format",
+    "selected": "Selected: {{format}}",
+    "selectFormat": "Select format",
+    "fileNamePattern": "Output filename pattern",
+    "tooltipTitle": "Export Format Information",
+    "tableHeaderFormat": "Format",
+    "tableHeaderUsage": "Features & Usage",
+    "pngDesc": "Absolute sharpness, supports transparent background (Alpha)",
+    "jpgDesc": "Lightweight size optimization, suitable for photos & sharing",
+    "webpDesc": "Modern web format, ultra-small file size",
+    "webpLosslessDesc": "100% absolute sharpness, lighter than PNG, keeps transparency"
   }
 }
