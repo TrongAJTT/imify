@@ -5,6 +5,7 @@ import { PDFDocument } from "pdf-lib"
 import { useTranslation } from "@imify/i18n"
 
 import { APP_CONFIG } from "@imify/core/config"
+import { mapQuickExportToEngineConfig } from "@imify/core"
 import type { ConversionProgressPayload } from "@imify/core/types"
 import { getCanonicalExtension } from "@imify/core/download-utils"
 import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@imify/engine/converter/wasm-worker-pool"
@@ -96,9 +97,10 @@ export function useSplicingExport({
       try {
         const store = useSplicingStore.getState()
         const { exportSettings } = store
-        const usesWasmEncoder = exportSettings.targetFormat === "avif" || exportSettings.targetFormat === "jxl"
+        const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportSettings.format)
+        const usesWasmEncoder = targetFormat === "avif" || targetFormat === "jxl"
         if (usesWasmEncoder) {
-          setWasmWorkerPoolSize(exportSettings.targetFormat === "jxl" ? "jxl" : "avif", exportSettings.concurrency)
+          setWasmWorkerPoolSize(targetFormat === "jxl" ? "jxl" : "avif", exportSettings.concurrency)
         }
 
         const layout = resolveLayoutConfig(store)
@@ -106,9 +108,9 @@ export function useSplicingExport({
         const imgStyle = resolveImageStyle(store)
 
         const config: SplicingExportConfig = {
-          format: exportSettings.targetFormat,
-          quality: exportSettings.quality,
-          formatOptions: exportSettings.codecOptions as any,
+          format: targetFormat as any,
+          quality,
+          formatOptions: codecOptions as any,
           exportMode: exportSettings.exportMode,
           trimBackground: exportSettings.trimBackground
         }
@@ -118,7 +120,7 @@ export function useSplicingExport({
         pushToast({
           id: toastId,
           fileName: t("toasts.exportingCount", { count: exportTargetCount }),
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: targetFormat as any,
           status: "processing",
           percent: 2,
           message: t("toasts.exportPrep")
@@ -145,7 +147,7 @@ export function useSplicingExport({
               pushToast({
                 id: toastId,
                 fileName: t("toasts.exportingCount", { count: exportTargetCount }),
-                targetFormat: exportSettings.targetFormat,
+                targetFormat: targetFormat as any,
                 status: "processing",
                 percent,
                 message
@@ -154,7 +156,7 @@ export function useSplicingExport({
           }
         )
 
-        const ext = getCanonicalExtension(exportSettings.targetFormat)
+        const ext = getCanonicalExtension(targetFormat as any)
 
         const imageSizes = images.map((img) => {
           const processed = calculateProcessedSize(img.originalWidth, img.originalHeight, store.image.resizeMode, store.image.fitValue, store.image.applyTo)
@@ -208,7 +210,7 @@ export function useSplicingExport({
             pushToast({
               id: toastId,
               fileName: t("toasts.exportingCount", { count: blobs.length }),
-              targetFormat: exportSettings.targetFormat,
+              targetFormat: targetFormat as any,
               status: "processing",
               percent: Math.min(98, percent),
               message: t("toasts.exportDownloaded", { completed: i + 1, total: blobs.length })
@@ -218,7 +220,7 @@ export function useSplicingExport({
           pushToast({
             id: toastId,
             fileName: t("toasts.exportComplete"),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: targetFormat as any,
             status: "success",
             percent: 100,
             message: t("toasts.exportCompleteDesc", { count: blobs.length })
@@ -228,7 +230,7 @@ export function useSplicingExport({
           pushToast({
             id: toastId,
             fileName: zipFileName,
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: targetFormat as any,
             status: "processing",
             percent: 85,
             message: t("toasts.exportPackagingZip")
@@ -241,7 +243,7 @@ export function useSplicingExport({
           pushToast({
             id: toastId,
             fileName: zipFileName,
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: targetFormat as any,
             status: "processing",
             percent: 96,
             message: t("toasts.exportZipDownloading")
@@ -250,7 +252,7 @@ export function useSplicingExport({
           pushToast({
             id: toastId,
             fileName: zipFileName,
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: targetFormat as any,
             status: "success",
             percent: 100,
             message: t("toasts.exportZipSuccess")
@@ -341,18 +343,20 @@ export function useSplicingExport({
       } catch (err) {
         console.error("Export failed:", err)
         const store = useSplicingStore.getState()
+        const { targetFormat: errTargetFormat } = mapQuickExportToEngineConfig(store.exportSettings.format)
         pushToast({
           id: `splicing_export_err_${Date.now()}`,
           fileName: t("toasts.exportError"),
-          targetFormat: store.exportSettings.targetFormat,
+          targetFormat: errTargetFormat as any,
           status: "error",
           percent: 100,
           message: t("toasts.exportErrorDesc")
         })
       } finally {
         const store = useSplicingStore.getState()
-        if (store.exportSettings.targetFormat === "avif" || store.exportSettings.targetFormat === "jxl") {
-          terminateWasmWorkerPool(store.exportSettings.targetFormat)
+        const { targetFormat: finTargetFormat } = mapQuickExportToEngineConfig(store.exportSettings.format)
+        if (finTargetFormat === "avif" || finTargetFormat === "jxl") {
+          terminateWasmWorkerPool(finTargetFormat)
         }
         setIsExporting(false)
       }

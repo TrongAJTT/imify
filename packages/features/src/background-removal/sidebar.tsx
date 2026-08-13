@@ -11,24 +11,16 @@ import {
 } from "@imify/ui";
 import { Sliders, Image, Eraser, Palette } from "lucide-react";
 import { BACKGROUND_REMOVAL_MODELS } from "./models";
-import { PresetSelector } from "../processor/preset-selector";
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
-import {
-  useBackgroundRemoverStore,
-  type SavedSetupPreset,
-} from "@imify/stores";
-import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
+import { QuickExportSelector } from "../shared/quick-export-selector";
+import { useBackgroundRemoverStore } from "@imify/stores";
 import { ModelVariantDialog } from "./model-variant-dialog";
 import { useTranslation } from "@imify/i18n";
 import { AiEngineAccordionCard } from "../shared/ai-engine-accordion-card";
-import { FEATURE_PRESET_PREFIXES } from "@imify/core";
 
 import { useBackgroundRemoverShowcaseContent } from "./remover-preset-info-panel";
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
 
 import {
-  BACKGROUND_REMOVER_PRESET as BG_REMOVER_PRESET,
-  BACKGROUND_REMOVER_TARGET_FORMATS,
   EDGE_REFINEMENT_MIN,
   EDGE_REFINEMENT_MAX,
 } from "./config";
@@ -58,9 +50,10 @@ export function BackgroundRemoverSidebar({
     setBackgroundColor,
     unloadModelAfterProcess,
     setUnloadModelAfterProcess,
-    activePresetId,
-    applyPreset,
-    resetToDefault,
+    exportFormat,
+    setExportFormat,
+    fileNamePattern,
+    setFileNamePattern,
     hasImage,
   } = useBackgroundRemoverStore();
 
@@ -72,9 +65,6 @@ export function BackgroundRemoverSidebar({
     selectedModel.variants[0];
   const [isModelVariantDialogOpen, setIsModelVariantDialogOpen] =
     useState(false);
-
-  // Auto-apply identified preset if it exists and no preset is active (initial load)
-  useIdentifiedPresetLoader(BG_REMOVER_PRESET, activePresetId, applyPreset);
 
   // Initialize smart default for unloadModelAfterProcess based on hardware
   useEffect(() => {
@@ -161,15 +151,12 @@ export function BackgroundRemoverSidebar({
       id: "output-preset",
       label: "",
       content: (
-        <PresetSelector
-          label={t("sidebar.outputPreset")}
+        <QuickExportSelector
+          format={exportFormat}
+          onFormatChange={setExportFormat}
+          fileNamePattern={fileNamePattern}
+          onFileNamePatternChange={setFileNamePattern}
           theme="pink"
-          identifiedPreset={BG_REMOVER_PRESET}
-          formatFilter={BACKGROUND_REMOVER_TARGET_FORMATS}
-          activePresetId={activePresetId}
-          onSelect={applyPreset}
-          onReset={resetToDefault}
-          tooltipContent={t("sidebar.presetTooltip")}
         />
       ),
     },

@@ -52,47 +52,7 @@ function extractSplicingPresetConfig(
     imageBorderRadius: image?.borderRadius ?? 0,
     imageBorderWidth: image?.borderWidth ?? 0,
     imageBorderColor: image?.borderColor ?? "#000000",
-    exportFormat: exportSettings?.targetFormat ?? "png",
-    exportQuality: exportSettings?.quality ?? 92,
-    exportJxlEffort: exportSettings.codecOptions.jxl?.effort ?? 7,
-    exportJxlLossless: exportSettings.codecOptions.jxl?.lossless ?? false,
-    exportJxlProgressive: exportSettings.codecOptions.jxl?.progressive ?? false,
-    exportJxlEpf: exportSettings.codecOptions.jxl?.epf ?? 1,
-    exportWebpLossless: exportSettings.codecOptions.webp?.lossless ?? false,
-    exportWebpNearLossless:
-      exportSettings.codecOptions.webp?.nearLossless ?? 100,
-    exportWebpEffort: exportSettings.codecOptions.webp?.effort ?? 5,
-    exportWebpSharpYuv: exportSettings.codecOptions.webp?.sharpYuv ?? false,
-    exportWebpPreserveExactAlpha:
-      exportSettings.codecOptions.webp?.preserveExactAlpha ?? false,
-    exportAvifSpeed: exportSettings.codecOptions.avif?.speed ?? 6,
-    exportAvifQualityAlpha: exportSettings.codecOptions.avif?.qualityAlpha,
-    exportAvifLossless: exportSettings.codecOptions.avif?.lossless ?? false,
-    exportAvifSubsample: exportSettings.codecOptions.avif?.subsample ?? 1,
-    exportAvifTune: exportSettings.codecOptions.avif?.tune ?? "auto",
-    exportAvifHighAlphaQuality:
-      exportSettings.codecOptions.avif?.highAlphaQuality ?? false,
-    exportMozJpegProgressive:
-      exportSettings.codecOptions.mozjpeg?.progressive ?? true,
-    exportMozJpegChromaSubsampling:
-      exportSettings.codecOptions.mozjpeg?.chromaSubsampling ?? 2,
-    exportPngTinyMode: exportSettings.codecOptions.png?.tinyMode ?? false,
-    exportPngCleanTransparentPixels:
-      exportSettings.codecOptions.png?.cleanTransparentPixels ?? false,
-    exportPngAutoGrayscale:
-      exportSettings.codecOptions.png?.autoGrayscale ?? false,
-    exportPngDithering: exportSettings.codecOptions.png?.dithering ?? false,
-    exportPngDitheringLevel:
-      exportSettings.codecOptions.png?.ditheringLevel ?? 0,
-    exportPngProgressiveInterlaced:
-      exportSettings.codecOptions.png?.progressiveInterlaced ?? false,
-    exportPngOxiPngCompression:
-      exportSettings.codecOptions.png?.oxipngCompression ?? false,
-    exportBmpColorDepth: exportSettings.codecOptions.bmp?.colorDepth ?? 24,
-    exportBmpDithering: exportSettings.codecOptions.bmp?.dithering ?? false,
-    exportBmpDitheringLevel:
-      exportSettings.codecOptions.bmp?.ditheringLevel ?? 0,
-    exportTiffColorMode: exportSettings.codecOptions.tiff?.colorMode ?? "color",
+    exportFormat: exportSettings?.format ?? "png",
     exportMode: exportSettings.exportMode,
     exportTrimBackground: exportSettings.trimBackground,
     exportConcurrency: exportSettings.concurrency,
@@ -134,55 +94,11 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
       borderColor: config.imageBorderColor ?? "#000000",
     },
     exportSettings: {
-      targetFormat: config.exportFormat ?? "png",
-      quality: config.exportQuality ?? 92,
+      format: (config.exportFormat as any) ?? "png",
       exportMode: config.exportMode ?? "single",
       trimBackground: config.exportTrimBackground ?? false,
       concurrency: config.exportConcurrency ?? 2,
       fileNamePattern: config.exportFileNamePattern ?? "spliced-[Index]",
-      codecOptions: {
-        jxl: {
-          effort: config.exportJxlEffort,
-          lossless: config.exportJxlLossless,
-          progressive: config.exportJxlProgressive,
-          epf: config.exportJxlEpf,
-        },
-        webp: {
-          lossless: config.exportWebpLossless,
-          nearLossless: config.exportWebpNearLossless,
-          effort: config.exportWebpEffort,
-          sharpYuv: config.exportWebpSharpYuv,
-          preserveExactAlpha: config.exportWebpPreserveExactAlpha,
-        },
-        avif: {
-          speed: config.exportAvifSpeed,
-          qualityAlpha: config.exportAvifQualityAlpha,
-          lossless: config.exportAvifLossless,
-          subsample: config.exportAvifSubsample,
-          tune: config.exportAvifTune,
-          highAlphaQuality: config.exportAvifHighAlphaQuality,
-        },
-        mozjpeg: {
-          enabled: true,
-          progressive: config.exportMozJpegProgressive,
-          chromaSubsampling: config.exportMozJpegChromaSubsampling as any,
-        },
-        png: {
-          tinyMode: config.exportPngTinyMode,
-          cleanTransparentPixels: config.exportPngCleanTransparentPixels,
-          autoGrayscale: config.exportPngAutoGrayscale,
-          dithering: config.exportPngDithering,
-          ditheringLevel: config.exportPngDitheringLevel,
-          progressiveInterlaced: config.exportPngProgressiveInterlaced,
-          oxipngCompression: config.exportPngOxiPngCompression,
-        },
-        bmp: {
-          colorDepth: config.exportBmpColorDepth,
-          dithering: config.exportBmpDithering,
-          ditheringLevel: config.exportBmpDitheringLevel,
-        },
-        tiff: { colorMode: config.exportTiffColorMode },
-      },
     },
     previewQualityPercent: config.previewQualityPercent ?? 20,
     previewShowImageNumber: config.previewShowImageNumber ?? false,

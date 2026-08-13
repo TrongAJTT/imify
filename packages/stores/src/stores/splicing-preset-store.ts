@@ -11,7 +11,8 @@ import type {
   SplicingExportMode,
   TiffColorMode,
   BmpColorDepth,
-  ResizeApplyTo
+  ResizeApplyTo,
+  QuickExportFormat,
 } from "@imify/core"
 
 
@@ -42,36 +43,7 @@ export interface SplicingPresetConfig {
   imageBorderRadius: number
   imageBorderWidth: number
   imageBorderColor: string
-  exportFormat: SplicingExportFormat
-  exportQuality: number
-  exportJxlEffort: number
-  exportJxlLossless: boolean
-  exportJxlProgressive: boolean
-  exportJxlEpf: 0 | 1 | 2 | 3
-  exportWebpLossless: boolean
-  exportWebpNearLossless: number
-  exportWebpEffort: number
-  exportWebpSharpYuv: boolean
-  exportWebpPreserveExactAlpha: boolean
-  exportAvifSpeed: number
-  exportAvifQualityAlpha?: number
-  exportAvifLossless: boolean
-  exportAvifSubsample: 1 | 2 | 3
-  exportAvifTune: "auto" | "ssim" | "psnr"
-  exportAvifHighAlphaQuality: boolean
-  exportMozJpegProgressive: boolean
-  exportMozJpegChromaSubsampling: 0 | 1 | 2
-  exportPngTinyMode: boolean
-  exportPngCleanTransparentPixels: boolean
-  exportPngAutoGrayscale: boolean
-  exportPngDithering: boolean
-  exportPngDitheringLevel: number
-  exportPngProgressiveInterlaced: boolean
-  exportPngOxiPngCompression: boolean
-  exportBmpColorDepth: BmpColorDepth
-  exportBmpDithering: boolean
-  exportBmpDitheringLevel: number
-  exportTiffColorMode: TiffColorMode
+  exportFormat: QuickExportFormat
   exportMode: SplicingExportMode
   exportTrimBackground: boolean
   exportConcurrency: number
@@ -133,35 +105,6 @@ function createDefaultConfig(): SplicingPresetConfig {
     imageBorderWidth: 0,
     imageBorderColor: "#000000",
     exportFormat: "png",
-    exportQuality: 92,
-    exportJxlEffort: 7,
-    exportJxlLossless: false,
-    exportJxlProgressive: false,
-    exportJxlEpf: 1,
-    exportWebpLossless: false,
-    exportWebpNearLossless: 100,
-    exportWebpEffort: 5,
-    exportWebpSharpYuv: false,
-    exportWebpPreserveExactAlpha: false,
-    exportAvifSpeed: 6,
-    exportAvifQualityAlpha: undefined,
-    exportAvifLossless: false,
-    exportAvifSubsample: 1,
-    exportAvifTune: "auto",
-    exportAvifHighAlphaQuality: false,
-    exportMozJpegProgressive: true,
-    exportMozJpegChromaSubsampling: 2,
-    exportPngTinyMode: false,
-    exportPngCleanTransparentPixels: false,
-    exportPngAutoGrayscale: false,
-    exportPngDithering: false,
-    exportPngDitheringLevel: 0,
-    exportPngProgressiveInterlaced: false,
-    exportPngOxiPngCompression: false,
-    exportBmpColorDepth: 24,
-    exportBmpDithering: false,
-    exportBmpDitheringLevel: 0,
-    exportTiffColorMode: "color",
     exportMode: "single",
     exportTrimBackground: false,
     exportConcurrency: 2,

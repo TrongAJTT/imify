@@ -1,13 +1,12 @@
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import type { FormatCodecOptions, ResizeApplyTo } from "@imify/core/types"
+import type { ResizeApplyTo } from "@imify/core/types"
 import type { ResizeQuickStats } from "@imify/core/resize-quick-stats"
 import type {
   SplicingAlignment,
   SplicingCanvasStyle,
   SplicingDirection,
-  SplicingExportFormat,
   SplicingExportMode,
   SplicingImageAppearanceDirection,
   SplicingImageResize,
@@ -15,8 +14,7 @@ import type {
   SplicingLayoutConfig,
   SplicingPreset
 } from "@imify/core"
-import { useBatchStore, type SavedSetupPreset } from "./batch-store"
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
+import type { SavedSetupPreset } from "./batch-store"
 
 export const PREVIEW_QUALITY_PERCENTS = [20, 30, 50, 75, 100] as const
 
@@ -35,10 +33,10 @@ export function normalizePreviewQualityPercent(value: number): number {
   return best
 }
 
+import type { QuickExportFormat } from "@imify/core"
+
 export interface SplicingExportSettings {
-  targetFormat: SplicingExportFormat
-  quality: number
-  codecOptions: FormatCodecOptions
+  format: QuickExportFormat
   exportMode: SplicingExportMode
   trimBackground: boolean
   concurrency: number
@@ -123,17 +121,7 @@ export interface SplicingStoreState {
 }
 
 export const DEFAULT_SPLICING_EXPORT_SETTINGS: SplicingExportSettings = {
-  targetFormat: "png",
-  quality: 92,
-  codecOptions: {
-    bmp: { colorDepth: 24, dithering: false, ditheringLevel: 0 },
-    jxl: { effort: 7, lossless: false, progressive: false, epf: 1 },
-    webp: { lossless: false, nearLossless: 100, effort: 5, sharpYuv: false, preserveExactAlpha: false },
-    avif: { speed: 6, qualityAlpha: undefined, lossless: false, subsample: 1, tune: "auto", highAlphaQuality: false },
-    mozjpeg: { enabled: true, progressive: true, chromaSubsampling: 2 },
-    png: { tinyMode: false, cleanTransparentPixels: false, autoGrayscale: false, dithering: false, ditheringLevel: 0, progressiveInterlaced: false, oxipngCompression: false },
-    tiff: { colorMode: "color" }
-  },
+  format: "png",
   exportMode: "single",
   trimBackground: false,
   concurrency: 2,
@@ -211,58 +199,16 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setIsExportFormatQualityOpen: (v) => set({ isExportFormatQualityOpen: v }),
 
       applyPreset: (preset) => {
-        const { targetFormat, quality, formatOptions, fileNamePattern } = preset.config
-        const supportedFormats: SplicingExportFormat[] = ["png", "webp", "avif", "jxl", "jpg", "bmp", "tiff", "mozjpeg"]
-        
-        let mappedFormat: SplicingExportFormat = "png"
-        if (supportedFormats.includes(targetFormat as any)) {
-          mappedFormat = targetFormat as SplicingExportFormat
-        } else if (targetFormat === "ico") {
-          mappedFormat = "png"
-        }
-
-        const isIdentified = preset.id.startsWith("preset_splicing_")
-
-        set((state) => ({
-          activePresetId: (preset.id === VIRTUAL_DEFAULT_PNG_PRESET.id || isIdentified) ? null : preset.id,
-          exportSettings: {
-            ...state.exportSettings,
-            targetFormat: mappedFormat,
-            quality,
-            fileNamePattern: fileNamePattern || "spliced-[Index]",
-            codecOptions: formatOptions as any
-          }
+        set(() => ({
+          activePresetId: preset.id,
         }))
-
-        // Sync global batch store to keep the Output Settings dialog in sync
-        const batchStore = useBatchStore.getState()
-        batchStore.setTargetFormat(targetFormat as any)
-        batchStore.setQuality(quality)
-        if (fileNamePattern) {
-          batchStore.setFileNamePattern(fileNamePattern)
-        }
       },
 
       resetToDefault: () => {
-        const defaultConfig = VIRTUAL_DEFAULT_PNG_PRESET.config
-        
-        set((state) => ({
+        set(() => ({
           activePresetId: null,
-          exportSettings: {
-            ...state.exportSettings,
-            targetFormat: defaultConfig.targetFormat as SplicingExportFormat,
-            quality: defaultConfig.quality,
-            fileNamePattern: defaultConfig.fileNamePattern || "spliced-[Index]",
-            codecOptions: defaultConfig.formatOptions as any
-          }
+          exportSettings: DEFAULT_SPLICING_EXPORT_SETTINGS,
         }))
-
-        const batchStore = useBatchStore.getState()
-        batchStore.setTargetFormat(defaultConfig.targetFormat as any)
-        batchStore.setQuality(defaultConfig.quality)
-        if (defaultConfig.fileNamePattern) {
-          batchStore.setFileNamePattern(defaultConfig.fileNamePattern)
-        }
       }
     }),
     {

@@ -74,7 +74,6 @@ import {
   COLLAGE_LAYOUT_PRESETS,
   MAX_COLLAGE_IMAGES,
   MIN_COLLAGE_IMAGES,
-  useCollageIdentifiedPreset,
   type CollageLayoutPreset,
 } from "./config";
 
@@ -116,8 +115,7 @@ export function CollageMakerWorkspace() {
   const setHeaderOnBack = useWorkspaceHeaderStore((state) => state.setOnBack);
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader);
 
-  // Identified Preset for Stage 3 Output Settings
-  const identifiedPreset = useCollageIdentifiedPreset();
+
 
   // Handle Drag Sensors for Queue Item Reordering
   const sensors = useSensors(

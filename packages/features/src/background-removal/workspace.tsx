@@ -17,11 +17,7 @@ import {
   downloadWithFilename,
   formatBytes,
 } from "../processor/processor-utils";
-import {
-  buildFormatConfigFromPreset,
-  VIRTUAL_DEFAULT_PNG_PRESET,
-} from "../processor/preset-utils";
-import { useBatchStore } from "@imify/stores/stores/batch-store";
+import { mapQuickExportToEngineConfig } from "@imify/core";
 import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
 import { useTranslation } from "@imify/i18n";
 
@@ -63,19 +59,11 @@ export function BackgroundRemoverWorkspace({
   const [isEncodingPreview, setIsEncodingPreview] = useState(false);
 
   const {
-    targetFormat,
-    quality,
-    codecOptions,
+    exportFormat,
+    fileNamePattern,
     outputFormat,
     backgroundColor,
-    activePresetId,
   } = useBackgroundRemoverStore();
-
-  const { presets } = useBatchStore();
-  const activePreset =
-    presets.find((p) => p.id === activePresetId) || VIRTUAL_DEFAULT_PNG_PRESET;
-  const fileNamePattern =
-    activePreset.config.fileNamePattern || "[OriginalName]";
   const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
 
   const { toasts, show, hide } = useToast();
@@ -190,6 +178,8 @@ export function BackgroundRemoverWorkspace({
 
         if (isAborted) return;
 
+        const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportFormat);
+
         // OPTIMIZATION: If we just need the size for preview, and target is WebP or JPEG,
         // use the browser's native fast encoder instead of the WASM worker.
         if (targetFormat === "webp" || targetFormat === "jpg") {
@@ -213,8 +203,15 @@ export function BackgroundRemoverWorkspace({
 
         if (isAborted || !sourceBlob) return;
 
-        const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
-        config.resize = { mode: "inherit" };
+        const config: FormatConfig = {
+          id: "bg-remover",
+          name: "Background Remover",
+          format: targetFormat as any,
+          enabled: true,
+          quality,
+          resize: { mode: "inherit" },
+          formatOptions: codecOptions as any,
+        };
 
         const converted = await convertImage({
           sourceBlob,
@@ -241,12 +238,10 @@ export function BackgroundRemoverWorkspace({
     };
   }, [
     resultImageData,
-    activePreset,
     outputFormat,
     backgroundColor,
     isProcessing,
-    targetFormat,
-    quality,
+    exportFormat,
   ]);
 
   const handleStartWithAgreement = () => {
@@ -267,7 +262,7 @@ export function BackgroundRemoverWorkspace({
     canvas: HTMLCanvasElement,
     fileName: string,
   ) => {
-    const extension = targetFormat === "jpg" ? "jpg" : targetFormat;
+    const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportFormat);
     if (
       targetFormat === "webp" ||
       targetFormat === "jpg" ||
@@ -307,8 +302,15 @@ export function BackgroundRemoverWorkspace({
       );
       if (!sourceBlob) throw new Error("Failed to create source blob");
 
-      const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
-      config.resize = { mode: "inherit" };
+      const config: FormatConfig = {
+        id: "bg-remover",
+        name: "Background Remover",
+        format: targetFormat as any,
+        enabled: true,
+        quality,
+        resize: { mode: "inherit" },
+        formatOptions: codecOptions as any,
+      };
 
       const converted = await convertImage({
         sourceBlob,
@@ -322,6 +324,7 @@ export function BackgroundRemoverWorkspace({
   const handleDownload = async () => {
     if (!resultImageData) return;
 
+    const { targetFormat } = mapQuickExportToEngineConfig(exportFormat);
     setIsDownloading(true);
     const toastId = show({
       title: t("workspace.encodingImage"),

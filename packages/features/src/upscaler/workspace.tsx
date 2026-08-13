@@ -17,11 +17,7 @@ import {
   downloadWithFilename,
   formatBytes,
 } from "../processor/processor-utils";
-import {
-  buildFormatConfigFromPreset,
-  VIRTUAL_DEFAULT_PNG_PRESET,
-} from "../processor/preset-utils";
-import { useBatchStore } from "@imify/stores/stores/batch-store";
+import { mapQuickExportToEngineConfig } from "@imify/core";
 import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
 
 import { AlertTriangle } from "lucide-react";
@@ -65,13 +61,7 @@ export function UpscalerWorkspace({
   const [resultBlobSize, setResultBlobSize] = useState<number | null>(null);
   const [isEncodingPreview, setIsEncodingPreview] = useState(false);
 
-  const { targetFormat, quality, activePresetId } = useImageUpscalerStore();
-
-  const { presets } = useBatchStore();
-  const activePreset =
-    presets.find((p) => p.id === activePresetId) || VIRTUAL_DEFAULT_PNG_PRESET;
-  const fileNamePattern =
-    activePreset.config.fileNamePattern || "[OriginalName]";
+  const { exportFormat, fileNamePattern } = useImageUpscalerStore();
   const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
 
   const { toasts, show, hide } = useToast();
@@ -176,6 +166,8 @@ export function UpscalerWorkspace({
 
         if (isAborted) return;
 
+        const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportFormat);
+
         if (targetFormat === "webp" || targetFormat === "jpg") {
           const mime = targetFormat === "webp" ? "image/webp" : "image/jpeg";
           const nativeBlob = await new Promise<Blob | null>((resolve) =>
@@ -195,8 +187,15 @@ export function UpscalerWorkspace({
 
         if (isAborted || !sourceBlob) return;
 
-        const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
-        config.resize = { mode: "inherit" };
+        const config: FormatConfig = {
+          id: "upscaler",
+          name: "Upscaler",
+          format: targetFormat as any,
+          enabled: true,
+          quality,
+          resize: { mode: "inherit" },
+          formatOptions: codecOptions as any,
+        };
 
         const converted = await convertImage({
           sourceBlob,
@@ -221,7 +220,7 @@ export function UpscalerWorkspace({
       isAborted = true;
       clearTimeout(debounceTimer);
     };
-  }, [resultImageData, activePreset, isProcessing, targetFormat, quality]);
+  }, [resultImageData, isProcessing, exportFormat]);
 
   const handleStartWithAgreement = () => {
     if (!hasAgreedToDownload) {
@@ -241,6 +240,7 @@ export function UpscalerWorkspace({
     canvas: HTMLCanvasElement,
     fileName: string,
   ) => {
+    const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportFormat);
     if (
       targetFormat === "webp" ||
       targetFormat === "jpg" ||
@@ -263,8 +263,15 @@ export function UpscalerWorkspace({
       );
       if (!sourceBlob) throw new Error("Failed to create source blob");
 
-      const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
-      config.resize = { mode: "inherit" };
+      const config: FormatConfig = {
+        id: "upscaler",
+        name: "Upscaler",
+        format: targetFormat as any,
+        enabled: true,
+        quality,
+        resize: { mode: "inherit" },
+        formatOptions: codecOptions as any,
+      };
 
       const converted = await convertImage({
         sourceBlob,
@@ -278,6 +285,7 @@ export function UpscalerWorkspace({
   const handleDownload = async () => {
     if (!resultImageData) return;
 
+    const { targetFormat } = mapQuickExportToEngineConfig(exportFormat);
     setIsDownloading(true);
     const toastId = show({
       title: t("workspace.toastEncodingTitle"),

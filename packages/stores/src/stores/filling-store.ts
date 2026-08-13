@@ -1,7 +1,6 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import type { FormatCodecOptions } from "@imify/core/types"
 import type {
   FillingStep,
   FillingTemplate,
@@ -19,13 +18,12 @@ import {
   createLayerFillState,
 } from "@imify/features/filling/types"
 import { buildRuntimeFillStateIds } from "@imify/features/filling/fill/runtime-items"
-import { useBatchStore, type SavedSetupPreset } from "./batch-store"
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
+import type { SavedSetupPreset } from "./batch-store"
+
+import type { QuickExportFormat } from "@imify/core"
 
 export interface FillingExportSettings {
-  targetFormat: FillingExportFormat
-  quality: number
-  codecOptions: FormatCodecOptions
+  format: QuickExportFormat
   fileNamePattern: string
 }
 
@@ -81,17 +79,7 @@ export interface FillingStoreState {
 }
 
 export const DEFAULT_FILLING_EXPORT_SETTINGS: FillingExportSettings = {
-  targetFormat: "png",
-  quality: 90,
-  codecOptions: {
-    bmp: { colorDepth: 24, dithering: false, ditheringLevel: 0 },
-    jxl: { effort: 7, lossless: false, progressive: false, epf: 1 },
-    webp: { lossless: false, nearLossless: 60, effort: 4, sharpYuv: false, preserveExactAlpha: false },
-    avif: { speed: 6, qualityAlpha: 80, lossless: false, subsample: 1, tune: "auto", highAlphaQuality: false },
-    mozjpeg: { enabled: true, progressive: true, chromaSubsampling: 2 },
-    png: { tinyMode: false, cleanTransparentPixels: false, autoGrayscale: false, dithering: false, ditheringLevel: 0, progressiveInterlaced: false, oxipngCompression: false },
-    tiff: { colorMode: "color" }
-  },
+  format: "png",
   fileNamePattern: "filled-[OriginalName]-[Index]"
 }
 
@@ -208,57 +196,16 @@ export const useFillingStore = create<FillingStoreState>()(
         }),
 
       applyPreset: (preset) => {
-        const { targetFormat, quality, formatOptions, fileNamePattern } = preset.config
-        const supportedFormats: FillingExportFormat[] = ["png", "webp", "avif", "jxl", "jpg", "bmp", "tiff", "mozjpeg"]
-        
-        let mappedFormat: FillingExportFormat = "png"
-        if (supportedFormats.includes(targetFormat as any)) {
-          mappedFormat = targetFormat as FillingExportFormat
-        } else if (targetFormat === "ico") {
-          mappedFormat = "png"
-        }
-
-        const isIdentified = preset.id.startsWith("preset_filling_")
-
-        set((state) => ({
-          activePresetId: (preset.id === VIRTUAL_DEFAULT_PNG_PRESET.id || isIdentified) ? null : preset.id,
-          exportSettings: {
-            ...state.exportSettings,
-            targetFormat: mappedFormat,
-            quality,
-            fileNamePattern: fileNamePattern || state.exportSettings.fileNamePattern,
-            codecOptions: formatOptions as any
-          }
+        set(() => ({
+          activePresetId: preset.id,
         }))
-
-        // Sync global batch store to keep the Output Settings dialog in sync
-        const batchStore = useBatchStore.getState()
-        batchStore.setTargetFormat(targetFormat as any)
-        batchStore.setQuality(quality)
-        if (fileNamePattern) {
-          batchStore.setFileNamePattern(fileNamePattern)
-        }
       },
 
       resetToDefault: () => {
-        const defaultConfig = VIRTUAL_DEFAULT_PNG_PRESET.config
-        set((state) => ({
+        set(() => ({
           activePresetId: null,
-          exportSettings: {
-            ...state.exportSettings,
-            targetFormat: defaultConfig.targetFormat as FillingExportFormat,
-            quality: defaultConfig.quality,
-            fileNamePattern: defaultConfig.fileNamePattern || DEFAULT_FILLING_EXPORT_SETTINGS.fileNamePattern,
-            codecOptions: defaultConfig.formatOptions as any
-          }
+          exportSettings: DEFAULT_FILLING_EXPORT_SETTINGS,
         }))
-
-        const batchStore = useBatchStore.getState()
-        batchStore.setTargetFormat(defaultConfig.targetFormat as any)
-        batchStore.setQuality(defaultConfig.quality)
-        if (defaultConfig.fileNamePattern) {
-          batchStore.setFileNamePattern(defaultConfig.fileNamePattern)
-        }
       }
     }),
     {

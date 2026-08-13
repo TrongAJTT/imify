@@ -25,6 +25,7 @@ export * from "./splicing-types"
 export * from "./workspace-entry-preferences"
 export * from "./pwa-install"
 export * from "./presets"
+export * from "./quick-export"
 export * from "./changelogs"
 
 export * from "./hooks/use-toast"

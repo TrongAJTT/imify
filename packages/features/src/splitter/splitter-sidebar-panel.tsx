@@ -5,9 +5,7 @@ import { SplitterCustomGuidesAccordion } from "./splitter-custom-guides-accordio
 import { SplitterOrderDialog } from "./splitter-order-dialog";
 import { SplitterPatternSequenceAccordion } from "./splitter-pattern-sequence-accordion";
 import { SplitOptionsAccordion } from "./split-options-accordion";
-import { getFormatAdvancedLabel } from "../processor/format-advanced-label";
-import { PresetSelector } from "../processor/preset-selector";
-import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
+import { QuickExportSelector } from "../shared/quick-export-selector";
 import { useSplitterStore } from "@imify/stores/stores/splitter-store";
 import {
   WorkspaceConfigSidebarPanel,
@@ -16,8 +14,7 @@ import {
 } from "@imify/ui";
 import { ArrowUpDown } from "lucide-react";
 import { useTranslation } from "@imify/i18n";
-
-import { SPLITTER_TARGET_FORMATS, useSplitterIdentifiedPreset } from "./config";
+import type { QuickExportFormat } from "@imify/core";
 
 interface SplitterSidebarPanelProps {
   enableWideSidebarGrid?: boolean;
@@ -33,21 +30,11 @@ export function SplitterSidebarPanel({
   const uiState = useSplitterStore((state) => state.uiState);
 
   const setSplitSettings = useSplitterStore((state) => state.setSplitSettings);
+  const setExportSettings = useSplitterStore((state) => state.setExportSettings);
   const setUiState = useSplitterStore((state) => state.setUiState);
   const addColorRule = useSplitterStore((state) => state.addColorRule);
   const updateColorRule = useSplitterStore((state) => state.updateColorRule);
   const removeColorRule = useSplitterStore((state) => state.removeColorRule);
-  const applyPreset = useSplitterStore((state) => state.applyPreset);
-  const resetToDefault = useSplitterStore((state) => state.resetToDefault);
-
-  const { splitterIdentifiedPreset, activePresetId } =
-    useSplitterIdentifiedPreset();
-
-  useIdentifiedPresetLoader(
-    splitterIdentifiedPreset,
-    activePresetId,
-    applyPreset,
-  );
 
   const showColorRuleCard =
     splitSettings.mode === "advanced" &&
@@ -60,7 +47,6 @@ export function SplitterSidebarPanel({
     splitSettings.mode === "advanced" &&
     splitSettings.advancedMethod === "custom_list";
 
-  const codecOptions = exportSettings.codecOptions;
   const [isSplitOrderDialogOpen, setIsSplitOrderDialogOpen] = useState(false);
 
   const splitOrderSummary = useMemo(() => {
@@ -83,11 +69,6 @@ export function SplitterSidebarPanel({
     t,
   ]);
 
-  const formatAdvancedLabel = useMemo(
-    () => getFormatAdvancedLabel(exportSettings.targetFormat),
-    [exportSettings.targetFormat],
-  );
-
   const sidebarItems: WorkspaceConfigSidebarItem[] = useMemo(() => {
     const items: WorkspaceConfigSidebarItem[] = [
       {
@@ -100,6 +81,20 @@ export function SplitterSidebarPanel({
             isOpen={uiState.isSplitOptionsOpen}
             onOpenChange={(open) => setUiState({ isSplitOptionsOpen: open })}
             onChange={setSplitSettings}
+          />
+        ),
+      },
+      {
+        id: "split-order-card",
+        label: "",
+        columnSpan: 2,
+        content: (
+          <SidebarCard
+            label={t("splitOrder")}
+            sublabel={splitOrderSummary}
+            icon={<ArrowUpDown size={14} />}
+            theme="orange"
+            onClick={() => setIsSplitOrderDialogOpen(true)}
           />
         ),
       },
@@ -159,26 +154,12 @@ export function SplitterSidebarPanel({
       label: "",
       columnSpan: 2,
       content: (
-        <PresetSelector
-          label={t("outputSettings")}
+        <QuickExportSelector
+          format={exportSettings.format}
+          onFormatChange={(format: QuickExportFormat) => setExportSettings({ format })}
+          fileNamePattern={exportSettings.fileNamePattern}
+          onFileNamePatternChange={(fileNamePattern: string) => setExportSettings({ fileNamePattern })}
           theme="orange"
-          identifiedPreset={splitterIdentifiedPreset}
-          formatFilter={SPLITTER_TARGET_FORMATS}
-          activePresetId={activePresetId}
-          onSelect={applyPreset}
-          onReset={resetToDefault}
-          renderSidebarContent={() => (
-            <div className="space-y-3">
-              <SidebarCard
-                label={t("splitOrder")}
-                sublabel={splitOrderSummary}
-                icon={<ArrowUpDown size={14} />}
-                theme="orange"
-                onClick={() => setIsSplitOrderDialogOpen(true)}
-              />
-            </div>
-          )}
-          tooltipContent={t("selectPresetTooltip")}
         />
       ),
     });
@@ -188,19 +169,16 @@ export function SplitterSidebarPanel({
     addColorRule,
     removeColorRule,
     setSplitSettings,
+    setExportSettings,
     setUiState,
     showColorRuleCard,
     showCustomGuidesCard,
     showPatternSequenceCard,
     splitOrderSummary,
     splitSettings,
+    exportSettings,
     uiState,
     updateColorRule,
-    formatAdvancedLabel,
-    activePresetId,
-    splitterIdentifiedPreset,
-    applyPreset,
-    resetToDefault,
     t,
   ]);
 

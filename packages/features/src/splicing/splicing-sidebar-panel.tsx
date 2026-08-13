@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo } from "react";
 
 import type { PerformancePreferences } from "../processor/performance-preferences";
 import type { SplicingImageResize } from "./types";
@@ -17,11 +17,8 @@ import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
 } from "@imify/ui";
-import { PresetSelector } from "../processor/preset-selector";
-import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
-import { useBatchStore } from "@imify/stores/stores/batch-store";
-
-import { SPLICING_TARGET_FORMATS, useSplicingIdentifiedPreset } from "./config";
+import { QuickExportSelector } from "../shared/quick-export-selector";
+import type { QuickExportFormat } from "@imify/core";
 
 interface SplicingSidebarPanelProps {
   performancePreferences: PerformancePreferences;
@@ -60,23 +57,11 @@ export function SplicingSidebarPanel({
   const setPreviewShowImageNumber = useSplicingStore(
     (s) => s.setPreviewShowImageNumber,
   );
-  const applyPreset = useSplicingStore((s) => s.applyPreset);
-  const resetToDefault = useSplicingStore((s) => s.resetToDefault);
-
-  const { splicingIdentifiedPreset, activePresetId } =
-    useSplicingIdentifiedPreset();
-
-  useIdentifiedPresetLoader(
-    splicingIdentifiedPreset,
-    activePresetId,
-    applyPreset,
-  );
 
   const bentoLayoutMode = deriveBentoLayoutMode(
     layout.primaryDirection,
     layout.secondaryDirection,
   );
-  /** For Bento, non-start alignments only apply when preview has at least 2 lines (columns/rows). */
   const bentoAlignmentLimited =
     layout.preset === "bento" &&
     (previewBentoFlowGroupCount === null || previewBentoFlowGroupCount <= 1);
@@ -98,46 +83,6 @@ export function SplicingSidebarPanel({
     layout.preset,
     layout.preset === "bento" ? bentoLayoutMode : undefined,
   );
-
-  const batchTargetFormat = useBatchStore((s) => s.targetFormat);
-  const batchQuality = useBatchStore((s) => s.quality);
-  const batchFileNamePattern = useBatchStore((s) => s.fileNamePattern);
-  const batchFormatOptions = useBatchStore((s) => s.formatOptions);
-
-  const lastSyncedBatchConfigRef = useRef<string | null>(null);
-
-  // Sync global batch store changes to local store when in "Custom" mode (activePresetId is null)
-  useEffect(() => {
-    if (activePresetId !== null) {
-      lastSyncedBatchConfigRef.current = null;
-      return;
-    }
-
-    const configKey = `${batchTargetFormat}-${batchQuality}-${batchFileNamePattern}-${JSON.stringify(batchFormatOptions)}`;
-    if (lastSyncedBatchConfigRef.current === configKey) {
-      return;
-    }
-
-    lastSyncedBatchConfigRef.current = configKey;
-    applyPreset({
-      ...splicingIdentifiedPreset,
-      config: {
-        ...splicingIdentifiedPreset.config,
-        targetFormat: batchTargetFormat,
-        quality: batchQuality,
-        fileNamePattern: batchFileNamePattern,
-        formatOptions: batchFormatOptions,
-      },
-    });
-  }, [
-    activePresetId,
-    batchTargetFormat,
-    batchQuality,
-    batchFileNamePattern,
-    batchFormatOptions,
-    splicingIdentifiedPreset,
-    applyPreset,
-  ]);
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
@@ -232,38 +177,33 @@ export function SplicingSidebarPanel({
       label: "",
       columnSpan: 2,
       content: (
-        <PresetSelector
-          label="Output Settings"
-          theme="amber"
-          identifiedPreset={splicingIdentifiedPreset}
-          formatFilter={SPLICING_TARGET_FORMATS}
-          activePresetId={activePresetId}
-          onSelect={applyPreset}
-          onReset={resetToDefault}
-          renderSidebarContent={() => (
-            <div className="pt-2">
-              <SplicingExportPanel
-                targetFormat={exportSettings.targetFormat}
-                concurrency={exportSettings.concurrency}
-                exportMode={exportSettings.exportMode}
-                exportTrimBackground={exportSettings.trimBackground}
-                availableExportModes={availableExportModes}
-                advisorFormatOptions={exportSettings.codecOptions}
-                onConcurrencyChange={(v) =>
-                  setExportSettings({ concurrency: v })
-                }
-                onExportModeChange={(v) => setExportSettings({ exportMode: v })}
-                onExportTrimBackgroundChange={(v) =>
-                  setExportSettings({ trimBackground: v })
-                }
-                performancePreferences={performancePreferences}
-                onOpenSettings={onOpenSettings}
-                disabled={false}
-              />
-            </div>
-          )}
-          tooltipContent="Select an export preset for Image Splicing."
-        />
+        <div className="space-y-3">
+          <QuickExportSelector
+            format={exportSettings.format}
+            onFormatChange={(format: QuickExportFormat) => setExportSettings({ format })}
+            fileNamePattern={exportSettings.fileNamePattern}
+            onFileNamePatternChange={(fileNamePattern: string) => setExportSettings({ fileNamePattern })}
+            theme="amber"
+          />
+          <SplicingExportPanel
+            targetFormat={exportSettings.format}
+            concurrency={exportSettings.concurrency}
+            exportMode={exportSettings.exportMode}
+            exportTrimBackground={exportSettings.trimBackground}
+            availableExportModes={availableExportModes}
+            advisorFormatOptions={{}}
+            onConcurrencyChange={(v) =>
+              setExportSettings({ concurrency: v })
+            }
+            onExportModeChange={(v) => setExportSettings({ exportMode: v })}
+            onExportTrimBackgroundChange={(v) =>
+              setExportSettings({ trimBackground: v })
+            }
+            performancePreferences={performancePreferences}
+            onOpenSettings={onOpenSettings}
+            disabled={false}
+          />
+        </div>
       ),
     },
     {

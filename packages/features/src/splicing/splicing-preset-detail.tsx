@@ -79,7 +79,7 @@ export function SplicingPresetDetail({ preset }: SplicingPresetDetailProps) {
 
   // Export format
   const formatLabel = config.exportFormat
-    ? `${config.exportFormat.toUpperCase()} (${config.exportQuality}%, ${resizeLabel})`
+    ? `${config.exportFormat.toUpperCase()} (${resizeLabel})`
     : "—";
 
   // Export mode

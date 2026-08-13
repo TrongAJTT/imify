@@ -10,6 +10,7 @@ import { AlertTriangle, ImagePlus, Trash2 } from "lucide-react";
 import { useTranslation } from "@imify/i18n";
 
 import { APP_CONFIG } from "@imify/core/config";
+import { mapQuickExportToEngineConfig } from "@imify/core";
 import {
   buildSmartOutputFileName,
   reserveUniqueFileName,
@@ -46,7 +47,6 @@ import { buildSplitterSplitPlan } from "./split-engine";
 import { decodeFileToImageData } from "@imify/engine/image-pipeline/decode-image-data";
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
-import { buildActiveSplitterFormatOptions } from "@imify/stores/stores/splitter-format-options";
 import { useSplitterStore } from "@imify/stores/stores/splitter-store";
 import { SplitterWorkspaceShell } from "./splitter-workspace-shell";
 import {
@@ -372,7 +372,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushImportToast({
         id: toastId,
         fileName: `Importing ${imageFiles.length} images`,
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
         status: "processing",
         percent: 5,
         message: "Preparing image import...",
@@ -404,7 +404,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushImportToast({
           id: toastId,
           fileName: `Importing ${imageFiles.length} images`,
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
           status: "processing",
           percent,
           message: `Creating thumbnails ${index + 1}/${imageFiles.length}...`,
@@ -415,7 +415,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushImportToast({
           id: toastId,
           fileName: "Image import failed",
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
           status: "error",
           percent: 100,
           message: "No valid images were imported.",
@@ -438,7 +438,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushImportToast({
         id: toastId,
         fileName: "Image import complete",
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
         status: "success",
         percent: 100,
         message: `Imported ${preparedItems.length} image${preparedItems.length === 1 ? "" : "s"}.`,
@@ -450,7 +450,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         importToastHideTimerRef.current = null;
       }, 2500);
     },
-    [activeImageId, exportSettings.targetFormat, pushImportToast],
+    [activeImageId, exportSettings.format, pushImportToast],
   );
 
   useClipboardImageIntake({
@@ -580,10 +580,11 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
     setIsExporting(true);
     setErrorText(null);
     const toastId = `splitter_export_${Date.now()}`;
+    const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportSettings.format);
     pushExportToast({
       id: toastId,
       fileName: "Split export",
-      targetFormat: exportSettings.targetFormat,
+      targetFormat: targetFormat as any,
       status: "processing",
       percent: 2,
       message: "Preparing split export...",
@@ -591,7 +592,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
 
     const usedNames = new Set<string>();
     const exportFiles: Array<{ name: string; blob: Blob }> = [];
-    const formatOptions = buildActiveSplitterFormatOptions(exportSettings);
     let globalIndex = 1;
 
     try {
@@ -600,7 +600,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushExportToast({
           id: toastId,
           fileName: "Split export",
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: targetFormat as any,
           status: "processing",
           percent: Math.min(
             70,
@@ -620,9 +620,9 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
 
         const convertedSegments = await convertSplitterSegments({
           segments,
-          targetFormat: exportSettings.targetFormat,
-          quality: exportSettings.quality,
-          formatOptions,
+          targetFormat: targetFormat as any,
+          quality,
+          formatOptions: codecOptions as any,
           onProgress: ({ completed, total }) => {
             const imageBase = (imageIndex / Math.max(1, images.length)) * 60;
             const imageStep =
@@ -635,7 +635,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
             pushExportToast({
               id: toastId,
               fileName: "Split export",
-              targetFormat: exportSettings.targetFormat,
+              targetFormat: targetFormat as any,
               status: "processing",
               percent,
               message: `Encoding ${image.file.name}: ${completed}/${total}`,
@@ -670,7 +670,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushExportToast({
           id: toastId,
           fileName: "Split export",
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
           status: "processing",
           percent: 90,
           message: "Packaging ZIP...",
@@ -688,7 +688,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
           pushExportToast({
             id: toastId,
             fileName: "Split export",
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
             status: "processing",
             percent,
             message: `Downloading ${index + 1}/${exportFiles.length}...`,
@@ -701,7 +701,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushExportToast({
         id: toastId,
         fileName: "Split export complete",
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
         status: "success",
         percent: 100,
         message: `Export finished: ${exportFiles.length} files.`,
@@ -722,7 +722,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushExportToast({
         id: toastId,
         fileName: "Split export failed",
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
         status: "error",
         percent: 100,
         message,

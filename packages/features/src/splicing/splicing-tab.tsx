@@ -9,6 +9,7 @@ import React, {
 import { Trash2 } from "lucide-react";
 
 import { APP_CONFIG } from "@imify/core/config";
+import { mapQuickExportToEngineConfig } from "@imify/core";
 import { buildResizeQuickStatsFromDimensions } from "@imify/core/resize-quick-stats";
 import { ToastContainer, useRenameInputPrompt } from "@imify/ui";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
@@ -336,11 +337,7 @@ export function SplicingTab({
   const skipSplicingHeavyPreviewQualityWarning = useBatchStore(
     (state) => state.skipSplicingHeavyPreviewQualityWarning,
   );
-  const canExportPdf =
-    exportSettings.targetFormat === "jpg" ||
-    exportSettings.targetFormat === "mozjpeg" ||
-    exportSettings.targetFormat === "png" ||
-    exportSettings.targetFormat === "webp";
+  const canExportPdf = true;
 
   const storeState = useSplicingStore.getState();
   const layoutConfig = useMemo(
@@ -406,7 +403,7 @@ export function SplicingTab({
       pushPreviewQualityToast({
         id: toastId,
         fileName: t("toasts.previewQualityToast", { percent: next }),
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
         status: "processing",
         percent: 5,
         message: t("toasts.previewQualityMsg"),
@@ -415,7 +412,7 @@ export function SplicingTab({
     [
       images.length,
       previewShowImageNumber,
-      exportSettings.targetFormat,
+      exportSettings.format,
       setPreviewQualityPercent,
       pushPreviewQualityToast,
     ],
@@ -510,7 +507,7 @@ export function SplicingTab({
         pushImportToast({
           id: toastId,
           fileName: t("toasts.importing", { count: imageFiles.length }),
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
           status: "processing",
           percent: 5,
           message: t("toasts.importPrep"),
@@ -544,7 +541,7 @@ export function SplicingTab({
           pushImportToast({
             id: toastId,
             fileName: t("toasts.importing", { count: imageFiles.length }),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
             status: "processing",
             percent,
             message: t("toasts.importThumb", {
@@ -560,7 +557,7 @@ export function SplicingTab({
           pushImportToast({
             id: toastId,
             fileName: t("toasts.importFailed"),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
             status: "error",
             percent: 100,
             message: t("toasts.importFailedDesc"),
@@ -579,7 +576,7 @@ export function SplicingTab({
         pushImportToast({
           id: toastId,
           fileName: t("toasts.importing", { count: imageFiles.length }),
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
           status: "processing",
           percent: 85,
           message: t("toasts.importRender"),
@@ -609,7 +606,7 @@ export function SplicingTab({
         pendingRenderRef.current = null;
       }
     },
-    [exportSettings.targetFormat, previewShowImageNumber, pushImportToast, t],
+    [exportSettings.format, previewShowImageNumber, pushImportToast, t],
   );
 
   const finalizeImportToast = useCallback(
@@ -618,7 +615,7 @@ export function SplicingTab({
       pushImportToast({
         id: toastId,
         fileName: t("toasts.importComplete"),
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
         status: "success",
         percent: 100,
         message: t("toasts.importCompleteDesc", { count: imageCount }),
@@ -631,7 +628,7 @@ export function SplicingTab({
         importToastHideTimerRef.current = null;
       }, 2500);
     },
-    [exportSettings.targetFormat, pushImportToast, t],
+    [exportSettings.format, pushImportToast, t],
   );
 
   const finalizePreviewQualityToast = useCallback(
@@ -640,7 +637,7 @@ export function SplicingTab({
       pushPreviewQualityToast({
         id: toastId,
         fileName: t("toasts.previewQualityToast", { percent: qualityPercent }),
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
         status: "success",
         percent: 100,
         message: t("toasts.previewUpdated"),
@@ -653,7 +650,7 @@ export function SplicingTab({
         previewQualityToastHideTimerRef.current = null;
       }, 2500);
     },
-    [exportSettings.targetFormat, pushPreviewQualityToast, t],
+    [exportSettings.format, pushPreviewQualityToast, t],
   );
 
   const handlePreviewSourcesProgress = useCallback(
@@ -669,7 +666,7 @@ export function SplicingTab({
         fileName: t("toasts.previewQualityToast", {
           percent: pending.qualityPercent,
         }),
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
         status: "processing",
         percent,
         message:
@@ -681,7 +678,7 @@ export function SplicingTab({
             : t("toasts.previewQualityMsg"),
       });
     },
-    [exportSettings.targetFormat, pushPreviewQualityToast, t],
+    [exportSettings.format, pushPreviewQualityToast, t],
   );
 
   const handlePreviewRendered = useCallback(
@@ -697,7 +694,7 @@ export function SplicingTab({
             fileName: t("toasts.importing", {
               count: importPending.expectedCount,
             }),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
             status: "processing",
             percent: 90,
             message: t("toasts.importNumbers"),
@@ -719,7 +716,7 @@ export function SplicingTab({
             fileName: t("toasts.previewQualityToast", {
               percent: qualityPending.qualityPercent,
             }),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
             status: "processing",
             percent: 90,
             message: t("toasts.importNumbers"),
@@ -728,7 +725,7 @@ export function SplicingTab({
       }
     },
     [
-      exportSettings.targetFormat,
+      exportSettings.format,
       finalizeImportToast,
       finalizePreviewQualityToast,
       pushImportToast,
@@ -754,7 +751,7 @@ export function SplicingTab({
             fileName: t("toasts.importing", {
               count: importPending.expectedCount,
             }),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
             status: "processing",
             percent,
             message: t("toasts.importNumbersProg", {
@@ -784,7 +781,7 @@ export function SplicingTab({
             fileName: t("toasts.previewQualityToast", {
               percent: qualityPending.qualityPercent,
             }),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
             status: "processing",
             percent,
             message: t("toasts.importNumbersProg", {
@@ -804,7 +801,7 @@ export function SplicingTab({
       }
     },
     [
-      exportSettings.targetFormat,
+      exportSettings.format,
       finalizeImportToast,
       finalizePreviewQualityToast,
       pushImportToast,

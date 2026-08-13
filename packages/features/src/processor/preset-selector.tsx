@@ -22,7 +22,6 @@ import { PresetCard } from "./preset-card";
 import { BatchSetupSidebarPanel } from "./setup-sidebar-panel";
 import { DEFAULT_PERFORMANCE_PREFERENCES } from "./performance-preferences";
 import { useTranslation } from "@imify/i18n";
-import { isFeaturePreset } from "@imify/core";
 
 import { useIsDesktopLayout } from "../workspace-chrome/desktop-layout";
 
@@ -70,16 +69,11 @@ export function PresetSelector({
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<"processor" | "feature">(
-    "processor",
-  );
   const [activeTab, setActiveTab] = useState<"select" | "custom">("custom");
 
   // Form Custom Creation State (simplified to basic metadata)
   const [customName, setCustomName] = useState("");
   const [customColor, setCustomColor] = useState("#0ea5e9");
-
-
 
   // Initialize metadata only when the dialog opens
   useEffect(() => {
@@ -95,7 +89,7 @@ export function PresetSelector({
       }
       setActiveTab("custom");
     }
-  }, [isDialogOpen]); // Removed identifiedPreset dependency to prevent tab reset on sync
+  }, [isDialogOpen]);
 
   const handleCreateAndApply = () => {
     const createdId = saveCurrentPreset({
@@ -104,7 +98,6 @@ export function PresetSelector({
       highlightColor: customColor,
     });
 
-    // Synchronously retrieve the newly created preset object from the store and apply it
     const newPreset = useBatchStore
       .getState()
       .presets.find((p) => p.id === createdId);
@@ -129,7 +122,6 @@ export function PresetSelector({
     ];
     if (!formatFilter) return baseFormats;
 
-    // Include 'all' plus any format allowed by formatFilter
     return [
       "all",
       ...baseFormats.slice(1).filter((f) => {
@@ -139,17 +131,11 @@ export function PresetSelector({
     ];
   }, [formatFilter]);
 
-  // Filter and sort presets by context "single" and optional format filter + dialog filter
   const sortedAvailablePresets = useMemo(() => {
     const list = presets.filter((p) => {
       const contextMatch = true;
       const propFormatMatch =
         !formatFilter || formatFilter.includes(p.config.targetFormat);
-
-      const typeMatch =
-        selectedType === "processor"
-          ? !isFeaturePreset(p.id)
-          : isFeaturePreset(p.id);
 
       let dialogFormatMatch = true;
       if (selectedFormat !== "all") {
@@ -158,7 +144,7 @@ export function PresetSelector({
         dialogFormatMatch = fmt === selectedFormat;
       }
 
-      return contextMatch && propFormatMatch && dialogFormatMatch && typeMatch;
+      return contextMatch && propFormatMatch && dialogFormatMatch;
     });
 
     return [...list].sort((a, b) => {
@@ -169,7 +155,7 @@ export function PresetSelector({
       }
       return b.updatedAt - a.updatedAt;
     });
-  }, [presets, formatFilter, selectedFormat, selectedType]);
+  }, [presets, formatFilter, selectedFormat]);
 
   const activePreset = activePresetId
     ? presets.find((p) => p.id === activePresetId)
@@ -339,37 +325,8 @@ export function PresetSelector({
           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
             {activeTab === "select" ? (
               <>
-                {/* Type & Format Filter Shields */}
+                {/* Format Filter Shield */}
                 <div className="flex flex-wrap items-center gap-2 justify-start">
-                  <Shield
-                    left={t("presetSelector.type")}
-                    size="sm"
-                    leftBg="bg-slate-700 dark:bg-slate-800"
-                    leftColor="text-white"
-                    rightBg="bg-slate-100 dark:bg-slate-800"
-                    rightColor="text-slate-600 dark:text-slate-400"
-                    className="border border-slate-200 dark:border-slate-700"
-                    right={
-                      <div className="flex items-center gap-1.5 h-full">
-                        {(["processor", "feature"] as const).map(
-                          (t, i, arr) => (
-                            <React.Fragment key={t}>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedType(t)}
-                                className={`transition-colors hover:text-sky-500 py-1 ${selectedType === t ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
-                              >
-                                {t === "processor" ? "Processor" : "Features"}
-                              </button>
-                              {i < arr.length - 1 && (
-                                <span className="opacity-30">•</span>
-                              )}
-                            </React.Fragment>
-                          ),
-                        )}
-                      </div>
-                    }
-                  />
 
                   <Shield
                     left={t("presetSelector.filter")}

@@ -57,22 +57,6 @@ function cloneSplitSettings(settings: SplitterSplitSettings): SplitterSplitSetti
 function cloneExportSettings(settings: SplitterExportSettings): SplitterExportSettings {
   return {
     ...settings,
-    codecOptions: {
-      ...settings.codecOptions,
-      bmp: settings.codecOptions.bmp ? { ...settings.codecOptions.bmp } : undefined,
-      jxl: settings.codecOptions.jxl ? { ...settings.codecOptions.jxl } : undefined,
-      webp: settings.codecOptions.webp ? { ...settings.codecOptions.webp } : undefined,
-      avif: settings.codecOptions.avif ? { ...settings.codecOptions.avif } : undefined,
-      mozjpeg: settings.codecOptions.mozjpeg ? { ...settings.codecOptions.mozjpeg } : undefined,
-      png: settings.codecOptions.png ? { ...settings.codecOptions.png } : undefined,
-      tiff: settings.codecOptions.tiff ? { ...settings.codecOptions.tiff } : undefined,
-      ico: settings.codecOptions.ico
-        ? {
-            ...settings.codecOptions.ico,
-            sizes: [...settings.codecOptions.ico.sizes]
-          }
-        : undefined
-    }
   }
 }
 

@@ -23,7 +23,7 @@ export function SplitterPresetDetail({ preset }: SplitterPresetDetailProps) {
       <div className="truncate">{toMethodLabel(preset)}</div>
       <div className="truncate text-right">{split.direction}</div>
       <div className="truncate">Format</div>
-      <div className="truncate text-right">{preset.config.exportSettings.targetFormat.toUpperCase()}</div>
+      <div className="truncate text-right">{preset.config.exportSettings.format.toUpperCase()}</div>
     </div>
   )
 }

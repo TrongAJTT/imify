@@ -10,13 +10,10 @@ import {
 } from "@imify/ui";
 import { Sliders, Maximize2, Grid } from "lucide-react";
 import { IMAGE_UPSCALER_MODELS } from "./models";
-import { PresetSelector } from "../processor/preset-selector";
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
-import { useImageUpscalerStore, type SavedSetupPreset } from "@imify/stores";
-import { useIdentifiedPresetLoader } from "../shared/use-identified-preset-loader";
+import { QuickExportSelector } from "../shared/quick-export-selector";
+import { useImageUpscalerStore } from "@imify/stores";
 import { ModelVariantDialog } from "./model-variant-dialog";
 import { AiEngineAccordionCard } from "../shared/ai-engine-accordion-card";
-import { FEATURE_PRESET_PREFIXES } from "@imify/core";
 
 import { useUpscalerPanelContent } from "./upscaler-preset-info-panel";
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
@@ -24,7 +21,6 @@ import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
 import { useTranslation } from "@imify/i18n";
 
 import {
-  UPSCALER_PRESET,
   DENOISE_STRENGTH_MIN,
   DENOISE_STRENGTH_MAX,
   DENOISE_STRENGTH_STEP,
@@ -53,9 +49,10 @@ export function UpscalerSidebar({
     setProcessingMode,
     unloadModelAfterProcess,
     setUnloadModelAfterProcess,
-    activePresetId,
-    applyPreset,
-    resetToDefault,
+    exportFormat,
+    setExportFormat,
+    fileNamePattern,
+    setFileNamePattern,
     hasImage,
   } = useImageUpscalerStore();
 
@@ -68,9 +65,6 @@ export function UpscalerSidebar({
   const [isModelVariantDialogOpen, setIsModelVariantDialogOpen] =
     useState(false);
   const isScaleLocked = typeof selectedModel.scaleFactor === "number";
-
-  // Auto-apply identified preset if it exists and no preset is active (initial load)
-  useIdentifiedPresetLoader(UPSCALER_PRESET, activePresetId, applyPreset);
 
   useEffect(() => {
     if (isScaleLocked && scaleFactor !== selectedModel.scaleFactor) {
@@ -203,15 +197,12 @@ export function UpscalerSidebar({
       id: "export-presets",
       label: "",
       content: (
-        <PresetSelector
-          label={t("sidebar.outputPreset")}
+        <QuickExportSelector
+          format={exportFormat}
+          onFormatChange={setExportFormat}
+          fileNamePattern={fileNamePattern}
+          onFileNamePatternChange={setFileNamePattern}
           theme="purple"
-          identifiedPreset={UPSCALER_PRESET}
-          formatFilter={["png", "webp", "avif", "jxl", "jpg"]}
-          activePresetId={activePresetId}
-          onSelect={applyPreset}
-          onReset={resetToDefault}
-          tooltipContent={t("sidebar.outputPresetTooltip")}
         />
       ),
     },

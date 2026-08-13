@@ -1,7 +1,6 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import { normalizeJxlCodecOptionsFromExportSource } from "@imify/core/jxl-options"
 import type {
   PatternCanvasSettings,
   PatternExportFormat,
@@ -12,7 +11,6 @@ import {
   DEFAULT_PATTERN_EXPORT_SETTINGS,
   DEFAULT_PATTERN_SETTINGS,
 } from "@imify/features/pattern/types"
-import type { BmpColorDepth, TiffColorMode } from "@imify/core/types"
 import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "./preset-colors"
 
 
@@ -21,39 +19,12 @@ const DEFAULT_PATTERN_PRESET_ID = "pattern_preset_default_sky"
 
 export type PatternPresetViewMode = "select" | "workspace"
 
+import type { QuickExportFormat } from "@imify/core"
+
 export interface PatternPresetConfig {
   canvas: PatternCanvasSettings
   settings: PatternSettings
-  exportFormat: PatternExportFormat
-  exportQuality: number
-  exportJxlEffort: number
-  exportJxlLossless: boolean
-  exportJxlProgressive: boolean
-  exportJxlEpf: 0 | 1 | 2 | 3
-  exportAvifSpeed: number
-  exportAvifQualityAlpha: number
-  exportAvifLossless: boolean
-  exportAvifSubsample: string
-  exportAvifTune: string
-  exportAvifHighAlphaQuality: boolean
-  exportMozJpegProgressive: boolean
-  exportMozJpegChromaSubsampling: string
-  exportPngTinyMode: boolean
-  exportPngCleanTransparentPixels: boolean
-  exportPngAutoGrayscale: boolean
-  exportPngDithering: boolean
-  exportPngDitheringLevel: number
-  exportPngProgressiveInterlaced: boolean
-  exportPngOxiPngCompression: boolean
-  exportWebpLossless: boolean
-  exportWebpNearLossless: number
-  exportWebpEffort: number
-  exportWebpSharpYuv: boolean
-  exportWebpPreserveExactAlpha: boolean
-  exportBmpColorDepth: BmpColorDepth
-  exportBmpDithering: boolean
-  exportBmpDitheringLevel: number
-  exportTiffColorMode: TiffColorMode
+  exportFormat: QuickExportFormat
 }
 
 export interface SavedPatternPreset {
@@ -103,41 +74,10 @@ function clonePatternSettings(settings: PatternSettings): PatternSettings {
 }
 
 export function clonePatternPresetConfig(config: PatternPresetConfig): PatternPresetConfig {
-  const normalizedJxlOptions = normalizeJxlCodecOptionsFromExportSource(config)
-
   return {
     canvas: clonePatternCanvas(config.canvas),
     settings: clonePatternSettings(config.settings),
     exportFormat: config.exportFormat,
-    exportQuality: config.exportQuality,
-    exportJxlEffort: normalizedJxlOptions.effort,
-    exportJxlLossless: normalizedJxlOptions.lossless,
-    exportJxlProgressive: normalizedJxlOptions.progressive,
-    exportJxlEpf: normalizedJxlOptions.epf,
-    exportAvifSpeed: config.exportAvifSpeed,
-    exportAvifQualityAlpha: config.exportAvifQualityAlpha,
-    exportAvifLossless: config.exportAvifLossless,
-    exportAvifSubsample: config.exportAvifSubsample,
-    exportAvifTune: config.exportAvifTune,
-    exportAvifHighAlphaQuality: config.exportAvifHighAlphaQuality,
-    exportMozJpegProgressive: config.exportMozJpegProgressive,
-    exportMozJpegChromaSubsampling: config.exportMozJpegChromaSubsampling,
-    exportPngTinyMode: config.exportPngTinyMode,
-    exportPngCleanTransparentPixels: config.exportPngCleanTransparentPixels,
-    exportPngAutoGrayscale: config.exportPngAutoGrayscale,
-    exportPngDithering: config.exportPngDithering,
-    exportPngDitheringLevel: config.exportPngDitheringLevel,
-    exportPngProgressiveInterlaced: config.exportPngProgressiveInterlaced,
-    exportPngOxiPngCompression: config.exportPngOxiPngCompression,
-    exportWebpLossless: config.exportWebpLossless,
-    exportWebpNearLossless: config.exportWebpNearLossless,
-    exportWebpEffort: config.exportWebpEffort,
-    exportWebpSharpYuv: config.exportWebpSharpYuv,
-    exportWebpPreserveExactAlpha: config.exportWebpPreserveExactAlpha,
-    exportBmpColorDepth: config.exportBmpColorDepth,
-    exportBmpDithering: config.exportBmpDithering,
-    exportBmpDitheringLevel: config.exportBmpDitheringLevel,
-    exportTiffColorMode: config.exportTiffColorMode,
   }
 }
 
@@ -146,35 +86,6 @@ function createDefaultPatternConfig(): PatternPresetConfig {
     canvas: clonePatternCanvas(DEFAULT_PATTERN_CANVAS_SETTINGS),
     settings: clonePatternSettings(DEFAULT_PATTERN_SETTINGS),
     exportFormat: DEFAULT_PATTERN_EXPORT_SETTINGS.exportFormat,
-    exportQuality: DEFAULT_PATTERN_EXPORT_SETTINGS.exportQuality,
-    exportJxlEffort: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlEffort,
-    exportJxlLossless: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlLossless,
-    exportJxlProgressive: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlProgressive,
-    exportJxlEpf: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlEpf,
-    exportAvifSpeed: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifSpeed,
-    exportAvifQualityAlpha: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifQualityAlpha,
-    exportAvifLossless: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifLossless,
-    exportAvifSubsample: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifSubsample,
-    exportAvifTune: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifTune,
-    exportAvifHighAlphaQuality: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifHighAlphaQuality,
-    exportMozJpegProgressive: DEFAULT_PATTERN_EXPORT_SETTINGS.exportMozJpegProgressive,
-    exportMozJpegChromaSubsampling: DEFAULT_PATTERN_EXPORT_SETTINGS.exportMozJpegChromaSubsampling,
-    exportPngTinyMode: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngTinyMode,
-    exportPngCleanTransparentPixels: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngCleanTransparentPixels,
-    exportPngAutoGrayscale: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngAutoGrayscale,
-    exportPngDithering: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngDithering,
-    exportPngDitheringLevel: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngDitheringLevel,
-    exportPngProgressiveInterlaced: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngProgressiveInterlaced,
-    exportPngOxiPngCompression: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngOxiPngCompression,
-    exportWebpLossless: DEFAULT_PATTERN_EXPORT_SETTINGS.exportWebpLossless,
-    exportWebpNearLossless: DEFAULT_PATTERN_EXPORT_SETTINGS.exportWebpNearLossless,
-    exportWebpEffort: DEFAULT_PATTERN_EXPORT_SETTINGS.exportWebpEffort,
-    exportWebpSharpYuv: DEFAULT_PATTERN_EXPORT_SETTINGS.exportWebpSharpYuv,
-    exportWebpPreserveExactAlpha: DEFAULT_PATTERN_EXPORT_SETTINGS.exportWebpPreserveExactAlpha,
-    exportBmpColorDepth: DEFAULT_PATTERN_EXPORT_SETTINGS.exportBmpColorDepth,
-    exportBmpDithering: DEFAULT_PATTERN_EXPORT_SETTINGS.exportBmpDithering,
-    exportBmpDitheringLevel: DEFAULT_PATTERN_EXPORT_SETTINGS.exportBmpDitheringLevel,
-    exportTiffColorMode: DEFAULT_PATTERN_EXPORT_SETTINGS.exportTiffColorMode,
   }
 }
 

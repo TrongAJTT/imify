@@ -1,6 +1,3 @@
-import type { SavedSetupPreset } from "@imify/stores/stores/batch-store";
-import { FEATURE_PRESET_PREFIXES } from "@imify/core/presets";
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "../processor/preset-utils";
 import type { GridDesignParams } from "../filling/types";
 
 export const MAX_COLLAGE_IMAGES = 10;
@@ -13,18 +10,6 @@ export interface CollageLayoutPreset {
   imageCount: number;
   params: GridDesignParams;
   svgPreview: string; // inline SVG paths or elements
-}
-
-export function useCollageIdentifiedPreset(): SavedSetupPreset {
-  return {
-    ...VIRTUAL_DEFAULT_PNG_PRESET,
-    id: `${FEATURE_PRESET_PREFIXES.COLLAGE_MAKER}_identified`,
-    name: "Collage Maker Preset",
-    highlightColor: "#f59e0b",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    pinned: false,
-  };
 }
 
 export const COLLAGE_LAYOUT_PRESETS: CollageLayoutPreset[] = [

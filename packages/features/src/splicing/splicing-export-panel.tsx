@@ -12,9 +12,11 @@ import { EXPORT_MODE_OPTIONS, SelectField } from "./splicing-sidebar-fields";
 import type { FormatCodecOptions } from "@imify/core/types";
 import type { SplicingExportFormat, SplicingExportMode } from "./types";
 
+import { mapQuickExportToEngineConfig, type QuickExportFormat } from "@imify/core";
+
 interface SplicingExportPanelProps {
   /** Format being exported (for concurrency limits) */
-  targetFormat: SplicingExportFormat;
+  targetFormat: QuickExportFormat;
   /** Current concurrency value */
   concurrency: number;
   /** File name pattern (displays as sublabel) */
@@ -75,7 +77,8 @@ export function SplicingExportPanel({
       onExportTrimBackgroundChange(false);
     }
   };
-  const concurrencyFormat = targetFormat === "mozjpeg" ? "jpg" : targetFormat;
+  const engineFormat = mapQuickExportToEngineConfig(targetFormat).targetFormat;
+  const concurrencyFormat = (engineFormat === "mozjpeg" ? "jpg" : engineFormat) as any;
 
   // Filter and translate options
   const modeOptions = useMemo(() => {
@@ -98,14 +101,14 @@ export function SplicingExportPanel({
   const advisor = useMemo(
     () =>
       calculateConcurrencyAdvisor({
-        targetFormat,
+        targetFormat: engineFormat as any,
         selectedConcurrency: concurrency,
         formatOptions: advisorFormatOptions,
         preferences: performancePreferences,
         t,
       }),
     [
-      targetFormat,
+      engineFormat,
       concurrency,
       advisorFormatOptions,
       performancePreferences,
@@ -140,7 +143,7 @@ export function SplicingExportPanel({
           headerChip={
             <SmartConcurrencyAdvisorCard
               advisor={advisor}
-              targetFormat={targetFormat}
+              targetFormat={engineFormat as any}
               selectedConcurrency={concurrency}
               formatOptions={advisorFormatOptions}
               performancePreferences={performancePreferences}

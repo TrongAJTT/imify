@@ -20,6 +20,7 @@ import { Download, Loader2 } from "lucide-react";
 
 import { ToastContainer } from "@imify/ui/components/toast-container";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
+import { mapQuickExportToEngineConfig, type QuickExportFormat } from "@imify/core";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import {
   buildFillRuntimeItems,
@@ -48,7 +49,6 @@ import {
   useTransformGuides,
   type RectBounds,
 } from "@imify/features/filling/use-transform-guides";
-import { buildActiveFillingFormatOptions } from "@imify/stores/stores/filling-format-options";
 import { preventWheelEvent } from "../../shared/prevent-wheel-event";
 import { useClipboardImageIntake } from "../../shared/use-clipboard-image-intake";
 import {
@@ -99,15 +99,9 @@ function safeRevokeObjectUrl(value: string | null | undefined) {
 }
 
 function resolveToastTargetFormat(
-  exportFormat: ReturnType<
-    typeof useFillingStore.getState
-  >["exportSettings"]["targetFormat"],
+  exportFormat: QuickExportFormat,
 ): ConversionProgressPayload["targetFormat"] {
-  if (exportFormat === "psd") {
-    return "png";
-  }
-
-  return exportFormat;
+  return mapQuickExportToEngineConfig(exportFormat).targetFormat as any;
 }
 
 interface FillWorkspaceProps {
@@ -156,7 +150,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState);
   const swapLayerFillStates = useFillingStore((s) => s.swapLayerFillStates);
   const exportSettings = useFillingStore((s) => s.exportSettings);
-  const { targetFormat: exportFormat, quality: exportQuality } = exportSettings;
+  const { targetFormat: exportFormat, quality: exportQuality } = mapQuickExportToEngineConfig(exportSettings.format);
   const { getShortcutLabel } = useShortcutPreferences();
 
   const [loadedImages, setLoadedImages] = useState<
@@ -1382,11 +1376,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
       setIsExporting(true);
       const toastId = `fill_export_${Date.now()}`;
-      const toastTargetFormat = resolveToastTargetFormat(exportFormat);
+      const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportSettings.format);
+      const toastTargetFormat = resolveToastTargetFormat(targetFormat as any);
 
       pushExportToast({
         id: toastId,
-        fileName: `Export ${exportFormat.toUpperCase()}`,
+        fileName: `Export ${exportSettings.format.toUpperCase()}`,
         targetFormat: toastTargetFormat,
         status: "processing",
         percent: 2,
@@ -1406,13 +1401,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           canvasFillState,
           runtimeItems: fillRuntimeItems,
           groupRuntimeTransforms,
-          exportFormat,
-          exportQuality,
+          exportFormat: targetFormat as any,
+          exportQuality: quality,
           fileNamePattern: exportSettings.fileNamePattern,
           input: inputValue,
-          formatOptions: buildActiveFillingFormatOptions(
-            useFillingStore.getState(),
-          ),
+          formatOptions: codecOptions as any,
           onProgress: ({ percent, message }) => {
             pushExportToast({
               id: toastId,

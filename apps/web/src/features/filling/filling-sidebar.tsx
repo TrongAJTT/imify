@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { Box, Layers, Palette } from "lucide-react";
+import { Box, Palette } from "lucide-react";
 import { AccordionCard } from "@imify/ui/ui/accordion-card";
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card";
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover";
@@ -20,13 +19,8 @@ import type {
   LayerGroup,
   VectorLayer,
 } from "@imify/features/filling/types";
-import { PresetSelector } from "@imify/features/processor/preset-selector";
-import { useIdentifiedPresetLoader } from "@imify/features/shared/use-identified-preset-loader";
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils";
-import {
-  useBatchStore,
-  type SavedSetupPreset,
-} from "@imify/stores/stores/batch-store";
+import { QuickExportSelector } from "@imify/features/shared/quick-export-selector";
+import { QuickExportFormat } from "@imify/core";
 
 type FillingSidebarMode =
   | "select"
@@ -34,16 +28,6 @@ type FillingSidebarMode =
   | "edit"
   | "symmetric-generate"
   | "grid-design";
-
-const FILLING_TARGET_FORMATS = [
-  "png",
-  "webp",
-  "avif",
-  "jxl",
-  "jpg",
-  "bmp",
-  "tiff",
-];
 
 interface ManualEditorSidebarBindings {
   layers: VectorLayer[];
@@ -59,17 +43,6 @@ interface ManualEditorSidebarBindings {
   onToggleLayerSelection: (id: string) => void;
   onClearSelection: () => void;
 }
-
-const FORMAT_OPTIONS = [
-  { value: "jpg", label: "JPG" },
-  { value: "mozjpeg", label: "MozJPEG" },
-  { value: "png", label: "PNG" },
-  { value: "webp", label: "WebP" },
-  { value: "avif", label: "AVIF" },
-  { value: "jxl", label: "JXL" },
-  { value: "bmp", label: "BMP" },
-  { value: "tiff", label: "TIFF" },
-];
 
 const BACKGROUND_OPTIONS: Array<{
   value: CanvasBackgroundType;
@@ -111,78 +84,8 @@ export function FillingWorkflowSidebar({
   const setCanvasFillState = useFillingStore(
     (state) => state.setCanvasFillState,
   );
-
   const exportSettings = useFillingStore((state) => state.exportSettings);
-  const activePresetId = useFillingStore((state) => state.activePresetId);
-  const applyPreset = useFillingStore((state) => state.applyPreset);
-  const resetToDefault = useFillingStore((state) => state.resetToDefault);
-
-  const identifiedPresetId = `preset_filling_${template.id}`;
-  const identifiedPresetName = `Filling #${template.name}`;
-  const identifiedPresetColor = "#06b6d4";
-
-  const fillingIdentifiedPreset: SavedSetupPreset = useMemo(
-    () => ({
-      ...VIRTUAL_DEFAULT_PNG_PRESET,
-      id: identifiedPresetId,
-      name: identifiedPresetName,
-      highlightColor: identifiedPresetColor,
-      config: {
-        ...VIRTUAL_DEFAULT_PNG_PRESET.config,
-        targetFormat: exportSettings.targetFormat as any,
-        quality: exportSettings.quality,
-        formatOptions: exportSettings.codecOptions as any,
-        fileNamePattern: exportSettings.fileNamePattern,
-      },
-    }),
-    [
-      identifiedPresetId,
-      identifiedPresetName,
-      identifiedPresetColor,
-      exportSettings,
-    ],
-  );
-
-  useIdentifiedPresetLoader(
-    fillingIdentifiedPreset,
-    activePresetId,
-    applyPreset,
-  );
-
-  const batchTargetFormat = useBatchStore((s) => s.targetFormat);
-  const batchQuality = useBatchStore((s) => s.quality);
-  const batchFileNamePattern = useBatchStore((s) => s.fileNamePattern);
-  const batchFormatOptions = useBatchStore((s) => s.formatOptions);
-
-  // Sync global batch store changes to local store when in "Custom" mode (activePresetId is null)
-  useEffect(() => {
-    if (activePresetId === null) {
-      applyPreset({
-        id: identifiedPresetId,
-        name: identifiedPresetName,
-        highlightColor: identifiedPresetColor,
-        config: {
-          ...VIRTUAL_DEFAULT_PNG_PRESET.config,
-          targetFormat: batchTargetFormat,
-          quality: batchQuality,
-          fileNamePattern: batchFileNamePattern,
-          formatOptions: batchFormatOptions,
-        },
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-    }
-  }, [
-    activePresetId,
-    batchTargetFormat,
-    batchQuality,
-    batchFileNamePattern,
-    batchFormatOptions,
-    identifiedPresetId,
-    identifiedPresetName,
-    identifiedPresetColor,
-    applyPreset,
-  ]);
+  const setExportSettings = useFillingStore((state) => state.setExportSettings);
 
   const modeLabel =
     mode === "fill"
@@ -368,15 +271,12 @@ export function FillingWorkflowSidebar({
         </div>
       </AccordionCard>
 
-      <PresetSelector
-        label="Output Settings"
+      <QuickExportSelector
+        format={exportSettings.format}
+        onFormatChange={(format: QuickExportFormat) => setExportSettings({ format })}
+        fileNamePattern={exportSettings.fileNamePattern}
+        onFileNamePatternChange={(fileNamePattern: string) => setExportSettings({ fileNamePattern })}
         theme="amber"
-        identifiedPreset={fillingIdentifiedPreset}
-        formatFilter={FILLING_TARGET_FORMATS}
-        activePresetId={activePresetId}
-        onSelect={applyPreset}
-        onReset={resetToDefault}
-        tooltipContent="Select an export preset for Image Filling."
       />
     </div>
   );
