@@ -106,11 +106,14 @@ export function CollageMakerWorkspace({
     uniformColumnsDef: "",
   });
 
-  const handleSelectLayout = useCallback((presetId: string, params: GridDesignParams) => {
-    setSelectedLayoutId(presetId);
-    setGridParams(params);
-    useFillingStore.getState().setGridDesignParams(params);
-  }, []);
+  const handleSelectLayout = useCallback(
+    (presetId: string, params: GridDesignParams) => {
+      setSelectedLayoutId(presetId);
+      setGridParams(params);
+      useFillingStore.getState().setGridDesignParams(params);
+    },
+    [],
+  );
 
   const handleGridParamsChange = useCallback((params: GridDesignParams) => {
     setGridParams(params);
@@ -253,7 +256,9 @@ export function CollageMakerWorkspace({
           const naturalHeight = img.naturalHeight || 1;
           // Scale image to match cell width exactly
           const scaleToWidth = layer.width / naturalWidth;
-          const offsetY = Math.round((layer.height - naturalHeight * scaleToWidth) / 2);
+          const offsetY = Math.round(
+            (layer.height - naturalHeight * scaleToWidth) / 2,
+          );
 
           resolve({
             ...(existing ?? createLayerFillState(layer.id)),
@@ -293,21 +298,15 @@ export function CollageMakerWorkspace({
   const sidebarTitle = useMemo(() => {
     if (stage === 1) return t("common:aboutThisTool");
     if (stage === 2) {
-      return `${t("common:toolSettings")} - ${t("collageMaker.stage2.title", { defaultValue: "Chọn layout" })}`;
+      return `${t("common:toolSettings")} - ${t("stage2.title")}`;
     }
-    return `${t("common:toolSettings")} - ${t("collageMaker.stage3.title", { defaultValue: "Chỉnh ảnh & Xuất" })}`;
+    return `${t("common:toolSettings")} - ${t("stage3.title")}`;
   }, [stage, t]);
 
-  const title = t("collageMaker.title", { defaultValue: "Ghép ảnh nhanh" });
-  const stage1Title = t("collageMaker.stage1.title", {
-    defaultValue: "Chuẩn bị ảnh",
-  });
-  const stage2Title = t("collageMaker.stage2.title", {
-    defaultValue: "Chọn layout",
-  });
-  const stage3Title = t("collageMaker.stage3.title", {
-    defaultValue: "Chỉnh ảnh",
-  });
+  const title = t("title");
+  const stage1Title = t("stage1.title");
+  const stage2Title = t("stage2.title");
+  const stage3Title = t("stage3.title");
 
   const middleLabel =
     stage === 1 ? stage1Title : stage === 2 ? stage2Title : stage3Title;
@@ -357,34 +356,20 @@ export function CollageMakerWorkspace({
 
     if (stage === 2) {
       return (
-        <div className="space-y-4 p-0">
-          <CollageMakerStage2Sidebar
-            queueCount={queueImages.length}
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasHeight}
-            canvasUnit={canvasUnit}
-            selectedLayoutId={selectedLayoutId}
-            gridParams={gridParams}
-            onCanvasWidthChange={setCanvasWidth}
-            onCanvasHeightChange={setCanvasHeight}
-            onCanvasUnitChange={setCanvasUnit}
-            onGridParamsChange={handleGridParamsChange}
-            onSelectLayout={handleSelectLayout}
-            enableWideSidebarGrid={enableWideSidebarGrid}
-          />
-          <Button
-            variant="primary"
-            className="w-full gap-2 font-bold py-2.5"
-            onClick={() => setStage(3)}
-          >
-            <span>
-              {t("collageMaker.stage2.nextToEdit", {
-                defaultValue: "Tiếp tục chỉnh ảnh",
-              })}
-            </span>
-            <ArrowRight size={16} />
-          </Button>
-        </div>
+        <CollageMakerStage2Sidebar
+          queueCount={queueImages.length}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
+          canvasUnit={canvasUnit}
+          selectedLayoutId={selectedLayoutId}
+          gridParams={gridParams}
+          onCanvasWidthChange={setCanvasWidth}
+          onCanvasHeightChange={setCanvasHeight}
+          onCanvasUnitChange={setCanvasUnit}
+          onGridParamsChange={handleGridParamsChange}
+          onSelectLayout={handleSelectLayout}
+          enableWideSidebarGrid={enableWideSidebarGrid}
+        />
       );
     }
 
@@ -423,13 +408,9 @@ export function CollageMakerWorkspace({
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3 dark:border-slate-800">
             <div>
-              <Subheading className="text-xl">
-                {t("collageMaker.stage1.title", {
-                  defaultValue: "Chuẩn bị ảnh",
-                })}
-              </Subheading>
+              <Subheading className="text-xl">{t("stage1.title")}</Subheading>
               <LabelText className="text-xs text-slate-500">
-                {t("collageMaker.stage1.subtitle", {
+                {t("stage1.subtitle", {
                   count: queueImages.length,
                   max: MAX_COLLAGE_IMAGES,
                   width: canvasWidth,
@@ -443,16 +424,10 @@ export function CollageMakerWorkspace({
               <div className="flex items-center gap-2">
                 <Button variant="secondary" size="sm" onClick={handleClearAll}>
                   <Trash2 size={14} />
-                  {t("collageMaker.stage1.clearAll", {
-                    defaultValue: "Xóa tất cả",
-                  })}
+                  {t("stage1.clearAll")}
                 </Button>
                 <Button variant="primary" size="sm" onClick={() => setStage(2)}>
-                  <span>
-                    {t("collageMaker.stage1.createCollage", {
-                      defaultValue: "Tạo ảnh ghép",
-                    })}
-                  </span>
+                  <span>{t("stage1.createCollage")}</span>
                   <ArrowRight size={14} />
                 </Button>
               </div>
@@ -469,12 +444,9 @@ export function CollageMakerWorkspace({
             <EmptyDropCard
               icon={<Upload size={28} className="text-amber-500" />}
               iconWrapperClassName="bg-amber-100 dark:bg-amber-900/30 border-transparent shadow-none"
-              title={t("collageMaker.stage1.dropzoneTitle", {
-                defaultValue: "Kéo thả ảnh vào đây để tạo ảnh ghép",
-              })}
-              subtitle={t("collageMaker.stage1.dropzoneSubtitle", {
+              title={t("stage1.dropzoneTitle")}
+              subtitle={t("stage1.dropzoneSubtitle", {
                 max: MAX_COLLAGE_IMAGES,
-                defaultValue: `Tải lên từ 2 đến ${MAX_COLLAGE_IMAGES} ảnh (JPEG, PNG, WebP, AVIF)`,
               })}
               onClick={() => {
                 const input = document.createElement("input");
@@ -494,14 +466,10 @@ export function CollageMakerWorkspace({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Subheading className="text-sm font-semibold">
-                  {t("collageMaker.stage1.queueTitle", {
-                    defaultValue: "Danh sách ảnh đã chọn",
-                  })}
+                  {t("stage1.queueTitle")}
                 </Subheading>
                 <LabelText className="text-xs text-slate-400">
-                  {t("collageMaker.stage1.reorderHelp", {
-                    defaultValue: "Kéo thẻ ảnh để đổi vị trí trong layout.",
-                  })}
+                  {t("stage1.reorderHelp")}
                 </LabelText>
               </div>
 
@@ -563,6 +531,17 @@ export function CollageMakerWorkspace({
         <GridDesignWorkspace
           template={generatedTemplate}
           onRefresh={async () => {}}
+          customActions={
+            <Button
+              variant="primary"
+              size="sm"
+              className="gap-1.5 font-bold px-3 shadow-xs"
+              onClick={() => setStage(3)}
+            >
+              <span>{t("stage2.nextToEdit")}</span>
+              <ArrowRight size={14} />
+            </Button>
+          }
           onSaved={(_template, destination) => {
             if (destination === "fill") {
               setStage(3);

@@ -57,7 +57,7 @@ export function CollageMakerStage2Sidebar({
       content: (
         <AccordionCard
           icon={<Ruler size={16} />}
-          label={t("collageMaker.stage2.imageSize", { defaultValue: "Output Image Size" })}
+          label={t("stage2.imageSize")}
           sublabel={`${canvasWidth} x ${canvasHeight} ${canvasUnit}`}
           colorTheme="amber"
           defaultOpen
@@ -80,44 +80,45 @@ export function CollageMakerStage2Sidebar({
       content: (
         <AccordionCard
           icon={<Sliders size={16} />}
-          label={t("collageMaker.stage2.spacingPadding", {
-            defaultValue: "Spacing & Margin",
-          })}
+          label={t("stage2.spacingPadding")}
           sublabel={`Pad: ${gridParams.outerPadding}px • Gap: ${gridParams.gapX}x${gridParams.gapY}px`}
           colorTheme="amber"
           defaultOpen
         >
           <div className="space-y-3">
             <NumberInput
-              label={t("collageMaker.stage2.outerPadding", {
-                defaultValue: "Outer Margin",
-              })}
+              label={t("stage2.outerPadding")}
               value={gridParams.outerPadding}
               onChangeValue={(val) =>
-                onGridParamsChange({ ...gridParams, outerPadding: Math.max(0, Math.round(val)) })
+                onGridParamsChange({
+                  ...gridParams,
+                  outerPadding: Math.max(0, Math.round(val)),
+                })
               }
               min={0}
               max={200}
             />
             <div className="flex gap-2">
               <NumberInput
-                label={t("collageMaker.stage2.gapX", {
-                  defaultValue: "Horizontal Gap",
-                })}
+                label={t("stage2.gapX")}
                 value={gridParams.gapX ?? 0}
                 onChangeValue={(val) =>
-                  onGridParamsChange({ ...gridParams, gapX: Math.max(0, Math.round(val)) })
+                  onGridParamsChange({
+                    ...gridParams,
+                    gapX: Math.max(0, Math.round(val)),
+                  })
                 }
                 min={0}
                 max={200}
               />
               <NumberInput
-                label={t("collageMaker.stage2.gapY", {
-                  defaultValue: "Vertical Gap",
-                })}
+                label={t("stage2.gapY")}
                 value={gridParams.gapY ?? 0}
                 onChangeValue={(val) =>
-                  onGridParamsChange({ ...gridParams, gapY: Math.max(0, Math.round(val)) })
+                  onGridParamsChange({
+                    ...gridParams,
+                    gapY: Math.max(0, Math.round(val)),
+                  })
                 }
                 min={0}
                 max={200}
@@ -132,10 +133,9 @@ export function CollageMakerStage2Sidebar({
       content: (
         <AccordionCard
           icon={<LayoutGrid size={16} />}
-          label={t("collageMaker.stage2.layoutSelector", { defaultValue: "Layout Templates" })}
-          sublabel={t("collageMaker.stage2.layoutsForImages", {
+          label={t("stage2.layoutSelector")}
+          sublabel={t("stage2.layoutsForImages", {
             count: queueCount >= 2 ? queueCount : 2,
-            defaultValue: `Layouts for ${queueCount >= 2 ? queueCount : 2} photos`,
           })}
           colorTheme="amber"
           defaultOpen
