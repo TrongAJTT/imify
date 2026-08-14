@@ -95,6 +95,7 @@ export function CollageMakerWorkspace({
   const [canvasWidth, setCanvasWidth] = useState<number>(1920);
   const [canvasHeight, setCanvasHeight] = useState<number>(1080);
   const [canvasUnit, setCanvasUnit] = useState<CanvasSizeUnit>("px");
+  const [canvasDpi, setCanvasDpi] = useState<number>(300);
   const [selectedLayoutId, setSelectedLayoutId] = useState<string>("");
   const [gridParams, setGridParams] = useState<GridDesignParams>({
     direction: "cols",
@@ -362,11 +363,13 @@ export function CollageMakerWorkspace({
           canvasWidth={canvasWidth}
           canvasHeight={canvasHeight}
           canvasUnit={canvasUnit}
+          canvasDpi={canvasDpi}
           selectedLayoutId={selectedLayoutId}
           gridParams={gridParams}
           onCanvasWidthChange={setCanvasWidth}
           onCanvasHeightChange={setCanvasHeight}
           onCanvasUnitChange={setCanvasUnit}
+          onCanvasDpiChange={setCanvasDpi}
           onGridParamsChange={handleGridParamsChange}
           onSelectLayout={handleSelectLayout}
           enableWideSidebarGrid={enableWideSidebarGrid}

@@ -63,8 +63,8 @@
     "untitledTemplate": "Mẫu chưa đặt tên",
     "finalSize": "Kích thước cuối:",
     "presetSelected": "Đã chọn preset:",
-    "ratio": "Tỷ lệ (Ratio)",
-    "lockRatio": "Khóa tỷ lệ (Lock ratio)",
+    "ratio": "Tỷ lệ",
+    "lockRatio": "Khóa tỷ lệ",
     "lockRatioDesc": "Giữ nguyên tỷ lệ giữa chiều rộng và chiều cao khi thay đổi kích thước."
   },
   "templateList": {
@@ -222,8 +222,8 @@
   },
   "manualEditor": {
     "groupDefaultName": "Nhóm {{index}}",
-    "canvas": "Vùng vẽ (Canvas)",
-    "layers": "Lớp vẽ (Layers)",
+    "canvas": "Vùng vẽ",
+    "layers": "Lớp vẽ",
     "properties": "Thuộc tính",
     "layerDefaultName": "Lớp vẽ",
     "saving": "Đang lưu...",

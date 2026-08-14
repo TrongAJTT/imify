@@ -68,6 +68,14 @@ function fromPixels(px: number, unit: CanvasSizeUnit, dpi: number): number {
   }
 }
 
+const DPI_SELECT_OPTIONS = [
+  { value: "72", label: "72 DPI" },
+  { value: "96", label: "96 DPI" },
+  { value: "150", label: "150 DPI" },
+  { value: "300", label: "300 DPI" },
+  { value: "600", label: "600 DPI" },
+];
+
 export function CanvasDimensionControls({
   width,
   height,
@@ -178,10 +186,22 @@ export function CanvasDimensionControls({
 
   const UNIT_OPTIONS = useMemo(
     () => [
-      { value: "px", label: t("filling:dialog.pixels", { defaultValue: "Pixels" }) },
-      { value: "in", label: t("filling:dialog.inches", { defaultValue: "Inches" }) },
-      { value: "cm", label: t("filling:dialog.centimeters", { defaultValue: "Centimeters" }) },
-      { value: "mm", label: t("filling:dialog.millimeters", { defaultValue: "Millimeters" }) },
+      {
+        value: "px",
+        label: t("filling:dialog.pixels", { defaultValue: "Pixels" }),
+      },
+      {
+        value: "in",
+        label: t("filling:dialog.inches", { defaultValue: "Inches" }),
+      },
+      {
+        value: "cm",
+        label: t("filling:dialog.centimeters", { defaultValue: "Centimeters" }),
+      },
+      {
+        value: "mm",
+        label: t("filling:dialog.millimeters", { defaultValue: "Millimeters" }),
+      },
     ],
     [t],
   );
@@ -195,14 +215,14 @@ export function CanvasDimensionControls({
       {showFinalSizeHeader && (
         <div className="flex flex-row items-center gap-3">
           <div className="flex flex-col flex-1">
-            <Kicker>{t("filling:dialog.finalSize", { defaultValue: "FINAL SIZE:" })}</Kicker>
+            <Kicker>{t("filling:dialog.finalSize")}</Kicker>
             <LabelText className="text-xs">
               {width} x {height} px
             </LabelText>
           </div>
 
           {showPopularSizesButton && (
-            <Tooltip content={t("filling:dialog.popularSizes", { defaultValue: "Kích thước phổ biến" })}>
+            <Tooltip content={t("filling:dialog.popularSizes")}>
               <Button
                 type="button"
                 variant="outline"
@@ -222,7 +242,7 @@ export function CanvasDimensionControls({
         <div className="flex flex-row gap-3 md:gap-1 items-end">
           <div className="flex-1 w-full min-w-0">
             <NumberInput
-              label={t("filling:dialog.width", { defaultValue: "Width" })}
+              label={t("filling:dialog.width")}
               value={displayWidth}
               onChangeValue={handleWidthChange}
               min={minWidth}
@@ -235,14 +255,14 @@ export function CanvasDimensionControls({
             variant="outline"
             size="icon"
             onClick={handleSwapDimensions}
-            title={t("common:swap", { defaultValue: "Đổi chiều" })}
+            title={t("common:swap")}
           >
             <ArrowLeftRight size={14} className="rotate-90 sm:rotate-0" />
           </Button>
 
           <div className="flex-1 w-full min-w-0">
             <NumberInput
-              label={t("filling:dialog.height", { defaultValue: "Height" })}
+              label={t("filling:dialog.height")}
               value={displayHeight}
               onChangeValue={handleHeightChange}
               min={minHeight}
@@ -256,7 +276,7 @@ export function CanvasDimensionControls({
       {/* RATIO & LOCK RATIO */}
       <div className="flex items-end gap-3">
         <SelectInput
-          label={t("filling:dialog.ratio", { defaultValue: "Ratio" })}
+          label={t("filling:dialog.ratio")}
           value={currentRatioValue}
           options={CANVAS_RATIO_OPTIONS}
           onChange={handleRatioChange}
@@ -270,14 +290,14 @@ export function CanvasDimensionControls({
           onClick={() => setLockRatio(!lockRatio)}
         >
           {lockRatio ? <Lock size={14} /> : <Unlock size={14} />}
-          {t("filling:dialog.lockRatio", { defaultValue: "Lock ratio" })}
+          {t("filling:dialog.lockRatio")}
         </Button>
       </div>
 
       {/* UNIT & DPI */}
       <div className="flex flex-row gap-3">
         <SelectInput
-          label={t("filling:dialog.unit", { defaultValue: "Unit" })}
+          label={t("filling:dialog.unit")}
           value={unit}
           options={UNIT_OPTIONS}
           onChange={(value) => onUnitChange?.(value as CanvasSizeUnit)}
@@ -286,12 +306,11 @@ export function CanvasDimensionControls({
 
         {unit !== "px" && onDpiChange && (
           <div className="flex-1 w-full">
-            <NumberInput
+            <SelectInput
               label="DPI"
-              value={dpi}
-              onChangeValue={onDpiChange}
-              min={72}
-              max={600}
+              value={String(dpi)}
+              options={DPI_SELECT_OPTIONS}
+              onChange={(value) => onDpiChange(Number(value))}
             />
           </div>
         )}

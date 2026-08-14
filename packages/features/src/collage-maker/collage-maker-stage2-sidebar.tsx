@@ -21,11 +21,13 @@ interface CollageMakerStage2SidebarProps {
   canvasWidth: number;
   canvasHeight: number;
   canvasUnit: CanvasSizeUnit;
+  canvasDpi?: number;
   selectedLayoutId: string;
   gridParams: GridDesignParams;
   onCanvasWidthChange: (w: number) => void;
   onCanvasHeightChange: (h: number) => void;
   onCanvasUnitChange: (unit: CanvasSizeUnit) => void;
+  onCanvasDpiChange?: (dpi: number) => void;
   onGridParamsChange: (params: GridDesignParams) => void;
   onSelectLayout: (presetId: string, params: GridDesignParams) => void;
   enableWideSidebarGrid?: boolean;
@@ -36,11 +38,13 @@ export function CollageMakerStage2Sidebar({
   canvasWidth,
   canvasHeight,
   canvasUnit,
+  canvasDpi,
   selectedLayoutId,
   gridParams,
   onCanvasWidthChange,
   onCanvasHeightChange,
   onCanvasUnitChange,
+  onCanvasDpiChange,
   onGridParamsChange,
   onSelectLayout,
   enableWideSidebarGrid = false,
@@ -66,11 +70,13 @@ export function CollageMakerStage2Sidebar({
             width={canvasWidth}
             height={canvasHeight}
             unit={canvasUnit}
+            dpi={canvasDpi}
             onSizeChange={(w, h) => {
               onCanvasWidthChange(w);
               onCanvasHeightChange(h);
             }}
             onUnitChange={onCanvasUnitChange}
+            onDpiChange={onCanvasDpiChange}
           />
         </AccordionCard>
       ),
@@ -85,7 +91,7 @@ export function CollageMakerStage2Sidebar({
           colorTheme="amber"
           defaultOpen
         >
-          <div className="space-y-3">
+          <div className="grid grid-cols-3 md:grid-cols-2 gap-2 items-end">
             <NumberInput
               label={t("stage2.outerPadding")}
               value={gridParams.outerPadding}
@@ -98,32 +104,30 @@ export function CollageMakerStage2Sidebar({
               min={0}
               max={200}
             />
-            <div className="flex gap-2">
-              <NumberInput
-                label={t("stage2.gapX")}
-                value={gridParams.gapX ?? 0}
-                onChangeValue={(val) =>
-                  onGridParamsChange({
-                    ...gridParams,
-                    gapX: Math.max(0, Math.round(val)),
-                  })
-                }
-                min={0}
-                max={200}
-              />
-              <NumberInput
-                label={t("stage2.gapY")}
-                value={gridParams.gapY ?? 0}
-                onChangeValue={(val) =>
-                  onGridParamsChange({
-                    ...gridParams,
-                    gapY: Math.max(0, Math.round(val)),
-                  })
-                }
-                min={0}
-                max={200}
-              />
-            </div>
+            <NumberInput
+              label={t("stage2.gapY")}
+              value={gridParams.gapY ?? 0}
+              onChangeValue={(val) =>
+                onGridParamsChange({
+                  ...gridParams,
+                  gapY: Math.max(0, Math.round(val)),
+                })
+              }
+              min={0}
+              max={200}
+            />
+            <NumberInput
+              label={t("stage2.gapX")}
+              value={gridParams.gapX ?? 0}
+              onChangeValue={(val) =>
+                onGridParamsChange({
+                  ...gridParams,
+                  gapX: Math.max(0, Math.round(val)),
+                })
+              }
+              min={0}
+              max={200}
+            />
           </div>
         </AccordionCard>
       ),
@@ -140,7 +144,7 @@ export function CollageMakerStage2Sidebar({
           colorTheme="amber"
           defaultOpen
         >
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 md:grid-cols-2 gap-2">
             {matchingPresets.map((preset) => {
               const isSelected = selectedLayoutId === preset.id;
               return (
