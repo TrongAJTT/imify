@@ -119,7 +119,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const transformerRef = useRef<Konva.Transformer>(null);
   const emptyImageUploadInputRef = useRef<HTMLInputElement>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
-  const [previewContainerHeight, setPreviewContainerHeight] = useState(520);
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(680);
   const [previewZoom, setPreviewZoom] = useState(100);
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
   const [previewInteractionMode, setPreviewInteractionMode] =
