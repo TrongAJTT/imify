@@ -5,7 +5,6 @@ import {
   resolveFeatureMediaAssetUrl,
 } from "@imify/features/shared/media-assets";
 import { useTranslation } from "@imify/i18n";
-import { useCommonFaqs } from "@imify/features/shared/features-info-common-faqs";
 
 export function CollageMakerInfoPanel() {
   const { t } = useTranslation("collageMaker");
@@ -41,8 +40,6 @@ export function CollageMakerInfoPanel() {
     t("showcase.chips.multiFormat", { defaultValue: "Xuất đa định dạng" }),
   ];
 
-  const commonFaqs = useCommonFaqs();
-
   const faqs = [
     {
       question: t("showcase.faqs.q1"),
@@ -64,7 +61,6 @@ export function CollageMakerInfoPanel() {
       question: t("showcase.faqs.q5"),
       answer: t("showcase.faqs.a5"),
     },
-    ...commonFaqs,
   ];
 
   return (

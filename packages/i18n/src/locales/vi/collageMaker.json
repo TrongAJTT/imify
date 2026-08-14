@@ -1,5 +1,7 @@
 {
   "title": "Tạo ảnh ghép",
+  "loadingTitle": "Đang tải Collage Maker...",
+  "loadingSubtitle": "Khởi tạo công cụ ghép ảnh và bố cục...",
   "showcase": {
     "title": "Ghép ảnh nhanh (Collage Maker)",
     "subtitle": "Tải ảnh trực tiếp, chọn layout phù hợp với số lượng ảnh, tùy chỉnh kích thước & khoảng cách, và xuất ra sản phẩm collage sắc nét tức thì.",
@@ -17,7 +19,7 @@
       "q3": "Tôi có thể tùy chỉnh kích thước canvas và khoảng cách giữa các khung không?",
       "a3": "Hoàn toàn có thể. Ở Bước 2, bạn có thể chỉnh sửa kích thước Canvas (Pixels, Inches, CM, MM kèm DPI), độ dày lề ngoài và khoảng cách ngang/dọc giữa các ô ảnh.",
       "q4": "Sau khi tạo bố cục, tôi có thể thu phóng và căn chỉnh từng ảnh không?",
-      "a4": "Có. Ở Bước 3, bạn có thể nhấp vào từng lớp ảnh để thu phóng (zoom), xoay, lật, kéo di chuyển, hoặc áp dụng thao tác nhanh (Fit, Align, Bo góc, Màu viền).",
+      "a4": "Có. Ở Bước 3, bạn có thể nhấp vào từng lớp ảnh để thu phóng, xoay, lật, kéo di chuyển, hoặc áp dụng thao tác nhanh (Fit, Align, Bo góc, Màu viền).",
       "q5": "Chất lượng ảnh sau khi xuất ra như thế nào?",
       "a5": "Ảnh được xử lý và kết xuất trực tiếp ở độ phân giải gốc của Canvas ngay trên trình duyệt, đảm bảo chất lượng sắc nét tối đa theo định dạng bạn chọn."
     }

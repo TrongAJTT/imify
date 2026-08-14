@@ -1,5 +1,7 @@
 {
   "title": "Collage Maker",
+  "loadingTitle": "Loading Collage Maker...",
+  "loadingSubtitle": "Initializing collage tool and layout presets...",
   "showcase": {
     "title": "Quick Collage Maker",
     "subtitle": "Upload your photos, pick a custom layout template, adjust canvas dimensions and spacing, and export high-quality collages instantly.",
