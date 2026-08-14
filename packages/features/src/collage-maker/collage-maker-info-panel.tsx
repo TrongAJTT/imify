@@ -11,22 +11,16 @@ export function CollageMakerInfoPanel() {
   const { t } = useTranslation("collageMaker");
 
   const previewSrc = resolveFeatureMediaAssetUrl(
-    FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
+    FEATURE_MEDIA_ASSET_PATHS.collageMaker.previewWebp,
   );
 
   const previewMediaSources = [
     {
       src: resolveFeatureMediaAssetUrl(
-        FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
+        FEATURE_MEDIA_ASSET_PATHS.collageMaker.previewWebp,
       ),
       type: "image" as const,
-      alt: t("showcase.previewAlt"),
-    },
-    {
-      src: resolveFeatureMediaAssetUrl(
-        FEATURE_MEDIA_ASSET_PATHS.filling.symmetricVisualEditorWebm,
-      ),
-      type: "video" as const,
+      alt: t("showcase.previewAlt", { defaultValue: "Collage Maker" }),
     },
   ];
 
@@ -49,8 +43,33 @@ export function CollageMakerInfoPanel() {
 
   const commonFaqs = useCommonFaqs();
 
+  const faqs = [
+    {
+      question: t("showcase.faqs.q1"),
+      answer: t("showcase.faqs.a1"),
+    },
+    {
+      question: t("showcase.faqs.q2"),
+      answer: t("showcase.faqs.a2"),
+    },
+    {
+      question: t("showcase.faqs.q3"),
+      answer: t("showcase.faqs.a3"),
+    },
+    {
+      question: t("showcase.faqs.q4"),
+      answer: t("showcase.faqs.a4"),
+    },
+    {
+      question: t("showcase.faqs.q5"),
+      answer: t("showcase.faqs.a5"),
+    },
+    ...commonFaqs,
+  ];
+
   return (
     <PresetInfoShowcasePanel
+      padding={3}
       previewSrc={previewSrc}
       previewMediaSources={previewMediaSources}
       previewAlt={t("showcase.previewAlt", { defaultValue: "Collage Maker" })}
@@ -59,7 +78,7 @@ export function CollageMakerInfoPanel() {
       subtitle={t("showcase.subtitle")}
       tips={tips}
       featureChips={featureChips}
-      faqs={commonFaqs}
+      faqs={faqs}
     />
   );
 }

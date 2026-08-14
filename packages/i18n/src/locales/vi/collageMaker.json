@@ -8,6 +8,18 @@
       "tip2": "Kéo sắp xếp thứ tự ảnh ở Bước 1 để điều chỉnh ảnh vào đúng từng ô trong layout.",
       "tip3": "Điều chỉnh lề ngoài và khoảng cách giữa các khung ở Bước 2 để tạo phong cách độc đáo.",
       "tip4": "Căn chỉnh vị trí, thu phóng ảnh và bo góc khung ở Bước 3 trước khi xuất ảnh."
+    },
+    "faqs": {
+      "q1": "Collage Maker hỗ trợ ghép tối đa bao nhiêu ảnh cùng lúc?",
+      "a1": "Bạn có thể tải lên và ghép từ 2 đến 10 bức ảnh. Hệ thống sẽ tự động tạo và gợi ý các mẫu bố cục lưới phù hợp nhất với số lượng ảnh bạn chọn.",
+      "q2": "Làm thế nào để điều chỉnh một bức ảnh vào đúng ô mong muốn?",
+      "a2": "Tại Bước 1 (Chuẩn bị ảnh), bạn chỉ cần kéo thả thẻ ảnh để thay đổi thứ tự. Ô số 1 trong hàng đợi sẽ tương ứng với ô số 1 trên lưới ghép.",
+      "q3": "Tôi có thể tùy chỉnh kích thước canvas và khoảng cách giữa các khung không?",
+      "a3": "Hoàn toàn có thể. Ở Bước 2, bạn có thể chỉnh sửa kích thước Canvas (Pixels, Inches, CM, MM kèm DPI), độ dày lề ngoài và khoảng cách ngang/dọc giữa các ô ảnh.",
+      "q4": "Sau khi tạo bố cục, tôi có thể thu phóng và căn chỉnh từng ảnh không?",
+      "a4": "Có. Ở Bước 3, bạn có thể nhấp vào từng lớp ảnh để thu phóng (zoom), xoay, lật, kéo di chuyển, hoặc áp dụng thao tác nhanh (Fit, Align, Bo góc, Màu viền).",
+      "q5": "Chất lượng ảnh sau khi xuất ra như thế nào?",
+      "a5": "Ảnh được xử lý và kết xuất trực tiếp ở độ phân giải gốc của Canvas ngay trên trình duyệt, đảm bảo chất lượng sắc nét tối đa theo định dạng bạn chọn."
     }
   },
   "stage1": {

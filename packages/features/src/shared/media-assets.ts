@@ -57,6 +57,9 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   pattern: {
     previewWebp: "/assets/features/preview-pattern_generator.webp"
   },
+  collageMaker: {
+    previewWebp: "/assets/features/preview-collage.webp"
+  },
   contextMenu: {
     previewWebp: "/assets/features/preview-context_menu.webp"
   },
@@ -130,6 +133,9 @@ export const FEATURE_MEDIA_ASSETS = {
   },
   pattern: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp
+  },
+  collageMaker: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.collageMaker.previewWebp
   },
   contextMenu: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp

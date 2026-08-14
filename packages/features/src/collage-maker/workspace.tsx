@@ -1,21 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ArrowRight,
-  LayoutGrid,
-  Ruler,
-  Sliders,
-  Trash2,
-  Upload,
-} from "lucide-react";
-import {
-  AccordionCard,
-  Button,
-  EmptyDropCard,
-  LabelText,
-  NumberInput,
-  SelectInput,
-  Subheading,
-} from "@imify/ui";
+import { ArrowRight, Trash2, Upload } from "lucide-react";
+import { Button, EmptyDropCard, LabelText, Subheading } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import {
   closestCenter,
@@ -53,7 +38,6 @@ import type {
 import { createLayerFillState } from "@imify/features/filling/types";
 import { generateGridLayers } from "@imify/features/filling/grid-designer/generator";
 import { GridDesignWorkspace } from "@imify/features/filling/grid-designer/workspace";
-import { GridDesignSidebar } from "@imify/features/filling/grid-designer/sidebar";
 import { FillWorkspace } from "@imify/features/filling/fill/workspace";
 import { FillSidebar } from "@imify/features/filling/fill/sidebar";
 import { SortableQueueItem } from "@imify/features/shared/sortable-queue-item";
@@ -410,7 +394,7 @@ export function CollageMakerWorkspace({
       {/* STAGE 1: PREPARE IMAGES */}
       {stage === 1 && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3 dark:border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <Subheading className="text-xl">{t("stage1.title")}</Subheading>
               <LabelText className="text-xs text-slate-500">
