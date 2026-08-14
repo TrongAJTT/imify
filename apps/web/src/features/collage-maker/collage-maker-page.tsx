@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CollageMakerWorkspace } from "@imify/features/collage-maker/workspace";
 import { useWorkspaceSidebarContext } from "@/components/layout/workspace-layout";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
-import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb";
 import { useTranslation } from "@imify/i18n";
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid";
 import { WorkspaceLoadingState } from "@imify/ui";
@@ -16,10 +15,6 @@ export function CollageMakerLandingPage() {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const enableWideSidebarGrid = useWideSidebarGridEnabled();
-  const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection);
-  const setHeaderBreadcrumb = useWorkspaceHeaderStore(
-    (state) => state.setBreadcrumb,
-  );
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader);
   const sidebarContext = useWorkspaceSidebarContext();
 

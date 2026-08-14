@@ -51,6 +51,9 @@
     "patternGenerator": {
       "desc": "Tạo các hoa văn lặp lại đẹp mắt và liền mạch từ bất kỳ nguồn ảnh nào."
     },
+    "collageMaker": {
+      "desc": "Ghép nhiều ảnh thành các mẫu bố cục lưới độc đáo với tùy chỉnh kích thước & khoảng cách linh hoạt."
+    },
     "diffchecker": {
       "desc": "So sánh hai ảnh cạnh nhau để phát hiện sự khác biệt chính xác từng pixel."
     },

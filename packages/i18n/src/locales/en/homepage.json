@@ -51,6 +51,9 @@
     "patternGenerator": {
       "desc": "Generate beautiful, seamless repeating patterns from any image source."
     },
+    "collageMaker": {
+      "desc": "Combine multiple photos into smart grid layouts with customizable spacing and instant export."
+    },
     "diffchecker": {
       "desc": "Compare two images side-by-side to detect pixel-perfect differences."
     },

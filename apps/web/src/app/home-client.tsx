@@ -82,6 +82,12 @@ const TOOL_DEFINITIONS: {
     badge: "highlight",
   },
   {
+    id: "collage-maker",
+    label: "Collage Maker",
+    src: FEATURE_MEDIA_ASSET_PATHS.collageMaker.previewWebp,
+    badge: "new",
+  },
+  {
     id: "pattern-generator",
     label: "Pattern Generator",
     src: FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp,
@@ -256,6 +262,7 @@ export function HomeClient() {
       splicing: t("tools.splicing.desc"),
       splitter: t("tools.splitter.desc"),
       filling: t("tools.filling.desc"),
+      "collage-maker": t("tools.collageMaker.desc"),
       "pattern-generator": t("tools.patternGenerator.desc"),
       diffchecker: t("tools.diffchecker.desc"),
       inspector: t("tools.inspector.desc"),
