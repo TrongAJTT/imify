@@ -20,7 +20,10 @@ import { Download, Loader2 } from "lucide-react";
 
 import { ToastContainer } from "@imify/ui/components/toast-container";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
-import { mapQuickExportToEngineConfig, type QuickExportFormat } from "@imify/core";
+import {
+  mapQuickExportToEngineConfig,
+  type QuickExportFormat,
+} from "@imify/core";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import {
   buildFillRuntimeItems,
@@ -79,6 +82,7 @@ import {
   isCommonImageFile,
 } from "../../shared/image-file-utils";
 import { exportFilledTemplate } from "../filling-export-utils";
+import { FillQuickActionsMenu } from "./quick-actions-menu";
 import { useTranslation } from "@imify/i18n";
 import {
   CANVAS_PADDING,
@@ -150,7 +154,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState);
   const swapLayerFillStates = useFillingStore((s) => s.swapLayerFillStates);
   const exportSettings = useFillingStore((s) => s.exportSettings);
-  const { targetFormat: exportFormat, quality: exportQuality } = mapQuickExportToEngineConfig(exportSettings.format);
+  const { targetFormat: exportFormat, quality: exportQuality } =
+    mapQuickExportToEngineConfig(exportSettings.format);
   const { getShortcutLabel } = useShortcutPreferences();
 
   const [loadedImages, setLoadedImages] = useState<
@@ -1376,7 +1381,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
       setIsExporting(true);
       const toastId = `fill_export_${Date.now()}`;
-      const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportSettings.format);
+      const { targetFormat, quality, codecOptions } =
+        mapQuickExportToEngineConfig(exportSettings.format);
       const toastTargetFormat = resolveToastTargetFormat(targetFormat as any);
 
       pushExportToast({
@@ -1583,7 +1589,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                 })}
           </MutedText>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <PreviewInteractionModeToggle
             mode={previewInteractionMode}
             onChange={setPreviewInteractionMode}
@@ -1592,22 +1598,29 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
             idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
           />
 
+          <FillQuickActionsMenu
+            template={activeTemplate}
+            selectedLayerId={selectedLayerId}
+            loadedImages={loadedImages}
+            disabled={isExporting}
+          />
+
           <Button
             variant="primary"
             size="sm"
             onClick={handleExport}
             disabled={isExporting}
-            className="min-w-[150px]"
+            className="gap-1.5 px-3"
           >
             {isExporting ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                {t("fill.exporting")}
+                <span>{t("fill.exporting")}</span>
               </>
             ) : (
               <>
                 <Download size={14} />
-                {t("fill.exportButton", { format: exportFormat.toUpperCase() })}
+                <span>{t("common:export", { defaultValue: "Xuất ảnh" })}</span>
               </>
             )}
           </Button>
@@ -2088,7 +2101,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                       }}
                       onDragEnd={(e) => {
                         if (hoveredSwapTargetLayerId) {
-                          swapLayerFillStates(layer.id, hoveredSwapTargetLayerId);
+                          swapLayerFillStates(
+                            layer.id,
+                            hoveredSwapTargetLayerId,
+                          );
                           setHoveredSwapTargetLayerId(null);
                           setPositionGuideLines([]);
                           setCursor("grab");
