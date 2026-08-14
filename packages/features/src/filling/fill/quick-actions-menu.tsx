@@ -22,6 +22,8 @@ import {
   ArrowDown,
   ArrowDownRight,
   RefreshCw,
+  Palette,
+  CornerUpRight,
   type LucideIcon,
 } from "lucide-react";
 import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
@@ -42,6 +44,15 @@ type AlignmentPosition =
   | "bottom-center"
   | "bottom-right";
 
+type QuickActionSubmenuKey =
+  | "fit"
+  | "align"
+  | "rotate"
+  | "flip"
+  | "border-width"
+  | "border-radius"
+  | "border-color";
+
 interface FillQuickActionsMenuProps {
   template: FillingTemplate;
   selectedLayerId: string | null;
@@ -60,9 +71,8 @@ export function FillQuickActionsMenu({
   const isDesktop = triggerBehavior === "hover";
 
   const [scope, setScope] = useState<QuickActionScope>("all");
-  const [activeDesktopSubmenu, setActiveDesktopSubmenu] = useState<
-    "fit" | "align" | "rotate" | "flip" | null
-  >(null);
+  const [activeDesktopSubmenu, setActiveDesktopSubmenu] =
+    useState<QuickActionSubmenuKey | null>(null);
 
   const closeSubmenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -76,7 +86,7 @@ export function FillQuickActionsMenu({
   }, []);
 
   const handleSubmenuMouseEnter = useCallback(
-    (menuKey: "fit" | "align" | "rotate" | "flip") => {
+    (menuKey: QuickActionSubmenuKey) => {
       clearCloseSubmenuTimer();
       setActiveDesktopSubmenu(menuKey);
     },
@@ -365,6 +375,57 @@ export function FillQuickActionsMenu({
     [getTargetLayerIds, layerFillStates, loadedImages, setLayerFillStates],
   );
 
+  const handleApplyBorderWidth = useCallback(
+    (width: number) => {
+      const targetIds = new Set(getTargetLayerIds());
+      const nextStates = layerFillStates.map((state) => {
+        if (!targetIds.has(state.layerId)) return state;
+        return {
+          ...state,
+          borderWidth: width,
+        };
+      });
+      setLayerFillStates(nextStates);
+    },
+    [getTargetLayerIds, layerFillStates, setLayerFillStates],
+  );
+
+  const handleApplyBorderRadius = useCallback(
+    (radius: number) => {
+      const targetIds = new Set(getTargetLayerIds());
+      const nextStates = layerFillStates.map((state) => {
+        if (!targetIds.has(state.layerId)) return state;
+        const nextBorderWidth =
+          (state.borderWidth ?? 0) === 0 ? 1 : state.borderWidth;
+        return {
+          ...state,
+          cornerRadius: radius,
+          borderWidth: nextBorderWidth,
+        };
+      });
+      setLayerFillStates(nextStates);
+    },
+    [getTargetLayerIds, layerFillStates, setLayerFillStates],
+  );
+
+  const handleApplyBorderColor = useCallback(
+    (color: string) => {
+      const targetIds = new Set(getTargetLayerIds());
+      const nextStates = layerFillStates.map((state) => {
+        if (!targetIds.has(state.layerId)) return state;
+        const nextBorderWidth =
+          (state.borderWidth ?? 0) === 0 ? 1 : state.borderWidth;
+        return {
+          ...state,
+          borderColor: color,
+          borderWidth: nextBorderWidth,
+        };
+      });
+      setLayerFillStates(nextStates);
+    },
+    [getTargetLayerIds, layerFillStates, setLayerFillStates],
+  );
+
   const triggerButton = (
     <button
       type="button"
@@ -585,6 +646,19 @@ export function FillQuickActionsMenu({
     </div>
   );
 
+  const BORDER_WIDTH_OPTIONS = [0, 1, 2, 4, 8, 12, 16, 24];
+  const BORDER_RADIUS_OPTIONS = [0, 4, 8, 12, 16, 24, 32, 48];
+  const BORDER_COLOR_OPTIONS = [
+    "#000000",
+    "#ffffff",
+    "#64748b",
+    "#ef4444",
+    "#f97316",
+    "#10b981",
+    "#06b6d4",
+    "#3b82f6",
+  ];
+
   const flipContent = (
     <div className="grid grid-cols-2 md:grid-cols-1 gap-1">
       {FLIP_OPTIONS.map((opt) => (
@@ -601,8 +675,59 @@ export function FillQuickActionsMenu({
     </div>
   );
 
+  const borderWidthContent = (
+    <div className="grid grid-cols-8 md:grid-cols-4 gap-1">
+      {BORDER_WIDTH_OPTIONS.map((w) => (
+        <button
+          key={w}
+          type="button"
+          onClick={() => handleApplyBorderWidth(w)}
+          title={`${w}px`}
+          className="h-7 flex items-center justify-center rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 dark:hover:text-sky-300 text-[11px] font-semibold transition-colors cursor-pointer border border-slate-200/50 dark:border-slate-700/50"
+        >
+          <span>{w}</span>
+        </button>
+      ))}
+    </div>
+  );
+
+  const borderRadiusContent = (
+    <div className="grid grid-cols-8 md:grid-cols-4 gap-1">
+      {BORDER_RADIUS_OPTIONS.map((r) => (
+        <button
+          key={r}
+          type="button"
+          onClick={() => handleApplyBorderRadius(r)}
+          title={`${r}px`}
+          className="h-7 flex items-center justify-center rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 dark:hover:text-sky-300 text-[11px] font-semibold transition-colors cursor-pointer border border-slate-200/50 dark:border-slate-700/50"
+        >
+          <span>{r}</span>
+        </button>
+      ))}
+    </div>
+  );
+
+  const borderColorContent = (
+    <div className="grid grid-cols-8 md:grid-cols-4 gap-1">
+      {BORDER_COLOR_OPTIONS.map((c) => (
+        <button
+          key={c}
+          type="button"
+          onClick={() => handleApplyBorderColor(c)}
+          title={c}
+          className="h-7 flex items-center justify-center rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer border border-slate-200/50 dark:border-slate-700/50"
+        >
+          <span
+            className="w-3.5 h-3.5 rounded-full border border-black/15 dark:border-white/20 shadow-xs"
+            style={{ backgroundColor: c }}
+          />
+        </button>
+      ))}
+    </div>
+  );
+
   const MENU_SECTIONS: {
-    key: "fit" | "align" | "rotate" | "flip";
+    key: QuickActionSubmenuKey;
     labelKey: string;
     icon: LucideIcon;
     widthClass: string;
@@ -633,8 +758,29 @@ export function FillQuickActionsMenu({
       key: "flip",
       labelKey: "quickActions.flipGroup",
       icon: FlipHorizontal,
-      widthClass: "w-48 ",
+      widthClass: "w-44",
       content: flipContent,
+    },
+    {
+      key: "border-width",
+      labelKey: "quickActions.borderWidthGroup",
+      icon: Square,
+      widthClass: "w-44",
+      content: borderWidthContent,
+    },
+    {
+      key: "border-radius",
+      labelKey: "quickActions.borderRadiusGroup",
+      icon: CornerUpRight,
+      widthClass: "w-44",
+      content: borderRadiusContent,
+    },
+    {
+      key: "border-color",
+      labelKey: "quickActions.borderColorGroup",
+      icon: Palette,
+      widthClass: "w-44",
+      content: borderColorContent,
     },
   ];
 
@@ -736,7 +882,7 @@ export function FillQuickActionsMenu({
           </div>
         ) : (
           /* MOBILE EXPANDED DIRECT LAYOUT */
-          <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
             {MENU_SECTIONS.map((section) => (
               <div key={section.key} className="space-y-1">
                 <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-0.5">
