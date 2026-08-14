@@ -111,7 +111,7 @@ export function FillQuickActionsMenu({
 
   // 1. FIT ACTIONS
   const handleApplyFit = useCallback(
-    (mode: "fitWidth" | "cover" | "contain") => {
+    (mode: "fill" | "cover" | "contain") => {
       const targetIds = new Set(getTargetLayerIds());
       const nextStates = layerFillStates.map((state) => {
         if (!targetIds.has(state.layerId) || !state.imageUrl) return state;
@@ -123,25 +123,32 @@ export function FillQuickActionsMenu({
         const naturalWidth = img.naturalWidth || 1;
         const naturalHeight = img.naturalHeight || 1;
 
-        let scale = 1;
+        let scaleX = 1;
+        let scaleY = 1;
         let offsetX = 0;
         let offsetY = 0;
 
-        if (mode === "fitWidth") {
-          scale = layer.width / naturalWidth;
-          offsetY = Math.round((layer.height - naturalHeight * scale) / 2);
+        if (mode === "fill") {
+          scaleX = layer.width / naturalWidth;
+          scaleY = layer.height / naturalHeight;
+          offsetX = 0;
+          offsetY = 0;
         } else if (mode === "cover") {
-          scale = Math.max(
+          const scale = Math.max(
             layer.width / naturalWidth,
             layer.height / naturalHeight,
           );
+          scaleX = scale;
+          scaleY = scale;
           offsetX = Math.round((layer.width - naturalWidth * scale) / 2);
           offsetY = Math.round((layer.height - naturalHeight * scale) / 2);
         } else if (mode === "contain") {
-          scale = Math.min(
+          const scale = Math.min(
             layer.width / naturalWidth,
             layer.height / naturalHeight,
           );
+          scaleX = scale;
+          scaleY = scale;
           offsetX = Math.round((layer.width - naturalWidth * scale) / 2);
           offsetY = Math.round((layer.height - naturalHeight * scale) / 2);
         }
@@ -151,8 +158,8 @@ export function FillQuickActionsMenu({
           imageTransform: {
             x: offsetX,
             y: offsetY,
-            scaleX: scale,
-            scaleY: scale,
+            scaleX,
+            scaleY,
             rotation: 0,
           },
         };
@@ -379,16 +386,16 @@ export function FillQuickActionsMenu({
     "flex items-center justify-left gap-1.5 py-1.5 px-2 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-[11px] font-bold transition-colors cursor-pointer";
 
   const FIT_CONFIG: {
-    mode: "fitWidth" | "cover" | "contain";
+    mode: "fill" | "cover" | "contain";
     labelKey: string;
     desc: string;
     icon: LucideIcon;
     colorClass: string;
   }[] = [
     {
-      mode: "fitWidth",
-      labelKey: "quickActions.fitWidth",
-      desc: "Fit width (100% cell)",
+      mode: "fill",
+      labelKey: "quickActions.fitFill",
+      desc: "Stretch to exact cell size",
       icon: StretchHorizontal,
       colorClass: "text-sky-500",
     },
