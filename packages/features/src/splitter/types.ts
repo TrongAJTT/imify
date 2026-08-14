@@ -226,10 +226,12 @@ export const DEFAULT_SPLITTER_SPLIT_SETTINGS: SplitterSplitSettings = {
   spriteSortMode: "top_left"
 }
 
+import { SPLITTER_NAMING_CONFIG } from "@imify/core"
+
 export const DEFAULT_SPLITTER_EXPORT_SETTINGS: SplitterExportSettings = {
   format: "png",
   downloadMode: "zip",
-  fileNamePattern: "split-[OriginalName]-[Index]"
+  fileNamePattern: SPLITTER_NAMING_CONFIG.defaultPattern
 }
 
 

@@ -11,6 +11,7 @@ import {
 import { Sliders, Maximize2, Grid } from "lucide-react";
 import { IMAGE_UPSCALER_MODELS } from "./models";
 import { QuickExportSelector } from "../shared/quick-export-selector";
+import { UPSCALER_NAMING_CONFIG } from "@imify/core";
 import { useImageUpscalerStore } from "@imify/stores";
 import { ModelVariantDialog } from "./model-variant-dialog";
 import { AiEngineAccordionCard } from "../shared/ai-engine-accordion-card";
@@ -202,6 +203,7 @@ export function UpscalerSidebar({
           onFormatChange={setExportFormat}
           fileNamePattern={fileNamePattern}
           onFileNamePatternChange={setFileNamePattern}
+          namingConfig={UPSCALER_NAMING_CONFIG}
           theme="purple"
         />
       ),

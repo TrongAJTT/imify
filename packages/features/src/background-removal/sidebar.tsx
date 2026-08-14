@@ -12,6 +12,7 @@ import {
 import { Sliders, Image, Eraser, Palette } from "lucide-react";
 import { BACKGROUND_REMOVAL_MODELS } from "./models";
 import { QuickExportSelector } from "../shared/quick-export-selector";
+import { BACKGROUND_REMOVAL_NAMING_CONFIG } from "@imify/core";
 import { useBackgroundRemoverStore } from "@imify/stores";
 import { ModelVariantDialog } from "./model-variant-dialog";
 import { useTranslation } from "@imify/i18n";
@@ -20,10 +21,7 @@ import { AiEngineAccordionCard } from "../shared/ai-engine-accordion-card";
 import { useBackgroundRemoverShowcaseContent } from "./remover-preset-info-panel";
 import { PresetInfoShowcasePanel } from "../shared/preset-info-showcase-panel";
 
-import {
-  EDGE_REFINEMENT_MIN,
-  EDGE_REFINEMENT_MAX,
-} from "./config";
+import { EDGE_REFINEMENT_MIN, EDGE_REFINEMENT_MAX } from "./config";
 
 export const BACKGROUND_REMOVER_SIDEBAR_PANEL_ID = "bg-remover-settings";
 
@@ -156,6 +154,7 @@ export function BackgroundRemoverSidebar({
           onFormatChange={setExportFormat}
           fileNamePattern={fileNamePattern}
           onFileNamePatternChange={setFileNamePattern}
+          namingConfig={BACKGROUND_REMOVAL_NAMING_CONFIG}
           theme="pink"
         />
       ),

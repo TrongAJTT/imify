@@ -199,9 +199,11 @@ export const DEFAULT_PATTERN_SETTINGS: PatternSettings = {
   outboundBoundary: { ...DEFAULT_PATTERN_OUTBOUND_BOUNDARY },
 }
 
+import { PATTERN_NAMING_CONFIG } from "@imify/core"
+
 export const DEFAULT_PATTERN_EXPORT_SETTINGS: PatternExportSettings = {
   exportFormat: "png",
-  fileNamePattern: "pattern-[OriginalName]-[Index]"
+  fileNamePattern: PATTERN_NAMING_CONFIG.defaultPattern
 }
 
 

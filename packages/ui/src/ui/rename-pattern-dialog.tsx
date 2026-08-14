@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { X, Save, FileEdit, Zap, Tags } from "lucide-react";
+import { X, Save, FileEdit, Zap, Tags, Info } from "lucide-react";
 import { SecondaryButton } from "./secondary-button";
 import { Button } from "./button";
 import { TextInput } from "./text-input";
@@ -44,6 +44,8 @@ export interface RenamePatternDialogProps {
   inputWarningLabel?: string;
   cancelLabel?: string;
   applyLabel?: string;
+  originalNameNoticeLabel?: string;
+  originalNameNoticeDesc?: string;
 }
 
 export function RenamePatternDialog({
@@ -66,6 +68,8 @@ export function RenamePatternDialog({
   inputWarningLabel = "Dynamic tag [Input] can only be used once.",
   cancelLabel = "Cancel",
   applyLabel = "Apply pattern",
+  originalNameNoticeLabel = "Note:",
+  originalNameNoticeDesc = "The [OriginalName] tag receives the input image's filename in single-image tools (Processor, Splitter, Background Remover, Upscaler). In multi-image and generative tools (Splicing, Filling, Collage Maker, Pattern Generator), it uses the tool's default identifier.",
 }: RenamePatternDialogProps) {
   const [pattern, setPattern] = useState(initialPattern);
 
@@ -213,6 +217,19 @@ export function RenamePatternDialog({
                   <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-200 truncate break-all">
                     {preview}
                   </span>
+                </div>
+              </div>
+
+              {/* Info notice about [OriginalName] behavior across tools */}
+              <div className="rounded-lg border border-sky-200/80 bg-sky-50/70 p-3 dark:border-sky-900/50 dark:bg-sky-950/30 mt-2">
+                <div className="flex items-start gap-2">
+                  <Info size={14} className="text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+                  <div className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+                    <strong className="font-semibold text-slate-800 dark:text-slate-200 mr-1">
+                      {originalNameNoticeLabel}
+                    </strong>
+                    {originalNameNoticeDesc}
+                  </div>
                 </div>
               </div>
             </div>

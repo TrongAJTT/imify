@@ -5,7 +5,7 @@ import { PDFDocument } from "pdf-lib"
 import { useTranslation } from "@imify/i18n"
 
 import { APP_CONFIG } from "@imify/core/config"
-import { mapQuickExportToEngineConfig } from "@imify/core"
+import { mapQuickExportToEngineConfig, SPLICING_NAMING_CONFIG } from "@imify/core"
 import type { ConversionProgressPayload } from "@imify/core/types"
 import { getCanonicalExtension } from "@imify/core/download-utils"
 import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@imify/engine/converter/wasm-worker-pool"
@@ -164,11 +164,11 @@ export function useSplicingExport({
         })
         const exportLayout = calculateLayout(imageSizes, layout, canvas, imgStyle, store.image.resizeMode, store.image.fitValue, store.image.applyTo)
 
-        const pattern = exportSettings.fileNamePattern.trim() || "spliced-[Index]"
+        const pattern = exportSettings.fileNamePattern.trim() || SPLICING_NAMING_CONFIG.defaultPattern
         const now = new Date(exportTsMs)
         const usedExportNames = new Set<string>()
 
-        const originalFileName = `imify-splicing-${exportTsMs}`
+        const originalFileName = SPLICING_NAMING_CONFIG.defaultOriginalName
 
         const buildImageFileName = (i: number) => {
           const dims = computeSplicingExportCanvasDimensions(exportLayout, canvas, config, i)

@@ -78,9 +78,11 @@ export interface FillingStoreState {
   resetToDefault: () => void
 }
 
+import { FILLING_NAMING_CONFIG } from "@imify/core"
+
 export const DEFAULT_FILLING_EXPORT_SETTINGS: FillingExportSettings = {
   format: "png",
-  fileNamePattern: "filled-[OriginalName]-[Index]"
+  fileNamePattern: FILLING_NAMING_CONFIG.defaultPattern
 }
 
 export const useFillingStore = create<FillingStoreState>()(

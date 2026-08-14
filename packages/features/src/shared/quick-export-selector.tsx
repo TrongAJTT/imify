@@ -1,14 +1,16 @@
-import React from "react";
-import { Download, Info } from "lucide-react";
+import React, { useState } from "react";
+import { Download, Info, FileEdit } from "lucide-react";
 import {
   AccordionCard,
   LabelText,
-  TextInput,
+  SidebarCard,
+  type RenamePatternPreviewSample,
   Tooltip,
   TooltipTableContent,
 } from "@imify/ui";
-import type { QuickExportFormat } from "@imify/core";
+import type { QuickExportFormat, ToolExportNamingConfig } from "@imify/core";
 import { useTranslation } from "@imify/i18n";
+import { SharedRenamePatternDialog } from "./rename-pattern-dialog";
 
 export interface QuickExportSelectorProps {
   format: QuickExportFormat;
@@ -20,6 +22,8 @@ export interface QuickExportSelectorProps {
   sublabel?: string;
   theme?: "pink" | "blue" | "purple" | "amber" | "sky" | "orange";
   defaultOpen?: boolean;
+  namingConfig?: ToolExportNamingConfig;
+  previewSample?: Partial<RenamePatternPreviewSample>;
   children?: React.ReactNode;
 }
 
@@ -33,9 +37,12 @@ export function QuickExportSelector({
   sublabel,
   theme = "sky",
   defaultOpen = true,
+  namingConfig,
+  previewSample,
   children,
 }: QuickExportSelectorProps) {
   const { t } = useTranslation("common");
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const safeFormat = (format || "png") as QuickExportFormat;
 
   const allFormatOptions: {
@@ -48,25 +55,25 @@ export function QuickExportSelector({
       id: "png",
       label: "PNG",
       badge: "100%",
-      desc: t("quickExport.pngDesc"),
+      desc: t("common:quickExport.pngDesc"),
     },
     {
       id: "jpg",
       label: "JPG",
       badge: "92%",
-      desc: t("quickExport.jpgDesc"),
+      desc: t("common:quickExport.jpgDesc"),
     },
     {
       id: "webp",
       label: "WEBP",
       badge: "88%",
-      desc: t("quickExport.webpDesc"),
+      desc: t("common:quickExport.webpDesc"),
     },
     {
       id: "webp-lossless",
       label: "WEBP",
       badge: "HQ",
-      desc: t("quickExport.webpLosslessDesc"),
+      desc: t("common:quickExport.webpLosslessDesc"),
     },
   ];
 
@@ -76,8 +83,13 @@ export function QuickExportSelector({
 
   return (
     <AccordionCard
-      label={label || t("quickExport.cardLabel")}
-      sublabel={sublabel || t("quickExport.selected", { format: safeFormat.toUpperCase() })}
+      label={label || t("common:quickExport.cardLabel")}
+      sublabel={
+        sublabel ||
+        t("common:quickExport.selected", {
+          format: safeFormat.toUpperCase(),
+        })
+      }
       icon={<Download size={16} />}
       defaultOpen={defaultOpen}
       colorTheme={theme}
@@ -85,14 +97,16 @@ export function QuickExportSelector({
     >
       <div>
         <div className="flex items-center justify-left gap-2 mb-1">
-          <LabelText className="text-xs">{t("quickExport.selectFormat")}</LabelText>
+          <LabelText className="text-xs">
+            {t("common:quickExport.selectFormat")}
+          </LabelText>
           <Tooltip
-            label={t("quickExport.tooltipTitle")}
+            label={t("common:quickExport.tooltipTitle")}
             variant="wide2"
             content={
               <TooltipTableContent
-                firstColumnHeader={t("quickExport.tableHeaderFormat")}
-                secondColumnHeader={t("quickExport.tableHeaderUsage")}
+                firstColumnHeader={t("common:quickExport.tableHeaderFormat")}
+                secondColumnHeader={t("common:quickExport.tableHeaderUsage")}
                 rows={allFormatOptions.map((opt) => ({
                   method: `${opt.label} (${opt.badge || "Default"})`,
                   description: opt.desc,
@@ -141,16 +155,38 @@ export function QuickExportSelector({
       </div>
 
       {onFileNamePatternChange && fileNamePattern !== undefined && (
-        <div>
-          <TextInput
-            label={t("quickExport.fileNamePattern")}
-            value={fileNamePattern}
-            onChange={(e: any) =>
-              onFileNamePatternChange(
-                typeof e === "string" ? e : e.target?.value || "",
-              )
+        <div className="pt-1">
+          <SidebarCard
+            icon={<FileEdit size={14} />}
+            label={t("common:fileRenaming")}
+            sublabel={
+              fileNamePattern ||
+              namingConfig?.defaultPattern ||
+              "[OriginalName]"
             }
-            placeholder="[OriginalName]"
+            onClick={() => setIsRenameDialogOpen(true)}
+            theme={theme}
+          />
+
+          <SharedRenamePatternDialog
+            isOpen={isRenameDialogOpen}
+            onClose={() => setIsRenameDialogOpen(false)}
+            onSave={(pattern) => {
+              onFileNamePatternChange(pattern);
+              setIsRenameDialogOpen(false);
+            }}
+            initialPattern={
+              fileNamePattern ||
+              namingConfig?.defaultPattern ||
+              "[OriginalName]"
+            }
+            namingConfig={namingConfig}
+            previewSample={{
+              ...previewSample,
+              outputExtension:
+                previewSample?.outputExtension ??
+                (safeFormat === "webp-lossless" ? "webp" : safeFormat),
+            }}
           />
         </div>
       )}

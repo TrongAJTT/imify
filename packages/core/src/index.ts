@@ -30,3 +30,4 @@ export * from "./changelogs"
 
 export * from "./hooks/use-toast"
 export * from "./format-utils"
+export * from "./tool-naming-config"

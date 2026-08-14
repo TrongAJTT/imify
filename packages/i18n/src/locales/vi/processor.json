@@ -457,6 +457,8 @@
     "apply": "Áp dụng cấu trúc",
     "placeholder": "Ví dụ: [OriginalName]_[Width]x[Height]",
     "previewInputHint": "{{name}} ({{width}}x{{height}}, {{index}} trên {{total}})",
+    "originalNameNoticeLabel": "Lưu ý:",
+    "originalNameNoticeDesc": "Thẻ [OriginalName] nhận tên tệp của ảnh gốc trong các tính năng xử lý ảnh đơn lẻ (Bộ xử lý, Tách ảnh, Tẩy nền, Nâng cấp ảnh). Trong các tính năng ghép hoặc tạo mới từ nhiều ảnh (Ghép ảnh liên tiếp, Lấp đầy, Tạo ảnh ghép, Tạo hoa văn), thẻ này nhận giá trị định danh mặc định của tính năng.",
     "presets": {
       "default": "Mặc định",
       "designer": "Thiết kế",

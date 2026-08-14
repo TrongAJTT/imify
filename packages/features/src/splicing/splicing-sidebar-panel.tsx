@@ -18,7 +18,7 @@ import {
   type WorkspaceConfigSidebarItem,
 } from "@imify/ui";
 import { QuickExportSelector } from "../shared/quick-export-selector";
-import type { QuickExportFormat } from "@imify/core";
+import { SPLICING_NAMING_CONFIG, type QuickExportFormat } from "@imify/core";
 
 interface SplicingSidebarPanelProps {
   performancePreferences: PerformancePreferences;
@@ -179,9 +179,14 @@ export function SplicingSidebarPanel({
       content: (
         <QuickExportSelector
           format={exportSettings.format}
-          onFormatChange={(format: QuickExportFormat) => setExportSettings({ format })}
+          onFormatChange={(format: QuickExportFormat) =>
+            setExportSettings({ format })
+          }
           fileNamePattern={exportSettings.fileNamePattern}
-          onFileNamePatternChange={(fileNamePattern: string) => setExportSettings({ fileNamePattern })}
+          onFileNamePatternChange={(fileNamePattern: string) =>
+            setExportSettings({ fileNamePattern })
+          }
+          namingConfig={SPLICING_NAMING_CONFIG}
           theme="amber"
         >
           <SplicingExportPanel
@@ -191,9 +196,7 @@ export function SplicingSidebarPanel({
             exportTrimBackground={exportSettings.trimBackground}
             availableExportModes={availableExportModes}
             advisorFormatOptions={{}}
-            onConcurrencyChange={(v) =>
-              setExportSettings({ concurrency: v })
-            }
+            onConcurrencyChange={(v) => setExportSettings({ concurrency: v })}
             onExportModeChange={(v) => setExportSettings({ exportMode: v })}
             onExportTrimBackgroundChange={(v) =>
               setExportSettings({ trimBackground: v })

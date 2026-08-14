@@ -20,6 +20,7 @@
   "error": "Error",
   "warning": "Warning",
   "notice": "Notice",
+  "fileRenaming": "File Renaming",
   "name": "Name",
   "color": "Color",
   "highlightColor": "Highlight color",

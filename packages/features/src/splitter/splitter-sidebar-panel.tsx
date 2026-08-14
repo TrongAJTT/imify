@@ -14,7 +14,7 @@ import {
 } from "@imify/ui";
 import { ArrowUpDown } from "lucide-react";
 import { useTranslation } from "@imify/i18n";
-import type { QuickExportFormat } from "@imify/core";
+import { SPLITTER_NAMING_CONFIG, type QuickExportFormat } from "@imify/core";
 
 interface SplitterSidebarPanelProps {
   enableWideSidebarGrid?: boolean;
@@ -151,6 +151,7 @@ export function SplitterSidebarPanel({
           onFileNamePatternChange={(fileNamePattern: string) =>
             setExportSettings({ fileNamePattern })
           }
+          namingConfig={SPLITTER_NAMING_CONFIG}
           theme="orange"
         >
           <SidebarCard

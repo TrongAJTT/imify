@@ -198,6 +198,8 @@ export interface PatternStoreState {
 
   exportFormat: QuickExportFormat
   setExportFormat: (format: QuickExportFormat) => void
+  fileNamePattern: string
+  setFileNamePattern: (pattern: string) => void
 
   setCanvas: (partial: Partial<PatternCanvasSettings>) => void
   setCanvasSize: (width: number, height: number) => void
@@ -234,6 +236,7 @@ export const usePatternStore = create<PatternStoreState>()(
       previewContainerHeight: 560,
 
       exportFormat: DEFAULT_PATTERN_EXPORT_SETTINGS.exportFormat,
+      fileNamePattern: DEFAULT_PATTERN_EXPORT_SETTINGS.fileNamePattern,
 
       setCanvas: (partial) =>
         set((state) => {
@@ -508,6 +511,7 @@ export const usePatternStore = create<PatternStoreState>()(
         }),
 
       setExportFormat: (v) => set({ exportFormat: v }),
+      setFileNamePattern: (v) => set({ fileNamePattern: v }),
       setPreviewContainerHeight: (v) => set({ previewContainerHeight: Math.max(200, v) }),
     }),
     {
@@ -528,6 +532,7 @@ export const usePatternStore = create<PatternStoreState>()(
           outboundBoundary: state.settings.outboundBoundary,
         },
         exportFormat: state.exportFormat,
+        fileNamePattern: state.fileNamePattern,
       }),
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<PatternStoreState> | undefined

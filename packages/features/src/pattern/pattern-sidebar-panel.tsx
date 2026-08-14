@@ -11,7 +11,7 @@ import { PatternCanvasAccordion } from "./pattern-canvas-accordion";
 import { PatternSettingsAccordion } from "./pattern-settings-accordion";
 import { QuickExportSelector } from "../shared/quick-export-selector";
 import { usePatternStore } from "@imify/stores/stores/pattern-store";
-import type { QuickExportFormat } from "@imify/core";
+import { PATTERN_NAMING_CONFIG, type QuickExportFormat } from "@imify/core";
 
 interface PatternSidebarPanelProps {
   enableWideSidebarGrid?: boolean;
@@ -24,6 +24,8 @@ export function PatternSidebarPanel({
 
   const exportFormat = usePatternStore((s) => s.exportFormat);
   const setExportFormat = usePatternStore((s) => s.setExportFormat);
+  const fileNamePattern = usePatternStore((s) => s.fileNamePattern);
+  const setFileNamePattern = usePatternStore((s) => s.setFileNamePattern);
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
@@ -60,7 +62,12 @@ export function PatternSidebarPanel({
       content: (
         <QuickExportSelector
           format={exportFormat}
-          onFormatChange={(format: QuickExportFormat) => setExportFormat(format as any)}
+          onFormatChange={(format: QuickExportFormat) =>
+            setExportFormat(format as any)
+          }
+          fileNamePattern={fileNamePattern}
+          onFileNamePatternChange={setFileNamePattern}
+          namingConfig={PATTERN_NAMING_CONFIG}
           theme="amber"
         />
       ),

@@ -120,12 +120,14 @@ export interface SplicingStoreState {
   resetToDefault: () => void
 }
 
+import { SPLICING_NAMING_CONFIG } from "@imify/core"
+
 export const DEFAULT_SPLICING_EXPORT_SETTINGS: SplicingExportSettings = {
   format: "png",
   exportMode: "single",
   trimBackground: false,
   concurrency: 2,
-  fileNamePattern: "spliced-[Index]"
+  fileNamePattern: SPLICING_NAMING_CONFIG.defaultPattern
 }
 
 export const useSplicingStore = create<SplicingStoreState>()(

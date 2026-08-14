@@ -34,7 +34,7 @@ import {
   type WorkspaceConfigSidebarItem,
 } from "@imify/ui/ui/workspace-config-sidebar-panel";
 import { QuickExportSelector } from "../../shared/quick-export-selector";
-import type { QuickExportFormat } from "@imify/core";
+import { FILLING_NAMING_CONFIG, type QuickExportFormat } from "@imify/core";
 
 interface FillSidebarProps {
   template: FillingTemplate;
@@ -179,9 +179,14 @@ export function FillSidebar({
       content: (
         <QuickExportSelector
           format={exportSettings.format}
-          onFormatChange={(format: QuickExportFormat) => setExportSettings({ format })}
+          onFormatChange={(format: QuickExportFormat) =>
+            setExportSettings({ format })
+          }
           fileNamePattern={exportSettings.fileNamePattern}
-          onFileNamePatternChange={(fileNamePattern: string) => setExportSettings({ fileNamePattern })}
+          onFileNamePatternChange={(fileNamePattern: string) =>
+            setExportSettings({ fileNamePattern })
+          }
+          namingConfig={FILLING_NAMING_CONFIG}
           theme="amber"
         />
       ),
