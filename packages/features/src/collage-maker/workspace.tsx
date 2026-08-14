@@ -53,11 +53,13 @@ import type {
 import { createLayerFillState } from "@imify/features/filling/types";
 import { generateGridLayers } from "@imify/features/filling/grid-designer/generator";
 import { GridDesignWorkspace } from "@imify/features/filling/grid-designer/workspace";
+import { GridDesignSidebar } from "@imify/features/filling/grid-designer/sidebar";
 import { FillWorkspace } from "@imify/features/filling/fill/workspace";
 import { FillSidebar } from "@imify/features/filling/fill/sidebar";
 import { SortableQueueItem } from "@imify/features/shared/sortable-queue-item";
 
 import { CollageMakerInfoPanel } from "./collage-maker-info-panel";
+import { CollageMakerStage2Sidebar } from "./collage-maker-stage2-sidebar";
 import {
   COLLAGE_DEFAULT_NAME_PREFIX,
   COLLAGE_LAYOUT_PRESETS,
@@ -71,7 +73,11 @@ export interface QueueImageItem {
   previewUrl: string;
 }
 
-export function CollageMakerWorkspace() {
+export interface CollageMakerWorkspaceProps {
+  onSidebarChange?: (sidebar: React.ReactNode, title?: string) => void;
+}
+
+export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspaceProps = {}) {
   const { t } = useTranslation(["collageMaker", "filling", "common"]);
 
   // Stage Management: 1 = Prepare, 2 = Layout, 3 = Fill & Export
@@ -227,12 +233,48 @@ export function CollageMakerWorkspace() {
     useFillingStore.getState().setLayerFillStates(nextStates);
   }, [stage, generatedTemplate, queueImages]);
 
-  // Header unmount cleanup
+  // Dynamic Sidebar Management according to Stage
   useEffect(() => {
-    return () => {
-      resetHeader();
-    };
-  }, [resetHeader]);
+    if (!onSidebarChange) return;
+
+    if (stage === 1) {
+      onSidebarChange(
+        <div className="p-4 space-y-4">
+          <CollageMakerInfoPanel />
+        </div>,
+        t("common:aboutThisTool"),
+      );
+    } else if (stage === 2) {
+      onSidebarChange(
+        <div className="p-4 space-y-4">
+          <CollageMakerStage2Sidebar
+            queueCount={queueImages.length}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+            canvasUnit={canvasUnit}
+            selectedLayoutId={selectedLayoutId}
+            gridParams={gridParams}
+            onCanvasWidthChange={setCanvasWidth}
+            onCanvasHeightChange={setCanvasHeight}
+            onCanvasUnitChange={setCanvasUnit}
+            onGridParamsChange={setGridParams}
+            onSelectLayout={(presetId, params) => {
+              setSelectedLayoutId(presetId);
+              setGridParams(params);
+            }}
+          />
+        </div>,
+        `${t("common:toolSettings")} - ${t("collageMaker.stage2.title", { defaultValue: "Chọn layout" })}`,
+      );
+    } else if (stage === 3) {
+      onSidebarChange(
+        <div className="p-4 space-y-4">
+          <FillSidebar template={generatedTemplate} />
+        </div>,
+        `${t("common:toolSettings")} - ${t("collageMaker.stage3.title", { defaultValue: "Chỉnh ảnh & Xuất" })}`,
+      );
+    }
+  }, [stage, templateId, onSidebarChange]);
 
   const title = t("collageMaker.title", { defaultValue: "Ghép ảnh nhanh" });
   const stage1Title = t("collageMaker.stage1.title", {
