@@ -54,7 +54,6 @@ export function PresetInfoShowcasePanel({
     "Tip unavailable.";
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [previewIndex, setPreviewIndex] = useState(0);
-  const [progressRemaining, setProgressRemaining] = useState(1);
   const effectivePreviewMediaSources = React.useMemo(() => {
     const fallback: PresetInfoPreviewMediaItem[] =
       Array.isArray(previewSources) && previewSources.length > 0
@@ -80,8 +79,12 @@ export function PresetInfoShowcasePanel({
     () =>
       effectivePreviewMediaSources[
         previewIndex % effectivePreviewMediaSources.length
-      ] ?? renderedPreviewMedia,
-    [effectivePreviewMediaSources, previewIndex, renderedPreviewMedia],
+      ] ?? {
+        src: previewSrc,
+        type: "image",
+        alt: previewAlt,
+      },
+    [effectivePreviewMediaSources, previewIndex, previewSrc, previewAlt],
   );
 
   const hasMultiplePreviews = effectivePreviewMediaSources.length > 1;
@@ -116,42 +119,21 @@ export function PresetInfoShowcasePanel({
     activePreviewMedia.type,
     renderedPreviewMedia.src,
     renderedPreviewMedia.type,
-    activePreviewMedia,
   ]);
 
   useEffect(() => {
-    if (!hasMultiplePreviews) {
-      setProgressRemaining(1);
+    if (!hasMultiplePreviews || activePreviewMedia.type !== "image") {
       return;
     }
 
-    setProgressRemaining(1);
-
-    if (activePreviewMedia.type !== "image") {
-      return;
-    }
-
-    const startAt = window.performance.now();
-    let rafId = 0;
     const autoAdvanceTimeout = window.setTimeout(() => {
       setPreviewIndex(
         (current) => (current + 1) % effectivePreviewMediaSources.length,
       );
     }, IMAGE_AUTO_ADVANCE_MS);
 
-    const tick = () => {
-      const elapsedMs = window.performance.now() - startAt;
-      const remaining = Math.max(0, 1 - elapsedMs / IMAGE_AUTO_ADVANCE_MS);
-      setProgressRemaining(remaining);
-      if (remaining > 0) {
-        rafId = window.requestAnimationFrame(tick);
-      }
-    };
-    rafId = window.requestAnimationFrame(tick);
-
     return () => {
       window.clearTimeout(autoAdvanceTimeout);
-      window.cancelAnimationFrame(rafId);
     };
   }, [
     activePreviewMedia.src,
@@ -210,35 +192,6 @@ export function PresetInfoShowcasePanel({
                 autoPlay
                 muted
                 playsInline
-                onLoadedMetadata={(event) => {
-                  if (
-                    activePreviewMedia.type !== "video" ||
-                    activePreviewMedia.src !== renderedPreviewMedia.src
-                  ) {
-                    return;
-                  }
-                  const durationSec = event.currentTarget.duration;
-                  if (!Number.isFinite(durationSec) || durationSec <= 0) {
-                    setProgressRemaining(1);
-                    return;
-                  }
-                  setProgressRemaining(1);
-                }}
-                onTimeUpdate={(event) => {
-                  if (
-                    activePreviewMedia.type !== "video" ||
-                    activePreviewMedia.src !== renderedPreviewMedia.src
-                  ) {
-                    return;
-                  }
-                  const durationSec = event.currentTarget.duration;
-                  const currentSec = event.currentTarget.currentTime;
-                  if (!Number.isFinite(durationSec) || durationSec <= 0) {
-                    return;
-                  }
-                  const remaining = Math.max(0, 1 - currentSec / durationSec);
-                  setProgressRemaining(remaining);
-                }}
                 onEnded={() => {
                   if (!hasMultiplePreviews) return;
                   if (
@@ -247,7 +200,6 @@ export function PresetInfoShowcasePanel({
                   ) {
                     return;
                   }
-                  setProgressRemaining(1);
                   setPreviewIndex(
                     (current) =>
                       (current + 1) % effectivePreviewMediaSources.length,
@@ -302,10 +254,10 @@ export function PresetInfoShowcasePanel({
           {hasMultiplePreviews ? (
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-slate-300/30 dark:bg-slate-700/35">
               <div
-                className="h-full bg-slate-400/45 transition-[width] duration-100 ease-linear dark:bg-slate-500/40"
+                key={previewIndex}
+                className="h-full bg-slate-400/45 dark:bg-slate-500/40"
                 style={{
-                  width: `${Math.max(0, Math.min(1, progressRemaining)) * 100}%`,
-                  marginLeft: "auto",
+                  animation: `imify-progress-shrink ${IMAGE_AUTO_ADVANCE_MS}ms linear forwards`,
                 }}
               />
             </div>

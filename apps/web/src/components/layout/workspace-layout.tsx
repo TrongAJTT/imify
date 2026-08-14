@@ -77,3 +77,7 @@ export function useWorkspaceSidebar(
     };
   }, [context]);
 }
+
+export function useWorkspaceSidebarContext() {
+  return useContext(WorkspaceSidebarContext);
+}

@@ -75,9 +75,13 @@ export interface QueueImageItem {
 
 export interface CollageMakerWorkspaceProps {
   onSidebarChange?: (sidebar: React.ReactNode, title?: string) => void;
+  enableWideSidebarGrid?: boolean;
 }
 
-export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspaceProps = {}) {
+export function CollageMakerWorkspace({
+  onSidebarChange,
+  enableWideSidebarGrid = false,
+}: CollageMakerWorkspaceProps = {}) {
   const { t } = useTranslation(["collageMaker", "filling", "common"]);
 
   // Stage Management: 1 = Prepare, 2 = Layout, 3 = Fill & Export
@@ -101,6 +105,17 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
     uniformColumns: false,
     uniformColumnsDef: "",
   });
+
+  const handleSelectLayout = useCallback((presetId: string, params: GridDesignParams) => {
+    setSelectedLayoutId(presetId);
+    setGridParams(params);
+    useFillingStore.getState().setGridDesignParams(params);
+  }, []);
+
+  const handleGridParamsChange = useCallback((params: GridDesignParams) => {
+    setGridParams(params);
+    useFillingStore.getState().setGridDesignParams(params);
+  }, []);
 
   // Header Store
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection);
@@ -133,6 +148,7 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
       const first = matchingPresets[0]!;
       setSelectedLayoutId(first.id);
       setGridParams(first.params);
+      useFillingStore.getState().setGridDesignParams(first.params);
     }
   }, [matchingPresets]);
 
@@ -184,8 +200,8 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
   // Generated Filling Template based on current Grid Params & Canvas Size
   const templateId = useMemo(
     () =>
-      `collage-${canvasWidth}x${canvasHeight}-${gridParams.direction}-${gridParams.rowCount}-${gridParams.outerPadding}-${gridParams.gapX}-${gridParams.gapY}`,
-    [canvasWidth, canvasHeight, gridParams],
+      `collage-${canvasWidth}x${canvasHeight}-${gridParams.direction}-${gridParams.rowCount}-${gridParams.rowDefinitions.join("_")}-${gridParams.outerPadding}-${gridParams.gapX}-${gridParams.gapY}-${selectedLayoutId}`,
+    [canvasWidth, canvasHeight, gridParams, selectedLayoutId],
   );
 
   const generatedTemplate = useMemo<FillingTemplate>(() => {
@@ -207,6 +223,7 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
       canvasHeight,
       layers: generatedLayers,
       groups: [],
+      gridDesignParams: gridParams,
     };
   }, [canvasWidth, canvasHeight, gridParams, templateId]);
 
@@ -233,48 +250,14 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
     useFillingStore.getState().setLayerFillStates(nextStates);
   }, [stage, generatedTemplate, queueImages]);
 
-  // Dynamic Sidebar Management according to Stage
-  useEffect(() => {
-    if (!onSidebarChange) return;
-
-    if (stage === 1) {
-      onSidebarChange(
-        <div className="p-4 space-y-4">
-          <CollageMakerInfoPanel />
-        </div>,
-        t("common:aboutThisTool"),
-      );
-    } else if (stage === 2) {
-      onSidebarChange(
-        <div className="p-4 space-y-4">
-          <CollageMakerStage2Sidebar
-            queueCount={queueImages.length}
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasHeight}
-            canvasUnit={canvasUnit}
-            selectedLayoutId={selectedLayoutId}
-            gridParams={gridParams}
-            onCanvasWidthChange={setCanvasWidth}
-            onCanvasHeightChange={setCanvasHeight}
-            onCanvasUnitChange={setCanvasUnit}
-            onGridParamsChange={setGridParams}
-            onSelectLayout={(presetId, params) => {
-              setSelectedLayoutId(presetId);
-              setGridParams(params);
-            }}
-          />
-        </div>,
-        `${t("common:toolSettings")} - ${t("collageMaker.stage2.title", { defaultValue: "Chọn layout" })}`,
-      );
-    } else if (stage === 3) {
-      onSidebarChange(
-        <div className="p-4 space-y-4">
-          <FillSidebar template={generatedTemplate} />
-        </div>,
-        `${t("common:toolSettings")} - ${t("collageMaker.stage3.title", { defaultValue: "Chỉnh ảnh & Xuất" })}`,
-      );
+  // Dynamic Sidebar Title according to Stage
+  const sidebarTitle = useMemo(() => {
+    if (stage === 1) return t("common:aboutThisTool");
+    if (stage === 2) {
+      return `${t("common:toolSettings")} - ${t("collageMaker.stage2.title", { defaultValue: "Chọn layout" })}`;
     }
-  }, [stage, templateId, onSidebarChange]);
+    return `${t("common:toolSettings")} - ${t("collageMaker.stage3.title", { defaultValue: "Chỉnh ảnh & Xuất" })}`;
+  }, [stage, t]);
 
   const title = t("collageMaker.title", { defaultValue: "Ghép ảnh nhanh" });
   const stage1Title = t("collageMaker.stage1.title", {
@@ -336,156 +319,20 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
     if (stage === 2) {
       return (
         <div className="space-y-4 p-0">
-          <AccordionCard
-            icon={<Ruler size={16} />}
-            label={t("collageMaker.stage2.imageSize", {
-              defaultValue: "Output Image Size",
-            })}
-            sublabel={`${canvasWidth} x ${canvasHeight} px`}
-            colorTheme="amber"
-            defaultOpen={true}
-          >
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <div className="flex-1 w-full min-w-0">
-                  <NumberInput
-                    label={t("filling:dialog.width", { defaultValue: "Width" })}
-                    value={canvasWidth}
-                    onChangeValue={(v) =>
-                      setCanvasWidth(Math.max(100, Math.round(v)))
-                    }
-                    min={100}
-                    max={16384}
-                  />
-                </div>
-                <div className="flex-1 w-full min-w-0">
-                  <NumberInput
-                    label={t("filling:dialog.height", {
-                      defaultValue: "Height",
-                    })}
-                    value={canvasHeight}
-                    onChangeValue={(v) =>
-                      setCanvasHeight(Math.max(100, Math.round(v)))
-                    }
-                    min={100}
-                    max={16384}
-                  />
-                </div>
-              </div>
-
-              <SelectInput
-                label={t("common:units", { defaultValue: "Unit" })}
-                value={canvasUnit}
-                onChange={(v) => setCanvasUnit(v as CanvasSizeUnit)}
-                options={[
-                  { label: "Pixel (px)", value: "px" },
-                  { label: "Millimeter (mm)", value: "mm" },
-                  { label: "Inch (in)", value: "in" },
-                ]}
-              />
-            </div>
-          </AccordionCard>
-
-          <AccordionCard
-            icon={<Sliders size={16} />}
-            label={t("collageMaker.stage2.spacingPadding", {
-              defaultValue: "Spacing & Margin",
-            })}
-            sublabel={`Pad: ${gridParams.outerPadding}px • Gap: ${gridParams.gapX}x${gridParams.gapY}px`}
-            colorTheme="amber"
-            defaultOpen={true}
-          >
-            <div className="space-y-3">
-              <NumberInput
-                label={t("collageMaker.stage2.outerPadding", {
-                  defaultValue: "Outer Margin",
-                })}
-                value={gridParams.outerPadding}
-                onChangeValue={(v) =>
-                  setGridParams((prev) => ({
-                    ...prev,
-                    outerPadding: Math.max(0, Math.round(v)),
-                  }))
-                }
-                min={0}
-                max={200}
-              />
-              <div className="flex gap-2">
-                <NumberInput
-                  label={t("collageMaker.stage2.gapX", {
-                    defaultValue: "Horizontal Gap",
-                  })}
-                  value={gridParams.gapX ?? 0}
-                  onChangeValue={(v) =>
-                    setGridParams((prev) => ({
-                      ...prev,
-                      gapX: Math.max(0, Math.round(v)),
-                    }))
-                  }
-                  min={0}
-                  max={200}
-                />
-                <NumberInput
-                  label={t("collageMaker.stage2.gapY", {
-                    defaultValue: "Vertical Gap",
-                  })}
-                  value={gridParams.gapY ?? 0}
-                  onChangeValue={(v) =>
-                    setGridParams((prev) => ({
-                      ...prev,
-                      gapY: Math.max(0, Math.round(v)),
-                    }))
-                  }
-                  min={0}
-                  max={200}
-                />
-              </div>
-            </div>
-          </AccordionCard>
-
-          <AccordionCard
-            icon={<LayoutGrid size={16} />}
-            label={t("collageMaker.stage2.layoutSelector", {
-              defaultValue: "Layout Templates",
-            })}
-            sublabel={t("collageMaker.stage2.layoutsForImages", {
-              count: queueImages.length,
-              defaultValue: `Layouts for ${queueImages.length} photos`,
-            })}
-            colorTheme="amber"
-            defaultOpen={true}
-          >
-            <div className="grid grid-cols-2 gap-2">
-              {matchingPresets.map((preset) => {
-                const isSelected = selectedLayoutId === preset.id;
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedLayoutId(preset.id);
-                      setGridParams(preset.params);
-                    }}
-                    className={`flex flex-col items-center gap-2 rounded-lg border p-2.5 transition-all text-left ${
-                      isSelected
-                        ? "border-amber-500 bg-amber-50/70 ring-1 ring-amber-400 dark:border-amber-500 dark:bg-amber-900/20"
-                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900"
-                    }`}
-                  >
-                    <svg
-                      viewBox="0 0 100 100"
-                      className="h-16 w-full rounded border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
-                      dangerouslySetInnerHTML={{ __html: preset.svgPreview }}
-                    />
-                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate w-full text-center">
-                      {preset.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </AccordionCard>
-
+          <CollageMakerStage2Sidebar
+            queueCount={queueImages.length}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+            canvasUnit={canvasUnit}
+            selectedLayoutId={selectedLayoutId}
+            gridParams={gridParams}
+            onCanvasWidthChange={setCanvasWidth}
+            onCanvasHeightChange={setCanvasHeight}
+            onCanvasUnitChange={setCanvasUnit}
+            onGridParamsChange={handleGridParamsChange}
+            onSelectLayout={handleSelectLayout}
+            enableWideSidebarGrid={enableWideSidebarGrid}
+          />
           <Button
             variant="primary"
             className="w-full gap-2 font-bold py-2.5"
@@ -510,12 +357,20 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
     canvasWidth,
     canvasHeight,
     canvasUnit,
-    gridParams,
-    matchingPresets,
     selectedLayoutId,
+    gridParams,
+    enableWideSidebarGrid,
+    handleGridParamsChange,
+    handleSelectLayout,
     generatedTemplate,
     t,
   ]);
+
+  useEffect(() => {
+    if (onSidebarChange) {
+      onSidebarChange(sidebarContent, sidebarTitle);
+    }
+  }, [sidebarContent, sidebarTitle, onSidebarChange]);
 
   return (
     <div className="space-y-4 p-0">
@@ -664,6 +519,11 @@ export function CollageMakerWorkspace({ onSidebarChange }: CollageMakerWorkspace
         <GridDesignWorkspace
           template={generatedTemplate}
           onRefresh={async () => {}}
+          onSaved={(_template, destination) => {
+            if (destination === "fill") {
+              setStage(3);
+            }
+          }}
         />
       )}
 

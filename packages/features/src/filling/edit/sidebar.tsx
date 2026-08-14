@@ -21,7 +21,6 @@ import {
   regenerateLayerShapePoints,
 } from "../shape-generators";
 import { getBoundingBox } from "../vector-math";
-import { CanvasSizeDialog } from "../canvas-size-dialog";
 import { LayerListPanel } from "../layer-list-panel";
 import { LayerPropertiesPanel } from "../layer-properties-panel";
 import { ShapePickerDialog } from "../shape-picker-dialog";
@@ -30,16 +29,11 @@ import {
   AccordionCard,
   Button,
   CheckboxCard,
-  NumberInput,
-  SelectInput,
   ResizableAccordionCard,
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
-  Tooltip,
-  Kicker,
-  Subheading,
-  LabelText,
 } from "@imify/ui";
+import { CanvasDimensionControls } from "@imify/features/shared/canvas-dimension-controls";
 
 interface ManualEditorSidebarProps {
   layers: VectorLayer[];
@@ -64,34 +58,6 @@ import {
   parseAspectRatio,
   ratioFromDimensions,
 } from "@imify/features/shared/use-aspect-ratio";
-
-const DPI_DEFAULT = 300;
-
-function toPixels(value: number, unit: CanvasSizeUnit, dpi: number): number {
-  switch (unit) {
-    case "in":
-      return Math.round(value * dpi);
-    case "cm":
-      return Math.round((value / 2.54) * dpi);
-    case "mm":
-      return Math.round((value / 25.4) * dpi);
-    default:
-      return Math.round(value);
-  }
-}
-
-function fromPixels(px: number, unit: CanvasSizeUnit, dpi: number): number {
-  switch (unit) {
-    case "in":
-      return Math.round((px / dpi) * 100) / 100;
-    case "cm":
-      return Math.round((px / dpi) * 2.54 * 100) / 100;
-    case "mm":
-      return Math.round((px / dpi) * 25.4 * 10) / 10;
-    default:
-      return px;
-  }
-}
 
 function synchronizeGroupsWithLayers(
   groups: LayerGroup[],
@@ -135,13 +101,9 @@ export function ManualEditorSidebar({
 }: ManualEditorSidebarProps) {
   const { t } = useTranslation("filling");
   const [shapePickerOpen, setShapePickerOpen] = useState(false);
-  const [canvasSizeDialogOpen, setCanvasSizeDialogOpen] = useState(false);
   const [canvasUnit, setCanvasUnit] = useState<CanvasSizeUnit>("px");
-  const [canvasDpi, setCanvasDpi] = useState(DPI_DEFAULT);
+  const [canvasDpi, setCanvasDpi] = useState(300);
   const [layersAccordionHeight, setLayersAccordionHeight] = useState(320);
-
-  const displayCanvasWidth = fromPixels(canvasWidth, canvasUnit, canvasDpi);
-  const displayCanvasHeight = fromPixels(canvasHeight, canvasUnit, canvasDpi);
 
   const selectedLayer = selectedLayerId
     ? layers.find((l) => l.id === selectedLayerId) ?? null
@@ -607,113 +569,6 @@ export function ManualEditorSidebar({
     [selectedLayerId, layers, onLayersChange],
   );
 
-  const [lockRatio, setLockRatio] = useState(false);
-
-  const CANVAS_RATIO_OPTIONS = useMemo(
-    () => ASPECT_RATIO_OPTIONS.filter((option) => option.value !== "original"),
-    [],
-  );
-
-  const currentRatioValue = useMemo(() => {
-    const currentRatio = ratioFromDimensions(canvasWidth, canvasHeight);
-    if (!currentRatio) {
-      return "free";
-    }
-
-    for (const option of CANVAS_RATIO_OPTIONS) {
-      if (option.value === "free") {
-        continue;
-      }
-
-      const optionRatio = parseAspectRatio(option.value);
-      if (isSameRatio(currentRatio, optionRatio)) {
-        return option.value;
-      }
-    }
-
-    return "free";
-  }, [canvasHeight, canvasWidth, CANVAS_RATIO_OPTIONS]);
-
-  const handleRatioChange = useCallback(
-    (ratioValue: string) => {
-      if (ratioValue === "free") {
-        return;
-      }
-
-      const ratio = parseAspectRatio(ratioValue);
-      if (!ratio || ratio <= 0) {
-        return;
-      }
-
-      const newHeightPx = Math.max(1, Math.round(canvasWidth / ratio));
-      onCanvasSizeChange(canvasWidth, newHeightPx);
-    },
-    [canvasWidth, onCanvasSizeChange],
-  );
-
-  const handleCanvasWidthChange = useCallback(
-    (value: number) => {
-      const newWidthPx = toPixels(value, canvasUnit, canvasDpi);
-
-      if (lockRatio && canvasWidth > 0 && canvasHeight > 0) {
-        const ratio = canvasWidth / canvasHeight;
-        const newHeightPx = Math.max(1, Math.round(newWidthPx / ratio));
-        onCanvasSizeChange(newWidthPx, newHeightPx);
-      } else {
-        onCanvasSizeChange(newWidthPx, canvasHeight);
-      }
-    },
-    [
-      canvasDpi,
-      canvasHeight,
-      canvasUnit,
-      canvasWidth,
-      lockRatio,
-      onCanvasSizeChange,
-    ],
-  );
-
-  const handleCanvasHeightChange = useCallback(
-    (value: number) => {
-      const newHeightPx = toPixels(value, canvasUnit, canvasDpi);
-
-      if (lockRatio && canvasWidth > 0 && canvasHeight > 0) {
-        const ratio = canvasWidth / canvasHeight;
-        const newWidthPx = Math.max(1, Math.round(newHeightPx * ratio));
-        onCanvasSizeChange(newWidthPx, newHeightPx);
-      } else {
-        onCanvasSizeChange(canvasWidth, newHeightPx);
-      }
-    },
-    [
-      canvasDpi,
-      canvasHeight,
-      canvasUnit,
-      canvasWidth,
-      lockRatio,
-      onCanvasSizeChange,
-    ],
-  );
-
-  const handleCanvasPresetConfirm = useCallback(
-    (preset: CanvasSizePreset) => {
-      setLockRatio(false);
-      onCanvasSizeChange(preset.width, preset.height);
-      setCanvasSizeDialogOpen(false);
-    },
-    [onCanvasSizeChange],
-  );
-
-  const UNIT_OPTIONS = useMemo(
-    () => [
-      { value: "px", label: t("dialog.pixels") },
-      { value: "in", label: t("dialog.inches") },
-      { value: "cm", label: t("dialog.centimeters") },
-      { value: "mm", label: t("dialog.millimeters") },
-    ],
-    [t],
-  );
-
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "canvas",
@@ -725,106 +580,15 @@ export function ManualEditorSidebar({
           colorTheme="amber"
           defaultOpen={true}
         >
-          <div className="space-y-3">
-            <div className="flex flex-row items-center gap-3">
-              <div className="flex flex-col flex-1">
-                <Kicker>{t("dialog.finalSize")}</Kicker>
-                <LabelText className="text-xs">
-                  {canvasWidth} x {canvasHeight} px
-                </LabelText>
-              </div>
-
-              <Tooltip content={t("dialog.popularSizes")}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCanvasSizeDialogOpen(true)}
-                  className="w-full px-2.5"
-                >
-                  <Ruler size={12} />
-                </Button>
-              </Tooltip>
-            </div>
-
-            <div className="flex flex-col gap-2.5">
-              <div className="flex flex-row gap-3 md:gap-1 items-end">
-                <div className="flex-1 w-full min-w-0">
-                  <NumberInput
-                    label={t("dialog.width")}
-                    value={displayCanvasWidth}
-                    onChangeValue={handleCanvasWidthChange}
-                    min={1}
-                    max={canvasUnit === "px" ? 16384 : 9999}
-                    step={canvasUnit === "px" ? 1 : 0.1}
-                  />
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    onCanvasSizeChange(canvasHeight, canvasWidth);
-                  }}
-                >
-                  <ArrowLeftRight size={14} className="rotate-90 sm:rotate-0" />
-                </Button>
-
-                <div className="flex-1 w-full min-w-0">
-                  <NumberInput
-                    label={t("dialog.height")}
-                    value={displayCanvasHeight}
-                    onChangeValue={handleCanvasHeightChange}
-                    min={1}
-                    max={canvasUnit === "px" ? 16384 : 9999}
-                    step={canvasUnit === "px" ? 1 : 0.1}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-end gap-3">
-              <SelectInput
-                label={t("dialog.ratio")}
-                value={currentRatioValue}
-                options={CANVAS_RATIO_OPTIONS}
-                onChange={handleRatioChange}
-                className="w-full flex-1"
-              />
-
-              <Button
-                variant={lockRatio ? "primary" : "secondary"}
-                size="sm"
-                className="w-full flex-1"
-                onClick={() => setLockRatio(!lockRatio)}
-              >
-                {lockRatio ? <Lock size={14} /> : <Unlock size={14} />}
-                {t("dialog.lockRatio")}
-              </Button>
-            </div>
-
-            <div className="flex flex-row gap-3">
-              <SelectInput
-                label={t("dialog.unit")}
-                value={canvasUnit}
-                options={UNIT_OPTIONS}
-                onChange={(value) => setCanvasUnit(value as CanvasSizeUnit)}
-                className="flex-1 w-full"
-              />
-
-              {canvasUnit !== "px" && (
-                <div className="flex-1 w-full">
-                  <NumberInput
-                    label="DPI"
-                    value={canvasDpi}
-                    onChangeValue={setCanvasDpi}
-                    min={72}
-                    max={600}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+          <CanvasDimensionControls
+            width={canvasWidth}
+            height={canvasHeight}
+            unit={canvasUnit}
+            dpi={canvasDpi}
+            onSizeChange={onCanvasSizeChange}
+            onUnitChange={setCanvasUnit}
+            onDpiChange={setCanvasDpi}
+          />
         </AccordionCard>
       ),
     },
@@ -918,14 +682,6 @@ export function ManualEditorSidebar({
         isOpen={shapePickerOpen}
         onClose={() => setShapePickerOpen(false)}
         onSelect={handleAddShape}
-      />
-
-      <CanvasSizeDialog
-        isOpen={canvasSizeDialogOpen}
-        onClose={() => setCanvasSizeDialogOpen(false)}
-        currentWidth={canvasWidth}
-        currentHeight={canvasHeight}
-        onConfirm={handleCanvasPresetConfirm}
       />
     </>
   );
