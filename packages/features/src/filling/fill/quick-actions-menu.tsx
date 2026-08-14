@@ -22,6 +22,7 @@ import {
   ArrowDown,
   ArrowDownRight,
   RefreshCw,
+  type LucideIcon,
 } from "lucide-react";
 import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
 import { usePopoverTriggerBehavior } from "../../shared/use-popover-trigger-behavior";
@@ -371,6 +372,73 @@ export function FillQuickActionsMenu({
     </button>
   );
 
+  const BTN_TRANSFORM =
+    "flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 dark:hover:text-sky-300 text-[11px] font-medium transition-colors cursor-pointer";
+
+  const BTN_RESET =
+    "flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-[11px] font-bold transition-colors cursor-pointer";
+
+  const FIT_CONFIG: {
+    mode: "fitWidth" | "cover" | "contain";
+    labelKey: string;
+    desc: string;
+    icon: LucideIcon;
+    colorClass: string;
+  }[] = [
+    {
+      mode: "fitWidth",
+      labelKey: "quickActions.fitWidth",
+      desc: "Fit width (100% cell)",
+      icon: StretchHorizontal,
+      colorClass: "text-sky-500",
+    },
+    {
+      mode: "cover",
+      labelKey: "quickActions.fitCover",
+      desc: "Cover without gaps",
+      icon: Maximize2,
+      colorClass: "text-emerald-500",
+    },
+    {
+      mode: "contain",
+      labelKey: "quickActions.fitContain",
+      desc: "View 100% full image",
+      icon: Minimize2,
+      colorClass: "text-indigo-500",
+    },
+  ];
+
+  const ROTATE_ROW_PAIRS: {
+    left: { angle: number; label: string; icon: LucideIcon };
+    right: { angle: number; label: string; icon: LucideIcon };
+  }[] = [
+    {
+      left: { angle: -90, label: "-90°", icon: RotateCcw },
+      right: { angle: 90, label: "+90°", icon: RotateCw },
+    },
+    {
+      left: { angle: -45, label: "-45°", icon: RotateCcw },
+      right: { angle: 45, label: "+45°", icon: RotateCw },
+    },
+  ];
+
+  const FLIP_OPTIONS: {
+    axis: "horizontal" | "vertical";
+    labelKey: string;
+    icon: LucideIcon;
+  }[] = [
+    {
+      axis: "horizontal",
+      labelKey: "quickActions.flipHorizontal",
+      icon: FlipHorizontal,
+    },
+    {
+      axis: "vertical",
+      labelKey: "quickActions.flipVertical",
+      icon: FlipVertical,
+    },
+  ];
+
   const ALIGNMENT_GRID: {
     pos: AlignmentPosition;
     label: string;
@@ -423,6 +491,143 @@ export function FillQuickActionsMenu({
     },
   ];
 
+  // Shared Section Contents (used identically across Desktop Submenus and Mobile Expanded list)
+  const fitContent = (
+    <div className="space-y-0.5">
+      {FIT_CONFIG.map((opt) => {
+        const Icon = opt.icon;
+        return (
+          <button
+            key={opt.mode}
+            type="button"
+            onClick={() => handleApplyFit(opt.mode)}
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 dark:hover:text-sky-300 text-left transition-colors cursor-pointer"
+          >
+            <Icon size={14} className={`${opt.colorClass} shrink-0`} />
+            <div>
+              <div className="font-semibold">{t(opt.labelKey)}</div>
+              <div className="text-[10px] text-slate-400 leading-tight">
+                {opt.desc}
+              </div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const alignContent = (
+    <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg">
+      {ALIGNMENT_GRID.map((item) => (
+        <button
+          key={item.pos}
+          type="button"
+          onClick={() => handleApplyAlignment(item.pos)}
+          title={item.label}
+          className="h-8 flex items-center justify-center rounded-md bg-white dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-600 shadow-xs transition-colors cursor-pointer"
+        >
+          {item.icon}
+        </button>
+      ))}
+    </div>
+  );
+
+  const transformContent = (
+    <div className="space-y-1">
+      {/* Row 1: Reset 0° & 180° */}
+      <div className="grid grid-cols-2 gap-1">
+        <button
+          type="button"
+          onClick={handleResetRotation}
+          className={BTN_RESET}
+        >
+          <RefreshCw size={12} />
+          <span>{t("quickActions.rotate0")}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => handleApplyRotate(180)}
+          className={BTN_TRANSFORM}
+        >
+          <RotateCw size={11} />
+          <span>180°</span>
+        </button>
+      </div>
+
+      {/* Row 2 (-90 / +90) & Row 3 (-45 / +45) */}
+      {ROTATE_ROW_PAIRS.map((row, idx) => (
+        <div key={idx} className="grid grid-cols-2 gap-1">
+          <button
+            type="button"
+            onClick={() => handleApplyRotate(row.left.angle)}
+            className={BTN_TRANSFORM}
+          >
+            <row.left.icon size={11} />
+            <span>{row.left.label}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleApplyRotate(row.right.angle)}
+            className={BTN_TRANSFORM}
+          >
+            <row.right.icon size={11} />
+            <span>{row.right.label}</span>
+          </button>
+        </div>
+      ))}
+
+      {/* Flip Actions */}
+      <div className="pt-1 border-t border-slate-200 dark:border-slate-800">
+        <div className="text-[10px] font-bold text-slate-400 px-1 uppercase tracking-wider mb-1">
+          {t("common:flip")}
+        </div>
+        <div className="grid grid-cols-2 gap-1">
+          {FLIP_OPTIONS.map((opt) => (
+            <button
+              key={opt.axis}
+              type="button"
+              onClick={() => handleApplyFlip(opt.axis)}
+              className={BTN_TRANSFORM}
+            >
+              <opt.icon size={13} />
+              <span>{t(opt.labelKey)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const MENU_SECTIONS: {
+    key: "fit" | "align" | "transform";
+    labelKey: string;
+    icon: LucideIcon;
+    widthClass: string;
+    content: React.ReactNode;
+  }[] = [
+    {
+      key: "fit",
+      labelKey: "quickActions.fitGroup",
+      icon: StretchHorizontal,
+      widthClass: "w-52",
+      content: fitContent,
+    },
+    {
+      key: "align",
+      labelKey: "quickActions.alignGroup",
+      icon: ArrowUpRight,
+      widthClass: "w-44",
+      content: alignContent,
+    },
+    {
+      key: "transform",
+      labelKey: "quickActions.transformGroup",
+      icon: RotateCw,
+      widthClass: "w-56",
+      content: transformContent,
+    },
+  ];
+
   return (
     <ControlledPopover
       trigger={triggerButton}
@@ -437,9 +642,7 @@ export function FillQuickActionsMenu({
         <div className="mb-2 pb-2 border-b border-slate-200 dark:border-slate-800 space-y-1">
           <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
             <Sparkles size={11} className="text-amber-500" />
-            {t("quickActions.scopeLabel", {
-              defaultValue: "Phạm vi áp dụng",
-            })}
+            {t("quickActions.scopeLabel")}
           </div>
           <div className="grid grid-cols-2 gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800">
             <button
@@ -455,7 +658,6 @@ export function FillQuickActionsMenu({
               <span className="truncate">
                 {t("quickActions.scopeAll", {
                   count: filledLayerCount,
-                  defaultValue: `Tất cả (${filledLayerCount})`,
                 })}
               </span>
             </button>
@@ -471,9 +673,7 @@ export function FillQuickActionsMenu({
             >
               <Square size={12} />
               <span className="truncate">
-                {t("quickActions.scopeSelected", {
-                  defaultValue: "Lớp chọn",
-                })}
+                {t("quickActions.scopeSelected")}
               </span>
             </button>
           </div>
@@ -482,447 +682,61 @@ export function FillQuickActionsMenu({
         {/* DESKTOP SUBMENU LAYOUT */}
         {isDesktop ? (
           <div className="space-y-1 relative">
-            {/* 1. FIT SUBMENU TRIGGER */}
-            <div
-              className="relative"
-              onMouseEnter={() => handleSubmenuMouseEnter("fit")}
-              onMouseLeave={handleSubmenuMouseLeave}
-            >
-              <button
-                type="button"
-                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer ${
-                  activeDesktopSubmenu === "fit"
-                    ? "bg-slate-100 dark:bg-slate-800/80 text-sky-600 dark:text-sky-400 font-semibold"
-                    : ""
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <StretchHorizontal
-                    size={14}
-                    className="text-slate-500 dark:text-slate-400"
-                  />
-                  <span>
-                    {t("quickActions.fitGroup", {
-                      defaultValue: "Khớp ảnh (Fit)",
-                    })}
-                  </span>
-                </div>
-                <ChevronRight size={13} className="text-slate-400" />
-              </button>
-
-              {/* FIT SUBMENU CONTENT with hover bridge */}
-              {activeDesktopSubmenu === "fit" && (
+            {MENU_SECTIONS.map((section) => {
+              const Icon = section.icon;
+              const isActive = activeDesktopSubmenu === section.key;
+              return (
                 <div
-                  onMouseEnter={() => handleSubmenuMouseEnter("fit")}
+                  key={section.key}
+                  className="relative"
+                  onMouseEnter={() => handleSubmenuMouseEnter(section.key)}
                   onMouseLeave={handleSubmenuMouseLeave}
-                  className="absolute left-full top-0 ml-1 w-52 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1.5 shadow-xl space-y-0.5 animate-in fade-in-50 duration-75 before:absolute before:-left-3 before:inset-y-0 before:w-3"
                 >
                   <button
                     type="button"
-                    onClick={() => handleApplyFit("fitWidth")}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 dark:hover:text-sky-300 text-left transition-colors cursor-pointer"
+                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer ${
+                      isActive
+                        ? "bg-slate-100 dark:bg-slate-800/80 text-sky-600 dark:text-sky-400 font-semibold"
+                        : ""
+                    }`}
                   >
-                    <StretchHorizontal
-                      size={14}
-                      className="text-sky-500 shrink-0"
-                    />
-                    <div>
-                      <div className="font-semibold">
-                        {t("quickActions.fitWidth", {
-                          defaultValue: "Khớp chiều rộng",
-                        })}
-                      </div>
-                      <div className="text-[10px] text-slate-400 leading-tight">
-                        Fit width (100% cell)
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Icon
+                        size={14}
+                        className="text-slate-500 dark:text-slate-400"
+                      />
+                      <span>{t(section.labelKey)}</span>
                     </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleApplyFit("cover")}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 dark:hover:text-sky-300 text-left transition-colors cursor-pointer"
-                  >
-                    <Maximize2
-                      size={14}
-                      className="text-emerald-500 shrink-0"
-                    />
-                    <div>
-                      <div className="font-semibold">
-                        {t("quickActions.fitCover", {
-                          defaultValue: "Phủ kín (Cover)",
-                        })}
-                      </div>
-                      <div className="text-[10px] text-slate-400 leading-tight">
-                        Cover without gaps
-                      </div>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleApplyFit("contain")}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 dark:hover:text-sky-300 text-left transition-colors cursor-pointer"
-                  >
-                    <Minimize2 size={14} className="text-indigo-500 shrink-0" />
-                    <div>
-                      <div className="font-semibold">
-                        {t("quickActions.fitContain", {
-                          defaultValue: "Trọn vẹn (Contain)",
-                        })}
-                      </div>
-                      <div className="text-[10px] text-slate-400 leading-tight">
-                        View 100% full image
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* 2. ALIGNMENT SUBMENU TRIGGER */}
-            <div
-              className="relative"
-              onMouseEnter={() => handleSubmenuMouseEnter("align")}
-              onMouseLeave={handleSubmenuMouseLeave}
-            >
-              <button
-                type="button"
-                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer ${
-                  activeDesktopSubmenu === "align"
-                    ? "bg-slate-100 dark:bg-slate-800/80 text-sky-600 dark:text-sky-400 font-semibold"
-                    : ""
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <ArrowUpRight
-                    size={14}
-                    className="text-slate-500 dark:text-slate-400"
-                  />
-                  <span>
-                    {t("quickActions.alignGroup", {
-                      defaultValue: "Căn lề (Align)",
-                    })}
-                  </span>
-                </div>
-                <ChevronRight size={13} className="text-slate-400" />
-              </button>
-
-              {/* ALIGNMENT SUBMENU (3x3 Grid) with hover bridge */}
-              {activeDesktopSubmenu === "align" && (
-                <div
-                  onMouseEnter={() => handleSubmenuMouseEnter("align")}
-                  onMouseLeave={handleSubmenuMouseLeave}
-                  className="absolute left-full top-0 ml-1 w-44 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2 shadow-xl animate-in fade-in-50 duration-75 before:absolute before:-left-3 before:inset-y-0 before:w-3"
-                >
-                  <div className="text-[10px] font-bold text-slate-400 mb-1 px-1 uppercase tracking-wider">
-                    {t("quickActions.alignGroup", {
-                      defaultValue: "9 Điểm căn lề",
-                    })}
-                  </div>
-                  <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg">
-                    {ALIGNMENT_GRID.map((item) => (
-                      <button
-                        key={item.pos}
-                        type="button"
-                        onClick={() => handleApplyAlignment(item.pos)}
-                        title={item.label}
-                        className="h-8 flex items-center justify-center rounded-md bg-white dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-600 shadow-xs transition-colors cursor-pointer"
-                      >
-                        {item.icon}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 3. TRANSFORM SUBMENU TRIGGER */}
-            <div
-              className="relative"
-              onMouseEnter={() => handleSubmenuMouseEnter("transform")}
-              onMouseLeave={handleSubmenuMouseLeave}
-            >
-              <button
-                type="button"
-                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer ${
-                  activeDesktopSubmenu === "transform"
-                    ? "bg-slate-100 dark:bg-slate-800/80 text-sky-600 dark:text-sky-400 font-semibold"
-                    : ""
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <RotateCw
-                    size={14}
-                    className="text-slate-500 dark:text-slate-400"
-                  />
-                  <span>
-                    {t("quickActions.transformGroup", {
-                      defaultValue: "Xoay & Lật",
-                    })}
-                  </span>
-                </div>
-                <ChevronRight size={13} className="text-slate-400" />
-              </button>
-
-              {/* TRANSFORM SUBMENU with hover bridge */}
-              {activeDesktopSubmenu === "transform" && (
-                <div
-                  onMouseEnter={() => handleSubmenuMouseEnter("transform")}
-                  onMouseLeave={handleSubmenuMouseLeave}
-                  className="absolute left-full top-0 ml-1 w-56 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1.5 shadow-xl space-y-1 animate-in fade-in-50 duration-75 before:absolute before:-left-3 before:inset-y-0 before:w-3"
-                >
-                  <div className="text-[10px] font-bold text-slate-400 px-1 uppercase tracking-wider">
-                    {t("quickActions.transformGroup", {
-                      defaultValue: "Góc xoay",
-                    })}
-                  </div>
-                  {/* Reset to 0° button */}
-                  <button
-                    type="button"
-                    onClick={handleResetRotation}
-                    className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-[11px] font-bold transition-colors cursor-pointer"
-                  >
-                    <RefreshCw size={12} />
-                    <span>
-                      {t("quickActions.rotate0", {
-                        defaultValue: "Về 0° (Reset)",
-                      })}
-                    </span>
+                    <ChevronRight size={13} className="text-slate-400" />
                   </button>
 
-                  <div className="grid grid-cols-3 gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleApplyRotate(-90)}
-                      className="flex items-center justify-center gap-1 py-1.5 px-1 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 text-[11px] font-medium transition-colors cursor-pointer"
+                  {/* SUBMENU CONTENT with hover bridge */}
+                  {isActive && (
+                    <div
+                      onMouseEnter={() => handleSubmenuMouseEnter(section.key)}
+                      onMouseLeave={handleSubmenuMouseLeave}
+                      className={`absolute left-full top-0 ml-1 ${section.widthClass} rounded-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1.5 shadow-xl animate-in fade-in-50 duration-75 before:absolute before:-left-3 before:inset-y-0 before:w-3`}
                     >
-                      <RotateCcw size={11} />
-                      <span>-90°</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleApplyRotate(90)}
-                      className="flex items-center justify-center gap-1 py-1.5 px-1 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 text-[11px] font-medium transition-colors cursor-pointer"
-                    >
-                      <RotateCw size={11} />
-                      <span>+90°</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleApplyRotate(180)}
-                      className="flex items-center justify-center gap-1 py-1.5 px-1 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 text-[11px] font-medium transition-colors cursor-pointer"
-                    >
-                      <RotateCw size={11} />
-                      <span>180°</span>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleApplyRotate(-45)}
-                      className="flex items-center justify-center gap-1 py-1.5 px-2 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 text-[11px] font-medium transition-colors cursor-pointer"
-                    >
-                      <RotateCcw size={11} />
-                      <span>-45°</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleApplyRotate(45)}
-                      className="flex items-center justify-center gap-1 py-1.5 px-2 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 text-[11px] font-medium transition-colors cursor-pointer"
-                    >
-                      <RotateCw size={11} />
-                      <span>+45°</span>
-                    </button>
-                  </div>
-
-                  <div className="pt-1 border-t border-slate-200 dark:border-slate-800">
-                    <div className="text-[10px] font-bold text-slate-400 px-1 uppercase tracking-wider mb-1">
-                      {t("common:flip", { defaultValue: "Lật ảnh" })}
+                      {section.content}
                     </div>
-                    <div className="grid grid-cols-2 gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleApplyFlip("horizontal")}
-                        className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 text-[11px] font-medium transition-colors cursor-pointer"
-                      >
-                        <FlipHorizontal size={13} />
-                        <span>
-                          {t("quickActions.flipHorizontal", {
-                            defaultValue: "Lật ngang",
-                          })}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleApplyFlip("vertical")}
-                        className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 text-[11px] font-medium transition-colors cursor-pointer"
-                      >
-                        <FlipVertical size={13} />
-                        <span>
-                          {t("quickActions.flipVertical", {
-                            defaultValue: "Lật dọc",
-                          })}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })}
           </div>
         ) : (
           /* MOBILE EXPANDED DIRECT LAYOUT */
           <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
-            {/* FIT SECTION */}
-            <div className="space-y-1">
-              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                {t("quickActions.fitGroup", {
-                  defaultValue: "Khớp ảnh (Fit)",
-                })}
+            {MENU_SECTIONS.map((section) => (
+              <div key={section.key} className="space-y-1">
+                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-0.5">
+                  {t(section.labelKey)}
+                </div>
+                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
+                  {section.content}
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-1">
-                <button
-                  type="button"
-                  onClick={() => handleApplyFit("fitWidth")}
-                  className="flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-center hover:bg-sky-50 dark:hover:bg-sky-950 cursor-pointer"
-                >
-                  <StretchHorizontal size={14} className="text-sky-500 mb-1" />
-                  <span className="text-[10px] font-semibold">
-                    {t("quickActions.fitWidth", {
-                      defaultValue: "Fit Width",
-                    })}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyFit("cover")}
-                  className="flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-center hover:bg-sky-50 dark:hover:bg-sky-950 cursor-pointer"
-                >
-                  <Maximize2 size={14} className="text-emerald-500 mb-1" />
-                  <span className="text-[10px] font-semibold">
-                    {t("quickActions.fitCover", {
-                      defaultValue: "Cover",
-                    })}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyFit("contain")}
-                  className="flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-center hover:bg-sky-50 dark:hover:bg-sky-950 cursor-pointer"
-                >
-                  <Minimize2 size={14} className="text-indigo-500 mb-1" />
-                  <span className="text-[10px] font-semibold">
-                    {t("quickActions.fitContain", {
-                      defaultValue: "Contain",
-                    })}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* ALIGNMENT SECTION */}
-            <div className="space-y-1">
-              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                {t("quickActions.alignGroup", {
-                  defaultValue: "Căn lề (Align)",
-                })}
-              </div>
-              <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-800/60 p-1.5 rounded-lg">
-                {ALIGNMENT_GRID.map((item) => (
-                  <button
-                    key={item.pos}
-                    type="button"
-                    onClick={() => handleApplyAlignment(item.pos)}
-                    title={item.label}
-                    className="h-8 flex items-center justify-center rounded-md bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-sky-500 hover:text-white cursor-pointer shadow-xs"
-                  >
-                    {item.icon}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* TRANSFORM SECTION (Mobile Full Controls) */}
-            <div className="space-y-1.5">
-              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                {t("quickActions.transformGroup", {
-                  defaultValue: "Xoay & Lật",
-                })}
-              </div>
-
-              {/* Reset to 0° button */}
-              <button
-                type="button"
-                onClick={handleResetRotation}
-                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 text-[11px] font-bold transition-colors cursor-pointer"
-              >
-                <RefreshCw size={12} />
-                <span>
-                  {t("quickActions.rotate0", { defaultValue: "Về 0° (Reset)" })}
-                </span>
-              </button>
-
-              {/* Row 1: 90 deg and 180 deg */}
-              <div className="grid grid-cols-3 gap-1">
-                <button
-                  type="button"
-                  onClick={() => handleApplyRotate(-90)}
-                  className="py-1.5 flex items-center justify-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold hover:bg-sky-50 cursor-pointer"
-                >
-                  <RotateCcw size={11} />
-                  <span>-90°</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyRotate(90)}
-                  className="py-1.5 flex items-center justify-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold hover:bg-sky-50 cursor-pointer"
-                >
-                  <RotateCw size={11} />
-                  <span>+90°</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyRotate(180)}
-                  className="py-1.5 flex items-center justify-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold hover:bg-sky-50 cursor-pointer"
-                >
-                  <span>180°</span>
-                </button>
-              </div>
-
-              {/* Row 2: 45 deg and flips */}
-              <div className="grid grid-cols-4 gap-1">
-                <button
-                  type="button"
-                  onClick={() => handleApplyRotate(-45)}
-                  className="py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-center text-[11px] font-semibold hover:bg-sky-50 cursor-pointer"
-                >
-                  -45°
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyRotate(45)}
-                  className="py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-center text-[11px] font-semibold hover:bg-sky-50 cursor-pointer"
-                >
-                  +45°
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyFlip("horizontal")}
-                  title={t("quickActions.flipHorizontal")}
-                  className="py-1.5 flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold hover:bg-sky-50 cursor-pointer"
-                >
-                  <FlipHorizontal size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApplyFlip("vertical")}
-                  title={t("quickActions.flipVertical")}
-                  className="py-1.5 flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold hover:bg-sky-50 cursor-pointer"
-                >
-                  <FlipVertical size={13} />
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
         )}
       </div>
