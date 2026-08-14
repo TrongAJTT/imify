@@ -80,7 +80,7 @@ export function FillingTemplateListPanel({
   onEditTemplate,
   onRefresh,
 }: FillingTemplateListPanelProps) {
-  const { t } = useTranslation("filling");
+  const { t } = useTranslation(["filling", "collageMaker"]);
 
   const SORT_OPTIONS: Array<{ value: TemplateSortMode; label: string }> = [
     { value: "usage_count", label: t("templateList.sortUsageCount") },
@@ -130,7 +130,7 @@ export function FillingTemplateListPanel({
         <EmptyDropCard
           icon={<LayoutGrid size={28} className="text-amber-500" />}
           iconWrapperClassName="bg-amber-100 dark:bg-amber-900/30 border-transparent shadow-none"
-          title={t("collageMaker.title", { defaultValue: "Ghép ảnh nhanh" })}
+          title={t("collageMaker:title")}
           subtitle={t("collageMaker.subtitle", {
             defaultValue: "Tạo ảnh ghép tức thì từ 2 đến 10 bức ảnh",
           })}
@@ -147,7 +147,7 @@ export function FillingTemplateListPanel({
       <div className="mb-4 flex items-center justify-between">
         <Subheading>{t("templateList.title")}</Subheading>
         <div className="flex items-center gap-2">
-          <Tooltip content={t("collageMaker.title", { defaultValue: "Ghép ảnh nhanh" })}>
+          <Tooltip content={t("collageMaker:title")}>
             <Button
               type="button"
               variant="outline"
@@ -157,7 +157,7 @@ export function FillingTemplateListPanel({
               }}
             >
               <LayoutGrid size={14} className="text-amber-500" />
-              {t("collageMaker.title", { defaultValue: "Ghép ảnh nhanh" })}
+              {t("collageMaker:title")}
             </Button>
           </Tooltip>
           <Button type="button" variant="primary" size="sm" onClick={onCreate}>

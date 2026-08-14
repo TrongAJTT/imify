@@ -47,6 +47,7 @@ interface GridDesignWorkspaceProps {
     destination: "fill" | "edit" | "list",
   ) => void | Promise<void>;
   customActions?: React.ReactNode;
+  autoSave?: boolean;
 }
 
 export function GridDesignWorkspace({
@@ -54,6 +55,7 @@ export function GridDesignWorkspace({
   onRefresh,
   onSaved,
   customActions,
+  autoSave = false,
 }: GridDesignWorkspaceProps) {
   const { t } = useTranslation("filling");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -286,11 +288,13 @@ export function GridDesignWorkspace({
     const timeout = window.setTimeout(() => {
       const synced = buildUpdatedTemplate();
       updateTemplate(synced);
-      void templateStorage.save(synced);
+      if (autoSave && !customActions) {
+        void templateStorage.save(synced);
+      }
     }, 350);
 
     return () => window.clearTimeout(timeout);
-  }, [buildUpdatedTemplate, updateTemplate]);
+  }, [autoSave, buildUpdatedTemplate, customActions, updateTemplate]);
 
   return (
     <div className="space-y-4">

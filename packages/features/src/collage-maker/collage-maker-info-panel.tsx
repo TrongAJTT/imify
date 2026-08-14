@@ -13,14 +13,14 @@ export function CollageMakerInfoPanel() {
   const previewSrc = resolveFeatureMediaAssetUrl(
     FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
   );
-  
+
   const previewMediaSources = [
     {
       src: resolveFeatureMediaAssetUrl(
         FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp,
       ),
       type: "image" as const,
-      alt: t("showcase.previewAlt", { defaultValue: "Ghép ảnh nhanh (Collage Maker)" }),
+      alt: t("showcase.previewAlt"),
     },
     {
       src: resolveFeatureMediaAssetUrl(
@@ -40,7 +40,9 @@ export function CollageMakerInfoPanel() {
   const featureChips = [
     t("showcase.chips.autoLayout", { defaultValue: "Bố cục tự động" }),
     t("showcase.chips.dragReorder", { defaultValue: "Kéo thả thứ tự" }),
-    t("showcase.chips.customSpacing", { defaultValue: "Tùy chỉnh lề & khoảng cách" }),
+    t("showcase.chips.customSpacing", {
+      defaultValue: "Tùy chỉnh lề & khoảng cách",
+    }),
     t("showcase.chips.fineTune", { defaultValue: "Tinh chỉnh vị trí" }),
     t("showcase.chips.multiFormat", { defaultValue: "Xuất đa định dạng" }),
   ];
