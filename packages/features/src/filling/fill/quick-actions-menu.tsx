@@ -61,7 +61,7 @@ export function FillQuickActionsMenu({
 
   const [scope, setScope] = useState<QuickActionScope>("all");
   const [activeDesktopSubmenu, setActiveDesktopSubmenu] = useState<
-    "fit" | "align" | "transform" | null
+    "fit" | "align" | "rotate" | "flip" | null
   >(null);
 
   const closeSubmenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -76,7 +76,7 @@ export function FillQuickActionsMenu({
   }, []);
 
   const handleSubmenuMouseEnter = useCallback(
-    (menuKey: "fit" | "align" | "transform") => {
+    (menuKey: "fit" | "align" | "rotate" | "flip") => {
       clearCloseSubmenuTimer();
       setActiveDesktopSubmenu(menuKey);
     },
@@ -373,10 +373,10 @@ export function FillQuickActionsMenu({
   );
 
   const BTN_TRANSFORM =
-    "flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 dark:hover:text-sky-300 text-[11px] font-medium transition-colors cursor-pointer";
+    "flex items-center justify-left gap-1.5 py-1.5 px-2 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 dark:hover:text-sky-300 text-[11px] font-medium transition-colors cursor-pointer";
 
   const BTN_RESET =
-    "flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-[11px] font-bold transition-colors cursor-pointer";
+    "flex items-center justify-left gap-1.5 py-1.5 px-2 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-[11px] font-bold transition-colors cursor-pointer";
 
   const FIT_CONFIG: {
     mode: "fitWidth" | "cover" | "contain";
@@ -532,7 +532,7 @@ export function FillQuickActionsMenu({
     </div>
   );
 
-  const transformContent = (
+  const rotateContent = (
     <div className="space-y-1">
       {/* Row 1: Reset 0° & 180° */}
       <div className="grid grid-cols-2 gap-1">
@@ -575,31 +575,27 @@ export function FillQuickActionsMenu({
           </button>
         </div>
       ))}
+    </div>
+  );
 
-      {/* Flip Actions */}
-      <div className="pt-1 border-t border-slate-200 dark:border-slate-800">
-        <div className="text-[10px] font-bold text-slate-400 px-1 uppercase tracking-wider mb-1">
-          {t("common:flip")}
-        </div>
-        <div className="grid grid-cols-2 gap-1">
-          {FLIP_OPTIONS.map((opt) => (
-            <button
-              key={opt.axis}
-              type="button"
-              onClick={() => handleApplyFlip(opt.axis)}
-              className={BTN_TRANSFORM}
-            >
-              <opt.icon size={13} />
-              <span>{t(opt.labelKey)}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+  const flipContent = (
+    <div className="grid grid-cols-2 md:grid-cols-1 gap-1">
+      {FLIP_OPTIONS.map((opt) => (
+        <button
+          key={opt.axis}
+          type="button"
+          onClick={() => handleApplyFlip(opt.axis)}
+          className={BTN_TRANSFORM}
+        >
+          <opt.icon size={13} />
+          <span>{t(opt.labelKey)}</span>
+        </button>
+      ))}
     </div>
   );
 
   const MENU_SECTIONS: {
-    key: "fit" | "align" | "transform";
+    key: "fit" | "align" | "rotate" | "flip";
     labelKey: string;
     icon: LucideIcon;
     widthClass: string;
@@ -620,11 +616,18 @@ export function FillQuickActionsMenu({
       content: alignContent,
     },
     {
-      key: "transform",
-      labelKey: "quickActions.transformGroup",
+      key: "rotate",
+      labelKey: "quickActions.rotateGroup",
       icon: RotateCw,
       widthClass: "w-56",
-      content: transformContent,
+      content: rotateContent,
+    },
+    {
+      key: "flip",
+      labelKey: "quickActions.flipGroup",
+      icon: FlipHorizontal,
+      widthClass: "w-48 ",
+      content: flipContent,
     },
   ];
 
