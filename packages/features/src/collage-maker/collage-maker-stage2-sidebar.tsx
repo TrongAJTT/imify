@@ -152,7 +152,8 @@ export function CollageMakerStage2Sidebar({
                   key={preset.id}
                   type="button"
                   onClick={() => onSelectLayout(preset.id, preset.params)}
-                  className={`flex flex-col items-center gap-2 rounded-lg border p-2.5 transition-all text-left ${
+                  title={preset.name || preset.id}
+                  className={`flex flex-col items-center gap-1.5 rounded-lg border p-2 transition-all cursor-pointer ${
                     isSelected
                       ? "border-amber-500 bg-amber-50/70 ring-1 ring-amber-400 dark:border-amber-500 dark:bg-amber-900/20"
                       : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900"
@@ -160,12 +161,14 @@ export function CollageMakerStage2Sidebar({
                 >
                   <svg
                     viewBox="0 0 100 100"
-                    className="h-16 w-full rounded border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
+                    className="aspect-square w-full rounded border border-slate-200/80 bg-slate-100 dark:border-slate-700/80 dark:bg-slate-800"
                     dangerouslySetInnerHTML={{ __html: preset.svgPreview }}
                   />
-                  <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate w-full text-center">
-                    {preset.name}
-                  </span>
+                  {preset.name ? (
+                    <span className="text-[10px] font-medium text-slate-700 dark:text-slate-200 truncate w-full text-center">
+                      {preset.name}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
