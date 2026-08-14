@@ -227,7 +227,7 @@ export function CollageMakerWorkspace({
     };
   }, [canvasWidth, canvasHeight, gridParams, templateId]);
 
-  // Stage 3 Initialization: Pre-fill uploaded images into generated template layers
+  // Stage 3 Initialization: Pre-fill uploaded images into generated template layers with auto fit-to-width
   useEffect(() => {
     if (stage !== 3) return;
 
@@ -236,18 +236,57 @@ export function CollageMakerWorkspace({
     useFillUiStore.getState().initializeFillSession(generatedTemplate);
 
     const defaultStates = useFillingStore.getState().layerFillStates;
-    const nextStates: LayerFillState[] = generatedTemplate.layers.map(
-      (layer, idx) => {
-        const imgItem = queueImages[idx];
-        const existing = defaultStates.find((s) => s.layerId === layer.id);
-        return {
-          ...(existing ?? createLayerFillState(layer.id)),
-          imageUrl: imgItem ? imgItem.previewUrl : null,
-        };
-      },
-    );
 
-    useFillingStore.getState().setLayerFillStates(nextStates);
+    // Calculate fit-to-width transform for each image in matching grid cell
+    const loadPromises = generatedTemplate.layers.map(async (layer, idx) => {
+      const imgItem = queueImages[idx];
+      if (!imgItem) {
+        return createLayerFillState(layer.id);
+      }
+
+      const existing = defaultStates.find((s) => s.layerId === layer.id);
+
+      return new Promise<LayerFillState>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const naturalWidth = img.naturalWidth || 1;
+          const naturalHeight = img.naturalHeight || 1;
+          // Scale image to match cell width exactly
+          const scaleToWidth = layer.width / naturalWidth;
+          const offsetY = Math.round((layer.height - naturalHeight * scaleToWidth) / 2);
+
+          resolve({
+            ...(existing ?? createLayerFillState(layer.id)),
+            imageUrl: imgItem.previewUrl,
+            imageTransform: {
+              x: 0,
+              y: offsetY,
+              scaleX: scaleToWidth,
+              scaleY: scaleToWidth,
+              rotation: 0,
+            },
+          });
+        };
+        img.onerror = () => {
+          resolve({
+            ...(existing ?? createLayerFillState(layer.id)),
+            imageUrl: imgItem.previewUrl,
+          });
+        };
+        img.src = imgItem.previewUrl;
+      });
+    });
+
+    let isSubscribed = true;
+    Promise.all(loadPromises).then((nextStates) => {
+      if (isSubscribed) {
+        useFillingStore.getState().setLayerFillStates(nextStates);
+      }
+    });
+
+    return () => {
+      isSubscribed = false;
+    };
   }, [stage, generatedTemplate, queueImages]);
 
   // Dynamic Sidebar Title according to Stage
@@ -350,7 +389,12 @@ export function CollageMakerWorkspace({
     }
 
     // Stage 3 Sidebar
-    return <FillSidebar template={generatedTemplate} />;
+    return (
+      <FillSidebar
+        template={generatedTemplate}
+        enableWideSidebarGrid={enableWideSidebarGrid}
+      />
+    );
   }, [
     stage,
     queueImages.length,
