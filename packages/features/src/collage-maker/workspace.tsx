@@ -59,18 +59,42 @@ export interface QueueImageItem {
 }
 
 export interface CollageMakerWorkspaceProps {
+  stage?: 1 | 2 | 3;
+  onStageChange?: (stage: 1 | 2 | 3) => void;
   onSidebarChange?: (sidebar: React.ReactNode, title?: string) => void;
   enableWideSidebarGrid?: boolean;
 }
 
 export function CollageMakerWorkspace({
+  stage: controlledStage,
+  onStageChange,
   onSidebarChange,
   enableWideSidebarGrid = false,
 }: CollageMakerWorkspaceProps = {}) {
   const { t } = useTranslation(["collageMaker", "filling", "common"]);
 
   // Stage Management: 1 = Prepare, 2 = Layout, 3 = Fill & Export
-  const [stage, setStage] = useState<1 | 2 | 3>(1);
+  const [internalStage, setInternalStage] = useState<1 | 2 | 3>(
+    controlledStage ?? 1,
+  );
+  const stage = controlledStage ?? internalStage;
+
+  const setStage = useCallback(
+    (action: 1 | 2 | 3 | ((prev: 1 | 2 | 3) => 1 | 2 | 3)) => {
+      const nextStage = typeof action === "function" ? action(stage) : action;
+      if (onStageChange) {
+        onStageChange(nextStage);
+      }
+      setInternalStage(nextStage);
+    },
+    [stage, onStageChange],
+  );
+
+  useEffect(() => {
+    if (controlledStage !== undefined) {
+      setInternalStage(controlledStage);
+    }
+  }, [controlledStage]);
 
   // Stage 1 - Upload Queue
   const [queueImages, setQueueImages] = useState<QueueImageItem[]>([]);
@@ -140,6 +164,13 @@ export function CollageMakerWorkspace({
       useFillingStore.getState().setGridDesignParams(first.params);
     }
   }, [matchingPresets]);
+
+  // Fallback to stage 1 if stage > 1 but photos are insufficient
+  useEffect(() => {
+    if (stage > 1 && queueImages.length < MIN_COLLAGE_IMAGES) {
+      setStage(1);
+    }
+  }, [stage, queueImages.length, setStage]);
 
   // Image Upload Handlers
   const handleFilesAdded = useCallback((files: FileList | File[]) => {

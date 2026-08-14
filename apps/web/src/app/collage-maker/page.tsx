@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { CollageMakerLandingPage } from "@/features/collage-maker/collage-maker-page";
+import { WorkspaceLoadingState } from "@imify/ui/ui/workspace-loading-state";
 
 export const metadata: Metadata = {
   title: "Collage Maker - Imify",
@@ -7,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function CollageMakerPage() {
-  return <CollageMakerLandingPage />;
+  return (
+    <Suspense fallback={<WorkspaceLoadingState />}>
+      <CollageMakerLandingPage />
+    </Suspense>
+  );
 }

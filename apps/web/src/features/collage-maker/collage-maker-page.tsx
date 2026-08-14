@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CollageMakerWorkspace } from "@imify/features/collage-maker/workspace";
 import { useWorkspaceSidebarContext } from "@/components/layout/workspace-layout";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
@@ -11,6 +12,8 @@ import { WorkspaceLoadingState } from "@imify/ui";
 
 export function CollageMakerLandingPage() {
   const { t } = useTranslation(["collageMaker", "common"]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const enableWideSidebarGrid = useWideSidebarGridEnabled();
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection);
@@ -20,17 +23,24 @@ export function CollageMakerLandingPage() {
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader);
   const sidebarContext = useWorkspaceSidebarContext();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const stepParam = searchParams.get("step");
+  const stage = stepParam === "3" ? 3 : stepParam === "2" ? 2 : 1;
+
+  const handleStageChange = useCallback(
+    (nextStage: 1 | 2 | 3) => {
+      if (nextStage === 1) {
+        router.push("/collage-maker");
+      } else {
+        router.push(`/collage-maker?step=${nextStage}`);
+      }
+    },
+    [router],
+  );
 
   useEffect(() => {
-    setHeaderSection(t("title"));
-    setHeaderBreadcrumb(
-      <FeatureBreadcrumb compact rootToolId="collage-maker" />,
-    );
+    setMounted(true);
     return () => resetHeader();
-  }, [resetHeader, setHeaderBreadcrumb, setHeaderSection, t]);
+  }, [resetHeader]);
 
   const handleSidebarChange = useCallback(
     (sidebar: React.ReactNode, title?: string) => {
@@ -55,6 +65,8 @@ export function CollageMakerLandingPage() {
 
   return (
     <CollageMakerWorkspace
+      stage={stage}
+      onStageChange={handleStageChange}
       onSidebarChange={handleSidebarChange}
       enableWideSidebarGrid={enableWideSidebarGrid}
     />
