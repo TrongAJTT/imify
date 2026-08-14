@@ -30,7 +30,7 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from "@dnd-kit/sortable";
 
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
@@ -57,6 +57,7 @@ import { GridDesignSidebar } from "@imify/features/filling/grid-designer/sidebar
 import { FillWorkspace } from "@imify/features/filling/fill/workspace";
 import { FillSidebar } from "@imify/features/filling/fill/sidebar";
 import { SortableQueueItem } from "@imify/features/shared/sortable-queue-item";
+import { MediaQueueCard } from "../shared/media-queue-card";
 
 import { CollageMakerInfoPanel } from "./collage-maker-info-panel";
 import { CollageMakerStage2Sidebar } from "./collage-maker-stage2-sidebar";
@@ -131,7 +132,7 @@ export function CollageMakerWorkspace({
 
   // Handle Drag Sensors for Queue Item Reordering
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
@@ -480,42 +481,19 @@ export function CollageMakerWorkspace({
               >
                 <SortableContext
                   items={queueImages.map((i) => i.id)}
-                  strategy={verticalListSortingStrategy}
+                  strategy={rectSortingStrategy}
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {queueImages.map((item, idx) => (
                       <SortableQueueItem key={item.id} id={item.id}>
-                        <div className="group relative flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded bg-slate-100 dark:bg-slate-800">
-                            <img
-                              src={item.previewUrl}
-                              alt={item.file.name}
-                              className="h-full w-full object-cover"
-                            />
-                            <span className="absolute top-0.5 left-0.5 rounded bg-black/60 px-1 py-0.2 text-[10px] font-bold text-white">
-                              {idx + 1}
-                            </span>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
-                              {item.file.name}
-                            </p>
-                            <p className="text-[11px] text-slate-400">
-                              {Math.round(item.file.size / 1024)} KB
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveImage(item.id);
-                            }}
-                            className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/40"
-                            aria-label="Remove image"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
+                        <MediaQueueCard
+                          id={item.id}
+                          name={item.file.name}
+                          sizeBytes={item.file.size}
+                          previewUrl={item.previewUrl}
+                          indexBadge={idx + 1}
+                          onRemove={handleRemoveImage}
+                        />
                       </SortableQueueItem>
                     ))}
                   </div>
