@@ -1,10 +1,3 @@
-import * as pdfjsLib from "pdfjs-dist"
-
-// Ensure worker is configured in browser environments
-if (typeof window !== "undefined" && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || "4.10.38"}/build/pdf.worker.min.mjs`
-}
-
 export interface RenderPdfPageOptions {
   pageNumber: number // 1-indexed
   dpi?: number
@@ -15,6 +8,25 @@ export interface RenderPdfPageOptions {
 export interface PdfDocumentInfo {
   pageCount: number
   fingerprint: string
+}
+
+let pdfjsLibPromise: Promise<typeof import("pdfjs-dist")> | null = null
+
+async function getPdfjsLib() {
+  if (typeof window === "undefined") {
+    throw new Error("PDF processing with pdfjs-dist is only supported in browser environments")
+  }
+
+  if (!pdfjsLibPromise) {
+    pdfjsLibPromise = import("pdfjs-dist").then((lib) => {
+      if (!lib.GlobalWorkerOptions.workerSrc) {
+        lib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${lib.version || "6.2.108"}/build/pdf.worker.min.mjs`
+      }
+      return lib
+    })
+  }
+
+  return pdfjsLibPromise
 }
 
 async function toUint8Array(source: Blob | ArrayBuffer | Uint8Array): Promise<Uint8Array> {
@@ -28,6 +40,7 @@ async function toUint8Array(source: Blob | ArrayBuffer | Uint8Array): Promise<Ui
 }
 
 export async function getPdfInfo(source: Blob | ArrayBuffer | Uint8Array): Promise<PdfDocumentInfo> {
+  const pdfjsLib = await getPdfjsLib()
   const data = await toUint8Array(source)
   const loadingTask = pdfjsLib.getDocument({ data })
   const pdfDoc = await loadingTask.promise
@@ -43,6 +56,7 @@ export async function renderPdfPageToCanvas(
   pageNumber: number,
   dpi: number = 150
 ): Promise<{ canvas: HTMLCanvasElement; width: number; height: number }> {
+  const pdfjsLib = await getPdfjsLib()
   const data = await toUint8Array(source)
   const loadingTask = pdfjsLib.getDocument({ data })
   const pdfDoc = await loadingTask.promise
@@ -123,6 +137,7 @@ export async function renderAllPdfPagesToBlobs(
     onProgress?: (current: number, total: number) => void
   }
 ): Promise<Array<{ pageNumber: number; blob: Blob }>> {
+  const pdfjsLib = await getPdfjsLib()
   const data = await toUint8Array(source)
   const loadingTask = pdfjsLib.getDocument({ data })
   const pdfDoc = await loadingTask.promise

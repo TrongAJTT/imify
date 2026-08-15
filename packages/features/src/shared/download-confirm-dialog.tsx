@@ -86,7 +86,7 @@ export function BatchDownloadConfirmDialog({
                   components={{
                     bold: (
                       <span
-                        key={1}
+                        key="bold"
                         className="font-bold text-slate-900 dark:text-white"
                       />
                     ),
@@ -106,11 +106,11 @@ export function BatchDownloadConfirmDialog({
                     components={{
                       bold: (
                         <span
-                          key={2}
+                          key="bold"
                           className="font-bold text-slate-900 dark:text-slate-100"
                         />
                       ),
-                      b: <b />,
+                      b: <b key="b" />,
                     }}
                   />
                 </BodyText>
