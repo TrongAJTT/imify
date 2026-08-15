@@ -1,6 +1,7 @@
 {
   "title": "PDF Studio",
-  "totalPagesCount": "{{count}} page(s)",
+  "documentTitle": "PDF Document",
+  "totalPagesCount": "{{count}} pages",
   "pageNumberLabel": "Page {{num}}",
   "modeSwitcher": {
     "imagesToPdf": "Images to PDF",

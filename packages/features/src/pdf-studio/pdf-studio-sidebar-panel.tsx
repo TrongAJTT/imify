@@ -9,7 +9,11 @@ import {
 } from "@imify/ui";
 import { ResizeCard } from "../processor/resize-card";
 import { QuickExportSelector } from "../shared/quick-export-selector";
-import { PDF_STUDIO_NAMING_CONFIG, type QuickExportFormat } from "@imify/core";
+import {
+  PDF_STUDIO_NAMING_CONFIG,
+  DPI_VERBOSE_SELECT_OPTIONS,
+  type QuickExportFormat,
+} from "@imify/core";
 import type {
   ImagesToPdfConfig,
   PdfStudioMode,
@@ -44,12 +48,6 @@ export function PdfStudioSidebarPanel({
   pdfFileName,
 }: PdfStudioSidebarPanelProps) {
   const { t } = useTranslation("pdfStudio");
-
-  const dpiOptions = [
-    { value: "72", label: "72 DPI (Web / Fast)" },
-    { value: "150", label: "150 DPI (Standard)" },
-    { value: "300", label: "300 DPI (High Quality / Print)" },
-  ];
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [];
 
@@ -187,7 +185,7 @@ export function PdfStudioSidebarPanel({
             <SelectInput
               label={t("settings.dpi")}
               value={String(pdfToImagesConfig.dpi)}
-              options={dpiOptions}
+              options={DPI_VERBOSE_SELECT_OPTIONS}
               onChange={(v) =>
                 onPdfToImagesConfigChange({
                   ...pdfToImagesConfig,

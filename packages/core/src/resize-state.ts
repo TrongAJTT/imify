@@ -13,7 +13,7 @@ import {
 } from "@imify/core/resize-resampling"
 
 export const PAPER_OPTIONS: PaperSize[] = ["A3", "A4", "A5", "B5", "Letter", "Legal"]
-export const DPI_OPTIONS: SupportedDPI[] = [72, 150, 300]
+export const DPI_OPTIONS: SupportedDPI[] = [72, 96, 150, 300, 600]
 
 function normalizePositiveInteger(value: unknown, fallback: number): number {
   if (typeof value !== "number" || Number.isNaN(value)) {

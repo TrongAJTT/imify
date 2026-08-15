@@ -15,9 +15,10 @@ import {
   rectSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { Download, Plus, Trash2 } from "lucide-react";
+import { Download, Images, Plus, Trash2 } from "lucide-react";
 import { Button, AnimatingSpinner } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
+import { formatFileSize } from "../inspector/format-utils";
 import {
   COMMON_IMAGE_ACCEPT,
   isCommonImageFile,
@@ -178,6 +179,11 @@ export function ImagesToPdfWorkspace({
     }
   };
 
+  const totalSize = React.useMemo(
+    () => items.reduce((acc, item) => acc + item.size, 0),
+    [items],
+  );
+
   return (
     <div className="flex flex-col gap-4">
       {/* Hidden file input */}
@@ -193,9 +199,16 @@ export function ImagesToPdfWorkspace({
       {/* Top Action Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-            {t("totalPagesCount", { count: items.length })}
-          </span>
+          <Images size={16} className="text-red-500" />
+          <div className="flex flex-col">
+            <span className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">
+              {t("documentTitle")}
+            </span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">
+              {formatFileSize(totalSize)} &middot;{" "}
+              {t("totalPagesCount", { count: items.length })}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

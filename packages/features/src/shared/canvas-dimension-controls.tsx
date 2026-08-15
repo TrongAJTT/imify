@@ -22,6 +22,7 @@ import {
   ratioFromDimensions,
 } from "./use-aspect-ratio";
 import { CanvasSizeDialog } from "../filling/canvas-size-dialog";
+import { DPI_SELECT_OPTIONS } from "@imify/core";
 
 export interface CanvasDimensionControlsProps {
   width: number;
@@ -67,14 +68,6 @@ function fromPixels(px: number, unit: CanvasSizeUnit, dpi: number): number {
       return px;
   }
 }
-
-const DPI_SELECT_OPTIONS = [
-  { value: "72", label: "72 DPI" },
-  { value: "96", label: "96 DPI" },
-  { value: "150", label: "150 DPI" },
-  { value: "300", label: "300 DPI" },
-  { value: "600", label: "600 DPI" },
-];
 
 export function CanvasDimensionControls({
   width,

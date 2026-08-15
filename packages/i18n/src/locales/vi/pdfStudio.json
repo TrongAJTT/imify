@@ -1,5 +1,6 @@
 {
   "title": "PDF Studio",
+  "documentTitle": "Tài liệu PDF",
   "totalPagesCount": "{{count}} trang",
   "pageNumberLabel": "Trang {{num}}",
   "modeSwitcher": {
