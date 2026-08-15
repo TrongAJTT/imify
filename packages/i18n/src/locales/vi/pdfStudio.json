@@ -45,6 +45,12 @@
     "startExtracting": "Bắt đầu trích xuất...",
     "packaging": "Đang nén ảnh vào tệp ZIP..."
   },
+  "pagination": {
+    "pageInfo": "Hiển thị {{start}} - {{end}} / {{totalCount}} trang",
+    "pageNumber": "Trang {{page}}",
+    "previous": "Trang trước",
+    "next": "Trang sau"
+  },
   "showcase": {
     "title": "Studio Chuyển đổi PDF & Ảnh 2 Chiều",
     "subtitle": "Gộp nhiều ảnh thành tài liệu PDF chuẩn hoặc trích xuất các trang PDF thành ảnh chất lượng cao — hoàn toàn cục bộ trên trình duyệt, không cần tải lên máy chủ.",

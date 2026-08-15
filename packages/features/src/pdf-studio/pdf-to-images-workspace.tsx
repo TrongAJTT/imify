@@ -1,9 +1,17 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import {
   Check,
   CheckSquare,
+  ChevronLeft,
+  ChevronRight,
   FileOutput,
   Layers,
   RotateCcw,
@@ -64,6 +72,32 @@ export function PdfToImagesWorkspace({
   const [pendingExportMode, setPendingExportMode] =
     useState<ExportSplitMode | null>(null);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const pageSize = isMobile
+    ? APP_CONFIG.PDF_STUDIO.PAGE_SIZE_MOBILE
+    : APP_CONFIG.PDF_STUDIO.PAGE_SIZE_DESKTOP;
+
+  const totalPages = Math.max(1, Math.ceil(pageCount / pageSize));
+
+  // Reset page if out of bounds
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
   const [exportToastPayload, setExportToastPayload] =
     useState<ConversionProgressPayload | null>(null);
   const exportToastHideTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -104,6 +138,7 @@ export function PdfToImagesWorkspace({
 
     const loadPdf = async () => {
       setIsInitializing(true);
+      setCurrentPage(1);
       try {
         const info = await getPdfInfo(pdfFile);
         if (isCancelled) return;
@@ -467,6 +502,14 @@ export function PdfToImagesWorkspace({
     void executeExport(mode === "one_by_one" ? "one_by_one" : "zip");
   };
 
+  // Slice visible items for current page
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(pageCount, startIndex + pageSize);
+  const visibleThumbnails = useMemo(
+    () => thumbnails.slice(startIndex, endIndex),
+    [thumbnails, startIndex, endIndex],
+  );
+
   return (
     <div className="flex flex-col gap-4">
       {/* Top Action Toolbar */}
@@ -587,7 +630,7 @@ export function PdfToImagesWorkspace({
         </div>
       </div>
 
-      {/* Grid of Pages */}
+      {/* Grid of Pages for Current View */}
       {isInitializing && thumbnails.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-red-500">
           <AnimatingSpinner size={32} />
@@ -596,8 +639,8 @@ export function PdfToImagesWorkspace({
           </span>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {thumbnails.map((thumb) => {
+        <div className="grid gap-2 md:gap-3 grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {visibleThumbnails.map((thumb) => {
             const isSelected = selectedPages.has(thumb.pageNumber);
 
             return (
@@ -644,6 +687,76 @@ export function PdfToImagesWorkspace({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination Controls Bar (Only visible when totalPages > 1) */}
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-2xs dark:border-slate-800 dark:bg-slate-950">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            {t("pagination.pageInfo", {
+              start: startIndex + 1,
+              end: endIndex,
+              totalCount: pageCount,
+            })}
+          </span>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              title={t("pagination.previous")}
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            {/* Page number buttons */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => {
+                  if (totalPages <= 7) return true;
+                  if (p === 1 || p === totalPages) return true;
+                  return Math.abs(p - currentPage) <= 1;
+                })
+                .map((p, idx, arr) => {
+                  const prevP = arr[idx - 1];
+                  const showEllipsis = prevP && p - prevP > 1;
+
+                  return (
+                    <React.Fragment key={p}>
+                      {showEllipsis && (
+                        <span className="px-1 text-xs text-slate-400 select-none">
+                          &hellip;
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage(p)}
+                        className={`inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors ${
+                          currentPage === p
+                            ? "bg-red-600 text-white shadow-xs dark:bg-red-600"
+                            : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              title={t("pagination.next")}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       )}
 

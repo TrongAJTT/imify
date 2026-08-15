@@ -42,8 +42,14 @@
     "rendering": "Rendering page {{current}}/{{total}}...",
     "saving": "Finalizing PDF file...",
     "readingPdf": "Reading PDF pages...",
-    "startExtracting": "Starting extraction...",
-    "packaging": "Compressing images into ZIP..."
+    "startExtracting": "Start extracting...",
+    "packaging": "Packaging images into ZIP..."
+  },
+  "pagination": {
+    "pageInfo": "Showing {{start}} - {{end}} / {{totalCount}} pages",
+    "pageNumber": "Page {{page}}",
+    "previous": "Previous",
+    "next": "Next"
   },
   "showcase": {
     "title": "Two-Way PDF & Image Studio",
