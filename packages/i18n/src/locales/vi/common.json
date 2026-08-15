@@ -91,5 +91,12 @@
     "jpgDesc": "Tối ưu dung lượng nhẹ, phù hợp ảnh chụp/chia sẻ",
     "webpDesc": "Định dạng web hiện đại, dung lượng siêu nhỏ",
     "webpLosslessDesc": "Nét tuyệt đối 100%, nhẹ hơn PNG, giữ nền trong suốt"
+  },
+  "pagination": {
+    "pageInfo": "Hiển thị {{start}} - {{end}} / {{totalCount}} trang",
+    "pageNumber": "Trang {{page}}",
+    "previous": "Trang trước",
+    "next": "Trang sau",
+    "jumpToPage": "Đi đến trang"
   }
 }

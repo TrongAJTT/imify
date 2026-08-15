@@ -10,8 +10,6 @@ import React, {
 import {
   Check,
   CheckSquare,
-  ChevronLeft,
-  ChevronRight,
   FileOutput,
   Layers,
   RotateCcw,
@@ -40,6 +38,7 @@ import {
   type ExportSplitMode,
 } from "../shared/export-split-button";
 import { BatchDownloadConfirmDialog } from "../shared/download-confirm-dialog";
+import { PaginationBar } from "../shared/pagination-bar";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
@@ -690,75 +689,15 @@ export function PdfToImagesWorkspace({
         </div>
       )}
 
-      {/* Pagination Controls Bar (Only visible when totalPages > 1) */}
-      {totalPages > 1 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-2xs dark:border-slate-800 dark:bg-slate-950">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            {t("pagination.pageInfo", {
-              start: startIndex + 1,
-              end: endIndex,
-              totalCount: pageCount,
-            })}
-          </span>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              title={t("pagination.previous")}
-            >
-              <ChevronLeft size={16} />
-            </button>
-
-            {/* Page number buttons */}
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter((p) => {
-                  if (totalPages <= 7) return true;
-                  if (p === 1 || p === totalPages) return true;
-                  return Math.abs(p - currentPage) <= 1;
-                })
-                .map((p, idx, arr) => {
-                  const prevP = arr[idx - 1];
-                  const showEllipsis = prevP && p - prevP > 1;
-
-                  return (
-                    <React.Fragment key={p}>
-                      {showEllipsis && (
-                        <span className="px-1 text-xs text-slate-400 select-none">
-                          &hellip;
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setCurrentPage(p)}
-                        className={`inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors ${
-                          currentPage === p
-                            ? "bg-red-600 text-white shadow-xs dark:bg-red-600"
-                            : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    </React.Fragment>
-                  );
-                })}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              title={t("pagination.next")}
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Pagination Controls Bar */}
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        startItemIndex={startIndex + 1}
+        endItemIndex={endIndex}
+        totalItems={pageCount}
+      />
 
       {/* Multi-download confirmation dialog */}
       <BatchDownloadConfirmDialog

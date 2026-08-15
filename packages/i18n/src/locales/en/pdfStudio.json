@@ -45,12 +45,6 @@
     "startExtracting": "Start extracting...",
     "packaging": "Packaging images into ZIP..."
   },
-  "pagination": {
-    "pageInfo": "Showing {{start}} - {{end}} / {{totalCount}} pages",
-    "pageNumber": "Page {{page}}",
-    "previous": "Previous",
-    "next": "Next"
-  },
   "showcase": {
     "title": "Two-Way PDF & Image Studio",
     "subtitle": "Merge photos into clean, multi-page PDFs or extract high-resolution raster images from PDF pages — all locally in your browser with zero upload.",

@@ -91,5 +91,12 @@
     "jpgDesc": "Lightweight size optimization, suitable for photos & sharing",
     "webpDesc": "Modern web format, ultra-small file size",
     "webpLosslessDesc": "100% absolute sharpness, lighter than PNG, keeps transparency"
+  },
+  "pagination": {
+    "pageInfo": "Showing {{start}} - {{end}} / {{totalCount}} pages",
+    "pageNumber": "Page {{page}}",
+    "previous": "Previous",
+    "next": "Next",
+    "jumpToPage": "Jump to page"
   }
 }
