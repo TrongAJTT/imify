@@ -1,13 +1,26 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { Check, FileOutput, Trash2 } from "lucide-react";
+import {
+  Check,
+  CheckSquare,
+  FileOutput,
+  Layers,
+  RotateCcw,
+  Square,
+  Trash2,
+} from "lucide-react";
 import { Button, AnimatingSpinner, ToastContainer } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import { formatFileSize } from "../inspector/format-utils";
 import type { PdfToImagesConfig } from "./types";
 import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
-import { APP_CONFIG, PDF_STUDIO_NAMING_CONFIG } from "@imify/core";
+import {
+  APP_CONFIG,
+  PDF_STUDIO_NAMING_CONFIG,
+  parsePageRange,
+  formatPageRange,
+} from "@imify/core";
 import {
   getPdfInfo,
   renderPdfPageToBlob,
@@ -43,6 +56,7 @@ export function PdfToImagesWorkspace({
   const { t } = useTranslation("pdfStudio");
   const [pageCount, setPageCount] = useState<number>(0);
   const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set());
+  const [rangeInput, setRangeInput] = useState<string>("");
   const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
@@ -84,7 +98,7 @@ export function PdfToImagesWorkspace({
     [clearToastHideTimer],
   );
 
-  // 1. Initial document scan & thumbnail generation
+  // 1. Initial document scan & sequential thumbnail generation
   useEffect(() => {
     let isCancelled = false;
 
@@ -109,9 +123,11 @@ export function PdfToImagesWorkspace({
           });
         }
         setSelectedPages(allSet);
+        setRangeInput(formatPageRange(allSet, count));
         setThumbnails(initialThumbs);
+        setIsInitializing(false);
 
-        // Asynchronously load thumbnail for each page (max width 200 for fast, lightweight preview)
+        // Asynchronously load thumbnail for each page sequentially
         for (let i = 1; i <= count; i += 1) {
           if (isCancelled) break;
           try {
@@ -130,6 +146,7 @@ export function PdfToImagesWorkspace({
             );
           } catch (e) {
             console.error(`Failed to load thumb for page ${i}:`, e);
+            if (isCancelled) break;
             setThumbnails((prev) =>
               prev.map((th) =>
                 th.pageNumber === i ? { ...th, isLoading: false } : th,
@@ -151,6 +168,7 @@ export function PdfToImagesWorkspace({
     };
   }, [pdfFile]);
 
+  // Handle manual click toggle on page card
   const togglePageSelection = (pageNumber: number) => {
     setSelectedPages((prev) => {
       const next = new Set(prev);
@@ -159,18 +177,55 @@ export function PdfToImagesWorkspace({
       } else {
         next.add(pageNumber);
       }
+      setRangeInput(formatPageRange(next, pageCount));
       return next;
     });
   };
 
+  // Handle page range input change (2-way binding)
+  const handleRangeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setRangeInput(val);
+    const parsed = parsePageRange(val, pageCount);
+    setSelectedPages(parsed);
+  };
+
+  // Quick preset selections
   const handleSelectAll = () => {
     const all = new Set<number>();
     for (let i = 1; i <= pageCount; i += 1) all.add(i);
     setSelectedPages(all);
+    setRangeInput(formatPageRange(all, pageCount));
   };
 
   const handleDeselectAll = () => {
     setSelectedPages(new Set());
+    setRangeInput("");
+  };
+
+  const handleSelectEven = () => {
+    const even = new Set<number>();
+    for (let i = 2; i <= pageCount; i += 2) even.add(i);
+    setSelectedPages(even);
+    setRangeInput(formatPageRange(even, pageCount));
+  };
+
+  const handleSelectOdd = () => {
+    const odd = new Set<number>();
+    for (let i = 1; i <= pageCount; i += 2) odd.add(i);
+    setSelectedPages(odd);
+    setRangeInput(formatPageRange(odd, pageCount));
+  };
+
+  const handleInvertSelection = () => {
+    setSelectedPages((prev) => {
+      const inverted = new Set<number>();
+      for (let i = 1; i <= pageCount; i += 1) {
+        if (!prev.has(i)) inverted.add(i);
+      }
+      setRangeInput(formatPageRange(inverted, pageCount));
+      return inverted;
+    });
   };
 
   const getFormatOptions = () => {
@@ -187,9 +242,7 @@ export function PdfToImagesWorkspace({
     return { format: "png" as const, quality: 1.0, ext: "png" };
   };
 
-  const executeExport = async (
-    mode: "zip" | "one_by_one",
-  ) => {
+  const executeExport = async (mode: "zip" | "one_by_one") => {
     const pagesToExport = Array.from(selectedPages).sort((a, b) => a - b);
     if (pagesToExport.length === 0 || isExporting) return;
 
@@ -210,7 +263,7 @@ export function PdfToImagesWorkspace({
     });
 
     try {
-      // If only 1 page selected, download directly as single image file
+      // Single page direct download
       if (pagesToExport.length === 1) {
         const pageNum = pagesToExport[0]!;
         pushExportToast({
@@ -314,7 +367,7 @@ export function PdfToImagesWorkspace({
         return;
       }
 
-      // Multiple pages -> package as ZIP
+      // Multiple pages -> ZIP packaging
       const archive: Record<string, Uint8Array> = {};
       const total = pagesToExport.length;
 
@@ -435,21 +488,6 @@ export function PdfToImagesWorkspace({
           <Button
             variant="secondary"
             size="sm"
-            onClick={
-              selectedPages.size === pageCount
-                ? handleDeselectAll
-                : handleSelectAll
-            }
-            disabled={isInitializing || isExporting}
-          >
-            {selectedPages.size === pageCount
-              ? t("actions.deselectAll")
-              : t("actions.selectAll")}
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
             onClick={onClear}
             disabled={isExporting}
           >
@@ -464,6 +502,88 @@ export function PdfToImagesWorkspace({
             oneByOneCount={selectedPages.size}
             showPdfOptions={false}
           />
+        </div>
+      </div>
+
+      {/* Page Range & Quick Selection Controls Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/60">
+        {/* Left: 2-way Range Input */}
+        <div className="flex items-center gap-2 flex-1 min-w-[240px] max-w-md">
+          <div className="relative flex-1">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400">
+              <Layers size={14} />
+            </div>
+            <input
+              type="text"
+              value={rangeInput}
+              onChange={handleRangeInputChange}
+              placeholder={t("actions.pageRangePlaceholder")}
+              disabled={isInitializing || isExporting}
+              className="h-8 w-full rounded-lg border border-slate-300 bg-white pl-8 pr-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-red-500 focus:outline-hidden focus:ring-1 focus:ring-red-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+            />
+          </div>
+          <span className="shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            {t("actions.selectedPagesCount", {
+              selected: selectedPages.size,
+              total: pageCount,
+            })}
+          </span>
+        </div>
+
+        {/* Right: Quick Selection Presets (Single toggle button for All/None) */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {selectedPages.size < pageCount ? (
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              disabled={isInitializing || isExporting}
+              className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-750 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              title={t("actions.selectAll")}
+            >
+              <CheckSquare size={12} className="text-red-500" />
+              <span>{t("actions.selectAll")}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleDeselectAll}
+              disabled={isInitializing || isExporting}
+              className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-750 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              title={t("actions.deselectAll")}
+            >
+              <Square size={12} className="text-slate-400" />
+              <span>{t("actions.deselectAll")}</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleSelectOdd}
+            disabled={isInitializing || isExporting}
+            className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-750 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            <span>{t("actions.selectOdd")}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSelectEven}
+            disabled={isInitializing || isExporting}
+            className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-750 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            <span>{t("actions.selectEven")}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleInvertSelection}
+            disabled={isInitializing || isExporting}
+            className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-750 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            title={t("actions.invertSelection")}
+          >
+            <RotateCcw size={12} className="text-amber-500" />
+            <span>{t("actions.invertSelection")}</span>
+          </button>
         </div>
       </div>
 
@@ -484,7 +604,7 @@ export function PdfToImagesWorkspace({
               <div
                 key={thumb.pageNumber}
                 onClick={() => togglePageSelection(thumb.pageNumber)}
-                className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-white shadow-sm transition-all dark:bg-slate-900 ${
+                className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-white shadow-xs transition-all dark:bg-slate-900 ${
                   isSelected
                     ? "border-red-500 ring-2 ring-red-500/20"
                     : "border-slate-200 opacity-60 hover:opacity-100 hover:border-slate-300 dark:border-slate-800"
