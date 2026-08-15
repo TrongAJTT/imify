@@ -111,11 +111,13 @@ export function PdfToImagesWorkspace({
         setSelectedPages(allSet);
         setThumbnails(initialThumbs);
 
-        // Asynchronously load thumbnail for each page (low DPI 72 for fast preview)
+        // Asynchronously load thumbnail for each page (max width 200 for fast, lightweight preview)
         for (let i = 1; i <= count; i += 1) {
           if (isCancelled) break;
           try {
-            const { canvas } = await renderPdfPageToCanvas(pdfFile, i, 72);
+            const { canvas } = await renderPdfPageToCanvas(pdfFile, i, {
+              maxWidth: 200,
+            });
             if (isCancelled) break;
 
             const dataUrl = canvas.toDataURL("image/jpeg", 0.75);

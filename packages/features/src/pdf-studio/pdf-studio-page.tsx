@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useTranslation } from "@imify/i18n";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
-import { sanitizeFile } from "../shared/image-file-utils";
+import { sanitizeFile, createThumbnailUrl } from "../shared/image-file-utils";
 import { PdfStudioModeSwitcher } from "./pdf-studio-mode-switcher";
 import { PdfStudioDropZone } from "./pdf-studio-drop-zone";
 import { ImagesToPdfWorkspace } from "./images-to-pdf-workspace";
@@ -93,7 +93,7 @@ export function SharedPdfStudioPage({
     for (const rawFile of files) {
       try {
         const sanitized = await sanitizeFile(rawFile);
-        const url = URL.createObjectURL(sanitized);
+        const url = await createThumbnailUrl(sanitized, 200);
         previewUrlsRef.current.push(url);
 
         newItems.push({

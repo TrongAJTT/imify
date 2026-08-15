@@ -54,7 +54,7 @@ export async function getPdfInfo(source: Blob | ArrayBuffer | Uint8Array): Promi
 export async function renderPdfPageToCanvas(
   source: Blob | ArrayBuffer | Uint8Array,
   pageNumber: number,
-  dpi: number = 150
+  options: number | { dpi?: number; maxWidth?: number } = 150
 ): Promise<{ canvas: HTMLCanvasElement; width: number; height: number }> {
   const pdfjsLib = await getPdfjsLib()
   const data = await toUint8Array(source)
@@ -66,8 +66,19 @@ export async function renderPdfPageToCanvas(
   }
 
   const page = await pdfDoc.getPage(pageNumber)
-  // Standard PDF resolution is 72 DPI
-  const scale = dpi / 72
+  const unscaledViewport = page.getViewport({ scale: 1 })
+
+  let scale = 150 / 72
+  if (typeof options === "number") {
+    scale = options / 72
+  } else if (options) {
+    if (options.maxWidth && options.maxWidth > 0) {
+      scale = options.maxWidth / unscaledViewport.width
+    } else if (options.dpi) {
+      scale = options.dpi / 72
+    }
+  }
+
   const viewport = page.getViewport({ scale })
 
   const canvas = document.createElement("canvas")
