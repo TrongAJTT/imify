@@ -7,18 +7,18 @@ import { Button, BodyText, Subheading, MutedText } from "@imify/ui";
 
 interface SplicingHeavyPreviewQualityDialogProps {
   isOpen: boolean;
-  nextQualityPercent: number;
+  nextQualityPercent?: number;
   imageCount: number;
   totalPixels: number;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (dontShowAgain?: boolean) => void;
 }
 
 import { useTranslation } from "@imify/i18n";
 
 export function SplicingHeavyPreviewQualityDialog({
   isOpen,
-  nextQualityPercent,
+  nextQualityPercent = 50,
   imageCount,
   totalPixels,
   onClose,
@@ -42,7 +42,8 @@ export function SplicingHeavyPreviewQualityDialog({
     if (dontShowAgain) {
       setSkipSplicingHeavyPreviewQualityWarning(true);
     }
-    onConfirm();
+    onConfirm(dontShowAgain);
+    onClose();
     setDontShowAgain(false);
   };
 

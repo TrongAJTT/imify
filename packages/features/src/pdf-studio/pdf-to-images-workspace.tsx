@@ -37,8 +37,8 @@ import {
   ExportSplitButton,
   type ExportSplitMode,
 } from "../shared/export-split-button";
-import { BatchDownloadConfirmDialog } from "../shared/download-confirm-dialog";
 import { PaginationBar } from "../shared/pagination-bar";
+import { confirmBatchDownload } from "@imify/stores";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
@@ -67,9 +67,6 @@ export function PdfToImagesWorkspace({
   const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
-  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
-  const [pendingExportMode, setPendingExportMode] =
-    useState<ExportSplitMode | null>(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -485,17 +482,13 @@ export function PdfToImagesWorkspace({
     }
   };
 
-  const handleExportModeSelect = (mode: ExportSplitMode) => {
+  const handleExportModeSelect = async (mode: ExportSplitMode) => {
     const pagesToExportCount = selectedPages.size;
     if (pagesToExportCount === 0 || isExporting) return;
 
-    if (
-      mode === "one_by_one" &&
-      pagesToExportCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD
-    ) {
-      setPendingExportMode(mode);
-      setShowDownloadConfirm(true);
-      return;
+    if (mode === "one_by_one") {
+      const confirmed = await confirmBatchDownload(pagesToExportCount);
+      if (!confirmed) return;
     }
 
     void executeExport(mode === "one_by_one" ? "one_by_one" : "zip");
@@ -697,21 +690,6 @@ export function PdfToImagesWorkspace({
         startItemIndex={startIndex + 1}
         endItemIndex={endIndex}
         totalItems={pageCount}
-      />
-
-      {/* Multi-download confirmation dialog */}
-      <BatchDownloadConfirmDialog
-        isOpen={showDownloadConfirm}
-        count={selectedPages.size}
-        onClose={() => {
-          setShowDownloadConfirm(false);
-          setPendingExportMode(null);
-        }}
-        onConfirm={() => {
-          setShowDownloadConfirm(false);
-          setPendingExportMode(null);
-          void executeExport("one_by_one");
-        }}
       />
 
       <ToastContainer

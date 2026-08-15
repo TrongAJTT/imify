@@ -9,7 +9,6 @@ import React, {
 import { AlertTriangle, ImagePlus, Trash2 } from "lucide-react";
 import { useTranslation } from "@imify/i18n";
 
-import { APP_CONFIG } from "@imify/core/config";
 import { mapQuickExportToEngineConfig } from "@imify/core";
 import {
   buildSmartOutputFileName,
@@ -18,7 +17,7 @@ import {
 import { ToastContainer, useRenameInputPrompt } from "@imify/ui";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
-import { BatchDownloadConfirmDialog } from "../shared/download-confirm-dialog";
+import { confirmBatchDownload } from "@imify/stores";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
 import {
   ExportSplitButton,
@@ -46,7 +45,6 @@ import {
 import { buildSplitterSplitPlan } from "./split-engine";
 import { decodeFileToImageData } from "@imify/engine/image-pipeline/decode-image-data";
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
-import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useSplitterStore } from "@imify/stores/stores/splitter-store";
 import { SplitterWorkspaceShell } from "./splitter-workspace-shell";
 import {
@@ -130,9 +128,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   const splitSettings = useSplitterStore((state) => state.splitSettings);
   const setSplitSettings = useSplitterStore((state) => state.setSplitSettings);
   const exportSettings = useSplitterStore((state) => state.exportSettings);
-  const skipDownloadConfirm = useBatchStore(
-    (state) => state.skipDownloadConfirm,
-  );
 
   const [images, setImages] = useState<SplitterImageItem[]>([]);
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
@@ -151,10 +146,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
     useState<ConversionProgressPayload | null>(null);
   const [exportToastPayload, setExportToastPayload] =
     useState<ConversionProgressPayload | null>(null);
-  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
-  const [pendingExportMode, setPendingExportMode] = useState<
-    "one_by_one" | null
-  >(null);
   const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
   const conversionToasts = useConversionToasts([
     importToastPayload,
@@ -372,7 +363,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushImportToast({
         id: toastId,
         fileName: `Importing ${imageFiles.length} images`,
-        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "processing",
         percent: 5,
         message: "Preparing image import...",
@@ -404,7 +396,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushImportToast({
           id: toastId,
           fileName: `Importing ${imageFiles.length} images`,
-          targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+            .targetFormat as any,
           status: "processing",
           percent,
           message: `Creating thumbnails ${index + 1}/${imageFiles.length}...`,
@@ -415,7 +408,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushImportToast({
           id: toastId,
           fileName: "Image import failed",
-          targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+            .targetFormat as any,
           status: "error",
           percent: 100,
           message: "No valid images were imported.",
@@ -438,7 +432,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushImportToast({
         id: toastId,
         fileName: "Image import complete",
-        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "success",
         percent: 100,
         message: `Imported ${preparedItems.length} image${preparedItems.length === 1 ? "" : "s"}.`,
@@ -560,27 +555,21 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
 
   const handleExport = async (
     downloadMode: "zip" | "one_by_one" = "zip",
-    forceDownloadConfirm: boolean = false,
     inputValue?: string,
   ) => {
     if (images.length === 0 || isExporting) {
       return;
     }
-    if (
-      downloadMode === "one_by_one" &&
-      !forceDownloadConfirm &&
-      estimatedExportFileCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD &&
-      !skipDownloadConfirm
-    ) {
-      setPendingExportMode("one_by_one");
-      setShowDownloadConfirm(true);
-      return;
+    if (downloadMode === "one_by_one") {
+      const confirmed = await confirmBatchDownload(estimatedExportFileCount);
+      if (!confirmed) return;
     }
 
     setIsExporting(true);
     setErrorText(null);
     const toastId = `splitter_export_${Date.now()}`;
-    const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportSettings.format);
+    const { targetFormat, quality, codecOptions } =
+      mapQuickExportToEngineConfig(exportSettings.format);
     pushExportToast({
       id: toastId,
       fileName: "Split export",
@@ -670,7 +659,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushExportToast({
           id: toastId,
           fileName: "Split export",
-          targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+            .targetFormat as any,
           status: "processing",
           percent: 90,
           message: "Packaging ZIP...",
@@ -688,7 +678,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
           pushExportToast({
             id: toastId,
             fileName: "Split export",
-            targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+              .targetFormat as any,
             status: "processing",
             percent,
             message: `Downloading ${index + 1}/${exportFiles.length}...`,
@@ -701,7 +692,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushExportToast({
         id: toastId,
         fileName: "Split export complete",
-        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "success",
         percent: 100,
         message: `Export finished: ${exportFiles.length} files.`,
@@ -722,7 +714,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushExportToast({
         id: toastId,
         fileName: "Split export failed",
-        targetFormat: mapQuickExportToEngineConfig(exportSettings.format).targetFormat as any,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "error",
         percent: 100,
         message,
@@ -743,7 +736,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       if (mode === "zip" || mode === "one_by_one") {
         checkAndPrompt(
           exportSettings.fileNamePattern,
-          (inputValue) => void handleExport(mode, false, inputValue),
+          (inputValue) => void handleExport(mode, inputValue),
         );
       }
     },
@@ -898,25 +891,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
           <ToastContainer
             toasts={conversionToasts}
             onRemove={handleRemoveToast}
-          />
-          <BatchDownloadConfirmDialog
-            isOpen={showDownloadConfirm}
-            count={estimatedExportFileCount}
-            onClose={() => {
-              setShowDownloadConfirm(false);
-              setPendingExportMode(null);
-            }}
-            onConfirm={() => {
-              setShowDownloadConfirm(false);
-              if (pendingExportMode) {
-                checkAndPrompt(
-                  exportSettings.fileNamePattern,
-                  (inputValue) =>
-                    void handleExport(pendingExportMode, true, inputValue),
-                );
-              }
-              setPendingExportMode(null);
-            }}
           />
           {renameInputPrompt}
         </>

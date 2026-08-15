@@ -28,7 +28,7 @@ const DOWNLOAD_HINT_IMAGE_BY_BROWSER: Record<SupportedBrowser, string> = {
 interface BatchDownloadConfirmDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (dontShowAgain?: boolean) => void;
   count: number;
 }
 
@@ -52,7 +52,7 @@ export function BatchDownloadConfirmDialog({
     if (localSkip) {
       setSkipDownloadConfirm(true);
     }
-    onConfirm();
+    onConfirm(localSkip);
     onClose();
   };
 

@@ -1,75 +1,94 @@
-"use client"
+"use client";
 
-import { registerStorageAdapter } from "@imify/core/storage-adapter"
-import { registerEngineRuntimeAdapter } from "@imify/engine/converter/runtime-adapter"
-import { setPreviewWorkerFactory } from "@imify/engine/converter/preview-worker-client"
-import { getDevModeEnabled } from "@imify/features/dev-mode/dev-mode-store"
+import { registerStorageAdapter } from "@imify/core/storage-adapter";
+import { registerEngineRuntimeAdapter } from "@imify/engine/converter/runtime-adapter";
+import { setPreviewWorkerFactory } from "@imify/engine/converter/preview-worker-client";
+import { getDevModeEnabled } from "@imify/features/dev-mode/dev-mode-store";
 import {
   ensureRuntimeLogCaptureInstalled,
-  setRuntimeLogCaptureEnabled
-} from "@imify/features/dev-mode/runtime-log-collector"
-import { initI18n } from "@imify/i18n"
-import { localStorageAdapter } from "../adapters/local-storage-adapter"
+  setRuntimeLogCaptureEnabled,
+} from "@imify/features/dev-mode/runtime-log-collector";
+import { initI18n } from "@imify/i18n";
+import { GlobalConfirmationHost } from "@imify/features/shared/global-confirmation-host";
+import { localStorageAdapter } from "../adapters/local-storage-adapter";
 
 interface AppProvidersProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
-let adaptersRegistered = false
+let adaptersRegistered = false;
 
 function canAccessLocalStorage(): boolean {
-  if (typeof window === "undefined") return false
+  if (typeof window === "undefined") return false;
   try {
-    const probeKey = "__imify_web_storage_probe__"
-    window.localStorage.setItem(probeKey, "1")
-    window.localStorage.removeItem(probeKey)
-    return true
+    const probeKey = "__imify_web_storage_probe__";
+    window.localStorage.setItem(probeKey, "1");
+    window.localStorage.removeItem(probeKey);
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
 function ensureWebAdaptersRegistered(): void {
   if (!canAccessLocalStorage() || adaptersRegistered) {
-    return
+    return;
   }
 
   try {
-    registerStorageAdapter(localStorageAdapter)
+    registerStorageAdapter(localStorageAdapter);
     registerEngineRuntimeAdapter({
-      resolveWasmUrl: (fileName) => `${window.location.origin}/assets/wasm/${fileName}`,
+      resolveWasmUrl: (fileName) =>
+        `${window.location.origin}/assets/wasm/${fileName}`,
       createWasmWorker: () =>
-        new Worker(new URL("@imify/engine/converter/wasm-encode.worker", import.meta.url), {
-          type: "module"
-        }),
+        new Worker(
+          new URL(
+            "@imify/engine/converter/wasm-encode.worker",
+            import.meta.url,
+          ),
+          {
+            type: "module",
+          },
+        ),
       createConversionWorker: () =>
-        new Worker(new URL("@imify/engine/converter/conversion.worker", import.meta.url), {
-          type: "module"
-        })
-    })
+        new Worker(
+          new URL("@imify/engine/converter/conversion.worker", import.meta.url),
+          {
+            type: "module",
+          },
+        ),
+    });
     setPreviewWorkerFactory(
       () =>
-        new Worker(new URL("@imify/engine/converter/preview.worker", import.meta.url), {
-          type: "module"
-        })
-    )
-    adaptersRegistered = true
+        new Worker(
+          new URL("@imify/engine/converter/preview.worker", import.meta.url),
+          {
+            type: "module",
+          },
+        ),
+    );
+    adaptersRegistered = true;
   } catch {
     // Keep UI rendering even if storage/runtime adapters are unavailable.
   }
 }
 
 if (typeof window !== "undefined") {
-  ensureWebAdaptersRegistered()
-  ensureRuntimeLogCaptureInstalled()
-  setRuntimeLogCaptureEnabled(getDevModeEnabled())
-  initI18n()
+  ensureWebAdaptersRegistered();
+  ensureRuntimeLogCaptureInstalled();
+  setRuntimeLogCaptureEnabled(getDevModeEnabled());
+  initI18n();
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
-  ensureWebAdaptersRegistered()
-  ensureRuntimeLogCaptureInstalled()
-  setRuntimeLogCaptureEnabled(getDevModeEnabled())
-  initI18n()
-  return <>{children}</>
+  ensureWebAdaptersRegistered();
+  ensureRuntimeLogCaptureInstalled();
+  setRuntimeLogCaptureEnabled(getDevModeEnabled());
+  initI18n();
+  return (
+    <>
+      {children}
+      <GlobalConfirmationHost />
+    </>
+  );
 }
