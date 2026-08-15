@@ -73,6 +73,9 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
     preview1Webp: "/assets/features/preview-background_remover-1.webp",
     preview2Webp: "/assets/features/preview-background_remover-2.webp"
   },
+  pdfStudio: {
+    previewWebp: "/assets/features/preview-pdf_studio.webp"
+  },
   downloadHints: {
     chromeWebp: "/assets/images/img-download-not-ask-chrome.webp",
     edgeWebp: "/assets/images/img-download-not-ask-edge.webp",
@@ -145,6 +148,9 @@ export const FEATURE_MEDIA_ASSETS = {
   },
   inspector: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp
+  },
+  pdfStudio: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.pdfStudio.previewWebp
   },
   remover: {
     preview1Webp: FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp,

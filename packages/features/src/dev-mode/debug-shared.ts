@@ -10,6 +10,7 @@ export type OptionsTab =
   | "pattern"
   | "diffchecker"
   | "inspector"
+  | "pdf-studio"
   | "background-remover"
   | "upscaler"
   | "context-menu"

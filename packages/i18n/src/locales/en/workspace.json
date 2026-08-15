@@ -36,6 +36,9 @@
     "inspector": {
       "label": "Image Inspector"
     },
+    "pdfStudio": {
+      "label": "PDF Studio"
+    },
     "contextMenu": {
       "label": "Context Menu"
     },

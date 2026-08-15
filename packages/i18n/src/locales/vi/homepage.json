@@ -60,6 +60,9 @@
     "inspector": {
       "desc": "Khám phá sâu metadata ẩn, dữ liệu GPS và bảng màu."
     },
+    "pdfStudio": {
+      "desc": "Chuyển đổi 2 chiều giữa ảnh và PDF, sắp xếp trang, chuẩn hóa khổ giấy và trích xuất ảnh độ phân giải cao."
+    },
     "contextMenu": {
       "desc": "Tùy chỉnh quy trình xử lý ảnh nhanh trên toàn trình duyệt của bạn."
     },

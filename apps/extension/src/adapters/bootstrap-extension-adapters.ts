@@ -41,6 +41,7 @@ import previewCollageWebp from "url:@assets/features/preview-collage.webp"
 import previewContextMenuWebp from "url:@assets/features/preview-context_menu.webp"
 import previewDiffCheckerWebp from "url:@assets/features/preview-difference_checker.webp"
 import previewInspectorWebp from "url:@assets/features/preview-image_inspector.webp"
+import previewPdfStudioWebp from "url:@assets/features/preview-pdf_studio.webp"
 import previewRemover1Webp from "url:@assets/features/preview-background_remover-1.webp"
 import previewRemover2Webp from "url:@assets/features/preview-background_remover-2.webp"
 import qrGeneratorIllustrationSvg from "url:@assets/images/illustrations/qr-generator.svg"
@@ -87,6 +88,7 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.downloadHints.firefoxWebp]: downloadHintFirefoxWebp,
   [FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp]: previewDiffCheckerWebp,
   [FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp]: previewInspectorWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.pdfStudio.previewWebp]: previewPdfStudioWebp,
   [FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp]: previewRemover1Webp,
   [FEATURE_MEDIA_ASSET_PATHS.remover.preview2Webp]: previewRemover2Webp,
   [FEATURE_MEDIA_ASSET_PATHS.brand.j2teamLogoIco]: j2teamLogoIco,

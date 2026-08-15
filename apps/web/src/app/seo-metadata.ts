@@ -98,6 +98,11 @@ export const WEB_ROUTE_METADATA = {
     description:
       "Inspect image metadata, dimensions, and visual properties to verify asset quality, technical consistency, and readiness for delivery channels."
   },
+  pdfStudio: {
+    title: "PDF Studio",
+    description:
+      "Convert images to PDF and extract PDF pages as images directly in your browser. Reorder, set paper size, and choose export DPI — 100% locally with zero server upload."
+  },
   backgroundRemover: {
     title: "Background Remover",
     description:

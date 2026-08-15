@@ -36,6 +36,9 @@
     "inspector": {
       "label": "Kiểm tra thông tin ảnh"
     },
+    "pdfStudio": {
+      "label": "Studio PDF"
+    },
     "contextMenu": {
       "label": "Menu chuột phải"
     },

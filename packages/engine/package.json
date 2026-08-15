@@ -19,5 +19,8 @@
     "./image-pipeline/render-image-data": "./src/image-pipeline/render-image-data.ts",
     "./image-pipeline/*": "./src/image-pipeline/*.ts"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "pdfjs-dist": "^6.2.108"
+  }
 }

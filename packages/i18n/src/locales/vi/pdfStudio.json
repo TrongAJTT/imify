@@ -1,0 +1,73 @@
+{
+  "title": "PDF Studio",
+  "totalPagesCount": "{{count}} trang",
+  "pageNumberLabel": "Trang {{num}}",
+  "modeSwitcher": {
+    "imagesToPdf": "Ảnh sang PDF",
+    "pdfToImages": "PDF sang Ảnh"
+  },
+  "dropZone": {
+    "imagesTitle": "Thả hình ảnh vào đây để tạo tệp PDF",
+    "imagesSubtitle": "Hỗ trợ JPG, PNG, WebP, AVIF, BMP và nhiều định dạng khác",
+    "pdfTitle": "Thả tệp PDF vào đây để trích xuất ảnh",
+    "pdfSubtitle": "Chọn một tệp PDF để bắt đầu trích xuất các trang"
+  },
+  "settings": {
+    "paperSizeTitle": "Cài đặt trang PDF",
+    "exportSettingsTitle": "Cài đặt xuất hình ảnh",
+    "dpi": "Độ phân giải (DPI)",
+    "outputFormat": "Định dạng xuất",
+    "quality": "Chất lượng hình ảnh"
+  },
+  "actions": {
+    "addImages": "Thêm ảnh",
+    "clearAll": "Dọn tất cả",
+    "clear": "Dọn",
+    "selectAll": "Chọn tất cả",
+    "deselectAll": "Bỏ chọn tất cả",
+    "exportPdf": "Xuất PDF",
+    "exportImages": "Xuất ảnh ({{count}})",
+    "dragToReorder": "Kéo để đổi thứ tự trang",
+    "removePage": "Xóa trang"
+  },
+  "progress": {
+    "building": "Đang chuẩn bị tài liệu PDF...",
+    "rendering": "Đang xử lý trang {{current}}/{{total}}...",
+    "saving": "Đang hoàn tất tệp PDF...",
+    "readingPdf": "Đang đọc các trang PDF...",
+    "startExtracting": "Bắt đầu trích xuất...",
+    "packaging": "Đang nén ảnh vào tệp ZIP..."
+  },
+  "showcase": {
+    "title": "Studio Chuyển đổi PDF & Ảnh 2 Chiều",
+    "subtitle": "Gộp nhiều ảnh thành tài liệu PDF chuẩn hoặc trích xuất các trang PDF thành ảnh chất lượng cao — hoàn toàn cục bộ trên trình duyệt, không cần tải lên máy chủ.",
+    "tips": [
+      "Kéo thả thumbnail để sắp xếp lại thứ tự các trang trước khi tạo PDF.",
+      "Chọn khổ giấy (A4, A3, Letter) ở thanh bên để chuẩn hóa kích thước tài liệu in ấn.",
+      "Chọn 300 DPI khi trích xuất ảnh từ PDF để đạt độ nét tối đa khi in ấn.",
+      "Toàn bộ quy trình diễn ra 100% trên trình duyệt của bạn — tài liệu bảo mật không bao giờ rời khỏi thiết bị."
+    ],
+    "featureChips": [
+      "Chuyển đổi 2 chiều",
+      "Sắp xếp trang kéo thả",
+      "Khổ giấy tiêu chuẩn",
+      "Trích xuất DPI cao",
+      "Đóng gói ZIP",
+      "Riêng tư 100%"
+    ],
+    "faqs": [
+      {
+        "question": "Tôi có thể gộp nhiều định dạng ảnh khác nhau vào cùng 1 file PDF không?",
+        "answer": "Có! Bạn có thể kết hợp cả JPG, PNG, WebP, AVIF và các định dạng khác thành một tệp PDF duy nhất."
+      },
+      {
+        "question": "Tài liệu của tôi có bị tải lên máy chủ không?",
+        "answer": "Không. Toàn bộ thao tác xử lý diễn ra trực tiếp trong trình duyệt web của bạn, bảo đảm quyền riêng tư tuyệt đối."
+      },
+      {
+        "question": "Nên chọn mức DPI nào khi trích xuất PDF sang ảnh?",
+        "answer": "Để chia sẻ web hoặc xem trên màn hình, mức 72 hoặc 150 DPI là tối ưu và nhẹ. Đối với lưu trữ hoặc in ấn chất lượng cao, mức 300 DPI mang lại độ sắc nét cao nhất."
+      }
+    ]
+  }
+}

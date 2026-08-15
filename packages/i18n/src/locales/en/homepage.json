@@ -60,6 +60,9 @@
     "inspector": {
       "desc": "Deep dive into hidden metadata, GPS data, and color palettes."
     },
+    "pdfStudio": {
+      "desc": "Two-way conversion between images and PDF with sortable pages, standard paper sizes, and high DPI extraction."
+    },
     "contextMenu": {
       "desc": "Customize your browser-wide quick-access image processing workflow."
     },

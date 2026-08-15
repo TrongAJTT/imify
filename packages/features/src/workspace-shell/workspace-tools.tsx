@@ -1,6 +1,7 @@
 import React from "react";
 import {
   ArrowLeftRight,
+  FileOutput,
   Image,
   Layers,
   LayoutGrid,
@@ -25,6 +26,7 @@ export const WORKSPACE_PRIMARY_TOOL_IDS = [
   "pattern",
   "diffchecker",
   "inspector",
+  "pdf-studio",
   "background-remover",
   "upscaler",
   "context-menu",
@@ -165,6 +167,16 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
     showOnExtSidebar: true,
   },
   {
+    id: "pdf-studio",
+    label: "PDF Studio",
+    href: "/pdf-studio",
+    categoryId: "utilities",
+    iconColorClassName: "text-red-500",
+    extTabId: "pdf-studio",
+    showOnWebToolsMenu: true,
+    showOnExtSidebar: true,
+  },
+  {
     id: "context-menu",
     label: "Context Menu",
     href: "/extension",
@@ -259,6 +271,8 @@ export function renderWorkspaceToolIcon(
       return <ArrowLeftRight size={size} className={className} />;
     case "inspector":
       return <ScanSearch size={size} className={className} />;
+    case "pdf-studio":
+      return <FileOutput size={size} className={className} />;
     case "context-menu":
       return <ListTree size={size} className={className} />;
     case "seo-audit":
@@ -313,6 +327,8 @@ function getToolIdKey(id: string): string {
       return "tools.diffchecker.label";
     case "inspector":
       return "tools.inspector.label";
+    case "pdf-studio":
+      return "tools.pdfStudio.label";
     case "context-menu":
       return "tools.contextMenu.label";
     case "seo-audit":

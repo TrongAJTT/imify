@@ -105,6 +105,12 @@ const TOOL_DEFINITIONS: {
     badge: "highlight",
   },
   {
+    id: "pdf-studio",
+    label: "PDF Studio",
+    src: FEATURE_MEDIA_ASSET_PATHS.pdfStudio.previewWebp,
+    badge: "new",
+  },
+  {
     id: "context-menu",
     label: "Context Menu",
     src: FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp,
@@ -266,6 +272,7 @@ export function HomeClient() {
       "pattern-generator": t("tools.patternGenerator.desc"),
       diffchecker: t("tools.diffchecker.desc"),
       inspector: t("tools.inspector.desc"),
+      "pdf-studio": t("tools.pdfStudio.desc"),
       "context-menu": t("tools.contextMenu.desc"),
       "seo-audit": t("tools.seoAudit.desc"),
       "background-remover": t("tools.backgroundRemover.desc"),
