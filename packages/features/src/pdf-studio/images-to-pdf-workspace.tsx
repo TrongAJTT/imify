@@ -55,6 +55,9 @@ export function ImagesToPdfWorkspace({
   const { t } = useTranslation("pdfStudio");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
+
   const [exportToastPayload, setExportToastPayload] =
     useState<ConversionProgressPayload | null>(null);
   const exportToastHideTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -118,6 +121,44 @@ export function ImagesToPdfWorkspace({
         onAddMoreFiles(validFiles);
       }
       e.target.value = "";
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current += 1;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0;
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current = 0;
+    setIsDragOver(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const validFiles = Array.from(e.dataTransfer.files).filter(isCommonImageFile);
+      if (validFiles.length > 0) {
+        onAddMoreFiles(validFiles);
+      }
     }
   };
 
@@ -255,7 +296,30 @@ export function ImagesToPdfWorkspace({
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div
+      className="relative flex flex-col gap-4 min-h-[300px]"
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Visual Drop Overlay */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-red-500 bg-red-50/90 dark:bg-red-950/85 backdrop-blur-xs transition-all pointer-events-none">
+          <div className="flex flex-col items-center gap-2.5 p-6 text-center">
+            <div className="p-3.5 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 shadow-sm animate-bounce">
+              <Plus size={32} strokeWidth={2.5} />
+            </div>
+            <span className="text-base font-bold text-red-700 dark:text-red-300">
+              {t("actions.addImages")}
+            </span>
+            <span className="text-xs text-red-600/80 dark:text-red-400/80">
+              {t("dropZone.imagesSubtitle")}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
