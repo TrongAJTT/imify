@@ -1,5 +1,10 @@
+import type { QuickExportFormat } from "@imify/core"
 import type {
   PaperSize,
+  ResizeApplyTo,
+  ResizeAspectMode,
+  ResizeFitMode,
+  ResizeMode,
   ResizeResamplingAlgorithm,
   SupportedDPI
 } from "@imify/core/types"
@@ -15,17 +20,25 @@ export interface PdfStudioImageItem {
 }
 
 export interface PdfToImagesConfig {
-  dpi: number // 72, 150, 300, 600
-  format: "png" | "jpg" | "webp"
-  quality: number // 1 - 100
+  format: QuickExportFormat
+  dpi: number // 72, 150, 300
+  fileNamePattern: string
   pageSelectionMode: "all" | "custom"
-  customPageRange: string // e.g. "1-3, 5, 8-10"
+  customPageRange: string
 }
 
 export interface ImagesToPdfConfig {
-  resizeMode: "inherit" | "paper_size"
+  resizeMode: ResizeMode
+  resizeValue: number
+  resizeApplyTo: ResizeApplyTo
+  resizeWidth: number
+  resizeHeight: number
+  resizeAspectMode: ResizeAspectMode
+  resizeAspectRatio: string
+  resizeFitMode: ResizeFitMode
+  resizeContainBackground: string
+  resamplingAlgorithm: ResizeResamplingAlgorithm
   paperSize: PaperSize
   dpi: SupportedDPI
-  resamplingAlgorithm: ResizeResamplingAlgorithm
   margin: number
 }

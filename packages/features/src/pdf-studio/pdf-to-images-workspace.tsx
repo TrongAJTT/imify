@@ -1,200 +1,255 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react"
-import { Check, Download, FileOutput, RefreshCw, Trash2 } from "lucide-react"
-import { Button, AnimatingSpinner } from "@imify/ui"
-import { useTranslation } from "@imify/i18n"
-import { formatFileSize } from "../inspector/format-utils"
-import type { PdfToImagesConfig } from "./types"
+import React, { useEffect, useState } from "react";
+import { Check, Download, FileOutput, Trash2 } from "lucide-react";
+import { Button, AnimatingSpinner } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
+import { formatFileSize } from "../inspector/format-utils";
+import type { PdfToImagesConfig } from "./types";
+import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
+import { PDF_STUDIO_NAMING_CONFIG } from "@imify/core";
 import {
   getPdfInfo,
   renderPdfPageToBlob,
-  renderPdfPageToCanvas
-} from "@imify/engine/converter/pdf-reader"
-import { zipSync } from "fflate"
+  renderPdfPageToCanvas,
+} from "@imify/engine/converter/pdf-reader";
+import { zipSync } from "fflate";
 
 interface PdfToImagesWorkspaceProps {
-  pdfFile: File
-  config: PdfToImagesConfig
-  onClear: () => void
+  pdfFile: File;
+  config: PdfToImagesConfig;
+  onClear: () => void;
 }
 
 interface PageThumbnail {
-  pageNumber: number
-  previewUrl: string | null
-  isLoading: boolean
+  pageNumber: number;
+  previewUrl: string | null;
+  isLoading: boolean;
 }
 
 export function PdfToImagesWorkspace({
   pdfFile,
   config,
-  onClear
+  onClear,
 }: PdfToImagesWorkspaceProps) {
-  const { t } = useTranslation("pdfStudio")
-  const [pageCount, setPageCount] = useState<number>(0)
-  const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set())
-  const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([])
-  const [isInitializing, setIsInitializing] = useState(true)
-  const [isExporting, setIsExporting] = useState(false)
-  const [exportProgress, setExportProgress] = useState<{ percent: number; message: string } | null>(null)
+  const { t } = useTranslation("pdfStudio");
+  const [pageCount, setPageCount] = useState<number>(0);
+  const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set());
+  const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([]);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState<{
+    percent: number;
+    message: string;
+  } | null>(null);
 
   // 1. Initial document scan & thumbnail generation
   useEffect(() => {
-    let isCancelled = false
+    let isCancelled = false;
 
     const loadPdf = async () => {
-      setIsInitializing(true)
+      setIsInitializing(true);
       try {
-        const info = await getPdfInfo(pdfFile)
-        if (isCancelled) return
+        const info = await getPdfInfo(pdfFile);
+        if (isCancelled) return;
 
-        const count = info.pageCount
-        setPageCount(count)
+        const count = info.pageCount;
+        setPageCount(count);
 
         // Select all pages by default
-        const allSet = new Set<number>()
-        const initialThumbs: PageThumbnail[] = []
+        const allSet = new Set<number>();
+        const initialThumbs: PageThumbnail[] = [];
         for (let i = 1; i <= count; i += 1) {
-          allSet.add(i)
-          initialThumbs.push({ pageNumber: i, previewUrl: null, isLoading: true })
+          allSet.add(i);
+          initialThumbs.push({
+            pageNumber: i,
+            previewUrl: null,
+            isLoading: true,
+          });
         }
-        setSelectedPages(allSet)
-        setThumbnails(initialThumbs)
+        setSelectedPages(allSet);
+        setThumbnails(initialThumbs);
 
         // Asynchronously load thumbnail for each page (low DPI 72 for fast preview)
         for (let i = 1; i <= count; i += 1) {
-          if (isCancelled) break
+          if (isCancelled) break;
           try {
-            const { canvas } = await renderPdfPageToCanvas(pdfFile, i, 72)
-            if (isCancelled) break
+            const { canvas } = await renderPdfPageToCanvas(pdfFile, i, 72);
+            if (isCancelled) break;
 
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.75)
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
             setThumbnails((prev) =>
               prev.map((th) =>
-                th.pageNumber === i ? { ...th, previewUrl: dataUrl, isLoading: false } : th
-              )
-            )
+                th.pageNumber === i
+                  ? { ...th, previewUrl: dataUrl, isLoading: false }
+                  : th,
+              ),
+            );
           } catch (e) {
-            console.error(`Failed to load thumb for page ${i}:`, e)
+            console.error(`Failed to load thumb for page ${i}:`, e);
             setThumbnails((prev) =>
               prev.map((th) =>
-                th.pageNumber === i ? { ...th, isLoading: false } : th
-              )
-            )
+                th.pageNumber === i ? { ...th, isLoading: false } : th,
+              ),
+            );
           }
         }
       } catch (err) {
-        console.error("Failed to load PDF info:", err)
+        console.error("Failed to load PDF info:", err);
       } finally {
-        if (!isCancelled) setIsInitializing(false)
+        if (!isCancelled) setIsInitializing(false);
       }
-    }
+    };
 
-    void loadPdf()
+    void loadPdf();
 
     return () => {
-      isCancelled = true
-    }
-  }, [pdfFile])
+      isCancelled = true;
+    };
+  }, [pdfFile]);
 
   const togglePageSelection = (pageNumber: number) => {
     setSelectedPages((prev) => {
-      const next = new Set(prev)
+      const next = new Set(prev);
       if (next.has(pageNumber)) {
-        next.delete(pageNumber)
+        next.delete(pageNumber);
       } else {
-        next.add(pageNumber)
+        next.add(pageNumber);
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   const handleSelectAll = () => {
-    const all = new Set<number>()
-    for (let i = 1; i <= pageCount; i += 1) all.add(i)
-    setSelectedPages(all)
-  }
+    const all = new Set<number>();
+    for (let i = 1; i <= pageCount; i += 1) all.add(i);
+    setSelectedPages(all);
+  };
 
   const handleDeselectAll = () => {
-    setSelectedPages(new Set())
-  }
+    setSelectedPages(new Set());
+  };
+
+  const getFormatOptions = () => {
+    const format = config.format || "png";
+    if (format === "jpg") {
+      return { format: "jpg" as const, quality: 0.92, ext: "jpg" };
+    }
+    if (format === "webp") {
+      return { format: "webp" as const, quality: 0.88, ext: "webp" };
+    }
+    if (format === "webp-lossless") {
+      return { format: "webp" as const, quality: 1.0, ext: "webp" };
+    }
+    return { format: "png" as const, quality: 1.0, ext: "png" };
+  };
 
   const handleExportImages = async () => {
-    const pagesToExport = Array.from(selectedPages).sort((a, b) => a - b)
-    if (pagesToExport.length === 0 || isExporting) return
+    const pagesToExport = Array.from(selectedPages).sort((a, b) => a - b);
+    if (pagesToExport.length === 0 || isExporting) return;
 
-    setIsExporting(true)
-    setExportProgress({ percent: 5, message: t("progress.startExtracting") })
+    setIsExporting(true);
+    setExportProgress({ percent: 5, message: t("progress.startExtracting") });
 
     try {
-      const baseName = pdfFile.name.replace(/\.[^.]+$/, "") || "document"
-      const ext = config.format === "jpg" ? "jpg" : config.format === "webp" ? "webp" : "png"
+      const { format: targetFormat, quality, ext } = getFormatOptions();
+      const pattern =
+        config.fileNamePattern || PDF_STUDIO_NAMING_CONFIG.defaultPattern;
 
-      // If only 1 page selected, download directly as image file
+      // If only 1 page selected, download directly as single image file
       if (pagesToExport.length === 1) {
-        const pageNum = pagesToExport[0]!
+        const pageNum = pagesToExport[0]!;
         setExportProgress({
           percent: 50,
-          message: t("progress.rendering", { current: 1, total: 1 })
-        })
+          message: t("progress.rendering", { current: 1, total: 1 }),
+        });
 
         const blob = await renderPdfPageToBlob(pdfFile, {
           pageNumber: pageNum,
           dpi: config.dpi,
-          format: config.format,
-          quality: config.quality / 100
-        })
+          format: targetFormat,
+          quality,
+        });
 
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = `${baseName}_page_${pageNum}.${ext}`
-        a.click()
-        URL.revokeObjectURL(url)
-        return
+        const smartName = buildSmartOutputFileName({
+          pattern,
+          originalFileName: pdfFile.name,
+          outputExtension: ext,
+          index: pageNum,
+          totalFiles: pageCount,
+          dimensions: { width: 0, height: 0 },
+          now: new Date(),
+        });
+
+        const finalFileName = smartName.endsWith(`.${ext}`)
+          ? smartName
+          : `${smartName}.${ext}`;
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = finalFileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        return;
       }
 
       // Multiple pages -> package as ZIP
-      const archive: Record<string, Uint8Array> = {}
-      const total = pagesToExport.length
+      const archive: Record<string, Uint8Array> = {};
+      const total = pagesToExport.length;
 
       for (let i = 0; i < total; i += 1) {
-        const pageNum = pagesToExport[i]!
-        const pct = Math.min(88, 10 + Math.round(((i + 1) / total) * 78))
+        const pageNum = pagesToExport[i]!;
+        const pct = Math.min(88, 10 + Math.round(((i + 1) / total) * 78));
         setExportProgress({
           percent: pct,
-          message: t("progress.rendering", { current: i + 1, total })
-        })
+          message: t("progress.rendering", { current: i + 1, total }),
+        });
 
         const blob = await renderPdfPageToBlob(pdfFile, {
           pageNumber: pageNum,
           dpi: config.dpi,
-          format: config.format,
-          quality: config.quality / 100
-        })
+          format: targetFormat,
+          quality,
+        });
 
-        const buffer = new Uint8Array(await blob.arrayBuffer())
-        const fileName = `${baseName}_page_${String(pageNum).padStart(2, "0")}.${ext}`
-        archive[fileName] = buffer
+        const smartName = buildSmartOutputFileName({
+          pattern,
+          originalFileName: pdfFile.name,
+          outputExtension: ext,
+          index: pageNum,
+          totalFiles: pageCount,
+          dimensions: { width: 0, height: 0 },
+          now: new Date(),
+        });
+
+        const finalFileName = smartName.endsWith(`.${ext}`)
+          ? smartName
+          : `${smartName}.${ext}`;
+        const buffer = new Uint8Array(await blob.arrayBuffer());
+        archive[finalFileName] = buffer;
       }
 
-      setExportProgress({ percent: 92, message: t("progress.packaging") })
-      const zipBytes = zipSync(archive, { level: 6 })
-      const zipBlob = new Blob([zipBytes as unknown as BlobPart], { type: "application/zip" })
+      setExportProgress({ percent: 92, message: t("progress.packaging") });
+      const zipBytes = zipSync(archive, { level: 6 });
+      const zipBlob = new Blob([zipBytes as unknown as BlobPart], {
+        type: "application/zip",
+      });
 
-      const url = URL.createObjectURL(zipBlob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `${baseName}_images.zip`
-      a.click()
-      URL.revokeObjectURL(url)
+      const baseName = pdfFile.name.replace(/\.[^.]+$/, "") || "document";
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${baseName}_images.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Failed to export images from PDF:", err)
+      console.error("Failed to export images from PDF:", err);
     } finally {
-      setIsExporting(false)
-      setExportProgress(null)
+      setIsExporting(false);
+      setExportProgress(null);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -207,7 +262,8 @@ export function PdfToImagesWorkspace({
               {pdfFile.name}
             </span>
             <span className="text-[11px] text-slate-400 dark:text-slate-500">
-              {formatFileSize(pdfFile.size)} &middot; {t("totalPagesCount", { count: pageCount })}
+              {formatFileSize(pdfFile.size)} &middot;{" "}
+              {t("totalPagesCount", { count: pageCount })}
             </span>
           </div>
         </div>
@@ -216,10 +272,16 @@ export function PdfToImagesWorkspace({
           <Button
             variant="secondary"
             size="sm"
-            onClick={selectedPages.size === pageCount ? handleDeselectAll : handleSelectAll}
+            onClick={
+              selectedPages.size === pageCount
+                ? handleDeselectAll
+                : handleSelectAll
+            }
             disabled={isInitializing || isExporting}
           >
-            {selectedPages.size === pageCount ? t("actions.deselectAll") : t("actions.selectAll")}
+            {selectedPages.size === pageCount
+              ? t("actions.deselectAll")
+              : t("actions.selectAll")}
           </Button>
 
           <Button
@@ -239,7 +301,11 @@ export function PdfToImagesWorkspace({
             disabled={isExporting || isInitializing || selectedPages.size === 0}
             className="bg-red-600 hover:bg-red-700 text-white dark:bg-red-600 dark:hover:bg-red-700"
           >
-            {isExporting ? <AnimatingSpinner size={14} /> : <Download size={14} />}
+            {isExporting ? (
+              <AnimatingSpinner size={14} />
+            ) : (
+              <Download size={14} />
+            )}
             {t("actions.exportImages", { count: selectedPages.size })}
           </Button>
         </div>
@@ -265,12 +331,14 @@ export function PdfToImagesWorkspace({
       {isInitializing && thumbnails.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-red-500">
           <AnimatingSpinner size={32} />
-          <span className="mt-3 text-xs text-slate-500">{t("progress.readingPdf")}</span>
+          <span className="mt-3 text-xs text-slate-500">
+            {t("progress.readingPdf")}
+          </span>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {thumbnails.map((thumb) => {
-            const isSelected = selectedPages.has(thumb.pageNumber)
+            const isSelected = selectedPages.has(thumb.pageNumber);
 
             return (
               <div
@@ -314,10 +382,10 @@ export function PdfToImagesWorkspace({
                   )}
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
     </div>
-  )
+  );
 }

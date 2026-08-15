@@ -3,13 +3,13 @@
 import React from "react";
 import { useTranslation } from "@imify/i18n";
 import {
-  AccordionCard,
   SelectInput,
-  SliderInput,
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
 } from "@imify/ui";
 import { ResizeCard } from "../processor/resize-card";
+import { QuickExportSelector } from "../shared/quick-export-selector";
+import { PDF_STUDIO_NAMING_CONFIG, type QuickExportFormat } from "@imify/core";
 import type {
   ImagesToPdfConfig,
   PdfStudioMode,
@@ -17,6 +17,10 @@ import type {
 } from "./types";
 import type {
   PaperSize,
+  ResizeApplyTo,
+  ResizeAspectMode,
+  ResizeFitMode,
+  ResizeMode,
   ResizeResamplingAlgorithm,
   SupportedDPI,
 } from "@imify/core/types";
@@ -27,6 +31,7 @@ interface PdfStudioSidebarPanelProps {
   onImagesToPdfConfigChange: (config: ImagesToPdfConfig) => void;
   pdfToImagesConfig: PdfToImagesConfig;
   onPdfToImagesConfigChange: (config: PdfToImagesConfig) => void;
+  pdfFileName?: string;
   enableWideSidebarGrid?: boolean;
 }
 
@@ -36,7 +41,7 @@ export function PdfStudioSidebarPanel({
   onImagesToPdfConfigChange,
   pdfToImagesConfig,
   onPdfToImagesConfigChange,
-  enableWideSidebarGrid = false,
+  pdfFileName,
 }: PdfStudioSidebarPanelProps) {
   const { t } = useTranslation("pdfStudio");
 
@@ -46,29 +51,78 @@ export function PdfStudioSidebarPanel({
     { value: "300", label: "300 DPI (High Quality / Print)" },
   ];
 
-  const formatOptions = [
-    { value: "png", label: "PNG (Lossless)" },
-    { value: "jpg", label: "JPEG (Standard)" },
-    { value: "webp", label: "WebP (Modern / Compact)" },
-  ];
-
   const sidebarItems: WorkspaceConfigSidebarItem[] = [];
 
   if (mode === "images-to-pdf") {
     sidebarItems.push({
-      id: "paper-settings",
+      id: "resize-settings",
       label: t("settings.paperSizeTitle"),
       content: (
         <ResizeCard
           resizeMode={imagesToPdfConfig.resizeMode}
-          availableModes={["inherit", "paper_size"]}
+          resizeValue={imagesToPdfConfig.resizeValue}
+          resizeApplyTo={imagesToPdfConfig.resizeApplyTo}
+          resizeWidth={imagesToPdfConfig.resizeWidth}
+          resizeHeight={imagesToPdfConfig.resizeHeight}
+          resizeAspectMode={imagesToPdfConfig.resizeAspectMode}
+          resizeAspectRatio={imagesToPdfConfig.resizeAspectRatio}
+          resizeFitMode={imagesToPdfConfig.resizeFitMode}
+          resizeContainBackground={imagesToPdfConfig.resizeContainBackground}
+          resamplingAlgorithm={imagesToPdfConfig.resamplingAlgorithm}
           paperSize={imagesToPdfConfig.paperSize}
           dpi={imagesToPdfConfig.dpi}
-          resamplingAlgorithm={imagesToPdfConfig.resamplingAlgorithm}
-          onResizeModeChange={(mode) =>
+          onResizeModeChange={(mode: string) =>
             onImagesToPdfConfigChange({
               ...imagesToPdfConfig,
-              resizeMode: mode === "paper_size" ? "paper_size" : "inherit",
+              resizeMode: mode as ResizeMode,
+            })
+          }
+          onResizeValueChange={(value: number) =>
+            onImagesToPdfConfigChange({
+              ...imagesToPdfConfig,
+              resizeValue: value,
+            })
+          }
+          onResizeApplyToChange={(applyTo: ResizeApplyTo) =>
+            onImagesToPdfConfigChange({
+              ...imagesToPdfConfig,
+              resizeApplyTo: applyTo,
+            })
+          }
+          onResizeWidthChange={(width: number) =>
+            onImagesToPdfConfigChange({
+              ...imagesToPdfConfig,
+              resizeWidth: width,
+            })
+          }
+          onResizeHeightChange={(height: number) =>
+            onImagesToPdfConfigChange({
+              ...imagesToPdfConfig,
+              resizeHeight: height,
+            })
+          }
+          onResizeAspectModeChange={(aspectMode: string) =>
+            onImagesToPdfConfigChange({
+              ...imagesToPdfConfig,
+              resizeAspectMode: aspectMode as ResizeAspectMode,
+            })
+          }
+          onResizeAspectRatioChange={(aspectRatio: string | number) =>
+            onImagesToPdfConfigChange({
+              ...imagesToPdfConfig,
+              resizeAspectRatio: String(aspectRatio),
+            })
+          }
+          onResizeFitModeChange={(fitMode: string) =>
+            onImagesToPdfConfigChange({
+              ...imagesToPdfConfig,
+              resizeFitMode: fitMode as ResizeFitMode,
+            })
+          }
+          onResizeContainBackgroundChange={(color: string) =>
+            onImagesToPdfConfigChange({
+              ...imagesToPdfConfig,
+              resizeContainBackground: color,
             })
           }
           onPaperSizeChange={(size) =>
@@ -97,11 +151,39 @@ export function PdfStudioSidebarPanel({
     });
   } else {
     sidebarItems.push({
-      id: "export-image-settings",
+      id: "export-settings",
       label: t("settings.exportSettingsTitle"),
       content: (
-        <AccordionCard label={t("settings.exportSettingsTitle")} alwaysOpen>
-          <div className="flex flex-col gap-3">
+        <QuickExportSelector
+          format={pdfToImagesConfig.format}
+          onFormatChange={(format: QuickExportFormat) =>
+            onPdfToImagesConfigChange({
+              ...pdfToImagesConfig,
+              format,
+            })
+          }
+          fileNamePattern={pdfToImagesConfig.fileNamePattern}
+          onFileNamePatternChange={(pattern: string) =>
+            onPdfToImagesConfigChange({
+              ...pdfToImagesConfig,
+              fileNamePattern: pattern,
+            })
+          }
+          namingConfig={{
+            ...PDF_STUDIO_NAMING_CONFIG,
+            defaultOriginalName:
+              pdfFileName?.replace(/\.[^.]+$/, "") ||
+              PDF_STUDIO_NAMING_CONFIG.defaultOriginalName,
+          }}
+          previewSample={{
+            originalFileName: pdfFileName || "document.pdf",
+            index: 1,
+            totalFiles: 10,
+          }}
+          theme="sky"
+          defaultOpen
+        >
+          <div className="pt-2">
             <SelectInput
               label={t("settings.dpi")}
               value={String(pdfToImagesConfig.dpi)}
@@ -113,37 +195,8 @@ export function PdfStudioSidebarPanel({
                 })
               }
             />
-
-            <SelectInput
-              label={t("settings.outputFormat")}
-              value={pdfToImagesConfig.format}
-              options={formatOptions}
-              onChange={(v) =>
-                onPdfToImagesConfigChange({
-                  ...pdfToImagesConfig,
-                  format: v as any,
-                })
-              }
-            />
-
-            {pdfToImagesConfig.format !== "png" && (
-              <SliderInput
-                label={t("settings.quality")}
-                value={pdfToImagesConfig.quality}
-                min={10}
-                max={100}
-                step={1}
-                suffix="%"
-                onChange={(q) =>
-                  onPdfToImagesConfigChange({
-                    ...pdfToImagesConfig,
-                    quality: q,
-                  })
-                }
-              />
-            )}
           </div>
-        </AccordionCard>
+        </QuickExportSelector>
       ),
     });
   }

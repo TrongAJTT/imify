@@ -107,15 +107,48 @@ export function ImagesToPdfWorkspace({
           message: t("progress.rendering", { current: i + 1, total }),
         });
 
-        const resizeConfig: ResizeConfig =
-          config.resizeMode === "paper_size"
-            ? {
-                mode: "paper_size",
-                value: config.paperSize,
-                dpi: config.dpi,
-                resamplingAlgorithm: config.resamplingAlgorithm,
-              }
-            : { mode: "inherit" };
+        const resizeConfig: ResizeConfig = (() => {
+          if (config.resizeMode === "paper_size") {
+            return {
+              mode: "paper_size",
+              value: config.paperSize,
+              dpi: config.dpi,
+              resamplingAlgorithm: config.resamplingAlgorithm,
+            };
+          }
+          if (
+            config.resizeMode === "fit_value" ||
+            config.resizeMode === "zoom_min" ||
+            config.resizeMode === "zoom_max"
+          ) {
+            return {
+              mode: config.resizeMode,
+              value: config.resizeValue,
+              applyTo: config.resizeApplyTo,
+              resamplingAlgorithm: config.resamplingAlgorithm,
+            };
+          }
+          if (config.resizeMode === "scale") {
+            return {
+              mode: "scale",
+              value: config.resizeValue,
+              resamplingAlgorithm: config.resamplingAlgorithm,
+            };
+          }
+          if (config.resizeMode === "set_size") {
+            return {
+              mode: "set_size",
+              width: config.resizeWidth,
+              height: config.resizeHeight,
+              fitMode: config.resizeFitMode,
+              aspectMode: config.resizeAspectMode,
+              aspectRatio: config.resizeAspectRatio,
+              containBackground: config.resizeContainBackground,
+              resamplingAlgorithm: config.resamplingAlgorithm,
+            };
+          }
+          return { mode: "inherit" };
+        })();
 
         const prepared = await prepareImageForPdf({
           sourceBlob: item.file,

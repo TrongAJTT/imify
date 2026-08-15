@@ -51,3 +51,10 @@ export const PATTERN_NAMING_CONFIG: ToolExportNamingConfig = {
   defaultOriginalName: "imify-pattern",
   defaultPattern: "imify-pattern-[Time]",
 };
+
+export const PDF_STUDIO_NAMING_CONFIG: ToolExportNamingConfig = {
+  toolId: "pdf-studio",
+  defaultOriginalName: "document",
+  defaultPattern: "[OriginalName]_page_[Index]",
+};
+
