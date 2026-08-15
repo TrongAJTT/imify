@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import {
   closestCenter,
   DndContext,
@@ -16,7 +16,9 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { Download, Images, Plus, Trash2 } from "lucide-react";
-import { Button, AnimatingSpinner } from "@imify/ui";
+import { Button, AnimatingSpinner, ToastContainer } from "@imify/ui";
+import { useConversionToasts } from "@imify/core/hooks/use-toast";
+import type { ConversionProgressPayload } from "@imify/core/types";
 import { useTranslation } from "@imify/i18n";
 import { formatFileSize } from "../inspector/format-utils";
 import {
@@ -53,10 +55,39 @@ export function ImagesToPdfWorkspace({
   const { t } = useTranslation("pdfStudio");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [exportProgress, setExportProgress] = useState<{
-    percent: number;
-    message: string;
-  } | null>(null);
+  const [exportToastPayload, setExportToastPayload] =
+    useState<ConversionProgressPayload | null>(null);
+  const exportToastHideTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const conversionToasts = useConversionToasts([exportToastPayload]);
+
+  const clearToastHideTimer = useCallback(() => {
+    if (exportToastHideTimerRef.current) {
+      clearTimeout(exportToastHideTimerRef.current);
+      exportToastHideTimerRef.current = null;
+    }
+  }, []);
+
+  const pushExportToast = useCallback(
+    (payload: ConversionProgressPayload) => {
+      clearToastHideTimer();
+      setExportToastPayload(payload);
+    },
+    [clearToastHideTimer],
+  );
+
+  const scheduleToastHide = useCallback(
+    (toastId: string, delayMs: number) => {
+      clearToastHideTimer();
+      exportToastHideTimerRef.current = setTimeout(() => {
+        setExportToastPayload((current) =>
+          current?.id === toastId ? null : current,
+        );
+        exportToastHideTimerRef.current = null;
+      }, delayMs);
+    },
+    [clearToastHideTimer],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -93,8 +124,17 @@ export function ImagesToPdfWorkspace({
   const handleExportPdf = async () => {
     if (items.length === 0 || isExporting) return;
 
+    const toastId = `export-pdf-${Date.now()}`;
     setIsExporting(true);
-    setExportProgress({ percent: 10, message: t("progress.building") });
+
+    pushExportToast({
+      id: toastId,
+      fileName: "imify_document.pdf",
+      targetFormat: "pdf",
+      status: "processing",
+      percent: 10,
+      message: t("progress.building"),
+    });
 
     try {
       const pdfDoc = await PDFDocument.create();
@@ -103,7 +143,11 @@ export function ImagesToPdfWorkspace({
       for (let i = 0; i < total; i += 1) {
         const item = items[i]!;
         const pct = Math.min(88, 10 + Math.round(((i + 1) / total) * 78));
-        setExportProgress({
+        pushExportToast({
+          id: toastId,
+          fileName: "imify_document.pdf",
+          targetFormat: "pdf",
+          status: "processing",
           percent: pct,
           message: t("progress.rendering", { current: i + 1, total }),
         });
@@ -159,7 +203,15 @@ export function ImagesToPdfWorkspace({
         await embedPreparedImageToDoc(pdfDoc, prepared, resizeConfig);
       }
 
-      setExportProgress({ percent: 94, message: t("progress.saving") });
+      pushExportToast({
+        id: toastId,
+        fileName: "imify_document.pdf",
+        targetFormat: "pdf",
+        status: "processing",
+        percent: 94,
+        message: t("progress.saving"),
+      });
+
       const pdfBytes = await pdfDoc.save();
       const pdfBlob = new Blob([pdfBytes as unknown as BlobPart], {
         type: "application/pdf",
@@ -171,11 +223,29 @@ export function ImagesToPdfWorkspace({
       a.download = "imify_document.pdf";
       a.click();
       URL.revokeObjectURL(url);
+
+      pushExportToast({
+        id: toastId,
+        fileName: "imify_document.pdf",
+        targetFormat: "pdf",
+        status: "success",
+        percent: 100,
+        message: t("progress.saving"),
+      });
+      scheduleToastHide(toastId, 2500);
     } catch (err) {
       console.error("Failed to generate PDF:", err);
+      pushExportToast({
+        id: toastId,
+        fileName: "imify_document.pdf",
+        targetFormat: "pdf",
+        status: "error",
+        percent: 100,
+        message: "Failed to generate PDF document",
+      });
+      scheduleToastHide(toastId, 4000);
     } finally {
       setIsExporting(false);
-      setExportProgress(null);
     }
   };
 
@@ -249,22 +319,6 @@ export function ImagesToPdfWorkspace({
         </div>
       </div>
 
-      {/* Progress Bar when exporting */}
-      {isExporting && exportProgress && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-700 dark:text-slate-300">
-            <span>{exportProgress.message}</span>
-            <span>{exportProgress.percent}%</span>
-          </div>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-            <div
-              className="h-full bg-red-500 transition-all duration-200"
-              style={{ width: `${exportProgress.percent}%` }}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Grid of Sortable Pages using MediaQueueCard */}
       <DndContext
         sensors={sensors}
@@ -291,6 +345,11 @@ export function ImagesToPdfWorkspace({
           </div>
         </SortableContext>
       </DndContext>
+
+      <ToastContainer
+        toasts={conversionToasts}
+        onRemove={() => setExportToastPayload(null)}
+      />
     </div>
   );
 }

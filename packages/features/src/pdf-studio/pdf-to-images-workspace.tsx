@@ -1,19 +1,27 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Check, Download, FileOutput, Trash2 } from "lucide-react";
-import { Button, AnimatingSpinner } from "@imify/ui";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { Check, FileOutput, Trash2 } from "lucide-react";
+import { Button, AnimatingSpinner, ToastContainer } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import { formatFileSize } from "../inspector/format-utils";
 import type { PdfToImagesConfig } from "./types";
 import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
-import { PDF_STUDIO_NAMING_CONFIG } from "@imify/core";
+import { APP_CONFIG, PDF_STUDIO_NAMING_CONFIG } from "@imify/core";
 import {
   getPdfInfo,
   renderPdfPageToBlob,
   renderPdfPageToCanvas,
 } from "@imify/engine/converter/pdf-reader";
 import { zipSync } from "fflate";
+import {
+  ExportSplitButton,
+  type ExportSplitMode,
+} from "../shared/export-split-button";
+import { BatchDownloadConfirmDialog } from "../shared/download-confirm-dialog";
+import { downloadWithFilename, sleep } from "../processor/batch/utils";
+import { useConversionToasts } from "@imify/core/hooks/use-toast";
+import type { ConversionProgressPayload } from "@imify/core/types";
 
 interface PdfToImagesWorkspaceProps {
   pdfFile: File;
@@ -38,10 +46,43 @@ export function PdfToImagesWorkspace({
   const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
-  const [exportProgress, setExportProgress] = useState<{
-    percent: number;
-    message: string;
-  } | null>(null);
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
+  const [pendingExportMode, setPendingExportMode] =
+    useState<ExportSplitMode | null>(null);
+
+  const [exportToastPayload, setExportToastPayload] =
+    useState<ConversionProgressPayload | null>(null);
+  const exportToastHideTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const conversionToasts = useConversionToasts([exportToastPayload]);
+
+  const clearToastHideTimer = useCallback(() => {
+    if (exportToastHideTimerRef.current) {
+      clearTimeout(exportToastHideTimerRef.current);
+      exportToastHideTimerRef.current = null;
+    }
+  }, []);
+
+  const pushExportToast = useCallback(
+    (payload: ConversionProgressPayload) => {
+      clearToastHideTimer();
+      setExportToastPayload(payload);
+    },
+    [clearToastHideTimer],
+  );
+
+  const scheduleToastHide = useCallback(
+    (toastId: string, delayMs: number) => {
+      clearToastHideTimer();
+      exportToastHideTimerRef.current = setTimeout(() => {
+        setExportToastPayload((current) =>
+          current?.id === toastId ? null : current,
+        );
+        exportToastHideTimerRef.current = null;
+      }, delayMs);
+    },
+    [clearToastHideTimer],
+  );
 
   // 1. Initial document scan & thumbnail generation
   useEffect(() => {
@@ -144,22 +185,37 @@ export function PdfToImagesWorkspace({
     return { format: "png" as const, quality: 1.0, ext: "png" };
   };
 
-  const handleExportImages = async () => {
+  const executeExport = async (
+    mode: "zip" | "one_by_one",
+  ) => {
     const pagesToExport = Array.from(selectedPages).sort((a, b) => a - b);
     if (pagesToExport.length === 0 || isExporting) return;
 
+    const toastId = `export-pdf-images-${Date.now()}`;
     setIsExporting(true);
-    setExportProgress({ percent: 5, message: t("progress.startExtracting") });
+
+    const { format: targetFormat, quality, ext } = getFormatOptions();
+    const pattern =
+      config.fileNamePattern || PDF_STUDIO_NAMING_CONFIG.defaultPattern;
+
+    pushExportToast({
+      id: toastId,
+      fileName: pdfFile.name,
+      targetFormat: ext as any,
+      status: "processing",
+      percent: 5,
+      message: t("progress.startExtracting"),
+    });
 
     try {
-      const { format: targetFormat, quality, ext } = getFormatOptions();
-      const pattern =
-        config.fileNamePattern || PDF_STUDIO_NAMING_CONFIG.defaultPattern;
-
       // If only 1 page selected, download directly as single image file
       if (pagesToExport.length === 1) {
         const pageNum = pagesToExport[0]!;
-        setExportProgress({
+        pushExportToast({
+          id: toastId,
+          fileName: pdfFile.name,
+          targetFormat: ext as any,
+          status: "processing",
           percent: 50,
           message: t("progress.rendering", { current: 1, total: 1 }),
         });
@@ -185,12 +241,74 @@ export function PdfToImagesWorkspace({
           ? smartName
           : `${smartName}.${ext}`;
 
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = finalFileName;
-        a.click();
-        URL.revokeObjectURL(url);
+        await downloadWithFilename(blob, finalFileName);
+
+        pushExportToast({
+          id: toastId,
+          fileName: pdfFile.name,
+          targetFormat: ext as any,
+          status: "success",
+          percent: 100,
+          message: t("progress.exportComplete", {
+            defaultValue: "Xuất hình ảnh thành công!",
+          }),
+        });
+        scheduleToastHide(toastId, 2500);
+        return;
+      }
+
+      // One by one sequential download
+      if (mode === "one_by_one") {
+        const total = pagesToExport.length;
+
+        for (let i = 0; i < total; i += 1) {
+          const pageNum = pagesToExport[i]!;
+          const pct = Math.min(95, 10 + Math.round(((i + 1) / total) * 85));
+          pushExportToast({
+            id: toastId,
+            fileName: pdfFile.name,
+            targetFormat: ext as any,
+            status: "processing",
+            percent: pct,
+            message: `${t("progress.rendering", { current: i + 1, total })}`,
+          });
+
+          const blob = await renderPdfPageToBlob(pdfFile, {
+            pageNumber: pageNum,
+            dpi: config.dpi,
+            format: targetFormat,
+            quality,
+          });
+
+          const smartName = buildSmartOutputFileName({
+            pattern,
+            originalFileName: pdfFile.name,
+            outputExtension: ext,
+            index: pageNum,
+            totalFiles: pageCount,
+            dimensions: { width: 0, height: 0 },
+            now: new Date(),
+          });
+
+          const finalFileName = smartName.endsWith(`.${ext}`)
+            ? smartName
+            : `${smartName}.${ext}`;
+
+          await downloadWithFilename(blob, finalFileName);
+          await sleep(120);
+        }
+
+        pushExportToast({
+          id: toastId,
+          fileName: pdfFile.name,
+          targetFormat: ext as any,
+          status: "success",
+          percent: 100,
+          message: t("progress.exportComplete", {
+            defaultValue: "Xuất hình ảnh thành công!",
+          }),
+        });
+        scheduleToastHide(toastId, 2500);
         return;
       }
 
@@ -201,7 +319,11 @@ export function PdfToImagesWorkspace({
       for (let i = 0; i < total; i += 1) {
         const pageNum = pagesToExport[i]!;
         const pct = Math.min(88, 10 + Math.round(((i + 1) / total) * 78));
-        setExportProgress({
+        pushExportToast({
+          id: toastId,
+          fileName: pdfFile.name,
+          targetFormat: ext as any,
+          status: "processing",
           percent: pct,
           message: t("progress.rendering", { current: i + 1, total }),
         });
@@ -230,25 +352,64 @@ export function PdfToImagesWorkspace({
         archive[finalFileName] = buffer;
       }
 
-      setExportProgress({ percent: 92, message: t("progress.packaging") });
+      pushExportToast({
+        id: toastId,
+        fileName: pdfFile.name,
+        targetFormat: ext as any,
+        status: "processing",
+        percent: 92,
+        message: t("progress.packaging"),
+      });
+
       const zipBytes = zipSync(archive, { level: 6 });
       const zipBlob = new Blob([zipBytes as unknown as BlobPart], {
         type: "application/zip",
       });
 
       const baseName = pdfFile.name.replace(/\.[^.]+$/, "") || "document";
-      const url = URL.createObjectURL(zipBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${baseName}_images.zip`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await downloadWithFilename(zipBlob, `${baseName}_images.zip`);
+
+      pushExportToast({
+        id: toastId,
+        fileName: pdfFile.name,
+        targetFormat: ext as any,
+        status: "success",
+        percent: 100,
+        message: t("progress.exportComplete", {
+          defaultValue: "Xuất hình ảnh thành công!",
+        }),
+      });
+      scheduleToastHide(toastId, 2500);
     } catch (err) {
       console.error("Failed to export images from PDF:", err);
+      pushExportToast({
+        id: toastId,
+        fileName: pdfFile.name,
+        targetFormat: ext as any,
+        status: "error",
+        percent: 100,
+        message: "Failed to export images from PDF",
+      });
+      scheduleToastHide(toastId, 4000);
     } finally {
       setIsExporting(false);
-      setExportProgress(null);
     }
+  };
+
+  const handleExportModeSelect = (mode: ExportSplitMode) => {
+    const pagesToExportCount = selectedPages.size;
+    if (pagesToExportCount === 0 || isExporting) return;
+
+    if (
+      mode === "one_by_one" &&
+      pagesToExportCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD
+    ) {
+      setPendingExportMode(mode);
+      setShowDownloadConfirm(true);
+      return;
+    }
+
+    void executeExport(mode === "one_by_one" ? "one_by_one" : "zip");
   };
 
   return (
@@ -294,38 +455,15 @@ export function PdfToImagesWorkspace({
             {t("actions.clear")}
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleExportImages}
-            disabled={isExporting || isInitializing || selectedPages.size === 0}
-            className="bg-red-600 hover:bg-red-700 text-white dark:bg-red-600 dark:hover:bg-red-700"
-          >
-            {isExporting ? (
-              <AnimatingSpinner size={14} />
-            ) : (
-              <Download size={14} />
-            )}
-            {t("actions.exportImages", { count: selectedPages.size })}
-          </Button>
+          <ExportSplitButton
+            onExport={handleExportModeSelect}
+            isLoading={isExporting}
+            primaryMode="zip"
+            oneByOneCount={selectedPages.size}
+            showPdfOptions={false}
+          />
         </div>
       </div>
-
-      {/* Progress Bar */}
-      {isExporting && exportProgress && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-700 dark:text-slate-300">
-            <span>{exportProgress.message}</span>
-            <span>{exportProgress.percent}%</span>
-          </div>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-            <div
-              className="h-full bg-red-500 transition-all duration-200"
-              style={{ width: `${exportProgress.percent}%` }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Grid of Pages */}
       {isInitializing && thumbnails.length === 0 ? (
@@ -386,6 +524,26 @@ export function PdfToImagesWorkspace({
           })}
         </div>
       )}
+
+      {/* Multi-download confirmation dialog */}
+      <BatchDownloadConfirmDialog
+        isOpen={showDownloadConfirm}
+        count={selectedPages.size}
+        onClose={() => {
+          setShowDownloadConfirm(false);
+          setPendingExportMode(null);
+        }}
+        onConfirm={() => {
+          setShowDownloadConfirm(false);
+          setPendingExportMode(null);
+          void executeExport("one_by_one");
+        }}
+      />
+
+      <ToastContainer
+        toasts={conversionToasts}
+        onRemove={() => setExportToastPayload(null)}
+      />
     </div>
   );
 }
