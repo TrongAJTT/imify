@@ -38,7 +38,7 @@ import {
   type ExportSplitMode,
 } from "../shared/export-split-button";
 import { PaginationBar } from "../shared/pagination-bar";
-import { confirmBatchDownload } from "@imify/stores";
+import { confirmBatchDownload, promptRenameInput } from "@imify/stores";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
@@ -273,7 +273,10 @@ export function PdfToImagesWorkspace({
     return { format: "png" as const, quality: 1.0, ext: "png" };
   };
 
-  const executeExport = async (mode: "zip" | "one_by_one") => {
+  const executeExport = async (
+    mode: "zip" | "one_by_one",
+    customInput?: string,
+  ) => {
     const pagesToExport = Array.from(selectedPages).sort((a, b) => a - b);
     if (pagesToExport.length === 0 || isExporting) return;
 
@@ -321,6 +324,7 @@ export function PdfToImagesWorkspace({
           totalFiles: pageCount,
           dimensions: { width: 0, height: 0 },
           now: new Date(),
+          input: customInput,
         });
 
         const finalFileName = smartName.endsWith(`.${ext}`)
@@ -374,6 +378,7 @@ export function PdfToImagesWorkspace({
             totalFiles: pageCount,
             dimensions: { width: 0, height: 0 },
             now: new Date(),
+            input: customInput,
           });
 
           const finalFileName = smartName.endsWith(`.${ext}`)
@@ -429,6 +434,7 @@ export function PdfToImagesWorkspace({
           totalFiles: pageCount,
           dimensions: { width: 0, height: 0 },
           now: new Date(),
+          input: customInput,
         });
 
         const finalFileName = smartName.endsWith(`.${ext}`)
@@ -491,7 +497,15 @@ export function PdfToImagesWorkspace({
       if (!confirmed) return;
     }
 
-    void executeExport(mode === "one_by_one" ? "one_by_one" : "zip");
+    const pattern =
+      config.fileNamePattern || PDF_STUDIO_NAMING_CONFIG.defaultPattern;
+    const customInput = await promptRenameInput(pattern);
+    if (customInput === null) return;
+
+    void executeExport(
+      mode === "one_by_one" ? "one_by_one" : "zip",
+      customInput,
+    );
   };
 
   // Slice visible items for current page

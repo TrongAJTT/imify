@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react"
 import { toUserFacingConversionError } from "@imify/core/error-utils"
 import type { ConversionProgressPayload, FormatConfig } from "@imify/core/types"
+import { confirmOomWarning } from "@imify/stores"
 import { applyExifPolicy } from "@imify/engine/converter/exif"
 import { convertImage } from "@imify/engine/converter"
 import { setConversionWorkerPoolSize, terminateConversionWorkerPool } from "@imify/engine/converter/conversion-worker-pool"
@@ -16,8 +17,6 @@ function toOutputFilenameWithExtension(nameOrBase: string, extension: string): s
 function toWebKitZipFilename(nameOrBase: string): string { void nameOrBase; return "favicon_kit.zip" }
 function isWorkerConvertibleFormat(format: FormatConfig["format"]): format is Exclude<FormatConfig["format"], "pdf"> { return format !== "pdf" }
 
-export interface OomWarningState { isOpen: boolean; totalSize: string; recommendedSize: string; mode: BatchRunMode }
-
 export function useBatchExecution({
   queue,
   setQueue,
@@ -25,9 +24,7 @@ export function useBatchExecution({
   concurrency,
   stripExif,
   fileNamePattern,
-  watermark,
-  skipOomWarning,
-  onPersistSkipOomWarning
+  watermark
 }: {
   queue: BatchQueueItem[]
   setQueue: Dispatch<SetStateAction<BatchQueueItem[]>>
@@ -36,15 +33,12 @@ export function useBatchExecution({
   stripExif: boolean
   fileNamePattern: string
   watermark: BatchWatermarkConfig
-  skipOomWarning: boolean
-  onPersistSkipOomWarning: () => void
 }) {
   const [isRunning, setIsRunning] = useState(false)
   const [cancelRequested, setCancelRequested] = useState(false)
   const [paused, setPaused] = useState(false)
   const [summary, setSummary] = useState<BatchSummary | null>(null)
   const [batchToastPayload, setBatchToastPayload] = useState<ConversionProgressPayload | null>(null)
-  const [oomWarning, setOomWarning] = useState<OomWarningState | null>(null)
   const cancelRef = useRef(false)
   const pauseRef = useRef(false)
   useEffect(() => { pauseRef.current = paused }, [paused])
@@ -160,43 +154,16 @@ export function useBatchExecution({
 
     if (!itemsToProcess.length) return
     const selectedBytes = itemsToProcess.reduce((sum, item) => sum + item.file.size, 0)
-    if (selectedBytes > MAX_TOTAL_QUEUE_BYTES && !skipOomWarning) {
-      setOomWarning({ isOpen: true, totalSize: String(toMb(selectedBytes)), recommendedSize: String(toMb(MAX_TOTAL_QUEUE_BYTES)), mode })
-      return
+    if (selectedBytes > MAX_TOTAL_QUEUE_BYTES) {
+      const confirmed = await confirmOomWarning(toMb(selectedBytes), String(toMb(MAX_TOTAL_QUEUE_BYTES)))
+      if (!confirmed) return
     }
     await startBatchExecution(itemsToProcess, mode, inputValue)
   }
 
   const requestCancel = () => { setCancelRequested(true); cancelRef.current = true; if (isWorkerConvertibleFormat(config.format)) terminateConversionWorkerPool(config.format) }
   const togglePause = () => setPaused((current) => !current)
-  const closeOomWarning = () => setOomWarning(null)
-  const confirmOomWarning = async (dontShowAgain: boolean, inputValue?: string) => {
-    if (!oomWarning) return
-    if (dontShowAgain) onPersistSkipOomWarning()
-    const mode = oomWarning.mode
-    setOomWarning(null)
-    
-    let itemsToProcess: BatchQueueItem[] = []
-    if (mode === "failed") {
-      itemsToProcess = queue.filter((item) => item.status === "error")
-    } else if (mode === "all_retry") {
-      const resetItems = queue.map((item) => ({
-        ...item,
-        status: "queued" as const,
-        percent: 0,
-        message: undefined,
-        outputBlob: undefined,
-        outputFileName: undefined
-      }))
-      setQueue(resetItems)
-      itemsToProcess = resetItems
-    } else {
-      itemsToProcess = queue.filter((item) => item.status === "queued" || item.status === "error")
-    }
-
-    await startBatchExecution(itemsToProcess, mode, inputValue)
-  }
   const clearSummary = () => setSummary(null)
   const clearBatchToast = (toastId?: string) => setBatchToastPayload((current) => (!current || (toastId && current.id !== toastId) ? current : null))
-  return { isRunning, paused, cancelRequested, summary, batchToastPayload, clearBatchToast, oomWarning, runBatch, requestCancel, togglePause, closeOomWarning, confirmOomWarning, clearSummary }
+  return { isRunning, paused, cancelRequested, summary, batchToastPayload, clearBatchToast, runBatch, requestCancel, togglePause, clearSummary }
 }

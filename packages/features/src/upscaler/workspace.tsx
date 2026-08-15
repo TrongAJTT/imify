@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, ToastContainer, useRenameInputPrompt } from "@imify/ui";
+import { Button, ToastContainer } from "@imify/ui";
 import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
-import { useImageUpscalerStore } from "@imify/stores";
+import { useImageUpscalerStore, promptRenameInput } from "@imify/stores";
 import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from "./models";
 import { ModelDownloadDialog } from "./model-download-dialog";
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
@@ -62,7 +62,6 @@ export function UpscalerWorkspace({
   const [isEncodingPreview, setIsEncodingPreview] = useState(false);
 
   const { exportFormat, fileNamePattern } = useImageUpscalerStore();
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
 
   const { toasts, show, hide } = useToast();
   const conversionToasts = useConversionToasts([progressPayload]);
@@ -166,7 +165,8 @@ export function UpscalerWorkspace({
 
         if (isAborted) return;
 
-        const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportFormat);
+        const { targetFormat, quality, codecOptions } =
+          mapQuickExportToEngineConfig(exportFormat);
 
         if (targetFormat === "webp" || targetFormat === "jpg") {
           const mime = targetFormat === "webp" ? "image/webp" : "image/jpeg";
@@ -240,7 +240,8 @@ export function UpscalerWorkspace({
     canvas: HTMLCanvasElement,
     fileName: string,
   ) => {
-    const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportFormat);
+    const { targetFormat, quality, codecOptions } =
+      mapQuickExportToEngineConfig(exportFormat);
     if (
       targetFormat === "webp" ||
       targetFormat === "jpg" ||
@@ -285,6 +286,9 @@ export function UpscalerWorkspace({
   const handleDownload = async () => {
     if (!resultImageData) return;
 
+    const inputValue = await promptRenameInput(fileNamePattern);
+    if (inputValue === null) return;
+
     const { targetFormat } = mapQuickExportToEngineConfig(exportFormat);
     setIsDownloading(true);
     const toastId = show({
@@ -308,86 +312,27 @@ export function UpscalerWorkspace({
 
       const extension = targetFormat === "jpg" ? "jpg" : targetFormat;
 
-      checkAndPrompt(
-        fileNamePattern,
-        async (inputValue) => {
-          try {
-            const fileName = buildSmartOutputFileName({
-              pattern: fileNamePattern,
-              originalFileName: sourceFile ? sourceFile.name : "result",
-              outputExtension: extension,
-              index: 1,
-              totalFiles: 1,
-              dimensions: {
-                width: resultImageData.width,
-                height: resultImageData.height,
-              },
-              now: new Date(),
-              input: inputValue,
-            });
-
-            await executeDownloadBlobCreationAndSave(canvas, fileName);
-            hide(toastId);
-            show({
-              title: t("workspace.toastDownloadReadyTitle"),
-              message: t("workspace.toastDownloadReadyMessage"),
-              type: "success",
-            });
-          } catch (error) {
-            console.error("Download failed:", error);
-            hide(toastId);
-            show({
-              title: t("workspace.toastDownloadFailedTitle"),
-              message:
-                error instanceof Error
-                  ? error.message
-                  : t("workspace.toastDownloadFailedMessage"),
-              type: "error",
-              duration: 5000,
-            });
-          } finally {
-            setIsDownloading(false);
-          }
+      const fileName = buildSmartOutputFileName({
+        pattern: fileNamePattern,
+        originalFileName: sourceFile ? sourceFile.name : "result",
+        outputExtension: extension,
+        index: 1,
+        totalFiles: 1,
+        dimensions: {
+          width: resultImageData.width,
+          height: resultImageData.height,
         },
-        async () => {
-          try {
-            const fileName = buildSmartOutputFileName({
-              pattern: fileNamePattern,
-              originalFileName: sourceFile ? sourceFile.name : "result",
-              outputExtension: extension,
-              index: 1,
-              totalFiles: 1,
-              dimensions: {
-                width: resultImageData.width,
-                height: resultImageData.height,
-              },
-              now: new Date(),
-            });
+        now: new Date(),
+        input: inputValue,
+      });
 
-            await executeDownloadBlobCreationAndSave(canvas, fileName);
-            hide(toastId);
-            show({
-              title: t("workspace.toastDownloadReadyTitle"),
-              message: t("workspace.toastDownloadReadyMessage"),
-              type: "success",
-            });
-          } catch (error) {
-            console.error("Download failed:", error);
-            hide(toastId);
-            show({
-              title: t("workspace.toastDownloadFailedTitle"),
-              message:
-                error instanceof Error
-                  ? error.message
-                  : t("workspace.toastDownloadFailedMessage"),
-              type: "error",
-              duration: 5000,
-            });
-          } finally {
-            setIsDownloading(false);
-          }
-        },
-      );
+      await executeDownloadBlobCreationAndSave(canvas, fileName);
+      hide(toastId);
+      show({
+        title: t("workspace.toastDownloadReadyTitle"),
+        message: t("workspace.toastDownloadReadyMessage"),
+        type: "success",
+      });
     } catch (error) {
       console.error("Download failed:", error);
       hide(toastId);
@@ -400,6 +345,7 @@ export function UpscalerWorkspace({
         type: "error",
         duration: 5000,
       });
+    } finally {
       setIsDownloading(false);
     }
   };
@@ -571,7 +517,6 @@ export function UpscalerWorkspace({
         toasts={[...toasts, ...conversionToasts]}
         onRemove={hide}
       />
-      {renameInputPrompt}
     </div>
   );
 }

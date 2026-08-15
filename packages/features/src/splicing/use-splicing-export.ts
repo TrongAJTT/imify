@@ -3,6 +3,7 @@ import { useCallback } from "react"
 import { zip } from "fflate"
 import { PDFDocument } from "pdf-lib"
 import { useTranslation } from "@imify/i18n"
+import { confirmBatchDownload } from "@imify/stores"
 
 import { APP_CONFIG } from "@imify/core/config"
 import { mapQuickExportToEngineConfig, SPLICING_NAMING_CONFIG } from "@imify/core"
@@ -53,43 +54,31 @@ export interface UseSplicingExportArgs {
   images: SplicingImageItem[]
   exportTargetCount: number
   isExporting: boolean
-  skipDownloadConfirm: boolean
 
   pushToast: (payload: ConversionProgressPayload) => void
   setImportToastPayload: Dispatch<SetStateAction<ConversionProgressPayload | null>>
   importToastHideTimerRef: MutableRefObject<ReturnType<typeof setTimeout> | null>
-
-  setIsExporting: (v: boolean) => void
-  setShowDownloadConfirm: (v: boolean) => void
-  setPendingExportModeForConfirm: (v: SplicingExportMode | null) => void
+  setIsExporting: (exporting: boolean) => void
 }
 
 export function useSplicingExport({
   images,
   exportTargetCount,
   isExporting,
-  skipDownloadConfirm,
   pushToast,
   setImportToastPayload,
   importToastHideTimerRef,
   setIsExporting,
-  setShowDownloadConfirm,
-  setPendingExportModeForConfirm
 }: UseSplicingExportArgs) {
   const { t } = useTranslation("splicing")
+
   const performExport = useCallback(
-    async (downloadMode: SplicingExportMode, forceDownloadConfirm: boolean = false, inputValue?: string) => {
+    async (downloadMode: SplicingExportMode, inputValue?: string) => {
       if (images.length === 0 || isExporting) return
 
-      if (
-        (downloadMode === "one_by_one" || downloadMode === "individual_pdf") &&
-        !forceDownloadConfirm &&
-        exportTargetCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD &&
-        !skipDownloadConfirm
-      ) {
-        setShowDownloadConfirm(true)
-        setPendingExportModeForConfirm(downloadMode)
-        return
+      if (downloadMode === "one_by_one" || downloadMode === "individual_pdf") {
+        const confirmed = await confirmBatchDownload(exportTargetCount)
+        if (!confirmed) return
       }
 
       setIsExporting(true)
@@ -365,13 +354,11 @@ export function useSplicingExport({
       images,
       isExporting,
       exportTargetCount,
-      skipDownloadConfirm,
       pushToast,
       setImportToastPayload,
       importToastHideTimerRef,
       setIsExporting,
-      setShowDownloadConfirm,
-      setPendingExportModeForConfirm
+      t
     ]
   )
 

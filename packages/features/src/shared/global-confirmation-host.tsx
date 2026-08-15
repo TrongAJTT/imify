@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useConfirmationDialogStore } from "@imify/stores";
+import { RenameInputDialog } from "@imify/ui";
 import { BatchDownloadConfirmDialog } from "./download-confirm-dialog";
 import { OOMWarningDialog } from "../processor/batch/oom-warning-dialog";
 import { SplicingHeavyPreviewQualityDialog } from "../splicing/splicing-heavy-preview-quality-dialog";
@@ -24,6 +25,11 @@ export function GlobalConfirmationHost() {
   );
   const resolveHeavyPreviewWarning = useConfirmationDialogStore(
     (state) => state.resolveHeavyPreviewWarning,
+  );
+
+  const renameInput = useConfirmationDialogStore((state) => state.renameInput);
+  const resolveRenameInput = useConfirmationDialogStore(
+    (state) => state.resolveRenameInput,
   );
 
   return (
@@ -58,6 +64,14 @@ export function GlobalConfirmationHost() {
         onConfirm={(dontShowAgain?: boolean) =>
           resolveHeavyPreviewWarning(true, !!dontShowAgain)
         }
+      />
+
+      {/* 4. Custom Filename Rename Input Dialog */}
+      <RenameInputDialog
+        isOpen={renameInput.isOpen}
+        renamePattern={renameInput.pattern}
+        onClose={() => resolveRenameInput(null)}
+        onConfirm={(value) => resolveRenameInput(value)}
       />
     </>
   );

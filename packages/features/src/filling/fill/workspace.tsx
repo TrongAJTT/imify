@@ -69,7 +69,8 @@ import {
 } from "@imify/features/filling/layer-visual-highlight";
 import { Subheading, MutedText } from "@imify/ui/ui/typography";
 import { Button } from "@imify/ui/ui/button";
-import { useRenameInputPrompt, ZoomPanControl } from "@imify/ui";
+import { ZoomPanControl } from "@imify/ui";
+import { promptRenameInput } from "@imify/stores";
 import { useCanvasResizer } from "../../shared/use-canvas-resizer";
 import {
   PreviewInteractionModeToggle,
@@ -184,7 +185,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
 
   const {
     rotationSnapAngles,
@@ -1464,10 +1464,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     ],
   );
 
-  const handleExport = useCallback(() => {
+  const handleExport = useCallback(async () => {
     const pattern = exportSettings.fileNamePattern || "[OriginalName]";
-    checkAndPrompt(pattern, (inputValue) => void performExport(inputValue));
-  }, [checkAndPrompt, exportSettings.fileNamePattern, performExport]);
+    const customInput = await promptRenameInput(pattern);
+    if (customInput === null) return;
+    void performExport(customInput);
+  }, [exportSettings.fileNamePattern, performExport]);
 
   const selectedEmptyImageOverlay = useMemo(() => {
     if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
@@ -2476,7 +2478,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         toasts={conversionToasts}
         onRemove={handleRemoveExportToast}
       />
-      {renameInputPrompt}
     </div>
   );
 }

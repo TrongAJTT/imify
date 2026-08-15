@@ -15,12 +15,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import {
-  ToastContainer,
-  BodyText,
-  RenameInputDialog,
-  useRenameInputPrompt,
-} from "@imify/ui";
+import { BodyText, ToastContainer } from "@imify/ui";
 import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
 import type {
   ConversionProgressPayload,
@@ -30,14 +25,13 @@ import { buildResizeQuickStatsFromDimensions } from "@imify/core/resize-quick-st
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
+import { promptRenameInput } from "@imify/stores";
 import { useClipboardImageIntake } from "../../shared/use-clipboard-image-intake";
-import { BatchDownloadConfirmDialog } from "../../shared/download-confirm-dialog";
 import { buildActiveCodecOptionsForTarget } from "../target-format-state";
 import { BatchActionBar } from "./action-bar";
 import { BatchQueueGrid } from "./queue-grid";
 import { BatchSummaryCard } from "./summary-card";
 import { BatchUploadDropzone } from "./upload-dropzone";
-import { OOMWarningDialog } from "./oom-warning-dialog";
 import type { BatchQueueItem } from "./types";
 import { readImageDimensions } from "./pipeline";
 import {
@@ -89,7 +83,6 @@ export function BatchProcessorWorkspace() {
     useState<ConversionProgressPayload | null>(null);
   const [isImportingUrls, setIsImportingUrls] = useState(false);
   const [batchInputValue, setBatchInputValue] = useState("");
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false);
   const pdfSplitRef = useRef<HTMLDivElement>(null);
   const firstQueueItem = queue[0];
@@ -157,12 +150,9 @@ export function BatchProcessorWorkspace() {
     summary,
     batchToastPayload,
     clearBatchToast,
-    oomWarning,
     runBatch,
     requestCancel,
     togglePause,
-    closeOomWarning,
-    confirmOomWarning,
     clearSummary,
   } = useBatchExecution({
     queue,
@@ -172,17 +162,12 @@ export function BatchProcessorWorkspace() {
     stripExif,
     fileNamePattern,
     watermark,
-    skipOomWarning,
-    onPersistSkipOomWarning: () => setSkipOomWarning(true),
   });
   const {
     isExporting,
     activeExportAction,
     exportToastPayload,
     clearExportToast,
-    showDownloadConfirm,
-    closeDownloadConfirm,
-    confirmDownloadIndividually,
     downloadIndividually,
     downloadAsZip,
     mergeIntoPdf,
@@ -190,7 +175,6 @@ export function BatchProcessorWorkspace() {
   } = useBatchExportActions({
     queue,
     config: effectiveConfig,
-    skipDownloadConfirm,
     onClosePdfSplit: () => setIsPdfSplitOpen(false),
   });
   const conversionToasts = useConversionToasts([
@@ -432,17 +416,17 @@ export function BatchProcessorWorkspace() {
           setQueue([]);
           clearSummary();
         }}
-        onRunAll={(mode = "all") => {
-          checkAndPrompt(fileNamePattern, (inputValue) => {
-            setBatchInputValue(inputValue);
-            void runBatch(mode, inputValue);
-          });
+        onRunAll={async (mode = "all") => {
+          const customInput = await promptRenameInput(fileNamePattern);
+          if (customInput === null) return;
+          setBatchInputValue(customInput);
+          void runBatch(mode, customInput);
         }}
-        onRunFailed={() => {
-          checkAndPrompt(fileNamePattern, (inputValue) => {
-            setBatchInputValue(inputValue);
-            void runBatch("failed", inputValue);
-          });
+        onRunFailed={async () => {
+          const customInput = await promptRenameInput(fileNamePattern);
+          if (customInput === null) return;
+          setBatchInputValue(customInput);
+          void runBatch("failed", customInput);
         }}
         onTogglePause={togglePause}
         paused={paused}
@@ -511,25 +495,7 @@ export function BatchProcessorWorkspace() {
           queue={queue}
         />
       </DndContext>
-      <BatchDownloadConfirmDialog
-        isOpen={showDownloadConfirm}
-        count={successfulOutputs.length}
-        onClose={closeDownloadConfirm}
-        onConfirm={() => {
-          void confirmDownloadIndividually();
-        }}
-      />
-      <OOMWarningDialog
-        isOpen={!!oomWarning?.isOpen}
-        totalSize={oomWarning?.totalSize || "0"}
-        recommendedSize={oomWarning?.recommendedSize || "350"}
-        onClose={closeOomWarning}
-        onConfirm={(dontShowAgain) => {
-          void confirmOomWarning(dontShowAgain, batchInputValue);
-        }}
-      />
       <ToastContainer toasts={mergedToasts} onRemove={handleRemoveToast} />
-      {renameInputPrompt}
     </div>
   );
 }

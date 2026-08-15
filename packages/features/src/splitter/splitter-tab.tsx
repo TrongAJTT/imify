@@ -14,10 +14,10 @@ import {
   buildSmartOutputFileName,
   reserveUniqueFileName,
 } from "@imify/core/file-name-pattern";
-import { ToastContainer, useRenameInputPrompt } from "@imify/ui";
+import { ToastContainer } from "@imify/ui";
 import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
-import { confirmBatchDownload } from "@imify/stores";
+import { confirmBatchDownload, promptRenameInput } from "@imify/stores";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
 import {
   ExportSplitButton,
@@ -146,7 +146,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
     useState<ConversionProgressPayload | null>(null);
   const [exportToastPayload, setExportToastPayload] =
     useState<ConversionProgressPayload | null>(null);
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
   const conversionToasts = useConversionToasts([
     importToastPayload,
     exportToastPayload,
@@ -734,13 +733,14 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   const handleExportAction = useCallback(
     async (mode: ExportSplitMode) => {
       if (mode === "zip" || mode === "one_by_one") {
-        checkAndPrompt(
+        const customInput = await promptRenameInput(
           exportSettings.fileNamePattern,
-          (inputValue) => void handleExport(mode, inputValue),
         );
+        if (customInput === null) return;
+        void handleExport(mode, customInput);
       }
     },
-    [handleExport, exportSettings.fileNamePattern, checkAndPrompt],
+    [handleExport, exportSettings.fileNamePattern],
   );
 
   const workspaceContent = (
@@ -892,7 +892,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
             toasts={conversionToasts}
             onRemove={handleRemoveToast}
           />
-          {renameInputPrompt}
         </>
       }
     />

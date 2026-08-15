@@ -18,13 +18,8 @@ import {
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
 import { useTranslation } from "@imify/i18n";
-import {
-  Button,
-  EmptyDropCard,
-  Heading,
-  MutedText,
-  useRenameInputPrompt,
-} from "@imify/ui";
+import { Button, EmptyDropCard, Heading, MutedText } from "@imify/ui";
+import { promptRenameInput } from "@imify/stores";
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
 import { CompareViewModeToolbar } from "../shared/compare-view-mode-toolbar";
 import {
@@ -159,7 +154,6 @@ export function SingleProcessorWorkspace({
   const [showImpactChip, setShowImpactChip] = useState(false);
   const [stackStatsCards, setStackStatsCards] = useState(false);
   const [processTime, setProcessTime] = useState<number | null>(null);
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
   const requestSequenceRef = useRef(0);
   const attachSequenceRef = useRef(0);
 
@@ -524,38 +518,28 @@ export function SingleProcessorWorkspace({
                   </Button>
                   <Button
                     disabled={!resultBlob || !resultFileName}
-                    onClick={() => {
+                    onClick={async () => {
                       if (
                         resultBlob &&
                         resultFileName &&
                         sourceFile &&
                         resultOutputExtension
                       ) {
-                        checkAndPrompt(
-                          fileNamePattern,
-                          async (inputValue) => {
-                            const finalFileName = buildSmartOutputFileName({
-                              pattern: fileNamePattern,
-                              originalFileName: sourceFile.name,
-                              outputExtension: resultOutputExtension,
-                              index: 1,
-                              totalFiles: 1,
-                              dimensions: resultNameDimensions,
-                              now: new Date(),
-                              input: inputValue,
-                            });
-                            await downloadWithFilename(
-                              resultBlob,
-                              finalFileName,
-                            );
-                          },
-                          async () => {
-                            await downloadWithFilename(
-                              resultBlob,
-                              resultFileName,
-                            );
-                          },
-                        );
+                        const inputValue =
+                          await promptRenameInput(fileNamePattern);
+                        if (inputValue === null) return;
+
+                        const finalFileName = buildSmartOutputFileName({
+                          pattern: fileNamePattern,
+                          originalFileName: sourceFile.name,
+                          outputExtension: resultOutputExtension,
+                          index: 1,
+                          totalFiles: 1,
+                          dimensions: resultNameDimensions,
+                          now: new Date(),
+                          input: inputValue,
+                        });
+                        await downloadWithFilename(resultBlob, finalFileName);
                       }
                     }}
                     type="button"
@@ -681,8 +665,6 @@ export function SingleProcessorWorkspace({
           </div>
         </>
       )}
-
-      {renameInputPrompt}
     </div>
   );
 }

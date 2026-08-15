@@ -22,10 +22,17 @@ interface HeavyPreviewWarningPayload {
   resolve: ((confirmed: boolean) => void) | null
 }
 
+interface RenameInputPayload {
+  isOpen: boolean
+  pattern: string
+  resolve: ((value: string | null) => void) | null
+}
+
 interface ConfirmationDialogState {
   downloadConfirm: DownloadConfirmPayload
   oomWarning: OomWarningPayload
   heavyPreviewWarning: HeavyPreviewWarningPayload
+  renameInput: RenameInputPayload
 
   // Actions for Download Confirm
   openDownloadConfirm: (count: number) => Promise<boolean>
@@ -38,6 +45,10 @@ interface ConfirmationDialogState {
   // Actions for Heavy Preview Warning
   openHeavyPreviewWarning: (imageCount: number, totalPixels: number) => Promise<boolean>
   resolveHeavyPreviewWarning: (confirmed: boolean, dontShowAgain?: boolean) => void
+
+  // Actions for Custom Rename Input
+  openRenameInput: (pattern: string) => Promise<string | null>
+  resolveRenameInput: (value: string | null) => void
 }
 
 export const useConfirmationDialogStore = create<ConfirmationDialogState>((set, get) => ({
@@ -56,6 +67,11 @@ export const useConfirmationDialogStore = create<ConfirmationDialogState>((set, 
     isOpen: false,
     imageCount: 0,
     totalPixels: 0,
+    resolve: null
+  },
+  renameInput: {
+    isOpen: false,
+    pattern: "",
     resolve: null
   },
 
@@ -167,6 +183,37 @@ export const useConfirmationDialogStore = create<ConfirmationDialogState>((set, 
         resolve: null
       }
     })
+  },
+
+  openRenameInput: (pattern: string) => {
+    const hasInputTag = /\[input\]/i.test(pattern || "")
+    if (!hasInputTag) {
+      return Promise.resolve("")
+    }
+
+    return new Promise<string | null>((resolve) => {
+      set({
+        renameInput: {
+          isOpen: true,
+          pattern,
+          resolve
+        }
+      })
+    })
+  },
+
+  resolveRenameInput: (value: string | null) => {
+    const { renameInput } = get()
+    if (renameInput.resolve) {
+      renameInput.resolve(value)
+    }
+    set({
+      renameInput: {
+        isOpen: false,
+        pattern: "",
+        resolve: null
+      }
+    })
   }
 }))
 
@@ -179,3 +226,6 @@ export const confirmOomWarning = (totalSizeMB: string | number, recommendedSizeM
 
 export const confirmHeavyPreviewWarning = (imageCount: number, totalPixels: number) =>
   useConfirmationDialogStore.getState().openHeavyPreviewWarning(imageCount, totalPixels)
+
+export const promptRenameInput = (pattern: string) =>
+  useConfirmationDialogStore.getState().openRenameInput(pattern)
