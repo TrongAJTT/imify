@@ -1,25 +1,33 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useTranslation } from "@imify/i18n"
+import React from "react";
+import { useTranslation } from "@imify/i18n";
 import {
   AccordionCard,
   SelectInput,
   SliderInput,
   WorkspaceConfigSidebarPanel,
-  type WorkspaceConfigSidebarItem
-} from "@imify/ui"
-import { ResizeCard } from "../processor/resize-card"
-import type { ImagesToPdfConfig, PdfStudioMode, PdfToImagesConfig } from "./types"
-import type { PaperSize, ResizeResamplingAlgorithm, SupportedDPI } from "@imify/core/types"
+  type WorkspaceConfigSidebarItem,
+} from "@imify/ui";
+import { ResizeCard } from "../processor/resize-card";
+import type {
+  ImagesToPdfConfig,
+  PdfStudioMode,
+  PdfToImagesConfig,
+} from "./types";
+import type {
+  PaperSize,
+  ResizeResamplingAlgorithm,
+  SupportedDPI,
+} from "@imify/core/types";
 
 interface PdfStudioSidebarPanelProps {
-  mode: PdfStudioMode
-  imagesToPdfConfig: ImagesToPdfConfig
-  onImagesToPdfConfigChange: (config: ImagesToPdfConfig) => void
-  pdfToImagesConfig: PdfToImagesConfig
-  onPdfToImagesConfigChange: (config: PdfToImagesConfig) => void
-  enableWideSidebarGrid?: boolean
+  mode: PdfStudioMode;
+  imagesToPdfConfig: ImagesToPdfConfig;
+  onImagesToPdfConfigChange: (config: ImagesToPdfConfig) => void;
+  pdfToImagesConfig: PdfToImagesConfig;
+  onPdfToImagesConfigChange: (config: PdfToImagesConfig) => void;
+  enableWideSidebarGrid?: boolean;
 }
 
 export function PdfStudioSidebarPanel({
@@ -28,23 +36,23 @@ export function PdfStudioSidebarPanel({
   onImagesToPdfConfigChange,
   pdfToImagesConfig,
   onPdfToImagesConfigChange,
-  enableWideSidebarGrid = false
+  enableWideSidebarGrid = false,
 }: PdfStudioSidebarPanelProps) {
-  const { t } = useTranslation("pdfStudio")
+  const { t } = useTranslation("pdfStudio");
 
   const dpiOptions = [
     { value: "72", label: "72 DPI (Web / Fast)" },
     { value: "150", label: "150 DPI (Standard)" },
-    { value: "300", label: "300 DPI (High Quality / Print)" }
-  ]
+    { value: "300", label: "300 DPI (High Quality / Print)" },
+  ];
 
   const formatOptions = [
     { value: "png", label: "PNG (Lossless)" },
     { value: "jpg", label: "JPEG (Standard)" },
-    { value: "webp", label: "WebP (Modern / Compact)" }
-  ]
+    { value: "webp", label: "WebP (Modern / Compact)" },
+  ];
 
-  const sidebarItems: WorkspaceConfigSidebarItem[] = []
+  const sidebarItems: WorkspaceConfigSidebarItem[] = [];
 
   if (mode === "images-to-pdf") {
     sidebarItems.push({
@@ -60,31 +68,33 @@ export function PdfStudioSidebarPanel({
           onResizeModeChange={(mode) =>
             onImagesToPdfConfigChange({
               ...imagesToPdfConfig,
-              resizeMode: mode === "paper_size" ? "paper_size" : "inherit"
+              resizeMode: mode === "paper_size" ? "paper_size" : "inherit",
             })
           }
           onPaperSizeChange={(size) =>
             onImagesToPdfConfigChange({
               ...imagesToPdfConfig,
-              paperSize: size as PaperSize
+              paperSize: size as PaperSize,
             })
           }
           onDpiChange={(dpi) =>
             onImagesToPdfConfigChange({
               ...imagesToPdfConfig,
-              dpi: (dpi || 300) as SupportedDPI
+              dpi: (dpi || 300) as SupportedDPI,
             })
           }
-          onResamplingAlgorithmChange={(resamplingAlgorithm: ResizeResamplingAlgorithm) =>
+          onResamplingAlgorithmChange={(
+            resamplingAlgorithm: ResizeResamplingAlgorithm,
+          ) =>
             onImagesToPdfConfigChange({
               ...imagesToPdfConfig,
-              resamplingAlgorithm
+              resamplingAlgorithm,
             })
           }
           alwaysOpen
         />
-      )
-    })
+      ),
+    });
   } else {
     sidebarItems.push({
       id: "export-image-settings",
@@ -99,7 +109,7 @@ export function PdfStudioSidebarPanel({
               onChange={(v) =>
                 onPdfToImagesConfigChange({
                   ...pdfToImagesConfig,
-                  dpi: Number(v) || 150
+                  dpi: Number(v) || 150,
                 })
               }
             />
@@ -111,7 +121,7 @@ export function PdfStudioSidebarPanel({
               onChange={(v) =>
                 onPdfToImagesConfigChange({
                   ...pdfToImagesConfig,
-                  format: v as any
+                  format: v as any,
                 })
               }
             />
@@ -127,21 +137,16 @@ export function PdfStudioSidebarPanel({
                 onChange={(q) =>
                   onPdfToImagesConfigChange({
                     ...pdfToImagesConfig,
-                    quality: q
+                    quality: q,
                   })
                 }
               />
             )}
           </div>
         </AccordionCard>
-      )
-    })
+      ),
+    });
   }
 
-  return (
-    <WorkspaceConfigSidebarPanel
-      items={sidebarItems}
-      twoColumn={enableWideSidebarGrid}
-    />
-  )
+  return <WorkspaceConfigSidebarPanel items={sidebarItems} twoColumn={false} />;
 }

@@ -1,48 +1,52 @@
-"use client"
+"use client";
 
-import React from "react"
-import { FileOutput, Images } from "lucide-react"
-import { EmptyDropCard } from "@imify/ui"
-import { COMMON_IMAGE_ACCEPT, isCommonImageFile } from "../shared/image-file-utils"
-import { useTranslation } from "@imify/i18n"
-import type { PdfStudioMode } from "./types"
+import React from "react";
+import { FileOutput, Images } from "lucide-react";
+import { EmptyDropCard } from "@imify/ui";
+import {
+  COMMON_IMAGE_ACCEPT,
+  isCommonImageFile,
+} from "../shared/image-file-utils";
+import { useTranslation } from "@imify/i18n";
+import type { PdfStudioMode } from "./types";
 
 interface PdfStudioDropZoneProps {
-  mode: PdfStudioMode
-  onLoadImageFiles: (files: File[]) => void
-  onLoadPdfFile: (file: File) => void
+  mode: PdfStudioMode;
+  onLoadImageFiles: (files: File[]) => void;
+  onLoadPdfFile: (file: File) => void;
 }
 
 export function PdfStudioDropZone({
   mode,
   onLoadImageFiles,
-  onLoadPdfFile
+  onLoadPdfFile,
 }: PdfStudioDropZoneProps) {
-  const { t } = useTranslation("pdfStudio")
+  const { t } = useTranslation("pdfStudio");
 
   const handleFiles = (files: FileList | null) => {
-    if (!files || files.length === 0) return
+    if (!files || files.length === 0) return;
 
-    const fileList = Array.from(files)
+    const fileList = Array.from(files);
     const pdfFile = fileList.find(
-      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
-    )
+      (f) =>
+        f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
+    );
 
     if (pdfFile) {
-      onLoadPdfFile(pdfFile)
-      return
+      onLoadPdfFile(pdfFile);
+      return;
     }
 
-    const imageFiles = fileList.filter((f) => isCommonImageFile(f))
+    const imageFiles = fileList.filter((f) => isCommonImageFile(f));
     if (imageFiles.length > 0) {
-      onLoadImageFiles(imageFiles)
+      onLoadImageFiles(imageFiles);
     }
-  }
+  };
 
-  const isPdfMode = mode === "pdf-to-images"
+  const isPdfMode = mode === "pdf-to-images";
   const acceptPattern = isPdfMode
     ? ".pdf,application/pdf"
-    : `${COMMON_IMAGE_ACCEPT},.pdf,application/pdf`
+    : `${COMMON_IMAGE_ACCEPT},.pdf,application/pdf`;
 
   return (
     <EmptyDropCard
@@ -54,16 +58,19 @@ export function PdfStudioDropZone({
         )
       }
       title={isPdfMode ? t("dropZone.pdfTitle") : t("dropZone.imagesTitle")}
-      subtitle={isPdfMode ? t("dropZone.pdfSubtitle") : t("dropZone.imagesSubtitle")}
+      subtitle={
+        isPdfMode ? t("dropZone.pdfSubtitle") : t("dropZone.imagesSubtitle")
+      }
       onDropFiles={handleFiles}
       fileInput={{
         accept: acceptPattern,
-        onInputFiles: handleFiles
+        multiple: !isPdfMode,
+        onInputFiles: handleFiles,
       }}
       onPasteFiles={(files) => {
-        handleFiles(files as any)
+        handleFiles(files as any);
       }}
-      allowMultipleUrls={false}
+      allowMultipleUrls={!isPdfMode}
     />
-  )
+  );
 }
