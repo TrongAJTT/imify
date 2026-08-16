@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import {
   closestCenter,
   DndContext,
@@ -17,7 +17,6 @@ import {
 } from "@dnd-kit/sortable";
 import { Download, Images, Plus, Trash2 } from "lucide-react";
 import { Button, AnimatingSpinner } from "@imify/ui";
-import type { ConversionProgressPayload } from "@imify/core/types";
 import { toast } from "@imify/stores";
 import { useTranslation } from "@imify/i18n";
 import { formatFileSize } from "../inspector/format-utils";
@@ -27,6 +26,10 @@ import {
 } from "../shared/image-file-utils";
 import { SortableQueueItem } from "../shared/sortable-queue-item";
 import { MediaQueueCard } from "../shared/media-queue-card";
+import {
+  HeroProgressCard,
+  type ExportStats,
+} from "../shared/hero-progress-card";
 import type { ImagesToPdfConfig, PdfStudioImageItem } from "./types";
 import type { ResizeConfig } from "@imify/core/types";
 import { StreamingPdfWriter } from "@imify/engine";
@@ -49,15 +52,13 @@ export function ImagesToPdfWorkspace({
   onAddMoreFiles,
   onClearAll,
 }: ImagesToPdfWorkspaceProps) {
-  const { t } = useTranslation("pdfStudio");
+  const { t } = useTranslation(["pdfStudio", "common"]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportStats, setExportStats] = useState<ExportStats | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounterRef = useRef(0);
-
-  const pushExportToast = useCallback((payload: ConversionProgressPayload) => {
-    toast.progress(payload);
-  }, []);
+  const exportAbortControllerRef = useRef<AbortController | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -122,26 +123,40 @@ export function ImagesToPdfWorkspace({
     setIsDragOver(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const validFiles = Array.from(e.dataTransfer.files).filter(isCommonImageFile);
+      const validFiles = Array.from(e.dataTransfer.files).filter(
+        isCommonImageFile,
+      );
       if (validFiles.length > 0) {
         onAddMoreFiles(validFiles);
       }
     }
   };
 
+  const handleCancelExport = useCallback(() => {
+    if (exportAbortControllerRef.current) {
+      exportAbortControllerRef.current.abort();
+      exportAbortControllerRef.current = null;
+    }
+    setIsExporting(false);
+    setExportStats(null);
+    toast.warning(t("progress.exportCancelled"));
+  }, [t]);
+
   const handleExportPdf = async () => {
     if (items.length === 0 || isExporting) return;
 
-    const toastId = `export-pdf-${Date.now()}`;
+    const abortController = new AbortController();
+    exportAbortControllerRef.current = abortController;
+    const startTime = Date.now();
     setIsExporting(true);
 
-    pushExportToast({
-      id: toastId,
-      fileName: "imify_document.pdf",
-      targetFormat: "pdf",
-      status: "processing",
-      percent: 10,
-      message: t("progress.building"),
+    setExportStats({
+      current: 0,
+      total: items.length,
+      percent: 0,
+      statusText: t("progress.building"),
+      ext: "PDF",
+      startedAt: startTime,
     });
 
     try {
@@ -149,15 +164,19 @@ export function ImagesToPdfWorkspace({
       const total = items.length;
 
       for (let i = 0; i < total; i += 1) {
+        if (abortController.signal.aborted) {
+          return;
+        }
+
         const item = items[i]!;
-        const pct = Math.min(88, 10 + Math.round(((i + 1) / total) * 78));
-        pushExportToast({
-          id: toastId,
-          fileName: "imify_document.pdf",
-          targetFormat: "pdf",
-          status: "processing",
+        const pct = Math.min(92, Math.round(((i + 1) / total) * 90));
+        setExportStats({
+          current: i + 1,
+          total,
           percent: pct,
-          message: t("progress.rendering", { current: i + 1, total }),
+          statusText: t("progress.rendering", { current: i + 1, total }),
+          ext: "PDF",
+          startedAt: startTime,
         });
 
         const resizeConfig: ResizeConfig = (() => {
@@ -208,6 +227,10 @@ export function ImagesToPdfWorkspace({
           resize: resizeConfig,
         });
 
+        if (abortController.signal.aborted) {
+          return;
+        }
+
         await pdfWriter.addPage({
           imageBytes: prepared.bytes,
           kind: prepared.kind,
@@ -217,16 +240,23 @@ export function ImagesToPdfWorkspace({
         });
       }
 
-      pushExportToast({
-        id: toastId,
-        fileName: "imify_document.pdf",
-        targetFormat: "pdf",
-        status: "processing",
-        percent: 94,
-        message: t("progress.saving"),
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      setExportStats({
+        current: total,
+        total,
+        percent: 96,
+        statusText: t("progress.saving"),
+        ext: "PDF",
+        startedAt: startTime,
       });
 
       const pdfBlob = await pdfWriter.finalize();
+      if (abortController.signal.aborted) {
+        return;
+      }
 
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement("a");
@@ -235,26 +265,22 @@ export function ImagesToPdfWorkspace({
       a.click();
       URL.revokeObjectURL(url);
 
-      pushExportToast({
-        id: toastId,
-        fileName: "imify_document.pdf",
-        targetFormat: "pdf",
-        status: "success",
-        percent: 100,
-        message: t("progress.saving"),
-      });
+      const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
+      toast.success(
+        t("common:completedInSeconds", { seconds: durationSec }),
+        undefined,
+        3000,
+      );
     } catch (err) {
+      if (abortController.signal.aborted) {
+        return;
+      }
       console.error("Failed to generate PDF:", err);
-      pushExportToast({
-        id: toastId,
-        fileName: "imify_document.pdf",
-        targetFormat: "pdf",
-        status: "error",
-        percent: 100,
-        message: "Failed to generate PDF document",
-      });
+      toast.error(t("common:error"));
     } finally {
       setIsExporting(false);
+      setExportStats(null);
+      exportAbortControllerRef.current = null;
     }
   };
 
@@ -350,6 +376,14 @@ export function ImagesToPdfWorkspace({
           </Button>
         </div>
       </div>
+
+      {/* Hero Progress Card (Mounted between stats bar and queue during export) */}
+      {isExporting && exportStats && (
+        <HeroProgressCard
+          stats={exportStats}
+          onCancel={handleCancelExport}
+        />
+      )}
 
       {/* Grid of Sortable Pages using MediaQueueCard */}
       <DndContext

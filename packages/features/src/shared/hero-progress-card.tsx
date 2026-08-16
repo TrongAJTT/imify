@@ -5,7 +5,19 @@ import { Timer, X, Zap } from "lucide-react"
 import { Button, AnimatingSpinner } from "@imify/ui"
 import { useTranslation } from "@imify/i18n"
 
+export interface ExportStats {
+  current: number
+  total: number
+  percent: number
+  statusText: string
+  ext?: string
+  concurrency?: number
+  startedAt?: number
+}
+
 export interface HeroProgressCardProps {
+  /** Optional consolidated export stats */
+  stats?: ExportStats
   /** Override title. Default: common.progressCard.title ("Đang xử lý") */
   title?: React.ReactNode
   /** Override description. Default: common.progressCard.description ("Vui lòng giữ tab này mở trong khi hệ thống đang xử lý") */
@@ -13,7 +25,7 @@ export interface HeroProgressCardProps {
   /** Status line text above the progress bar. Default: common.progressCard.progress ("Tiến trình") */
   statusText?: React.ReactNode
   /** Percent completed (0 - 100) */
-  percent: number
+  percent?: number
   /** Current completed count */
   current?: number
   /** Total count */
@@ -22,7 +34,9 @@ export interface HeroProgressCardProps {
   badge?: React.ReactNode
   /** Concurrency thread count (if any) */
   concurrency?: number
-  /** Elapsed seconds for timer display (if any) */
+  /** Start timestamp in milliseconds for isolated live timer rendering */
+  startedAt?: number
+  /** Static elapsed seconds for timer display (fallback) */
   elapsedSeconds?: number
   /** Callback to cancel operation */
   onCancel?: () => void
@@ -32,7 +46,50 @@ export interface HeroProgressCardProps {
   className?: string
 }
 
+function HeroProgressTimer({
+  startedAt,
+  fallbackSeconds,
+}: {
+  startedAt?: number
+  fallbackSeconds?: number
+}) {
+  const { t } = useTranslation("common")
+  const [now, setNow] = React.useState(() => Date.now())
+
+  React.useEffect(() => {
+    if (!startedAt) return
+    const interval = setInterval(() => {
+      setNow(Date.now())
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [startedAt])
+
+  const totalSec = startedAt
+    ? Math.max(0, Math.floor((now - startedAt) / 1000))
+    : typeof fallbackSeconds === "number"
+    ? fallbackSeconds
+    : null
+
+  if (totalSec === null) return null
+
+  const minutes = Math.floor(totalSec / 60)
+  const seconds = totalSec % 60
+
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:text-slate-300 font-mono"
+      title={t("progressCard.elapsedTooltip", { seconds: totalSec })}
+    >
+      <Timer size={11} className="text-slate-500 dark:text-slate-400" />
+      <span>
+        {minutes}:{seconds.toString().padStart(2, "0")}
+      </span>
+    </span>
+  )
+}
+
 export function HeroProgressCard({
+  stats,
   title,
   description,
   statusText,
@@ -41,6 +98,7 @@ export function HeroProgressCard({
   total,
   badge,
   concurrency,
+  startedAt,
   elapsedSeconds,
   onCancel,
   cancelLabel,
@@ -50,10 +108,16 @@ export function HeroProgressCard({
 
   const displayTitle = title ?? t("progressCard.title")
   const displayDesc = description ?? t("progressCard.description")
-  const displayStatus = statusText ?? t("progressCard.progress")
+  const displayStatus = statusText ?? stats?.statusText ?? t("progressCard.progress")
   const displayCancel = cancelLabel ?? t("progressCard.cancel")
+  const displayBadge = badge ?? stats?.ext
+  const displayConcurrency = concurrency ?? stats?.concurrency
+  const displayCurrent = current ?? stats?.current
+  const displayTotal = total ?? stats?.total
+  const displayStartedAt = startedAt ?? stats?.startedAt
+  const rawPercent = percent ?? stats?.percent ?? 0
 
-  const clampedPercent = Math.max(0, Math.min(100, Math.round(percent)))
+  const clampedPercent = Math.max(0, Math.min(100, Math.round(rawPercent)))
 
   return (
     <div
@@ -71,34 +135,26 @@ export function HeroProgressCard({
               <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 flex-wrap">
                 <span>{displayTitle}</span>
 
-                {badge && (
+                {displayBadge && (
                   <span className="rounded-md bg-sky-100 px-1.5 py-0.5 text-[10px] font-extrabold text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
-                    {badge}
+                    {displayBadge}
                   </span>
                 )}
 
-                {typeof concurrency === "number" && concurrency > 0 && (
+                {typeof displayConcurrency === "number" && displayConcurrency > 0 && (
                   <span
                     className="inline-flex items-center gap-0.5 rounded-md bg-amber-100 dark:bg-amber-950/40 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400 cursor-help"
-                    title={t("progressCard.concurrencyTooltip", { count: concurrency })}
+                    title={t("progressCard.concurrencyTooltip", { count: displayConcurrency })}
                   >
                     <Zap size={11} className="text-amber-500 fill-amber-500" />
-                    <span>{concurrency}</span>
+                    <span>{displayConcurrency}</span>
                   </span>
                 )}
 
-                {typeof elapsedSeconds === "number" && (
-                  <span
-                    className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:text-slate-300 font-mono"
-                    title={t("progressCard.elapsedTooltip", { seconds: elapsedSeconds })}
-                  >
-                    <Timer size={11} className="text-slate-500 dark:text-slate-400" />
-                    <span>
-                      {Math.floor(elapsedSeconds / 60)}:
-                      {(elapsedSeconds % 60).toString().padStart(2, "0")}
-                    </span>
-                  </span>
-                )}
+                <HeroProgressTimer
+                  startedAt={displayStartedAt}
+                  fallbackSeconds={elapsedSeconds}
+                />
               </h4>
 
               {displayDesc && (
@@ -130,8 +186,8 @@ export function HeroProgressCard({
             <span className="truncate">{displayStatus}</span>
             <span className="font-mono text-sky-600 dark:text-sky-400">
               {clampedPercent}%
-              {typeof current === "number" && typeof total === "number"
-                ? ` (${current}/${total})`
+              {typeof displayCurrent === "number" && typeof displayTotal === "number"
+                ? ` (${displayCurrent}/${displayTotal})`
                 : ""}
             </span>
           </div>

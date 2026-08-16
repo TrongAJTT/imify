@@ -38,7 +38,10 @@ import {
   ExportSplitButton,
   type ExportSplitMode,
 } from "../shared/export-split-button";
-import { HeroProgressCard } from "../shared/hero-progress-card";
+import {
+  HeroProgressCard,
+  type ExportStats,
+} from "../shared/hero-progress-card";
 import { PaginationBar } from "../shared/pagination-bar";
 import { confirmBatchDownload, promptRenameInput, toast } from "@imify/stores";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
@@ -60,15 +63,6 @@ interface PageThumbnail {
   isLoading: boolean;
 }
 
-interface ExportStats {
-  current: number;
-  total: number;
-  percent: number;
-  statusText: string;
-  concurrency: number;
-  ext: string;
-}
-
 export function PdfToImagesWorkspace({
   pdfFile,
   config,
@@ -82,18 +76,6 @@ export function PdfToImagesWorkspace({
   const [isInitializing, setIsInitializing] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [exportStats, setExportStats] = useState<ExportStats | null>(null);
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-
-  useEffect(() => {
-    if (!isExporting) {
-      setElapsedSeconds(0);
-      return;
-    }
-    const timer = setInterval(() => {
-      setElapsedSeconds((s) => s + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isExporting]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -400,6 +382,7 @@ export function PdfToImagesWorkspace({
       statusText: t("progress.startExtracting"),
       concurrency,
       ext: ext.toUpperCase(),
+      startedAt: startTime,
     });
 
     try {
@@ -667,13 +650,7 @@ export function PdfToImagesWorkspace({
       {/* Hero Progress Card (Mounted above selection controls during export) */}
       {isExporting && exportStats && (
         <HeroProgressCard
-          badge={exportStats.ext}
-          concurrency={exportStats.concurrency}
-          elapsedSeconds={elapsedSeconds}
-          statusText={exportStats.statusText}
-          percent={exportStats.percent}
-          current={exportStats.current}
-          total={exportStats.total}
+          stats={exportStats}
           onCancel={handleCancelExport}
         />
       )}
