@@ -43,10 +43,10 @@ import {
 import { useBatchExecution } from "./hooks/use-batch-execution";
 import { useBatchExportActions } from "./hooks/use-batch-export-actions";
 import { isCommonImageFile, sanitizeFile } from "../../shared/image-file-utils";
+import { HeroProgressCard } from "../../shared/hero-progress-card";
 
 export function BatchProcessorWorkspace() {
   const targetFormat = useBatchStore((s) => s.targetFormat);
-  const concurrency = useBatchStore((s) => s.concurrency);
   const quality = useBatchStore((s) => s.quality);
   const formatOptions = useBatchStore((s) => s.formatOptions);
   const resizeMode = useBatchStore((s) => s.resizeMode);
@@ -145,6 +145,7 @@ export function BatchProcessorWorkspace() {
     cancelRequested,
     summary,
     batchToastPayload,
+    executionProgress,
     clearBatchToast,
     runBatch,
     requestCancel,
@@ -154,7 +155,6 @@ export function BatchProcessorWorkspace() {
     queue,
     setQueue,
     config: effectiveConfig,
-    concurrency,
     stripExif,
     fileNamePattern,
     watermark,
@@ -418,7 +418,27 @@ export function BatchProcessorWorkspace() {
           pressure on AVIF/PDF.
         </BodyText>
       ) : null}
-      {summary && !isRunning && queue.length > 0 ? (
+      {isRunning && executionProgress ? (
+        <div className="mb-4">
+          <HeroProgressCard
+            percent={executionProgress.percent}
+            current={executionProgress.current}
+            total={executionProgress.total}
+            badge={effectiveConfig?.format.toUpperCase()}
+            concurrency={executionProgress.concurrency}
+            startedAt={executionProgress.startedAt}
+            statusText={
+              paused
+                ? "Batch paused"
+                : cancelRequested
+                  ? "Cancelling..."
+                  : executionProgress.statusText
+            }
+            onCancel={requestCancel}
+            cancelLabel={cancelRequested ? "Cancelling..." : undefined}
+          />
+        </div>
+      ) : summary && !isRunning && queue.length > 0 ? (
         <BatchSummaryCard
           activeExportAction={activeExportAction}
           formatBytes={formatBytes}

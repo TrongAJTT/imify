@@ -52,7 +52,6 @@ export function BatchSetupSidebarPanel({
   );
   const setIsResizeOpen = useBatchStore((state) => state.setIsResizeOpen);
   const targetFormat = useBatchStore((state) => state.targetFormat);
-  const concurrency = useBatchStore((state) => state.concurrency);
   const quality = useBatchStore((state) => state.quality);
   const formatOptions = useBatchStore((state) => state.formatOptions);
   const resizeMode = useBatchStore((state) => state.resizeMode);

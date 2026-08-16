@@ -18,6 +18,15 @@ function toOutputFilenameWithExtension(nameOrBase: string, extension: string): s
 function toWebKitZipFilename(nameOrBase: string): string { void nameOrBase; return "favicon_kit.zip" }
 function isWorkerConvertibleFormat(format: FormatConfig["format"]): format is Exclude<FormatConfig["format"], "pdf"> { return format !== "pdf" }
 
+export interface BatchExecutionProgress {
+  current: number
+  total: number
+  percent: number
+  statusText: string
+  startedAt: number
+  concurrency: number
+}
+
 export function useBatchExecution({
   queue,
   setQueue,
@@ -41,6 +50,7 @@ export function useBatchExecution({
   const [paused, setPaused] = useState(false)
   const [summary, setSummary] = useState<BatchSummary | null>(null)
   const [batchToastPayload, setBatchToastPayload] = useState<ConversionProgressPayload | null>(null)
+  const [executionProgress, setExecutionProgress] = useState<BatchExecutionProgress | null>(null)
   const cancelRef = useRef(false)
   const pauseRef = useRef(false)
   useEffect(() => { pauseRef.current = paused }, [paused])
@@ -72,7 +82,6 @@ export function useBatchExecution({
 
   const processItem = async (item: BatchQueueItem, itemIndex: number, totalQueueCount: number, inputValue?: string): Promise<"success" | "error"> => {
     setItemState(item.id, { status: "processing", percent: 12, message: undefined, outputBlob: undefined, outputFileName: undefined })
-    await notifyProgress(item.id, item.file.name, config, "processing", 12)
     try {
       const sourceBlob = await applyWatermarkToImageBlob(item.file, watermark)
       const converted = await convertImage({ sourceBlob, config })
@@ -81,14 +90,11 @@ export function useBatchExecution({
       const outputExtension = converted.outputExtension ?? config.format
       const smartName = buildSmartOutputFileName({ pattern: fileNamePattern, originalFileName: item.file.name, outputExtension, index: itemIndex, totalFiles: totalQueueCount, dimensions, now: new Date(), input: inputValue })
       setItemState(item.id, { status: "processing", percent: 84 })
-      await notifyProgress(item.id, item.file.name, config, "processing", 84, "Finalizing output...")
       setItemState(item.id, { status: "success", percent: 100, outputBlob: normalizedBlob, outputFileName: outputExtension === "zip" ? smartName || toWebKitZipFilename(item.file.name) : smartName || toOutputFilenameWithExtension(item.file.name, outputExtension) })
-      await notifyProgress(item.id, item.file.name, config, "success", 100, "Ready for download")
       return "success"
     } catch (error) {
       const message = toUserFacingConversionError(error, "Unknown batch conversion error")
       setItemState(item.id, { status: "error", percent: 100, message, outputBlob: undefined, outputFileName: undefined })
-      await notifyProgress(item.id, item.file.name, config, "error", 100, message)
       return "error"
     }
   }
@@ -107,7 +113,14 @@ export function useBatchExecution({
       const pushBatchProgress = () => {
         const processed = successCount + failedCount
         const percent = Math.round((processed / totalItems) * 100)
-        setBatchToastPayload({ id: batchToastId, fileName: `Processing batch (${totalItems} files)`, targetFormat: config.format, status: "processing", percent, message: `Converted ${processed}/${totalItems} files...` })
+        setExecutionProgress({
+          current: processed,
+          total: totalItems,
+          percent,
+          statusText: `Processed ${processed}/${totalItems} files`,
+          startedAt,
+          concurrency: effectiveConcurrency,
+        })
       }
       const runWorkerSlot = async () => {
         while (!cancelRef.current) {
@@ -126,9 +139,20 @@ export function useBatchExecution({
       const durationMs = Date.now() - startedAt
       const canceled = cancelRef.current
       if (successCount + failedCount < total) failedCount += total - (successCount + failedCount)
-      setBatchToastPayload({ id: batchToastId, fileName: canceled ? "Batch processing cancelled" : "Batch processing completed", targetFormat: config.format, status: canceled ? "error" : "success", percent: 100, message: canceled ? `Processed ${successCount} files before cancellation` : `Successfully processed ${successCount} files in ${(durationMs / 1000).toFixed(1)}s` })
+      const toastPayload: ConversionProgressPayload = {
+        id: batchToastId,
+        fileName: canceled ? "Batch processing cancelled" : "Batch processing completed",
+        targetFormat: config.format,
+        status: canceled ? "error" : "success",
+        percent: 100,
+        message: canceled
+          ? `Processed ${successCount} files before cancellation`
+          : `Successfully processed ${successCount} files in ${(durationMs / 1000).toFixed(1)}s`
+      }
+      setBatchToastPayload(toastPayload)
       setTimeout(() => setBatchToastPayload((current) => (current?.id === batchToastId ? null : current)), 5000)
       setSummary({ mode, total, success: successCount, failed: failedCount, canceled, durationMs })
+      setExecutionProgress(null)
       setIsRunning(false); setCancelRequested(false); setPaused(false); pauseRef.current = false; cancelRef.current = false
       if (usesConversionWorkerPool) terminateConversionWorkerPool(workerPoolFormat)
     }
@@ -167,5 +191,17 @@ export function useBatchExecution({
   const togglePause = () => setPaused((current) => !current)
   const clearSummary = () => setSummary(null)
   const clearBatchToast = (toastId?: string) => setBatchToastPayload((current) => (!current || (toastId && current.id !== toastId) ? current : null))
-  return { isRunning, paused, cancelRequested, summary, batchToastPayload, clearBatchToast, runBatch, requestCancel, togglePause, clearSummary }
+  return {
+    isRunning,
+    paused,
+    cancelRequested,
+    summary,
+    batchToastPayload,
+    executionProgress,
+    clearBatchToast,
+    runBatch,
+    requestCancel,
+    togglePause,
+    clearSummary
+  }
 }
