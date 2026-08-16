@@ -28,6 +28,13 @@
     "loadingChangelog": "Đang tải nhật ký...",
     "loadError": "Không thể tải nội dung nhật ký thay đổi."
   },
+  "updateAvailableDialog": {
+    "title": "Có phiên bản mới!",
+    "subtitle": "Bản cập nhật đã sẵn sàng. Làm mới ngay để nhận các tính năng và sửa lỗi mới nhất.",
+    "btnChangelogs": "Xem nhật ký thay đổi",
+    "btnUpdate": "Cập nhật ngay",
+    "dontShowAgainToday": "Không hiện lại trong hôm nay"
+  },
   "updatedDialog": {
     "title": "Imify đã được cập nhật!",
     "subtitle": "Khám phá những thay đổi trong phiên bản mới nhất.",

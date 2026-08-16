@@ -28,6 +28,13 @@
     "loadingChangelog": "Loading update logs...",
     "loadError": "Could not load changelog content."
   },
+  "updateAvailableDialog": {
+    "title": "New version available!",
+    "subtitle": "A new update is ready. Refresh now to get the latest features and fixes.",
+    "btnChangelogs": "View changelog",
+    "btnUpdate": "Update now",
+    "dontShowAgainToday": "Don't show again today"
+  },
   "updatedDialog": {
     "title": "Imify has been updated!",
     "subtitle": "Discover the latest changes and additions.",
