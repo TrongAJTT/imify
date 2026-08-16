@@ -23,12 +23,12 @@ import {
   WorkspaceSettingsDialog,
   WorkspaceOptionsHeader,
   DevToolsDialog,
-  WhatsNewUpdateNotificationGate,
   useIsDesktopLayout,
   getExtensionSidebarToolGroups,
   renderWorkspaceToolIcon,
   getWorkspaceToolLabel
 } from "@imify/features/workspace-shell"
+import { GlobalModalsHost } from "@imify/features/shared/global-modals-host"
 import { useDevModeEnabled } from "@imify/features"
 import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
 import { getDevModeEnabled } from "@imify/features/dev-mode/dev-mode-store"
@@ -694,7 +694,7 @@ export default function OptionsPage() {
         onOpenAboutAttribution={() => setIsAttributionDialogOpen(true)}
         onOpenDonate={() => setIsDonateDialogOpen(true)}
       />
-      <WhatsNewUpdateNotificationGate />
+      <GlobalModalsHost />
 
       <DevToolsDialog
         isOpen={isDevToolsDialogOpen}

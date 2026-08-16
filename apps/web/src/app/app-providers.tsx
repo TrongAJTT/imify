@@ -9,7 +9,7 @@ import {
   setRuntimeLogCaptureEnabled,
 } from "@imify/features/dev-mode/runtime-log-collector";
 import { initI18n } from "@imify/i18n";
-import { GlobalConfirmationHost } from "@imify/features/shared/global-confirmation-host";
+import { GlobalModalsHost } from "@imify/features/shared/global-modals-host";
 import { localStorageAdapter } from "../adapters/local-storage-adapter";
 
 interface AppProvidersProps {
@@ -88,7 +88,7 @@ export function AppProviders({ children }: AppProvidersProps) {
   return (
     <>
       {children}
-      <GlobalConfirmationHost />
+      <GlobalModalsHost />
     </>
   );
 }
