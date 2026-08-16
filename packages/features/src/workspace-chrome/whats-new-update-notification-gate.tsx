@@ -86,13 +86,32 @@ export function WhatsNewUpdateNotificationGate() {
     setSeenState(nextState)
     seenStateRef.current = nextState
     try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(nextState))
+      }
       await deferredStorage.setItem(STORAGE_KEY_V2, JSON.stringify(nextState))
     } catch {
       // Ignore storage write failures
     }
   }
 
-  // 1. Listen for Service Worker activation broadcast to safely set cacheVersion
+  // 1. Sync state if modified externally (e.g. via DevTools or other tabs)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY_V2 && e.newValue) {
+        const parsed = safeParseSeenStateV2(e.newValue)
+        if (parsed) {
+          setSeenState(parsed)
+          seenStateRef.current = parsed
+        }
+      }
+    }
+    window.addEventListener("storage", handleStorageChange)
+    return () => window.removeEventListener("storage", handleStorageChange)
+  }, [])
+
+  // 2. Listen for Service Worker activation broadcast to safely set cacheVersion
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return
 
@@ -114,7 +133,7 @@ export function WhatsNewUpdateNotificationGate() {
     return () => navigator.serviceWorker.removeEventListener("message", handleSwMessage)
   }, [])
 
-  // 2. Main initialization and check flow
+  // 3. Main initialization and check flow
   useEffect(() => {
     if (didCheckRef.current) return
     didCheckRef.current = true
@@ -224,7 +243,11 @@ export function WhatsNewUpdateNotificationGate() {
 
   const handleSnooze = async () => {
     setIsSummaryOpen(false)
-    const current = seenStateRef.current
+    let current = seenStateRef.current
+    if (!current && typeof window !== "undefined" && window.localStorage) {
+      const raw = window.localStorage.getItem(STORAGE_KEY_V2)
+      if (raw) current = safeParseSeenStateV2(raw)
+    }
     if (!current) return
     const nextMidnight = getNextMidnightTimestamp()
     await persistState({
@@ -239,15 +262,24 @@ export function WhatsNewUpdateNotificationGate() {
 
   const handleUpdate = async () => {
     setIsUpdating(true)
-    const current = seenStateRef.current
     const now = Date.now()
 
+    let current = seenStateRef.current
+    if (typeof window !== "undefined" && window.localStorage) {
+      const raw = window.localStorage.getItem(STORAGE_KEY_V2)
+      if (raw) {
+        const parsed = safeParseSeenStateV2(raw)
+        if (parsed) current = parsed
+      }
+    }
+
     if (current) {
-      await persistState({
+      const nextState: SeenStateV2 = {
         ...current,
         cacheVersion: current.version,
         resetCacheAt: now
-      })
+      }
+      await persistState(nextState)
     }
 
     try {
