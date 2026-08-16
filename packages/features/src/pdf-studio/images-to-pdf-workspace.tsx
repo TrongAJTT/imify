@@ -399,6 +399,7 @@ export function ImagesToPdfWorkspace({
                 <MediaQueueCard
                   id={item.id}
                   name={item.name}
+                  file={item.file}
                   sizeBytes={item.size}
                   previewUrl={item.previewUrl}
                   indexBadge={idx + 1}

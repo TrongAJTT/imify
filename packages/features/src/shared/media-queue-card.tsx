@@ -2,10 +2,12 @@ import React from "react";
 import { X } from "lucide-react";
 import { BodyText, Button, MutedText } from "@imify/ui";
 import { formatBytes } from "../processor/processor-utils";
+import { useThumbnail } from "./hooks/use-thumbnail";
 
 export interface MediaQueueCardProps {
   id: string;
   name: string;
+  file?: File;
   sizeBytes?: number;
   previewUrl: string;
   indexBadge?: number | string;
@@ -19,6 +21,7 @@ export interface MediaQueueCardProps {
 export function MediaQueueCard({
   id,
   name,
+  file,
   sizeBytes,
   previewUrl,
   indexBadge,
@@ -28,6 +31,9 @@ export function MediaQueueCard({
   disabled = false,
   className = "",
 }: MediaQueueCardProps) {
+  const { thumbnail } = useThumbnail(file ?? null);
+  const effectiveSrc = thumbnail || previewUrl;
+
   return (
     <article
       className={`group relative flex flex-col overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/90 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 transition-colors select-none cursor-grab active:cursor-grabbing ${className}`}
@@ -61,7 +67,7 @@ export function MediaQueueCard({
         <img
           alt={name}
           className="h-full w-full object-cover pointer-events-none"
-          src={previewUrl}
+          src={effectiveSrc}
           loading="lazy"
         />
       </div>

@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useTranslation } from "@imify/i18n";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
-import { sanitizeFile, createThumbnailUrl } from "../shared/image-file-utils";
+import { isCommonImageFile } from "../shared/image-file-utils";
 import { PdfStudioModeSwitcher } from "./pdf-studio-mode-switcher";
 import { PdfStudioDropZone } from "./pdf-studio-drop-zone";
 import { ImagesToPdfWorkspace } from "./images-to-pdf-workspace";
@@ -86,31 +86,25 @@ export function SharedPdfStudioPage({
     };
   }, [cleanupImagePreviews]);
 
-  const handleLoadImageFiles = useCallback(async (files: File[]) => {
+  const handleLoadImageFiles = useCallback((files: File[]) => {
     setMode("images-to-pdf");
-    const newItems: PdfStudioImageItem[] = [];
+    const imageFiles = files.filter(isCommonImageFile);
+    if (imageFiles.length === 0) return;
 
-    for (const rawFile of files) {
-      try {
-        const sanitized = await sanitizeFile(rawFile);
-        const url = await createThumbnailUrl(sanitized, 200);
-        previewUrlsRef.current.push(url);
+    const newItems: PdfStudioImageItem[] = imageFiles.map((file) => {
+      const url = URL.createObjectURL(file);
+      previewUrlsRef.current.push(url);
 
-        newItems.push({
-          id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          file: sanitized,
-          previewUrl: url,
-          name: sanitized.name,
-          size: sanitized.size,
-        });
-      } catch (e) {
-        console.error("Failed to load file:", rawFile.name, e);
-      }
-    }
+      return {
+        id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        file,
+        previewUrl: url,
+        name: file.name,
+        size: file.size,
+      };
+    });
 
-    if (newItems.length > 0) {
-      setImageItems((prev) => [...prev, ...newItems]);
-    }
+    setImageItems((prev) => [...prev, ...newItems]);
   }, []);
 
   const handleLoadPdfFile = useCallback((file: File) => {
