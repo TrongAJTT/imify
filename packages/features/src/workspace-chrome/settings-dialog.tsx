@@ -45,7 +45,6 @@ import {
   type WorkspaceLayoutPreferences,
 } from "./layout-preferences";
 import {
-  detectHardwareProfile,
   normalizePerformancePreferences,
   resolvePdfStudioLazyPagination,
   type PerformancePreferences,
@@ -236,25 +235,9 @@ export function WorkspaceSettingsDialog({
   const safePerformancePreferences = normalizePerformancePreferences(
     performancePreferences,
   );
-  const advisorEnabled = safePerformancePreferences.smartAdvisorEnabled;
-  const overclockEnabled = safePerformancePreferences.allowConcurrencyOverclock;
-  const hardwareProfile = safePerformancePreferences.hardwareProfile;
 
   const updatePerformancePreferences = (next: PerformancePreferences) => {
     onChangePerformancePreferences(normalizePerformancePreferences(next));
-  };
-
-  const updateHardwareProfile = (
-    updates: Partial<PerformancePreferences["hardwareProfile"]>,
-  ) => {
-    updatePerformancePreferences({
-      ...safePerformancePreferences,
-      hardwareProfile: {
-        ...safePerformancePreferences.hardwareProfile,
-        ...updates,
-        source: "manual",
-      },
-    });
   };
 
   const tabs = [
@@ -540,137 +523,26 @@ export function WorkspaceSettingsDialog({
                   )}
                   <section className="space-y-4">
                     <SettingsItemHeader
-                      title={t("performance.advisorTitle")}
-                      description={t("performance.advisorDesc")}
+                      title={t("performance.optimizationTitle", "MEMORY & DEVICE OPTIMIZATION")}
+                      description={t("performance.optimizationDesc")}
                     />
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
-                      {t("performance.privacyNote")}
+                    <div className="space-y-2">
+                      <ToggleSwitch
+                        label={t("performance.pdfStudioLazyPagination")}
+                        description={t("performance.pdfStudioLazyPaginationDesc")}
+                        checked={resolvePdfStudioLazyPagination(
+                          safePerformancePreferences,
+                          isMobileDialog,
+                        )}
+                        onChange={(checked) =>
+                          updatePerformancePreferences({
+                            ...safePerformancePreferences,
+                            pdfStudioLazyPagination: checked,
+                          })
+                        }
+                        colorWhenEnabled="sky"
+                      />
                     </div>
-                    <ToggleSwitch
-                      label={t("performance.enableAdvisor")}
-                      description={t("performance.enableAdvisorDesc")}
-                      checked={advisorEnabled}
-                      onChange={(checked) =>
-                        updatePerformancePreferences({
-                          ...safePerformancePreferences,
-                          smartAdvisorEnabled: checked,
-                        })
-                      }
-                    />
-                    <ToggleSwitch
-                      label={t("performance.unlockConcurrency")}
-                      description={t("performance.unlockConcurrencyDesc")}
-                      checked={overclockEnabled}
-                      onChange={(checked) =>
-                        updatePerformancePreferences({
-                          ...safePerformancePreferences,
-                          allowConcurrencyOverclock: checked,
-                        })
-                      }
-                      colorWhenEnabled="amber"
-                    />
-                    <ToggleSwitch
-                      label={t("performance.pdfStudioLazyPagination")}
-                      description={t("performance.pdfStudioLazyPaginationDesc")}
-                      checked={resolvePdfStudioLazyPagination(
-                        safePerformancePreferences,
-                        isMobileDialog,
-                      )}
-                      onChange={(checked) =>
-                        updatePerformancePreferences({
-                          ...safePerformancePreferences,
-                          pdfStudioLazyPagination: checked,
-                        })
-                      }
-                      colorWhenEnabled="sky"
-                    />
-                    {advisorEnabled && (
-                      <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <BodyText className="font-semibold text-slate-800 dark:text-slate-200">
-                              {t("performance.hardwareProfile")}
-                            </BodyText>
-                            <MutedText className="text-xs">
-                              {t("performance.sourceLabel", {
-                                source:
-                                  hardwareProfile.source === "detected"
-                                    ? t("performance.sourceAuto")
-                                    : hardwareProfile.source === "manual"
-                                      ? t("performance.sourceManual")
-                                      : t("performance.sourceFallback"),
-                              })}
-                            </MutedText>
-                          </div>
-
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const detected = detectHardwareProfile();
-                              updatePerformancePreferences({
-                                ...safePerformancePreferences,
-                                hardwareProfile: detected,
-                              });
-                            }}
-                          >
-                            {t("performance.autoDetect")}
-                          </Button>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          <NumberInput
-                            label={t("performance.cpuCores")}
-                            value={hardwareProfile.cpuCores}
-                            min={1}
-                            max={64}
-                            step={1}
-                            onChangeValue={(nextValue) => {
-                              updateHardwareProfile({ cpuCores: nextValue });
-                            }}
-                          />
-
-                          <NumberInput
-                            label={t("performance.ramBudget")}
-                            value={hardwareProfile.ramBudgetGb}
-                            min={0.5}
-                            max={64}
-                            step={0.5}
-                            onChangeValue={(nextValue) => {
-                              updateHardwareProfile({ ramBudgetGb: nextValue });
-                            }}
-                          />
-                        </div>
-
-                        <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
-                          {t("performance.detectedHardware", {
-                            cores:
-                              hardwareProfile.detectedLogicalCores ??
-                              hardwareProfile.cpuCores,
-                            ram:
-                              hardwareProfile.detectedDeviceMemoryGb ??
-                              t("performance.detectedHardwareUnknown"),
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {!advisorEnabled && (
-                      <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-relaxed text-sky-800 dark:border-sky-900/50 dark:bg-slate-950/30 dark:text-sky-300">
-                        {t("performance.modeStatic")}
-                      </div>
-                    )}
-
-                    {overclockEnabled ? (
-                      <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800 dark:border-rose-900/50 dark:bg-slate-950/30 dark:text-rose-300">
-                        {t("performance.modeDanger")}
-                      </div>
-                    ) : (
-                      <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-800 dark:border-emerald-900/50 dark:bg-slate-950/30 dark:text-emerald-300">
-                        {t("performance.modeSafe")}
-                      </div>
-                    )}
                   </section>
                 </div>
               )}
