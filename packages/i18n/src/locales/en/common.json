@@ -99,5 +99,13 @@
     "previous": "Previous",
     "next": "Next",
     "jumpToPage": "Jump to page"
+  },
+  "progressCard": {
+    "title": "Processing",
+    "description": "Please keep this tab open while the system is processing",
+    "progress": "Progress",
+    "cancel": "Cancel",
+    "concurrencyTooltip": "Running {{count}} parallel threads",
+    "elapsedTooltip": "Elapsed: {{seconds}}s"
   }
 }

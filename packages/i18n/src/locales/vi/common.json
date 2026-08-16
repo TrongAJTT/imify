@@ -99,5 +99,13 @@
     "previous": "Trang trước",
     "next": "Trang sau",
     "jumpToPage": "Đi đến trang"
+  },
+  "progressCard": {
+    "title": "Đang xử lý",
+    "description": "Vui lòng giữ tab này mở trong khi hệ thống đang xử lý",
+    "progress": "Tiến trình",
+    "cancel": "Hủy tiến trình",
+    "concurrencyTooltip": "Đang chạy {{count}} luồng song song",
+    "elapsedTooltip": "Thời gian: {{seconds}}s"
   }
 }

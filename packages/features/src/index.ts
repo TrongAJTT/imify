@@ -53,6 +53,8 @@ export * from "./splitter"
 export * from "./processor"
 export * from "./workspace-shell"
 export * from "./upscaler"
+export * from "./shared/hero-progress-card"
+export * from "./pdf-studio"
 export * from "./qr-generator"
 export * from "./qr-reader"
 
