@@ -20,10 +20,9 @@ import {
   MutedText,
   LabelText,
 } from "@imify/ui";
-import { useQrGeneratorStore } from "@imify/stores";
+import { useQrGeneratorStore, toast } from "@imify/stores";
 import { encodeQrData } from "./qr-encoder";
 import { downloadWithFilename } from "../processor/processor-utils";
-import { useToast } from "@imify/core/hooks/use-toast";
 import { renderMasterCanvas, exportAsSvg } from "./qr-render-engine";
 import type { QrType } from "./types";
 import { QrFieldsForm } from "./qr-fields-form";
@@ -93,7 +92,6 @@ export function QrGeneratorWorkspace() {
     frameTextColor,
   } = store;
 
-  const { success, error } = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -180,9 +178,9 @@ export function QrGeneratorWorkspace() {
       });
 
       await downloadWithFilename(blob, `imify-qr-${type}.svg`);
-      success(t("workspace.exportSuccess"), t("workspace.downloadSvgSuccess"));
+      toast.success(t("workspace.exportSuccess"), t("workspace.downloadSvgSuccess"));
     } catch (err) {
-      error(t("workspace.exportFailed"), t("workspace.svgFailed"));
+      toast.error(t("workspace.exportFailed"), t("workspace.svgFailed"));
     } finally {
       setIsDownloading(false);
     }
@@ -197,17 +195,17 @@ export function QrGeneratorWorkspace() {
       canvas.toBlob(async (blob) => {
         if (blob) {
           await downloadWithFilename(blob, `imify-qr-${type}.png`);
-          success(
+          toast.success(
             t("workspace.exportSuccess"),
             t("workspace.downloadPngSuccess"),
           );
         } else {
-          error(t("workspace.exportFailed"), t("workspace.blobFailed"));
+          toast.error(t("workspace.exportFailed"), t("workspace.blobFailed"));
         }
         setIsDownloading(false);
       }, "image/png");
     } catch (err) {
-      error(t("workspace.exportFailed"), t("workspace.pngFailed"));
+      toast.error(t("workspace.exportFailed"), t("workspace.pngFailed"));
       setIsDownloading(false);
     }
   };
@@ -222,12 +220,12 @@ export function QrGeneratorWorkspace() {
         async (blob) => {
           if (blob) {
             await downloadWithFilename(blob, `imify-qr-${type}.webp`);
-            success(
+            toast.success(
               t("workspace.exportSuccess"),
               t("workspace.downloadWebpSuccess"),
             );
           } else {
-            error(t("workspace.exportFailed"), t("workspace.blobFailed"));
+            toast.error(t("workspace.exportFailed"), t("workspace.blobFailed"));
           }
           setIsDownloading(false);
         },
@@ -235,7 +233,7 @@ export function QrGeneratorWorkspace() {
         1.0,
       );
     } catch (err) {
-      error(t("workspace.exportFailed"), t("workspace.webpFailed"));
+      toast.error(t("workspace.exportFailed"), t("workspace.webpFailed"));
       setIsDownloading(false);
     }
   };

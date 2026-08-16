@@ -4,7 +4,6 @@ import {
   type WorkspaceConfigSidebarItem,
   AccordionCard,
   MutedText,
-  ToastContainer,
   SplitButton,
   type SplitButtonOption,
   Tooltip,
@@ -26,13 +25,12 @@ import {
   FileText,
   Copy,
 } from "lucide-react";
-import { useQrReaderStore, useWorkspaceHeaderStore } from "@imify/stores";
+import { useQrReaderStore, useWorkspaceHeaderStore, toast } from "@imify/stores";
 import {
   parseQrString,
   type ParsedQrResult,
   type ParsedQrType,
 } from "./qr-parser";
-import { useToast } from "@imify/core/hooks/use-toast";
 import { useTranslation } from "@imify/i18n";
 import { QrActionsPanel } from "./qr-actions-panel";
 
@@ -117,7 +115,6 @@ export function QrReaderSidebar({
     setLastScanResult,
     lastScanResult,
   } = useQrReaderStore();
-  const { toasts, success, error, hide } = useToast();
   const setIsMobileSidebarOpen = useWorkspaceHeaderStore((s) => s.setIsMobileSidebarOpen);
 
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
@@ -137,16 +134,16 @@ export function QrReaderSidebar({
     if (window.confirm(`${title}\n\n${msg}`)) {
       if (mode === "all") {
         clearHistory();
-        success(t("history.title"), t("history.clearSuccess"));
+        toast.success(t("history.title"), t("history.clearSuccess"));
       } else if (mode === "3days") {
         clearHistoryOlderThan(3);
-        success(t("history.title"), t("history.clearOlderSuccess"));
+        toast.success(t("history.title"), t("history.clearOlderSuccess"));
       } else if (mode === "7days") {
         clearHistoryOlderThan(7);
-        success(t("history.title"), t("history.clearOlderSuccess"));
+        toast.success(t("history.title"), t("history.clearOlderSuccess"));
       } else if (mode === "30days") {
         clearHistoryOlderThan(30);
-        success(t("history.title"), t("history.clearOlderSuccess"));
+        toast.success(t("history.title"), t("history.clearOlderSuccess"));
       }
     }
   };
@@ -154,7 +151,7 @@ export function QrReaderSidebar({
   const handleDeleteItem = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     deleteFromHistory(id);
-    success(t("history.title"), t("history.deleteSuccess"));
+    toast.success(t("history.title"), t("history.deleteSuccess"));
   };
 
   const handleCopyRaw = (raw: string, e: React.MouseEvent) => {
@@ -162,10 +159,10 @@ export function QrReaderSidebar({
     navigator.clipboard
       .writeText(raw)
       .then(() => {
-        success(t("workspace.copied"), t("workspace.copiedSuccess"));
+        toast.success(t("workspace.copied"), t("workspace.copiedSuccess"));
       })
       .catch(() => {
-        error(t("workspace.errorHeader"), t("workspace.copyFailed"));
+        toast.error(t("workspace.errorHeader"), t("workspace.copyFailed"));
       });
   };
 
@@ -343,13 +340,10 @@ export function QrReaderSidebar({
   ];
 
   return (
-    <>
-      <WorkspaceConfigSidebarPanel
-        title={t("history.title")}
-        items={sidebarItems}
-        twoColumn={false}
-      />
-      <ToastContainer toasts={toasts} onRemove={hide} />
-    </>
+    <WorkspaceConfigSidebarPanel
+      title={t("history.title")}
+      items={sidebarItems}
+      twoColumn={false}
+    />
   );
 }

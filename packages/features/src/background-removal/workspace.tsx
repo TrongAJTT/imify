@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, ToastContainer } from "@imify/ui";
-import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
-import { useBackgroundRemoverStore, promptRenameInput } from "@imify/stores";
+import { Button } from "@imify/ui";
+import { useBackgroundRemoverStore, promptRenameInput, toast } from "@imify/stores";
 import { BACKGROUND_REMOVAL_MODELS } from "./models";
 import { ModelDownloadDialog } from "./model-download-dialog";
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
@@ -60,9 +59,6 @@ export function BackgroundRemoverWorkspace({
 
   const { exportFormat, fileNamePattern, outputFormat, backgroundColor } =
     useBackgroundRemoverStore();
-
-  const { toasts, show, hide } = useToast();
-  const conversionToasts = useConversionToasts([progressPayload]);
 
   // Memoize source blob URL to prevent creating a new one on every render
   const sourceFileUrl = React.useMemo(() => {
@@ -326,14 +322,13 @@ export function BackgroundRemoverWorkspace({
 
     const { targetFormat } = mapQuickExportToEngineConfig(exportFormat);
     setIsDownloading(true);
-    const toastId = show({
-      title: t("workspace.encodingImage"),
-      message: t("workspace.preparingFile", {
+    const toastId = toast.info(
+      t("workspace.encodingImage"),
+      t("workspace.preparingFile", {
         format: targetFormat.toUpperCase(),
       }),
-      type: "notification",
-      duration: 60000,
-    });
+      60000,
+    );
 
     try {
       const canvas = document.createElement("canvas");
@@ -368,22 +363,19 @@ export function BackgroundRemoverWorkspace({
       });
 
       await executeDownloadBlobCreationAndSave(canvas, fileName);
-      hide(toastId);
-      show({
-        title: t("workspace.downloadReady"),
-        message: t("workspace.imageExported"),
-        type: "success",
-      });
+      toast.dismiss(toastId);
+      toast.success(
+        t("workspace.downloadReady"),
+        t("workspace.imageExported"),
+      );
     } catch (error) {
       console.error("Download failed:", error);
-      hide(toastId);
-      show({
-        title: t("workspace.downloadFailed"),
-        message:
-          error instanceof Error ? error.message : t("workspace.unableEncode"),
-        type: "error",
-        duration: 5000,
-      });
+      toast.dismiss(toastId);
+      toast.error(
+        t("workspace.downloadFailed"),
+        error instanceof Error ? error.message : t("workspace.unableEncode"),
+        5000,
+      );
     } finally {
       setIsDownloading(false);
     }
@@ -543,11 +535,6 @@ export function BackgroundRemoverWorkspace({
         onConfirm={handleConfirmDownload}
         model={selectedModel}
         variantId={variantId}
-      />
-
-      <ToastContainer
-        toasts={[...toasts, ...conversionToasts]}
-        onRemove={hide}
       />
     </div>
   );

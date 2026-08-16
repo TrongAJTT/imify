@@ -14,10 +14,12 @@ import {
   buildSmartOutputFileName,
   reserveUniqueFileName,
 } from "@imify/core/file-name-pattern";
-import { ToastContainer } from "@imify/ui";
-import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
-import { confirmBatchDownload, promptRenameInput } from "@imify/stores";
+import {
+  toast,
+  confirmBatchDownload,
+  promptRenameInput,
+} from "@imify/stores";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
 import {
   ExportSplitButton,
@@ -142,14 +144,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   const [previewPlan, setPreviewPlan] = useState<ReturnType<
     typeof buildSplitterSplitPlan
   > | null>(null);
-  const [importToastPayload, setImportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const [exportToastPayload, setExportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const conversionToasts = useConversionToasts([
-    importToastPayload,
-    exportToastPayload,
-  ]);
   const { getShortcutLabel } = useShortcutPreferences();
 
   const splitterPreviewShortcutsEnabled = images.length > 0;
@@ -174,12 +168,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imagesRef = useRef<SplitterImageItem[]>([]);
   const previewComputeSequenceRef = useRef(0);
-  const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
 
   const activeImage = useMemo(
     () =>
@@ -236,46 +224,15 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   useEffect(() => {
     return () => {
       imagesRef.current.forEach(revokeImageItemUrls);
-      if (importToastHideTimerRef.current) {
-        clearTimeout(importToastHideTimerRef.current);
-      }
-      if (exportToastHideTimerRef.current) {
-        clearTimeout(exportToastHideTimerRef.current);
-      }
     };
   }, []);
 
-  const handleRemoveToast = useCallback((toastId: string) => {
-    if (importToastHideTimerRef.current) {
-      clearTimeout(importToastHideTimerRef.current);
-      importToastHideTimerRef.current = null;
-    }
-    setImportToastPayload((current) =>
-      current?.id === toastId ? null : current,
-    );
-    if (exportToastHideTimerRef.current) {
-      clearTimeout(exportToastHideTimerRef.current);
-      exportToastHideTimerRef.current = null;
-    }
-    setExportToastPayload((current) =>
-      current?.id === toastId ? null : current,
-    );
-  }, []);
-
   const pushImportToast = useCallback((payload: ConversionProgressPayload) => {
-    if (importToastHideTimerRef.current) {
-      clearTimeout(importToastHideTimerRef.current);
-      importToastHideTimerRef.current = null;
-    }
-    setImportToastPayload(payload);
+    toast.progress(payload);
   }, []);
 
   const pushExportToast = useCallback((payload: ConversionProgressPayload) => {
-    if (exportToastHideTimerRef.current) {
-      clearTimeout(exportToastHideTimerRef.current);
-      exportToastHideTimerRef.current = null;
-    }
-    setExportToastPayload(payload);
+    toast.progress(payload);
   }, []);
 
   useEffect(() => {
@@ -413,12 +370,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
           percent: 100,
           message: "No valid images were imported.",
         });
-        importToastHideTimerRef.current = setTimeout(() => {
-          setImportToastPayload((current) =>
-            current?.id === toastId ? null : current,
-          );
-          importToastHideTimerRef.current = null;
-        }, 3000);
         return;
       }
 
@@ -437,12 +388,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         percent: 100,
         message: `Imported ${preparedItems.length} image${preparedItems.length === 1 ? "" : "s"}.`,
       });
-      importToastHideTimerRef.current = setTimeout(() => {
-        setImportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        importToastHideTimerRef.current = null;
-      }, 2500);
     },
     [activeImageId, exportSettings.format, pushImportToast],
   );
@@ -697,12 +642,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         percent: 100,
         message: `Export finished: ${exportFiles.length} files.`,
       });
-      exportToastHideTimerRef.current = setTimeout(() => {
-        setExportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        exportToastHideTimerRef.current = null;
-      }, 2500);
     } catch (error) {
       const message =
         error instanceof Error && error.message.trim()
@@ -719,12 +658,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         percent: 100,
         message,
       });
-      exportToastHideTimerRef.current = setTimeout(() => {
-        setExportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        exportToastHideTimerRef.current = null;
-      }, 3500);
     } finally {
       setIsExporting(false);
     }
@@ -885,15 +818,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   return (
     <SplitterWorkspaceShell
       onRootClick={onRootClick}
-      workspace={
-        <>
-          {workspaceContent}
-          <ToastContainer
-            toasts={conversionToasts}
-            onRemove={handleRemoveToast}
-          />
-        </>
-      }
+      workspace={workspaceContent}
     />
   );
 }

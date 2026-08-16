@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
-import { useToast } from "@imify/core/hooks/use-toast"
-import { ToastContainer } from "@imify/ui"
+import { toast } from "@imify/stores"
 import type { ColorBlindMode, PreviewChannelMode } from "./types"
 import { rgbToHex, transformPixelForPreview } from "./visual-analysis"
 
@@ -55,7 +54,6 @@ export function InteractivePreview({
   const transformedDataRef = useRef<Uint8ClampedArray | null>(null)
   const [sample, setSampleState] = useState<PixelSample | null>(null)
   const [isReady, setIsReady] = useState(false)
-  const { toasts, hide, colorCopied, copyFailed } = useToast()
 
   const setSample = (s: PixelSample | null) => {
     setSampleState(s)
@@ -207,9 +205,9 @@ export function InteractivePreview({
     setSample(clickedSample)
     try {
       await navigator.clipboard.writeText(clickedSample.hex)
-      colorCopied(clickedSample.hex, 2000)
+      toast.colorCopied(clickedSample.hex, 2000)
     } catch {
-      copyFailed("Clipboard access was denied.", 2000)
+      toast.copyFailed("Clipboard access was denied.", 2000)
     }
   }
 
@@ -217,6 +215,7 @@ export function InteractivePreview({
     <div className="relative mb-3 flex h-full w-full min-w-0 items-center justify-center overflow-hidden" style={{ maxHeight: maxDisplayHeight }}>
       <canvas
         ref={previewCanvasRef}
+        role="img"
         aria-label={alt}
         className="block h-auto w-auto max-h-full max-w-full cursor-zoom-in rounded border border-slate-200/80 bg-slate-100/80 dark:border-slate-700/70 dark:bg-slate-900/60"
         onPointerMove={handlePointerMove}
@@ -245,8 +244,6 @@ export function InteractivePreview({
           </div>
         </div>
       )}
-      <ToastContainer toasts={toasts} onRemove={hide} />
     </div>
   )
 }
-

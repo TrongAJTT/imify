@@ -16,9 +16,8 @@ import {
 } from "lucide-react";
 import { Button, BodyText, MutedText, Subheading, BaseDialog } from "@imify/ui";
 import { formatFileSize } from "@imify/core";
-import { useToast } from "@imify/core/hooks/use-toast";
-import { ToastContainer } from "@imify/ui/components/toast-container";
 import { useFontStore } from "@imify/stores/stores/font-store";
+import { toast } from "@imify/stores";
 import { isLocalFontAccessSupported } from "@imify/core/browser-detection";
 import { useTranslation } from "@imify/i18n";
 import {
@@ -34,7 +33,6 @@ import { DownloadFontDialog } from "./asset-fonts-download-dialog";
 
 export function AssetFontsTab() {
   const { t } = useTranslation("workspace");
-  const { toasts, hide, success, error } = useToast();
 
   const installedFonts = useFontStore((state) => state.installedFonts);
   const addFont = useFontStore((state) => state.addFont);
@@ -113,7 +111,7 @@ export function AssetFontsTab() {
     setFontToDownload(null);
     setIsDownloading(font.family);
 
-    success(
+    toast.success(
       t("assets.fonts.downloadStartedTitle"),
       t("assets.fonts.downloadingWoff", { family: font.family }),
     );
@@ -137,13 +135,13 @@ export function AssetFontsTab() {
       };
 
       await addFont(entry);
-      success(
+      toast.success(
         t("assets.fonts.installedTitle"),
         t("assets.fonts.installedDesc", { family: font.family }),
       );
     } catch (err: any) {
       console.error(`Failed to install ${font.family}:`, err);
-      error(
+      toast.error(
         t("assets.fonts.downloadFailedTitle"),
         err.message ||
           t("assets.fonts.downloadFailedDesc", { family: font.family }),
@@ -156,7 +154,7 @@ export function AssetFontsTab() {
   // Handle System Fonts fetch & open picker
   const handleOpenSystemPicker = async () => {
     if (!isLocalAccessSupported) {
-      error(
+      toast.error(
         t("assets.fonts.notSupportedTitle"),
         t("assets.fonts.notSupportedDesc"),
       );
@@ -170,7 +168,7 @@ export function AssetFontsTab() {
       setSystemFonts(fonts);
     } catch (err) {
       console.error("System fonts fetch failed:", err);
-      error(
+      toast.error(
         t("assets.fonts.fetchFailedTitle"),
         t("assets.fonts.fetchFailedDesc"),
       );
@@ -211,7 +209,7 @@ export function AssetFontsTab() {
       }) ||
       familyFonts[0];
 
-    success(
+    toast.success(
       t("assets.fonts.importingTitle"),
       t("assets.fonts.extractingSystemFont", { name: preferred.fullName }),
     );
@@ -252,13 +250,13 @@ export function AssetFontsTab() {
       };
 
       await addFont(entry);
-      success(
+      toast.success(
         t("assets.fonts.importedTitle"),
         t("assets.fonts.importedDesc", { name: preferred.family }),
       );
     } catch (err: any) {
       console.error(`Failed to import system font ${familyName}:`, err);
-      error(
+      toast.error(
         t("assets.fonts.importFailedTitle"),
         err.message || t("assets.fonts.importFailedDesc", { name: familyName }),
       );
@@ -273,7 +271,7 @@ export function AssetFontsTab() {
     // Validate extension
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (ext !== "ttf" && ext !== "otf" && ext !== "woff2") {
-      error(
+      toast.error(
         t("assets.fonts.invalidFileTitle"),
         t("assets.fonts.invalidFileDesc"),
       );
@@ -281,7 +279,7 @@ export function AssetFontsTab() {
     }
 
     try {
-      success(
+      toast.success(
         t("assets.fonts.importingTitle"),
         t("assets.fonts.processingFile", { name: file.name }),
       );
@@ -331,13 +329,13 @@ export function AssetFontsTab() {
       };
 
       await addFont(entry);
-      success(
+      toast.success(
         t("assets.fonts.importedTitle"),
         t("assets.fonts.installedDesc", { family: formattedName }),
       );
     } catch (err: any) {
       console.error("File import failed:", err);
-      error(
+      toast.error(
         t("assets.fonts.importFailedTitle"),
         err.message || t("assets.fonts.importFailedDesc", { name: file.name }),
       );
@@ -357,13 +355,13 @@ export function AssetFontsTab() {
 
     try {
       await removeFont(id);
-      success(
+      toast.success(
         t("assets.fonts.removedTitle"),
         t("assets.fonts.removedDesc", { name }),
       );
     } catch (err) {
       console.error(`Failed to delete font ${name}:`, err);
-      error(
+      toast.error(
         t("assets.fonts.clearAllFailedTitle"),
         t("assets.fonts.deleteFailedDesc", { name }),
       );
@@ -377,12 +375,12 @@ export function AssetFontsTab() {
 
     try {
       await resetToDefault();
-      success(
+      toast.success(
         t("assets.fonts.clearAllSuccessTitle"),
         t("assets.fonts.clearAllSuccessDesc"),
       );
     } catch (err) {
-      error(
+      toast.error(
         t("assets.fonts.clearAllFailedTitle"),
         t("assets.fonts.clearAllFailedDesc"),
       );
@@ -834,8 +832,6 @@ export function AssetFontsTab() {
           </Button>
         </div>
       </BaseDialog>
-
-      <ToastContainer toasts={toasts} onRemove={hide} />
     </div>
   );
 }

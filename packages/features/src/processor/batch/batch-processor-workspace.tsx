@@ -15,17 +15,16 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { BodyText, ToastContainer } from "@imify/ui";
-import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
+import { BodyText } from "@imify/ui";
 import type {
   ConversionProgressPayload,
   FormatConfig,
 } from "@imify/core/types";
+import { toast, promptRenameInput } from "@imify/stores";
 import { buildResizeQuickStatsFromDimensions } from "@imify/core/resize-quick-stats";
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
-import { promptRenameInput } from "@imify/stores";
 import { useClipboardImageIntake } from "../../shared/use-clipboard-image-intake";
 import { buildActiveCodecOptionsForTarget } from "../target-format-state";
 import { BatchActionBar } from "./action-bar";
@@ -79,14 +78,11 @@ export function BatchProcessorWorkspace() {
   const syncResizeToSource = useBatchStore((s) => s.syncResizeToSource);
   const setResizeQuickStats = useBatchStore((s) => s.setResizeQuickStats);
   const [queue, setQueue] = useState<BatchQueueItem[]>([]);
-  const [urlImportToast, setUrlImportToast] =
-    useState<ConversionProgressPayload | null>(null);
   const [isImportingUrls, setIsImportingUrls] = useState(false);
   const [batchInputValue, setBatchInputValue] = useState("");
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false);
   const pdfSplitRef = useRef<HTMLDivElement>(null);
   const firstQueueItem = queue[0];
-  const { toasts: systemToasts, hide, warning } = useToast();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, {
@@ -177,38 +173,18 @@ export function BatchProcessorWorkspace() {
     config: effectiveConfig,
     onClosePdfSplit: () => setIsPdfSplitOpen(false),
   });
-  const conversionToasts = useConversionToasts([
-    urlImportToast,
-    exportToastPayload,
-    batchToastPayload,
-  ]);
-  const mergedToasts = useMemo(
-    () => [...conversionToasts, ...systemToasts],
-    [conversionToasts, systemToasts],
-  );
-  const handleRemoveToast = useCallback(
-    (toastId: string) => {
-      hide(toastId);
-      setUrlImportToast((current) =>
-        current?.id === toastId ? null : current,
-      );
-      clearExportToast(toastId);
-      clearBatchToast(toastId);
-    },
-    [clearBatchToast, clearExportToast, hide],
-  );
   useEffect(() => {
     setBatchIsRunning(isRunning);
   }, [isRunning, setBatchIsRunning]);
   useEffect(() => {
     if (!heavyFormatToast) return;
-    warning(
+    toast.warning(
       `${heavyFormatToast.format} encoding is heavy`,
       "If your PC is low-spec, consider lowering Concurrency to 1 or 2 to avoid lags.",
       6000,
     );
     setHeavyFormatToast(null);
-  }, [heavyFormatToast, setHeavyFormatToast, warning]);
+  }, [heavyFormatToast, setHeavyFormatToast]);
   useEffect(() => {
     if (!isPdfSplitOpen) return;
     const handlePointerDown = (event: PointerEvent) => {
@@ -303,7 +279,6 @@ export function BatchProcessorWorkspace() {
   const importFromImageUrls = async (urls: string[]) => {
     if (!urls.length) return;
     setIsImportingUrls(true);
-    setUrlImportToast(null);
     try {
       const { files, failures } = await fetchRemoteImagesFromUrls(urls);
       if (files.length) appendImageFiles(files);
@@ -316,7 +291,7 @@ export function BatchProcessorWorkspace() {
           : files.length && failures.length
             ? `Imported ${files.length} URL${files.length > 1 ? "s" : ""}, ${failures.length} failed.`
             : "No valid image URLs were imported.";
-      setUrlImportToast({
+      toast.progress({
         id: toastId,
         fileName: "URL Import Status",
         targetFormat: targetFormat,
@@ -324,13 +299,6 @@ export function BatchProcessorWorkspace() {
         percent: 100,
         message,
       });
-      setTimeout(
-        () =>
-          setUrlImportToast((current) =>
-            current?.id === toastId ? null : current,
-          ),
-        2000,
-      );
     } finally {
       setIsImportingUrls(false);
     }
@@ -495,7 +463,6 @@ export function BatchProcessorWorkspace() {
           queue={queue}
         />
       </DndContext>
-      <ToastContainer toasts={mergedToasts} onRemove={handleRemoveToast} />
     </div>
   );
 }

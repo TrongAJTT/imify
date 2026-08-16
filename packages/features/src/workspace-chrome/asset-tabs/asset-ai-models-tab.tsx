@@ -21,9 +21,7 @@ import {
   resolveHuggingFaceRepoId,
 } from "../../upscaler/models";
 import { ModelDownloadDialog } from "../../background-removal/model-download-dialog";
-import { useToast } from "@imify/core/hooks/use-toast";
-import { ToastContainer } from "@imify/ui/components/toast-container";
-
+import { toast } from "@imify/stores";
 import { useTranslation } from "@imify/i18n";
 
 export function AssetAIModelsTab() {
@@ -36,7 +34,6 @@ export function AssetAIModelsTab() {
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
     new Set(),
   );
-  const { toasts, hide, success, error } = useToast();
 
   const MODEL_CATEGORIES = [
     {
@@ -143,7 +140,7 @@ export function AssetAIModelsTab() {
       }
 
       await checkCache();
-      success(
+      toast.success(
         t("assets.aiModels.deletedTitle"),
         t("assets.aiModels.deletedDesc", {
           variant: variant.label,
@@ -152,7 +149,7 @@ export function AssetAIModelsTab() {
       );
     } catch (err) {
       console.error("Failed to delete model cache:", err);
-      error(
+      toast.error(
         t("assets.aiModels.deleteFailedTitle"),
         t("assets.aiModels.deleteFailedDesc"),
       );
@@ -167,7 +164,7 @@ export function AssetAIModelsTab() {
 
     const variant =
       model.variants.find((v) => v.id === variantId) || model.variants[0];
-    success(
+    toast.success(
       t("assets.aiModels.downloadStartedTitle"),
       t("assets.aiModels.downloadStartedDesc", {
         name: model.name,
@@ -202,7 +199,7 @@ export function AssetAIModelsTab() {
 
         worker.onmessage = async (e) => {
           if (e.data.action === "warm-up-complete") {
-            success(
+            toast.success(
               t("assets.aiModels.readyTitle"),
               t("assets.aiModels.readyDesc", {
                 name: model.name,
@@ -214,7 +211,7 @@ export function AssetAIModelsTab() {
             }, 500);
             worker.terminate();
           } else if (e.data.action === "error") {
-            error(
+            toast.error(
               t("assets.aiModels.downloadFailedTitle"),
               t("assets.aiModels.downloadFailedDesc", { name: model.name }),
             );
@@ -236,7 +233,7 @@ export function AssetAIModelsTab() {
 
         worker.onmessage = async (e) => {
           if (e.data.action === "warm-up-complete") {
-            success(
+            toast.success(
               t("assets.aiModels.readyTitle"),
               t("assets.aiModels.readyDesc", {
                 name: model.name,
@@ -248,7 +245,7 @@ export function AssetAIModelsTab() {
             }, 500);
             worker.terminate();
           } else if (e.data.action === "error") {
-            error(
+            toast.error(
               t("assets.aiModels.downloadFailedTitle"),
               t("assets.aiModels.downloadFailedDesc", { name: model.name }),
             );
@@ -258,7 +255,7 @@ export function AssetAIModelsTab() {
       }
     } catch (err) {
       console.error("Failed to start download:", err);
-      error(
+      toast.error(
         t("assets.aiModels.downloadFailedTitle"),
         t("assets.aiModels.downloadInitFailedDesc"),
       );
@@ -472,8 +469,6 @@ export function AssetAIModelsTab() {
           {t("common:refresh")}
         </Button>
       </div>
-
-      <ToastContainer toasts={toasts} onRemove={hide} />
     </div>
   );
 }

@@ -18,12 +18,11 @@ import {
 import type Konva from "konva";
 import { Download, Loader2 } from "lucide-react";
 
-import { ToastContainer } from "@imify/ui/components/toast-container";
-import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import {
   mapQuickExportToEngineConfig,
   type QuickExportFormat,
 } from "@imify/core";
+import { toast } from "@imify/stores";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import {
   buildFillRuntimeItems,
@@ -180,11 +179,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     null,
   );
   const [positionGuideLines, setPositionGuideLines] = useState<number[][]>([]);
-  const [exportToastPayload, setExportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
 
   const {
     rotationSnapAngles,
@@ -196,47 +190,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     rotationTolerance: 4,
     positionTolerance: 8,
   });
-  const conversionToasts = useConversionToasts([exportToastPayload]);
 
-  const clearExportToastHideTimer = useCallback(() => {
-    if (!exportToastHideTimerRef.current) {
-      return;
-    }
-
-    clearTimeout(exportToastHideTimerRef.current);
-    exportToastHideTimerRef.current = null;
+  const pushExportToast = useCallback((payload: ConversionProgressPayload) => {
+    toast.progress(payload);
   }, []);
-
-  const pushExportToast = useCallback(
-    (payload: ConversionProgressPayload) => {
-      clearExportToastHideTimer();
-      setExportToastPayload(payload);
-    },
-    [clearExportToastHideTimer],
-  );
-
-  const scheduleExportToastHide = useCallback(
-    (toastId: string, delayMs: number) => {
-      clearExportToastHideTimer();
-      exportToastHideTimerRef.current = setTimeout(() => {
-        setExportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        exportToastHideTimerRef.current = null;
-      }, delayMs);
-    },
-    [clearExportToastHideTimer],
-  );
-
-  const handleRemoveExportToast = useCallback(
-    (toastId: string) => {
-      clearExportToastHideTimer();
-      setExportToastPayload((current) =>
-        current?.id === toastId ? null : current,
-      );
-    },
-    [clearExportToastHideTimer],
-  );
 
   const activeTemplate = useMemo(() => {
     if (sessionTemplate && sessionTemplate.id === template.id) {
@@ -632,12 +589,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       setSelectedLayerId(fillRuntimeItems[0]?.id ?? null);
     }
   }, [fillRuntimeItems, selectedLayerId, setSelectedLayerId]);
-
-  useEffect(() => {
-    return () => {
-      clearExportToastHideTimer();
-    };
-  }, [clearExportToastHideTimer]);
 
   const handlePreviewWheel = useCallback(
     (event: WheelEvent) => {
@@ -1432,7 +1383,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           percent: 100,
           message: "Export completed",
         });
-        scheduleExportToastHide(toastId, 2500);
       } catch (err) {
         console.error("Export failed:", err);
 
@@ -1444,7 +1394,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           percent: 100,
           message: "Unable to export filled template",
         });
-        scheduleExportToastHide(toastId, 6000);
       } finally {
         setIsExporting(false);
       }
@@ -1460,7 +1409,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       isExporting,
       layerFillStates,
       pushExportToast,
-      scheduleExportToastHide,
     ],
   );
 
@@ -2473,11 +2421,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           />
         </div>
       </div>
-
-      <ToastContainer
-        toasts={conversionToasts}
-        onRemove={handleRemoveExportToast}
-      />
     </div>
   );
 }

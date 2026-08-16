@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConversionProgressPayload } from '@imify/core/types';
+import { useTranslation } from '@imify/i18n';
+import { toast } from '@imify/stores';
 import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from './models';
 import {
   FEATURE_MEDIA_ASSET_PATHS,
@@ -16,8 +18,6 @@ export interface UseImageUpscalerOptions {
   onError?: (error: string) => void;
   unloadAfterSuccess?: boolean;
 }
-
-import { useTranslation } from '@imify/i18n';
 
 export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
   const { t } = useTranslation("upscaler");
@@ -51,61 +51,72 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
     switch (action) {
       case 'download-progress':
         if (payload.status === 'initiate') {
-          setProgressPayload({
+          const p: ConversionProgressPayload = {
             id: 'image-upscaler-task',
             fileName: t('progress.taskName'),
             status: 'processing',
             percent: 0,
             message: t('progress.initializing', { file: payload.file })
-          });
+          };
+          setProgressPayload(p);
+          toast.progress(p);
         } else if (payload.status === 'progress') {
-          setProgressPayload({
+          const p: ConversionProgressPayload = {
             id: 'image-upscaler-task',
             fileName: t('progress.taskName'),
             status: 'processing',
             percent: payload.progress,
             message: t('progress.downloading', { progress: Math.round(payload.progress) })
-          });
+          };
+          setProgressPayload(p);
+          toast.progress(p);
         } else if (payload.status === 'done') {
-          setProgressPayload({
+          const p: ConversionProgressPayload = {
             id: 'image-upscaler-task',
             fileName: t('progress.taskName'),
             status: 'processing',
             percent: 100,
             message: t('progress.loaded', { file: payload.file })
-          });
+          };
+          setProgressPayload(p);
+          toast.progress(p);
         } else if (payload.status === 'ready') {
-          setProgressPayload({
+          const p: ConversionProgressPayload = {
             id: 'image-upscaler-task',
             fileName: t('progress.taskName'),
             status: 'processing',
             percent: 100,
             message: t('progress.modelReady')
-          });
+          };
+          setProgressPayload(p);
+          toast.progress(p);
         }
         break;
 
-      case 'processing-progress':
-        setProgressPayload({
+      case 'processing-progress': {
+        const p: ConversionProgressPayload = {
           id: 'image-upscaler-task',
           fileName: t('progress.taskName'),
           status: 'processing',
           percent: payload.percent,
           message: payload.message
-        });
+        };
+        setProgressPayload(p);
+        toast.progress(p);
         break;
+      }
 
       case 'upscale-result': {
         setIsProcessing(false);
-        setProgressPayload({
+        const p: ConversionProgressPayload = {
           id: 'image-upscaler-task',
           fileName: t('progress.taskName'),
           status: 'success',
           percent: 100,
           message: t('progress.upscaledSuccess')
-        });
-        // Clear success toast after 3s
-        setTimeout(() => setProgressPayload(null), 3000);
+        };
+        setProgressPayload(p);
+        toast.progress(p);
 
         const { data, width, height } = payload;
         const resultImageData = new ImageData(
@@ -122,19 +133,20 @@ export function useImageUpscaler(options: UseImageUpscalerOptions = {}) {
         break;
       }
 
-      case 'error':
+      case 'error': {
         setIsProcessing(false);
-        setProgressPayload({
+        const p: ConversionProgressPayload = {
           id: 'image-upscaler-task',
           fileName: t('progress.taskName'),
           status: 'error',
           percent: 100,
           message: payload.message
-        });
+        };
+        setProgressPayload(p);
+        toast.progress(p);
         optionsRef.current.onError?.(payload.message);
-        // Auto clear error toast after 10s
-        setTimeout(() => setProgressPayload(null), 10000);
         break;
+      }
     }
   }, [terminateWorker, t]);
 

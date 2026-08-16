@@ -18,11 +18,10 @@ import {
   X,
 } from "lucide-react";
 import { APP_CONFIG } from "@imify/core/config";
-import { useToast } from "@imify/core/hooks/use-toast";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
+import { toast } from "@imify/stores";
 import { useUnifiedPresetStats } from "../shared/unified-preset-manager";
 import { useAssetStatistics } from "./asset-management-dialog";
-import { ToastContainer } from "@imify/ui/components/toast-container";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { Button } from "@imify/ui/ui/button";
 import {
@@ -151,13 +150,13 @@ export function WorkspaceSettingsDialog({
   const handleMigrateSchema = () => {
     try {
       migrateSchemaToV2();
-      success(
+      toast.success(
         t("data.migrateSuccessTitle"),
         t("data.migrateSuccessDesc"),
         3000,
       );
     } catch (err: any) {
-      error(
+      toast.error(
         t("data.migrateErrorTitle"),
         err.message || t("data.migrateErrorDesc"),
         15000,
@@ -165,7 +164,6 @@ export function WorkspaceSettingsDialog({
     }
   };
   const [isMobileDialog, setIsMobileDialog] = useState(false);
-  const { toasts, hide, success, error } = useToast();
 
   const skipDownloadConfirm = useBatchStore(
     (state) => state.skipDownloadConfirm,
@@ -953,7 +951,6 @@ export function WorkspaceSettingsDialog({
             </div>
           </div>
         )}
-        <ToastContainer toasts={toasts} onRemove={hide} />
       </BaseDialog>
       {devModeSettingsAdapter && (
         <>
@@ -975,7 +972,7 @@ export function WorkspaceSettingsDialog({
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
             onSuccess={() =>
-              success(
+              toast.success(
                 t("data.importSuccessTitle"),
                 t("data.importSuccessDesc"),
                 3000,

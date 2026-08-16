@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConversionProgressPayload } from '@imify/core/types';
+import { toast } from '@imify/stores';
 import { BACKGROUND_REMOVAL_MODELS } from './models';
 import {
   FEATURE_MEDIA_ASSET_PATHS,
@@ -42,71 +43,81 @@ export function useBackgroundRemoval(options: UseBackgroundRemovalOptions = {}) 
     switch (action) {
       case 'download-progress':
         if (payload.status === 'initiate') {
-          setProgressPayload({
+          const p: ConversionProgressPayload = {
             id: 'bg-remover-task',
             fileName: 'Background Removal',
             status: 'processing',
             percent: 0,
             message: `Initializing ${payload.file}...`
-          });
+          };
+          setProgressPayload(p);
+          toast.progress(p);
         } else if (payload.status === 'progress') {
-          setProgressPayload({
+          const p: ConversionProgressPayload = {
             id: 'bg-remover-task',
             fileName: 'Background Removal',
             status: 'processing',
             percent: payload.progress,
             message: `Downloading model: ${Math.round(payload.progress)}%`
-          });
+          };
+          setProgressPayload(p);
+          toast.progress(p);
         } else if (payload.status === 'done') {
-          setProgressPayload({
+          const p: ConversionProgressPayload = {
             id: 'bg-remover-task',
             fileName: 'Background Removal',
             status: 'processing',
             percent: 100,
             message: `Loaded ${payload.file}`
-          });
+          };
+          setProgressPayload(p);
+          toast.progress(p);
         } else if (payload.status === 'ready') {
-          setProgressPayload({
+          const p: ConversionProgressPayload = {
             id: 'bg-remover-task',
             fileName: 'Background Removal',
             status: 'processing',
             percent: 100,
             message: 'AI Model Ready'
-          });
+          };
+          setProgressPayload(p);
+          toast.progress(p);
         }
         break;
 
-      case 'segmentation-result':
+      case 'segmentation-result': {
         setIsProcessing(false);
-        setProgressPayload({
+        const p: ConversionProgressPayload = {
           id: 'bg-remover-task',
           fileName: 'Background Removal',
           status: 'success',
           percent: 100,
           message: 'Background removed successfully'
-        });
-        // Clear success toast after 3s
-        setTimeout(() => setProgressPayload(null), 3000);
+        };
+        setProgressPayload(p);
+        toast.progress(p);
         optionsRef.current.onSuccess?.(payload.output);
         
         if (optionsRef.current.unloadAfterSuccess) {
           terminateWorker();
         }
         break;
+      }
 
-      case 'error':
+      case 'error': {
         setIsProcessing(false);
-        setProgressPayload({
+        const p: ConversionProgressPayload = {
           id: 'bg-remover-task',
           fileName: 'Background Removal',
           status: 'error',
           percent: 100,
           message: payload.message
-        });
+        };
+        setProgressPayload(p);
+        toast.progress(p);
         optionsRef.current.onError?.(payload.message);
-        // Auto clear error toast after 10s
-        setTimeout(() => setProgressPayload(null), 10000);
         break;
+      }
     }
   }, [terminateWorker]);
 

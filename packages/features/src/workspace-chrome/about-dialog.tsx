@@ -14,8 +14,7 @@ import {
 import { IMIFY_LINKS } from "@imify/core";
 import { getAppMetadata } from "@imify/core/app-metadata";
 import { useDevModeEnabled } from "@imify/features/dev-mode/dev-mode-storage";
-import { useToast } from "@imify/core/hooks/use-toast";
-import { ToastContainer } from "@imify/ui/components/toast-container";
+import { toast } from "@imify/stores";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { Button } from "@imify/ui/ui/button";
 import {
@@ -110,7 +109,6 @@ export function AboutDialog({
     FEATURE_MEDIA_ASSETS.brand.imifyLogoPng,
   );
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
-  const { toasts, hide, success, warning } = useToast();
   const [isInstallDialogOpen, setIsInstallDialogOpen] = useState(false);
   const [isChangelogsDialogOpen, setIsChangelogsDialogOpen] = useState(false);
   const [isGuidesDialogOpen, setIsGuidesDialogOpen] = useState(false);
@@ -119,19 +117,19 @@ export function AboutDialog({
 
   const activateDevMode = useCallback(async () => {
     if (devModeEnabled) {
-      warning(
+      toast.warning(
         "Developer Mode",
         "Already enabled. Go to Settings -> Developer.",
       );
       return;
     }
     await setDevModeEnabled(true);
-    success(
+    toast.success(
       "Developer Mode enabled!",
       "Open Settings to access the Developer tab.",
       4000,
     );
-  }, [devModeEnabled, setDevModeEnabled, success, warning]);
+  }, [devModeEnabled, setDevModeEnabled]);
 
   const handleIconClick = useEasterEggClicker(activateDevMode);
 
@@ -141,7 +139,7 @@ export function AboutDialog({
     try {
       const hasUpdate = await checkForUpdates(true);
       if (!hasUpdate) {
-        success(t("noUpdateTitle"), t("noUpdateDesc"), 3500);
+        toast.success(t("noUpdateTitle"), t("noUpdateDesc"), 3500);
       }
     } catch {
       // Ignore network errors
@@ -373,7 +371,6 @@ export function AboutDialog({
         isOpen={isGuidesDialogOpen}
         onClose={() => setIsGuidesDialogOpen(false)}
       />
-      <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>
   );
 }

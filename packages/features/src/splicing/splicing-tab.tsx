@@ -11,13 +11,15 @@ import { Trash2 } from "lucide-react";
 import { APP_CONFIG } from "@imify/core/config";
 import { mapQuickExportToEngineConfig } from "@imify/core";
 import { buildResizeQuickStatsFromDimensions } from "@imify/core/resize-quick-stats";
-import { ToastContainer } from "@imify/ui";
-import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import { useTranslation } from "@imify/i18n";
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useSplicingExport } from "./use-splicing-export";
-import { confirmHeavyPreviewWarning, promptRenameInput } from "@imify/stores";
+import {
+  toast,
+  confirmHeavyPreviewWarning,
+  promptRenameInput,
+} from "@imify/stores";
 import type {
   SplicingImageItem,
   LayoutResult,
@@ -203,30 +205,6 @@ export function SplicingTab({
 
   const [previewInteractionMode, setPreviewInteractionMode] =
     useState<PreviewInteractionMode>("zoom");
-  const [importToastPayload, setImportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const [previewQualityToastPayload, setPreviewQualityToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const conversionToasts = useConversionToasts([
-    importToastPayload,
-    previewQualityToastPayload,
-  ]);
-  const handleRemoveToast = useCallback((toastId: string) => {
-    if (importToastHideTimerRef.current) {
-      clearTimeout(importToastHideTimerRef.current);
-      importToastHideTimerRef.current = null;
-    }
-    if (previewQualityToastHideTimerRef.current) {
-      clearTimeout(previewQualityToastHideTimerRef.current);
-      previewQualityToastHideTimerRef.current = null;
-    }
-    setImportToastPayload((current) =>
-      current?.id === toastId ? null : current,
-    );
-    setPreviewQualityToastPayload((current) =>
-      current?.id === toastId ? null : current,
-    );
-  }, []);
   const { getShortcutLabel } = useShortcutPreferences();
 
   const splicingPreviewShortcutsEnabled = images.length > 0;
@@ -255,12 +233,6 @@ export function SplicingTab({
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imagesCountRef = useRef(0);
-  const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const previewQualityToastHideTimerRef = useRef<ReturnType<
-    typeof setTimeout
-  > | null>(null);
   const pendingRenderRef = useRef<{
     toastId: string;
     expectedCount: number;
@@ -363,11 +335,7 @@ export function SplicingTab({
 
   const pushPreviewQualityToast = useCallback(
     (payload: ConversionProgressPayload) => {
-      if (previewQualityToastHideTimerRef.current) {
-        clearTimeout(previewQualityToastHideTimerRef.current);
-        previewQualityToastHideTimerRef.current = null;
-      }
-      setPreviewQualityToastPayload(payload);
+      toast.progress(payload);
     },
     [],
   );
@@ -447,34 +415,14 @@ export function SplicingTab({
   useEffect(() => {
     if (images.length > 0) return;
     previewQualityRenderRef.current = null;
-    if (previewQualityToastHideTimerRef.current) {
-      clearTimeout(previewQualityToastHideTimerRef.current);
-      previewQualityToastHideTimerRef.current = null;
-    }
-    setPreviewQualityToastPayload(null);
   }, [images.length]);
 
   useEffect(() => {
     imagesCountRef.current = images.length;
   }, [images.length]);
 
-  useEffect(() => {
-    return () => {
-      if (importToastHideTimerRef.current) {
-        clearTimeout(importToastHideTimerRef.current);
-      }
-      if (previewQualityToastHideTimerRef.current) {
-        clearTimeout(previewQualityToastHideTimerRef.current);
-      }
-    };
-  }, []);
-
   const pushImportToast = useCallback((payload: ConversionProgressPayload) => {
-    if (importToastHideTimerRef.current) {
-      clearTimeout(importToastHideTimerRef.current);
-      importToastHideTimerRef.current = null;
-    }
-    setImportToastPayload(payload);
+    toast.progress(payload);
   }, []);
 
   const addFiles = useCallback(
@@ -537,7 +485,7 @@ export function SplicingTab({
 
       if (newItems.length === 0) {
         if (shouldShowProgress) {
-          pushImportToast({
+          toast.progress({
             id: toastId,
             fileName: t("toasts.importFailed"),
             targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
@@ -546,18 +494,12 @@ export function SplicingTab({
             percent: 100,
             message: t("toasts.importFailedDesc"),
           });
-          importToastHideTimerRef.current = setTimeout(() => {
-            setImportToastPayload((current) =>
-              current?.id === toastId ? null : current,
-            );
-            importToastHideTimerRef.current = null;
-          }, 3000);
         }
         return;
       }
 
       if (shouldShowProgress) {
-        pushImportToast({
+        toast.progress({
           id: toastId,
           fileName: t("toasts.importing", { count: imageFiles.length }),
           targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
@@ -591,13 +533,13 @@ export function SplicingTab({
         pendingRenderRef.current = null;
       }
     },
-    [exportSettings.format, previewShowImageNumber, pushImportToast, t],
+    [exportSettings.format, previewShowImageNumber, t],
   );
 
   const finalizeImportToast = useCallback(
     (toastId: string, imageCount: number) => {
       pendingRenderRef.current = null;
-      pushImportToast({
+      toast.progress({
         id: toastId,
         fileName: t("toasts.importComplete"),
         targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
@@ -606,21 +548,14 @@ export function SplicingTab({
         percent: 100,
         message: t("toasts.importCompleteDesc", { count: imageCount }),
       });
-
-      importToastHideTimerRef.current = setTimeout(() => {
-        setImportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        importToastHideTimerRef.current = null;
-      }, 2500);
     },
-    [exportSettings.format, pushImportToast, t],
+    [exportSettings.format, t],
   );
 
   const finalizePreviewQualityToast = useCallback(
     (toastId: string, qualityPercent: number) => {
       previewQualityRenderRef.current = null;
-      pushPreviewQualityToast({
+      toast.progress({
         id: toastId,
         fileName: t("toasts.previewQualityToast", { percent: qualityPercent }),
         targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
@@ -629,15 +564,8 @@ export function SplicingTab({
         percent: 100,
         message: t("toasts.previewUpdated"),
       });
-
-      previewQualityToastHideTimerRef.current = setTimeout(() => {
-        setPreviewQualityToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        previewQualityToastHideTimerRef.current = null;
-      }, 2500);
     },
-    [exportSettings.format, pushPreviewQualityToast, t],
+    [exportSettings.format, t],
   );
 
   const handlePreviewSourcesProgress = useCallback(
@@ -648,7 +576,7 @@ export function SplicingTab({
       }
       const ratio = p.total > 0 ? p.completed / p.total : 0;
       const percent = Math.min(88, 5 + Math.round(ratio * 83));
-      pushPreviewQualityToast({
+      toast.progress({
         id: pending.toastId,
         fileName: t("toasts.previewQualityToast", {
           percent: pending.qualityPercent,
@@ -666,7 +594,7 @@ export function SplicingTab({
             : t("toasts.previewQualityMsg"),
       });
     },
-    [exportSettings.format, pushPreviewQualityToast, t],
+    [exportSettings.format, t],
   );
 
   const handlePreviewRendered = useCallback(
@@ -860,9 +788,6 @@ export function SplicingTab({
     images,
     exportTargetCount,
     isExporting,
-    pushToast: pushImportToast,
-    setImportToastPayload,
-    importToastHideTimerRef,
     setIsExporting,
   });
 
@@ -969,7 +894,6 @@ export function SplicingTab({
           if (files.length) await addFiles(files);
         }}
       />
-      <ToastContainer toasts={conversionToasts} onRemove={handleRemoveToast} />
     </div>
   );
 

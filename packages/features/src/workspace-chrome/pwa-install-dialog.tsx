@@ -7,7 +7,7 @@ import { Button } from "@imify/ui/ui/button";
 import { Heading, Kicker, BodyText } from "@imify/ui/ui/typography";
 import { useTranslation } from "@imify/i18n";
 import { isPwaInstallable, triggerPwaInstall } from "@imify/core";
-import { useToast } from "@imify/core/hooks/use-toast";
+import { toast } from "@imify/stores";
 
 interface PwaInstallDialogProps {
   isOpen: boolean;
@@ -16,20 +16,19 @@ interface PwaInstallDialogProps {
 
 export function PwaInstallDialog({ isOpen, onClose }: PwaInstallDialogProps) {
   const { t } = useTranslation("about");
-  const { success, error } = useToast();
   const installable = isPwaInstallable();
 
   const handleInstall = async () => {
     if (!installable) {
-      error("Installation Failed", t("pwaDialog.alreadyInstalled"));
+      toast.error("Installation Failed", t("pwaDialog.alreadyInstalled"));
       return;
     }
     const accepted = await triggerPwaInstall();
     if (accepted) {
-      success("Installation Initiated", "Imify is installing on your system.");
+      toast.success("Installation Initiated", "Imify is installing on your system.");
       onClose();
     } else {
-      error("Installation Cancelled", "App installation prompt was declined.");
+      toast.error("Installation Cancelled", "App installation prompt was declined.");
     }
   };
 

@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, ToastContainer } from "@imify/ui";
-import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
-import { useImageUpscalerStore, promptRenameInput } from "@imify/stores";
+import { Button } from "@imify/ui";
+import { useImageUpscalerStore, promptRenameInput, toast } from "@imify/stores";
 import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from "./models";
 import { ModelDownloadDialog } from "./model-download-dialog";
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
@@ -62,9 +61,6 @@ export function UpscalerWorkspace({
   const [isEncodingPreview, setIsEncodingPreview] = useState(false);
 
   const { exportFormat, fileNamePattern } = useImageUpscalerStore();
-
-  const { toasts, show, hide } = useToast();
-  const conversionToasts = useConversionToasts([progressPayload]);
 
   const sourceFileUrl = React.useMemo(() => {
     if (!sourceFile) return "";
@@ -291,14 +287,13 @@ export function UpscalerWorkspace({
 
     const { targetFormat } = mapQuickExportToEngineConfig(exportFormat);
     setIsDownloading(true);
-    const toastId = show({
-      title: t("workspace.toastEncodingTitle"),
-      message: t("workspace.toastEncodingMessage", {
+    const toastId = toast.info(
+      t("workspace.toastEncodingTitle"),
+      t("workspace.toastEncodingMessage", {
         format: targetFormat.toUpperCase(),
       }),
-      type: "notification",
-      duration: 60000,
-    });
+      60000,
+    );
 
     try {
       const canvas = document.createElement("canvas");
@@ -327,24 +322,21 @@ export function UpscalerWorkspace({
       });
 
       await executeDownloadBlobCreationAndSave(canvas, fileName);
-      hide(toastId);
-      show({
-        title: t("workspace.toastDownloadReadyTitle"),
-        message: t("workspace.toastDownloadReadyMessage"),
-        type: "success",
-      });
+      toast.dismiss(toastId);
+      toast.success(
+        t("workspace.toastDownloadReadyTitle"),
+        t("workspace.toastDownloadReadyMessage"),
+      );
     } catch (error) {
       console.error("Download failed:", error);
-      hide(toastId);
-      show({
-        title: t("workspace.toastDownloadFailedTitle"),
-        message:
-          error instanceof Error
-            ? error.message
-            : t("workspace.toastDownloadFailedMessage"),
-        type: "error",
-        duration: 5000,
-      });
+      toast.dismiss(toastId);
+      toast.error(
+        t("workspace.toastDownloadFailedTitle"),
+        error instanceof Error
+          ? error.message
+          : t("workspace.toastDownloadFailedMessage"),
+        5000,
+      );
     } finally {
       setIsDownloading(false);
     }
@@ -511,11 +503,6 @@ export function UpscalerWorkspace({
         onConfirm={handleConfirmDownload}
         model={selectedModel}
         variantId={variantId}
-      />
-
-      <ToastContainer
-        toasts={[...toasts, ...conversionToasts]}
-        onRemove={hide}
       />
     </div>
   );

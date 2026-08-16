@@ -3,7 +3,7 @@ import { useCallback } from "react"
 import { zip } from "fflate"
 import { PDFDocument } from "pdf-lib"
 import { useTranslation } from "@imify/i18n"
-import { confirmBatchDownload } from "@imify/stores"
+import { confirmBatchDownload, toast } from "@imify/stores"
 
 import { APP_CONFIG } from "@imify/core/config"
 import { mapQuickExportToEngineConfig, SPLICING_NAMING_CONFIG } from "@imify/core"
@@ -54,10 +54,6 @@ export interface UseSplicingExportArgs {
   images: SplicingImageItem[]
   exportTargetCount: number
   isExporting: boolean
-
-  pushToast: (payload: ConversionProgressPayload) => void
-  setImportToastPayload: Dispatch<SetStateAction<ConversionProgressPayload | null>>
-  importToastHideTimerRef: MutableRefObject<ReturnType<typeof setTimeout> | null>
   setIsExporting: (exporting: boolean) => void
 }
 
@@ -65,9 +61,6 @@ export function useSplicingExport({
   images,
   exportTargetCount,
   isExporting,
-  pushToast,
-  setImportToastPayload,
-  importToastHideTimerRef,
   setIsExporting,
 }: UseSplicingExportArgs) {
   const { t } = useTranslation("splicing")
@@ -106,7 +99,7 @@ export function useSplicingExport({
 
         const exportTsMs = Date.now()
         const toastId = `splicing_export_${exportTsMs}`
-        pushToast({
+        toast.progress({
           id: toastId,
           fileName: t("toasts.exportingCount", { count: exportTargetCount }),
           targetFormat: targetFormat as any,
@@ -133,7 +126,7 @@ export function useSplicingExport({
                   ? Math.min(1, (completed + active * 0.55) / safeTotal)
                   : Math.min(1, completed / safeTotal)
               const percent = phase === "decode" ? Math.min(30, Math.round(4 + ratio * 26)) : Math.min(78, Math.round(30 + ratio * 48))
-              pushToast({
+              toast.progress({
                 id: toastId,
                 fileName: t("toasts.exportingCount", { count: exportTargetCount }),
                 targetFormat: targetFormat as any,
@@ -196,7 +189,7 @@ export function useSplicingExport({
           for (let i = 0; i < blobs.length; i++) {
             downloadBlob(blobs[i], buildImageFileName(i))
             const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
-            pushToast({
+            toast.progress({
               id: toastId,
               fileName: t("toasts.exportingCount", { count: blobs.length }),
               targetFormat: targetFormat as any,
@@ -206,7 +199,7 @@ export function useSplicingExport({
             })
             await new Promise((r) => setTimeout(r, 120))
           }
-          pushToast({
+          toast.progress({
             id: toastId,
             fileName: t("toasts.exportComplete"),
             targetFormat: targetFormat as any,
@@ -216,7 +209,7 @@ export function useSplicingExport({
           })
         } else if (downloadMode === "zip") {
           const zipFileName = `spliced-image-${exportTsMs}.zip`
-          pushToast({
+          toast.progress({
             id: toastId,
             fileName: zipFileName,
             targetFormat: targetFormat as any,
@@ -229,7 +222,7 @@ export function useSplicingExport({
             files.push({ name: buildImageFileName(i), blob: blobs[i] })
           }
           const zipBlob = await createZipBlob(files)
-          pushToast({
+          toast.progress({
             id: toastId,
             fileName: zipFileName,
             targetFormat: targetFormat as any,
@@ -238,7 +231,7 @@ export function useSplicingExport({
             message: t("toasts.exportZipDownloading")
           })
           downloadBlob(zipBlob, zipFileName)
-          pushToast({
+          toast.progress({
             id: toastId,
             fileName: zipFileName,
             targetFormat: targetFormat as any,
@@ -282,7 +275,7 @@ export function useSplicingExport({
               const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
               downloadBlob(pdfBlob, buildPdfFileName(i))
               const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
-              pushToast({
+              toast.progress({
                 id: toastId,
                 fileName: t("toasts.exportingCountPdf", { count: blobs.length }),
                 targetFormat: "pdf",
@@ -291,7 +284,7 @@ export function useSplicingExport({
                 message: t("toasts.exportDownloadedPdf", { completed: i + 1, total: blobs.length })
               })
             }
-            pushToast({
+            toast.progress({
               id: toastId,
               fileName: t("toasts.exportComplete"),
               targetFormat: "pdf",
@@ -299,10 +292,6 @@ export function useSplicingExport({
               percent: 100,
               message: t("toasts.exportCompleteDescPdf", { count: blobs.length })
             })
-            importToastHideTimerRef.current = setTimeout(() => {
-              setImportToastPayload((current) => (current?.id === toastId ? null : current))
-              importToastHideTimerRef.current = null
-            }, 2500)
             return
           }
 
@@ -315,7 +304,7 @@ export function useSplicingExport({
           const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
           const singlePdfFileName = `spliced-image-${exportTsMs}.pdf`
           downloadBlob(pdfBlob, singlePdfFileName)
-          pushToast({
+          toast.progress({
             id: toastId,
             fileName: singlePdfFileName,
             targetFormat: "pdf",
@@ -324,16 +313,11 @@ export function useSplicingExport({
             message: t("toasts.exportPdfSuccess")
           })
         }
-
-        importToastHideTimerRef.current = setTimeout(() => {
-          setImportToastPayload((current) => (current?.id === toastId ? null : current))
-          importToastHideTimerRef.current = null
-        }, 2500)
       } catch (err) {
         console.error("Export failed:", err)
         const store = useSplicingStore.getState()
         const { targetFormat: errTargetFormat } = mapQuickExportToEngineConfig(store.exportSettings.format)
-        pushToast({
+        toast.progress({
           id: `splicing_export_err_${Date.now()}`,
           fileName: t("toasts.exportError"),
           targetFormat: errTargetFormat as any,
@@ -354,9 +338,6 @@ export function useSplicingExport({
       images,
       isExporting,
       exportTargetCount,
-      pushToast,
-      setImportToastPayload,
-      importToastHideTimerRef,
       setIsExporting,
       t
     ]

@@ -16,9 +16,9 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { Download, Images, Plus, Trash2 } from "lucide-react";
-import { Button, AnimatingSpinner, ToastContainer } from "@imify/ui";
-import { useConversionToasts } from "@imify/core/hooks/use-toast";
+import { Button, AnimatingSpinner } from "@imify/ui";
 import type { ConversionProgressPayload } from "@imify/core/types";
+import { toast } from "@imify/stores";
 import { useTranslation } from "@imify/i18n";
 import { formatFileSize } from "../inspector/format-utils";
 import {
@@ -58,39 +58,9 @@ export function ImagesToPdfWorkspace({
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounterRef = useRef(0);
 
-  const [exportToastPayload, setExportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const exportToastHideTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const conversionToasts = useConversionToasts([exportToastPayload]);
-
-  const clearToastHideTimer = useCallback(() => {
-    if (exportToastHideTimerRef.current) {
-      clearTimeout(exportToastHideTimerRef.current);
-      exportToastHideTimerRef.current = null;
-    }
+  const pushExportToast = useCallback((payload: ConversionProgressPayload) => {
+    toast.progress(payload);
   }, []);
-
-  const pushExportToast = useCallback(
-    (payload: ConversionProgressPayload) => {
-      clearToastHideTimer();
-      setExportToastPayload(payload);
-    },
-    [clearToastHideTimer],
-  );
-
-  const scheduleToastHide = useCallback(
-    (toastId: string, delayMs: number) => {
-      clearToastHideTimer();
-      exportToastHideTimerRef.current = setTimeout(() => {
-        setExportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        exportToastHideTimerRef.current = null;
-      }, delayMs);
-    },
-    [clearToastHideTimer],
-  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -273,7 +243,6 @@ export function ImagesToPdfWorkspace({
         percent: 100,
         message: t("progress.saving"),
       });
-      scheduleToastHide(toastId, 2500);
     } catch (err) {
       console.error("Failed to generate PDF:", err);
       pushExportToast({
@@ -284,7 +253,6 @@ export function ImagesToPdfWorkspace({
         percent: 100,
         message: "Failed to generate PDF document",
       });
-      scheduleToastHide(toastId, 4000);
     } finally {
       setIsExporting(false);
     }
@@ -410,11 +378,6 @@ export function ImagesToPdfWorkspace({
           </div>
         </SortableContext>
       </DndContext>
-
-      <ToastContainer
-        toasts={conversionToasts}
-        onRemove={() => setExportToastPayload(null)}
-      />
     </div>
   );
 }

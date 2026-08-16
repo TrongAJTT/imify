@@ -17,17 +17,15 @@ import {
   MutedText,
   Kicker,
   TextArea,
-  ToastContainer,
   Tooltip,
   cn,
   LabelText,
 } from "@imify/ui";
-import { useQrReaderStore } from "@imify/stores";
+import { useQrReaderStore, toast } from "@imify/stores";
 import {
   COMMON_IMAGE_ACCEPT_WITH_SVG,
   isCommonImageFile,
 } from "../shared/image-file-utils";
-import { useToast } from "@imify/core/hooks/use-toast";
 import { useTranslation } from "@imify/i18n";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 import { QrActionsPanel } from "./qr-actions-panel";
@@ -200,7 +198,6 @@ export function QrReaderWorkspace() {
     saveToHistory,
   } = useQrReaderStore();
 
-  const { toasts, success, error, hide } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -270,12 +267,12 @@ export function QrReaderWorkspace() {
       .then((stream) => {
         setCameraStream(stream);
         setIsScreenShare(false);
-        success(t("workspace.cameraStarted"), t("workspace.cameraAlign"));
+        toast.success(t("workspace.cameraStarted"), t("workspace.cameraAlign"));
       })
       .catch((err) => {
         console.error("Camera access failed:", err);
         setCameraError(t("workspace.cameraDenied"));
-        error(t("workspace.cameraError"), t("workspace.cameraFail"));
+        toast.error(t("workspace.cameraError"), t("workspace.cameraFail"));
       });
   };
 
@@ -290,10 +287,10 @@ export function QrReaderWorkspace() {
 
       setCameraStream(stream);
       setIsScreenShare(true);
-      success(t("workspace.screenStarted"), t("workspace.screenSelect"));
+      toast.success(t("workspace.screenStarted"), t("workspace.screenSelect"));
     } catch (err) {
       console.error("DisplayMedia capture failed:", err);
-      error(t("workspace.captureFailed"), t("workspace.captureError"));
+      toast.error(t("workspace.captureFailed"), t("workspace.captureError"));
     }
   };
 
@@ -319,7 +316,7 @@ export function QrReaderWorkspace() {
           if (result && result.code && result.code.data) {
             const { code, canvas: decodedCanvas } = result;
             setLastScanResult(decodeUtf8String(code.data));
-            success(
+            toast.success(
               t("workspace.scannedSuccess"),
               t("workspace.decodedSuccess"),
             );
@@ -343,7 +340,7 @@ export function QrReaderWorkspace() {
       active = false;
       cancelAnimationFrame(animationFrameId);
     };
-  }, [cameraStream, lastScanResult, setLastScanResult, success]);
+  }, [cameraStream, lastScanResult, setLastScanResult, t]);
 
   // 5. File import scan logic (PNG & SVG)
   const handleScanFile = (file: File) => {
@@ -371,7 +368,7 @@ export function QrReaderWorkspace() {
           if (result && result.code && result.code.data) {
             const { code, canvas: decodedCanvas } = result;
             setLastScanResult(decodeUtf8String(code.data));
-            success(
+            toast.success(
               t("workspace.scannedSuccess"),
               t("workspace.decodedFileSuccess"),
             );
@@ -379,13 +376,13 @@ export function QrReaderWorkspace() {
             // Extract QR image using helper function
             setScannedQrImage(extractQrImage(decodedCanvas, code.location));
           } else {
-            error(t("workspace.scanFailed"), t("workspace.noQrDetected"));
+            toast.error(t("workspace.scanFailed"), t("workspace.noQrDetected"));
           }
         }
         setIsAnalyzing(false);
       };
       img.onerror = () => {
-        error(t("workspace.errorHeader"), t("workspace.loadFailed"));
+        toast.error(t("workspace.errorHeader"), t("workspace.loadFailed"));
         setIsAnalyzing(false);
       };
       img.src = result;
@@ -400,7 +397,7 @@ export function QrReaderWorkspace() {
     if (isCommonImageFile(file) || file.name.toLowerCase().endsWith(".svg")) {
       handleScanFile(file);
     } else {
-      error(t("workspace.unsupportedFormat"), t("workspace.uploadValid"));
+      toast.error(t("workspace.unsupportedFormat"), t("workspace.uploadValid"));
     }
   };
 
@@ -411,7 +408,7 @@ export function QrReaderWorkspace() {
       }
     },
     onError: (msg) => {
-      error(t("workspace.errorHeader"), msg);
+      toast.error(t("workspace.errorHeader"), msg);
     },
     mode: "single",
     enabled: !cameraStream,
@@ -423,11 +420,11 @@ export function QrReaderWorkspace() {
       .writeText(lastScanResult)
       .then(() => {
         setCopied(true);
-        success(t("workspace.copied"), t("workspace.copiedSuccess"));
+        toast.success(t("workspace.copied"), t("workspace.copiedSuccess"));
         setTimeout(() => setCopied(false), 2000);
       })
       .catch(() => {
-        error(t("workspace.errorHeader"), t("workspace.copyFailed"));
+        toast.error(t("workspace.errorHeader"), t("workspace.copyFailed"));
       });
   };
 
@@ -565,7 +562,7 @@ export function QrReaderWorkspace() {
                   variant="secondary"
                   onClick={() => {
                     saveToHistory(lastScanResult);
-                    success(t("history.title"), t("history.saveSuccess"));
+                    toast.success(t("history.title"), t("history.saveSuccess"));
                   }}
                   disabled={isAlreadySaved}
                   className="flex-1 text-xs py-2 px-4 flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-800"
@@ -695,8 +692,6 @@ export function QrReaderWorkspace() {
         accept={COMMON_IMAGE_ACCEPT_WITH_SVG}
         className="hidden"
       />
-
-      <ToastContainer toasts={toasts} onRemove={hide} />
     </div>
   );
 }

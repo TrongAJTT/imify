@@ -1,14 +1,16 @@
 "use client";
 
 import React from "react";
-import { useConfirmationDialogStore } from "@imify/stores";
-import { RenameInputDialog } from "@imify/ui";
+import { useConfirmationDialogStore, useToastStore } from "@imify/stores";
+import { RenameInputDialog, ToastContainer } from "@imify/ui";
 import { BatchDownloadConfirmDialog } from "./download-confirm-dialog";
 import { OOMWarningDialog } from "../processor/batch/oom-warning-dialog";
 import { SplicingHeavyPreviewQualityDialog } from "../splicing/splicing-heavy-preview-quality-dialog";
 import { WhatsNewUpdateNotificationGate } from "../workspace-chrome/whats-new-update-notification-gate";
 
 export function GlobalModalsHost() {
+  const toasts = useToastStore((state) => state.toasts);
+  const dismissToast = useToastStore((state) => state.dismissToast);
   const downloadConfirm = useConfirmationDialogStore(
     (state) => state.downloadConfirm,
   );
@@ -77,6 +79,9 @@ export function GlobalModalsHost() {
 
       {/* 5. Update Notification & Changelogs Gate */}
       <WhatsNewUpdateNotificationGate />
+
+      {/* 6. Global Unified Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemove={dismissToast} />
     </>
   );
 }
