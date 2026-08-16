@@ -160,4 +160,5 @@ export async function convertImage(
 export * from "./pdf-engine"
 export * from "./pdf-reader"
 export * from "./streaming-zip"
+export * from "./streaming-pdf"
 

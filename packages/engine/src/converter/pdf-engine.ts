@@ -179,31 +179,42 @@ export async function embedPreparedImageToDoc(
   }
 }
 
+import { StreamingPdfWriter } from "./streaming-pdf"
+
 export async function convertImageToPdf(params: PdfConvertParams): Promise<Blob> {
   const prepared = await prepareImageForPdf(params)
-  const pdfDoc = await PDFDocument.create()
-  await embedPreparedImageToDoc(pdfDoc, prepared, params.resize)
-  const pdfBytes = await pdfDoc.save()
-  return toPdfBlob(pdfBytes)
+  const writer = new StreamingPdfWriter()
+  await writer.addPage({
+    imageBytes: prepared.bytes,
+    kind: prepared.kind,
+    imageWidth: prepared.width,
+    imageHeight: prepared.height,
+    resize: params.resize,
+  })
+  return await writer.finalize()
 }
 
 export async function mergeImagesToPdf(
   sourceBlobs: Blob[],
   onPageProgress?: (current: number, total: number) => void
 ): Promise<Blob> {
-  const pdfDoc = await PDFDocument.create()
+  const writer = new StreamingPdfWriter()
   const total = sourceBlobs.length
 
   for (let i = 0; i < total; i += 1) {
     const sourceBlob = sourceBlobs[i]!
     const prepared = await prepareImageForPdf({
       sourceBlob,
-      resize: { mode: "inherit" }
+      resize: { mode: "inherit" },
     })
-    await embedPreparedImageToDoc(pdfDoc, prepared)
+    await writer.addPage({
+      imageBytes: prepared.bytes,
+      kind: prepared.kind,
+      imageWidth: prepared.width,
+      imageHeight: prepared.height,
+    })
     onPageProgress?.(i + 1, total)
   }
 
-  const pdfBytes = await pdfDoc.save()
-  return toPdfBlob(pdfBytes)
+  return await writer.finalize()
 }

@@ -61,51 +61,60 @@ export async function renderPdfPageToCanvas(
   const loadingTask = pdfjsLib.getDocument({ data })
   const pdfDoc = await loadingTask.promise
 
-  if (pageNumber < 1 || pageNumber > pdfDoc.numPages) {
-    throw new Error(`Page number ${pageNumber} is out of range (1 - ${pdfDoc.numPages})`)
-  }
-
-  const page = await pdfDoc.getPage(pageNumber)
-  const unscaledViewport = page.getViewport({ scale: 1 })
-
-  let scale = 150 / 72
-  if (typeof options === "number") {
-    scale = options / 72
-  } else if (options) {
-    if (options.maxWidth && options.maxWidth > 0) {
-      scale = options.maxWidth / unscaledViewport.width
-    } else if (options.dpi) {
-      scale = options.dpi / 72
+  try {
+    if (pageNumber < 1 || pageNumber > pdfDoc.numPages) {
+      throw new Error(`Page number ${pageNumber} is out of range (1 - ${pdfDoc.numPages})`)
     }
-  }
 
-  const viewport = page.getViewport({ scale })
+    const page = await pdfDoc.getPage(pageNumber)
+    const unscaledViewport = page.getViewport({ scale: 1 })
 
-  const canvas = document.createElement("canvas")
-  canvas.width = Math.floor(viewport.width)
-  canvas.height = Math.floor(viewport.height)
+    let scale = 150 / 72
+    if (typeof options === "number") {
+      scale = options / 72
+    } else if (options) {
+      if (options.maxWidth && options.maxWidth > 0) {
+        scale = options.maxWidth / unscaledViewport.width
+      } else if (options.dpi) {
+        scale = options.dpi / 72
+      }
+    }
 
-  const ctx = canvas.getContext("2d")
-  if (!ctx) {
-    throw new Error("Failed to get 2D canvas context for PDF rendering")
-  }
+    const viewport = page.getViewport({ scale })
 
-  // Fill white background for pages that don't specify background color
-  ctx.fillStyle = "#FFFFFF"
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+    const canvas = document.createElement("canvas")
+    canvas.width = Math.floor(viewport.width)
+    canvas.height = Math.floor(viewport.height)
 
-  const renderContext = {
-    canvas,
-    canvasContext: ctx as any,
-    viewport
-  }
+    const ctx = canvas.getContext("2d")
+    if (!ctx) {
+      throw new Error("Failed to get 2D canvas context for PDF rendering")
+    }
 
-  await (page.render(renderContext as any) as any).promise
+    // Fill white background for pages that don't specify background color
+    ctx.fillStyle = "#FFFFFF"
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  return {
-    canvas,
-    width: canvas.width,
-    height: canvas.height
+    const renderContext = {
+      canvas,
+      canvasContext: ctx as any,
+      viewport
+    }
+
+    await (page.render(renderContext as any) as any).promise
+    page.cleanup()
+
+    return {
+      canvas,
+      width: canvas.width,
+      height: canvas.height
+    }
+  } finally {
+    try {
+      void loadingTask.destroy()
+    } catch {
+      // Ignore
+    }
   }
 }
 
@@ -123,19 +132,25 @@ export async function renderPdfPageToBlob(
         ? "image/webp"
         : "image/png"
 
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          resolve(blob)
-        } else {
-          reject(new Error(`Failed to convert canvas to ${mimeType} blob`))
-        }
-      },
-      mimeType,
-      quality
-    )
-  })
+  try {
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob)
+          } else {
+            reject(new Error(`Failed to convert canvas to ${mimeType} blob`))
+          }
+        },
+        mimeType,
+        quality
+      )
+    })
+  } finally {
+    // Release canvas memory buffer immediately
+    canvas.width = 1
+    canvas.height = 1
+  }
 }
 
 export async function renderAllPdfPagesToBlobs(

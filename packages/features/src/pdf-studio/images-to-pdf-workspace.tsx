@@ -29,11 +29,8 @@ import { SortableQueueItem } from "../shared/sortable-queue-item";
 import { MediaQueueCard } from "../shared/media-queue-card";
 import type { ImagesToPdfConfig, PdfStudioImageItem } from "./types";
 import type { ResizeConfig } from "@imify/core/types";
-import { PDFDocument } from "pdf-lib";
-import {
-  embedPreparedImageToDoc,
-  prepareImageForPdf,
-} from "@imify/engine/converter/pdf-engine";
+import { StreamingPdfWriter } from "@imify/engine";
+import { prepareImageForPdf } from "@imify/engine/converter/pdf-engine";
 
 interface ImagesToPdfWorkspaceProps {
   items: PdfStudioImageItem[];
@@ -148,7 +145,7 @@ export function ImagesToPdfWorkspace({
     });
 
     try {
-      const pdfDoc = await PDFDocument.create();
+      const pdfWriter = new StreamingPdfWriter();
       const total = items.length;
 
       for (let i = 0; i < total; i += 1) {
@@ -211,7 +208,13 @@ export function ImagesToPdfWorkspace({
           resize: resizeConfig,
         });
 
-        await embedPreparedImageToDoc(pdfDoc, prepared, resizeConfig);
+        await pdfWriter.addPage({
+          imageBytes: prepared.bytes,
+          kind: prepared.kind,
+          imageWidth: prepared.width,
+          imageHeight: prepared.height,
+          resize: resizeConfig,
+        });
       }
 
       pushExportToast({
@@ -223,10 +226,7 @@ export function ImagesToPdfWorkspace({
         message: t("progress.saving"),
       });
 
-      const pdfBytes = await pdfDoc.save();
-      const pdfBlob = new Blob([pdfBytes as unknown as BlobPart], {
-        type: "application/pdf",
-      });
+      const pdfBlob = await pdfWriter.finalize();
 
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement("a");

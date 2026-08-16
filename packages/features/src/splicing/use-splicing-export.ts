@@ -1,9 +1,9 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react"
 import { useCallback } from "react"
 import { zip } from "fflate"
-import { PDFDocument } from "pdf-lib"
 import { useTranslation } from "@imify/i18n"
 import { confirmBatchDownload, toast } from "@imify/stores"
+import { StreamingPdfWriter } from "@imify/engine"
 
 import { APP_CONFIG } from "@imify/core/config"
 import { mapQuickExportToEngineConfig, SPLICING_NAMING_CONFIG } from "@imify/core"
@@ -240,39 +240,11 @@ export function useSplicingExport({
             message: t("toasts.exportZipSuccess")
           })
         } else if (downloadMode === "pdf" || downloadMode === "individual_pdf") {
-          const convertBlobToPdfPage = async (pdfDoc: PDFDocument, blob: Blob) => {
-            let image: Awaited<ReturnType<typeof pdfDoc.embedPng | typeof pdfDoc.embedJpg>>
-            if (ext === "png") {
-              image = await pdfDoc.embedPng(await blob.arrayBuffer())
-            } else if (ext === "jpg" || ext === "jpeg") {
-              image = await pdfDoc.embedJpg(await blob.arrayBuffer())
-            } else {
-              const canvas = new OffscreenCanvas(100, 100)
-              const ctx = canvas.getContext("2d")
-              if (!ctx) return
-
-              const bitmap = await createImageBitmap(blob)
-              canvas.width = bitmap.width
-              canvas.height = bitmap.height
-              ctx.drawImage(bitmap, 0, 0)
-              bitmap.close()
-
-              const pngBlob = await canvas.convertToBlob({ type: "image/png" })
-              image = await pdfDoc.embedPng(await pngBlob.arrayBuffer())
-            }
-
-            const width = image.width as number
-            const height = image.height as number
-            const page = pdfDoc.addPage([width, height])
-            page.drawImage(image, { x: 0, y: 0, width, height })
-          }
-
           if (downloadMode === "individual_pdf") {
             for (let i = 0; i < blobs.length; i++) {
-              const pdfDoc = await PDFDocument.create()
-              await convertBlobToPdfPage(pdfDoc, blobs[i])
-              const pdfBytes = await pdfDoc.save()
-              const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
+              const writer = new StreamingPdfWriter()
+              await writer.addPage({ imageBlob: blobs[i] })
+              const pdfBlob = await writer.finalize()
               downloadBlob(pdfBlob, buildPdfFileName(i))
               const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
               toast.progress({
@@ -281,7 +253,7 @@ export function useSplicingExport({
                 targetFormat: "pdf",
                 status: "processing",
                 percent: Math.min(98, percent),
-                message: t("toasts.exportDownloadedPdf", { completed: i + 1, total: blobs.length })
+                message: t("toasts.exportDownloadedPdf", { completed: i + 1, total: blobs.length }),
               })
             }
             toast.progress({
@@ -290,18 +262,17 @@ export function useSplicingExport({
               targetFormat: "pdf",
               status: "success",
               percent: 100,
-              message: t("toasts.exportCompleteDescPdf", { count: blobs.length })
+              message: t("toasts.exportCompleteDescPdf", { count: blobs.length }),
             })
             return
           }
 
-          const pdfDoc = await PDFDocument.create()
+          const writer = new StreamingPdfWriter()
           for (const blob of blobs) {
-            await convertBlobToPdfPage(pdfDoc, blob)
+            await writer.addPage({ imageBlob: blob })
           }
 
-          const pdfBytes = await pdfDoc.save()
-          const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
+          const pdfBlob = await writer.finalize()
           const singlePdfFileName = `spliced-image-${exportTsMs}.pdf`
           downloadBlob(pdfBlob, singlePdfFileName)
           toast.progress({
@@ -310,7 +281,7 @@ export function useSplicingExport({
             targetFormat: "pdf",
             status: "success",
             percent: 100,
-            message: t("toasts.exportPdfSuccess")
+            message: t("toasts.exportPdfSuccess"),
           })
         }
       } catch (err) {
