@@ -41,7 +41,7 @@ import {
   type ExportSplitMode,
 } from "../shared/export-split-button";
 import { PaginationBar } from "../shared/pagination-bar";
-import { confirmBatchDownload, promptRenameInput } from "@imify/stores";
+import { confirmBatchDownload, promptRenameInput, toast } from "@imify/stores";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
 import {
   resolvePdfStudioLazyPagination,
@@ -75,7 +75,7 @@ export function PdfToImagesWorkspace({
   config,
   onClear,
 }: PdfToImagesWorkspaceProps) {
-  const { t } = useTranslation("pdfStudio");
+  const { t } = useTranslation(["pdfStudio", "common"]);
   const [pageCount, setPageCount] = useState<number>(0);
   const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set());
   const [rangeInput, setRangeInput] = useState<string>("");
@@ -363,6 +363,17 @@ export function PdfToImagesWorkspace({
     const pagesToExport = Array.from(selectedPages).sort((a, b) => a - b);
     if (pagesToExport.length === 0 || isExporting) return;
 
+    const startTime = Date.now();
+    const notifyCompleted = () => {
+      const elapsedMs = Date.now() - startTime;
+      const durationSeconds = (elapsedMs / 1000).toFixed(1);
+      toast.success(
+        t("done", { ns: "common" }),
+        t("completedInSeconds", { ns: "common", seconds: durationSeconds }),
+        3000,
+      );
+    };
+
     // 1. Immediately abort background thumbnail generation to allocate 100% resources
     thumbnailAbortControllerRef.current?.abort();
 
@@ -423,6 +434,7 @@ export function PdfToImagesWorkspace({
           : `${smartName}.${ext}`;
 
         await downloadWithFilename(blob, finalFileName);
+        notifyCompleted();
         return;
       }
 
@@ -473,6 +485,7 @@ export function PdfToImagesWorkspace({
           await downloadWithFilename(blob, finalFileName);
           await sleep(100);
         }
+        notifyCompleted();
         return;
       }
 
@@ -560,9 +573,12 @@ export function PdfToImagesWorkspace({
       const zipBlob = await streamingZip.finalize();
       if (signal.aborted) return;
 
-      const baseName = pdfFile.name.replace(/\.pdf$/i, "");
-      const zipFileName = `${baseName}_images.zip`;
+      const now = new Date();
+      const pad2 = (n: number) => n.toString().padStart(2, "0");
+      const time = `${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
+      const zipFileName = `imify-pdftoimg-${time}.zip`;
       await downloadWithFilename(zipBlob, zipFileName);
+      notifyCompleted();
     } catch (e: any) {
       if (!signal.aborted) {
         console.error("Export error:", e);

@@ -14,6 +14,7 @@
   "exporting": "Exporting...",
   "processing": "Processing...",
   "done": "Done",
+  "completedInSeconds": "Completed in {{seconds}}s",
   "result": "Result",
   "expand": "Expand",
   "collapse": "Collapse",

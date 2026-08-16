@@ -40,18 +40,6 @@ function getIcon(type: ToastPayload["type"]): React.ReactNode {
   }
 }
 
-function getProgressValue(toast: ToastPayload, countdownProgress: number): number | null {
-  if (toast.status === "processing" || toast.status === "queued") {
-    return typeof toast.percent === "number" ? toast.percent : null
-  }
-
-  if (toast.duration && toast.duration > 0) {
-    return countdownProgress
-  }
-
-  return null
-}
-
 interface ToastItemProps {
   toast: ToastPayload
   onRemove: (id: string) => void
@@ -59,30 +47,9 @@ interface ToastItemProps {
 }
 
 function ToastItem({ toast, onRemove, index }: ToastItemProps) {
-  const [progress, setProgress] = useState(100)
   const accent = getAccentColor(toast.type)
   const duration = toast.duration
   const isProcessing = toast.status === "processing" || toast.status === "queued"
-
-  useEffect(() => {
-    if (isProcessing || !duration || duration <= 0) return
-
-    const startTime = Date.now()
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime
-      const remaining = Math.max(0, 100 - (elapsed / duration) * 100)
-      setProgress(remaining)
-
-      if (elapsed >= duration) {
-        clearInterval(interval)
-        onRemove(toast.id)
-      }
-    }, 10)
-
-    return () => clearInterval(interval)
-  }, [toast.id, duration, isProcessing, onRemove])
-
-  const progressValue = getProgressValue(toast, progress)
 
   return (
     <div
@@ -113,6 +80,14 @@ function ToastItem({ toast, onRemove, index }: ToastItemProps) {
           to {
             opacity: 1;
             transform: translateX(0);
+          }
+        }
+        @keyframes toastProgressCountdown {
+          from {
+            width: 100%;
+          }
+          to {
+            width: 0%;
           }
         }
       `}</style>
@@ -207,8 +182,8 @@ function ToastItem({ toast, onRemove, index }: ToastItemProps) {
         ) : null}
       </div>
 
-      {/* Progress bar */}
-      {progressValue !== null && (
+      {/* Progress / Countdown bar */}
+      {isProcessing ? (
         <div
           style={{
             position: "absolute",
@@ -216,20 +191,41 @@ function ToastItem({ toast, onRemove, index }: ToastItemProps) {
             left: 0,
             right: 0,
             height: "3px",
-            background: "rgba(255, 255, 255, 0.05)",
+            background: "rgba(255, 255, 255, 0.08)",
             overflow: "hidden"
           }}
         >
           <div
             style={{
               height: "100%",
-              width: `${progressValue}%`,
+              width: `${typeof toast.percent === "number" ? toast.percent : 0}%`,
               background: accent,
-              transition: "width 0.05s linear"
+              transition: "width 0.2s ease-out"
             }}
           />
         </div>
-      )}
+      ) : duration && duration > 0 ? (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "3px",
+            background: "rgba(255, 255, 255, 0.08)",
+            overflow: "hidden"
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: "100%",
+              background: accent,
+              animation: `toastProgressCountdown ${duration}ms linear forwards`
+            }}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -14,6 +14,7 @@
   "exporting": "Đang xuất...",
   "processing": "Đang xử lý...",
   "done": "Hoàn thành",
+  "completedInSeconds": "Đã hoàn thành sau {{seconds}} giây",
   "result": "Kết quả",
   "expand": "Mở rộng",
   "collapse": "Thu gọn",
