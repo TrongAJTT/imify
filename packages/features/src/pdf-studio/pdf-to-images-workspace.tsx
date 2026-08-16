@@ -14,6 +14,7 @@ import {
   Layers,
   RotateCcw,
   Square,
+  Timer,
   Trash2,
   X,
   Zap,
@@ -82,6 +83,18 @@ export function PdfToImagesWorkspace({
   const [isInitializing, setIsInitializing] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [exportStats, setExportStats] = useState<ExportStats | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isExporting) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setElapsedSeconds((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isExporting]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -592,9 +605,9 @@ export function PdfToImagesWorkspace({
   return (
     <div className="flex flex-col gap-4">
       {/* Workspace Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
             <FileOutput size={20} />
           </div>
           <div>
@@ -638,25 +651,35 @@ export function PdfToImagesWorkspace({
 
       {/* Hero Progress Card (Mounted above selection controls during export) */}
       {isExporting && exportStats && (
-        <div className="relative overflow-hidden rounded-2xl border border-red-200 bg-gradient-to-br from-red-50/70 via-white to-slate-50 p-4 md:p-5 shadow-sm dark:border-red-900/50 dark:from-slate-900 dark:via-slate-900/90 dark:to-red-950/20 animate-in fade-in zoom-in-95 duration-200">
+        <div className="relative overflow-hidden rounded-xl border border-sky-200 bg-gradient-to-br from-sky-50/70 via-white to-slate-50 p-4 md:p-5 shadow-xs dark:border-sky-900/50 dark:from-slate-900 dark:via-slate-900/90 dark:to-sky-950/20 animate-in fade-in zoom-in-95 duration-200">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white shadow-xs">
-                  <AnimatingSpinner size={18} />
+                <div className="text-sky-500 dark:text-sky-400 shrink-0">
+                  <AnimatingSpinner size={24} />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 flex-wrap">
                     <span>{t("progress.exportingTitle")}</span>
-                    <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-extrabold text-red-700 dark:bg-red-900/40 dark:text-red-400">
+                    <span className="rounded-md bg-sky-100 px-1.5 py-0.5 text-[10px] font-extrabold text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
                       {exportStats.ext}
                     </span>
                     <span
-                      className="inline-flex items-center gap-0.5 rounded bg-amber-100 dark:bg-amber-950/40 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400 cursor-help"
+                      className="inline-flex items-center gap-0.5 rounded-md bg-amber-100 dark:bg-amber-950/40 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400 cursor-help"
                       title={t("progress.concurrencyLabel", { count: exportStats.concurrency })}
                     >
                       <Zap size={11} className="text-amber-500 fill-amber-500" />
                       <span>{exportStats.concurrency}</span>
+                    </span>
+                    <span
+                      className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:text-slate-300 font-mono"
+                      title={`Thời gian: ${elapsedSeconds}s`}
+                    >
+                      <Timer size={11} className="text-slate-500 dark:text-slate-400" />
+                      <span>
+                        {Math.floor(elapsedSeconds / 60)}:
+                        {(elapsedSeconds % 60).toString().padStart(2, "0")}
+                      </span>
                     </span>
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -670,7 +693,7 @@ export function PdfToImagesWorkspace({
                   variant="outline"
                   size="sm"
                   onClick={handleCancelExport}
-                  className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-950/30 text-xs font-semibold"
+                  className="w-full sm:w-auto rounded-lg border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-red-600 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-red-400 text-xs font-semibold"
                 >
                   <X size={13} className="mr-1 inline" />
                   {t("progress.cancelExport")}
@@ -682,13 +705,13 @@ export function PdfToImagesWorkspace({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                 <span className="truncate">{exportStats.statusText}</span>
-                <span className="font-mono text-red-600 dark:text-red-400">
+                <span className="font-mono text-sky-600 dark:text-sky-400">
                   {exportStats.percent}% ({exportStats.current}/{exportStats.total})
                 </span>
               </div>
-              <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-300 ease-out shadow-xs"
+                  className="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-600 transition-all duration-300 ease-out shadow-xs"
                   style={{ width: `${exportStats.percent}%` }}
                 />
               </div>
