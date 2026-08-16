@@ -5,7 +5,8 @@
   "pageNumberLabel": "Page {{num}}",
   "modeSwitcher": {
     "imagesToPdf": "Images to PDF",
-    "pdfToImages": "PDF to Images"
+    "pdfToImages": "PDF to Images",
+    "switchDisabledTooltip": "Please clear current files before switching modes"
   },
   "dropZone": {
     "imagesTitle": "Drop images here to create a PDF",

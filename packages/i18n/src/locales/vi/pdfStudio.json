@@ -5,7 +5,8 @@
   "pageNumberLabel": "Trang {{num}}",
   "modeSwitcher": {
     "imagesToPdf": "Ảnh sang PDF",
-    "pdfToImages": "PDF sang Ảnh"
+    "pdfToImages": "PDF sang Ảnh",
+    "switchDisabledTooltip": "Vui lòng dọn tất cả tệp hiện tại trước khi chuyển chế độ"
   },
   "dropZone": {
     "imagesTitle": "Thả hình ảnh vào đây để tạo tệp PDF",

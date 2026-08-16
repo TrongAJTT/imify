@@ -9,17 +9,22 @@ interface PdfStudioModeSwitcherProps {
   mode: PdfStudioMode
   onModeChange: (mode: PdfStudioMode) => void
   disabled?: boolean
+  disabledTooltip?: string
 }
 
 export function PdfStudioModeSwitcher({
   mode,
   onModeChange,
-  disabled = false
+  disabled = false,
+  disabledTooltip
 }: PdfStudioModeSwitcherProps) {
   const { t } = useTranslation("pdfStudio")
 
   return (
-    <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100/80 p-1 dark:border-slate-800 dark:bg-slate-900/80">
+    <div
+      className="inline-flex rounded-lg border border-slate-200 bg-slate-100/80 p-1 dark:border-slate-800 dark:bg-slate-900/80"
+      title={disabled ? disabledTooltip : undefined}
+    >
       <button
         type="button"
         disabled={disabled}

@@ -7,6 +7,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
+import { usePdfStudioStore } from "@imify/stores";
 import { useTranslation } from "@imify/i18n";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 import { isCommonImageFile } from "../shared/image-file-utils";
@@ -41,37 +42,19 @@ export function SharedPdfStudioPage({
   renderWorkspace,
 }: SharedPdfStudioPageProps) {
   const { t } = useTranslation("pdfStudio");
-  const [mode, setMode] = useState<PdfStudioMode>("images-to-pdf");
+  const mode = usePdfStudioStore((s) => s.mode);
+  const setMode = usePdfStudioStore((s) => s.setMode);
+  const imagesToPdfConfig = usePdfStudioStore((s) => s.imagesToPdfConfig);
+  const setImagesToPdfConfig = usePdfStudioStore(
+    (s) => s.setImagesToPdfConfig,
+  );
+  const pdfToImagesConfig = usePdfStudioStore((s) => s.pdfToImagesConfig);
+  const setPdfToImagesConfig = usePdfStudioStore(
+    (s) => s.setPdfToImagesConfig,
+  );
+
   const [imageItems, setImageItems] = useState<PdfStudioImageItem[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-
-  const [imagesToPdfConfig, setImagesToPdfConfig] = useState<ImagesToPdfConfig>(
-    {
-      resizeMode: "inherit",
-      resizeValue: 1280,
-      resizeApplyTo: "width",
-      resizeWidth: 1280,
-      resizeHeight: 960,
-      resizeAspectMode: "original",
-      resizeAspectRatio: "16:9",
-      resizeFitMode: "fill",
-      resizeContainBackground: "#FFFFFF",
-      resamplingAlgorithm: "lanczos3",
-      paperSize: "A4",
-      dpi: 300,
-      margin: 0,
-    },
-  );
-
-  const [pdfToImagesConfig, setPdfToImagesConfig] = useState<PdfToImagesConfig>(
-    {
-      format: "png",
-      dpi: 150,
-      fileNamePattern: "[OriginalName]_page_[Index]",
-      pageSelectionMode: "all",
-      customPageRange: "",
-    },
-  );
 
   const previewUrlsRef = useRef<string[]>([]);
 
@@ -157,7 +140,12 @@ export function SharedPdfStudioPage({
     <div className="flex flex-col gap-4">
       {/* Top Header / Mode Switcher */}
       <div className="flex items-center justify-center">
-        <PdfStudioModeSwitcher mode={mode} onModeChange={setMode} />
+        <PdfStudioModeSwitcher
+          mode={mode}
+          onModeChange={setMode}
+          disabled={hasContent}
+          disabledTooltip={t("modeSwitcher.switchDisabledTooltip")}
+        />
       </div>
 
       {/* Main Workspace Body */}
