@@ -12,7 +12,6 @@ import {
   type BatchResizeMode,
   type BatchTargetFormat,
 } from "@imify/stores/stores/batch-types";
-import { buildResizeOverrideFromState } from "@imify/core/resize-state";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
 import { useTranslation } from "@imify/i18n";
@@ -207,40 +206,6 @@ export function BatchSetupSidebarPanel({
     [targetFormat, t],
   );
 
-  const advisorResizeConfig = useMemo(
-    () =>
-      buildResizeOverrideFromState({
-        mode: resizeMode,
-        value: resizeValue,
-        applyTo: resizeApplyTo,
-        width: resizeWidth,
-        height: resizeHeight,
-        aspectMode: resizeAspectMode,
-        aspectRatio: resizeAspectRatio,
-        anchor: resizeAnchor,
-        fitMode: resizeFitMode,
-        containBackground: resizeContainBackground,
-        resamplingAlgorithm: resizeResamplingAlgorithm,
-        paperSize,
-        dpi,
-      }) ?? ({ mode: "inherit" } as const),
-    [
-      resizeMode,
-      resizeValue,
-      resizeApplyTo,
-      resizeWidth,
-      resizeHeight,
-      resizeAspectMode,
-      resizeAspectRatio,
-      resizeAnchor,
-      resizeFitMode,
-      resizeContainBackground,
-      resizeResamplingAlgorithm,
-      paperSize,
-      dpi,
-    ],
-  );
-
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "target-format-quality",
@@ -391,22 +356,15 @@ export function BatchSetupSidebarPanel({
       content: (
         <BatchExportPanel
           targetFormat={targetFormat}
-          concurrency={concurrency}
           fileNamePattern={fileNamePattern}
           stripExif={stripExif}
           supportsExif={supportsExif}
           watermark={watermark}
           watermarkSaved={watermarkIsSaved}
-          formatOptions={formatOptions}
-          onConcurrencyChange={onConcurrencyChange}
           onFileRenamingClick={() => setIsRenameDialogOpen(true)}
           onStripExifChange={onStripExifChange}
           onWatermarkingClick={() => setIsWatermarkDialogOpen(true)}
-          performancePreferences={performancePreferences}
-          resizeConfigForAdvisor={advisorResizeConfig}
-          onOpenSettings={onOpenSettings}
           disabled={isRunning}
-          hideConcurrency={setupContext === "single"}
           isRunning={isRunning}
         />
       ),

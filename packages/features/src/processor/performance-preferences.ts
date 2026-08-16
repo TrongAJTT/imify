@@ -702,3 +702,16 @@ export function resolveConcurrencyLockState(input: {
       : MAX_CONCURRENCY
   }
 }
+
+/**
+ * Automatically calculates safe and optimal concurrency based on available CPU hardware threads.
+ * Keeps 50% CPU headroom for UI responsiveness, bounded between 1 and maxCap (default: 6).
+ */
+export function detectOptimalConcurrency(maxCap = 6): number {
+  const hardwareThreads =
+    typeof navigator !== "undefined" && navigator.hardwareConcurrency
+      ? navigator.hardwareConcurrency
+      : 4
+  return Math.max(1, Math.min(maxCap, Math.floor(hardwareThreads / 2) || 2))
+}
+

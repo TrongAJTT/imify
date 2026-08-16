@@ -191,18 +191,13 @@ export function SplicingSidebarPanel({
         >
           <SplicingExportPanel
             targetFormat={exportSettings.format}
-            concurrency={exportSettings.concurrency}
             exportMode={exportSettings.exportMode}
             exportTrimBackground={exportSettings.trimBackground}
             availableExportModes={availableExportModes}
-            advisorFormatOptions={{}}
-            onConcurrencyChange={(v) => setExportSettings({ concurrency: v })}
             onExportModeChange={(v) => setExportSettings({ exportMode: v })}
             onExportTrimBackgroundChange={(v) =>
               setExportSettings({ trimBackground: v })
             }
-            performancePreferences={performancePreferences}
-            onOpenSettings={onOpenSettings}
             disabled={false}
           />
         </QuickExportSelector>

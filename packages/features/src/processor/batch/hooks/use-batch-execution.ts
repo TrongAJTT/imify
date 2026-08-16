@@ -9,6 +9,7 @@ import type { BatchQueueItem, BatchRunMode, BatchSummary, BatchWatermarkConfig }
 import { buildSmartOutputFileName, readImageDimensions } from "../pipeline"
 import { MAX_TOTAL_QUEUE_BYTES, notifyProgress, sleep, toMb } from "../utils"
 import { applyWatermarkToImageBlob } from "../../watermark"
+import { detectOptimalConcurrency } from "../../performance-preferences"
 
 function toOutputFilenameWithExtension(nameOrBase: string, extension: string): string {
   const base = nameOrBase.replace(/\.[^.]+$/, "") || "image"
@@ -29,11 +30,12 @@ export function useBatchExecution({
   queue: BatchQueueItem[]
   setQueue: Dispatch<SetStateAction<BatchQueueItem[]>>
   config: FormatConfig
-  concurrency: number
+  concurrency?: number
   stripExif: boolean
   fileNamePattern: string
   watermark: BatchWatermarkConfig
 }) {
+  const effectiveConcurrency = concurrency ?? detectOptimalConcurrency()
   const [isRunning, setIsRunning] = useState(false)
   const [cancelRequested, setCancelRequested] = useState(false)
   const [paused, setPaused] = useState(false)
@@ -98,7 +100,7 @@ export function useBatchExecution({
     const batchToastId = `batch_progress_${startedAt}`
     const workerPoolFormat = isWorkerConvertibleFormat(config.format) ? config.format : null
     const usesConversionWorkerPool = workerPoolFormat !== null
-    if (usesConversionWorkerPool) setConversionWorkerPoolSize(workerPoolFormat, concurrency)
+    if (usesConversionWorkerPool) setConversionWorkerPoolSize(workerPoolFormat, effectiveConcurrency)
     let successCount = 0; let failedCount = 0
     try {
       const totalItems = itemsToProcess.length; const totalQueueCount = queue.length; let nextItemIndex = 0
@@ -118,7 +120,7 @@ export function useBatchExecution({
         }
       }
       pushBatchProgress()
-      await Promise.all(Array.from({ length: Math.max(1, Math.min(concurrency, totalItems)) }, () => runWorkerSlot()))
+      await Promise.all(Array.from({ length: Math.max(1, Math.min(effectiveConcurrency, totalItems)) }, () => runWorkerSlot()))
     } finally {
       const total = itemsToProcess.length
       const durationMs = Date.now() - startedAt
