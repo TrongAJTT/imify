@@ -44,7 +44,15 @@
     "saving": "Finalizing PDF file...",
     "readingPdf": "Reading PDF pages...",
     "startExtracting": "Start extracting...",
-    "packaging": "Packaging images into ZIP..."
+    "packaging": "Packaging images into ZIP...",
+    "exportingTitle": "Exporting images...",
+    "exportingDesc": "Please keep this tab open while your PDF pages are being processed and extracted.",
+    "cancelExport": "Cancel Export",
+    "exportCancelled": "Export process cancelled",
+    "exportComplete": "Images exported successfully!",
+    "processedPages": "Processed {{current}} / {{total}} pages",
+    "zipBuilding": "Compressing and packaging ZIP archive...",
+    "concurrencyLabel": "Running {{count}} parallel threads"
   },
   "showcase": {
     "title": "Two-Way PDF & Image Studio",

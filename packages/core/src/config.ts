@@ -20,5 +20,7 @@ export const APP_CONFIG = {
   PDF_STUDIO: {
     PAGE_SIZE_DESKTOP: 36,
     PAGE_SIZE_MOBILE: 24,
+    LAZY_LOAD_PAGING_DESKTOP: false,
+    LAZY_LOAD_PAGING_MOBILE: true,
   },
-}
+};

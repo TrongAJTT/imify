@@ -65,7 +65,9 @@
     "detectedHardwareUnknown": "không rõ",
     "modeStatic": "Chế độ thông minh đang tắt. Trình tư vấn luồng xử lý thông minh đang chạy ở chế độ dự phòng tĩnh sử dụng cấu hình mặc định (4 luồng, giới hạn 4GB RAM).",
     "modeDanger": "Chế độ nguy hiểm: overclock đã được kích hoạt. Các định dạng nặng (AVIF/JXL/PNG tiny+OxiPNG) có thể bị hết bộ nhớ (OOM) nếu bạn đẩy luồng xử lý quá cao.",
-    "modeSafe": "Chế độ an toàn: luồng xử lý tối đa được khóa cứng theo tính toán của Trình tư vấn để giảm nguy cơ crash."
+    "modeSafe": "Chế độ an toàn: luồng xử lý tối đa được khóa cứng theo tính toán của Trình tư vấn để giảm nguy cơ crash.",
+    "pdfStudioLazyPagination": "Tải trang theo phân trang (PDF Studio)",
+    "pdfStudioLazyPaginationDesc": "Chỉ tải trước hình thu nhỏ cho các trang trong phân trang hiện tại để tối ưu hóa bộ nhớ RAM (được khuyến nghị cho thiết bị di động hoặc tệp PDF lớn)."
   },
   "warnings": {
     "sectionTitle": "Cảnh báo",

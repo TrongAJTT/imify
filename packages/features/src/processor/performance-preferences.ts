@@ -1,5 +1,6 @@
 import { normalizeResizeResamplingAlgorithm } from "@imify/core/resize-resampling"
 import type { FormatCodecOptions, ImageFormat, ResizeConfig } from "@imify/core/types"
+import { APP_CONFIG } from "@imify/core"
 
 export const PERFORMANCE_PREFERENCES_KEY = "imify_performance_preferences"
 export const MAX_CONCURRENCY = 90
@@ -30,6 +31,7 @@ export interface PerformancePreferences {
   smartAdvisorEnabled: boolean
   allowConcurrencyOverclock: boolean
   hardwareProfile: SmartHardwareProfile
+  pdfStudioLazyPagination?: boolean
 }
 
 export interface ConcurrencyAdvisorResult {
@@ -57,7 +59,8 @@ export const DEFAULT_PERFORMANCE_PREFERENCES: PerformancePreferences = {
     cpuCores: DEFAULT_CPU_CORES,
     ramBudgetGb: DEFAULT_RAM_BUDGET_GB,
     source: "fallback"
-  }
+  },
+  pdfStudioLazyPagination: undefined
 }
 
 function clampNumber(
@@ -140,8 +143,24 @@ export function normalizePerformancePreferences(value: unknown): PerformancePref
   return {
     smartAdvisorEnabled: Boolean(input.smartAdvisorEnabled),
     allowConcurrencyOverclock: Boolean(input.allowConcurrencyOverclock),
-    hardwareProfile: normalizeHardwareProfile(input.hardwareProfile)
+    hardwareProfile: normalizeHardwareProfile(input.hardwareProfile),
+    pdfStudioLazyPagination:
+      typeof input.pdfStudioLazyPagination === "boolean"
+        ? input.pdfStudioLazyPagination
+        : undefined,
   }
+}
+
+export function resolvePdfStudioLazyPagination(
+  prefs?: PerformancePreferences,
+  isMobile = false
+): boolean {
+  if (typeof prefs?.pdfStudioLazyPagination === "boolean") {
+    return prefs.pdfStudioLazyPagination
+  }
+  return isMobile
+    ? APP_CONFIG.PDF_STUDIO.LAZY_LOAD_PAGING_MOBILE
+    : APP_CONFIG.PDF_STUDIO.LAZY_LOAD_PAGING_DESKTOP
 }
 
 export function detectHardwareProfile(): SmartHardwareProfile {

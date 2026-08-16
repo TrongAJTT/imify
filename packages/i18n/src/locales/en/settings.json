@@ -65,7 +65,9 @@
     "detectedHardwareUnknown": "unknown",
     "modeStatic": "Smart mode is off. Concurrency Advisor is running in static fallback mode using default profile (4 threads, 4GB RAM budget).",
     "modeDanger": "Danger mode: overclock is enabled. Heavy formats (AVIF/JXL/PNG tiny+OxiPNG) can hit OOM if you push concurrency too high.",
-    "modeSafe": "Safe mode: concurrency max is hard-locked by Advisor calculations to reduce crash risk."
+    "modeSafe": "Safe mode: concurrency max is hard-locked by Advisor calculations to reduce crash risk.",
+    "pdfStudioLazyPagination": "Lazy Load Pages by Pagination (PDF Studio)",
+    "pdfStudioLazyPaginationDesc": "Only preload thumbnails for pages within the active pagination view to optimize RAM usage (recommended for mobile or large PDF documents)."
   },
   "warnings": {
     "sectionTitle": "Warnings",

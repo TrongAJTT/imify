@@ -15,8 +15,10 @@ import {
   RotateCcw,
   Square,
   Trash2,
+  X,
+  Zap,
 } from "lucide-react";
-import { Button, AnimatingSpinner, ToastContainer } from "@imify/ui";
+import { Button, AnimatingSpinner } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import { formatFileSize } from "../inspector/format-utils";
 import type { PdfToImagesConfig } from "./types";
@@ -32,7 +34,7 @@ import {
   renderPdfPageToBlob,
   renderPdfPageToCanvas,
 } from "@imify/engine/converter/pdf-reader";
-import { zipSync } from "fflate";
+import { StreamingZip } from "@imify/engine/converter/streaming-zip";
 import {
   ExportSplitButton,
   type ExportSplitMode,
@@ -40,8 +42,11 @@ import {
 import { PaginationBar } from "../shared/pagination-bar";
 import { confirmBatchDownload, promptRenameInput } from "@imify/stores";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
-import { useConversionToasts } from "@imify/core/hooks/use-toast";
-import type { ConversionProgressPayload } from "@imify/core/types";
+import {
+  resolvePdfStudioLazyPagination,
+  type PerformancePreferences,
+  PERFORMANCE_PREFERENCES_KEY,
+} from "../processor/performance-preferences";
 
 interface PdfToImagesWorkspaceProps {
   pdfFile: File;
@@ -53,6 +58,15 @@ interface PageThumbnail {
   pageNumber: number;
   previewUrl: string | null;
   isLoading: boolean;
+}
+
+interface ExportStats {
+  current: number;
+  total: number;
+  percent: number;
+  statusText: string;
+  concurrency: number;
+  ext: string;
 }
 
 export function PdfToImagesWorkspace({
@@ -67,14 +81,42 @@ export function PdfToImagesWorkspace({
   const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportStats, setExportStats] = useState<ExportStats | null>(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
+  // Read performance preferences for lazy load paging
+  const [isLazyPaging, setIsLazyPaging] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const raw = localStorage.getItem(PERFORMANCE_PREFERENCES_KEY);
+      const parsed: PerformancePreferences | undefined = raw
+        ? JSON.parse(raw)
+        : undefined;
+      return resolvePdfStudioLazyPagination(
+        parsed,
+        window.innerWidth < 768,
+      );
+    } catch {
+      return false;
+    }
+  });
+
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      try {
+        const raw = localStorage.getItem(PERFORMANCE_PREFERENCES_KEY);
+        const parsed: PerformancePreferences | undefined = raw
+          ? JSON.parse(raw)
+          : undefined;
+        setIsLazyPaging(resolvePdfStudioLazyPagination(parsed, mobile));
+      } catch {
+        // Ignore
+      }
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -94,47 +136,33 @@ export function PdfToImagesWorkspace({
     }
   }, [totalPages, currentPage]);
 
-  const [exportToastPayload, setExportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const exportToastHideTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Object URLs tracking to avoid memory leak
+  const previewUrlsMapRef = useRef<Map<number, string>>(new Map());
+  const thumbnailAbortControllerRef = useRef<AbortController | null>(null);
+  const exportAbortControllerRef = useRef<AbortController | null>(null);
 
-  const conversionToasts = useConversionToasts([exportToastPayload]);
-
-  const clearToastHideTimer = useCallback(() => {
-    if (exportToastHideTimerRef.current) {
-      clearTimeout(exportToastHideTimerRef.current);
-      exportToastHideTimerRef.current = null;
-    }
+  const cleanupAllPreviewUrls = useCallback(() => {
+    previewUrlsMapRef.current.forEach((url) => URL.revokeObjectURL(url));
+    previewUrlsMapRef.current.clear();
   }, []);
 
-  const pushExportToast = useCallback(
-    (payload: ConversionProgressPayload) => {
-      clearToastHideTimer();
-      setExportToastPayload(payload);
-    },
-    [clearToastHideTimer],
-  );
+  useEffect(() => {
+    return () => {
+      cleanupAllPreviewUrls();
+      thumbnailAbortControllerRef.current?.abort();
+      exportAbortControllerRef.current?.abort();
+    };
+  }, [cleanupAllPreviewUrls]);
 
-  const scheduleToastHide = useCallback(
-    (toastId: string, delayMs: number) => {
-      clearToastHideTimer();
-      exportToastHideTimerRef.current = setTimeout(() => {
-        setExportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        exportToastHideTimerRef.current = null;
-      }, delayMs);
-    },
-    [clearToastHideTimer],
-  );
-
-  // 1. Initial document scan & sequential thumbnail generation
+  // 1. Initial document scan
   useEffect(() => {
     let isCancelled = false;
 
-    const loadPdf = async () => {
+    const scanPdf = async () => {
       setIsInitializing(true);
       setCurrentPage(1);
+      cleanupAllPreviewUrls();
+
       try {
         const info = await getPdfInfo(pdfFile);
         if (isCancelled) return;
@@ -142,7 +170,6 @@ export function PdfToImagesWorkspace({
         const count = info.pageCount;
         setPageCount(count);
 
-        // Select all pages by default
         const allSet = new Set<number>();
         const initialThumbs: PageThumbnail[] = [];
         for (let i = 1; i <= count; i += 1) {
@@ -157,47 +184,81 @@ export function PdfToImagesWorkspace({
         setRangeInput(formatPageRange(allSet, count));
         setThumbnails(initialThumbs);
         setIsInitializing(false);
-
-        // Asynchronously load thumbnail for each page sequentially
-        for (let i = 1; i <= count; i += 1) {
-          if (isCancelled) break;
-          try {
-            const { canvas } = await renderPdfPageToCanvas(pdfFile, i, {
-              maxWidth: 200,
-            });
-            if (isCancelled) break;
-
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
-            setThumbnails((prev) =>
-              prev.map((th) =>
-                th.pageNumber === i
-                  ? { ...th, previewUrl: dataUrl, isLoading: false }
-                  : th,
-              ),
-            );
-          } catch (e) {
-            console.error(`Failed to load thumb for page ${i}:`, e);
-            if (isCancelled) break;
-            setThumbnails((prev) =>
-              prev.map((th) =>
-                th.pageNumber === i ? { ...th, isLoading: false } : th,
-              ),
-            );
-          }
-        }
       } catch (err) {
         console.error("Failed to load PDF info:", err);
-      } finally {
         if (!isCancelled) setIsInitializing(false);
       }
     };
 
-    void loadPdf();
+    void scanPdf();
 
     return () => {
       isCancelled = true;
     };
-  }, [pdfFile]);
+  }, [pdfFile, cleanupAllPreviewUrls]);
+
+  // 2. Thumbnail loading (Lazy Paged or All in background, cancellable on export)
+  useEffect(() => {
+    if (isInitializing || pageCount === 0 || isExporting) return;
+
+    // Cancel any previous thumbnail loader
+    thumbnailAbortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    thumbnailAbortControllerRef.current = abortController;
+    const signal = abortController.signal;
+
+    const startPage = isLazyPaging
+      ? (currentPage - 1) * pageSize + 1
+      : 1;
+    const endPage = isLazyPaging
+      ? Math.min(pageCount, currentPage * pageSize)
+      : pageCount;
+
+    const loadThumbnails = async () => {
+      for (let i = startPage; i <= endPage; i += 1) {
+        if (signal.aborted) break;
+
+        // Skip if already loaded
+        if (previewUrlsMapRef.current.has(i)) continue;
+
+        try {
+          const { canvas } = await renderPdfPageToCanvas(pdfFile, i, {
+            maxWidth: 200,
+          });
+          if (signal.aborted) break;
+
+          const blob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob((b) => resolve(b), "image/jpeg", 0.7),
+          );
+          if (signal.aborted || !blob) break;
+
+          const objectUrl = URL.createObjectURL(blob);
+          previewUrlsMapRef.current.set(i, objectUrl);
+
+          setThumbnails((prev) =>
+            prev.map((th) =>
+              th.pageNumber === i
+                ? { ...th, previewUrl: objectUrl, isLoading: false }
+                : th,
+            ),
+          );
+        } catch (e) {
+          if (signal.aborted) break;
+          setThumbnails((prev) =>
+            prev.map((th) =>
+              th.pageNumber === i ? { ...th, isLoading: false } : th,
+            ),
+          );
+        }
+      }
+    };
+
+    void loadThumbnails();
+
+    return () => {
+      abortController.abort();
+    };
+  }, [pdfFile, pageCount, isInitializing, currentPage, pageSize, isLazyPaging, isExporting]);
 
   // Handle manual click toggle on page card
   const togglePageSelection = (pageNumber: number) => {
@@ -273,6 +334,15 @@ export function PdfToImagesWorkspace({
     return { format: "png" as const, quality: 1.0, ext: "png" };
   };
 
+  const handleCancelExport = useCallback(() => {
+    if (exportAbortControllerRef.current) {
+      exportAbortControllerRef.current.abort();
+      exportAbortControllerRef.current = null;
+    }
+    setIsExporting(false);
+    setExportStats(null);
+  }, []);
+
   const executeExport = async (
     mode: "zip" | "one_by_one",
     customInput?: string,
@@ -280,34 +350,40 @@ export function PdfToImagesWorkspace({
     const pagesToExport = Array.from(selectedPages).sort((a, b) => a - b);
     if (pagesToExport.length === 0 || isExporting) return;
 
-    const toastId = `export-pdf-images-${Date.now()}`;
+    // 1. Immediately abort background thumbnail generation to allocate 100% resources
+    thumbnailAbortControllerRef.current?.abort();
+
+    // 2. Initialize export abort controller
+    const abortController = new AbortController();
+    exportAbortControllerRef.current = abortController;
+    const signal = abortController.signal;
+
     setIsExporting(true);
 
     const { format: targetFormat, quality, ext } = getFormatOptions();
     const pattern =
       config.fileNamePattern || PDF_STUDIO_NAMING_CONFIG.defaultPattern;
 
-    pushExportToast({
-      id: toastId,
-      fileName: pdfFile.name,
-      targetFormat: ext as any,
-      status: "processing",
+    const hardwareThreads =
+      typeof navigator !== "undefined" && navigator.hardwareConcurrency
+        ? navigator.hardwareConcurrency
+        : 4;
+    const concurrency = Math.max(1, Math.min(6, Math.floor(hardwareThreads / 2) || 2));
+
+    setExportStats({
+      current: 0,
+      total: pagesToExport.length,
       percent: 5,
-      message: t("progress.startExtracting"),
+      statusText: t("progress.startExtracting"),
+      concurrency,
+      ext: ext.toUpperCase(),
     });
 
     try {
       // Single page direct download
       if (pagesToExport.length === 1) {
         const pageNum = pagesToExport[0]!;
-        pushExportToast({
-          id: toastId,
-          fileName: pdfFile.name,
-          targetFormat: ext as any,
-          status: "processing",
-          percent: 50,
-          message: t("progress.rendering", { current: 1, total: 1 }),
-        });
+        setExportStats((s) => (s ? { ...s, percent: 50, statusText: t("progress.rendering", { current: 1, total: 1 }) } : s));
 
         const blob = await renderPdfPageToBlob(pdfFile, {
           pageNumber: pageNum,
@@ -315,6 +391,8 @@ export function PdfToImagesWorkspace({
           format: targetFormat,
           quality,
         });
+
+        if (signal.aborted) return;
 
         const smartName = buildSmartOutputFileName({
           pattern,
@@ -332,18 +410,6 @@ export function PdfToImagesWorkspace({
           : `${smartName}.${ext}`;
 
         await downloadWithFilename(blob, finalFileName);
-
-        pushExportToast({
-          id: toastId,
-          fileName: pdfFile.name,
-          targetFormat: ext as any,
-          status: "success",
-          percent: 100,
-          message: t("progress.exportComplete", {
-            defaultValue: "Xuất hình ảnh thành công!",
-          }),
-        });
-        scheduleToastHide(toastId, 2500);
         return;
       }
 
@@ -352,16 +418,20 @@ export function PdfToImagesWorkspace({
         const total = pagesToExport.length;
 
         for (let i = 0; i < total; i += 1) {
+          if (signal.aborted) return;
           const pageNum = pagesToExport[i]!;
-          const pct = Math.min(95, 10 + Math.round(((i + 1) / total) * 85));
-          pushExportToast({
-            id: toastId,
-            fileName: pdfFile.name,
-            targetFormat: ext as any,
-            status: "processing",
-            percent: pct,
-            message: `${t("progress.rendering", { current: i + 1, total })}`,
-          });
+          const pct = Math.min(95, 5 + Math.round(((i + 1) / total) * 90));
+
+          setExportStats((s) =>
+            s
+              ? {
+                  ...s,
+                  current: i + 1,
+                  percent: pct,
+                  statusText: t("progress.rendering", { current: i + 1, total }),
+                }
+              : s,
+          );
 
           const blob = await renderPdfPageToBlob(pdfFile, {
             pageNumber: pageNum,
@@ -369,6 +439,8 @@ export function PdfToImagesWorkspace({
             format: targetFormat,
             quality,
           });
+
+          if (signal.aborted) return;
 
           const smartName = buildSmartOutputFileName({
             pattern,
@@ -386,166 +458,176 @@ export function PdfToImagesWorkspace({
             : `${smartName}.${ext}`;
 
           await downloadWithFilename(blob, finalFileName);
-          await sleep(120);
+          await sleep(100);
         }
-
-        pushExportToast({
-          id: toastId,
-          fileName: pdfFile.name,
-          targetFormat: ext as any,
-          status: "success",
-          percent: 100,
-          message: t("progress.exportComplete", {
-            defaultValue: "Xuất hình ảnh thành công!",
-          }),
-        });
-        scheduleToastHide(toastId, 2500);
         return;
       }
 
-      // Multiple pages -> ZIP packaging
-      const archive: Record<string, Uint8Array> = {};
+      // Multiple pages -> Streaming ZIP with concurrency
+      const streamingZip = new StreamingZip();
       const total = pagesToExport.length;
+      let completedCount = 0;
 
-      for (let i = 0; i < total; i += 1) {
-        const pageNum = pagesToExport[i]!;
-        const pct = Math.min(88, 10 + Math.round(((i + 1) / total) * 78));
-        pushExportToast({
-          id: toastId,
-          fileName: pdfFile.name,
-          targetFormat: ext as any,
-          status: "processing",
-          percent: pct,
-          message: t("progress.rendering", { current: i + 1, total }),
-        });
+      // Process in concurrency chunks
+      for (let i = 0; i < total; i += concurrency) {
+        if (signal.aborted) {
+          streamingZip.abort();
+          return;
+        }
 
-        const blob = await renderPdfPageToBlob(pdfFile, {
-          pageNumber: pageNum,
-          dpi: config.dpi,
-          format: targetFormat,
-          quality,
-        });
+        const chunk = pagesToExport.slice(i, i + concurrency);
+        await Promise.all(
+          chunk.map(async (pageNum) => {
+            if (signal.aborted) return;
+            const blob = await renderPdfPageToBlob(pdfFile, {
+              pageNumber: pageNum,
+              dpi: config.dpi,
+              format: targetFormat,
+              quality,
+            });
 
-        const smartName = buildSmartOutputFileName({
-          pattern,
-          originalFileName: pdfFile.name,
-          outputExtension: ext,
-          index: pageNum,
-          totalFiles: pageCount,
-          dimensions: { width: 0, height: 0 },
-          now: new Date(),
-          input: customInput,
-        });
+            if (signal.aborted) return;
 
-        const finalFileName = smartName.endsWith(`.${ext}`)
-          ? smartName
-          : `${smartName}.${ext}`;
-        const buffer = new Uint8Array(await blob.arrayBuffer());
-        archive[finalFileName] = buffer;
+            const smartName = buildSmartOutputFileName({
+              pattern,
+              originalFileName: pdfFile.name,
+              outputExtension: ext,
+              index: pageNum,
+              totalFiles: pageCount,
+              dimensions: { width: 0, height: 0 },
+              now: new Date(),
+              input: customInput,
+            });
+
+            const finalFileName = smartName.endsWith(`.${ext}`)
+              ? smartName
+              : `${smartName}.${ext}`;
+
+            await streamingZip.addFile(finalFileName, blob);
+            completedCount += 1;
+
+            const pct = Math.min(
+              90,
+              5 + Math.round((completedCount / total) * 85),
+            );
+
+            setExportStats((s) =>
+              s
+                ? {
+                    ...s,
+                    current: completedCount,
+                    percent: pct,
+                    statusText: t("progress.rendering", {
+                      current: completedCount,
+                      total,
+                    }),
+                  }
+                : s,
+            );
+          }),
+        );
       }
 
-      pushExportToast({
-        id: toastId,
-        fileName: pdfFile.name,
-        targetFormat: ext as any,
-        status: "processing",
-        percent: 92,
-        message: t("progress.packaging"),
-      });
+      if (signal.aborted) {
+        streamingZip.abort();
+        return;
+      }
 
-      const zipBytes = zipSync(archive, { level: 6 });
-      const zipBlob = new Blob([zipBytes as unknown as BlobPart], {
-        type: "application/zip",
-      });
+      // Finalize ZIP
+      setExportStats((s) =>
+        s
+          ? {
+              ...s,
+              percent: 95,
+              statusText: t("progress.zipBuilding"),
+            }
+          : s,
+      );
 
-      const baseName = pdfFile.name.replace(/\.[^.]+$/, "") || "document";
-      await downloadWithFilename(zipBlob, `${baseName}_images.zip`);
+      const zipBlob = await streamingZip.finalize();
+      if (signal.aborted) return;
 
-      pushExportToast({
-        id: toastId,
-        fileName: pdfFile.name,
-        targetFormat: ext as any,
-        status: "success",
-        percent: 100,
-        message: t("progress.exportComplete", {
-          defaultValue: "Xuất hình ảnh thành công!",
-        }),
-      });
-      scheduleToastHide(toastId, 2500);
-    } catch (err) {
-      console.error("Failed to export images from PDF:", err);
-      pushExportToast({
-        id: toastId,
-        fileName: pdfFile.name,
-        targetFormat: ext as any,
-        status: "error",
-        percent: 100,
-        message: "Failed to export images from PDF",
-      });
-      scheduleToastHide(toastId, 4000);
+      const baseName = pdfFile.name.replace(/\.pdf$/i, "");
+      const zipFileName = `${baseName}_images.zip`;
+      await downloadWithFilename(zipBlob, zipFileName);
+    } catch (e: any) {
+      if (!signal.aborted) {
+        console.error("Export error:", e);
+      }
     } finally {
       setIsExporting(false);
+      setExportStats(null);
+      exportAbortControllerRef.current = null;
     }
   };
 
-  const handleExportModeSelect = async (mode: ExportSplitMode) => {
-    const pagesToExportCount = selectedPages.size;
-    if (pagesToExportCount === 0 || isExporting) return;
-
-    if (mode === "one_by_one") {
-      const confirmed = await confirmBatchDownload(pagesToExportCount);
-      if (!confirmed) return;
-    }
+  const handleExportClick = async (exportMode: ExportSplitMode) => {
+    const pagesToExport = Array.from(selectedPages);
+    if (pagesToExport.length === 0) return;
 
     const pattern =
       config.fileNamePattern || PDF_STUDIO_NAMING_CONFIG.defaultPattern;
-    const customInput = await promptRenameInput(pattern);
-    if (customInput === null) return;
+    let customInput: string | undefined = undefined;
 
-    void executeExport(
-      mode === "one_by_one" ? "one_by_one" : "zip",
-      customInput,
-    );
+    if (pattern.includes("[Input]")) {
+      const inputVal = await promptRenameInput(pattern);
+      if (inputVal === null) return;
+      customInput = inputVal;
+    }
+
+    if (exportMode === "one_by_one" && pagesToExport.length > 1) {
+      const confirmed = await confirmBatchDownload(pagesToExport.length);
+      if (!confirmed) return;
+      await executeExport("one_by_one", customInput);
+      return;
+    }
+
+    await executeExport(exportMode === "one_by_one" ? "one_by_one" : "zip", customInput);
   };
 
-  // Slice visible items for current page
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(pageCount, startIndex + pageSize);
-  const visibleThumbnails = useMemo(
-    () => thumbnails.slice(startIndex, endIndex),
-    [thumbnails, startIndex, endIndex],
-  );
+  const visibleThumbnails = thumbnails.slice(startIndex, endIndex);
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Top Action Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-        <div className="flex items-center gap-2">
-          <FileOutput size={16} className="text-red-500" />
-          <div className="flex flex-col">
-            <span className="truncate text-xs font-bold text-slate-900 dark:text-slate-100 max-w-[200px] sm:max-w-xs">
+      {/* Workspace Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
+            <FileOutput size={20} />
+          </div>
+          <div>
+            <h3
+              className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate max-w-xs md:max-w-md"
+              title={pdfFile.name}
+            >
               {pdfFile.name}
-            </span>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">
-              {formatFileSize(pdfFile.size)} &middot;{" "}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {formatFileSize(pdfFile.size)} •{" "}
               {t("totalPagesCount", { count: pageCount })}
-            </span>
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
             onClick={onClear}
-            disabled={isExporting}
+            disabled={isInitializing || isExporting}
+            className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
           >
             <Trash2 size={14} />
-            {t("actions.clear")}
+            <span>{t("actions.clear")}</span>
           </Button>
 
           <ExportSplitButton
-            onExport={handleExportModeSelect}
+            onExport={handleExportClick}
+            disabled={
+              isInitializing || isExporting || selectedPages.size === 0
+            }
             isLoading={isExporting}
             primaryMode="zip"
             oneByOneCount={selectedPages.size}
@@ -553,6 +635,67 @@ export function PdfToImagesWorkspace({
           />
         </div>
       </div>
+
+      {/* Hero Progress Card (Mounted above selection controls during export) */}
+      {isExporting && exportStats && (
+        <div className="relative overflow-hidden rounded-2xl border border-red-200 bg-gradient-to-br from-red-50/70 via-white to-slate-50 p-4 md:p-5 shadow-sm dark:border-red-900/50 dark:from-slate-900 dark:via-slate-900/90 dark:to-red-950/20 animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white shadow-xs">
+                  <AnimatingSpinner size={18} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 flex-wrap">
+                    <span>{t("progress.exportingTitle")}</span>
+                    <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-extrabold text-red-700 dark:bg-red-900/40 dark:text-red-400">
+                      {exportStats.ext}
+                    </span>
+                    <span
+                      className="inline-flex items-center gap-0.5 rounded bg-amber-100 dark:bg-amber-950/40 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400 cursor-help"
+                      title={t("progress.concurrencyLabel", { count: exportStats.concurrency })}
+                    >
+                      <Zap size={11} className="text-amber-500 fill-amber-500" />
+                      <span>{exportStats.concurrency}</span>
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {t("progress.exportingDesc")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancelExport}
+                  className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-950/30 text-xs font-semibold"
+                >
+                  <X size={13} className="mr-1 inline" />
+                  {t("progress.cancelExport")}
+                </Button>
+              </div>
+            </div>
+
+            {/* Large Progress Bar */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span className="truncate">{exportStats.statusText}</span>
+                <span className="font-mono text-red-600 dark:text-red-400">
+                  {exportStats.percent}% ({exportStats.current}/{exportStats.total})
+                </span>
+              </div>
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-300 ease-out shadow-xs"
+                  style={{ width: `${exportStats.percent}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Page Range & Quick Selection Controls Bar */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/60">
@@ -579,7 +722,7 @@ export function PdfToImagesWorkspace({
           </span>
         </div>
 
-        {/* Right: Quick Selection Presets (Single toggle button for All/None) */}
+        {/* Right: Quick Selection Presets */}
         <div className="flex flex-wrap items-center gap-1.5">
           {selectedPages.size < pageCount ? (
             <button
@@ -636,80 +779,79 @@ export function PdfToImagesWorkspace({
         </div>
       </div>
 
-      {/* Grid of Pages for Current View */}
-      {isInitializing && thumbnails.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-red-500">
-          <AnimatingSpinner size={32} />
-          <span className="mt-3 text-xs text-slate-500">
-            {t("progress.readingPdf")}
-          </span>
-        </div>
-      ) : (
-        <div className="grid gap-2 md:gap-3 grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {visibleThumbnails.map((thumb) => {
-            const isSelected = selectedPages.has(thumb.pageNumber);
+      {/* Grid of Pages & Pagination (Hidden during active export to release DOM & GPU memory) */}
+      {!isExporting && (
+        <>
+          {isInitializing && thumbnails.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-red-500">
+              <AnimatingSpinner size={32} />
+              <span className="mt-3 text-xs text-slate-500">
+                {t("progress.readingPdf")}
+              </span>
+            </div>
+          ) : (
+            <div className="grid gap-2 md:gap-3 grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {visibleThumbnails.map((thumb) => {
+                const isSelected = selectedPages.has(thumb.pageNumber);
 
-            return (
-              <div
-                key={thumb.pageNumber}
-                onClick={() => togglePageSelection(thumb.pageNumber)}
-                className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-white shadow-xs transition-all dark:bg-slate-900 ${
-                  isSelected
-                    ? "border-red-500 ring-2 ring-red-500/20"
-                    : "border-slate-200 opacity-60 hover:opacity-100 hover:border-slate-300 dark:border-slate-800"
-                }`}
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-2.5 py-1.5 dark:border-slate-800/80 dark:bg-slate-950/50">
-                  <span className="rounded bg-slate-200/80 px-1.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                    {t("pageNumberLabel", { num: thumb.pageNumber })}
-                  </span>
-
+                return (
                   <div
-                    className={`flex h-4 w-4 items-center justify-center rounded-sm border transition-colors ${
+                    key={thumb.pageNumber}
+                    onClick={() => togglePageSelection(thumb.pageNumber)}
+                    className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-white shadow-xs transition-all dark:bg-slate-900 ${
                       isSelected
-                        ? "border-red-500 bg-red-500 text-white"
-                        : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800"
+                        ? "border-red-500 ring-2 ring-red-500/20"
+                        : "border-slate-200 opacity-60 hover:opacity-100 hover:border-slate-300 dark:border-slate-800"
                     }`}
                   >
-                    {isSelected && <Check size={11} strokeWidth={3} />}
-                  </div>
-                </div>
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-2.5 py-1.5 dark:border-slate-800/80 dark:bg-slate-950/50">
+                      <span className="rounded bg-slate-200/80 px-1.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                        {t("pageNumberLabel", { num: thumb.pageNumber })}
+                      </span>
 
-                {/* Thumbnail */}
-                <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-slate-100/50 p-2 dark:bg-slate-950/30">
-                  {thumb.previewUrl ? (
-                    <img
-                      src={thumb.previewUrl}
-                      alt={`Page ${thumb.pageNumber}`}
-                      className="max-h-full max-w-full rounded object-contain shadow-xs"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-slate-400">
-                      <AnimatingSpinner size={18} />
+                      <div
+                        className={`flex h-4 w-4 items-center justify-center rounded-sm border transition-colors ${
+                          isSelected
+                            ? "border-red-500 bg-red-500 text-white"
+                            : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800"
+                        }`}
+                      >
+                        {isSelected && <Check size={11} strokeWidth={3} />}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+
+                    {/* Thumbnail */}
+                    <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-slate-100/50 p-2 dark:bg-slate-950/30">
+                      {thumb.previewUrl ? (
+                        <img
+                          src={thumb.previewUrl}
+                          alt={`Page ${thumb.pageNumber}`}
+                          className="max-h-full max-w-full rounded object-contain shadow-xs pointer-events-none"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-slate-400">
+                          <AnimatingSpinner size={18} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Pagination Controls Bar */}
+          <PaginationBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            startItemIndex={startIndex + 1}
+            endItemIndex={endIndex}
+            totalItems={pageCount}
+          />
+        </>
       )}
-
-      {/* Pagination Controls Bar */}
-      <PaginationBar
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        startItemIndex={startIndex + 1}
-        endItemIndex={endIndex}
-        totalItems={pageCount}
-      />
-
-      <ToastContainer
-        toasts={conversionToasts}
-        onRemove={() => setExportToastPayload(null)}
-      />
     </div>
   );
 }

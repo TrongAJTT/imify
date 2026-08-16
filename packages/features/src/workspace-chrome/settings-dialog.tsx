@@ -48,6 +48,7 @@ import {
 import {
   detectHardwareProfile,
   normalizePerformancePreferences,
+  resolvePdfStudioLazyPagination,
   type PerformancePreferences,
 } from "../processor/performance-preferences";
 import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog";
@@ -569,6 +570,21 @@ export function WorkspaceSettingsDialog({
                         })
                       }
                       colorWhenEnabled="amber"
+                    />
+                    <ToggleSwitch
+                      label={t("performance.pdfStudioLazyPagination")}
+                      description={t("performance.pdfStudioLazyPaginationDesc")}
+                      checked={resolvePdfStudioLazyPagination(
+                        safePerformancePreferences,
+                        isMobileDialog,
+                      )}
+                      onChange={(checked) =>
+                        updatePerformancePreferences({
+                          ...safePerformancePreferences,
+                          pdfStudioLazyPagination: checked,
+                        })
+                      }
+                      colorWhenEnabled="sky"
                     />
                     {advisorEnabled && (
                       <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">

@@ -44,7 +44,15 @@
     "saving": "Đang hoàn tất tệp PDF...",
     "readingPdf": "Đang đọc các trang PDF...",
     "startExtracting": "Bắt đầu trích xuất...",
-    "packaging": "Đang nén ảnh vào tệp ZIP..."
+    "packaging": "Đang nén ảnh vào tệp ZIP...",
+    "exportingTitle": "Đang xuất hình ảnh...",
+    "exportingDesc": "Vui lòng giữ tab này mở trong khi hệ thống đang xử lý và trích xuất các trang PDF.",
+    "cancelExport": "Hủy tiến trình",
+    "exportCancelled": "Đã hủy tiến trình xuất ảnh",
+    "exportComplete": "Xuất hình ảnh thành công!",
+    "processedPages": "Đã xử lý {{current}} / {{total}} trang",
+    "zipBuilding": "Đang nén và đóng gói tệp ZIP...",
+    "concurrencyLabel": "Đang chạy {{count}} luồng song song"
   },
   "showcase": {
     "title": "Studio Chuyển đổi PDF & Ảnh 2 Chiều",
