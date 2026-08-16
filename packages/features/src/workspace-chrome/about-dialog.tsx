@@ -32,6 +32,7 @@ import { PwaInstallDialog } from "./pwa-install-dialog";
 import { ChangelogsDialog } from "./changelogs-dialog";
 import { GuidesDialog } from "./guides-dialog";
 import { useTranslation, Trans } from "@imify/i18n";
+import { checkForUpdates } from "./whats-new-update-notification-gate";
 
 const appMetadata = getAppMetadata();
 const DEV_MODE_CLICK_TARGET = 7;
@@ -114,6 +115,8 @@ export function AboutDialog({
   const [isChangelogsDialogOpen, setIsChangelogsDialogOpen] = useState(false);
   const [isGuidesDialogOpen, setIsGuidesDialogOpen] = useState(false);
 
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+
   const activateDevMode = useCallback(async () => {
     if (devModeEnabled) {
       warning(
@@ -131,7 +134,21 @@ export function AboutDialog({
   }, [devModeEnabled, setDevModeEnabled, success, warning]);
 
   const handleIconClick = useEasterEggClicker(activateDevMode);
-  const handleVersionClick = useEasterEggClicker(activateDevMode);
+
+  const handleVersionClick = async () => {
+    if (isCheckingUpdate) return;
+    setIsCheckingUpdate(true);
+    try {
+      const hasUpdate = await checkForUpdates(true);
+      if (!hasUpdate) {
+        success(t("noUpdateTitle"), t("noUpdateDesc"), 3500);
+      }
+    } catch {
+      // Ignore network errors
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   return (
     <BaseDialog
@@ -154,8 +171,9 @@ export function AboutDialog({
           <button
             type="button"
             onClick={handleIconClick}
-            className="shrink-0 select-none cursor-default focus:outline-none active:scale-90 transition-transform duration-100"
+            className="shrink-0 select-none cursor-pointer focus:outline-none active:scale-90 transition-transform duration-100"
             aria-label="Imify logo"
+            title={t("devModeTooltip")}
             tabIndex={-1}
           >
             {iconSrc ? (
@@ -180,11 +198,15 @@ export function AboutDialog({
               <button
                 type="button"
                 onClick={handleVersionClick}
-                className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 select-none cursor-default focus:outline-none active:scale-90 transition-transform duration-100"
+                className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 select-none cursor-pointer focus:outline-none active:scale-90 transition-all duration-100"
                 tabIndex={-1}
                 aria-label="App version"
+                title={t("checkUpdateTooltip")}
+                disabled={isCheckingUpdate}
               >
-                {`v${appMetadata.version}`}
+                {isCheckingUpdate
+                  ? t("checkingUpdate", "Checking...")
+                  : `v${appMetadata.version}`}
               </button>
               <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                 {appMetadata.versionType}
@@ -230,7 +252,7 @@ export function AboutDialog({
         <div className="space-y-8 pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
           <div className="space-y-4">
             <Kicker className="text-xs tracking-widest text-center text-slate-400 uppercase">
-              {t("linksTitle", "Quick Links & Support")}
+              {t("linksTitle")}
             </Kicker>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {/* Official Website button */}
@@ -239,7 +261,7 @@ export function AboutDialog({
                 className="bg-sky-50 text-sky-600 border-sky-100 hover:bg-sky-100 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-900/50"
               >
                 <Globe size={16} />
-                {t("officialWebsite", "Official Website")}
+                {t("officialWebsite")}
               </ActionLink>
 
               {/* GitHub Repository button */}
@@ -248,7 +270,7 @@ export function AboutDialog({
                 className="bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-900/50"
               >
                 <Github size={16} />
-                {t("githubRepository", "GitHub Repository")}
+                {t("githubRepository")}
               </ActionLink>
 
               {/* Sponsor Author button */}
@@ -258,7 +280,7 @@ export function AboutDialog({
                 className="w-full h-full px-5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 text-rose-500 dark:text-rose-400 text-sm font-bold hover:bg-rose-100/50 dark:hover:bg-rose-900/30 transition-all flex items-center justify-center gap-2"
               >
                 <Heart size={16} fill="currentColor" />
-                {t("sponsorAuthor", "Sponsor Author")}
+                {t("sponsorAuthor")}
               </button>
 
               {/* Attribution button */}
@@ -268,7 +290,7 @@ export function AboutDialog({
                 className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
               >
                 <Library size={16} />
-                {t("attribution", "Attribution")}
+                {t("attribution")}
               </button>
 
               {/* Guides button */}
@@ -278,7 +300,7 @@ export function AboutDialog({
                 className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
               >
                 <BadgeQuestionMark size={16} />
-                {t("guides", "Guides")}
+                {t("guides")}
               </button>
 
               {/* Install App button */}
@@ -288,7 +310,7 @@ export function AboutDialog({
                 className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
               >
                 <Download size={16} />
-                {t("installApp", "Install App")}
+                {t("installApp")}
               </button>
             </div>
           </div>
@@ -314,7 +336,7 @@ export function AboutDialog({
                 onClick={() => setIsChangelogsDialogOpen(true)}
                 className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
               >
-                {t("changelogs", "Changelogs")}
+                {t("changelogs")}
               </button>
               <span className="text-slate-200 dark:text-slate-800">/</span>
               <a
@@ -323,7 +345,7 @@ export function AboutDialog({
                 rel="noreferrer"
                 className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
               >
-                {t("termsOfUse", "Terms of Use")}
+                {t("termsOfUse")}
               </a>
               <span className="text-slate-200 dark:text-slate-800">/</span>
               <a
@@ -332,7 +354,7 @@ export function AboutDialog({
                 rel="noreferrer"
                 className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
               >
-                {t("privacyPolicy", "Privacy Policy")}
+                {t("privacyPolicy")}
               </a>
             </MutedText>
           </div>

@@ -68,6 +68,93 @@ function safeParseSeenStateV2(raw: string): SeenStateV2 | null {
   }
 }
 
+export const CHECK_UPDATES_EVENT = "imify:check-for-updates"
+
+export async function checkForUpdates(force = false): Promise<boolean> {
+  const appMetadata = getAppMetadata()
+  const currentBundleVersion = appMetadata.version
+  const currentBundleVersionType = appMetadata.versionType
+  const now = Date.now()
+
+  let rawV2 = typeof window !== "undefined" && window.localStorage ? window.localStorage.getItem(STORAGE_KEY_V2) : null
+  if (!rawV2) {
+    rawV2 = await deferredStorage.getItem(STORAGE_KEY_V2)
+  }
+  let state = rawV2 ? safeParseSeenStateV2(rawV2) : null
+
+  if (!state) {
+    state = {
+      version: currentBundleVersion,
+      versionType: currentBundleVersionType,
+      findVersionAt: now,
+      remindAt: 0,
+      cacheVersion: currentBundleVersion,
+      resetCacheAt: now,
+      lastFetchVersionAt: 0
+    }
+  }
+
+  // If forced or cooldown has passed, fetch from remote
+  if (force || now - state.lastFetchVersionAt >= FETCH_RATE_LIMIT_MS) {
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 6000)
+      const res = await fetch(REMOTE_PACKAGE_JSON_URL, {
+        signal: controller.signal,
+        cache: "no-store"
+      })
+      clearTimeout(timeoutId)
+
+      if (res.ok) {
+        const remotePkg = await res.json()
+        const remoteVer = typeof remotePkg.version === "string" ? remotePkg.version : null
+        const remoteType = remotePkg.imifyMetadata?.versionType || "Stable"
+
+        let nextVersion = state.version
+        let nextType = state.versionType
+        let nextFindVersionAt = state.findVersionAt
+        let nextRemindAt = state.remindAt
+
+        if (remoteVer && compareSemver(remoteVer, state.version) > 0) {
+          nextVersion = remoteVer
+          nextType = remoteType
+          nextFindVersionAt = now
+          nextRemindAt = now // Ready to prompt
+        }
+
+        state = {
+          ...state,
+          version: nextVersion,
+          versionType: nextType,
+          findVersionAt: nextFindVersionAt,
+          remindAt: nextRemindAt,
+          lastFetchVersionAt: now
+        }
+
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state))
+        }
+        await deferredStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state))
+      }
+    } catch {
+      state = {
+        ...state,
+        lastFetchVersionAt: now
+      }
+      if (typeof window !== "undefined" && window.localStorage) {
+        window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state))
+      }
+      await deferredStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state))
+    }
+  }
+
+  const hasUpdate = compareSemver(state.version, state.cacheVersion) > 0
+  if (hasUpdate) {
+    window.dispatchEvent(new CustomEvent(CHECK_UPDATES_EVENT))
+  }
+  return hasUpdate
+}
+
 export function WhatsNewUpdateNotificationGate() {
   const appMetadata = getAppMetadata()
   const currentBundleVersion = appMetadata.version
@@ -107,8 +194,25 @@ export function WhatsNewUpdateNotificationGate() {
         }
       }
     }
+
+    const handleManualCheck = () => {
+      let rawV2 = window.localStorage.getItem(STORAGE_KEY_V2)
+      let state = rawV2 ? safeParseSeenStateV2(rawV2) : seenStateRef.current
+      if (state) {
+        setSeenState(state)
+        seenStateRef.current = state
+        if (compareSemver(state.version, state.cacheVersion) > 0) {
+          setIsSummaryOpen(true)
+        }
+      }
+    }
+
     window.addEventListener("storage", handleStorageChange)
-    return () => window.removeEventListener("storage", handleStorageChange)
+    window.addEventListener(CHECK_UPDATES_EVENT, handleManualCheck)
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      window.removeEventListener(CHECK_UPDATES_EVENT, handleManualCheck)
+    }
   }, [])
 
   // 2. Listen for Service Worker activation broadcast to safely set cacheVersion
