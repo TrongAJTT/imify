@@ -16,6 +16,7 @@ import { encodeImageDataToTiff } from "@imify/engine/converter/tiff-encoder"
 import { encodeWebp } from "@imify/engine/converter/webp-encoder"
 import type { FillExportWorkerPayload, FillExportWorkerRequestMessage, FillExportWorkerResponseMessage } from "@imify/features/filling/filling-export-worker-protocol"
 import { buildSmartOutputFileName } from "@imify/core/file-name-pattern"
+import { FILLING_NAMING_CONFIG } from "@imify/core"
 
 interface ExportFilledTemplateOptions {
   template: FillingTemplate
@@ -122,8 +123,8 @@ export async function exportFilledTemplate(options: ExportFilledTemplateOptions)
   onProgress?.({ percent: 97, message: "Starting download..." })
   
   const finalFilename = buildSmartOutputFileName({
-    pattern: fileNamePattern || "[OriginalName]",
-    originalFileName: template.name,
+    pattern: fileNamePattern || FILLING_NAMING_CONFIG.defaultPattern,
+    originalFileName: template.name || FILLING_NAMING_CONFIG.defaultOriginalName,
     outputExtension: extension,
     index: 1,
     totalFiles: 1,

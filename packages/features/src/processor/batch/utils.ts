@@ -1,6 +1,7 @@
 import { toOutputFilename } from "@imify/core/download-utils"
 import { APP_CONFIG } from "@imify/core/config"
 import type { ConversionProgressPayload, FormatConfig } from "@imify/core/types"
+import { toast } from "@imify/stores"
 import { downloadWithFilename, formatBytes, withBatchResize } from "../processor-utils"
 
 export const MAX_FILE_SIZE_BYTES = APP_CONFIG.BATCH.MAX_FILE_SIZE_MB * 1024 * 1024
@@ -52,12 +53,14 @@ export async function notifyProgress(
   percent: number,
   message?: string
 ): Promise<void> {
-  await publishProgressToActiveTab({
+  const payload: ConversionProgressPayload = {
     id,
     fileName: toOutputFilename(fileName, config.format),
     targetFormat: config.format,
     status,
     percent,
     message
-  })
+  }
+  toast.progress(payload)
+  await publishProgressToActiveTab(payload)
 }

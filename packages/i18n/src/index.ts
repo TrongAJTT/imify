@@ -1,3 +1,5 @@
+"use client"
+
 export { initI18n, ALL_NAMESPACES } from "./i18n-instance"
 export { resolveInitialLanguage } from "./language-resolution"
 export {

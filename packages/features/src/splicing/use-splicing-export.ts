@@ -1,10 +1,12 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react"
 import { useCallback } from "react"
 import { zip } from "fflate"
-import { PDFDocument } from "pdf-lib"
 import { useTranslation } from "@imify/i18n"
+import { confirmBatchDownload, toast } from "@imify/stores"
+import { StreamingPdfWriter } from "@imify/engine"
 
 import { APP_CONFIG } from "@imify/core/config"
+import { mapQuickExportToEngineConfig, SPLICING_NAMING_CONFIG } from "@imify/core"
 import type { ConversionProgressPayload } from "@imify/core/types"
 import { getCanonicalExtension } from "@imify/core/download-utils"
 import { setWasmWorkerPoolSize, terminateWasmWorkerPool } from "@imify/engine/converter/wasm-worker-pool"
@@ -52,43 +54,24 @@ export interface UseSplicingExportArgs {
   images: SplicingImageItem[]
   exportTargetCount: number
   isExporting: boolean
-  skipDownloadConfirm: boolean
-
-  pushToast: (payload: ConversionProgressPayload) => void
-  setImportToastPayload: Dispatch<SetStateAction<ConversionProgressPayload | null>>
-  importToastHideTimerRef: MutableRefObject<ReturnType<typeof setTimeout> | null>
-
-  setIsExporting: (v: boolean) => void
-  setShowDownloadConfirm: (v: boolean) => void
-  setPendingExportModeForConfirm: (v: SplicingExportMode | null) => void
+  setIsExporting: (exporting: boolean) => void
 }
 
 export function useSplicingExport({
   images,
   exportTargetCount,
   isExporting,
-  skipDownloadConfirm,
-  pushToast,
-  setImportToastPayload,
-  importToastHideTimerRef,
   setIsExporting,
-  setShowDownloadConfirm,
-  setPendingExportModeForConfirm
 }: UseSplicingExportArgs) {
   const { t } = useTranslation("splicing")
+
   const performExport = useCallback(
-    async (downloadMode: SplicingExportMode, forceDownloadConfirm: boolean = false, inputValue?: string) => {
+    async (downloadMode: SplicingExportMode, inputValue?: string) => {
       if (images.length === 0 || isExporting) return
 
-      if (
-        (downloadMode === "one_by_one" || downloadMode === "individual_pdf") &&
-        !forceDownloadConfirm &&
-        exportTargetCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD &&
-        !skipDownloadConfirm
-      ) {
-        setShowDownloadConfirm(true)
-        setPendingExportModeForConfirm(downloadMode)
-        return
+      if (downloadMode === "one_by_one" || downloadMode === "individual_pdf") {
+        const confirmed = await confirmBatchDownload(exportTargetCount)
+        if (!confirmed) return
       }
 
       setIsExporting(true)
@@ -96,9 +79,10 @@ export function useSplicingExport({
       try {
         const store = useSplicingStore.getState()
         const { exportSettings } = store
-        const usesWasmEncoder = exportSettings.targetFormat === "avif" || exportSettings.targetFormat === "jxl"
+        const { targetFormat, quality, codecOptions } = mapQuickExportToEngineConfig(exportSettings.format)
+        const usesWasmEncoder = targetFormat === "avif" || targetFormat === "jxl"
         if (usesWasmEncoder) {
-          setWasmWorkerPoolSize(exportSettings.targetFormat === "jxl" ? "jxl" : "avif", exportSettings.concurrency)
+          setWasmWorkerPoolSize(targetFormat === "jxl" ? "jxl" : "avif", exportSettings.concurrency)
         }
 
         const layout = resolveLayoutConfig(store)
@@ -106,19 +90,19 @@ export function useSplicingExport({
         const imgStyle = resolveImageStyle(store)
 
         const config: SplicingExportConfig = {
-          format: exportSettings.targetFormat,
-          quality: exportSettings.quality,
-          formatOptions: exportSettings.codecOptions as any,
+          format: targetFormat as any,
+          quality,
+          formatOptions: codecOptions as any,
           exportMode: exportSettings.exportMode,
           trimBackground: exportSettings.trimBackground
         }
 
         const exportTsMs = Date.now()
         const toastId = `splicing_export_${exportTsMs}`
-        pushToast({
+        toast.progress({
           id: toastId,
           fileName: t("toasts.exportingCount", { count: exportTargetCount }),
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: targetFormat as any,
           status: "processing",
           percent: 2,
           message: t("toasts.exportPrep")
@@ -142,10 +126,10 @@ export function useSplicingExport({
                   ? Math.min(1, (completed + active * 0.55) / safeTotal)
                   : Math.min(1, completed / safeTotal)
               const percent = phase === "decode" ? Math.min(30, Math.round(4 + ratio * 26)) : Math.min(78, Math.round(30 + ratio * 48))
-              pushToast({
+              toast.progress({
                 id: toastId,
                 fileName: t("toasts.exportingCount", { count: exportTargetCount }),
-                targetFormat: exportSettings.targetFormat,
+                targetFormat: targetFormat as any,
                 status: "processing",
                 percent,
                 message
@@ -154,7 +138,7 @@ export function useSplicingExport({
           }
         )
 
-        const ext = getCanonicalExtension(exportSettings.targetFormat)
+        const ext = getCanonicalExtension(targetFormat as any)
 
         const imageSizes = images.map((img) => {
           const processed = calculateProcessedSize(img.originalWidth, img.originalHeight, store.image.resizeMode, store.image.fitValue, store.image.applyTo)
@@ -162,11 +146,11 @@ export function useSplicingExport({
         })
         const exportLayout = calculateLayout(imageSizes, layout, canvas, imgStyle, store.image.resizeMode, store.image.fitValue, store.image.applyTo)
 
-        const pattern = exportSettings.fileNamePattern.trim() || "spliced-[Index]"
+        const pattern = exportSettings.fileNamePattern.trim() || SPLICING_NAMING_CONFIG.defaultPattern
         const now = new Date(exportTsMs)
         const usedExportNames = new Set<string>()
 
-        const originalFileName = `imify-splicing-${exportTsMs}`
+        const originalFileName = SPLICING_NAMING_CONFIG.defaultOriginalName
 
         const buildImageFileName = (i: number) => {
           const dims = computeSplicingExportCanvasDimensions(exportLayout, canvas, config, i)
@@ -205,30 +189,30 @@ export function useSplicingExport({
           for (let i = 0; i < blobs.length; i++) {
             downloadBlob(blobs[i], buildImageFileName(i))
             const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
-            pushToast({
+            toast.progress({
               id: toastId,
               fileName: t("toasts.exportingCount", { count: blobs.length }),
-              targetFormat: exportSettings.targetFormat,
+              targetFormat: targetFormat as any,
               status: "processing",
               percent: Math.min(98, percent),
               message: t("toasts.exportDownloaded", { completed: i + 1, total: blobs.length })
             })
             await new Promise((r) => setTimeout(r, 120))
           }
-          pushToast({
+          toast.progress({
             id: toastId,
             fileName: t("toasts.exportComplete"),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: targetFormat as any,
             status: "success",
             percent: 100,
             message: t("toasts.exportCompleteDesc", { count: blobs.length })
           })
         } else if (downloadMode === "zip") {
           const zipFileName = `spliced-image-${exportTsMs}.zip`
-          pushToast({
+          toast.progress({
             id: toastId,
             fileName: zipFileName,
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: targetFormat as any,
             status: "processing",
             percent: 85,
             message: t("toasts.exportPackagingZip")
@@ -238,121 +222,85 @@ export function useSplicingExport({
             files.push({ name: buildImageFileName(i), blob: blobs[i] })
           }
           const zipBlob = await createZipBlob(files)
-          pushToast({
+          toast.progress({
             id: toastId,
             fileName: zipFileName,
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: targetFormat as any,
             status: "processing",
             percent: 96,
             message: t("toasts.exportZipDownloading")
           })
           downloadBlob(zipBlob, zipFileName)
-          pushToast({
+          toast.progress({
             id: toastId,
             fileName: zipFileName,
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: targetFormat as any,
             status: "success",
             percent: 100,
             message: t("toasts.exportZipSuccess")
           })
         } else if (downloadMode === "pdf" || downloadMode === "individual_pdf") {
-          const convertBlobToPdfPage = async (pdfDoc: PDFDocument, blob: Blob) => {
-            let image: Awaited<ReturnType<typeof pdfDoc.embedPng | typeof pdfDoc.embedJpg>>
-            if (ext === "png") {
-              image = await pdfDoc.embedPng(await blob.arrayBuffer())
-            } else if (ext === "jpg" || ext === "jpeg") {
-              image = await pdfDoc.embedJpg(await blob.arrayBuffer())
-            } else {
-              const canvas = new OffscreenCanvas(100, 100)
-              const ctx = canvas.getContext("2d")
-              if (!ctx) return
-
-              const bitmap = await createImageBitmap(blob)
-              canvas.width = bitmap.width
-              canvas.height = bitmap.height
-              ctx.drawImage(bitmap, 0, 0)
-              bitmap.close()
-
-              const pngBlob = await canvas.convertToBlob({ type: "image/png" })
-              image = await pdfDoc.embedPng(await pngBlob.arrayBuffer())
-            }
-
-            const width = image.width as number
-            const height = image.height as number
-            const page = pdfDoc.addPage([width, height])
-            page.drawImage(image, { x: 0, y: 0, width, height })
-          }
-
           if (downloadMode === "individual_pdf") {
             for (let i = 0; i < blobs.length; i++) {
-              const pdfDoc = await PDFDocument.create()
-              await convertBlobToPdfPage(pdfDoc, blobs[i])
-              const pdfBytes = await pdfDoc.save()
-              const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
+              const writer = new StreamingPdfWriter()
+              await writer.addPage({ imageBlob: blobs[i] })
+              const pdfBlob = await writer.finalize()
               downloadBlob(pdfBlob, buildPdfFileName(i))
               const percent = 78 + Math.round(((i + 1) / Math.max(1, blobs.length)) * 20)
-              pushToast({
+              toast.progress({
                 id: toastId,
                 fileName: t("toasts.exportingCountPdf", { count: blobs.length }),
                 targetFormat: "pdf",
                 status: "processing",
                 percent: Math.min(98, percent),
-                message: t("toasts.exportDownloadedPdf", { completed: i + 1, total: blobs.length })
+                message: t("toasts.exportDownloadedPdf", { completed: i + 1, total: blobs.length }),
               })
             }
-            pushToast({
+            toast.progress({
               id: toastId,
               fileName: t("toasts.exportComplete"),
               targetFormat: "pdf",
               status: "success",
               percent: 100,
-              message: t("toasts.exportCompleteDescPdf", { count: blobs.length })
+              message: t("toasts.exportCompleteDescPdf", { count: blobs.length }),
             })
-            importToastHideTimerRef.current = setTimeout(() => {
-              setImportToastPayload((current) => (current?.id === toastId ? null : current))
-              importToastHideTimerRef.current = null
-            }, 2500)
             return
           }
 
-          const pdfDoc = await PDFDocument.create()
+          const writer = new StreamingPdfWriter()
           for (const blob of blobs) {
-            await convertBlobToPdfPage(pdfDoc, blob)
+            await writer.addPage({ imageBlob: blob })
           }
 
-          const pdfBytes = await pdfDoc.save()
-          const pdfBlob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" })
+          const pdfBlob = await writer.finalize()
           const singlePdfFileName = `spliced-image-${exportTsMs}.pdf`
           downloadBlob(pdfBlob, singlePdfFileName)
-          pushToast({
+          toast.progress({
             id: toastId,
             fileName: singlePdfFileName,
             targetFormat: "pdf",
             status: "success",
             percent: 100,
-            message: t("toasts.exportPdfSuccess")
+            message: t("toasts.exportPdfSuccess"),
           })
         }
-
-        importToastHideTimerRef.current = setTimeout(() => {
-          setImportToastPayload((current) => (current?.id === toastId ? null : current))
-          importToastHideTimerRef.current = null
-        }, 2500)
       } catch (err) {
         console.error("Export failed:", err)
         const store = useSplicingStore.getState()
-        pushToast({
+        const { targetFormat: errTargetFormat } = mapQuickExportToEngineConfig(store.exportSettings.format)
+        toast.progress({
           id: `splicing_export_err_${Date.now()}`,
           fileName: t("toasts.exportError"),
-          targetFormat: store.exportSettings.targetFormat,
+          targetFormat: errTargetFormat as any,
           status: "error",
           percent: 100,
           message: t("toasts.exportErrorDesc")
         })
       } finally {
         const store = useSplicingStore.getState()
-        if (store.exportSettings.targetFormat === "avif" || store.exportSettings.targetFormat === "jxl") {
-          terminateWasmWorkerPool(store.exportSettings.targetFormat)
+        const { targetFormat: finTargetFormat } = mapQuickExportToEngineConfig(store.exportSettings.format)
+        if (finTargetFormat === "avif" || finTargetFormat === "jxl") {
+          terminateWasmWorkerPool(finTargetFormat)
         }
         setIsExporting(false)
       }
@@ -361,13 +309,8 @@ export function useSplicingExport({
       images,
       isExporting,
       exportTargetCount,
-      skipDownloadConfirm,
-      pushToast,
-      setImportToastPayload,
-      importToastHideTimerRef,
       setIsExporting,
-      setShowDownloadConfirm,
-      setPendingExportModeForConfirm
+      t
     ]
   )
 

@@ -1,6 +1,6 @@
 {
   "name": "@imify/engine",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "private": true,
   "description": "Image processing pipeline, WASM encoders, and worker pool for Imify",
   "scripts": {
@@ -19,5 +19,8 @@
     "./image-pipeline/render-image-data": "./src/image-pipeline/render-image-data.ts",
     "./image-pipeline/*": "./src/image-pipeline/*.ts"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "pdfjs-dist": "^6.2.108"
+  }
 }

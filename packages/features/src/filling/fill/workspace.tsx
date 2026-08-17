@@ -16,10 +16,13 @@ import {
   Transformer,
 } from "react-konva";
 import type Konva from "konva";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, SquareMousePointer } from "lucide-react";
 
-import { ToastContainer } from "@imify/ui/components/toast-container";
-import { useConversionToasts } from "@imify/core/hooks/use-toast";
+import {
+  mapQuickExportToEngineConfig,
+  type QuickExportFormat,
+} from "@imify/core";
+import { toast } from "@imify/stores";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import {
   buildFillRuntimeItems,
@@ -48,7 +51,6 @@ import {
   useTransformGuides,
   type RectBounds,
 } from "@imify/features/filling/use-transform-guides";
-import { buildActiveFillingFormatOptions } from "@imify/stores/stores/filling-format-options";
 import { preventWheelEvent } from "../../shared/prevent-wheel-event";
 import { useClipboardImageIntake } from "../../shared/use-clipboard-image-intake";
 import {
@@ -66,7 +68,8 @@ import {
 } from "@imify/features/filling/layer-visual-highlight";
 import { Subheading, MutedText } from "@imify/ui/ui/typography";
 import { Button } from "@imify/ui/ui/button";
-import { useRenameInputPrompt, ZoomPanControl } from "@imify/ui";
+import { Tooltip, ZoomPanControl } from "@imify/ui";
+import { promptRenameInput } from "@imify/stores";
 import { useCanvasResizer } from "../../shared/use-canvas-resizer";
 import {
   PreviewInteractionModeToggle,
@@ -79,6 +82,7 @@ import {
   isCommonImageFile,
 } from "../../shared/image-file-utils";
 import { exportFilledTemplate } from "../filling-export-utils";
+import { FillQuickActionsMenu } from "./quick-actions-menu";
 import { useTranslation } from "@imify/i18n";
 import {
   CANVAS_PADDING,
@@ -87,6 +91,7 @@ import {
   PREVIEW_ZOOM_FACTOR,
   ROTATE_CURSOR,
   IMAGE_HITBOX_PADDING,
+  LAYER_SWAP_HOVER_RADIUS,
 } from "../config";
 
 function safeRevokeObjectUrl(value: string | null | undefined) {
@@ -98,15 +103,9 @@ function safeRevokeObjectUrl(value: string | null | undefined) {
 }
 
 function resolveToastTargetFormat(
-  exportFormat: ReturnType<
-    typeof useFillingStore.getState
-  >["exportSettings"]["targetFormat"],
+  exportFormat: QuickExportFormat,
 ): ConversionProgressPayload["targetFormat"] {
-  if (exportFormat === "psd") {
-    return "png";
-  }
-
-  return exportFormat;
+  return mapQuickExportToEngineConfig(exportFormat).targetFormat as any;
 }
 
 interface FillWorkspaceProps {
@@ -120,7 +119,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const transformerRef = useRef<Konva.Transformer>(null);
   const emptyImageUploadInputRef = useRef<HTMLInputElement>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
-  const [previewContainerHeight, setPreviewContainerHeight] = useState(520);
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(680);
   const [previewZoom, setPreviewZoom] = useState(100);
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
   const [previewInteractionMode, setPreviewInteractionMode] =
@@ -153,8 +152,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId);
   const setCanvasFillState = useFillingStore((s) => s.setCanvasFillState);
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState);
+  const swapLayerFillStates = useFillingStore((s) => s.swapLayerFillStates);
   const exportSettings = useFillingStore((s) => s.exportSettings);
-  const { targetFormat: exportFormat, quality: exportQuality } = exportSettings;
+  const { targetFormat: exportFormat, quality: exportQuality } =
+    mapQuickExportToEngineConfig(exportSettings.format);
   const { getShortcutLabel } = useShortcutPreferences();
 
   const [loadedImages, setLoadedImages] = useState<
@@ -170,17 +171,14 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false);
   const [isDragOverSelectedEmptyTarget, setIsDragOverSelectedEmptyTarget] =
     useState(false);
+  const [hoveredSwapTargetLayerId, setHoveredSwapTargetLayerId] = useState<
+    string | null
+  >(null);
   const [cursor, setCursor] = useState("default");
   const [rotationGuideLine, setRotationGuideLine] = useState<number[] | null>(
     null,
   );
   const [positionGuideLines, setPositionGuideLines] = useState<number[][]>([]);
-  const [exportToastPayload, setExportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
 
   const {
     rotationSnapAngles,
@@ -192,47 +190,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     rotationTolerance: 4,
     positionTolerance: 8,
   });
-  const conversionToasts = useConversionToasts([exportToastPayload]);
 
-  const clearExportToastHideTimer = useCallback(() => {
-    if (!exportToastHideTimerRef.current) {
-      return;
-    }
-
-    clearTimeout(exportToastHideTimerRef.current);
-    exportToastHideTimerRef.current = null;
+  const pushExportToast = useCallback((payload: ConversionProgressPayload) => {
+    toast.progress(payload);
   }, []);
-
-  const pushExportToast = useCallback(
-    (payload: ConversionProgressPayload) => {
-      clearExportToastHideTimer();
-      setExportToastPayload(payload);
-    },
-    [clearExportToastHideTimer],
-  );
-
-  const scheduleExportToastHide = useCallback(
-    (toastId: string, delayMs: number) => {
-      clearExportToastHideTimer();
-      exportToastHideTimerRef.current = setTimeout(() => {
-        setExportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        exportToastHideTimerRef.current = null;
-      }, delayMs);
-    },
-    [clearExportToastHideTimer],
-  );
-
-  const handleRemoveExportToast = useCallback(
-    (toastId: string) => {
-      clearExportToastHideTimer();
-      setExportToastPayload((current) =>
-        current?.id === toastId ? null : current,
-      );
-    },
-    [clearExportToastHideTimer],
-  );
 
   const activeTemplate = useMemo(() => {
     if (sessionTemplate && sessionTemplate.id === template.id) {
@@ -581,6 +542,124 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   }, []);
 
   useEffect(() => {
+    const handleImageTransformShortcuts = (e: KeyboardEvent) => {
+      if (!selectedRuntimeItem || !selectedFillState?.imageUrl) return;
+
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const transform = selectedFillState.imageTransform;
+      const moveStep = e.shiftKey ? 10 : 1;
+      const rotStep = e.shiftKey ? 5 : 1;
+      const scaleStep = e.shiftKey ? 0.05 : 0.01;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            x: Math.round((transform.x - moveStep) * 100) / 100,
+          },
+        });
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            x: Math.round((transform.x + moveStep) * 100) / 100,
+          },
+        });
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            y: Math.round((transform.y - moveStep) * 100) / 100,
+          },
+        });
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            y: Math.round((transform.y + moveStep) * 100) / 100,
+          },
+        });
+      } else if (e.key === "[") {
+        e.preventDefault();
+        const nextRot = Math.round((transform.rotation - rotStep) * 100) / 100;
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            rotation: nextRot,
+          },
+        });
+      } else if (e.key === "]") {
+        e.preventDefault();
+        const nextRot = Math.round((transform.rotation + rotStep) * 100) / 100;
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            rotation: nextRot,
+          },
+        });
+      } else if (e.key === "-" || e.key === "_") {
+        e.preventDefault();
+        const currentScaleX = transform.scaleX;
+        const currentScaleY = transform.scaleY;
+        const ratio = currentScaleY / (currentScaleX || 1);
+        const nextScaleX = Math.max(
+          0.01,
+          Math.round((currentScaleX - scaleStep) * 1000) / 1000,
+        );
+        const nextScaleY = Math.max(
+          0.01,
+          Math.round(nextScaleX * ratio * 1000) / 1000,
+        );
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            scaleX: nextScaleX,
+            scaleY: nextScaleY,
+          },
+        });
+      } else if (e.key === "=" || e.key === "+") {
+        e.preventDefault();
+        const currentScaleX = transform.scaleX;
+        const currentScaleY = transform.scaleY;
+        const ratio = currentScaleY / (currentScaleX || 1);
+        const nextScaleX = Math.max(
+          0.01,
+          Math.round((currentScaleX + scaleStep) * 1000) / 1000,
+        );
+        const nextScaleY = Math.max(
+          0.01,
+          Math.round(nextScaleX * ratio * 1000) / 1000,
+        );
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            scaleX: nextScaleX,
+            scaleY: nextScaleY,
+          },
+        });
+      }
+    };
+
+    window.addEventListener("keydown", handleImageTransformShortcuts);
+    return () =>
+      window.removeEventListener("keydown", handleImageTransformShortcuts);
+  }, [selectedRuntimeItem, selectedFillState, updateLayerFillState]);
+
+  useEffect(() => {
     const newMap = new Map<string, HTMLImageElement>();
     for (const fillState of layerFillStates) {
       if (!fillState.imageUrl) continue;
@@ -628,12 +707,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       setSelectedLayerId(fillRuntimeItems[0]?.id ?? null);
     }
   }, [fillRuntimeItems, selectedLayerId, setSelectedLayerId]);
-
-  useEffect(() => {
-    return () => {
-      clearExportToastHideTimer();
-    };
-  }, [clearExportToastHideTimer]);
 
   const handlePreviewWheel = useCallback(
     (event: WheelEvent) => {
@@ -855,6 +928,44 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     },
     [fillRuntimeItems, getRuntimeItemBounds],
   );
+
+  const findSwapTargetLayerIdAtPoint = useCallback(
+    (worldPoint: { x: number; y: number }, sourceLayerId: string) => {
+      for (const item of fillRuntimeItems) {
+        if (item.id === sourceLayerId) continue;
+        const bounds = getRuntimeItemBounds(item);
+        const centerX = bounds.x + bounds.width / 2;
+        const centerY = bounds.y + bounds.height / 2;
+        const dist = Math.hypot(worldPoint.x - centerX, worldPoint.y - centerY);
+        if (dist <= LAYER_SWAP_HOVER_RADIUS) {
+          return item.id;
+        }
+      }
+      return null;
+    },
+    [fillRuntimeItems, getRuntimeItemBounds],
+  );
+
+  const hoveredSwapTargetItem = useMemo(() => {
+    if (!hoveredSwapTargetLayerId) return null;
+    return (
+      fillRuntimeItems.find((item) => item.id === hoveredSwapTargetLayerId) ??
+      null
+    );
+  }, [fillRuntimeItems, hoveredSwapTargetLayerId]);
+
+  const hoveredSwapTargetPolygons = useMemo(() => {
+    if (!hoveredSwapTargetItem) return [];
+    if (hoveredSwapTargetItem.kind === "group") {
+      return applyRuntimeTransformToPolygons(
+        hoveredSwapTargetItem.polygons,
+        groupRuntimeTransforms[hoveredSwapTargetItem.id] ?? {
+          ...DEFAULT_IMAGE_TRANSFORM,
+        },
+      );
+    }
+    return [toWorldLayerPoints(hoveredSwapTargetItem.layer)];
+  }, [groupRuntimeTransforms, hoveredSwapTargetItem]);
 
   useEffect(() => {
     const tr = transformerRef.current;
@@ -1339,11 +1450,13 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
       setIsExporting(true);
       const toastId = `fill_export_${Date.now()}`;
-      const toastTargetFormat = resolveToastTargetFormat(exportFormat);
+      const { targetFormat, quality, codecOptions } =
+        mapQuickExportToEngineConfig(exportSettings.format);
+      const toastTargetFormat = resolveToastTargetFormat(targetFormat as any);
 
       pushExportToast({
         id: toastId,
-        fileName: `Export ${exportFormat.toUpperCase()}`,
+        fileName: `Export ${exportSettings.format.toUpperCase()}`,
         targetFormat: toastTargetFormat,
         status: "processing",
         percent: 2,
@@ -1363,13 +1476,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           canvasFillState,
           runtimeItems: fillRuntimeItems,
           groupRuntimeTransforms,
-          exportFormat,
-          exportQuality,
+          exportFormat: targetFormat as any,
+          exportQuality: quality,
           fileNamePattern: exportSettings.fileNamePattern,
           input: inputValue,
-          formatOptions: buildActiveFillingFormatOptions(
-            useFillingStore.getState(),
-          ),
+          formatOptions: codecOptions as any,
           onProgress: ({ percent, message }) => {
             pushExportToast({
               id: toastId,
@@ -1390,7 +1501,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           percent: 100,
           message: "Export completed",
         });
-        scheduleExportToastHide(toastId, 2500);
       } catch (err) {
         console.error("Export failed:", err);
 
@@ -1402,7 +1512,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           percent: 100,
           message: "Unable to export filled template",
         });
-        scheduleExportToastHide(toastId, 6000);
       } finally {
         setIsExporting(false);
       }
@@ -1418,14 +1527,15 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       isExporting,
       layerFillStates,
       pushExportToast,
-      scheduleExportToastHide,
     ],
   );
 
-  const handleExport = useCallback(() => {
+  const handleExport = useCallback(async () => {
     const pattern = exportSettings.fileNamePattern || "[OriginalName]";
-    checkAndPrompt(pattern, (inputValue) => void performExport(inputValue));
-  }, [checkAndPrompt, exportSettings.fileNamePattern, performExport]);
+    const customInput = await promptRenameInput(pattern);
+    if (customInput === null) return;
+    void performExport(customInput);
+  }, [exportSettings.fileNamePattern, performExport]);
 
   const selectedEmptyImageOverlay = useMemo(() => {
     if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
@@ -1533,11 +1643,43 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     template.canvasWidth,
   ]);
 
+  const fillTipsRaw = t("tooltips.fillShortcutsHelpTips", {
+    returnObjects: true,
+  });
+  const fillTipsList: string[] = Array.isArray(fillTipsRaw)
+    ? fillTipsRaw
+    : [
+        "Sử dụng các phím mũi tên để điều chỉnh tọa độ (Offset X, Offset Y) (giữ Shift để nhích bước lớn hơn).",
+        "Sử dụng phím [ và ] để giảm hoặc tăng góc xoay (Rotation) của hình ảnh.",
+        "Sử dụng phím - và = để thu nhỏ hoặc phóng to tỷ lệ (Scale) của hình ảnh (tự động giữ nguyên tỷ lệ).",
+      ];
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <Subheading>{t("dialog.fillTitle")}</Subheading>
+          <div className="flex items-center gap-1.5">
+            <Subheading>{t("dialog.fillTitle")}</Subheading>
+            <Tooltip
+              variant="wide2"
+              label={t("tooltips.fillShortcutsHelpLabel")}
+              content={
+                <ul className="space-y-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 list-disc pl-3.5 pr-1">
+                  {fillTipsList.map((tip, idx) => (
+                    <li key={idx}>{tip}</li>
+                  ))}
+                </ul>
+              }
+            >
+              <button
+                type="button"
+                className="inline-flex items-center text-slate-400 hover:text-sky-500 dark:text-slate-500 dark:hover:text-sky-400 transition-colors"
+                aria-label={t("tooltips.fillShortcutsHelpAria", {})}
+              >
+                <SquareMousePointer size={14} />
+              </button>
+            </Tooltip>
+          </div>
           <MutedText className="text-xs mt-0.5 truncate">
             {template.canvasWidth} x {template.canvasHeight} px &middot;{" "}
             {template.layers.length === 1
@@ -1547,7 +1689,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                 })}
           </MutedText>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <PreviewInteractionModeToggle
             mode={previewInteractionMode}
             onChange={setPreviewInteractionMode}
@@ -1556,22 +1698,29 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
             idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
           />
 
+          <FillQuickActionsMenu
+            template={activeTemplate}
+            selectedLayerId={selectedLayerId}
+            loadedImages={loadedImages}
+            disabled={isExporting}
+          />
+
           <Button
             variant="primary"
             size="sm"
             onClick={handleExport}
             disabled={isExporting}
-            className="min-w-[150px]"
+            className="gap-1.5 px-3"
           >
             {isExporting ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                {t("fill.exporting")}
+                <span>{t("fill.exporting")}</span>
               </>
             ) : (
               <>
                 <Download size={14} />
-                {t("fill.exportButton", { format: exportFormat.toUpperCase() })}
+                <span>{t("common:export")}</span>
               </>
             )}
           </Button>
@@ -2026,6 +2175,20 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                           );
                         }
 
+                        const stage = node.getStage();
+                        const pointerPos = stage?.getPointerPosition();
+                        if (pointerPos) {
+                          const worldPointer = {
+                            x: (pointerPos.x - offsetX) / renderScale,
+                            y: (pointerPos.y - offsetY) / renderScale,
+                          };
+                          const swapTargetId = findSwapTargetLayerIdAtPoint(
+                            worldPointer,
+                            layer.id,
+                          );
+                          setHoveredSwapTargetLayerId(swapTargetId);
+                        }
+
                         updateLayerFillState(layer.id, {
                           imageTransform: {
                             ...fillState.imageTransform,
@@ -2037,6 +2200,17 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                         setPositionGuideLines(toStageGuideLines(guides));
                       }}
                       onDragEnd={(e) => {
+                        if (hoveredSwapTargetLayerId) {
+                          swapLayerFillStates(
+                            layer.id,
+                            hoveredSwapTargetLayerId,
+                          );
+                          setHoveredSwapTargetLayerId(null);
+                          setPositionGuideLines([]);
+                          setCursor("grab");
+                          return;
+                        }
+
                         const node = e.target;
                         const nextTransformX =
                           (node.x() - layerX + IMAGE_HITBOX_PADDING) /
@@ -2188,6 +2362,20 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                         groupRuntimeTransform,
                       );
 
+                      const stage = node.getStage();
+                      const pointerPos = stage?.getPointerPosition();
+                      if (pointerPos) {
+                        const worldPointer = {
+                          x: (pointerPos.x - offsetX) / renderScale,
+                          y: (pointerPos.y - offsetY) / renderScale,
+                        };
+                        const swapTargetId = findSwapTargetLayerIdAtPoint(
+                          worldPointer,
+                          selectedRuntimeItem.id,
+                        );
+                        setHoveredSwapTargetLayerId(swapTargetId);
+                      }
+
                       updateLayerFillState(selectedRuntimeItem.id, {
                         imageTransform: {
                           ...fillState.imageTransform,
@@ -2199,6 +2387,17 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                       setPositionGuideLines(toStageGuideLines(guides));
                     }}
                     onDragEnd={(e) => {
+                      if (hoveredSwapTargetLayerId) {
+                        swapLayerFillStates(
+                          selectedRuntimeItem.id,
+                          hoveredSwapTargetLayerId,
+                        );
+                        setHoveredSwapTargetLayerId(null);
+                        setPositionGuideLines([]);
+                        setCursor("grab");
+                        return;
+                      }
+
                       const node = e.target;
                       const nextWorldX =
                         (node.x() + IMAGE_HITBOX_PADDING - offsetX) /
@@ -2291,6 +2490,58 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                 return newBox;
               }}
             />
+
+            {hoveredSwapTargetItem && hoveredSwapTargetPolygons.length > 0 && (
+              <Group key="swap-hover-overlay" listening={false}>
+                {hoveredSwapTargetPolygons.map((polygon, index) => (
+                  <Line
+                    key={`swap-poly-${index}`}
+                    points={flattenPoints(polygon).map(
+                      (val) => val * renderScale,
+                    )}
+                    x={offsetX}
+                    y={offsetY}
+                    fill="rgba(6, 182, 212, 0.25)"
+                    stroke="#06b6d4"
+                    strokeWidth={3}
+                    dash={[8, 6]}
+                    closed
+                  />
+                ))}
+                {(() => {
+                  const bounds = getRuntimeItemBounds(hoveredSwapTargetItem);
+                  const centerX =
+                    offsetX + (bounds.x + bounds.width / 2) * renderScale;
+                  const centerY =
+                    offsetY + (bounds.y + bounds.height / 2) * renderScale;
+                  return (
+                    <Group x={centerX} y={centerY}>
+                      <Rect
+                        x={-56}
+                        y={-18}
+                        width={112}
+                        height={36}
+                        cornerRadius={18}
+                        fill="#06b6d4"
+                        shadowColor="#000000"
+                        shadowBlur={12}
+                        shadowOpacity={0.35}
+                      />
+                      <Text
+                        text="⇄ Swap"
+                        x={-52}
+                        y={-7}
+                        width={104}
+                        align="center"
+                        fill="#ffffff"
+                        fontSize={13}
+                        fontStyle="bold"
+                      />
+                    </Group>
+                  );
+                })()}
+              </Group>
+            )}
           </Layer>
         </Stage>
 
@@ -2320,12 +2571,6 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           />
         </div>
       </div>
-
-      <ToastContainer
-        toasts={conversionToasts}
-        onRemove={handleRemoveExportToast}
-      />
-      {renameInputPrompt}
     </div>
   );
 }

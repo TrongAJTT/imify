@@ -8,6 +8,8 @@ import { EmptyDropCard } from "@imify/ui";
 import { SplitterPresetDetail } from "./splitter-preset-detail";
 import type { SavedSplitterPreset } from "@imify/stores/stores/splitter-preset-store";
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store";
+import { confirmDialog } from "@imify/stores";
+import { generateDefaultPresetName } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 
 interface SplitterPresetSelectViewProps {
@@ -69,7 +71,10 @@ function SplitterPresetCard({
               {preset.name}
             </span>
             {preset.pinned && (
-              <Pin size={12} className="mt-0.5 fill-amber-500 text-amber-500 rotate-45 shrink-0" />
+              <Pin
+                size={12}
+                className="mt-0.5 fill-amber-500 text-amber-500 rotate-45 shrink-0"
+              />
             )}
           </div>
 
@@ -108,7 +113,10 @@ function SplitterPresetCard({
             }`}
             aria-label={preset.pinned ? "Unpin preset" : "Pin preset"}
           >
-            <Pin size={12} className={preset.pinned ? "fill-amber-500 rotate-45" : ""} />
+            <Pin
+              size={12}
+              className={preset.pinned ? "fill-amber-500 rotate-45" : ""}
+            />
           </button>
           <button
             type="button"
@@ -157,17 +165,20 @@ export function SplitterPresetSelectView({
   const [editingPreset, setEditingPreset] =
     useState<SavedSplitterPreset | null>(null);
 
-  const togglePinPreset = useSplitterPresetStore((state) => state.togglePinPreset);
+  const togglePinPreset = useSplitterPresetStore(
+    (state) => state.togglePinPreset,
+  );
 
   const sortedPresets = useMemo(
-    () => [...presets].sort((a, b) => {
-      const pinA = a.pinned ? 1 : 0;
-      const pinB = b.pinned ? 1 : 0;
-      if (pinA !== pinB) {
-        return pinB - pinA;
-      }
-      return b.updatedAt - a.updatedAt;
-    }),
+    () =>
+      [...presets].sort((a, b) => {
+        const pinA = a.pinned ? 1 : 0;
+        const pinB = b.pinned ? 1 : 0;
+        if (pinA !== pinB) {
+          return pinB - pinA;
+        }
+        return b.updatedAt - a.updatedAt;
+      }),
     [presets],
   );
 
@@ -197,8 +208,11 @@ export function SplitterPresetSelectView({
     setIsSavePresetDialogOpen(false);
   };
 
-  const confirmDeletePreset = (preset: SavedSplitterPreset) => {
-    const shouldDelete = window.confirm(t("deleteConfirm", { name: preset.name }));
+  const confirmDeletePreset = async (preset: SavedSplitterPreset) => {
+    const shouldDelete = await confirmDialog({
+      title: t("deleteConfirm", { name: preset.name }),
+      variant: "destructive",
+    });
     if (!shouldDelete) {
       return;
     }
@@ -249,14 +263,14 @@ export function SplitterPresetSelectView({
         }}
         onSave={handleSavePreset}
         highlightColors={[...PRESET_HIGHLIGHT_COLORS]}
-        title={editingPreset ? t("editSplitterPreset") : t("saveSplitterPreset")}
+        title={
+          editingPreset ? t("editSplitterPreset") : t("saveSplitterPreset")
+        }
+        featureKey="splitter"
         defaultName={
           editingPreset
             ? editingPreset.name
-            : `${t("splitterPresetPrefix")} ${new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}`
+            : generateDefaultPresetName("splitter")
         }
       />
     </div>

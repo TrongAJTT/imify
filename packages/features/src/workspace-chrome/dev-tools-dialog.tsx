@@ -13,9 +13,7 @@ import {
   HelpCircle,
   Database,
 } from "lucide-react";
-import { useToast } from "@imify/core/hooks/use-toast";
 import {
-  ToastContainer,
   BaseDialog,
   Button,
   SettingsItemHeader,
@@ -24,6 +22,7 @@ import {
   BodyText,
   MutedText,
 } from "@imify/ui";
+import { toast, confirmDialog } from "@imify/stores";
 import { useDevModeEnabled } from "../dev-mode/dev-mode-storage";
 import { useDevModeStore } from "../dev-mode/dev-mode-store";
 import { I18nRuntimeImportDialog } from "../dev-mode/i18n-runtime-import-dialog";
@@ -98,7 +97,6 @@ export function DevToolsDialog({
   const setShowI18nDebugKeys = useDevModeStore(
     (state) => state.setShowI18nDebugKeys,
   );
-  const { toasts, hide, success, error } = useToast();
 
   const [languages, setLanguages] = useState<LanguageInfo[]>([]);
   const [expandedLangCode, setExpandedLangCode] = useState<string | null>(null);
@@ -122,11 +120,14 @@ export function DevToolsDialog({
     e: React.MouseEvent,
   ) => {
     e.stopPropagation();
-    const confirmed = window.confirm(
-      `Delete custom language "${lang.name}"?` +
-        "\n\n" +
-        "This will permanently delete it from local storage.",
-    );
+    const confirmed = await confirmDialog({
+      title: `Delete custom language "${lang.name}"?`,
+      description: "This will permanently delete it from local storage.",
+      variant: "destructive",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      defaultFocus: "confirm",
+    });
     if (!confirmed) return;
     try {
       await deleteRuntimeLanguage(lang.code);
@@ -135,7 +136,7 @@ export function DevToolsDialog({
       } else {
         setLanguages(getAvailableLanguages());
       }
-      success("Language Deleted", `Successfully removed ${lang.name}.`);
+      toast.success("Language Deleted", `Successfully removed ${lang.name}.`);
     } catch (err) {
       console.error("Failed to delete custom language:", err);
     }
@@ -149,7 +150,7 @@ export function DevToolsDialog({
     try {
       const zipData = await exportLanguageAsZip(lang.code);
       if (!zipData) {
-        error("Export Failed", "Language data not found.");
+        toast.error("Export Failed", "Language data not found.");
         return;
       }
       const blob = new Blob([zipData as BlobPart], { type: "application/zip" });
@@ -159,7 +160,7 @@ export function DevToolsDialog({
       a.download = `imify-locale-${lang.code}.zip`;
       a.click();
       URL.revokeObjectURL(url);
-      success(
+      toast.success(
         "Language Exported",
         `Successfully downloaded ${lang.name} zip file.`,
       );
@@ -178,13 +179,13 @@ export function DevToolsDialog({
       a.download = `imify-locale-en-v${appVersion}.zip`;
       a.click();
       URL.revokeObjectURL(url);
-      success(
+      toast.success(
         "Bundle Downloaded",
         "English locale bundle downloaded successfully.",
       );
     } catch (err) {
       console.error("Failed to export English bundle:", err);
-      error("Export Failed", "Could not export the English bundle.");
+      toast.error("Export Failed", "Could not export the English bundle.");
     }
   };
 
@@ -523,7 +524,6 @@ export function DevToolsDialog({
             </div>
           </div>
         )}
-        <ToastContainer toasts={toasts} onRemove={hide} />
       </BaseDialog>
 
       {devModeSettingsAdapter && (
@@ -545,14 +545,14 @@ export function DevToolsDialog({
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
             onSuccess={() =>
-              success("Import successful", "State has been restored.", 3000)
+              toast.success("Import successful", "State has been restored.", 3000)
             }
           />
           <I18nRuntimeImportDialog
             isOpen={isI18nImportDialogOpen}
             onClose={() => setIsI18nImportDialogOpen(false)}
             onSuccess={(meta) =>
-              success(
+              toast.success(
                 "Language loaded successfully",
                 `Loaded custom language ${meta.languageName} (${meta.languageCode}) at runtime.`,
                 3000,
@@ -563,7 +563,7 @@ export function DevToolsDialog({
             isOpen={isI18nTemplateDialogOpen}
             onClose={() => setIsI18nTemplateDialogOpen(false)}
             onSuccess={() =>
-              success(
+              toast.success(
                 "Template generated",
                 "Empty translation JSON template has been downloaded.",
                 3000,

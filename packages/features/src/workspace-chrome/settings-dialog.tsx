@@ -15,13 +15,15 @@ import {
   ListTree,
   RotateCcw,
   ShieldAlert,
+  Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import { APP_CONFIG } from "@imify/core/config";
-import { useToast } from "@imify/core/hooks/use-toast";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
+import { toast, confirmDialog } from "@imify/stores";
+import { useUnifiedPresetStats } from "../shared/unified-preset-manager";
 import { useAssetStatistics } from "./asset-management-dialog";
-import { ToastContainer } from "@imify/ui/components/toast-container";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { Button } from "@imify/ui/ui/button";
 import {
@@ -45,12 +47,18 @@ import {
   type WorkspaceLayoutPreferences,
 } from "./layout-preferences";
 import {
-  detectHardwareProfile,
   normalizePerformancePreferences,
+  resolvePdfStudioLazyPagination,
   type PerformancePreferences,
 } from "../processor/performance-preferences";
 import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog";
 import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog";
+import {
+  DEV_MODE_FEATURES,
+  buildSystemDataPayload,
+  downloadSystemDataPayload,
+} from "../dev-mode";
+import type { DevModeFeatureDef } from "../dev-mode/dev-mode-registry";
 import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter";
 import { SettingsShortcutsPanel } from "./settings-shortcuts-panel";
 import { LanguageSettingsTab } from "./language-settings-tab";
@@ -117,14 +125,14 @@ export function WorkspaceSettingsDialog({
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
-  const presets = useBatchStore((state) => state.presets);
+  const unifiedPresetStats = useUnifiedPresetStats();
+
   const schemaVersion = useBatchStore((state) => state.schemaVersion ?? 1);
   const migrateSchemaToV2 = useBatchStore((state) => state.migrateSchemaToV2);
   const assetStats = useAssetStatistics(isOpen);
 
   const [stats, setStats] = useState({
     sizeKb: 0,
-    presetCount: 0,
     storeCount: 0,
   });
 
@@ -139,23 +147,23 @@ export function WorkspaceSettingsDialog({
         storeCount++;
       }
     }
+
     setStats({
       sizeKb: Math.round((size / 1024) * 10) / 10,
-      presetCount: presets.length,
       storeCount,
     });
-  }, [presets]);
+  }, []);
 
   const handleMigrateSchema = () => {
     try {
       migrateSchemaToV2();
-      success(
+      toast.success(
         t("data.migrateSuccessTitle"),
         t("data.migrateSuccessDesc"),
         3000,
       );
     } catch (err: any) {
-      error(
+      toast.error(
         t("data.migrateErrorTitle"),
         err.message || t("data.migrateErrorDesc"),
         15000,
@@ -163,7 +171,6 @@ export function WorkspaceSettingsDialog({
     }
   };
   const [isMobileDialog, setIsMobileDialog] = useState(false);
-  const { toasts, hide, success, error } = useToast();
 
   const skipDownloadConfirm = useBatchStore(
     (state) => state.skipDownloadConfirm,
@@ -236,25 +243,68 @@ export function WorkspaceSettingsDialog({
   const safePerformancePreferences = normalizePerformancePreferences(
     performancePreferences,
   );
-  const advisorEnabled = safePerformancePreferences.smartAdvisorEnabled;
-  const overclockEnabled = safePerformancePreferences.allowConcurrencyOverclock;
-  const hardwareProfile = safePerformancePreferences.hardwareProfile;
 
   const updatePerformancePreferences = (next: PerformancePreferences) => {
     onChangePerformancePreferences(normalizePerformancePreferences(next));
   };
 
-  const updateHardwareProfile = (
-    updates: Partial<PerformancePreferences["hardwareProfile"]>,
-  ) => {
-    updatePerformancePreferences({
-      ...safePerformancePreferences,
-      hardwareProfile: {
-        ...safePerformancePreferences.hardwareProfile,
-        ...updates,
-        source: "manual",
-      },
+  const handleClearAllData = async () => {
+    const confirmed = await confirmDialog({
+      title: t("data.confirmClearTitle"),
+      subtitle: t("data.confirmClearSubtitle"),
+      description: t("data.confirmClearDesc"),
+      variant: "destructive",
+      confirmText: t("data.confirmClearBtn"),
+      defaultFocus: "confirm",
     });
+
+    if (!confirmed) return;
+
+    try {
+      if (devModeSettingsAdapter) {
+        const allFeatureIds = DEV_MODE_FEATURES.map(
+          (feature: DevModeFeatureDef) => feature.id,
+        );
+        const backupPayload = await buildSystemDataPayload({
+          activeTab: null,
+          performancePreferences: safePerformancePreferences,
+          layoutPreferences: layoutPreferences,
+          getStorageState: devModeSettingsAdapter.getSettingsState,
+          exportType: "backup",
+          exportedFeatures: allFeatureIds,
+        });
+        downloadSystemDataPayload(backupPayload);
+      }
+
+      localStorage.clear();
+      sessionStorage.clear();
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      if ("indexedDB" in window && typeof indexedDB.databases === "function") {
+        try {
+          const dbs = await indexedDB.databases();
+          dbs.forEach((db) => {
+            if (db.name) indexedDB.deleteDatabase(db.name);
+          });
+        } catch {
+          // ignore
+        }
+      }
+
+      toast.success(
+        t("data.clearSuccessTitle"),
+        t("data.clearSuccessDesc"),
+        3000,
+      );
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      console.error("Failed to clear data:", err);
+    }
   };
 
   const tabs = [
@@ -540,122 +590,31 @@ export function WorkspaceSettingsDialog({
                   )}
                   <section className="space-y-4">
                     <SettingsItemHeader
-                      title={t("performance.advisorTitle")}
-                      description={t("performance.advisorDesc")}
+                      title={t(
+                        "performance.optimizationTitle",
+                        "MEMORY & DEVICE OPTIMIZATION",
+                      )}
+                      description={t("performance.optimizationDesc")}
                     />
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
-                      {t("performance.privacyNote")}
+                    <div className="space-y-2">
+                      <ToggleSwitch
+                        label={t("performance.pdfStudioLazyPagination")}
+                        description={t(
+                          "performance.pdfStudioLazyPaginationDesc",
+                        )}
+                        checked={resolvePdfStudioLazyPagination(
+                          safePerformancePreferences,
+                          isMobileDialog,
+                        )}
+                        onChange={(checked) =>
+                          updatePerformancePreferences({
+                            ...safePerformancePreferences,
+                            pdfStudioLazyPagination: checked,
+                          })
+                        }
+                        colorWhenEnabled="sky"
+                      />
                     </div>
-                    <ToggleSwitch
-                      label={t("performance.enableAdvisor")}
-                      description={t("performance.enableAdvisorDesc")}
-                      checked={advisorEnabled}
-                      onChange={(checked) =>
-                        updatePerformancePreferences({
-                          ...safePerformancePreferences,
-                          smartAdvisorEnabled: checked,
-                        })
-                      }
-                    />
-                    <ToggleSwitch
-                      label={t("performance.unlockConcurrency")}
-                      description={t("performance.unlockConcurrencyDesc")}
-                      checked={overclockEnabled}
-                      onChange={(checked) =>
-                        updatePerformancePreferences({
-                          ...safePerformancePreferences,
-                          allowConcurrencyOverclock: checked,
-                        })
-                      }
-                      colorWhenEnabled="amber"
-                    />
-                    {advisorEnabled && (
-                      <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <BodyText className="font-semibold text-slate-800 dark:text-slate-200">
-                              {t("performance.hardwareProfile")}
-                            </BodyText>
-                            <MutedText className="text-xs">
-                              {t("performance.sourceLabel", {
-                                source:
-                                  hardwareProfile.source === "detected"
-                                    ? t("performance.sourceAuto")
-                                    : hardwareProfile.source === "manual"
-                                      ? t("performance.sourceManual")
-                                      : t("performance.sourceFallback"),
-                              })}
-                            </MutedText>
-                          </div>
-
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const detected = detectHardwareProfile();
-                              updatePerformancePreferences({
-                                ...safePerformancePreferences,
-                                hardwareProfile: detected,
-                              });
-                            }}
-                          >
-                            {t("performance.autoDetect")}
-                          </Button>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          <NumberInput
-                            label={t("performance.cpuCores")}
-                            value={hardwareProfile.cpuCores}
-                            min={1}
-                            max={64}
-                            step={1}
-                            onChangeValue={(nextValue) => {
-                              updateHardwareProfile({ cpuCores: nextValue });
-                            }}
-                          />
-
-                          <NumberInput
-                            label={t("performance.ramBudget")}
-                            value={hardwareProfile.ramBudgetGb}
-                            min={0.5}
-                            max={64}
-                            step={0.5}
-                            onChangeValue={(nextValue) => {
-                              updateHardwareProfile({ ramBudgetGb: nextValue });
-                            }}
-                          />
-                        </div>
-
-                        <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
-                          {t("performance.detectedHardware", {
-                            cores:
-                              hardwareProfile.detectedLogicalCores ??
-                              hardwareProfile.cpuCores,
-                            ram:
-                              hardwareProfile.detectedDeviceMemoryGb ??
-                              t("performance.detectedHardwareUnknown"),
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {!advisorEnabled && (
-                      <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-relaxed text-sky-800 dark:border-sky-900/50 dark:bg-slate-950/30 dark:text-sky-300">
-                        {t("performance.modeStatic")}
-                      </div>
-                    )}
-
-                    {overclockEnabled ? (
-                      <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800 dark:border-rose-900/50 dark:bg-slate-950/30 dark:text-rose-300">
-                        {t("performance.modeDanger")}
-                      </div>
-                    ) : (
-                      <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-800 dark:border-emerald-900/50 dark:bg-slate-950/30 dark:text-emerald-300">
-                        {t("performance.modeSafe")}
-                      </div>
-                    )}
                   </section>
                 </div>
               )}
@@ -782,7 +741,7 @@ export function WorkspaceSettingsDialog({
                           {t("data.totalPresets")}
                         </span>
                         <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                          {stats.presetCount}
+                          {unifiedPresetStats.totalCount}
                         </span>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -873,23 +832,44 @@ export function WorkspaceSettingsDialog({
                       description={t("data.backupRestoreDesc")}
                     />
                     {devModeSettingsAdapter && (
-                      <div className="grid grid-cols-2 gap-3 pt-1">
-                        <Button
-                          variant="outline"
-                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        {/* 1. Export Card */}
+                        <button
+                          type="button"
                           onClick={() => setIsExportDialogOpen(true)}
+                          className="group flex flex-col items-start p-3.5 text-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-sky-500/40 dark:hover:border-sky-500/40 transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                         >
-                          <Download size={14} />
-                          {t("data.exportData", "Export Data")}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          <div className="flex items-center gap-2.5 w-full mb-1.5">
+                            <div className="text-sky-600 dark:text-sky-400 group-hover:scale-105 transition-transform">
+                              <Download size={16} />
+                            </div>
+                            <span className="font-semibold text-sm text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                              {t("data.exportData")}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                            {t("data.exportDataDesc")}
+                          </p>
+                        </button>
+
+                        {/* 2. Import Card */}
+                        <button
+                          type="button"
                           onClick={() => setIsImportDialogOpen(true)}
+                          className="group flex flex-col items-start p-3.5 text-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                         >
-                          <Download size={14} className="rotate-180" />
-                          {t("data.importData")}
-                        </Button>
+                          <div className="flex items-center gap-2.5 w-full mb-1.5">
+                            <div className="text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+                              <Upload size={16} />
+                            </div>
+                            <span className="font-semibold text-sm text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                              {t("data.importData")}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                            {t("data.importDataDesc")}
+                          </p>
+                        </button>
                       </div>
                     )}
                   </section>
@@ -930,13 +910,30 @@ export function WorkspaceSettingsDialog({
                         )}
                       </div>
                     </div>
+                    {/* Clear / Reset Card */}
+                    <button
+                      type="button"
+                      onClick={handleClearAllData}
+                      className="w-full group flex flex-col items-start p-3.5 text-left rounded-xl border border-rose-200/70 dark:border-rose-900/30 bg-rose-50/30 dark:bg-rose-950/10 hover:bg-rose-50/70 dark:hover:bg-rose-950/30 hover:border-rose-400/50 dark:hover:border-rose-700/50 transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                    >
+                      <div className="flex items-center gap-2.5 w-full mb-1.5">
+                        <div className="text-rose-600 dark:text-rose-400 group-hover:scale-105 transition-transform">
+                          <Trash2 size={16} />
+                        </div>
+                        <span className="font-semibold text-sm text-rose-700 dark:text-rose-300 group-hover:text-rose-600 dark:group-hover:text-rose-200 transition-colors">
+                          {t("data.clearData")}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                        {t("data.clearDataDesc")}
+                      </p>
+                    </button>
                   </section>
                 </div>
               ) : null}
             </div>
           </div>
         )}
-        <ToastContainer toasts={toasts} onRemove={hide} />
       </BaseDialog>
       {devModeSettingsAdapter && (
         <>
@@ -958,7 +955,7 @@ export function WorkspaceSettingsDialog({
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
             onSuccess={() =>
-              success(
+              toast.success(
                 t("data.importSuccessTitle"),
                 t("data.importSuccessDesc"),
                 3000,

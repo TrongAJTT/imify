@@ -96,6 +96,9 @@ This list is synchronized with `packages/core/src/attributions.ts` (source of tr
 *   **[react-i18next](https://react.i18next.com/)**
     *   **Author(s):** Jan Mühlemann and i18next contributors
     *   **License:** MIT
+*   **[pdfjs-dist (PDF.js)](https://github.com/mozilla/pdf.js)**
+    *   **Author(s):** Mozilla and individual contributors
+    *   **License:** Apache-2.0
 
 ## AI Models & Engines
 *   **[Transformers.js](https://github.com/huggingface/transformers.js)**

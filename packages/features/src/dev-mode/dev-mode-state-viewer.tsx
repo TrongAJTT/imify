@@ -3,37 +3,25 @@
 import React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, Copy, RefreshCw, AlignLeft } from "lucide-react";
-import { useBatchStore } from "@imify/stores/stores/batch-store";
-import { useSplicingStore } from "@imify/stores/stores/splicing-store";
-import { useSplitterStore } from "@imify/stores/stores/splitter-store";
-import { useFillingStore } from "@imify/stores/stores/filling-store";
-import { usePatternStore } from "@imify/stores/stores/pattern-store";
-import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store";
-import { useInspectorStore } from "@imify/stores/stores/inspector-store";
-import { useQrGeneratorStore } from "@imify/stores/stores/qr-generator-store";
-import { useBackgroundRemoverStore } from "@imify/stores/stores/background-remover-store";
 import { Button } from "@imify/ui/ui/button";
 import { Tooltip } from "@imify/ui/ui/tooltip";
+import {
+  DEV_MODE_FEATURES,
+  getFeatureRawState,
+  stripStoreActions,
+  type DevModeFeatureId,
+} from "./dev-mode-registry";
+import { useBatchStore } from "@imify/stores/stores/batch-store";
 import type { OptionsTab } from "./debug-shared";
 import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter";
-
-function stripActions(state: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(state)) {
-    if (typeof value !== "function") {
-      out[key] = value;
-    }
-  }
-  return out;
-}
 
 type StoreFilter =
   | "all"
   | OptionsTab
   | "batch_global"
   | "processor"
-  | "qr_generator"
-  | "background_remover";
+  | "context-menu"
+  | DevModeFeatureId;
 
 interface DevModeStateViewerProps {
   activeTab: OptionsTab | null;
@@ -53,6 +41,23 @@ export function DevModeStateViewer({
   const [copied, setCopied] = useState(false);
   const [wordWrap, setWordWrap] = useState(false);
   const [settingsState, setSettingsState] = useState<unknown>(null);
+  const [, setTick] = useState(0);
+
+  // Subscribe to all registered feature stores for real-time live updates
+  useEffect(() => {
+    const unsubscribes = DEV_MODE_FEATURES.map((feature) => {
+      if (feature.storeHook) {
+        return feature.storeHook.subscribe(() => {
+          setTick((t) => (t + 1) % 100000);
+        });
+      }
+      return null;
+    }).filter(Boolean);
+
+    return () => {
+      unsubscribes.forEach((unsub) => unsub?.());
+    };
+  }, []);
 
   useEffect(() => {
     let unmounted = false;
@@ -80,104 +85,78 @@ export function DevModeStateViewer({
     };
   }, [settingsAdapter]);
 
-  const batchState = useBatchStore();
-  const splicingState = useSplicingStore();
-  const splitterState = useSplitterStore();
-  const fillingState = useFillingStore();
-  const patternState = usePatternStore();
-  const diffcheckerState = useDiffcheckerStore();
-  const inspectorState = useInspectorStore();
-  const qrGeneratorState = useQrGeneratorStore();
-  const backgroundRemoverState = useBackgroundRemoverStore();
-
   const allStores = useMemo<Record<string, Record<string, unknown>>>(() => {
-    const rootBatch = stripActions(
-      batchState as unknown as Record<string, unknown>,
-    );
-    const singleConfig = (batchState as any).contextConfigs?.single || {};
-    const batchConfig = (batchState as any).contextConfigs?.batch || {};
-    const presets = Array.isArray((batchState as any).presets)
-      ? (batchState as any).presets
-      : [];
-    const activePresetIds = (batchState as any).activePresetIds || {};
-    const recentPresetIds = (batchState as any).recentPresetIds || {};
+    const storesRecord: Record<string, Record<string, unknown>> = {};
 
-    return {
-      batch_global: rootBatch,
-      processor: {
-        presets: presets.map((preset: any) => stripActions(preset)),
-        activePresetIds,
-        recentPresetIds,
-        contextConfigs: {
-          single: stripActions(singleConfig),
-          batch: stripActions(batchConfig),
-        },
+    // 1. Processor & Batch details
+    const batchRaw = useBatchStore.getState() as any;
+    const rootBatch = stripStoreActions(batchRaw);
+    const singleConfig = batchRaw?.contextConfigs?.single || {};
+    const batchConfig = batchRaw?.contextConfigs?.batch || {};
+    const presets = Array.isArray(batchRaw?.presets) ? batchRaw.presets : [];
+    const activePresetIds = batchRaw?.activePresetIds || {};
+    const recentPresetIds = batchRaw?.recentPresetIds || {};
+
+    storesRecord.batch_global = rootBatch;
+    storesRecord.processor = {
+      presets: presets.map((preset: any) => stripStoreActions(preset)),
+      activePresetIds,
+      recentPresetIds,
+      contextConfigs: {
+        single: stripStoreActions(singleConfig),
+        batch: stripStoreActions(batchConfig),
       },
-      splicing: stripActions(
-        splicingState as unknown as Record<string, unknown>,
-      ),
-      splitter: stripActions(
-        splitterState as unknown as Record<string, unknown>,
-      ),
-      filling: stripActions(fillingState as unknown as Record<string, unknown>),
-      pattern: stripActions(patternState as unknown as Record<string, unknown>),
-      diffchecker: stripActions(
-        diffcheckerState as unknown as Record<string, unknown>,
-      ),
-      inspector: stripActions(
-        inspectorState as unknown as Record<string, unknown>,
-      ),
-      qr_generator: (() => {
-        const cleaned = stripActions(
-          qrGeneratorState as unknown as Record<string, unknown>,
-        );
-        const { data, ...rest } = cleaned;
-        return rest;
-      })(),
-      background_remover: stripActions(
-        backgroundRemoverState as unknown as Record<string, unknown>,
-      ),
-      "context-menu": (settingsState as any)?.context_menu || {},
     };
-  }, [
-    batchState,
-    diffcheckerState,
-    fillingState,
-    inspectorState,
-    patternState,
-    settingsState,
-    splicingState,
-    splitterState,
-    qrGeneratorState,
-    backgroundRemoverState,
-  ]);
 
-  const tabToStoreKey: Partial<Record<StoreFilter, keyof typeof allStores>> = {
-    batch_global: "batch_global",
-    single: "processor",
-    batch: "processor",
-    processor: "processor",
-    "context-menu": "context-menu",
-    splicing: "splicing",
-    splitter: "splitter",
-    filling: "filling",
-    pattern: "pattern",
-    diffchecker: "diffchecker",
-    inspector: "inspector",
-    qr_generator: "qr_generator",
-    background_remover: "background_remover",
-  };
+    // 2. All other features dynamically from DEV_MODE_FEATURES registry
+    for (const feature of DEV_MODE_FEATURES) {
+      if (feature.id === "batch") continue;
+      if (feature.storeHook) {
+        const raw = getFeatureRawState(feature.id);
+        if (raw) {
+          storesRecord[feature.id] = raw;
+        }
+      }
+    }
+
+    // 3. Context Menu / Settings
+    storesRecord["context-menu"] = (settingsState as any)?.context_menu || {};
+
+    return storesRecord;
+  }, [settingsState]);
+
+  const filterOptions = useMemo<Array<{ value: StoreFilter; label: string }>>(() => {
+    const options: Array<{ value: StoreFilter; label: string }> = [
+      { value: "all", label: "All Stores" },
+      { value: "batch_global", label: "Processor Global" },
+      { value: "processor", label: "Processor" },
+      { value: "context-menu", label: "Context Menu" },
+    ];
+
+    for (const feature of DEV_MODE_FEATURES) {
+      if (feature.id === "batch") continue;
+      if (feature.storeHook) {
+        options.push({
+          value: feature.id,
+          label: feature.label,
+        });
+      }
+    }
+
+    return options;
+  }, []);
 
   const visibleSnapshot = useMemo(() => {
     if (filter === "all") {
       return allStores;
     }
-    const key = tabToStoreKey[filter];
-    if (!key) {
+    const storeKey = filter === "single" || filter === "batch" ? "processor" : filter;
+    const storeData = allStores[storeKey];
+    if (!storeData) {
       return allStores;
     }
-    return { [key]: allStores[key] };
-  }, [allStores, filter, tabToStoreKey]);
+    return { [storeKey]: storeData };
+  }, [allStores, filter]);
 
   const jsonText = useMemo(() => {
     try {
@@ -196,21 +175,6 @@ export function DevModeStateViewer({
       // Ignore permission errors from clipboard API.
     }
   }, [jsonText]);
-
-  const filterOptions: Array<{ value: StoreFilter; label: string }> = [
-    { value: "all", label: "All Stores" },
-    { value: "batch_global", label: "Processor Global" },
-    { value: "processor", label: "Processor" },
-    { value: "context-menu", label: "Context Menu" },
-    { value: "splicing", label: "Image Splicing" },
-    { value: "splitter", label: "Image Splitter" },
-    { value: "filling", label: "Image Filling" },
-    { value: "pattern", label: "Pattern Generator" },
-    { value: "diffchecker", label: "Difference Checker" },
-    { value: "inspector", label: "Image Inspector" },
-    { value: "qr_generator", label: "QR Code Generator" },
-    { value: "background_remover", label: "Background Remover" },
-  ];
 
   return (
     <div className="flex flex-col gap-3 pt-0.5 w-full max-w-full overflow-hidden">

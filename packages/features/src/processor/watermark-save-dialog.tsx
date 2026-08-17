@@ -59,35 +59,49 @@ export function WatermarkSaveDialog({
       isOpen={isOpen}
       onClose={onClose}
       contentClassName="w-full max-w-lg mx-auto rounded-xl overflow-hidden flex flex-col"
-    >
-      <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/40">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-sky-100 p-2 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
-            <Save size={18} />
+      header={
+        <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-sky-100 p-2 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
+              <Save size={18} />
+            </div>
+            <div className="min-w-0">
+              <Subheading className="text-sm font-bold leading-tight">
+                {t("watermarkDialog.saveTitle", "Save Watermark")}
+              </Subheading>
+              <MutedText className="text-[11px] leading-tight mt-0.5">
+                {t(
+                  "watermarkDialog.saveDesc",
+                  "Save current watermark as a reusable pattern.",
+                )}
+              </MutedText>
+            </div>
           </div>
-          <div className="min-w-0">
-            <Subheading className="text-sm font-bold leading-tight">
-              {t("watermarkDialog.saveTitle", "Save Watermark")}
-            </Subheading>
-            <MutedText className="text-[11px] leading-tight mt-0.5">
-              {t(
-                "watermarkDialog.saveDesc",
-                "Save current watermark as a reusable pattern.",
-              )}
-            </MutedText>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-1 text-slate-500 transition-colors hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
+            aria-label="Close save watermark dialog"
+          >
+            <X size={16} />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-full p-1 text-slate-500 transition-colors hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
-          aria-label="Close save watermark dialog"
-        >
-          <X size={16} />
-        </button>
-      </div>
-
-      <div className="space-y-4 p-5">
+      }
+      stickyHeader={true}
+      footer={
+        <div className="flex items-center justify-end gap-2 px-5 py-4">
+          <SecondaryButton onClick={onClose} className="px-4">
+            {t("watermarkDialog.cancel", "Cancel")}
+          </SecondaryButton>
+          <Button onClick={onSave} disabled={!canSave} className="px-5">
+            <Save size={14} />
+            {t("watermarkDialog.save", "Save")}
+          </Button>
+        </div>
+      }
+      stickyFooter={true}
+    >
+      <div className="space-y-4 p-5 min-h-[35vh]">
         <div className="space-y-1">
           <LabelText className="text-xs">
             {t("watermarkDialog.saveAction", "Action")}
@@ -191,16 +205,6 @@ export function WatermarkSaveDialog({
             }
           }}
         />
-      </div>
-
-      <div className="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/40">
-        <SecondaryButton onClick={onClose} className="px-4">
-          {t("watermarkDialog.cancel", "Cancel")}
-        </SecondaryButton>
-        <Button onClick={onSave} disabled={!canSave} className="px-5">
-          <Save size={14} />
-          {t("watermarkDialog.save", "Save")}
-        </Button>
       </div>
     </BaseDialog>
   );

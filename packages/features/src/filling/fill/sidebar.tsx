@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { FillingTemplate } from "@imify/features/filling/types";
 import {
   closestCenter,
@@ -33,14 +33,8 @@ import {
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
 } from "@imify/ui/ui/workspace-config-sidebar-panel";
-import { PresetSelector } from "@imify/features/processor/preset-selector";
-import { useIdentifiedPresetLoader } from "@imify/features/shared/use-identified-preset-loader";
-import { useBatchStore } from "@imify/stores/stores/batch-store";
-
-import {
-  FILLING_TARGET_FORMATS,
-  useFillingIdentifiedPreset,
-} from "@imify/features/filling/config";
+import { QuickExportSelector } from "../../shared/quick-export-selector";
+import { FILLING_NAMING_CONFIG, type QuickExportFormat } from "@imify/core";
 
 interface FillSidebarProps {
   template: FillingTemplate;
@@ -53,64 +47,15 @@ export function FillSidebar({
 }: FillSidebarProps) {
   const { t } = useTranslation("filling");
   const layerFillStates = useFillingStore((s) => s.layerFillStates);
+  const exportSettings = useFillingStore((s) => s.exportSettings);
+  const setExportSettings = useFillingStore((s) => s.setExportSettings);
+
   const sessionTemplate = useFillUiStore((s) => s.sessionTemplate);
   const initializeFillSession = useFillUiStore((s) => s.initializeFillSession);
   const updateSessionTemplate = useFillUiStore((s) => s.updateSessionTemplate);
   const hiddenLayerIds = useFillUiStore((s) => s.hiddenLayerIds);
   const resetFillSessionState = useFillUiStore((s) => s.resetFillSessionState);
   const [layersAccordionHeight, setLayersAccordionHeight] = useState(320);
-
-  const applyPreset = useFillingStore((s) => s.applyPreset);
-  const resetToDefault = useFillingStore((s) => s.resetToDefault);
-
-  const { fillingIdentifiedPreset, activePresetId } =
-    useFillingIdentifiedPreset(template.id, template.name);
-
-  useIdentifiedPresetLoader(
-    fillingIdentifiedPreset,
-    activePresetId,
-    applyPreset,
-  );
-
-  const batchTargetFormat = useBatchStore((s) => s.targetFormat);
-  const batchQuality = useBatchStore((s) => s.quality);
-  const batchFileNamePattern = useBatchStore((s) => s.fileNamePattern);
-  const batchFormatOptions = useBatchStore((s) => s.formatOptions);
-
-  const lastSyncedBatchConfigRef = useRef<string | null>(null);
-
-  // Sync global batch store changes to local store when in "Custom" mode (activePresetId is null)
-  useEffect(() => {
-    if (activePresetId !== null) {
-      lastSyncedBatchConfigRef.current = null;
-      return;
-    }
-
-    const configKey = `${batchTargetFormat}-${batchQuality}-${batchFileNamePattern}-${JSON.stringify(batchFormatOptions)}`;
-    if (lastSyncedBatchConfigRef.current === configKey) {
-      return;
-    }
-
-    lastSyncedBatchConfigRef.current = configKey;
-    applyPreset({
-      ...fillingIdentifiedPreset,
-      config: {
-        ...fillingIdentifiedPreset.config,
-        targetFormat: batchTargetFormat,
-        quality: batchQuality,
-        fileNamePattern: batchFileNamePattern,
-        formatOptions: batchFormatOptions,
-      },
-    });
-  }, [
-    activePresetId,
-    batchTargetFormat,
-    batchQuality,
-    batchFileNamePattern,
-    batchFormatOptions,
-    fillingIdentifiedPreset,
-    applyPreset,
-  ]);
 
   const activeTemplate = useMemo(() => {
     if (sessionTemplate && sessionTemplate.id === template.id)
@@ -232,15 +177,17 @@ export function FillSidebar({
       id: "output-settings",
       label: "",
       content: (
-        <PresetSelector
-          label={t("fill.outputSettings")}
+        <QuickExportSelector
+          format={exportSettings.format}
+          onFormatChange={(format: QuickExportFormat) =>
+            setExportSettings({ format })
+          }
+          fileNamePattern={exportSettings.fileNamePattern}
+          onFileNamePatternChange={(fileNamePattern: string) =>
+            setExportSettings({ fileNamePattern })
+          }
+          namingConfig={FILLING_NAMING_CONFIG}
           theme="amber"
-          identifiedPreset={fillingIdentifiedPreset}
-          formatFilter={FILLING_TARGET_FORMATS}
-          activePresetId={activePresetId}
-          onSelect={applyPreset}
-          onReset={resetToDefault}
-          tooltipContent={t("fill.presetSelectorTooltip")}
         />
       ),
     },

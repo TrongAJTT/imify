@@ -11,13 +11,13 @@ import { Loader2, Save } from "lucide-react";
 import { useCanvasResizer } from "../shared/use-canvas-resizer";
 import { usePanDrag } from "../shared/use-pan-drag";
 
-import { ToastContainer, Subheading, MutedText } from "@imify/ui";
+import { Subheading, MutedText } from "@imify/ui";
 import { toUserFacingConversionError } from "@imify/core/error-utils";
-import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import { renderPatternToContext } from "@imify/features/pattern/pattern-renderer";
-import { buildActivePatternFormatOptions } from "@imify/stores/stores/pattern-format-options";
+import { mapQuickExportToEngineConfig } from "@imify/core";
 import { usePatternStore } from "@imify/stores/stores/pattern-store";
+import { toast } from "@imify/stores";
 import { useShortcutActions } from "../filling/use-shortcut-actions";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
 import { Button } from "@imify/ui";
@@ -83,77 +83,6 @@ export function PatternTab() {
   );
 
   const exportFormat = usePatternStore((state) => state.exportFormat);
-  const exportQuality = usePatternStore((state) => state.exportQuality);
-  const exportJxlEffort = usePatternStore((state) => state.exportJxlEffort);
-  const exportJxlLossless = usePatternStore((state) => state.exportJxlLossless);
-  const exportJxlProgressive = usePatternStore(
-    (state) => state.exportJxlProgressive,
-  );
-  const exportJxlEpf = usePatternStore((state) => state.exportJxlEpf);
-  const exportAvifSpeed = usePatternStore((state) => state.exportAvifSpeed);
-  const exportAvifQualityAlpha = usePatternStore(
-    (state) => state.exportAvifQualityAlpha,
-  );
-  const exportAvifLossless = usePatternStore(
-    (state) => state.exportAvifLossless,
-  );
-  const exportAvifSubsample = usePatternStore(
-    (state) => state.exportAvifSubsample,
-  );
-  const exportAvifTune = usePatternStore((state) => state.exportAvifTune);
-  const exportAvifHighAlphaQuality = usePatternStore(
-    (state) => state.exportAvifHighAlphaQuality,
-  );
-  const exportMozJpegProgressive = usePatternStore(
-    (state) => state.exportMozJpegProgressive,
-  );
-  const exportMozJpegChromaSubsampling = usePatternStore(
-    (state) => state.exportMozJpegChromaSubsampling,
-  );
-  const exportPngTinyMode = usePatternStore((state) => state.exportPngTinyMode);
-  const exportPngCleanTransparentPixels = usePatternStore(
-    (state) => state.exportPngCleanTransparentPixels,
-  );
-  const exportPngAutoGrayscale = usePatternStore(
-    (state) => state.exportPngAutoGrayscale,
-  );
-  const exportPngDithering = usePatternStore(
-    (state) => state.exportPngDithering,
-  );
-  const exportPngDitheringLevel = usePatternStore(
-    (state) => state.exportPngDitheringLevel,
-  );
-  const exportPngProgressiveInterlaced = usePatternStore(
-    (state) => state.exportPngProgressiveInterlaced,
-  );
-  const exportPngOxiPngCompression = usePatternStore(
-    (state) => state.exportPngOxiPngCompression,
-  );
-  const exportWebpLossless = usePatternStore(
-    (state) => state.exportWebpLossless,
-  );
-  const exportWebpNearLossless = usePatternStore(
-    (state) => state.exportWebpNearLossless,
-  );
-  const exportWebpEffort = usePatternStore((state) => state.exportWebpEffort);
-  const exportWebpSharpYuv = usePatternStore(
-    (state) => state.exportWebpSharpYuv,
-  );
-  const exportWebpPreserveExactAlpha = usePatternStore(
-    (state) => state.exportWebpPreserveExactAlpha,
-  );
-  const exportBmpColorDepth = usePatternStore(
-    (state) => state.exportBmpColorDepth,
-  );
-  const exportBmpDithering = usePatternStore(
-    (state) => state.exportBmpDithering,
-  );
-  const exportBmpDitheringLevel = usePatternStore(
-    (state) => state.exportBmpDitheringLevel,
-  );
-  const exportTiffColorMode = usePatternStore(
-    (state) => state.exportTiffColorMode,
-  );
   const { getShortcutLabel } = useShortcutPreferences();
 
   const previewHostRef = useRef<HTMLDivElement>(null);
@@ -175,11 +104,6 @@ export function PatternTab() {
   );
   const [isRenderingPreview, setIsRenderingPreview] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [exportToastPayload, setExportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
 
   const { isResizing, handleResizeStart } = useCanvasResizer({
     containerRef: previewHostRef,
@@ -203,8 +127,6 @@ export function PatternTab() {
 
   const assetBitmapsRef = useRef<Map<string, ImageBitmap>>(new Map());
   const backgroundBitmapRef = useRef<ImageBitmap | null>(null);
-
-  const conversionToasts = useConversionToasts([exportToastPayload]);
 
   const activeAssets = useMemo(
     () => assets.filter((asset) => asset.enabled),
@@ -273,112 +195,14 @@ export function PatternTab() {
   const shouldRenderBoundaryOverlay =
     hasVisualBoundaryOverlay && canUseBoundaryOverlay;
 
-  const formatOptions = useMemo(
-    () =>
-      buildActivePatternFormatOptions({
-        exportFormat,
-        exportBmpColorDepth,
-        exportBmpDithering,
-        exportBmpDitheringLevel,
-        exportJxlEffort,
-        exportJxlLossless,
-        exportJxlProgressive,
-        exportJxlEpf,
-        exportWebpLossless,
-        exportWebpNearLossless,
-        exportWebpEffort,
-        exportWebpSharpYuv,
-        exportWebpPreserveExactAlpha,
-        exportAvifSpeed,
-        exportAvifQualityAlpha,
-        exportAvifLossless,
-        exportAvifSubsample,
-        exportAvifTune,
-        exportAvifHighAlphaQuality,
-        exportMozJpegProgressive,
-        exportMozJpegChromaSubsampling,
-        exportPngTinyMode,
-        exportPngCleanTransparentPixels,
-        exportPngAutoGrayscale,
-        exportPngDithering,
-        exportPngDitheringLevel,
-        exportPngProgressiveInterlaced,
-        exportPngOxiPngCompression,
-        exportTiffColorMode,
-      }),
-    [
-      exportFormat,
-      exportBmpColorDepth,
-      exportBmpDithering,
-      exportBmpDitheringLevel,
-      exportJxlEffort,
-      exportJxlLossless,
-      exportJxlProgressive,
-      exportJxlEpf,
-      exportWebpLossless,
-      exportWebpNearLossless,
-      exportWebpEffort,
-      exportWebpSharpYuv,
-      exportWebpPreserveExactAlpha,
-      exportAvifSpeed,
-      exportAvifQualityAlpha,
-      exportAvifLossless,
-      exportAvifSubsample,
-      exportAvifTune,
-      exportAvifHighAlphaQuality,
-      exportMozJpegProgressive,
-      exportMozJpegChromaSubsampling,
-      exportPngTinyMode,
-      exportPngCleanTransparentPixels,
-      exportPngAutoGrayscale,
-      exportPngDithering,
-      exportPngDitheringLevel,
-      exportPngProgressiveInterlaced,
-      exportPngOxiPngCompression,
-      exportTiffColorMode,
-    ],
+  const { targetFormat, quality, codecOptions } = useMemo(
+    () => mapQuickExportToEngineConfig(exportFormat),
+    [exportFormat],
   );
 
-  const clearExportToastHideTimer = useCallback(() => {
-    if (!exportToastHideTimerRef.current) {
-      return;
-    }
-
-    clearTimeout(exportToastHideTimerRef.current);
-    exportToastHideTimerRef.current = null;
+  const pushExportToast = useCallback((payload: ConversionProgressPayload) => {
+    toast.progress(payload);
   }, []);
-
-  const pushExportToast = useCallback(
-    (payload: ConversionProgressPayload) => {
-      clearExportToastHideTimer();
-      setExportToastPayload(payload);
-    },
-    [clearExportToastHideTimer],
-  );
-
-  const scheduleExportToastHide = useCallback(
-    (toastId: string, delayMs: number) => {
-      clearExportToastHideTimer();
-
-      exportToastHideTimerRef.current = setTimeout(() => {
-        setExportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        exportToastHideTimerRef.current = null;
-      }, delayMs);
-    },
-    [clearExportToastHideTimer],
-  );
-
-  const handleRemoveExportToast = useCallback(
-    (toastId: string) => {
-      clearExportToastHideTimer();
-      setExportToastPayload((current) =>
-        current?.id === toastId ? null : current,
-      );
-    },
-    [clearExportToastHideTimer],
-  );
 
   const replaceAssetBitmaps = useCallback(
     (nextMap: Map<string, ImageBitmap>) => {
@@ -502,7 +326,6 @@ export function PatternTab() {
 
   useEffect(() => {
     return () => {
-      clearExportToastHideTimer();
       closeBitmapMap(assetBitmapsRef.current);
       assetBitmapsRef.current = new Map();
 
@@ -511,7 +334,7 @@ export function PatternTab() {
         backgroundBitmapRef.current = null;
       }
     };
-  }, [clearExportToastHideTimer]);
+  }, []);
 
   useEffect(() => {
     if (activeVisualBoundary === "inbound") {
@@ -716,7 +539,7 @@ export function PatternTab() {
     pushExportToast({
       id: toastId,
       fileName: outputBaseName,
-      targetFormat: exportFormat,
+      targetFormat: targetFormat as any,
       status: "processing",
       percent: 2,
       message: t("toasts.preparingExport"),
@@ -727,15 +550,15 @@ export function PatternTab() {
         canvas,
         settings,
         assets,
-        exportFormat,
-        exportQuality,
-        formatOptions,
+        exportFormat: targetFormat as any,
+        exportQuality: quality,
+        formatOptions: codecOptions as any,
         outputBaseName,
         onProgress: ({ percent, message }) => {
           pushExportToast({
             id: toastId,
             fileName: outputBaseName,
-            targetFormat: exportFormat,
+            targetFormat: targetFormat as any,
             status: "processing",
             percent,
             message,
@@ -746,22 +569,20 @@ export function PatternTab() {
       pushExportToast({
         id: toastId,
         fileName: outputBaseName,
-        targetFormat: exportFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportFormat).targetFormat as any,
         status: "success",
         percent: 100,
         message: t("toasts.exportCompleted"),
       });
-      scheduleExportToastHide(toastId, 2600);
     } catch (error) {
       pushExportToast({
         id: toastId,
         fileName: outputBaseName,
-        targetFormat: exportFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportFormat).targetFormat as any,
         status: "error",
         percent: 100,
         message: toUserFacingConversionError(error, t("toasts.exportFailed")),
       });
-      scheduleExportToastHide(toastId, 4800);
     } finally {
       setIsExporting(false);
     }
@@ -906,11 +727,6 @@ export function PatternTab() {
           />
         </div>
       </div>
-
-      <ToastContainer
-        toasts={conversionToasts}
-        onRemove={handleRemoveExportToast}
-      />
     </div>
   );
 }

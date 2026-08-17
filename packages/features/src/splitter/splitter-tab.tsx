@@ -9,15 +9,17 @@ import React, {
 import { AlertTriangle, ImagePlus, Trash2 } from "lucide-react";
 import { useTranslation } from "@imify/i18n";
 
-import { APP_CONFIG } from "@imify/core/config";
+import { mapQuickExportToEngineConfig } from "@imify/core";
 import {
   buildSmartOutputFileName,
   reserveUniqueFileName,
 } from "@imify/core/file-name-pattern";
-import { ToastContainer, useRenameInputPrompt } from "@imify/ui";
-import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
-import { BatchDownloadConfirmDialog } from "../shared/download-confirm-dialog";
+import {
+  toast,
+  confirmBatchDownload,
+  promptRenameInput,
+} from "@imify/stores";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
 import {
   ExportSplitButton,
@@ -45,8 +47,6 @@ import {
 import { buildSplitterSplitPlan } from "./split-engine";
 import { decodeFileToImageData } from "@imify/engine/image-pipeline/decode-image-data";
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
-import { useBatchStore } from "@imify/stores/stores/batch-store";
-import { buildActiveSplitterFormatOptions } from "@imify/stores/stores/splitter-format-options";
 import { useSplitterStore } from "@imify/stores/stores/splitter-store";
 import { SplitterWorkspaceShell } from "./splitter-workspace-shell";
 import {
@@ -130,9 +130,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   const splitSettings = useSplitterStore((state) => state.splitSettings);
   const setSplitSettings = useSplitterStore((state) => state.setSplitSettings);
   const exportSettings = useSplitterStore((state) => state.exportSettings);
-  const skipDownloadConfirm = useBatchStore(
-    (state) => state.skipDownloadConfirm,
-  );
 
   const [images, setImages] = useState<SplitterImageItem[]>([]);
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
@@ -147,19 +144,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   const [previewPlan, setPreviewPlan] = useState<ReturnType<
     typeof buildSplitterSplitPlan
   > | null>(null);
-  const [importToastPayload, setImportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const [exportToastPayload, setExportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
-  const [pendingExportMode, setPendingExportMode] = useState<
-    "one_by_one" | null
-  >(null);
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
-  const conversionToasts = useConversionToasts([
-    importToastPayload,
-    exportToastPayload,
-  ]);
   const { getShortcutLabel } = useShortcutPreferences();
 
   const splitterPreviewShortcutsEnabled = images.length > 0;
@@ -184,12 +168,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imagesRef = useRef<SplitterImageItem[]>([]);
   const previewComputeSequenceRef = useRef(0);
-  const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
 
   const activeImage = useMemo(
     () =>
@@ -246,46 +224,15 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   useEffect(() => {
     return () => {
       imagesRef.current.forEach(revokeImageItemUrls);
-      if (importToastHideTimerRef.current) {
-        clearTimeout(importToastHideTimerRef.current);
-      }
-      if (exportToastHideTimerRef.current) {
-        clearTimeout(exportToastHideTimerRef.current);
-      }
     };
   }, []);
 
-  const handleRemoveToast = useCallback((toastId: string) => {
-    if (importToastHideTimerRef.current) {
-      clearTimeout(importToastHideTimerRef.current);
-      importToastHideTimerRef.current = null;
-    }
-    setImportToastPayload((current) =>
-      current?.id === toastId ? null : current,
-    );
-    if (exportToastHideTimerRef.current) {
-      clearTimeout(exportToastHideTimerRef.current);
-      exportToastHideTimerRef.current = null;
-    }
-    setExportToastPayload((current) =>
-      current?.id === toastId ? null : current,
-    );
-  }, []);
-
   const pushImportToast = useCallback((payload: ConversionProgressPayload) => {
-    if (importToastHideTimerRef.current) {
-      clearTimeout(importToastHideTimerRef.current);
-      importToastHideTimerRef.current = null;
-    }
-    setImportToastPayload(payload);
+    toast.progress(payload);
   }, []);
 
   const pushExportToast = useCallback((payload: ConversionProgressPayload) => {
-    if (exportToastHideTimerRef.current) {
-      clearTimeout(exportToastHideTimerRef.current);
-      exportToastHideTimerRef.current = null;
-    }
-    setExportToastPayload(payload);
+    toast.progress(payload);
   }, []);
 
   useEffect(() => {
@@ -372,7 +319,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushImportToast({
         id: toastId,
         fileName: `Importing ${imageFiles.length} images`,
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "processing",
         percent: 5,
         message: "Preparing image import...",
@@ -404,7 +352,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushImportToast({
           id: toastId,
           fileName: `Importing ${imageFiles.length} images`,
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+            .targetFormat as any,
           status: "processing",
           percent,
           message: `Creating thumbnails ${index + 1}/${imageFiles.length}...`,
@@ -415,17 +364,12 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushImportToast({
           id: toastId,
           fileName: "Image import failed",
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+            .targetFormat as any,
           status: "error",
           percent: 100,
           message: "No valid images were imported.",
         });
-        importToastHideTimerRef.current = setTimeout(() => {
-          setImportToastPayload((current) =>
-            current?.id === toastId ? null : current,
-          );
-          importToastHideTimerRef.current = null;
-        }, 3000);
         return;
       }
 
@@ -438,19 +382,14 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushImportToast({
         id: toastId,
         fileName: "Image import complete",
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "success",
         percent: 100,
         message: `Imported ${preparedItems.length} image${preparedItems.length === 1 ? "" : "s"}.`,
       });
-      importToastHideTimerRef.current = setTimeout(() => {
-        setImportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        importToastHideTimerRef.current = null;
-      }, 2500);
     },
-    [activeImageId, exportSettings.targetFormat, pushImportToast],
+    [activeImageId, exportSettings.format, pushImportToast],
   );
 
   useClipboardImageIntake({
@@ -560,30 +499,25 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
 
   const handleExport = async (
     downloadMode: "zip" | "one_by_one" = "zip",
-    forceDownloadConfirm: boolean = false,
     inputValue?: string,
   ) => {
     if (images.length === 0 || isExporting) {
       return;
     }
-    if (
-      downloadMode === "one_by_one" &&
-      !forceDownloadConfirm &&
-      estimatedExportFileCount > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD &&
-      !skipDownloadConfirm
-    ) {
-      setPendingExportMode("one_by_one");
-      setShowDownloadConfirm(true);
-      return;
+    if (downloadMode === "one_by_one") {
+      const confirmed = await confirmBatchDownload(estimatedExportFileCount);
+      if (!confirmed) return;
     }
 
     setIsExporting(true);
     setErrorText(null);
     const toastId = `splitter_export_${Date.now()}`;
+    const { targetFormat, quality, codecOptions } =
+      mapQuickExportToEngineConfig(exportSettings.format);
     pushExportToast({
       id: toastId,
       fileName: "Split export",
-      targetFormat: exportSettings.targetFormat,
+      targetFormat: targetFormat as any,
       status: "processing",
       percent: 2,
       message: "Preparing split export...",
@@ -591,7 +525,6 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
 
     const usedNames = new Set<string>();
     const exportFiles: Array<{ name: string; blob: Blob }> = [];
-    const formatOptions = buildActiveSplitterFormatOptions(exportSettings);
     let globalIndex = 1;
 
     try {
@@ -600,7 +533,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushExportToast({
           id: toastId,
           fileName: "Split export",
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: targetFormat as any,
           status: "processing",
           percent: Math.min(
             70,
@@ -620,9 +553,9 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
 
         const convertedSegments = await convertSplitterSegments({
           segments,
-          targetFormat: exportSettings.targetFormat,
-          quality: exportSettings.quality,
-          formatOptions,
+          targetFormat: targetFormat as any,
+          quality,
+          formatOptions: codecOptions as any,
           onProgress: ({ completed, total }) => {
             const imageBase = (imageIndex / Math.max(1, images.length)) * 60;
             const imageStep =
@@ -635,7 +568,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
             pushExportToast({
               id: toastId,
               fileName: "Split export",
-              targetFormat: exportSettings.targetFormat,
+              targetFormat: targetFormat as any,
               status: "processing",
               percent,
               message: `Encoding ${image.file.name}: ${completed}/${total}`,
@@ -670,7 +603,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
         pushExportToast({
           id: toastId,
           fileName: "Split export",
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+            .targetFormat as any,
           status: "processing",
           percent: 90,
           message: "Packaging ZIP...",
@@ -688,7 +622,8 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
           pushExportToast({
             id: toastId,
             fileName: "Split export",
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+              .targetFormat as any,
             status: "processing",
             percent,
             message: `Downloading ${index + 1}/${exportFiles.length}...`,
@@ -701,17 +636,12 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushExportToast({
         id: toastId,
         fileName: "Split export complete",
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "success",
         percent: 100,
         message: `Export finished: ${exportFiles.length} files.`,
       });
-      exportToastHideTimerRef.current = setTimeout(() => {
-        setExportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        exportToastHideTimerRef.current = null;
-      }, 2500);
     } catch (error) {
       const message =
         error instanceof Error && error.message.trim()
@@ -722,17 +652,12 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
       pushExportToast({
         id: toastId,
         fileName: "Split export failed",
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "error",
         percent: 100,
         message,
       });
-      exportToastHideTimerRef.current = setTimeout(() => {
-        setExportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        exportToastHideTimerRef.current = null;
-      }, 3500);
     } finally {
       setIsExporting(false);
     }
@@ -741,13 +666,14 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   const handleExportAction = useCallback(
     async (mode: ExportSplitMode) => {
       if (mode === "zip" || mode === "one_by_one") {
-        checkAndPrompt(
+        const customInput = await promptRenameInput(
           exportSettings.fileNamePattern,
-          (inputValue) => void handleExport(mode, false, inputValue),
         );
+        if (customInput === null) return;
+        void handleExport(mode, customInput);
       }
     },
-    [handleExport, exportSettings.fileNamePattern, checkAndPrompt],
+    [handleExport, exportSettings.fileNamePattern],
   );
 
   const workspaceContent = (
@@ -892,35 +818,7 @@ export function SplitterTab({ onRootClick }: SplitterTabProps = {}) {
   return (
     <SplitterWorkspaceShell
       onRootClick={onRootClick}
-      workspace={
-        <>
-          {workspaceContent}
-          <ToastContainer
-            toasts={conversionToasts}
-            onRemove={handleRemoveToast}
-          />
-          <BatchDownloadConfirmDialog
-            isOpen={showDownloadConfirm}
-            count={estimatedExportFileCount}
-            onClose={() => {
-              setShowDownloadConfirm(false);
-              setPendingExportMode(null);
-            }}
-            onConfirm={() => {
-              setShowDownloadConfirm(false);
-              if (pendingExportMode) {
-                checkAndPrompt(
-                  exportSettings.fileNamePattern,
-                  (inputValue) =>
-                    void handleExport(pendingExportMode, true, inputValue),
-                );
-              }
-              setPendingExportMode(null);
-            }}
-          />
-          {renameInputPrompt}
-        </>
-      }
+      workspace={workspaceContent}
     />
   );
 }

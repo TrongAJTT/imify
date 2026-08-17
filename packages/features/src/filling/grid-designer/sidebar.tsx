@@ -1,68 +1,37 @@
 "use client";
 
 import React, { useCallback, useMemo } from "react";
-import { LayoutGrid } from "lucide-react";
+import { Columns3, Copy, LayoutGrid, Rows3 } from "lucide-react";
 import { AccordionCard } from "@imify/ui/ui/accordion-card";
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card";
 import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
 import { NumberInput } from "@imify/ui/ui/number-input";
+import { RadioCard } from "@imify/ui/ui/radio-card";
 import { TextInput } from "@imify/ui/ui/text-input";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
-import type { FillingTemplate, GridDesignParams } from "../types";
+import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
+import type {
+  FillingTemplate,
+  GridDesignParams,
+  GridPrimaryDirection,
+} from "../types";
 import { DEFAULT_GRID_DESIGN_PARAMS } from "../types";
+import { GRID_TEMPLATE_PRESETS, type GridTemplatePreset } from "../config";
 import { useTranslation } from "@imify/i18n";
 import { parseGridDesign } from "./generator";
+import { parseGridTemplateString } from "./grid-template-utils";
 import { usePopoverTriggerBehavior } from "../../shared/use-popover-trigger-behavior";
 
 interface GridDesignSidebarProps {
   template: FillingTemplate;
 }
 
-interface GridTemplatePreset {
-  id: string;
-  label: string;
-  rowDefinitions: string[];
-}
-
-const GRID_TEMPLATE_PRESETS: GridTemplatePreset[] = [
-  {
-    id: "horizontal-3",
-    label: "3 horiz columns",
-    rowDefinitions: ["1", "1", "1"],
-  },
-  {
-    id: "vertical-3",
-    label: "3 vertical columns",
-    rowDefinitions: ["3"],
-  },
-  {
-    id: "row3-col2",
-    label: "Left Rail + Right Stack",
-    rowDefinitions: ["1a 2", "1a 1 1", "1"],
-  },
-  {
-    id: "row3-col3",
-    label: "Alternating Split",
-    rowDefinitions: ["2 1", "1 2", "2 1"],
-  },
-  {
-    id: "row3-col4",
-    label: "Top-Right Merge",
-    rowDefinitions: ["1 2a", "1 2a", "1 1 1"],
-  },
-  {
-    id: "row3-col5",
-    label: "Top-Left Merge",
-    rowDefinitions: ["2a 1", "2a 1", "1 2"],
-  },
-];
-
-const PRESET_ROWS = 3;
 const PRESET_OUTER_PADDING = 16;
 const PRESET_GAP = 16;
 const PREVIEW_CANVAS_SIZE = 240;
 
 function normalizeGridDesignParams(params: GridDesignParams): GridDesignParams {
+  const direction: GridPrimaryDirection = params.direction ?? "rows";
   const rowCount = Math.max(1, Math.round(params.rowCount));
   const rowDefinitions = Array.from(
     { length: rowCount },
@@ -79,6 +48,7 @@ function normalizeGridDesignParams(params: GridDesignParams): GridDesignParams {
   );
 
   return {
+    direction,
     rowCount,
     outerPadding: Math.max(0, Math.round(params.outerPadding)),
     gap: legacyGap,
@@ -91,16 +61,20 @@ function normalizeGridDesignParams(params: GridDesignParams): GridDesignParams {
 }
 
 function GridTemplatePreview({ preset }: { preset: GridTemplatePreset }) {
+  const { direction, definitions } = parseGridTemplateString(
+    preset.templateString,
+  );
   const previewParams: GridDesignParams = {
     ...DEFAULT_GRID_DESIGN_PARAMS,
-    rowCount: preset.rowDefinitions.length,
+    direction,
+    rowCount: definitions.length,
     outerPadding: PRESET_OUTER_PADDING,
     gap: PRESET_GAP,
     gapX: PRESET_GAP,
     gapY: PRESET_GAP,
     uniformColumns: false,
     uniformColumnsDef: "",
-    rowDefinitions: [...preset.rowDefinitions],
+    rowDefinitions: [...definitions],
   };
   const preview = parseGridDesign(
     previewParams,
@@ -133,6 +107,9 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
   const setGridDesignParams = useFillingStore(
     (state) => state.setGridDesignParams,
   );
+  const setHighlightedGridIndex = useFillUiStore(
+    (state) => state.setHighlightedGridIndex,
+  );
   const popoverBehavior = usePopoverTriggerBehavior();
 
   const params = useMemo(
@@ -143,6 +120,8 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
       ),
     [storeParams, template.gridDesignParams],
   );
+
+  const isColsMode = params.direction === "cols";
 
   const update = useCallback(
     (partial: Partial<GridDesignParams>) => {
@@ -180,25 +159,31 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
 
   const applyTemplatePreset = useCallback(
     (preset: GridTemplatePreset) => {
-      const rowDefinitions = [...preset.rowDefinitions];
+      const { direction, definitions } = parseGridTemplateString(
+        preset.templateString,
+      );
       update({
-        rowCount: rowDefinitions.length,
-        outerPadding: PRESET_OUTER_PADDING,
-        gap: PRESET_GAP,
-        gapX: PRESET_GAP,
-        gapY: PRESET_GAP,
+        direction,
+        rowCount: definitions.length,
         uniformColumns: false,
         uniformColumnsDef: "",
-        rowDefinitions,
+        rowDefinitions: definitions,
       });
     },
     [update],
   );
 
-  const sublabel = t("gridDesigner.sublabel", {
-    rows: params.rowCount,
-    cells: layerCount,
-  });
+  const sublabel = isColsMode
+    ? t("gridDesigner.sublabelCols", {
+        count: params.rowCount,
+        cells: layerCount,
+        defaultValue: `${params.rowCount} columns, ${layerCount} cells`,
+      })
+    : t("gridDesigner.sublabelRows", {
+        count: params.rowCount,
+        cells: layerCount,
+        defaultValue: `${params.rowCount} rows, ${layerCount} cells`,
+      });
 
   const validation = useMemo(() => {
     const result = parseGridDesign(
@@ -212,8 +197,9 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
       for (const cell of row) {
         if (!cell.hasError) continue;
         const message = cell.errorMessage ?? t("gridDesigner.invalidSyntax");
-        if (!errorsByRow.has(cell.rowIndex)) {
-          errorsByRow.set(cell.rowIndex, message);
+        const idx = isColsMode ? cell.colIndex : cell.rowIndex;
+        if (!errorsByRow.has(idx)) {
+          errorsByRow.set(idx, message);
         }
       }
     }
@@ -225,7 +211,7 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
           t("gridDesigner.invalidSyntax")
         : null,
     };
-  }, [params, template.canvasHeight, template.canvasWidth, t]);
+  }, [params, template.canvasHeight, template.canvasWidth, t, isColsMode]);
 
   const localizedPresets = useMemo(() => {
     return GRID_TEMPLATE_PRESETS.map((preset) => ({
@@ -243,9 +229,44 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
       alwaysOpen={true}
     >
       <div className="space-y-3">
+        {/* Primary Direction Selector */}
+        <div className="space-y-1">
+          <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+            {t("gridDesigner.primaryDirection", {
+              defaultValue: "Primary Direction",
+            })}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <RadioCard
+              title={t("gridDesigner.directionRows", { defaultValue: "Rows" })}
+              icon={<Rows3 size={14} />}
+              value="rows"
+              selectedValue={params.direction ?? "rows"}
+              onChange={(val) =>
+                update({ direction: val as GridPrimaryDirection })
+              }
+            />
+            <RadioCard
+              title={t("gridDesigner.directionCols", {
+                defaultValue: "Columns",
+              })}
+              icon={<Columns3 size={14} />}
+              value="cols"
+              selectedValue={params.direction ?? "rows"}
+              onChange={(val) =>
+                update({ direction: val as GridPrimaryDirection })
+              }
+            />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <NumberInput
-            label={t("gridDesigner.rows")}
+            label={
+              isColsMode
+                ? t("gridDesigner.cols", { defaultValue: "Number of columns" })
+                : t("gridDesigner.rows", { defaultValue: "Number of rows" })
+            }
             value={params.rowCount}
             onChangeValue={updateRowCount}
             min={1}
@@ -282,37 +303,79 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
         </div>
 
         <CheckboxCard
-          title={t("gridDesigner.uniformColumns")}
-          subtitle={t("gridDesigner.uniformColumnsDesc")}
+          title={
+            isColsMode
+              ? t("gridDesigner.uniformCols", {
+                  defaultValue: "Use Same Rows For All Columns",
+                })
+              : t("gridDesigner.uniformRows", {
+                  defaultValue: "Use Same Columns For All Rows",
+                })
+          }
+          subtitle={
+            isColsMode
+              ? t("gridDesigner.uniformColsDesc", {
+                  defaultValue:
+                    "Apply one shared column definition to all columns.",
+                })
+              : t("gridDesigner.uniformRowsDesc", {
+                  defaultValue: "Apply one shared row definition to all rows.",
+                })
+          }
+          icon={<Copy size={14} />}
           checked={params.uniformColumns}
           onChange={(checked) => update({ uniformColumns: checked })}
-          tooltipContent={t("tooltips.uniformColumns")}
         />
 
         {params.uniformColumns ? (
           <TextInput
-            label={t("gridDesigner.sharedDef")}
+            label={
+              isColsMode
+                ? t("gridDesigner.sharedColDef", {
+                    defaultValue: "Shared Column Definition",
+                  })
+                : t("gridDesigner.sharedRowDef", {
+                    defaultValue: "Shared Row Definition",
+                  })
+            }
             value={params.uniformColumnsDef}
             onChange={(value) => update({ uniformColumnsDef: value })}
             placeholder={t("gridDesigner.placeholderExamples")}
             errorMessage={validation.sharedError ?? undefined}
           />
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
             {params.rowDefinitions.map((definition, rowIndex) => (
-              <TextInput
-                key={`grid-row-${rowIndex}`}
-                label={t("gridDesigner.rowDefLabel", { index: rowIndex + 1 })}
-                value={definition}
-                onChange={(value) => updateRowDefinition(rowIndex, value)}
-                placeholder={t("gridDesigner.placeholderExamples")}
-                errorMessage={validation.errorsByRow.get(rowIndex)}
-              />
+              <div
+                key={`grid-def-${rowIndex}`}
+                onMouseEnter={() => setHighlightedGridIndex(rowIndex)}
+                onMouseLeave={() => setHighlightedGridIndex(null)}
+              >
+                <TextInput
+                  label={
+                    isColsMode
+                      ? t("gridDesigner.colDefLabel", {
+                          index: rowIndex + 1,
+                          defaultValue: `Column ${rowIndex + 1} Rows`,
+                        })
+                      : t("gridDesigner.rowDefLabel", {
+                          index: rowIndex + 1,
+                          defaultValue: `Row ${rowIndex + 1} Columns`,
+                        })
+                  }
+                  value={definition}
+                  onChange={(value) => updateRowDefinition(rowIndex, value)}
+                  onFocus={() => setHighlightedGridIndex(rowIndex)}
+                  onBlur={() => setHighlightedGridIndex(null)}
+                  placeholder={t("gridDesigner.placeholderExamples")}
+                  errorMessage={validation.errorsByRow.get(rowIndex)}
+                />
+              </div>
             ))}
           </div>
         )}
 
-        <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="whitespace-pre-line text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
           {t("tooltips.rowDefinition")}
         </p>
 
@@ -328,39 +391,60 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
           trigger={
             <button
               type="button"
-              className="flex w-full items-center gap-1.5 rounded-md border border-dashed border-sky-300 bg-sky-50 px-3 py-2 text-left text-xs font-semibold text-sky-700 transition-colors hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-300 dark:hover:bg-sky-900/50"
+              className="flex w-full items-center justify-between gap-2 rounded-md border border-dashed border-sky-300 bg-sky-50 px-3 py-2 text-left transition-colors hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-900/30 dark:hover:bg-sky-900/50"
             >
-              <LayoutGrid size={14} />
-              {t("gridDesigner.useTemplates")}
-            </button>
-          }
-          contentClassName="z-[9999] w-[min(400px,calc(100vw-24px))] rounded-lg border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
-        >
-          <div className="mb-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
-            {t("gridDesigner.quickTemplates")}
-          </div>
-          <div className="grid grid-cols-3 justify-items-center gap-2">
-            {localizedPresets.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                className="w-full max-w-28 aspect-[5/6] rounded-md border border-slate-200 p-2 text-left transition-colors hover:border-sky-300 hover:bg-sky-50 dark:border-slate-700 dark:hover:border-sky-600 dark:hover:bg-sky-900/30"
-                onClick={() => applyTemplatePreset(preset)}
-              >
-                <div className="flex h-full flex-col">
-                  <div className="aspect-square w-full">
-                    <GridTemplatePreview preset={preset} />
+              <div className="flex items-center gap-2 min-w-0">
+                <LayoutGrid
+                  size={16}
+                  className="shrink-0 text-sky-600 dark:text-sky-400"
+                />
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-sky-700 dark:text-sky-300 truncate">
+                    {t("gridDesigner.useTemplates")}
                   </div>
-                  <div className="mt-1 line-clamp-1 text-[10px] font-medium leading-4 text-slate-700 dark:text-slate-200">
-                    {preset.label}
+                  <div className="text-[10px] text-sky-600/80 dark:text-sky-400/80 truncate">
+                    {t("gridDesigner.useTemplatesDesc", {
+                      defaultValue: "Select from layout presets",
+                    })}
                   </div>
                 </div>
-              </button>
-            ))}
+              </div>
+            </button>
+          }
+          contentClassName="z-[9999] w-[min(420px,calc(100vw-24px))] rounded-lg border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+        >
+          <div className="mb-2.5">
+            <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+              {t("gridDesigner.quickTemplates")}
+            </div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">
+              {t("gridDesigner.quickTemplatesDesc", {
+                defaultValue:
+                  "Click a preset to apply layout (preserves current padding & gaps)",
+              })}
+            </div>
           </div>
-          <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-            {t("gridDesigner.appliesPresetStats")}
-          </p>
+          <div className="max-h-[320px] overflow-y-auto custom-scrollbar p-0.5">
+            <div className="grid grid-cols-3 justify-items-center gap-2">
+              {localizedPresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className="w-full max-w-28 aspect-[5/6] rounded-md border border-slate-200 p-2 text-left transition-colors hover:border-sky-300 hover:bg-sky-50 dark:border-slate-700 dark:hover:border-sky-600 dark:hover:bg-sky-900/30"
+                  onClick={() => applyTemplatePreset(preset)}
+                >
+                  <div className="flex h-full flex-col">
+                    <div className="aspect-square w-full">
+                      <GridTemplatePreview preset={preset} />
+                    </div>
+                    <div className="mt-1 line-clamp-1 text-[10px] font-medium leading-4 text-slate-700 dark:text-slate-200">
+                      {preset.label}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </ControlledPopover>
       </div>
     </AccordionCard>

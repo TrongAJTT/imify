@@ -1,5 +1,4 @@
 export * from "./color-match-rules-accordion"
-export * from "./config"
 export * from "./split-engine"
 export * from "./split-export"
 export * from "./split-options-accordion"

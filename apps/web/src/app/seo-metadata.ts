@@ -98,6 +98,11 @@ export const WEB_ROUTE_METADATA = {
     description:
       "Inspect image metadata, dimensions, and visual properties to verify asset quality, technical consistency, and readiness for delivery channels."
   },
+  pdfStudio: {
+    title: "PDF Studio",
+    description:
+      "Convert images to PDF and extract PDF pages as images directly in your browser. Reorder, set paper size, and choose export DPI — 100% locally with zero server upload."
+  },
   backgroundRemover: {
     title: "Background Remover",
     description:
@@ -117,5 +122,10 @@ export const WEB_ROUTE_METADATA = {
     title: "QR Reader",
     description:
       "Scan QR codes instantly using your device's camera or by uploading image files (PNG/SVG) to decode links, Wi-Fi details, and contact cards locally."
+  },
+  recovery: {
+    title: "Recovery Center",
+    description:
+      "Emergency troubleshooting tool to resolve data conflicts, clear local caches, and recover application state in Imify."
   }
 } satisfies Record<string, SeoMetadataEntry>

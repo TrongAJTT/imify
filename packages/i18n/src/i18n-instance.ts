@@ -28,7 +28,9 @@ export const ALL_NAMESPACES = [
   "backgroundRemover",
   "upscaler",
   "qrGenerator",
-  "qrReader"
+  "qrReader",
+  "collageMaker",
+  "pdfStudio"
 ] as const
 
 /**

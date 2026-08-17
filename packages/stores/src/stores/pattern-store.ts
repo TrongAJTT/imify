@@ -1,12 +1,7 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import {
-  mergeNormalizedAvifTextExportSource,
-  mergeNormalizedPngExportSource,
-  mergeNormalizedWebpExportSource
-} from "@imify/core/codec-options"
-import { mergeNormalizedJxlExportSource } from "@imify/core/jxl-options"
+import type { QuickExportFormat } from "@imify/core"
 import type {
   PatternAsset,
   PatternAssetBorderSettings,
@@ -201,36 +196,10 @@ export interface PatternStoreState {
   activeVisualBoundary: PatternVisualBoundaryTarget | null
   previewContainerHeight: number
 
-  exportFormat: PatternExportFormat
-  exportQuality: number
-  exportJxlEffort: number
-  exportJxlLossless: boolean
-  exportJxlProgressive: boolean
-  exportJxlEpf: 0 | 1 | 2 | 3
-  exportAvifSpeed: number
-  exportAvifQualityAlpha: number
-  exportAvifLossless: boolean
-  exportAvifSubsample: string
-  exportAvifTune: string
-  exportAvifHighAlphaQuality: boolean
-  exportMozJpegProgressive: boolean
-  exportMozJpegChromaSubsampling: string
-  exportPngTinyMode: boolean
-  exportPngCleanTransparentPixels: boolean
-  exportPngAutoGrayscale: boolean
-  exportPngDithering: boolean
-  exportPngDitheringLevel: number
-  exportPngProgressiveInterlaced: boolean
-  exportPngOxiPngCompression: boolean
-  exportWebpLossless: boolean
-  exportWebpNearLossless: number
-  exportWebpEffort: number
-  exportWebpSharpYuv: boolean
-  exportWebpPreserveExactAlpha: boolean
-  exportBmpColorDepth: BmpColorDepth
-  exportBmpDithering: boolean
-  exportBmpDitheringLevel: number
-  exportTiffColorMode: TiffColorMode
+  exportFormat: QuickExportFormat
+  setExportFormat: (format: QuickExportFormat) => void
+  fileNamePattern: string
+  setFileNamePattern: (pattern: string) => void
 
   setCanvas: (partial: Partial<PatternCanvasSettings>) => void
   setCanvasSize: (width: number, height: number) => void
@@ -251,100 +220,7 @@ export interface PatternStoreState {
   updateAsset: (assetId: string, partial: Partial<PatternAsset>) => void
   removeAsset: (assetId: string) => void
   clearAssets: () => void
-  reorderAssetsByIds: (ids: string[]) => void
-
-  setExportFormat: (format: PatternExportFormat) => void
-  setExportQuality: (quality: number) => void
-  setExportJxlEffort: (effort: number) => void
-  setExportJxlLossless: (enabled: boolean) => void
-  setExportJxlProgressive: (enabled: boolean) => void
-  setExportJxlEpf: (value: 0 | 1 | 2 | 3) => void
-  setExportAvifSpeed: (speed: number) => void
-  setExportAvifQualityAlpha: (v: number) => void
-  setExportAvifLossless: (v: boolean) => void
-  setExportAvifSubsample: (v: string) => void
-  setExportAvifTune: (v: string) => void
-  setExportAvifHighAlphaQuality: (v: boolean) => void
-  setExportMozJpegProgressive: (v: boolean) => void
-  setExportMozJpegChromaSubsampling: (v: string) => void
-  setExportPngTinyMode: (v: boolean) => void
-  setExportPngCleanTransparentPixels: (v: boolean) => void
-  setExportPngAutoGrayscale: (v: boolean) => void
-  setExportPngDitheringLevel: (v: number) => void
-  setExportPngProgressiveInterlaced: (v: boolean) => void
-  setExportPngOxiPngCompression: (v: boolean) => void
-  setExportWebpLossless: (v: boolean) => void
-  setExportWebpNearLossless: (v: number) => void
-  setExportWebpEffort: (v: number) => void
-  setExportWebpSharpYuv: (v: boolean) => void
-  setExportWebpPreserveExactAlpha: (v: boolean) => void
-  setExportBmpColorDepth: (v: BmpColorDepth) => void
-  setExportBmpDitheringLevel: (v: number) => void
-  setExportTiffColorMode: (v: TiffColorMode) => void
-}
-
-type PatternJxlExportState = Pick<
-  PatternStoreState,
-  "exportJxlEffort" | "exportJxlLossless" | "exportJxlProgressive" | "exportJxlEpf"
->
-
-function buildNormalizedPatternJxlPatch(
-  state: PatternJxlExportState,
-  patch: Partial<PatternJxlExportState>
-): PatternJxlExportState {
-  return mergeNormalizedJxlExportSource(state, patch)
-}
-
-type PatternWebpExportState = Pick<
-  PatternStoreState,
-  | "exportWebpLossless"
-  | "exportWebpNearLossless"
-  | "exportWebpEffort"
-  | "exportWebpSharpYuv"
-  | "exportWebpPreserveExactAlpha"
->
-
-function buildNormalizedPatternWebpPatch(
-  state: PatternWebpExportState,
-  patch: Partial<PatternWebpExportState>
-): PatternWebpExportState {
-  return mergeNormalizedWebpExportSource(state, patch)
-}
-
-type PatternAvifExportState = Pick<
-  PatternStoreState,
-  | "exportAvifSpeed"
-  | "exportAvifQualityAlpha"
-  | "exportAvifLossless"
-  | "exportAvifSubsample"
-  | "exportAvifTune"
-  | "exportAvifHighAlphaQuality"
->
-
-function buildNormalizedPatternAvifPatch(
-  state: PatternAvifExportState,
-  patch: Partial<PatternAvifExportState>
-): PatternAvifExportState {
-  return mergeNormalizedAvifTextExportSource(state, patch)
-}
-
-type PatternPngExportState = Pick<
-  PatternStoreState,
-  | "exportPngTinyMode"
-  | "exportPngCleanTransparentPixels"
-  | "exportPngAutoGrayscale"
-  | "exportPngDithering"
-  | "exportPngDitheringLevel"
-  | "exportPngProgressiveInterlaced"
-  | "exportPngOxiPngCompression"
->
-
-function buildNormalizedPatternPngPatch(
-  state: PatternPngExportState,
-  patch: Partial<PatternPngExportState>
-): PatternPngExportState {
-  return mergeNormalizedPngExportSource(state, patch)
-}
+  reorderAssetsByIds: (ids: string[]) => void}
 
 export const usePatternStore = create<PatternStoreState>()(
   persist(
@@ -360,35 +236,7 @@ export const usePatternStore = create<PatternStoreState>()(
       previewContainerHeight: 560,
 
       exportFormat: DEFAULT_PATTERN_EXPORT_SETTINGS.exportFormat,
-      exportQuality: DEFAULT_PATTERN_EXPORT_SETTINGS.exportQuality,
-      exportJxlEffort: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlEffort,
-      exportJxlLossless: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlLossless,
-      exportJxlProgressive: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlProgressive,
-      exportJxlEpf: DEFAULT_PATTERN_EXPORT_SETTINGS.exportJxlEpf,
-      exportAvifSpeed: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifSpeed,
-      exportAvifQualityAlpha: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifQualityAlpha,
-      exportAvifLossless: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifLossless,
-      exportAvifSubsample: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifSubsample,
-      exportAvifTune: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifTune,
-      exportAvifHighAlphaQuality: DEFAULT_PATTERN_EXPORT_SETTINGS.exportAvifHighAlphaQuality,
-      exportMozJpegProgressive: DEFAULT_PATTERN_EXPORT_SETTINGS.exportMozJpegProgressive,
-      exportMozJpegChromaSubsampling: DEFAULT_PATTERN_EXPORT_SETTINGS.exportMozJpegChromaSubsampling,
-      exportPngTinyMode: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngTinyMode,
-      exportPngCleanTransparentPixels: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngCleanTransparentPixels,
-      exportPngAutoGrayscale: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngAutoGrayscale,
-      exportPngDithering: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngDithering,
-      exportPngDitheringLevel: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngDitheringLevel,
-      exportPngProgressiveInterlaced: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngProgressiveInterlaced,
-      exportPngOxiPngCompression: DEFAULT_PATTERN_EXPORT_SETTINGS.exportPngOxiPngCompression,
-      exportWebpLossless: DEFAULT_PATTERN_EXPORT_SETTINGS.exportWebpLossless,
-      exportWebpNearLossless: DEFAULT_PATTERN_EXPORT_SETTINGS.exportWebpNearLossless,
-      exportWebpEffort: DEFAULT_PATTERN_EXPORT_SETTINGS.exportWebpEffort,
-      exportWebpSharpYuv: DEFAULT_PATTERN_EXPORT_SETTINGS.exportWebpSharpYuv,
-      exportWebpPreserveExactAlpha: DEFAULT_PATTERN_EXPORT_SETTINGS.exportWebpPreserveExactAlpha,
-      exportBmpColorDepth: DEFAULT_PATTERN_EXPORT_SETTINGS.exportBmpColorDepth,
-      exportBmpDithering: DEFAULT_PATTERN_EXPORT_SETTINGS.exportBmpDithering,
-      exportBmpDitheringLevel: DEFAULT_PATTERN_EXPORT_SETTINGS.exportBmpDitheringLevel,
-      exportTiffColorMode: DEFAULT_PATTERN_EXPORT_SETTINGS.exportTiffColorMode,
+      fileNamePattern: DEFAULT_PATTERN_EXPORT_SETTINGS.fileNamePattern,
 
       setCanvas: (partial) =>
         set((state) => {
@@ -663,48 +511,7 @@ export const usePatternStore = create<PatternStoreState>()(
         }),
 
       setExportFormat: (v) => set({ exportFormat: v }),
-      setExportQuality: (v) => set({ exportQuality: v }),
-      setExportJxlEffort: (v) => set((state) => buildNormalizedPatternJxlPatch(state, { exportJxlEffort: v })),
-      setExportJxlLossless: (v) => set((state) => buildNormalizedPatternJxlPatch(state, { exportJxlLossless: v })),
-      setExportJxlProgressive: (v) =>
-        set((state) => buildNormalizedPatternJxlPatch(state, { exportJxlProgressive: v })),
-      setExportJxlEpf: (v) => set((state) => buildNormalizedPatternJxlPatch(state, { exportJxlEpf: v })),
-      setExportAvifSpeed: (v) => set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifSpeed: v })),
-      setExportAvifQualityAlpha: (v) =>
-        set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifQualityAlpha: v })),
-      setExportAvifLossless: (v) =>
-        set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifLossless: v })),
-      setExportAvifSubsample: (v) =>
-        set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifSubsample: v })),
-      setExportAvifTune: (v) => set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifTune: v })),
-      setExportAvifHighAlphaQuality: (v) =>
-        set((state) => buildNormalizedPatternAvifPatch(state, { exportAvifHighAlphaQuality: v })),
-      setExportMozJpegProgressive: (v) => set({ exportMozJpegProgressive: v }),
-      setExportMozJpegChromaSubsampling: (v) => set({ exportMozJpegChromaSubsampling: v }),
-      setExportPngTinyMode: (v) => set((state) => buildNormalizedPatternPngPatch(state, { exportPngTinyMode: v })),
-      setExportPngCleanTransparentPixels: (v) =>
-        set((state) => buildNormalizedPatternPngPatch(state, { exportPngCleanTransparentPixels: v })),
-      setExportPngAutoGrayscale: (v) =>
-        set((state) => buildNormalizedPatternPngPatch(state, { exportPngAutoGrayscale: v })),
-      setExportPngDitheringLevel: (v) =>
-        set((state) => buildNormalizedPatternPngPatch(state, { exportPngDitheringLevel: v })),
-      setExportPngProgressiveInterlaced: (v) =>
-        set((state) => buildNormalizedPatternPngPatch(state, { exportPngProgressiveInterlaced: v })),
-      setExportPngOxiPngCompression: (v) =>
-        set((state) => buildNormalizedPatternPngPatch(state, { exportPngOxiPngCompression: v })),
-      setExportWebpLossless: (v) =>
-        set((state) => buildNormalizedPatternWebpPatch(state, { exportWebpLossless: v })),
-      setExportWebpNearLossless: (v) =>
-        set((state) => buildNormalizedPatternWebpPatch(state, { exportWebpNearLossless: v })),
-      setExportWebpEffort: (v) =>
-        set((state) => buildNormalizedPatternWebpPatch(state, { exportWebpEffort: v })),
-      setExportWebpSharpYuv: (v) =>
-        set((state) => buildNormalizedPatternWebpPatch(state, { exportWebpSharpYuv: v })),
-      setExportWebpPreserveExactAlpha: (v) =>
-        set((state) => buildNormalizedPatternWebpPatch(state, { exportWebpPreserveExactAlpha: v })),
-      setExportBmpColorDepth: (v) => set({ exportBmpColorDepth: v }),
-      setExportBmpDitheringLevel: (v) => set({ exportBmpDitheringLevel: v, exportBmpDithering: v > 0 }),
-      setExportTiffColorMode: (v) => set({ exportTiffColorMode: v }),
+      setFileNamePattern: (v) => set({ fileNamePattern: v }),
       setPreviewContainerHeight: (v) => set({ previewContainerHeight: Math.max(200, v) }),
     }),
     {
@@ -725,35 +532,7 @@ export const usePatternStore = create<PatternStoreState>()(
           outboundBoundary: state.settings.outboundBoundary,
         },
         exportFormat: state.exportFormat,
-        exportQuality: state.exportQuality,
-        exportJxlEffort: state.exportJxlEffort,
-        exportJxlLossless: state.exportJxlLossless,
-        exportJxlProgressive: state.exportJxlProgressive,
-        exportJxlEpf: state.exportJxlEpf,
-        exportAvifSpeed: state.exportAvifSpeed,
-        exportAvifQualityAlpha: state.exportAvifQualityAlpha,
-        exportAvifLossless: state.exportAvifLossless,
-        exportAvifSubsample: state.exportAvifSubsample,
-        exportAvifTune: state.exportAvifTune,
-        exportAvifHighAlphaQuality: state.exportAvifHighAlphaQuality,
-        exportMozJpegProgressive: state.exportMozJpegProgressive,
-        exportMozJpegChromaSubsampling: state.exportMozJpegChromaSubsampling,
-        exportPngTinyMode: state.exportPngTinyMode,
-        exportPngCleanTransparentPixels: state.exportPngCleanTransparentPixels,
-        exportPngAutoGrayscale: state.exportPngAutoGrayscale,
-        exportPngDithering: state.exportPngDithering,
-        exportPngDitheringLevel: state.exportPngDitheringLevel,
-        exportPngProgressiveInterlaced: state.exportPngProgressiveInterlaced,
-        exportPngOxiPngCompression: state.exportPngOxiPngCompression,
-        exportWebpLossless: state.exportWebpLossless,
-        exportWebpNearLossless: state.exportWebpNearLossless,
-        exportWebpEffort: state.exportWebpEffort,
-        exportWebpSharpYuv: state.exportWebpSharpYuv,
-        exportWebpPreserveExactAlpha: state.exportWebpPreserveExactAlpha,
-        exportBmpColorDepth: state.exportBmpColorDepth,
-        exportBmpDithering: state.exportBmpDithering,
-        exportBmpDitheringLevel: state.exportBmpDitheringLevel,
-        exportTiffColorMode: state.exportTiffColorMode,
+        fileNamePattern: state.fileNamePattern,
       }),
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<PatternStoreState> | undefined

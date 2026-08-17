@@ -1,242 +1,288 @@
-"use client"
+"use client";
 
-import React, { useCallback, useMemo, useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import React, { useCallback, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   DEFAULT_PREFER_RECENT_PRESET_ENTRY,
   normalizePreferRecentPresetEntry,
   PREFER_RECENT_PRESET_ENTRY_KEY,
-} from "@imify/core"
-import { useWebDarkMode } from "@/hooks/use-web-dark-mode"
-import { useWebPageMode } from "@/hooks/use-web-page-mode"
-import { buildToolEntryHref } from "@/features/presets/tool-entry-route"
+} from "@imify/core";
+import { useWebDarkMode } from "@/hooks/use-web-dark-mode";
+import { useWebPageMode } from "@/hooks/use-web-page-mode";
+import { buildToolEntryHref } from "@/features/presets/tool-entry-route";
 import {
   AboutDialog,
   AssetManagementDialog,
   AttributionDialog,
   DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
-  DonateDialog,
   type WorkspaceLayoutPreferences,
   WorkspaceOptionsHeader,
   WorkspaceSettingsDialog,
   DevToolsDialog,
-  WhatsNewUpdateNotificationGate,
   getWorkspaceToolsMenuGroups,
   renderWorkspaceToolIcon,
   normalizeWorkspaceLayoutPreferences,
-  WORKSPACE_LAYOUT_PREFERENCES_KEY
-} from "@imify/features/workspace-shell"
-import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store"
-import type { OptionsTab } from "@imify/features/dev-mode/debug-shared"
-import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
+  WORKSPACE_LAYOUT_PREFERENCES_KEY,
+} from "@imify/features/workspace-shell";
+import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store";
+import type { OptionsTab } from "@imify/features/dev-mode/debug-shared";
+import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter";
 import {
   DEFAULT_PERFORMANCE_PREFERENCES,
   PERFORMANCE_PREFERENCES_KEY,
-  normalizePerformancePreferences
-} from "@imify/features/processor/performance-preferences"
-import { useDevModeEnabled } from "@imify/features"
-import { useTranslation } from "@imify/i18n"
+  normalizePerformancePreferences,
+} from "@imify/features/processor/performance-preferences";
+import { useDevModeEnabled } from "@imify/features";
+import { useTranslation } from "@imify/i18n";
 
-const WEB_DEFAULT_ROUTE_KEY = "imify_web_default_route"
-const LAYOUT_PREFERENCES_EVENT = "imify:layout-preferences-changed"
-const PERFORMANCE_PREFERENCES_EVENT = "imify:performance-preferences-changed"
-const DARK_MODE_KEY = "imify-dark-mode"
+const WEB_DEFAULT_ROUTE_KEY = "imify_web_default_route";
+const LAYOUT_PREFERENCES_EVENT = "imify:layout-preferences-changed";
+const PERFORMANCE_PREFERENCES_EVENT = "imify:performance-preferences-changed";
+const DARK_MODE_KEY = "imify-dark-mode";
 
-function safeRead<T>(key: string, fallback: T, normalize: (value: unknown) => T): T {
-  if (typeof window === "undefined") return fallback
+function safeRead<T>(
+  key: string,
+  fallback: T,
+  normalize: (value: unknown) => T,
+): T {
+  if (typeof window === "undefined") return fallback;
   try {
-    const raw = window.localStorage.getItem(key)
-    if (!raw) return fallback
-    return normalize(JSON.parse(raw))
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    return normalize(JSON.parse(raw));
   } catch {
-    return fallback
+    return fallback;
   }
 }
 
 function safeWrite<T>(key: string, value: T): void {
-  if (typeof window === "undefined") return
+  if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(key, JSON.stringify(value))
+    window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
     // Ignore restricted localStorage contexts.
   }
 }
 
 function publishLayoutPreferencesChanged(): void {
-  if (typeof window === "undefined") return
-  window.dispatchEvent(new CustomEvent(LAYOUT_PREFERENCES_EVENT))
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(LAYOUT_PREFERENCES_EVENT));
 }
 
 function publishPerformancePreferencesChanged(): void {
-  if (typeof window === "undefined") return
-  window.dispatchEvent(new CustomEvent(PERFORMANCE_PREFERENCES_EVENT))
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(PERFORMANCE_PREFERENCES_EVENT));
 }
 
 function toDevModeActiveTab(pathname: string): OptionsTab | null {
-  if (pathname.startsWith("/single-processor")) return "single"
-  if (pathname.startsWith("/batch-processor")) return "batch"
-  if (pathname.startsWith("/splicing")) return "splicing"
-  if (pathname.startsWith("/splitter")) return "splitter"
-  if (pathname.startsWith("/filling")) return "filling"
-  if (pathname.startsWith("/pattern-generator")) return "pattern"
-  if (pathname.startsWith("/diffchecker")) return "diffchecker"
-  if (pathname.startsWith("/inspector")) return "inspector"
-  return null
+  if (pathname.startsWith("/single-processor")) return "single";
+  if (pathname.startsWith("/batch-processor")) return "batch";
+  if (pathname.startsWith("/splicing")) return "splicing";
+  if (pathname.startsWith("/splitter")) return "splitter";
+  if (pathname.startsWith("/filling")) return "filling";
+  if (pathname.startsWith("/pattern-generator")) return "pattern";
+  if (pathname.startsWith("/diffchecker")) return "diffchecker";
+  if (pathname.startsWith("/inspector")) return "inspector";
+  return null;
 }
 
 export function WebHeader() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const { isMonolithicPage: isStickyHeader } = useWebPageMode()
-  const { isDark, toggleDarkMode } = useWebDarkMode()
-  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false)
-  const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false)
-  const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false)
-  const [isAssetManagementDialogOpen, setIsAssetManagementDialogOpen] = useState(false)
-  const [isDevToolsDialogOpen, setIsDevToolsDialogOpen] = useState(false)
-  const [devModeEnabled] = useDevModeEnabled()
-  const { t, i18n } = useTranslation(["workspace", "common"])
-  const [isMounted, setIsMounted] = useState(false)
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isMonolithicPage: isStickyHeader, isRecoveryPage } = useWebPageMode();
+  const { isDark, toggleDarkMode } = useWebDarkMode();
+  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
+  const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false);
+  const [isAssetManagementDialogOpen, setIsAssetManagementDialogOpen] =
+    useState(false);
+  const [isDevToolsDialogOpen, setIsDevToolsDialogOpen] = useState(false);
+  const [devModeEnabled] = useDevModeEnabled();
+  const { t, i18n } = useTranslation(["workspace", "common"]);
+  const [isMounted, setIsMounted] = useState(false);
   React.useEffect(() => {
-    setIsMounted(true)
-  }, [])
-  
-  const isSettingsDialogOpen = useWorkspaceSettingsDialogStore((state) => state.isOpen)
-  const settingsInitialTab = useWorkspaceSettingsDialogStore((state) => state.initialTab)
-  const openSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.openSettingsDialog)
-  const closeSettingsDialog = useWorkspaceSettingsDialogStore((state) => state.closeSettingsDialog)
+    setIsMounted(true);
+  }, []);
+
+  const isSettingsDialogOpen = useWorkspaceSettingsDialogStore(
+    (state) => state.isOpen,
+  );
+  const settingsInitialTab = useWorkspaceSettingsDialogStore(
+    (state) => state.initialTab,
+  );
+  const openSettingsDialog = useWorkspaceSettingsDialogStore(
+    (state) => state.openSettingsDialog,
+  );
+  const closeSettingsDialog = useWorkspaceSettingsDialogStore(
+    (state) => state.closeSettingsDialog,
+  );
 
   const [defaultRoute, setDefaultRoute] = useState<string>(() => {
-    if (typeof window === "undefined") return "/single-processor"
-    const saved = window.localStorage.getItem(WEB_DEFAULT_ROUTE_KEY)
-    const groups = getWorkspaceToolsMenuGroups()
-    const links = groups.flatMap((group) => group.items.map((item) => item.href))
-    return saved && links.includes(saved) ? saved : "/single-processor"
-  })
-  const [preferRecentPresetEntry, setPreferRecentPresetEntry] = useState<boolean>(() =>
-    safeRead(
-      PREFER_RECENT_PRESET_ENTRY_KEY,
-      DEFAULT_PREFER_RECENT_PRESET_ENTRY,
-      normalizePreferRecentPresetEntry
-    )
-  )
-  const [layoutPreferences, setLayoutPreferences] = useState<WorkspaceLayoutPreferences>(() =>
-    safeRead(
-      WORKSPACE_LAYOUT_PREFERENCES_KEY,
-      DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
-      normalizeWorkspaceLayoutPreferences
-    )
-  )
+    if (typeof window === "undefined") return "/single-processor";
+    const saved = window.localStorage.getItem(WEB_DEFAULT_ROUTE_KEY);
+    const groups = getWorkspaceToolsMenuGroups();
+    const links = groups.flatMap((group) =>
+      group.items.map((item) => item.href),
+    );
+    return saved && links.includes(saved) ? saved : "/single-processor";
+  });
+  const [preferRecentPresetEntry, setPreferRecentPresetEntry] =
+    useState<boolean>(() =>
+      safeRead(
+        PREFER_RECENT_PRESET_ENTRY_KEY,
+        DEFAULT_PREFER_RECENT_PRESET_ENTRY,
+        normalizePreferRecentPresetEntry,
+      ),
+    );
+  const [layoutPreferences, setLayoutPreferences] =
+    useState<WorkspaceLayoutPreferences>(() =>
+      safeRead(
+        WORKSPACE_LAYOUT_PREFERENCES_KEY,
+        DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
+        normalizeWorkspaceLayoutPreferences,
+      ),
+    );
   const [performancePreferences, setPerformancePreferences] = useState(() =>
-    safeRead(PERFORMANCE_PREFERENCES_KEY, DEFAULT_PERFORMANCE_PREFERENCES, normalizePerformancePreferences)
-  )
-  const devModeActiveTab = useMemo(() => toDevModeActiveTab(pathname ?? "/"), [pathname])
+    safeRead(
+      PERFORMANCE_PREFERENCES_KEY,
+      DEFAULT_PERFORMANCE_PREFERENCES,
+      normalizePerformancePreferences,
+    ),
+  );
+  const devModeActiveTab = useMemo(
+    () => toDevModeActiveTab(pathname ?? "/"),
+    [pathname],
+  );
   const readDevModeSettingsSnapshot = useCallback(
     () => ({
-      defaultRoute: safeRead(WEB_DEFAULT_ROUTE_KEY, "/single-processor", (value) =>
-        typeof value === "string" ? value : "/single-processor"
+      defaultRoute: safeRead(
+        WEB_DEFAULT_ROUTE_KEY,
+        "/single-processor",
+        (value) => (typeof value === "string" ? value : "/single-processor"),
       ),
-      darkMode: safeRead(DARK_MODE_KEY, "system", (value) => (typeof value === "string" ? value : "system")),
+      darkMode: safeRead(DARK_MODE_KEY, "system", (value) =>
+        typeof value === "string" ? value : "system",
+      ),
       layoutPreferences: safeRead(
         WORKSPACE_LAYOUT_PREFERENCES_KEY,
         DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
-        normalizeWorkspaceLayoutPreferences
+        normalizeWorkspaceLayoutPreferences,
       ),
       performancePreferences: safeRead(
         PERFORMANCE_PREFERENCES_KEY,
         DEFAULT_PERFORMANCE_PREFERENCES,
-        normalizePerformancePreferences
-      )
+        normalizePerformancePreferences,
+      ),
     }),
-    []
-  )
+    [],
+  );
   const devModeSettingsAdapter = useMemo<DevModeSettingsAdapter>(
     () => ({
       getSettingsState: async () => readDevModeSettingsSnapshot(),
       setSettingsState: async (state) => {
-        const safeState = state && typeof state === "object" ? (state as Record<string, unknown>) : {}
+        const safeState =
+          state && typeof state === "object"
+            ? (state as Record<string, unknown>)
+            : {};
         if (typeof safeState.defaultRoute === "string") {
-          safeWrite(WEB_DEFAULT_ROUTE_KEY, safeState.defaultRoute)
-          setDefaultRoute(safeState.defaultRoute)
+          safeWrite(WEB_DEFAULT_ROUTE_KEY, safeState.defaultRoute);
+          setDefaultRoute(safeState.defaultRoute);
         }
         if (typeof safeState.darkMode === "string") {
-          safeWrite(DARK_MODE_KEY, safeState.darkMode)
+          safeWrite(DARK_MODE_KEY, safeState.darkMode);
         }
         if (safeState.layoutPreferences) {
-          const nextLayout = normalizeWorkspaceLayoutPreferences(safeState.layoutPreferences)
-          safeWrite(WORKSPACE_LAYOUT_PREFERENCES_KEY, nextLayout)
-          setLayoutPreferences(nextLayout)
-          publishLayoutPreferencesChanged()
+          const nextLayout = normalizeWorkspaceLayoutPreferences(
+            safeState.layoutPreferences,
+          );
+          safeWrite(WORKSPACE_LAYOUT_PREFERENCES_KEY, nextLayout);
+          setLayoutPreferences(nextLayout);
+          publishLayoutPreferencesChanged();
         }
         if (safeState.performancePreferences) {
-          const nextPerformance = normalizePerformancePreferences(safeState.performancePreferences)
-          safeWrite(PERFORMANCE_PREFERENCES_KEY, nextPerformance)
-          setPerformancePreferences(nextPerformance)
-          publishPerformancePreferencesChanged()
+          const nextPerformance = normalizePerformancePreferences(
+            safeState.performancePreferences,
+          );
+          safeWrite(PERFORMANCE_PREFERENCES_KEY, nextPerformance);
+          setPerformancePreferences(nextPerformance);
+          publishPerformancePreferencesChanged();
         }
       },
       subscribeSettingsState: (listener) => {
         const handler = () => {
-          listener(readDevModeSettingsSnapshot())
-        }
-        window.addEventListener("storage", handler)
-        window.addEventListener(LAYOUT_PREFERENCES_EVENT, handler)
-        window.addEventListener(PERFORMANCE_PREFERENCES_EVENT, handler)
+          listener(readDevModeSettingsSnapshot());
+        };
+        window.addEventListener("storage", handler);
+        window.addEventListener(LAYOUT_PREFERENCES_EVENT, handler);
+        window.addEventListener(PERFORMANCE_PREFERENCES_EVENT, handler);
         return () => {
-          window.removeEventListener("storage", handler)
-          window.removeEventListener(LAYOUT_PREFERENCES_EVENT, handler)
-          window.removeEventListener(PERFORMANCE_PREFERENCES_EVENT, handler)
-        }
-      }
+          window.removeEventListener("storage", handler);
+          window.removeEventListener(LAYOUT_PREFERENCES_EVENT, handler);
+          window.removeEventListener(PERFORMANCE_PREFERENCES_EVENT, handler);
+        };
+      },
     }),
-    [readDevModeSettingsSnapshot]
-  )
+    [readDevModeSettingsSnapshot],
+  );
 
-  const defaultScreenOptions = useMemo(
-    () => {
-      const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en")
-      const links = Array.from(
-        new Map(
-          groups.flatMap((group) =>
-            group.items.map((item) => [item.href, { href: item.href, label: item.label }])
-          )
-        ).values()
-      )
-      return links.map((item) => ({ value: item.href, label: item.label }))
-    },
-    [i18n.language, isMounted]
-  )
+  const defaultScreenOptions = useMemo(() => {
+    const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en");
+    const links = Array.from(
+      new Map(
+        groups.flatMap((group) =>
+          group.items.map((item) => [
+            item.href,
+            { href: item.href, label: item.label },
+          ]),
+        ),
+      ).values(),
+    );
+    return links.map((item) => ({ value: item.href, label: item.label }));
+  }, [i18n.language, isMounted]);
+
+  const toolsMenuGroups = useMemo(() => {
+    const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en");
+    return groups.map((group) => ({
+      title: group.title,
+      items: group.items.map((item) => ({
+        id: item.id,
+        href: buildToolEntryHref(item.id, item.href),
+        label: item.label,
+        icon: renderWorkspaceToolIcon(item.id, 14),
+      })),
+    }));
+  }, [i18n.language, isMounted]);
+
+  if (pathname === "/recovery" || isRecoveryPage) {
+    return null;
+  }
 
   const headerNode = (
     <WorkspaceOptionsHeader
       isLoading={false}
       isDark={isDark}
-      title={t("workspace:title", { lng: isMounted ? undefined : "en", defaultValue: "Imify" })}
-      subtitle={t("workspace:subtitle", { lng: isMounted ? undefined : "en", defaultValue: "Powerful Image Toolkit" })}
-      toolsMenuGroups={useMemo(() => {
-        const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en")
-        return groups.map((group) => ({
-          title: group.title,
-          items: group.items.map((item) => ({
-            id: item.id,
-            href: buildToolEntryHref(item.id, item.href),
-            label: item.label,
-            icon: renderWorkspaceToolIcon(item.id, 14)
-          }))
-        }))
-      }, [i18n.language, isMounted])}
-      toolsMenuLabel={t("workspace:allTools", { lng: isMounted ? undefined : "en", defaultValue: "All Tools" })}
+      title={t("workspace:title", {
+        lng: isMounted ? undefined : "en",
+        defaultValue: "Imify",
+      })}
+      subtitle={t("workspace:subtitle", {
+        lng: isMounted ? undefined : "en",
+        defaultValue: "Powerful Image Toolkit",
+      })}
+      toolsMenuGroups={toolsMenuGroups}
+      toolsMenuLabel={t("workspace:allTools", {
+        lng: isMounted ? undefined : "en",
+        defaultValue: "All Tools",
+      })}
       onNavigateHome={() => router.push("/")}
       onNavigate={(href) => router.push(href)}
       onToggleDark={toggleDarkMode}
       onOpenAbout={() => setIsAboutDialogOpen(true)}
       onOpenSettings={() => openSettingsDialog()}
-      onOpenDonate={() => setIsDonateDialogOpen(true)}
       onOpenAssetManagement={() => setIsAssetManagementDialogOpen(true)}
       onOpenDevTools={() => setIsDevToolsDialogOpen(true)}
       isDevModeEnabled={devModeEnabled}
     />
-  )
+  );
 
   return (
     <>
@@ -258,16 +304,10 @@ export function WebHeader() {
         isOpen={isAboutDialogOpen}
         onClose={() => setIsAboutDialogOpen(false)}
         onOpenAboutAttribution={() => setIsAttributionDialogOpen(true)}
-        onOpenDonate={() => setIsDonateDialogOpen(true)}
       />
-      <WhatsNewUpdateNotificationGate />
       <AttributionDialog
         isOpen={isAttributionDialogOpen}
         onClose={() => setIsAttributionDialogOpen(false)}
-      />
-      <DonateDialog
-        isOpen={isDonateDialogOpen}
-        onClose={() => setIsDonateDialogOpen(false)}
       />
       <AssetManagementDialog
         isOpen={isAssetManagementDialogOpen}
@@ -288,40 +328,43 @@ export function WebHeader() {
         defaultScreenValue={defaultRoute}
         defaultScreenOptions={defaultScreenOptions}
         onChangeDefaultScreenValue={(value) => {
-          setDefaultRoute(value)
-          safeWrite(WEB_DEFAULT_ROUTE_KEY, value)
+          setDefaultRoute(value);
+          safeWrite(WEB_DEFAULT_ROUTE_KEY, value);
         }}
         preferRecentPresetEntry={preferRecentPresetEntry}
         onChangePreferRecentPresetEntry={(checked) => {
-          setPreferRecentPresetEntry(checked)
-          safeWrite(PREFER_RECENT_PRESET_ENTRY_KEY, checked)
+          setPreferRecentPresetEntry(checked);
+          safeWrite(PREFER_RECENT_PRESET_ENTRY_KEY, checked);
         }}
         usageEntries={[]}
         onResetUsageStats={() => undefined}
         layoutPreferences={layoutPreferences}
         onChangeNavigationSidebarLevel={(level) => {
-          const next = { ...layoutPreferences, navigationSidebarLevel: level }
-          setLayoutPreferences(next)
-          safeWrite(WORKSPACE_LAYOUT_PREFERENCES_KEY, next)
-          publishLayoutPreferencesChanged()
+          const next = { ...layoutPreferences, navigationSidebarLevel: level };
+          setLayoutPreferences(next);
+          safeWrite(WORKSPACE_LAYOUT_PREFERENCES_KEY, next);
+          publishLayoutPreferencesChanged();
         }}
         onChangeConfigurationSidebarLevel={(level) => {
-          const next = { ...layoutPreferences, configurationSidebarLevel: level }
-          setLayoutPreferences(next)
-          safeWrite(WORKSPACE_LAYOUT_PREFERENCES_KEY, next)
-          publishLayoutPreferencesChanged()
+          const next = {
+            ...layoutPreferences,
+            configurationSidebarLevel: level,
+          };
+          setLayoutPreferences(next);
+          safeWrite(WORKSPACE_LAYOUT_PREFERENCES_KEY, next);
+          publishLayoutPreferencesChanged();
         }}
         performancePreferences={performancePreferences}
         onChangePerformancePreferences={(value) => {
-          const next = normalizePerformancePreferences(value)
-          setPerformancePreferences(next)
-          safeWrite(PERFORMANCE_PREFERENCES_KEY, next)
-          publishPerformancePreferencesChanged()
+          const next = normalizePerformancePreferences(value);
+          setPerformancePreferences(next);
+          safeWrite(PERFORMANCE_PREFERENCES_KEY, next);
+          publishPerformancePreferencesChanged();
         }}
         showExtensionOnlyOptions={false}
         enableUsageStatsTab={false}
         devModeSettingsAdapter={devModeSettingsAdapter}
       />
     </>
-  )
+  );
 }

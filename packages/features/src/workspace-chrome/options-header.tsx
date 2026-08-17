@@ -53,7 +53,7 @@ interface WorkspaceOptionsHeaderProps {
   onToggleDark: () => void;
   onOpenAbout: () => void;
   onOpenSettings: () => void;
-  onOpenDonate: () => void;
+  onOpenDonate?: () => void;
   onOpenAssetManagement: () => void;
   onOpenDevTools?: () => void;
   isDevModeEnabled?: boolean;
@@ -378,7 +378,13 @@ export function WorkspaceOptionsHeader({
             {/* Donate Button */}
             {isExtension ? (
               <TitleBarButton
-                onClick={onOpenDonate}
+                onClick={() =>
+                  window.open(
+                    IMIFY_LINKS.sponsor,
+                    "_blank",
+                    "noopener,noreferrer",
+                  )
+                }
                 tooltipText={t("header.tooltips.donate")}
                 isDonate
                 label={undefined}
@@ -386,7 +392,7 @@ export function WorkspaceOptionsHeader({
                 <Heart size={16} fill="red" stroke="red" />
               </TitleBarButton>
             ) : (
-              <GithubStarDonate onOpenDonate={onOpenDonate} />
+              <GithubStarDonate />
             )}
 
             {/* Toggle Dark Mode Button */}
@@ -608,10 +614,11 @@ export function WorkspaceOptionsHeader({
                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
 
                 {/* Donate Button */}
-                <button
-                  type="button"
+                <a
+                  href={IMIFY_LINKS.sponsor}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onClick={() => {
-                    onOpenDonate();
                     setIsMoreMenuOpen(false);
                   }}
                   className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-450 dark:hover:bg-rose-950/30"
@@ -622,7 +629,7 @@ export function WorkspaceOptionsHeader({
                     className="text-rose-600 dark:text-rose-450"
                   />
                   <span>{t("header.menu.donate")}</span>
-                </button>
+                </a>
               </div>
             ) : null}
           </div>

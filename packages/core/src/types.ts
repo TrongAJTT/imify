@@ -9,7 +9,7 @@ export type ImageFormat =
   | "tiff"
   | "pdf"
 
-export type SupportedDPI = 72 | 150 | 300
+export type SupportedDPI = 72 | 96 | 150 | 300 | 600
 
 export type PaperSize = "A3" | "A4" | "A5" | "B5" | "Letter" | "Legal"
 

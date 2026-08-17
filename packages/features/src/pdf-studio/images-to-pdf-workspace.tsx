@@ -1,0 +1,417 @@
+"use client";
+
+import React, { useRef, useState, useCallback, useEffect } from "react";
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+import { Download, Images, Plus, Trash2 } from "lucide-react";
+import { Button, AnimatingSpinner } from "@imify/ui";
+import { toast } from "@imify/stores";
+import { useTranslation } from "@imify/i18n";
+import { formatFileSize } from "../inspector/format-utils";
+import {
+  COMMON_IMAGE_ACCEPT,
+  isCommonImageFile,
+} from "../shared/image-file-utils";
+import { SortableQueueItem } from "../shared/sortable-queue-item";
+import { MediaQueueCard } from "../shared/media-queue-card";
+import {
+  HeroProgressCard,
+  type ExportStats,
+} from "../shared/hero-progress-card";
+import type { ImagesToPdfConfig, PdfStudioImageItem } from "./types";
+import type { ResizeConfig } from "@imify/core/types";
+import { StreamingPdfWriter } from "@imify/engine";
+import { prepareImageForPdf } from "@imify/engine/converter/pdf-engine";
+
+interface ImagesToPdfWorkspaceProps {
+  items: PdfStudioImageItem[];
+  config: ImagesToPdfConfig;
+  onRemoveItem: (id: string) => void;
+  onReorderItems: (fromIndex: number, toIndex: number) => void;
+  onAddMoreFiles: (files: File[]) => void;
+  onClearAll: () => void;
+}
+
+export function ImagesToPdfWorkspace({
+  items,
+  config,
+  onRemoveItem,
+  onReorderItems,
+  onAddMoreFiles,
+  onClearAll,
+}: ImagesToPdfWorkspaceProps) {
+  const { t } = useTranslation(["pdfStudio", "common"]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportStats, setExportStats] = useState<ExportStats | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
+  const exportAbortControllerRef = useRef<AbortController | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = items.findIndex((i) => i.id === active.id);
+    const newIndex = items.findIndex((i) => i.id === over.id);
+    if (oldIndex >= 0 && newIndex >= 0) {
+      onReorderItems(oldIndex, newIndex);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const validFiles = Array.from(e.target.files).filter((f) =>
+        isCommonImageFile(f),
+      );
+      if (validFiles.length > 0) {
+        onAddMoreFiles(validFiles);
+      }
+      e.target.value = "";
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current += 1;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0;
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current = 0;
+    setIsDragOver(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const validFiles = Array.from(e.dataTransfer.files).filter(
+        isCommonImageFile,
+      );
+      if (validFiles.length > 0) {
+        onAddMoreFiles(validFiles);
+      }
+    }
+  };
+
+  const handleCancelExport = useCallback(() => {
+    if (exportAbortControllerRef.current) {
+      exportAbortControllerRef.current.abort();
+      exportAbortControllerRef.current = null;
+    }
+    setIsExporting(false);
+    setExportStats(null);
+    toast.warning(t("progress.exportCancelled"));
+  }, [t]);
+
+  const handleExportPdf = async () => {
+    if (items.length === 0 || isExporting) return;
+
+    const abortController = new AbortController();
+    exportAbortControllerRef.current = abortController;
+    const startTime = Date.now();
+    setIsExporting(true);
+
+    setExportStats({
+      current: 0,
+      total: items.length,
+      percent: 0,
+      statusText: t("progress.building"),
+      ext: "PDF",
+      startedAt: startTime,
+    });
+
+    try {
+      const pdfWriter = new StreamingPdfWriter();
+      const total = items.length;
+
+      for (let i = 0; i < total; i += 1) {
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        const item = items[i]!;
+        const pct = Math.min(92, Math.round(((i + 1) / total) * 90));
+        setExportStats({
+          current: i + 1,
+          total,
+          percent: pct,
+          statusText: t("progress.rendering", { current: i + 1, total }),
+          ext: "PDF",
+          startedAt: startTime,
+        });
+
+        const resizeConfig: ResizeConfig = (() => {
+          if (config.resizeMode === "paper_size") {
+            return {
+              mode: "paper_size",
+              value: config.paperSize,
+              dpi: config.dpi,
+              resamplingAlgorithm: config.resamplingAlgorithm,
+            };
+          }
+          if (
+            config.resizeMode === "fit_value" ||
+            config.resizeMode === "zoom_min" ||
+            config.resizeMode === "zoom_max"
+          ) {
+            return {
+              mode: config.resizeMode,
+              value: config.resizeValue,
+              applyTo: config.resizeApplyTo,
+              resamplingAlgorithm: config.resamplingAlgorithm,
+            };
+          }
+          if (config.resizeMode === "scale") {
+            return {
+              mode: "scale",
+              value: config.resizeValue,
+              resamplingAlgorithm: config.resamplingAlgorithm,
+            };
+          }
+          if (config.resizeMode === "set_size") {
+            return {
+              mode: "set_size",
+              width: config.resizeWidth,
+              height: config.resizeHeight,
+              fitMode: config.resizeFitMode,
+              aspectMode: config.resizeAspectMode,
+              aspectRatio: config.resizeAspectRatio,
+              containBackground: config.resizeContainBackground,
+              resamplingAlgorithm: config.resamplingAlgorithm,
+            };
+          }
+          return { mode: "inherit" };
+        })();
+
+        const prepared = await prepareImageForPdf({
+          sourceBlob: item.file,
+          resize: resizeConfig,
+        });
+
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        await pdfWriter.addPage({
+          imageBytes: prepared.bytes,
+          kind: prepared.kind,
+          imageWidth: prepared.width,
+          imageHeight: prepared.height,
+          resize: resizeConfig,
+        });
+      }
+
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      setExportStats({
+        current: total,
+        total,
+        percent: 96,
+        statusText: t("progress.saving"),
+        ext: "PDF",
+        startedAt: startTime,
+      });
+
+      const pdfBlob = await pdfWriter.finalize();
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "imify_document.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+
+      const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
+      toast.success(
+        t("common:completedInSeconds", { seconds: durationSec }),
+        undefined,
+        3000,
+      );
+    } catch (err) {
+      if (abortController.signal.aborted) {
+        return;
+      }
+      console.error("Failed to generate PDF:", err);
+      toast.error(t("common:error"));
+    } finally {
+      setIsExporting(false);
+      setExportStats(null);
+      exportAbortControllerRef.current = null;
+    }
+  };
+
+  const totalSize = React.useMemo(
+    () => items.reduce((acc, item) => acc + item.size, 0),
+    [items],
+  );
+
+  return (
+    <div
+      className="relative flex flex-col gap-4 min-h-[300px]"
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Visual Drop Overlay */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-red-500 bg-red-50/90 dark:bg-red-950/85 backdrop-blur-xs transition-all pointer-events-none">
+          <div className="flex flex-col items-center gap-2.5 p-6 text-center">
+            <div className="p-3.5 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 shadow-sm animate-bounce">
+              <Plus size={32} strokeWidth={2.5} />
+            </div>
+            <span className="text-base font-bold text-red-700 dark:text-red-300">
+              {t("actions.addImages")}
+            </span>
+            <span className="text-xs text-red-600/80 dark:text-red-400/80">
+              {t("dropZone.imagesSubtitle")}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept={COMMON_IMAGE_ACCEPT}
+        onChange={handleFileInputChange}
+        className="hidden"
+      />
+
+      {/* Top Action Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex items-center gap-2">
+          <Images size={16} className="text-red-500" />
+          <div className="flex flex-col">
+            <span className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">
+              {t("documentTitle")}
+            </span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">
+              {formatFileSize(totalSize)} &middot;{" "}
+              {t("totalPagesCount", { count: items.length })}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isExporting}
+          >
+            <Plus size={14} />
+            {t("actions.addImages")}
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onClearAll}
+            disabled={isExporting}
+          >
+            <Trash2 size={14} />
+            {t("actions.clearAll")}
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleExportPdf}
+            disabled={isExporting || items.length === 0}
+            className="bg-red-600 hover:bg-red-700 text-white dark:bg-red-600 dark:hover:bg-red-700"
+          >
+            {isExporting ? (
+              <AnimatingSpinner size={14} />
+            ) : (
+              <Download size={14} />
+            )}
+            {t("actions.exportPdf")}
+          </Button>
+        </div>
+      </div>
+
+      {/* Hero Progress Card (Mounted between stats bar and queue during export) */}
+      {isExporting && exportStats && (
+        <HeroProgressCard
+          stats={exportStats}
+          onCancel={handleCancelExport}
+        />
+      )}
+
+      {/* Grid of Sortable Pages using MediaQueueCard */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={items.map((i) => i.id)}
+          strategy={rectSortingStrategy}
+        >
+          <div className="grid gap-3 grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {items.map((item, idx) => (
+              <SortableQueueItem key={item.id} id={item.id}>
+                <MediaQueueCard
+                  id={item.id}
+                  name={item.name}
+                  file={item.file}
+                  sizeBytes={item.size}
+                  previewUrl={item.previewUrl}
+                  indexBadge={idx + 1}
+                  onRemove={onRemoveItem}
+                />
+              </SortableQueueItem>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+    </div>
+  );
+}

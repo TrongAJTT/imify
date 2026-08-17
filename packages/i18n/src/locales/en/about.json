@@ -1,7 +1,13 @@
 {
   "title": "Imify",
   "subtitle": "The Powerful Image Toolkit",
-  "devModeOn": "DEV MODE ON",
+  "devModeOn": "Developer Mode is enabled",
+  "devModeTooltip": "Click 7 times to enable Developer Mode",
+  "checkUpdateTooltip": "Click to check for updates",
+  "updateAvailableTooltip": "New version available! Click to check",
+  "noUpdateTitle": "You're up to date!",
+  "noUpdateDesc": "No new updates are currently available for Imify.",
+  "checkingUpdate": "Checking for updates...",
   "aboutTitle": "About the project",
   "aboutText1": "Imify was born out of a simple need: Privacy-First image processing. Unlike online converters that upload your data to remote servers, Imify handles every single byte locally right in your browser memory.",
   "aboutText2": "Built for developers, designers, and privacy enthusiasts who need quick, reliable, and secure image formatting without compromise.",
@@ -28,6 +34,13 @@
     "loadingChangelog": "Loading update logs...",
     "loadError": "Could not load changelog content."
   },
+  "updateAvailableDialog": {
+    "title": "New version available!",
+    "subtitle": "A new update is ready. Refresh now to get the latest features and fixes.",
+    "btnChangelogs": "View changelog",
+    "btnUpdate": "Update now",
+    "dontShowAgainToday": "Don't show again today"
+  },
   "updatedDialog": {
     "title": "Imify has been updated!",
     "subtitle": "Discover the latest changes and additions.",
@@ -44,10 +57,6 @@
     "btnInstall": "Install Now",
     "btnCancel": "Cancel",
     "alreadyInstalled": "PWA app is already installed or device does not support installation."
-  },
-  "donateDialog": {
-    "title": "Thanks for choosing Imify!",
-    "desc": "As an open-source project dedicated to the community, Imify has been and will always be free. If it helps your work, please consider supporting the author to help cover living expenses, maintain our domains, and fuel future features and bug fixes for everyone."
   },
   "attributionDialog": {
     "title": "Acknowledgements",

@@ -24,6 +24,9 @@
     "filling": {
       "label": "Image Filling"
     },
+    "collageMaker": {
+      "label": "Collage Maker"
+    },
     "patternGenerator": {
       "label": "Pattern Generator"
     },
@@ -32,6 +35,9 @@
     },
     "inspector": {
       "label": "Image Inspector"
+    },
+    "pdfStudio": {
+      "label": "PDF Studio"
     },
     "contextMenu": {
       "label": "Context Menu"

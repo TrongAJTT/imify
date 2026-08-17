@@ -87,6 +87,22 @@ async function syncVersions() {
     console.log("[sync-package-versions] Web manifest not found or could not be updated, skipping.")
   }
 
+  // 4. Sync Web Service Worker Version
+  const swPath = path.join(ROOT_DIR, "apps/web/public/sw.js")
+  try {
+    const swRaw = await readFile(swPath, "utf8")
+    const swVersionRegex = /const SW_VERSION = ['"][^'"]+['"]/
+    if (swVersionRegex.test(swRaw)) {
+      const updatedSw = swRaw.replace(swVersionRegex, `const SW_VERSION = '${newVersion}'`)
+      if (updatedSw !== swRaw) {
+        console.log(`[sync-package-versions] Updating Service Worker version -> ${newVersion}`)
+        await writeFile(swPath, updatedSw)
+      }
+    }
+  } catch (err) {
+    console.log("[sync-package-versions] sw.js not found or could not be updated, skipping.")
+  }
+
   console.log("[sync-package-versions] Done.")
 }
 

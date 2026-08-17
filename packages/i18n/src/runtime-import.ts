@@ -24,6 +24,7 @@ import enFilling from "./locales/en/filling.json"
 import enPattern from "./locales/en/pattern.json"
 import enDiffchecker from "./locales/en/diffchecker.json"
 import enInspector from "./locales/en/inspector.json"
+import enPdfStudio from "./locales/en/pdfStudio.json"
 import enBackgroundRemover from "./locales/en/backgroundRemover.json"
 import enUpscaler from "./locales/en/upscaler.json"
 import enQrGenerator from "./locales/en/qrGenerator.json"
@@ -43,6 +44,7 @@ const EN_RESOURCES: Record<string, any> = {
   pattern: enPattern,
   diffchecker: enDiffchecker,
   inspector: enInspector,
+  pdfStudio: enPdfStudio,
   backgroundRemover: enBackgroundRemover,
   upscaler: enUpscaler,
   qrGenerator: enQrGenerator,
@@ -63,6 +65,7 @@ export const NAMESPACES = [
   "pattern",
   "diffchecker",
   "inspector",
+  "pdfStudio",
   "backgroundRemover",
   "upscaler",
   "qrGenerator",

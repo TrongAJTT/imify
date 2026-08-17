@@ -1,7 +1,13 @@
 {
   "title": "Imify",
   "subtitle": "Bộ công cụ xử lý ảnh mạnh mẽ",
-  "devModeOn": "DEV MODE BẬT",
+  "devModeOn": "Chế độ nhà phát triển đang bật",
+  "devModeTooltip": "Nhấn 7 lần để bật Chế độ nhà phát triển",
+  "checkUpdateTooltip": "Nhấn để kiểm tra bản cập nhật mới",
+  "updateAvailableTooltip": "Có phiên bản mới! Nhấn để kiểm tra",
+  "noUpdateTitle": "Bạn đang dùng bản mới nhất!",
+  "noUpdateDesc": "Hiện chưa có bản cập nhật mới nào cho Imify.",
+  "checkingUpdate": "Đang kiểm tra cập nhật...",
   "aboutTitle": "Về dự án",
   "aboutText1": "Imify được ra đời từ một nhu cầu đơn giản: Xử lý ảnh ưu tiên Quyền riêng tư. Không giống như các trình chuyển đổi trực tuyến tải dữ liệu của bạn lên máy chủ từ xa, Imify xử lý mọi byte dữ liệu cục bộ ngay trong bộ nhớ trình duyệt của bạn.",
   "aboutText2": "Được xây dựng cho các nhà phát triển, nhà thiết kế và những người đam mê quyền riêng tư cần định dạng hình ảnh nhanh chóng, đáng tin cậy và an toàn mà không phải đánh đổi.",
@@ -28,6 +34,13 @@
     "loadingChangelog": "Đang tải nhật ký...",
     "loadError": "Không thể tải nội dung nhật ký thay đổi."
   },
+  "updateAvailableDialog": {
+    "title": "Có phiên bản mới!",
+    "subtitle": "Bản cập nhật đã sẵn sàng. Làm mới ngay để nhận các tính năng và sửa lỗi mới nhất.",
+    "btnChangelogs": "Xem nhật ký thay đổi",
+    "btnUpdate": "Cập nhật ngay",
+    "dontShowAgainToday": "Không hiện lại trong hôm nay"
+  },
   "updatedDialog": {
     "title": "Imify đã được cập nhật!",
     "subtitle": "Khám phá những thay đổi trong phiên bản mới nhất.",
@@ -44,10 +57,6 @@
     "btnInstall": "Cài đặt ngay",
     "btnCancel": "Hủy bỏ",
     "alreadyInstalled": "Ứng dụng PWA đã được cài đặt hoặc thiết bị không hỗ trợ."
-  },
-  "donateDialog": {
-    "title": "Cảm ơn bạn đã lựa chọn Imify!",
-    "desc": "Là một dự án mã nguồn mở dành cho cộng đồng, Imify đã và sẽ luôn miễn phí. Nếu công cụ giúp ích cho công việc của bạn, hãy cân nhắc ủng hộ tác giả để trang trải chi phí vận hành, duy trì tên miền, và tiếp thêm động lực phát triển thêm nhiều tính năng mới cũng như sửa lỗi cho mọi người."
   },
   "attributionDialog": {
     "title": "Ghi nhận công lao",

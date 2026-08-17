@@ -1,6 +1,7 @@
 import React from "react";
 import {
   ArrowLeftRight,
+  FileOutput,
   Image,
   Layers,
   LayoutGrid,
@@ -25,6 +26,7 @@ export const WORKSPACE_PRIMARY_TOOL_IDS = [
   "pattern",
   "diffchecker",
   "inspector",
+  "pdf-studio",
   "background-remover",
   "upscaler",
   "context-menu",
@@ -126,6 +128,15 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
     showOnExtSidebar: true,
   },
   {
+    id: "collage-maker",
+    label: "Collage Maker",
+    href: "/collage-maker",
+    categoryId: "layout-composition",
+    iconColorClassName: "text-amber-500",
+    showOnWebToolsMenu: true,
+    showOnExtSidebar: true,
+  },
+  {
     id: "pattern-generator",
     label: "Pattern Generator",
     href: "/pattern-generator",
@@ -152,6 +163,16 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
     categoryId: "utilities",
     iconColorClassName: "text-teal-500",
     extTabId: "inspector",
+    showOnWebToolsMenu: true,
+    showOnExtSidebar: true,
+  },
+  {
+    id: "pdf-studio",
+    label: "PDF Studio",
+    href: "/pdf-studio",
+    categoryId: "utilities",
+    iconColorClassName: "text-red-500",
+    extTabId: "pdf-studio",
     showOnWebToolsMenu: true,
     showOnExtSidebar: true,
   },
@@ -242,12 +263,16 @@ export function renderWorkspaceToolIcon(
       return <Scissors size={size} className={className} />;
     case "filling":
       return <Layers size={size} className={className} />;
+    case "collage-maker":
+      return <LayoutGrid size={size} className={className} />;
     case "pattern-generator":
       return <Stamp size={size} className={className} />;
     case "diffchecker":
       return <ArrowLeftRight size={size} className={className} />;
     case "inspector":
       return <ScanSearch size={size} className={className} />;
+    case "pdf-studio":
+      return <FileOutput size={size} className={className} />;
     case "context-menu":
       return <ListTree size={size} className={className} />;
     case "seo-audit":
@@ -294,12 +319,16 @@ function getToolIdKey(id: string): string {
       return "tools.splitter.label";
     case "filling":
       return "tools.filling.label";
+    case "collage-maker":
+      return "tools.collageMaker.label";
     case "pattern-generator":
       return "tools.patternGenerator.label";
     case "diffchecker":
       return "tools.diffchecker.label";
     case "inspector":
       return "tools.inspector.label";
+    case "pdf-studio":
+      return "tools.pdfStudio.label";
     case "context-menu":
       return "tools.contextMenu.label";
     case "seo-audit":

@@ -1,11 +1,10 @@
 "use client"
 
 import React, { useCallback, useState, type ReactNode } from "react"
-import { useImageUpscalerStore } from "@imify/stores"
+import { useImageUpscalerStore, toast } from "@imify/stores"
 import { useImageUpscaler } from "./use-image-upscaler"
 import { decodeFileToImageData } from "@imify/engine/image-pipeline/decode-image-data"
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake"
-import { useToast } from "@imify/core/hooks/use-toast"
 import type { ConversionProgressPayload } from "@imify/core/types"
 
 export interface SharedImageUpscalerRenderProps {
@@ -39,8 +38,6 @@ export function SharedUpscalerPage({
   const [sourceFile, setSourceFile] = useState<File | null>(null)
   const [sourceImageData, setSourceImageData] = useState<ImageData | null>(null)
   const [resultImageData, setResultImageData] = useState<ImageData | null>(null)
-  
-  const { error } = useToast()
 
   const {
     upscaleImage,
@@ -66,9 +63,9 @@ export function SharedUpscalerPage({
       const result = await decodeFileToImageData(file)
       setSourceImageData(result.imageData)
     } catch (err) {
-      error("Load Failed", "Could not read the image file.")
+      toast.error("Load Failed", "Could not read the image file.")
     }
-  }, [error, setHasImage])
+  }, [setHasImage])
 
   const handleClear = useCallback(() => {
     setSourceFile(null)

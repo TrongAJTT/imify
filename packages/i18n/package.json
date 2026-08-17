@@ -1,6 +1,6 @@
 {
   "name": "@imify/i18n",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "private": true,
   "description": "Enterprise i18n system for Imify",
   "scripts": {

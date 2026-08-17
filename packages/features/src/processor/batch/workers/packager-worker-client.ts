@@ -66,13 +66,18 @@ export class PackagerWorkerClient {
         if (this.terminated) throw new Error("Packager worker terminated");
         blobs.push(params.entries[i].blob);
         report(
-          Math.min(52, 10 + Math.round(((i + 1) / total) * 42)),
+          Math.min(50, 10 + Math.round(((i + 1) / total) * 40)),
           `Prepared ${i + 1}/${total} pages...`,
         );
         await nextTick();
       }
-      report(64, "Building merged PDF file...");
-      const outputBlob = await mergeImagesToPdf(blobs);
+      report(55, "Building merged PDF file...");
+      const outputBlob = await mergeImagesToPdf(blobs, (current, count) => {
+        report(
+          Math.min(94, 55 + Math.round((current / count) * 39)),
+          `Embedding page ${current}/${count} into PDF...`,
+        );
+      });
       return { outputBlob, outputFileName: params.exportFileName };
     }
 

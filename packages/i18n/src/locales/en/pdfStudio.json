@@ -1,0 +1,89 @@
+{
+  "title": "PDF Studio",
+  "documentTitle": "PDF Document",
+  "totalPagesCount": "{{count}} pages",
+  "pageNumberLabel": "Page {{num}}",
+  "modeSwitcher": {
+    "imagesToPdf": "Images to PDF",
+    "pdfToImages": "PDF to Images",
+    "switchDisabledTooltip": "Please clear current files before switching modes"
+  },
+  "dropZone": {
+    "imagesTitle": "Drop images here to create a PDF",
+    "imagesSubtitle": "Supports JPG, PNG, WebP, AVIF, BMP, and more",
+    "pdfTitle": "Drop a PDF here to extract images",
+    "pdfSubtitle": "Select a PDF file to begin extracting pages"
+  },
+  "settings": {
+    "paperSizeTitle": "PDF Page Settings",
+    "exportSettingsTitle": "Image Export Settings",
+    "dpi": "Resolution (DPI)",
+    "outputFormat": "Output Format",
+    "quality": "Image Quality"
+  },
+  "actions": {
+    "addImages": "Add Images",
+    "clearAll": "Clear all",
+    "clear": "Clear",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
+    "selectEven": "Even pages",
+    "selectOdd": "Odd pages",
+    "invertSelection": "Invert selection",
+    "pageRangeLabel": "Page range",
+    "pageRangePlaceholder": "e.g. 1-10, 15, 20-30",
+    "selectedPagesCount": "Selected {{selected}}/{{total}} pages",
+    "exportPdf": "Export PDF",
+    "exportImages": "Export Images ({{count}})",
+    "dragToReorder": "Drag to reorder pages",
+    "removePage": "Remove page"
+  },
+  "progress": {
+    "building": "Preparing PDF document...",
+    "rendering": "Rendering page {{current}}/{{total}}...",
+    "saving": "Finalizing PDF file...",
+    "readingPdf": "Reading PDF pages...",
+    "startExtracting": "Start extracting...",
+    "packaging": "Packaging images into ZIP...",
+    "exportingTitle": "Exporting images...",
+    "exportingDesc": "Please keep this tab open while your PDF pages are being processed and extracted.",
+    "cancelExport": "Cancel Export",
+    "exportCancelled": "Export process cancelled",
+    "exportComplete": "Images exported successfully!",
+    "processedPages": "Processed {{current}} / {{total}} pages",
+    "zipBuilding": "Compressing and packaging ZIP archive...",
+    "concurrencyLabel": "Running {{count}} parallel threads"
+  },
+  "showcase": {
+    "title": "Two-Way PDF & Image Studio",
+    "subtitle": "Merge photos into clean, multi-page PDFs or extract high-resolution raster images from PDF pages — all locally in your browser with zero upload.",
+    "tips": [
+      "Drag and drop thumbnails to reorder pages before compiling into a PDF.",
+      "Choose Paper Size (A4, A3, Letter) in the sidebar for standardized document layouts.",
+      "Select 300 DPI when extracting images from PDF for crisp printing quality.",
+      "All conversions happen client-side — your confidential documents never leave your computer."
+    ],
+    "featureChips": [
+      "Two-Way Conversion",
+      "Sortable Page Grid",
+      "Paper Size Presets",
+      "High DPI Extraction",
+      "ZIP Packaging",
+      "100% Client-Side"
+    ],
+    "faqs": [
+      {
+        "question": "Can I combine different image formats into one PDF?",
+        "answer": "Yes! You can mix JPG, PNG, WebP, AVIF, and other formats into a single unified PDF document."
+      },
+      {
+        "question": "Are my documents uploaded to a server?",
+        "answer": "No. Everything runs 100% locally inside your web browser using WebAssembly and canvas technologies for ultimate privacy."
+      },
+      {
+        "question": "What DPI should I choose when converting PDF to images?",
+        "answer": "For web sharing, 72 or 150 DPI is fast and compact. For high-resolution archival or print, 300 DPI delivers maximum clarity."
+      }
+    ]
+  }
+}

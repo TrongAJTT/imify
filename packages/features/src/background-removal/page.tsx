@@ -4,11 +4,11 @@ import React, { useCallback, useEffect, useState, type ReactNode } from "react";
 import {
   useBackgroundRemoverStore,
   useWorkspaceHeaderStore,
+  toast,
 } from "@imify/stores";
 import { useBackgroundRemoval } from "./use-background-removal";
 import { decodeFileToImageData } from "@imify/engine/image-pipeline/decode-image-data";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
-import { useToast } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import { useTranslation } from "@imify/i18n";
 
@@ -51,8 +51,6 @@ export function SharedBackgroundRemoverPage({
     null,
   );
   const [lastAiOutput, setLastAiOutput] = useState<any>(null);
-
-  const { error, success } = useToast();
 
   const processOutput = useCallback(
     async (output: any) => {
@@ -180,10 +178,10 @@ export function SharedBackgroundRemoverPage({
         await new Promise((resolve) => setTimeout(resolve, 300));
         useWorkspaceHeaderStore.getState().setIsMobileSidebarOpen(true);
       } catch (err) {
-        error(t("workspace.loadFailed"), t("workspace.loadFailedDesc"));
+        toast.error(t("workspace.loadFailed"), t("workspace.loadFailedDesc"));
       }
     },
-    [error, setHasImage, t],
+    [setHasImage, t],
   );
 
   const handleClear = useCallback(() => {

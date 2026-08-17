@@ -56,10 +56,22 @@ export function BatchSummaryCard(props: BatchSummaryCardProps) {
     targetFormat.toLowerCase(),
   );
 
+  const isSaved = reductionPercent >= 0;
+
   return (
-    <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/10 p-5 shadow-sm">
+    <div
+      className={`rounded-xl border p-5 shadow-sm transition-colors duration-200 ${
+        isSaved
+          ? "border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/10"
+          : "border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10"
+      }`}
+    >
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-emerald-500 text-white rounded-full shadow-sm">
+        <div
+          className={`p-2 text-white rounded-full shadow-sm ${
+            isSaved ? "bg-emerald-500" : "bg-amber-500"
+          }`}
+        >
           <Check size={20} />
         </div>
         <div>
@@ -74,15 +86,25 @@ export function BatchSummaryCard(props: BatchSummaryCardProps) {
       </div>
       {successfulCount > 0 ? (
         <>
-          <div className="my-4 border-t border-emerald-200/80 dark:border-emerald-800/60" />
+          <div
+            className={`my-4 border-t ${
+              isSaved
+                ? "border-emerald-200/80 dark:border-emerald-800/60"
+                : "border-amber-200/80 dark:border-amber-800/60"
+            }`}
+          />
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
                 <Kicker>{t("common:result")}</Kicker>
                 <span
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${reductionPercent >= 0 ? "text-emerald-600 dark:text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30" : "text-orange-600 dark:text-orange-500 bg-orange-100 dark:bg-orange-900/30"}`}
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${
+                    isSaved
+                      ? "text-emerald-600 dark:text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30"
+                      : "text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30"
+                  }`}
                 >
-                  {reductionPercent >= 0 ? t("summaryCard.saved") : t("summaryCard.increased")}{" "}
+                  {isSaved ? t("summaryCard.saved") : t("summaryCard.increased")}{" "}
                   {Math.abs(reductionPercent).toFixed(1)}%
                 </span>
               </div>
@@ -92,7 +114,11 @@ export function BatchSummaryCard(props: BatchSummaryCardProps) {
                 </span>
                 <ChevronsRight size={16} className="text-slate-500" />
                 <span
-                  className={`text-xl font-bold ${reductionPercent >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-orange-600 dark:text-orange-400"}`}
+                  className={`text-xl font-bold ${
+                    isSaved
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-amber-600 dark:text-amber-400"
+                  }`}
                 >
                   {formatBytes(outputTotalAfterRun)}
                 </span>

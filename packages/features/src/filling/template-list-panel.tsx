@@ -5,6 +5,7 @@ import {
   Download,
   Edit,
   Edit3,
+  LayoutGrid,
   Pin,
   PinOff,
   Plus,
@@ -17,11 +18,12 @@ import {
   EmptyDropCard,
   SelectInput,
   Subheading,
-  TextInput,
+  PresetNameInput,
   Tooltip,
 } from "@imify/ui";
 import { templateStorage } from "./template-storage";
 import { exportToPsd } from "./psd-export";
+import { confirmDialog, toast } from "@imify/stores";
 import {
   createLayerFillState,
   DEFAULT_CANVAS_FILL_STATE,
@@ -79,7 +81,7 @@ export function FillingTemplateListPanel({
   onEditTemplate,
   onRefresh,
 }: FillingTemplateListPanelProps) {
-  const { t } = useTranslation("filling");
+  const { t } = useTranslation(["filling", "collageMaker"]);
 
   const SORT_OPTIONS: Array<{ value: TemplateSortMode; label: string }> = [
     { value: "usage_count", label: t("templateList.sortUsageCount") },
@@ -112,19 +114,32 @@ export function FillingTemplateListPanel({
       setRenameTemplate(null);
     } catch (error) {
       console.error("Failed to rename template", error);
-      window.alert("Failed to rename template.");
+      toast.error("Error", "Failed to rename template.");
     }
   };
 
   if (templates.length === 0) {
     return (
-      <EmptyDropCard
-        icon={<Plus size={28} className="text-sky-500" />}
-        iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none"
-        title={t("templateList.noTemplatesTitle")}
-        subtitle={t("templateList.noTemplatesDesc")}
-        onClick={onCreate}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <EmptyDropCard
+          icon={<Plus size={28} className="text-sky-500" />}
+          iconWrapperClassName="bg-sky-100 dark:bg-sky-900/30 border-transparent shadow-none"
+          title={t("templateList.noTemplatesTitle")}
+          subtitle={t("templateList.noTemplatesDesc")}
+          onClick={onCreate}
+        />
+        <EmptyDropCard
+          icon={<LayoutGrid size={28} className="text-amber-500" />}
+          iconWrapperClassName="bg-amber-100 dark:bg-amber-900/30 border-transparent shadow-none"
+          title={t("collageMaker:title")}
+          subtitle={t("collageMaker.subtitle", {
+            defaultValue: "Tạo ảnh ghép tức thì từ 2 đến 10 bức ảnh",
+          })}
+          onClick={() => {
+            window.location.href = "/collage-maker";
+          }}
+        />
+      </div>
     );
   }
 
@@ -132,10 +147,25 @@ export function FillingTemplateListPanel({
     <>
       <div className="mb-4 flex items-center justify-between">
         <Subheading>{t("templateList.title")}</Subheading>
-        <Button type="button" variant="primary" size="sm" onClick={onCreate}>
-          <Plus size={14} />
-          {t("templateList.newTemplate")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Tooltip content={t("collageMaker:title")}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                window.location.href = "/collage-maker";
+              }}
+            >
+              <LayoutGrid size={14} className="text-amber-500" />
+              {t("collageMaker:title")}
+            </Button>
+          </Tooltip>
+          <Button type="button" variant="primary" size="sm" onClick={onCreate}>
+            <Plus size={14} />
+            {t("templateList.newTemplate")}
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
@@ -183,12 +213,18 @@ export function FillingTemplateListPanel({
           </div>
 
           <div className="mb-5 space-y-4">
-            <TextInput
+            <PresetNameInput
               label={t("dialog.templateName")}
               value={renameName}
               onChange={setRenameName}
+              featureKey="filling"
               placeholder="e.g. My Photo Grid"
               autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  void handleRenameConfirm();
+                }
+              }}
             />
           </div>
 
@@ -285,7 +321,7 @@ function FillingTemplateCard({
       URL.revokeObjectURL(objectUrl);
     } catch (error) {
       console.error("Failed to export template PSD", error);
-      window.alert("Failed to export PSD for this template.");
+      toast.error("Error", "Failed to export PSD for this template.");
     } finally {
       setIsExportingPsd(false);
     }
@@ -369,15 +405,14 @@ function FillingTemplateCard({
             title={t("templateList.deleteTooltip")}
             icon={<Trash2 size={13} />}
             destructive
-            onClick={() => {
-              if (
-                !window.confirm(
-                  t("templateList.deleteConfirm", { name: template.name }),
-                )
-              ) {
-                return;
+            onClick={async () => {
+              const confirmed = await confirmDialog({
+                title: t("templateList.deleteConfirm", { name: template.name }),
+                variant: "destructive",
+              });
+              if (confirmed) {
+                void templateStorage.remove(template.id).then(onRefresh);
               }
-              void templateStorage.remove(template.id).then(onRefresh);
             }}
           />
         </div>

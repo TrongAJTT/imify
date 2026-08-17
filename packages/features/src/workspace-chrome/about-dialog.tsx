@@ -10,12 +10,13 @@ import {
   BadgeQuestionMark,
   Library,
   X,
+  Code2,
+  Sparkles,
 } from "lucide-react";
 import { IMIFY_LINKS } from "@imify/core";
 import { getAppMetadata } from "@imify/core/app-metadata";
 import { useDevModeEnabled } from "@imify/features/dev-mode/dev-mode-storage";
-import { useToast } from "@imify/core/hooks/use-toast";
-import { ToastContainer } from "@imify/ui/components/toast-container";
+import { toast } from "@imify/stores";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { Button } from "@imify/ui/ui/button";
 import {
@@ -32,6 +33,11 @@ import { PwaInstallDialog } from "./pwa-install-dialog";
 import { ChangelogsDialog } from "./changelogs-dialog";
 import { GuidesDialog } from "./guides-dialog";
 import { useTranslation, Trans } from "@imify/i18n";
+import {
+  checkForUpdates,
+  getHasUpdateAvailable,
+  CHECK_UPDATES_EVENT,
+} from "./whats-new-update-notification-gate";
 
 const appMetadata = getAppMetadata();
 const DEV_MODE_CLICK_TARGET = 7;
@@ -41,7 +47,7 @@ interface AboutDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenAboutAttribution: () => void;
-  onOpenDonate: () => void;
+  onOpenDonate?: () => void;
 }
 
 function useEasterEggClicker(onActivate: () => void) {
@@ -105,33 +111,67 @@ export function AboutDialog({
   onOpenDonate,
 }: AboutDialogProps) {
   const { t } = useTranslation("about");
+  const appMetadata = getAppMetadata();
   const iconSrc = resolveFeatureMediaAssetUrl(
     FEATURE_MEDIA_ASSETS.brand.imifyLogoPng,
   );
   const [devModeEnabled, setDevModeEnabled] = useDevModeEnabled();
-  const { toasts, hide, success, warning } = useToast();
   const [isInstallDialogOpen, setIsInstallDialogOpen] = useState(false);
   const [isChangelogsDialogOpen, setIsChangelogsDialogOpen] = useState(false);
   const [isGuidesDialogOpen, setIsGuidesDialogOpen] = useState(false);
 
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [hasUpdate, setHasUpdate] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setHasUpdate(getHasUpdateAvailable());
+
+    const handleUpdateCheck = () => {
+      setHasUpdate(getHasUpdateAvailable());
+    };
+
+    window.addEventListener(CHECK_UPDATES_EVENT, handleUpdateCheck);
+    window.addEventListener("storage", handleUpdateCheck);
+    return () => {
+      window.removeEventListener(CHECK_UPDATES_EVENT, handleUpdateCheck);
+      window.removeEventListener("storage", handleUpdateCheck);
+    };
+  }, [isOpen]);
+
   const activateDevMode = useCallback(async () => {
     if (devModeEnabled) {
-      warning(
+      toast.warning(
         "Developer Mode",
         "Already enabled. Go to Settings -> Developer.",
       );
       return;
     }
     await setDevModeEnabled(true);
-    success(
+    toast.success(
       "Developer Mode enabled!",
       "Open Settings to access the Developer tab.",
       4000,
     );
-  }, [devModeEnabled, setDevModeEnabled, success, warning]);
+  }, [devModeEnabled, setDevModeEnabled]);
 
   const handleIconClick = useEasterEggClicker(activateDevMode);
-  const handleVersionClick = useEasterEggClicker(activateDevMode);
+
+  const handleVersionClick = async () => {
+    if (isCheckingUpdate) return;
+    setIsCheckingUpdate(true);
+    try {
+      const hasUpdateResult = await checkForUpdates(true);
+      setHasUpdate(hasUpdateResult);
+      if (!hasUpdateResult) {
+        toast.success(t("noUpdateTitle"), t("noUpdateDesc"), 3500);
+      }
+    } catch {
+      // Ignore network errors
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   return (
     <BaseDialog
@@ -149,14 +189,14 @@ export function AboutDialog({
         <X size={16} />
       </Button>
 
-      <div className="flex flex-col">
-        <div className="flex items-center gap-5 mb-8">
+      <div className="flex flex-col gap-8">
+        <div className="flex items-center gap-6">
           <button
             type="button"
             onClick={handleIconClick}
-            className="shrink-0 select-none cursor-default focus:outline-none active:scale-90 transition-transform duration-100"
-            aria-label="Imify logo"
+            className="p-1 rounded-2xl focus:outline-none select-none cursor-default"
             tabIndex={-1}
+            aria-label="App Icon"
           >
             {iconSrc ? (
               /* eslint-disable-next-line @next/next/no-img-element */
@@ -176,22 +216,46 @@ export function AboutDialog({
             <Kicker className="text-sm text-sky-500 dark:text-sky-400 tracking-widest">
               {t("subtitle", "The Powerful Image Toolkit")}
             </Kicker>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-1.5 mt-2">
               <button
                 type="button"
+                suppressHydrationWarning
                 onClick={handleVersionClick}
-                className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 select-none cursor-default focus:outline-none active:scale-90 transition-transform duration-100"
+                className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 select-none cursor-pointer focus:outline-none active:scale-90 transition-all duration-100"
                 tabIndex={-1}
                 aria-label="App version"
+                title={t("checkUpdateTooltip")}
+                disabled={isCheckingUpdate}
               >
-                {`v${appMetadata.version}`}
+                {isCheckingUpdate
+                  ? t("checkingUpdate", "Checking...")
+                  : `v${appMetadata.cacheVersion || appMetadata.version}`}
               </button>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 select-none">
                 {appMetadata.versionType}
               </span>
+              {hasUpdate ? (
+                <button
+                  type="button"
+                  onClick={handleVersionClick}
+                  title={t(
+                    "updateAvailableTooltip",
+                    t("updateAvailableDialog.title", "New version available!"),
+                  )}
+                  className="p-1 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 inline-flex items-center justify-center select-none cursor-pointer border border-amber-300 dark:border-amber-700/50 motion-safe:animate-pulse transition-all hover:scale-105 active:scale-95"
+                >
+                  <Sparkles
+                    size={13}
+                    className="text-amber-500 fill-amber-500 shrink-0"
+                  />
+                </button>
+              ) : null}
               {devModeEnabled ? (
-                <span className="px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-[10px] font-bold text-violet-600 dark:text-violet-400">
-                  {t("devModeOn", "DEV MODE ON")}
+                <span
+                  title={t("devModeOn", "Developer Mode is enabled")}
+                  className="p-1 rounded-md bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center justify-center select-none cursor-default border border-violet-200/60 dark:border-violet-800/40 transition-all hover:scale-105"
+                >
+                  <Code2 size={13} className="shrink-0" />
                 </span>
               ) : null}
             </div>
@@ -230,7 +294,7 @@ export function AboutDialog({
         <div className="space-y-8 pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
           <div className="space-y-4">
             <Kicker className="text-xs tracking-widest text-center text-slate-400 uppercase">
-              {t("linksTitle", "Quick Links & Support")}
+              {t("linksTitle")}
             </Kicker>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {/* Official Website button */}
@@ -239,7 +303,7 @@ export function AboutDialog({
                 className="bg-sky-50 text-sky-600 border-sky-100 hover:bg-sky-100 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-900/50"
               >
                 <Globe size={16} />
-                {t("officialWebsite", "Official Website")}
+                {t("officialWebsite")}
               </ActionLink>
 
               {/* GitHub Repository button */}
@@ -248,18 +312,17 @@ export function AboutDialog({
                 className="bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-900/50"
               >
                 <Github size={16} />
-                {t("githubRepository", "GitHub Repository")}
+                {t("githubRepository")}
               </ActionLink>
 
               {/* Sponsor Author button */}
-              <button
-                type="button"
-                onClick={onOpenDonate}
-                className="w-full h-full px-5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 text-rose-500 dark:text-rose-400 text-sm font-bold hover:bg-rose-100/50 dark:hover:bg-rose-900/30 transition-all flex items-center justify-center gap-2"
+              <ActionLink
+                href={IMIFY_LINKS.sponsor}
+                className="bg-rose-50/50 text-rose-500 border-rose-200 hover:bg-rose-100/50 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/50"
               >
                 <Heart size={16} fill="currentColor" />
-                {t("sponsorAuthor", "Sponsor Author")}
-              </button>
+                {t("sponsorAuthor")}
+              </ActionLink>
 
               {/* Attribution button */}
               <button
@@ -268,7 +331,7 @@ export function AboutDialog({
                 className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
               >
                 <Library size={16} />
-                {t("attribution", "Attribution")}
+                {t("attribution")}
               </button>
 
               {/* Guides button */}
@@ -278,7 +341,7 @@ export function AboutDialog({
                 className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
               >
                 <BadgeQuestionMark size={16} />
-                {t("guides", "Guides")}
+                {t("guides")}
               </button>
 
               {/* Install App button */}
@@ -288,7 +351,7 @@ export function AboutDialog({
                 className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
               >
                 <Download size={16} />
-                {t("installApp", "Install App")}
+                {t("installApp")}
               </button>
             </div>
           </div>
@@ -314,7 +377,7 @@ export function AboutDialog({
                 onClick={() => setIsChangelogsDialogOpen(true)}
                 className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
               >
-                {t("changelogs", "Changelogs")}
+                {t("changelogs")}
               </button>
               <span className="text-slate-200 dark:text-slate-800">/</span>
               <a
@@ -323,7 +386,7 @@ export function AboutDialog({
                 rel="noreferrer"
                 className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
               >
-                {t("termsOfUse", "Terms of Use")}
+                {t("termsOfUse")}
               </a>
               <span className="text-slate-200 dark:text-slate-800">/</span>
               <a
@@ -332,7 +395,7 @@ export function AboutDialog({
                 rel="noreferrer"
                 className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
               >
-                {t("privacyPolicy", "Privacy Policy")}
+                {t("privacyPolicy")}
               </a>
             </MutedText>
           </div>
@@ -351,7 +414,6 @@ export function AboutDialog({
         isOpen={isGuidesDialogOpen}
         onClose={() => setIsGuidesDialogOpen(false)}
       />
-      <ToastContainer toasts={toasts} onRemove={hide} />
     </BaseDialog>
   );
 }

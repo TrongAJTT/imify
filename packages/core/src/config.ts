@@ -16,4 +16,11 @@ export const APP_CONFIG = {
     /** When choosing preview quality ≥50%, warn if sum(width×height) exceeds this (px²) */
     HEAVY_PREVIEW_QUALITY_WARNING_TOTAL_PIXELS: 80_000_000,
   },
-}
+  /** PDF Studio */
+  PDF_STUDIO: {
+    PAGE_SIZE_DESKTOP: 36,
+    PAGE_SIZE_MOBILE: 24,
+    LAZY_LOAD_PAGING_DESKTOP: false,
+    LAZY_LOAD_PAGING_MOBILE: true,
+  },
+};

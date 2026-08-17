@@ -102,37 +102,11 @@ export interface PatternSettings {
   outboundBoundary: PatternBoundarySettings
 }
 
+import type { QuickExportFormat } from "@imify/core"
+
 export interface PatternExportSettings {
-  exportFormat: PatternExportFormat
-  exportQuality: number
-  exportJxlEffort: number
-  exportJxlLossless: boolean
-  exportJxlProgressive: boolean
-  exportJxlEpf: 0 | 1 | 2 | 3
-  exportAvifSpeed: number
-  exportAvifQualityAlpha: number
-  exportAvifLossless: boolean
-  exportAvifSubsample: string
-  exportAvifTune: string
-  exportAvifHighAlphaQuality: boolean
-  exportMozJpegProgressive: boolean
-  exportMozJpegChromaSubsampling: string
-  exportPngTinyMode: boolean
-  exportPngCleanTransparentPixels: boolean
-  exportPngAutoGrayscale: boolean
-  exportPngDithering: boolean
-  exportPngDitheringLevel: number
-  exportPngProgressiveInterlaced: boolean
-  exportPngOxiPngCompression: boolean
-  exportWebpLossless: boolean
-  exportWebpNearLossless: number
-  exportWebpEffort: number
-  exportWebpSharpYuv: boolean
-  exportWebpPreserveExactAlpha: boolean
-  exportBmpColorDepth: BmpColorDepth
-  exportBmpDithering: boolean
-  exportBmpDitheringLevel: number
-  exportTiffColorMode: TiffColorMode
+  exportFormat: QuickExportFormat
+  fileNamePattern: string
 }
 
 export const DEFAULT_PATTERN_CANVAS_SETTINGS: PatternCanvasSettings = {
@@ -225,37 +199,11 @@ export const DEFAULT_PATTERN_SETTINGS: PatternSettings = {
   outboundBoundary: { ...DEFAULT_PATTERN_OUTBOUND_BOUNDARY },
 }
 
+import { PATTERN_NAMING_CONFIG } from "@imify/core"
+
 export const DEFAULT_PATTERN_EXPORT_SETTINGS: PatternExportSettings = {
   exportFormat: "png",
-  exportQuality: 90,
-  exportJxlEffort: 7,
-  exportJxlLossless: false,
-  exportJxlProgressive: false,
-  exportJxlEpf: 1,
-  exportAvifSpeed: 6,
-  exportAvifQualityAlpha: 80,
-  exportAvifLossless: false,
-  exportAvifSubsample: "4:2:0",
-  exportAvifTune: "auto",
-  exportAvifHighAlphaQuality: false,
-  exportMozJpegProgressive: true,
-  exportMozJpegChromaSubsampling: "4:2:0",
-  exportPngTinyMode: false,
-  exportPngCleanTransparentPixels: false,
-  exportPngAutoGrayscale: false,
-  exportPngDithering: false,
-  exportPngDitheringLevel: 50,
-  exportPngProgressiveInterlaced: false,
-  exportPngOxiPngCompression: false,
-  exportWebpLossless: false,
-  exportWebpNearLossless: 60,
-  exportWebpEffort: 4,
-  exportWebpSharpYuv: false,
-  exportWebpPreserveExactAlpha: false,
-  exportBmpColorDepth: 24,
-  exportBmpDithering: false,
-  exportBmpDitheringLevel: 50,
-  exportTiffColorMode: "color",
+  fileNamePattern: PATTERN_NAMING_CONFIG.defaultPattern
 }
 
 

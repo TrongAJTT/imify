@@ -1,11 +1,19 @@
 // Service Worker v5 - Next.js Static Export Native Offline Support
 // Fixes SPA client-side routing and direct F5 navigate issues under offline mode.
+const SW_VERSION = '2.3.0';
+
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.4.1/workbox-sw.js');
 
 if (workbox) {
   console.log('[SW] Workbox loaded — Next.js static export optimized');
 
   // ─── EXCLUSIONS ──────────────────────────────────────────────────────────────
+ 
+  // Never intercept or cache runtime version descriptor
+  workbox.routing.registerRoute(
+    ({ url }) => url.pathname === '/version.json',
+    new workbox.strategies.NetworkOnly()
+  );
 
   // Skip analytics / tracking
   workbox.routing.registerRoute(
@@ -49,6 +57,11 @@ if (workbox) {
     { url: '/qr-reader.txt',                       revision: '6' },
     { url: '/extension.html',                      revision: '6' },
     { url: '/extension.txt',                       revision: '6' },
+    { url: '/recovery.html',                       revision: '6' },
+    { url: '/recovery.txt',                        revision: '6' },
+    { url: '/pdf-studio.html',                     revision: '6' },
+    { url: '/pdf-studio.txt',                      revision: '6' },
+    { url: '/404.html',                            revision: '6' },
 
     // ── Single Processor ────────────────────────────────────────────────────────
     { url: '/single-processor.html',               revision: '6' },
@@ -80,6 +93,10 @@ if (workbox) {
     { url: '/pattern-generator/work.html',          revision: '6' },
     { url: '/pattern-generator/work.txt',           revision: '6' },
 
+    // ── Collage Maker ───────────────────────────────────────────────────────────
+    { url: '/collage-maker.html',                  revision: '6' },
+    { url: '/collage-maker.txt',                   revision: '6' },
+
     // ── Filling ─────────────────────────────────────────────────────────────────
     { url: '/filling.html',                        revision: '6' },
     { url: '/filling.txt',                         revision: '6' },
@@ -96,6 +113,7 @@ if (workbox) {
     { url: '/locales/en/_meta.json',               revision: '5' },
     { url: '/locales/en/about.json',               revision: '5' },
     { url: '/locales/en/backgroundRemover.json',   revision: '5' },
+    { url: '/locales/en/collageMaker.json',         revision: '5' },
     { url: '/locales/en/common.json',              revision: '5' },
     { url: '/locales/en/devMode.json',             revision: '5' },
     { url: '/locales/en/diffchecker.json',         revision: '5' },
@@ -103,6 +121,7 @@ if (workbox) {
     { url: '/locales/en/homepage.json',            revision: '5' },
     { url: '/locales/en/inspector.json',           revision: '5' },
     { url: '/locales/en/pattern.json',             revision: '5' },
+    { url: '/locales/en/pdfStudio.json',           revision: '5' },
     { url: '/locales/en/processor.json',           revision: '5' },
     { url: '/locales/en/qrGenerator.json',         revision: '5' },
     { url: '/locales/en/qrReader.json',            revision: '5' },
@@ -116,6 +135,7 @@ if (workbox) {
     { url: '/locales/vi/_meta.json',               revision: '5' },
     { url: '/locales/vi/about.json',               revision: '5' },
     { url: '/locales/vi/backgroundRemover.json',   revision: '5' },
+    { url: '/locales/vi/collageMaker.json',         revision: '5' },
     { url: '/locales/vi/common.json',              revision: '5' },
     { url: '/locales/vi/devMode.json',             revision: '5' },
     { url: '/locales/vi/diffchecker.json',         revision: '5' },
@@ -123,6 +143,7 @@ if (workbox) {
     { url: '/locales/vi/homepage.json',            revision: '5' },
     { url: '/locales/vi/inspector.json',           revision: '5' },
     { url: '/locales/vi/pattern.json',             revision: '5' },
+    { url: '/locales/vi/pdfStudio.json',           revision: '5' },
     { url: '/locales/vi/processor.json',           revision: '5' },
     { url: '/locales/vi/qrGenerator.json',         revision: '5' },
     { url: '/locales/vi/qrReader.json',            revision: '5' },
@@ -245,6 +266,16 @@ if (workbox) {
         });
       }
 
+      // Try fetching from network if available
+      try {
+        const networkResponse = await fetch(url);
+        if (networkResponse && networkResponse.status !== 404) {
+          return networkResponse;
+        }
+      } catch {
+        // Network unavailable or offline
+      }
+
       // SPA Fallback: serve index.html for any navigation route not explicitly mapped
       const indexResponse = await workbox.precaching.matchPrecache('/index.html');
       if (indexResponse) {
@@ -253,6 +284,29 @@ if (workbox) {
         return new Response(indexResponse.body, {
           status: indexResponse.status,
           statusText: indexResponse.statusText,
+          headers,
+        });
+      }
+
+      // 404 / Error Fallback when offline or not found
+      const notFoundResponse = await workbox.precaching.matchPrecache('/404.html');
+      if (notFoundResponse) {
+        const headers = new Headers(notFoundResponse.headers);
+        headers.set('Content-Type', 'text/html; charset=utf-8');
+        return new Response(notFoundResponse.body, {
+          status: 404,
+          statusText: 'Not Found',
+          headers,
+        });
+      }
+
+      const recoveryResponse = await workbox.precaching.matchPrecache('/recovery.html');
+      if (recoveryResponse) {
+        const headers = new Headers(recoveryResponse.headers);
+        headers.set('Content-Type', 'text/html; charset=utf-8');
+        return new Response(recoveryResponse.body, {
+          status: 200,
+          statusText: 'OK',
           headers,
         });
       }
@@ -269,7 +323,15 @@ if (workbox) {
   });
 
   self.addEventListener('activate', (event) => {
-    event.waitUntil(clients.claim());
+    event.waitUntil(
+      clients.claim().then(() => {
+        return self.clients.matchAll({ includeUncontrolled: true, type: 'window' }).then((clientList) => {
+          clientList.forEach((client) => {
+            client.postMessage({ type: 'SW_CACHE_READY', version: SW_VERSION });
+          });
+        });
+      })
+    );
   });
 
   self.addEventListener('message', (event) => {

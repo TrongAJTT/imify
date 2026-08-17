@@ -5,7 +5,7 @@ import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import { useMemo, useRef, useState, useEffect, useCallback } from "react"
 import { bootstrapExtensionAdapters } from "@/adapters/bootstrap-extension-adapters"
-import { SidebarPanel, BottomSheet } from "@imify/ui"
+import { SidebarPanel, BottomSheet, BottomSheetTriggerBar } from "@imify/ui"
 import { PopupApp } from "@/popup/popup-app"
 import SidePanelLiteApp from "@/sidepanel/sidepanel-lite-app"
 import SidepanelAuditSnapshotApp from "@/sidepanel/sidepanel-audit-snapshot-app"
@@ -18,17 +18,16 @@ import {
 import {
   AboutDialog,
   AssetManagementDialog,
-  DonateDialog,
   WORKSPACE_TOOLS,
   WorkspaceSettingsDialog,
   WorkspaceOptionsHeader,
   DevToolsDialog,
-  WhatsNewUpdateNotificationGate,
   useIsDesktopLayout,
   getExtensionSidebarToolGroups,
   renderWorkspaceToolIcon,
   getWorkspaceToolLabel
 } from "@imify/features/workspace-shell"
+import { GlobalModalsHost } from "@imify/features/shared/global-modals-host"
 import { useDevModeEnabled } from "@imify/features"
 import type { DevModeSettingsAdapter } from "@imify/features/dev-mode/dev-mode-settings-adapter"
 import { getDevModeEnabled } from "@imify/features/dev-mode/dev-mode-store"
@@ -694,7 +693,7 @@ export default function OptionsPage() {
         onOpenAboutAttribution={() => setIsAttributionDialogOpen(true)}
         onOpenDonate={() => setIsDonateDialogOpen(true)}
       />
-      <WhatsNewUpdateNotificationGate />
+      <GlobalModalsHost />
 
       <DevToolsDialog
         isOpen={isDevToolsDialogOpen}
@@ -744,8 +743,6 @@ export default function OptionsPage() {
         }}
         devModeSettingsAdapter={devModeSettingsAdapter}
       />
-
-      <DonateDialog isOpen={isDonateDialogOpen} onClose={() => setIsDonateDialogOpen(false)} />
 
       <AssetManagementDialog
         isOpen={isAssetManagementDialogOpen}
@@ -973,18 +970,10 @@ export default function OptionsPage() {
                 </BottomSheet>
 
                 {/* Persistent Trigger Bar at bottom - Compact Version (Extension) */}
-                <button
-                  type="button"
+                <BottomSheetTriggerBar
                   onClick={() => setIsMobileSidebarOpen(true)}
-                  className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 rounded-t-2xl px-6 pb-2 pt-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] transition-transform active:translate-y-0.5"
-                >
-                  <div className="w-8 h-1 rounded-full bg-slate-200 dark:bg-slate-800 mb-1.5" />
-                  <div className="w-full flex items-center justify-center">
-                    <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em]">
-                      Configuration
-                    </h3>
-                  </div>
-                </button>
+                  title={getBottomSheetTitle() || "Configuration"}
+                />
               </>
             )
           )}

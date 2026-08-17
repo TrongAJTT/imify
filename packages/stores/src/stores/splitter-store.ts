@@ -1,22 +1,19 @@
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import type { FormatCodecOptions } from "@imify/core/types"
 import {
   createDefaultSplitterColorRule,
   DEFAULT_SPLITTER_EXPORT_SETTINGS,
   DEFAULT_SPLITTER_SPLIT_SETTINGS,
   type SplitterColorRule,
   type SplitterCustomGuide,
-  type SplitterExportFormat,
   type SplitterExportSettings,
   type SplitterPresetConfig,
   type SplitterSplitSettings,
   type SplitterStoreState,
   type SplitterUiState
 } from "@imify/features/splitter/types"
-import { useBatchStore, type SavedSetupPreset } from "./batch-store"
-import { VIRTUAL_DEFAULT_PNG_PRESET } from "@imify/features/processor/preset-utils"
+import type { SavedSetupPreset } from "./batch-store"
 
 function clampInt(value: number, min: number, max: number, fallback: number): number {
   if (!Number.isFinite(value)) {
@@ -104,9 +101,10 @@ function normalizeSplitSettings(settings: SplitterSplitSettings): SplitterSplitS
 }
 
 function normalizeExportSettings(settings: SplitterExportSettings): SplitterExportSettings {
+  const validFormats = ["png", "jpg", "webp", "webp-lossless"]
   return {
     ...settings,
-    quality: clampInt(settings.quality, 1, 100, 92),
+    format: validFormats.includes(settings.format) ? settings.format : "png",
     fileNamePattern: getTrimmedString(settings.fileNamePattern) ?? "split-[OriginalName]-[Index]"
   }
 }
@@ -236,57 +234,16 @@ export const useSplitterStore = create<SplitterStoreState>()(
         }),
 
       applyPreset: (preset: SavedSetupPreset) => {
-        const { targetFormat, quality, formatOptions, fileNamePattern } = preset.config
-        const supportedFormats: SplitterExportFormat[] = ["png", "webp", "avif", "jxl", "jpg", "bmp", "tiff"]
-        
-        let mappedFormat: SplitterExportFormat = "png"
-        if (supportedFormats.includes(targetFormat as any)) {
-          mappedFormat = targetFormat as SplitterExportFormat
-        } else if (targetFormat === "mozjpeg") {
-          mappedFormat = "jpg"
-        }
-
-        const isIdentified = preset.id.startsWith("preset_image-splitter_")
-
         set((state) => ({
-          activePresetId: (preset.id === VIRTUAL_DEFAULT_PNG_PRESET.id || isIdentified) ? null : preset.id,
-          exportSettings: normalizeExportSettings({
-            ...state.exportSettings,
-            targetFormat: mappedFormat,
-            quality,
-            codecOptions: formatOptions as FormatCodecOptions,
-            fileNamePattern: fileNamePattern || state.exportSettings.fileNamePattern
-          })
+          activePresetId: preset.id,
         }))
-
-        // Sync global batch store to keep the Output Settings dialog in sync
-        const batchStore = useBatchStore.getState()
-        batchStore.setTargetFormat(targetFormat as any)
-        batchStore.setQuality(quality)
-        if (fileNamePattern) {
-          batchStore.setFileNamePattern(fileNamePattern)
-        }
       },
 
       resetToDefault: () => {
-        const defaultConfig = VIRTUAL_DEFAULT_PNG_PRESET.config
-        set((state) => ({
+        set(() => ({
           activePresetId: null,
-          exportSettings: normalizeExportSettings({
-            ...state.exportSettings,
-            targetFormat: defaultConfig.targetFormat as SplitterExportFormat,
-            quality: defaultConfig.quality,
-            codecOptions: defaultConfig.formatOptions as FormatCodecOptions,
-            fileNamePattern: defaultConfig.fileNamePattern || DEFAULT_SPLITTER_EXPORT_SETTINGS.fileNamePattern
-          })
+          exportSettings: DEFAULT_SPLITTER_EXPORT_SETTINGS
         }))
-
-        const batchStore = useBatchStore.getState()
-        batchStore.setTargetFormat(defaultConfig.targetFormat as any)
-        batchStore.setQuality(defaultConfig.quality)
-        if (defaultConfig.fileNamePattern) {
-          batchStore.setFileNamePattern(defaultConfig.fileNamePattern)
-        }
       }
     }),
     {

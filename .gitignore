@@ -47,6 +47,7 @@ _old/
 # Generated synced media assets
 apps/extension/assets/
 apps/web/public/assets/
+apps/web/public/version.json
 
 # Generated synced locales
 apps/web/public/locales/
@@ -61,3 +62,4 @@ assets/wasm/
 
 # Internal docs
 docs/knowledge/
+.codegraph/

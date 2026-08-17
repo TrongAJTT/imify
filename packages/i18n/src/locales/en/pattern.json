@@ -139,7 +139,6 @@
   },
   "drawingDialog": {
     "title": "Draw Asset",
-    "subtitle": "Sketch directly in-browser. Saved output is auto-trimmed transparent PNG.",
     "brush": "Brush",
     "eraser": "Eraser",
     "smoothBrush": "Smooth Brush Stroke",

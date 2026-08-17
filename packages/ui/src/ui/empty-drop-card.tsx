@@ -22,6 +22,7 @@ interface EmptyDropCardProps {
   titleClassName?: string;
   subtitleClassName?: string;
   onPasteFiles?: (files: File[]) => void;
+  onPasteError?: (errorMessage: string) => void;
   onProcessUrls?: (urls: string[]) => Promise<void>;
   allowMultipleUrls?: boolean;
 }
@@ -39,6 +40,7 @@ export function EmptyDropCard({
   titleClassName = "",
   subtitleClassName = "",
   onPasteFiles,
+  onPasteError,
   onProcessUrls,
   allowMultipleUrls = false,
 }: EmptyDropCardProps) {
@@ -137,11 +139,11 @@ export function EmptyDropCard({
       if (files.length > 0) {
         onPasteFiles(files);
       } else {
-        alert(t("common:noImageInClipboard"));
+        onPasteError?.(t("common:noImageInClipboard"));
       }
     } catch (e) {
       console.error(e);
-      alert(t("common:clipboardPermissionError"));
+      onPasteError?.(t("common:clipboardPermissionError"));
     }
   };
 

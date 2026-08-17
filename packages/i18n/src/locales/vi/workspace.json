@@ -24,6 +24,9 @@
     "filling": {
       "label": "Lấp đầy ảnh"
     },
+    "collageMaker": {
+      "label": "Ghép ảnh nhanh"
+    },
     "patternGenerator": {
       "label": "Tạo hình nền lặp"
     },
@@ -32,6 +35,9 @@
     },
     "inspector": {
       "label": "Kiểm tra thông tin ảnh"
+    },
+    "pdfStudio": {
+      "label": "PDF Studio"
     },
     "contextMenu": {
       "label": "Menu chuột phải"

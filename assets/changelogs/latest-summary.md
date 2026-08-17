@@ -1,15 +1,12 @@
-🎉 Welcome to Imify v2.2.2!
+🎉 Welcome to Imify v2.3!
 
-This patch release brings critical stability, mobile compatibility, and offline PWA improvements on top of our major v2.2 update.
+This major release brings two powerful new tools — **PDF Studio** and **Collage Maker** — along with an **Emergency Recovery Mode**, a brand-new **Global Dialog & Toast System**, automated smart concurrency, and dozens of UX and stability improvements across all tools!
 
-🔧 Patch Highlights (v2.2.2):
+✨ Major Highlights (v2.3):
 
-- Fix web app crash/error when navigating to the workspace page from Splicing and Filling tools.
-- Update Difference Checker feature, now supporting up to 4 image comparisons simultaneously with expanded layout options in Side-by-Side mode.
-
-✨ Recap of Major Features from v2.2:
-
-- ✂️ AI Background Removal: Powered by 3 specialized AI models (including ORMBG and MODNet) running locally.
-- 🤖 Image Upscaler: Added performance advisory warnings for upscaling high-resolution images (> 1000px) alongside full language support.
-- 🔍 All-in-one QR Station: Customizable QR Generator (logo overlays, patterns, SVG export) & QR Reader (screen capture, camera).
-- 🌍 Custom Locales & DevTools: Support for custom JSON language imports and new developer dashboard with LocalStorage Manager.
+- 📄 **PDF Studio Suite**: Comprehensive 2-way PDF tool to convert Images to PDF (with custom DPI, reordering, resizing, margins) and extract PDF pages to high-res images or zip archives.
+- 🖼️ **Quick Collage Maker**: Intuitive 3-stage workspace to compose multi-image photo collages with customizable layouts, aspect ratios, gaps, and drag-and-drop layer swapping.
+- 🛠️ **Emergency Recovery Mode**: Dedicated `/recovery` page to diagnose cache anomalies, reset corrupted Service Worker states, and restore app access safely.
+- 🔔 **Unified Global Dialogs & Toasts**: Seamless promise-based confirmation dialogs, keyboard navigation, and streamlined toast notifications.
+- ⚡ **Smart Automated Concurrency**: Intelligent hardware detection for batch processing and splicing tasks without manual configuration hassle.
+- 🛡️ **Enhanced Data Management**: Redesigned backup/restore cards, wipe data with auto-backup, and full state inspector support for new tools.

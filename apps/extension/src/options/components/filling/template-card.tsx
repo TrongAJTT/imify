@@ -4,6 +4,7 @@ import { Edit, Pin, PinOff, Trash2 } from "lucide-react"
 import type { FillingTemplate } from "@imify/features/filling/types"
 import { templateStorage } from "@imify/features/filling/template-storage"
 import { useFillingStore } from "@imify/stores/stores/filling-store"
+import { confirmDialog } from "@imify/stores"
 
 interface TemplateCardProps {
   template: FillingTemplate
@@ -26,7 +27,9 @@ export function TemplateCard({ template, onRefresh }: TemplateCardProps) {
     })
     return () => {
       revoked = true
-      if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl)
+      if (thumbnailUrl) {
+        URL.revokeObjectURL(thumbnailUrl)
+      }
     }
   }, [template.id])
 
@@ -47,7 +50,11 @@ export function TemplateCard({ template, onRefresh }: TemplateCardProps) {
   }, [template.id, onRefresh])
 
   const handleDelete = useCallback(async () => {
-    const confirmed = window.confirm(`Delete template "${template.name}"? This action cannot be undone.`)
+    const confirmed = await confirmDialog({
+      title: `Delete template "${template.name}"?`,
+      description: "This action cannot be undone.",
+      variant: "destructive",
+    })
     if (!confirmed) {
       return
     }

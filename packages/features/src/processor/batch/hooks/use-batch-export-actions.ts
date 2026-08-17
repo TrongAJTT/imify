@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { APP_CONFIG } from "@imify/core/config";
+import { confirmBatchDownload } from "@imify/stores";
 import { toUserFacingConversionError } from "@imify/core/error-utils";
 import type {
   ConversionProgressPayload,
@@ -17,12 +17,10 @@ function getBatchZipTimestamp(): number {
 export function useBatchExportActions({
   queue,
   config,
-  skipDownloadConfirm,
   onClosePdfSplit,
 }: {
   queue: BatchQueueItem[];
   config: FormatConfig;
-  skipDownloadConfirm: boolean;
   onClosePdfSplit: () => void;
 }) {
   const [isExporting, setIsExporting] = useState(false);
@@ -30,7 +28,6 @@ export function useBatchExportActions({
     useState<BatchExportAction | null>(null);
   const [exportToastPayload, setExportToastPayload] =
     useState<ConversionProgressPayload | null>(null);
-  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
   const exportToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -58,14 +55,17 @@ export function useBatchExportActions({
     },
     [],
   );
-  const getPackagerWorker = () =>
-    (packagerWorkerRef.current ??= new PackagerWorkerClient());
+  const getPackagerWorker = () => {
+    if (!packagerWorkerRef.current) {
+      packagerWorkerRef.current = new PackagerWorkerClient();
+    }
+    return packagerWorkerRef.current;
+  };
   const getSuccessfulOutputs = () =>
     queue.filter(
       (item) =>
         item.status === "success" && item.outputBlob && item.outputFileName,
     );
-  const closeDownloadConfirm = () => setShowDownloadConfirm(false);
   const clearExportToast = (toastId?: string) => {
     clearExportToastHideTimer();
     setExportToastPayload((current) =>
@@ -73,17 +73,14 @@ export function useBatchExportActions({
     );
   };
 
-  const downloadIndividually = async (force = false) => {
+  const downloadIndividually = async () => {
     const successful = getSuccessfulOutputs();
-    if (!successful.length || isExporting) return;
-    if (
-      !force &&
-      successful.length > APP_CONFIG.BATCH.DOWNLOAD_CONFIRM_THRESHOLD &&
-      !skipDownloadConfirm
-    ) {
-      setShowDownloadConfirm(true);
+    if (!successful.length || isExporting) {
       return;
     }
+    const confirmed = await confirmBatchDownload(successful.length);
+    if (!confirmed) return;
+
     setIsExporting(true);
     setActiveExportAction("one_by_one");
     try {
@@ -98,10 +95,6 @@ export function useBatchExportActions({
       setIsExporting(false);
       setActiveExportAction(null);
     }
-  };
-  const confirmDownloadIndividually = async () => {
-    setShowDownloadConfirm(false);
-    await downloadIndividually(true);
   };
 
   const runPackagerExport = async (params: {
@@ -272,9 +265,6 @@ export function useBatchExportActions({
     activeExportAction,
     exportToastPayload,
     clearExportToast,
-    showDownloadConfirm,
-    closeDownloadConfirm,
-    confirmDownloadIndividually,
     downloadIndividually,
     downloadAsZip,
     mergeIntoPdf,

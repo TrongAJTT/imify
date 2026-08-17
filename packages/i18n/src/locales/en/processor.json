@@ -119,6 +119,7 @@
     "close": "Close",
     "saveApply": "Save & Apply",
     "createApply": "Create & Apply",
+    "deleteConfirm": "Delete preset \"{{name}}\"?",
     "formatNotSupported": "Format {{format}} is not supported. (Supported: {{supported}})"
   },
   "targetFormat": "Target format",
@@ -436,6 +437,8 @@
     "apply": "Apply pattern",
     "placeholder": "e.g. [OriginalName]_[Width]x[Height]",
     "previewInputHint": "{{name}} ({{width}}x{{height}}, {{index}} of {{total}})",
+    "originalNameNoticeLabel": "Note:",
+    "originalNameNoticeDesc": "The [OriginalName] tag receives the input image's filename in single-image tools (Processor, Splitter, Background Remover, Upscaler). In multi-image and generative tools (Splicing, Filling, Collage Maker, Pattern Generator), it uses the tool's default identifier.",
     "presets": {
       "default": "Default",
       "designer": "Designer",

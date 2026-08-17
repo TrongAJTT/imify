@@ -1,0 +1,56 @@
+{
+  "title": "Tạo ảnh ghép",
+  "loadingTitle": "Đang tải Collage Maker...",
+  "loadingSubtitle": "Khởi tạo công cụ ghép ảnh và bố cục...",
+  "showcase": {
+    "title": "Ghép ảnh nhanh (Collage Maker)",
+    "subtitle": "Tải ảnh trực tiếp, chọn layout phù hợp với số lượng ảnh, tùy chỉnh kích thước & khoảng cách, và xuất ra sản phẩm collage sắc nét tức thì.",
+    "tips": {
+      "tip1": "Tải lên từ 2 đến 10 bức ảnh để bắt đầu tạo khung ghép tự động.",
+      "tip2": "Kéo sắp xếp thứ tự ảnh ở Bước 1 để điều chỉnh ảnh vào đúng từng ô trong layout.",
+      "tip3": "Điều chỉnh lề ngoài và khoảng cách giữa các khung ở Bước 2 để tạo phong cách độc đáo.",
+      "tip4": "Căn chỉnh vị trí, thu phóng ảnh và bo góc khung ở Bước 3 trước khi xuất ảnh."
+    },
+    "faqs": {
+      "q1": "Collage Maker hỗ trợ ghép tối đa bao nhiêu ảnh cùng lúc?",
+      "a1": "Bạn có thể tải lên và ghép từ 2 đến 10 bức ảnh. Hệ thống sẽ tự động tạo và gợi ý các mẫu bố cục lưới phù hợp nhất với số lượng ảnh bạn chọn.",
+      "q2": "Làm thế nào để điều chỉnh một bức ảnh vào đúng ô mong muốn?",
+      "a2": "Tại Bước 1 (Chuẩn bị ảnh), bạn chỉ cần kéo thả thẻ ảnh để thay đổi thứ tự. Ô số 1 trong hàng đợi sẽ tương ứng với ô số 1 trên lưới ghép.",
+      "q3": "Tôi có thể tùy chỉnh kích thước canvas và khoảng cách giữa các khung không?",
+      "a3": "Hoàn toàn có thể. Ở Bước 2, bạn có thể chỉnh sửa kích thước Canvas (Pixels, Inches, CM, MM kèm DPI), độ dày lề ngoài và khoảng cách ngang/dọc giữa các ô ảnh.",
+      "q4": "Sau khi tạo bố cục, tôi có thể thu phóng và căn chỉnh từng ảnh không?",
+      "a4": "Có. Ở Bước 3, bạn có thể nhấp vào từng lớp ảnh để thu phóng, xoay, lật, kéo di chuyển, hoặc áp dụng thao tác nhanh (Fit, Align, Bo góc, Màu viền).",
+      "q5": "Chất lượng ảnh sau khi xuất ra như thế nào?",
+      "a5": "Ảnh được xử lý và kết xuất trực tiếp ở độ phân giải gốc của Canvas ngay trên trình duyệt, đảm bảo chất lượng sắc nét tối đa theo định dạng bạn chọn."
+    }
+  },
+  "stage1": {
+    "title": "Chuẩn bị ảnh",
+    "subtitle": "Đã tải {{count}}/{{max}} ảnh • Canvas {{width}} x {{height}} px",
+    "createCollage": "Tạo ảnh ghép",
+    "clearAll": "Xóa tất cả",
+    "dropzoneTitle": "Kéo thả ảnh vào đây để tạo ảnh ghép",
+    "dropzoneSubtitle": "Tải lên từ 2 đến {{max}} ảnh (JPEG, PNG, WebP, AVIF, GIF)",
+    "browseFiles": "Chọn ảnh từ máy tính",
+    "queueTitle": "Danh sách ảnh đã chọn",
+    "reorderHelp": "Kéo vị trí thẻ ảnh để đổi vị trí hiển thị ô trong layout."
+  },
+  "stage2": {
+    "title": "Chọn layout",
+    "imageSize": "Kích thước ảnh đầu ra",
+    "spacingPadding": "Lề & Khoảng cách",
+    "outerPadding": "Lề bên ngoài",
+    "gapX": "Khoảng cách ngang",
+    "gapY": "Khoảng cách dọc",
+    "layoutSelector": "Mẫu layout ghép",
+    "layoutsForImages": "Bố cục cho {{count}} ảnh",
+    "nextToEdit": "Tiếp tục chỉnh ảnh"
+  },
+  "stage3": {
+    "title": "Chỉnh ảnh & Xuất tệp",
+    "layerCustomization": "Tùy chỉnh lớp ảnh",
+    "backgroundColor": "Màu Canvas & Bố cục",
+    "outputSettings": "Cấu hình đầu ra",
+    "exportCollage": "Xuất ảnh ghép"
+  }
+}

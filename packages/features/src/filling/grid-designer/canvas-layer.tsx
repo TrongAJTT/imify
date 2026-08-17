@@ -1,6 +1,7 @@
 import React from "react"
 import { Layer, Rect } from "react-konva"
 import type { GridLayoutCell } from "./generator"
+import type { GridPrimaryDirection } from "../types"
 
 interface GridDesignCanvasLayerProps {
   canvasWidth: number
@@ -9,6 +10,8 @@ interface GridDesignCanvasLayerProps {
   offsetY: number
   renderScale: number
   cells: GridLayoutCell[]
+  direction?: GridPrimaryDirection
+  highlightedIndex?: number | null
 }
 
 export function GridDesignCanvasLayer({
@@ -18,6 +21,8 @@ export function GridDesignCanvasLayer({
   offsetY,
   renderScale,
   cells,
+  direction = "rows",
+  highlightedIndex = null,
 }: GridDesignCanvasLayerProps) {
   return (
     <Layer>
@@ -34,6 +39,27 @@ export function GridDesignCanvasLayer({
 
       {cells.map((cell) => {
         const isError = cell.hasError
+        const isHighlighted =
+          highlightedIndex !== null &&
+          ((direction === "rows" && cell.rowIndex === highlightedIndex) ||
+            (direction === "cols" && cell.colIndex === highlightedIndex))
+
+        let fill = "rgba(59, 130, 246, 0.12)"
+        let stroke = "#94a3b8"
+        let strokeWidth = 1
+        let dash: number[] | undefined = undefined
+
+        if (isError) {
+          fill = "rgba(239, 68, 68, 0.18)"
+          stroke = "#ef4444"
+          strokeWidth = 2
+          dash = [6, 4]
+        } else if (isHighlighted) {
+          fill = "rgba(234, 179, 8, 0.25)"
+          stroke = "#eab308"
+          strokeWidth = 2
+        }
+
         return (
           <Rect
             key={cell.id}
@@ -41,10 +67,10 @@ export function GridDesignCanvasLayer({
             y={offsetY + cell.y * renderScale}
             width={Math.max(1, cell.width * renderScale)}
             height={Math.max(1, cell.height * renderScale)}
-            fill={isError ? "rgba(239, 68, 68, 0.18)" : "rgba(59, 130, 246, 0.12)"}
-            stroke={isError ? "#ef4444" : "#94a3b8"}
-            strokeWidth={isError ? 2 : 1}
-            dash={isError ? [6, 4] : undefined}
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={strokeWidth}
+            dash={dash}
             cornerRadius={4}
             listening={false}
           />

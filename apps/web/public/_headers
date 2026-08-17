@@ -2,3 +2,7 @@
 /background-remover/*
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: require-corp
+
+# Never cache dynamic runtime version descriptor
+/version.json
+  Cache-Control: no-cache, no-store, must-revalidate

@@ -17,8 +17,9 @@ import {
   RadioCard,
   SelectInput,
   Subheading,
-  TextInput,
+  PresetNameInput,
 } from "@imify/ui";
+import { generateDefaultPresetName, calculateAspectRatio } from "@imify/core";
 import {
   DEFAULT_GRID_DESIGN_PARAMS,
   DEFAULT_SYMMETRIC_PARAMS,
@@ -129,7 +130,7 @@ export function TemplateMethodDialog({
 
   useEffect(() => {
     if (!isOpen) return;
-    setName("");
+    setName(generateDefaultPresetName("filling"));
     setMethod("grid-design");
     setWidthPx(initialWidth);
     setHeightPx(initialHeight);
@@ -145,9 +146,7 @@ export function TemplateMethodDialog({
     const now = Date.now();
     const template: FillingTemplate = {
       id: generateId("tmpl"),
-      name:
-        name.trim() ||
-        t("dialog.untitledTemplate", { defaultValue: "Untitled Template" }),
+      name: name.trim() || generateDefaultPresetName("filling"),
       canvasWidth: widthPx,
       canvasHeight: heightPx,
       layers: [],
@@ -165,7 +164,7 @@ export function TemplateMethodDialog({
     await onRefresh();
     onCreated(template, method);
     onClose();
-  }, [heightPx, method, name, onClose, onCreated, onRefresh, widthPx, t]);
+  }, [heightPx, method, name, onClose, onCreated, onRefresh, widthPx]);
 
   return (
     <>
@@ -187,10 +186,11 @@ export function TemplateMethodDialog({
           </div>
 
           <div className="mb-5 space-y-4">
-            <TextInput
+            <PresetNameInput
               label={t("dialog.templateName")}
               value={name}
               onChange={setName}
+              featureKey="filling"
               placeholder="e.g. My Photo Grid"
               autoFocus
             />
@@ -282,6 +282,9 @@ export function TemplateMethodDialog({
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
                 {t("dialog.finalSize", { defaultValue: "Final size:" })}{" "}
                 {widthPx} x {heightPx} px
+                {calculateAspectRatio(widthPx, heightPx)
+                  ? ` (${calculateAspectRatio(widthPx, heightPx)})`
+                  : ""}
               </div>
               {selectedPresetLabel && (
                 <MutedText className="mt-1 text-[11px]">

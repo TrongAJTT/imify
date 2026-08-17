@@ -15,7 +15,7 @@ import { useTranslation } from "@imify/i18n";
 
 export function WebFooter() {
   const appMetadata = getAppMetadata();
-  const { isMonolithicPage: isFullFooter } = useWebPageMode();
+  const { isMonolithicPage: isFullFooter, isRecoveryPage } = useWebPageMode();
   const isDesktop = useIsDesktopLayout();
   const { t, i18n } = useTranslation("homepage");
   const [isMounted, setIsMounted] = React.useState(false);
@@ -28,45 +28,63 @@ export function WebFooter() {
     return groups.flatMap((g) => g.items);
   }, [i18n.language, isMounted]);
 
+  const moreFeatures = React.useMemo(() => {
+    const list = allTools.slice(4, 8).filter((tool) => tool.id !== "filling");
+    const pdfStudio = allTools.find((tool) => tool.id === "pdf-studio");
+    if (pdfStudio) {
+      list.push(pdfStudio);
+    }
+    return list;
+  }, [allTools]);
+
+  if (isRecoveryPage) {
+    return null;
+  }
+
   // Hide footer ONLY on tool pages AND on mobile interface.
   if (!isFullFooter && !isDesktop) {
     return null;
   }
+
+  const displayVersion = isMounted
+    ? appMetadata.cacheVersion || appMetadata.version
+    : appMetadata.version;
 
   if (!isFullFooter) {
     return (
       <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
         <div className="flex w-full items-center justify-between px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-4">
-            <span className="font-semibold text-slate-900 dark:text-slate-100">
-              Imify Web v{appMetadata.version}
+            <span
+              suppressHydrationWarning
+              className="font-semibold text-slate-900 dark:text-slate-100"
+            >
+              Imify Web v{displayVersion}
             </span>
             <span className="h-3 w-px bg-slate-200 dark:bg-slate-800" />
             <span className="hidden md:inline">{t("footer.shortDesc")}</span>
           </div>
           <div className="flex items-center gap-6">
-            <p>
-              {t("footer.copyright", {
-                year: new Date().getFullYear(),
-                defaultValue: `© ${new Date().getFullYear()} Imify by TrongAJTT`,
-              })}
-            </p>
-            <div className="flex gap-4">
-              <Link
-                href={IMIFY_LINKS.terms}
-                target="_blank"
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                {t("footer.terms")}
-              </Link>
-              <Link
-                href={IMIFY_LINKS.privacy}
-                target="_blank"
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                {t("footer.privacy")}
-              </Link>
-            </div>
+            <Link
+              href="/recovery"
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              {t("footer.recovery")}
+            </Link>
+            <Link
+              href={IMIFY_LINKS.terms}
+              target="_blank"
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              {t("footer.terms")}
+            </Link>
+            <Link
+              href={IMIFY_LINKS.privacy}
+              target="_blank"
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              {t("footer.privacy")}
+            </Link>
           </div>
         </div>
       </footer>
@@ -82,8 +100,11 @@ export function WebFooter() {
               <span className="text-xl font-bold text-slate-900 dark:text-white">
                 Imify
               </span>
-              <span className="text-xs text-slate-400 mb-[2px]">
-                v{appMetadata.version}
+              <span
+                suppressHydrationWarning
+                className="text-xs text-slate-400 mb-[2px]"
+              >
+                v{displayVersion}
               </span>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
@@ -114,7 +135,7 @@ export function WebFooter() {
               {t("footer.moreFeatures")}
             </h3>
             <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
-              {allTools.slice(4, 8).map((tool) => (
+              {moreFeatures.map((tool) => (
                 <li key={tool.id}>
                   <Link
                     href={tool.href}
@@ -147,6 +168,12 @@ export function WebFooter() {
             })}
           </p>
           <div className="flex gap-4">
+            <Link
+              href="/recovery"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              {t("footer.recoveryPage")}
+            </Link>
             <Link
               href={IMIFY_LINKS.privacy}
               target="_blank"

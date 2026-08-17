@@ -37,9 +37,11 @@ import previewImageFillingWebp from "url:@assets/features/preview-image_filling.
 import symmetricVisualEditorWebm from "url:@assets/features/guide-symgen-visual_editor.webm"
 import manualMultiSelectWebm from "url:@assets/features/guide-image_filling_manual-visual_multi_select.webm"
 import previewPatternGeneratorWebp from "url:@assets/features/preview-pattern_generator.webp"
+import previewCollageWebp from "url:@assets/features/preview-collage.webp"
 import previewContextMenuWebp from "url:@assets/features/preview-context_menu.webp"
 import previewDiffCheckerWebp from "url:@assets/features/preview-difference_checker.webp"
 import previewInspectorWebp from "url:@assets/features/preview-image_inspector.webp"
+import previewPdfStudioWebp from "url:@assets/features/preview-pdf_studio.webp"
 import previewRemover1Webp from "url:@assets/features/preview-background_remover-1.webp"
 import previewRemover2Webp from "url:@assets/features/preview-background_remover-2.webp"
 import qrGeneratorIllustrationSvg from "url:@assets/images/illustrations/qr-generator.svg"
@@ -47,6 +49,7 @@ import qrReaderIllustrationSvg from "url:@assets/images/illustrations/qr-reader.
 import seoAuditIllustrationSvg from "url:@assets/images/illustrations/seo-audit.svg"
 import j2teamLogoIco from "url:@assets/images/j2tl-logo.ico"
 import latestSummaryMd from "url:@assets/changelogs/latest-summary.md"
+import v2_3Md from "url:@assets/changelogs/v2-3.md"
 import v2_2Md from "url:@assets/changelogs/v2-2.md"
 import v2_1Md from "url:@assets/changelogs/v2-1.md"
 import v1_5Md from "url:@assets/changelogs/v1-5.md"
@@ -76,6 +79,7 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.splitter.guideVisualControlWebm]: splitterGuideVisualControlWebm,
   [FEATURE_MEDIA_ASSET_PATHS.splicing.previewWebp]: previewImageSplicingWebp,
   [FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp]: previewPatternGeneratorWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.collageMaker.previewWebp]: previewCollageWebp,
   [FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp]: previewContextMenuWebp,
   [FEATURE_MEDIA_ASSET_PATHS.filling.previewImageWebp]: previewImageFillingWebp,
   [FEATURE_MEDIA_ASSET_PATHS.filling.symmetricVisualEditorWebm]: symmetricVisualEditorWebm,
@@ -85,10 +89,12 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.downloadHints.firefoxWebp]: downloadHintFirefoxWebp,
   [FEATURE_MEDIA_ASSET_PATHS.diffchecker.previewWebp]: previewDiffCheckerWebp,
   [FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp]: previewInspectorWebp,
+  [FEATURE_MEDIA_ASSET_PATHS.pdfStudio.previewWebp]: previewPdfStudioWebp,
   [FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp]: previewRemover1Webp,
   [FEATURE_MEDIA_ASSET_PATHS.remover.preview2Webp]: previewRemover2Webp,
   [FEATURE_MEDIA_ASSET_PATHS.brand.j2teamLogoIco]: j2teamLogoIco,
   [FEATURE_MEDIA_ASSET_PATHS.common.latestSummaryMd]: latestSummaryMd,
+  [FEATURE_MEDIA_ASSET_PATHS.common.v2_3]: v2_3Md,
   [FEATURE_MEDIA_ASSET_PATHS.common.v2_2]: v2_2Md,
   [FEATURE_MEDIA_ASSET_PATHS.common.v2_1]: v2_1Md,
   [FEATURE_MEDIA_ASSET_PATHS.common.v1_5]: v1_5Md,

@@ -57,6 +57,9 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   pattern: {
     previewWebp: "/assets/features/preview-pattern_generator.webp"
   },
+  collageMaker: {
+    previewWebp: "/assets/features/preview-collage.webp"
+  },
   contextMenu: {
     previewWebp: "/assets/features/preview-context_menu.webp"
   },
@@ -70,6 +73,9 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
     preview1Webp: "/assets/features/preview-background_remover-1.webp",
     preview2Webp: "/assets/features/preview-background_remover-2.webp"
   },
+  pdfStudio: {
+    previewWebp: "/assets/features/preview-pdf_studio.webp"
+  },
   downloadHints: {
     chromeWebp: "/assets/images/img-download-not-ask-chrome.webp",
     edgeWebp: "/assets/images/img-download-not-ask-edge.webp",
@@ -77,6 +83,7 @@ export const FEATURE_MEDIA_ASSET_PATHS = {
   },
   common: {
     latestSummaryMd: "/assets/changelogs/latest-summary.md",
+    v2_3: "/assets/changelogs/v2-3.md",
     v2_2: "/assets/changelogs/v2-2.md",
     v2_1: "/assets/changelogs/v2-1.md",
     v1_5: "/assets/changelogs/v1-5.md",
@@ -131,6 +138,9 @@ export const FEATURE_MEDIA_ASSETS = {
   pattern: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.pattern.previewWebp
   },
+  collageMaker: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.collageMaker.previewWebp
+  },
   contextMenu: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.contextMenu.previewWebp
   },
@@ -139,6 +149,9 @@ export const FEATURE_MEDIA_ASSETS = {
   },
   inspector: {
     previewWebp: FEATURE_MEDIA_ASSET_PATHS.inspector.previewWebp
+  },
+  pdfStudio: {
+    previewWebp: FEATURE_MEDIA_ASSET_PATHS.pdfStudio.previewWebp
   },
   remover: {
     preview1Webp: FEATURE_MEDIA_ASSET_PATHS.remover.preview1Webp,

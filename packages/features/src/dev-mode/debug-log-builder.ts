@@ -1,5 +1,5 @@
 import { getAppMetadata } from "@imify/core"
-import { DEV_MODE_FEATURES } from "./dev-mode-registry"
+import { DEV_MODE_FEATURES, getFeatureRawState, type DevModeFeatureId } from "./dev-mode-registry"
 import { useRuntimeLogStore } from "./runtime-log-collector"
 import type {
   OptionsTab
@@ -122,17 +122,7 @@ export interface DebugLogPayload {
   export_source: "dev_panel"
   active_tab: OptionsTab | null
   environment?: DebugLogEnvironment
-  stores: {
-    batch?: unknown
-    splicing?: unknown
-    splitter?: unknown
-    filling?: unknown
-    pattern?: unknown
-    diffchecker?: unknown
-    inspector?: unknown
-    qr_generator?: unknown
-    background_remover?: unknown
-  }
+  stores: Partial<Record<DevModeFeatureId, unknown>>
   settings?: unknown
   performance?: unknown
   layout?: unknown
@@ -168,14 +158,12 @@ export async function buildDebugLog(params: BuildDebugLogParams): Promise<DebugL
   
   for (const feature of DEV_MODE_FEATURES) {
     if (hasFeature(feature.id) && feature.storeHook) {
-      let stateData = feature.storeHook.getState() as unknown as Record<string, unknown>
-      if (feature.id === "qr_generator") {
-        const { data, ...rest } = stateData
-        stateData = rest
+      const stateData = getFeatureRawState(feature.id)
+      if (stateData) {
+        stores[feature.id] = sanitizeValue(
+          extractStoreData(stateData)
+        )
       }
-      stores[feature.id as keyof typeof stores] = sanitizeValue(
-        extractStoreData(stateData)
-      )
     }
   }
 
@@ -212,6 +200,10 @@ export async function buildDebugLog(params: BuildDebugLogParams): Promise<DebugL
       : undefined,
   }
 }
+
+export { buildDebugLog as buildSystemDataPayload }
+export { downloadDebugLog as downloadSystemDataPayload }
+export { importDebugLog as importSystemDataPayload }
 
 // ─── Download helper ─────────────────────────────────────────────────────────
 

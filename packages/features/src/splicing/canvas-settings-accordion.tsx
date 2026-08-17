@@ -62,14 +62,14 @@ export function CanvasSettingsAccordion({
         <div className="grid grid-cols-2 gap-2 items-end">
           <NumberInput
             label={t("canvasFields.mainGap")}
-            value={mainSpacing}
+            value={mainSpacing ?? 0}
             onChangeValue={onMainSpacingChange}
             min={0}
             max={200}
           />
           <NumberInput
             label={t("canvasFields.crossGap")}
-            value={crossSpacing}
+            value={crossSpacing ?? 0}
             onChangeValue={onCrossSpacingChange}
             min={0}
             max={200}
@@ -78,21 +78,21 @@ export function CanvasSettingsAccordion({
         <div className="grid grid-cols-3 gap-2 items-end">
           <NumberInput
             label={t("canvasFields.padding")}
-            value={canvasPadding}
+            value={canvasPadding ?? 0}
             onChangeValue={onCanvasPaddingChange}
             min={0}
             max={200}
           />
           <NumberInput
             label={t("canvasFields.radius")}
-            value={canvasBorderRadius}
+            value={canvasBorderRadius ?? 0}
             onChangeValue={onCanvasBorderRadiusChange}
             min={0}
             max={200}
           />
           <NumberInput
             label={t("canvasFields.border")}
-            value={canvasBorderWidth}
+            value={canvasBorderWidth ?? 0}
             onChangeValue={onCanvasBorderWidthChange}
             min={0}
             max={50}

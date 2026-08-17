@@ -5,7 +5,7 @@ import { WebFooter } from "@/components/layout/web-footer"
 import { WebHeader } from "@/components/layout/web-header"
 import { WorkspaceLayout } from "@/components/layout/workspace-layout"
 import { PwaRegistration } from "@/components/pwa/registration"
-import { PwaUpdateNotice } from "@/components/pwa/update-notice"
+import { ChunkErrorRecovery } from "@/components/pwa/chunk-error-recovery"
 import { FEATURE_MEDIA_ASSET_PATHS } from "@imify/features/shared/media-assets"
 import { WEB_ROUTE_METADATA } from "./seo-metadata"
 
@@ -44,8 +44,8 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <AppProviders>
+          <ChunkErrorRecovery />
           <PwaRegistration />
-          <PwaUpdateNotice />
           <WebHeader />
           <WorkspaceLayout>{children}</WorkspaceLayout>
           <WebFooter />

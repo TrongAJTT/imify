@@ -19,6 +19,7 @@ import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
 import { MutedText, Subheading } from "@imify/ui/ui/typography";
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
+import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
 import { useShortcutActions } from "../use-shortcut-actions";
 import { parseGridDesign, generateGridLayers } from "./generator";
@@ -45,12 +46,16 @@ interface GridDesignWorkspaceProps {
     template: FillingTemplate,
     destination: "fill" | "edit" | "list",
   ) => void | Promise<void>;
+  customActions?: React.ReactNode;
+  autoSave?: boolean;
 }
 
 export function GridDesignWorkspace({
   template,
   onRefresh,
   onSaved,
+  customActions,
+  autoSave = false,
 }: GridDesignWorkspaceProps) {
   const { t } = useTranslation("filling");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -65,6 +70,9 @@ export function GridDesignWorkspace({
     (state) => state.setGridDesignParams,
   );
   const setGridLayerCount = useFillingStore((state) => state.setGridLayerCount);
+  const highlightedGridIndex = useFillUiStore(
+    (state) => state.highlightedGridIndex,
+  );
   const updateTemplate = useFillingStore((state) => state.updateTemplate);
   const { getShortcutLabel } = useShortcutPreferences();
   const [isSaving, setIsSaving] = useState(false);
@@ -280,11 +288,13 @@ export function GridDesignWorkspace({
     const timeout = window.setTimeout(() => {
       const synced = buildUpdatedTemplate();
       updateTemplate(synced);
-      void templateStorage.save(synced);
+      if (autoSave && !customActions) {
+        void templateStorage.save(synced);
+      }
     }, 350);
 
     return () => window.clearTimeout(timeout);
-  }, [buildUpdatedTemplate, updateTemplate]);
+  }, [autoSave, buildUpdatedTemplate, customActions, updateTemplate]);
 
   return (
     <div className="space-y-4">
@@ -309,55 +319,59 @@ export function GridDesignWorkspace({
             panKeyHint={getShortcutLabel("global.preview.pan_mode")}
             idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
           />
-          <div className="flex items-center">
-            <Button
-              variant="primary"
-              size="sm"
-              disabled={isSaving}
-              className="rounded-r-none px-2"
-              onClick={() => void handleSaveToDestination("fill")}
-            >
-              <Image size={14} />
-              {t("gridDesigner.saveFill")}
-            </Button>
-            <ControlledPopover
-              preset="dropdown"
-              side="bottom"
-              align="end"
-              sideOffset={6}
-              collisionPadding={10}
-              trigger={
-                <Button
-                  variant="primary"
-                  size="sm"
-                  aria-label="Open save actions"
-                  disabled={isSaving}
-                  className="rounded-l-none border-l border-sky-400/60 px-2"
+          {customActions !== undefined ? (
+            customActions
+          ) : (
+            <div className="flex items-center">
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={isSaving}
+                className="rounded-r-none px-2"
+                onClick={() => void handleSaveToDestination("fill")}
+              >
+                <Image size={14} />
+                {t("gridDesigner.saveFill")}
+              </Button>
+              <ControlledPopover
+                preset="dropdown"
+                side="bottom"
+                align="end"
+                sideOffset={6}
+                collisionPadding={10}
+                trigger={
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    aria-label="Open save actions"
+                    disabled={isSaving}
+                    className="rounded-l-none border-l border-sky-400/60 px-2"
+                  >
+                    <ChevronDown size={14} />
+                  </Button>
+                }
+                contentClassName="z-[9999] min-w-[170px] rounded-md border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                closeOnContentClick
+              >
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  onClick={() => void handleSaveToDestination("edit")}
                 >
-                  <ChevronDown size={14} />
-                </Button>
-              }
-              contentClassName="z-[9999] min-w-[170px] rounded-md border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
-              closeOnContentClick
-            >
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                onClick={() => void handleSaveToDestination("edit")}
-              >
-                <Pencil size={14} />
-                {t("gridDesigner.saveEdit")}
-              </button>
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                onClick={() => void handleSaveToDestination("list")}
-              >
-                <ArrowLeft size={14} />
-                {t("gridDesigner.saveBack")}
-              </button>
-            </ControlledPopover>
-          </div>
+                  <Pencil size={14} />
+                  {t("gridDesigner.saveEdit")}
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  onClick={() => void handleSaveToDestination("list")}
+                >
+                  <ArrowLeft size={14} />
+                  {t("gridDesigner.saveBack")}
+                </button>
+              </ControlledPopover>
+            </div>
+          )}
         </div>
       </div>
 
@@ -374,6 +388,8 @@ export function GridDesignWorkspace({
             offsetY={offsetY}
             renderScale={renderScale}
             cells={parseResult.layoutCells}
+            direction={activeParams.direction ?? "rows"}
+            highlightedIndex={highlightedGridIndex}
           />
         </Stage>
         <ZoomPanControl

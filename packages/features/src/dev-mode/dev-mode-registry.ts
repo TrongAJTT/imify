@@ -7,6 +7,8 @@ import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { useQrGeneratorStore } from "@imify/stores/stores/qr-generator-store"
 import { useBackgroundRemoverStore } from "@imify/stores/stores/background-remover-store"
+import { useCollageMakerStore } from "@imify/stores/stores/collage-maker-store"
+import { usePdfStudioStore } from "@imify/stores/stores/pdf-studio-store"
 import type { StoreApi, UseBoundStore } from "zustand"
 
 export type DevModeFeatureId =
@@ -19,6 +21,8 @@ export type DevModeFeatureId =
   | "inspector"
   | "qr_generator"
   | "background_remover"
+  | "collage_maker"
+  | "pdf_studio"
   | "settings"
   | "performance"
   | "layout"
@@ -46,9 +50,44 @@ export const DEV_MODE_FEATURES: DevModeFeatureDef[] = [
   { id: "inspector", label: "Image Inspector", storeHook: useInspectorStore },
   { id: "qr_generator", label: "QR Code Generator", storeHook: useQrGeneratorStore },
   { id: "background_remover", label: "Background Remover", storeHook: useBackgroundRemoverStore },
+  { id: "collage_maker", label: "Collage Maker", storeHook: useCollageMakerStore },
+  { id: "pdf_studio", label: "PDF Studio", storeHook: usePdfStudioStore },
   { id: "settings", label: "Settings & Context Menu" },
   { id: "performance", label: "Performance Preferences" },
   { id: "layout", label: "Workspace Layout Preferences" },
   { id: "runtime_logs", label: "Runtime Console Logs" },
   { id: "environment", label: "Environment Information" },
 ]
+
+/**
+ * Remove function actions from a state object.
+ */
+export function stripStoreActions(state: unknown): Record<string, unknown> {
+  if (!state || typeof state !== "object") return {}
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(state as Record<string, unknown>)) {
+    if (typeof value !== "function") {
+      out[key] = value
+    }
+  }
+  return out
+}
+
+/**
+ * Get cleaned data snapshot of a specific feature store by ID.
+ */
+export function getFeatureRawState(featureId: DevModeFeatureId): Record<string, unknown> | undefined {
+  const feature = DEV_MODE_FEATURES.find((f) => f.id === featureId)
+  if (!feature?.storeHook) return undefined
+
+  const raw = feature.storeHook.getState() as unknown as Record<string, unknown>
+  const cleaned = stripStoreActions(raw)
+
+  if (featureId === "qr_generator") {
+    const { data, ...rest } = cleaned
+    return rest
+  }
+
+  return cleaned
+}
+

@@ -12,7 +12,9 @@ const PUBLIC_ROUTES = [
   "/pattern-generator",
   "/filling",
   "/diffchecker",
-  "/inspector"
+  "/inspector",
+  "/pdf-studio",
+  "/recovery"
 ] as const
 
 function getSiteUrl(): string {

@@ -9,21 +9,23 @@ import React, {
 import { Trash2 } from "lucide-react";
 
 import { APP_CONFIG } from "@imify/core/config";
+import { mapQuickExportToEngineConfig } from "@imify/core";
 import { buildResizeQuickStatsFromDimensions } from "@imify/core/resize-quick-stats";
-import { ToastContainer, useRenameInputPrompt } from "@imify/ui";
-import { useConversionToasts } from "@imify/core/hooks/use-toast";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import { useTranslation } from "@imify/i18n";
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useSplicingExport } from "./use-splicing-export";
+import {
+  toast,
+  confirmHeavyPreviewWarning,
+  promptRenameInput,
+} from "@imify/stores";
 import type {
   SplicingImageItem,
   LayoutResult,
   SplicingPreset,
   SplicingDirection,
 } from "./types";
-import { SplicingHeavyPreviewQualityDialog } from "./splicing-heavy-preview-quality-dialog";
-import { BatchDownloadConfirmDialog } from "../shared/download-confirm-dialog";
 import {
   ExportSplitButton,
   type ExportSplitMode,
@@ -203,40 +205,9 @@ export function SplicingTab({
 
   const [previewInteractionMode, setPreviewInteractionMode] =
     useState<PreviewInteractionMode>("zoom");
-  const [importToastPayload, setImportToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const [previewQualityToastPayload, setPreviewQualityToastPayload] =
-    useState<ConversionProgressPayload | null>(null);
-  const conversionToasts = useConversionToasts([
-    importToastPayload,
-    previewQualityToastPayload,
-  ]);
-  const handleRemoveToast = useCallback((toastId: string) => {
-    if (importToastHideTimerRef.current) {
-      clearTimeout(importToastHideTimerRef.current);
-      importToastHideTimerRef.current = null;
-    }
-    if (previewQualityToastHideTimerRef.current) {
-      clearTimeout(previewQualityToastHideTimerRef.current);
-      previewQualityToastHideTimerRef.current = null;
-    }
-    setImportToastPayload((current) =>
-      current?.id === toastId ? null : current,
-    );
-    setPreviewQualityToastPayload((current) =>
-      current?.id === toastId ? null : current,
-    );
-  }, []);
-  const [heavyPreviewQualityDialogOpen, setHeavyPreviewQualityDialogOpen] =
-    useState(false);
-  const [pendingPreviewQualityPercent, setPendingPreviewQualityPercent] =
-    useState<number | null>(null);
-  const [pendingExportModeForConfirm, setPendingExportModeForConfirm] =
-    useState<SplicingExportMode | null>(null);
   const { getShortcutLabel } = useShortcutPreferences();
 
-  const splicingPreviewShortcutsEnabled =
-    images.length > 0 && !showDownloadConfirm && !heavyPreviewQualityDialogOpen;
+  const splicingPreviewShortcutsEnabled = images.length > 0;
 
   useShortcutActions([
     {
@@ -262,12 +233,6 @@ export function SplicingTab({
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imagesCountRef = useRef(0);
-  const importToastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const previewQualityToastHideTimerRef = useRef<ReturnType<
-    typeof setTimeout
-  > | null>(null);
   const pendingRenderRef = useRef<{
     toastId: string;
     expectedCount: number;
@@ -336,11 +301,7 @@ export function SplicingTab({
   const skipSplicingHeavyPreviewQualityWarning = useBatchStore(
     (state) => state.skipSplicingHeavyPreviewQualityWarning,
   );
-  const canExportPdf =
-    exportSettings.targetFormat === "jpg" ||
-    exportSettings.targetFormat === "mozjpeg" ||
-    exportSettings.targetFormat === "png" ||
-    exportSettings.targetFormat === "webp";
+  const canExportPdf = true;
 
   const storeState = useSplicingStore.getState();
   const layoutConfig = useMemo(
@@ -374,11 +335,7 @@ export function SplicingTab({
 
   const pushPreviewQualityToast = useCallback(
     (payload: ConversionProgressPayload) => {
-      if (previewQualityToastHideTimerRef.current) {
-        clearTimeout(previewQualityToastHideTimerRef.current);
-        previewQualityToastHideTimerRef.current = null;
-      }
-      setPreviewQualityToastPayload(payload);
+      toast.progress(payload);
     },
     [],
   );
@@ -406,7 +363,8 @@ export function SplicingTab({
       pushPreviewQualityToast({
         id: toastId,
         fileName: t("toasts.previewQualityToast", { percent: next }),
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "processing",
         percent: 5,
         message: t("toasts.previewQualityMsg"),
@@ -415,29 +373,36 @@ export function SplicingTab({
     [
       images.length,
       previewShowImageNumber,
-      exportSettings.targetFormat,
+      exportSettings.format,
       setPreviewQualityPercent,
       pushPreviewQualityToast,
     ],
   );
 
   const handlePreviewQualitySelectChange = useCallback(
-    (raw: number) => {
+    async (raw: number) => {
       const next = normalizePreviewQualityPercent(raw);
       if (
-        !shouldWarnHeavySplicingPreviewQuality(
+        shouldWarnHeavySplicingPreviewQuality(
           next,
           images,
           skipSplicingHeavyPreviewQualityWarning,
         )
       ) {
-        applyPreviewQualityChange(next);
-        return;
+        const confirmed = await confirmHeavyPreviewWarning(
+          images.length,
+          previewImagesTotalPixels,
+        );
+        if (!confirmed) return;
       }
-      setPendingPreviewQualityPercent(next);
-      setHeavyPreviewQualityDialogOpen(true);
+      applyPreviewQualityChange(next);
     },
-    [images, skipSplicingHeavyPreviewQualityWarning, applyPreviewQualityChange],
+    [
+      images,
+      skipSplicingHeavyPreviewQualityWarning,
+      previewImagesTotalPixels,
+      applyPreviewQualityChange,
+    ],
   );
 
   useEffect(() => {
@@ -447,56 +412,17 @@ export function SplicingTab({
     };
   }, [onRegisterPreviewQualityChangeHandler, handlePreviewQualitySelectChange]);
 
-  const confirmHeavyPreviewQuality = useCallback(() => {
-    if (pendingPreviewQualityPercent != null) {
-      applyPreviewQualityChange(pendingPreviewQualityPercent);
-    }
-    setHeavyPreviewQualityDialogOpen(false);
-    setPendingPreviewQualityPercent(null);
-  }, [pendingPreviewQualityPercent, applyPreviewQualityChange]);
-
-  const cancelHeavyPreviewQuality = useCallback(() => {
-    setHeavyPreviewQualityDialogOpen(false);
-    setPendingPreviewQualityPercent(null);
-  }, []);
-
-  useEffect(() => {
-    if (images.length === 0 && heavyPreviewQualityDialogOpen) {
-      cancelHeavyPreviewQuality();
-    }
-  }, [images.length, heavyPreviewQualityDialogOpen, cancelHeavyPreviewQuality]);
-
   useEffect(() => {
     if (images.length > 0) return;
     previewQualityRenderRef.current = null;
-    if (previewQualityToastHideTimerRef.current) {
-      clearTimeout(previewQualityToastHideTimerRef.current);
-      previewQualityToastHideTimerRef.current = null;
-    }
-    setPreviewQualityToastPayload(null);
   }, [images.length]);
 
   useEffect(() => {
     imagesCountRef.current = images.length;
   }, [images.length]);
 
-  useEffect(() => {
-    return () => {
-      if (importToastHideTimerRef.current) {
-        clearTimeout(importToastHideTimerRef.current);
-      }
-      if (previewQualityToastHideTimerRef.current) {
-        clearTimeout(previewQualityToastHideTimerRef.current);
-      }
-    };
-  }, []);
-
   const pushImportToast = useCallback((payload: ConversionProgressPayload) => {
-    if (importToastHideTimerRef.current) {
-      clearTimeout(importToastHideTimerRef.current);
-      importToastHideTimerRef.current = null;
-    }
-    setImportToastPayload(payload);
+    toast.progress(payload);
   }, []);
 
   const addFiles = useCallback(
@@ -510,7 +436,8 @@ export function SplicingTab({
         pushImportToast({
           id: toastId,
           fileName: t("toasts.importing", { count: imageFiles.length }),
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+            .targetFormat as any,
           status: "processing",
           percent: 5,
           message: t("toasts.importPrep"),
@@ -544,7 +471,8 @@ export function SplicingTab({
           pushImportToast({
             id: toastId,
             fileName: t("toasts.importing", { count: imageFiles.length }),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+              .targetFormat as any,
             status: "processing",
             percent,
             message: t("toasts.importThumb", {
@@ -557,29 +485,25 @@ export function SplicingTab({
 
       if (newItems.length === 0) {
         if (shouldShowProgress) {
-          pushImportToast({
+          toast.progress({
             id: toastId,
             fileName: t("toasts.importFailed"),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+              .targetFormat as any,
             status: "error",
             percent: 100,
             message: t("toasts.importFailedDesc"),
           });
-          importToastHideTimerRef.current = setTimeout(() => {
-            setImportToastPayload((current) =>
-              current?.id === toastId ? null : current,
-            );
-            importToastHideTimerRef.current = null;
-          }, 3000);
         }
         return;
       }
 
       if (shouldShowProgress) {
-        pushImportToast({
+        toast.progress({
           id: toastId,
           fileName: t("toasts.importing", { count: imageFiles.length }),
-          targetFormat: exportSettings.targetFormat,
+          targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+            .targetFormat as any,
           status: "processing",
           percent: 85,
           message: t("toasts.importRender"),
@@ -609,51 +533,39 @@ export function SplicingTab({
         pendingRenderRef.current = null;
       }
     },
-    [exportSettings.targetFormat, previewShowImageNumber, pushImportToast, t],
+    [exportSettings.format, previewShowImageNumber, t],
   );
 
   const finalizeImportToast = useCallback(
     (toastId: string, imageCount: number) => {
       pendingRenderRef.current = null;
-      pushImportToast({
+      toast.progress({
         id: toastId,
         fileName: t("toasts.importComplete"),
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "success",
         percent: 100,
         message: t("toasts.importCompleteDesc", { count: imageCount }),
       });
-
-      importToastHideTimerRef.current = setTimeout(() => {
-        setImportToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        importToastHideTimerRef.current = null;
-      }, 2500);
     },
-    [exportSettings.targetFormat, pushImportToast, t],
+    [exportSettings.format, t],
   );
 
   const finalizePreviewQualityToast = useCallback(
     (toastId: string, qualityPercent: number) => {
       previewQualityRenderRef.current = null;
-      pushPreviewQualityToast({
+      toast.progress({
         id: toastId,
         fileName: t("toasts.previewQualityToast", { percent: qualityPercent }),
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "success",
         percent: 100,
         message: t("toasts.previewUpdated"),
       });
-
-      previewQualityToastHideTimerRef.current = setTimeout(() => {
-        setPreviewQualityToastPayload((current) =>
-          current?.id === toastId ? null : current,
-        );
-        previewQualityToastHideTimerRef.current = null;
-      }, 2500);
     },
-    [exportSettings.targetFormat, pushPreviewQualityToast, t],
+    [exportSettings.format, t],
   );
 
   const handlePreviewSourcesProgress = useCallback(
@@ -664,12 +576,13 @@ export function SplicingTab({
       }
       const ratio = p.total > 0 ? p.completed / p.total : 0;
       const percent = Math.min(88, 5 + Math.round(ratio * 83));
-      pushPreviewQualityToast({
+      toast.progress({
         id: pending.toastId,
         fileName: t("toasts.previewQualityToast", {
           percent: pending.qualityPercent,
         }),
-        targetFormat: exportSettings.targetFormat,
+        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+          .targetFormat as any,
         status: "processing",
         percent,
         message:
@@ -681,7 +594,7 @@ export function SplicingTab({
             : t("toasts.previewQualityMsg"),
       });
     },
-    [exportSettings.targetFormat, pushPreviewQualityToast, t],
+    [exportSettings.format, t],
   );
 
   const handlePreviewRendered = useCallback(
@@ -697,7 +610,8 @@ export function SplicingTab({
             fileName: t("toasts.importing", {
               count: importPending.expectedCount,
             }),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+              .targetFormat as any,
             status: "processing",
             percent: 90,
             message: t("toasts.importNumbers"),
@@ -719,7 +633,8 @@ export function SplicingTab({
             fileName: t("toasts.previewQualityToast", {
               percent: qualityPending.qualityPercent,
             }),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+              .targetFormat as any,
             status: "processing",
             percent: 90,
             message: t("toasts.importNumbers"),
@@ -728,7 +643,7 @@ export function SplicingTab({
       }
     },
     [
-      exportSettings.targetFormat,
+      exportSettings.format,
       finalizeImportToast,
       finalizePreviewQualityToast,
       pushImportToast,
@@ -754,7 +669,8 @@ export function SplicingTab({
             fileName: t("toasts.importing", {
               count: importPending.expectedCount,
             }),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+              .targetFormat as any,
             status: "processing",
             percent,
             message: t("toasts.importNumbersProg", {
@@ -784,7 +700,8 @@ export function SplicingTab({
             fileName: t("toasts.previewQualityToast", {
               percent: qualityPending.qualityPercent,
             }),
-            targetFormat: exportSettings.targetFormat,
+            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
+              .targetFormat as any,
             status: "processing",
             percent,
             message: t("toasts.importNumbersProg", {
@@ -804,7 +721,7 @@ export function SplicingTab({
       }
     },
     [
-      exportSettings.targetFormat,
+      exportSettings.format,
       finalizeImportToast,
       finalizePreviewQualityToast,
       pushImportToast,
@@ -871,28 +788,20 @@ export function SplicingTab({
     images,
     exportTargetCount,
     isExporting,
-    skipDownloadConfirm,
-    pushToast: pushImportToast,
-    setImportToastPayload,
-    importToastHideTimerRef,
     setIsExporting,
-    setShowDownloadConfirm,
-    setPendingExportModeForConfirm,
   });
-
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
 
   const primaryExportMode: "zip" | "one_by_one" =
     exportSettings.exportMode === "single" ? "one_by_one" : "zip";
   const handleExportAction = useCallback(
     async (mode: ExportSplitMode) => {
-      checkAndPrompt(
+      const customInput = await promptRenameInput(
         exportSettings.fileNamePattern,
-        (inputValue) =>
-          void performExport(mode as SplicingExportMode, false, inputValue),
       );
+      if (customInput === null) return;
+      void performExport(mode as SplicingExportMode, customInput);
     },
-    [performExport, exportSettings.fileNamePattern, checkAndPrompt],
+    [performExport, exportSettings.fileNamePattern],
   );
 
   const hasImages = images.length > 0;
@@ -985,35 +894,6 @@ export function SplicingTab({
           if (files.length) await addFiles(files);
         }}
       />
-      <ToastContainer toasts={conversionToasts} onRemove={handleRemoveToast} />
-      <BatchDownloadConfirmDialog
-        isOpen={showDownloadConfirm}
-        count={exportTargetCount}
-        onClose={() => {
-          setShowDownloadConfirm(false);
-          setPendingExportModeForConfirm(null);
-        }}
-        onConfirm={() => {
-          const mode = pendingExportModeForConfirm ?? "one_by_one";
-          setShowDownloadConfirm(false);
-          checkAndPrompt(
-            exportSettings.fileNamePattern,
-            (inputValue) => void performExport(mode, true, inputValue),
-          );
-          setPendingExportModeForConfirm(null);
-        }}
-      />
-      <SplicingHeavyPreviewQualityDialog
-        isOpen={heavyPreviewQualityDialogOpen}
-        nextQualityPercent={
-          pendingPreviewQualityPercent ?? previewQualityPercent
-        }
-        imageCount={images.length}
-        totalPixels={previewImagesTotalPixels}
-        onClose={cancelHeavyPreviewQuality}
-        onConfirm={confirmHeavyPreviewQuality}
-      />
-      {renameInputPrompt}
     </div>
   );
 

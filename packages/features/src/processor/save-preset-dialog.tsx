@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Check, Save, X } from "lucide-react";
 import { createPortal } from "react-dom";
-import { Button } from "@imify/ui";
+import { Button, PresetNameInput } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
+import type { PresetNamingFeatureKey } from "@imify/core";
 
 interface SavePresetDialogProps {
   isOpen: boolean;
@@ -11,6 +12,8 @@ interface SavePresetDialogProps {
   defaultName: string;
   highlightColors: readonly string[];
   title?: string;
+  featureKey?: PresetNamingFeatureKey | string;
+  defaultPattern?: string;
 }
 
 export function SavePresetDialog({
@@ -20,6 +23,8 @@ export function SavePresetDialog({
   defaultName,
   highlightColors,
   title = "Save Configuration Preset",
+  featureKey = "processor",
+  defaultPattern,
 }: SavePresetDialogProps): React.ReactElement | null {
   const { t } = useTranslation("common");
   const [presetName, setPresetName] = useState(defaultName);
@@ -59,20 +64,18 @@ export function SavePresetDialog({
           </button>
         </div>
         <div className="space-y-4">
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-300">
-            {t("name")}
-            <input
-              autoFocus
-              className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 outline-none transition-all focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-              value={presetName}
-              onChange={(event) => setPresetName(event.target.value)}
-              placeholder="e.g. Social Media Export"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && presetName.trim())
-                  onSave(presetName, presetColor);
-              }}
-            />
-          </label>
+          <PresetNameInput
+            value={presetName}
+            onChange={setPresetName}
+            featureKey={featureKey}
+            defaultPattern={defaultPattern}
+            autoFocus
+            placeholder="e.g. Social Media Export"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && presetName.trim())
+                onSave(presetName, presetColor);
+            }}
+          />
           <div>
             <span className="block text-xs font-medium text-slate-600 dark:text-slate-300">
               {t("highlightColor")}

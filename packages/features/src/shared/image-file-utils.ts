@@ -116,4 +116,37 @@ export async function decodeFileToImageSource(file: File): Promise<HTMLImageElem
   })
 }
 
+export async function createThumbnailUrl(
+  file: File,
+  maxWidth = 200,
+  quality = 0.7
+): Promise<string> {
+  if (typeof window === "undefined" || typeof createImageBitmap === "undefined") {
+    return URL.createObjectURL(file);
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file, {
+      resizeWidth: maxWidth,
+      resizeQuality: "low",
+    });
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close();
+      return URL.createObjectURL(file);
+    }
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close();
+
+    const blob = await canvas.convertToBlob({
+      type: "image/jpeg",
+      quality,
+    });
+    return URL.createObjectURL(blob);
+  } catch {
+    return URL.createObjectURL(file);
+  }
+}
+
 

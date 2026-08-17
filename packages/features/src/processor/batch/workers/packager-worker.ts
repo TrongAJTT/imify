@@ -203,8 +203,13 @@ async function onFinalize(message: PackagerFinalizeMessage): Promise<void> {
     return
   }
   if (job.mode === "merge_pdf") {
-    postProgress(message.id, 64, "Building merged PDF file...")
-    const outputBuffer = await (await mergeImagesToPdf(job.blobs)).arrayBuffer()
+    postProgress(message.id, 55, "Building merged PDF file...")
+    const totalPages = job.blobs.length
+    const pdfBlob = await mergeImagesToPdf(job.blobs, (current, count) => {
+      const pct = Math.min(94, 55 + Math.round((current / count) * 39))
+      postProgress(message.id, pct, `Embedding page ${current}/${count} into PDF...`)
+    })
+    const outputBuffer = await pdfBlob.arrayBuffer()
     jobs.delete(message.id)
     workerPostMessage.postMessage(
       {

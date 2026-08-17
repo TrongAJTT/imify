@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from "react";
-import { Check, Edit2, Plus, Trash2 } from "lucide-react";
+import { Check, Edit2, LayoutGrid, Plus, Trash2 } from "lucide-react";
 
 import { EmptyDropCard } from "@imify/ui";
 import { WorkspaceSelectHeader } from "../processor/workspace-select-header";
 import { SavePresetDialog } from "../processor/save-preset-dialog";
 import { SplicingPresetDetail } from "./splicing-preset-detail";
 import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store";
+import { confirmDialog } from "@imify/stores";
+import { generateDefaultPresetName } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 import { useTranslation } from "@imify/i18n";
 
@@ -169,10 +171,11 @@ export function SplicingPresetSelectView({
     setIsSavePresetDialogOpen(false);
   };
 
-  const confirmDeletePreset = (preset: SavedSplicingPreset) => {
-    const shouldDelete = window.confirm(
-      t("select.deleteConfirm", { name: preset.name }),
-    );
+  const confirmDeletePreset = async (preset: SavedSplicingPreset) => {
+    const shouldDelete = await confirmDialog({
+      title: t("select.deleteConfirm", { name: preset.name }),
+      variant: "destructive",
+    });
     if (!shouldDelete) {
       return;
     }
@@ -183,7 +186,7 @@ export function SplicingPresetSelectView({
   return (
     <div className="p-0">
       {sortedPresets.length === 0 ? (
-        <>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <EmptyDropCard
             icon={<Plus size={28} className="text-orange-500" />}
             iconWrapperClassName="bg-orange-100 dark:bg-orange-900/30 border-transparent shadow-none"
@@ -191,7 +194,16 @@ export function SplicingPresetSelectView({
             subtitle={t("select.noPresetsSubtitle")}
             onClick={openCreateDialog}
           />
-        </>
+          <EmptyDropCard
+            icon={<LayoutGrid size={28} className="text-amber-500" />}
+            iconWrapperClassName="bg-amber-100 dark:bg-amber-900/30 border-transparent shadow-none"
+            title="Ghép ảnh nhanh"
+            subtitle="Tạo ảnh ghép tức thì từ 2 đến 10 bức ảnh"
+            onClick={() => {
+              window.location.href = "/collage-maker";
+            }}
+          />
+        </div>
       ) : (
         <>
           <WorkspaceSelectHeader
@@ -199,6 +211,19 @@ export function SplicingPresetSelectView({
             createLabel={t("select.newPreset")}
             onCreate={openCreateDialog}
             createIcon={<Plus size={14} />}
+            extraActions={
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = "/collage-maker";
+                }}
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                title="Ghép ảnh nhanh"
+              >
+                <LayoutGrid size={14} className="text-amber-500" />
+                <span>Ghép ảnh nhanh</span>
+              </button>
+            }
           />
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3">
@@ -225,15 +250,11 @@ export function SplicingPresetSelectView({
         onSave={handleSavePreset}
         highlightColors={[...PRESET_HIGHLIGHT_COLORS]}
         title={editingPreset ? t("select.editPreset") : t("select.savePreset")}
+        featureKey="splicing"
         defaultName={
           editingPreset
             ? editingPreset.name
-            : t("select.presetDefaultName", {
-                time: new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
-              })
+            : generateDefaultPresetName("splicing")
         }
       />
     </div>

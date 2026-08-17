@@ -102,10 +102,10 @@ export type SplitterExportFormat =
 
 export type SplitterDownloadMode = "zip" | "one_by_one"
 
+import type { QuickExportFormat } from "@imify/core"
+
 export interface SplitterExportSettings {
-  targetFormat: SplitterExportFormat
-  quality: number
-  codecOptions: FormatCodecOptions
+  format: QuickExportFormat
   downloadMode: SplitterDownloadMode
   fileNamePattern: string
 }
@@ -226,56 +226,12 @@ export const DEFAULT_SPLITTER_SPLIT_SETTINGS: SplitterSplitSettings = {
   spriteSortMode: "top_left"
 }
 
+import { SPLITTER_NAMING_CONFIG } from "@imify/core"
+
 export const DEFAULT_SPLITTER_EXPORT_SETTINGS: SplitterExportSettings = {
-  targetFormat: "png",
-  quality: 92,
-  codecOptions: {
-    bmp: {
-      colorDepth: 24,
-      dithering: false,
-      ditheringLevel: 0
-    },
-    jxl: {
-      effort: 7,
-      lossless: false,
-      progressive: false,
-      epf: 1
-    },
-    webp: {
-      lossless: false,
-      nearLossless: 100,
-      effort: 5,
-      sharpYuv: false,
-      preserveExactAlpha: false
-    },
-    avif: {
-      speed: 6,
-      qualityAlpha: undefined,
-      lossless: false,
-      subsample: 1,
-      tune: "auto",
-      highAlphaQuality: false
-    },
-    mozjpeg: {
-      enabled: true,
-      progressive: true,
-      chromaSubsampling: 2
-    },
-    png: {
-      tinyMode: false,
-      cleanTransparentPixels: false,
-      autoGrayscale: false,
-      dithering: false,
-      ditheringLevel: 0,
-      progressiveInterlaced: false,
-      oxipngCompression: false
-    },
-    tiff: {
-      colorMode: "color"
-    }
-  },
+  format: "png",
   downloadMode: "zip",
-  fileNamePattern: "split-[OriginalName]-[Index]"
+  fileNamePattern: SPLITTER_NAMING_CONFIG.defaultPattern
 }
 
 

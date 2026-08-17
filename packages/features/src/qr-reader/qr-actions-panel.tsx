@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { parseQrString, formatICalDateForDisplay, formatICalTrigger } from "./qr-parser";
 import { Button, Tooltip } from "@imify/ui";
-import { useToast } from "@imify/core/hooks/use-toast";
+import { toast } from "@imify/stores";
 import { useTranslation } from "@imify/i18n";
 import {
   ExternalLink,
@@ -99,17 +99,16 @@ export function QrActionsPanel({
   buttonSizeClassName = "text-xs h-9",
 }: QrActionsPanelProps) {
   const { t } = useTranslation("qrReader");
-  const { success, error } = useToast();
   const [showPassword, setShowPassword] = useState(false);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        success(t("workspace.copied"), t("sidebar.copied"));
+        toast.success(t("workspace.copied"), t("sidebar.copied"));
       })
       .catch(() => {
-        error(t("workspace.errorHeader"), t("workspace.copyFailed"));
+        toast.error(t("workspace.errorHeader"), t("workspace.copyFailed"));
       });
   };
 
@@ -126,7 +125,7 @@ export function QrActionsPanel({
         navigator.clipboard
           .writeText(cleanUrl)
           .then(() => {
-            success(t("sidebar.copiedUrl"), t("sidebar.redirectingUrlVoid"));
+            toast.success(t("sidebar.copiedUrl"), t("sidebar.redirectingUrlVoid"));
             setTimeout(() => {
               window.open(
                 "https://www.urlvoid.com/",
@@ -136,7 +135,7 @@ export function QrActionsPanel({
             }, 2000);
           })
           .catch(() => {
-            error(t("workspace.errorHeader"), t("sidebar.copyUrlFailed"));
+            toast.error(t("workspace.errorHeader"), t("sidebar.copyUrlFailed"));
           });
       };
 

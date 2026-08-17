@@ -80,10 +80,10 @@ export function useGithubStars() {
 }
 
 interface GithubStarDonateProps {
-  onOpenDonate: () => void;
+  onOpenDonate?: () => void;
 }
 
-export function GithubStarDonate({ onOpenDonate }: GithubStarDonateProps) {
+export function GithubStarDonate({ onOpenDonate }: GithubStarDonateProps = {}) {
   const stars = useGithubStars();
   const { t } = useTranslation("workspace");
 
@@ -116,16 +116,17 @@ export function GithubStarDonate({ onOpenDonate }: GithubStarDonateProps) {
 
       {/* Donate Button */}
       <Tooltip content={t("header.tooltips.donate")}>
-        <button
-          type="button"
-          onClick={onOpenDonate}
+        <a
+          href={IMIFY_LINKS.sponsor}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center justify-center w-9 h-full rounded-r-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-rose-500 dark:hover:text-rose-400 transition-colors group"
         >
           <Heart
             size={14}
             className="fill-rose-400 stroke-rose-400 dark:fill-rose-600 dark:stroke-rose-600 group-hover:scale-125 transition-transform duration-200"
           />
-        </button>
+        </a>
       </Tooltip>
     </div>
   );

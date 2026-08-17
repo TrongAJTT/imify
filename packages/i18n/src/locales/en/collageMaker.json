@@ -1,0 +1,56 @@
+{
+  "title": "Collage Maker",
+  "loadingTitle": "Loading Collage Maker...",
+  "loadingSubtitle": "Initializing collage tool and layout presets...",
+  "showcase": {
+    "title": "Quick Collage Maker",
+    "subtitle": "Upload your photos, pick a custom layout template, adjust canvas dimensions and spacing, and export high-quality collages instantly.",
+    "tips": {
+      "tip1": "Upload 2 to 10 photos to start assembling your custom collage layout.",
+      "tip2": "Reorder your photos in Stage 1 to control which image goes into which cell.",
+      "tip3": "Adjust outer padding and inner cell gaps in Stage 2 to style your grid.",
+      "tip4": "Fine-tune individual photo zoom, panning, and frame borders in Stage 3."
+    },
+    "faqs": {
+      "q1": "How many photos can I combine at once?",
+      "a1": "You can upload and collage between 2 and 10 photos. The tool automatically generates and recommends grid layouts tailored to your exact photo count.",
+      "q2": "How do I place a specific photo into a particular frame cell?",
+      "a2": "In Stage 1 (Prepare Images), simply drag and drop the photo cards to reorder them. Item #1 in the queue corresponds to cell #1 in the layout grid.",
+      "q3": "Can I customize canvas dimensions and frame gaps?",
+      "a3": "Yes. In Stage 2, you can adjust canvas dimensions (Pixels, Inches, CM, MM with custom DPI), outer margins, and horizontal/vertical gaps between frames.",
+      "q4": "Can I zoom, pan, and transform individual photos?",
+      "a4": "Yes. In Stage 3, click any photo layer to zoom, pan, rotate, flip, or use Quick Actions to adjust Fit modes, border radius, and border colors.",
+      "q5": "What is the export quality of the collage image?",
+      "a5": "All processing and rendering happens entirely on-device in your browser at full canvas resolution, preserving sharp quality across formats."
+    }
+  },
+  "stage1": {
+    "title": "Prepare Images",
+    "subtitle": "{{count}} of {{max}} photos uploaded • Canvas {{width}} x {{height}} px",
+    "createCollage": "Create Collage",
+    "clearAll": "Clear All",
+    "dropzoneTitle": "Drop photos here to create collage",
+    "dropzoneSubtitle": "Upload 2 to {{max}} images (JPEG, PNG, WebP, AVIF, GIF)",
+    "browseFiles": "Browse Files",
+    "queueTitle": "Uploaded Photos",
+    "reorderHelp": "Drag items to reorder photo position in grid layout."
+  },
+  "stage2": {
+    "title": "Choose Layout",
+    "imageSize": "Output Image Size",
+    "spacingPadding": "Spacing & Margin",
+    "outerPadding": "Outer Margin",
+    "gapX": "Horizontal Gap",
+    "gapY": "Vertical Gap",
+    "layoutSelector": "Layout Templates",
+    "layoutsForImages": "Layouts for {{count}} photos",
+    "nextToEdit": "Proceed to Fine-Tuning"
+  },
+  "stage3": {
+    "title": "Adjust Photos & Export",
+    "layerCustomization": "Layer Customization",
+    "backgroundColor": "Canvas & Background Color",
+    "outputSettings": "Export Settings",
+    "exportCollage": "Export Collage"
+  }
+}

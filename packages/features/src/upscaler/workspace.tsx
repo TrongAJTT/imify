@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, ToastContainer, useRenameInputPrompt } from "@imify/ui";
-import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
-import { useImageUpscalerStore } from "@imify/stores";
+import { Button } from "@imify/ui";
+import { useImageUpscalerStore, promptRenameInput, toast } from "@imify/stores";
 import { IMAGE_UPSCALER_MODELS, resolveHuggingFaceRepoId } from "./models";
 import { ModelDownloadDialog } from "./model-download-dialog";
 import { PixelCompareWorkspace } from "../diffchecker/pixel-compare-workspace";
@@ -17,11 +16,7 @@ import {
   downloadWithFilename,
   formatBytes,
 } from "../processor/processor-utils";
-import {
-  buildFormatConfigFromPreset,
-  VIRTUAL_DEFAULT_PNG_PRESET,
-} from "../processor/preset-utils";
-import { useBatchStore } from "@imify/stores/stores/batch-store";
+import { mapQuickExportToEngineConfig } from "@imify/core";
 import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
 
 import { AlertTriangle } from "lucide-react";
@@ -65,17 +60,7 @@ export function UpscalerWorkspace({
   const [resultBlobSize, setResultBlobSize] = useState<number | null>(null);
   const [isEncodingPreview, setIsEncodingPreview] = useState(false);
 
-  const { targetFormat, quality, activePresetId } = useImageUpscalerStore();
-
-  const { presets } = useBatchStore();
-  const activePreset =
-    presets.find((p) => p.id === activePresetId) || VIRTUAL_DEFAULT_PNG_PRESET;
-  const fileNamePattern =
-    activePreset.config.fileNamePattern || "[OriginalName]";
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
-
-  const { toasts, show, hide } = useToast();
-  const conversionToasts = useConversionToasts([progressPayload]);
+  const { exportFormat, fileNamePattern } = useImageUpscalerStore();
 
   const sourceFileUrl = React.useMemo(() => {
     if (!sourceFile) return "";
@@ -176,6 +161,9 @@ export function UpscalerWorkspace({
 
         if (isAborted) return;
 
+        const { targetFormat, quality, codecOptions } =
+          mapQuickExportToEngineConfig(exportFormat);
+
         if (targetFormat === "webp" || targetFormat === "jpg") {
           const mime = targetFormat === "webp" ? "image/webp" : "image/jpeg";
           const nativeBlob = await new Promise<Blob | null>((resolve) =>
@@ -195,8 +183,15 @@ export function UpscalerWorkspace({
 
         if (isAborted || !sourceBlob) return;
 
-        const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
-        config.resize = { mode: "inherit" };
+        const config: FormatConfig = {
+          id: "upscaler",
+          name: "Upscaler",
+          format: targetFormat as any,
+          enabled: true,
+          quality,
+          resize: { mode: "inherit" },
+          formatOptions: codecOptions as any,
+        };
 
         const converted = await convertImage({
           sourceBlob,
@@ -221,7 +216,7 @@ export function UpscalerWorkspace({
       isAborted = true;
       clearTimeout(debounceTimer);
     };
-  }, [resultImageData, activePreset, isProcessing, targetFormat, quality]);
+  }, [resultImageData, isProcessing, exportFormat]);
 
   const handleStartWithAgreement = () => {
     if (!hasAgreedToDownload) {
@@ -241,6 +236,8 @@ export function UpscalerWorkspace({
     canvas: HTMLCanvasElement,
     fileName: string,
   ) => {
+    const { targetFormat, quality, codecOptions } =
+      mapQuickExportToEngineConfig(exportFormat);
     if (
       targetFormat === "webp" ||
       targetFormat === "jpg" ||
@@ -263,8 +260,15 @@ export function UpscalerWorkspace({
       );
       if (!sourceBlob) throw new Error("Failed to create source blob");
 
-      const config: FormatConfig = buildFormatConfigFromPreset(activePreset);
-      config.resize = { mode: "inherit" };
+      const config: FormatConfig = {
+        id: "upscaler",
+        name: "Upscaler",
+        format: targetFormat as any,
+        enabled: true,
+        quality,
+        resize: { mode: "inherit" },
+        formatOptions: codecOptions as any,
+      };
 
       const converted = await convertImage({
         sourceBlob,
@@ -278,15 +282,18 @@ export function UpscalerWorkspace({
   const handleDownload = async () => {
     if (!resultImageData) return;
 
+    const inputValue = await promptRenameInput(fileNamePattern);
+    if (inputValue === null) return;
+
+    const { targetFormat } = mapQuickExportToEngineConfig(exportFormat);
     setIsDownloading(true);
-    const toastId = show({
-      title: t("workspace.toastEncodingTitle"),
-      message: t("workspace.toastEncodingMessage", {
+    const toastId = toast.info(
+      t("workspace.toastEncodingTitle"),
+      t("workspace.toastEncodingMessage", {
         format: targetFormat.toUpperCase(),
       }),
-      type: "notification",
-      duration: 60000,
-    });
+      60000,
+    );
 
     try {
       const canvas = document.createElement("canvas");
@@ -300,98 +307,37 @@ export function UpscalerWorkspace({
 
       const extension = targetFormat === "jpg" ? "jpg" : targetFormat;
 
-      checkAndPrompt(
-        fileNamePattern,
-        async (inputValue) => {
-          try {
-            const fileName = buildSmartOutputFileName({
-              pattern: fileNamePattern,
-              originalFileName: sourceFile ? sourceFile.name : "result",
-              outputExtension: extension,
-              index: 1,
-              totalFiles: 1,
-              dimensions: {
-                width: resultImageData.width,
-                height: resultImageData.height,
-              },
-              now: new Date(),
-              input: inputValue,
-            });
-
-            await executeDownloadBlobCreationAndSave(canvas, fileName);
-            hide(toastId);
-            show({
-              title: t("workspace.toastDownloadReadyTitle"),
-              message: t("workspace.toastDownloadReadyMessage"),
-              type: "success",
-            });
-          } catch (error) {
-            console.error("Download failed:", error);
-            hide(toastId);
-            show({
-              title: t("workspace.toastDownloadFailedTitle"),
-              message:
-                error instanceof Error
-                  ? error.message
-                  : t("workspace.toastDownloadFailedMessage"),
-              type: "error",
-              duration: 5000,
-            });
-          } finally {
-            setIsDownloading(false);
-          }
+      const fileName = buildSmartOutputFileName({
+        pattern: fileNamePattern,
+        originalFileName: sourceFile ? sourceFile.name : "result",
+        outputExtension: extension,
+        index: 1,
+        totalFiles: 1,
+        dimensions: {
+          width: resultImageData.width,
+          height: resultImageData.height,
         },
-        async () => {
-          try {
-            const fileName = buildSmartOutputFileName({
-              pattern: fileNamePattern,
-              originalFileName: sourceFile ? sourceFile.name : "result",
-              outputExtension: extension,
-              index: 1,
-              totalFiles: 1,
-              dimensions: {
-                width: resultImageData.width,
-                height: resultImageData.height,
-              },
-              now: new Date(),
-            });
+        now: new Date(),
+        input: inputValue,
+      });
 
-            await executeDownloadBlobCreationAndSave(canvas, fileName);
-            hide(toastId);
-            show({
-              title: t("workspace.toastDownloadReadyTitle"),
-              message: t("workspace.toastDownloadReadyMessage"),
-              type: "success",
-            });
-          } catch (error) {
-            console.error("Download failed:", error);
-            hide(toastId);
-            show({
-              title: t("workspace.toastDownloadFailedTitle"),
-              message:
-                error instanceof Error
-                  ? error.message
-                  : t("workspace.toastDownloadFailedMessage"),
-              type: "error",
-              duration: 5000,
-            });
-          } finally {
-            setIsDownloading(false);
-          }
-        },
+      await executeDownloadBlobCreationAndSave(canvas, fileName);
+      toast.dismiss(toastId);
+      toast.success(
+        t("workspace.toastDownloadReadyTitle"),
+        t("workspace.toastDownloadReadyMessage"),
       );
     } catch (error) {
       console.error("Download failed:", error);
-      hide(toastId);
-      show({
-        title: t("workspace.toastDownloadFailedTitle"),
-        message:
-          error instanceof Error
-            ? error.message
-            : t("workspace.toastDownloadFailedMessage"),
-        type: "error",
-        duration: 5000,
-      });
+      toast.dismiss(toastId);
+      toast.error(
+        t("workspace.toastDownloadFailedTitle"),
+        error instanceof Error
+          ? error.message
+          : t("workspace.toastDownloadFailedMessage"),
+        5000,
+      );
+    } finally {
       setIsDownloading(false);
     }
   };
@@ -558,12 +504,6 @@ export function UpscalerWorkspace({
         model={selectedModel}
         variantId={variantId}
       />
-
-      <ToastContainer
-        toasts={[...toasts, ...conversionToasts]}
-        onRemove={hide}
-      />
-      {renameInputPrompt}
     </div>
   );
 }

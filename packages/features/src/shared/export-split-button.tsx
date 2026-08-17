@@ -9,6 +9,7 @@ export type ExportSplitMode = "zip" | "one_by_one" | "pdf" | "individual_pdf";
 interface ExportSplitButtonProps {
   onExport: (mode: ExportSplitMode) => void | Promise<void>;
   isLoading?: boolean;
+  disabled?: boolean;
   primaryMode?: "zip" | "one_by_one";
   oneByOneCount?: number;
   showPdfOptions?: boolean;
@@ -20,11 +21,13 @@ const BASE_ITEM_CLASS =
 export function ExportSplitButton({
   onExport,
   isLoading = false,
+  disabled = false,
   primaryMode = "zip",
   oneByOneCount,
   showPdfOptions = false,
 }: ExportSplitButtonProps) {
   const { t } = useTranslation("common");
+  const isEffectiveDisabled = disabled || isLoading;
   const dropdownModes: ExportSplitMode[] = [
     "one_by_one",
     "pdf",
@@ -45,7 +48,7 @@ export function ExportSplitButton({
         variant="primary"
         size="sm"
         onClick={() => void onExport(primaryMode)}
-        disabled={isLoading}
+        disabled={isEffectiveDisabled}
         className={
           dropdownModes.length > 0
             ? "rounded-r-none border-r border-sky-500/60"
@@ -62,7 +65,7 @@ export function ExportSplitButton({
             <Button
               variant="primary"
               size="sm"
-              disabled={isLoading}
+              disabled={isEffectiveDisabled}
               className="rounded-l-none px-2"
               aria-label={t("exportModes.openExportOptions")}
             >

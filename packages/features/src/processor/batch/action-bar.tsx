@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button, Tooltip } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
+import { confirmDialog } from "@imify/stores";
 import type { BatchRunMode } from "./types";
 
 export interface QueueStats {
@@ -73,8 +74,12 @@ export function BatchActionBar({
         {!isRunning && (queueStats.success > 0 || queueStats.error > 0) ? (
           <Button
             variant="secondary"
-            onClick={() => {
-              if (confirm(t("batchConfirmRetryAll"))) {
+            onClick={async () => {
+              const confirmed = await confirmDialog({
+                title: t("batchConfirmRetryAll"),
+                variant: "warning",
+              });
+              if (confirmed) {
                 onRunAll("all_retry");
               }
             }}
@@ -104,8 +109,12 @@ export function BatchActionBar({
         {!isRunning && queueHasItems ? (
           <Button
             variant="secondary"
-            onClick={() => {
-              if (confirm(t("batchConfirmClearAll"))) {
+            onClick={async () => {
+              const confirmed = await confirmDialog({
+                title: t("batchConfirmClearAll"),
+                variant: "destructive",
+              });
+              if (confirmed) {
                 onClear();
               }
             }}

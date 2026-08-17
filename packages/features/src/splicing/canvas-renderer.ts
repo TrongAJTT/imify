@@ -600,7 +600,16 @@ export async function exportSplicedImage(
     let active = 0
     let nextIndex = 0
     const total = layoutResult.groups.length
-    const concurrency = Math.max(1, Math.min(5, options?.concurrency ?? 1))
+    const concurrency = Math.max(
+      1,
+      Math.min(
+        5,
+        options?.concurrency ??
+          (typeof navigator !== "undefined" && navigator.hardwareConcurrency
+            ? Math.floor(navigator.hardwareConcurrency / 2) || 2
+            : 2)
+      )
+    )
 
     const runOne = async (groupIndex: number): Promise<void> => {
       active += 1

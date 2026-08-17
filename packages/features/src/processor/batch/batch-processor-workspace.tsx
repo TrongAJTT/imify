@@ -15,29 +15,22 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import {
-  ToastContainer,
-  BodyText,
-  RenameInputDialog,
-  useRenameInputPrompt,
-} from "@imify/ui";
-import { useConversionToasts, useToast } from "@imify/core/hooks/use-toast";
+import { BodyText } from "@imify/ui";
 import type {
   ConversionProgressPayload,
   FormatConfig,
 } from "@imify/core/types";
+import { toast, promptRenameInput } from "@imify/stores";
 import { buildResizeQuickStatsFromDimensions } from "@imify/core/resize-quick-stats";
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
 import { useClipboardImageIntake } from "../../shared/use-clipboard-image-intake";
-import { BatchDownloadConfirmDialog } from "../../shared/download-confirm-dialog";
 import { buildActiveCodecOptionsForTarget } from "../target-format-state";
 import { BatchActionBar } from "./action-bar";
 import { BatchQueueGrid } from "./queue-grid";
 import { BatchSummaryCard } from "./summary-card";
 import { BatchUploadDropzone } from "./upload-dropzone";
-import { OOMWarningDialog } from "./oom-warning-dialog";
 import type { BatchQueueItem } from "./types";
 import { readImageDimensions } from "./pipeline";
 import {
@@ -50,10 +43,10 @@ import {
 import { useBatchExecution } from "./hooks/use-batch-execution";
 import { useBatchExportActions } from "./hooks/use-batch-export-actions";
 import { isCommonImageFile, sanitizeFile } from "../../shared/image-file-utils";
+import { HeroProgressCard } from "../../shared/hero-progress-card";
 
 export function BatchProcessorWorkspace() {
   const targetFormat = useBatchStore((s) => s.targetFormat);
-  const concurrency = useBatchStore((s) => s.concurrency);
   const quality = useBatchStore((s) => s.quality);
   const formatOptions = useBatchStore((s) => s.formatOptions);
   const resizeMode = useBatchStore((s) => s.resizeMode);
@@ -85,15 +78,11 @@ export function BatchProcessorWorkspace() {
   const syncResizeToSource = useBatchStore((s) => s.syncResizeToSource);
   const setResizeQuickStats = useBatchStore((s) => s.setResizeQuickStats);
   const [queue, setQueue] = useState<BatchQueueItem[]>([]);
-  const [urlImportToast, setUrlImportToast] =
-    useState<ConversionProgressPayload | null>(null);
   const [isImportingUrls, setIsImportingUrls] = useState(false);
   const [batchInputValue, setBatchInputValue] = useState("");
-  const { checkAndPrompt, renameInputPrompt } = useRenameInputPrompt();
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false);
   const pdfSplitRef = useRef<HTMLDivElement>(null);
   const firstQueueItem = queue[0];
-  const { toasts: systemToasts, hide, warning } = useToast();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, {
@@ -156,33 +145,25 @@ export function BatchProcessorWorkspace() {
     cancelRequested,
     summary,
     batchToastPayload,
+    executionProgress,
     clearBatchToast,
-    oomWarning,
     runBatch,
     requestCancel,
     togglePause,
-    closeOomWarning,
-    confirmOomWarning,
     clearSummary,
   } = useBatchExecution({
     queue,
     setQueue,
     config: effectiveConfig,
-    concurrency,
     stripExif,
     fileNamePattern,
     watermark,
-    skipOomWarning,
-    onPersistSkipOomWarning: () => setSkipOomWarning(true),
   });
   const {
     isExporting,
     activeExportAction,
     exportToastPayload,
     clearExportToast,
-    showDownloadConfirm,
-    closeDownloadConfirm,
-    confirmDownloadIndividually,
     downloadIndividually,
     downloadAsZip,
     mergeIntoPdf,
@@ -190,41 +171,20 @@ export function BatchProcessorWorkspace() {
   } = useBatchExportActions({
     queue,
     config: effectiveConfig,
-    skipDownloadConfirm,
     onClosePdfSplit: () => setIsPdfSplitOpen(false),
   });
-  const conversionToasts = useConversionToasts([
-    urlImportToast,
-    exportToastPayload,
-    batchToastPayload,
-  ]);
-  const mergedToasts = useMemo(
-    () => [...conversionToasts, ...systemToasts],
-    [conversionToasts, systemToasts],
-  );
-  const handleRemoveToast = useCallback(
-    (toastId: string) => {
-      hide(toastId);
-      setUrlImportToast((current) =>
-        current?.id === toastId ? null : current,
-      );
-      clearExportToast(toastId);
-      clearBatchToast(toastId);
-    },
-    [clearBatchToast, clearExportToast, hide],
-  );
   useEffect(() => {
     setBatchIsRunning(isRunning);
   }, [isRunning, setBatchIsRunning]);
   useEffect(() => {
     if (!heavyFormatToast) return;
-    warning(
+    toast.warning(
       `${heavyFormatToast.format} encoding is heavy`,
       "If your PC is low-spec, consider lowering Concurrency to 1 or 2 to avoid lags.",
       6000,
     );
     setHeavyFormatToast(null);
-  }, [heavyFormatToast, setHeavyFormatToast, warning]);
+  }, [heavyFormatToast, setHeavyFormatToast]);
   useEffect(() => {
     if (!isPdfSplitOpen) return;
     const handlePointerDown = (event: PointerEvent) => {
@@ -319,7 +279,6 @@ export function BatchProcessorWorkspace() {
   const importFromImageUrls = async (urls: string[]) => {
     if (!urls.length) return;
     setIsImportingUrls(true);
-    setUrlImportToast(null);
     try {
       const { files, failures } = await fetchRemoteImagesFromUrls(urls);
       if (files.length) appendImageFiles(files);
@@ -332,7 +291,7 @@ export function BatchProcessorWorkspace() {
           : files.length && failures.length
             ? `Imported ${files.length} URL${files.length > 1 ? "s" : ""}, ${failures.length} failed.`
             : "No valid image URLs were imported.";
-      setUrlImportToast({
+      toast.progress({
         id: toastId,
         fileName: "URL Import Status",
         targetFormat: targetFormat,
@@ -340,13 +299,6 @@ export function BatchProcessorWorkspace() {
         percent: 100,
         message,
       });
-      setTimeout(
-        () =>
-          setUrlImportToast((current) =>
-            current?.id === toastId ? null : current,
-          ),
-        2000,
-      );
     } finally {
       setIsImportingUrls(false);
     }
@@ -432,17 +384,17 @@ export function BatchProcessorWorkspace() {
           setQueue([]);
           clearSummary();
         }}
-        onRunAll={(mode = "all") => {
-          checkAndPrompt(fileNamePattern, (inputValue) => {
-            setBatchInputValue(inputValue);
-            void runBatch(mode, inputValue);
-          });
+        onRunAll={async (mode = "all") => {
+          const customInput = await promptRenameInput(fileNamePattern);
+          if (customInput === null) return;
+          setBatchInputValue(customInput);
+          void runBatch(mode, customInput);
         }}
-        onRunFailed={() => {
-          checkAndPrompt(fileNamePattern, (inputValue) => {
-            setBatchInputValue(inputValue);
-            void runBatch("failed", inputValue);
-          });
+        onRunFailed={async () => {
+          const customInput = await promptRenameInput(fileNamePattern);
+          if (customInput === null) return;
+          setBatchInputValue(customInput);
+          void runBatch("failed", customInput);
         }}
         onTogglePause={togglePause}
         paused={paused}
@@ -466,7 +418,27 @@ export function BatchProcessorWorkspace() {
           pressure on AVIF/PDF.
         </BodyText>
       ) : null}
-      {summary && !isRunning && queue.length > 0 ? (
+      {isRunning && executionProgress ? (
+        <div className="mb-4">
+          <HeroProgressCard
+            percent={executionProgress.percent}
+            current={executionProgress.current}
+            total={executionProgress.total}
+            badge={effectiveConfig?.format.toUpperCase()}
+            concurrency={executionProgress.concurrency}
+            startedAt={executionProgress.startedAt}
+            statusText={
+              paused
+                ? "Batch paused"
+                : cancelRequested
+                  ? "Cancelling..."
+                  : executionProgress.statusText
+            }
+            onCancel={requestCancel}
+            cancelLabel={cancelRequested ? "Cancelling..." : undefined}
+          />
+        </div>
+      ) : summary && !isRunning && queue.length > 0 ? (
         <BatchSummaryCard
           activeExportAction={activeExportAction}
           formatBytes={formatBytes}
@@ -511,25 +483,6 @@ export function BatchProcessorWorkspace() {
           queue={queue}
         />
       </DndContext>
-      <BatchDownloadConfirmDialog
-        isOpen={showDownloadConfirm}
-        count={successfulOutputs.length}
-        onClose={closeDownloadConfirm}
-        onConfirm={() => {
-          void confirmDownloadIndividually();
-        }}
-      />
-      <OOMWarningDialog
-        isOpen={!!oomWarning?.isOpen}
-        totalSize={oomWarning?.totalSize || "0"}
-        recommendedSize={oomWarning?.recommendedSize || "350"}
-        onClose={closeOomWarning}
-        onConfirm={(dontShowAgain) => {
-          void confirmOomWarning(dontShowAgain, batchInputValue);
-        }}
-      />
-      <ToastContainer toasts={mergedToasts} onRemove={handleRemoveToast} />
-      {renameInputPrompt}
     </div>
   );
 }

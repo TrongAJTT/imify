@@ -2,13 +2,14 @@ import React, { useMemo, useState } from "react";
 import { Plus, RotateCcw } from "lucide-react";
 import { EmptyDropCard, Shield, MutedText, Button } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
-import { isFeaturePreset } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "@imify/stores/stores/preset-colors";
 import {
   useBatchStore,
   type SavedSetupPreset,
   type SetupContext,
 } from "@imify/stores/stores/batch-store";
+import { confirmDialog } from "@imify/stores";
+import { generateDefaultPresetName } from "@imify/core";
 import { PresetCard } from "./preset-card";
 import { SavePresetDialog } from "./save-preset-dialog";
 import { WorkspaceSelectHeader } from "./workspace-select-header";
@@ -41,11 +42,6 @@ export function ProcessorPresetSelectView({
     null,
   );
   const [selectedFormat, setSelectedFormat] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<"processor" | "feature">(
-    "processor",
-  );
-
-
 
   const contextLabel = context === "single" ? "Single" : "Batch";
   const formats = useMemo(() => {
@@ -54,12 +50,6 @@ export function ProcessorPresetSelectView({
 
   const filteredPresets = useMemo(() => {
     let list = presets;
-
-    if (selectedType === "processor") {
-      list = list.filter((p) => !isFeaturePreset(p.id));
-    } else if (selectedType === "feature") {
-      list = list.filter((p) => isFeaturePreset(p.id));
-    }
 
     if (selectedFormat !== "all") {
       list = list.filter((p) => {
@@ -76,7 +66,7 @@ export function ProcessorPresetSelectView({
       }
       return b.updatedAt - a.updatedAt;
     });
-  }, [presets, selectedFormat, selectedType]);
+  }, [presets, selectedFormat]);
 
   const sortedPresets = filteredPresets; // Use filtered ones for display
   const openCreateDialog = () => {
@@ -104,46 +94,17 @@ export function ProcessorPresetSelectView({
     onCreatePreset(name, color);
     setIsSavePresetDialogOpen(false);
   };
-  const confirmDeletePreset = (preset: SavedSetupPreset) => {
-    if (
-      !window.confirm(
-        t("presetSelector.deleteConfirm", {
-          defaultValue: `Delete preset "${preset.name}"?`,
-          name: preset.name,
-        }),
-      )
-    )
-      return;
+  const confirmDeletePreset = async (preset: SavedSetupPreset) => {
+    const shouldDelete = await confirmDialog({
+      title: t("presetSelector.deleteConfirm", { name: preset.name }),
+      variant: "destructive",
+    });
+    if (!shouldDelete) return;
     onDeletePreset(preset.id);
   };
 
   const filterControl = (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-      <Shield
-        left={t("presetSelector.type", "Type")}
-        size="sm"
-        leftBg="bg-slate-700 dark:bg-slate-800"
-        leftColor="text-white"
-        rightBg="bg-slate-100 dark:bg-slate-800"
-        rightColor="text-slate-600 dark:text-slate-400"
-        className="border border-slate-200 dark:border-slate-700 w-full sm:w-auto"
-        right={
-          <div className="flex items-center gap-1.5 h-full">
-            {(["processor", "feature"] as const).map((tVal, i, arr) => (
-              <React.Fragment key={tVal}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedType(tVal)}
-                  className={`transition-colors hover:text-sky-500 py-1 ${selectedType === tVal ? "text-sky-600 dark:text-sky-400 font-extrabold" : ""}`}
-                >
-                  {tVal === "processor" ? "Processor" : "Features"}
-                </button>
-                {i < arr.length - 1 && <span className="opacity-30">•</span>}
-              </React.Fragment>
-            ))}
-          </div>
-        }
-      />
       <Shield
         left={t("presetSelector.filter", "Filter")}
         size="sm"
@@ -250,17 +211,11 @@ export function ProcessorPresetSelectView({
             ? t("presetSelector.editPresetTitle")
             : t("presetSelector.savePresetTitle")
         }
+        featureKey="processor"
         defaultName={
           editingPreset
             ? editingPreset.name
-            : t("presetSelector.defaultPresetName", {
-                defaultValue: `${contextLabel} Preset ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
-                context: contextLabel,
-                time: new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
-              })
+            : generateDefaultPresetName("processor")
         }
       />
     </div>

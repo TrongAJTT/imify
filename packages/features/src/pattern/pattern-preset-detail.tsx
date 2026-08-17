@@ -30,7 +30,9 @@ export function PatternPresetDetail({ preset }: PatternPresetDetailProps) {
     /_/g,
     " ",
   );
-  const formatLabel = config.exportFormat.toUpperCase();
+  const rawFormat =
+    config.exportFormat || (config as any).targetFormat || "PNG";
+  const formatLabel = rawFormat.toUpperCase();
   const boundaryLabel = `${t("boundaryFields.inbound")}: ${config.settings.inboundBoundary.enabled ? "on" : "off"} / ${t("boundaryFields.outbound")}: ${config.settings.outboundBoundary.enabled ? "on" : "off"}`;
 
   return (

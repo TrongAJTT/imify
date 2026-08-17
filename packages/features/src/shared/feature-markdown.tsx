@@ -146,11 +146,11 @@ function MarkdownBlockquote({ children }: React.HTMLAttributes<HTMLQuoteElement>
 
 interface FeatureMarkdownProps {
   markdown: string
-  markdownUrl: string
+  markdownUrl?: string
   className?: string
 }
 
-export function FeatureMarkdown({ markdown, markdownUrl, className }: FeatureMarkdownProps) {
+export function FeatureMarkdown({ markdown, markdownUrl = "", className }: FeatureMarkdownProps) {
   const options = useMemo(
     () => ({
       forceBlock: true,

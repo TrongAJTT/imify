@@ -1,5 +1,12 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Layers, Settings2, Ruler, ArrowLeftRight } from "lucide-react";
+import {
+  Layers,
+  Settings2,
+  Ruler,
+  ArrowLeftRight,
+  Lock,
+  Unlock,
+} from "lucide-react";
 
 import type {
   CanvasSizePreset,
@@ -14,7 +21,6 @@ import {
   regenerateLayerShapePoints,
 } from "../shape-generators";
 import { getBoundingBox } from "../vector-math";
-import { CanvasSizeDialog } from "../canvas-size-dialog";
 import { LayerListPanel } from "../layer-list-panel";
 import { LayerPropertiesPanel } from "../layer-properties-panel";
 import { ShapePickerDialog } from "../shape-picker-dialog";
@@ -22,12 +28,12 @@ import { GroupLayerPanel } from "../group-layer-panel";
 import {
   AccordionCard,
   Button,
-  NumberInput,
-  SelectInput,
+  CheckboxCard,
   ResizableAccordionCard,
   WorkspaceConfigSidebarPanel,
   type WorkspaceConfigSidebarItem,
 } from "@imify/ui";
+import { CanvasDimensionControls } from "@imify/features/shared/canvas-dimension-controls";
 
 interface ManualEditorSidebarProps {
   layers: VectorLayer[];
@@ -46,34 +52,12 @@ interface ManualEditorSidebarProps {
 }
 
 import { useTranslation } from "@imify/i18n";
-
-const DPI_DEFAULT = 300;
-
-function toPixels(value: number, unit: CanvasSizeUnit, dpi: number): number {
-  switch (unit) {
-    case "in":
-      return Math.round(value * dpi);
-    case "cm":
-      return Math.round((value / 2.54) * dpi);
-    case "mm":
-      return Math.round((value / 25.4) * dpi);
-    default:
-      return Math.round(value);
-  }
-}
-
-function fromPixels(px: number, unit: CanvasSizeUnit, dpi: number): number {
-  switch (unit) {
-    case "in":
-      return Math.round((px / dpi) * 100) / 100;
-    case "cm":
-      return Math.round((px / dpi) * 2.54 * 100) / 100;
-    case "mm":
-      return Math.round((px / dpi) * 25.4 * 10) / 10;
-    default:
-      return px;
-  }
-}
+import {
+  ASPECT_RATIO_OPTIONS,
+  isSameRatio,
+  parseAspectRatio,
+  ratioFromDimensions,
+} from "@imify/features/shared/use-aspect-ratio";
 
 function synchronizeGroupsWithLayers(
   groups: LayerGroup[],
@@ -117,13 +101,9 @@ export function ManualEditorSidebar({
 }: ManualEditorSidebarProps) {
   const { t } = useTranslation("filling");
   const [shapePickerOpen, setShapePickerOpen] = useState(false);
-  const [canvasSizeDialogOpen, setCanvasSizeDialogOpen] = useState(false);
   const [canvasUnit, setCanvasUnit] = useState<CanvasSizeUnit>("px");
-  const [canvasDpi, setCanvasDpi] = useState(DPI_DEFAULT);
+  const [canvasDpi, setCanvasDpi] = useState(300);
   const [layersAccordionHeight, setLayersAccordionHeight] = useState(320);
-
-  const displayCanvasWidth = fromPixels(canvasWidth, canvasUnit, canvasDpi);
-  const displayCanvasHeight = fromPixels(canvasHeight, canvasUnit, canvasDpi);
 
   const selectedLayer = selectedLayerId
     ? layers.find((l) => l.id === selectedLayerId) ?? null
@@ -589,38 +569,6 @@ export function ManualEditorSidebar({
     [selectedLayerId, layers, onLayersChange],
   );
 
-  const handleCanvasWidthChange = useCallback(
-    (value: number) => {
-      onCanvasSizeChange(toPixels(value, canvasUnit, canvasDpi), canvasHeight);
-    },
-    [canvasDpi, canvasHeight, canvasUnit, onCanvasSizeChange],
-  );
-
-  const handleCanvasHeightChange = useCallback(
-    (value: number) => {
-      onCanvasSizeChange(canvasWidth, toPixels(value, canvasUnit, canvasDpi));
-    },
-    [canvasDpi, canvasUnit, canvasWidth, onCanvasSizeChange],
-  );
-
-  const handleCanvasPresetConfirm = useCallback(
-    (preset: CanvasSizePreset) => {
-      onCanvasSizeChange(preset.width, preset.height);
-      setCanvasSizeDialogOpen(false);
-    },
-    [onCanvasSizeChange],
-  );
-
-  const UNIT_OPTIONS = useMemo(
-    () => [
-      { value: "px", label: t("dialog.pixels") },
-      { value: "in", label: t("dialog.inches") },
-      { value: "cm", label: t("dialog.centimeters") },
-      { value: "mm", label: t("dialog.millimeters") },
-    ],
-    [t],
-  );
-
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "canvas",
@@ -632,76 +580,15 @@ export function ManualEditorSidebar({
           colorTheme="amber"
           defaultOpen={true}
         >
-          <div className="space-y-3">
-            <div className="flex flex-col gap-2.5">
-              <div className="flex flex-row gap-3 md:gap-1 items-end">
-                <div className="flex-1 w-full min-w-0">
-                  <NumberInput
-                    label={t("dialog.width")}
-                    value={displayCanvasWidth}
-                    onChangeValue={handleCanvasWidthChange}
-                    min={1}
-                    max={canvasUnit === "px" ? 16384 : 9999}
-                    step={canvasUnit === "px" ? 1 : 0.1}
-                  />
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    onCanvasSizeChange(canvasHeight, canvasWidth);
-                  }}
-                >
-                  <ArrowLeftRight size={14} className="rotate-90 sm:rotate-0" />
-                </Button>
-                <div className="flex-1 w-full min-w-0">
-                  <NumberInput
-                    label={t("dialog.height")}
-                    value={displayCanvasHeight}
-                    onChangeValue={handleCanvasHeightChange}
-                    min={1}
-                    max={canvasUnit === "px" ? 16384 : 9999}
-                    step={canvasUnit === "px" ? 1 : 0.1}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-row gap-3">
-              <SelectInput
-                label={t("dialog.unit")}
-                value={canvasUnit}
-                options={UNIT_OPTIONS}
-                onChange={(value) => setCanvasUnit(value as CanvasSizeUnit)}
-                className="flex-1 w-full"
-              />
-
-              {canvasUnit !== "px" && (
-                <div className="flex-1 w-full">
-                  <NumberInput
-                    label="DPI"
-                    value={canvasDpi}
-                    onChangeValue={setCanvasDpi}
-                    min={72}
-                    max={600}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="text-[11px] text-slate-500 dark:text-slate-400">
-              {t("dialog.finalSize")} {canvasWidth} x {canvasHeight} px
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCanvasSizeDialogOpen(true)}
-              className="w-full"
-            >
-              {t("dialog.popularSizes")}
-            </Button>
-          </div>
+          <CanvasDimensionControls
+            width={canvasWidth}
+            height={canvasHeight}
+            unit={canvasUnit}
+            dpi={canvasDpi}
+            onSizeChange={onCanvasSizeChange}
+            onUnitChange={setCanvasUnit}
+            onDpiChange={setCanvasDpi}
+          />
         </AccordionCard>
       ),
     },
@@ -795,14 +682,6 @@ export function ManualEditorSidebar({
         isOpen={shapePickerOpen}
         onClose={() => setShapePickerOpen(false)}
         onSelect={handleAddShape}
-      />
-
-      <CanvasSizeDialog
-        isOpen={canvasSizeDialogOpen}
-        onClose={() => setCanvasSizeDialogOpen(false)}
-        currentWidth={canvasWidth}
-        currentHeight={canvasHeight}
-        onConfirm={handleCanvasPresetConfirm}
       />
     </>
   );

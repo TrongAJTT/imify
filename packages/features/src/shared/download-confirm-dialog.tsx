@@ -28,7 +28,7 @@ const DOWNLOAD_HINT_IMAGE_BY_BROWSER: Record<SupportedBrowser, string> = {
 interface BatchDownloadConfirmDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (dontShowAgain?: boolean) => void;
   count: number;
 }
 
@@ -52,7 +52,7 @@ export function BatchDownloadConfirmDialog({
     if (localSkip) {
       setSkipDownloadConfirm(true);
     }
-    onConfirm();
+    onConfirm(localSkip);
     onClose();
   };
 
@@ -86,7 +86,7 @@ export function BatchDownloadConfirmDialog({
                   components={{
                     bold: (
                       <span
-                        key={1}
+                        key="bold"
                         className="font-bold text-slate-900 dark:text-white"
                       />
                     ),
@@ -106,11 +106,11 @@ export function BatchDownloadConfirmDialog({
                     components={{
                       bold: (
                         <span
-                          key={2}
+                          key="bold"
                           className="font-bold text-slate-900 dark:text-slate-100"
                         />
                       ),
-                      b: <b />,
+                      b: <b key="b" />,
                     }}
                   />
                 </BodyText>

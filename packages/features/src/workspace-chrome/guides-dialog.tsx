@@ -35,6 +35,11 @@ const GUIDES: GuideItem[] = [
     label: "How to Report Bugs",
     path: "/assets/guides/bug-report.md",
   },
+  {
+    id: "recovery-page",
+    label: "Recovery Page",
+    path: "/assets/guides/recovery-page.md",
+  },
 ];
 
 interface GuidesDialogProps {
