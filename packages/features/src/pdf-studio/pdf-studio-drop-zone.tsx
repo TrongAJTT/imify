@@ -23,6 +23,8 @@ export function PdfStudioDropZone({
 }: PdfStudioDropZoneProps) {
   const { t } = useTranslation("pdfStudio");
 
+  const isPdfMode = mode === "pdf-to-images";
+
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
@@ -31,22 +33,34 @@ export function PdfStudioDropZone({
       (f) =>
         f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
     );
-
-    if (pdfFile) {
-      onLoadPdfFile(pdfFile);
-      return;
-    }
-
     const imageFiles = fileList.filter((f) => isCommonImageFile(f));
-    if (imageFiles.length > 0) {
-      onLoadImageFiles(imageFiles);
+
+    if (isPdfMode) {
+      // Prioritize PDF in PDF-to-images mode; auto-switch if images dropped
+      if (pdfFile) {
+        onLoadPdfFile(pdfFile);
+        return;
+      }
+      if (imageFiles.length > 0) {
+        onLoadImageFiles(imageFiles);
+        return;
+      }
+    } else {
+      // Prioritize images in Images-to-PDF mode; auto-switch if PDF dropped
+      if (imageFiles.length > 0) {
+        onLoadImageFiles(imageFiles);
+        return;
+      }
+      if (pdfFile) {
+        onLoadPdfFile(pdfFile);
+        return;
+      }
     }
   };
 
-  const isPdfMode = mode === "pdf-to-images";
   const acceptPattern = isPdfMode
     ? ".pdf,application/pdf"
-    : `${COMMON_IMAGE_ACCEPT},.pdf,application/pdf`;
+    : COMMON_IMAGE_ACCEPT;
 
   return (
     <EmptyDropCard
