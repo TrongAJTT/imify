@@ -16,6 +16,7 @@ import {
 import type { OptionsTab } from "./debug-shared";
 import type { DevModeSettingsAdapter } from "./dev-mode-settings-adapter";
 import { Tooltip } from "@imify/ui/ui/tooltip";
+import { confirmDialog } from "@imify/stores";
 
 interface SchemaMigration {
   fromVersion: number;
@@ -179,9 +180,11 @@ export function DevModeImportDialog({
     if (!payload || selectedFeatures.length === 0) return;
 
     if (isVersionMismatch) {
-      const confirmed = window.confirm(
-        `Version mismatch.\n\nImport from ${payload.imify_version} (${payload.imify_version_type}) into ${appMetadata.version} (${appMetadata.versionType}) may cause unexpected behavior.\n\nDo you want to continue?`,
-      );
+      const confirmed = await confirmDialog({
+        title: "Version Mismatch Warning",
+        description: `Importing from ${payload.imify_version} (${payload.imify_version_type}) into ${appMetadata.version} (${appMetadata.versionType}) may cause unexpected behavior. Do you want to continue?`,
+        variant: "warning",
+      });
       if (!confirmed) return;
     }
 

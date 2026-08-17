@@ -22,7 +22,7 @@ import {
   BodyText,
   MutedText,
 } from "@imify/ui";
-import { toast } from "@imify/stores";
+import { toast, confirmDialog } from "@imify/stores";
 import { useDevModeEnabled } from "../dev-mode/dev-mode-storage";
 import { useDevModeStore } from "../dev-mode/dev-mode-store";
 import { I18nRuntimeImportDialog } from "../dev-mode/i18n-runtime-import-dialog";
@@ -120,11 +120,14 @@ export function DevToolsDialog({
     e: React.MouseEvent,
   ) => {
     e.stopPropagation();
-    const confirmed = window.confirm(
-      `Delete custom language "${lang.name}"?` +
-        "\n\n" +
-        "This will permanently delete it from local storage.",
-    );
+    const confirmed = await confirmDialog({
+      title: `Delete custom language "${lang.name}"?`,
+      description: "This will permanently delete it from local storage.",
+      variant: "destructive",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      defaultFocus: "confirm",
+    });
     if (!confirmed) return;
     try {
       await deleteRuntimeLanguage(lang.code);

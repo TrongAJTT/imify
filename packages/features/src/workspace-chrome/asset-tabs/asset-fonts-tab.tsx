@@ -17,7 +17,7 @@ import {
 import { Button, BodyText, MutedText, Subheading, BaseDialog } from "@imify/ui";
 import { formatFileSize } from "@imify/core";
 import { useFontStore } from "@imify/stores/stores/font-store";
-import { toast } from "@imify/stores";
+import { toast, confirmDialog } from "@imify/stores";
 import { isLocalFontAccessSupported } from "@imify/core/browser-detection";
 import { useTranslation } from "@imify/i18n";
 import {
@@ -348,9 +348,10 @@ export function AssetFontsTab() {
 
   // Handle Font Deletion
   const handleDeleteFont = async (id: string, name: string) => {
-    const shouldDelete = window.confirm(
-      t("assets.fonts.removeConfirm", { name }),
-    );
+    const shouldDelete = await confirmDialog({
+      title: t("assets.fonts.removeConfirm", { name }),
+      variant: "destructive",
+    });
     if (!shouldDelete) return;
 
     try {
@@ -370,7 +371,10 @@ export function AssetFontsTab() {
 
   // Clear all custom fonts
   const handleClearAll = async () => {
-    const shouldReset = window.confirm(t("assets.fonts.clearAllConfirm"));
+    const shouldReset = await confirmDialog({
+      title: t("assets.fonts.clearAllConfirm"),
+      variant: "destructive",
+    });
     if (!shouldReset) return;
 
     try {

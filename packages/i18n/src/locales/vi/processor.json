@@ -119,6 +119,7 @@
     "close": "Đóng",
     "saveApply": "Lưu & Áp dụng",
     "createApply": "Tạo & Áp dụng",
+    "deleteConfirm": "Xóa cấu hình \"{{name}}\"?",
     "formatNotSupported": "Định dạng {{format}} không được hỗ trợ. (Hỗ trợ: {{supported}})"
   },
   "targetFormat": "Định dạng đầu ra",

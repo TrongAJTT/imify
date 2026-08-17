@@ -25,7 +25,7 @@ import {
   FileText,
   Copy,
 } from "lucide-react";
-import { useQrReaderStore, useWorkspaceHeaderStore, toast } from "@imify/stores";
+import { useQrReaderStore, useWorkspaceHeaderStore, toast, confirmDialog } from "@imify/stores";
 import {
   parseQrString,
   type ParsedQrResult,
@@ -119,7 +119,9 @@ export function QrReaderSidebar({
 
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
 
-  const handleRequestClear = (mode: "all" | "3days" | "7days" | "30days") => {
+  const handleRequestClear = async (
+    mode: "all" | "3days" | "7days" | "30days",
+  ) => {
     const title =
       mode === "all"
         ? t("history.confirmClearTitle")
@@ -131,7 +133,13 @@ export function QrReaderSidebar({
             days: mode === "3days" ? 3 : mode === "7days" ? 7 : 30,
           });
 
-    if (window.confirm(`${title}\n\n${msg}`)) {
+    const confirmed = await confirmDialog({
+      title,
+      description: msg,
+      variant: "destructive",
+    });
+
+    if (confirmed) {
       if (mode === "all") {
         clearHistory();
         toast.success(t("history.title"), t("history.clearSuccess"));

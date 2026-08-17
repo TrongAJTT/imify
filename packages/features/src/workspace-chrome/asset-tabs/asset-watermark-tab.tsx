@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import { Button, BodyText, MutedText } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
+import { confirmDialog } from "@imify/stores";
 import {
   WatermarkPreviewCard,
   EmptySavedWatermarkState,
@@ -19,12 +20,13 @@ export function AssetWatermarkTab() {
 
   const selectedItem = savedItems.find((item) => item.id === selectedId);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedId || !selectedItem) return;
 
-    const shouldDelete = window.confirm(
-      t("assets.deleteConfirm", { name: selectedItem.name }),
-    );
+    const shouldDelete = await confirmDialog({
+      title: t("assets.deleteConfirm", { name: selectedItem.name }),
+      variant: "destructive",
+    });
     if (!shouldDelete) return;
 
     deleteSavedWatermark(selectedId);

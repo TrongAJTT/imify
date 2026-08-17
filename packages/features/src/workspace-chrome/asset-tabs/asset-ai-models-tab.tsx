@@ -21,7 +21,7 @@ import {
   resolveHuggingFaceRepoId,
 } from "../../upscaler/models";
 import { ModelDownloadDialog } from "../../background-removal/model-download-dialog";
-import { toast } from "@imify/stores";
+import { toast, confirmDialog } from "@imify/stores";
 import { useTranslation } from "@imify/i18n";
 
 export function AssetAIModelsTab() {
@@ -101,12 +101,13 @@ export function AssetAIModelsTab() {
   }, []);
 
   const handleDelete = async (model: AIModelMetadata, variant: any) => {
-    const shouldDelete = window.confirm(
-      t("assets.aiModels.deleteConfirm", {
+    const shouldDelete = await confirmDialog({
+      title: t("assets.aiModels.deleteConfirm", {
         name: model.name,
         variant: variant.label,
       }),
-    );
+      variant: "destructive",
+    });
     if (!shouldDelete) return;
 
     try {

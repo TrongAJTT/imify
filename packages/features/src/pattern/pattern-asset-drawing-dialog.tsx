@@ -20,6 +20,7 @@ import {
 } from "@imify/ui";
 import { useShortcutActions } from "../filling/use-shortcut-actions";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
+import { confirmDialog } from "@imify/stores";
 import { Brush, Eraser, RotateCcw, Trash2, X } from "lucide-react";
 import React, {
   useCallback,
@@ -457,9 +458,13 @@ export function PatternAssetDrawingDialog({
     suggestedName,
   ]);
 
-  const handleManualClose = useCallback(() => {
+  const handleManualClose = useCallback(async () => {
     if (hasUndoHistory) {
-      const confirmed = window.confirm(t("tooltips.unsavedChangesConfirm"));
+      const confirmed = await confirmDialog({
+        title: t("tooltips.unsavedChangesConfirm"),
+        variant: "warning",
+        defaultFocus: "cancel",
+      });
       if (!confirmed) {
         return;
       }

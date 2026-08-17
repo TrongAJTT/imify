@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { SettingsSectionHeader } from "@imify/ui/ui/settings-section-header";
 import { SettingsItemHeader } from "@imify/ui/ui/settings-item-header";
-import { useI18nStore } from "@imify/stores";
+import { useI18nStore, confirmDialog } from "@imify/stores";
 import {
   getAvailableLanguages,
   getAppI18nVersion,
@@ -56,11 +56,11 @@ export function LanguageSettingsTab({
     e: React.MouseEvent,
   ) => {
     e.stopPropagation();
-    const confirmed = window.confirm(
-      t("language.deleteConfirm", { name: lang.name }) +
-        "\n\n" +
-        t("language.deleteConfirmDesc"),
-    );
+    const confirmed = await confirmDialog({
+      title: t("language.deleteConfirm", { name: lang.name }),
+      description: t("language.deleteConfirmDesc"),
+      variant: "destructive",
+    });
     if (!confirmed) return;
     try {
       await deleteRuntimeLanguage(lang.code);

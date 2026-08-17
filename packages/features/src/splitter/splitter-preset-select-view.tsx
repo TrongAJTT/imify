@@ -8,6 +8,7 @@ import { EmptyDropCard } from "@imify/ui";
 import { SplitterPresetDetail } from "./splitter-preset-detail";
 import type { SavedSplitterPreset } from "@imify/stores/stores/splitter-preset-store";
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store";
+import { confirmDialog } from "@imify/stores";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 
 interface SplitterPresetSelectViewProps {
@@ -197,8 +198,11 @@ export function SplitterPresetSelectView({
     setIsSavePresetDialogOpen(false);
   };
 
-  const confirmDeletePreset = (preset: SavedSplitterPreset) => {
-    const shouldDelete = window.confirm(t("deleteConfirm", { name: preset.name }));
+  const confirmDeletePreset = async (preset: SavedSplitterPreset) => {
+    const shouldDelete = await confirmDialog({
+      title: t("deleteConfirm", { name: preset.name }),
+      variant: "destructive",
+    });
     if (!shouldDelete) {
       return;
     }

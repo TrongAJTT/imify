@@ -23,6 +23,7 @@ import {
 } from "@imify/ui";
 import { templateStorage } from "./template-storage";
 import { exportToPsd } from "./psd-export";
+import { confirmDialog, toast } from "@imify/stores";
 import {
   createLayerFillState,
   DEFAULT_CANVAS_FILL_STATE,
@@ -113,7 +114,7 @@ export function FillingTemplateListPanel({
       setRenameTemplate(null);
     } catch (error) {
       console.error("Failed to rename template", error);
-      window.alert("Failed to rename template.");
+      toast.error("Error", "Failed to rename template.");
     }
   };
 
@@ -314,7 +315,7 @@ function FillingTemplateCard({
       URL.revokeObjectURL(objectUrl);
     } catch (error) {
       console.error("Failed to export template PSD", error);
-      window.alert("Failed to export PSD for this template.");
+      toast.error("Error", "Failed to export PSD for this template.");
     } finally {
       setIsExportingPsd(false);
     }
@@ -398,15 +399,14 @@ function FillingTemplateCard({
             title={t("templateList.deleteTooltip")}
             icon={<Trash2 size={13} />}
             destructive
-            onClick={() => {
-              if (
-                !window.confirm(
-                  t("templateList.deleteConfirm", { name: template.name }),
-                )
-              ) {
-                return;
+            onClick={async () => {
+              const confirmed = await confirmDialog({
+                title: t("templateList.deleteConfirm", { name: template.name }),
+                variant: "destructive",
+              });
+              if (confirmed) {
+                void templateStorage.remove(template.id).then(onRefresh);
               }
-              void templateStorage.remove(template.id).then(onRefresh);
             }}
           />
         </div>

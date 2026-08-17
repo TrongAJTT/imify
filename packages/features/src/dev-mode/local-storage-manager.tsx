@@ -19,6 +19,7 @@ import {
 import { Button } from "@imify/ui/ui/button";
 import { Subheading, BodyText, MutedText } from "@imify/ui/ui/typography";
 import { AccordionCard } from "@imify/ui/index";
+import { confirmDialog, alertDialog, toast } from "@imify/stores";
 
 interface StorageItem {
   key: string;
@@ -127,13 +128,17 @@ export function LocalStorageManager() {
   };
 
   // Delete key
-  const handleDelete = (key: string) => {
+  const handleDelete = async (key: string) => {
     if (typeof window === "undefined") return;
-    if (
-      window.confirm(
-        `Are you sure you want to delete local storage key "${key}"?`,
-      )
-    ) {
+    const confirmed = await confirmDialog({
+      title: `Delete Local Storage Key?`,
+      description: `Are you sure you want to delete local storage key "${key}"?`,
+      variant: "destructive",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      defaultFocus: "confirm",
+    });
+    if (confirmed) {
       window.localStorage.removeItem(key);
       if (editingKey === key) setEditingKey(null);
       loadItems();
@@ -187,7 +192,7 @@ export function LocalStorageManager() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
         if (typeof data === "object" && data !== null) {
@@ -195,12 +200,27 @@ export function LocalStorageManager() {
             window.localStorage.setItem(k, String(data[k]));
           });
           loadItems();
-          alert("Import successful! Please reload the page to apply changes.");
+          await alertDialog({
+            title: "Import Successful",
+            description: "Please reload the page to apply changes.",
+            variant: "success",
+            buttonText: "OK",
+          });
         } else {
-          alert("Invalid storage backup format.");
+          await alertDialog({
+            title: "Import Failed",
+            description: "Invalid storage backup format.",
+            variant: "destructive",
+            buttonText: "OK",
+          });
         }
       } catch (err) {
-        alert("Failed to parse JSON file.");
+        await alertDialog({
+          title: "Import Error",
+          description: "Failed to parse JSON file.",
+          variant: "destructive",
+          buttonText: "OK",
+        });
       }
     };
     reader.readAsText(file);
@@ -208,19 +228,24 @@ export function LocalStorageManager() {
   };
 
   // Reset all Imify storage keys
-  const handleResetAll = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to reset all Imify local storage configs?\n\nThis will restore the app to factory settings.",
-      )
-    ) {
+  const handleResetAll = async () => {
+    const confirmed = await confirmDialog({
+      title: "Reset All Storage Configs?",
+      description:
+        "Are you sure you want to reset all Imify local storage configs? This will restore the app to factory settings.",
+      variant: "destructive",
+      confirmText: "Reset All & Reload",
+      cancelText: "Cancel",
+      defaultFocus: "confirm",
+    });
+
+    if (confirmed) {
       items.forEach((item) => {
         if (item.key.toLowerCase().startsWith("imify")) {
           window.localStorage.removeItem(item.key);
         }
       });
       loadItems();
-      alert("All Imify storage keys cleared. Reloading page...");
       window.location.reload();
     }
   };

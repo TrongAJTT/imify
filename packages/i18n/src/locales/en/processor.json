@@ -119,6 +119,7 @@
     "close": "Close",
     "saveApply": "Save & Apply",
     "createApply": "Create & Apply",
+    "deleteConfirm": "Delete preset \"{{name}}\"?",
     "formatNotSupported": "Format {{format}} is not supported. (Supported: {{supported}})"
   },
   "targetFormat": "Target format",

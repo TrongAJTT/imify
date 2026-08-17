@@ -8,6 +8,7 @@ import {
   type SavedSetupPreset,
   type SetupContext,
 } from "@imify/stores/stores/batch-store";
+import { confirmDialog } from "@imify/stores";
 import { PresetCard } from "./preset-card";
 import { SavePresetDialog } from "./save-preset-dialog";
 import { WorkspaceSelectHeader } from "./workspace-select-header";
@@ -92,16 +93,12 @@ export function ProcessorPresetSelectView({
     onCreatePreset(name, color);
     setIsSavePresetDialogOpen(false);
   };
-  const confirmDeletePreset = (preset: SavedSetupPreset) => {
-    if (
-      !window.confirm(
-        t("presetSelector.deleteConfirm", {
-          defaultValue: `Delete preset "${preset.name}"?`,
-          name: preset.name,
-        }),
-      )
-    )
-      return;
+  const confirmDeletePreset = async (preset: SavedSetupPreset) => {
+    const shouldDelete = await confirmDialog({
+      title: t("presetSelector.deleteConfirm", { name: preset.name }),
+      variant: "destructive",
+    });
+    if (!shouldDelete) return;
     onDeletePreset(preset.id);
   };
 

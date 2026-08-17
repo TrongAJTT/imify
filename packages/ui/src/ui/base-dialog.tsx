@@ -6,6 +6,8 @@ interface BaseDialogProps {
   isOpen: boolean;
   onClose: () => void;
   isDirty?: boolean;
+  /** Optional callback when a close attempt is made while isDirty is true */
+  onDirtyCloseAttempt?: () => void;
   /** Optional guard to block a close attempt for specific event types */
   shouldBlockCloseAttempt?: (eventType: string) => boolean;
   children: React.ReactNode;
@@ -20,26 +22,26 @@ interface BaseDialogProps {
   stickyHeader?: boolean;
   /** Whether the footer should be sticky at the bottom when content scrolls */
   stickyFooter?: boolean;
-  /** Class name for header wrapper */
   headerClassName?: string;
-  /** Class name for footer wrapper */
-  footerClassName?: string;
-  /** Class name for body content wrapper */
   bodyClassName?: string;
+  footerClassName?: string;
 }
 
 /**
- * BaseDialog component using HTML5 native <dialog> element.
- * Handles:
- * 1. Modal backdrop and focus trap via showModal()
- * 2. Escape key handling via onCancel
- * 3. Click outside to close (backdrop click)
+ * BaseDialog
+ * A reusable modal dialog component using the native HTML <dialog> element.
+ * Features:
+ * 1. Native backdrop support (::backdrop) with Tailwind CSS styling
+ * 2. Proper ESC key handling and click-outside (backdrop click) detection
+ * 3. Mobile safe-area / viewport boundary handling
  * 4. isDirty check before closing
+ * 5. Scroll lock on underlying page content when open
  */
 export function BaseDialog({
   isOpen,
   onClose,
   isDirty = false,
+  onDirtyCloseAttempt,
   shouldBlockCloseAttempt,
   children,
   className = "",
@@ -49,8 +51,8 @@ export function BaseDialog({
   stickyHeader,
   stickyFooter,
   headerClassName = "",
-  footerClassName = "",
   bodyClassName = "",
+  footerClassName = "",
 }: BaseDialogProps): React.ReactElement | null {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [mounted, setMounted] = React.useState(false);
@@ -61,30 +63,38 @@ export function BaseDialog({
 
   // Sync React's isOpen state with Native Dialog API
   useEffect(() => {
-    const dialog = dialogRef.current;
+    const dialogNode = dialogRef.current;
+    if (!dialogNode) return;
+
     if (isOpen) {
-      if (!dialog) return;
-      if (!dialog.open) {
-        dialog.showModal();
-        // Prevent page scroll when dialog is open
-        document.body.style.overflow = "hidden";
-        document.documentElement.style.overflow = "hidden";
+      if (!dialogNode.open) {
+        dialogNode.showModal();
       }
     } else {
-      // Always restore page scroll when closed
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-      if (dialog?.open) {
-        dialog.close();
+      if (dialogNode.open) {
+        dialogNode.close();
       }
     }
-  }, [isOpen, mounted]);
+  }, [isOpen]);
 
-  // Cleanup overflow on unmount
+  // Lock body scroll when dialog is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isOpen]);
+
+  // Cleanup on unmount (ensure dialog is closed and not orphaned)
   useEffect(() => {
     return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
+      const dialogNode = dialogRef.current;
+      if (dialogNode?.open) {
+        dialogNode.close();
+      }
     };
   }, []);
 
@@ -104,11 +114,9 @@ export function BaseDialog({
       e?.preventDefault();
     }
 
-    if (isDirty) {
-      const confirmLeave = window.confirm(
-        "You have unsaved changes. Are you sure you want to close?",
-      );
-      if (!confirmLeave) return;
+    if (isDirty && onDirtyCloseAttempt) {
+      onDirtyCloseAttempt();
+      return;
     }
 
     onClose();

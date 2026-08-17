@@ -6,6 +6,7 @@ import { WorkspaceSelectHeader } from "../processor/workspace-select-header";
 import { SavePresetDialog } from "../processor/save-preset-dialog";
 import { SplicingPresetDetail } from "./splicing-preset-detail";
 import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store";
+import { confirmDialog } from "@imify/stores";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 import { useTranslation } from "@imify/i18n";
 
@@ -169,10 +170,11 @@ export function SplicingPresetSelectView({
     setIsSavePresetDialogOpen(false);
   };
 
-  const confirmDeletePreset = (preset: SavedSplicingPreset) => {
-    const shouldDelete = window.confirm(
-      t("select.deleteConfirm", { name: preset.name }),
-    );
+  const confirmDeletePreset = async (preset: SavedSplicingPreset) => {
+    const shouldDelete = await confirmDialog({
+      title: t("select.deleteConfirm", { name: preset.name }),
+      variant: "destructive",
+    });
     if (!shouldDelete) {
       return;
     }

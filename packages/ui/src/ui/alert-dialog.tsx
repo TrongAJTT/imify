@@ -20,7 +20,7 @@ export interface AlertDialogProps {
 
 export function AlertDialog({
   isOpen,
-  title = "Notice",
+  title,
   subtitle,
   description,
   buttonText = "OK",
@@ -48,22 +48,30 @@ export function AlertDialog({
       contentClassName="w-full rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150"
     >
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-start sm:items-center gap-3">
           {styles.icon}
-          <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-50 leading-tight">
-              {title}
-            </h3>
-            {subtitle ? (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {subtitle}
-              </p>
-            ) : null}
+          <div className="flex-1 min-w-0">
+            {title ? (
+              <>
+                <h3 className="text-sm sm:text-[15px] font-semibold text-slate-900 dark:text-slate-100 leading-snug">
+                  {title}
+                </h3>
+                {subtitle ? (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {subtitle}
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <div className="text-sm sm:text-[15px] font-medium text-slate-800 dark:text-slate-200 leading-snug">
+                {description}
+              </div>
+            )}
           </div>
         </div>
 
-        {description ? (
-          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+        {title && description ? (
+          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pl-10">
             {description}
           </div>
         ) : null}

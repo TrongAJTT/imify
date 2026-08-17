@@ -22,6 +22,7 @@ import type {
   BatchWatermarkPosition,
 } from "@imify/stores/stores/batch-types";
 import type { SavedWatermarkItem } from "@imify/stores/stores/watermark-store";
+import { confirmDialog } from "@imify/stores";
 import { watermarkStorage } from "@imify/core/indexed-db";
 import { useTranslation } from "react-i18next";
 
@@ -824,14 +825,19 @@ export function WatermarkOpenSavedDialog({
     [items, selectedId],
   );
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!allowDelete || !onDelete || !selectedItem) {
       return;
     }
 
-    const shouldDelete = window.confirm(
-      `Delete saved watermark \"${selectedItem.name}\"?`,
-    );
+    const shouldDelete = await confirmDialog({
+      title: `Delete saved watermark "${selectedItem.name}"?`,
+      description: "This watermark preset will be permanently deleted.",
+      variant: "destructive",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      defaultFocus: "confirm",
+    });
     if (!shouldDelete) {
       return;
     }
