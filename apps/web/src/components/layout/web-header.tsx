@@ -89,7 +89,7 @@ function toDevModeActiveTab(pathname: string): OptionsTab | null {
 export function WebHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const { isMonolithicPage: isStickyHeader } = useWebPageMode();
+  const { isMonolithicPage: isStickyHeader, isRecoveryPage } = useWebPageMode();
   const { isDark, toggleDarkMode } = useWebDarkMode();
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false);
@@ -239,7 +239,20 @@ export function WebHeader() {
     return links.map((item) => ({ value: item.href, label: item.label }));
   }, [i18n.language, isMounted]);
 
-  if (pathname === "/recovery") {
+  const toolsMenuGroups = useMemo(() => {
+    const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en");
+    return groups.map((group) => ({
+      title: group.title,
+      items: group.items.map((item) => ({
+        id: item.id,
+        href: buildToolEntryHref(item.id, item.href),
+        label: item.label,
+        icon: renderWorkspaceToolIcon(item.id, 14),
+      })),
+    }));
+  }, [i18n.language, isMounted]);
+
+  if (pathname === "/recovery" || isRecoveryPage) {
     return null;
   }
 
@@ -255,20 +268,7 @@ export function WebHeader() {
         lng: isMounted ? undefined : "en",
         defaultValue: "Powerful Image Toolkit",
       })}
-      toolsMenuGroups={useMemo(() => {
-        const groups = getWorkspaceToolsMenuGroups(
-          isMounted ? undefined : "en",
-        );
-        return groups.map((group) => ({
-          title: group.title,
-          items: group.items.map((item) => ({
-            id: item.id,
-            href: buildToolEntryHref(item.id, item.href),
-            label: item.label,
-            icon: renderWorkspaceToolIcon(item.id, 14),
-          })),
-        }));
-      }, [i18n.language, isMounted])}
+      toolsMenuGroups={toolsMenuGroups}
       toolsMenuLabel={t("workspace:allTools", {
         lng: isMounted ? undefined : "en",
         defaultValue: "All Tools",

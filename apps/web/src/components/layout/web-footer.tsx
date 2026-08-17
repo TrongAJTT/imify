@@ -23,10 +23,6 @@ export function WebFooter() {
     setIsMounted(true);
   }, []);
 
-  if (isRecoveryPage) {
-    return null;
-  }
-
   const allTools = React.useMemo(() => {
     const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en");
     return groups.flatMap((g) => g.items);
@@ -41,6 +37,10 @@ export function WebFooter() {
     });
     return list;
   }, [allTools, t]);
+
+  if (isRecoveryPage) {
+    return null;
+  }
 
   // Hide footer ONLY on tool pages AND on mobile interface.
   if (!isFullFooter && !isDesktop) {
