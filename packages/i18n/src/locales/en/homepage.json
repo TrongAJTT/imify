@@ -173,7 +173,8 @@
     "fullDesc": "The powerful client-side image toolkit. Fast, private, and powerful image processing directly in your browser. No uploads, no waiting.",
     "tools": "Tools",
     "moreFeatures": "More Features",
-    "findUs": "Find us",
+    "recoveryPage": "Recovery Page",
+    "findUs": "Find Us",
     "copyright": "© {{year}} Imify by TrongAJTT. All rights reserved.",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service"

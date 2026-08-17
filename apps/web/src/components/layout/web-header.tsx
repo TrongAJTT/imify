@@ -15,7 +15,6 @@ import {
   AssetManagementDialog,
   AttributionDialog,
   DEFAULT_WORKSPACE_LAYOUT_PREFERENCES,
-  DonateDialog,
   type WorkspaceLayoutPreferences,
   WorkspaceOptionsHeader,
   WorkspaceSettingsDialog,
@@ -94,7 +93,6 @@ export function WebHeader() {
   const { isDark, toggleDarkMode } = useWebDarkMode();
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [isAttributionDialogOpen, setIsAttributionDialogOpen] = useState(false);
-  const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false);
   const [isAssetManagementDialogOpen, setIsAssetManagementDialogOpen] =
     useState(false);
   const [isDevToolsDialogOpen, setIsDevToolsDialogOpen] = useState(false);
@@ -280,7 +278,6 @@ export function WebHeader() {
       onToggleDark={toggleDarkMode}
       onOpenAbout={() => setIsAboutDialogOpen(true)}
       onOpenSettings={() => openSettingsDialog()}
-      onOpenDonate={() => setIsDonateDialogOpen(true)}
       onOpenAssetManagement={() => setIsAssetManagementDialogOpen(true)}
       onOpenDevTools={() => setIsDevToolsDialogOpen(true)}
       isDevModeEnabled={devModeEnabled}
@@ -307,15 +304,10 @@ export function WebHeader() {
         isOpen={isAboutDialogOpen}
         onClose={() => setIsAboutDialogOpen(false)}
         onOpenAboutAttribution={() => setIsAttributionDialogOpen(true)}
-        onOpenDonate={() => setIsDonateDialogOpen(true)}
       />
       <AttributionDialog
         isOpen={isAttributionDialogOpen}
         onClose={() => setIsAttributionDialogOpen(false)}
-      />
-      <DonateDialog
-        isOpen={isDonateDialogOpen}
-        onClose={() => setIsDonateDialogOpen(false)}
       />
       <AssetManagementDialog
         isOpen={isAssetManagementDialogOpen}

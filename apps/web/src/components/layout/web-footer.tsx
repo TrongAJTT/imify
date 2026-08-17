@@ -32,6 +32,16 @@ export function WebFooter() {
     return groups.flatMap((g) => g.items);
   }, [i18n.language, isMounted]);
 
+  const moreFeatures = React.useMemo(() => {
+    const list = allTools.slice(4, 8).filter((tool) => tool.id !== "filling");
+    list.push({
+      id: "recovery",
+      href: "/recovery",
+      label: t("footer.recoveryPage", "Trang khôi phục"),
+    });
+    return list;
+  }, [allTools, t]);
+
   // Hide footer ONLY on tool pages AND on mobile interface.
   if (!isFullFooter && !isDesktop) {
     return null;
@@ -49,28 +59,20 @@ export function WebFooter() {
             <span className="hidden md:inline">{t("footer.shortDesc")}</span>
           </div>
           <div className="flex items-center gap-6">
-            <p>
-              {t("footer.copyright", {
-                year: new Date().getFullYear(),
-                defaultValue: `© ${new Date().getFullYear()} Imify by TrongAJTT`,
-              })}
-            </p>
-            <div className="flex gap-4">
-              <Link
-                href={IMIFY_LINKS.terms}
-                target="_blank"
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                {t("footer.terms")}
-              </Link>
-              <Link
-                href={IMIFY_LINKS.privacy}
-                target="_blank"
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                {t("footer.privacy")}
-              </Link>
-            </div>
+            <Link
+              href={IMIFY_LINKS.terms}
+              target="_blank"
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              {t("footer.terms")}
+            </Link>
+            <Link
+              href={IMIFY_LINKS.privacy}
+              target="_blank"
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              {t("footer.privacy")}
+            </Link>
           </div>
         </div>
       </footer>
@@ -118,7 +120,7 @@ export function WebFooter() {
               {t("footer.moreFeatures")}
             </h3>
             <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
-              {allTools.slice(4, 8).map((tool) => (
+              {moreFeatures.map((tool) => (
                 <li key={tool.id}>
                   <Link
                     href={tool.href}

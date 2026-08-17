@@ -41,7 +41,7 @@ interface AboutDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenAboutAttribution: () => void;
-  onOpenDonate: () => void;
+  onOpenDonate?: () => void;
 }
 
 function useEasterEggClicker(onActivate: () => void) {
@@ -272,14 +272,13 @@ export function AboutDialog({
               </ActionLink>
 
               {/* Sponsor Author button */}
-              <button
-                type="button"
-                onClick={onOpenDonate}
-                className="w-full h-full px-5 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 text-rose-500 dark:text-rose-400 text-sm font-bold hover:bg-rose-100/50 dark:hover:bg-rose-900/30 transition-all flex items-center justify-center gap-2"
+              <ActionLink
+                href={IMIFY_LINKS.sponsor}
+                className="bg-rose-50/50 text-rose-500 border-rose-200 hover:bg-rose-100/50 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/50"
               >
                 <Heart size={16} fill="currentColor" />
                 {t("sponsorAuthor")}
-              </button>
+              </ActionLink>
 
               {/* Attribution button */}
               <button

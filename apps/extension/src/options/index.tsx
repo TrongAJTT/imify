@@ -18,7 +18,6 @@ import {
 import {
   AboutDialog,
   AssetManagementDialog,
-  DonateDialog,
   WORKSPACE_TOOLS,
   WorkspaceSettingsDialog,
   WorkspaceOptionsHeader,
@@ -744,8 +743,6 @@ export default function OptionsPage() {
         }}
         devModeSettingsAdapter={devModeSettingsAdapter}
       />
-
-      <DonateDialog isOpen={isDonateDialogOpen} onClose={() => setIsDonateDialogOpen(false)} />
 
       <AssetManagementDialog
         isOpen={isAssetManagementDialogOpen}
