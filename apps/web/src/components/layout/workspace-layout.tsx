@@ -13,7 +13,8 @@ const WorkspaceSidebarContext =
   createContext<WorkspaceSidebarContextValue | null>(null);
 
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
-  const { isExtensionPage, isMonolithicPage } = useWebPageMode();
+  const { isExtensionPage, isMonolithicPage, isRecoveryPage } =
+    useWebPageMode();
   const [rightSidebar, setRightSidebar] = useState<React.ReactNode | null>(
     null,
   );
@@ -28,6 +29,10 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     }),
     [],
   );
+
+  if (isRecoveryPage) {
+    return <main className="flex w-full flex-1 flex-col">{children}</main>;
+  }
 
   return (
     <WorkspaceSidebarContext.Provider value={contextValue}>

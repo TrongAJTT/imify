@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { RefreshCw, Sparkles, AlertTriangle, Trash2 } from "lucide-react";
+import Link from "next/link";
+import {
+  RefreshCw,
+  Sparkles,
+  AlertTriangle,
+  Trash2,
+  ShieldAlert,
+} from "lucide-react";
 import { Button } from "@imify/ui/ui/button";
 
 interface ErrorProps {
@@ -25,7 +32,9 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
 
     if (matchesChunk) {
       const now = Date.now();
-      const lastRetry = sessionStorage.getItem("__imify_chunk_retry_timestamp__");
+      const lastRetry = sessionStorage.getItem(
+        "__imify_chunk_retry_timestamp__",
+      );
       if (!lastRetry || now - Number(lastRetry) > 15000) {
         sessionStorage.setItem("__imify_chunk_retry_timestamp__", String(now));
         window.location.reload();
@@ -93,6 +102,16 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
             <Trash2 size={13} className="text-slate-400" />
             {isClearing ? "Refreshing..." : "Hard Reload"}
           </Button>
+        </div>
+
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 w-full flex items-center justify-center">
+          <Link
+            href="/recovery"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors font-medium"
+          >
+            <ShieldAlert size={13} />
+            <span>Emergency Recovery Center</span>
+          </Link>
         </div>
       </div>
     </div>

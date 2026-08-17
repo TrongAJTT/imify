@@ -15,13 +15,17 @@ import { useTranslation } from "@imify/i18n";
 
 export function WebFooter() {
   const appMetadata = getAppMetadata();
-  const { isMonolithicPage: isFullFooter } = useWebPageMode();
+  const { isMonolithicPage: isFullFooter, isRecoveryPage } = useWebPageMode();
   const isDesktop = useIsDesktopLayout();
   const { t, i18n } = useTranslation("homepage");
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  if (isRecoveryPage) {
+    return null;
+  }
 
   const allTools = React.useMemo(() => {
     const groups = getWorkspaceToolsMenuGroups(isMounted ? undefined : "en");

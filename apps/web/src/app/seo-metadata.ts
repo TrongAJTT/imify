@@ -122,5 +122,10 @@ export const WEB_ROUTE_METADATA = {
     title: "QR Reader",
     description:
       "Scan QR codes instantly using your device's camera or by uploading image files (PNG/SVG) to decode links, Wi-Fi details, and contact cards locally."
+  },
+  recovery: {
+    title: "Recovery Center",
+    description:
+      "Emergency troubleshooting tool to resolve data conflicts, clear local caches, and recover application state in Imify."
   }
 } satisfies Record<string, SeoMetadataEntry>

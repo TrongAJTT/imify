@@ -241,6 +241,10 @@ export function WebHeader() {
     return links.map((item) => ({ value: item.href, label: item.label }));
   }, [i18n.language, isMounted]);
 
+  if (pathname === "/recovery") {
+    return null;
+  }
+
   const headerNode = (
     <WorkspaceOptionsHeader
       isLoading={false}

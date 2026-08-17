@@ -51,6 +51,8 @@ if (workbox) {
     { url: '/qr-reader.txt',                       revision: '6' },
     { url: '/extension.html',                      revision: '6' },
     { url: '/extension.txt',                       revision: '6' },
+    { url: '/recovery.html',                       revision: '6' },
+    { url: '/recovery.txt',                        revision: '6' },
 
     // ── Single Processor ────────────────────────────────────────────────────────
     { url: '/single-processor.html',               revision: '6' },

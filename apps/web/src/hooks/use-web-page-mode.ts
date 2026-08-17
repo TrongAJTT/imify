@@ -6,12 +6,14 @@ export function useWebPageMode() {
   const pathname = usePathname()
   const isLandingPage = pathname === "/"
   const isExtensionPage = pathname === "/extension"
-  const isMonolithicPage = isLandingPage || isExtensionPage
+  const isRecoveryPage = pathname === "/recovery"
+  const isMonolithicPage = isLandingPage || isExtensionPage || isRecoveryPage
 
   return {
     pathname,
     isLandingPage,
     isExtensionPage,
+    isRecoveryPage,
     isMonolithicPage
   }
 }

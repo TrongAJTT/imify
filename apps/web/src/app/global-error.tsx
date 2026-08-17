@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { RefreshCw, Sparkles, AlertTriangle, Trash2 } from "lucide-react";
+import {
+  RefreshCw,
+  Sparkles,
+  AlertTriangle,
+  Trash2,
+  ShieldAlert,
+} from "lucide-react";
 import { FEATURE_MEDIA_ASSET_PATHS } from "@imify/features/shared/media-assets";
 
 interface GlobalErrorProps {
@@ -26,7 +32,9 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
     // If it's a chunk loading error, attempt an immediate smooth recovery
     if (matchesChunk) {
       const now = Date.now();
-      const lastRetry = sessionStorage.getItem("__imify_chunk_retry_timestamp__");
+      const lastRetry = sessionStorage.getItem(
+        "__imify_chunk_retry_timestamp__",
+      );
       if (!lastRetry || now - Number(lastRetry) > 15000) {
         sessionStorage.setItem("__imify_chunk_retry_timestamp__", String(now));
         window.location.reload();
@@ -73,7 +81,11 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                 isChunkError ? "bg-indigo-600" : "bg-amber-500"
               }`}
             >
-              {isChunkError ? <Sparkles size={14} /> : <AlertTriangle size={14} />}
+              {isChunkError ? (
+                <Sparkles size={14} />
+              ) : (
+                <AlertTriangle size={14} />
+              )}
             </div>
           </div>
 
@@ -105,7 +117,10 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               onClick={() => (isChunkError ? handleHardRefresh() : reset())}
               className="w-full sm:flex-1 h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white text-sm font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-150"
             >
-              <RefreshCw size={16} className={isClearing ? "animate-spin" : ""} />
+              <RefreshCw
+                size={16}
+                className={isClearing ? "animate-spin" : ""}
+              />
               {isChunkError ? "Update Now" : "Try Again"}
             </button>
 
@@ -118,6 +133,16 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               <Trash2 size={15} className="text-slate-400" />
               {isClearing ? "Refreshing..." : "Clear Cache & Reload"}
             </button>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 w-full flex items-center justify-center">
+            <a
+              href="/recovery"
+              className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors font-medium"
+            >
+              <ShieldAlert size={13} />
+              <span>Emergency Recovery Center</span>
+            </a>
           </div>
         </div>
       </body>
