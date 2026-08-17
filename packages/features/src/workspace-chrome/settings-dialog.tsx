@@ -15,11 +15,13 @@ import {
   ListTree,
   RotateCcw,
   ShieldAlert,
+  Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import { APP_CONFIG } from "@imify/core/config";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
-import { toast } from "@imify/stores";
+import { toast, confirmDialog } from "@imify/stores";
 import { useUnifiedPresetStats } from "../shared/unified-preset-manager";
 import { useAssetStatistics } from "./asset-management-dialog";
 import { BaseDialog } from "@imify/ui/ui/base-dialog";
@@ -51,6 +53,12 @@ import {
 } from "../processor/performance-preferences";
 import { DevModeExportDialog } from "../dev-mode/dev-mode-export-dialog";
 import { DevModeImportDialog } from "../dev-mode/dev-mode-import-dialog";
+import {
+  DEV_MODE_FEATURES,
+  buildSystemDataPayload,
+  downloadSystemDataPayload,
+} from "../dev-mode";
+import type { DevModeFeatureDef } from "../dev-mode/dev-mode-registry";
 import type { DevModeSettingsAdapter } from "../dev-mode/dev-mode-settings-adapter";
 import { SettingsShortcutsPanel } from "./settings-shortcuts-panel";
 import { LanguageSettingsTab } from "./language-settings-tab";
@@ -238,6 +246,65 @@ export function WorkspaceSettingsDialog({
 
   const updatePerformancePreferences = (next: PerformancePreferences) => {
     onChangePerformancePreferences(normalizePerformancePreferences(next));
+  };
+
+  const handleClearAllData = async () => {
+    const confirmed = await confirmDialog({
+      title: t("data.confirmClearTitle"),
+      subtitle: t("data.confirmClearSubtitle"),
+      description: t("data.confirmClearDesc"),
+      variant: "destructive",
+      confirmText: t("data.confirmClearBtn"),
+      defaultFocus: "confirm",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      if (devModeSettingsAdapter) {
+        const allFeatureIds = DEV_MODE_FEATURES.map(
+          (feature: DevModeFeatureDef) => feature.id,
+        );
+        const backupPayload = await buildSystemDataPayload({
+          activeTab: null,
+          performancePreferences: safePerformancePreferences,
+          layoutPreferences: layoutPreferences,
+          getStorageState: devModeSettingsAdapter.getSettingsState,
+          exportType: "backup",
+          exportedFeatures: allFeatureIds,
+        });
+        downloadSystemDataPayload(backupPayload);
+      }
+
+      localStorage.clear();
+      sessionStorage.clear();
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      if ("indexedDB" in window && typeof indexedDB.databases === "function") {
+        try {
+          const dbs = await indexedDB.databases();
+          dbs.forEach((db) => {
+            if (db.name) indexedDB.deleteDatabase(db.name);
+          });
+        } catch {
+          // ignore
+        }
+      }
+
+      toast.success(
+        t("data.clearSuccessTitle"),
+        t("data.clearSuccessDesc"),
+        3000,
+      );
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      console.error("Failed to clear data:", err);
+    }
   };
 
   const tabs = [
@@ -523,13 +590,18 @@ export function WorkspaceSettingsDialog({
                   )}
                   <section className="space-y-4">
                     <SettingsItemHeader
-                      title={t("performance.optimizationTitle", "MEMORY & DEVICE OPTIMIZATION")}
+                      title={t(
+                        "performance.optimizationTitle",
+                        "MEMORY & DEVICE OPTIMIZATION",
+                      )}
                       description={t("performance.optimizationDesc")}
                     />
                     <div className="space-y-2">
                       <ToggleSwitch
                         label={t("performance.pdfStudioLazyPagination")}
-                        description={t("performance.pdfStudioLazyPaginationDesc")}
+                        description={t(
+                          "performance.pdfStudioLazyPaginationDesc",
+                        )}
                         checked={resolvePdfStudioLazyPagination(
                           safePerformancePreferences,
                           isMobileDialog,
@@ -760,23 +832,44 @@ export function WorkspaceSettingsDialog({
                       description={t("data.backupRestoreDesc")}
                     />
                     {devModeSettingsAdapter && (
-                      <div className="grid grid-cols-2 gap-3 pt-1">
-                        <Button
-                          variant="outline"
-                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        {/* 1. Export Card */}
+                        <button
+                          type="button"
                           onClick={() => setIsExportDialogOpen(true)}
+                          className="group flex flex-col items-start p-3.5 text-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-sky-500/40 dark:hover:border-sky-500/40 transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                         >
-                          <Download size={14} />
-                          {t("data.exportData", "Export Data")}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="justify-start gap-2 rounded-lg border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          <div className="flex items-center gap-2.5 w-full mb-1.5">
+                            <div className="text-sky-600 dark:text-sky-400 group-hover:scale-105 transition-transform">
+                              <Download size={16} />
+                            </div>
+                            <span className="font-semibold text-sm text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                              {t("data.exportData")}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                            {t("data.exportDataDesc")}
+                          </p>
+                        </button>
+
+                        {/* 2. Import Card */}
+                        <button
+                          type="button"
                           onClick={() => setIsImportDialogOpen(true)}
+                          className="group flex flex-col items-start p-3.5 text-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                         >
-                          <Download size={14} className="rotate-180" />
-                          {t("data.importData")}
-                        </Button>
+                          <div className="flex items-center gap-2.5 w-full mb-1.5">
+                            <div className="text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+                              <Upload size={16} />
+                            </div>
+                            <span className="font-semibold text-sm text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                              {t("data.importData")}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                            {t("data.importDataDesc")}
+                          </p>
+                        </button>
                       </div>
                     )}
                   </section>
@@ -817,6 +910,24 @@ export function WorkspaceSettingsDialog({
                         )}
                       </div>
                     </div>
+                    {/* Clear / Reset Card */}
+                    <button
+                      type="button"
+                      onClick={handleClearAllData}
+                      className="w-full group flex flex-col items-start p-3.5 text-left rounded-xl border border-rose-200/70 dark:border-rose-900/30 bg-rose-50/30 dark:bg-rose-950/10 hover:bg-rose-50/70 dark:hover:bg-rose-950/30 hover:border-rose-400/50 dark:hover:border-rose-700/50 transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                    >
+                      <div className="flex items-center gap-2.5 w-full mb-1.5">
+                        <div className="text-rose-600 dark:text-rose-400 group-hover:scale-105 transition-transform">
+                          <Trash2 size={16} />
+                        </div>
+                        <span className="font-semibold text-sm text-rose-700 dark:text-rose-300 group-hover:text-rose-600 dark:group-hover:text-rose-200 transition-colors">
+                          {t("data.clearData")}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                        {t("data.clearDataDesc")}
+                      </p>
+                    </button>
                   </section>
                 </div>
               ) : null}
