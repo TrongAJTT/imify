@@ -7,6 +7,7 @@ import { SavePresetDialog } from "../processor/save-preset-dialog";
 import { SplicingPresetDetail } from "./splicing-preset-detail";
 import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store";
 import { confirmDialog } from "@imify/stores";
+import { generateDefaultPresetName } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 import { useTranslation } from "@imify/i18n";
 
@@ -249,15 +250,11 @@ export function SplicingPresetSelectView({
         onSave={handleSavePreset}
         highlightColors={[...PRESET_HIGHLIGHT_COLORS]}
         title={editingPreset ? t("select.editPreset") : t("select.savePreset")}
+        featureKey="splicing"
         defaultName={
           editingPreset
             ? editingPreset.name
-            : t("select.presetDefaultName", {
-                time: new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
-              })
+            : generateDefaultPresetName("splicing")
         }
       />
     </div>

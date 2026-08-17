@@ -9,6 +9,7 @@ import {
   type SetupContext,
 } from "@imify/stores/stores/batch-store";
 import { confirmDialog } from "@imify/stores";
+import { generateDefaultPresetName } from "@imify/core";
 import { PresetCard } from "./preset-card";
 import { SavePresetDialog } from "./save-preset-dialog";
 import { WorkspaceSelectHeader } from "./workspace-select-header";
@@ -210,17 +211,11 @@ export function ProcessorPresetSelectView({
             ? t("presetSelector.editPresetTitle")
             : t("presetSelector.savePresetTitle")
         }
+        featureKey="processor"
         defaultName={
           editingPreset
             ? editingPreset.name
-            : t("presetSelector.defaultPresetName", {
-                defaultValue: `${contextLabel} Preset ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
-                context: contextLabel,
-                time: new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
-              })
+            : generateDefaultPresetName("processor")
         }
       />
     </div>

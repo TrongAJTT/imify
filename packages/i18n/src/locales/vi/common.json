@@ -24,6 +24,8 @@
   "notice": "Chú ý",
   "fileRenaming": "Đổi tên tệp",
   "name": "Tên",
+  "clearName": "Xóa tên",
+  "defaultName": "Tên mặc định",
   "color": "Màu sắc",
   "highlightColor": "Màu nổi bật",
   "files": "Tệp tin",

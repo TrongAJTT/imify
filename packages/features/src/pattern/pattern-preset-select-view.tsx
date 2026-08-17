@@ -7,6 +7,7 @@ import { SavePresetDialog } from "../processor/save-preset-dialog";
 import { PatternPresetDetail } from "./pattern-preset-detail";
 import type { SavedPatternPreset } from "@imify/stores/stores/pattern-preset-store";
 import { confirmDialog } from "@imify/stores";
+import { generateDefaultPresetName } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 import { useTranslation } from "@imify/i18n";
 
@@ -269,15 +270,11 @@ export function PatternPresetSelectView({
             ? t("select.editPresetTitle")
             : t("select.savePresetTitle")
         }
+        featureKey="pattern"
         defaultName={
           editingPreset
             ? editingPreset.name
-            : t("select.defaultPresetNamePattern", {
-                time: new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
-              })
+            : generateDefaultPresetName("pattern")
         }
       />
     </div>

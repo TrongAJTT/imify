@@ -24,6 +24,8 @@
   "notice": "Notice",
   "fileRenaming": "File Renaming",
   "name": "Name",
+  "clearName": "Clear name",
+  "defaultName": "Default name",
   "color": "Color",
   "highlightColor": "Highlight color",
   "files": "Files",

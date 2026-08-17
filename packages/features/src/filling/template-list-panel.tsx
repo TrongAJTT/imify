@@ -18,7 +18,7 @@ import {
   EmptyDropCard,
   SelectInput,
   Subheading,
-  TextInput,
+  PresetNameInput,
   Tooltip,
 } from "@imify/ui";
 import { templateStorage } from "./template-storage";
@@ -213,12 +213,18 @@ export function FillingTemplateListPanel({
           </div>
 
           <div className="mb-5 space-y-4">
-            <TextInput
+            <PresetNameInput
               label={t("dialog.templateName")}
               value={renameName}
               onChange={setRenameName}
+              featureKey="filling"
               placeholder="e.g. My Photo Grid"
               autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  void handleRenameConfirm();
+                }
+              }}
             />
           </div>
 
