@@ -12,6 +12,8 @@ import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store";
 import { useInspectorStore } from "@imify/stores/stores/inspector-store";
 import { useQrGeneratorStore } from "@imify/stores/stores/qr-generator-store";
 import { useBackgroundRemoverStore } from "@imify/stores/stores/background-remover-store";
+import { useCollageMakerStore } from "@imify/stores/stores/collage-maker-store";
+import { usePdfStudioStore } from "@imify/stores/stores/pdf-studio-store";
 import { Button } from "@imify/ui/ui/button";
 import { Tooltip } from "@imify/ui/ui/tooltip";
 import type { OptionsTab } from "./debug-shared";
@@ -33,7 +35,9 @@ type StoreFilter =
   | "batch_global"
   | "processor"
   | "qr_generator"
-  | "background_remover";
+  | "background_remover"
+  | "collage_maker"
+  | "pdf_studio";
 
 interface DevModeStateViewerProps {
   activeTab: OptionsTab | null;
@@ -89,6 +93,8 @@ export function DevModeStateViewer({
   const inspectorState = useInspectorStore();
   const qrGeneratorState = useQrGeneratorStore();
   const backgroundRemoverState = useBackgroundRemoverStore();
+  const collageMakerState = useCollageMakerStore();
+  const pdfStudioState = usePdfStudioStore();
 
   const allStores = useMemo<Record<string, Record<string, unknown>>>(() => {
     const rootBatch = stripActions(
@@ -137,6 +143,12 @@ export function DevModeStateViewer({
       background_remover: stripActions(
         backgroundRemoverState as unknown as Record<string, unknown>,
       ),
+      collage_maker: stripActions(
+        collageMakerState as unknown as Record<string, unknown>,
+      ),
+      pdf_studio: stripActions(
+        pdfStudioState as unknown as Record<string, unknown>,
+      ),
       "context-menu": (settingsState as any)?.context_menu || {},
     };
   }, [
@@ -150,6 +162,8 @@ export function DevModeStateViewer({
     splitterState,
     qrGeneratorState,
     backgroundRemoverState,
+    collageMakerState,
+    pdfStudioState,
   ]);
 
   const tabToStoreKey: Partial<Record<StoreFilter, keyof typeof allStores>> = {
@@ -166,6 +180,8 @@ export function DevModeStateViewer({
     inspector: "inspector",
     qr_generator: "qr_generator",
     background_remover: "background_remover",
+    collage_maker: "collage_maker",
+    pdf_studio: "pdf_studio",
   };
 
   const visibleSnapshot = useMemo(() => {
@@ -210,6 +226,8 @@ export function DevModeStateViewer({
     { value: "inspector", label: "Image Inspector" },
     { value: "qr_generator", label: "QR Code Generator" },
     { value: "background_remover", label: "Background Remover" },
+    { value: "collage_maker", label: "Collage Maker" },
+    { value: "pdf_studio", label: "PDF Studio" },
   ];
 
   return (

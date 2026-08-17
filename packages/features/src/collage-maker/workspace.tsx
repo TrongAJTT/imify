@@ -21,6 +21,7 @@ import {
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
 import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
+import { useCollageMakerStore } from "@imify/stores/stores/collage-maker-store";
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb";
 
 import {
@@ -99,22 +100,19 @@ export function CollageMakerWorkspace({
   // Stage 1 - Upload Queue
   const [queueImages, setQueueImages] = useState<QueueImageItem[]>([]);
 
-  // Stage 2 - Canvas & Spacing Config
-  const [canvasWidth, setCanvasWidth] = useState<number>(1920);
-  const [canvasHeight, setCanvasHeight] = useState<number>(1080);
-  const [canvasUnit, setCanvasUnit] = useState<CanvasSizeUnit>("px");
-  const [canvasDpi, setCanvasDpi] = useState<number>(300);
-  const [selectedLayoutId, setSelectedLayoutId] = useState<string>("");
-  const [gridParams, setGridParams] = useState<GridDesignParams>({
-    direction: "cols",
-    rowCount: 2,
-    rowDefinitions: ["1", "1"],
-    outerPadding: 20,
-    gapX: 16,
-    gapY: 16,
-    uniformColumns: false,
-    uniformColumnsDef: "",
-  });
+  // Stage 2 - Canvas & Spacing Config (Collage Maker Store)
+  const canvasWidth = useCollageMakerStore((s) => s.canvasWidth);
+  const setCanvasWidth = useCollageMakerStore((s) => s.setCanvasWidth);
+  const canvasHeight = useCollageMakerStore((s) => s.canvasHeight);
+  const setCanvasHeight = useCollageMakerStore((s) => s.setCanvasHeight);
+  const canvasUnit = useCollageMakerStore((s) => s.canvasUnit);
+  const setCanvasUnit = useCollageMakerStore((s) => s.setCanvasUnit);
+  const canvasDpi = useCollageMakerStore((s) => s.canvasDpi);
+  const setCanvasDpi = useCollageMakerStore((s) => s.setCanvasDpi);
+  const selectedLayoutId = useCollageMakerStore((s) => s.selectedLayoutId);
+  const setSelectedLayoutId = useCollageMakerStore((s) => s.setSelectedLayoutId);
+  const gridParams = useCollageMakerStore((s) => s.gridParams);
+  const setGridParams = useCollageMakerStore((s) => s.setGridParams);
 
   const handleSelectLayout = useCallback(
     (presetId: string, params: GridDesignParams) => {
@@ -122,13 +120,16 @@ export function CollageMakerWorkspace({
       setGridParams(params);
       useFillingStore.getState().setGridDesignParams(params);
     },
-    [],
+    [setSelectedLayoutId, setGridParams],
   );
 
-  const handleGridParamsChange = useCallback((params: GridDesignParams) => {
-    setGridParams(params);
-    useFillingStore.getState().setGridDesignParams(params);
-  }, []);
+  const handleGridParamsChange = useCallback(
+    (params: GridDesignParams) => {
+      setGridParams(params);
+      useFillingStore.getState().setGridDesignParams(params);
+    },
+    [setGridParams],
+  );
 
   // Header Store
   const setHeaderSection = useWorkspaceHeaderStore((state) => state.setSection);

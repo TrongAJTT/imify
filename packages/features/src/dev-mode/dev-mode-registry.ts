@@ -7,6 +7,8 @@ import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"
 import { useInspectorStore } from "@imify/stores/stores/inspector-store"
 import { useQrGeneratorStore } from "@imify/stores/stores/qr-generator-store"
 import { useBackgroundRemoverStore } from "@imify/stores/stores/background-remover-store"
+import { useCollageMakerStore } from "@imify/stores/stores/collage-maker-store"
+import { usePdfStudioStore } from "@imify/stores/stores/pdf-studio-store"
 import type { StoreApi, UseBoundStore } from "zustand"
 
 export type DevModeFeatureId =
@@ -19,6 +21,8 @@ export type DevModeFeatureId =
   | "inspector"
   | "qr_generator"
   | "background_remover"
+  | "collage_maker"
+  | "pdf_studio"
   | "settings"
   | "performance"
   | "layout"
@@ -46,6 +50,8 @@ export const DEV_MODE_FEATURES: DevModeFeatureDef[] = [
   { id: "inspector", label: "Image Inspector", storeHook: useInspectorStore },
   { id: "qr_generator", label: "QR Code Generator", storeHook: useQrGeneratorStore },
   { id: "background_remover", label: "Background Remover", storeHook: useBackgroundRemoverStore },
+  { id: "collage_maker", label: "Collage Maker", storeHook: useCollageMakerStore },
+  { id: "pdf_studio", label: "PDF Studio", storeHook: usePdfStudioStore },
   { id: "settings", label: "Settings & Context Menu" },
   { id: "performance", label: "Performance Preferences" },
   { id: "layout", label: "Workspace Layout Preferences" },

@@ -132,6 +132,8 @@ export interface DebugLogPayload {
     inspector?: unknown
     qr_generator?: unknown
     background_remover?: unknown
+    collage_maker?: unknown
+    pdf_studio?: unknown
   }
   settings?: unknown
   performance?: unknown
