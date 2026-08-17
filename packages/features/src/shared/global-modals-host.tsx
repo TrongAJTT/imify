@@ -3,12 +3,14 @@
 import React from "react";
 import { useConfirmationDialogStore, useToastStore } from "@imify/stores";
 import { AlertDialog, ConfirmDialog, RenameInputDialog, ToastContainer } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
 import { BatchDownloadConfirmDialog } from "./download-confirm-dialog";
 import { OOMWarningDialog } from "../processor/batch/oom-warning-dialog";
 import { SplicingHeavyPreviewQualityDialog } from "../splicing/splicing-heavy-preview-quality-dialog";
 import { WhatsNewUpdateNotificationGate } from "../workspace-chrome/whats-new-update-notification-gate";
 
 export function GlobalModalsHost() {
+  const { t } = useTranslation("common");
   const toasts = useToastStore((state) => state.toasts);
   const dismissToast = useToastStore((state) => state.dismissToast);
 
@@ -58,8 +60,8 @@ export function GlobalModalsHost() {
         title={genericConfirm.title}
         subtitle={genericConfirm.subtitle}
         description={genericConfirm.description}
-        confirmText={genericConfirm.confirmText}
-        cancelText={genericConfirm.cancelText}
+        confirmText={genericConfirm.confirmText ?? t("confirm")}
+        cancelText={genericConfirm.cancelText ?? t("cancel")}
         variant={genericConfirm.variant}
         defaultFocus={genericConfirm.defaultFocus}
         onConfirm={() => resolveConfirm(true)}
@@ -72,7 +74,7 @@ export function GlobalModalsHost() {
         title={genericAlert.title}
         subtitle={genericAlert.subtitle}
         description={genericAlert.description}
-        buttonText={genericAlert.buttonText}
+        buttonText={genericAlert.buttonText ?? t("confirm")}
         variant={genericAlert.variant}
         onClose={() => resolveAlert()}
       />

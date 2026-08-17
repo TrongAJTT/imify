@@ -270,11 +270,11 @@ export const useConfirmationDialogStore = create<ConfirmationDialogState>((set, 
       set({
         genericConfirm: {
           isOpen: true,
-          title: options?.title ?? "Confirmation",
+          title: options?.title,
           subtitle: options?.subtitle,
           description: options?.description,
-          confirmText: options?.confirmText ?? "Confirm",
-          cancelText: options?.cancelText ?? "Cancel",
+          confirmText: options?.confirmText,
+          cancelText: options?.cancelText,
           variant: options?.variant ?? "destructive",
           defaultFocus: options?.defaultFocus ?? "confirm",
           resolve
@@ -301,10 +301,10 @@ export const useConfirmationDialogStore = create<ConfirmationDialogState>((set, 
       set({
         genericAlert: {
           isOpen: true,
-          title: options?.title ?? "Notice",
+          title: options?.title,
           subtitle: options?.subtitle,
           description: options?.description,
-          buttonText: options?.buttonText ?? "OK",
+          buttonText: options?.buttonText,
           variant: options?.variant ?? "info",
           resolve
         }

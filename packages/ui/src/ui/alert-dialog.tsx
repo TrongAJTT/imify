@@ -23,7 +23,7 @@ export function AlertDialog({
   title,
   subtitle,
   description,
-  buttonText = "OK",
+  buttonText = "Confirm",
   variant = "info",
   onClose,
 }: AlertDialogProps) {
