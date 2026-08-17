@@ -9,7 +9,7 @@ import {
   normalizeWorkspaceLayoutPreferences,
   WORKSPACE_LAYOUT_PREFERENCES_KEY
 } from "@imify/features/workspace-shell"
-import { BottomSheet } from "@imify/ui"
+import { BottomSheet, BottomSheetTriggerBar } from "@imify/ui"
 import { useWorkspaceHeaderStore } from "@imify/stores"
 
 interface WorkspaceShellProps {
@@ -113,18 +113,10 @@ export function WorkspaceShell({ children, rightSidebar, title = "Configuration"
           </BottomSheet>
 
           {/* Persistent Trigger Bar at bottom - Compact Version */}
-          <button
-            type="button"
+          <BottomSheetTriggerBar
             onClick={() => setIsMobileSidebarOpen(true)}
-            className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 rounded-t-2xl px-6 pb-2 pt-2 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] transition-transform active:translate-y-0.5"
-          >
-            <div className="w-8 h-1 rounded-full bg-slate-200 dark:bg-slate-800 mb-1.5" />
-            <div className="w-full flex items-center justify-center">
-               <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em]">
-                 {title}
-               </h3>
-            </div>
-          </button>
+            title={title}
+          />
         </>
       )}
     </>
