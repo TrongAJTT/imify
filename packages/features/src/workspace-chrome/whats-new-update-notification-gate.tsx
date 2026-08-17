@@ -95,14 +95,44 @@ export async function checkForUpdates(force = false): Promise<boolean> {
   let state = rawV2 ? safeParseSeenStateV2(rawV2) : null
 
   if (!state) {
-    state = {
-      version: currentBundleVersion,
-      versionType: currentBundleVersionType,
-      findVersionAt: now,
-      remindAt: 0,
-      cacheVersion: currentBundleVersion,
-      resetCacheAt: now,
-      lastFetchVersionAt: 0
+    let rawV1 = typeof window !== "undefined" && window.localStorage ? window.localStorage.getItem(STORAGE_KEY_V1) : null
+    if (!rawV1) {
+      rawV1 = await deferredStorage.getItem(STORAGE_KEY_V1)
+    }
+    if (rawV1) {
+      try {
+        const parsedV1 = JSON.parse(rawV1)
+        // Migrate v1→v2: cacheVersion = currentBundleVersion because the user has already
+        // loaded this bundle. v1's version was "last seen changelog version", unrelated to
+        // SW cache staleness. Never set remindAt = now here to avoid locking scroll on load.
+        state = {
+          version: currentBundleVersion,
+          versionType: currentBundleVersionType,
+          findVersionAt: now,
+          remindAt: 0,
+          cacheVersion: currentBundleVersion,
+          resetCacheAt: typeof parsedV1?.lastSeenAt === "number" ? parsedV1.lastSeenAt : now,
+          lastFetchVersionAt: 0
+        }
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.removeItem(STORAGE_KEY_V1)
+        }
+        await deferredStorage.removeItem(STORAGE_KEY_V1)
+      } catch {
+        // Ignore parse error
+      }
+    }
+
+    if (!state) {
+      state = {
+        version: currentBundleVersion,
+        versionType: currentBundleVersionType,
+        findVersionAt: now,
+        remindAt: 0,
+        cacheVersion: currentBundleVersion,
+        resetCacheAt: now,
+        lastFetchVersionAt: 0
+      }
     }
   }
 
@@ -235,12 +265,18 @@ export function WhatsNewUpdateNotificationGate() {
       if (event.data?.type === "SW_CACHE_READY" && typeof event.data.version === "string") {
         const swVer = event.data.version
         const current = seenStateRef.current
-        if (current && current.cacheVersion !== swVer) {
-          void persistState({
-            ...current,
-            cacheVersion: swVer,
-            resetCacheAt: Date.now()
-          })
+        if (!current || current.cacheVersion === swVer) return
+
+        if (compareSemver(swVer, current.cacheVersion) > 0) {
+          // SW has activated with a newer version — reload so the page runs fresh assets.
+          // skipWaiting() is already called automatically on SW install, so the new SW
+          // is already controlling this tab. A reload picks up the new precache.
+          void persistState({ ...current, cacheVersion: swVer, resetCacheAt: Date.now() }).then(
+            () => window.location.reload()
+          )
+        } else {
+          // SW version is same or older (e.g. SW downgrade or re-activate) — just sync state
+          void persistState({ ...current, cacheVersion: swVer, resetCacheAt: Date.now() })
         }
       }
     }
@@ -266,17 +302,22 @@ export function WhatsNewUpdateNotificationGate() {
           if (rawV1) {
             try {
               const parsedV1 = JSON.parse(rawV1)
-              const v1Ver = parsedV1?.version || currentBundleVersion
-              const v1Type = parsedV1?.versionType || currentBundleVersionType
+              // Migrate v1→v2: cacheVersion = currentBundleVersion because the user has already
+              // loaded this bundle. v1's version was "last seen changelog version", unrelated to
+              // SW cache staleness. Never set remindAt = now here to avoid locking scroll on load.
               state = {
-                version: v1Ver,
-                versionType: v1Type,
+                version: currentBundleVersion,
+                versionType: currentBundleVersionType,
                 findVersionAt: now,
                 remindAt: 0,
-                cacheVersion: v1Ver,
-                resetCacheAt: now,
+                cacheVersion: currentBundleVersion,
+                resetCacheAt: typeof parsedV1?.lastSeenAt === "number" ? parsedV1.lastSeenAt : now,
                 lastFetchVersionAt: 0
               }
+              if (typeof window !== "undefined" && window.localStorage) {
+                window.localStorage.removeItem(STORAGE_KEY_V1)
+              }
+              await deferredStorage.removeItem(STORAGE_KEY_V1)
             } catch {
               // Ignore parse error
             }
