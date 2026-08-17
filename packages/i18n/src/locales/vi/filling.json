@@ -148,6 +148,13 @@
     "symmetricHelpDesc": "• Bạn có thể điều chỉnh kích thước và khoảng cách một cách trực quan bằng cách sử dụng hai thành phần đầu tiên trên trục chính thứ nhất, và thành phần đầu tiên trên trục chính thứ hai.\n• Sử dụng các phím mũi tên để nhích vị trí bộ điều khiển (giữ Shift để nhích bước lớn hơn).",
     "symmetricHelpAria": "Trợ giúp trình soạn thảo trực quan Trình tạo đối xứng",
     "symmetricHelpMediaAlt": "Trình soạn thảo trực quan Trình tạo đối xứng",
+    "fillShortcutsHelpLabel": "Mẹo chỉnh sửa trực quan hình ảnh",
+    "fillShortcutsHelpTips": [
+      "Sử dụng các phím mũi tên để điều chỉnh tọa độ (Offset X, Offset Y) (giữ Shift để nhích bước lớn hơn).",
+      "Sử dụng phím [ và ] để giảm hoặc tăng góc xoay (Rotation) của hình ảnh.",
+      "Sử dụng phím - và = để thu nhỏ hoặc phóng to tỷ lệ (Scale) của hình ảnh (tự động giữ nguyên tỷ lệ)."
+    ],
+    "fillShortcutsHelpAria": "Trợ giúp phím tắt điều khiển hình ảnh",
     "rowCount": "Đặt số lượng hàng ngang mà bố cục sẽ tạo ra.",
     "outerPadding": "Khoảng lề giữa mép canvas và lưới được tạo.",
     "gapX": "Khoảng cách ngang giữa các ô lưới.",

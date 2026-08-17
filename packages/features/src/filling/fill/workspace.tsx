@@ -16,7 +16,7 @@ import {
   Transformer,
 } from "react-konva";
 import type Konva from "konva";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, SquareMousePointer } from "lucide-react";
 
 import {
   mapQuickExportToEngineConfig,
@@ -68,7 +68,7 @@ import {
 } from "@imify/features/filling/layer-visual-highlight";
 import { Subheading, MutedText } from "@imify/ui/ui/typography";
 import { Button } from "@imify/ui/ui/button";
-import { ZoomPanControl } from "@imify/ui";
+import { Tooltip, ZoomPanControl } from "@imify/ui";
 import { promptRenameInput } from "@imify/stores";
 import { useCanvasResizer } from "../../shared/use-canvas-resizer";
 import {
@@ -540,6 +540,124 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       window.removeEventListener("keyup", handleKeyUp);
     };
   }, []);
+
+  useEffect(() => {
+    const handleImageTransformShortcuts = (e: KeyboardEvent) => {
+      if (!selectedRuntimeItem || !selectedFillState?.imageUrl) return;
+
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const transform = selectedFillState.imageTransform;
+      const moveStep = e.shiftKey ? 10 : 1;
+      const rotStep = e.shiftKey ? 5 : 1;
+      const scaleStep = e.shiftKey ? 0.05 : 0.01;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            x: Math.round((transform.x - moveStep) * 100) / 100,
+          },
+        });
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            x: Math.round((transform.x + moveStep) * 100) / 100,
+          },
+        });
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            y: Math.round((transform.y - moveStep) * 100) / 100,
+          },
+        });
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            y: Math.round((transform.y + moveStep) * 100) / 100,
+          },
+        });
+      } else if (e.key === "[") {
+        e.preventDefault();
+        const nextRot = Math.round((transform.rotation - rotStep) * 100) / 100;
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            rotation: nextRot,
+          },
+        });
+      } else if (e.key === "]") {
+        e.preventDefault();
+        const nextRot = Math.round((transform.rotation + rotStep) * 100) / 100;
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            rotation: nextRot,
+          },
+        });
+      } else if (e.key === "-" || e.key === "_") {
+        e.preventDefault();
+        const currentScaleX = transform.scaleX;
+        const currentScaleY = transform.scaleY;
+        const ratio = currentScaleY / (currentScaleX || 1);
+        const nextScaleX = Math.max(
+          0.01,
+          Math.round((currentScaleX - scaleStep) * 1000) / 1000,
+        );
+        const nextScaleY = Math.max(
+          0.01,
+          Math.round(nextScaleX * ratio * 1000) / 1000,
+        );
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            scaleX: nextScaleX,
+            scaleY: nextScaleY,
+          },
+        });
+      } else if (e.key === "=" || e.key === "+") {
+        e.preventDefault();
+        const currentScaleX = transform.scaleX;
+        const currentScaleY = transform.scaleY;
+        const ratio = currentScaleY / (currentScaleX || 1);
+        const nextScaleX = Math.max(
+          0.01,
+          Math.round((currentScaleX + scaleStep) * 1000) / 1000,
+        );
+        const nextScaleY = Math.max(
+          0.01,
+          Math.round(nextScaleX * ratio * 1000) / 1000,
+        );
+        updateLayerFillState(selectedRuntimeItem.id, {
+          imageTransform: {
+            ...transform,
+            scaleX: nextScaleX,
+            scaleY: nextScaleY,
+          },
+        });
+      }
+    };
+
+    window.addEventListener("keydown", handleImageTransformShortcuts);
+    return () =>
+      window.removeEventListener("keydown", handleImageTransformShortcuts);
+  }, [selectedRuntimeItem, selectedFillState, updateLayerFillState]);
 
   useEffect(() => {
     const newMap = new Map<string, HTMLImageElement>();
@@ -1525,11 +1643,43 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     template.canvasWidth,
   ]);
 
+  const fillTipsRaw = t("tooltips.fillShortcutsHelpTips", {
+    returnObjects: true,
+  });
+  const fillTipsList: string[] = Array.isArray(fillTipsRaw)
+    ? fillTipsRaw
+    : [
+        "Sử dụng các phím mũi tên để điều chỉnh tọa độ (Offset X, Offset Y) (giữ Shift để nhích bước lớn hơn).",
+        "Sử dụng phím [ và ] để giảm hoặc tăng góc xoay (Rotation) của hình ảnh.",
+        "Sử dụng phím - và = để thu nhỏ hoặc phóng to tỷ lệ (Scale) của hình ảnh (tự động giữ nguyên tỷ lệ).",
+      ];
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <Subheading>{t("dialog.fillTitle")}</Subheading>
+          <div className="flex items-center gap-1.5">
+            <Subheading>{t("dialog.fillTitle")}</Subheading>
+            <Tooltip
+              variant="wide2"
+              label={t("tooltips.fillShortcutsHelpLabel")}
+              content={
+                <ul className="space-y-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 list-disc pl-3.5 pr-1">
+                  {fillTipsList.map((tip, idx) => (
+                    <li key={idx}>{tip}</li>
+                  ))}
+                </ul>
+              }
+            >
+              <button
+                type="button"
+                className="inline-flex items-center text-slate-400 hover:text-sky-500 dark:text-slate-500 dark:hover:text-sky-400 transition-colors"
+                aria-label={t("tooltips.fillShortcutsHelpAria", {})}
+              >
+                <SquareMousePointer size={14} />
+              </button>
+            </Tooltip>
+          </div>
           <MutedText className="text-xs mt-0.5 truncate">
             {template.canvasWidth} x {template.canvasHeight} px &middot;{" "}
             {template.layers.length === 1
@@ -1570,7 +1720,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
             ) : (
               <>
                 <Download size={14} />
-                <span>{t("common:export", { defaultValue: "Xuất ảnh" })}</span>
+                <span>{t("common:export")}</span>
               </>
             )}
           </Button>

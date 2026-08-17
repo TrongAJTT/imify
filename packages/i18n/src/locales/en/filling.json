@@ -148,6 +148,13 @@
     "symmetricHelpDesc": "• You can adjust size and spacing visually using the first two components on the first main axis, and the first component on the second main axis.\n• Use arrow keys to nudge the selected control (hold Shift for larger steps).",
     "symmetricHelpAria": "Symmetric Generator visual editor help",
     "symmetricHelpMediaAlt": "Symmetric Generator visual editor",
+    "fillShortcutsHelpLabel": "Visual image editing shortcuts",
+    "fillShortcutsHelpTips": [
+      "Use arrow keys to adjust image position (Offset X, Offset Y) (hold Shift for larger steps).",
+      "Use [ and ] keys to decrease or increase image rotation angle.",
+      "Use - and = keys to decrease or increase image scale (maintains aspect ratio)."
+    ],
+    "fillShortcutsHelpAria": "Image control shortcuts help",
     "rowCount": "Set how many horizontal rows the layout should generate.",
     "outerPadding": "Spacing between the canvas edge and the generated grid.",
     "gapX": "Horizontal spacing between grid cells.",
