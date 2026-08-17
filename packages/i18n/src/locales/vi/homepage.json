@@ -121,6 +121,14 @@
         "answer": "Không cần cài đặt. Bạn có thể bắt đầu sử dụng Imify Web trực tiếp trong trình duyệt ngay bây giờ. Đối với các quy trình độc quyền của tiện ích mở rộng, bạn có thể tùy chọn cài đặt tiện ích mở rộng trình duyệt."
       },
       {
+        "question": "Tôi thấy Imify Web đã cập nhật bản mới nhưng tôi vẫn còn kẹt ở bản cũ?",
+        "answer": "Vấn đề có thể do cache không tự làm mới và bị kẹt ở phiên bản cũ, hoặc quá trình tự động cập nhật gặp sự cố.\n\n**1. Trường hợp quá trình tự động cập nhật gặp sự cố:**\n- Nếu bạn đang ở phiên bản 2.3 trở lên, hãy mở hộp thoại **Giới thiệu Imify**, nhấn vào badge phiên bản để kiểm tra. Nếu có phiên bản mới, hộp thoại thông báo cập nhật sẽ hiện ra, nhấn **Cập nhật ngay** để tiến hành cập nhật.\n- Nếu cập nhật thất bại hoặc đang ở phiên bản cũ hơn, hãy chuyển sang bước 2.\n\n**2. Trường hợp cache không tự làm mới:**\n- **Phương pháp 1 (Khuyên dùng):** Truy cập vào [Trang Khôi Phục]({{recoveryUrl}}) và nhấn tùy chọn **Dọn dẹp bộ nhớ đệm** để xóa cache trong máy, sau đó tải lại trang để nạp phiên bản mới nhất.\n- **Phương pháp 2 (Dự phòng):** Nếu không thể vào trang Khôi phục, bạn có thể xóa cache trình duyệt thủ công theo hướng dẫn chính thức: [Chrome]({{chromeUrl}}), [Edge]({{edgeUrl}}), [Firefox]({{firefoxUrl}}).\n- Ngoài ra trên PC, bạn có thể nhấn tổ hợp phím `Ctrl + F5` (hoặc `Cmd + Shift + R` trên macOS) để tải mới hoàn toàn."
+      },
+      {
+        "question": "Tôi gặp sự cố khi đang sử dụng hoặc truy cập một chức năng nào đó?",
+        "answer": "- **Nếu gặp sự cố khi đang xử lý ảnh (bị đứng hoặc trang giữ chỗ của trình duyệt):** Khả năng cao là do thiết bị bị tràn RAM khi xử lý lượng ảnh lớn. Hãy tải lại trang để giải phóng RAM và chia nhỏ khối lượng công việc. Nếu nhu cầu xử lý vượt quá giới hạn của môi trường web, bạn nên cân nhắc dùng phần mềm chuyên dụng trên máy tính.\n- **Nếu gặp lỗi khi đang mở hoặc truy cập trang:** Dữ liệu cài đặt hoặc cache có thể bị xung đột. Hãy vào [Trang Khôi Phục]({{recoveryUrl}}), sao lưu cấu hình cần thiết và chọn **Dọn sạch dữ liệu (Khôi phục gốc)**.\n- **Báo cáo sự cố:** Nếu vẫn gặp lỗi, vui lòng gửi phản hồi tại [GitHub Issues]({{githubIssuesUrl}}) để chúng tôi hỗ trợ."
+      },
+      {
         "question": "Imify có hoàn toàn miễn phí không?",
         "answer": "Có, tất cả các công cụ cốt lõi trong Imify Web đều miễn phí. Không có phí ẩn hoặc khóa tính năng cao cấp trên các tính năng không gian làm việc web."
       },

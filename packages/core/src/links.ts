@@ -13,5 +13,10 @@ export const IMIFY_LINKS = {
   unikorn: "https://unikorn.vn/p/imify",
   j2teamLaunch: "https://launch.j2team.dev/products/imify-save-process-images",
   videoDemo: "https://www.youtube.com/watch?v=ltMZ3KlBCWQ",
+  chromeClearCookiesGuide: "https://support.google.com/chrome/answer/95647",
+  edgeClearCookiesGuide:
+    "https://support.microsoft.com/en-us/edge/manage-cookies-in-microsoft-edge-view-allow-block-delete-and-use",
+  firefoxClearCookiesGuide:
+    "https://support.mozilla.org/en-US/kb/clear-cookies-and-site-data-firefox",
 } as const
 

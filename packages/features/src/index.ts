@@ -57,4 +57,5 @@ export * from "./shared/hero-progress-card"
 export * from "./pdf-studio"
 export * from "./qr-generator"
 export * from "./qr-reader"
+export * from "./shared/feature-markdown"
 

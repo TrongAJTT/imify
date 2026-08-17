@@ -509,44 +509,61 @@ export function HomeClient() {
 
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px]">
-            <div className="flex flex-col items-center text-center bg-white p-8 dark:bg-slate-950">
-              <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400">
-                <Shield size={22} />
+            {/* Card 1: 100% Privacy */}
+            <div className="flex flex-col items-start text-left sm:items-center sm:text-center bg-white p-6 sm:p-8 dark:bg-slate-950">
+              <div className="flex items-center sm:flex-col gap-3.5 sm:gap-0 mb-3 sm:mb-2 w-full sm:w-auto">
+                <div className="sm:mb-6 inline-flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400 shrink-0">
+                  <Shield size={22} />
+                </div>
+                <Subheading className="text-lg sm:text-xl font-bold">
+                  {t("privacyTitle")}
+                </Subheading>
               </div>
-              <Subheading className="text-xl mb-2">
-                {t("privacyTitle")}
-              </Subheading>
               <BodyText className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                 {t("privacyDesc")}
               </BodyText>
             </div>
-            <div className="flex flex-col items-center text-center bg-white p-8 dark:bg-slate-950">
-              <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400">
-                <Zap size={22} />
+
+            {/* Card 2: Seamless Experience */}
+            <div className="flex flex-col items-start text-left sm:items-center sm:text-center bg-white p-6 sm:p-8 dark:bg-slate-950">
+              <div className="flex items-center sm:flex-col gap-3.5 sm:gap-0 mb-3 sm:mb-2 w-full sm:w-auto">
+                <div className="sm:mb-6 inline-flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400 shrink-0">
+                  <Zap size={22} />
+                </div>
+                <Subheading className="text-lg sm:text-xl font-bold">
+                  {t("experienceTitle")}
+                </Subheading>
               </div>
-              <Subheading className="text-xl mb-2">
-                {t("experienceTitle")}
-              </Subheading>
               <BodyText className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                 {t("experienceDesc")}
               </BodyText>
             </div>
-            <div className="flex flex-col items-center text-center bg-white p-8 dark:bg-slate-950">
-              <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                <Github size={22} />
+
+            {/* Card 3: Open Source */}
+            <div className="flex flex-col items-start text-left sm:items-center sm:text-center bg-white p-6 sm:p-8 dark:bg-slate-950">
+              <div className="flex items-center sm:flex-col gap-3.5 sm:gap-0 mb-3 sm:mb-2 w-full sm:w-auto">
+                <div className="sm:mb-6 inline-flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 shrink-0">
+                  <Github size={22} />
+                </div>
+                <Subheading className="text-lg sm:text-xl font-bold">
+                  {t("openSourceTitle")}
+                </Subheading>
               </div>
-              <Subheading className="text-xl mb-2">
-                {t("openSourceTitle")}
-              </Subheading>
               <BodyText className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                 {t("openSourceDesc")}
               </BodyText>
             </div>
-            <div className="flex flex-col items-center text-center bg-white p-8 dark:bg-slate-950">
-              <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400">
-                <CircleDollarSign size={22} />
+
+            {/* Card 4: 100% Free */}
+            <div className="flex flex-col items-start text-left sm:items-center sm:text-center bg-white p-6 sm:p-8 dark:bg-slate-950">
+              <div className="flex items-center sm:flex-col gap-3.5 sm:gap-0 mb-3 sm:mb-2 w-full sm:w-auto">
+                <div className="sm:mb-6 inline-flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 shrink-0">
+                  <CircleDollarSign size={22} />
+                </div>
+                <Subheading className="text-lg sm:text-xl font-bold">
+                  {t("freeTitle")}
+                </Subheading>
               </div>
-              <Subheading className="text-xl mb-2">{t("freeTitle")}</Subheading>
               <BodyText className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                 {t("freeDesc")}
               </BodyText>

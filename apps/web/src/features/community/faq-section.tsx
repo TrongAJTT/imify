@@ -6,6 +6,8 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@imify/ui/ui/utils";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { useTranslation } from "@imify/i18n";
+import { IMIFY_LINKS } from "@imify/core";
+import { FeatureMarkdown } from "@imify/features";
 
 function FaqItem({
   question,
@@ -49,10 +51,8 @@ function FaqItem({
           </button>
         </Collapsible.Trigger>
         <Collapsible.Content className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
-          <div className="px-6 pb-6 pt-0">
-            <BodyText className="text-slate-600 dark:text-slate-400 leading-relaxed text-base">
-              {answer}
-            </BodyText>
+          <div className="px-6 pb-6 pt-0 text-slate-600 dark:text-slate-400 leading-relaxed text-base">
+            <FeatureMarkdown markdown={answer} />
           </div>
         </Collapsible.Content>
       </div>
@@ -65,7 +65,14 @@ export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const faqItems = React.useMemo(() => {
-    const raw = t("faq.items", { returnObjects: true }) as Array<{
+    const raw = t("faq.items", {
+      returnObjects: true,
+      recoveryUrl: "/recovery",
+      chromeUrl: IMIFY_LINKS.chromeClearCookiesGuide,
+      edgeUrl: IMIFY_LINKS.edgeClearCookiesGuide,
+      firefoxUrl: IMIFY_LINKS.firefoxClearCookiesGuide,
+      githubIssuesUrl: IMIFY_LINKS.githubIssuesNew,
+    }) as Array<{
       question: string;
       answer: string;
     }>;
