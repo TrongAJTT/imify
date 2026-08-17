@@ -53,6 +53,9 @@ if (workbox) {
     { url: '/extension.txt',                       revision: '6' },
     { url: '/recovery.html',                       revision: '6' },
     { url: '/recovery.txt',                        revision: '6' },
+    { url: '/pdf-studio.html',                     revision: '6' },
+    { url: '/pdf-studio.txt',                      revision: '6' },
+    { url: '/404.html',                            revision: '6' },
 
     // ── Single Processor ────────────────────────────────────────────────────────
     { url: '/single-processor.html',               revision: '6' },
@@ -112,6 +115,7 @@ if (workbox) {
     { url: '/locales/en/homepage.json',            revision: '5' },
     { url: '/locales/en/inspector.json',           revision: '5' },
     { url: '/locales/en/pattern.json',             revision: '5' },
+    { url: '/locales/en/pdfStudio.json',           revision: '5' },
     { url: '/locales/en/processor.json',           revision: '5' },
     { url: '/locales/en/qrGenerator.json',         revision: '5' },
     { url: '/locales/en/qrReader.json',            revision: '5' },
@@ -133,6 +137,7 @@ if (workbox) {
     { url: '/locales/vi/homepage.json',            revision: '5' },
     { url: '/locales/vi/inspector.json',           revision: '5' },
     { url: '/locales/vi/pattern.json',             revision: '5' },
+    { url: '/locales/vi/pdfStudio.json',           revision: '5' },
     { url: '/locales/vi/processor.json',           revision: '5' },
     { url: '/locales/vi/qrGenerator.json',         revision: '5' },
     { url: '/locales/vi/qrReader.json',            revision: '5' },
@@ -255,6 +260,16 @@ if (workbox) {
         });
       }
 
+      // Try fetching from network if available
+      try {
+        const networkResponse = await fetch(url);
+        if (networkResponse && networkResponse.status !== 404) {
+          return networkResponse;
+        }
+      } catch {
+        // Network unavailable or offline
+      }
+
       // SPA Fallback: serve index.html for any navigation route not explicitly mapped
       const indexResponse = await workbox.precaching.matchPrecache('/index.html');
       if (indexResponse) {
@@ -263,6 +278,29 @@ if (workbox) {
         return new Response(indexResponse.body, {
           status: indexResponse.status,
           statusText: indexResponse.statusText,
+          headers,
+        });
+      }
+
+      // 404 / Error Fallback when offline or not found
+      const notFoundResponse = await workbox.precaching.matchPrecache('/404.html');
+      if (notFoundResponse) {
+        const headers = new Headers(notFoundResponse.headers);
+        headers.set('Content-Type', 'text/html; charset=utf-8');
+        return new Response(notFoundResponse.body, {
+          status: 404,
+          statusText: 'Not Found',
+          headers,
+        });
+      }
+
+      const recoveryResponse = await workbox.precaching.matchPrecache('/recovery.html');
+      if (recoveryResponse) {
+        const headers = new Headers(recoveryResponse.headers);
+        headers.set('Content-Type', 'text/html; charset=utf-8');
+        return new Response(recoveryResponse.body, {
+          status: 200,
+          statusText: 'OK',
           headers,
         });
       }

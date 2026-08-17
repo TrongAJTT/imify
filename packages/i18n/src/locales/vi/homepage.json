@@ -102,7 +102,7 @@
     "items": [
       {
         "question": "Ảnh của tôi có an toàn khi xử lý trên trang web của bạn không?",
-        "answer": "Hoàn toàn an toàn. Imify không có máy chủ. Không có máy chủ từ xa nào lưu trữ dữ liệu của bạn; toàn bộ quy trình xử lý diễn ra cục bộ trên máy của bạn. Quyền riêng tư không chỉ là một tính năng — đó là kiến trúc của chúng tôi."
+        "answer": "Hoàn toàn an toàn. Imify không có máy chủ. Không có máy chủ từ xa nào lưu trữ dữ liệu của bạn; toàn bộ quy trình xử lý diễn ra cục bộ trên máy của bạn. Quyền riêng tư không chỉ là một tính năng - đó là kiến trúc của chúng tôi."
       },
       {
         "question": "Trang web cảm thấy chậm hoặc lag trong quá trình chuyển đổi. Đây có phải là lỗi không?",
@@ -113,8 +113,12 @@
         "answer": "Chúng tôi hỗ trợ nhiều định dạng hiện đại và truyền thống bao gồm JPEG, PNG, WebP, AVIF và JPEG XL. Khả năng hỗ trợ không ngừng được mở rộng dựa trên hỗ trợ của trình duyệt."
       },
       {
+        "question": "Imify Web tương thích với những trình duyệt nào?",
+        "answer": "- Trên PC, Imify Web tương thích tốt với các trình duyệt nhân Chromium (được kiểm nghiệm nhiều nhất trên Chrome) và trình duyệt Firefox.\n- Trên các thiết bị di động (được thử nghiệm trên các mẫu Android), trình duyệt tương thích tốt nhất và được khuyên dùng là Firefox, Chrome bị lỗi trong quá trình giải mã ảnh ở một số bức ảnh chụp màn hình và chúng tôi chưa có cách khắc phục lỗi này."
+      },
+      {
         "question": "Tôi có thể sử dụng Imify trên điện thoại hoặc máy tính bảng không?",
-        "answer": "Về lý thuyết là có. Trang web có giao diện thích ứng cho cả màn hình nhỏ và lớn. Tuy nhiên, chúng tôi không khuyến nghị điều này. Imify được thiết kế và tối ưu cho màn hình lớn để mang lại trải nghiệm làm việc tốt nhất. Sử dụng trên màn hình điện thoại nhỏ sẽ khó thao tác và bạn sẽ không thể tận hưởng hết các tính năng."
+        "answer": "- Về lý thuyết là có. Trang web có giao diện thích ứng cho cả màn hình nhỏ và lớn.\n- Tuy nhiên, chúng tôi không khuyến nghị điều này. Imify được thiết kế và tối ưu cho màn hình lớn để mang lại trải nghiệm làm việc tốt nhất. Sử dụng trên màn hình điện thoại nhỏ sẽ khó thao tác và bạn sẽ không thể tận hưởng hết các tính năng.\n- Trong hoàn cảnh buộc bạn phải sử dụng, hãy sử dụng trình duyệt Firefox để có một trải nghiệm tương thích tốt nhất."
       },
       {
         "question": "Tôi có cần cài đặt gì trước khi sử dụng Imify Web không?",

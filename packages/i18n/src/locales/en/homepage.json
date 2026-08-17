@@ -102,7 +102,7 @@
     "items": [
       {
         "question": "Are my photos safe while processing on your website?",
-        "answer": "Absolutely. Imify is serverless. There is no remote server storing your data; the entire processing pipeline happens locally on your machine. Your privacy isn't just a feature—it's the architecture."
+        "answer": "Absolutely. Imify is serverless. There is no remote server storing your data; the entire processing pipeline happens locally on your machine. Your privacy isn't just a feature - it's the architecture."
       },
       {
         "question": "The website feels slow or lags during conversion. Is this a bug?",
@@ -113,8 +113,12 @@
         "answer": "We support a wide range of modern and traditional formats including JPEG, PNG, WebP, AVIF, and JPEG XL. Capabilities are constantly expanding based on browser support."
       },
       {
+        "question": "Which browsers are compatible with Imify Web?",
+        "answer": "- On desktop, Imify Web is highly compatible with Chromium-based browsers (most extensively tested on Chrome) and Firefox.\n- On mobile devices (tested on Android), Firefox is the most compatible and highly recommended browser. Chrome currently experiences image decoding errors with certain screenshots, and we have not yet found a fix for this issue."
+      },
+      {
         "question": "Can I use Imify on mobile or tablet?",
-        "answer": "In theory, yes. The website is responsive for both small and large screens. However, we don't recommend it. Imify is designed and optimized for large screens to provide the best working experience. Using it on a small phone screen will make it difficult to operate and you won't be able to enjoy all the features to their full extent."
+        "answer": "- In theory, yes. The website is responsive for both small and large screens.\n- However, we don't recommend it. Imify is designed and optimized for large screens to provide the best working experience. Using it on a small phone screen will make it difficult to operate and you won't be able to enjoy all the features to their full extent.\n- In situations where you are forced to use it, please opt for the Firefox browser for the best compatibility."
       },
       {
         "question": "Do I need to install anything before using Imify Web?",
