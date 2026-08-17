@@ -1,6 +1,6 @@
 // Service Worker v5 - Next.js Static Export Native Offline Support
 // Fixes SPA client-side routing and direct F5 navigate issues under offline mode.
-const SW_VERSION = '2.2.2';
+const SW_VERSION = '2.3.0';
 
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.4.1/workbox-sw.js');
 
@@ -8,6 +8,12 @@ if (workbox) {
   console.log('[SW] Workbox loaded — Next.js static export optimized');
 
   // ─── EXCLUSIONS ──────────────────────────────────────────────────────────────
+ 
+  // Never intercept or cache runtime version descriptor
+  workbox.routing.registerRoute(
+    ({ url }) => url.pathname === '/version.json',
+    new workbox.strategies.NetworkOnly()
+  );
 
   // Skip analytics / tracking
   workbox.routing.registerRoute(

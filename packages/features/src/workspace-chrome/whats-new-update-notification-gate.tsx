@@ -8,8 +8,7 @@ import { WhatsNewUpdateSummaryDialog } from "./whats-new-update-summary-dialog"
 
 const STORAGE_KEY_V2 = "imify_whats_new_seen_v2"
 const STORAGE_KEY_V1 = "imify_whats_new_seen_v1"
-const REMOTE_PACKAGE_JSON_URL = "https://raw.githubusercontent.com/trongajtt/imify/main/package.json"
-const FETCH_RATE_LIMIT_MS = 3 * 60 * 60 * 1000 // 3 hours
+const FETCH_RATE_LIMIT_MS = 1 * 60 * 60 * 1000 // 1 hour
 
 export type SeenStateV2 = {
   version: string
@@ -63,6 +62,32 @@ function safeParseSeenStateV2(raw: string): SeenStateV2 | null {
     if (typeof obj.resetCacheAt !== "number") return null
     if (typeof obj.lastFetchVersionAt !== "number") return null
     return obj as SeenStateV2
+  } catch {
+    return null
+  }
+}
+
+async function fetchLatestPackageMetadata(): Promise<{ version: string; versionType: string } | null> {
+  if (typeof window === "undefined") return null
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const res = await fetch("/version.json", {
+      signal: controller.signal,
+      cache: "no-store"
+    })
+    clearTimeout(timeoutId)
+
+    if (res.ok) {
+      const data = await res.json()
+      if (typeof data?.version === "string" && data.version.trim() !== "") {
+        return {
+          version: data.version,
+          versionType: typeof data?.versionType === "string" ? data.versionType : "Stable"
+        }
+      }
+    }
+    return null
   } catch {
     return null
   }
@@ -136,58 +161,44 @@ export async function checkForUpdates(force = false): Promise<boolean> {
     }
   }
 
-  // If forced or cooldown has passed, fetch from remote
+  // If forced or cooldown has passed, fetch latest version from /version.json
   if (force || now - state.lastFetchVersionAt >= FETCH_RATE_LIMIT_MS) {
-    try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 6000)
-      const res = await fetch(REMOTE_PACKAGE_JSON_URL, {
-        signal: controller.signal,
-        cache: "no-store"
-      })
-      clearTimeout(timeoutId)
+    const latestPkg = await fetchLatestPackageMetadata()
+    if (latestPkg) {
+      const remoteVer = latestPkg.version
+      const remoteType = latestPkg.versionType
 
-      if (res.ok) {
-        const remotePkg = await res.json()
-        const remoteVer = typeof remotePkg.version === "string" ? remotePkg.version : null
-        const remoteType = remotePkg.imifyMetadata?.versionType || "Stable"
+      let nextVersion = state.version
+      let nextType = state.versionType
+      let nextFindVersionAt = state.findVersionAt
+      let nextRemindAt = state.remindAt
 
-        let nextVersion = state.version
-        let nextType = state.versionType
-        let nextFindVersionAt = state.findVersionAt
-        let nextRemindAt = state.remindAt
-
-        if (remoteVer && compareSemver(remoteVer, state.version) > 0) {
-          nextVersion = remoteVer
-          nextType = remoteType
-          nextFindVersionAt = now
-          nextRemindAt = now // Ready to prompt
-        }
-
-        state = {
-          ...state,
-          version: nextVersion,
-          versionType: nextType,
-          findVersionAt: nextFindVersionAt,
-          remindAt: nextRemindAt,
-          lastFetchVersionAt: now
-        }
-
-        if (typeof window !== "undefined" && window.localStorage) {
-          window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state))
-        }
-        await deferredStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state))
+      if (compareSemver(remoteVer, state.version) > 0) {
+        nextVersion = remoteVer
+        nextType = remoteType
+        nextFindVersionAt = now
+        nextRemindAt = now // Ready to prompt
       }
-    } catch {
+
+      state = {
+        ...state,
+        version: nextVersion,
+        versionType: nextType,
+        findVersionAt: nextFindVersionAt,
+        remindAt: nextRemindAt,
+        lastFetchVersionAt: now
+      }
+    } else {
       state = {
         ...state,
         lastFetchVersionAt: now
       }
-      if (typeof window !== "undefined" && window.localStorage) {
-        window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state))
-      }
-      await deferredStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state))
     }
+
+    if (typeof window !== "undefined" && window.localStorage) {
+      window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state))
+    }
+    await deferredStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state))
   }
 
   const hasUpdate = compareSemver(state.version, state.cacheVersion) > 0
@@ -257,7 +268,7 @@ export function WhatsNewUpdateNotificationGate() {
     }
   }, [])
 
-  // 2. Listen for Service Worker activation broadcast to safely set cacheVersion
+  // 2. Listen for Service Worker activation broadcast to notify new available version
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return
 
@@ -265,18 +276,17 @@ export function WhatsNewUpdateNotificationGate() {
       if (event.data?.type === "SW_CACHE_READY" && typeof event.data.version === "string") {
         const swVer = event.data.version
         const current = seenStateRef.current
-        if (!current || current.cacheVersion === swVer) return
+        if (!current) return
 
-        if (compareSemver(swVer, current.cacheVersion) > 0) {
-          // SW has activated with a newer version — reload so the page runs fresh assets.
-          // skipWaiting() is already called automatically on SW install, so the new SW
-          // is already controlling this tab. A reload picks up the new precache.
-          void persistState({ ...current, cacheVersion: swVer, resetCacheAt: Date.now() }).then(
-            () => window.location.reload()
-          )
-        } else {
-          // SW version is same or older (e.g. SW downgrade or re-activate) — just sync state
-          void persistState({ ...current, cacheVersion: swVer, resetCacheAt: Date.now() })
+        if (compareSemver(swVer, current.version) > 0) {
+          void persistState({
+            ...current,
+            version: swVer,
+            findVersionAt: Date.now(),
+            remindAt: Date.now()
+          }).then(() => {
+            setIsSummaryOpen(true)
+          })
         }
       }
     }
@@ -339,52 +349,40 @@ export function WhatsNewUpdateNotificationGate() {
           await persistState(state)
         }
 
-        // Check if we need to fetch the latest version from remote repository
+        // Check if we need to fetch the latest version from /version.json
         if (now - state.lastFetchVersionAt >= FETCH_RATE_LIMIT_MS) {
-          try {
-            const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), 6000)
-            const res = await fetch(REMOTE_PACKAGE_JSON_URL, {
-              signal: controller.signal,
-              cache: "no-store"
-            })
-            clearTimeout(timeoutId)
+          const latestPkg = await fetchLatestPackageMetadata()
+          if (latestPkg) {
+            const remoteVer = latestPkg.version
+            const remoteType = latestPkg.versionType
 
-            if (res.ok) {
-              const remotePkg = await res.json()
-              const remoteVer = typeof remotePkg.version === "string" ? remotePkg.version : null
-              const remoteType = remotePkg.imifyMetadata?.versionType || "Stable"
+            let nextVersion = state.version
+            let nextType = state.versionType
+            let nextFindVersionAt = state.findVersionAt
+            let nextRemindAt = state.remindAt
 
-              let nextVersion = state.version
-              let nextType = state.versionType
-              let nextFindVersionAt = state.findVersionAt
-              let nextRemindAt = state.remindAt
-
-              if (remoteVer && compareSemver(remoteVer, state.version) > 0) {
-                nextVersion = remoteVer
-                nextType = remoteType
-                nextFindVersionAt = now
-                nextRemindAt = now // Ready to prompt
-              }
-
-              state = {
-                ...state,
-                version: nextVersion,
-                versionType: nextType,
-                findVersionAt: nextFindVersionAt,
-                remindAt: nextRemindAt,
-                lastFetchVersionAt: now
-              }
-              await persistState(state)
+            if (compareSemver(remoteVer, state.version) > 0) {
+              nextVersion = remoteVer
+              nextType = remoteType
+              nextFindVersionAt = now
+              nextRemindAt = now // Ready to prompt
             }
-          } catch {
-            // Failed remote fetch (offline or network error) -> just record attempt
+
+            state = {
+              ...state,
+              version: nextVersion,
+              versionType: nextType,
+              findVersionAt: nextFindVersionAt,
+              remindAt: nextRemindAt,
+              lastFetchVersionAt: now
+            }
+          } else {
             state = {
               ...state,
               lastFetchVersionAt: now
             }
-            await persistState(state)
           }
+          await persistState(state)
         }
 
         // 3. Evaluate whether to show the Update Available dialog

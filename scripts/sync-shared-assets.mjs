@@ -49,8 +49,21 @@ async function copyToTarget(files, targetDir) {
 }
 
 async function syncSharedAssets() {
+  const rootPkgRaw = await fs.readFile(path.resolve(__dirname, "../package.json"), "utf-8")
+  const rootPkg = JSON.parse(rootPkgRaw)
+  const versionData = {
+    version: rootPkg.version || "0.0.0",
+    versionType: rootPkg.imifyMetadata?.versionType || "Stable"
+  }
+  const versionJsonContent = JSON.stringify(versionData, null, 2) + "\n"
+
   const files = await listFilesRecursively(sourceDir)
   await Promise.all(targets.map((targetDir) => copyToTarget(files, targetDir)))
+
+  // Write version.json into generated public & extension output targets
+  await fs.writeFile(path.resolve(__dirname, "../apps/web/public/version.json"), versionJsonContent, "utf-8")
+  await fs.writeFile(path.resolve(__dirname, "../apps/extension/assets/version.json"), versionJsonContent, "utf-8")
+  console.log(`[sync-shared-assets] Synced version.json (v${versionData.version} - ${versionData.versionType})`)
 }
 
 syncSharedAssets().catch((error) => {

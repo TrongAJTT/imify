@@ -49,6 +49,7 @@ import qrReaderIllustrationSvg from "url:@assets/images/illustrations/qr-reader.
 import seoAuditIllustrationSvg from "url:@assets/images/illustrations/seo-audit.svg"
 import j2teamLogoIco from "url:@assets/images/j2tl-logo.ico"
 import latestSummaryMd from "url:@assets/changelogs/latest-summary.md"
+import v2_3Md from "url:@assets/changelogs/v2-3.md"
 import v2_2Md from "url:@assets/changelogs/v2-2.md"
 import v2_1Md from "url:@assets/changelogs/v2-1.md"
 import v1_5Md from "url:@assets/changelogs/v1-5.md"
@@ -93,6 +94,7 @@ const extensionMediaAssetMap: Record<string, string> = {
   [FEATURE_MEDIA_ASSET_PATHS.remover.preview2Webp]: previewRemover2Webp,
   [FEATURE_MEDIA_ASSET_PATHS.brand.j2teamLogoIco]: j2teamLogoIco,
   [FEATURE_MEDIA_ASSET_PATHS.common.latestSummaryMd]: latestSummaryMd,
+  [FEATURE_MEDIA_ASSET_PATHS.common.v2_3]: v2_3Md,
   [FEATURE_MEDIA_ASSET_PATHS.common.v2_2]: v2_2Md,
   [FEATURE_MEDIA_ASSET_PATHS.common.v2_1]: v2_1Md,
   [FEATURE_MEDIA_ASSET_PATHS.common.v1_5]: v1_5Md,

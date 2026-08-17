@@ -63,6 +63,7 @@ export function BaseDialog({
 
   // Sync React's isOpen state with Native Dialog API
   useEffect(() => {
+    if (!mounted) return;
     const dialogNode = dialogRef.current;
     if (!dialogNode) return;
 
@@ -75,18 +76,18 @@ export function BaseDialog({
         dialogNode.close();
       }
     }
-  }, [isOpen]);
+  }, [isOpen, mounted]);
 
   // Lock body scroll when dialog is open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && mounted) {
       const originalStyle = window.getComputedStyle(document.body).overflow;
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = originalStyle;
       };
     }
-  }, [isOpen]);
+  }, [isOpen, mounted]);
 
   // Cleanup on unmount (ensure dialog is closed and not orphaned)
   useEffect(() => {
