@@ -58,3 +58,36 @@ export const DEV_MODE_FEATURES: DevModeFeatureDef[] = [
   { id: "runtime_logs", label: "Runtime Console Logs" },
   { id: "environment", label: "Environment Information" },
 ]
+
+/**
+ * Remove function actions from a state object.
+ */
+export function stripStoreActions(state: unknown): Record<string, unknown> {
+  if (!state || typeof state !== "object") return {}
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(state as Record<string, unknown>)) {
+    if (typeof value !== "function") {
+      out[key] = value
+    }
+  }
+  return out
+}
+
+/**
+ * Get cleaned data snapshot of a specific feature store by ID.
+ */
+export function getFeatureRawState(featureId: DevModeFeatureId): Record<string, unknown> | undefined {
+  const feature = DEV_MODE_FEATURES.find((f) => f.id === featureId)
+  if (!feature?.storeHook) return undefined
+
+  const raw = feature.storeHook.getState() as unknown as Record<string, unknown>
+  const cleaned = stripStoreActions(raw)
+
+  if (featureId === "qr_generator") {
+    const { data, ...rest } = cleaned
+    return rest
+  }
+
+  return cleaned
+}
+
