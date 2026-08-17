@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useConfirmationDialogStore, useToastStore } from "@imify/stores";
-import { RenameInputDialog, ToastContainer } from "@imify/ui";
+import { AlertDialog, ConfirmDialog, RenameInputDialog, ToastContainer } from "@imify/ui";
 import { BatchDownloadConfirmDialog } from "./download-confirm-dialog";
 import { OOMWarningDialog } from "../processor/batch/oom-warning-dialog";
 import { SplicingHeavyPreviewQualityDialog } from "../splicing/splicing-heavy-preview-quality-dialog";
@@ -11,6 +11,21 @@ import { WhatsNewUpdateNotificationGate } from "../workspace-chrome/whats-new-up
 export function GlobalModalsHost() {
   const toasts = useToastStore((state) => state.toasts);
   const dismissToast = useToastStore((state) => state.dismissToast);
+
+  const genericConfirm = useConfirmationDialogStore(
+    (state) => state.genericConfirm,
+  );
+  const resolveConfirm = useConfirmationDialogStore(
+    (state) => state.resolveConfirm,
+  );
+
+  const genericAlert = useConfirmationDialogStore(
+    (state) => state.genericAlert,
+  );
+  const resolveAlert = useConfirmationDialogStore(
+    (state) => state.resolveAlert,
+  );
+
   const downloadConfirm = useConfirmationDialogStore(
     (state) => state.downloadConfirm,
   );
@@ -37,6 +52,31 @@ export function GlobalModalsHost() {
 
   return (
     <>
+      {/* 0. Generic Global Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={genericConfirm.isOpen}
+        title={genericConfirm.title}
+        subtitle={genericConfirm.subtitle}
+        description={genericConfirm.description}
+        confirmText={genericConfirm.confirmText}
+        cancelText={genericConfirm.cancelText}
+        variant={genericConfirm.variant}
+        defaultFocus={genericConfirm.defaultFocus}
+        onConfirm={() => resolveConfirm(true)}
+        onCancel={() => resolveConfirm(false)}
+      />
+
+      {/* 0.1. Generic Global Alert Dialog */}
+      <AlertDialog
+        isOpen={genericAlert.isOpen}
+        title={genericAlert.title}
+        subtitle={genericAlert.subtitle}
+        description={genericAlert.description}
+        buttonText={genericAlert.buttonText}
+        variant={genericAlert.variant}
+        onClose={() => resolveAlert()}
+      />
+
       {/* 1. Download Confirmation Dialog */}
       <BatchDownloadConfirmDialog
         isOpen={downloadConfirm.isOpen}

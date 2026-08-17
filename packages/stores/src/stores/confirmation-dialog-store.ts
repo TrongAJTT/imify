@@ -1,6 +1,37 @@
+import type React from "react"
 import { create } from "zustand"
 import { APP_CONFIG } from "@imify/core"
 import { useBatchStore } from "./batch-store"
+
+export type DialogVariant = "info" | "warning" | "destructive" | "success"
+
+export interface ConfirmDialogOptions {
+  title?: React.ReactNode
+  subtitle?: React.ReactNode
+  description?: React.ReactNode
+  confirmText?: React.ReactNode
+  cancelText?: React.ReactNode
+  variant?: DialogVariant
+  defaultFocus?: "confirm" | "cancel"
+}
+
+export interface AlertDialogOptions {
+  title?: React.ReactNode
+  subtitle?: React.ReactNode
+  description?: React.ReactNode
+  buttonText?: React.ReactNode
+  variant?: DialogVariant
+}
+
+interface GenericConfirmPayload extends ConfirmDialogOptions {
+  isOpen: boolean
+  resolve: ((confirmed: boolean) => void) | null
+}
+
+interface GenericAlertPayload extends AlertDialogOptions {
+  isOpen: boolean
+  resolve: (() => void) | null
+}
 
 interface DownloadConfirmPayload {
   isOpen: boolean
@@ -33,6 +64,16 @@ interface ConfirmationDialogState {
   oomWarning: OomWarningPayload
   heavyPreviewWarning: HeavyPreviewWarningPayload
   renameInput: RenameInputPayload
+  genericConfirm: GenericConfirmPayload
+  genericAlert: GenericAlertPayload
+
+  // Actions for Generic Confirm
+  openConfirm: (options?: ConfirmDialogOptions) => Promise<boolean>
+  resolveConfirm: (confirmed: boolean) => void
+
+  // Actions for Generic Alert
+  openAlert: (options?: AlertDialogOptions) => Promise<void>
+  resolveAlert: () => void
 
   // Actions for Download Confirm
   openDownloadConfirm: (count: number) => Promise<boolean>
@@ -52,6 +93,14 @@ interface ConfirmationDialogState {
 }
 
 export const useConfirmationDialogStore = create<ConfirmationDialogState>((set, get) => ({
+  genericConfirm: {
+    isOpen: false,
+    resolve: null
+  },
+  genericAlert: {
+    isOpen: false,
+    resolve: null
+  },
   downloadConfirm: {
     isOpen: false,
     count: 0,
@@ -214,10 +263,76 @@ export const useConfirmationDialogStore = create<ConfirmationDialogState>((set, 
         resolve: null
       }
     })
+  },
+
+  openConfirm: (options?: ConfirmDialogOptions) => {
+    return new Promise<boolean>((resolve) => {
+      set({
+        genericConfirm: {
+          isOpen: true,
+          title: options?.title ?? "Confirmation",
+          subtitle: options?.subtitle,
+          description: options?.description,
+          confirmText: options?.confirmText ?? "Confirm",
+          cancelText: options?.cancelText ?? "Cancel",
+          variant: options?.variant ?? "destructive",
+          defaultFocus: options?.defaultFocus ?? "confirm",
+          resolve
+        }
+      })
+    })
+  },
+
+  resolveConfirm: (confirmed: boolean) => {
+    const { genericConfirm } = get()
+    if (genericConfirm.resolve) {
+      genericConfirm.resolve(confirmed)
+    }
+    set({
+      genericConfirm: {
+        isOpen: false,
+        resolve: null
+      }
+    })
+  },
+
+  openAlert: (options?: AlertDialogOptions) => {
+    return new Promise<void>((resolve) => {
+      set({
+        genericAlert: {
+          isOpen: true,
+          title: options?.title ?? "Notice",
+          subtitle: options?.subtitle,
+          description: options?.description,
+          buttonText: options?.buttonText ?? "OK",
+          variant: options?.variant ?? "info",
+          resolve
+        }
+      })
+    })
+  },
+
+  resolveAlert: () => {
+    const { genericAlert } = get()
+    if (genericAlert.resolve) {
+      genericAlert.resolve()
+    }
+    set({
+      genericAlert: {
+        isOpen: false,
+        resolve: null
+      }
+    })
   }
 }))
 
 // Direct helper functions (usable in any async function without hooks)
+export const confirmDialog = (options?: ConfirmDialogOptions) =>
+  useConfirmationDialogStore.getState().openConfirm(options)
+
+export const alertDialog = (options?: AlertDialogOptions) =>
+  useConfirmationDialogStore.getState().openAlert(options)
+
 export const confirmBatchDownload = (count: number) =>
   useConfirmationDialogStore.getState().openDownloadConfirm(count)
 
@@ -229,3 +344,4 @@ export const confirmHeavyPreviewWarning = (imageCount: number, totalPixels: numb
 
 export const promptRenameInput = (pattern: string) =>
   useConfirmationDialogStore.getState().openRenameInput(pattern)
+

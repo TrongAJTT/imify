@@ -20,6 +20,7 @@ import { Button } from "@imify/ui/ui/button";
 import { getAppMetadata, IMIFY_LINKS } from "@imify/core";
 import { FEATURE_MEDIA_ASSET_PATHS } from "@imify/features/shared/media-assets";
 import { useTranslation } from "@imify/i18n";
+import { confirmDialog } from "@imify/stores";
 
 export function RecoveryClient() {
   const { t } = useTranslation("common");
@@ -28,7 +29,6 @@ export function RecoveryClient() {
   const [isClearingCache, setIsClearingCache] = useState(false);
   const [cacheClearSuccess, setCacheClearSuccess] = useState(false);
 
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isResettingData, setIsResettingData] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
 
@@ -89,6 +89,18 @@ export function RecoveryClient() {
 
   // ─── 2. Factory Reset / Clear All Data ───────────────────────────────────────
   const handleFactoryReset = async () => {
+    const confirmed = await confirmDialog({
+      title: t("recovery.confirmResetTitle"),
+      subtitle: "Imify Reset Guard",
+      description: t("recovery.confirmResetDesc"),
+      variant: "destructive",
+      confirmText: t("recovery.confirmResetBtn"),
+      cancelText: t("cancel"),
+      defaultFocus: "confirm",
+    });
+
+    if (!confirmed) return;
+
     setIsResettingData(true);
     try {
       localStorage.clear();
@@ -113,7 +125,6 @@ export function RecoveryClient() {
       }
 
       setResetSuccess(true);
-      setShowResetConfirm(false);
       setTimeout(() => {
         window.location.href = "/";
       }, 1500);
@@ -399,12 +410,17 @@ export function RecoveryClient() {
               <Button
                 variant="destructive"
                 className="w-full rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs h-10 gap-2 shadow-xs"
-                onClick={() => setShowResetConfirm(true)}
+                onClick={handleFactoryReset}
                 disabled={isClearingCache || isResettingData}
               >
-                <Trash2 size={14} />
+                <Trash2
+                  size={14}
+                  className={isResettingData ? "animate-spin" : ""}
+                />
                 <span>
-                  {t("recovery.factoryResetBtn", "Xóa sạch toàn bộ dữ liệu")}
+                  {isResettingData
+                    ? "Cleaning..."
+                    : t("recovery.factoryResetBtn", "Xóa sạch toàn bộ dữ liệu")}
                 </span>
               </Button>
             </div>
@@ -563,58 +579,6 @@ export function RecoveryClient() {
           TrongAJTT. Emergency Recovery Module.
         </span>
       </footer>
-
-      {/* ─── Confirmation Modal for Factory Reset ───────────────────────────── */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-md rounded-3xl border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-900 p-6 shadow-2xl flex flex-col gap-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
-                <AlertTriangle size={24} />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-50">
-                  {t("recovery.confirmResetTitle")}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Imify Reset Guard
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              {t("recovery.confirmResetDesc")}
-            </p>
-
-            <div className="flex items-center justify-end gap-2.5 pt-2">
-              <Button
-                variant="outline"
-                className="rounded-xl text-xs font-semibold h-10 px-4"
-                onClick={() => setShowResetConfirm(false)}
-                disabled={isResettingData}
-              >
-                {t("cancel")}
-              </Button>
-              <Button
-                variant="destructive"
-                className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold h-10 px-4 gap-2"
-                onClick={handleFactoryReset}
-                disabled={isResettingData}
-              >
-                <Trash2
-                  size={14}
-                  className={isResettingData ? "animate-spin" : ""}
-                />
-                <span>
-                  {isResettingData
-                    ? "Cleaning..."
-                    : t("recovery.confirmResetBtn")}
-                </span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
