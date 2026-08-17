@@ -30,13 +30,12 @@ export function WebFooter() {
 
   const moreFeatures = React.useMemo(() => {
     const list = allTools.slice(4, 8).filter((tool) => tool.id !== "filling");
-    list.push({
-      id: "recovery",
-      href: "/recovery",
-      label: t("footer.recoveryPage", "Trang khôi phục"),
-    });
+    const pdfStudio = allTools.find((tool) => tool.id === "pdf-studio");
+    if (pdfStudio) {
+      list.push(pdfStudio);
+    }
     return list;
-  }, [allTools, t]);
+  }, [allTools]);
 
   if (isRecoveryPage) {
     return null;
@@ -66,6 +65,12 @@ export function WebFooter() {
             <span className="hidden md:inline">{t("footer.shortDesc")}</span>
           </div>
           <div className="flex items-center gap-6">
+            <Link
+              href="/recovery"
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              {t("footer.recovery")}
+            </Link>
             <Link
               href={IMIFY_LINKS.terms}
               target="_blank"
@@ -163,6 +168,12 @@ export function WebFooter() {
             })}
           </p>
           <div className="flex gap-4">
+            <Link
+              href="/recovery"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              {t("footer.recoveryPage")}
+            </Link>
             <Link
               href={IMIFY_LINKS.privacy}
               target="_blank"
