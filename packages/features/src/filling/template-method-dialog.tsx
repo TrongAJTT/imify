@@ -19,7 +19,7 @@ import {
   Subheading,
   PresetNameInput,
 } from "@imify/ui";
-import { generateDefaultPresetName } from "@imify/core";
+import { generateDefaultPresetName, calculateAspectRatio } from "@imify/core";
 import {
   DEFAULT_GRID_DESIGN_PARAMS,
   DEFAULT_SYMMETRIC_PARAMS,
@@ -282,6 +282,9 @@ export function TemplateMethodDialog({
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
                 {t("dialog.finalSize", { defaultValue: "Final size:" })}{" "}
                 {widthPx} x {heightPx} px
+                {calculateAspectRatio(widthPx, heightPx)
+                  ? ` (${calculateAspectRatio(widthPx, heightPx)})`
+                  : ""}
               </div>
               {selectedPresetLabel && (
                 <MutedText className="mt-1 text-[11px]">

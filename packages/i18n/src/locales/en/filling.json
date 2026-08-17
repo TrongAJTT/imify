@@ -67,6 +67,18 @@
     "lockRatio": "Lock ratio",
     "lockRatioDesc": "Maintain width & height ratio when resizing."
   },
+  "canvasSizeDialog": {
+    "title": "Popular Canvas Sizes",
+    "description": "Pick from common paper, social, and screen sizes. You can continue fine-tuning width and height manually.",
+    "noPresetSelected": "No preset selected yet",
+    "categoryPaper": "Paper",
+    "categoryPaperDesc": "Print-friendly paper sizes",
+    "categorySocial": "Social",
+    "categorySocialDesc": "Popular social-media formats",
+    "categoryScreen": "Screen",
+    "categoryScreenDesc": "Display and presentation resolutions",
+    "applySize": "Apply Size"
+  },
   "templateList": {
     "title": "Templates",
     "searchPlaceholder": "Search templates...",

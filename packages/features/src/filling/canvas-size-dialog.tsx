@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useState } from "react"
 import { FileText, Monitor, Ruler, Share2, X } from "lucide-react"
 import { CANVAS_SIZE_PRESETS, type CanvasSizePreset } from "./types"
 import { BaseDialog, Button, MutedText, Subheading } from "@imify/ui"
+import { calculateAspectRatio } from "@imify/core"
+import { useTranslation } from "@imify/i18n"
 
 interface CanvasSizeDialogProps {
   isOpen: boolean
@@ -17,18 +19,18 @@ type PresetCategory = "Paper" | "Social" | "Screen"
 
 const CATEGORY_ORDER: PresetCategory[] = ["Paper", "Social", "Screen"]
 
-const CATEGORY_META: Record<PresetCategory, { icon: React.ReactNode; subtitle: string }> = {
+const CATEGORY_META: Record<PresetCategory, { icon: React.ReactNode; defaultSubtitle: string }> = {
   Paper: {
-    icon: <FileText size={14} className="text-sky-500" />,
-    subtitle: "Print-friendly paper sizes",
+    icon: <FileText size={14} className="text-sky-500 shrink-0" />,
+    defaultSubtitle: "Print-friendly paper sizes",
   },
   Social: {
-    icon: <Share2 size={14} className="text-sky-500" />,
-    subtitle: "Popular social-media formats",
+    icon: <Share2 size={14} className="text-sky-500 shrink-0" />,
+    defaultSubtitle: "Popular social-media formats",
   },
   Screen: {
-    icon: <Monitor size={14} className="text-sky-500" />,
-    subtitle: "Display and presentation resolutions",
+    icon: <Monitor size={14} className="text-sky-500 shrink-0" />,
+    defaultSubtitle: "Display and presentation resolutions",
   },
 }
 
@@ -43,6 +45,7 @@ export function CanvasSizeDialog({
   currentHeight,
   onConfirm,
 }: CanvasSizeDialogProps) {
+  const { t } = useTranslation(["filling", "common"])
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null)
 
   useEffect(() => {
@@ -70,69 +73,104 @@ export function CanvasSizeDialog({
     return map
   }, [])
 
+  const topRatio = selectedPreset ? calculateAspectRatio(selectedPreset.width, selectedPreset.height) : ""
+
   return (
-    <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="rounded-xl w-[680px] max-w-[96vw]">
-      <div className="p-5 md:p-6">
-        <div className="mb-4 flex items-center justify-between">
+    <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="rounded-2xl w-[680px] max-w-[96vw]">
+      <div className="p-4 sm:p-5 md:p-6">
+        <div className="mb-3 sm:mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Ruler size={18} className="text-sky-500" />
-            <Subheading>Popular Canvas Sizes</Subheading>
+            <Subheading>{t("canvasSizeDialog.title", "Popular Canvas Sizes")}</Subheading>
           </div>
-          <button type="button" onClick={onClose} className="rounded p-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded p-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+            aria-label={t("common:close", "Close")}
+          >
             <X size={16} className="text-slate-400" />
           </button>
         </div>
 
-        <MutedText className="mb-4 text-xs">
-          Pick from common paper, social, and screen sizes. You can continue fine-tuning width and height manually.
+        <MutedText className="mb-4 text-xs leading-relaxed">
+          {t(
+            "canvasSizeDialog.description",
+            "Pick from common paper, social, and screen sizes. You can continue fine-tuning width and height manually."
+          )}
         </MutedText>
 
         <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/30">
           {selectedPreset ? (
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedPreset.label}</span>
-              <span className="text-slate-500 dark:text-slate-400">
+            <div className="flex items-center justify-between text-xs gap-2">
+              <span className="font-semibold text-slate-700 dark:text-slate-300 truncate">
+                {selectedPreset.label}
+              </span>
+              <span className="text-slate-500 dark:text-slate-400 shrink-0">
+                {topRatio ? `(${topRatio}) ` : ""}
                 {selectedPreset.width} x {selectedPreset.height} px
               </span>
             </div>
           ) : (
-            <div className="text-xs text-slate-500 dark:text-slate-400">No preset selected yet</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              {t("canvasSizeDialog.noPresetSelected", "No preset selected yet")}
+            </div>
           )}
         </div>
 
-        <div className="max-h-[52vh] space-y-4 overflow-y-auto pr-1">
+        <div className="max-h-[52vh] space-y-4 overflow-y-auto px-0.5">
           {CATEGORY_ORDER.map((category) => {
             const presets = presetsByCategory.get(category) ?? []
             if (presets.length === 0) return null
+
+            const categoryTitle = t(`canvasSizeDialog.category${category}`, category)
+            const categoryDesc = t(
+              `canvasSizeDialog.category${category}Desc`,
+              CATEGORY_META[category].defaultSubtitle
+            )
+
             return (
               <section key={category}>
                 <div className="mb-2 flex items-center gap-2">
                   {CATEGORY_META[category].icon}
                   <div>
-                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{category}</div>
-                    <div className="text-[11px] text-slate-400 dark:text-slate-500">{CATEGORY_META[category].subtitle}</div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {categoryTitle}
+                    </div>
+                    <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                      {categoryDesc}
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {presets.map((preset) => {
                     const selected = selectedLabel === preset.label
+                    const itemRatio = calculateAspectRatio(preset.width, preset.height)
+
                     return (
                       <button
                         key={preset.label}
                         type="button"
                         onClick={() => setSelectedLabel(preset.label)}
-                        className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                        className={`rounded-lg border px-3 py-2 text-left transition-colors cursor-pointer ${
                           selected
-                            ? "border-sky-400 bg-sky-50 dark:border-sky-600 dark:bg-sky-500/10"
+                            ? "border-sky-400 bg-sky-50 dark:border-sky-600 dark:bg-sky-500/10 shadow-xs"
                             : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:bg-slate-800/60"
                         }`}
                       >
-                        <div className={`text-xs font-semibold ${selected ? "text-sky-700 dark:text-sky-300" : "text-slate-700 dark:text-slate-300"}`}>
+                        <div
+                          className={`text-xs font-semibold truncate ${
+                            selected
+                              ? "text-sky-700 dark:text-sky-300"
+                              : "text-slate-700 dark:text-slate-300"
+                          }`}
+                        >
                           {preset.label}
                         </div>
                         <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                           {preset.width} x {preset.height} px
+                          {itemRatio ? ` (${itemRatio})` : ""}
                         </div>
                       </button>
                     )
@@ -144,9 +182,16 @@ export function CanvasSizeDialog({
         </div>
 
         <div className="mt-5 flex justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
-          <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" size="sm" onClick={() => selectedPreset && onConfirm(selectedPreset)} disabled={!selectedPreset}>
-            Apply Size
+          <Button variant="secondary" size="sm" onClick={onClose}>
+            {t("common:cancel", "Cancel")}
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => selectedPreset && onConfirm(selectedPreset)}
+            disabled={!selectedPreset}
+          >
+            {t("canvasSizeDialog.applySize", "Apply Size")}
           </Button>
         </div>
       </div>

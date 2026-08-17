@@ -67,6 +67,18 @@
     "lockRatio": "Khóa tỷ lệ",
     "lockRatioDesc": "Giữ nguyên tỷ lệ giữa chiều rộng và chiều cao khi thay đổi kích thước."
   },
+  "canvasSizeDialog": {
+    "title": "Kích thước Canvas phổ biến",
+    "description": "Chọn từ các kích thước giấy, mạng xã hội và màn hình phổ biến. Bạn vẫn có thể tùy chỉnh chi tiết chiều rộng và chiều cao sau đó.",
+    "noPresetSelected": "Chưa chọn kích thước mẫu nào",
+    "categoryPaper": "Khổ giấy",
+    "categoryPaperDesc": "Kích thước in ấn chuẩn",
+    "categorySocial": "Mạng xã hội",
+    "categorySocialDesc": "Các định dạng mạng xã hội phổ biến",
+    "categoryScreen": "Màn hình",
+    "categoryScreenDesc": "Độ phân giải hiển thị & trình chiếu",
+    "applySize": "Áp dụng kích thước"
+  },
   "templateList": {
     "title": "Mẫu thiết kế",
     "searchPlaceholder": "Tìm kiếm mẫu...",

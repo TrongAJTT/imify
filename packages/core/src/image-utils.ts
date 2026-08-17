@@ -282,3 +282,58 @@ export function clampQuality(quality: number | undefined, fallback = 92): number
 
   return Math.max(1, Math.min(100, Math.round(quality)))
 }
+
+const COMMON_ASPECT_RATIOS: Array<[number, string]> = [
+  [1, "1:1"],
+  [4 / 3, "4:3"],
+  [3 / 4, "3:4"],
+  [3 / 2, "3:2"],
+  [2 / 3, "2:3"],
+  [16 / 9, "16:9"],
+  [9 / 16, "9:16"],
+  [16 / 10, "16:10"],
+  [10 / 16, "10:16"],
+  [21 / 9, "21:9"],
+  [9 / 21, "9:21"],
+  [4 / 5, "4:5"],
+  [5 / 4, "5:4"],
+  [5 / 3, "5:3"],
+  [3 / 5, "3:5"],
+  [1.91, "1.91:1"],
+  [1 / 1.91, "1:1.91"],
+  [2, "2:1"],
+  [1 / 2, "1:2"],
+  [1.414, "1:1.414"],
+  [1 / 1.414, "1.414:1"],
+]
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b)
+}
+
+/**
+ * Calculates and returns a formatted aspect ratio string (e.g. "16:9", "1:1", "4:3").
+ */
+export function calculateAspectRatio(width: number, height: number): string {
+  if (!width || !height || width <= 0 || height <= 0) return ""
+
+  const w = Math.round(width)
+  const h = Math.round(height)
+
+  const d = gcd(w, h)
+  const rw = w / d
+  const rh = h / d
+
+  if (rw <= 32 && rh <= 32) {
+    return `${rw}:${rh}`
+  }
+
+  const decimal = w / h
+  const match = COMMON_ASPECT_RATIOS.find(([r]) => Math.abs(decimal - r) < 0.02)
+  if (match) {
+    return match[1]
+  }
+
+  return `${rw}:${rh}`
+}
+
