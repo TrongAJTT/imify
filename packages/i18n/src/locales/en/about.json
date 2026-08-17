@@ -1,9 +1,10 @@
 {
   "title": "Imify",
   "subtitle": "The Powerful Image Toolkit",
-  "devModeOn": "DEV MODE ON",
+  "devModeOn": "Developer Mode is enabled",
   "devModeTooltip": "Click 7 times to enable Developer Mode",
   "checkUpdateTooltip": "Click to check for updates",
+  "updateAvailableTooltip": "New version available! Click to check",
   "noUpdateTitle": "You're up to date!",
   "noUpdateDesc": "No new updates are currently available for Imify.",
   "checkingUpdate": "Checking for updates...",

@@ -47,13 +47,20 @@ export function WebFooter() {
     return null;
   }
 
+  const displayVersion = isMounted
+    ? appMetadata.cacheVersion || appMetadata.version
+    : appMetadata.version;
+
   if (!isFullFooter) {
     return (
       <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
         <div className="flex w-full items-center justify-between px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-4">
-            <span className="font-semibold text-slate-900 dark:text-slate-100">
-              Imify Web v{appMetadata.version}
+            <span
+              suppressHydrationWarning
+              className="font-semibold text-slate-900 dark:text-slate-100"
+            >
+              Imify Web v{displayVersion}
             </span>
             <span className="h-3 w-px bg-slate-200 dark:bg-slate-800" />
             <span className="hidden md:inline">{t("footer.shortDesc")}</span>
@@ -88,8 +95,11 @@ export function WebFooter() {
               <span className="text-xl font-bold text-slate-900 dark:text-white">
                 Imify
               </span>
-              <span className="text-xs text-slate-400 mb-[2px]">
-                v{appMetadata.version}
+              <span
+                suppressHydrationWarning
+                className="text-xs text-slate-400 mb-[2px]"
+              >
+                v{displayVersion}
               </span>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">

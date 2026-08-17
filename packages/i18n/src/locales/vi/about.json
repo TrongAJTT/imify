@@ -1,9 +1,10 @@
 {
   "title": "Imify",
   "subtitle": "Bộ công cụ xử lý ảnh mạnh mẽ",
-  "devModeOn": "DEV MODE BẬT",
+  "devModeOn": "Chế độ nhà phát triển đang bật",
   "devModeTooltip": "Nhấn 7 lần để bật Chế độ nhà phát triển",
   "checkUpdateTooltip": "Nhấn để kiểm tra bản cập nhật mới",
+  "updateAvailableTooltip": "Có phiên bản mới! Nhấn để kiểm tra",
   "noUpdateTitle": "Bạn đang dùng bản mới nhất!",
   "noUpdateDesc": "Hiện chưa có bản cập nhật mới nào cho Imify.",
   "checkingUpdate": "Đang kiểm tra cập nhật...",

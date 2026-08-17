@@ -554,8 +554,11 @@ export function RecoveryClient() {
 
       {/* ─── Footer Copyright ───────────────────────────────────────────────── */}
       <footer className="w-full text-center py-4 text-xs text-slate-400 dark:text-slate-600">
-        <span>
-          © {new Date().getFullYear()} Imify v{appMetadata.version}
+        <span suppressHydrationWarning>
+          © {new Date().getFullYear()} Imify v
+          {isMounted
+            ? appMetadata.cacheVersion || appMetadata.version
+            : appMetadata.version}
           {appMetadata.versionType ? ` (${appMetadata.versionType})` : ""} by
           TrongAJTT. Emergency Recovery Module.
         </span>

@@ -31,7 +31,7 @@ function parseSemverParts(version: string): number[] {
     .slice(0, 3)
 }
 
-function compareSemver(a: string, b: string): number {
+export function compareSemver(a: string, b: string): number {
   const aParts = parseSemverParts(a)
   const bParts = parseSemverParts(b)
   const len = Math.max(aParts.length, bParts.length)
@@ -69,6 +69,18 @@ function safeParseSeenStateV2(raw: string): SeenStateV2 | null {
 }
 
 export const CHECK_UPDATES_EVENT = "imify:check-for-updates"
+
+export function getHasUpdateAvailable(): boolean {
+  if (typeof window === "undefined" || !window.localStorage) return false
+  try {
+    const rawV2 = window.localStorage.getItem(STORAGE_KEY_V2)
+    const state = rawV2 ? safeParseSeenStateV2(rawV2) : null
+    if (!state) return false
+    return compareSemver(state.version, state.cacheVersion) > 0
+  } catch {
+    return false
+  }
+}
 
 export async function checkForUpdates(force = false): Promise<boolean> {
   const appMetadata = getAppMetadata()

@@ -10,6 +10,8 @@ import {
   BadgeQuestionMark,
   Library,
   X,
+  Code2,
+  Sparkles,
 } from "lucide-react";
 import { IMIFY_LINKS } from "@imify/core";
 import { getAppMetadata } from "@imify/core/app-metadata";
@@ -31,7 +33,11 @@ import { PwaInstallDialog } from "./pwa-install-dialog";
 import { ChangelogsDialog } from "./changelogs-dialog";
 import { GuidesDialog } from "./guides-dialog";
 import { useTranslation, Trans } from "@imify/i18n";
-import { checkForUpdates } from "./whats-new-update-notification-gate";
+import {
+  checkForUpdates,
+  getHasUpdateAvailable,
+  CHECK_UPDATES_EVENT,
+} from "./whats-new-update-notification-gate";
 
 const appMetadata = getAppMetadata();
 const DEV_MODE_CLICK_TARGET = 7;
@@ -105,6 +111,7 @@ export function AboutDialog({
   onOpenDonate,
 }: AboutDialogProps) {
   const { t } = useTranslation("about");
+  const appMetadata = getAppMetadata();
   const iconSrc = resolveFeatureMediaAssetUrl(
     FEATURE_MEDIA_ASSETS.brand.imifyLogoPng,
   );
@@ -114,6 +121,23 @@ export function AboutDialog({
   const [isGuidesDialogOpen, setIsGuidesDialogOpen] = useState(false);
 
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [hasUpdate, setHasUpdate] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setHasUpdate(getHasUpdateAvailable());
+
+    const handleUpdateCheck = () => {
+      setHasUpdate(getHasUpdateAvailable());
+    };
+
+    window.addEventListener(CHECK_UPDATES_EVENT, handleUpdateCheck);
+    window.addEventListener("storage", handleUpdateCheck);
+    return () => {
+      window.removeEventListener(CHECK_UPDATES_EVENT, handleUpdateCheck);
+      window.removeEventListener("storage", handleUpdateCheck);
+    };
+  }, [isOpen]);
 
   const activateDevMode = useCallback(async () => {
     if (devModeEnabled) {
@@ -137,8 +161,9 @@ export function AboutDialog({
     if (isCheckingUpdate) return;
     setIsCheckingUpdate(true);
     try {
-      const hasUpdate = await checkForUpdates(true);
-      if (!hasUpdate) {
+      const hasUpdateResult = await checkForUpdates(true);
+      setHasUpdate(hasUpdateResult);
+      if (!hasUpdateResult) {
         toast.success(t("noUpdateTitle"), t("noUpdateDesc"), 3500);
       }
     } catch {
@@ -164,15 +189,14 @@ export function AboutDialog({
         <X size={16} />
       </Button>
 
-      <div className="flex flex-col">
-        <div className="flex items-center gap-5 mb-8">
+      <div className="flex flex-col gap-8">
+        <div className="flex items-center gap-6">
           <button
             type="button"
             onClick={handleIconClick}
-            className="shrink-0 select-none cursor-pointer focus:outline-none active:scale-90 transition-transform duration-100"
-            aria-label="Imify logo"
-            title={t("devModeTooltip")}
+            className="p-1 rounded-2xl focus:outline-none select-none cursor-default"
             tabIndex={-1}
+            aria-label="App Icon"
           >
             {iconSrc ? (
               /* eslint-disable-next-line @next/next/no-img-element */
@@ -192,11 +216,12 @@ export function AboutDialog({
             <Kicker className="text-sm text-sky-500 dark:text-sky-400 tracking-widest">
               {t("subtitle", "The Powerful Image Toolkit")}
             </Kicker>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-1.5 mt-2">
               <button
                 type="button"
+                suppressHydrationWarning
                 onClick={handleVersionClick}
-                className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 select-none cursor-pointer focus:outline-none active:scale-90 transition-all duration-100"
+                className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 select-none cursor-pointer focus:outline-none active:scale-90 transition-all duration-100"
                 tabIndex={-1}
                 aria-label="App version"
                 title={t("checkUpdateTooltip")}
@@ -204,14 +229,33 @@ export function AboutDialog({
               >
                 {isCheckingUpdate
                   ? t("checkingUpdate", "Checking...")
-                  : `v${appMetadata.version}`}
+                  : `v${appMetadata.cacheVersion || appMetadata.version}`}
               </button>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 select-none">
                 {appMetadata.versionType}
               </span>
+              {hasUpdate ? (
+                <button
+                  type="button"
+                  onClick={handleVersionClick}
+                  title={t(
+                    "updateAvailableTooltip",
+                    t("updateAvailableDialog.title", "New version available!"),
+                  )}
+                  className="p-1 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 inline-flex items-center justify-center select-none cursor-pointer border border-amber-300 dark:border-amber-700/50 motion-safe:animate-pulse transition-all hover:scale-105 active:scale-95"
+                >
+                  <Sparkles
+                    size={13}
+                    className="text-amber-500 fill-amber-500 shrink-0"
+                  />
+                </button>
+              ) : null}
               {devModeEnabled ? (
-                <span className="px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-[10px] font-bold text-violet-600 dark:text-violet-400">
-                  {t("devModeOn", "DEV MODE ON")}
+                <span
+                  title={t("devModeOn", "Developer Mode is enabled")}
+                  className="p-1 rounded-md bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center justify-center select-none cursor-default border border-violet-200/60 dark:border-violet-800/40 transition-all hover:scale-105"
+                >
+                  <Code2 size={13} className="shrink-0" />
                 </span>
               ) : null}
             </div>
