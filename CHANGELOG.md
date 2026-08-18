@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **PDF Studio File Naming**: Standardized Images-to-PDF export naming to `imify-imgtopdf-${time}.pdf` and refactored downloads via shared `downloadWithFilename` utility.
-- **Update Checking Rate Limit**: Reduced background update polling cooldown from 3 hours to 1 hour.
+- **Update Checking Rate Limit**: Reduced background update polling cooldown from 3 hours to 30 minutes.
 - **Update Page Layout**: Applied compact mini-footer and calibrated card vertical alignment to optical center on `/update`.
 
 ### Fixed
