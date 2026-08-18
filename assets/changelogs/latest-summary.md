@@ -1,6 +1,6 @@
-🎉 Welcome to Imify v2.3!
+🎉 Welcome to Imify v2.3.1!
 
-This major release brings two powerful new tools — **PDF Studio** and **Collage Maker** — along with an **Emergency Recovery Mode**, a brand-new **Global Dialog & Toast System**, automated smart concurrency, and dozens of UX and stability improvements across all tools!
+This maintenance release introduces a **Dedicated Update Shortcut (`/update`)** for instant cache purging, rich **Feature-Specific Open Graph Images** for social sharing, centralized export naming helpers, and key stability fixes for dialog lifecycles and background update detection.
 
 ✨ Major Highlights (v2.3):
 
