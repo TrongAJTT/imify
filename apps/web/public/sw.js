@@ -15,6 +15,12 @@ if (workbox) {
     new workbox.strategies.NetworkOnly()
   );
 
+  // Never intercept or cache update shortcut page
+  workbox.routing.registerRoute(
+    ({ url }) => url.pathname.startsWith('/update'),
+    new workbox.strategies.NetworkOnly()
+  );
+
   // Skip analytics / tracking
   workbox.routing.registerRoute(
     ({ url }) =>

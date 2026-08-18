@@ -146,5 +146,17 @@
     "reportBugBtn": "Báo cáo lỗi trên GitHub",
     "systemInfo": "Thông tin Hệ thống",
     "openRecovery": "Khôi phục khẩn cấp"
+  },
+  "updatePage": {
+    "title": "Cập nhật Ứng dụng",
+    "subtitle": "Xóa bộ nhớ đệm cũ để tải phiên bản mới nhất của Imify.",
+    "noInternetTitle": "Không có kết nối Internet",
+    "noInternetDesc": "Không có kết nối internet, không thể cập nhật.",
+    "clearingCacheTitle": "Đang cập nhật...",
+    "clearingCacheDesc": "Đang xóa cache cũ để ứng dụng có thể cập nhật.",
+    "successTitle": "Cập nhật hoàn tất!",
+    "successDesc": "Xóa cache thành công, tiến hành quay lại trang chủ để cập nhật.",
+    "returnHome": "Quay lại trang chủ ({{seconds}}s)",
+    "returnHomeNow": "Quay lại trang chủ ngay"
   }
 }

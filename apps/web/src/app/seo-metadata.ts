@@ -127,5 +127,10 @@ export const WEB_ROUTE_METADATA = {
     title: "Recovery Center",
     description:
       "Emergency troubleshooting tool to resolve data conflicts, clear local caches, and recover application state in Imify."
+  },
+  update: {
+    title: "App Update",
+    description:
+      "Clear stale caches and refresh Imify Web to load the latest application version."
   }
 } satisfies Record<string, SeoMetadataEntry>
