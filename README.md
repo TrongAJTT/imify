@@ -7,27 +7,38 @@
 [![React](https://img.shields.io/badge/React-18.2.0-61dafb.svg)](https://reactjs.org/)
 [![Plasmo](https://img.shields.io/badge/Plasmo-Framework-blue?logo=plasmo)](https://www.plasmo.com/)
 
-## ✨ Key Features (v2 Suite)
+## ✨ Key Features
 
-* **Dual Platforms**: Use Imify as a standalone web application or as a tightly integrated browser extension.
-* **100% Client-Side Processing**: Zero server dependencies. Complete data privacy using WebAssembly and Web Workers.
-* **Rich Format Support**: Read and convert to `JPG`, `PNG` (Tiny mode, Floyd-Steinberg dithering, and OxiPNG WASM optimization), `WebP`, `AVIF`, `JXL` (JPEG XL), `TIFF`, `ICO`, `BMP`, and `PDF`.
-* **Advanced Processing Tools (Available in both the web application and the browser extension)**:
-  * **AI Background Removal**: 100% local, high-precision background extraction powered by ORMBG, MODNet, and Selfie AI models.
-  * **QR Station**: Offline QR Code Generator (with logo overlays, custom styles, and vector SVG exports) & Advanced QR Reader (scan via active screen, camera, or files).
-  * **Batch Processor**: Drag-and-drop multiple files to convert them in bulk. Includes ZIP packaging.
-  * **Image Splitter**: Slice images via grid systems or custom percentage/pixel sequences with a reorderable guide UI.
-  * **Image Splicing**: Vertically or horizontally stitch multiple images together with gap controls.
-  * **Pattern & Fill**: Generate seamless patterns and use symmetric edge-filling techniques.
-  * **Difference Checker**: Pixel-perfect visual comparison tool for QA and analysis.
-  * **Image Inspector**: Deep dive into image metadata and EXIF data.
-* **Extension-Exclusive Features**:
-  * **Right-Click Context Menu**: Instantly convert and download any web image using your preferred presets.
-  * **SEO Audit (Chrome & Edge)**: Deep DOM scanning to detect oversized images, missing alt text, and potential bandwidth savings via modern formats. (Note: Currently unavailable on Firefox because this feature requires Side Panel API).
-* **Smart Resizing Engine**: Scale by dimension, percentage, or match standard physical paper sizes (A4, Letter) with DPI controls.
-* **Installable PWA & Offline Support**: Install Imify as a standalone desktop or mobile application. All image processing assets are cached for 100% offline use.
-* **Custom Locales**: Import, export, and manage your own custom translation JSON bundles (with default English and Vietnamese support).
-* **Modern Workspace UI**: A unified, desktop-like layout with collapsible navigation, reorderable sidebar configurations (`dnd-kit`), and dark mode support.
+- **Dual Platforms**: Use Imify as a standalone web application or as a tightly integrated browser extension.
+- **100% Client-Side Processing**: Zero server dependencies. Complete data privacy using WebAssembly and Web Workers.
+- **Rich Format Support**: Read and convert to `JPG`, `PNG` (Tiny mode, Floyd-Steinberg dithering, and OxiPNG WASM optimization), `WebP`, `AVIF`, `JXL` (JPEG XL), `TIFF`, `ICO`, `BMP`, and `PDF`.
+- **Advanced Processing & Creation Workspaces**:
+  - **PDF Studio (Two-Way PDF Suite)**: Convert images to multi-page PDFs with layout, margins, and DPI controls, or extract pages as high-resolution images and ZIP archives.
+  - **Quick Collage Maker**: Create multi-image collages with grid presets, aspect ratios, customizable spacing/radii, and interactive drag-and-drop layer swapping.
+  - **AI Background Removal & Upscaler**: 100% local background removal (ORMBG, MODNet, Selfie AI) and neural super-resolution upscaling.
+  - **QR Station**: Offline QR Code Generator (with logo overlays, custom styles, and vector SVG exports) & Advanced QR Reader (scan via camera or files).
+  - **Batch Processor**: Bulk convert, resize, compress, and rename multiple files with streaming ZIP packaging.
+  - **Image Splitter**: Slice images via grid systems or custom percentage/pixel sequences with a reorderable guide UI.
+  - **Image Splicing**: Vertically or horizontally stitch multiple images together with gap and background controls.
+  - **Pattern & Fill**: Generate seamless repeating patterns and use symmetric edge-filling techniques.
+  - **Difference Checker & Inspector**: Pixel-perfect visual comparison tool and deep EXIF metadata inspector.
+- **Reliability & Maintenance Tools**:
+  - **Emergency Recovery Mode (`/recovery`)**: Standalone diagnostic route to unregister broken Service Workers and purge corrupted caches without data loss.
+  - **Instant Update Shortcut (`/update`)**: Dedicated cache purging and update refresh route with automatic offline detection.
+- **Extension-Exclusive Features**:
+  - **Right-Click Context Menu**: Instantly convert and download any web image using your preferred presets.
+  - **SEO Audit (Chrome & Edge)**: Deep DOM scanning to detect oversized images, missing alt text, and potential bandwidth savings via modern formats. (Note: Currently unavailable on Firefox because this feature requires Side Panel API).
+- **Smart Resizing Engine**: Scale by dimension, percentage, or match standard physical paper sizes (A4, Letter) with DPI controls.
+- **Installable PWA & Offline Support**: Install Imify as a standalone desktop or mobile application. All image processing assets are cached for 100% offline use.
+- **Custom Locales**: Import, export, and manage your own custom translation JSON bundles (with default English and Vietnamese support).
+- **Modern Workspace UI**: A unified, desktop-like layout with collapsible navigation, reorderable sidebar configurations (`dnd-kit`), and dark mode support.
+
+## 📣 Updates
+
+<div align="center">
+   <img src="https://cdn.trongajtt.com/apps/imify/updates/v2-2-0/changelog.webp" alt="Update v2.2" style="width:45%;">
+   <img src="https://cdn.trongajtt.com/apps/imify/updates/v2-3/changelog.webp" alt="Update v2.3" style="width:45%;">
+</div>
 
 ## 📸 Screenshots
 
@@ -38,9 +49,9 @@
   <img src="https://cdn.trongajtt.com/apps/imify/image-processor.webp" alt="image Processor" style="width:32%;">
   <img src="https://cdn.trongajtt.com/apps/imify/image-inspector.webp" alt="Image Inspector" style="width:32%;">
   <img src="https://cdn.trongajtt.com/apps/imify/seo-audit-preview.webp" alt="SEO Audit" style="width:32%;">
-  <img src="assets/features/preview-image_filling.webp" alt="Image Filling" style="width:32%;">
-  <img src="assets/features/preview-image_splitter-2.webp" alt="Image Splitter 2" style="width:32%;">
-  <img src="assets/features/preview-pattern_generator.webp" alt="Pattern Generator" style="width:32%;">
+  <img src="assets/features/preview-collage.webp" alt="Collage Maker" style="width:32%;">
+  <img src="assets/features/preview-pdf_studio.webp" alt="PDF Studio" style="width:32%;">
+  <img src="assets/images/illustrations/qr-generator.svg" alt="QR Suite" style="width:32%;">
 </div>
 
 ## 💝 Support & Donate
@@ -49,6 +60,12 @@ If you find Imify useful, please consider supporting its development:
 
 [![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-6e5494?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/TrongAJTT)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/trongajtt)
+
+## 📚 Documentation & Resources
+
+- ❓ **[Frequently Asked Questions (FAQs)](./FAQs.md)**: Troubleshooting, cache purging guides, browser compatibility, and privacy architecture.
+- 🎖️ **[Credits & Attributions](./CREDITS.md)**: Open-source libraries, WASM encoders, AI models, and community contributions.
+- 📋 **[Changelog](./CHANGELOG.md)**: Full release history and update notes.
 
 ## 📥 Installation
 
@@ -60,19 +77,20 @@ Imify is officially available on the Chrome Web Store, Microsoft Edge Add-ons St
 
 > [!IMPORTANT]
 > 🛡️ **Note for Chrome Users (Enhanced Safe Browsing):**
-> - Because Imify is a newly published extension, users with Chrome's "Enhanced Safe Browsing" enabled might see a warning stating the extension is *"not trusted."*
+>
+> - Because Imify is a newly published extension, users with Chrome's "Enhanced Safe Browsing" enabled might see a warning stating the extension is _"not trusted."_
 > - This is a standard Google policy applied to all **new developer accounts** until they build a history of trust over a few months. It is not related to the code itself. Imify is completely open-source, operates 100% offline, and requires no external servers. You can verify every line of code in this repository. It is entirely safe to click "Continue to install".
 
 ## 🛠️ Tech Stack
 
-* **Monorepo**: [Turborepo](https://turbo.build/)
-* **Web App**: [Next.js](https://nextjs.org/) (App Router, Pure Static Export)
-* **Extension Framework**: [Plasmo](https://docs.plasmo.com/) (Manifest V3)
-* **UI/Styling**: React, Tailwind CSS, Radix UI, dnd-kit, Lucide React
-* **State Management**: Zustand
-* **Core Image Processing**: Native `OffscreenCanvas` API, Web Workers
-* **Advanced Encoders**: WebAssembly (Wasm) via `@jsquash/avif`, `@jsquash/jxl`, `@jsquash/oxipng`; plus `image-q`, `UPNG.js`, `UTIF.js`, `fflate`
-* **Language**: TypeScript (Strict typing)
+- **Monorepo**: [Turborepo](https://turbo.build/)
+- **Web App**: [Next.js](https://nextjs.org/) (App Router, Pure Static Export)
+- **Extension Framework**: [Plasmo](https://docs.plasmo.com/) (Manifest V3)
+- **UI/Styling**: React, Tailwind CSS, Radix UI, dnd-kit, Lucide React
+- **State Management**: Zustand
+- **Core Image Processing**: Native `OffscreenCanvas` API, Web Workers
+- **Advanced Encoders**: WebAssembly (Wasm) via `@jsquash/avif`, `@jsquash/jxl`, `@jsquash/oxipng`; plus `image-q`, `UPNG.js`, `UTIF.js`, `fflate`
+- **Language**: TypeScript (Strict typing)
 
 ## 📂 Monorepo Structure
 
@@ -94,20 +112,20 @@ imify/
 
 ### Prerequisites
 
-* [Node.js](https://nodejs.org/) (v18 or higher)
-* [pnpm](https://pnpm.io/) (Recommended package manager)
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [pnpm](https://pnpm.io/) (Recommended package manager)
 
 ### Installation
 
 1. Clone the repository:
-   
+
    ```bash
    git clone https://github.com/trongajtt/imify.git
    cd imify
    ```
 
 2. Install dependencies:
-   
+
    ```bash
    pnpm install
    ```
@@ -134,8 +152,8 @@ pnpm dev:firefox
 ### Loading the Extension
 
 1. Open your browser and navigate to:
-   * Chrome: `chrome://extensions/`
-   * Firefox: `about:debugging#/runtime/this-extension`
+   - Chrome: `chrome://extensions/`
+   - Firefox: `about:debugging#/runtime/this-extension`
 2. Enable **Developer mode** (for Chrome).
 3. Click **Load unpacked** (Chrome) or **Load Temporary Add-on** (Firefox).
 4. Select the build directory (e.g., `build/chrome-mv3-dev` or `build/firefox-mv3-dev`).
@@ -182,11 +200,13 @@ If you are reviewing this extension for the Mozilla Add-ons Store, please follow
 3. The generated add-on will be an archive located in the output build directory (e.g., `apps/extension/build/firefox-mv3-prod.zip`).
 
 **Compliance Declaration regarding WebAssembly (WASM) & Minification:**
+
 - **WASM Origin:** All `.wasm` binaries used in this project for image encoding, decoding, and processing (AVIF, JXL, OxiPNG, MozJPEG, WebP, and Resampling) are sourced standardly via official open-source NPM packages (such as `@jsquash/avif`, `@jsquash/jxl`, `@jsquash/oxipng`, `@jsquash/mozjpeg`, `@jsquash/webp`, and `@jsquash/resize`) as declared in `package.json`. There are no privately built or obfuscated custom WASM payloads.
-- **Local Bundling:** During the build process (`pnpm build`), these WASM binaries are synchronized from `node_modules` into the extension's local `assets/wasm` directory via internal build scripts (`scripts/sync-wasm.mjs`). 
+- **Local Bundling:** During the build process (`pnpm build`), these WASM binaries are synchronized from `node_modules` into the extension's local `assets/wasm` directory via internal build scripts (`scripts/sync-wasm.mjs`).
 - **Zero Remote Execution:** The extension processes all images 100% locally and does not fetch any executable code, scripts, or WASM files from remote servers. All resources are bundled within the final `.zip` package.
 
 > **Note for Firefox Reviewers**: Our build pipeline includes a dedicated sanitation script (`scripts/sanitize-firefox-manifest.mjs`). This script automatically adjusts the production manifest for Firefox to ensure compliance with current Gecko MV3 support:
+>
 > 1. **Permission Cleanup**: Removes `offscreen` and `sidePanel` permissions which are currently unsupported or restricted in Firefox.
 > 2. **UI Adjustments**: Removes the `side_panel` and `action.default_popup` keys. Removing the popup allows the extension to use a fallback behavior (handled in `apps/extension/src/background/index.ts`) that opens the Options page directly when the user clicks the extension icon, providing a seamless experience despite the lack of Side Panel support.
 

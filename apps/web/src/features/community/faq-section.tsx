@@ -68,6 +68,7 @@ export function FaqSection() {
     const raw = t("faq.items", {
       returnObjects: true,
       recoveryUrl: "/recovery",
+      updateUrl: "/update",
       chromeUrl: IMIFY_LINKS.chromeClearCookiesGuide,
       edgeUrl: IMIFY_LINKS.edgeClearCookiesGuide,
       firefoxUrl: IMIFY_LINKS.firefoxClearCookiesGuide,
