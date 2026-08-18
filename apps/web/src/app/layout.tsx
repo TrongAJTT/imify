@@ -7,19 +7,39 @@ import { WorkspaceLayout } from "@/components/layout/workspace-layout"
 import { PwaRegistration } from "@/components/pwa/registration"
 import { ChunkErrorRecovery } from "@/components/pwa/chunk-error-recovery"
 import { FEATURE_MEDIA_ASSET_PATHS } from "@imify/features/shared/media-assets"
-import { WEB_ROUTE_METADATA } from "./seo-metadata"
+import { DEFAULT_OG_IMAGE, IMIFY_LINKS } from "@imify/core/links"
+import { HOME_SEO_DESCRIPTION } from "./seo-metadata"
 
 export const metadata: Metadata = {
+  metadataBase: new URL(IMIFY_LINKS.website),
   title: {
     default: "Imify",
     template: "%s | Imify"
   },
-  description: WEB_ROUTE_METADATA.home.description,
+  description: HOME_SEO_DESCRIPTION,
   manifest: "/manifest.json",
   icons: {
     icon: FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
     shortcut: FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng,
     apple: FEATURE_MEDIA_ASSET_PATHS.brand.imifyLogoPng
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Imify",
+    title: "Imify - Privacy-First Image Toolkit",
+    description: HOME_SEO_DESCRIPTION,
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE,
+        alt: "Imify - Fast, Privacy-First Image Processing"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Imify - Privacy-First Image Toolkit",
+    description: HOME_SEO_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE]
   },
   appleWebApp: {
     capable: true,

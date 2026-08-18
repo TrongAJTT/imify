@@ -15,7 +15,7 @@ import { useTranslation } from "@imify/i18n";
 
 export function WebFooter() {
   const appMetadata = getAppMetadata();
-  const { isMonolithicPage: isFullFooter, isRecoveryPage } = useWebPageMode();
+  const { isFullFooterPage: isFullFooter, isRecoveryPage, isUpdatePage } = useWebPageMode();
   const isDesktop = useIsDesktopLayout();
   const { t, i18n } = useTranslation("homepage");
   const [isMounted, setIsMounted] = React.useState(false);
@@ -41,8 +41,8 @@ export function WebFooter() {
     return null;
   }
 
-  // Hide footer ONLY on tool pages AND on mobile interface.
-  if (!isFullFooter && !isDesktop) {
+  // Hide footer on tool pages on mobile interface (keep visible for /update and landing/extension)
+  if (!isFullFooter && !isDesktop && !isUpdatePage) {
     return null;
   }
 

@@ -37,6 +37,7 @@ coverage/
 .gitnexus
 .cursor/plans/
 .github/copilot-instructions.md
+.antigravityignore
 
 # Documentation & Backups
 backups/

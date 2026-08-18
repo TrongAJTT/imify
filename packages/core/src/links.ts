@@ -1,5 +1,9 @@
+export const DEFAULT_OG_IMAGE =
+  "https://cdn.trongajtt.com/apps/imify/promo.webp";
+
 export const IMIFY_LINKS = {
   website: "https://imify.trongajtt.com/",
+  defaultOgImage: DEFAULT_OG_IMAGE,
   terms: "https://www.trongajtt.com/apps/imify/terms/",
   privacy: "https://www.trongajtt.com/apps/imify/policy/",
   authorProfile: "https://github.com/TrongAJTT",
@@ -15,5 +19,5 @@ export const IMIFY_LINKS = {
     "https://support.microsoft.com/en-us/edge/manage-cookies-in-microsoft-edge-view-allow-block-delete-and-use",
   firefoxClearCookiesGuide:
     "https://support.mozilla.org/en-US/kb/clear-cookies-and-site-data-firefox",
-} as const
+} as const;
 

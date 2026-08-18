@@ -48,3 +48,24 @@ export function generateDefaultPresetName(
     `${featureKey} #[DateTime]`;
   return formatPresetNameWithDateTime(pattern, date);
 }
+
+/**
+ * Formats a compact timestamp `HHmmss` (e.g. `143025`).
+ */
+export function formatCompactTime(date: Date = new Date()): string {
+  return `${pad2(date.getHours())}${pad2(date.getMinutes())}${pad2(date.getSeconds())}`;
+}
+
+/**
+ * Generates an export filename with prefix, compact time (`HHmmss`), and extension.
+ * Example: `generateExportFileName("imify-imgtopdf", "pdf")` -> `imify-imgtopdf-143025.pdf`
+ */
+export function generateExportFileName(
+  prefix: string,
+  extension: string,
+  date: Date = new Date(),
+): string {
+  const time = formatCompactTime(date);
+  const ext = extension.startsWith(".") ? extension : `.${extension}`;
+  return `${prefix}-${time}${ext}`;
+}

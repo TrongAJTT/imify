@@ -7,6 +7,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]
 
+# Update v2.3.1 - 2026-08-18
+
+### Added
+
+- **Dedicated Update Shortcut (`/update`)**: Introduced a standalone utility route to purge stale CacheStorage, prompt Service Worker updates, verify offline connectivity, and redirect to homepage with an automated 5-second countdown.
+- **Social Sharing & Open Graph Images**: Configured feature-specific Open Graph preview images across all tool routes matching their landing page showcases, with a centralized default promo banner constant (`https://cdn.trongajtt.com/apps/imify/promo.webp`).
+- **Core Export Naming Helpers**: Added `formatCompactTime` and `generateExportFileName` helpers in `@imify/core/preset-naming-config` for unified timestamped exports.
+
+### Changed
+
+- **PDF Studio File Naming**: Standardized Images-to-PDF export naming to `imify-imgtopdf-${time}.pdf` and refactored downloads via shared `downloadWithFilename` utility.
+- **Update Checking Rate Limit**: Reduced background update polling cooldown from 3 hours to 30 minutes.
+- **Update Page Layout**: Applied compact mini-footer and calibrated card vertical alignment to optical center on `/update`.
+
+### Fixed
+
+- **BaseDialog Lifecycle Synchronization**: Fixed an issue where conditionally mounted modals failed to call `dialogNode.showModal()` due to missing `mounted` dependency in React effect lifecycle.
+- **Service Worker Notification Flow**: Fixed `SW_CACHE_READY` event handler to prompt the update dialog instead of forcing an immediate page reload.
+- **Server Component Hooks Bundling**: Fixed Next.js build error in Server Component routes by isolating client hook directives in `@imify/core`.
+
+# Update v2.3.0 - 2026-08-17
+
+**Imify v2.3 is one of our most feature-packed updates yet!** We are introducing two brand-new creative and document tools - **PDF Studio** and **Collage Maker** - designed from the ground up for maximum speed, privacy, and memory efficiency directly in your browser. This release also introduces a dedicated **Emergency Recovery Mode**, a brand-new **Unified Dialog & Toast System**, automated hardware concurrency, and extensive workflow refinements across all existing workspaces.
+
+## 📄 PDF Studio (Two-Way PDF Tool Suite)
+
+A versatile, client-side PDF workstation operating with zero server uploads:
+
+- **Images to PDF Conversion**:
+
+  - **Batch Import & Reordering**: Import multiple images (PNG, JPEG, WebP, SVG, AVIF) with drag-and-drop support, visual reordering, and individual rotation.
+  - **Precision Page Layout**: Configure standard page formats (A4, A3, Letter, Legal, etc.), orientation (Portrait, Landscape, Auto-fit), and customizable page margins.
+  - **DPI Resolution & Scaling Suite**: Choose target output DPI presets (72, 150, 300 DPI) and image fit policies (Contain, Cover, Stretch) with custom background fills.
+  - **Memory-Efficient Streaming Export**: Powered by `StreamingPdfWriter` to handle dozens of high-res images without browser tab crashes.
+  - **Custom Naming & Metadata**: Configure flexible file naming patterns before generating the PDF.
+
+- **PDF to Images Extraction**:
+  - **High-Performance Rendering**: Powered by WebAssembly-based rendering with 200px lazy thumbnail caching and responsive viewport virtualization for documents with hundreds of pages.
+  - **Flexible Extraction Options**: Extract all pages or specific page ranges into high-quality PNG, JPEG, or WebP formats.
+  - **Streamlined Packaging**: Export individual pages one-by-one or download all extracted images bundled into a single ZIP archive.
+  - **Interactive Page Navigator**: Responsive pagination bar with a jump-to-page search popover and two-way page selection.
+
+## 🖼️ Quick Collage Maker
+
+A creative, multi-stage workspace built to craft photo collages effortlessly:
+
+- **3-Stage Guided Workflow**:
+  1. **Photo Intake**: Bulk upload photos with live media queue management and format validation.
+  2. **Layout Customization**: Choose from diverse collage grid presets, adjust aspect ratios, customize outer padding, and tweak inner spacing/gaps.
+  3. **Canvas Fine-Tuning & Export**: Fine-tune layer positioning, drag-and-drop to swap images between cells, apply border radii and custom background colors, and export in your preferred format.
+- **Interactive Drag-to-Swap**: Easily re-arrange photos by dragging one image directly onto another cell.
+- **Smart Aspect Ratio Presets**: Standard 1:1, 4:5, 16:9, 9:16, 4:3, and custom dimension presets with DPI scaling.
+
+## 🛠️ Emergency Recovery Mode (`/recovery`)
+
+A standalone recovery route to help users diagnose and resolve browser caching anomalies:
+
+- **One-Click Diagnostic & Repair**: Diagnose corrupted Service Worker states, stale PWA caches, or faulty IndexedDB data.
+- **Granular Storage Cleanup**: Selectively purge stale caches, reset application configurations, or execute a factory reset without affecting user backups.
+- **Built-in Guide**: Comprehensive troubleshooting steps integrated into the Help & Guides dialog.
+
+## 🔔 Unified Global Dialogs & Notifications
+
+- **Promise-Based Confirmation System**: Standardized dialogs (`AlertDialog`, `ConfirmDialog`, `RenameInputDialog`) with full keyboard navigation (`Enter` to confirm, `Esc` to cancel).
+- **Centralized Toast System**: Unified notification toast manager providing real-time feedback with animated countdowns and status indicators.
+- **Custom Filename Dialog**: Standardized file naming modal integrated across all export workflows.
+
+## ⚡ Performance & Core Enhancements
+
+- **Smart Automated Concurrency**: Replaced manual concurrency selectors with automatic hardware detection based on device CPU cores and available memory.
+- **Hero Progress Card**: Real-time progress tracker with elapsed time chips, task cancellation, and completion statistics across Batch Processor, Splicing, and PDF Studio.
+- **Grid Designer & Filling Upgrades**:
+  - Added Quick Actions Popover with instant border width, radius, and color pickers.
+  - Added Fit options: _Fill_, _Cover_, and _Contain_ with exact stretch behavior.
+  - Interactive layer drag-to-swap and aspect ratio lock controls.
+- **Settings & Data Management**:
+  - Redesigned Backup & Restore action cards with visual status badges.
+  - Added **Wipe Data with Auto-Backup** to safeguard settings before clearing data.
+  - Expanded Dev Mode State Viewer with state inspection for Collage Maker and PDF Studio.
+- **About Dialog & Version Management**:
+  - Interactive version badge with manual update check triggers and instant tooltip feedback.
+  - Enhanced Developer Mode toggle indicator.
+
 ## [2.2.2] - 2026-07-22 - Web App only
 
 ### Added

@@ -16,9 +16,13 @@ export function resolveFeatureMediaAssetUrl(url: string): string {
   }
 }
 
+export const DEFAULT_OG_IMAGE =
+  "https://cdn.trongajtt.com/apps/imify/promo.webp";
+
 export const FEATURE_MEDIA_ASSET_PATHS = {
   brand: {
     imifyLogoPng: "/assets/icon.png",
+    promoWebp: DEFAULT_OG_IMAGE,
     githubLogoSvg: "/assets/images/github-logo.svg",
     buyMeCoffeeLogoSvg: "/assets/images/bmc-logo.svg",
     paypalIconSvg: "/assets/images/pp-icon.svg",

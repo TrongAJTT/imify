@@ -6,3 +6,7 @@
 # Never cache dynamic runtime version descriptor
 /version.json
   Cache-Control: no-cache, no-store, must-revalidate
+
+# Never cache update shortcut route
+/update*
+  Cache-Control: no-cache, no-store, must-revalidate

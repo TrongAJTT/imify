@@ -19,6 +19,8 @@ import { Download, Images, Plus, Trash2 } from "lucide-react";
 import { Button, AnimatingSpinner } from "@imify/ui";
 import { toast } from "@imify/stores";
 import { useTranslation } from "@imify/i18n";
+import { generateExportFileName } from "@imify/core";
+import { downloadWithFilename } from "../processor/processor-utils";
 import { formatFileSize } from "../inspector/format-utils";
 import {
   COMMON_IMAGE_ACCEPT,
@@ -258,12 +260,8 @@ export function ImagesToPdfWorkspace({
         return;
       }
 
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "imify_document.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
+      const fileName = generateExportFileName("imify-imgtopdf", "pdf");
+      await downloadWithFilename(pdfBlob, fileName);
 
       const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
       toast.success(

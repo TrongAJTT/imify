@@ -44,6 +44,7 @@ import {
 } from "../shared/hero-progress-card";
 import { PaginationBar } from "../shared/pagination-bar";
 import { confirmBatchDownload, promptRenameInput, toast } from "@imify/stores";
+import { generateExportFileName } from "@imify/core";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
 import {
   resolvePdfStudioLazyPagination,
@@ -555,10 +556,7 @@ export function PdfToImagesWorkspace({
       const zipBlob = await streamingZip.finalize();
       if (signal.aborted) return;
 
-      const now = new Date();
-      const pad2 = (n: number) => n.toString().padStart(2, "0");
-      const time = `${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
-      const zipFileName = `imify-pdftoimg-${time}.zip`;
+      const zipFileName = generateExportFileName("imify-pdftoimg", "zip");
       await downloadWithFilename(zipBlob, zipFileName);
       notifyCompleted();
     } catch (e: any) {

@@ -146,5 +146,17 @@
     "reportBugBtn": "Report on GitHub",
     "systemInfo": "System Information",
     "openRecovery": "Emergency Recovery"
+  },
+  "updatePage": {
+    "title": "App Update",
+    "subtitle": "Purging old cache to load the latest version of Imify.",
+    "noInternetTitle": "No Internet Connection",
+    "noInternetDesc": "No internet connection detected, unable to update.",
+    "clearingCacheTitle": "Updating App...",
+    "clearingCacheDesc": "Clearing stale cache so the application can update to the latest version.",
+    "successTitle": "Update Ready!",
+    "successDesc": "Cache cleared successfully. Returning to homepage to complete the update.",
+    "returnHome": "Back to Home ({{seconds}}s)",
+    "returnHomeNow": "Back to Home Now"
   }
 }

@@ -8,7 +8,7 @@ import { WhatsNewUpdateSummaryDialog } from "./whats-new-update-summary-dialog"
 
 const STORAGE_KEY_V2 = "imify_whats_new_seen_v2"
 const STORAGE_KEY_V1 = "imify_whats_new_seen_v1"
-const FETCH_RATE_LIMIT_MS = 1 * 60 * 60 * 1000 // 1 hour
+const FETCH_RATE_LIMIT_MS = 30 * 60 * 1000 // 30 minutes
 
 export type SeenStateV2 = {
   version: string
