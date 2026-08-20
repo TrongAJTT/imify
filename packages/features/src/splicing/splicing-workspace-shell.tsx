@@ -80,6 +80,9 @@ function extractSplicingPresetConfig(
     captionContainerColor:
       captionConfig?.containerColor ??
       DEFAULT_SPLICING_CAPTION_CONFIG.containerColor,
+    captionContainerOpacity:
+      captionConfig?.containerOpacity ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.containerOpacity,
     captionBorderRadius:
       captionConfig?.borderRadius ??
       DEFAULT_SPLICING_CAPTION_CONFIG.borderRadius,
@@ -91,6 +94,18 @@ function extractSplicingPresetConfig(
       captionConfig?.offsetX ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetX,
     captionOffsetY:
       captionConfig?.offsetY ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetY,
+    captionOffsetLockMode:
+      captionConfig?.offsetLockMode ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.offsetLockMode,
+    captionOffsetFontSizeMultiplier:
+      captionConfig?.offsetFontSizeMultiplier ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.offsetFontSizeMultiplier,
+    captionOffsetPaddingSource:
+      captionConfig?.offsetPaddingSource ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingSource,
+    captionOffsetPaddingMultiplier:
+      captionConfig?.offsetPaddingMultiplier ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingMultiplier,
     captionFlipHorizontal:
       captionConfig?.flipHorizontal ??
       DEFAULT_SPLICING_CAPTION_CONFIG.flipHorizontal,
@@ -150,6 +165,9 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
       containerColor:
         config.captionContainerColor ??
         DEFAULT_SPLICING_CAPTION_CONFIG.containerColor,
+      containerOpacity:
+        config.captionContainerOpacity ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.containerOpacity,
       borderRadius:
         config.captionBorderRadius ??
         DEFAULT_SPLICING_CAPTION_CONFIG.borderRadius,
@@ -159,6 +177,18 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
         config.captionAlignment ?? DEFAULT_SPLICING_CAPTION_CONFIG.alignment,
       offsetX: config.captionOffsetX ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetX,
       offsetY: config.captionOffsetY ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetY,
+      offsetLockMode:
+        config.captionOffsetLockMode ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.offsetLockMode,
+      offsetFontSizeMultiplier:
+        config.captionOffsetFontSizeMultiplier ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.offsetFontSizeMultiplier,
+      offsetPaddingSource:
+        config.captionOffsetPaddingSource ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingSource,
+      offsetPaddingMultiplier:
+        config.captionOffsetPaddingMultiplier ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingMultiplier,
       flipHorizontal:
         config.captionFlipHorizontal ??
         DEFAULT_SPLICING_CAPTION_CONFIG.flipHorizontal,
@@ -166,6 +196,7 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
         config.captionFlipVertical ??
         DEFAULT_SPLICING_CAPTION_CONFIG.flipVertical,
     },
+
     exportSettings: {
       format: (config.exportFormat as any) ?? "png",
       exportMode: config.exportMode ?? "single",

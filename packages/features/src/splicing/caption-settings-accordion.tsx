@@ -1,26 +1,35 @@
 import React, { useEffect } from "react";
+
 import {
   Type,
   Link2,
   Unlink2,
+  Lock,
+  Unlock,
   FlipHorizontal,
   FlipVertical,
+  Calculator,
 } from "lucide-react";
 import {
   AccordionCard,
   NumberInput,
   SelectInput,
   ColorPickerPopover,
+  ControlledPopover,
+  SegmentedControl,
 } from "@imify/ui";
 
 import { useTranslation } from "@imify/i18n";
 import { useFontStore } from "@imify/stores/stores/font-store";
-import type {
-  SplicingCaptionConfig,
-  SplicingCaptionMode,
-  SplicingCaptionPosition,
-  SplicingCaptionAlignment,
-} from "./types";
+import {
+  computeCaptionLockedOffset,
+  type SplicingCaptionConfig,
+  type SplicingCaptionMode,
+  type SplicingCaptionPosition,
+  type SplicingCaptionAlignment,
+  type SplicingCaptionOffsetLockMode,
+  type SplicingCaptionOffsetPaddingSource,
+} from "@imify/core";
 
 interface CaptionSettingsAccordionProps {
   captionConfig: SplicingCaptionConfig;
@@ -78,29 +87,69 @@ export function CaptionSettingsAccordion({
     })),
   ];
 
-  const handlePaddingVChange = (v: number) => {
-    if (captionConfig.paddingLinked) {
-      onCaptionConfigChange({ paddingV: v, paddingH: v });
-    } else {
-      onCaptionConfigChange({ paddingV: v });
+  const lockedOffset = computeCaptionLockedOffset(captionConfig);
+
+  const applyOffsetLockUpdate = (
+    patch: Partial<SplicingCaptionConfig>,
+    candidateConfig?: SplicingCaptionConfig,
+  ) => {
+    const nextCfg = candidateConfig || { ...captionConfig, ...patch };
+    if (nextCfg.offsetLockMode === "auto") {
+      const offsetVal = computeCaptionLockedOffset(nextCfg);
+      const finalOffsetVal = nextCfg.mode === "inside" ? -offsetVal : offsetVal;
+      if (nextCfg.position === "top") {
+        patch.offsetY = -finalOffsetVal;
+        patch.offsetX = 0;
+      } else if (nextCfg.position === "bottom") {
+        patch.offsetY = finalOffsetVal;
+        patch.offsetX = 0;
+      } else if (nextCfg.position === "left") {
+        patch.offsetX = -finalOffsetVal;
+        patch.offsetY = 0;
+      } else if (nextCfg.position === "right") {
+        patch.offsetX = finalOffsetVal;
+        patch.offsetY = 0;
+      } else {
+        patch.offsetX = 0;
+        patch.offsetY = 0;
+      }
     }
+    onCaptionConfigChange(patch);
+  };
+
+  const handleFontSizeChange = (fontSize: number) => {
+    const patch: Partial<SplicingCaptionConfig> = { fontSize };
+    applyOffsetLockUpdate(patch, { ...captionConfig, fontSize });
+  };
+
+  const handlePaddingVChange = (v: number) => {
+    const patch: Partial<SplicingCaptionConfig> = captionConfig.paddingLinked
+      ? { paddingV: v, paddingH: v }
+      : { paddingV: v };
+    applyOffsetLockUpdate(patch, {
+      ...captionConfig,
+      ...patch,
+    });
   };
 
   const handlePaddingHChange = (h: number) => {
-    if (captionConfig.paddingLinked) {
-      onCaptionConfigChange({ paddingV: h, paddingH: h });
-    } else {
-      onCaptionConfigChange({ paddingH: h });
-    }
+    const patch: Partial<SplicingCaptionConfig> = captionConfig.paddingLinked
+      ? { paddingV: h, paddingH: h }
+      : { paddingH: h };
+    applyOffsetLockUpdate(patch, {
+      ...captionConfig,
+      ...patch,
+    });
   };
 
   const togglePaddingLinked = () => {
     const nextLinked = !captionConfig.paddingLinked;
     if (nextLinked) {
-      onCaptionConfigChange({
+      const patch = {
         paddingLinked: true,
         paddingH: captionConfig.paddingV,
-      });
+      };
+      applyOffsetLockUpdate(patch, { ...captionConfig, ...patch });
     } else {
       onCaptionConfigChange({ paddingLinked: false });
     }
@@ -127,9 +176,15 @@ export function CaptionSettingsAccordion({
           onChange={(m) => {
             const nextMode = m as SplicingCaptionMode;
             if (nextMode === "outside" && captionConfig.position === "center") {
-              onCaptionConfigChange({ mode: nextMode, position: "top" });
+              applyOffsetLockUpdate(
+                { mode: nextMode, position: "top" },
+                { ...captionConfig, mode: nextMode, position: "top" },
+              );
             } else {
-              onCaptionConfigChange({ mode: nextMode });
+              applyOffsetLockUpdate(
+                { mode: nextMode },
+                { ...captionConfig, mode: nextMode },
+              );
             }
           }}
         />
@@ -153,9 +208,7 @@ export function CaptionSettingsAccordion({
                 <NumberInput
                   label={t("captionFields.fontSize")}
                   value={captionConfig.fontSize}
-                  onChangeValue={(fontSize) =>
-                    onCaptionConfigChange({ fontSize })
-                  }
+                  onChangeValue={handleFontSizeChange}
                   min={8}
                   max={200}
                 />
@@ -222,35 +275,198 @@ export function CaptionSettingsAccordion({
                   min={0}
                   max={100}
                 />
-                <ColorPickerPopover
-                  label={t("captionFields.containerColor")}
-                  value={captionConfig.containerColor}
-                  onChange={(containerColor) =>
-                    onCaptionConfigChange({ containerColor })
+                <NumberInput
+                  label={t("captionFields.containerOpacity")}
+                  value={
+                    typeof captionConfig.containerOpacity === "number"
+                      ? captionConfig.containerOpacity
+                      : 100
                   }
-                  enableAlpha={true}
-                  outputMode="rgba"
-                  appearance="stacked"
+                  onChangeValue={(containerOpacity) =>
+                    onCaptionConfigChange({ containerOpacity })
+                  }
+                  min={0}
+                  max={100}
                 />
               </div>
+
+              <ColorPickerPopover
+                label={t("captionFields.containerColor")}
+                value={captionConfig.containerColor}
+                onChange={(containerColor) =>
+                  onCaptionConfigChange({ containerColor })
+                }
+                enableAlpha={true}
+                outputMode="rgba"
+                appearance="stacked"
+              />
             </div>
 
             {/* Section: Position & Alignment */}
             <div className="border-t border-slate-100 dark:border-slate-800/80 space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                {t("captionFields.positionSection")}
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  {t("captionFields.positionSection")}
+                </span>
+
+                {/* Lock Offset Popover Button */}
+                <ControlledPopover
+                  behavior="click"
+                  align="end"
+                  side="bottom"
+                  contentClassName="p-3 w-72 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 z-50"
+                  trigger={
+                    <button
+                      type="button"
+                      className={`p-1 rounded-md text-xs transition-colors flex items-center gap-1 ${
+                        captionConfig.offsetLockMode === "auto"
+                          ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 font-medium"
+                          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                      }`}
+                      title={t("captionFields.offsetLock")}
+                    >
+                      {captionConfig.offsetLockMode === "auto" ? (
+                        <Lock size={13} />
+                      ) : (
+                        <Unlock size={13} />
+                      )}
+                      <span className="text-[10px] font-mono">
+                        {captionConfig.offsetLockMode === "auto"
+                          ? `±${lockedOffset}px`
+                          : ""}
+                      </span>
+                    </button>
+                  }
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
+                      <Calculator size={14} className="text-amber-500" />
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        {t("captionFields.offsetFormulaTitle")}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <SegmentedControl
+                        value={captionConfig.offsetLockMode || "none"}
+                        onChange={(val) => {
+                          const modeVal = val as SplicingCaptionOffsetLockMode;
+                          applyOffsetLockUpdate(
+                            { offsetLockMode: modeVal },
+                            { ...captionConfig, offsetLockMode: modeVal },
+                          );
+                        }}
+                        options={[
+                          {
+                            value: "none",
+                            label: t("captionFields.offsetLockNone"),
+                          },
+                          {
+                            value: "auto",
+                            label: t("captionFields.offsetLockAuto"),
+                          },
+                        ]}
+                      />
+                    </div>
+
+                    {captionConfig.offsetLockMode === "auto" && (
+                      <div className="space-y-2.5 pt-1">
+                        {/* Font size multiplier */}
+                        <SelectInput
+                          label={t("captionFields.offsetFontSizeMultiplier")}
+                          value={String(
+                            captionConfig.offsetFontSizeMultiplier ?? 1,
+                          )}
+                          options={[
+                            { value: "0.5", label: "0.5x (Nửa cỡ chữ)" },
+                            { value: "1", label: "1.0x (Chuẩn cỡ chữ)" },
+                            { value: "2", label: "2.0x (Gấp đôi cỡ chữ)" },
+                          ]}
+                          onChange={(v) => {
+                            const mult = parseFloat(v);
+                            applyOffsetLockUpdate(
+                              { offsetFontSizeMultiplier: mult },
+                              {
+                                ...captionConfig,
+                                offsetFontSizeMultiplier: mult,
+                              },
+                            );
+                          }}
+                        />
+
+                        {/* Padding Source */}
+                        <SelectInput
+                          label={t("captionFields.offsetPaddingSource")}
+                          value={captionConfig.offsetPaddingSource || "max"}
+                          options={[
+                            {
+                              value: "max",
+                              label: t("captionFields.offsetPaddingMax"),
+                            },
+                            {
+                              value: "sum",
+                              label: t("captionFields.offsetPaddingSum"),
+                            },
+                            {
+                              value: "min",
+                              label: t("captionFields.offsetPaddingMin"),
+                            },
+                          ]}
+                          onChange={(v) => {
+                            const src = v as SplicingCaptionOffsetPaddingSource;
+                            applyOffsetLockUpdate(
+                              { offsetPaddingSource: src },
+                              { ...captionConfig, offsetPaddingSource: src },
+                            );
+                          }}
+                        />
+
+                        {/* Padding Multiplier */}
+                        <SelectInput
+                          label={t("captionFields.offsetPaddingMultiplier")}
+                          value={String(
+                            captionConfig.offsetPaddingMultiplier ?? 1,
+                          )}
+                          options={[
+                            { value: "0.5", label: "0.5x" },
+                            { value: "1", label: "1.0x" },
+                            { value: "2", label: "2.0x" },
+                          ]}
+                          onChange={(v) => {
+                            const mult = parseFloat(v);
+                            applyOffsetLockUpdate(
+                              { offsetPaddingMultiplier: mult },
+                              {
+                                ...captionConfig,
+                                offsetPaddingMultiplier: mult,
+                              },
+                            );
+                          }}
+                        />
+
+                        <div className="p-2 rounded-md bg-amber-50 dark:bg-amber-950/30 text-[11px] text-amber-800 dark:text-amber-300 font-mono text-center">
+                          {t("captionFields.offsetCalculatedPreview", {
+                            value: lockedOffset,
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </ControlledPopover>
+              </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <SelectInput
                   label={t("captionFields.position")}
                   value={captionConfig.position}
                   options={positionOptions}
-                  onChange={(p) =>
-                    onCaptionConfigChange({
-                      position: p as SplicingCaptionPosition,
-                    })
-                  }
+                  onChange={(p) => {
+                    const nextPos = p as SplicingCaptionPosition;
+                    applyOffsetLockUpdate(
+                      { position: nextPos },
+                      { ...captionConfig, position: nextPos },
+                    );
+                  }}
                 />
                 <SelectInput
                   label={t("captionFields.alignment")}
@@ -266,24 +482,30 @@ export function CaptionSettingsAccordion({
 
               {captionConfig.position !== "center" && (
                 <div className="grid grid-cols-2 gap-2 items-end">
-                  <NumberInput
-                    label={t("captionFields.offsetX")}
-                    value={captionConfig.offsetX}
-                    onChangeValue={(offsetX) =>
-                      onCaptionConfigChange({ offsetX })
-                    }
-                    min={-500}
-                    max={500}
-                  />
-                  <NumberInput
-                    label={t("captionFields.offsetY")}
-                    value={captionConfig.offsetY}
-                    onChangeValue={(offsetY) =>
-                      onCaptionConfigChange({ offsetY })
-                    }
-                    min={-500}
-                    max={500}
-                  />
+                  <div className="relative">
+                    <NumberInput
+                      label={t("captionFields.offsetX")}
+                      value={captionConfig.offsetX}
+                      onChangeValue={(offsetX) =>
+                        onCaptionConfigChange({ offsetX })
+                      }
+                      min={-500}
+                      max={500}
+                      disabled={captionConfig.offsetLockMode === "auto"}
+                    />
+                  </div>
+                  <div className="relative">
+                    <NumberInput
+                      label={t("captionFields.offsetY")}
+                      value={captionConfig.offsetY}
+                      onChangeValue={(offsetY) =>
+                        onCaptionConfigChange({ offsetY })
+                      }
+                      min={-500}
+                      max={500}
+                      disabled={captionConfig.offsetLockMode === "auto"}
+                    />
+                  </div>
                 </div>
               )}
 

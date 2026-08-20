@@ -60,6 +60,9 @@ export type SplicingCaptionMode = "none" | "inside" | "outside"
 export type SplicingCaptionPosition = "top" | "bottom" | "left" | "right" | "center"
 export type SplicingCaptionAlignment = "start" | "center" | "end"
 
+export type SplicingCaptionOffsetLockMode = "none" | "auto"
+export type SplicingCaptionOffsetPaddingSource = "sum" | "max" | "min"
+
 export interface SplicingCaptionConfig {
   mode: SplicingCaptionMode
   fontFamily: string
@@ -69,13 +72,30 @@ export interface SplicingCaptionConfig {
   paddingH: number
   paddingLinked: boolean
   containerColor: string
+  containerOpacity: number
   borderRadius: number
   position: SplicingCaptionPosition
   alignment: SplicingCaptionAlignment
   offsetX: number
   offsetY: number
+  offsetLockMode: SplicingCaptionOffsetLockMode
+  offsetFontSizeMultiplier: number
+  offsetPaddingSource: SplicingCaptionOffsetPaddingSource
+  offsetPaddingMultiplier: number
   flipHorizontal: boolean
   flipVertical: boolean
+}
+
+export function computeCaptionLockedOffset(config: SplicingCaptionConfig): number {
+  const padVal =
+    config.offsetPaddingSource === "sum"
+      ? config.paddingV + config.paddingH
+      : config.offsetPaddingSource === "min"
+      ? Math.min(config.paddingV, config.paddingH)
+      : Math.max(config.paddingV, config.paddingH)
+  const fontMult = typeof config.offsetFontSizeMultiplier === "number" ? config.offsetFontSizeMultiplier : 1
+  const padMult = typeof config.offsetPaddingMultiplier === "number" ? config.offsetPaddingMultiplier : 1
+  return Math.round(config.fontSize * fontMult + padVal * padMult)
 }
 
 export const DEFAULT_SPLICING_CAPTION_CONFIG: SplicingCaptionConfig = {
@@ -87,12 +107,18 @@ export const DEFAULT_SPLICING_CAPTION_CONFIG: SplicingCaptionConfig = {
   paddingH: 12,
   paddingLinked: true,
   containerColor: "rgba(0, 0, 0, 0.6)",
+  containerOpacity: 100,
   borderRadius: 0,
   position: "top",
   alignment: "center",
   offsetX: 0,
   offsetY: 0,
+  offsetLockMode: "none",
+  offsetFontSizeMultiplier: 1,
+  offsetPaddingSource: "max",
+  offsetPaddingMultiplier: 1,
   flipHorizontal: false,
   flipVertical: false,
 }
+
 

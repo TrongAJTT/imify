@@ -70,7 +70,19 @@
     "paddingUnlinked": "Mở khóa tỉ lệ padding",
     "borderRadius": "Bo góc",
     "containerColor": "Màu nền khung",
+    "containerOpacity": "Độ mờ (%)",
     "positionSection": "Vị trí & Căn lề",
+    "offsetLock": "Khóa offset",
+    "offsetLockNone": "Không khóa (Thủ công)",
+    "offsetLockAuto": "Thiết lập tự động",
+    "offsetFormulaTitle": "Công thức tính Offset",
+    "offsetFontSizeMultiplier": "Hệ số cỡ chữ",
+    "offsetPaddingSource": "Nguồn padding",
+    "offsetPaddingSum": "Tổng 2 chiều (Dọc + Ngang)",
+    "offsetPaddingMax": "Lớn nhất (Max)",
+    "offsetPaddingMin": "Nhỏ nhất (Min)",
+    "offsetPaddingMultiplier": "Hệ số padding",
+    "offsetCalculatedPreview": "Offset tính toán: {{value}}px",
     "position": "Vị trí",
     "posTop": "Trên",
     "posBottom": "Dưới",
@@ -86,6 +98,7 @@
     "flipHorizontal": "Đảo chiều ngang",
     "flipVertical": "Đảo chiều dọc"
   },
+
 
   "preset": {
     "stitchV": "Ghép dọc",

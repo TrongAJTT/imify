@@ -366,12 +366,24 @@ function drawCaption(
 
   // Container background
   if (config.containerColor && config.containerColor !== "transparent") {
-    ctx.fillStyle = config.containerColor
-    drawRoundedRect(ctx, -boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, borderRadius)
-    ctx.fill()
+    const opacityRatio =
+      typeof config.containerOpacity === "number"
+        ? Math.max(0, Math.min(100, config.containerOpacity)) / 100
+        : 1
+    if (opacityRatio > 0) {
+      ctx.save()
+      if (opacityRatio < 1) {
+        ctx.globalAlpha = ctx.globalAlpha * opacityRatio
+      }
+      ctx.fillStyle = config.containerColor
+      drawRoundedRect(ctx, -boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, borderRadius)
+      ctx.fill()
+      ctx.restore()
+    }
   }
 
   // Text
+
   ctx.fillStyle = config.textColor || "#ffffff"
   ctx.textAlign = "center"
   ctx.textBaseline = "middle"

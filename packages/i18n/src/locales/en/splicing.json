@@ -70,7 +70,19 @@
     "paddingUnlinked": "Unlock padding ratio",
     "borderRadius": "Border Radius",
     "containerColor": "Background Color",
+    "containerOpacity": "Opacity (%)",
     "positionSection": "Position & Alignment",
+    "offsetLock": "Lock Offset",
+    "offsetLockNone": "Unlocked (Manual)",
+    "offsetLockAuto": "Auto Calculated",
+    "offsetFormulaTitle": "Offset Calculation Formula",
+    "offsetFontSizeMultiplier": "Font Size Multiplier",
+    "offsetPaddingSource": "Padding Source",
+    "offsetPaddingSum": "Sum (Vertical + Horizontal)",
+    "offsetPaddingMax": "Max Dimension",
+    "offsetPaddingMin": "Min Dimension",
+    "offsetPaddingMultiplier": "Padding Multiplier",
+    "offsetCalculatedPreview": "Calculated offset: {{value}}px",
     "position": "Position",
     "posTop": "Top",
     "posBottom": "Bottom",
@@ -86,6 +98,7 @@
     "flipHorizontal": "Flip Horizontal (Flip H)",
     "flipVertical": "Flip Vertical / Reading (Flip V)"
   },
+
 
   "preset": {
     "stitchV": "Stitch V",
