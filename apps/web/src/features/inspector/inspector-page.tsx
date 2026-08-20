@@ -6,7 +6,8 @@ import {
   InspectorSidebarShell,
   InspectorWorkspace,
 } from "@imify/features/inspector";
-import { AnimatingSpinner, WorkspaceLoadingState } from "@imify/ui";
+import { AnimatingSpinner } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { useEffect, useMemo, useState } from "react";
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
@@ -66,7 +67,7 @@ export function InspectorPage() {
   }, [setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
 
   if (!isHydrated) {
-    return <WorkspaceLoadingState title="Loading image inspector..." />;
+    return <WorkspaceLoadingState />;
   }
 
   return (

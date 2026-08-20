@@ -58,4 +58,5 @@ export * from "./pdf-studio"
 export * from "./qr-generator"
 export * from "./qr-reader"
 export * from "./shared/feature-markdown"
+export * from "./shared/workspace-loading-state"
 

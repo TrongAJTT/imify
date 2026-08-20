@@ -6,7 +6,7 @@ import {
   DiffcheckerSidebarShell,
 } from "@imify/features/diffchecker";
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store";
-import { WorkspaceLoadingState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
 import { useEffect, useMemo, useState } from "react";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
@@ -60,7 +60,7 @@ export function DiffcheckerPage() {
   }, [resetHeader, setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
 
   if (!isHydrated) {
-    return <WorkspaceLoadingState title="Loading difference checker..." />;
+    return <WorkspaceLoadingState />;
   }
 
   return (

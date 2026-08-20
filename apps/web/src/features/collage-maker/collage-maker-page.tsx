@@ -7,7 +7,7 @@ import { useWorkspaceSidebarContext } from "@/components/layout/workspace-layout
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import { useTranslation } from "@imify/i18n";
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid";
-import { WorkspaceLoadingState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 
 export function CollageMakerLandingPage() {
   const { t } = useTranslation(["collageMaker", "common"]);
@@ -48,14 +48,7 @@ export function CollageMakerLandingPage() {
   );
 
   if (!mounted) {
-    return (
-      <WorkspaceLoadingState
-        title={t("loadingTitle", { defaultValue: "Đang tải Collage Maker..." })}
-        subtitle={t("loadingSubtitle", {
-          defaultValue: "Khởi tạo công cụ ghép ảnh và bố cục...",
-        })}
-      />
-    );
+    return <WorkspaceLoadingState />;
   }
 
   return (

@@ -13,7 +13,7 @@ import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb";
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
 import { useRouter } from "next/navigation";
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid";
-import { WorkspaceLoadingState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { useTranslation } from "@imify/i18n";
 import { useImageUpscalerStore } from "@imify/stores/stores/image-upscaler-store";
 
@@ -85,7 +85,7 @@ export function UpscalerPage() {
   }, [router, setHeaderBreadcrumb, setHeaderSection, t]);
 
   if (!hydrated) {
-    return <WorkspaceLoadingState title={t("loading")} />;
+    return <WorkspaceLoadingState />;
   }
 
   return (

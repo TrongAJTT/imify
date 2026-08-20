@@ -12,7 +12,7 @@ import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb";
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
 import { useRouter } from "next/navigation";
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid";
-import { WorkspaceLoadingState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { useQrReaderStore } from "@imify/stores/stores/qr-reader-store";
 import { useTranslation } from "@imify/i18n/index";
 
@@ -70,7 +70,7 @@ export function QrReaderPage() {
   }, [router, setHeaderBreadcrumb, setHeaderSection]);
 
   if (!hydrated) {
-    return <WorkspaceLoadingState title="Loading QR reader..." />;
+    return <WorkspaceLoadingState />;
   }
 
   return <SharedQrReaderPage renderWorkspace={() => <QrReaderWorkspace />} />;

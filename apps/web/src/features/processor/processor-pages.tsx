@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { SingleProcessorWorkspace } from "@imify/features/processor/single-processor-workspace";
 import { BatchProcessorWorkspace } from "@imify/features/processor/batch";
 import { ProcessorPresetSelectView } from "@imify/features/processor/processor-preset-select-view";
@@ -132,7 +133,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
   ]);
 
   if (!isBatchStoreRehydrated || setupContext !== context) {
-    return <WorkspaceLoadingState title={t("loadingProcessorPresets")} />;
+    return <WorkspaceLoadingState />;
   }
 
   return (
@@ -347,7 +348,7 @@ export function ProcessorWorkPage({
   const config = contextConfigs[context];
 
   if (!isBatchStoreRehydrated) {
-    return <WorkspaceLoadingState title={t("loadingPresetWorkspace")} />;
+    return <WorkspaceLoadingState />;
   }
 
   if (!preset) {
@@ -365,7 +366,7 @@ export function ProcessorWorkPage({
   }
 
   if (setupContext !== context || activePresetId !== preset.id) {
-    return <WorkspaceLoadingState title={t("loadingPresetWorkspace")} />;
+    return <WorkspaceLoadingState />;
   }
 
   if (context === "single") {

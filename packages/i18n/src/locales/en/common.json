@@ -165,5 +165,14 @@
     "indeterminateSubtitle": "Preparing files, please wait...",
     "progressCount": "Processing {{completed}} of {{total}} images ({{percent}}%)",
     "processingFile": "Processing: {{name}}"
+  },
+  "workspaceLoading": {
+    "defaultTitle": "Loading data...",
+    "defaultSubtitle": "Loading data for the current workspace, please wait.",
+    "timeoutTitle": "Loading is taking longer than expected",
+    "timeoutSubtitle": "If reloading does not resolve the issue, please try emergency recovery.",
+    "reloadPage": "Reload page",
+    "goToRecovery": "Emergency recovery"
   }
 }
+

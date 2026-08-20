@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Expand, Shrink } from "lucide-react"
 import { useDiffcheckerStore } from "@imify/stores/stores/diffchecker-store"

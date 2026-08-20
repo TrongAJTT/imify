@@ -11,7 +11,8 @@ import {
   usePatternPresetStore,
 } from "@imify/stores/stores/pattern-preset-store";
 import { usePatternStore } from "@imify/stores/stores/pattern-store";
-import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb";
@@ -137,7 +138,7 @@ export function PatternLandingPage() {
   }, [ensureDefaultPreset, isHydrated, setPresetViewMode]);
 
   if (!isHydrated) {
-    return <WorkspaceLoadingState title="Loading pattern presets..." />;
+    return <WorkspaceLoadingState />;
   }
 
   return (
@@ -275,7 +276,7 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
   ]);
 
   if (!isHydrated) {
-    return <WorkspaceLoadingState title="Loading pattern workspace..." />;
+    return <WorkspaceLoadingState />;
   }
 
   if (!preset) {
@@ -294,7 +295,7 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
   }
 
   if (activePresetId !== preset.id) {
-    return <WorkspaceLoadingState title="Loading pattern workspace..." />;
+    return <WorkspaceLoadingState />;
   }
 
   return <PatternTab />;

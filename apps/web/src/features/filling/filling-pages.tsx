@@ -23,12 +23,8 @@ import {
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb";
 import { useWideSidebarGridEnabled } from "@/hooks/use-wide-sidebar-grid";
-import {
-  Heading,
-  MutedText,
-  WorkspaceLoadingState,
-  WorkspaceNotFoundState,
-} from "@imify/ui";
+import { Heading, MutedText, WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { PresetNotFoundRedirectAction } from "@/features/presets/preset-not-found-redirect-action";
 import { useTranslation } from "@imify/i18n/index";
 
@@ -142,7 +138,7 @@ export function FillingHomePage({ routeBase }: FillingHomePageProps) {
   ]);
 
   if (!templatesLoaded) {
-    return <WorkspaceLoadingState title="Loading filling templates..." />;
+    return <WorkspaceLoadingState />;
   }
 
   return (
@@ -455,21 +451,15 @@ export function FillingFlowPage({
   }, [mode, template]);
 
   if (!templatesLoaded) {
-    return (
-      <WorkspaceLoadingState
-        title={`Loading ${toTitle(mode).toLowerCase()}...`}
-      />
-    );
+    return <WorkspaceLoadingState />;
   }
 
   if (mode === "symmetric-generate" && symmetricAccessStatus === "checking") {
-    return (
-      <WorkspaceLoadingState title="Validating symmetric generator access..." />
-    );
+    return <WorkspaceLoadingState />;
   }
 
   if (mode === "grid-design" && gridDesignAccessStatus === "checking") {
-    return <WorkspaceLoadingState title="Validating grid designer access..." />;
+    return <WorkspaceLoadingState />;
   }
 
   if (mode === "symmetric-generate" && symmetricAccessStatus === "blocked") {
@@ -543,11 +533,7 @@ export function FillingFlowPage({
             editingTemplateId === null;
 
   if (!modeReady) {
-    return (
-      <WorkspaceLoadingState
-        title={`Loading ${toTitle(mode).toLowerCase()}...`}
-      />
-    );
+    return <WorkspaceLoadingState />;
   }
 
   return (

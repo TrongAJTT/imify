@@ -12,7 +12,8 @@ import {
   useSplitterPresetStore,
 } from "@imify/stores/stores/splitter-preset-store";
 import { useSplitterStore } from "@imify/stores/stores/splitter-store";
-import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import { FeatureBreadcrumb } from "@imify/features/shared/feature-breadcrumb";
@@ -99,7 +100,7 @@ export function SplitterLandingPage() {
   }, [setHeaderActions, setHeaderBreadcrumb, setHeaderSection]);
 
   if (!isHydrated) {
-    return <WorkspaceLoadingState title="Loading splitter presets..." />;
+    return <WorkspaceLoadingState />;
   }
 
   return (
@@ -196,7 +197,7 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
   }, [applyPreset, applyPresetConfig, isHydrated, preset, setPresetViewMode]);
 
   if (!isHydrated) {
-    return <WorkspaceLoadingState title="Loading splitter workspace..." />;
+    return <WorkspaceLoadingState />;
   }
 
   if (!preset) {

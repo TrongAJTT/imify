@@ -10,7 +10,8 @@ import {
   type SplicingPresetConfig,
 } from "@imify/stores/stores/splicing-preset-store";
 import { useSplicingStore } from "@imify/stores/stores/splicing-store";
-import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store";
@@ -156,7 +157,7 @@ export function SplicingLandingPage() {
   }, [ensureDefaultPreset, isRehydrated, setPresetViewMode]);
 
   if (!isRehydrated) {
-    return <WorkspaceLoadingState title="Loading splicing presets..." />;
+    return <WorkspaceLoadingState />;
   }
 
   return (
@@ -266,7 +267,7 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
   }, [applyPreset, isRehydrated, preset, setPresetViewMode]);
 
   if (!isRehydrated) {
-    return <WorkspaceLoadingState title="Loading splicing workspace..." />;
+    return <WorkspaceLoadingState />;
   }
 
   if (!preset) {

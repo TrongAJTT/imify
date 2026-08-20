@@ -165,5 +165,14 @@
     "indeterminateSubtitle": "Đang chuẩn bị tệp, vui lòng chờ...",
     "progressCount": "Đang xử lý {{completed}} / {{total}} ảnh ({{percent}}%)",
     "processingFile": "Đang xử lý: {{name}}"
+  },
+  "workspaceLoading": {
+    "defaultTitle": "Đang tải dữ liệu",
+    "defaultSubtitle": "Đang tải dữ liệu cho không gian làm việc hiện tại, xin vui lòng chờ.",
+    "timeoutTitle": "Đang tải lâu hơn dự kiến",
+    "timeoutSubtitle": "Nếu tải lại không giải quyết được vấn đề. Vui lòng khôi phục dữ liệu.",
+    "reloadPage": "Tải lại trang",
+    "goToRecovery": "Khôi phục dữ liệu"
   }
 }
+
