@@ -510,9 +510,10 @@ export function CanvasPreview({
       >
         <canvas
           ref={canvasRef}
-          className="rounded shadow-sm"
+          className="rounded shadow-sm bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%,transparent_75%,#e2e8f0_75%,#e2e8f0),linear-gradient(45deg,#e2e8f0_25%,transparent_25%,transparent_75%,#e2e8f0_75%,#e2e8f0)] dark:bg-[linear-gradient(45deg,#1e293b_25%,transparent_25%,transparent_75%,#1e293b_75%,#1e293b),linear-gradient(45deg,#1e293b_25%,transparent_25%,transparent_75%,#1e293b_75%,#1e293b)] bg-[length:16px_16px] bg-[position:0_0,8px_8px] bg-white dark:bg-slate-900"
           style={{
             imageRendering: "auto",
+
             cursor:
               previewInteractionMode === "pan"
                 ? "auto"
