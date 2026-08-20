@@ -69,45 +69,54 @@ function ImageCaptionEditPopover({
       }
       contentClassName="z-50 w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-xl space-y-2 text-xs"
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
-          Tiêu đề ảnh #{index + 1}
-        </span>
-        {value.trim() !== "" && (
-          <button
-            type="button"
-            onClick={() => onChange(imageId, "")}
-            className="text-[10px] text-sky-600 hover:text-sky-500 font-medium cursor-pointer"
-          >
-            Mặc định
-          </button>
-        )}
-      </div>
-      <div className="relative flex items-center">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(imageId, e.target.value)}
-          placeholder={defaultText}
-          autoFocus
-          className="w-full h-8 px-2.5 pr-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-        />
-        {value && (
-          <button
-            type="button"
-            onClick={() => onChange(imageId, "")}
-            className="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-          >
-            <X size={12} />
-          </button>
-        )}
+      <div
+        className="space-y-2"
+        onKeyDown={(e) => e.stopPropagation()}
+        onKeyUp={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+            Tiêu đề ảnh #{index + 1}
+          </span>
+          {value.trim() !== "" && (
+            <button
+              type="button"
+              onClick={() => onChange(imageId, "")}
+              className="text-[10px] text-sky-600 hover:text-sky-500 font-medium cursor-pointer"
+            >
+              Mặc định
+            </button>
+          )}
+        </div>
+        <div className="relative flex items-center">
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(imageId, e.target.value)}
+            placeholder={defaultText}
+            autoFocus
+            className="w-full h-8 px-2.5 pr-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === "Enter") {
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            onKeyUp={(e) => e.stopPropagation()}
+          />
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange(imageId, "")}
+              className="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+            >
+              <X size={12} />
+            </button>
+          )}
+        </div>
       </div>
     </ControlledPopover>
+
   );
 }
 
