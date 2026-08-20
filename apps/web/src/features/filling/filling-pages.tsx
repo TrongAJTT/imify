@@ -12,6 +12,7 @@ import type {
   FillingStep,
   LayerGroup,
   VectorLayer,
+  TextLayer,
 } from "@imify/features/filling/types";
 import { regenerateLayerShapePoints } from "@imify/features/filling/shape-generators";
 import { FillWorkspace } from "@imify/features/filling/fill/workspace";
@@ -231,6 +232,7 @@ export function FillingFlowPage({
   }, [refreshTemplates, templatesLoaded]);
 
   const [editorLayers, setEditorLayers] = useState<VectorLayer[]>([]);
+  const [editorTextLayers, setEditorTextLayers] = useState<TextLayer[]>([]);
   const [editorGroups, setEditorGroups] = useState<LayerGroup[]>([]);
   const [editorCanvasWidth, setEditorCanvasWidth] = useState(1920);
   const [editorCanvasHeight, setEditorCanvasHeight] = useState(1080);
@@ -240,6 +242,9 @@ export function FillingFlowPage({
   const [selectedEditorLayerIds, setSelectedEditorLayerIds] = useState<
     string[]
   >([]);
+  const [selectedEditorTextLayerId, setSelectedEditorTextLayerId] = useState<
+    string | null
+  >(null);
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [symmetricAccessStatus, setSymmetricAccessStatus] = useState<
     "checking" | "allowed" | "blocked"
@@ -252,18 +257,32 @@ export function FillingFlowPage({
   const handleSelectEditorLayer = useCallback((id: string | null) => {
     setSelectedEditorLayerId(id);
     setSelectedEditorLayerIds(id ? [id] : []);
+    if (id) {
+      setSelectedEditorTextLayerId(null);
+    }
+  }, []);
+  const handleSelectEditorTextLayer = useCallback((id: string | null) => {
+    setSelectedEditorTextLayerId(id);
+    if (id) {
+      setSelectedEditorLayerId(null);
+      setSelectedEditorLayerIds([]);
+    }
   }, []);
   const handleToggleEditorLayerSelection = useCallback((id: string) => {
     setSelectedEditorLayerIds((prev) => {
       const exists = prev.includes(id);
       const next = exists ? prev.filter((item) => item !== id) : [...prev, id];
       setSelectedEditorLayerId(next[next.length - 1] ?? null);
+      if (next.length > 0) {
+        setSelectedEditorTextLayerId(null);
+      }
       return next;
     });
   }, []);
   const handleClearEditorSelection = useCallback(() => {
     setSelectedEditorLayerId(null);
     setSelectedEditorLayerIds([]);
+    setSelectedEditorTextLayerId(null);
   }, []);
 
   const template = useMemo(
@@ -275,18 +294,22 @@ export function FillingFlowPage({
       mode === "edit" && template
         ? {
             layers: editorLayers,
+            textLayers: editorTextLayers,
             groups: editorGroups,
             canvasWidth: editorCanvasWidth,
             canvasHeight: editorCanvasHeight,
             selectedLayerId: selectedEditorLayerId,
             selectedLayerIds: selectedEditorLayerIds,
+            selectedTextLayerId: selectedEditorTextLayerId,
             onLayersChange: setEditorLayers,
+            onTextLayersChange: setEditorTextLayers,
             onGroupsChange: setEditorGroups,
             onCanvasSizeChange: (width: number, height: number) => {
               setEditorCanvasWidth(Math.max(1, Math.round(width)));
               setEditorCanvasHeight(Math.max(1, Math.round(height)));
             },
             onSelectLayer: handleSelectEditorLayer,
+            onSelectTextLayer: handleSelectEditorTextLayer,
             onToggleLayerSelection: handleToggleEditorLayerSelection,
             onClearSelection: handleClearEditorSelection,
           }
@@ -296,15 +319,19 @@ export function FillingFlowPage({
       editorCanvasWidth,
       editorGroups,
       editorLayers,
+      editorTextLayers,
       handleClearEditorSelection,
       handleSelectEditorLayer,
+      handleSelectEditorTextLayer,
       handleToggleEditorLayerSelection,
       mode,
       selectedEditorLayerId,
       selectedEditorLayerIds,
+      selectedEditorTextLayerId,
       template,
     ],
   );
+
   const sidebar = useMemo(
     () =>
       template ? (
@@ -443,11 +470,13 @@ export function FillingFlowPage({
   useEffect(() => {
     if (!template || mode !== "edit") return;
     setEditorLayers(template.layers);
+    setEditorTextLayers(template.textLayers ?? []);
     setEditorGroups(template.groups ?? []);
     setEditorCanvasWidth(template.canvasWidth);
     setEditorCanvasHeight(template.canvasHeight);
     setSelectedEditorLayerId(null);
     setSelectedEditorLayerIds([]);
+    setSelectedEditorTextLayerId(null);
   }, [mode, template]);
 
   if (!templatesLoaded) {
@@ -546,14 +575,20 @@ export function FillingFlowPage({
           canvasHeight={editorCanvasHeight}
           groups={editorGroups}
           layers={editorLayers}
+          textLayers={editorTextLayers}
           selectedLayerId={selectedEditorLayerId}
           selectedLayerIds={selectedEditorLayerIds}
+          selectedTextLayerId={selectedEditorTextLayerId}
           onSelectLayer={handleSelectEditorLayer}
+          onSelectTextLayer={handleSelectEditorTextLayer}
           onToggleLayerSelection={handleToggleEditorLayerSelection}
           onSetSelectedLayers={(ids) => {
             const unique = Array.from(new Set(ids));
             setSelectedEditorLayerIds(unique);
             setSelectedEditorLayerId(unique[unique.length - 1] ?? null);
+            if (unique.length > 0) {
+              setSelectedEditorTextLayerId(null);
+            }
           }}
           onClearSelection={handleClearEditorSelection}
           onUpdateLayer={(id, partial) => {
@@ -576,6 +611,14 @@ export function FillingFlowPage({
               }),
             );
           }}
+          onUpdateTextLayer={(id, partial) => {
+            setEditorTextLayers((prev) =>
+              prev.map((layer) => {
+                if (layer.id !== id) return layer;
+                return { ...layer, ...partial };
+              }),
+            );
+          }}
           onSaveTemplate={async (destination) => {
             if (isSavingTemplate) return;
             setIsSavingTemplate(true);
@@ -585,12 +628,14 @@ export function FillingFlowPage({
                 canvasWidth: editorCanvasWidth,
                 canvasHeight: editorCanvasHeight,
                 layers: editorLayers,
+                textLayers: editorTextLayers,
                 groups: editorGroups,
                 updatedAt: Date.now(),
               };
               await templateStorage.save(savedTemplate);
               const all = await templateStorage.getAll();
               useFillingStore.getState().setTemplates(all);
+
               if (destination === "list") {
                 router.push(routeBase);
                 return;

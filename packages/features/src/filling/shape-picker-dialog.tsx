@@ -1,5 +1,5 @@
 import React from "react"
-import { X } from "lucide-react"
+import { Type, X } from "lucide-react"
 
 import type { ShapeType } from "./types"
 import { SHAPE_CATEGORIES, SHAPE_LABELS, generateShapePoints } from "./shape-generators"
@@ -10,14 +10,15 @@ interface ShapePickerDialogProps {
   isOpen: boolean
   onClose: () => void
   onSelect: (type: ShapeType) => void
+  onSelectTextLayer?: () => void
 }
 
-export function ShapePickerDialog({ isOpen, onClose, onSelect }: ShapePickerDialogProps) {
+export function ShapePickerDialog({ isOpen, onClose, onSelect, onSelectTextLayer }: ShapePickerDialogProps) {
   return (
     <BaseDialog isOpen={isOpen} onClose={onClose} contentClassName="rounded-xl w-[600px] max-w-[95vw]">
       <div className="p-5">
         <div className="flex items-center justify-between mb-4">
-          <Subheading>Add Shape Layer</Subheading>
+          <Subheading>Add Layer</Subheading>
           <button
             type="button"
             onClick={onClose}
@@ -28,7 +29,33 @@ export function ShapePickerDialog({ isOpen, onClose, onSelect }: ShapePickerDial
         </div>
 
         <div className="space-y-4">
+          {onSelectTextLayer && (
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600 mb-2">
+                Text / Typography
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelectTextLayer()
+                    onClose()
+                  }}
+                  className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-lg border border-purple-200 dark:border-purple-800/60 bg-purple-50/50 dark:bg-purple-950/20 hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/30 transition-all group cursor-pointer"
+                >
+                  <div className="w-[80px] h-[80px] flex items-center justify-center">
+                    <Type size={36} className="text-purple-500 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <span className="text-[10px] font-medium text-purple-700 dark:text-purple-300">
+                    Text Layer
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {SHAPE_CATEGORIES.map((cat) => (
+
             <div key={cat.label}>
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600 mb-2">
                 {cat.label}

@@ -55,6 +55,20 @@ export interface VectorLayer {
   groupId?: string
 }
 
+// ── Text Layer ──
+
+export interface TextLayer {
+  id: string
+  name: string
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation: number
+  locked: boolean
+  visible: boolean
+}
+
 // ── Layer Group ──
 
 export interface LayerGroup {
@@ -74,6 +88,7 @@ export interface FillingTemplate {
   canvasWidth: number
   canvasHeight: number
   layers: VectorLayer[]
+  textLayers?: TextLayer[]
   groups: LayerGroup[]
   symmetricParams?: SymmetricParams
   gridDesignParams?: GridDesignParams
@@ -83,6 +98,7 @@ export interface FillingTemplate {
   lastUsedAt: number | null
   isPinned: boolean
 }
+
 
 // ── Fill State (per-layer image fill during [C]) ──
 

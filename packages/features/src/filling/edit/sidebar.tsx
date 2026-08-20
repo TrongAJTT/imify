@@ -15,6 +15,7 @@ import type {
   CanvasSizeUnit,
   LayerGroup,
   VectorLayer,
+  TextLayer,
   ShapeType,
 } from "../types";
 import { generateId } from "../types";
@@ -39,19 +40,24 @@ import { CanvasDimensionControls } from "@imify/features/shared/canvas-dimension
 
 interface ManualEditorSidebarProps {
   layers: VectorLayer[];
+  textLayers?: TextLayer[];
   groups: LayerGroup[];
   canvasWidth: number;
   canvasHeight: number;
   selectedLayerId: string | null;
   selectedLayerIds: string[];
+  selectedTextLayerId?: string | null;
   onLayersChange: (layers: VectorLayer[]) => void;
+  onTextLayersChange?: (textLayers: TextLayer[]) => void;
   onGroupsChange: (groups: LayerGroup[]) => void;
   onCanvasSizeChange: (width: number, height: number) => void;
   onSelectLayer: (id: string | null) => void;
+  onSelectTextLayer?: (id: string | null) => void;
   onToggleLayerSelection: (id: string) => void;
   onClearSelection: () => void;
   enableWideSidebarGrid?: boolean;
 }
+
 
 import { useTranslation } from "@imify/i18n";
 import {
@@ -88,15 +94,19 @@ function synchronizeGroupsWithLayers(
 
 export function ManualEditorSidebar({
   layers,
+  textLayers = [],
   groups,
   canvasWidth,
   canvasHeight,
   selectedLayerId,
   selectedLayerIds,
+  selectedTextLayerId = null,
   onLayersChange,
+  onTextLayersChange,
   onGroupsChange,
   onCanvasSizeChange,
   onSelectLayer,
+  onSelectTextLayer,
   onToggleLayerSelection,
   onClearSelection,
   enableWideSidebarGrid = false,
@@ -194,10 +204,34 @@ export function ManualEditorSidebar({
 
       const updated = [...layers, newLayer];
       onLayersChange(updated);
+      onSelectTextLayer?.(null);
       onSelectLayer(newLayer.id);
     },
-    [canvasHeight, canvasWidth, layers, onLayersChange, onSelectLayer],
+    [canvasHeight, canvasWidth, layers, onLayersChange, onSelectLayer, onSelectTextLayer],
   );
+
+  const handleAddTextLayer = useCallback(() => {
+    const defaultW = Math.min(300, canvasWidth * 0.5);
+    const defaultH = Math.min(80, canvasHeight * 0.2);
+    const cx = (canvasWidth - defaultW) / 2;
+    const cy = (canvasHeight - defaultH) / 2;
+
+    const newTextLayer: TextLayer = {
+      id: generateId("text"),
+      name: `Text ${textLayers.length + 1}`,
+      x: Math.round(cx),
+      y: Math.round(cy),
+      width: Math.round(defaultW),
+      height: Math.round(defaultH),
+      rotation: 0,
+      locked: false,
+      visible: true,
+    };
+
+    onTextLayersChange?.([...textLayers, newTextLayer]);
+    onClearSelection();
+    onSelectTextLayer?.(newTextLayer.id);
+  }, [canvasHeight, canvasWidth, onClearSelection, onSelectTextLayer, onTextLayersChange, textLayers]);
 
   const handleToggleLock = useCallback(
     (id: string) => {
@@ -244,6 +278,36 @@ export function ManualEditorSidebar({
       onSelectLayer,
     ],
   );
+
+  const handleToggleTextLayerLock = useCallback(
+    (id: string) => {
+      onTextLayersChange?.(
+        textLayers.map((l) => (l.id === id ? { ...l, locked: !l.locked } : l)),
+      );
+    },
+    [onTextLayersChange, textLayers],
+  );
+
+  const handleToggleTextLayerVisibility = useCallback(
+    (id: string) => {
+      onTextLayersChange?.(
+        textLayers.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
+      );
+    },
+    [onTextLayersChange, textLayers],
+  );
+
+  const handleDeleteTextLayer = useCallback(
+    (id: string) => {
+      const nextTextLayers = textLayers.filter((l) => l.id !== id);
+      onTextLayersChange?.(nextTextLayers);
+      if (selectedTextLayerId === id) {
+        onSelectTextLayer?.(null);
+      }
+    },
+    [onSelectTextLayer, onTextLayersChange, selectedTextLayerId, textLayers],
+  );
+
 
   const handleDragLayer = useCallback(
     (
@@ -615,13 +679,28 @@ export function ManualEditorSidebar({
         >
           <LayerListPanel
             layers={layers}
+            textLayers={textLayers}
             selectedLayerId={selectedLayerId}
             selectedLayerIds={selectedLayerIds}
-            onSelectLayer={onSelectLayer}
-            onToggleLayerSelection={onToggleLayerSelection}
+            selectedTextLayerId={selectedTextLayerId}
+            onSelectLayer={(id) => {
+              onSelectTextLayer?.(null);
+              onSelectLayer(id);
+            }}
+            onSelectTextLayer={(id) => {
+              onClearSelection();
+              onSelectTextLayer?.(id);
+            }}
+            onToggleLayerSelection={(id) => {
+              onSelectTextLayer?.(null);
+              onToggleLayerSelection(id);
+            }}
             onToggleLock={handleToggleLock}
             onToggleVisibility={handleToggleVisibility}
             onDeleteLayer={handleDeleteLayer}
+            onToggleTextLayerLock={handleToggleTextLayerLock}
+            onToggleTextLayerVisibility={handleToggleTextLayerVisibility}
+            onDeleteTextLayer={handleDeleteTextLayer}
             onDragLayer={handleDragLayer}
             onAddShape={() => setShapePickerOpen(true)}
             onToggleGroupForSelected={handleToggleGroupForSelectedLayer}
@@ -684,7 +763,9 @@ export function ManualEditorSidebar({
         isOpen={shapePickerOpen}
         onClose={() => setShapePickerOpen(false)}
         onSelect={handleAddShape}
+        onSelectTextLayer={handleAddTextLayer}
       />
     </>
   );
 }
+

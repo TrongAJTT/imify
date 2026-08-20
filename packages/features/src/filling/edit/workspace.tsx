@@ -7,10 +7,10 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Stage, Layer, Line, Rect, Transformer } from "react-konva";
+import { Stage, Layer, Line, Rect, Group, Text, Transformer } from "react-konva";
 import type Konva from "konva";
 import { ArrowLeft, ChevronDown, Image, Loader2, Save } from "lucide-react";
-import type { LayerGroup, VectorLayer } from "../types";
+import type { LayerGroup, TextLayer, VectorLayer } from "../types";
 import { resolveLayerShapePoints } from "../shape-generators";
 import {
   buildGroupOverlayPolygons,
@@ -49,13 +49,17 @@ interface ManualEditorWorkspaceProps {
   canvasHeight: number;
   groups: LayerGroup[];
   layers: VectorLayer[];
+  textLayers?: TextLayer[];
   selectedLayerId: string | null;
   selectedLayerIds: string[];
+  selectedTextLayerId?: string | null;
   onSelectLayer: (id: string | null) => void;
+  onSelectTextLayer?: (id: string | null) => void;
   onToggleLayerSelection: (id: string) => void;
   onSetSelectedLayers: (ids: string[]) => void;
   onClearSelection: () => void;
   onUpdateLayer: (id: string, partial: Partial<VectorLayer>) => void;
+  onUpdateTextLayer?: (id: string, partial: Partial<TextLayer>) => void;
   onSaveTemplate: (destination: "fill" | "list") => Promise<void>;
   isSavingTemplate: boolean;
   visualHelp?: ManualEditorVisualHelp;
@@ -71,18 +75,23 @@ export function ManualEditorWorkspace({
   canvasHeight,
   groups,
   layers,
+  textLayers = [],
   selectedLayerId,
   selectedLayerIds,
+  selectedTextLayerId = null,
   onSelectLayer,
+  onSelectTextLayer,
   onToggleLayerSelection,
   onSetSelectedLayers,
   onClearSelection,
   onUpdateLayer,
+  onUpdateTextLayer,
   onSaveTemplate,
   isSavingTemplate,
   visualHelp,
   showHeader = true,
 }: ManualEditorWorkspaceProps) {
+
   const { t } = useTranslation("filling");
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
@@ -286,9 +295,18 @@ export function ManualEditorWorkspace({
         return;
       }
     }
+    if (selectedTextLayerId) {
+      const node = stage.findOne(`#text-layer-${selectedTextLayerId}`);
+      if (node) {
+        tr.nodes([node]);
+        tr.getLayer()?.batchDraw();
+        return;
+      }
+    }
     tr.nodes([]);
     tr.getLayer()?.batchDraw();
-  }, [selectedLayerId, layers]);
+  }, [selectedLayerId, selectedTextLayerId, layers, textLayers]);
+
 
   const toWorldPoint = useCallback(
     (pointer: { x: number; y: number }) => ({
@@ -486,10 +504,47 @@ export function ManualEditorWorkspace({
     [layers, offsetX, offsetY, onUpdateLayer, renderScale],
   );
 
+  const handleTextLayerDragEnd = useCallback(
+    (textLayerId: string, e: Konva.KonvaEventObject<DragEvent>) => {
+      const node = e.target;
+      onUpdateTextLayer?.(textLayerId, {
+        x: Math.round(((node.x() - offsetX) / renderScale) * 100) / 100,
+        y: Math.round(((node.y() - offsetY) / renderScale) * 100) / 100,
+      });
+      setPositionGuideLines([]);
+      setCursor("grab");
+    },
+    [offsetX, offsetY, onUpdateTextLayer, renderScale],
+  );
+
+  const handleTextLayerTransformEnd = useCallback(
+    (textLayerId: string, e: Konva.KonvaEventObject<Event>) => {
+      const node = e.target;
+      const scaleXNode = node.scaleX();
+      const scaleYNode = node.scaleY();
+      const textLayer = textLayers.find((l) => l.id === textLayerId);
+      if (!textLayer) return;
+      onUpdateTextLayer?.(textLayerId, {
+        x: Math.round(((node.x() - offsetX) / renderScale) * 100) / 100,
+        y: Math.round(((node.y() - offsetY) / renderScale) * 100) / 100,
+        width: Math.round(Math.abs(textLayer.width * scaleXNode)),
+        height: Math.round(Math.abs(textLayer.height * scaleYNode)),
+        rotation: Math.round(node.rotation() * 100) / 100,
+      });
+      node.scaleX(1);
+      node.scaleY(1);
+      setRotationGuideLine(null);
+      setPositionGuideLines([]);
+      setCursor("default");
+    },
+    [textLayers, offsetX, offsetY, onUpdateTextLayer, renderScale],
+  );
+
   const groupConnectionOverlays = useMemo(
     () => groups.flatMap((group) => buildGroupOverlayPolygons(group, layers)),
     [groups, layers],
   );
+
 
   return (
     <div className="space-y-4">
@@ -726,6 +781,71 @@ export function ManualEditorWorkspace({
                 />
               );
             })}
+            {textLayers.map((tLayer) => {
+              if (!tLayer.visible) return null;
+              const isSelected = selectedTextLayerId === tLayer.id;
+              const w = tLayer.width * renderScale;
+              const h = tLayer.height * renderScale;
+              return (
+                <Group
+                  key={tLayer.id}
+                  id={`text-layer-${tLayer.id}`}
+                  name="manual-text-layer"
+                  x={offsetX + tLayer.x * renderScale}
+                  y={offsetY + tLayer.y * renderScale}
+                  rotation={tLayer.rotation}
+                  draggable={!tLayer.locked}
+                  onClick={() => {
+                    onClearSelection();
+                    onSelectTextLayer?.(tLayer.id);
+                  }}
+                  onTap={() => {
+                    onClearSelection();
+                    onSelectTextLayer?.(tLayer.id);
+                  }}
+                  onMouseEnter={() =>
+                    setCursor(tLayer.locked ? "not-allowed" : "grab")
+                  }
+                  onMouseLeave={() => setCursor("default")}
+                  onDragStart={() => {
+                    setPositionGuideLines([]);
+                    setRotationGuideLine(null);
+                    setCursor("grabbing");
+                  }}
+                  onDragEnd={(e) => handleTextLayerDragEnd(tLayer.id, e)}
+                  onTransformStart={() => {
+                    setPositionGuideLines([]);
+                    setRotationGuideLine(null);
+                    setCursor("grabbing");
+                  }}
+                  onTransform={handleTransform}
+                  onTransformEnd={(e) => handleTextLayerTransformEnd(tLayer.id, e)}
+                >
+                  <Rect
+                    width={w}
+                    height={h}
+                    fill={isSelected ? "rgba(147, 51, 234, 0.18)" : "rgba(147, 51, 234, 0.08)"}
+                    stroke={isSelected ? "#9333ea" : "#c084fc"}
+                    strokeWidth={isSelected ? 2 : 1.2}
+                    dash={[6, 4]}
+                    cornerRadius={4}
+                  />
+                  <Text
+                    text={tLayer.name || "Text Layer"}
+                    width={w}
+                    height={h}
+                    align="center"
+                    verticalAlign="middle"
+                    fontSize={Math.max(10, Math.min(18 * renderScale, h * 0.45))}
+                    fontFamily="sans-serif"
+                    fontStyle="bold"
+                    fill={isSelected ? "#7e22ce" : "#9333ea"}
+                    padding={4}
+                    listening={false}
+                  />
+                </Group>
+              );
+            })}
             {selectionBoxRect ? (
               <Rect
                 x={offsetX + selectionBoxRect.x * renderScale}
@@ -739,6 +859,7 @@ export function ManualEditorWorkspace({
                 listening={false}
               />
             ) : null}
+
             <Transformer
               ref={transformerRef}
               rotateEnabled
