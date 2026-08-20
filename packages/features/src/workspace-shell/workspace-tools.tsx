@@ -1,4 +1,5 @@
 import React from "react";
+import { APP_ROUTES } from "@imify/core";
 import {
   ArrowLeftRight,
   FileOutput,
@@ -80,7 +81,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "single-processor",
     label: "Single Processor",
-    href: "/single-processor",
+    href: APP_ROUTES.SINGLE_PROCESSOR,
     categoryId: "image-processing",
     iconColorClassName: "text-sky-500",
     extTabId: "single",
@@ -90,7 +91,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "batch-processor",
     label: "Batch Processor",
-    href: "/batch-processor",
+    href: APP_ROUTES.BATCH_PROCESSOR,
     categoryId: "image-processing",
     iconColorClassName: "text-violet-500",
     extTabId: "batch",
@@ -100,7 +101,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "splicing",
     label: "Image Splicing",
-    href: "/splicing",
+    href: APP_ROUTES.SPLICING,
     categoryId: "layout-composition",
     iconColorClassName: "text-indigo-500",
     extTabId: "splicing",
@@ -110,7 +111,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "splitter",
     label: "Image Splitter",
-    href: "/splitter",
+    href: APP_ROUTES.SPLITTER,
     categoryId: "image-processing",
     iconColorClassName: "text-orange-500",
     extTabId: "splitter",
@@ -120,7 +121,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "filling",
     label: "Image Filling",
-    href: "/filling",
+    href: APP_ROUTES.FILLING,
     categoryId: "layout-composition",
     iconColorClassName: "text-cyan-500",
     extTabId: "filling",
@@ -130,7 +131,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "collage-maker",
     label: "Collage Maker",
-    href: "/collage-maker",
+    href: APP_ROUTES.COLLAGE_MAKER,
     categoryId: "layout-composition",
     iconColorClassName: "text-amber-500",
     showOnWebToolsMenu: true,
@@ -139,7 +140,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "pattern-generator",
     label: "Pattern Generator",
-    href: "/pattern-generator",
+    href: APP_ROUTES.PATTERN_GENERATOR,
     categoryId: "layout-composition",
     iconColorClassName: "text-emerald-500",
     extTabId: "pattern",
@@ -149,7 +150,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "diffchecker",
     label: "Difference Checker",
-    href: "/diffchecker",
+    href: APP_ROUTES.DIFFCHECKER,
     categoryId: "utilities",
     iconColorClassName: "text-rose-500",
     extTabId: "diffchecker",
@@ -159,7 +160,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "inspector",
     label: "Image Inspector",
-    href: "/inspector",
+    href: APP_ROUTES.INSPECTOR,
     categoryId: "utilities",
     iconColorClassName: "text-teal-500",
     extTabId: "inspector",
@@ -169,7 +170,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "pdf-studio",
     label: "PDF Studio",
-    href: "/pdf-studio",
+    href: APP_ROUTES.PDF_STUDIO,
     categoryId: "utilities",
     iconColorClassName: "text-red-500",
     extTabId: "pdf-studio",
@@ -179,7 +180,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "context-menu",
     label: "Context Menu",
-    href: "/extension",
+    href: APP_ROUTES.EXTENSION,
     categoryId: "extension-exclusive",
     iconColorClassName: "text-blue-500",
     extTabId: "context-menu",
@@ -189,7 +190,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "seo-audit",
     label: "SEO Audit",
-    href: "/extension",
+    href: APP_ROUTES.EXTENSION,
     categoryId: "extension-exclusive",
     iconColorClassName: "text-fuchsia-500",
     showOnWebToolsMenu: true,
@@ -198,7 +199,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "background-remover",
     label: "Background Remover",
-    href: "/background-remover",
+    href: APP_ROUTES.BACKGROUND_REMOVER,
     categoryId: "image-processing",
     iconColorClassName: "text-pink-500",
     extTabId: "background-remover",
@@ -208,7 +209,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "upscaler",
     label: "Upscaler",
-    href: "/upscaler",
+    href: APP_ROUTES.UPSCALER,
     categoryId: "image-processing",
     iconColorClassName: "text-indigo-500",
     extTabId: "upscaler",
@@ -218,7 +219,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "qr-generator",
     label: "QR Generator",
-    href: "/qr-generator",
+    href: APP_ROUTES.QR_GENERATOR,
     categoryId: "utilities",
     iconColorClassName: "text-amber-500",
     extTabId: "qr-generator",
@@ -228,7 +229,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
   {
     id: "qr-reader",
     label: "QR Reader",
-    href: "/qr-reader",
+    href: APP_ROUTES.QR_READER,
     categoryId: "utilities",
     iconColorClassName: "text-blue-500",
     extTabId: "qr-reader",
@@ -236,6 +237,7 @@ export const WORKSPACE_TOOLS: WorkspaceToolDefinition[] = [
     showOnExtSidebar: true,
   },
 ];
+
 
 export function renderWorkspaceWorkspaceIcon(
   toolId: string,

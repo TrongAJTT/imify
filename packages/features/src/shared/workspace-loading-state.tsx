@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { APP_ROUTES } from "@imify/core";
 import { useTranslation } from "@imify/i18n";
 import { WorkspaceLoadingStateView } from "@imify/ui";
 
@@ -36,7 +37,7 @@ export function WorkspaceLoadingState({
 
   const handleGoToRecovery = () => {
     if (typeof window !== "undefined") {
-      window.location.href = "/recovery";
+      window.location.href = APP_ROUTES.RECOVERY;
     }
   };
 

@@ -28,6 +28,7 @@
     "./resize-resampling": "./src/resize-resampling.ts",
     "./storage-adapter": "./src/storage-adapter.ts",
     "./types": "./src/types.ts",
+    "./routes": "./src/routes.ts",
     "./hooks/use-toast": "./src/hooks/use-toast.ts"
   },
   "license": "Apache-2.0"

@@ -6,6 +6,7 @@ import { useBatchStore } from "@imify/stores/stores/batch-store"
 import { usePatternPresetStore } from "@imify/stores/stores/pattern-preset-store"
 import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store"
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store"
+import { APP_ROUTES } from "@imify/core"
 import { WorkspaceLoadingState } from "@imify/features/shared/workspace-loading-state"
 import { isPreferRecentPresetEntryEnabled } from "@/features/presets/recent-preset-entry-preference"
 import { isPresetToolEntryId, type PresetToolEntryId } from "@/features/presets/tool-entry-route"
@@ -13,17 +14,18 @@ import { isPresetToolEntryId, type PresetToolEntryId } from "@/features/presets/
 function getLandingHref(toolId: PresetToolEntryId): string {
   switch (toolId) {
     case "single-processor":
-      return "/single-processor"
+      return APP_ROUTES.SINGLE_PROCESSOR
     case "batch-processor":
-      return "/batch-processor"
+      return APP_ROUTES.BATCH_PROCESSOR
     case "splitter":
-      return "/splitter"
+      return APP_ROUTES.SPLITTER
     case "splicing":
-      return "/splicing"
+      return APP_ROUTES.SPLICING
     case "pattern-generator":
-      return "/pattern-generator"
+      return APP_ROUTES.PATTERN_GENERATOR
   }
 }
+
 
 function getRecentWorkspaceHref(toolId: PresetToolEntryId): string | null {
   if (toolId === "single-processor" || toolId === "batch-processor") {

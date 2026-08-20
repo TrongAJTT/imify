@@ -6,7 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@imify/ui/ui/utils";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { useTranslation } from "@imify/i18n";
-import { IMIFY_LINKS } from "@imify/core";
+import { APP_ROUTES, IMIFY_LINKS } from "@imify/core";
 import { FeatureMarkdown } from "@imify/features";
 
 function FaqItem({
@@ -67,8 +67,8 @@ export function FaqSection() {
   const faqItems = React.useMemo(() => {
     const raw = t("faq.items", {
       returnObjects: true,
-      recoveryUrl: "/recovery",
-      updateUrl: "/update",
+      recoveryUrl: APP_ROUTES.RECOVERY,
+      updateUrl: APP_ROUTES.UPDATE,
       chromeUrl: IMIFY_LINKS.chromeClearCookiesGuide,
       edgeUrl: IMIFY_LINKS.edgeClearCookiesGuide,
       firefoxUrl: IMIFY_LINKS.firefoxClearCookiesGuide,
