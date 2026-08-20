@@ -71,10 +71,14 @@
     "borderRadius": "Border Radius",
     "containerColor": "Background Color",
     "containerOpacity": "Opacity (%)",
+    "swapColors": "Swap text & container colors",
+    "lockPaddingHMax": "Lock horizontal padding to image dimension",
+    "lockPaddingHMaxActive": "Locking max horizontal padding",
+    "lockPaddingHMaxInactive": "Lock horizontal padding to image dimension",
     "positionSection": "Position & Alignment",
     "offsetLock": "Lock Offset",
-    "offsetLockNone": "Unlocked (Manual)",
-    "offsetLockAuto": "Auto Calculated",
+    "offsetLockNone": "Unlocked",
+    "offsetLockAuto": "Auto",
     "offsetFormulaTitle": "Offset Calculation Formula",
     "offsetFontSizeMultiplier": "Font Size Multiplier",
     "offsetPaddingSource": "Padding Source",
@@ -95,9 +99,9 @@
     "alignEnd": "End / Right",
     "offsetX": "Offset X (px)",
     "offsetY": "Offset Y (px)",
-    "flipHorizontal": "Flip Horizontal (Flip H)",
-    "flipVertical": "Flip Vertical / Reading (Flip V)"
+    "rotate180": "Invert Text"
   },
+
 
 
   "preset": {

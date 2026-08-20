@@ -106,12 +106,9 @@ function extractSplicingPresetConfig(
     captionOffsetPaddingMultiplier:
       captionConfig?.offsetPaddingMultiplier ??
       DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingMultiplier,
-    captionFlipHorizontal:
-      captionConfig?.flipHorizontal ??
-      DEFAULT_SPLICING_CAPTION_CONFIG.flipHorizontal,
-    captionFlipVertical:
-      captionConfig?.flipVertical ??
-      DEFAULT_SPLICING_CAPTION_CONFIG.flipVertical,
+    captionRotate180:
+      captionConfig?.rotate180 ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.rotate180,
   };
 }
 
@@ -189,13 +186,11 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
       offsetPaddingMultiplier:
         config.captionOffsetPaddingMultiplier ??
         DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingMultiplier,
-      flipHorizontal:
-        config.captionFlipHorizontal ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.flipHorizontal,
-      flipVertical:
-        config.captionFlipVertical ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.flipVertical,
+      rotate180:
+        config.captionRotate180 ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.rotate180,
     },
+
 
     exportSettings: {
       format: (config.exportFormat as any) ?? "png",

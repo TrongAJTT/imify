@@ -73,8 +73,7 @@ export interface SplicingPresetConfig {
   captionOffsetFontSizeMultiplier?: number
   captionOffsetPaddingSource?: SplicingCaptionOffsetPaddingSource
   captionOffsetPaddingMultiplier?: number
-  captionFlipHorizontal?: boolean
-  captionFlipVertical?: boolean
+  captionRotate180?: boolean
 }
 
 
@@ -102,6 +101,7 @@ interface SplicingPresetStoreState {
   deletePreset: (presetId: string) => void
   syncActivePresetConfig: (config: SplicingPresetConfig) => void
 }
+
 
 const PRESET_HIGHLIGHT_COLORS = ["rgb(59, 130, 246)", "rgb(34, 197, 94)", "rgb(249, 115, 22)", "rgb(168, 85, 247)"]
 
@@ -155,8 +155,7 @@ function createDefaultConfig(): SplicingPresetConfig {
     captionOffsetFontSizeMultiplier: DEFAULT_SPLICING_CAPTION_CONFIG.offsetFontSizeMultiplier,
     captionOffsetPaddingSource: DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingSource,
     captionOffsetPaddingMultiplier: DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingMultiplier,
-    captionFlipHorizontal: DEFAULT_SPLICING_CAPTION_CONFIG.flipHorizontal,
-    captionFlipVertical: DEFAULT_SPLICING_CAPTION_CONFIG.flipVertical,
+    captionRotate180: DEFAULT_SPLICING_CAPTION_CONFIG.rotate180,
   }
 }
 

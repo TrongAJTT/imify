@@ -15,6 +15,8 @@ import type { ConversionProgressPayload } from "@imify/core/types";
 import { useTranslation } from "@imify/i18n";
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useSplicingExport } from "./use-splicing-export";
+import { calculateProcessedSize } from "./layout-engine";
+
 import {
   toast,
   confirmHeavyPreviewWarning,
@@ -319,13 +321,23 @@ export function SplicingTab({
   useEffect(() => {
     setResizeQuickStats(
       buildResizeQuickStatsFromDimensions(
-        images.map((image) => ({
-          width: image.originalWidth,
-          height: image.originalHeight,
-        })),
+        images.map((image) => {
+          const processed = calculateProcessedSize(
+            image.originalWidth,
+            image.originalHeight,
+            imageResize,
+            imageFitValue,
+            imageApplyTo
+          );
+          return {
+            width: processed.width,
+            height: processed.height,
+          };
+        }),
       ),
     );
-  }, [images, setResizeQuickStats]);
+  }, [images, imageResize, imageFitValue, imageApplyTo, setResizeQuickStats]);
+
 
   const previewImagesTotalPixels = useMemo(
     () =>

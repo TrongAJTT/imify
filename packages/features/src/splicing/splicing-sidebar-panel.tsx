@@ -183,7 +183,13 @@ export function SplicingSidebarPanel({
         <CaptionSettingsAccordion
           captionConfig={captionConfig}
           onCaptionConfigChange={setCaptionConfig}
+          resizeQuickStats={resizeQuickStats}
+          imageFitValue={image.fitValue}
+          imageResize={image.resizeMode}
+          imageApplyTo={image.applyTo}
         />
+
+
       ),
     },
     {

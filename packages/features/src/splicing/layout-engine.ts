@@ -484,15 +484,24 @@ function applyAlignment(
 
   for (let i = 0; i < placements.length; i++) {
     const d = shift + i * extraGap
+    const p = placements[i]
     if (lineDir === "horizontal") {
-      placements[i].outerRect.x += d
-      placements[i].contentRect.x += d
+      p.outerRect.x += d
+      p.contentRect.x += d
+      if (p.captionRect) {
+        p.captionRect.x += d
+      }
     } else {
-      placements[i].outerRect.y += d
-      placements[i].contentRect.y += d
+      p.outerRect.y += d
+      p.contentRect.y += d
+      if (p.captionRect) {
+        p.captionRect.y += d
+      }
     }
   }
 }
+
+
 
 /**
  * Core layout algorithm.

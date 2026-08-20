@@ -71,10 +71,14 @@
     "borderRadius": "Bo góc",
     "containerColor": "Màu nền khung",
     "containerOpacity": "Độ mờ (%)",
+    "swapColors": "Đổi màu chữ & khung nền",
+    "lockPaddingHMax": "Khóa pad ngang khớp kích thước ảnh",
+    "lockPaddingHMaxActive": "Đang khóa pad ngang tối đa",
+    "lockPaddingHMaxInactive": "Khóa pad ngang khớp ảnh",
     "positionSection": "Vị trí & Căn lề",
     "offsetLock": "Khóa offset",
-    "offsetLockNone": "Không khóa (Thủ công)",
-    "offsetLockAuto": "Thiết lập tự động",
+    "offsetLockNone": "Không khóa",
+    "offsetLockAuto": "Tự động",
     "offsetFormulaTitle": "Công thức tính Offset",
     "offsetFontSizeMultiplier": "Hệ số cỡ chữ",
     "offsetPaddingSource": "Nguồn padding",
@@ -95,9 +99,9 @@
     "alignEnd": "Cuối / Phải",
     "offsetX": "Offset X (px)",
     "offsetY": "Offset Y (px)",
-    "flipHorizontal": "Đảo chiều ngang",
-    "flipVertical": "Đảo chiều dọc"
+    "rotate180": "Đảo ngược chữ"
   },
+
 
 
   "preset": {

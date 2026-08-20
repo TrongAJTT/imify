@@ -241,8 +241,13 @@ function drawCaption(
   ctx.font = `500 ${fontSize}px ${config.fontFamily || "Inter"}, system-ui, sans-serif`
   const textMetrics = ctx.measureText(captionText)
   const textWidth = textMetrics.width
-  const boxWidth = textWidth + padH * 2
+  const maxAvailableBoxWidth =
+    config.position === "left" || config.position === "right"
+      ? (placement.captionRect?.height ?? placement.contentRect.height) * scale
+      : (placement.captionRect?.width ?? placement.contentRect.width) * scale
+  const boxWidth = Math.min(textWidth + padH * 2, maxAvailableBoxWidth)
   const boxHeight = fontSize + padV * 2
+
 
   let boxCenterX = 0
   let boxCenterY = 0
@@ -358,11 +363,10 @@ function drawCaption(
   if (rotationAngle !== 0) {
     ctx.rotate(rotationAngle)
   }
-  const scaleX = config.flipHorizontal ? -1 : 1
-  const scaleY = config.flipVertical ? -1 : 1
-  if (scaleX !== 1 || scaleY !== 1) {
-    ctx.scale(scaleX, scaleY)
+  if (config.rotate180) {
+    ctx.rotate(Math.PI)
   }
+
 
   // Container background
   if (config.containerColor && config.containerColor !== "transparent") {
@@ -423,6 +427,7 @@ export function drawSplicingCanvas(
   drawRoundedRect(ctx, 0, 0, cw, ch, canvasStyle.borderRadius * scale)
   ctx.clip()
 
+  // Pass 1: Render all image backgrounds, contents, and borders
   for (const group of layout.groups) {
     for (const placement of group.placements) {
       const source = sources[placement.imageIndex]
@@ -489,17 +494,6 @@ export function drawSplicingCanvas(
         ctx.restore()
       }
 
-      // Caption
-      if (options?.captionConfig && options.captionConfig.mode !== "none") {
-        const imageId = options.imageIds?.[placement.imageIndex]
-        const customText = imageId && options.captionTexts ? options.captionTexts[imageId] : undefined
-        const effectiveText = customText !== undefined && customText.trim() !== ""
-          ? customText
-          : `Image #${placement.imageIndex + 1}`
-
-        drawCaption(ctx, placement, scale, effectiveText, options.captionConfig)
-      }
-
       // Image numbering badge (if enabled)
       if (options?.showImageNumber) {
         const label = String(placement.imageIndex + 1)
@@ -523,6 +517,25 @@ export function drawSplicingCanvas(
       }
     }
   }
+
+  // Pass 2: Render all captions on top
+  if (options?.captionConfig && options.captionConfig.mode !== "none") {
+    for (const group of layout.groups) {
+      for (const placement of group.placements) {
+        const source = sources[placement.imageIndex]
+        if (!source) continue
+
+        const imageId = options.imageIds?.[placement.imageIndex]
+        const customText = imageId && options.captionTexts ? options.captionTexts[imageId] : undefined
+        const effectiveText = customText !== undefined && customText.trim() !== ""
+          ? customText
+          : `Image #${placement.imageIndex + 1}`
+
+        drawCaption(ctx, placement, scale, effectiveText, options.captionConfig)
+      }
+    }
+  }
+
   ctx.restore()
 
   // Canvas border

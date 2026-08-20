@@ -82,8 +82,7 @@ export interface SplicingCaptionConfig {
   offsetFontSizeMultiplier: number
   offsetPaddingSource: SplicingCaptionOffsetPaddingSource
   offsetPaddingMultiplier: number
-  flipHorizontal: boolean
-  flipVertical: boolean
+  rotate180: boolean
 }
 
 export function computeCaptionLockedOffset(config: SplicingCaptionConfig): number {
@@ -117,8 +116,8 @@ export const DEFAULT_SPLICING_CAPTION_CONFIG: SplicingCaptionConfig = {
   offsetFontSizeMultiplier: 1,
   offsetPaddingSource: "max",
   offsetPaddingMultiplier: 1,
-  flipHorizontal: false,
-  flipVertical: false,
+  rotate180: false,
 }
+
 
 

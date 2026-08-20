@@ -1,14 +1,14 @@
-import React, { useEffect } from "react";
-
+import React, { useEffect, useState } from "react";
 import {
   Type,
   Link2,
   Unlink2,
   Lock,
   Unlock,
-  FlipHorizontal,
-  FlipVertical,
+  RotateCw,
   Calculator,
+  ArrowLeftRight,
+  Maximize2,
 } from "lucide-react";
 import {
   AccordionCard,
@@ -29,19 +29,31 @@ import {
   type SplicingCaptionAlignment,
   type SplicingCaptionOffsetLockMode,
   type SplicingCaptionOffsetPaddingSource,
+  type ResizeQuickStats,
+  type ResizeApplyTo,
 } from "@imify/core";
 
 interface CaptionSettingsAccordionProps {
   captionConfig: SplicingCaptionConfig;
   onCaptionConfigChange: (patch: Partial<SplicingCaptionConfig>) => void;
+  resizeQuickStats?: ResizeQuickStats | null;
+  imageFitValue?: number;
+  imageResize?: string;
+  imageApplyTo?: ResizeApplyTo;
 }
+
 
 export function CaptionSettingsAccordion({
   captionConfig,
   onCaptionConfigChange,
+  resizeQuickStats,
+  imageFitValue = 800,
+  imageResize = "inherit",
+  imageApplyTo = "width",
 }: CaptionSettingsAccordionProps) {
   const { t } = useTranslation("splicing");
   const { installedFonts, loadInstalledFonts } = useFontStore();
+  const [lockPaddingHMax, setLockPaddingHMax] = useState(false);
 
   useEffect(() => {
     loadInstalledFonts();
@@ -49,6 +61,37 @@ export function CaptionSettingsAccordion({
 
   const mode = captionConfig.mode;
   const isEnabled = mode !== "none";
+  const isInside = mode === "inside";
+
+  // Max padding calculations:
+  // 1. Pad Vertical: max = 2 * fontSize
+  const maxPaddingV = Math.max(16, captionConfig.fontSize * 2);
+
+  // 2. Pad Horizontal: max = image width if top/bottom/center, or image height if left/right (after resize)
+  const isVerticalAxis =
+    captionConfig.position === "top" ||
+    captionConfig.position === "bottom" ||
+    captionConfig.position === "center";
+
+  const maxImageDimension = isVerticalAxis
+    ? resizeQuickStats?.width?.max || imageFitValue || 800
+    : resizeQuickStats?.height?.max || imageFitValue || 800;
+
+  const maxPaddingH = Math.max(10, Math.round(maxImageDimension));
+
+
+
+  // If lockPaddingHMax is active, keep paddingH locked to maxPaddingH
+  useEffect(() => {
+    if (lockPaddingHMax && captionConfig.paddingH !== maxPaddingH) {
+      onCaptionConfigChange({ paddingH: maxPaddingH });
+    }
+  }, [
+    lockPaddingHMax,
+    maxPaddingH,
+    captionConfig.paddingH,
+    onCaptionConfigChange,
+  ]);
 
   const modeOptions: { value: SplicingCaptionMode; label: string }[] = [
     { value: "none", label: t("captionFields.modeNone", "Không có") },
@@ -61,7 +104,7 @@ export function CaptionSettingsAccordion({
     { value: "bottom", label: t("captionFields.posBottom", "Dưới") },
     { value: "left", label: t("captionFields.posLeft", "Trái") },
     { value: "right", label: t("captionFields.posRight", "Phải") },
-    ...(mode === "inside"
+    ...(isInside
       ? [
           {
             value: "center" as const,
@@ -94,9 +137,14 @@ export function CaptionSettingsAccordion({
     candidateConfig?: SplicingCaptionConfig,
   ) => {
     const nextCfg = candidateConfig || { ...captionConfig, ...patch };
-    if (nextCfg.offsetLockMode === "auto") {
+    if (nextCfg.mode === "outside") {
+      patch.offsetX = 0;
+      patch.offsetY = 0;
+      patch.offsetLockMode = "none";
+    } else if (nextCfg.offsetLockMode === "auto") {
       const offsetVal = computeCaptionLockedOffset(nextCfg);
-      const finalOffsetVal = nextCfg.mode === "inside" ? -offsetVal : offsetVal;
+      // For inside mode, negative pushes inside
+      const finalOffsetVal = -offsetVal;
       if (nextCfg.position === "top") {
         patch.offsetY = -finalOffsetVal;
         patch.offsetX = 0;
@@ -118,14 +166,22 @@ export function CaptionSettingsAccordion({
   };
 
   const handleFontSizeChange = (fontSize: number) => {
+    const nextMaxPadV = Math.max(16, fontSize * 2);
     const patch: Partial<SplicingCaptionConfig> = { fontSize };
+    if (captionConfig.paddingV > nextMaxPadV) {
+      patch.paddingV = nextMaxPadV;
+      if (captionConfig.paddingLinked) {
+        patch.paddingH = Math.min(nextMaxPadV, maxPaddingH);
+      }
+    }
     applyOffsetLockUpdate(patch, { ...captionConfig, fontSize });
   };
 
   const handlePaddingVChange = (v: number) => {
+    const clampedV = Math.min(v, maxPaddingV);
     const patch: Partial<SplicingCaptionConfig> = captionConfig.paddingLinked
-      ? { paddingV: v, paddingH: v }
-      : { paddingV: v };
+      ? { paddingV: clampedV, paddingH: Math.min(clampedV, maxPaddingH) }
+      : { paddingV: clampedV };
     applyOffsetLockUpdate(patch, {
       ...captionConfig,
       ...patch,
@@ -133,9 +189,10 @@ export function CaptionSettingsAccordion({
   };
 
   const handlePaddingHChange = (h: number) => {
+    const clampedH = Math.min(h, maxPaddingH);
     const patch: Partial<SplicingCaptionConfig> = captionConfig.paddingLinked
-      ? { paddingV: h, paddingH: h }
-      : { paddingH: h };
+      ? { paddingV: Math.min(clampedH, maxPaddingV), paddingH: clampedH }
+      : { paddingH: clampedH };
     applyOffsetLockUpdate(patch, {
       ...captionConfig,
       ...patch,
@@ -145,13 +202,36 @@ export function CaptionSettingsAccordion({
   const togglePaddingLinked = () => {
     const nextLinked = !captionConfig.paddingLinked;
     if (nextLinked) {
+      const targetPad = Math.min(captionConfig.paddingV, maxPaddingH);
       const patch = {
         paddingLinked: true,
-        paddingH: captionConfig.paddingV,
+        paddingH: targetPad,
       };
       applyOffsetLockUpdate(patch, { ...captionConfig, ...patch });
     } else {
       onCaptionConfigChange({ paddingLinked: false });
+    }
+  };
+
+  // Swap text color & container color
+  const handleSwapColors = () => {
+    const currentText = captionConfig.textColor;
+    const currentBg = captionConfig.containerColor;
+    onCaptionConfigChange({
+      textColor: currentBg,
+      containerColor: currentText,
+    });
+  };
+
+  // Toggle max paddingH lock
+  const handleToggleLockPaddingHMax = () => {
+    const nextLock = !lockPaddingHMax;
+    setLockPaddingHMax(nextLock);
+    if (nextLock) {
+      onCaptionConfigChange({
+        paddingH: maxPaddingH,
+        paddingLinked: false,
+      });
     }
   };
 
@@ -175,10 +255,27 @@ export function CaptionSettingsAccordion({
           options={modeOptions}
           onChange={(m) => {
             const nextMode = m as SplicingCaptionMode;
-            if (nextMode === "outside" && captionConfig.position === "center") {
+            if (nextMode === "outside") {
+              const nextPos =
+                captionConfig.position === "center"
+                  ? "top"
+                  : captionConfig.position;
               applyOffsetLockUpdate(
-                { mode: nextMode, position: "top" },
-                { ...captionConfig, mode: nextMode, position: "top" },
+                {
+                  mode: nextMode,
+                  position: nextPos,
+                  offsetX: 0,
+                  offsetY: 0,
+                  offsetLockMode: "none",
+                },
+                {
+                  ...captionConfig,
+                  mode: nextMode,
+                  position: nextPos,
+                  offsetX: 0,
+                  offsetY: 0,
+                  offsetLockMode: "none",
+                },
               );
             } else {
               applyOffsetLockUpdate(
@@ -229,26 +326,68 @@ export function CaptionSettingsAccordion({
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {t("captionFields.containerSection")}
                 </span>
-                <button
-                  type="button"
-                  onClick={togglePaddingLinked}
-                  className={`p-1 rounded-md text-xs transition-colors flex items-center gap-1 ${
-                    captionConfig.paddingLinked
-                      ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 font-medium"
-                      : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                  }`}
-                  title={
-                    captionConfig.paddingLinked
-                      ? t("captionFields.paddingLinked")
-                      : t("captionFields.paddingUnlinked")
-                  }
-                >
-                  {captionConfig.paddingLinked ? (
-                    <Link2 size={13} />
-                  ) : (
-                    <Unlink2 size={13} />
-                  )}
-                </button>
+
+                <div className="flex items-center gap-1">
+                  {/* Swap Colors Button */}
+                  <button
+                    type="button"
+                    onClick={handleSwapColors}
+                    className="p-1 rounded-md text-xs transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    title={t(
+                      "captionFields.swapColors",
+                      "Đổi màu chữ & khung nền",
+                    )}
+                  >
+                    <ArrowLeftRight size={13} />
+                  </button>
+
+                  {/* Lock Max PaddingH Button */}
+                  <button
+                    type="button"
+                    onClick={handleToggleLockPaddingHMax}
+                    className={`p-1 rounded-md text-xs transition-colors flex items-center gap-0.5 ${
+                      lockPaddingHMax
+                        ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 font-medium"
+                        : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    }`}
+                    title={
+                      lockPaddingHMax
+                        ? t(
+                            "captionFields.lockPaddingHMaxActive",
+                            "Đang khóa pad ngang tối đa",
+                          )
+                        : t(
+                            "captionFields.lockPaddingHMaxInactive",
+                            "Khóa pad ngang khớp ảnh",
+                          )
+                    }
+                  >
+                    <Maximize2 size={13} />
+                  </button>
+
+                  {/* Link Padding Ratio Button */}
+                  <button
+                    type="button"
+                    onClick={togglePaddingLinked}
+                    disabled={lockPaddingHMax}
+                    className={`p-1 rounded-md text-xs transition-colors flex items-center gap-1 ${
+                      captionConfig.paddingLinked
+                        ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 font-medium"
+                        : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    } ${lockPaddingHMax ? "opacity-40 cursor-not-allowed" : ""}`}
+                    title={
+                      captionConfig.paddingLinked
+                        ? t("captionFields.paddingLinked")
+                        : t("captionFields.paddingUnlinked")
+                    }
+                  >
+                    {captionConfig.paddingLinked ? (
+                      <Link2 size={13} />
+                    ) : (
+                      <Unlink2 size={13} />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 items-end">
@@ -257,14 +396,15 @@ export function CaptionSettingsAccordion({
                   value={captionConfig.paddingV}
                   onChangeValue={handlePaddingVChange}
                   min={0}
-                  max={150}
+                  max={maxPaddingV}
                 />
                 <NumberInput
                   label={t("captionFields.paddingH")}
                   value={captionConfig.paddingH}
                   onChangeValue={handlePaddingHChange}
                   min={0}
-                  max={150}
+                  max={maxPaddingH}
+                  disabled={lockPaddingHMax}
                 />
                 <NumberInput
                   label={t("captionFields.borderRadius")}
@@ -309,150 +449,154 @@ export function CaptionSettingsAccordion({
                   {t("captionFields.positionSection")}
                 </span>
 
-                {/* Lock Offset Popover Button */}
-                <ControlledPopover
-                  behavior="click"
-                  align="end"
-                  side="bottom"
-                  contentClassName="p-3 w-72 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 z-50"
-                  trigger={
-                    <button
-                      type="button"
-                      className={`p-1 rounded-md text-xs transition-colors flex items-center gap-1 ${
-                        captionConfig.offsetLockMode === "auto"
-                          ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 font-medium"
-                          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                      }`}
-                      title={t("captionFields.offsetLock")}
-                    >
-                      {captionConfig.offsetLockMode === "auto" ? (
-                        <Lock size={13} />
-                      ) : (
-                        <Unlock size={13} />
-                      )}
-                      <span className="text-[10px] font-mono">
-                        {captionConfig.offsetLockMode === "auto"
-                          ? `±${lockedOffset}px`
-                          : ""}
-                      </span>
-                    </button>
-                  }
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-                      <Calculator size={14} className="text-amber-500" />
-                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                        {t("captionFields.offsetFormulaTitle")}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <SegmentedControl
-                        value={captionConfig.offsetLockMode || "none"}
-                        onChange={(val) => {
-                          const modeVal = val as SplicingCaptionOffsetLockMode;
-                          applyOffsetLockUpdate(
-                            { offsetLockMode: modeVal },
-                            { ...captionConfig, offsetLockMode: modeVal },
-                          );
-                        }}
-                        options={[
-                          {
-                            value: "none",
-                            label: t("captionFields.offsetLockNone"),
-                          },
-                          {
-                            value: "auto",
-                            label: t("captionFields.offsetLockAuto"),
-                          },
-                        ]}
-                      />
-                    </div>
-
-                    {captionConfig.offsetLockMode === "auto" && (
-                      <div className="space-y-2.5 pt-1">
-                        {/* Font size multiplier */}
-                        <SelectInput
-                          label={t("captionFields.offsetFontSizeMultiplier")}
-                          value={String(
-                            captionConfig.offsetFontSizeMultiplier ?? 1,
-                          )}
-                          options={[
-                            { value: "0.5", label: "0.5x (Nửa cỡ chữ)" },
-                            { value: "1", label: "1.0x (Chuẩn cỡ chữ)" },
-                            { value: "2", label: "2.0x (Gấp đôi cỡ chữ)" },
-                          ]}
-                          onChange={(v) => {
-                            const mult = parseFloat(v);
-                            applyOffsetLockUpdate(
-                              { offsetFontSizeMultiplier: mult },
-                              {
-                                ...captionConfig,
-                                offsetFontSizeMultiplier: mult,
-                              },
-                            );
-                          }}
-                        />
-
-                        {/* Padding Source */}
-                        <SelectInput
-                          label={t("captionFields.offsetPaddingSource")}
-                          value={captionConfig.offsetPaddingSource || "max"}
-                          options={[
-                            {
-                              value: "max",
-                              label: t("captionFields.offsetPaddingMax"),
-                            },
-                            {
-                              value: "sum",
-                              label: t("captionFields.offsetPaddingSum"),
-                            },
-                            {
-                              value: "min",
-                              label: t("captionFields.offsetPaddingMin"),
-                            },
-                          ]}
-                          onChange={(v) => {
-                            const src = v as SplicingCaptionOffsetPaddingSource;
-                            applyOffsetLockUpdate(
-                              { offsetPaddingSource: src },
-                              { ...captionConfig, offsetPaddingSource: src },
-                            );
-                          }}
-                        />
-
-                        {/* Padding Multiplier */}
-                        <SelectInput
-                          label={t("captionFields.offsetPaddingMultiplier")}
-                          value={String(
-                            captionConfig.offsetPaddingMultiplier ?? 1,
-                          )}
-                          options={[
-                            { value: "0.5", label: "0.5x" },
-                            { value: "1", label: "1.0x" },
-                            { value: "2", label: "2.0x" },
-                          ]}
-                          onChange={(v) => {
-                            const mult = parseFloat(v);
-                            applyOffsetLockUpdate(
-                              { offsetPaddingMultiplier: mult },
-                              {
-                                ...captionConfig,
-                                offsetPaddingMultiplier: mult,
-                              },
-                            );
-                          }}
-                        />
-
-                        <div className="p-2 rounded-md bg-amber-50 dark:bg-amber-950/30 text-[11px] text-amber-800 dark:text-amber-300 font-mono text-center">
-                          {t("captionFields.offsetCalculatedPreview", {
-                            value: lockedOffset,
-                          })}
-                        </div>
+                {/* Lock Offset Popover Button (Only for Inside Mode) */}
+                {isInside && (
+                  <ControlledPopover
+                    behavior="click"
+                    align="end"
+                    side="bottom"
+                    contentClassName="p-3 w-72 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 z-50"
+                    trigger={
+                      <button
+                        type="button"
+                        className={`p-1 rounded-md text-xs transition-colors flex items-center gap-1 ${
+                          captionConfig.offsetLockMode === "auto"
+                            ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 font-medium"
+                            : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        }`}
+                        title={t("captionFields.offsetLock")}
+                      >
+                        {captionConfig.offsetLockMode === "auto" ? (
+                          <Lock size={13} />
+                        ) : (
+                          <Unlock size={13} />
+                        )}
+                        <span className="text-[10px] font-mono">
+                          {captionConfig.offsetLockMode === "auto"
+                            ? `±${lockedOffset}px`
+                            : ""}
+                        </span>
+                      </button>
+                    }
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <Calculator size={14} className="text-amber-500" />
+                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                          {t("captionFields.offsetFormulaTitle")}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                </ControlledPopover>
+
+                      <div className="space-y-2">
+                        <SegmentedControl
+                          value={captionConfig.offsetLockMode || "none"}
+                          onChange={(val) => {
+                            const modeVal =
+                              val as SplicingCaptionOffsetLockMode;
+                            applyOffsetLockUpdate(
+                              { offsetLockMode: modeVal },
+                              { ...captionConfig, offsetLockMode: modeVal },
+                            );
+                          }}
+                          options={[
+                            {
+                              value: "none",
+                              label: t("captionFields.offsetLockNone"),
+                            },
+                            {
+                              value: "auto",
+                              label: t("captionFields.offsetLockAuto"),
+                            },
+                          ]}
+                        />
+                      </div>
+
+                      {captionConfig.offsetLockMode === "auto" && (
+                        <div className="space-y-2.5 pt-1">
+                          {/* Font size multiplier */}
+                          <SelectInput
+                            label={t("captionFields.offsetFontSizeMultiplier")}
+                            value={String(
+                              captionConfig.offsetFontSizeMultiplier ?? 1,
+                            )}
+                            options={[
+                              { value: "0.5", label: "0.5x" },
+                              { value: "1", label: "1.0x" },
+                              { value: "2", label: "2.0x" },
+                            ]}
+                            onChange={(v) => {
+                              const mult = parseFloat(v);
+                              applyOffsetLockUpdate(
+                                { offsetFontSizeMultiplier: mult },
+                                {
+                                  ...captionConfig,
+                                  offsetFontSizeMultiplier: mult,
+                                },
+                              );
+                            }}
+                          />
+
+                          {/* Padding Source */}
+                          <SelectInput
+                            label={t("captionFields.offsetPaddingSource")}
+                            value={captionConfig.offsetPaddingSource || "max"}
+                            options={[
+                              {
+                                value: "max",
+                                label: t("captionFields.offsetPaddingMax"),
+                              },
+                              {
+                                value: "sum",
+                                label: t("captionFields.offsetPaddingSum"),
+                              },
+                              {
+                                value: "min",
+                                label: t("captionFields.offsetPaddingMin"),
+                              },
+                            ]}
+                            onChange={(v) => {
+                              const src =
+                                v as SplicingCaptionOffsetPaddingSource;
+                              applyOffsetLockUpdate(
+                                { offsetPaddingSource: src },
+                                { ...captionConfig, offsetPaddingSource: src },
+                              );
+                            }}
+                          />
+
+                          {/* Padding Multiplier */}
+                          <SelectInput
+                            label={t("captionFields.offsetPaddingMultiplier")}
+                            value={String(
+                              captionConfig.offsetPaddingMultiplier ?? 1,
+                            )}
+                            options={[
+                              { value: "0.5", label: "0.5x" },
+                              { value: "1", label: "1.0x" },
+                              { value: "2", label: "2.0x" },
+                            ]}
+                            onChange={(v) => {
+                              const mult = parseFloat(v);
+                              applyOffsetLockUpdate(
+                                { offsetPaddingMultiplier: mult },
+                                {
+                                  ...captionConfig,
+                                  offsetPaddingMultiplier: mult,
+                                },
+                              );
+                            }}
+                          />
+
+                          <div className="p-2 rounded-md bg-amber-50 dark:bg-amber-950/30 text-[11px] text-amber-800 dark:text-amber-300 font-mono text-center">
+                            {t("captionFields.offsetCalculatedPreview", {
+                              value: lockedOffset,
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </ControlledPopover>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -480,7 +624,8 @@ export function CaptionSettingsAccordion({
                 />
               </div>
 
-              {captionConfig.position !== "center" && (
+              {/* Offset Controls: ONLY for Inside mode and non-center */}
+              {isInside && captionConfig.position !== "center" && (
                 <div className="grid grid-cols-2 gap-2 items-end">
                   <div className="relative">
                     <NumberInput
@@ -509,24 +654,24 @@ export function CaptionSettingsAccordion({
                 </div>
               )}
 
-              {/* Flips */}
-              <div className="pt-1 space-y-1.5">
+              {/* Rotate 180° (Invert text) */}
+              <div className="pt-1">
                 <label className="flex items-center justify-between py-1.5 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 cursor-pointer select-none">
                   <span className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <FlipHorizontal size={14} className="text-slate-400" />
-                    {t("captionFields.flipHorizontal")}
+                    <RotateCw size={14} className="text-slate-400" />
+                    {t("captionFields.rotate180")}
                   </span>
                   <button
                     type="button"
                     role="switch"
-                    aria-checked={captionConfig.flipHorizontal}
+                    aria-checked={captionConfig.rotate180}
                     onClick={() =>
                       onCaptionConfigChange({
-                        flipHorizontal: !captionConfig.flipHorizontal,
+                        rotate180: !captionConfig.rotate180,
                       })
                     }
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 ${
-                      captionConfig.flipHorizontal
+                      captionConfig.rotate180
                         ? "bg-amber-500"
                         : "bg-slate-300 dark:bg-slate-600"
                     }`}
@@ -534,38 +679,7 @@ export function CaptionSettingsAccordion({
                     <span
                       aria-hidden="true"
                       className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        captionConfig.flipHorizontal
-                          ? "translate-x-4"
-                          : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </label>
-
-                <label className="flex items-center justify-between py-1.5 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 cursor-pointer select-none">
-                  <span className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <FlipVertical size={14} className="text-slate-400" />
-                    {t("captionFields.flipVertical")}
-                  </span>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={captionConfig.flipVertical}
-                    onClick={() =>
-                      onCaptionConfigChange({
-                        flipVertical: !captionConfig.flipVertical,
-                      })
-                    }
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 ${
-                      captionConfig.flipVertical
-                        ? "bg-amber-500"
-                        : "bg-slate-300 dark:bg-slate-600"
-                    }`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        captionConfig.flipVertical
+                        captionConfig.rotate180
                           ? "translate-x-4"
                           : "translate-x-0"
                       }`}
