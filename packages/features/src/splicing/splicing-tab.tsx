@@ -278,6 +278,10 @@ export function SplicingTab({
   } = useSplicingStore((s) => s.image);
 
   const exportSettings = useSplicingStore((s) => s.exportSettings);
+  const captionConfig = useSplicingStore((s) => s.captionConfig);
+  const captionTexts = useSplicingStore((s) => s.captionTexts);
+  const setCaptionText = useSplicingStore((s) => s.setCaptionText);
+  const clearCaptionTexts = useSplicingStore((s) => s.clearCaptionTexts);
   const previewQualityPercent = useSplicingStore(
     (s) => s.previewQualityPercent,
   );
@@ -538,7 +542,12 @@ export function SplicingTab({
         }
       }
     },
-    [exportSettings.format, finalizePreviewQualityToast, pushPreviewQualityToast, t],
+    [
+      exportSettings.format,
+      finalizePreviewQualityToast,
+      pushPreviewQualityToast,
+      t,
+    ],
   );
 
   const handlePreviewNumberingProgress = useCallback(
@@ -636,7 +645,8 @@ export function SplicingTab({
     }
     setImages([]);
     setLayoutResult(null);
-  }, [images]);
+    clearCaptionTexts();
+  }, [images, clearCaptionTexts]);
   const exportTargetCount =
     exportSettings.exportMode === "single"
       ? 1
@@ -733,6 +743,9 @@ export function SplicingTab({
         previewInteractionMode={previewInteractionMode}
         previewQualityPercent={previewQualityPercent}
         previewShowImageNumber={previewShowImageNumber}
+        captionMode={captionConfig.mode}
+        captionTexts={captionTexts}
+        onCaptionTextChange={setCaptionText}
         onLayoutComputed={handleLayoutComputed}
         onPreviewRendered={handlePreviewRendered}
         onPreviewSourcesProgress={handlePreviewSourcesProgress}

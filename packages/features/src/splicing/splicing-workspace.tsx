@@ -1,9 +1,9 @@
 import React from "react";
 import { ImagePlus } from "lucide-react";
-
 import type {
   LayoutResult,
   SplicingCanvasStyle,
+  SplicingCaptionMode,
   SplicingImageItem,
   SplicingImageResize,
   SplicingImageStyle,
@@ -31,6 +31,9 @@ interface SplicingWorkspaceProps {
   previewInteractionMode: PreviewInteractionMode;
   previewQualityPercent: number;
   previewShowImageNumber: boolean;
+  captionMode?: SplicingCaptionMode;
+  captionTexts?: Record<string, string>;
+  onCaptionTextChange?: (id: string, text: string) => void;
   onLayoutComputed: (layout: LayoutResult | null) => void;
   onPreviewRendered: (imageCount: number) => void;
   onPreviewSourcesProgress: (payload: {
@@ -65,6 +68,9 @@ export function SplicingWorkspace({
   imageFitValue,
   imageApplyTo,
   previewInteractionMode,
+  captionMode,
+  captionTexts,
+  onCaptionTextChange,
   onLayoutComputed,
   onPreviewRendered,
   onPreviewSourcesProgress,
@@ -133,6 +139,9 @@ export function SplicingWorkspace({
             onRemove={onRemoveImage}
             onReorder={onReorderImage}
             onAddMore={onAddMore}
+            captionMode={captionMode}
+            captionTexts={captionTexts}
+            onCaptionTextChange={onCaptionTextChange}
             pinAddButtonRight
           />
         </div>

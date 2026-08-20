@@ -56,3 +56,43 @@ export interface SplicingImageStyle {
   borderColor: string
 }
 
+export type SplicingCaptionMode = "none" | "inside" | "outside"
+export type SplicingCaptionPosition = "top" | "bottom" | "left" | "right" | "center"
+export type SplicingCaptionAlignment = "start" | "center" | "end"
+
+export interface SplicingCaptionConfig {
+  mode: SplicingCaptionMode
+  fontFamily: string
+  fontSize: number
+  textColor: string
+  paddingV: number
+  paddingH: number
+  paddingLinked: boolean
+  containerColor: string
+  borderRadius: number
+  position: SplicingCaptionPosition
+  alignment: SplicingCaptionAlignment
+  offsetX: number
+  offsetY: number
+  flipHorizontal: boolean
+  flipVertical: boolean
+}
+
+export const DEFAULT_SPLICING_CAPTION_CONFIG: SplicingCaptionConfig = {
+  mode: "none",
+  fontFamily: "Inter",
+  fontSize: 24,
+  textColor: "#ffffff",
+  paddingV: 12,
+  paddingH: 12,
+  paddingLinked: true,
+  containerColor: "rgba(0, 0, 0, 0.6)",
+  borderRadius: 0,
+  position: "top",
+  alignment: "center",
+  offsetX: 0,
+  offsetY: 0,
+  flipHorizontal: false,
+  flipVertical: false,
+}
+

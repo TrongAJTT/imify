@@ -8,7 +8,11 @@ export type {
   SplicingExportFormat,
   SplicingLayoutConfig,
   SplicingCanvasStyle,
-  SplicingImageStyle
+  SplicingImageStyle,
+  SplicingCaptionMode,
+  SplicingCaptionPosition,
+  SplicingCaptionAlignment,
+  SplicingCaptionConfig
 } from "@imify/core"
 
 import type { FormatCodecOptions, SplicingExportFormat, SplicingExportMode } from "@imify/core"
@@ -40,8 +44,10 @@ export interface LayoutPlacement {
   imageIndex: number
   outerRect: LayoutRect
   contentRect: LayoutRect
+  captionRect?: LayoutRect
   sourceCropUv?: LayoutRect
 }
+
 
 export interface LayoutGroup {
   index: number

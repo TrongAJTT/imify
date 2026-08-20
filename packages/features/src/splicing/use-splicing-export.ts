@@ -119,6 +119,8 @@ export function useSplicingExport({
           config,
           {
             concurrency: exportSettings.concurrency,
+            captionConfig: store.captionConfig,
+            captionTexts: store.captionTexts,
             onProgress: ({ phase, completed, total, active, message }) => {
               const safeTotal = Math.max(1, total)
               const ratio =
@@ -144,7 +146,8 @@ export function useSplicingExport({
           const processed = calculateProcessedSize(img.originalWidth, img.originalHeight, store.image.resizeMode, store.image.fitValue, store.image.applyTo)
           return { width: processed.width, height: processed.height }
         })
-        const exportLayout = calculateLayout(imageSizes, layout, canvas, imgStyle, store.image.resizeMode, store.image.fitValue, store.image.applyTo)
+        const exportLayout = calculateLayout(imageSizes, layout, canvas, imgStyle, store.image.resizeMode, store.image.fitValue, store.image.applyTo, store.captionConfig)
+
 
         const pattern = exportSettings.fileNamePattern.trim() || SPLICING_NAMING_CONFIG.defaultPattern
         const now = new Date(exportTsMs)

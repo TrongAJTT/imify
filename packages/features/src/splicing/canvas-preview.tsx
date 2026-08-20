@@ -77,7 +77,10 @@ export function CanvasPreview({
   const previewShowImageNumber = useSplicingStore(
     (s) => s.previewShowImageNumber,
   );
+  const captionConfig = useSplicingStore((s) => s.captionConfig);
+  const captionTexts = useSplicingStore((s) => s.captionTexts);
   const [canvasWidth, setCanvasWidth] = useState(0);
+
   const [canvasHeight, setCanvasHeight] = useState(0);
   const { isResizing, handleResizeStart } = useCanvasResizer({
     containerRef,
@@ -326,7 +329,8 @@ export function CanvasPreview({
       imageStyle,
       imageResize,
       fitValue,
-      imageApplyTo
+      imageApplyTo,
+      captionConfig,
     );
 
     setLayoutResult(layoutResult);
@@ -369,6 +373,9 @@ export function CanvasPreview({
       previewScale * (zoom / 100),
       {
         showImageNumber: previewShowImageNumber && numberingReady,
+        captionConfig,
+        captionTexts,
+        imageIds: images.map((img) => img.id),
       },
     );
 
@@ -383,6 +390,9 @@ export function CanvasPreview({
     imageStyle,
     imageResize,
     fitValue,
+    imageApplyTo,
+    captionConfig,
+    captionTexts,
     containerHeight,
     zoom,
     previewShowImageNumber,

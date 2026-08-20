@@ -13,9 +13,11 @@ import type {
   BmpColorDepth,
   ResizeApplyTo,
   QuickExportFormat,
+  SplicingCaptionMode,
+  SplicingCaptionPosition,
+  SplicingCaptionAlignment,
 } from "@imify/core"
-
-
+import { DEFAULT_SPLICING_CAPTION_CONFIG } from "@imify/core"
 
 export type SplicingPresetViewMode = "select" | "workspace"
 
@@ -50,6 +52,21 @@ export interface SplicingPresetConfig {
   exportFileNamePattern: string
   previewQualityPercent: number
   previewShowImageNumber: boolean
+  captionMode?: SplicingCaptionMode
+  captionFontFamily?: string
+  captionFontSize?: number
+  captionTextColor?: string
+  captionPaddingV?: number
+  captionPaddingH?: number
+  captionPaddingLinked?: boolean
+  captionContainerColor?: string
+  captionBorderRadius?: number
+  captionPosition?: SplicingCaptionPosition
+  captionAlignment?: SplicingCaptionAlignment
+  captionOffsetX?: number
+  captionOffsetY?: number
+  captionFlipHorizontal?: boolean
+  captionFlipVertical?: boolean
 }
 
 export interface SavedSplicingPreset {
@@ -110,9 +127,25 @@ function createDefaultConfig(): SplicingPresetConfig {
     exportConcurrency: 2,
     exportFileNamePattern: "spliced-[Index]",
     previewQualityPercent: 20,
-    previewShowImageNumber: false
+    previewShowImageNumber: false,
+    captionMode: DEFAULT_SPLICING_CAPTION_CONFIG.mode,
+    captionFontFamily: DEFAULT_SPLICING_CAPTION_CONFIG.fontFamily,
+    captionFontSize: DEFAULT_SPLICING_CAPTION_CONFIG.fontSize,
+    captionTextColor: DEFAULT_SPLICING_CAPTION_CONFIG.textColor,
+    captionPaddingV: DEFAULT_SPLICING_CAPTION_CONFIG.paddingV,
+    captionPaddingH: DEFAULT_SPLICING_CAPTION_CONFIG.paddingH,
+    captionPaddingLinked: DEFAULT_SPLICING_CAPTION_CONFIG.paddingLinked,
+    captionContainerColor: DEFAULT_SPLICING_CAPTION_CONFIG.containerColor,
+    captionBorderRadius: DEFAULT_SPLICING_CAPTION_CONFIG.borderRadius,
+    captionPosition: DEFAULT_SPLICING_CAPTION_CONFIG.position,
+    captionAlignment: DEFAULT_SPLICING_CAPTION_CONFIG.alignment,
+    captionOffsetX: DEFAULT_SPLICING_CAPTION_CONFIG.offsetX,
+    captionOffsetY: DEFAULT_SPLICING_CAPTION_CONFIG.offsetY,
+    captionFlipHorizontal: DEFAULT_SPLICING_CAPTION_CONFIG.flipHorizontal,
+    captionFlipVertical: DEFAULT_SPLICING_CAPTION_CONFIG.flipVertical,
   }
 }
+
 
 export const useSplicingPresetStore = create<SplicingPresetStoreState>()(
   persist(

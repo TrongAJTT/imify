@@ -10,6 +10,8 @@ import {
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import type { SplicingPresetConfig } from "@imify/stores/stores/splicing-preset-store";
 
+import { DEFAULT_SPLICING_CAPTION_CONFIG } from "@imify/core";
+
 interface SplicingWorkspaceShellProps {
   workspace: React.ReactNode;
   onRootClick?: () => void;
@@ -25,6 +27,7 @@ function extractSplicingPresetConfig(
     canvas,
     image,
     exportSettings,
+    captionConfig,
     previewQualityPercent,
     previewShowImageNumber,
   } = splicingState;
@@ -36,7 +39,8 @@ function extractSplicingPresetConfig(
     flowMaxSize: layout?.flowMaxSize ?? 2000,
     flowSplitOverflow: layout?.flowSplitOverflow ?? false,
     alignment: layout?.alignment ?? "start",
-    imageAppearanceDirection: layout?.imageAppearanceDirection ?? "top_to_bottom",
+    imageAppearanceDirection:
+      layout?.imageAppearanceDirection ?? "top_to_bottom",
     canvasPadding: canvas?.padding ?? 0,
     mainSpacing: canvas?.mainSpacing ?? 0,
     crossSpacing: canvas?.crossSpacing ?? 0,
@@ -59,6 +63,40 @@ function extractSplicingPresetConfig(
     exportFileNamePattern: exportSettings.fileNamePattern,
     previewQualityPercent,
     previewShowImageNumber,
+    captionMode: captionConfig?.mode ?? DEFAULT_SPLICING_CAPTION_CONFIG.mode,
+    captionFontFamily:
+      captionConfig?.fontFamily ?? DEFAULT_SPLICING_CAPTION_CONFIG.fontFamily,
+    captionFontSize:
+      captionConfig?.fontSize ?? DEFAULT_SPLICING_CAPTION_CONFIG.fontSize,
+    captionTextColor:
+      captionConfig?.textColor ?? DEFAULT_SPLICING_CAPTION_CONFIG.textColor,
+    captionPaddingV:
+      captionConfig?.paddingV ?? DEFAULT_SPLICING_CAPTION_CONFIG.paddingV,
+    captionPaddingH:
+      captionConfig?.paddingH ?? DEFAULT_SPLICING_CAPTION_CONFIG.paddingH,
+    captionPaddingLinked:
+      captionConfig?.paddingLinked ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.paddingLinked,
+    captionContainerColor:
+      captionConfig?.containerColor ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.containerColor,
+    captionBorderRadius:
+      captionConfig?.borderRadius ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.borderRadius,
+    captionPosition:
+      captionConfig?.position ?? DEFAULT_SPLICING_CAPTION_CONFIG.position,
+    captionAlignment:
+      captionConfig?.alignment ?? DEFAULT_SPLICING_CAPTION_CONFIG.alignment,
+    captionOffsetX:
+      captionConfig?.offsetX ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetX,
+    captionOffsetY:
+      captionConfig?.offsetY ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetY,
+    captionFlipHorizontal:
+      captionConfig?.flipHorizontal ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.flipHorizontal,
+    captionFlipVertical:
+      captionConfig?.flipVertical ??
+      DEFAULT_SPLICING_CAPTION_CONFIG.flipVertical,
   };
 }
 
@@ -72,7 +110,8 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
       flowMaxSize: config.flowMaxSize ?? 2000,
       flowSplitOverflow: config.flowSplitOverflow ?? false,
       alignment: config.alignment ?? "start",
-      imageAppearanceDirection: config.imageAppearanceDirection ?? "top_to_bottom",
+      imageAppearanceDirection:
+        config.imageAppearanceDirection ?? "top_to_bottom",
     },
     canvas: {
       padding: config.canvasPadding ?? 0,
@@ -92,6 +131,40 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
       borderRadius: config.imageBorderRadius ?? 0,
       borderWidth: config.imageBorderWidth ?? 0,
       borderColor: config.imageBorderColor ?? "#000000",
+    },
+    captionConfig: {
+      mode: config.captionMode ?? DEFAULT_SPLICING_CAPTION_CONFIG.mode,
+      fontFamily:
+        config.captionFontFamily ?? DEFAULT_SPLICING_CAPTION_CONFIG.fontFamily,
+      fontSize:
+        config.captionFontSize ?? DEFAULT_SPLICING_CAPTION_CONFIG.fontSize,
+      textColor:
+        config.captionTextColor ?? DEFAULT_SPLICING_CAPTION_CONFIG.textColor,
+      paddingV:
+        config.captionPaddingV ?? DEFAULT_SPLICING_CAPTION_CONFIG.paddingV,
+      paddingH:
+        config.captionPaddingH ?? DEFAULT_SPLICING_CAPTION_CONFIG.paddingH,
+      paddingLinked:
+        config.captionPaddingLinked ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.paddingLinked,
+      containerColor:
+        config.captionContainerColor ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.containerColor,
+      borderRadius:
+        config.captionBorderRadius ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.borderRadius,
+      position:
+        config.captionPosition ?? DEFAULT_SPLICING_CAPTION_CONFIG.position,
+      alignment:
+        config.captionAlignment ?? DEFAULT_SPLICING_CAPTION_CONFIG.alignment,
+      offsetX: config.captionOffsetX ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetX,
+      offsetY: config.captionOffsetY ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetY,
+      flipHorizontal:
+        config.captionFlipHorizontal ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.flipHorizontal,
+      flipVertical:
+        config.captionFlipVertical ??
+        DEFAULT_SPLICING_CAPTION_CONFIG.flipVertical,
     },
     exportSettings: {
       format: (config.exportFormat as any) ?? "png",
