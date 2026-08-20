@@ -158,5 +158,12 @@
     "successDesc": "Xóa cache thành công, tiến hành quay lại trang chủ để cập nhật.",
     "returnHome": "Quay lại trang chủ ({{seconds}}s)",
     "returnHomeNow": "Quay lại trang chủ ngay"
+  },
+  "importProgressDialog": {
+    "title": "Đang nhập dữ liệu",
+    "subtitle": "Vui lòng chờ trong khi các tệp đang được xử lý...",
+    "indeterminateSubtitle": "Đang chuẩn bị tệp, vui lòng chờ...",
+    "progressCount": "Đang xử lý {{completed}} / {{total}} ảnh ({{percent}}%)",
+    "processingFile": "Đang xử lý: {{name}}"
   }
 }

@@ -158,5 +158,12 @@
     "successDesc": "Cache cleared successfully. Returning to homepage to complete the update.",
     "returnHome": "Back to Home ({{seconds}}s)",
     "returnHomeNow": "Back to Home Now"
+  },
+  "importProgressDialog": {
+    "title": "Importing Images",
+    "subtitle": "Please wait while files are being processed...",
+    "indeterminateSubtitle": "Preparing files, please wait...",
+    "progressCount": "Processing {{completed}} of {{total}} images ({{percent}}%)",
+    "processingFile": "Processing: {{name}}"
   }
 }

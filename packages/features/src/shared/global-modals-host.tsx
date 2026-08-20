@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
-import { useConfirmationDialogStore, useToastStore } from "@imify/stores";
+import { useConfirmationDialogStore, useToastStore, useImportProgressStore } from "@imify/stores";
 import { AlertDialog, ConfirmDialog, RenameInputDialog, ToastContainer } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import { BatchDownloadConfirmDialog } from "./download-confirm-dialog";
 import { OOMWarningDialog } from "../processor/batch/oom-warning-dialog";
 import { SplicingHeavyPreviewQualityDialog } from "../splicing/splicing-heavy-preview-quality-dialog";
 import { WhatsNewUpdateNotificationGate } from "../workspace-chrome/whats-new-update-notification-gate";
+import { ImportProgressDialog } from "./import-progress-dialog";
 
 export function GlobalModalsHost() {
   const { t } = useTranslation("common");
@@ -51,6 +52,8 @@ export function GlobalModalsHost() {
   const resolveRenameInput = useConfirmationDialogStore(
     (state) => state.resolveRenameInput,
   );
+
+  const importProgress = useImportProgressStore();
 
   return (
     <>
@@ -122,8 +125,19 @@ export function GlobalModalsHost() {
       {/* 5. Update Notification & Changelogs Gate */}
       <WhatsNewUpdateNotificationGate />
 
-      {/* 6. Global Unified Toast Notifications */}
+      {/* 6. Global Import Progress Dialog */}
+      <ImportProgressDialog
+        isOpen={importProgress.isOpen}
+        title={importProgress.title}
+        subtitle={importProgress.subtitle}
+        totalCount={importProgress.totalCount}
+        processedCount={importProgress.processedCount}
+        currentFileName={importProgress.currentFileName}
+      />
+
+      {/* 7. Global Unified Toast Notifications */}
       <ToastContainer toasts={toasts} onRemove={dismissToast} />
     </>
   );
 }
+

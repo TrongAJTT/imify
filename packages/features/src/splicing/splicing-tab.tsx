@@ -19,6 +19,9 @@ import {
   toast,
   confirmHeavyPreviewWarning,
   promptRenameInput,
+  openImportProgress,
+  updateImportProgress,
+  closeImportProgress,
 } from "@imify/stores";
 import type {
   SplicingImageItem,
@@ -233,13 +236,6 @@ export function SplicingTab({
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imagesCountRef = useRef(0);
-  const pendingRenderRef = useRef<{
-    toastId: string;
-    expectedCount: number;
-    requiresNumbering: boolean;
-    previewDone: boolean;
-    numberingDone: boolean;
-  } | null>(null);
   const previewQualityRenderRef = useRef<{
     toastId: string;
     expectedCount: number;
@@ -421,135 +417,55 @@ export function SplicingTab({
     imagesCountRef.current = images.length;
   }, [images.length]);
 
-  const pushImportToast = useCallback((payload: ConversionProgressPayload) => {
-    toast.progress(payload);
-  }, []);
-
   const addFiles = useCallback(
     async (files: File[]) => {
       const imageFiles = files.filter((f) => isCommonImageFile(f));
       if (imageFiles.length === 0) return;
 
-      const shouldShowProgress = true;
-      const toastId = `splicing_import_${Date.now()}`;
-      if (shouldShowProgress) {
-        pushImportToast({
-          id: toastId,
-          fileName: t("toasts.importing", { count: imageFiles.length }),
-          targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
-            .targetFormat as any,
-          status: "processing",
-          percent: 5,
-          message: t("toasts.importPrep"),
-        });
-      }
+      openImportProgress({ totalCount: imageFiles.length });
 
-      const newItems: SplicingImageItem[] = [];
-      let processedCount = 0;
-      for (let i = 0; i < imageFiles.length; i++) {
-        const rawFile = imageFiles[i];
-        try {
-          const file = await sanitizeFile(rawFile);
-          const thumb = await generateThumbnail(file);
-          newItems.push({
-            id: `splice_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-            file,
-            thumbnailUrl: thumb.url,
-            originalWidth: thumb.width,
-            originalHeight: thumb.height,
-          });
-        } catch {
-          // Skip invalid files
+      try {
+        const newItems: SplicingImageItem[] = [];
+        for (let i = 0; i < imageFiles.length; i++) {
+          const rawFile = imageFiles[i];
+          try {
+            const file = await sanitizeFile(rawFile);
+            const thumb = await generateThumbnail(file);
+            newItems.push({
+              id: `splice_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+              file,
+              thumbnailUrl: thumb.url,
+              originalWidth: thumb.width,
+              originalHeight: thumb.height,
+            });
+          } catch {
+            // Skip invalid files
+          }
+
+          updateImportProgress(i + 1, imageFiles.length, rawFile.name);
         }
-        processedCount = i + 1;
 
-        if (shouldShowProgress) {
-          const percent = Math.min(
-            78,
-            5 + Math.round((processedCount / imageFiles.length) * 73),
-          );
-          pushImportToast({
-            id: toastId,
-            fileName: t("toasts.importing", { count: imageFiles.length }),
-            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
-              .targetFormat as any,
-            status: "processing",
-            percent,
-            message: t("toasts.importThumb", {
-              completed: processedCount,
-              total: imageFiles.length,
-            }),
-          });
+        if (newItems.length === 0) {
+          toast.error(t("toasts.importFailed"));
+          return;
         }
-      }
 
-      if (newItems.length === 0) {
-        if (shouldShowProgress) {
-          toast.progress({
-            id: toastId,
-            fileName: t("toasts.importFailed"),
-            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
-              .targetFormat as any,
-            status: "error",
-            percent: 100,
-            message: t("toasts.importFailedDesc"),
-          });
+        setImages((prev) => [...prev, ...newItems]);
+        toast.success(
+          t("toasts.importCompleteDesc", { count: newItems.length }) ||
+            `Imported ${newItems.length} images`,
+        );
+
+        // Automatically open the mobile configuration bottom sheet when images are loaded
+        if (typeof window !== "undefined") {
+          const { useWorkspaceHeaderStore } = require("@imify/stores");
+          useWorkspaceHeaderStore.getState().setIsMobileSidebarOpen(true);
         }
-        return;
-      }
-
-      if (shouldShowProgress) {
-        toast.progress({
-          id: toastId,
-          fileName: t("toasts.importing", { count: imageFiles.length }),
-          targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
-            .targetFormat as any,
-          status: "processing",
-          percent: 85,
-          message: t("toasts.importRender"),
-        });
-      }
-
-      const expectedCount = imagesCountRef.current + newItems.length;
-      if (shouldShowProgress) {
-        pendingRenderRef.current = {
-          toastId,
-          expectedCount,
-          requiresNumbering: previewShowImageNumber,
-          previewDone: false,
-          numberingDone: !previewShowImageNumber,
-        };
-      }
-
-      setImages((prev) => [...prev, ...newItems]);
-
-      // Bug fixed: Automatically open the mobile configuration bottom sheet when images are loaded
-      if (typeof window !== "undefined") {
-        const { useWorkspaceHeaderStore } = require("@imify/stores");
-        useWorkspaceHeaderStore.getState().setIsMobileSidebarOpen(true);
-      }
-
-      if (!shouldShowProgress) {
-        pendingRenderRef.current = null;
+      } finally {
+        closeImportProgress();
       }
     },
-    [exportSettings.format, previewShowImageNumber, t],
-  );
-
-  const finalizeImportToast = useCallback(
-    (toastId: string, imageCount: number) => {
-      pendingRenderRef.current = null;
-      toast.progress({
-        id: toastId,
-        fileName: t("toasts.importComplete"),
-        targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
-          .targetFormat as any,
-        status: "success",
-        percent: 100,
-        message: t("toasts.importCompleteDesc", { count: imageCount }),
-      });
-    },
-    [exportSettings.format, t],
+    [t],
   );
 
   const finalizePreviewQualityToast = useCallback(
@@ -599,26 +515,6 @@ export function SplicingTab({
 
   const handlePreviewRendered = useCallback(
     (imageCount: number) => {
-      const importPending = pendingRenderRef.current;
-      if (importPending && imageCount >= importPending.expectedCount) {
-        importPending.previewDone = true;
-        if (!importPending.requiresNumbering || importPending.numberingDone) {
-          finalizeImportToast(importPending.toastId, imageCount);
-        } else {
-          pushImportToast({
-            id: importPending.toastId,
-            fileName: t("toasts.importing", {
-              count: importPending.expectedCount,
-            }),
-            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
-              .targetFormat as any,
-            status: "processing",
-            percent: 90,
-            message: t("toasts.importNumbers"),
-          });
-        }
-      }
-
       const qualityPending = previewQualityRenderRef.current;
       if (qualityPending && imageCount >= qualityPending.expectedCount) {
         qualityPending.previewDone = true;
@@ -642,14 +538,7 @@ export function SplicingTab({
         }
       }
     },
-    [
-      exportSettings.format,
-      finalizeImportToast,
-      finalizePreviewQualityToast,
-      pushImportToast,
-      pushPreviewQualityToast,
-      t,
-    ],
+    [exportSettings.format, finalizePreviewQualityToast, pushPreviewQualityToast, t],
   );
 
   const handlePreviewNumberingProgress = useCallback(
@@ -658,37 +547,6 @@ export function SplicingTab({
       completed: number;
       total: number;
     }) => {
-      const importPending = pendingRenderRef.current;
-      if (importPending?.requiresNumbering) {
-        if (payload.status === "processing") {
-          const ratio =
-            payload.total > 0 ? payload.completed / payload.total : 0;
-          const percent = Math.min(99, 90 + Math.round(ratio * 9));
-          pushImportToast({
-            id: importPending.toastId,
-            fileName: t("toasts.importing", {
-              count: importPending.expectedCount,
-            }),
-            targetFormat: mapQuickExportToEngineConfig(exportSettings.format)
-              .targetFormat as any,
-            status: "processing",
-            percent,
-            message: t("toasts.importNumbersProg", {
-              completed: payload.completed,
-              total: payload.total,
-            }),
-          });
-        } else {
-          importPending.numberingDone = true;
-          if (importPending.previewDone) {
-            finalizeImportToast(
-              importPending.toastId,
-              importPending.expectedCount,
-            );
-          }
-        }
-      }
-
       const qualityPending = previewQualityRenderRef.current;
       if (qualityPending?.requiresNumbering) {
         if (payload.status === "processing") {
@@ -722,10 +580,9 @@ export function SplicingTab({
     },
     [
       exportSettings.format,
-      finalizeImportToast,
       finalizePreviewQualityToast,
-      pushImportToast,
       pushPreviewQualityToast,
+      t,
     ],
   );
 

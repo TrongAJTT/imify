@@ -7,7 +7,12 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import { usePdfStudioStore } from "@imify/stores";
+import {
+  usePdfStudioStore,
+  toast,
+  openImportProgress,
+  closeImportProgress,
+} from "@imify/stores";
 import { useTranslation } from "@imify/i18n";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 import { isCommonImageFile } from "../shared/image-file-utils";
@@ -69,26 +74,38 @@ export function SharedPdfStudioPage({
     };
   }, [cleanupImagePreviews]);
 
-  const handleLoadImageFiles = useCallback((files: File[]) => {
-    setMode("images-to-pdf");
-    const imageFiles = files.filter(isCommonImageFile);
-    if (imageFiles.length === 0) return;
+  const handleLoadImageFiles = useCallback(
+    (files: File[]) => {
+      const imageFiles = files.filter(isCommonImageFile);
+      if (imageFiles.length === 0) return;
 
-    const newItems: PdfStudioImageItem[] = imageFiles.map((file) => {
-      const url = URL.createObjectURL(file);
-      previewUrlsRef.current.push(url);
+      openImportProgress({ totalCount: imageFiles.length });
+      try {
+        setMode("images-to-pdf");
+        const newItems: PdfStudioImageItem[] = imageFiles.map((file) => {
+          const url = URL.createObjectURL(file);
+          previewUrlsRef.current.push(url);
 
-      return {
-        id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        file,
-        previewUrl: url,
-        name: file.name,
-        size: file.size,
-      };
-    });
+          return {
+            id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            file,
+            previewUrl: url,
+            name: file.name,
+            size: file.size,
+          };
+        });
 
-    setImageItems((prev) => [...prev, ...newItems]);
-  }, []);
+        setImageItems((prev) => [...prev, ...newItems]);
+        toast.success(
+          t("common:countFiles", { count: newItems.length }) ||
+            `Imported ${newItems.length} files`,
+        );
+      } finally {
+        closeImportProgress();
+      }
+    },
+    [setMode, t],
+  );
 
   const handleLoadPdfFile = useCallback((file: File) => {
     setMode("pdf-to-images");
