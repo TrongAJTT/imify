@@ -19,6 +19,7 @@ import {
 } from "../group-geometry";
 import { flattenPoints } from "../vector-math";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
+import { isShortcutEventFromEditableTarget } from "@imify/stores/shortcuts";
 import { useShortcutActions } from "../use-shortcut-actions";
 import { useTransformGuides, type RectBounds } from "../use-transform-guides";
 import {
@@ -60,11 +61,13 @@ interface ManualEditorWorkspaceProps {
   onClearSelection: () => void;
   onUpdateLayer: (id: string, partial: Partial<VectorLayer>) => void;
   onUpdateTextLayer?: (id: string, partial: Partial<TextLayer>) => void;
+  onToggleGroupForSelected?: () => void;
   onSaveTemplate: (destination: "fill" | "list") => Promise<void>;
   isSavingTemplate: boolean;
   visualHelp?: ManualEditorVisualHelp;
   showHeader?: boolean;
 }
+
 
 // When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
 // Matches DiffChecker's multiplicative approach.
@@ -86,6 +89,7 @@ export function ManualEditorWorkspace({
   onClearSelection,
   onUpdateLayer,
   onUpdateTextLayer,
+  onToggleGroupForSelected,
   onSaveTemplate,
   isSavingTemplate,
   visualHelp,
@@ -138,6 +142,82 @@ export function ManualEditorWorkspace({
     rotationTolerance: 4,
     positionTolerance: 8,
   });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isShortcutEventFromEditableTarget(e)) return;
+
+      // Group / Ungroup shortcut: Ctrl+G / Cmd+G
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === "g" || e.key === "G") &&
+        !e.shiftKey &&
+        !e.altKey
+      ) {
+        if (selectedLayerIds.length > 0 && onToggleGroupForSelected) {
+          e.preventDefault();
+          onToggleGroupForSelected();
+          return;
+        }
+      }
+
+      // Arrow keys movement
+      const isArrowKey =
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight";
+
+      if (!isArrowKey) return;
+
+      const step = e.shiftKey ? 10 : 1;
+      let dx = 0;
+      let dy = 0;
+      if (e.key === "ArrowLeft") dx = -step;
+      else if (e.key === "ArrowRight") dx = step;
+      else if (e.key === "ArrowUp") dy = -step;
+      else if (e.key === "ArrowDown") dy = step;
+
+      // 1. If a text layer is selected
+      if (selectedTextLayerId && onUpdateTextLayer) {
+        const textLayer = textLayers.find((l) => l.id === selectedTextLayerId);
+        if (textLayer && !textLayer.locked) {
+          e.preventDefault();
+          onUpdateTextLayer(selectedTextLayerId, {
+            x: Math.round((textLayer.x + dx) * 100) / 100,
+            y: Math.round((textLayer.y + dy) * 100) / 100,
+          });
+          return;
+        }
+      }
+
+      // 2. If shape layers are selected
+      if (selectedLayerIds.length > 0) {
+        e.preventDefault();
+        for (const layerId of selectedLayerIds) {
+          const layer = layers.find((l) => l.id === layerId);
+          if (layer && !layer.locked) {
+            onUpdateLayer(layerId, {
+              x: Math.round((layer.x + dx) * 100) / 100,
+              y: Math.round((layer.y + dy) * 100) / 100,
+            });
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    layers,
+    onToggleGroupForSelected,
+    onUpdateLayer,
+    onUpdateTextLayer,
+    selectedLayerIds,
+    selectedTextLayerId,
+    textLayers,
+  ]);
+
 
   const clampPreviewZoom = useCallback((value: number) => {
     return Math.max(
@@ -410,9 +490,19 @@ export function ManualEditorWorkspace({
         y: (node.y() - offsetY) / renderScale,
       };
       const movingBounds = getBoundsFromPoints(toWorldLayerPoints(draftLayer));
-      const candidateBounds = layers
-        .filter((candidate) => candidate.id !== layerId && candidate.visible)
-        .map((candidate) => getBoundsFromPoints(toWorldLayerPoints(candidate)));
+      const candidateBounds: RectBounds[] = [
+        ...layers
+          .filter((candidate) => candidate.id !== layerId && candidate.visible)
+          .map((candidate) => getBoundsFromPoints(toWorldLayerPoints(candidate))),
+        ...textLayers
+          .filter((candidate) => candidate.visible)
+          .map((candidate) => ({
+            x: candidate.x,
+            y: candidate.y,
+            width: candidate.width,
+            height: candidate.height,
+          })),
+      ];
       const { snappedRect, guides } = snapRectPosition({
         movingRect: movingBounds,
         candidateRects: candidateBounds,
@@ -443,12 +533,76 @@ export function ManualEditorWorkspace({
       canvasHeight,
       canvasWidth,
       layers,
+      textLayers,
       offsetX,
       offsetY,
       renderScale,
       snapRectPosition,
     ],
   );
+
+  const handleTextLayerDragMove = useCallback(
+    (textLayerId: string, e: Konva.KonvaEventObject<DragEvent>) => {
+      const node = e.target;
+      const textLayer = textLayers.find((candidate) => candidate.id === textLayerId);
+      if (!textLayer) return;
+      const movingBounds: RectBounds = {
+        x: (node.x() - offsetX) / renderScale,
+        y: (node.y() - offsetY) / renderScale,
+        width: textLayer.width,
+        height: textLayer.height,
+      };
+      const candidateBounds: RectBounds[] = [
+        ...layers
+          .filter((candidate) => candidate.visible)
+          .map((candidate) => getBoundsFromPoints(toWorldLayerPoints(candidate))),
+        ...textLayers
+          .filter((candidate) => candidate.id !== textLayerId && candidate.visible)
+          .map((candidate) => ({
+            x: candidate.x,
+            y: candidate.y,
+            width: candidate.width,
+            height: candidate.height,
+          })),
+      ];
+      const { snappedRect, guides } = snapRectPosition({
+        movingRect: movingBounds,
+        candidateRects: candidateBounds,
+        canvasRect: {
+          x: 0,
+          y: 0,
+          width: canvasWidth,
+          height: canvasHeight,
+        } as RectBounds,
+      });
+      const deltaX = snappedRect.x - movingBounds.x;
+      const deltaY = snappedRect.y - movingBounds.y;
+      if (Math.abs(deltaX) > 0.001 || Math.abs(deltaY) > 0.001) {
+        node.x(node.x() + deltaX * renderScale);
+        node.y(node.y() + deltaY * renderScale);
+      }
+      const stageGuides = guides.map((guide) => {
+        if (guide.orientation === "vertical") {
+          const x = offsetX + guide.value * renderScale;
+          return [x, offsetY, x, offsetY + canvasHeight * renderScale];
+        }
+        const y = offsetY + guide.value * renderScale;
+        return [offsetX, y, offsetX + canvasWidth * renderScale, y];
+      });
+      setPositionGuideLines(stageGuides);
+    },
+    [
+      canvasHeight,
+      canvasWidth,
+      layers,
+      textLayers,
+      offsetX,
+      offsetY,
+      renderScale,
+      snapRectPosition,
+    ],
+  );
+
 
   const handleTransform = useCallback(
     (e: Konva.KonvaEventObject<Event>) => {
@@ -812,6 +966,7 @@ export function ManualEditorWorkspace({
                     setRotationGuideLine(null);
                     setCursor("grabbing");
                   }}
+                  onDragMove={(e) => handleTextLayerDragMove(tLayer.id, e)}
                   onDragEnd={(e) => handleTextLayerDragEnd(tLayer.id, e)}
                   onTransformStart={() => {
                     setPositionGuideLines([]);

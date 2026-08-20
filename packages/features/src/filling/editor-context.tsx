@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useState, type ReactNode } from "react"
 import type { LayerGroup, TextLayer, VectorLayer } from "./types"
 import { regenerateLayerShapePoints } from "./shape-generators"
+import { toggleGroupForSelectedLayers } from "./group-management"
 
 interface EditorContextValue {
   editorLayers: VectorLayer[]
@@ -17,12 +18,14 @@ interface EditorContextValue {
   clearSelectedLayers: () => void
   updateLayer: (id: string, partial: Partial<VectorLayer>) => void
   updateTextLayer: (id: string, partial: Partial<TextLayer>) => void
+  toggleGroupForSelected: () => void
   editorGroups: LayerGroup[]
   setEditorGroups: (groups: LayerGroup[] | ((prev: LayerGroup[]) => LayerGroup[])) => void
   canvasWidth: number
   canvasHeight: number
   setCanvasSize: (width: number, height: number) => void
 }
+
 
 const EditorContext = createContext<EditorContextValue | null>(null)
 
@@ -106,6 +109,16 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     )
   }, [])
 
+  const toggleGroupForSelected = useCallback(() => {
+    const { nextLayers, nextGroups } = toggleGroupForSelectedLayers({
+      layers: editorLayers,
+      groups: editorGroups,
+      selectedLayerIds,
+    })
+    setEditorLayers(nextLayers)
+    setEditorGroups(nextGroups)
+  }, [editorLayers, editorGroups, selectedLayerIds])
+
   const setCanvasSize = useCallback((width: number, height: number) => {
     setCanvasWidth(Math.max(1, Math.round(width)))
     setCanvasHeight(Math.max(1, Math.round(height)))
@@ -128,6 +141,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         clearSelectedLayers,
         updateLayer,
         updateTextLayer,
+        toggleGroupForSelected,
         editorGroups,
         setEditorGroups,
         canvasWidth,
@@ -155,12 +169,14 @@ const NOOP_CONTEXT: EditorContextValue = {
   clearSelectedLayers: () => {},
   updateLayer: () => {},
   updateTextLayer: () => {},
+  toggleGroupForSelected: () => {},
   editorGroups: [],
   setEditorGroups: () => {},
   canvasWidth: 1920,
   canvasHeight: 1080,
   setCanvasSize: () => {},
 }
+
 
 export function useEditorContext(): EditorContextValue {
   const ctx = useContext(EditorContext)

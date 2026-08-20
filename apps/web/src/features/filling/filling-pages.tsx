@@ -15,7 +15,9 @@ import type {
   TextLayer,
 } from "@imify/features/filling/types";
 import { regenerateLayerShapePoints } from "@imify/features/filling/shape-generators";
+import { toggleGroupForSelectedLayers } from "@imify/features/filling/group-management";
 import { FillWorkspace } from "@imify/features/filling/fill/workspace";
+
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
 import {
   FillingOverviewSidebar,
@@ -619,7 +621,17 @@ export function FillingFlowPage({
               }),
             );
           }}
+          onToggleGroupForSelected={() => {
+            const { nextLayers, nextGroups } = toggleGroupForSelectedLayers({
+              layers: editorLayers,
+              groups: editorGroups,
+              selectedLayerIds: selectedEditorLayerIds,
+            });
+            setEditorLayers(nextLayers);
+            setEditorGroups(nextGroups);
+          }}
           onSaveTemplate={async (destination) => {
+
             if (isSavingTemplate) return;
             setIsSavingTemplate(true);
             try {

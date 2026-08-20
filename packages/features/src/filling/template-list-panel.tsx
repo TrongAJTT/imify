@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   Download,
   Edit,
-  Edit3,
+  Tag,
   LayoutGrid,
   Pin,
   PinOff,
@@ -377,7 +377,7 @@ function FillingTemplateCard({
           />
           <ActionIconButton
             title={t("templateList.renameTemplateTooltip")}
-            icon={<Edit3 size={13} />}
+            icon={<Tag size={13} />}
             onClick={() => onRenameTemplate(template)}
           />
           <ActionIconButton
@@ -501,6 +501,48 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
           }
         />
       ))}
+      {template.textLayers?.slice(0, 8).map((tLayer) => {
+        const cx = originX + (tLayer.x + tLayer.width / 2) * scale;
+        const cy = originY + (tLayer.y + tLayer.height / 2) * scale;
+        const w = tLayer.width * scale;
+        const h = tLayer.height * scale;
+        return (
+          <g
+            key={tLayer.id}
+            transform={
+              tLayer.rotation !== 0
+                ? `rotate(${tLayer.rotation} ${cx} ${cy})`
+                : undefined
+            }
+          >
+            <rect
+              x={originX + tLayer.x * scale}
+              y={originY + tLayer.y * scale}
+              width={w}
+              height={h}
+              fill="currentColor"
+              fillOpacity={0.15}
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeDasharray="3 2"
+              rx={2}
+            />
+            <text
+              x={cx}
+              y={cy}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={Math.max(6, Math.min(10, h * 0.45))}
+              fill="currentColor"
+              opacity={0.7}
+              fontWeight="600"
+              fontFamily="sans-serif"
+            >
+              {tLayer.name || "Text"}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }

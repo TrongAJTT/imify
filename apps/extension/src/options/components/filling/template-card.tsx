@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from "react"
 import { Edit, Pin, PinOff, Trash2 } from "lucide-react"
 
 import type { FillingTemplate } from "@imify/features/filling/types"
+import { resolveLayerShapePoints } from "@imify/features/filling/shape-generators"
 import { templateStorage } from "@imify/features/filling/template-storage"
+
 import { useFillingStore } from "@imify/stores/stores/filling-store"
 import { confirmDialog } from "@imify/stores"
 
@@ -166,12 +168,14 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
   const scaleX = 240 / template.canvasWidth
   const scaleY = 135 / template.canvasHeight
   const scale = Math.min(scaleX, scaleY) * 0.85
+  const originX = (240 - template.canvasWidth * scale) / 2
+  const originY = (135 - template.canvasHeight * scale) / 2
 
   return (
     <svg width="240" height="135" viewBox="0 0 240 135" className="text-slate-300 dark:text-slate-600">
       <rect
-        x={(240 - template.canvasWidth * scale) / 2}
-        y={(135 - template.canvasHeight * scale) / 2}
+        x={originX}
+        y={originY}
         width={template.canvasWidth * scale}
         height={template.canvasHeight * scale}
         fill="none"
@@ -181,20 +185,67 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
         rx="2"
       />
       {template.layers.slice(0, 12).map((layer) => (
-        <rect
+        <polygon
           key={layer.id}
-          x={(240 - template.canvasWidth * scale) / 2 + layer.x * scale}
-          y={(135 - template.canvasHeight * scale) / 2 + layer.y * scale}
-          width={layer.width * scale}
-          height={layer.height * scale}
+          points={resolveLayerShapePoints(layer)
+            .map(
+              (point) =>
+                `${originX + (layer.x + point.x) * scale},${originY + (layer.y + point.y) * scale}`
+            )
+            .join(" ")}
           fill="currentColor"
           opacity={0.3}
-          rx="1"
+          transform={
+            layer.rotation !== 0
+              ? `rotate(${layer.rotation} ${originX + (layer.x + layer.width / 2) * scale} ${originY + (layer.y + layer.height / 2) * scale})`
+              : undefined
+          }
         />
       ))}
+      {template.textLayers?.slice(0, 8).map((tLayer) => {
+        const cx = originX + (tLayer.x + tLayer.width / 2) * scale
+        const cy = originY + (tLayer.y + tLayer.height / 2) * scale
+        const w = tLayer.width * scale
+        const h = tLayer.height * scale
+        return (
+          <g
+            key={tLayer.id}
+            transform={
+              tLayer.rotation !== 0 ? `rotate(${tLayer.rotation} ${cx} ${cy})` : undefined
+            }
+          >
+            <rect
+              x={originX + tLayer.x * scale}
+              y={originY + tLayer.y * scale}
+              width={w}
+              height={h}
+              fill="currentColor"
+              fillOpacity={0.15}
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeDasharray="3 2"
+              rx={2}
+            />
+            <text
+              x={cx}
+              y={cy}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={Math.max(6, Math.min(10, h * 0.45))}
+              fill="currentColor"
+              opacity={0.7}
+              fontWeight="600"
+              fontFamily="sans-serif"
+            >
+              {tLayer.name || "Text"}
+            </text>
+          </g>
+        )
+      })}
     </svg>
   )
 }
+
 
 function formatRelativeTime(timestamp: number): string {
   const diff = Date.now() - timestamp

@@ -66,6 +66,7 @@ export function FillingTab() {
     clearSelectedLayers,
     updateLayer,
     updateTextLayer,
+    toggleGroupForSelected,
     editorGroups,
     setEditorGroups,
     canvasWidth,
@@ -73,6 +74,7 @@ export function FillingTab() {
     setCanvasSize,
   } =
     useEditorContext()
+
 
   const loadTemplates = useCallback(async () => {
     const all = await templateStorage.getAll()
@@ -206,9 +208,11 @@ export function FillingTab() {
           onClearSelection={clearSelectedLayers}
           onUpdateLayer={updateLayer}
           onUpdateTextLayer={updateTextLayer}
+          onToggleGroupForSelected={toggleGroupForSelected}
           onSaveTemplate={handleSaveTemplate}
           isSavingTemplate={isSavingTemplate}
         />
+
       )}
 
 
