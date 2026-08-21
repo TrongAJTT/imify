@@ -452,6 +452,75 @@ function createCanvasGradient(
   return gradient
 }
 
+function drawRoundedRectPath(
+  ctx: OffscreenCanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+): void {
+  const r = Math.max(0, Math.min(radius, width / 2, height / 2))
+  ctx.beginPath()
+  if (r <= 0) {
+    ctx.rect(x, y, width, height)
+    return
+  }
+  if (typeof ctx.roundRect === "function") {
+    ctx.roundRect(x, y, width, height, r)
+    return
+  }
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + width - r, y)
+  ctx.arcTo(x + width, y, x + width, y + r, r)
+  ctx.lineTo(x + width, y + height - r)
+  ctx.arcTo(x + width, y + height, x + width - r, y + height, r)
+  ctx.lineTo(x + r, y + height)
+  ctx.arcTo(x, y + height, x, y + height - r, r)
+  ctx.lineTo(x, y + r)
+  ctx.arcTo(x, y, x + r, y, r)
+  ctx.closePath()
+}
+
+function wrapTextLines(
+  ctx: OffscreenCanvasRenderingContext2D,
+  text: string,
+  maxWidth: number
+): string[] {
+  if (!text) return [""]
+  const rawParagraphs = text.split("\n")
+  const lines: string[] = []
+
+  for (const paragraph of rawParagraphs) {
+    if (paragraph === "") {
+      lines.push("")
+      continue
+    }
+
+    const words = paragraph.split(" ")
+    let currentLine = ""
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i]
+      const testLine = currentLine ? `${currentLine} ${word}` : word
+      const metrics = ctx.measureText(testLine)
+
+      if (metrics.width > maxWidth && currentLine) {
+        lines.push(currentLine)
+        currentLine = word
+      } else {
+        currentLine = testLine
+      }
+    }
+
+    if (currentLine) {
+      lines.push(currentLine)
+    }
+  }
+
+  return lines.length > 0 ? lines : [text]
+}
+
 function drawTextLayerItem(
   ctx: OffscreenCanvasRenderingContext2D,
   textLayer: TextLayer,
@@ -460,10 +529,9 @@ function drawTextLayerItem(
 ): void {
   ctx.save()
 
-  if (textLayer.rotation !== 0) {
-    ctx.translate(textLayer.x + textLayer.width / 2, textLayer.y + textLayer.height / 2)
+  ctx.translate(textLayer.x, textLayer.y)
+  if (textLayer.rotation) {
     ctx.rotate((textLayer.rotation * Math.PI) / 180)
-    ctx.translate(-(textLayer.x + textLayer.width / 2), -(textLayer.y + textLayer.height / 2))
   }
 
   const effectiveBorderWidth = canvasFillState.borderOverrideEnabled
@@ -475,86 +543,95 @@ function drawTextLayerItem(
 
   const containerColor = textLayer.containerColor || "rgba(255, 255, 255, 0.85)"
   const containerOpacity = (textLayer.containerOpacity ?? 100) / 100
-  const borderRadius = canvasFillState.cornerRadiusOverrideEnabled
+  const effectiveCornerRadius = canvasFillState.cornerRadiusOverrideEnabled
     ? canvasFillState.cornerRadiusOverride
     : (fillState?.cornerRadius ?? textLayer.borderRadius ?? 8)
+  const borderRadius = Math.max(0, effectiveCornerRadius)
   const fontSize = textLayer.fontSize ?? 24
   const fontFamily = textLayer.fontFamily || "Inter"
   const textColor = textLayer.textColor || "#1e293b"
   const paddingV = textLayer.paddingV ?? 12
   const paddingH = textLayer.paddingH ?? 16
+  const width = Math.max(1, textLayer.width)
+  const height = Math.max(1, textLayer.height)
 
-  // Draw background container
-  ctx.save()
-  ctx.globalAlpha = containerOpacity
-  ctx.fillStyle = containerColor
-  if (borderRadius > 0 && typeof ctx.roundRect === "function") {
-    ctx.beginPath()
-    ctx.roundRect(textLayer.x, textLayer.y, textLayer.width, textLayer.height, borderRadius)
+  // 1. Draw background container
+  if (containerOpacity > 0) {
+    ctx.save()
+    ctx.globalAlpha = containerOpacity
+    ctx.fillStyle = containerColor
+    drawRoundedRectPath(ctx, 0, 0, width, height, borderRadius)
     ctx.fill()
-  } else {
-    ctx.fillRect(textLayer.x, textLayer.y, textLayer.width, textLayer.height)
+    ctx.restore()
   }
-  ctx.restore()
 
-  // Draw border if enabled
+  // 2. Draw border if enabled
   if (effectiveBorderWidth > 0) {
     ctx.save()
     ctx.lineWidth = effectiveBorderWidth
     ctx.strokeStyle = effectiveBorderColor
-    if (borderRadius > 0 && typeof ctx.roundRect === "function") {
-      ctx.beginPath()
-      ctx.roundRect(textLayer.x, textLayer.y, textLayer.width, textLayer.height, borderRadius)
-      ctx.stroke()
-    } else {
-      ctx.strokeRect(textLayer.x, textLayer.y, textLayer.width, textLayer.height)
-    }
+    drawRoundedRectPath(ctx, 0, 0, width, height, borderRadius)
+    ctx.stroke()
     ctx.restore()
   }
 
-  // Draw text
+  // 3. Draw text content
   const text = textLayer.content || textLayer.name || "Text Layer"
-  const availWidth = Math.max(1, textLayer.width - paddingH * 2)
-  const availHeight = Math.max(1, textLayer.height - paddingV * 2)
+  const availWidth = Math.max(1, width - paddingH * 2)
+  const availHeight = Math.max(1, height - paddingV * 2)
 
   ctx.save()
-  ctx.translate(textLayer.x + textLayer.width / 2, textLayer.y + textLayer.height / 2)
+
+  // Clip text to padded area with border radius
+  drawRoundedRectPath(ctx, 0, 0, width, height, borderRadius)
+  ctx.clip()
+
+  // Apply 180-degree rotation around center if enabled
   if (textLayer.rotate180) {
+    ctx.translate(width / 2, height / 2)
     ctx.rotate(Math.PI)
+    ctx.translate(-width / 2, -height / 2)
   }
-  ctx.font = `${fontSize}px ${fontFamily}, sans-serif`
+
+  const cleanFontFamily = fontFamily.replace(/["']/g, "")
+  ctx.font = `${fontSize}px "${cleanFontFamily}", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
   ctx.fillStyle = textColor
 
-  const align = textLayer.alignment ?? "center"
-  const position = textLayer.position ?? "center"
+  const align = textLayer.alignment === "start" ? "left" : textLayer.alignment === "end" ? "right" : "center"
+  const verticalAlign = textLayer.position === "top" ? "top" : textLayer.position === "bottom" ? "bottom" : "middle"
 
-  let localX = 0
-  if (align === "start") {
+  const lines = wrapTextLines(ctx, text, availWidth)
+  const lineHeight = fontSize * 1.25
+  const totalTextHeight = lines.length * lineHeight
+
+  let startY = 0
+  if (verticalAlign === "top") {
+    startY = paddingV
+  } else if (verticalAlign === "bottom") {
+    startY = height - paddingV - totalTextHeight
+  } else {
+    startY = (height - totalTextHeight) / 2
+  }
+
+  let textX = 0
+  if (align === "left") {
     ctx.textAlign = "left"
-    localX = -availWidth / 2
-  } else if (align === "end") {
+    textX = paddingH
+  } else if (align === "right") {
     ctx.textAlign = "right"
-    localX = availWidth / 2
+    textX = width - paddingH
   } else {
     ctx.textAlign = "center"
-    localX = 0
+    textX = width / 2
   }
 
-  let localY = 0
-  if (position === "top") {
-    ctx.textBaseline = "top"
-    localY = -availHeight / 2
-  } else if (position === "bottom") {
-    ctx.textBaseline = "bottom"
-    localY = availHeight / 2
-  } else {
-    ctx.textBaseline = "middle"
-    localY = 0
+  ctx.textBaseline = "top"
+  for (let i = 0; i < lines.length; i++) {
+    const lineY = startY + i * lineHeight
+    ctx.fillText(lines[i], textX, lineY, availWidth)
   }
 
-  ctx.fillText(text, localX, localY, availWidth)
   ctx.restore()
-
   ctx.restore()
 }
 

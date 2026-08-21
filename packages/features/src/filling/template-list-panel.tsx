@@ -483,41 +483,35 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
         strokeDasharray="4 2"
         rx="2"
       />
-      {template.layers.slice(0, 12).map((layer) => (
-        <polygon
-          key={layer.id}
-          points={resolveLayerShapePoints(layer)
-            .map(
-              (point) =>
-                `${originX + (layer.x + point.x) * scale},${originY + (layer.y + point.y) * scale}`,
-            )
-            .join(" ")}
-          fill="currentColor"
-          opacity={0.3}
-          transform={
-            layer.rotation !== 0
-              ? `rotate(${layer.rotation} ${originX + (layer.x + layer.width / 2) * scale} ${originY + (layer.y + layer.height / 2) * scale})`
-              : undefined
-          }
-        />
-      ))}
+      {template.layers.slice(0, 12).map((layer) => {
+        const lx = originX + layer.x * scale;
+        const ly = originY + layer.y * scale;
+        return (
+          <polygon
+            key={layer.id}
+            points={resolveLayerShapePoints(layer)
+              .map((point) => `${point.x * scale},${point.y * scale}`)
+              .join(" ")}
+            fill="currentColor"
+            opacity={0.3}
+            transform={`translate(${lx}, ${ly})${layer.rotation ? ` rotate(${layer.rotation})` : ""}`}
+          />
+        );
+      })}
       {template.textLayers?.slice(0, 8).map((tLayer) => {
-        const cx = originX + (tLayer.x + tLayer.width / 2) * scale;
-        const cy = originY + (tLayer.y + tLayer.height / 2) * scale;
+        const lx = originX + tLayer.x * scale;
+        const ly = originY + tLayer.y * scale;
         const w = tLayer.width * scale;
         const h = tLayer.height * scale;
+        const text = tLayer.content || tLayer.name || "Text";
         return (
           <g
             key={tLayer.id}
-            transform={
-              tLayer.rotation !== 0
-                ? `rotate(${tLayer.rotation} ${cx} ${cy})`
-                : undefined
-            }
+            transform={`translate(${lx}, ${ly})${tLayer.rotation ? ` rotate(${tLayer.rotation})` : ""}`}
           >
             <rect
-              x={originX + tLayer.x * scale}
-              y={originY + tLayer.y * scale}
+              x={0}
+              y={0}
               width={w}
               height={h}
               fill="currentColor"
@@ -528,8 +522,8 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
               rx={2}
             />
             <text
-              x={cx}
-              y={cy}
+              x={w / 2}
+              y={h / 2}
               textAnchor="middle"
               dominantBaseline="central"
               fontSize={Math.max(6, Math.min(10, h * 0.45))}
@@ -538,7 +532,7 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
               fontWeight="600"
               fontFamily="sans-serif"
             >
-              {tLayer.name || "Text"}
+              {text}
             </text>
           </g>
         );

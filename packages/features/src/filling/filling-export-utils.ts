@@ -77,6 +77,26 @@ async function exportFilledTemplateWithWorker(payload: FillExportWorkerPayload, 
 }
 
 async function exportFilledTemplateInline(payload: FillExportWorkerPayload, onProgress?: (payload: { percent: number; message: string }) => void): Promise<Blob> {
+  if (typeof document !== "undefined" && "fonts" in document) {
+    try {
+      await document.fonts.ready
+      const textItems = payload.runtimeItems?.filter((item) => item.kind === "text") ?? []
+      for (const item of textItems) {
+        if (item.kind === "text") {
+          const family = item.textLayer.fontFamily || "Inter"
+          const size = item.textLayer.fontSize ?? 24
+          try {
+            await document.fonts.load(`${size}px "${family}"`)
+          } catch {
+            // ignore
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Font loading check error:", err)
+    }
+  }
+
   onProgress?.({ percent: 4, message: "Loading layer images..." })
   const imageBitmaps = await loadAllImagesAsBitmaps(payload.layerFillStates, (completed, total) => {
     if (total === 0) return onProgress?.({ percent: 20, message: "No layer images to load" })
@@ -108,8 +128,12 @@ export async function exportFilledTemplate(options: ExportFilledTemplateOptions)
   const { targetFormat, extension } = resolveRasterTargetFormat(exportFormat)
   const workerPayload: FillExportWorkerPayload = { template, layerFillStates, canvasFillState, runtimeItems, groupRuntimeTransforms, targetFormat, quality: exportQuality, formatOptions }
 
+  const hasTextLayers =
+    (template.textLayers && template.textLayers.length > 0) ||
+    runtimeItems.some((item) => item.kind === "text")
+
   let outputBlob: Blob
-  if (typeof Worker === "function") {
+  if (typeof Worker === "function" && !hasTextLayers) {
     try {
       outputBlob = await exportFilledTemplateWithWorker(workerPayload, onProgress)
     } catch {

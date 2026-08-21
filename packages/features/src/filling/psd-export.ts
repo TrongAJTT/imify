@@ -44,19 +44,43 @@ export async function exportToPsd(
 
     const fillState = layerFillStates.find((lf) => lf.layerId === layer.id)
     const img = loadedImages.get(layer.id)
-    const layerWidth = Math.max(1, Math.round(layer.width))
-    const layerHeight = Math.max(1, Math.round(layer.height))
-    const layerCanvas = new OffscreenCanvas(layerWidth, layerHeight)
+
+    const rot = layer.rotation || 0
+    const rad = (rot * Math.PI) / 180
+    const cos = Math.cos(rad)
+    const sin = Math.sin(rad)
+
+    const shapePoints = resolveLayerShapePoints(layer)
+    const worldPoints = shapePoints.map((p) => ({
+      x: layer.x + (p.x * cos - p.y * sin),
+      y: layer.y + (p.x * sin + p.y * cos),
+    }))
+
+    const minX = Math.min(...worldPoints.map((p) => p.x))
+    const minY = Math.min(...worldPoints.map((p) => p.y))
+    const maxX = Math.max(...worldPoints.map((p) => p.x))
+    const maxY = Math.max(...worldPoints.map((p) => p.y))
+
+    const boxWidth = Math.max(1, Math.ceil(maxX - minX))
+    const boxHeight = Math.max(1, Math.ceil(maxY - minY))
+
+    const layerCanvas = new OffscreenCanvas(boxWidth, boxHeight)
     const ctx = layerCanvas.getContext("2d")!
 
+    ctx.save()
+    ctx.translate(-minX + layer.x, -minY + layer.y)
+    if (rot !== 0) {
+      ctx.rotate(rad)
+    }
     drawLayerShapeContent(ctx, layer, fillState ?? null, img ?? null)
+    ctx.restore()
 
     const imageData = ctx.getImageData(0, 0, layerCanvas.width, layerCanvas.height)
     psdLayers.push({
       name: layer.name || `Layer ${layer.id.slice(-5)}`,
       canvas: imageDataToCanvas(imageData),
-      left: Math.round(layer.x),
-      top: Math.round(layer.y),
+      left: Math.round(minX),
+      top: Math.round(minY),
     })
   }
 
@@ -65,31 +89,62 @@ export async function exportToPsd(
     for (const textLayer of template.textLayers) {
       if (!textLayer.visible) continue
 
-      const text = textLayer.name || "Text"
+      const text = textLayer.content || textLayer.name || "Text"
       const layerWidth = Math.max(1, Math.round(textLayer.width))
       const layerHeight = Math.max(1, Math.round(textLayer.height))
-      const fontSize = 24
+      const fontSize = textLayer.fontSize ?? 24
+      const fontFamily = textLayer.fontFamily || "Arial"
+      const textColor = textLayer.textColor || "#000000"
 
-      const textCanvas = new OffscreenCanvas(layerWidth, layerHeight)
-      const ctx = textCanvas.getContext("2d")!
-      ctx.font = `${fontSize}px Arial, sans-serif`
-      ctx.fillStyle = "#000000"
-      ctx.textAlign = "center"
-      ctx.textBaseline = "middle"
-      ctx.fillText(text, layerWidth / 2, layerHeight / 2)
-
-      const imageData = ctx.getImageData(0, 0, textCanvas.width, textCanvas.height)
-      const rad = ((textLayer.rotation || 0) * Math.PI) / 180
+      const rot = textLayer.rotation || 0
+      const rad = (rot * Math.PI) / 180
       const cos = Math.cos(rad)
       const sin = Math.sin(rad)
-      const centerX = textLayer.x + layerWidth / 2
-      const centerY = textLayer.y + layerHeight / 2
+
+      const corners = [
+        { x: 0, y: 0 },
+        { x: layerWidth, y: 0 },
+        { x: layerWidth, y: layerHeight },
+        { x: 0, y: layerHeight },
+      ].map((p) => ({
+        x: textLayer.x + (p.x * cos - p.y * sin),
+        y: textLayer.y + (p.x * sin + p.y * cos),
+      }))
+
+      const minX = Math.min(...corners.map((p) => p.x))
+      const minY = Math.min(...corners.map((p) => p.y))
+      const maxX = Math.max(...corners.map((p) => p.x))
+      const maxY = Math.max(...corners.map((p) => p.y))
+
+      const boxWidth = Math.max(1, Math.ceil(maxX - minX))
+      const boxHeight = Math.max(1, Math.ceil(maxY - minY))
+
+      const textCanvas = new OffscreenCanvas(boxWidth, boxHeight)
+      const ctx = textCanvas.getContext("2d")!
+      ctx.save()
+      ctx.translate(-minX + textLayer.x, -minY + textLayer.y)
+      if (rot !== 0) {
+        ctx.rotate(rad)
+      }
+      ctx.font = `${fontSize}px "${fontFamily}", Arial, sans-serif`
+      ctx.fillStyle = textColor
+      ctx.textAlign = textLayer.alignment === "start" ? "left" : textLayer.alignment === "end" ? "right" : "center"
+      ctx.textBaseline = textLayer.position === "top" ? "top" : textLayer.position === "bottom" ? "bottom" : "middle"
+      
+      const textX = ctx.textAlign === "left" ? (textLayer.paddingH ?? 16) : ctx.textAlign === "right" ? layerWidth - (textLayer.paddingH ?? 16) : layerWidth / 2
+      const textY = ctx.textBaseline === "top" ? (textLayer.paddingV ?? 12) : ctx.textBaseline === "bottom" ? layerHeight - (textLayer.paddingV ?? 12) : layerHeight / 2
+      ctx.fillText(text, textX, textY)
+      ctx.restore()
+
+      const imageData = ctx.getImageData(0, 0, textCanvas.width, textCanvas.height)
+      const tx = textLayer.x + (textX * cos - (textY + fontSize * 0.35) * sin)
+      const ty = textLayer.y + (textX * sin + (textY + fontSize * 0.35) * cos)
 
       psdLayers.push({
         name: text,
         canvas: imageDataToCanvas(imageData),
-        left: Math.round(textLayer.x),
-        top: Math.round(textLayer.y),
+        left: Math.round(minX),
+        top: Math.round(minY),
         text: {
           text,
           transform: [
@@ -97,16 +152,16 @@ export async function exportToPsd(
             sin,
             -sin,
             cos,
-            Math.round(centerX),
-            Math.round(centerY + fontSize * 0.35),
+            Math.round(tx),
+            Math.round(ty),
           ],
           style: {
-            font: { name: "ArialMT" },
+            font: { name: fontFamily },
             fontSize,
             fillColor: { r: 0, g: 0, b: 0 },
           },
           paragraphStyle: {
-            justification: "center",
+            justification: textLayer.alignment === "start" ? "left" : textLayer.alignment === "end" ? "right" : "center",
           },
         },
       })
