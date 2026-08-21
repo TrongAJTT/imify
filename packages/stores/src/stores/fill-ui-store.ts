@@ -2,6 +2,7 @@ import { create } from "zustand"
 import type { FillingTemplate, ImageTransform } from "@imify/features/filling/types"
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types"
 import { buildFillRuntimeItems } from "@imify/features/filling/fill/runtime-items"
+import { useFillingStore } from "./filling-store"
 
 export type FillCustomizationTab = "image" | "border" | "layer"
 
@@ -15,6 +16,9 @@ function cloneFillingTemplate(template: FillingTemplate): FillingTemplate {
     groups: (template.groups ?? []).map((group) => ({
       ...group,
       layerIds: [...group.layerIds],
+    })),
+    textLayers: (template.textLayers ?? []).map((textLayer) => ({
+      ...textLayer,
     })),
   }
 }
@@ -47,6 +51,23 @@ export const useFillUiStore = create<FillUiStoreState>()((set) => ({
   initializeFillSession: (template) =>
     set(() => {
       const clonedTemplate = cloneFillingTemplate(template)
+      const savedTextStates =
+        useFillingStore.getState().savedFillStateByTemplateId[template.id]
+          ?.textLayerStates
+
+      if (clonedTemplate.textLayers && savedTextStates) {
+        clonedTemplate.textLayers = clonedTemplate.textLayers.map((tl) => {
+          const saved = savedTextStates[tl.id]
+          if (saved) {
+            return {
+              ...tl,
+              ...saved,
+            }
+          }
+          return tl
+        })
+      }
+
       const runtimeItems = buildFillRuntimeItems(clonedTemplate, new Set())
       const groupRuntimeTransforms = runtimeItems
         .filter((item) => item.kind === "group")

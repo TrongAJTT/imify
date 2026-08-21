@@ -102,6 +102,9 @@ export function FillLayerCustomizationAccordion({
   const canvasFillState = useFillingStore((s) => s.canvasFillState);
   const setCanvasFillState = useFillingStore((s) => s.setCanvasFillState);
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState);
+  const updateSavedTextLayerConfig = useFillingStore(
+    (s) => s.updateSavedTextLayerConfig,
+  );
 
   const BORDER_GRADIENT_SCOPE_OPTIONS: Array<{
     value: "per-layer" | "unified";
@@ -264,6 +267,7 @@ export function FillLayerCustomizationAccordion({
     (patch: Partial<CaptionConfigData>) => {
       if (!selectedTextLayer) return;
       const targetId = selectedTextLayer.id;
+      updateSavedTextLayerConfig(template.id, targetId, patch);
       updateSessionTemplate((prev) => {
         if (!prev) return prev;
         const updated = (prev.textLayers ?? []).map((tl) => {
@@ -281,7 +285,12 @@ export function FillLayerCustomizationAccordion({
         };
       });
     },
-    [selectedTextLayer, updateSessionTemplate],
+    [
+      selectedTextLayer,
+      template.id,
+      updateSavedTextLayerConfig,
+      updateSessionTemplate,
+    ],
   );
 
   const textPositionOptions = useMemo(
@@ -377,8 +386,32 @@ export function FillLayerCustomizationAccordion({
     (partial: Partial<LayerFillState>) => {
       if (!selectedLayerId) return;
       updateLayerFillState(selectedLayerId, partial);
+      if (selectedTextLayer && partial.cornerRadius !== undefined) {
+        updateSavedTextLayerConfig(template.id, selectedTextLayer.id, {
+          borderRadius: partial.cornerRadius,
+        });
+        updateSessionTemplate((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            textLayers: (prev.textLayers ?? []).map((tl) =>
+              tl.id === selectedTextLayer.id
+                ? { ...tl, borderRadius: partial.cornerRadius }
+                : tl,
+            ),
+            updatedAt: Date.now(),
+          };
+        });
+      }
     },
-    [selectedLayerId, updateLayerFillState],
+    [
+      selectedLayerId,
+      selectedTextLayer,
+      template.id,
+      updateLayerFillState,
+      updateSavedTextLayerConfig,
+      updateSessionTemplate,
+    ],
   );
 
   const updateSelectedTemplateLayer = useCallback(

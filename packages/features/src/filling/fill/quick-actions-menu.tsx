@@ -108,6 +108,9 @@ export function FillQuickActionsMenu({
 
   const layerFillStates = useFillingStore((s) => s.layerFillStates);
   const setLayerFillStates = useFillingStore((s) => s.setLayerFillStates);
+  const updateSavedTextLayerConfig = useFillingStore(
+    (s) => s.updateSavedTextLayerConfig,
+  );
   const updateSessionTemplate = useFillUiStore((s) => s.updateSessionTemplate);
 
   const totalLayerCount = useMemo(() => {
@@ -442,6 +445,10 @@ export function FillQuickActionsMenu({
 
       setLayerFillStates(nextStates);
 
+      for (const id of targetIds) {
+        updateSavedTextLayerConfig(template.id, id, { borderRadius: radius });
+      }
+
       updateSessionTemplate((prev) => {
         if (!prev || !prev.textLayers) return prev;
         const updatedTextLayers = prev.textLayers.map((tl) =>
@@ -458,6 +465,8 @@ export function FillQuickActionsMenu({
       getTargetLayerIds,
       layerFillStates,
       setLayerFillStates,
+      template.id,
+      updateSavedTextLayerConfig,
       updateSessionTemplate,
     ],
   );
