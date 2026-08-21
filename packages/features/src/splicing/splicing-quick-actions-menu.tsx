@@ -1,24 +1,16 @@
-import React, { useState, useMemo, useCallback, useRef } from "react";
-import {
-  Zap,
-  ChevronRight,
-  Palette,
-  PanelTop,
-  LayoutGrid,
-  Sparkles,
-  Check,
-} from "lucide-react";
-import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
-import { usePopoverTriggerBehavior } from "../shared/use-popover-trigger-behavior";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { Palette, PanelTop, LayoutGrid, Sparkles, Check } from "lucide-react";
 import { useSplicingStore } from "@imify/stores/stores/splicing-store";
 import { CaptionDpadPicker } from "../shared/caption-dpad-picker";
+import {
+  QuickActionsMenuFrame,
+  type QuickActionSection,
+} from "../shared/quick-actions-menu-frame";
 import type {
   SplicingCaptionPosition,
   SplicingCaptionAlignment,
 } from "@imify/core";
 import { useTranslation } from "@imify/i18n";
-
-type SplicingQuickActionSubmenuKey = "color" | "outside" | "inside";
 
 interface SplicingQuickActionsMenuProps {
   disabled?: boolean;
@@ -59,78 +51,83 @@ const COLOR_PRESETS: ColorPreset[] = [
     containerOpacity: 100,
   },
   {
-    id: "white-slate",
-    labelKey: "quickActions.colorWhiteSlate",
-    labelFallback: "Chữ xanh đen • Nền trắng đặc",
-    textColor: "#0f172a",
-    containerColor: "#ffffff",
+    id: "white-blue",
+    labelKey: "quickActions.colorWhiteBlue",
+    labelFallback: "Chữ trắng • Nền xanh dương",
+    textColor: "#ffffff",
+    containerColor: "#0284c7",
     containerOpacity: 100,
   },
   {
-    id: "crimson-badge",
-    labelKey: "quickActions.colorCrimsonBadge",
-    labelFallback: "Chữ trắng • Nền đỏ",
-    textColor: "#ffffff",
-    containerColor: "rgba(225, 29, 72, 0.85)",
+    id: "yellow-red",
+    labelKey: "quickActions.colorYellowRed",
+    labelFallback: "Chữ vàng • Nền đỏ đô",
+    textColor: "#fef08a",
+    containerColor: "#991b1b",
     containerOpacity: 100,
   },
   {
-    id: "blue-badge",
-    labelKey: "quickActions.colorBlueBadge",
-    labelFallback: "Chữ trắng • Nền xanh",
-    textColor: "#ffffff",
-    containerColor: "rgba(37, 99, 235, 0.85)",
+    id: "green-glass",
+    labelKey: "quickActions.colorGreenGlass",
+    labelFallback: "Chữ xanh neon • Nền tối mờ",
+    textColor: "#4ade80",
+    containerColor: "rgba(15, 23, 42, 0.75)",
     containerOpacity: 100,
   },
   {
-    id: "minimal-white",
-    labelKey: "quickActions.colorMinimalWhite",
-    labelFallback: "Chữ trắng không nền",
+    id: "solid-black-white",
+    labelKey: "quickActions.colorSolidBlackWhite",
+    labelFallback: "Chữ trắng • Nền đen đặc",
     textColor: "#ffffff",
-    containerColor: "transparent",
-    containerOpacity: 0,
+    containerColor: "#000000",
+    containerOpacity: 100,
   },
   {
-    id: "minimal-black",
-    labelKey: "quickActions.colorMinimalBlack",
-    labelFallback: "Chữ đen không nền",
-    textColor: "#0f172a",
+    id: "transparent-white",
+    labelKey: "quickActions.colorTransparentWhite",
+    labelFallback: "Chữ trắng • Không nền",
+    textColor: "#ffffff",
     containerColor: "transparent",
     containerOpacity: 0,
   },
 ];
 
+/**
+ * Pure helper function to compute offset (X, Y) for inside captions
+ */
 function computeInsideCaptionOffsets(
-  pos: SplicingCaptionPosition,
-  align: SplicingCaptionAlignment,
+  position: SplicingCaptionPosition,
+  alignment: SplicingCaptionAlignment,
   fontSize: number,
 ): { offsetX: number; offsetY: number } {
   const offsetVal = Math.round(fontSize / 2);
 
-  if (pos === "top") {
-    if (align === "start") return { offsetX: offsetVal, offsetY: offsetVal };
-    if (align === "center") return { offsetX: 0, offsetY: offsetVal };
-    return { offsetX: -offsetVal, offsetY: offsetVal };
-  }
-  if (pos === "center") {
-    if (align === "start") return { offsetX: offsetVal, offsetY: 0 };
-    if (align === "center") return { offsetX: 0, offsetY: 0 };
-    return { offsetX: -offsetVal, offsetY: 0 };
-  }
-  if (pos === "bottom") {
-    if (align === "start") return { offsetX: offsetVal, offsetY: -offsetVal };
-    if (align === "center") return { offsetX: 0, offsetY: -offsetVal };
-    return { offsetX: -offsetVal, offsetY: -offsetVal };
-  }
-  if (pos === "left") {
-    if (align === "start") return { offsetX: offsetVal, offsetY: offsetVal };
-    if (align === "center") return { offsetX: offsetVal, offsetY: 0 };
-    return { offsetX: offsetVal, offsetY: -offsetVal };
-  }
-  if (pos === "right") {
-    if (align === "start") return { offsetX: -offsetVal, offsetY: offsetVal };
-    if (align === "center") return { offsetX: -offsetVal, offsetY: 0 };
-    return { offsetX: -offsetVal, offsetY: -offsetVal };
+  switch (position) {
+    case "top":
+      if (alignment === "start") return { offsetX: offsetVal, offsetY: offsetVal };
+      if (alignment === "center") return { offsetX: 0, offsetY: offsetVal };
+      if (alignment === "end") return { offsetX: -offsetVal, offsetY: offsetVal };
+      break;
+    case "bottom":
+      if (alignment === "start") return { offsetX: offsetVal, offsetY: -offsetVal };
+      if (alignment === "center") return { offsetX: 0, offsetY: -offsetVal };
+      if (alignment === "end") return { offsetX: -offsetVal, offsetY: -offsetVal };
+      break;
+    case "left":
+      if (alignment === "start") return { offsetX: offsetVal, offsetY: offsetVal };
+      if (alignment === "center") return { offsetX: offsetVal, offsetY: 0 };
+      if (alignment === "end") return { offsetX: offsetVal, offsetY: -offsetVal };
+      break;
+    case "right":
+      if (alignment === "start") return { offsetX: -offsetVal, offsetY: offsetVal };
+      if (alignment === "center") return { offsetX: -offsetVal, offsetY: 0 };
+      if (alignment === "end") return { offsetX: -offsetVal, offsetY: -offsetVal };
+      break;
+    case "center":
+      if (alignment === "start") return { offsetX: offsetVal, offsetY: 0 };
+      if (alignment === "center") return { offsetX: 0, offsetY: 0 };
+      if (alignment === "end") return { offsetX: -offsetVal, offsetY: 0 };
+      break;
   }
   return { offsetX: 0, offsetY: 0 };
 }
@@ -139,38 +136,6 @@ export function SplicingQuickActionsMenu({
   disabled = false,
 }: SplicingQuickActionsMenuProps) {
   const { t } = useTranslation(["splicing", "common"]);
-  const triggerBehavior = usePopoverTriggerBehavior();
-  const isDesktop = triggerBehavior === "hover";
-
-  const [activeDesktopSubmenu, setActiveDesktopSubmenu] =
-    useState<SplicingQuickActionSubmenuKey | null>(null);
-
-  const closeSubmenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-
-  const clearCloseSubmenuTimer = useCallback(() => {
-    if (closeSubmenuTimerRef.current) {
-      clearTimeout(closeSubmenuTimerRef.current);
-      closeSubmenuTimerRef.current = null;
-    }
-  }, []);
-
-  const handleSubmenuMouseEnter = useCallback(
-    (menuKey: SplicingQuickActionSubmenuKey) => {
-      clearCloseSubmenuTimer();
-      setActiveDesktopSubmenu(menuKey);
-    },
-    [clearCloseSubmenuTimer],
-  );
-
-  const handleSubmenuMouseLeave = useCallback(() => {
-    clearCloseSubmenuTimer();
-    closeSubmenuTimerRef.current = setTimeout(() => {
-      setActiveDesktopSubmenu(null);
-      closeSubmenuTimerRef.current = null;
-    }, 250);
-  }, [clearCloseSubmenuTimer]);
 
   const captionConfig = useSplicingStore((s) => s.captionConfig);
   const setCaptionConfig = useSplicingStore((s) => s.setCaptionConfig);
@@ -185,7 +150,7 @@ export function SplicingQuickActionsMenu({
     );
 
   // Keep local selection synchronized with store if store changes externally
-  React.useEffect(() => {
+  useEffect(() => {
     if (captionConfig.position)
       setSelectedInsidePosition(captionConfig.position);
     if (captionConfig.alignment)
@@ -278,20 +243,6 @@ export function SplicingQuickActionsMenu({
     currentFontSize,
   );
   const currentComputedPad = Math.round(currentFontSize / 3);
-
-  const triggerButton = (
-    <button
-      type="button"
-      disabled={disabled}
-      className="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg border border-sky-300 dark:border-sky-800/60 bg-sky-50/70 dark:bg-sky-950/40 text-xs font-semibold text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/60 shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      <Zap
-        size={13}
-        className="text-sky-600 dark:text-sky-400 fill-sky-500/20"
-      />
-      <span>{t("quickActions.button")}</span>
-    </button>
-  );
 
   // Submenu 1: Colors Content
   const colorContent = (
@@ -398,114 +349,49 @@ export function SplicingQuickActionsMenu({
     />
   );
 
-  const renderSubmenuItem = (
-    menuKey: SplicingQuickActionSubmenuKey,
-    label: string,
-    icon: React.ReactNode,
-    submenuContent: React.ReactNode,
-    submenuWidth = "w-64",
-  ) => {
-    const isSubmenuActive = activeDesktopSubmenu === menuKey;
+  const sections: QuickActionSection[] = [
+    {
+      key: "color",
+      label: t("quickActions.captionColor"),
+      icon: Palette,
+      iconColor: "text-amber-500",
+      widthClass: "w-60",
+      content: colorContent,
+    },
+    {
+      key: "outside",
+      label: t("quickActions.captionOutside"),
+      icon: PanelTop,
+      iconColor: "text-sky-500",
+      widthClass: "w-60",
+      content: outsideContent,
+    },
+    {
+      key: "inside",
+      label: t("quickActions.captionInside"),
+      icon: LayoutGrid,
+      iconColor: "text-emerald-500",
+      widthClass: "w-60",
+      content: insideContent,
+    },
+  ];
 
-    return (
-      <div
-        key={menuKey}
-        className="relative"
-        onMouseEnter={() => isDesktop && handleSubmenuMouseEnter(menuKey)}
-        onMouseLeave={() => isDesktop && handleSubmenuMouseLeave()}
-      >
-        <button
-          type="button"
-          onClick={() => {
-            if (!isDesktop) {
-              setActiveDesktopSubmenu((prev) =>
-                prev === menuKey ? null : menuKey,
-              );
-            }
-          }}
-          className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-            isSubmenuActive
-              ? "bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 font-semibold"
-              : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-          }`}
-        >
-          <div className="flex items-center gap-2 min-w-0">
-            {icon}
-            <span className="truncate">{label}</span>
-          </div>
-          <ChevronRight
-            size={14}
-            className={`text-slate-400 transition-transform ${
-              isSubmenuActive && !isDesktop ? "rotate-90" : ""
-            }`}
-          />
-        </button>
-
-        {/* Desktop Floating Flyout Submenu */}
-        {isDesktop && isSubmenuActive && (
-          <div
-            className={`absolute top-0 right-full mr-1.5 ${submenuWidth} p-2 rounded-xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 z-60 animate-in fade-in zoom-in-95 duration-100`}
-            onMouseEnter={() => handleSubmenuMouseEnter(menuKey)}
-            onMouseLeave={handleSubmenuMouseLeave}
-          >
-            <div className="mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
-              {icon}
-              <span>{label}</span>
-            </div>
-            {submenuContent}
-          </div>
-        )}
-
-        {/* Mobile / Tablet Accordion Expand */}
-        {!isDesktop && isSubmenuActive && (
-          <div className="pl-3 pr-1 py-2 border-l-2 border-sky-400 ml-3 my-1 space-y-1 bg-slate-50/60 dark:bg-slate-800/40 rounded-r-lg">
-            {submenuContent}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const headerNode = (
+    <div className="px-1 py-0.5 flex items-center justify-between">
+      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+        <Sparkles size={12} className="text-amber-500" />
+        {t("quickActions.title")}
+      </span>
+    </div>
+  );
 
   return (
-    <ControlledPopover
-      trigger={triggerButton}
-      behavior={triggerBehavior}
-      align="end"
-      side="bottom"
-      contentClassName="p-2 w-64 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 z-50 animate-in fade-in zoom-in-95 duration-100"
-    >
-      <div className="space-y-1">
-        <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800 mb-1 flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-            <Sparkles size={12} className="text-amber-500" />
-            {t("quickActions.title")}
-          </span>
-        </div>
-
-        {renderSubmenuItem(
-          "color",
-          t("quickActions.captionColor"),
-          <Palette size={14} className="text-amber-500" />,
-          colorContent,
-          "w-60",
-        )}
-
-        {renderSubmenuItem(
-          "outside",
-          t("quickActions.captionOutside"),
-          <PanelTop size={14} className="text-sky-500" />,
-          outsideContent,
-          "w-60",
-        )}
-
-        {renderSubmenuItem(
-          "inside",
-          t("quickActions.captionInside"),
-          <LayoutGrid size={14} className="text-emerald-500" />,
-          insideContent,
-          "w-60",
-        )}
-      </div>
-    </ControlledPopover>
+    <QuickActionsMenuFrame
+      sections={sections}
+      headerNode={headerNode}
+      triggerLabel={t("quickActions.button")}
+      disabled={disabled}
+      flyoutSide="left"
+    />
   );
 }

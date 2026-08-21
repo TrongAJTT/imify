@@ -1,7 +1,5 @@
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
-  Zap,
-  ChevronRight,
   Maximize2,
   Minimize2,
   StretchHorizontal,
@@ -26,10 +24,12 @@ import {
   CornerUpRight,
   type LucideIcon,
 } from "lucide-react";
-import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
-import { usePopoverTriggerBehavior } from "../../shared/use-popover-trigger-behavior";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
 import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
+import {
+  QuickActionsMenuFrame,
+  type QuickActionSection,
+} from "../../shared/quick-actions-menu-frame";
 import {
   DEFAULT_IMAGE_TRANSFORM,
   type FillingTemplate,
@@ -49,15 +49,6 @@ type AlignmentPosition =
   | "bottom-center"
   | "bottom-right";
 
-type QuickActionSubmenuKey =
-  | "fit"
-  | "align"
-  | "rotate"
-  | "flip"
-  | "border-width"
-  | "border-radius"
-  | "border-color";
-
 interface FillQuickActionsMenuProps {
   template: FillingTemplate;
   selectedLayerId: string | null;
@@ -72,39 +63,8 @@ export function FillQuickActionsMenu({
   disabled = false,
 }: FillQuickActionsMenuProps) {
   const { t } = useTranslation(["filling", "common"]);
-  const triggerBehavior = usePopoverTriggerBehavior();
-  const isDesktop = triggerBehavior === "hover";
 
   const [scope, setScope] = useState<QuickActionScope>("all");
-  const [activeDesktopSubmenu, setActiveDesktopSubmenu] =
-    useState<QuickActionSubmenuKey | null>(null);
-
-  const closeSubmenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-
-  const clearCloseSubmenuTimer = useCallback(() => {
-    if (closeSubmenuTimerRef.current) {
-      clearTimeout(closeSubmenuTimerRef.current);
-      closeSubmenuTimerRef.current = null;
-    }
-  }, []);
-
-  const handleSubmenuMouseEnter = useCallback(
-    (menuKey: QuickActionSubmenuKey) => {
-      clearCloseSubmenuTimer();
-      setActiveDesktopSubmenu(menuKey);
-    },
-    [clearCloseSubmenuTimer],
-  );
-
-  const handleSubmenuMouseLeave = useCallback(() => {
-    clearCloseSubmenuTimer();
-    closeSubmenuTimerRef.current = setTimeout(() => {
-      setActiveDesktopSubmenu(null);
-      closeSubmenuTimerRef.current = null;
-    }, 250); // 250ms buffer time to move mouse diagonally
-  }, [clearCloseSubmenuTimer]);
 
   const layerFillStates = useFillingStore((s) => s.layerFillStates);
   const setLayerFillStates = useFillingStore((s) => s.setLayerFillStates);
@@ -505,20 +465,6 @@ export function FillQuickActionsMenu({
     [getTargetLayerIds, layerFillStates, setLayerFillStates],
   );
 
-  const triggerButton = (
-    <button
-      type="button"
-      disabled={disabled}
-      className="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg border border-sky-300 dark:border-sky-800/60 bg-sky-50/70 dark:bg-sky-950/40 text-xs font-semibold text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/60 shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      <Zap
-        size={13}
-        className="text-sky-600 dark:text-sky-400 fill-sky-500/20"
-      />
-      <span>{t("quickActions.button")}</span>
-    </button>
-  );
-
   const BTN_TRANSFORM =
     "flex items-center justify-left gap-1.5 py-1.5 px-2 rounded-md bg-slate-50 dark:bg-slate-800/60 hover:bg-sky-50 dark:hover:bg-sky-950/60 hover:text-sky-600 dark:hover:text-sky-300 text-[11px] font-medium transition-colors cursor-pointer";
 
@@ -805,176 +751,107 @@ export function FillQuickActionsMenu({
     </div>
   );
 
-  const MENU_SECTIONS: {
-    key: QuickActionSubmenuKey;
-    labelKey: string;
-    icon: LucideIcon;
-    widthClass: string;
-    content: React.ReactNode;
-  }[] = [
+  const sections: QuickActionSection[] = [
     {
       key: "fit",
-      labelKey: "quickActions.fitGroup",
+      label: t("quickActions.fitGroup"),
       icon: StretchHorizontal,
       widthClass: "w-52",
       content: fitContent,
     },
     {
       key: "align",
-      labelKey: "quickActions.alignGroup",
+      label: t("quickActions.alignGroup"),
       icon: ArrowUpRight,
       widthClass: "w-44",
       content: alignContent,
     },
     {
       key: "rotate",
-      labelKey: "quickActions.rotateGroup",
+      label: t("quickActions.rotateGroup"),
       icon: RotateCw,
       widthClass: "w-56",
       content: rotateContent,
     },
     {
       key: "flip",
-      labelKey: "quickActions.flipGroup",
+      label: t("quickActions.flipGroup"),
       icon: FlipHorizontal,
       widthClass: "w-44",
       content: flipContent,
     },
     {
       key: "border-width",
-      labelKey: "quickActions.borderWidthGroup",
+      label: t("quickActions.borderWidthGroup"),
       icon: Square,
       widthClass: "w-44",
       content: borderWidthContent,
     },
     {
       key: "border-radius",
-      labelKey: "quickActions.borderRadiusGroup",
+      label: t("quickActions.borderRadiusGroup"),
       icon: CornerUpRight,
       widthClass: "w-44",
       content: borderRadiusContent,
     },
     {
       key: "border-color",
-      labelKey: "quickActions.borderColorGroup",
+      label: t("quickActions.borderColorGroup"),
       icon: Palette,
       widthClass: "w-44",
       content: borderColorContent,
     },
   ];
 
-  return (
-    <ControlledPopover
-      trigger={triggerButton}
-      preset="dropdown"
-      behavior={triggerBehavior}
-      align="end"
-      sideOffset={6}
-      disabled={disabled}
-    >
-      <div className="z-50 w-72 md:w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2 shadow-xl outline-none text-slate-800 dark:text-slate-200 text-xs">
-        {/* SCOPE SELECTION (Always visible at top) */}
-        <div className="mb-2 pb-2 border-b border-slate-200 dark:border-slate-800 space-y-1">
-          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
-            <Sparkles size={11} className="text-amber-500" />
-            {t("quickActions.scopeLabel")}
-          </div>
-          <div className="grid grid-cols-2 gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800">
-            <button
-              type="button"
-              onClick={() => setScope("all")}
-              className={`flex items-center justify-center gap-1.5 py-1 px-2 rounded-md font-medium text-[11px] transition-all cursor-pointer ${
-                scope === "all"
-                  ? "bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-300 shadow-xs font-bold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-              }`}
-            >
-              <Layers size={12} />
-              <span className="truncate">
-                {t("quickActions.scopeAll", {
-                  count: totalLayerCount,
-                })}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setScope("selected")}
-              disabled={!selectedLayerId}
-              className={`flex items-center justify-center gap-1.5 py-1 px-2 rounded-md font-medium text-[11px] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                scope === "selected"
-                  ? "bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-300 shadow-xs font-bold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-              }`}
-            >
-              <Square size={12} />
-              <span className="truncate">
-                {t("quickActions.scopeSelected")}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* DESKTOP SUBMENU LAYOUT */}
-        {isDesktop ? (
-          <div className="space-y-1 relative">
-            {MENU_SECTIONS.map((section) => {
-              const Icon = section.icon;
-              const isActive = activeDesktopSubmenu === section.key;
-              return (
-                <div
-                  key={section.key}
-                  className="relative"
-                  onMouseEnter={() => handleSubmenuMouseEnter(section.key)}
-                  onMouseLeave={handleSubmenuMouseLeave}
-                >
-                  <button
-                    type="button"
-                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer ${
-                      isActive
-                        ? "bg-slate-100 dark:bg-slate-800/80 text-sky-600 dark:text-sky-400 font-semibold"
-                        : ""
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon
-                        size={14}
-                        className="text-slate-500 dark:text-slate-400"
-                      />
-                      <span>{t(section.labelKey)}</span>
-                    </div>
-                    <ChevronRight size={13} className="text-slate-400" />
-                  </button>
-
-                  {/* SUBMENU CONTENT with hover bridge */}
-                  {isActive && (
-                    <div
-                      onMouseEnter={() => handleSubmenuMouseEnter(section.key)}
-                      onMouseLeave={handleSubmenuMouseLeave}
-                      className={`absolute left-full top-0 ml-1 ${section.widthClass} rounded-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1.5 shadow-xl animate-in fade-in-50 duration-75 before:absolute before:-left-3 before:inset-y-0 before:w-3`}
-                    >
-                      {section.content}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          /* MOBILE EXPANDED DIRECT LAYOUT */
-          <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
-            {MENU_SECTIONS.map((section) => (
-              <div key={section.key} className="space-y-1">
-                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-0.5">
-                  {t(section.labelKey)}
-                </div>
-                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
-                  {section.content}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+  const headerNode = (
+    <div className="space-y-1">
+      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
+        <Sparkles size={11} className="text-amber-500" />
+        {t("quickActions.scopeLabel")}
       </div>
-    </ControlledPopover>
+      <div className="grid grid-cols-2 gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800">
+        <button
+          type="button"
+          onClick={() => setScope("all")}
+          className={`flex items-center justify-center gap-1.5 py-1 px-2 rounded-md font-medium text-[11px] transition-all cursor-pointer ${
+            scope === "all"
+              ? "bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-300 shadow-xs font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+          }`}
+        >
+          <Layers size={12} />
+          <span className="truncate">
+            {t("quickActions.scopeAll", {
+              count: totalLayerCount,
+            })}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setScope("selected")}
+          disabled={!selectedLayerId}
+          className={`flex items-center justify-center gap-1.5 py-1 px-2 rounded-md font-medium text-[11px] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+            scope === "selected"
+              ? "bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-300 shadow-xs font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+          }`}
+        >
+          <Square size={12} />
+          <span className="truncate">
+            {t("quickActions.scopeSelected")}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <QuickActionsMenuFrame
+      sections={sections}
+      headerNode={headerNode}
+      triggerLabel={t("quickActions.button")}
+      disabled={disabled}
+      flyoutSide="left"
+    />
   );
 }
