@@ -1,4 +1,4 @@
-import type { FillingTemplate, LayerGroup, Point2D, VectorLayer } from "../types"
+import type { FillingTemplate, LayerGroup, Point2D, TextLayer, VectorLayer } from "../types"
 import { buildGroupFillPolygons, getBoundsFromPoints, toWorldLayerPoints } from "../group-geometry"
 
 export const FILL_GROUP_RUNTIME_PREFIX = "fill-group:"
@@ -26,7 +26,18 @@ export interface FillRuntimeGroupItem {
   members: VectorLayer[]
 }
 
-export type FillRuntimeItem = FillRuntimeLayerItem | FillRuntimeGroupItem
+export interface FillRuntimeTextItem {
+  id: string
+  kind: "text"
+  name: string
+  typeLabel: string
+  memberLayerIds: string[]
+  polygons: Point2D[][]
+  bounds: { x: number; y: number; width: number; height: number }
+  textLayer: TextLayer
+}
+
+export type FillRuntimeItem = FillRuntimeLayerItem | FillRuntimeGroupItem | FillRuntimeTextItem
 
 export function makeFillGroupRuntimeId(groupId: string): string {
   return `${FILL_GROUP_RUNTIME_PREFIX}${groupId}`
@@ -129,6 +140,34 @@ export function buildFillRuntimeItems(
       polygons: [polygon],
       bounds,
       layer,
+    })
+  }
+
+  const visibleTextLayers = (template.textLayers ?? []).filter(
+    (tl) => tl.visible && !hiddenLayerIds.has(tl.id)
+  )
+
+  for (const tl of visibleTextLayers) {
+    const polygon = [
+      { x: tl.x, y: tl.y },
+      { x: tl.x + tl.width, y: tl.y },
+      { x: tl.x + tl.width, y: tl.y + tl.height },
+      { x: tl.x, y: tl.y + tl.height },
+    ]
+    items.push({
+      id: tl.id,
+      kind: "text",
+      name: tl.name || "Text Layer",
+      typeLabel: "Text Layer",
+      memberLayerIds: [tl.id],
+      polygons: [polygon],
+      bounds: {
+        x: tl.x,
+        y: tl.y,
+        width: Math.max(1, tl.width),
+        height: Math.max(1, tl.height),
+      },
+      textLayer: tl,
     })
   }
 

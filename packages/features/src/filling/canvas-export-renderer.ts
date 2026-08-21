@@ -12,6 +12,7 @@ import {
   type ImageTransform,
   type LayerFillState,
   type Point2D,
+  type TextLayer,
   type VectorLayer,
 } from "./types"
 import { resolveLayerShapePoints } from "./shape-generators"
@@ -131,6 +132,16 @@ export async function renderFilledCanvas(options: RenderOptions): Promise<ImageD
         continue
       }
 
+      if (runtimeItem.kind === "text") {
+        drawTextLayerItem(
+          ctx,
+          runtimeItem.textLayer,
+          fillState,
+          canvasFillState
+        )
+        continue
+      }
+
       drawLayerItem(
         ctx,
         runtimeItem.layer,
@@ -159,6 +170,18 @@ export async function renderFilledCanvas(options: RenderOptions): Promise<ImageD
       canvasWidth,
       canvasHeight,
       loadedImages.get(layer.id)
+    )
+  }
+
+  for (const textLayer of template.textLayers ?? []) {
+    if (!textLayer.visible) continue
+
+    const fillState = layerFillStates.find((lf) => lf.layerId === textLayer.id)
+    drawTextLayerItem(
+      ctx,
+      textLayer,
+      fillState,
+      canvasFillState
     )
   }
 
@@ -427,6 +450,110 @@ function createCanvasGradient(
     gradient.addColorStop(stop.offset, stop.color)
   }
   return gradient
+}
+
+function drawTextLayerItem(
+  ctx: OffscreenCanvasRenderingContext2D,
+  textLayer: TextLayer,
+  fillState: LayerFillState | undefined,
+  canvasFillState: CanvasFillState
+): void {
+  ctx.save()
+
+  if (textLayer.rotation !== 0) {
+    ctx.translate(textLayer.x + textLayer.width / 2, textLayer.y + textLayer.height / 2)
+    ctx.rotate((textLayer.rotation * Math.PI) / 180)
+    ctx.translate(-(textLayer.x + textLayer.width / 2), -(textLayer.y + textLayer.height / 2))
+  }
+
+  const effectiveBorderWidth = canvasFillState.borderOverrideEnabled
+    ? canvasFillState.borderOverrideWidth
+    : (fillState?.borderWidth ?? 0)
+  const effectiveBorderColor = canvasFillState.borderOverrideEnabled
+    ? canvasFillState.borderOverrideColor
+    : (fillState?.borderColor ?? "#000000")
+
+  const containerColor = textLayer.containerColor || "rgba(255, 255, 255, 0.85)"
+  const containerOpacity = (textLayer.containerOpacity ?? 100) / 100
+  const borderRadius = textLayer.borderRadius ?? 8
+  const fontSize = textLayer.fontSize ?? 24
+  const fontFamily = textLayer.fontFamily || "Inter"
+  const textColor = textLayer.textColor || "#1e293b"
+  const paddingV = textLayer.paddingV ?? 12
+  const paddingH = textLayer.paddingH ?? 16
+
+  // Draw background container
+  ctx.save()
+  ctx.globalAlpha = containerOpacity
+  ctx.fillStyle = containerColor
+  if (borderRadius > 0 && typeof ctx.roundRect === "function") {
+    ctx.beginPath()
+    ctx.roundRect(textLayer.x, textLayer.y, textLayer.width, textLayer.height, borderRadius)
+    ctx.fill()
+  } else {
+    ctx.fillRect(textLayer.x, textLayer.y, textLayer.width, textLayer.height)
+  }
+  ctx.restore()
+
+  // Draw border if enabled
+  if (effectiveBorderWidth > 0) {
+    ctx.save()
+    ctx.lineWidth = effectiveBorderWidth
+    ctx.strokeStyle = effectiveBorderColor
+    if (borderRadius > 0 && typeof ctx.roundRect === "function") {
+      ctx.beginPath()
+      ctx.roundRect(textLayer.x, textLayer.y, textLayer.width, textLayer.height, borderRadius)
+      ctx.stroke()
+    } else {
+      ctx.strokeRect(textLayer.x, textLayer.y, textLayer.width, textLayer.height)
+    }
+    ctx.restore()
+  }
+
+  // Draw text
+  const text = textLayer.content || textLayer.name || "Text Layer"
+  const availWidth = Math.max(1, textLayer.width - paddingH * 2)
+  const availHeight = Math.max(1, textLayer.height - paddingV * 2)
+
+  ctx.save()
+  ctx.translate(textLayer.x + textLayer.width / 2, textLayer.y + textLayer.height / 2)
+  if (textLayer.rotate180) {
+    ctx.rotate(Math.PI)
+  }
+  ctx.font = `${fontSize}px ${fontFamily}, sans-serif`
+  ctx.fillStyle = textColor
+
+  const align = textLayer.alignment ?? "center"
+  const position = textLayer.position ?? "center"
+
+  let localX = 0
+  if (align === "start") {
+    ctx.textAlign = "left"
+    localX = -availWidth / 2
+  } else if (align === "end") {
+    ctx.textAlign = "right"
+    localX = availWidth / 2
+  } else {
+    ctx.textAlign = "center"
+    localX = 0
+  }
+
+  let localY = 0
+  if (position === "top") {
+    ctx.textBaseline = "top"
+    localY = -availHeight / 2
+  } else if (position === "bottom") {
+    ctx.textBaseline = "bottom"
+    localY = availHeight / 2
+  } else {
+    ctx.textBaseline = "middle"
+    localY = 0
+  }
+
+  ctx.fillText(text, localX, localY, availWidth)
+  ctx.restore()
+
+  ctx.restore()
 }
 
 /**

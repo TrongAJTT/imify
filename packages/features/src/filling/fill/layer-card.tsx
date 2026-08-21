@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { ImageOff, Layers } from "lucide-react";
+import { ImageOff, Layers, Type } from "lucide-react";
 
 import type { LayerFillState } from "@imify/features/filling/types";
 import type { FillRuntimeItem } from "@imify/features/filling/fill/runtime-items";
@@ -61,6 +61,7 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const selected = selectedLayerId === item.id;
+  const isText = item.kind === "text";
   const hasImage = Boolean(fillState?.imageUrl);
 
   useEffect(() => {
@@ -80,6 +81,9 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
   }, [fillState?.imageUrl]);
 
   const sublabel = useMemo(() => {
+    if (item.kind === "text") {
+      return item.textLayer.content || "Text Layer";
+    }
     const baseTypeLabel =
       item.kind === "group"
         ? item.typeLabel
@@ -96,9 +100,11 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
       className={[
         "group relative rounded-md border px-2.5 py-2.5 transition-colors shadow-sm",
         selected
-          ? hasImage
-            ? "border-sky-300 bg-sky-50/30"
-            : "border-amber-300 bg-amber-50/40 ring-1 ring-amber-200/70"
+          ? isText
+            ? "border-purple-400 bg-purple-50/40 ring-1 ring-purple-300/70"
+            : hasImage
+              ? "border-sky-300 bg-sky-50/30"
+              : "border-amber-300 bg-amber-50/40 ring-1 ring-amber-200/70"
           : "border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30",
       ].join(" ")}
       onClick={() => setSelectedLayerId(item.id)}
@@ -111,7 +117,11 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
     >
       <div className="flex items-start gap-3">
         <div className="relative w-[32px] h-[32px] overflow-hidden bg-slate-50 dark:bg-slate-900/40 rounded-md border flex items-center justify-center shrink-0">
-          {fillState?.imageUrl ? (
+          {isText ? (
+            <div className="flex items-center justify-center w-full h-full text-purple-600 dark:text-purple-400 bg-purple-50/60 dark:bg-purple-950/40">
+              <Type size={16} />
+            </div>
+          ) : fillState?.imageUrl ? (
             <img
               src={previewImageUrl ?? fillState.imageUrl}
               alt={`${item.name || "Layer"} preview`}
@@ -131,6 +141,9 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
           <div className="truncate text-[12px] font-bold text-slate-800 dark:text-slate-100 inline-flex items-center gap-1.5">
             {item.kind === "group" && (
               <Layers size={12} className="text-amber-500 shrink-0" />
+            )}
+            {item.kind === "text" && (
+              <Type size={12} className="text-purple-500 shrink-0" />
             )}
             <span className="truncate">
               {item.name || `Layer ${item.id.slice(-5)}`}

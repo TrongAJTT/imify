@@ -60,6 +60,7 @@ export interface VectorLayer {
 export interface TextLayer {
   id: string
   name: string
+  content?: string
   x: number
   y: number
   width: number
@@ -67,6 +68,37 @@ export interface TextLayer {
   rotation: number
   locked: boolean
   visible: boolean
+  fontFamily?: string
+  fontSize?: number
+  textColor?: string
+  paddingV?: number
+  paddingH?: number
+  paddingLinked?: boolean
+  containerColor?: string
+  containerOpacity?: number
+  borderRadius?: number
+  position?: "top" | "center" | "bottom" | "left" | "right"
+  alignment?: "start" | "center" | "end"
+  rotate180?: boolean
+  offsetX?: number
+  offsetY?: number
+}
+
+export const DEFAULT_TEXT_LAYER_CONFIG = {
+  fontFamily: "Inter",
+  fontSize: 24,
+  textColor: "#1e293b",
+  paddingV: 12,
+  paddingH: 16,
+  paddingLinked: false,
+  containerColor: "rgba(255, 255, 255, 0.85)",
+  containerOpacity: 100,
+  borderRadius: 8,
+  position: "center" as const,
+  alignment: "center" as const,
+  rotate180: false,
+  offsetX: 0,
+  offsetY: 0,
 }
 
 // ── Layer Group ──

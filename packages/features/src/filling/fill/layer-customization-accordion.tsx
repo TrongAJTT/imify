@@ -12,6 +12,7 @@ import {
   Palette,
   RotateCcw,
   SlidersHorizontal,
+  Type,
   X,
 } from "lucide-react";
 
@@ -19,9 +20,13 @@ import type {
   FillingTemplate,
   ImageTransform,
   LayerFillState,
+  TextLayer,
   VectorLayer,
 } from "@imify/features/filling/types";
-import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types";
+import {
+  DEFAULT_IMAGE_TRANSFORM,
+  DEFAULT_TEXT_LAYER_CONFIG,
+} from "@imify/features/filling/types";
 import { regenerateLayerShapePoints } from "@imify/features/filling/shape-generators";
 import {
   buildFillRuntimeItems,
@@ -39,12 +44,17 @@ import { AccordionCard } from "@imify/ui/ui/accordion-card";
 import { Button } from "@imify/ui/ui/button";
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover";
 import { NumberInput } from "@imify/ui/ui/number-input";
+import { TextInput } from "@imify/ui/ui/text-input";
 import { Tooltip } from "@imify/ui/ui/tooltip";
 import {
   SHORTCUT_DEFINITION_MAP,
   type ShortcutActionId,
 } from "@imify/stores/shortcuts";
 import { useTranslation } from "@imify/i18n";
+import {
+  CaptionConfigSections,
+  type CaptionConfigData,
+} from "../../shared/caption-config-sections";
 import {
   COMMON_IMAGE_ACCEPT,
   getFirstCommonImageFileFromDataTransfer,
@@ -83,22 +93,6 @@ export function FillLayerCustomizationAccordion({
   template,
 }: FillLayerCustomizationAccordionProps) {
   const { t } = useTranslation("filling");
-
-  const TAB_ITEMS: Array<{
-    id: FillCustomizationTab;
-    label: string;
-    icon: React.ReactNode;
-  }> = [
-    { id: "image", label: t("fill.tabImage"), icon: <ImagePlus size={14} /> },
-    { id: "border", label: t("fill.tabBorder"), icon: <Palette size={14} /> },
-    { id: "layer", label: t("fill.tabLayer"), icon: <Layers size={14} /> },
-  ];
-
-  const TAB_INFO_TEXT: Record<FillCustomizationTab, string> = {
-    image: t("fill.tabImageDesc"),
-    border: t("fill.tabBorderDesc"),
-    layer: t("fill.tabLayerDesc"),
-  };
 
   const selectedLayerId = useFillingStore((s) => s.selectedLayerId);
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId);
@@ -147,7 +141,12 @@ export function FillLayerCustomizationAccordion({
   );
   const runtimeItems = useMemo(
     () => buildFillRuntimeItems(activeTemplate, hiddenLayerIdSet),
-    [activeTemplate.layers, activeTemplate.groups, hiddenLayerIdSet],
+    [
+      activeTemplate.layers,
+      activeTemplate.groups,
+      activeTemplate.textLayers,
+      hiddenLayerIdSet,
+    ],
   );
   const selectedRuntimeItem = useMemo<FillRuntimeItem | null>(
     () => runtimeItems.find((item) => item.id === selectedLayerId) ?? null,
@@ -155,8 +154,40 @@ export function FillLayerCustomizationAccordion({
   );
   const selectedLayer =
     selectedRuntimeItem?.kind === "layer" ? selectedRuntimeItem.layer : null;
+  const selectedTextLayer =
+    selectedRuntimeItem?.kind === "text" ? selectedRuntimeItem.textLayer : null;
   const selectedGroupItem =
     selectedRuntimeItem?.kind === "group" ? selectedRuntimeItem : null;
+
+  const isTextLayer = selectedRuntimeItem?.kind === "text";
+
+  const TAB_ITEMS: Array<{
+    id: FillCustomizationTab;
+    label: string;
+    icon: React.ReactNode;
+  }> = [
+    {
+      id: "image",
+      label: isTextLayer
+        ? t("fill.tabText", { defaultValue: "Văn bản" })
+        : t("fill.tabImage"),
+      icon: isTextLayer ? <Type size={14} /> : <ImagePlus size={14} />,
+    },
+    { id: "border", label: t("fill.tabBorder"), icon: <Palette size={14} /> },
+    { id: "layer", label: t("fill.tabLayer"), icon: <Layers size={14} /> },
+  ];
+
+  const TAB_INFO_TEXT: Record<FillCustomizationTab, string> = {
+    image: isTextLayer
+      ? t("fill.tabTextDesc", {
+          defaultValue:
+            "Tùy chỉnh nội dung, phông chữ, khung nền và vị trí văn bản.",
+        })
+      : t("fill.tabImageDesc"),
+    border: t("fill.tabBorderDesc"),
+    layer: t("fill.tabLayerDesc"),
+  };
+
   const selectedGroupTransform = useMemo<ImageTransform | null>(() => {
     if (!selectedGroupItem) {
       return null;
@@ -175,6 +206,86 @@ export function FillLayerCustomizationAccordion({
         (state) => state.layerId === selectedRuntimeItem?.id,
       ),
     [layerFillStates, selectedRuntimeItem?.id],
+  );
+
+  const textConfig: CaptionConfigData = useMemo(() => {
+    if (!selectedTextLayer) return {};
+    return {
+      content: selectedTextLayer.content ?? selectedTextLayer.name,
+      fontFamily:
+        selectedTextLayer.fontFamily ?? DEFAULT_TEXT_LAYER_CONFIG.fontFamily,
+      fontSize:
+        selectedTextLayer.fontSize ?? DEFAULT_TEXT_LAYER_CONFIG.fontSize,
+      textColor:
+        selectedTextLayer.textColor ?? DEFAULT_TEXT_LAYER_CONFIG.textColor,
+      paddingV:
+        selectedTextLayer.paddingV ?? DEFAULT_TEXT_LAYER_CONFIG.paddingV,
+      paddingH:
+        selectedTextLayer.paddingH ?? DEFAULT_TEXT_LAYER_CONFIG.paddingH,
+      paddingLinked:
+        selectedTextLayer.paddingLinked ??
+        DEFAULT_TEXT_LAYER_CONFIG.paddingLinked,
+      containerColor:
+        selectedTextLayer.containerColor ??
+        DEFAULT_TEXT_LAYER_CONFIG.containerColor,
+      containerOpacity:
+        selectedTextLayer.containerOpacity ??
+        DEFAULT_TEXT_LAYER_CONFIG.containerOpacity,
+      borderRadius:
+        selectedTextLayer.borderRadius ??
+        DEFAULT_TEXT_LAYER_CONFIG.borderRadius,
+      position:
+        (selectedTextLayer.position as any) ??
+        DEFAULT_TEXT_LAYER_CONFIG.position,
+      alignment:
+        selectedTextLayer.alignment ?? DEFAULT_TEXT_LAYER_CONFIG.alignment,
+      rotate180:
+        selectedTextLayer.rotate180 ?? DEFAULT_TEXT_LAYER_CONFIG.rotate180,
+      offsetX: selectedTextLayer.offsetX ?? DEFAULT_TEXT_LAYER_CONFIG.offsetX,
+      offsetY: selectedTextLayer.offsetY ?? DEFAULT_TEXT_LAYER_CONFIG.offsetY,
+    };
+  }, [selectedTextLayer]);
+
+  const handleTextLayerConfigChange = useCallback(
+    (patch: Partial<CaptionConfigData>) => {
+      if (!selectedTextLayer) return;
+      const targetId = selectedTextLayer.id;
+      updateSessionTemplate((prev) => {
+        if (!prev) return prev;
+        const updated = (prev.textLayers ?? []).map((tl) => {
+          if (tl.id !== targetId) return tl;
+          return {
+            ...tl,
+            ...patch,
+            name: patch.content !== undefined ? patch.content : tl.name,
+          };
+        });
+        return {
+          ...prev,
+          textLayers: updated,
+          updatedAt: Date.now(),
+        };
+      });
+    },
+    [selectedTextLayer, updateSessionTemplate],
+  );
+
+  const textPositionOptions = useMemo(
+    () => [
+      {
+        value: "top",
+        label: t("captionFields.posTop", { defaultValue: "Trên" }),
+      },
+      {
+        value: "center",
+        label: t("captionFields.posCenter", { defaultValue: "Giữa" }),
+      },
+      {
+        value: "bottom",
+        label: t("captionFields.posBottom", { defaultValue: "Dưới" }),
+      },
+    ],
+    [t],
   );
 
   useShortcutActions([
@@ -198,7 +309,7 @@ export function FillLayerCustomizationAccordion({
   ]);
 
   const getLayerTransformBase = useCallback(
-    (layer: VectorLayer): LayerTransformBase => {
+    (layer: VectorLayer | TextLayer): LayerTransformBase => {
       const existing = layerTransformBaseRef.current.get(layer.id);
       if (existing) {
         return existing;
@@ -230,6 +341,23 @@ export function FillLayerCustomizationAccordion({
       scaleY: Math.max(0.01, selectedLayer.height / Math.max(1, base.height)),
     };
   }, [selectedLayer, getLayerTransformBase]);
+
+  const selectedTextLayerTransform = useMemo<ImageTransform | null>(() => {
+    if (!selectedTextLayer) return null;
+
+    const base = getLayerTransformBase(selectedTextLayer);
+    return {
+      x: Math.round((selectedTextLayer.x - base.x) * 100) / 100,
+      y: Math.round((selectedTextLayer.y - base.y) * 100) / 100,
+      rotation:
+        Math.round((selectedTextLayer.rotation - base.rotation) * 100) / 100,
+      scaleX: Math.max(0.01, selectedTextLayer.width / Math.max(1, base.width)),
+      scaleY: Math.max(
+        0.01,
+        selectedTextLayer.height / Math.max(1, base.height),
+      ),
+    };
+  }, [selectedTextLayer, getLayerTransformBase]);
 
   const updateSelectedLayerState = useCallback(
     (partial: Partial<LayerFillState>) => {
@@ -296,6 +424,43 @@ export function FillLayerCustomizationAccordion({
         return;
       }
 
+      if (selectedTextLayer && selectedTextLayerTransform) {
+        const base = getLayerTransformBase(selectedTextLayer);
+        const nextOffsetX = partial.x ?? selectedTextLayerTransform.x;
+        const nextOffsetY = partial.y ?? selectedTextLayerTransform.y;
+        const nextRotation =
+          partial.rotation ?? selectedTextLayerTransform.rotation;
+        const nextScaleX = partial.scaleX ?? selectedTextLayerTransform.scaleX;
+        const nextScaleY = partial.scaleY ?? selectedTextLayerTransform.scaleY;
+
+        const nextX = Math.round((base.x + nextOffsetX) * 100) / 100;
+        const nextY = Math.round((base.y + nextOffsetY) * 100) / 100;
+        const nextRot = Math.round((base.rotation + nextRotation) * 100) / 100;
+        const nextWidth = clampSize(base.width * nextScaleX);
+        const nextHeight = clampSize(base.height * nextScaleY);
+
+        updateSessionTemplate((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            textLayers: (prev.textLayers ?? []).map((tl) =>
+              tl.id === selectedTextLayer.id
+                ? {
+                    ...tl,
+                    x: nextX,
+                    y: nextY,
+                    rotation: nextRot,
+                    width: nextWidth,
+                    height: nextHeight,
+                  }
+                : tl,
+            ),
+            updatedAt: Date.now(),
+          };
+        });
+        return;
+      }
+
       if (!selectedLayer || !selectedLayerTransform) return;
 
       const base = getLayerTransformBase(selectedLayer);
@@ -317,10 +482,13 @@ export function FillLayerCustomizationAccordion({
       getLayerTransformBase,
       selectedLayer,
       selectedLayerTransform,
+      selectedTextLayer,
+      selectedTextLayerTransform,
       selectedGroupItem,
       selectedGroupTransform,
       updateGroupRuntimeTransform,
       updateSelectedTemplateLayer,
+      updateSessionTemplate,
     ],
   );
 
@@ -517,6 +685,30 @@ export function FillLayerCustomizationAccordion({
       return;
     }
 
+    if (selectedTextLayer) {
+      const base = getLayerTransformBase(selectedTextLayer);
+      updateSessionTemplate((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          textLayers: (prev.textLayers ?? []).map((tl) =>
+            tl.id === selectedTextLayer.id
+              ? {
+                  ...tl,
+                  x: base.x,
+                  y: base.y,
+                  rotation: base.rotation,
+                  width: base.width,
+                  height: base.height,
+                }
+              : tl,
+          ),
+          updatedAt: Date.now(),
+        };
+      });
+      return;
+    }
+
     if (!selectedLayer) return;
 
     const base = getLayerTransformBase(selectedLayer);
@@ -531,8 +723,10 @@ export function FillLayerCustomizationAccordion({
     getLayerTransformBase,
     selectedGroupItem,
     selectedLayer,
+    selectedTextLayer,
     updateGroupRuntimeTransform,
     updateSelectedTemplateLayer,
+    updateSessionTemplate,
   ]);
 
   const handleDeleteLayer = useCallback(() => {
@@ -578,6 +772,7 @@ export function FillLayerCustomizationAccordion({
       }
       colorTheme="sky"
       defaultOpen={true}
+      childrenClassName="p-2"
     >
       <div>
         {!selectedRuntimeItem ? (
@@ -626,7 +821,36 @@ export function FillLayerCustomizationAccordion({
 
             {activeCustomizationTab === "image" && (
               <div className="space-y-3 mt-3">
-                {!selectedFillState?.imageUrl ? (
+                {selectedTextLayer ? (
+                  <CaptionConfigSections
+                    config={textConfig}
+                    onChange={handleTextLayerConfigChange}
+                    textInputNode={
+                      <TextInput
+                        label={t("fill.textContent", {
+                          defaultValue: "Nội dung",
+                        })}
+                        value={textConfig.content ?? selectedTextLayer.name}
+                        onChange={(val) =>
+                          handleTextLayerConfigChange({ content: val })
+                        }
+                        placeholder={t("fill.textContentPlaceholder", {
+                          defaultValue: "Nhập nội dung văn bản...",
+                        })}
+                      />
+                    }
+                    positionOptions={textPositionOptions}
+                    maxPaddingV={Math.max(
+                      1,
+                      Math.round(selectedTextLayer.height),
+                    )}
+                    maxPaddingH={Math.max(
+                      1,
+                      Math.round(selectedTextLayer.width),
+                    )}
+                    sectionClassName="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 first:border-t-0 first:pt-0"
+                  />
+                ) : !selectedFillState?.imageUrl ? (
                   <div
                     className={`rounded-md border border-dashed p-3 transition-colors ${
                       isDragOverImageDropZone
@@ -757,11 +981,14 @@ export function FillLayerCustomizationAccordion({
             )}
 
             {activeCustomizationTab === "layer" &&
-              (selectedLayerTransform || selectedGroupTransform) && (
+              (selectedLayerTransform ||
+                selectedGroupTransform ||
+                selectedTextLayerTransform) && (
                 <FillTransformControls
                   transform={
                     selectedLayerTransform ??
-                    selectedGroupTransform ?? { ...DEFAULT_IMAGE_TRANSFORM }
+                    selectedGroupTransform ??
+                    selectedTextLayerTransform ?? { ...DEFAULT_IMAGE_TRANSFORM }
                   }
                   onChange={handleLayerTransformChange}
                   onReset={handleResetLayerTransform}

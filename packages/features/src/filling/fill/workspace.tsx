@@ -258,6 +258,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
       );
     }
 
+    if (selectedRuntimeItem.kind === "text") {
+      return [];
+    }
+
     return [toWorldLayerPoints(selectedRuntimeItem.layer)];
   }, [
     groupRuntimeTransforms,
@@ -964,6 +968,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         },
       );
     }
+    if (hoveredSwapTargetItem.kind === "text") {
+      return [];
+    }
     return [toWorldLayerPoints(hoveredSwapTargetItem.layer)];
   }, [groupRuntimeTransforms, hoveredSwapTargetItem]);
 
@@ -1538,7 +1545,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   }, [exportSettings.fileNamePattern, performExport]);
 
   const selectedEmptyImageOverlay = useMemo(() => {
-    if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
+    if (
+      !selectedRuntimeItem ||
+      selectedRuntimeItem.kind === "text" ||
+      selectedFillState?.imageUrl
+    ) {
       return null;
     }
 
@@ -1960,6 +1971,33 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                         ...DEFAULT_IMAGE_TRANSFORM,
                       }
                     }
+                    scale={renderScale}
+                    offsetX={offsetX}
+                    offsetY={offsetY}
+                    isSelected={selectedLayerId === item.id}
+                    containerHighlightMode={containerHighlightMode}
+                    isLayerTransformInteractive={
+                      selectedLayerId === item.id &&
+                      activeCustomizationTab === "layer"
+                    }
+                    onLayerTransformDragStart={handleLayerTransformDragStart}
+                    onLayerTransformDragMove={handleLayerTransformDragMove}
+                    onLayerTransformDragEnd={handleLayerTransformDragEnd}
+                    onSelect={() => {
+                      setSelectedCanvasNode(null);
+                      setSelectedLayerId(item.id);
+                    }}
+                  />
+                );
+              }
+
+              if (item.kind === "text") {
+                return (
+                  <FilledTextLayerShape
+                    key={item.id}
+                    item={item}
+                    fillState={fillState}
+                    canvasFillState={canvasFillState}
                     scale={renderScale}
                     offsetX={offsetX}
                     offsetY={offsetY}
@@ -2833,6 +2871,152 @@ function FilledLayerShape({
         />
       )}
     </>
+  );
+}
+
+function FilledTextLayerShape({
+  item,
+  fillState,
+  canvasFillState,
+  scale,
+  offsetX,
+  offsetY,
+  isSelected,
+  containerHighlightMode,
+  isLayerTransformInteractive,
+  onLayerTransformDragStart,
+  onLayerTransformDragMove,
+  onLayerTransformDragEnd,
+  onSelect,
+}: {
+  item: Extract<FillRuntimeItem, { kind: "text" }>;
+  fillState:
+    | ReturnType<typeof useFillingStore.getState>["layerFillStates"][number]
+    | undefined;
+  canvasFillState: CanvasFillState;
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+  isSelected: boolean;
+  containerHighlightMode: LayerContainerHighlightMode;
+  isLayerTransformInteractive: boolean;
+  onLayerTransformDragStart?: () => void;
+  onLayerTransformDragMove?: (e: Konva.KonvaEventObject<DragEvent>) => void;
+  onLayerTransformDragEnd?: (e: Konva.KonvaEventObject<DragEvent>) => void;
+  onSelect: () => void;
+}) {
+  const textLayer = item.textLayer;
+  const x = offsetX + textLayer.x * scale;
+  const y = offsetY + textLayer.y * scale;
+  const width = textLayer.width * scale;
+  const height = textLayer.height * scale;
+
+  const effectiveBorderWidth = canvasFillState.borderOverrideEnabled
+    ? canvasFillState.borderOverrideWidth
+    : fillState?.borderWidth ?? 0;
+  const effectiveBorderColor = canvasFillState.borderOverrideEnabled
+    ? canvasFillState.borderOverrideColor
+    : fillState?.borderColor ?? "#000000";
+
+  const containerColor =
+    textLayer.containerColor || "rgba(255, 255, 255, 0.85)";
+  const containerOpacity = (textLayer.containerOpacity ?? 100) / 100;
+  const borderRadius = (textLayer.borderRadius ?? 8) * scale;
+  const fontSize = (textLayer.fontSize ?? 24) * scale;
+  const fontFamily = textLayer.fontFamily || "Inter";
+  const textColor = textLayer.textColor || "#1e293b";
+  const paddingV = (textLayer.paddingV ?? 12) * scale;
+  const paddingH = (textLayer.paddingH ?? 16) * scale;
+
+  const align =
+    textLayer.alignment === "start"
+      ? "left"
+      : textLayer.alignment === "end"
+        ? "right"
+        : "center";
+
+  const verticalAlign =
+    textLayer.position === "top"
+      ? "top"
+      : textLayer.position === "bottom"
+        ? "bottom"
+        : "middle";
+
+  return (
+    <Group
+      x={x}
+      y={y}
+      rotation={textLayer.rotation}
+      onClick={onSelect}
+      onTap={onSelect}
+    >
+      {/* Background Container */}
+      <Rect
+        width={width}
+        height={height}
+        fill={containerColor}
+        opacity={containerOpacity}
+        cornerRadius={borderRadius}
+        stroke={effectiveBorderWidth > 0 ? effectiveBorderColor : undefined}
+        strokeWidth={effectiveBorderWidth * scale}
+      />
+
+      {/* Rendered Text */}
+      <Text
+        text={textLayer.content || textLayer.name || "Text Layer"}
+        x={width / 2}
+        y={height / 2}
+        offsetX={Math.max(1, width - paddingH * 2) / 2}
+        offsetY={Math.max(1, height - paddingV * 2) / 2}
+        width={Math.max(1, width - paddingH * 2)}
+        height={Math.max(1, height - paddingV * 2)}
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        fill={textColor}
+        align={align}
+        verticalAlign={verticalAlign}
+        wrap="word"
+        ellipsis={true}
+        rotation={textLayer.rotate180 ? 180 : 0}
+        listening={false}
+      />
+
+      {/* Selected outline */}
+      {(isSelected || containerHighlightMode !== "none") && (
+        <Rect
+          width={width}
+          height={height}
+          cornerRadius={borderRadius}
+          stroke={
+            isSelected
+              ? "#8b5cf6"
+              : containerHighlightMode === "missing"
+                ? "#f59e0b"
+                : "#3b82f6"
+          }
+          strokeWidth={2}
+          dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
+          listening={false}
+        />
+      )}
+
+      {isLayerTransformInteractive && (
+        <Rect
+          id={`fill-layer-transform-${textLayer.id}`}
+          name="fill-layer-transform-node"
+          width={width}
+          height={height}
+          fill="rgba(139, 92, 246, 0.001)"
+          strokeEnabled={false}
+          draggable
+          onClick={onSelect}
+          onTap={onSelect}
+          onDragStart={onLayerTransformDragStart}
+          onDragMove={onLayerTransformDragMove}
+          onDragEnd={onLayerTransformDragEnd}
+        />
+      )}
+    </Group>
   );
 }
 
