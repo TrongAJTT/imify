@@ -84,18 +84,26 @@ function GridTemplatePreview({ preset }: { preset: GridTemplatePreset }) {
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
-      {preview.layoutCells.map((cell) => (
-        <div
-          key={`${preset.id}-${cell.id}`}
-          className="absolute rounded-[3px] border border-sky-300 bg-sky-200/65 dark:border-sky-500/70 dark:bg-sky-500/35"
-          style={{
-            left: `${(cell.x / PREVIEW_CANVAS_SIZE) * 100}%`,
-            top: `${(cell.y / PREVIEW_CANVAS_SIZE) * 100}%`,
-            width: `${(cell.width / PREVIEW_CANVAS_SIZE) * 100}%`,
-            height: `${(cell.height / PREVIEW_CANVAS_SIZE) * 100}%`,
-          }}
-        />
-      ))}
+      {preview.layoutCells.map((cell) => {
+        const clipPath =
+          cell.points && cell.points.length > 4
+            ? `polygon(${cell.points.map((p) => `${((p.x / cell.width) * 100).toFixed(1)}% ${((p.y / cell.height) * 100).toFixed(1)}%`).join(", ")})`
+            : undefined
+
+        return (
+          <div
+            key={`${preset.id}-${cell.id}`}
+            className="absolute rounded-[3px] border border-sky-300 bg-sky-200/65 dark:border-sky-500/70 dark:bg-sky-500/35"
+            style={{
+              left: `${(cell.x / PREVIEW_CANVAS_SIZE) * 100}%`,
+              top: `${(cell.y / PREVIEW_CANVAS_SIZE) * 100}%`,
+              width: `${(cell.width / PREVIEW_CANVAS_SIZE) * 100}%`,
+              height: `${(cell.height / PREVIEW_CANVAS_SIZE) * 100}%`,
+              clipPath,
+            }}
+          />
+        )
+      })}
     </div>
   );
 }

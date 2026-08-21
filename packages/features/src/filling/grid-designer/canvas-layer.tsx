@@ -1,7 +1,7 @@
 import React from "react"
-import { Layer, Rect, Text } from "react-konva"
+import { Layer, Line, Rect, Text } from "react-konva"
 import type { GridLayoutCell } from "./generator"
-import type { GridPrimaryDirection } from "../types"
+import type { GridPrimaryDirection, Point2D } from "../types"
 
 interface GridDesignCanvasLayerProps {
   canvasWidth: number
@@ -12,6 +12,22 @@ interface GridDesignCanvasLayerProps {
   cells: GridLayoutCell[]
   direction?: GridPrimaryDirection
   highlightedIndex?: number | null
+}
+
+function isStandardRect(points?: Point2D[], width?: number, height?: number): boolean {
+  if (!points || points.length !== 4 || width === undefined || height === undefined) {
+    return false
+  }
+  return (
+    Math.abs(points[0]!.x) < 0.01 &&
+    Math.abs(points[0]!.y) < 0.01 &&
+    Math.abs(points[1]!.x - width) < 0.01 &&
+    Math.abs(points[1]!.y) < 0.01 &&
+    Math.abs(points[2]!.x - width) < 0.01 &&
+    Math.abs(points[2]!.y - height) < 0.01 &&
+    Math.abs(points[3]!.x) < 0.01 &&
+    Math.abs(points[3]!.y - height) < 0.01
+  )
 }
 
 export function GridDesignCanvasLayer({
@@ -67,21 +83,37 @@ export function GridDesignCanvasLayer({
 
         const cellW = Math.max(1, cell.width * renderScale)
         const cellH = Math.max(1, cell.height * renderScale)
+        const isRect = isStandardRect(cell.points, cell.width, cell.height)
 
         return (
           <React.Fragment key={cell.id}>
-            <Rect
-              x={offsetX + cell.x * renderScale}
-              y={offsetY + cell.y * renderScale}
-              width={cellW}
-              height={cellH}
-              fill={fill}
-              stroke={stroke}
-              strokeWidth={strokeWidth}
-              dash={dash}
-              cornerRadius={4}
-              listening={false}
-            />
+            {isRect ? (
+              <Rect
+                x={offsetX + cell.x * renderScale}
+                y={offsetY + cell.y * renderScale}
+                width={cellW}
+                height={cellH}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={strokeWidth}
+                dash={dash}
+                cornerRadius={4}
+                listening={false}
+              />
+            ) : (
+              <Line
+                points={cell.points!.flatMap((p) => [
+                  offsetX + (cell.x + p.x) * renderScale,
+                  offsetY + (cell.y + p.y) * renderScale,
+                ])}
+                closed={true}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={strokeWidth}
+                dash={dash}
+                listening={false}
+              />
+            )}
             {cell.isText && !isError && (
               <Text
                 x={offsetX + cell.x * renderScale}

@@ -65,3 +65,4 @@ flowchart TD
 - For any code changes: Run `pnpm typecheck` to verify TypeScript across all 9 packages (or target any package for smaller scope) and `pnpm lint` to check code quality.
 - For major web refactors: Run `pnpm build:web` to verify Next.js static production export.
 - For extension changes: Run `pnpm build:chrome` or `pnpm build:firefox` to verify extension builds and manifest sanitation.
+- Giving commit message if it is required in the prompt.

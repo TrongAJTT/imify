@@ -159,7 +159,7 @@
     "outerPadding": "Spacing between the canvas edge and the generated grid.",
     "gapX": "Horizontal spacing between grid cells.",
     "gapY": "Vertical spacing between grid cells.",
-    "rowDefinition": "Definition Guide:\n• Enter 1 number (e.g. \"3\"): Splits into equal cells.\n• Enter ratios (e.g. \"2 1\", \"1 2 1\"): Customizes cell proportions.\n• Merge indicators (e.g. \"1a 2\", \"1a 1 1\"): Merges matching lowercase letters (a-z) across adjacent rows/columns.\n• Suffix \"T\" (e.g. \"1T\", \"1Ta\", \"1-T-a\"): Parses the cell as a Text Layer.\n• Enter \"=\": Inherits the exact definition from the previous row/column.",
+    "rowDefinition": "Definition Guide:\n• Enter 1 number (e.g. \"3\"): Splits into equal cells.\n• Enter ratios (e.g. \"2 1\", \"1 2 1\"): Customizes cell proportions.\n• Merge indicators (e.g. \"1ab 1b 1bc\", \"1a 2\", \"1a 1 1\"): Merges matching lowercase letters (a-z) into connected chains.\n• Suffix \"C\" (e.g. \"1C\", \"1Cab\"): Computes the Convex Hull of the merged cells instead of a bounding box.\n• Suffix \"T\" (e.g. \"1T\", \"1Ta\", \"1-T-a\"): Parses the cell as a Text Layer.\n• Enter \"=\": Inherits the exact definition from the previous row/column.",
     "uniformColumns": "Use one shared row definition for every row."
   },
   "gridPresets": {
