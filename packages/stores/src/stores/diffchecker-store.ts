@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
+import { getInitialCanvasHeightPx } from "@imify/core"
 import type {
   DiffAlgorithm,
   DiffAlignAnchor,
@@ -42,7 +43,7 @@ interface DiffcheckerState {
   setMultiImageLayout4: (layout: MultiImageLayout4) => void
 }
 
-const DEFAULT_CONTAINER_HEIGHT = 384 // Tailwind `h-96`
+const DEFAULT_CONTAINER_HEIGHT = getInitialCanvasHeightPx(384)
 
 export const useDiffcheckerStore = create<DiffcheckerState>()(
   persist(
@@ -86,7 +87,6 @@ export const useDiffcheckerStore = create<DiffcheckerState>()(
         overlayOpacity: state.overlayOpacity,
         splitPosition: state.splitPosition,
         diffThreshold: state.diffThreshold,
-        containerHeight: state.containerHeight,
         multiImageLayout2: state.multiImageLayout2,
         multiImageLayout3: state.multiImageLayout3,
         multiImageLayout4: state.multiImageLayout4,

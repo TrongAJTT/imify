@@ -73,6 +73,7 @@ import { Button } from "@imify/ui/ui/button";
 import { Tooltip, ZoomPanControl } from "@imify/ui";
 import { promptRenameInput } from "@imify/stores";
 import { useCanvasResizer } from "../../shared/use-canvas-resizer";
+import { getInitialCanvasHeightPx } from "@imify/core";
 import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
@@ -121,7 +122,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const transformerRef = useRef<Konva.Transformer>(null);
   const emptyImageUploadInputRef = useRef<HTMLInputElement>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
-  const [previewContainerHeight, setPreviewContainerHeight] = useState(680);
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(() =>
+    getInitialCanvasHeightPx(680),
+  );
   const [previewZoom, setPreviewZoom] = useState(100);
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
   const [previewInteractionMode, setPreviewInteractionMode] =

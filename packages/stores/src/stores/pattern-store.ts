@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import type { QuickExportFormat } from "@imify/core"
+import { getInitialCanvasHeightPx, type QuickExportFormat } from "@imify/core"
 import type {
   PatternAsset,
   PatternAssetBorderSettings,
@@ -194,7 +194,7 @@ export interface PatternStoreState {
   assets: PatternAsset[]
   visualBoundaryVisibility: PatternVisualBoundaryVisibility
   activeVisualBoundary: PatternVisualBoundaryTarget | null
-  previewContainerHeight: number
+  previewContainerHeight: number | null
 
   exportFormat: QuickExportFormat
   setExportFormat: (format: QuickExportFormat) => void
@@ -233,7 +233,7 @@ export const usePatternStore = create<PatternStoreState>()(
         outbound: false,
       },
       activeVisualBoundary: null,
-      previewContainerHeight: 560,
+      previewContainerHeight: null,
 
       exportFormat: DEFAULT_PATTERN_EXPORT_SETTINGS.exportFormat,
       fileNamePattern: DEFAULT_PATTERN_EXPORT_SETTINGS.fileNamePattern,

@@ -8,6 +8,7 @@ import { hasFileDragPayload } from "../shared/image-file-utils"
 import { preventWheelEvent } from "../shared/prevent-wheel-event"
 import { useCanvasResizer } from "../shared/use-canvas-resizer"
 import { useTranslation } from "@imify/i18n"
+import { getInitialCanvasHeightPx } from "@imify/core"
 interface SplitterPreviewProps {
   image: {
     name: string
@@ -39,7 +40,7 @@ export function SplitterPreview({
 
   const [isDragOver, setIsDragOver] = useState(false)
   const [zoom, setZoom] = useState(100)
-  const [containerHeight, setContainerHeight] = useState(520)
+  const [containerHeight, setContainerHeight] = useState(() => getInitialCanvasHeightPx(520))
   const [frameWidth, setFrameWidth] = useState(0)
   const previewFrameRef = useRef<HTMLDivElement>(null)
   const previewInteractionModeRef = useRef(previewInteractionMode)

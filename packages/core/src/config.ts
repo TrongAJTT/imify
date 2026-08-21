@@ -24,3 +24,23 @@ export const APP_CONFIG = {
     LAZY_LOAD_PAGING_MOBILE: true,
   },
 };
+
+/** Default initial canvas/preview height across all tool workspaces */
+export const CANVAS_INITIAL_HEIGHT_VH = 65;
+export const CANVAS_INITIAL_HEIGHT_STYLE = "65vh";
+export const CANVAS_MIN_HEIGHT_PX = 200;
+
+/**
+ * Calculates initial canvas/preview height in pixels based on viewport height (80vh).
+ * Safely falls back to a sensible pixel default when executed on SSR / without window.
+ */
+export function getInitialCanvasHeightPx(fallbackPx = 680): number {
+  if (typeof window !== "undefined" && window.innerHeight > 0) {
+    return Math.max(
+      CANVAS_MIN_HEIGHT_PX,
+      Math.round((window.innerHeight * CANVAS_INITIAL_HEIGHT_VH) / 100)
+    );
+  }
+  return fallbackPx;
+}
+

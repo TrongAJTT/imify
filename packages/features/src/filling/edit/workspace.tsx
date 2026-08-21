@@ -35,6 +35,7 @@ import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle";
 import { preventWheelEvent } from "../../shared/prevent-wheel-event";
 import { useTranslation } from "@imify/i18n";
+import { getInitialCanvasHeightPx } from "@imify/core";
 import { PREVIEW_MIN_ZOOM, PREVIEW_MAX_ZOOM, CANVAS_PADDING } from "../config";
 
 export interface ManualEditorVisualHelp {
@@ -102,7 +103,9 @@ export function ManualEditorWorkspace({
   const transformerRef = useRef<Konva.Transformer>(null);
   const ignoreNextStageClickRef = useRef(false);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
-  const [previewContainerHeight, setPreviewContainerHeight] = useState(520);
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(() =>
+    getInitialCanvasHeightPx(520),
+  );
   const [previewZoom, setPreviewZoom] = useState(100);
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
   const {
