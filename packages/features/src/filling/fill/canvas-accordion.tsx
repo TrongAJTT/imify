@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useCallback, useRef } from "react";
-import {
-  SquareRoundCorner,
-  Palette,
-  ImagePlus,
-  SquareDashedTopSolid,
-  X,
-} from "lucide-react";
+import { Palette, ImagePlus, X } from "lucide-react";
 import type {
   CanvasFillState,
   CanvasBackgroundType,
@@ -16,9 +10,7 @@ import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
 import { AccordionCard } from "@imify/ui/ui/accordion-card";
 import { SelectInput } from "@imify/ui/ui/select-input";
-import { NumberInput } from "@imify/ui/ui/number-input";
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover";
-import { CheckboxCard } from "@imify/ui/ui/checkbox-card";
 import { Button } from "@imify/ui/ui/button";
 import { useTranslation } from "@imify/i18n";
 import { COMMON_IMAGE_ACCEPT } from "../../shared/image-file-utils";
@@ -32,14 +24,6 @@ export function FillCanvasAccordion() {
       { value: "transparent", label: t("fillCanvas.transparent") },
       { value: "image", label: t("fillCanvas.image") },
     ];
-
-  const BORDER_GRADIENT_SCOPE_OPTIONS: Array<{
-    value: "per-layer" | "unified";
-    label: string;
-  }> = [
-    { value: "per-layer", label: t("fillCanvas.perLayer") },
-    { value: "unified", label: t("fillCanvas.unified") },
-  ];
 
   const state = useFillingStore((s) => s.canvasFillState);
   const setState = useFillingStore((s) => s.setCanvasFillState);
@@ -149,68 +133,6 @@ export function FillCanvasAccordion() {
             )}
           </div>
         )}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-          <CheckboxCard
-            icon={<SquareDashedTopSolid size={14} />}
-            title={t("tooltips.overrideLayerBordersLabel")}
-            tooltipLabel={t("tooltips.overrideLayerBordersLabel")}
-            tooltipContent={t("tooltips.overrideLayerBorders")}
-            checked={state.borderOverrideEnabled}
-            onChange={(v) => update({ borderOverrideEnabled: v })}
-          />
-          {state.borderOverrideEnabled && (
-            <div className="mt-2 space-y-2">
-              <div className="grid grid-cols-2 gap-2 items-end">
-                <NumberInput
-                  label={t("fillCanvas.borderWidth")}
-                  value={state.borderOverrideWidth}
-                  onChangeValue={(v) => update({ borderOverrideWidth: v })}
-                  min={0}
-                  max={50}
-                />
-                <SelectInput
-                  label={t("fillCanvas.gradientModeLabel")}
-                  value={state.borderGradientScope ?? "per-layer"}
-                  options={BORDER_GRADIENT_SCOPE_OPTIONS}
-                  onChange={(v) =>
-                    update({
-                      borderGradientScope: v as "per-layer" | "unified",
-                    })
-                  }
-                  tooltipContent={t("tooltips.gradientMode")}
-                />
-              </div>
-              <ColorPickerPopover
-                label={t("fillCanvas.borderColor")}
-                value={state.borderOverrideColor}
-                onChange={(v) => update({ borderOverrideColor: v })}
-                enableAlpha={false}
-                outputMode="hex"
-              />
-            </div>
-          )}
-        </div>
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-          <CheckboxCard
-            icon={<SquareRoundCorner size={14} />}
-            title={t("tooltips.overrideCornerRadiusLabel")}
-            tooltipLabel={t("tooltips.overrideCornerRadiusLabel")}
-            tooltipContent={t("tooltips.overrideCornerRadius")}
-            checked={state.cornerRadiusOverrideEnabled}
-            onChange={(v) => update({ cornerRadiusOverrideEnabled: v })}
-          />
-          {state.cornerRadiusOverrideEnabled && (
-            <div className="mt-2">
-              <NumberInput
-                label={t("fillCanvas.cornerRadius")}
-                value={state.cornerRadiusOverride}
-                onChangeValue={(v) => update({ cornerRadiusOverride: v })}
-                min={0}
-                max={200}
-              />
-            </div>
-          )}
-        </div>
       </div>
     </AccordionCard>
   );

@@ -2968,14 +2968,51 @@ function FilledLayerShape({
         )}
       </Group>
 
-      {containerHighlightMode !== "none" && (
+      {effectiveBorderWidth > 0 && (
         <Line
           x={x}
           y={y}
           rotation={layer.rotation}
           points={flat}
           closed
-          stroke={containerHighlightMode === "missing" ? "#f59e0b" : "#3b82f6"}
+          stroke={parsedBorderGradient ? undefined : effectiveBorderColor}
+          strokeWidth={effectiveBorderWidth * scale}
+          strokeLinearGradientStartPoint={
+            parsedBorderGradient ? gradientGeometry?.start : undefined
+          }
+          strokeLinearGradientEndPoint={
+            parsedBorderGradient ? gradientGeometry?.end : undefined
+          }
+          strokeLinearGradientColorStops={
+            parsedBorderGradient
+              ? parsedBorderGradient.stops.flatMap((stop) => [
+                  stop.offset,
+                  stop.color,
+                ])
+              : undefined
+          }
+          lineJoin="round"
+          onClick={onSelect}
+          onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
+        />
+      )}
+
+      {(isSelected || containerHighlightMode !== "none") && (
+        <Line
+          x={x}
+          y={y}
+          rotation={layer.rotation}
+          points={flat}
+          closed
+          stroke={
+            isSelected
+              ? "#3b82f6"
+              : containerHighlightMode === "missing"
+                ? "#f59e0b"
+                : "#3b82f6"
+          }
           strokeWidth={2}
           dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
           lineJoin="round"
@@ -3010,37 +3047,6 @@ function FilledLayerShape({
           onDragStart={onLayerTransformDragStart}
           onDragMove={onLayerTransformDragMove}
           onDragEnd={onLayerTransformDragEnd}
-        />
-      )}
-
-      {effectiveBorderWidth > 0 && (
-        <Line
-          x={x}
-          y={y}
-          rotation={layer.rotation}
-          points={flat}
-          closed
-          stroke={parsedBorderGradient ? undefined : effectiveBorderColor}
-          strokeWidth={effectiveBorderWidth * scale}
-          strokeLinearGradientStartPoint={
-            parsedBorderGradient ? gradientGeometry?.start : undefined
-          }
-          strokeLinearGradientEndPoint={
-            parsedBorderGradient ? gradientGeometry?.end : undefined
-          }
-          strokeLinearGradientColorStops={
-            parsedBorderGradient
-              ? parsedBorderGradient.stops.flatMap((stop) => [
-                  stop.offset,
-                  stop.color,
-                ])
-              : undefined
-          }
-          lineJoin="round"
-          onClick={onSelect}
-          onTap={onSelect}
-          onDblClick={onDoubleClick}
-          onDblTap={onDoubleClick}
         />
       )}
     </>
@@ -3463,43 +3469,6 @@ function FilledGroupShape({
           </Group>
         ))}
 
-      {containerHighlightMode !== "none" && stageHull.length >= 6 && (
-        <Line
-          points={stageHull}
-          closed
-          stroke={containerHighlightMode === "missing" ? "#f59e0b" : "#3b82f6"}
-          strokeWidth={2}
-          dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
-          lineJoin="round"
-          listening={false}
-        />
-      )}
-
-      {isLayerTransformInteractive && localHullFlat.length >= 6 && (
-        <Line
-          id={`fill-layer-transform-${item.id}`}
-          name="fill-layer-transform-node"
-          x={transformNodeX}
-          y={transformNodeY}
-          rotation={runtimeTransform.rotation}
-          scaleX={transformNodeScaleX}
-          scaleY={transformNodeScaleY}
-          points={localHullFlat}
-          closed
-          fill="rgba(59, 130, 246, 0.001)"
-          strokeEnabled={false}
-          strokeWidth={0}
-          draggable
-          onClick={onSelect}
-          onTap={onSelect}
-          onDblClick={onDoubleClick}
-          onDblTap={onDoubleClick}
-          onDragStart={onLayerTransformDragStart}
-          onDragMove={onLayerTransformDragMove}
-          onDragEnd={onLayerTransformDragEnd}
-        />
-      )}
-
       {effectiveBorderWidth > 0 &&
         stagePolygons.map((stagePolygon, index) => (
           <Line
@@ -3529,6 +3498,50 @@ function FilledGroupShape({
             onDblTap={onDoubleClick}
           />
         ))}
+
+      {(isSelected || containerHighlightMode !== "none") &&
+        stageHull.length >= 6 && (
+          <Line
+            points={stageHull}
+            closed
+            stroke={
+              isSelected
+                ? "#3b82f6"
+                : containerHighlightMode === "missing"
+                  ? "#f59e0b"
+                  : "#3b82f6"
+            }
+            strokeWidth={2}
+            dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
+            lineJoin="round"
+            listening={false}
+          />
+        )}
+
+      {isLayerTransformInteractive && localHullFlat.length >= 6 && (
+        <Line
+          id={`fill-layer-transform-${item.id}`}
+          name="fill-layer-transform-node"
+          x={transformNodeX}
+          y={transformNodeY}
+          rotation={runtimeTransform.rotation}
+          scaleX={transformNodeScaleX}
+          scaleY={transformNodeScaleY}
+          points={localHullFlat}
+          closed
+          fill="rgba(59, 130, 246, 0.001)"
+          strokeEnabled={false}
+          strokeWidth={0}
+          draggable
+          onClick={onSelect}
+          onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
+          onDragStart={onLayerTransformDragStart}
+          onDragMove={onLayerTransformDragMove}
+          onDragEnd={onLayerTransformDragEnd}
+        />
+      )}
     </>
   );
 }

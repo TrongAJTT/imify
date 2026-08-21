@@ -42,8 +42,10 @@ import {
 } from "@imify/stores/stores/fill-ui-store";
 import { AccordionCard } from "@imify/ui/ui/accordion-card";
 import { Button } from "@imify/ui/ui/button";
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card";
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover";
 import { NumberInput } from "@imify/ui/ui/number-input";
+import { SelectInput } from "@imify/ui/ui/select-input";
 import { TextInput } from "@imify/ui/ui/text-input";
 import { Tooltip } from "@imify/ui/ui/tooltip";
 import {
@@ -98,7 +100,19 @@ export function FillLayerCustomizationAccordion({
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId);
   const layerFillStates = useFillingStore((s) => s.layerFillStates);
   const canvasFillState = useFillingStore((s) => s.canvasFillState);
+  const setCanvasFillState = useFillingStore((s) => s.setCanvasFillState);
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState);
+
+  const BORDER_GRADIENT_SCOPE_OPTIONS: Array<{
+    value: "per-layer" | "unified";
+    label: string;
+  }> = useMemo(
+    () => [
+      { value: "per-layer", label: t("fillCanvas.perLayer") },
+      { value: "unified", label: t("fillCanvas.unified") },
+    ],
+    [t],
+  );
 
   const activeCustomizationTab = useFillUiStore(
     (s) => s.activeCustomizationTab,
@@ -755,8 +769,9 @@ export function FillLayerCustomizationAccordion({
     setSelectedLayerId,
   ]);
 
-  const borderOverridden = canvasFillState.borderOverrideEnabled;
-  const cornerRadiusOverridden = canvasFillState.cornerRadiusOverrideEnabled;
+  const isOverrideAll =
+    canvasFillState.borderOverrideEnabled ||
+    canvasFillState.cornerRadiusOverrideEnabled;
 
   return (
     <AccordionCard
@@ -924,55 +939,132 @@ export function FillLayerCustomizationAccordion({
 
             {activeCustomizationTab === "border" && (
               <div className="space-y-3 mt-3">
-                <div className="grid grid-cols-3 gap-2">
-                  <NumberInput
-                    label={t("fill.borderWidthLabel")}
-                    value={selectedFillState?.borderWidth ?? 0}
-                    onChangeValue={(value) =>
-                      updateSelectedLayerState({ borderWidth: value })
-                    }
-                    min={0}
-                    max={50}
-                    disabled={borderOverridden}
-                    tooltipContent={
-                      borderOverridden
-                        ? t("tooltips.borderDisabled")
-                        : undefined
-                    }
-                  />
-                  <NumberInput
-                    label={t("fill.radiusLabel")}
-                    value={selectedFillState?.cornerRadius ?? 0}
-                    onChangeValue={(value) =>
-                      updateSelectedLayerState({ cornerRadius: value })
-                    }
-                    min={0}
-                    max={200}
-                    disabled={cornerRadiusOverridden}
-                    tooltipContent={
-                      cornerRadiusOverridden
-                        ? t("tooltips.radiusDisabled")
-                        : undefined
-                    }
-                  />
-                  <ColorPickerPopover
-                    label={t("fill.colorLabel")}
-                    value={selectedFillState?.borderColor ?? "#000000"}
-                    onChange={(value) =>
-                      updateSelectedLayerState({ borderColor: value })
-                    }
-                    enableAlpha={false}
-                    enableGradient
-                    outputMode="hex"
-                    appearance="stacked"
-                  />
-                </div>
-
-                {(borderOverridden || cornerRadiusOverridden) && (
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                    {t("fill.overrideNotice")}
-                  </p>
+                {!isOverrideAll && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <NumberInput
+                      label={t("fill.borderWidthLabel")}
+                      value={selectedFillState?.borderWidth ?? 0}
+                      onChangeValue={(value) =>
+                        updateSelectedLayerState({ borderWidth: value })
+                      }
+                      min={0}
+                      max={50}
+                    />
+                    <NumberInput
+                      label={t("fill.radiusLabel")}
+                      value={selectedFillState?.cornerRadius ?? 0}
+                      onChangeValue={(value) =>
+                        updateSelectedLayerState({ cornerRadius: value })
+                      }
+                      min={0}
+                      max={200}
+                    />
+                    <ColorPickerPopover
+                      label={t("fill.colorLabel")}
+                      value={selectedFillState?.borderColor ?? "#000000"}
+                      onChange={(value) =>
+                        updateSelectedLayerState({ borderColor: value })
+                      }
+                      enableAlpha={false}
+                      enableGradient
+                      outputMode="hex"
+                      appearance="stacked"
+                    />
+                  </div>
                 )}
+
+                <div
+                  className={
+                    !isOverrideAll
+                      ? "pt-2 border-t border-slate-100 dark:border-slate-800"
+                      : ""
+                  }
+                >
+                  <CheckboxCard
+                    icon={<Layers size={14} />}
+                    title={t("fill.overrideAll", {
+                      defaultValue: "Ghi đè toàn bộ",
+                    })}
+                    tooltipLabel={t("fill.overrideAll", {
+                      defaultValue: "Ghi đè toàn bộ",
+                    })}
+                    tooltipContent={t("fill.overrideAllDesc", {
+                      defaultValue:
+                        "Ghi đè cài đặt đường viền, bo góc và màu sắc cho tất cả các lớp vẽ trên canvas.",
+                    })}
+                    checked={isOverrideAll}
+                    onChange={(v) => {
+                      setCanvasFillState({
+                        ...canvasFillState,
+                        borderOverrideEnabled: v,
+                        cornerRadiusOverrideEnabled: v,
+                      });
+                    }}
+                  />
+
+                  {isOverrideAll && (
+                    <div className="mt-2 space-y-2">
+                      <div className="grid grid-cols-2 gap-2 items-end">
+                        <NumberInput
+                          label={t("fillCanvas.borderWidth")}
+                          value={canvasFillState.borderOverrideWidth}
+                          onChangeValue={(v) =>
+                            setCanvasFillState({
+                              ...canvasFillState,
+                              borderOverrideWidth: v,
+                            })
+                          }
+                          min={0}
+                          max={50}
+                        />
+                        <NumberInput
+                          label={t("fillCanvas.cornerRadius")}
+                          value={canvasFillState.cornerRadiusOverride}
+                          onChangeValue={(v) =>
+                            setCanvasFillState({
+                              ...canvasFillState,
+                              cornerRadiusOverride: v,
+                            })
+                          }
+                          min={0}
+                          max={200}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 items-end">
+                        <SelectInput
+                          label={t("fillCanvas.gradientModeLabel")}
+                          value={
+                            canvasFillState.borderGradientScope ?? "per-layer"
+                          }
+                          options={BORDER_GRADIENT_SCOPE_OPTIONS}
+                          onChange={(v) =>
+                            setCanvasFillState({
+                              ...canvasFillState,
+                              borderGradientScope: v as
+                                | "per-layer"
+                                | "unified",
+                            })
+                          }
+                          tooltipContent={t("tooltips.gradientMode")}
+                        />
+                        <ColorPickerPopover
+                          label={t("fillCanvas.borderColor")}
+                          value={canvasFillState.borderOverrideColor}
+                          onChange={(v) =>
+                            setCanvasFillState({
+                              ...canvasFillState,
+                              borderOverrideColor: v,
+                            })
+                          }
+                          enableAlpha={false}
+                          enableGradient
+                          outputMode="hex"
+                          appearance="stacked"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
