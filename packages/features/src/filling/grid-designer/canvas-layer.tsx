@@ -1,5 +1,5 @@
 import React from "react"
-import { Layer, Rect } from "react-konva"
+import { Layer, Rect, Text } from "react-konva"
 import type { GridLayoutCell } from "./generator"
 import type { GridPrimaryDirection } from "../types"
 
@@ -58,24 +58,50 @@ export function GridDesignCanvasLayer({
           fill = "rgba(234, 179, 8, 0.25)"
           stroke = "#eab308"
           strokeWidth = 2
+        } else if (cell.isText) {
+          fill = "rgba(139, 92, 246, 0.14)"
+          stroke = "#8b5cf6"
+          strokeWidth = 1.5
+          dash = [4, 3]
         }
 
+        const cellW = Math.max(1, cell.width * renderScale)
+        const cellH = Math.max(1, cell.height * renderScale)
+
         return (
-          <Rect
-            key={cell.id}
-            x={offsetX + cell.x * renderScale}
-            y={offsetY + cell.y * renderScale}
-            width={Math.max(1, cell.width * renderScale)}
-            height={Math.max(1, cell.height * renderScale)}
-            fill={fill}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-            dash={dash}
-            cornerRadius={4}
-            listening={false}
-          />
+          <React.Fragment key={cell.id}>
+            <Rect
+              x={offsetX + cell.x * renderScale}
+              y={offsetY + cell.y * renderScale}
+              width={cellW}
+              height={cellH}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              dash={dash}
+              cornerRadius={4}
+              listening={false}
+            />
+            {cell.isText && !isError && (
+              <Text
+                x={offsetX + cell.x * renderScale}
+                y={offsetY + cell.y * renderScale}
+                width={cellW}
+                height={cellH}
+                text="T"
+                fontSize={Math.max(11, Math.min(22, cellH * 0.35))}
+                fontStyle="bold"
+                fontFamily="sans-serif"
+                fill="#8b5cf6"
+                align="center"
+                verticalAlign="middle"
+                listening={false}
+              />
+            )}
+          </React.Fragment>
         )
       })}
     </Layer>
   )
 }
+

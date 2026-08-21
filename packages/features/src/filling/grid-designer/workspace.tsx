@@ -22,8 +22,10 @@ import { useFillingStore } from "@imify/stores/stores/filling-store";
 import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
 import { useShortcutActions } from "../use-shortcut-actions";
-import { parseGridDesign, generateGridLayers } from "./generator";
+import { parseGridDesign, generateGridLayers, generateGridTemplate } from "./generator";
 import { GridDesignCanvasLayer } from "./canvas-layer";
+
+
 import { templateStorage } from "../template-storage";
 import type { FillingTemplate } from "../types";
 import { DEFAULT_GRID_DESIGN_PARAMS } from "../types";
@@ -250,17 +252,20 @@ export function GridDesignWorkspace({
     (stageSize.height - template.canvasHeight * renderScale) / 2 + previewPan.y;
 
   const buildUpdatedTemplate = useCallback((): FillingTemplate => {
+    const { layers, textLayers } = generateGridTemplate(
+      activeParams,
+      template.canvasWidth,
+      template.canvasHeight,
+    );
     return {
       ...template,
-      layers: generateGridLayers(
-        activeParams,
-        template.canvasWidth,
-        template.canvasHeight,
-      ),
+      layers,
+      textLayers,
       gridDesignParams: activeParams,
       updatedAt: Date.now(),
     };
   }, [activeParams, template]);
+
 
   const handleSaveToDestination = useCallback(
     async (destination: "fill" | "edit" | "list") => {

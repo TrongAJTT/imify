@@ -6,9 +6,9 @@ export interface ParsedGridTemplate {
 }
 
 /**
- * Parses a template string (e.g. "R:1:-:-", "C:1 2:-:-:3", "R:1:1:1")
- * into a direction ("rows" | "cols") and an expanded list of definitions where "-" is replaced
- * with the preceding non-hyphen definition.
+ * Parses a template string (e.g. "R:1:=:=", "C:1 2:=:=:3", "R:1:1:1")
+ * into a direction ("rows" | "cols") and an expanded list of definitions where "=" (or legacy "-") is replaced
+ * with the preceding non-repeated definition.
  */
 export function parseGridTemplateString(
   templateStr: string | null | undefined,
@@ -57,7 +57,7 @@ export function parseGridTemplateString(
 
   for (let i = 0; i < rawDefs.length; i++) {
     const item = rawDefs[i].trim();
-    if (item === "-") {
+    if (item === "=" || item === "-") {
       definitions.push(lastResolved);
     } else {
       const resolved = item || "1";
@@ -74,7 +74,7 @@ export function parseGridTemplateString(
 
 /**
  * Serializes a direction and definitions array into a compact template string
- * (e.g. direction: "rows", defs: ["1", "1", "1"] => "R:1:-:-").
+ * (e.g. direction: "rows", defs: ["1", "1", "1"] => "R:1:=:=").
  */
 export function deparseGridTemplate(
   direction: GridPrimaryDirection,
@@ -82,7 +82,7 @@ export function deparseGridTemplate(
 ): string {
   const prefix = direction === "cols" ? "C" : "R";
   if (!definitions || definitions.length === 0) {
-    return `${prefix}:3:-:-`;
+    return `${prefix}:3:=:=`;
   }
 
   const resultParts: string[] = [];
@@ -91,7 +91,7 @@ export function deparseGridTemplate(
   for (let i = 0; i < definitions.length; i++) {
     const def = definitions[i].trim();
     if (i > 0 && def === previousDef) {
-      resultParts.push("-");
+      resultParts.push("=");
     } else {
       resultParts.push(def);
       previousDef = def;
@@ -100,3 +100,4 @@ export function deparseGridTemplate(
 
   return `${prefix}:${resultParts.join(":")}`;
 }
+

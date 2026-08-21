@@ -1,9 +1,16 @@
-import { generateId, type GridDesignParams, type Point2D, type VectorLayer } from "../types"
+import {
+  generateId,
+  type GridDesignParams,
+  type Point2D,
+  type TextLayer,
+  type VectorLayer,
+} from "../types"
 
 const EPSILON = 0.001
 
 interface ParsedToken {
   ratio: number
+  isText: boolean
   indicator: string | null
   token: string
   startPct: number
@@ -24,6 +31,7 @@ export interface GridCell {
   widthPct: number
   rowSpan: number
   isMerged: boolean
+  isText: boolean
   hasError: boolean
   errorMessage?: string
   indicator?: string
@@ -48,8 +56,6 @@ export interface GridParseResult {
   errors: string[]
 }
 
-const CELL_TOKEN_REGEX = /^(\d*\.?\d+)([^0-9\s]*)$/
-
 function nearlyEqual(a: number, b: number): boolean {
   return Math.abs(a - b) < EPSILON
 }
@@ -73,12 +79,12 @@ function normalizeDefinitions(params: GridDesignParams): string[] {
 
   for (let i = 0; i < source.length; i++) {
     const raw = (source[i] ?? "").trim()
-    if (raw === "-") {
+    if (raw === "=" || raw === "-") {
       resolved.push(lastResolved)
     } else {
       const def = raw || "1"
       resolved.push(def)
-      if (def !== "-") {
+      if (def !== "=" && def !== "-") {
         lastResolved = def
       }
     }
@@ -110,6 +116,75 @@ function expandUniformToken(token: string): string[] {
   return Array.from({ length: count }, () => "1")
 }
 
+interface TokenParseInfo {
+  ratio: number
+  isText: boolean
+  indicator: string | null
+  errorMessage?: string
+}
+
+function parseToken(rawToken: string): TokenParseInfo {
+  const trimmed = rawToken.trim()
+  if (!trimmed) {
+    return { ratio: 1, isText: false, indicator: null, errorMessage: "Empty token." }
+  }
+
+  const ratioMatch = trimmed.match(/^(\d+(?:\.\d+)?)/)
+  if (!ratioMatch) {
+    return {
+      ratio: 1,
+      isText: false,
+      indicator: null,
+      errorMessage: "Invalid syntax: missing ratio number.",
+    }
+  }
+
+  const ratio = Number.parseFloat(ratioMatch[1])
+  if (ratio <= 0) {
+    return {
+      ratio,
+      isText: false,
+      indicator: null,
+      errorMessage: "Ratio must be greater than 0.",
+    }
+  }
+
+  let rest = trimmed.slice(ratioMatch[0].length)
+  let isText = false
+
+  // Check for 'T' flag (either uppercase 'T', or hyphenated '-t' / '-t-')
+  if (rest.includes("T")) {
+    isText = true
+    rest = rest.replace(/T/g, "")
+  } else if (/-(t)(?:-|$)/i.test(rest) || /^-t$/i.test(rest)) {
+    isText = true
+    rest = rest.replace(/-t(?=-|$)/gi, "")
+  }
+
+  // Strip all remaining hyphens and whitespace
+  const indicatorClean = rest.replace(/[\s-]+/g, "")
+
+  if (!indicatorClean) {
+    return { ratio, isText, indicator: null }
+  }
+
+  // Only lowercase latin characters a-z allowed for merge indicators
+  if (!/^[a-z]+$/.test(indicatorClean)) {
+    return {
+      ratio,
+      isText,
+      indicator: null,
+      errorMessage: "Merge indicator must be lowercase letters (a-z).",
+    }
+  }
+
+  return {
+    ratio,
+    isText,
+    indicator: indicatorClean,
+  }
+}
+
 function parseSingleDefinition(
   definition: string,
   primaryIndex: number,
@@ -120,7 +195,7 @@ function parseSingleDefinition(
   let lastToken = "1"
 
   for (const rawToken of rawTokens) {
-    if (rawToken === "-") {
+    if (rawToken === "=" || rawToken === "-") {
       tokens.push(lastToken)
     } else if (rawTokens.length === 1) {
       const expanded = expandUniformToken(rawToken)
@@ -144,6 +219,7 @@ function parseSingleDefinition(
     return [{
       ...makeCellIndices(0),
       ratio: 1,
+      isText: false,
       indicator: null,
       token: "",
       startPct: 0,
@@ -157,28 +233,12 @@ function parseSingleDefinition(
   }
 
   const parsed = tokens.map<ParsedGridCell>((token, subIndex) => {
-    const match = token.match(CELL_TOKEN_REGEX)
-    if (!match) {
-      return {
-        ...makeCellIndices(subIndex),
-        ratio: 1,
-        indicator: null,
-        token,
-        startPct: 0,
-        endPct: 0,
-        widthPct: 0,
-        rowSpan: 1,
-        isMerged: false,
-        rootCell: null,
-        errorMessage: "Invalid syntax.",
-      }
-    }
-
-    const ratio = Number.parseFloat(match[1])
+    const tokenInfo = parseToken(token)
     return {
       ...makeCellIndices(subIndex),
-      ratio,
-      indicator: match[2] || null,
+      ratio: tokenInfo.ratio,
+      isText: tokenInfo.isText,
+      indicator: tokenInfo.indicator,
       token,
       startPct: 0,
       endPct: 0,
@@ -186,7 +246,7 @@ function parseSingleDefinition(
       rowSpan: 1,
       isMerged: false,
       rootCell: null,
-      errorMessage: ratio > 0 ? undefined : "Ratio must be greater than 0.",
+      errorMessage: tokenInfo.errorMessage,
     }
   })
 
@@ -253,6 +313,9 @@ function mergeAdjacentSections(grid: ParsedGridCell[][], isColsMode: boolean): s
 
       const root = candidate.rootCell ?? candidate
       root.rowSpan += 1
+      if (currentCell.isText) {
+        root.isText = true
+      }
       currentCell.isMerged = true
       currentCell.rootCell = root
     }
@@ -271,6 +334,7 @@ function buildGridCell(cell: ParsedGridCell): GridCell {
     widthPct: cell.widthPct,
     rowSpan: cell.rowSpan,
     isMerged: cell.isMerged,
+    isText: cell.isText,
     hasError: Boolean(cell.errorMessage),
     errorMessage: cell.errorMessage,
     indicator: cell.indicator ?? undefined,
@@ -378,20 +442,60 @@ function buildRectanglePoints(width: number, height: number): Point2D[] {
   ]
 }
 
-export function generateGridLayers(params: GridDesignParams, canvasWidth: number, canvasHeight: number): VectorLayer[] {
+export interface GeneratedGridResult {
+  layers: VectorLayer[]
+  textLayers: TextLayer[]
+}
+
+export function generateGridTemplate(
+  params: GridDesignParams,
+  canvasWidth: number,
+  canvasHeight: number
+): GeneratedGridResult {
   const { layoutCells } = parseGridDesign(params, canvasWidth, canvasHeight)
 
-  return layoutCells.map((cell, index) => ({
-    id: generateId("grid"),
-    name: `Grid Cell ${index + 1}`,
-    shapeType: "custom",
-    points: buildRectanglePoints(cell.width, cell.height),
-    x: cell.x,
-    y: cell.y,
-    width: cell.width,
-    height: cell.height,
-    rotation: 0,
-    locked: true,
-    visible: true,
-  }))
+  const layers: VectorLayer[] = []
+  const textLayers: TextLayer[] = []
+
+  let vectorIndex = 0
+  let textIndex = 0
+
+  for (const cell of layoutCells) {
+    if (cell.isText) {
+      textIndex += 1
+      textLayers.push({
+        id: generateId("text"),
+        name: `Text ${textIndex}`,
+        x: cell.x,
+        y: cell.y,
+        width: cell.width,
+        height: cell.height,
+        rotation: 0,
+        locked: false,
+        visible: true,
+      })
+    } else {
+      vectorIndex += 1
+      layers.push({
+        id: generateId("grid"),
+        name: `Grid Cell ${vectorIndex}`,
+        shapeType: "custom",
+        points: buildRectanglePoints(cell.width, cell.height),
+        x: cell.x,
+        y: cell.y,
+        width: cell.width,
+        height: cell.height,
+        rotation: 0,
+        locked: true,
+        visible: true,
+      })
+    }
+  }
+
+  return { layers, textLayers }
 }
+
+export function generateGridLayers(params: GridDesignParams, canvasWidth: number, canvasHeight: number): VectorLayer[] {
+  return generateGridTemplate(params, canvasWidth, canvasHeight).layers
+}
+

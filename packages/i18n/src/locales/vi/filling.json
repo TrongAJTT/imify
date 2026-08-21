@@ -159,7 +159,7 @@
     "outerPadding": "Khoảng lề giữa mép canvas và lưới được tạo.",
     "gapX": "Khoảng cách ngang giữa các ô lưới.",
     "gapY": "Khoảng cách dọc giữa các ô lưới.",
-    "rowDefinition": "Hướng dẫn cấu trúc định nghĩa:\n• Nhập 1 số (vd: \"3\"): Chia đều thành số lượng ô tương ứng.\n• Nhập tỷ lệ cách bằng dấu cách (vd: \"2 1\", \"1 2 1\"): Định nghĩa tỷ lệ kích thước các ô.\n• Ký tự gộp (vd: \"1a 2\", \"1a 1 1\"): Gộp các ô trùng ký tự trên dòng/cột liền kề.\n• Ký tự \"-\": Lặp lại định nghĩa chính xác của dòng/cột liền trước.",
+    "rowDefinition": "Hướng dẫn cấu trúc định nghĩa:\n• Nhập 1 số (vd: \"3\"): Chia đều thành số lượng ô tương ứng.\n• Nhập tỷ lệ cách bằng dấu cách (vd: \"2 1\", \"1 2 1\"): Định nghĩa tỷ lệ kích thước các ô.\n• Ký tự gộp (vd: \"1a 2\", \"1a 1 1\"): Gộp các ô trùng ký tự thường (a-z) trên dòng/cột liền kề.\n• Hậu tố \"T\" (vd: \"1T\", \"1Ta\" hoặc \"1-T-a\"): Định nghĩa ô là lớp văn bản (Text Layer).\n• Ký tự \"=\": Lặp lại định nghĩa chính xác của dòng/cột liền trước.",
     "uniformColumns": "Sử dụng chung một định nghĩa hàng cho tất cả các hàng."
   },
   "gridPresets": {
