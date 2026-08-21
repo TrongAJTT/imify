@@ -99,11 +99,25 @@
     "alignEnd": "End / Right",
     "offsetX": "Offset X (px)",
     "offsetY": "Offset Y (px)",
-    "rotate180": "Invert Text"
+    "rotate180": "Invert Text",
+    "visualPicker": "Visual placement picker"
   },
-
-
-
+  "quickActions": {
+    "button": "Quick Actions",
+    "title": "Caption Quick Actions",
+    "captionColor": "Caption Colors",
+    "captionOutside": "Outside Caption",
+    "captionInside": "Inside Caption",
+    "colorDarkGlass": "White Text • Dark Glass",
+    "colorLightGlass": "Black Text • Light Glass",
+    "colorBlackGold": "Gold Text • Opaque Black",
+    "colorWhiteSlate": "Slate Text • Opaque White",
+    "colorCrimsonBadge": "White Text • Crimson",
+    "colorBlueBadge": "White Text • Blue",
+    "colorMinimalWhite": "White Text • No Background",
+    "colorMinimalBlack": "Black Text • No Background",
+    "previewParams": "Pad: {{pad}}px • Offset: ({{offX}}, {{offY}})px"
+  },
   "preset": {
     "stitchV": "Stitch V",
     "stitchH": "Stitch H",

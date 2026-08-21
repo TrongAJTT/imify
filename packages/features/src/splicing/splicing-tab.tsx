@@ -37,6 +37,7 @@ import {
 } from "../shared/export-split-button";
 import { SplicingWorkspace } from "./splicing-workspace";
 import { SplicingWorkspaceShell } from "./splicing-workspace-shell";
+import { SplicingQuickActionsMenu } from "./splicing-quick-actions-menu";
 import {
   Button,
   PreviewInteractionModeToggle,
@@ -720,6 +721,7 @@ export function SplicingTab({
               panKeyHint={getShortcutLabel("global.preview.pan_mode")}
               idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
             />
+            <SplicingQuickActionsMenu disabled={isExporting} />
             <div className="flex items-center gap-3">
               <Button
                 variant="secondary"

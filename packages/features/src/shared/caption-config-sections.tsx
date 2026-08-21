@@ -8,6 +8,7 @@ import {
   Calculator,
   ArrowLeftRight,
   Maximize2,
+  LayoutGrid,
 } from "lucide-react";
 import {
   NumberInput,
@@ -18,6 +19,7 @@ import {
 } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import { useFontStore } from "@imify/stores/stores/font-store";
+import { CaptionDpadPicker } from "./caption-dpad-picker";
 import {
   computeCaptionLockedOffset,
   type SplicingCaptionConfig,
@@ -376,38 +378,64 @@ export function CaptionConfigSections<
             {t("captionFields.positionSection", "Vị trí & Căn lề")}
           </span>
 
-          {showOffsetCalculator && (
+          <div className="flex items-center gap-1">
             <ControlledPopover
               behavior="click"
               align="end"
               side="bottom"
-              contentClassName="p-3 w-72 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 z-50"
+              contentClassName="p-3 w-52 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 z-50 animate-in fade-in zoom-in-95 duration-100"
               trigger={
                 <button
                   type="button"
-                  className={`p-1 rounded-md text-xs transition-colors flex items-center gap-1 ${
-                    config.offsetLockMode === "auto"
-                      ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 font-medium"
-                      : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                  }`}
-                  title={t(
-                    "captionFields.offsetLock",
-                    "Khóa khoảng cách tự động",
-                  )}
+                  className="p-1 rounded-md text-xs transition-colors flex items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  title={t("captionFields.visualPicker", "Chọn vị trí & căn lề trực quan")}
                 >
-                  {config.offsetLockMode === "auto" ? (
-                    <Lock size={13} />
-                  ) : (
-                    <Unlock size={13} />
-                  )}
-                  <span className="text-[10px] font-mono">
-                    {config.offsetLockMode === "auto"
-                      ? `±${lockedOffset}px`
-                      : ""}
-                  </span>
+                  <LayoutGrid size={13} />
                 </button>
               }
             >
+              <CaptionDpadPicker
+                position={config.position || "top"}
+                onPositionChange={(pos) => onChange({ position: pos as any } as Partial<T>)}
+                alignment={config.alignment || "center"}
+                onAlignmentChange={(align) => onChange({ alignment: align as any } as Partial<T>)}
+                allowedPositions={(positionOptions ?? defaultPositionOptions).map((o) => o.value as SplicingCaptionPosition)}
+                allowedAlignments={alignmentOptions.map((o) => o.value as SplicingCaptionAlignment)}
+              />
+            </ControlledPopover>
+
+            {showOffsetCalculator && (
+              <ControlledPopover
+                behavior="click"
+                align="end"
+                side="bottom"
+                contentClassName="p-3 w-72 rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 z-50"
+                trigger={
+                  <button
+                    type="button"
+                    className={`p-1 rounded-md text-xs transition-colors flex items-center gap-1 ${
+                      config.offsetLockMode === "auto"
+                        ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 font-medium"
+                        : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    }`}
+                    title={t(
+                      "captionFields.offsetLock",
+                      "Khóa khoảng cách tự động",
+                    )}
+                  >
+                    {config.offsetLockMode === "auto" ? (
+                      <Lock size={13} />
+                    ) : (
+                      <Unlock size={13} />
+                    )}
+                    <span className="text-[10px] font-mono">
+                      {config.offsetLockMode === "auto"
+                        ? `±${lockedOffset}px`
+                        : ""}
+                    </span>
+                  </button>
+                }
+              >
               <div className="space-y-3">
                 <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
                   <Calculator size={14} className="text-amber-500" />
@@ -525,6 +553,7 @@ export function CaptionConfigSections<
               </div>
             </ControlledPopover>
           )}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">

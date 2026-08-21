@@ -99,11 +99,25 @@
     "alignEnd": "Cuối / Phải",
     "offsetX": "Offset X (px)",
     "offsetY": "Offset Y (px)",
-    "rotate180": "Đảo ngược chữ"
+    "rotate180": "Đảo ngược chữ",
+    "visualPicker": "Chọn vị trí & căn lề trực quan"
   },
-
-
-
+  "quickActions": {
+    "button": "Thao tác nhanh",
+    "title": "Thao tác nhanh Tiêu đề",
+    "captionColor": "Màu tiêu đề",
+    "captionOutside": "Tiêu đề ngoài ảnh",
+    "captionInside": "Tiêu đề trong ảnh",
+    "colorDarkGlass": "Chữ trắng • Nền tối mờ",
+    "colorLightGlass": "Chữ đen • Nền sáng mờ",
+    "colorBlackGold": "Chữ vàng • Nền đen đặc",
+    "colorWhiteSlate": "Chữ xanh đen • Nền trắng đặc",
+    "colorCrimsonBadge": "Chữ trắng • Nền đỏ",
+    "colorBlueBadge": "Chữ trắng • Nền xanh",
+    "colorMinimalWhite": "Chữ trắng không nền",
+    "colorMinimalBlack": "Chữ đen không nền",
+    "previewParams": "Pad: {{pad}}px • Offset: ({{offX}}, {{offY}})px"
+  },
   "preset": {
     "stitchV": "Ghép dọc",
     "stitchH": "Ghép ngang",
