@@ -29,7 +29,12 @@ import {
 import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
 import { usePopoverTriggerBehavior } from "../../shared/use-popover-trigger-behavior";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
-import type { FillingTemplate } from "../types";
+import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
+import {
+  DEFAULT_IMAGE_TRANSFORM,
+  type FillingTemplate,
+  type LayerFillState,
+} from "../types";
 import { useTranslation } from "@imify/i18n";
 
 type QuickActionScope = "all" | "selected";
@@ -103,21 +108,21 @@ export function FillQuickActionsMenu({
 
   const layerFillStates = useFillingStore((s) => s.layerFillStates);
   const setLayerFillStates = useFillingStore((s) => s.setLayerFillStates);
+  const updateSessionTemplate = useFillUiStore((s) => s.updateSessionTemplate);
 
-  const filledLayerCount = useMemo(() => {
-    return template.layers.filter((l) => {
-      const state = layerFillStates.find((s) => s.layerId === l.id);
-      return Boolean(state?.imageUrl);
-    }).length;
-  }, [template.layers, layerFillStates]);
+  const totalLayerCount = useMemo(() => {
+    return template.layers.length + (template.textLayers?.length ?? 0);
+  }, [template.layers, template.textLayers]);
 
-  // Target layer IDs based on scope
+  // Target layer IDs based on scope (vector layers and text layers)
   const getTargetLayerIds = useCallback((): string[] => {
     if (scope === "selected" && selectedLayerId) {
       return [selectedLayerId];
     }
-    return template.layers.map((l) => l.id);
-  }, [scope, selectedLayerId, template.layers]);
+    const layerIds = template.layers.map((l) => l.id);
+    const textLayerIds = (template.textLayers ?? []).map((tl) => tl.id);
+    return [...layerIds, ...textLayerIds];
+  }, [scope, selectedLayerId, template.layers, template.textLayers]);
 
   // 1. FIT ACTIONS
   const handleApplyFit = useCallback(
@@ -378,6 +383,7 @@ export function FillQuickActionsMenu({
   const handleApplyBorderWidth = useCallback(
     (width: number) => {
       const targetIds = new Set(getTargetLayerIds());
+      const existingIds = new Set(layerFillStates.map((s) => s.layerId));
       const nextStates = layerFillStates.map((state) => {
         if (!targetIds.has(state.layerId)) return state;
         return {
@@ -385,6 +391,21 @@ export function FillQuickActionsMenu({
           borderWidth: width,
         };
       });
+
+      for (const id of targetIds) {
+        if (!existingIds.has(id)) {
+          nextStates.push({
+            layerId: id,
+            imageUrl: null,
+            imageTransform: { ...DEFAULT_IMAGE_TRANSFORM },
+            borderWidth: width,
+            borderColor: "#000000",
+            borderGradient: null,
+            cornerRadius: 0,
+          });
+        }
+      }
+
       setLayerFillStates(nextStates);
     },
     [getTargetLayerIds, layerFillStates, setLayerFillStates],
@@ -393,6 +414,7 @@ export function FillQuickActionsMenu({
   const handleApplyBorderRadius = useCallback(
     (radius: number) => {
       const targetIds = new Set(getTargetLayerIds());
+      const existingIds = new Set(layerFillStates.map((s) => s.layerId));
       const nextStates = layerFillStates.map((state) => {
         if (!targetIds.has(state.layerId)) return state;
         const nextBorderWidth =
@@ -403,14 +425,47 @@ export function FillQuickActionsMenu({
           borderWidth: nextBorderWidth,
         };
       });
+
+      for (const id of targetIds) {
+        if (!existingIds.has(id)) {
+          nextStates.push({
+            layerId: id,
+            imageUrl: null,
+            imageTransform: { ...DEFAULT_IMAGE_TRANSFORM },
+            cornerRadius: radius,
+            borderWidth: 1,
+            borderColor: "#000000",
+            borderGradient: null,
+          });
+        }
+      }
+
       setLayerFillStates(nextStates);
+
+      updateSessionTemplate((prev) => {
+        if (!prev || !prev.textLayers) return prev;
+        const updatedTextLayers = prev.textLayers.map((tl) =>
+          targetIds.has(tl.id) ? { ...tl, borderRadius: radius } : tl,
+        );
+        return {
+          ...prev,
+          textLayers: updatedTextLayers,
+          updatedAt: Date.now(),
+        };
+      });
     },
-    [getTargetLayerIds, layerFillStates, setLayerFillStates],
+    [
+      getTargetLayerIds,
+      layerFillStates,
+      setLayerFillStates,
+      updateSessionTemplate,
+    ],
   );
 
   const handleApplyBorderColor = useCallback(
     (color: string) => {
       const targetIds = new Set(getTargetLayerIds());
+      const existingIds = new Set(layerFillStates.map((s) => s.layerId));
       const nextStates = layerFillStates.map((state) => {
         if (!targetIds.has(state.layerId)) return state;
         const nextBorderWidth =
@@ -421,6 +476,21 @@ export function FillQuickActionsMenu({
           borderWidth: nextBorderWidth,
         };
       });
+
+      for (const id of targetIds) {
+        if (!existingIds.has(id)) {
+          nextStates.push({
+            layerId: id,
+            imageUrl: null,
+            imageTransform: { ...DEFAULT_IMAGE_TRANSFORM },
+            borderColor: color,
+            borderWidth: 1,
+            borderGradient: null,
+            cornerRadius: 0,
+          });
+        }
+      }
+
       setLayerFillStates(nextStates);
     },
     [getTargetLayerIds, layerFillStates, setLayerFillStates],
@@ -813,7 +883,7 @@ export function FillQuickActionsMenu({
               <Layers size={12} />
               <span className="truncate">
                 {t("quickActions.scopeAll", {
-                  count: filledLayerCount,
+                  count: totalLayerCount,
                 })}
               </span>
             </button>

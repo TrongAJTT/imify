@@ -7,6 +7,7 @@ import type { LayerFillState } from "@imify/features/filling/types";
 import type { FillRuntimeItem } from "@imify/features/filling/fill/runtime-items";
 import { SHAPE_LABELS } from "@imify/features/filling/shape-generators";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
+import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
 
 interface FillLayerCardProps {
   item: FillRuntimeItem;
@@ -46,11 +47,12 @@ async function generateLayerPreview(imageUrl: string): Promise<string | null> {
     ctx.drawImage(bitmap, 0, 0);
     bitmap.close();
 
-    const thumbnailBlob = await canvas.convertToBlob({
-      type: "image/jpeg",
+    const outputBlob = await canvas.convertToBlob({
+      type: "image/webp",
       quality: LAYER_PREVIEW_QUALITY,
     });
-    return blobToDataUrl(thumbnailBlob);
+
+    return await blobToDataUrl(outputBlob);
   } catch {
     return null;
   }
@@ -59,24 +61,31 @@ async function generateLayerPreview(imageUrl: string): Promise<string | null> {
 export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
   const selectedLayerId = useFillingStore((s) => s.selectedLayerId);
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId);
-  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const setActiveCustomizationTab = useFillUiStore(
+    (s) => s.setActiveCustomizationTab,
+  );
   const selected = selectedLayerId === item.id;
   const isText = item.kind === "text";
   const hasImage = Boolean(fillState?.imageUrl);
 
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+
   useEffect(() => {
-    let isMounted = true;
-    const loadPreview = async () => {
-      if (!fillState?.imageUrl) {
-        if (isMounted) setPreviewImageUrl(null);
-        return;
+    let cancelled = false;
+
+    if (!fillState?.imageUrl) {
+      setPreviewImageUrl(null);
+      return;
+    }
+
+    void generateLayerPreview(fillState.imageUrl).then((src) => {
+      if (!cancelled) {
+        setPreviewImageUrl(src);
       }
-      const preview = await generateLayerPreview(fillState.imageUrl);
-      if (isMounted) setPreviewImageUrl(preview ?? fillState.imageUrl);
-    };
-    void loadPreview();
+    });
+
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
   }, [fillState?.imageUrl]);
 
@@ -108,6 +117,10 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
           : "border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30",
       ].join(" ")}
       onClick={() => setSelectedLayerId(item.id)}
+      onDoubleClick={() => {
+        setSelectedLayerId(item.id);
+        setActiveCustomizationTab("image");
+      }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();

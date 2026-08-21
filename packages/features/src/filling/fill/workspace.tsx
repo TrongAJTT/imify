@@ -141,6 +141,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const activeCustomizationTab = useFillUiStore(
     (s) => s.activeCustomizationTab,
   );
+  const setActiveCustomizationTab = useFillUiStore(
+    (s) => s.setActiveCustomizationTab,
+  );
   const initializeFillSession = useFillUiStore((s) => s.initializeFillSession);
   const sessionTemplate = useFillUiStore((s) => s.sessionTemplate);
   const updateSessionTemplate = useFillUiStore((s) => s.updateSessionTemplate);
@@ -2141,6 +2144,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                       setSelectedCanvasNode(null);
                       setSelectedLayerId(item.id);
                     }}
+                    onDoubleClick={() => {
+                      setSelectedCanvasNode(null);
+                      setSelectedLayerId(item.id);
+                      setActiveCustomizationTab("image");
+                    }}
                   />
                 );
               }
@@ -2167,6 +2175,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                     onSelect={() => {
                       setSelectedCanvasNode(null);
                       setSelectedLayerId(item.id);
+                    }}
+                    onDoubleClick={() => {
+                      setSelectedCanvasNode(null);
+                      setSelectedLayerId(item.id);
+                      setActiveCustomizationTab("image");
                     }}
                   />
                 );
@@ -2196,6 +2209,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                   onSelect={() => {
                     setSelectedCanvasNode(null);
                     setSelectedLayerId(item.layer.id);
+                  }}
+                  onDoubleClick={() => {
+                    setSelectedCanvasNode(null);
+                    setSelectedLayerId(item.layer.id);
+                    setActiveCustomizationTab("image");
                   }}
                 />
               );
@@ -2784,6 +2802,7 @@ function FilledLayerShape({
   onLayerTransformDragMove,
   onLayerTransformDragEnd,
   onSelect,
+  onDoubleClick,
 }: {
   layer: VectorLayer;
   fillState:
@@ -2803,6 +2822,7 @@ function FilledLayerShape({
   onLayerTransformDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onLayerTransformDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onSelect: () => void;
+  onDoubleClick?: () => void;
 }) {
   const effectiveCornerRadius = canvasFillState.cornerRadiusOverrideEnabled
     ? canvasFillState.cornerRadiusOverride
@@ -2897,6 +2917,8 @@ function FilledLayerShape({
         rotation={layer.rotation}
         onClick={onSelect}
         onTap={onSelect}
+        onDblClick={onDoubleClick}
+        onDblTap={onDoubleClick}
         clipFunc={(ctx: any) => {
           ctx.beginPath();
           for (let i = 0; i < flat.length; i += 2) {
@@ -2913,6 +2935,8 @@ function FilledLayerShape({
           strokeEnabled={false}
           onClick={onSelect}
           onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
           perfectDrawEnabled={false}
         />
 
@@ -2936,6 +2960,10 @@ function FilledLayerShape({
             rotation={fillState.imageTransform.rotation}
             stroke={isSelected ? "#3b82f6" : undefined}
             strokeWidth={isSelected ? 2 / scale : 0}
+            onClick={onSelect}
+            onTap={onSelect}
+            onDblClick={onDoubleClick}
+            onDblTap={onDoubleClick}
           />
         )}
       </Group>
@@ -2977,6 +3005,8 @@ function FilledLayerShape({
           draggable
           onClick={onSelect}
           onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
           onDragStart={onLayerTransformDragStart}
           onDragMove={onLayerTransformDragMove}
           onDragEnd={onLayerTransformDragEnd}
@@ -3009,6 +3039,8 @@ function FilledLayerShape({
           lineJoin="round"
           onClick={onSelect}
           onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
         />
       )}
     </>
@@ -3029,6 +3061,7 @@ function FilledTextLayerShape({
   onLayerTransformDragMove,
   onLayerTransformDragEnd,
   onSelect,
+  onDoubleClick,
 }: {
   item: Extract<FillRuntimeItem, { kind: "text" }>;
   fillState:
@@ -3045,6 +3078,7 @@ function FilledTextLayerShape({
   onLayerTransformDragMove?: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onLayerTransformDragEnd?: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onSelect: () => void;
+  onDoubleClick?: () => void;
 }) {
   const textLayer = item.textLayer;
   const x = offsetX + textLayer.x * scale;
@@ -3062,7 +3096,10 @@ function FilledTextLayerShape({
   const containerColor =
     textLayer.containerColor || "rgba(255, 255, 255, 0.85)";
   const containerOpacity = (textLayer.containerOpacity ?? 100) / 100;
-  const borderRadius = (textLayer.borderRadius ?? 8) * scale;
+  const effectiveCornerRadius = canvasFillState.cornerRadiusOverrideEnabled
+    ? canvasFillState.cornerRadiusOverride
+    : (fillState?.cornerRadius ?? textLayer.borderRadius ?? 8);
+  const borderRadius = effectiveCornerRadius * scale;
   const fontSize = (textLayer.fontSize ?? 24) * scale;
   const fontFamily = textLayer.fontFamily || "Inter";
   const textColor = textLayer.textColor || "#1e293b";
@@ -3091,6 +3128,8 @@ function FilledTextLayerShape({
         rotation={textLayer.rotation}
         onClick={onSelect}
         onTap={onSelect}
+        onDblClick={onDoubleClick}
+        onDblTap={onDoubleClick}
       >
         {/* Background Container */}
         <Rect
@@ -3159,6 +3198,8 @@ function FilledTextLayerShape({
           draggable
           onClick={onSelect}
           onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
           onDragStart={onLayerTransformDragStart}
           onDragMove={onLayerTransformDragMove}
           onDragEnd={onLayerTransformDragEnd}
@@ -3186,6 +3227,7 @@ function FilledGroupShape({
   onLayerTransformDragMove,
   onLayerTransformDragEnd,
   onSelect,
+  onDoubleClick,
 }: {
   item: FillRuntimeGroupItem;
   fillState:
@@ -3212,6 +3254,7 @@ function FilledGroupShape({
   onLayerTransformDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onLayerTransformDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onSelect: () => void;
+  onDoubleClick?: () => void;
 }) {
   const effectiveBorderWidth = canvasFillState.borderOverrideEnabled
     ? canvasFillState.borderOverrideWidth
@@ -3372,6 +3415,8 @@ function FilledGroupShape({
           strokeWidth={1}
           onClick={onSelect}
           onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
           perfectDrawEnabled={false}
         />
       ))}
@@ -3412,6 +3457,8 @@ function FilledGroupShape({
               strokeWidth={index === 0 && isSelected ? 2 / scale : 0}
               onClick={onSelect}
               onTap={onSelect}
+              onDblClick={onDoubleClick}
+              onDblTap={onDoubleClick}
             />
           </Group>
         ))}
@@ -3445,6 +3492,8 @@ function FilledGroupShape({
           draggable
           onClick={onSelect}
           onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
           onDragStart={onLayerTransformDragStart}
           onDragMove={onLayerTransformDragMove}
           onDragEnd={onLayerTransformDragEnd}
@@ -3476,6 +3525,8 @@ function FilledGroupShape({
             lineJoin="round"
             onClick={onSelect}
             onTap={onSelect}
+            onDblClick={onDoubleClick}
+            onDblTap={onDoubleClick}
           />
         ))}
     </>

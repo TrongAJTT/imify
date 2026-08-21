@@ -475,7 +475,9 @@ function drawTextLayerItem(
 
   const containerColor = textLayer.containerColor || "rgba(255, 255, 255, 0.85)"
   const containerOpacity = (textLayer.containerOpacity ?? 100) / 100
-  const borderRadius = textLayer.borderRadius ?? 8
+  const borderRadius = canvasFillState.cornerRadiusOverrideEnabled
+    ? canvasFillState.cornerRadiusOverride
+    : (fillState?.cornerRadius ?? textLayer.borderRadius ?? 8)
   const fontSize = textLayer.fontSize ?? 24
   const fontFamily = textLayer.fontFamily || "Inter"
   const textColor = textLayer.textColor || "#1e293b"
