@@ -159,7 +159,15 @@
     "outerPadding": "Khoảng lề giữa mép canvas và lưới được tạo.",
     "gapX": "Khoảng cách ngang giữa các ô lưới.",
     "gapY": "Khoảng cách dọc giữa các ô lưới.",
-    "rowDefinition": "Hướng dẫn cấu trúc định nghĩa:\n• Nhập 1 số (vd: \"3\"): Chia đều thành số lượng ô tương ứng.\n• Nhập tỷ lệ cách bằng dấu cách (vd: \"2 1\", \"1 2 1\"): Định nghĩa tỷ lệ kích thước các ô.\n• Ký tự gộp (vd: \"1ab 1b 1bc\", \"1a 2\", \"1a 1 1\"): Gộp các ô có chung ký tự thường (a-z) thành mắt xích liên kết.\n• Hậu tố \"C\" (vd: \"1C\", \"1Cab\"): Lấy bao lồi (Convex Hull) từ các ô được gộp thay vì hình chữ nhật bao quanh.\n• Hậu tố \"T\" (vd: \"1T\", \"1Ta\" hoặc \"1-T-a\"): Định nghĩa ô là lớp văn bản (Text Layer).\n• Ký tự \"=\": Lặp lại định nghĩa chính xác của dòng/cột liền trước.",
+    "rowDefinitionTitle": "Hướng dẫn cấu trúc định nghĩa:",
+    "rowDefinitionTips": [
+      "Nhập 1 số (vd: \"3\"): Chia đều thành số lượng ô tương ứng.",
+      "Nhập tỷ lệ cách bằng dấu cách (vd: \"2 1\", \"1 2 1\"): Định nghĩa tỷ lệ kích thước các ô.",
+      "Ký tự gộp (vd: \"1ab 1b 1bc\", \"1a 2\", \"1a 1 1\"): Gộp các ô có chung ký tự thường (a-z) thành mắt xích liên kết.",
+      "Hậu tố \"C\" (vd: \"1C\", \"1Cab\"): Lấy bao lồi (Convex Hull) từ các ô được gộp thay vì hình chữ nhật bao quanh.",
+      "Hậu tố \"T\" (vd: \"1T\", \"1Ta\" hoặc \"1-T-a\"): Định nghĩa ô là lớp văn bản (Text Layer).",
+      "Ký tự \"=\": Lặp lại định nghĩa chính xác của dòng/cột liền trước."
+    ],
     "uniformColumns": "Sử dụng chung một định nghĩa hàng cho tất cả các hàng."
   },
   "gridPresets": {

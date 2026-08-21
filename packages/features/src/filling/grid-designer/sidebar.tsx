@@ -20,6 +20,7 @@ import { GRID_TEMPLATE_PRESETS, type GridTemplatePreset } from "../config";
 import { useTranslation } from "@imify/i18n";
 import { parseGridDesign } from "./generator";
 import { parseGridTemplateString } from "./grid-template-utils";
+import { GRID_DESIGN_TOOLTIPS } from "./tooltips";
 import { usePopoverTriggerBehavior } from "../../shared/use-popover-trigger-behavior";
 
 interface GridDesignSidebarProps {
@@ -383,9 +384,24 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
           </div>
         )}
 
-        <p className="whitespace-pre-line text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-          {t("tooltips.rowDefinition")}
-        </p>
+        <div className="space-y-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+          <div className="font-medium text-slate-600 dark:text-slate-300">
+            {t("tooltips.rowDefinitionTitle", {
+              defaultValue: GRID_DESIGN_TOOLTIPS.rowDefinitionTitle,
+            })}
+          </div>
+          <ul className="list-disc pl-3.5 space-y-0.5">
+            {((): string[] => {
+              const raw = t("tooltips.rowDefinitionTips", {
+                returnObjects: true,
+                defaultValue: GRID_DESIGN_TOOLTIPS.rowDefinitionTips,
+              });
+              return Array.isArray(raw) ? (raw as string[]) : [...GRID_DESIGN_TOOLTIPS.rowDefinitionTips];
+            })().map((tip, idx) => (
+              <li key={idx}>{tip}</li>
+            ))}
+          </ul>
+        </div>
 
         <ControlledPopover
           behavior={popoverBehavior}

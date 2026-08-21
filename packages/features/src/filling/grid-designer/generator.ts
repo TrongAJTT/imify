@@ -305,6 +305,139 @@ function parseSingleDefinition(
 }
 
 
+function crossProduct(o: Point2D, a: Point2D, b: Point2D): number {
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+}
+
+function polygonSignedArea(points: Point2D[]): number {
+  if (points.length < 3) return 0
+  let area = 0
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length
+    area += points[i]!.x * points[j]!.y - points[j]!.x * points[i]!.y
+  }
+  return area / 2
+}
+
+function lineIntersection(
+  p1: Point2D,
+  p2: Point2D,
+  a: Point2D,
+  b: Point2D
+): Point2D {
+  const dx1 = p2.x - p1.x
+  const dy1 = p2.y - p1.y
+  const dx2 = b.x - a.x
+  const dy2 = b.y - a.y
+  const denom = dx1 * dy2 - dy1 * dx2
+  if (Math.abs(denom) < 1e-9) {
+    return p2
+  }
+  const t = ((a.x - p1.x) * dy2 - (a.y - p1.y) * dx2) / denom
+  return {
+    x: p1.x + t * dx1,
+    y: p1.y + t * dy1,
+  }
+}
+
+/**
+ * Clips a polygon (subject) by subtracting the interior of a convex hull,
+ * expanding the cutting line outward by `gapOffset` (Pythagoras of gapX and gapY)
+ * to maintain diagonal spacing.
+ */
+export function subtractConvexHullFromPolygon(
+  subject: Point2D[],
+  hull: Point2D[],
+  gapOffset = 0
+): Point2D[] {
+  if (subject.length < 3 || hull.length < 3) {
+    return subject
+  }
+
+  // Ensure hull is oriented Counter-Clockwise (CCW)
+  const hullCcw = polygonSignedArea(hull) < 0 ? [...hull].reverse() : [...hull]
+
+  let currentPolygon = [...subject]
+
+  for (let i = 0; i < hullCcw.length; i++) {
+    const a = hullCcw[i]!
+    const b = hullCcw[(i + 1) % hullCcw.length]!
+
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const len = Math.hypot(dx, dy)
+    if (len < EPSILON) continue
+
+    // Unit outward normal for CCW polygon: (dy / len, -dx / len)
+    const nx = dy / len
+    const ny = -dx / len
+
+    // Check if the original unshifted edge (a, b) actually intersects currentPolygon
+    const rawInside = currentPolygon.some((p) => crossProduct(a, b, p) > EPSILON)
+    const rawOutside = currentPolygon.some((p) => crossProduct(a, b, p) < -EPSILON)
+
+    // If the edge does not intersect currentPolygon, skip it
+    if (!rawInside || !rawOutside) {
+      continue
+    }
+
+    const aCut: Point2D = { x: a.x + nx * gapOffset, y: a.y + ny * gapOffset }
+    const bCut: Point2D = { x: b.x + nx * gapOffset, y: b.y + ny * gapOffset }
+
+    const hasInside = currentPolygon.some((p) => crossProduct(aCut, bCut, p) > EPSILON)
+    const hasOutside = currentPolygon.some((p) => crossProduct(aCut, bCut, p) < -EPSILON)
+
+    if (hasInside && hasOutside) {
+      const nextPoly: Point2D[] = []
+      const n = currentPolygon.length
+
+      for (let j = 0; j < n; j++) {
+        const p1 = currentPolygon[j]!
+        const p2 = currentPolygon[(j + 1) % n]!
+        const d1 = crossProduct(aCut, bCut, p1)
+        const d2 = crossProduct(aCut, bCut, p2)
+
+        const p1Outside = d1 <= EPSILON
+        const p2Outside = d2 <= EPSILON
+
+        if (p1Outside && p2Outside) {
+          nextPoly.push(p2)
+        } else if (p1Outside && !p2Outside) {
+          nextPoly.push(lineIntersection(p1, p2, aCut, bCut))
+        } else if (!p1Outside && p2Outside) {
+          nextPoly.push(lineIntersection(p1, p2, aCut, bCut))
+          nextPoly.push(p2)
+        }
+      }
+
+      currentPolygon = nextPoly
+      if (currentPolygon.length < 3) {
+        return []
+      }
+    } else if (hasInside && !hasOutside) {
+      // Entire remaining piece is within the gapOffset margin
+      return []
+    }
+  }
+
+  const cleaned: Point2D[] = []
+  for (let i = 0; i < currentPolygon.length; i++) {
+    const pt = currentPolygon[i]!
+    const isDup = cleaned.some(
+      (u) => Math.abs(u.x - pt.x) < EPSILON && Math.abs(u.y - pt.y) < EPSILON
+    )
+    if (!isDup) {
+      cleaned.push(pt)
+    }
+  }
+
+  if (cleaned.length < 3 || Math.abs(polygonSignedArea(cleaned)) < 1) {
+    return []
+  }
+
+  return cleaned
+}
+
 export interface RectBounds {
   minX: number
   maxX: number
@@ -910,6 +1043,108 @@ function buildChainedLayoutCells(
         })
       }
     }
+  }
+
+  // Post-process: If any convex hull layer exists, clip all other non-convex shape cells
+  // that strictly overlap the convex hull's bounding area so they yield space without colliding
+  const convexHulls = layoutCells
+    .filter((c) => c.isConvex && c.points && c.points.length >= 3)
+    .map((c) => ({
+      bounds: {
+        minX: c.x,
+        maxX: c.x + c.width,
+        minY: c.y,
+        maxY: c.y + c.height,
+      },
+      points: c.points!.map((p) => ({ x: c.x + p.x, y: c.y + p.y })),
+    }))
+
+  if (convexHulls.length > 0) {
+    const finalLayoutCells: GridLayoutCell[] = []
+    const gapX = resolveGapX(params)
+    const gapY = resolveGapY(params)
+    const diagonalGap = Math.hypot(gapX, gapY)
+
+    for (const cell of layoutCells) {
+      if (cell.isConvex || cell.isText) {
+        finalLayoutCells.push(cell)
+        continue
+      }
+
+      const cellBounds = {
+        minX: cell.x,
+        maxX: cell.x + cell.width,
+        minY: cell.y,
+        maxY: cell.y + cell.height,
+      }
+
+      // Find convex hulls that actually overlap with this cell's bounding area
+      const overlappingHulls = convexHulls.filter(
+        (h) =>
+          !(
+            cellBounds.maxX <= h.bounds.minX + EPSILON ||
+            cellBounds.minX >= h.bounds.maxX - EPSILON ||
+            cellBounds.maxY <= h.bounds.minY + EPSILON ||
+            cellBounds.minY >= h.bounds.maxY - EPSILON
+          )
+      )
+
+      if (overlappingHulls.length === 0) {
+        finalLayoutCells.push(cell)
+        continue
+      }
+
+      const initialPoints = cell.points ?? buildRectanglePoints(cell.width, cell.height)
+      let currentWorldPoints: Point2D[] = initialPoints.map((p) => ({
+        x: cell.x + p.x,
+        y: cell.y + p.y,
+      }))
+
+      for (const hull of overlappingHulls) {
+        currentWorldPoints = subtractConvexHullFromPolygon(currentWorldPoints, hull.points, diagonalGap)
+        if (currentWorldPoints.length < 3) {
+          break
+        }
+      }
+
+      if (currentWorldPoints.length >= 3) {
+        let minX = Number.POSITIVE_INFINITY
+        let maxX = Number.NEGATIVE_INFINITY
+        let minY = Number.POSITIVE_INFINITY
+        let maxY = Number.NEGATIVE_INFINITY
+
+        for (const pt of currentWorldPoints) {
+          if (pt.x < minX) minX = pt.x
+          if (pt.x > maxX) maxX = pt.x
+          if (pt.y < minY) minY = pt.y
+          if (pt.y > maxY) maxY = pt.y
+        }
+
+        const width = Math.max(1, Math.round((maxX - minX) * 1000) / 1000)
+        const height = Math.max(1, Math.round((maxY - minY) * 1000) / 1000)
+        const x = Math.round(minX * 1000) / 1000
+        const y = Math.round(minY * 1000) / 1000
+
+        const localPoints = currentWorldPoints.map((pt) => ({
+          x: Math.round((pt.x - minX) * 1000) / 1000,
+          y: Math.round((pt.y - minY) * 1000) / 1000,
+        }))
+
+        finalLayoutCells.push({
+          ...cell,
+          x,
+          y,
+          width,
+          height,
+          points: localPoints,
+        })
+      } else {
+        // Cell was completely swallowed by convex hull
+        mergedCellIds.add(cell.id)
+      }
+    }
+
+    return { layoutCells: finalLayoutCells, mergedCellIds }
   }
 
   return { layoutCells, mergedCellIds }
