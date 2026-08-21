@@ -4,12 +4,14 @@ import type {
   CanvasFillState,
   Point2D,
   VectorLayer,
+  TextLayer,
 } from "./types"
 import { resolveLayerShapePoints } from "./shape-generators"
 
 /**
  * Export a filled template to PSD format using ag-psd.
- * Each vector layer becomes a PSD layer with clipping mask.
+ * Each vector layer becomes a PSD layer with clipping mask,
+ * and text layers become native editable PSD text layers.
  */
 export async function exportToPsd(
   template: FillingTemplate,
@@ -58,15 +60,69 @@ export async function exportToPsd(
     })
   }
 
+  // Template text layers (native PSD text layer)
+  if (Array.isArray(template.textLayers)) {
+    for (const textLayer of template.textLayers) {
+      if (!textLayer.visible) continue
+
+      const text = textLayer.name || "Text"
+      const layerWidth = Math.max(1, Math.round(textLayer.width))
+      const layerHeight = Math.max(1, Math.round(textLayer.height))
+      const fontSize = 24
+
+      const textCanvas = new OffscreenCanvas(layerWidth, layerHeight)
+      const ctx = textCanvas.getContext("2d")!
+      ctx.font = `${fontSize}px Arial, sans-serif`
+      ctx.fillStyle = "#000000"
+      ctx.textAlign = "center"
+      ctx.textBaseline = "middle"
+      ctx.fillText(text, layerWidth / 2, layerHeight / 2)
+
+      const imageData = ctx.getImageData(0, 0, textCanvas.width, textCanvas.height)
+      const rad = ((textLayer.rotation || 0) * Math.PI) / 180
+      const cos = Math.cos(rad)
+      const sin = Math.sin(rad)
+      const centerX = textLayer.x + layerWidth / 2
+      const centerY = textLayer.y + layerHeight / 2
+
+      psdLayers.push({
+        name: text,
+        canvas: imageDataToCanvas(imageData),
+        left: Math.round(textLayer.x),
+        top: Math.round(textLayer.y),
+        text: {
+          text,
+          transform: [
+            cos,
+            sin,
+            -sin,
+            cos,
+            Math.round(centerX),
+            Math.round(centerY + fontSize * 0.35),
+          ],
+          style: {
+            font: { name: "ArialMT" },
+            fontSize,
+            fillColor: { r: 0, g: 0, b: 0 },
+          },
+          paragraphStyle: {
+            justification: "center",
+          },
+        },
+      })
+    }
+  }
+
   const psd = {
     width: template.canvasWidth,
     height: template.canvasHeight,
     children: psdLayers,
   }
 
-  const buffer = writePsd(psd)
+  const buffer = writePsd(psd, { invalidateTextLayers: true })
   return new Blob([buffer], { type: "application/octet-stream" })
 }
+
 
 function imageDataToCanvas(imageData: ImageData): HTMLCanvasElement {
   const canvas = document.createElement("canvas")
