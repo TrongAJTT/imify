@@ -165,7 +165,7 @@ export function CaptionSettingsAccordion({
             maxPaddingV={maxPaddingV}
             maxPaddingH={maxPaddingH}
             showOffsetCalculator={isInside}
-            showOffsetInputs={isInside && captionConfig.position !== "center"}
+            showOffsetInputs={isInside}
             enableLockPaddingHMax={true}
           />
         )}

@@ -352,8 +352,15 @@ function drawCaption(
       }
       case "center":
       default: {
-        boxCenterX = cx + cw / 2 + offX
-        boxCenterY = cy + ch / 2 + offY
+        const posY = cy + ch / 2
+        const posX =
+          config.alignment === "start"
+            ? cx + boxWidth / 2
+            : config.alignment === "end"
+            ? cx + cw - boxWidth / 2
+            : cx + cw / 2
+        boxCenterX = posX + offX
+        boxCenterY = posY + offY
         break
       }
     }
