@@ -98,7 +98,7 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
       role="button"
       tabIndex={0}
       className={[
-        "group relative rounded-md border px-2.5 py-2.5 transition-colors shadow-sm",
+        "group relative border p-2 transition-colors shadow-sm",
         selected
           ? isText
             ? "border-purple-400 bg-purple-50/40 ring-1 ring-purple-300/70"
@@ -117,6 +117,7 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
     >
       <div className="flex items-start gap-3">
         <div className="relative w-[32px] h-[32px] overflow-hidden bg-slate-50 dark:bg-slate-900/40 rounded-md border flex items-center justify-center shrink-0">
+          {/* Card header type on the left */}
           {isText ? (
             <div className="flex items-center justify-center w-full h-full text-purple-600 dark:text-purple-400 bg-purple-50/60 dark:bg-purple-950/40">
               <Type size={16} />
@@ -137,6 +138,7 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
             </div>
           )}
         </div>
+        {/* Content on the right */}
         <div className="min-w-0 flex-1">
           <div className="truncate text-[12px] font-bold text-slate-800 dark:text-slate-100 inline-flex items-center gap-1.5">
             {item.kind === "group" && (
@@ -149,9 +151,7 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
               {item.name || `Layer ${item.id.slice(-5)}`}
             </span>
           </div>
-          <div className="truncate text-[10px] text-slate-400 mt-0.5">
-            {sublabel}
-          </div>
+          <div className="truncate text-[10px] text-slate-400">{sublabel}</div>
         </div>
       </div>
     </div>

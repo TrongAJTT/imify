@@ -827,16 +827,12 @@ export function FillLayerCustomizationAccordion({
                     onChange={handleTextLayerConfigChange}
                     textInputNode={
                       <TextInput
-                        label={t("fill.textContent", {
-                          defaultValue: "Nội dung",
-                        })}
+                        label={t("fill.textContent", {})}
                         value={textConfig.content ?? selectedTextLayer.name}
                         onChange={(val) =>
                           handleTextLayerConfigChange({ content: val })
                         }
-                        placeholder={t("fill.textContentPlaceholder", {
-                          defaultValue: "Nhập nội dung văn bản...",
-                        })}
+                        placeholder={t("fill.textContentPlaceholder", {})}
                       />
                     }
                     positionOptions={textPositionOptions}

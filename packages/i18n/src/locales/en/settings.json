@@ -156,8 +156,8 @@
         "description": "Disable preview wheel interaction in supported workspaces."
       },
       "fill.customization.tab_image": {
-        "label": "Open Image tab",
-        "description": "Show image transform/upload controls in Fill customization."
+        "label": "Open Content tab",
+        "description": "Show content configuration controls in Fill customization."
       },
       "fill.customization.tab_border": {
         "label": "Open Border tab",

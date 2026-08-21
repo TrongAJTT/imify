@@ -40,6 +40,7 @@ import {
 import type {
   CanvasFillState,
   FillingTemplate,
+  TextLayer,
   VectorLayer,
 } from "@imify/features/filling/types";
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types";
@@ -58,6 +59,7 @@ import {
   resolveLayerShapePoints,
 } from "@imify/features/filling/shape-generators";
 import {
+  computeLinearGradientEndpoints,
   flattenPoints,
   pointInPolygon,
   roundedPolygonPoints,
@@ -546,8 +548,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   }, []);
 
   useEffect(() => {
-    const handleImageTransformShortcuts = (e: KeyboardEvent) => {
-      if (!selectedRuntimeItem || !selectedFillState?.imageUrl) return;
+    const handleTransformShortcuts = (e: KeyboardEvent) => {
+      if (!selectedRuntimeItem) return;
 
       const target = e.target as HTMLElement | null;
       if (
@@ -560,108 +562,179 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         return;
       }
 
-      const transform = selectedFillState.imageTransform;
       const moveStep = e.shiftKey ? 10 : 1;
       const rotStep = e.shiftKey ? 5 : 1;
       const scaleStep = e.shiftKey ? 0.05 : 0.01;
 
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            x: Math.round((transform.x - moveStep) * 100) / 100,
-          },
-        });
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault();
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            x: Math.round((transform.x + moveStep) * 100) / 100,
-          },
-        });
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            y: Math.round((transform.y - moveStep) * 100) / 100,
-          },
-        });
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            y: Math.round((transform.y + moveStep) * 100) / 100,
-          },
-        });
-      } else if (e.key === "[") {
-        e.preventDefault();
-        const nextRot = Math.round((transform.rotation - rotStep) * 100) / 100;
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            rotation: nextRot,
-          },
-        });
-      } else if (e.key === "]") {
-        e.preventDefault();
-        const nextRot = Math.round((transform.rotation + rotStep) * 100) / 100;
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            rotation: nextRot,
-          },
-        });
-      } else if (e.key === "-" || e.key === "_") {
-        e.preventDefault();
-        const currentScaleX = transform.scaleX;
-        const currentScaleY = transform.scaleY;
-        const ratio = currentScaleY / (currentScaleX || 1);
-        const nextScaleX = Math.max(
-          0.01,
-          Math.round((currentScaleX - scaleStep) * 1000) / 1000,
-        );
-        const nextScaleY = Math.max(
-          0.01,
-          Math.round(nextScaleX * ratio * 1000) / 1000,
-        );
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            scaleX: nextScaleX,
-            scaleY: nextScaleY,
-          },
-        });
-      } else if (e.key === "=" || e.key === "+") {
-        e.preventDefault();
-        const currentScaleX = transform.scaleX;
-        const currentScaleY = transform.scaleY;
-        const ratio = currentScaleY / (currentScaleX || 1);
-        const nextScaleX = Math.max(
-          0.01,
-          Math.round((currentScaleX + scaleStep) * 1000) / 1000,
-        );
-        const nextScaleY = Math.max(
-          0.01,
-          Math.round(nextScaleX * ratio * 1000) / 1000,
-        );
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            scaleX: nextScaleX,
-            scaleY: nextScaleY,
-          },
-        });
+      let dx = 0;
+      let dy = 0;
+      let drot = 0;
+      let dscale = 0;
+
+      if (e.key === "ArrowLeft") dx = -moveStep;
+      else if (e.key === "ArrowRight") dx = moveStep;
+      else if (e.key === "ArrowUp") dy = -moveStep;
+      else if (e.key === "ArrowDown") dy = moveStep;
+      else if (e.key === "[") drot = -rotStep;
+      else if (e.key === "]") drot = rotStep;
+      else if (e.key === "-" || e.key === "_") dscale = -scaleStep;
+      else if (e.key === "=" || e.key === "+") dscale = scaleStep;
+      else return;
+
+      e.preventDefault();
+
+      // Mode: Tab "Lớp" (Layer transform mode)
+      if (activeCustomizationTab === "layer") {
+        if (selectedRuntimeItem.kind === "text") {
+          const textLayer = selectedRuntimeItem.textLayer;
+          updateSessionTemplate((prev) =>
+            !prev
+              ? prev
+              : {
+                  ...prev,
+                  textLayers: (prev.textLayers ?? []).map((tl) =>
+                    tl.id === textLayer.id
+                      ? {
+                          ...tl,
+                          x: dx ? Math.round((tl.x + dx) * 100) / 100 : tl.x,
+                          y: dy ? Math.round((tl.y + dy) * 100) / 100 : tl.y,
+                          rotation: drot
+                            ? Math.round((tl.rotation + drot) * 100) / 100
+                            : tl.rotation,
+                          width: dscale
+                            ? Math.max(10, Math.round(tl.width * (1 + dscale)))
+                            : tl.width,
+                          height: dscale
+                            ? Math.max(
+                                10,
+                                Math.round(tl.height * (1 + dscale)),
+                              )
+                            : tl.height,
+                        }
+                      : tl,
+                  ),
+                  updatedAt: Date.now(),
+                },
+          );
+          return;
+        }
+
+        if (selectedRuntimeItem.kind === "layer") {
+          const layer = selectedRuntimeItem.layer;
+          updateSessionTemplate((prev) =>
+            !prev
+              ? prev
+              : {
+                  ...prev,
+                  layers: prev.layers.map((l) =>
+                    l.id === layer.id
+                      ? {
+                          ...l,
+                          x: dx ? Math.round((l.x + dx) * 100) / 100 : l.x,
+                          y: dy ? Math.round((l.y + dy) * 100) / 100 : l.y,
+                          rotation: drot
+                            ? Math.round((l.rotation + drot) * 100) / 100
+                            : l.rotation,
+                        }
+                      : l,
+                  ),
+                  updatedAt: Date.now(),
+                },
+          );
+          return;
+        }
+
+        if (selectedRuntimeItem.kind === "group") {
+          const current = groupRuntimeTransforms[selectedRuntimeItem.id] ?? {
+            ...DEFAULT_IMAGE_TRANSFORM,
+          };
+          updateGroupRuntimeTransform(selectedRuntimeItem.id, {
+            x: dx ? Math.round((current.x + dx) * 100) / 100 : current.x,
+            y: dy ? Math.round((current.y + dy) * 100) / 100 : current.y,
+            rotation: drot
+              ? Math.round((current.rotation + drot) * 100) / 100
+              : current.rotation,
+          });
+          return;
+        }
       }
+
+      // Mode: Tab "Văn bản" (Text layer content/styling mode)
+      if (selectedRuntimeItem.kind === "text") {
+        const textLayer = selectedRuntimeItem.textLayer;
+        const fontStep = e.shiftKey ? 4 : 1;
+        updateSessionTemplate((prev) =>
+          !prev
+            ? prev
+            : {
+                ...prev,
+                textLayers: (prev.textLayers ?? []).map((tl) =>
+                  tl.id === textLayer.id
+                    ? {
+                        ...tl,
+                        offsetX: dx
+                          ? Math.round(((tl.offsetX ?? 0) + dx) * 100) / 100
+                          : tl.offsetX,
+                        offsetY: dy
+                          ? Math.round(((tl.offsetY ?? 0) + dy) * 100) / 100
+                          : tl.offsetY,
+                        fontSize: dscale
+                          ? Math.max(
+                              8,
+                              Math.min(
+                                200,
+                                (tl.fontSize ?? 24) +
+                                  (dscale > 0 ? fontStep : -fontStep),
+                              ),
+                            )
+                          : tl.fontSize,
+                      }
+                    : tl,
+                ),
+                updatedAt: Date.now(),
+              },
+        );
+        return;
+      }
+
+      // Mode: Tab "Ảnh" (Image fill transform mode)
+      if (!selectedFillState?.imageUrl) return;
+
+      const transform = selectedFillState.imageTransform;
+      const ratio = transform.scaleY / (transform.scaleX || 1);
+      const nextScaleX = dscale
+        ? Math.max(0.01, Math.round((transform.scaleX + dscale) * 1000) / 1000)
+        : transform.scaleX;
+      const nextScaleY = dscale
+        ? Math.max(0.01, Math.round(nextScaleX * ratio * 1000) / 1000)
+        : transform.scaleY;
+
+      updateLayerFillState(selectedRuntimeItem.id, {
+        imageTransform: {
+          ...transform,
+          x: dx ? Math.round((transform.x + dx) * 100) / 100 : transform.x,
+          y: dy ? Math.round((transform.y + dy) * 100) / 100 : transform.y,
+          rotation: drot
+            ? Math.round((transform.rotation + drot) * 100) / 100
+            : transform.rotation,
+          scaleX: nextScaleX,
+          scaleY: nextScaleY,
+        },
+      });
     };
 
-    window.addEventListener("keydown", handleImageTransformShortcuts);
+    window.addEventListener("keydown", handleTransformShortcuts);
     return () =>
-      window.removeEventListener("keydown", handleImageTransformShortcuts);
-  }, [selectedRuntimeItem, selectedFillState, updateLayerFillState]);
+      window.removeEventListener("keydown", handleTransformShortcuts);
+  }, [
+    activeCustomizationTab,
+    groupRuntimeTransforms,
+    selectedRuntimeItem,
+    selectedFillState,
+    updateGroupRuntimeTransform,
+    updateLayerFillState,
+    updateSessionTemplate,
+  ]);
 
   useEffect(() => {
     const newMap = new Map<string, HTMLImageElement>();
@@ -813,7 +886,57 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
   const updateSelectedLayerFromNode = useCallback(
     (node: Konva.Node) => {
-      if (!selectedLayerId || selectedRuntimeItem?.kind !== "layer") return;
+      if (!selectedLayerId || !selectedRuntimeItem) return;
+
+      if (selectedRuntimeItem.kind === "text") {
+        const textLayer = selectedRuntimeItem.textLayer;
+        const nextScaleX = Math.max(
+          0.01,
+          Math.abs(node.scaleX() / renderScale),
+        );
+        const nextScaleY = Math.max(
+          0.01,
+          Math.abs(node.scaleY() / renderScale),
+        );
+        const nextX =
+          Math.round(((node.x() - offsetX) / renderScale) * 100) / 100;
+        const nextY =
+          Math.round(((node.y() - offsetY) / renderScale) * 100) / 100;
+        const nextRotation = Math.round(node.rotation() * 100) / 100;
+        const nextWidth = Math.max(
+          1,
+          Math.round(textLayer.width * nextScaleX),
+        );
+        const nextHeight = Math.max(
+          1,
+          Math.round(textLayer.height * nextScaleY),
+        );
+
+        node.scaleX(renderScale);
+        node.scaleY(renderScale);
+
+        const nextTextLayer: TextLayer = {
+          ...textLayer,
+          x: nextX,
+          y: nextY,
+          rotation: nextRotation,
+          width: nextWidth,
+          height: nextHeight,
+        };
+
+        const nextTemplate: FillingTemplate = {
+          ...activeTemplate,
+          textLayers: (activeTemplate.textLayers ?? []).map((tl) =>
+            tl.id === nextTextLayer.id ? nextTextLayer : tl,
+          ),
+          updatedAt: Date.now(),
+        };
+
+        updateSessionTemplate(() => nextTemplate);
+        return;
+      }
+
+      if (selectedRuntimeItem.kind !== "layer") return;
       const selectedLayer = selectedRuntimeItem.layer;
 
       const worldPoints = resolveLayerShapePoints(selectedLayer);
@@ -904,6 +1027,15 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
   const getRuntimeItemBounds = useCallback(
     (item: FillRuntimeItem): RectBounds => {
+      if (item.kind === "text") {
+        return {
+          x: item.textLayer.x,
+          y: item.textLayer.y,
+          width: item.textLayer.width,
+          height: item.textLayer.height,
+        };
+      }
+
       if (item.kind === "layer") {
         return getBoundsFromPoints(toWorldLayerPoints(item.layer));
       }
@@ -1127,6 +1259,35 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
         node.x(groupStageX + snappedDeltaX * renderScale);
         node.y(groupStageY + snappedDeltaY * renderScale);
+        setPositionGuideLines(toStageGuideLines(guides));
+        return;
+      }
+
+      if (selectedRuntimeItem?.kind === "text") {
+        const textLayer = selectedRuntimeItem.textLayer;
+        const node = e.target;
+        const draftX = (node.x() - offsetX) / renderScale;
+        const draftY = (node.y() - offsetY) / renderScale;
+        const movingRect: RectBounds = {
+          x: draftX,
+          y: draftY,
+          width: textLayer.width,
+          height: textLayer.height,
+        };
+
+        const { snappedRect, guides } = snapRectPosition({
+          movingRect,
+          candidateRects: getLayerSnapCandidateRects(textLayer.id),
+          canvasRect,
+        });
+
+        const deltaX = snappedRect.x - movingRect.x;
+        const deltaY = snappedRect.y - movingRect.y;
+        if (Math.abs(deltaX) > 0.001 || Math.abs(deltaY) > 0.001) {
+          node.x(node.x() + deltaX * renderScale);
+          node.y(node.y() + deltaY * renderScale);
+        }
+
         setPositionGuideLines(toStageGuideLines(guides));
         return;
       }
@@ -1631,22 +1792,15 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   );
   const backgroundGradientGeometry = useMemo(() => {
     if (!parsedBackgroundGradient) return null;
-    const angleRad = (parsedBackgroundGradient.angle * Math.PI) / 180;
     const width = template.canvasWidth * renderScale;
     const height = template.canvasHeight * renderScale;
-    const cx = width / 2;
-    const cy = height / 2;
-    const len = Math.max(width, height);
-    return {
-      start: {
-        x: cx - (Math.cos(angleRad) * len) / 2,
-        y: cy - (Math.sin(angleRad) * len) / 2,
-      },
-      end: {
-        x: cx + (Math.cos(angleRad) * len) / 2,
-        y: cy + (Math.sin(angleRad) * len) / 2,
-      },
-    };
+    return computeLinearGradientEndpoints(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      parsedBackgroundGradient.angle,
+    );
   }, [
     parsedBackgroundGradient,
     renderScale,
@@ -2681,23 +2835,17 @@ function FilledLayerShape({
 
   const gradientGeometry = useMemo(() => {
     if (!parsedBorderGradient) return null;
-    const angleRad = (parsedBorderGradient.angle * Math.PI) / 180;
 
     if (borderGradientScope === "unified") {
       const globalWidth = canvasWidth * scale;
       const globalHeight = canvasHeight * scale;
-      const globalCenterX = offsetX + globalWidth / 2;
-      const globalCenterY = offsetY + globalHeight / 2;
-      const globalLength = Math.max(globalWidth, globalHeight);
-
-      const globalStart = {
-        x: globalCenterX - (Math.cos(angleRad) * globalLength) / 2,
-        y: globalCenterY - (Math.sin(angleRad) * globalLength) / 2,
-      };
-      const globalEnd = {
-        x: globalCenterX + (Math.cos(angleRad) * globalLength) / 2,
-        y: globalCenterY + (Math.sin(angleRad) * globalLength) / 2,
-      };
+      const globalLine = computeLinearGradientEndpoints(
+        offsetX + globalWidth / 2,
+        offsetY + globalHeight / 2,
+        globalWidth,
+        globalHeight,
+        parsedBorderGradient.angle,
+      );
 
       const rotationRad = (layer.rotation * Math.PI) / 180;
       const invCos = Math.cos(-rotationRad);
@@ -2712,27 +2860,20 @@ function FilledLayerShape({
       };
 
       return {
-        start: toLocal(globalStart),
-        end: toLocal(globalEnd),
+        start: toLocal(globalLine.start),
+        end: toLocal(globalLine.end),
       };
     }
 
     const width = layer.width * scale;
     const height = layer.height * scale;
-    const cx = width / 2;
-    const cy = height / 2;
-    const len = Math.max(width, height);
-
-    return {
-      start: {
-        x: cx - (Math.cos(angleRad) * len) / 2,
-        y: cy - (Math.sin(angleRad) * len) / 2,
-      },
-      end: {
-        x: cx + (Math.cos(angleRad) * len) / 2,
-        y: cy + (Math.sin(angleRad) * len) / 2,
-      },
-    };
+    return computeLinearGradientEndpoints(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      parsedBorderGradient.angle,
+    );
   }, [
     borderGradientScope,
     canvasHeight,
@@ -2943,69 +3084,76 @@ function FilledTextLayerShape({
         : "middle";
 
   return (
-    <Group
-      x={x}
-      y={y}
-      rotation={textLayer.rotation}
-      onClick={onSelect}
-      onTap={onSelect}
-    >
-      {/* Background Container */}
-      <Rect
-        width={width}
-        height={height}
-        fill={containerColor}
-        opacity={containerOpacity}
-        cornerRadius={borderRadius}
-        stroke={effectiveBorderWidth > 0 ? effectiveBorderColor : undefined}
-        strokeWidth={effectiveBorderWidth * scale}
-      />
-
-      {/* Rendered Text */}
-      <Text
-        text={textLayer.content || textLayer.name || "Text Layer"}
-        x={width / 2}
-        y={height / 2}
-        offsetX={Math.max(1, width - paddingH * 2) / 2}
-        offsetY={Math.max(1, height - paddingV * 2) / 2}
-        width={Math.max(1, width - paddingH * 2)}
-        height={Math.max(1, height - paddingV * 2)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        fill={textColor}
-        align={align}
-        verticalAlign={verticalAlign}
-        wrap="word"
-        ellipsis={true}
-        rotation={textLayer.rotate180 ? 180 : 0}
-        listening={false}
-      />
-
-      {/* Selected outline */}
-      {(isSelected || containerHighlightMode !== "none") && (
+    <>
+      <Group
+        x={x}
+        y={y}
+        rotation={textLayer.rotation}
+        onClick={onSelect}
+        onTap={onSelect}
+      >
+        {/* Background Container */}
         <Rect
           width={width}
           height={height}
+          fill={containerColor}
+          opacity={containerOpacity}
           cornerRadius={borderRadius}
-          stroke={
-            isSelected
-              ? "#8b5cf6"
-              : containerHighlightMode === "missing"
-                ? "#f59e0b"
-                : "#3b82f6"
-          }
-          strokeWidth={2}
-          dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
+          stroke={effectiveBorderWidth > 0 ? effectiveBorderColor : undefined}
+          strokeWidth={effectiveBorderWidth * scale}
+        />
+
+        {/* Rendered Text */}
+        <Text
+          text={textLayer.content || textLayer.name || "Text Layer"}
+          x={width / 2}
+          y={height / 2}
+          offsetX={Math.max(1, width - paddingH * 2) / 2}
+          offsetY={Math.max(1, height - paddingV * 2) / 2}
+          width={Math.max(1, width - paddingH * 2)}
+          height={Math.max(1, height - paddingV * 2)}
+          fontSize={fontSize}
+          fontFamily={fontFamily}
+          fill={textColor}
+          align={align}
+          verticalAlign={verticalAlign}
+          wrap="word"
+          ellipsis={true}
+          rotation={textLayer.rotate180 ? 180 : 0}
           listening={false}
         />
-      )}
+
+        {/* Selected outline */}
+        {(isSelected || containerHighlightMode !== "none") && (
+          <Rect
+            width={width}
+            height={height}
+            cornerRadius={borderRadius}
+            stroke={
+              isSelected
+                ? "#8b5cf6"
+                : containerHighlightMode === "missing"
+                  ? "#f59e0b"
+                  : "#3b82f6"
+            }
+            strokeWidth={2}
+            dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
+            listening={false}
+          />
+        )}
+      </Group>
 
       {isLayerTransformInteractive && (
         <Rect
           id={`fill-layer-transform-${textLayer.id}`}
           name="fill-layer-transform-node"
-          width={width}
-          height={height}
+          x={x}
+          y={y}
+          rotation={textLayer.rotation}
+          width={textLayer.width}
+          height={textLayer.height}
+          scaleX={scale}
+          scaleY={scale}
           fill="rgba(139, 92, 246, 0.001)"
           strokeEnabled={false}
           draggable
@@ -3016,7 +3164,7 @@ function FilledTextLayerShape({
           onDragEnd={onLayerTransformDragEnd}
         />
       )}
-    </Group>
+    </>
   );
 }
 
@@ -3149,23 +3297,16 @@ function FilledGroupShape({
   const groupGradientGeometry = useMemo(() => {
     if (!parsedBorderGradient) return null;
 
-    const angleRad = (parsedBorderGradient.angle * Math.PI) / 180;
     if (borderGradientScope === "unified") {
       const width = canvasWidth * scale;
       const height = canvasHeight * scale;
-      const cx = offsetX + width / 2;
-      const cy = offsetY + height / 2;
-      const len = Math.max(width, height);
-      return {
-        start: {
-          x: cx - (Math.cos(angleRad) * len) / 2,
-          y: cy - (Math.sin(angleRad) * len) / 2,
-        },
-        end: {
-          x: cx + (Math.cos(angleRad) * len) / 2,
-          y: cy + (Math.sin(angleRad) * len) / 2,
-        },
-      };
+      return computeLinearGradientEndpoints(
+        offsetX + width / 2,
+        offsetY + height / 2,
+        width,
+        height,
+        parsedBorderGradient.angle,
+      );
     }
 
     const points = displayPolygons.flat();
@@ -3173,19 +3314,13 @@ function FilledGroupShape({
     const bounds = getBoundsFromPoints(points);
     const width = bounds.width * scale;
     const height = bounds.height * scale;
-    const cx = offsetX + bounds.x * scale + width / 2;
-    const cy = offsetY + bounds.y * scale + height / 2;
-    const len = Math.max(width, height);
-    return {
-      start: {
-        x: cx - (Math.cos(angleRad) * len) / 2,
-        y: cy - (Math.sin(angleRad) * len) / 2,
-      },
-      end: {
-        x: cx + (Math.cos(angleRad) * len) / 2,
-        y: cy + (Math.sin(angleRad) * len) / 2,
-      },
-    };
+    return computeLinearGradientEndpoints(
+      offsetX + bounds.x * scale + width / 2,
+      offsetY + bounds.y * scale + height / 2,
+      width,
+      height,
+      parsedBorderGradient.angle,
+    );
   }, [
     borderGradientScope,
     canvasHeight,
