@@ -167,7 +167,7 @@ export function PatternLandingPage() {
   );
 }
 
-export function PatternWorkPage({ presetId }: { presetId: string }) {
+export function PatternWorkPage({ presetId }: { presetId?: string }) {
   const { t } = useTranslation(["pattern", "common"]);
   const enableWideSidebarGrid = useWideSidebarGridEnabled();
   const isHydrated = usePatternPresetHydrated();
@@ -203,10 +203,22 @@ export function PatternWorkPage({ presetId }: { presetId: string }) {
     `${t("common:toolSettings")} - ${t("title")}`,
   );
 
-  const preset = useMemo(
-    () => presets.find((entry) => entry.id === presetId) ?? null,
-    [presetId, presets],
-  );
+  const preset = useMemo(() => {
+    if (presetId) {
+      return presets.find((entry) => entry.id === presetId) ?? null;
+    }
+    if (activePresetId) {
+      const active = presets.find((entry) => entry.id === activePresetId);
+      if (active) return active;
+    }
+    return presets[0] ?? null;
+  }, [activePresetId, presetId, presets]);
+
+  useEffect(() => {
+    if (isHydrated && !presetId && preset) {
+      router.replace(`/pattern-generator/work?id=${preset.id}`);
+    }
+  }, [isHydrated, preset, presetId, router]);
 
   useEffect(() => {
     return () => {

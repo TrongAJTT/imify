@@ -28,7 +28,7 @@ interface ProcessorLandingPageProps {
 
 interface ProcessorWorkPageProps {
   context: SetupContext;
-  presetId: string;
+  presetId?: string;
 }
 
 const AUTO_SAVE_DELAY_MS = 420;
@@ -221,10 +221,22 @@ export function ProcessorWorkPage({
     (store) => (store as any)._hasHydrated,
   );
 
-  const preset = useMemo(
-    () => presets.find((entry) => entry.id === presetId) ?? null,
-    [presetId, presets],
-  );
+  const preset = useMemo(() => {
+    if (presetId) {
+      return presets.find((entry) => entry.id === presetId) ?? null;
+    }
+    if (activePresetId) {
+      const active = presets.find((entry) => entry.id === activePresetId);
+      if (active) return active;
+    }
+    return presets[0] ?? null;
+  }, [activePresetId, presetId, presets]);
+
+  useEffect(() => {
+    if (isBatchStoreRehydrated && !presetId && preset) {
+      router.replace(`${getRoutePrefix(context)}/work?id=${preset.id}`);
+    }
+  }, [context, isBatchStoreRehydrated, preset, presetId, router]);
 
   useEffect(() => {
     return () => {

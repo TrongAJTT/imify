@@ -68,7 +68,7 @@ interface FillingHomePageProps {
 
 interface FillingFlowPageProps {
   mode: FillingMode;
-  templateId: string;
+  templateId?: string;
   routeBase: string;
 }
 
@@ -287,10 +287,22 @@ export function FillingFlowPage({
     setSelectedEditorTextLayerId(null);
   }, []);
 
-  const template = useMemo(
-    () => templates.find((entry) => entry.id === templateId) ?? null,
-    [templateId, templates],
-  );
+  const template = useMemo(() => {
+    if (templateId) {
+      return templates.find((entry) => entry.id === templateId) ?? null;
+    }
+    if (activeTemplateId) {
+      const active = templates.find((entry) => entry.id === activeTemplateId);
+      if (active) return active;
+    }
+    return templates[0] ?? null;
+  }, [activeTemplateId, templateId, templates]);
+
+  useEffect(() => {
+    if (templatesLoaded && !templateId && template) {
+      router.replace(`${routeBase}/${mode}?id=${template.id}`);
+    }
+  }, [mode, routeBase, router, template, templateId, templatesLoaded]);
   const manualEditorBindings = useMemo(
     () =>
       mode === "edit" && template

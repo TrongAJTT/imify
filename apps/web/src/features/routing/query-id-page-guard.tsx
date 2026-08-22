@@ -26,11 +26,7 @@ interface QueryIdPageGuardProps {
 
 export function QueryIdPageGuard({ target }: QueryIdPageGuardProps) {
   const searchParams = useSearchParams()
-  const id = getRouteId({ id: searchParams.get("id") ?? undefined })
-
-  if (!id) {
-    return null
-  }
+  const id = getRouteId({ id: searchParams.get("id") ?? undefined }) ?? undefined
 
   switch (target) {
     case "pattern-work":

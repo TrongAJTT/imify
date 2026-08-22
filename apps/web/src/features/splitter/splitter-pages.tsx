@@ -128,7 +128,7 @@ export function SplitterLandingPage() {
   );
 }
 
-export function SplitterWorkPage({ presetId }: { presetId: string }) {
+export function SplitterWorkPage({ presetId }: { presetId?: string }) {
   const { t } = useTranslation("common");
   const enableWideSidebarGrid = useWideSidebarGridEnabled();
   const router = useRouter();
@@ -140,6 +140,10 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
   const resetHeader = useWorkspaceHeaderStore((state) => state.resetHeader);
   const isHydrated = useSplitterPresetHydrated();
   const presets = useSplitterPresetStore((state) => state.presets);
+  const activePresetId = useSplitterPresetStore((state) => state.activePresetId);
+  const ensureDefaultPreset = useSplitterPresetStore(
+    (state) => state.ensureDefaultPreset,
+  );
   const applyPreset = useSplitterPresetStore((state) => state.applyPreset);
   const setPresetViewMode = useSplitterPresetStore(
     (state) => state.setPresetViewMode,
@@ -148,10 +152,32 @@ export function SplitterWorkPage({ presetId }: { presetId: string }) {
     (state) => state.applyPresetConfig,
   );
   const appliedPresetIdRef = useRef<string | null>(null);
-  const preset = useMemo(
-    () => presets.find((entry) => entry.id === presetId) ?? null,
-    [presetId, presets],
-  );
+
+  const preset = useMemo(() => {
+    if (presetId) {
+      return presets.find((entry) => entry.id === presetId) ?? null;
+    }
+    if (activePresetId) {
+      const active = presets.find((entry) => entry.id === activePresetId);
+      if (active) return active;
+    }
+    return presets[0] ?? null;
+  }, [activePresetId, presetId, presets]);
+
+  useEffect(() => {
+    if (isHydrated && !presetId && preset) {
+      router.replace(`/splitter/work?id=${preset.id}`);
+    }
+  }, [isHydrated, preset, presetId, router]);
+
+  useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+    if (presets.length === 0) {
+      ensureDefaultPreset();
+    }
+  }, [ensureDefaultPreset, isHydrated, presets.length]);
 
   useWorkspaceSidebar(
     <SplitterSidebarShell enableWideSidebarGrid={enableWideSidebarGrid} />,
