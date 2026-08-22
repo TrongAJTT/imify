@@ -73,6 +73,7 @@ import { Button } from "@imify/ui/ui/button";
 import { Tooltip, ZoomPanControl } from "@imify/ui";
 import { promptRenameInput } from "@imify/stores";
 import { useCanvasResizer } from "../../shared/use-canvas-resizer";
+import { useCanvasViewport } from "../../shared/use-canvas-viewport";
 import { getInitialCanvasHeightPx } from "@imify/core";
 import {
   PreviewInteractionModeToggle,
@@ -136,6 +137,36 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     containerRef,
     onHeightChange: setPreviewContainerHeight,
     minHeight: 320,
+  });
+
+  const {
+    isPanning: isViewportPanning,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
+  } = useCanvasViewport({
+    zoom: previewZoom,
+    panX: previewPan.x,
+    panY: previewPan.y,
+    onZoomChange: setPreviewZoom,
+    onPanChange: (x, y) => setPreviewPan({ x, y }),
+    interactionMode: previewInteractionMode,
+    minZoom: PREVIEW_MIN_ZOOM,
+    maxZoom: PREVIEW_MAX_ZOOM,
+    zoomFactor: PREVIEW_ZOOM_FACTOR,
+    containerRef,
+    shouldStartPan: () => {
+      const stage = stageRef.current;
+      if (!stage) return true;
+      const pointerPos = stage.getPointerPosition();
+      if (!pointerPos) return true;
+      const hitShape = stage.getIntersection(pointerPos);
+      if (hitShape) {
+        return false;
+      }
+      return true;
+    },
   });
 
   const canvasFillState = useFillingStore((s) => s.canvasFillState);
@@ -611,10 +642,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                             ? Math.max(10, Math.round(tl.width * (1 + dscale)))
                             : tl.width,
                           height: dscale
-                            ? Math.max(
-                                10,
-                                Math.round(tl.height * (1 + dscale)),
-                              )
+                            ? Math.max(10, Math.round(tl.height * (1 + dscale)))
                             : tl.height,
                         }
                       : tl,
@@ -909,10 +937,7 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         const nextY =
           Math.round(((node.y() - offsetY) / renderScale) * 100) / 100;
         const nextRotation = Math.round(node.rotation() * 100) / 100;
-        const nextWidth = Math.max(
-          1,
-          Math.round(textLayer.width * nextScaleX),
-        );
+        const nextWidth = Math.max(1, Math.round(textLayer.width * nextScaleX));
         const nextHeight = Math.max(
           1,
           Math.round(textLayer.height * nextScaleY),
@@ -1900,8 +1925,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
       <div
         ref={containerRef}
-        className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
+        className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden select-none touch-none"
         style={{ height: `${previewContainerHeight}px`, cursor }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
         onDragOver={handleStageContainerDragOver}
         onDragLeave={handleStageContainerDragLeave}
         onDrop={handleStageContainerDrop}
@@ -1921,6 +1950,17 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           onClick={handleStageClick}
           onTap={handleStageClick}
           onMouseMove={(e) => {
+            if (isViewportPanning) {
+              setCursor("grabbing");
+              return;
+            }
+
+            if (previewInteractionMode === "pan") {
+              const isPointerDown = (e.evt as MouseEvent).buttons === 1;
+              setCursor(isPointerDown ? "grabbing" : "grab");
+              return;
+            }
+
             const targetName = e.target.name();
             if (targetName.includes("rotater")) {
               setCursor(ROTATE_CURSOR);
@@ -3107,7 +3147,7 @@ function FilledTextLayerShape({
   const containerOpacity = (textLayer.containerOpacity ?? 100) / 100;
   const effectiveCornerRadius = canvasFillState.cornerRadiusOverrideEnabled
     ? canvasFillState.cornerRadiusOverride
-    : (fillState?.cornerRadius ?? textLayer.borderRadius ?? 8);
+    : fillState?.cornerRadius ?? textLayer.borderRadius ?? 8;
   const borderRadius = effectiveCornerRadius * scale;
   const fontSize = (textLayer.fontSize ?? 24) * scale;
   const fontFamily = textLayer.fontFamily || "Inter";

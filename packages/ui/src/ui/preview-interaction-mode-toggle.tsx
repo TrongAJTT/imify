@@ -6,8 +6,6 @@ import {
   type SegmentedControlOption,
 } from "./segmented-control";
 import { useTranslation } from "@imify/i18n";
-import { RichDropdown } from "./rich-dropdown";
-import { type RichDropdownOption } from "./rich-dropdown";
 
 export type PreviewInteractionMode = "zoom" | "pan" | "idle";
 
@@ -68,37 +66,15 @@ export function PreviewInteractionModeToggle({
     },
   ];
 
-  // Convert SegmentedControlOptions to RichDropdownOptions
-  const richDropdownOptions: RichDropdownOption<PreviewInteractionMode>[] =
-    options.map((opt) => ({
-      value: opt.value,
-      label: String(opt.tooltipLabel || opt.label),
-      displayLabel: String(opt.label),
-      sublabel: String(opt.tooltipContent),
-      icon: opt.icon,
-    }));
-
   return (
-    <>
-      {/* Desktop View: Cụm 3 nút */}
-      <div className="hidden sm:block">
-        <SegmentedControl
-          value={mode}
-          options={options}
-          onChange={onChange}
-          ariaLabel="Preview interaction mode"
-        />
-      </div>
-
-      {/* Mobile View: Dropdown select thu gọn dùng RichDropdown nâng cao */}
-      <div className="block sm:hidden">
-        <RichDropdown
-          value={mode}
-          options={richDropdownOptions}
-          onChange={onChange}
-        />
-      </div>
-    </>
+    <div className="hidden sm:block">
+      <SegmentedControl
+        value={mode}
+        options={options}
+        onChange={onChange}
+        ariaLabel="Preview interaction mode"
+      />
+    </div>
   );
 }
 

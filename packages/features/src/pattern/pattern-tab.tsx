@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { Loader2, Save } from "lucide-react";
 import { useCanvasResizer } from "../shared/use-canvas-resizer";
-import { usePanDrag } from "../shared/use-pan-drag";
+import { useCanvasViewport } from "../shared/use-canvas-viewport";
 
 import { Subheading, MutedText } from "@imify/ui";
 import { toUserFacingConversionError } from "@imify/core/error-utils";
@@ -27,7 +27,6 @@ import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
 } from "@imify/ui";
-import { preventWheelEvent } from "../shared/prevent-wheel-event";
 import { useTranslation } from "@imify/i18n";
 import {
   PREVIEW_MIN_ZOOM,
@@ -112,17 +111,33 @@ export function PatternTab() {
   });
 
   const {
-    pan: previewPanInternal,
-    setPan: setPreviewPanInternal,
+    isPanning: isViewportPanning,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
     handlePointerCancel,
-  } = usePanDrag({
-    onlyWhenZoomed: false,
-    currentZoom: previewZoom,
+  } = useCanvasViewport({
+    zoom: previewZoom,
+    panX: previewPan.x,
+    panY: previewPan.y,
     onZoomChange: setPreviewZoom,
     onPanChange: (x, y) => setPreviewPan({ x, y }),
+    interactionMode: previewInteractionMode,
+    minZoom: PREVIEW_MIN_ZOOM,
+    maxZoom: PREVIEW_MAX_ZOOM,
+    zoomFactor: PREVIEW_ZOOM_FACTOR,
+    containerRef: previewHostRef,
+    shouldStartPan: (e) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.closest(
+          '[data-viewer-interactive="true"], [class*="pointer-events-auto"], input, button, select, textarea, [class*="cursor-"]',
+        )
+      ) {
+        return false;
+      }
+      return true;
+    },
   });
 
   const assetBitmapsRef = useRef<Map<string, ImageBitmap>>(new Map());
@@ -132,12 +147,6 @@ export function PatternTab() {
     () => assets.filter((asset) => asset.enabled),
     [assets],
   );
-  const clampPreviewZoom = useCallback((value: number) => {
-    return Math.max(
-      PREVIEW_MIN_ZOOM,
-      Math.min(PREVIEW_MAX_ZOOM, Math.round(value)),
-    );
-  }, []);
 
   const previewShortcutsEnabled = activeAssets.length > 0;
 
@@ -437,96 +446,6 @@ export function PatternTab() {
     ],
   );
 
-  const handlePreviewWheel = useCallback(
-    (event: WheelEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest('[class*="pointer-events-auto"]')) {
-        return;
-      }
-
-      if (previewInteractionMode === "idle") {
-        return;
-      }
-
-      preventWheelEvent(event);
-
-      if (previewInteractionMode === "pan") {
-        const delta = event.deltaY > 0 ? 50 : -50;
-        if (event.shiftKey) {
-          setPreviewPan((current) => ({ ...current, x: current.x - delta }));
-        } else {
-          setPreviewPan((current) => ({ ...current, y: current.y - delta }));
-        }
-        return;
-      }
-
-      const oldZoom = previewZoom;
-      const dir = event.deltaY > 0 ? -1 : 1;
-      const nextZoom = clampPreviewZoom(
-        oldZoom * (1 + PREVIEW_ZOOM_FACTOR * dir),
-      );
-
-      if (nextZoom === oldZoom) {
-        return;
-      }
-
-      const host = previewHostRef.current;
-      if (!host) {
-        setPreviewZoom(nextZoom);
-        return;
-      }
-
-      const rect = host.getBoundingClientRect();
-      const pointerX = event.clientX - rect.left;
-      const pointerY = event.clientY - rect.top;
-
-      const oldScale = oldZoom / 100;
-      const newScale = nextZoom / 100;
-      if (oldScale <= 0 || newScale <= 0) {
-        setPreviewZoom(nextZoom);
-        return;
-      }
-
-      const worldX = (pointerX - previewBaseOffset.x - previewPan.x) / oldScale;
-      const worldY = (pointerY - previewBaseOffset.y - previewPan.y) / oldScale;
-
-      const nextPanX = pointerX - previewBaseOffset.x - worldX * newScale;
-      const nextPanY = pointerY - previewBaseOffset.y - worldY * newScale;
-
-      setPreviewZoom(nextZoom);
-      setPreviewPan({
-        x: Math.round(nextPanX * 100) / 100,
-        y: Math.round(nextPanY * 100) / 100,
-      });
-    },
-    [
-      clampPreviewZoom,
-      previewBaseOffset.x,
-      previewBaseOffset.y,
-      previewInteractionMode,
-      previewPan.x,
-      previewPan.y,
-      previewZoom,
-    ],
-  );
-
-  useEffect(() => {
-    const host = previewHostRef.current;
-    if (!host) {
-      return;
-    }
-
-    const handleNativeWheel = (event: WheelEvent) => {
-      handlePreviewWheel(event);
-    };
-
-    host.addEventListener("wheel", handleNativeWheel, { passive: false });
-
-    return () => {
-      host.removeEventListener("wheel", handleNativeWheel);
-    };
-  }, [handlePreviewWheel]);
-
   const handleExportPattern = async () => {
     if (isExporting) {
       return;
@@ -569,7 +488,8 @@ export function PatternTab() {
       pushExportToast({
         id: toastId,
         fileName: outputBaseName,
-        targetFormat: mapQuickExportToEngineConfig(exportFormat).targetFormat as any,
+        targetFormat: mapQuickExportToEngineConfig(exportFormat)
+          .targetFormat as any,
         status: "success",
         percent: 100,
         message: t("toasts.exportCompleted"),
@@ -578,7 +498,8 @@ export function PatternTab() {
       pushExportToast({
         id: toastId,
         fileName: outputBaseName,
-        targetFormat: mapQuickExportToEngineConfig(exportFormat).targetFormat as any,
+        targetFormat: mapQuickExportToEngineConfig(exportFormat)
+          .targetFormat as any,
         status: "error",
         percent: 100,
         message: toUserFacingConversionError(error, t("toasts.exportFailed")),
@@ -632,11 +553,22 @@ export function PatternTab() {
 
       <div
         ref={previewHostRef}
-        className="relative mx-auto overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
+        className="relative mx-auto overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-700 dark:bg-slate-900/60 select-none touch-none"
         style={{
           width: "100%",
           height: `${previewContainerHeight}px`,
+          cursor: isViewportPanning
+            ? "grabbing"
+            : previewInteractionMode === "pan"
+              ? "grab"
+              : previewInteractionMode === "idle"
+                ? "default"
+                : "default",
         }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
       >
         <div
           className="relative h-full w-full flex items-center justify-center overflow-hidden"
@@ -644,17 +576,7 @@ export function PatternTab() {
             transform: `translate(${previewPan.x}px, ${previewPan.y}px) scale(${previewZoom / 100})`,
             transformOrigin: "center center",
             touchAction: "none",
-            cursor:
-              previewInteractionMode === "pan"
-                ? "grab"
-                : previewInteractionMode === "idle"
-                  ? "default"
-                  : "zoom-in",
           }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
         >
           <div
             className="relative bg-white shadow-xl dark:bg-slate-950"

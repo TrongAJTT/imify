@@ -60,6 +60,13 @@
     "idleLabel": "Idle Mode",
     "idleTooltip": "Preview wheel interaction is disabled."
   },
+  "triggerButton": {
+    "toggleHelp": "Click to toggle on/off.",
+    "perTapHelp": "Click for single-use action (auto-resets after use).",
+    "doubleTapHelp": "Click for single use, Double-click to lock mode.",
+    "lockedBadge": "Locked (Click to unlock)",
+    "singleUseBadge": "Single use (Double-click to lock)"
+  },
   "commonFaqs": [
     {
       "question": "What are common errors during processing?",

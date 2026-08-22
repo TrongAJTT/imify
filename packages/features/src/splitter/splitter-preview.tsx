@@ -1,28 +1,25 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
-import { AnimatingSpinner } from "@imify/ui"
-import { usePanDrag } from "../shared/use-pan-drag"
-import { ZoomPanControl } from "@imify/ui"
-import type { PreviewInteractionMode } from "@imify/ui"
-import type { SplitterSplitPlan, SplitterSplitSettings } from "./types"
-import { hasFileDragPayload } from "../shared/image-file-utils"
-import { preventWheelEvent } from "../shared/prevent-wheel-event"
-import { useCanvasResizer } from "../shared/use-canvas-resizer"
-import { useTranslation } from "@imify/i18n"
-import { getInitialCanvasHeightPx } from "@imify/core"
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatingSpinner } from "@imify/ui";
+import { CanvasViewportShell } from "../shared/canvas-viewport-shell";
+import type { PreviewInteractionMode } from "@imify/ui";
+import type { SplitterSplitPlan, SplitterSplitSettings } from "./types";
+import { hasFileDragPayload } from "../shared/image-file-utils";
+import { useTranslation } from "@imify/i18n";
+import { getInitialCanvasHeightPx } from "@imify/core";
 interface SplitterPreviewProps {
   image: {
-    name: string
-    previewUrl: string
-    width: number
-    height: number
-  } | null
-  plan: SplitterSplitPlan | null
-  warningText?: string | null
-  onDropFiles?: (files: FileList | null) => void
-  isComputing?: boolean
-  previewInteractionMode?: PreviewInteractionMode
-  splitSettings?: SplitterSplitSettings
-  onBasicGuideChange?: (axis: "x" | "y", value: number) => void
+    name: string;
+    previewUrl: string;
+    width: number;
+    height: number;
+  } | null;
+  plan: SplitterSplitPlan | null;
+  warningText?: string | null;
+  onDropFiles?: (files: FileList | null) => void;
+  isComputing?: boolean;
+  previewInteractionMode?: PreviewInteractionMode;
+  splitSettings?: SplitterSplitSettings;
+  onBasicGuideChange?: (axis: "x" | "y", value: number) => void;
 }
 
 export function SplitterPreview({
@@ -33,171 +30,128 @@ export function SplitterPreview({
   isComputing = false,
   previewInteractionMode = "zoom",
   splitSettings,
-  onBasicGuideChange
+  onBasicGuideChange,
 }: SplitterPreviewProps) {
-  const { t } = useTranslation("splitter")
-  const PREVIEW_ZOOM_FACTOR = 0.15
+  const { t } = useTranslation("splitter");
+  const PREVIEW_ZOOM_FACTOR = 0.15;
 
-  const [isDragOver, setIsDragOver] = useState(false)
-  const [zoom, setZoom] = useState(100)
-  const [containerHeight, setContainerHeight] = useState(() => getInitialCanvasHeightPx(520))
-  const [frameWidth, setFrameWidth] = useState(0)
-  const previewFrameRef = useRef<HTMLDivElement>(null)
-  const previewInteractionModeRef = useRef(previewInteractionMode)
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [zoom, setZoom] = useState(100);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [containerHeight, setContainerHeight] = useState(() =>
+    getInitialCanvasHeightPx(520),
+  );
+  const [frameWidth, setFrameWidth] = useState(0);
+  const previewFrameRef = useRef<HTMLDivElement>(null);
 
-  const { isResizing, handleResizeStart } = useCanvasResizer({
-    containerRef: previewFrameRef,
-    onHeightChange: setContainerHeight,
-    minHeight: 240
-  })
-
-  useEffect(() => {
-    previewInteractionModeRef.current = previewInteractionMode
-  }, [previewInteractionMode])
-
-  const guideBoxRef = useRef<HTMLDivElement>(null)
-  const dragAxisRef = useRef<"x" | "y" | null>(null)
-
-  const { pan, setPan, handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } = usePanDrag({
-    enabled: previewInteractionMode === "pan",
-    onlyWhenZoomed: false,
-    currentZoom: zoom,
-    onZoomChange: setZoom,
-    onPanChange: (x, y) => setPan({ x, y })
-  })
+  const guideBoxRef = useRef<HTMLDivElement>(null);
+  const dragAxisRef = useRef<"x" | "y" | null>(null);
 
   useEffect(() => {
-    const frame = previewFrameRef.current
-    if (!frame) return
+    const frame = previewFrameRef.current;
+    if (!frame) return;
 
     const syncFrameWidth = () => {
-      setFrameWidth(frame.clientWidth)
-    }
+      setFrameWidth(frame.clientWidth);
+    };
 
-    syncFrameWidth()
-    const observer = new ResizeObserver(syncFrameWidth)
-    observer.observe(frame)
-    return () => observer.disconnect()
-  }, [])
+    syncFrameWidth();
+    const observer = new ResizeObserver(syncFrameWidth);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, []);
 
   const renderedImageBox = useMemo(() => {
-    if (!image) return { width: 0, height: 0 }
-    const safeHeight = Math.max(1, containerHeight)
-    const safeWidth = Math.max(1, frameWidth)
-    const imageAspect = Math.max(1, image.width) / Math.max(1, image.height)
-    const frameAspect = safeWidth / safeHeight
+    if (!image) return { width: 0, height: 0 };
+    const safeHeight = Math.max(1, containerHeight);
+    const safeWidth = Math.max(1, frameWidth);
+    const imageAspect = Math.max(1, image.width) / Math.max(1, image.height);
+    const frameAspect = safeWidth / safeHeight;
 
     if (frameAspect > imageAspect) {
       return {
         width: Math.round(safeHeight * imageAspect),
-        height: safeHeight
-      }
+        height: safeHeight,
+      };
     }
 
     return {
       width: safeWidth,
-      height: Math.round(safeWidth / imageAspect)
-    }
-  }, [containerHeight, frameWidth, image])
+      height: Math.round(safeWidth / imageAspect),
+    };
+  }, [containerHeight, frameWidth, image]);
 
   if (!image) {
-    return null
+    return null;
   }
 
-  const xCuts = plan?.xCuts.slice(1, -1) ?? []
-  const yCuts = plan?.yCuts.slice(1, -1) ?? []
+  const xCuts = plan?.xCuts.slice(1, -1) ?? [];
+  const yCuts = plan?.yCuts.slice(1, -1) ?? [];
   const isAutoSpriteMode =
-    splitSettings?.mode === "advanced" && splitSettings.advancedMethod === "auto_sprite"
-  const firstXCut = xCuts[0] ?? null
-  const firstYCut = yCuts[0] ?? null
+    splitSettings?.mode === "advanced" &&
+    splitSettings.advancedMethod === "auto_sprite";
+  const firstXCut = xCuts[0] ?? null;
+  const firstYCut = yCuts[0] ?? null;
   const canDragXGuide =
     splitSettings?.mode === "basic" &&
-    (splitSettings.direction === "vertical" || splitSettings.direction === "grid") &&
-    firstXCut != null
+    (splitSettings.direction === "vertical" ||
+      splitSettings.direction === "grid") &&
+    firstXCut != null;
   const canDragYGuide =
     splitSettings?.mode === "basic" &&
-    (splitSettings.direction === "horizontal" || splitSettings.direction === "grid") &&
-    firstYCut != null
+    (splitSettings.direction === "horizontal" ||
+      splitSettings.direction === "grid") &&
+    firstYCut != null;
 
-  const guideColor = splitSettings?.guideColor?.trim() || "#06b6d4"
+  const guideColor = splitSettings?.guideColor?.trim() || "#06b6d4";
 
   useEffect(() => {
     const handleMove = (event: PointerEvent) => {
-      const axis = dragAxisRef.current
-      const guideBox = guideBoxRef.current
+      const axis = dragAxisRef.current;
+      const guideBox = guideBoxRef.current;
       if (!axis || !guideBox || !onBasicGuideChange) {
-        return
+        return;
       }
 
-      const rect = guideBox.getBoundingClientRect()
+      const rect = guideBox.getBoundingClientRect();
       if (axis === "x") {
-        const relative = Math.max(1, Math.min(rect.width - 1, event.clientX - rect.left))
-        const sourceValue = Math.round((relative / rect.width) * image.width)
-        onBasicGuideChange("x", sourceValue)
-        return
+        const relative = Math.max(
+          1,
+          Math.min(rect.width - 1, event.clientX - rect.left),
+        );
+        const sourceValue = Math.round((relative / rect.width) * image.width);
+        onBasicGuideChange("x", sourceValue);
+        return;
       }
 
-      const relative = Math.max(1, Math.min(rect.height - 1, event.clientY - rect.top))
-      const sourceValue = Math.round((relative / rect.height) * image.height)
-      onBasicGuideChange("y", sourceValue)
-    }
+      const relative = Math.max(
+        1,
+        Math.min(rect.height - 1, event.clientY - rect.top),
+      );
+      const sourceValue = Math.round((relative / rect.height) * image.height);
+      onBasicGuideChange("y", sourceValue);
+    };
 
     const handleUp = () => {
-      dragAxisRef.current = null
-    }
+      dragAxisRef.current = null;
+    };
 
-    window.addEventListener("pointermove", handleMove)
-    window.addEventListener("pointerup", handleUp)
-    window.addEventListener("pointercancel", handleUp)
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+    window.addEventListener("pointercancel", handleUp);
     return () => {
-      window.removeEventListener("pointermove", handleMove)
-      window.removeEventListener("pointerup", handleUp)
-      window.removeEventListener("pointercancel", handleUp)
-    }
-  }, [image.height, image.width, onBasicGuideChange])
-
-  // Use native wheel listener to reliably block outer page scrolling.
-  useEffect(() => {
-    const el = previewFrameRef.current
-    if (!el) return
-
-    const handleWheel = (e: WheelEvent) => {
-      const mode = previewInteractionModeRef.current
-      if (mode === "idle") return
-
-      const target = e.target as HTMLElement | null
-      if (target?.closest('[class*="pointer-events-auto"]')) return
-
-      e.preventDefault()
-      e.stopPropagation()
-
-      if (mode === "pan") {
-        const delta = e.deltaY > 0 ? 50 : -50
-        if (e.shiftKey) {
-          setPan((current) => ({ ...current, x: current.x - delta }))
-          return
-        }
-        setPan((current) => ({ ...current, y: current.y - delta }))
-        return
-      }
-
-      setZoom((current) => {
-        const dir = e.deltaY > 0 ? -1 : 1
-        const next = current * (1 + PREVIEW_ZOOM_FACTOR * dir)
-        return Math.max(50, Math.min(10000, Math.round(next)))
-      })
-    }
-
-    el.addEventListener("wheel", handleWheel, { passive: false, capture: true })
-    return () => {
-      el.removeEventListener("wheel", handleWheel, { capture: true } as any)
-    }
-  }, [setPan, setZoom])
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      window.removeEventListener("pointercancel", handleUp);
+    };
+  }, [image.height, image.width, onBasicGuideChange]);
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
-        <span className="truncate">{t("previewLabel")}: {image.name}</span>
+        <span className="truncate">
+          {t("previewLabel")}: {image.name}
+        </span>
         <span className="shrink-0">
           {(plan?.rects.length ?? 0) === 1
             ? t("slicesCount_one")
@@ -208,79 +162,59 @@ export function SplitterPreview({
       <div className="rounded-xl border border-slate-200 bg-slate-100 p-1.5 sm:p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
         <div
           ref={previewFrameRef}
-          className={`relative mx-auto overflow-hidden rounded-lg border bg-white dark:bg-slate-950 touch-none ${isDragOver
-              ? "border-cyan-500 ring-2 ring-cyan-300/60 dark:ring-cyan-700/60"
-              : "border-slate-300 dark:border-slate-700"
-            }`}
-          style={{
-            width: "100%",
-            height: `${containerHeight}px`
-          }}
           onDragOver={(event) => {
-            if (!onDropFiles) {
-              return
-            }
-            if (!hasFileDragPayload(event.dataTransfer)) {
-              return
-            }
-            event.preventDefault()
-            setIsDragOver(true)
+            if (!onDropFiles || !hasFileDragPayload(event.dataTransfer)) return;
+            event.preventDefault();
+            setIsDragOver(true);
           }}
           onDragLeave={() => {
-            if (!onDropFiles) {
-              return
-            }
-            setIsDragOver(false)
+            if (!onDropFiles) return;
+            setIsDragOver(false);
           }}
           onDrop={(event) => {
-            if (!onDropFiles) {
-              return
-            }
-            if (!hasFileDragPayload(event.dataTransfer)) {
-              return
-            }
-            event.preventDefault()
-            setIsDragOver(false)
-            onDropFiles(event.dataTransfer.files)
+            if (!onDropFiles || !hasFileDragPayload(event.dataTransfer)) return;
+            event.preventDefault();
+            setIsDragOver(false);
+            onDropFiles(event.dataTransfer.files);
           }}
         >
-          <div className="relative h-full w-full overflow-hidden">
+          <CanvasViewportShell
+            zoom={zoom}
+            panX={pan.x}
+            panY={pan.y}
+            onZoomChange={(v) => setZoom(Math.max(50, Math.min(10000, v)))}
+            onPanChange={(x, y) => setPan({ x, y })}
+            containerHeight={containerHeight}
+            onHeightChange={setContainerHeight}
+            minHeight={240}
+            interactionMode={previewInteractionMode}
+            minZoom={50}
+            maxZoom={10000}
+            className={`mx-auto bg-white dark:bg-slate-950 ${
+              isDragOver
+                ? "border-cyan-500 ring-2 ring-cyan-300/60 dark:ring-cyan-700/60"
+                : "border-slate-300 dark:border-slate-700"
+            }`}
+            applyTransformToChildren={true}
+          >
             <div
-              className="relative h-full w-full flex items-center justify-center"
+              ref={guideBoxRef}
+              className="relative overflow-hidden"
               style={{
-                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
-                transformOrigin: "center center",
-                touchAction: "none",
-                cursor:
-                  previewInteractionMode === "pan"
-                    ? "grab"
-                    : previewInteractionMode === "idle"
-                      ? "default"
-                      : "zoom-in"
+                width: `${Math.max(1, renderedImageBox.width)}px`,
+                height: `${Math.max(1, renderedImageBox.height)}px`,
               }}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerCancel}
             >
-              <div
-                ref={guideBoxRef}
-                className="relative overflow-hidden"
-                style={{
-                  width: `${Math.max(1, renderedImageBox.width)}px`,
-                  height: `${Math.max(1, renderedImageBox.height)}px`
-                }}
-              >
-                <img
-                  src={image.previewUrl}
-                  alt={image.name}
-                  className="h-full w-full object-fill"
-                  draggable={false}
-                />
+              <img
+                src={image.previewUrl}
+                alt={image.name}
+                className="h-full w-full object-fill pointer-events-none"
+                draggable={false}
+              />
 
-                <div className="pointer-events-none absolute inset-0">
-                  {isAutoSpriteMode
-                    ? (plan?.rects ?? []).map((rect) => (
+              <div className="pointer-events-none absolute inset-0">
+                {isAutoSpriteMode
+                  ? (plan?.rects ?? []).map((rect) => (
                       <div
                         key={`sprite_${rect.index}_${rect.x}_${rect.y}`}
                         className="absolute border"
@@ -289,102 +223,83 @@ export function SplitterPreview({
                           top: `${(rect.y / image.height) * 100}%`,
                           width: `${(rect.width / image.width) * 100}%`,
                           height: `${(rect.height / image.height) * 100}%`,
-                          borderColor: guideColor
+                          borderColor: guideColor,
                         }}
                       />
                     ))
-                    : null}
+                  : null}
 
-                  {!isAutoSpriteMode
-                    ? xCuts.map((cut) => (
+                {!isAutoSpriteMode
+                  ? xCuts.map((cut) => (
                       <div
                         key={`x_${cut}`}
                         className="absolute top-0 bottom-0 w-px"
                         style={{
                           left: `${(cut / image.width) * 100}%`,
-                          backgroundColor: guideColor
+                          backgroundColor: guideColor,
                         }}
                       />
                     ))
-                    : null}
+                  : null}
 
-                  {!isAutoSpriteMode
-                    ? yCuts.map((cut) => (
+                {!isAutoSpriteMode
+                  ? yCuts.map((cut) => (
                       <div
                         key={`y_${cut}`}
                         className="absolute left-0 right-0 h-px"
                         style={{
                           top: `${(cut / image.height) * 100}%`,
-                          backgroundColor: guideColor
+                          backgroundColor: guideColor,
                         }}
                       />
                     ))
-                    : null}
+                  : null}
+              </div>
+              {canDragXGuide ? (
+                <button
+                  type="button"
+                  data-viewer-interactive="true"
+                  className="absolute top-0 bottom-0 z-20 w-4 -translate-x-1/2 cursor-ew-resize bg-transparent pointer-events-auto"
+                  style={{ left: `${(firstXCut / image.width) * 100}%` }}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dragAxisRef.current = "x";
+                  }}
+                  aria-label="Adjust first vertical guide"
+                />
+              ) : null}
+              {canDragYGuide ? (
+                <button
+                  type="button"
+                  data-viewer-interactive="true"
+                  className="absolute left-0 right-0 z-20 h-4 -translate-y-1/2 cursor-ns-resize bg-transparent pointer-events-auto"
+                  style={{ top: `${(firstYCut / image.height) * 100}%` }}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dragAxisRef.current = "y";
+                  }}
+                  aria-label="Adjust first horizontal guide"
+                />
+              ) : null}
+            </div>
+
+            {isDragOver ? (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-cyan-500/15 text-sm font-semibold text-cyan-700 dark:text-cyan-300">
+                {t("dropImagesToImport")}
+              </div>
+            ) : null}
+
+            {isComputing ? (
+              <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center px-4 text-center">
+                <div className="inline-flex items-center gap-2 rounded-full border border-slate-300/90 bg-white/95 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur dark:border-slate-600/90 dark:bg-slate-900/90 dark:text-slate-200">
+                  <AnimatingSpinner size={12} />
+                  <span className="truncate">{t("computingSplitPreview")}</span>
                 </div>
-                {canDragXGuide ? (
-                  <button
-                    type="button"
-                    className="absolute top-0 bottom-0 z-20 w-4 -translate-x-1/2 cursor-ew-resize bg-transparent"
-                    style={{ left: `${(firstXCut / image.width) * 100}%` }}
-                    onPointerDown={(event) => {
-                      event.preventDefault()
-                      event.stopPropagation()
-                      dragAxisRef.current = "x"
-                    }}
-                    aria-label="Adjust first vertical guide"
-                  />
-                ) : null}
-                {canDragYGuide ? (
-                  <button
-                    type="button"
-                    className="absolute left-0 right-0 z-20 h-4 -translate-y-1/2 cursor-ns-resize bg-transparent"
-                    style={{ top: `${(firstYCut / image.height) * 100}%` }}
-                    onPointerDown={(event) => {
-                      event.preventDefault()
-                      event.stopPropagation()
-                      dragAxisRef.current = "y"
-                    }}
-                    aria-label="Adjust first horizontal guide"
-                  />
-                ) : null}
               </div>
-            </div>
-          </div>
-
-          {isDragOver ? (
-            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-cyan-500/15 text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-              {t("dropImagesToImport")}
-            </div>
-          ) : null}
-
-          {isComputing ? (
-            <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center px-4 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-300/90 bg-white/95 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur dark:border-slate-600/90 dark:bg-slate-900/90 dark:text-slate-200">
-                <AnimatingSpinner size={12} />
-                <span className="truncate">{t("computingSplitPreview")}</span>
-              </div>
-            </div>
-          ) : null}
-
-          <ZoomPanControl
-            zoom={zoom}
-            panX={pan.x}
-            panY={pan.y}
-            onZoomChange={(value) => setZoom(Math.max(50, Math.min(10000, value)))}
-            onPanChange={(x, y) => setPan({ x, y })}
-            minZoom={50}
-            maxZoom={10000}
-          />
-
-          <div
-            onPointerDown={handleResizeStart}
-            className={`absolute bottom-0 left-0 right-0 h-1 cursor-ns-resize z-20 group`}
-            style={{ touchAction: "none" }}
-          >
-            <div className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${isResizing ? "bg-sky-500" : "bg-slate-300 group-hover:bg-sky-400 dark:bg-slate-600 dark:group-hover:bg-sky-500"
-              }`}
-            />
-          </div>
+            ) : null}
+          </CanvasViewportShell>
         </div>
       </div>
 
@@ -394,5 +309,5 @@ export function SplitterPreview({
         </div>
       ) : null}
     </div>
-  )
+  );
 }

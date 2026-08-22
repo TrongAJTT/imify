@@ -60,6 +60,13 @@
     "idleLabel": "Chế độ chờ",
     "idleTooltip": "Đã tắt tương tác cuộn chuột xem trước."
   },
+  "triggerButton": {
+    "toggleHelp": "Nhấp để bật/tắt chế độ.",
+    "perTapHelp": "Nhấp để dùng 1 lần (tự động tắt sau khi thực hiện).",
+    "doubleTapHelp": "Nhấp 1 lần để dùng 1 lần, Nhấp đúp để khóa cố định chế độ.",
+    "lockedBadge": "Đã khóa (Nhấp để mở khóa)",
+    "singleUseBadge": "Dùng 1 lần (Nhấp đúp để khóa)"
+  },
   "commonFaqs": [
     {
       "question": "Các lỗi thường gặp trong quá trình xử lý là gì?",
