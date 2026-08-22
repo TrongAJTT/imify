@@ -1,6 +1,6 @@
 {
   "name": "@imify/config",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "private": true,
   "description": "Shared tooling configuration for the Imify monorepo",
   "exports": {
