@@ -15,7 +15,10 @@ import { Subheading, MutedText } from "@imify/ui";
 import { toUserFacingConversionError } from "@imify/core/error-utils";
 import type { ConversionProgressPayload } from "@imify/core/types";
 import { renderPatternToContext } from "@imify/features/pattern/pattern-renderer";
-import { mapQuickExportToEngineConfig } from "@imify/core";
+import {
+  getInitialCanvasHeightPx,
+  mapQuickExportToEngineConfig,
+} from "@imify/core";
 import { usePatternStore } from "@imify/stores/stores/pattern-store";
 import { toast } from "@imify/stores";
 import { useShortcutActions } from "../filling/use-shortcut-actions";
@@ -74,11 +77,8 @@ export function PatternTab() {
   const hideVisualBoundary = usePatternStore(
     (state) => state.hideVisualBoundary,
   );
-  const previewContainerHeight = usePatternStore(
-    (state) => state.previewContainerHeight,
-  );
-  const setPreviewContainerHeight = usePatternStore(
-    (state) => state.setPreviewContainerHeight,
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(() =>
+    getInitialCanvasHeightPx(),
   );
 
   const exportFormat = usePatternStore((state) => state.exportFormat);

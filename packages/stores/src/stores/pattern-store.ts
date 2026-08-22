@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import { getInitialCanvasHeightPx, type QuickExportFormat } from "@imify/core"
+import { type QuickExportFormat } from "@imify/core"
 import type {
   PatternAsset,
   PatternAssetBorderSettings,
@@ -10,7 +10,6 @@ import type {
   PatternBoundarySettings,
   PatternCanvasSettings,
   PatternDistributionSettings,
-  PatternExportFormat,
   PatternLayerBorderOverrideSettings,
   PatternLayerColorOverrideMode,
   PatternLayerColorOverrideSettings,
@@ -28,7 +27,6 @@ import {
   DEFAULT_PATTERN_LAYER_CORNER_RADIUS_OVERRIDE_SETTINGS,
   DEFAULT_PATTERN_SETTINGS,
 } from "@imify/features/pattern/types"
-import type { BmpColorDepth, TiffColorMode } from "@imify/core/types"
 
 
 
@@ -194,7 +192,6 @@ export interface PatternStoreState {
   assets: PatternAsset[]
   visualBoundaryVisibility: PatternVisualBoundaryVisibility
   activeVisualBoundary: PatternVisualBoundaryTarget | null
-  previewContainerHeight: number | null
 
   exportFormat: QuickExportFormat
   setExportFormat: (format: QuickExportFormat) => void
@@ -215,7 +212,6 @@ export interface PatternStoreState {
   setActiveVisualBoundary: (target: PatternVisualBoundaryTarget | null) => void
   triggerVisualBoundary: (target: PatternVisualBoundaryTarget) => void
   hideVisualBoundary: () => void  
-  setPreviewContainerHeight: (v: number) => void
   addAsset: (asset: PatternAsset) => void
   updateAsset: (assetId: string, partial: Partial<PatternAsset>) => void
   removeAsset: (assetId: string) => void
@@ -233,7 +229,6 @@ export const usePatternStore = create<PatternStoreState>()(
         outbound: false,
       },
       activeVisualBoundary: null,
-      previewContainerHeight: null,
 
       exportFormat: DEFAULT_PATTERN_EXPORT_SETTINGS.exportFormat,
       fileNamePattern: DEFAULT_PATTERN_EXPORT_SETTINGS.fileNamePattern,
@@ -512,7 +507,6 @@ export const usePatternStore = create<PatternStoreState>()(
 
       setExportFormat: (v) => set({ exportFormat: v }),
       setFileNamePattern: (v) => set({ fileNamePattern: v }),
-      setPreviewContainerHeight: (v) => set({ previewContainerHeight: Math.max(200, v) }),
     }),
     {
       name: "imify_pattern_generator",
