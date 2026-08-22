@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useCallback, useMemo, useState } from "react";
 import {
   Layers,
@@ -13,6 +15,7 @@ import type {
   CanvasSizeUnit,
   LayerGroup,
   VectorLayer,
+  TextLayer,
   ShapeType,
 } from "../types";
 import { generateId } from "../types";
@@ -37,15 +40,19 @@ import { CanvasDimensionControls } from "@imify/features/shared/canvas-dimension
 
 interface ManualEditorSidebarProps {
   layers: VectorLayer[];
+  textLayers?: TextLayer[];
   groups: LayerGroup[];
   canvasWidth: number;
   canvasHeight: number;
   selectedLayerId: string | null;
   selectedLayerIds: string[];
+  selectedTextLayerId?: string | null;
   onLayersChange: (layers: VectorLayer[]) => void;
+  onTextLayersChange?: (textLayers: TextLayer[]) => void;
   onGroupsChange: (groups: LayerGroup[]) => void;
   onCanvasSizeChange: (width: number, height: number) => void;
   onSelectLayer: (id: string | null) => void;
+  onSelectTextLayer?: (id: string | null) => void;
   onToggleLayerSelection: (id: string) => void;
   onClearSelection: () => void;
   enableWideSidebarGrid?: boolean;
@@ -58,43 +65,26 @@ import {
   parseAspectRatio,
   ratioFromDimensions,
 } from "@imify/features/shared/use-aspect-ratio";
-
-function synchronizeGroupsWithLayers(
-  groups: LayerGroup[],
-  layers: VectorLayer[],
-): LayerGroup[] {
-  const layerIdsByGroup = new Map<string, string[]>();
-
-  for (const layer of layers) {
-    if (!layer.groupId) {
-      continue;
-    }
-
-    const current = layerIdsByGroup.get(layer.groupId) ?? [];
-    current.push(layer.id);
-    layerIdsByGroup.set(layer.groupId, current);
-  }
-
-  return groups
-    .map((group) => ({
-      ...group,
-      layerIds: layerIdsByGroup.get(group.id) ?? [],
-      combineAsConvexHull: Boolean(group.combineAsConvexHull),
-    }))
-    .filter((group) => group.layerIds.length > 0);
-}
+import {
+  synchronizeGroupsWithLayers,
+  toggleGroupForSelectedLayers,
+} from "../group-management";
 
 export function ManualEditorSidebar({
   layers,
+  textLayers = [],
   groups,
   canvasWidth,
   canvasHeight,
   selectedLayerId,
   selectedLayerIds,
+  selectedTextLayerId = null,
   onLayersChange,
+  onTextLayersChange,
   onGroupsChange,
   onCanvasSizeChange,
   onSelectLayer,
+  onSelectTextLayer,
   onToggleLayerSelection,
   onClearSelection,
   enableWideSidebarGrid = false,
@@ -192,10 +182,48 @@ export function ManualEditorSidebar({
 
       const updated = [...layers, newLayer];
       onLayersChange(updated);
+      onSelectTextLayer?.(null);
       onSelectLayer(newLayer.id);
     },
-    [canvasHeight, canvasWidth, layers, onLayersChange, onSelectLayer],
+    [
+      canvasHeight,
+      canvasWidth,
+      layers,
+      onLayersChange,
+      onSelectLayer,
+      onSelectTextLayer,
+    ],
   );
+
+  const handleAddTextLayer = useCallback(() => {
+    const defaultW = Math.min(300, canvasWidth * 0.5);
+    const defaultH = Math.min(80, canvasHeight * 0.2);
+    const cx = (canvasWidth - defaultW) / 2;
+    const cy = (canvasHeight - defaultH) / 2;
+
+    const newTextLayer: TextLayer = {
+      id: generateId("text"),
+      name: `Text ${textLayers.length + 1}`,
+      x: Math.round(cx),
+      y: Math.round(cy),
+      width: Math.round(defaultW),
+      height: Math.round(defaultH),
+      rotation: 0,
+      locked: false,
+      visible: true,
+    };
+
+    onTextLayersChange?.([...textLayers, newTextLayer]);
+    onClearSelection();
+    onSelectTextLayer?.(newTextLayer.id);
+  }, [
+    canvasHeight,
+    canvasWidth,
+    onClearSelection,
+    onSelectTextLayer,
+    onTextLayersChange,
+    textLayers,
+  ]);
 
   const handleToggleLock = useCallback(
     (id: string) => {
@@ -241,6 +269,37 @@ export function ManualEditorSidebar({
       onLayersChange,
       onSelectLayer,
     ],
+  );
+
+  const handleToggleTextLayerLock = useCallback(
+    (id: string) => {
+      onTextLayersChange?.(
+        textLayers.map((l) => (l.id === id ? { ...l, locked: !l.locked } : l)),
+      );
+    },
+    [onTextLayersChange, textLayers],
+  );
+
+  const handleToggleTextLayerVisibility = useCallback(
+    (id: string) => {
+      onTextLayersChange?.(
+        textLayers.map((l) =>
+          l.id === id ? { ...l, visible: !l.visible } : l,
+        ),
+      );
+    },
+    [onTextLayersChange, textLayers],
+  );
+
+  const handleDeleteTextLayer = useCallback(
+    (id: string) => {
+      const nextTextLayers = textLayers.filter((l) => l.id !== id);
+      onTextLayersChange?.(nextTextLayers);
+      if (selectedTextLayerId === id) {
+        onSelectTextLayer?.(null);
+      }
+    },
+    [onSelectTextLayer, onTextLayersChange, selectedTextLayerId, textLayers],
   );
 
   const handleDragLayer = useCallback(
@@ -390,74 +449,18 @@ export function ManualEditorSidebar({
   }, [groups, layers, onGroupsChange, onLayersChange, selectedLayerIds]);
 
   const handleToggleGroupForSelectedLayer = useCallback(() => {
-    if (selectedLayerIds.length === 0) {
-      return;
-    }
-
-    if (selectedSharedGroupId) {
-      handleUngroupSelectedLayer();
-      return;
-    }
-
-    const selectedSet = new Set(selectedLayerIds);
-    const movingLayers = layers.filter((layer) => selectedSet.has(layer.id));
-    if (movingLayers.length === 0) {
-      return;
-    }
-
-    const topSelectedIndex = layers.findIndex((layer) =>
-      selectedSet.has(layer.id),
-    );
-    if (topSelectedIndex < 0) {
-      return;
-    }
-
-    const insertIndex = layers
-      .slice(0, topSelectedIndex)
-      .filter((layer) => !selectedSet.has(layer.id)).length;
-
-    const newGroupId = generateId("grp");
-    const groupedLayers = movingLayers.map((layer) => ({
-      ...layer,
-      groupId: newGroupId,
-    }));
-    const remainingLayers = layers.filter(
-      (layer) => !selectedSet.has(layer.id),
-    );
-    const nextLayers = [
-      ...remainingLayers.slice(0, insertIndex),
-      ...groupedLayers,
-      ...remainingLayers.slice(insertIndex),
-    ];
-
-    const nextGroups = synchronizeGroupsWithLayers(
-      [
-        ...normalizedGroups,
-        {
-          id: newGroupId,
-          name: t("manualEditor.groupDefaultName", {
-            index: normalizedGroups.length + 1,
-          }),
-          layerIds: groupedLayers.map((layer) => layer.id),
-          closeLoop: false,
-          fillInterior: false,
-          combineAsConvexHull: false,
-        },
-      ],
-      nextLayers,
-    );
+    const { nextLayers, nextGroups } = toggleGroupForSelectedLayers({
+      layers,
+      groups,
+      selectedLayerIds,
+      defaultGroupName: t("manualEditor.groupDefaultNamePrefix", {
+        defaultValue: "Group",
+      }),
+    });
 
     onLayersChange(nextLayers);
     onGroupsChange(nextGroups);
-  }, [
-    handleUngroupSelectedLayer,
-    layers,
-    normalizedGroups,
-    onGroupsChange,
-    onLayersChange,
-    selectedLayerIds,
-    selectedSharedGroupId,
-  ]);
+  }, [groups, layers, onGroupsChange, onLayersChange, selectedLayerIds, t]);
 
   const handleToggleCloseLoop = useCallback(
     (checked: boolean) => {
@@ -569,6 +572,22 @@ export function ManualEditorSidebar({
     [selectedLayerId, layers, onLayersChange],
   );
 
+  const selectedTextLayer = selectedTextLayerId
+    ? textLayers.find((l) => l.id === selectedTextLayerId) ?? null
+    : null;
+
+  const handleUpdateTextLayer = useCallback(
+    (partial: Partial<TextLayer>) => {
+      if (!selectedTextLayerId) return;
+      onTextLayersChange?.(
+        textLayers.map((l) =>
+          l.id === selectedTextLayerId ? { ...l, ...partial } : l,
+        ),
+      );
+    },
+    [selectedTextLayerId, textLayers, onTextLayersChange],
+  );
+
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
       id: "canvas",
@@ -613,13 +632,28 @@ export function ManualEditorSidebar({
         >
           <LayerListPanel
             layers={layers}
+            textLayers={textLayers}
             selectedLayerId={selectedLayerId}
             selectedLayerIds={selectedLayerIds}
-            onSelectLayer={onSelectLayer}
-            onToggleLayerSelection={onToggleLayerSelection}
+            selectedTextLayerId={selectedTextLayerId}
+            onSelectLayer={(id) => {
+              onSelectTextLayer?.(null);
+              onSelectLayer(id);
+            }}
+            onSelectTextLayer={(id) => {
+              onClearSelection();
+              onSelectTextLayer?.(id);
+            }}
+            onToggleLayerSelection={(id) => {
+              onSelectTextLayer?.(null);
+              onToggleLayerSelection(id);
+            }}
             onToggleLock={handleToggleLock}
             onToggleVisibility={handleToggleVisibility}
             onDeleteLayer={handleDeleteLayer}
+            onToggleTextLayerLock={handleToggleTextLayerLock}
+            onToggleTextLayerVisibility={handleToggleTextLayerVisibility}
+            onDeleteTextLayer={handleDeleteTextLayer}
             onDragLayer={handleDragLayer}
             onAddShape={() => setShapePickerOpen(true)}
             onToggleGroupForSelected={handleToggleGroupForSelectedLayer}
@@ -630,27 +664,49 @@ export function ManualEditorSidebar({
         </ResizableAccordionCard>
       ),
     },
-    ...(selectedLayer
-      ? [
-          {
-            id: "properties",
-            content: (
-              <AccordionCard
-                icon={<Settings2 size={16} />}
-                label={t("manualEditor.properties")}
-                sublabel={`${selectedLayer.name || t("manualEditor.layerDefaultName")}`}
-                colorTheme="purple"
-                defaultOpen={true}
-              >
-                <LayerPropertiesPanel
-                  layer={selectedLayer}
-                  onUpdate={handleUpdateLayer}
-                />
-              </AccordionCard>
-            ),
-          } satisfies WorkspaceConfigSidebarItem,
-        ]
-      : []),
+    {
+      id: "properties",
+      content: (
+        <AccordionCard
+          icon={<Settings2 size={16} />}
+          label={t("manualEditor.properties")}
+          sublabel={
+            selectedLayer
+              ? `${selectedLayer.name || t("manualEditor.layerDefaultName")}`
+              : selectedTextLayer
+                ? `${selectedTextLayer.name || "Text Layer"}`
+                : t("manualEditor.noSelection")
+          }
+          colorTheme="purple"
+          defaultOpen={true}
+        >
+          {selectedLayer ? (
+            <LayerPropertiesPanel
+              layer={selectedLayer}
+              onUpdate={handleUpdateLayer}
+            />
+          ) : selectedTextLayer ? (
+            <LayerPropertiesPanel
+              layer={selectedTextLayer}
+              onUpdate={handleUpdateTextLayer}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/70 bg-muted/20 p-2 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted/80 text-muted-foreground">
+                <Layers size={18} />
+              </div>
+              <p className="text-xs font-medium text-foreground">
+                {t("fill.noLayerSelected")}
+              </p>
+              <p className="max-w-[210px] text-[11px] text-muted-foreground">
+                {t("fill.selectLayerPrompt")}
+              </p>
+            </div>
+          )}
+        </AccordionCard>
+      ),
+    },
+
     ...(selectedGroup
       ? [
           {
@@ -682,6 +738,7 @@ export function ManualEditorSidebar({
         isOpen={shapePickerOpen}
         onClose={() => setShapePickerOpen(false)}
         onSelect={handleAddShape}
+        onSelectTextLayer={handleAddTextLayer}
       />
     </>
   );

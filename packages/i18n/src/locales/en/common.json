@@ -60,6 +60,13 @@
     "idleLabel": "Idle Mode",
     "idleTooltip": "Preview wheel interaction is disabled."
   },
+  "triggerButton": {
+    "toggleHelp": "Click to toggle on/off.",
+    "perTapHelp": "Click for single-use action (auto-resets after use).",
+    "doubleTapHelp": "Click for single use, Double-click to lock mode.",
+    "lockedBadge": "Locked (Click to unlock)",
+    "singleUseBadge": "Single use (Double-click to lock)"
+  },
   "commonFaqs": [
     {
       "question": "What are common errors during processing?",
@@ -158,5 +165,21 @@
     "successDesc": "Cache cleared successfully. Returning to homepage to complete the update.",
     "returnHome": "Back to Home ({{seconds}}s)",
     "returnHomeNow": "Back to Home Now"
+  },
+  "importProgressDialog": {
+    "title": "Importing Images",
+    "subtitle": "Please wait while files are being processed...",
+    "indeterminateSubtitle": "Preparing files, please wait...",
+    "progressCount": "Processing {{completed}} of {{total}} images ({{percent}}%)",
+    "processingFile": "Processing: {{name}}"
+  },
+  "workspaceLoading": {
+    "defaultTitle": "Loading data...",
+    "defaultSubtitle": "Loading data for the current workspace, please wait.",
+    "timeoutTitle": "Loading is taking longer than expected",
+    "timeoutSubtitle": "If reloading does not resolve the issue, please try emergency recovery.",
+    "reloadPage": "Reload page",
+    "goToRecovery": "Emergency recovery"
   }
 }
+

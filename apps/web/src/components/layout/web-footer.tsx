@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { getWorkspaceToolsMenuGroups } from "@imify/features/workspace-shell/workspace-tools";
-import { getAppMetadata, IMIFY_LINKS } from "@imify/core";
+import { getAppMetadata, IMIFY_LINKS, APP_ROUTES } from "@imify/core";
 import { useWebPageMode } from "@/hooks/use-web-page-mode";
 import { useIsDesktopLayout } from "@imify/features/workspace-chrome";
 import {
@@ -66,7 +66,7 @@ export function WebFooter() {
           </div>
           <div className="flex items-center gap-6">
             <Link
-              href="/recovery"
+              href={APP_ROUTES.RECOVERY}
               className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               {t("footer.recovery")}
@@ -169,7 +169,7 @@ export function WebFooter() {
           </p>
           <div className="flex gap-4">
             <Link
-              href="/recovery"
+              href={APP_ROUTES.RECOVERY}
               className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               {t("footer.recoveryPage")}

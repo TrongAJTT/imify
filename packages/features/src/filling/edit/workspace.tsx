@@ -7,10 +7,25 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Stage, Layer, Line, Rect, Transformer } from "react-konva";
+import {
+  Stage,
+  Layer,
+  Line,
+  Rect,
+  Group,
+  Text,
+  Transformer,
+} from "react-konva";
 import type Konva from "konva";
-import { ArrowLeft, ChevronDown, Image, Loader2, Save } from "lucide-react";
-import type { LayerGroup, VectorLayer } from "../types";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Image,
+  Loader2,
+  MousePointerSquareDashed,
+  Save,
+} from "lucide-react";
+import type { LayerGroup, TextLayer, VectorLayer } from "../types";
 import { resolveLayerShapePoints } from "../shape-generators";
 import {
   buildGroupOverlayPolygons,
@@ -19,6 +34,7 @@ import {
 } from "../group-geometry";
 import { flattenPoints } from "../vector-math";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
+import { isShortcutEventFromEditableTarget } from "@imify/stores/shortcuts";
 import { useShortcutActions } from "../use-shortcut-actions";
 import { useTransformGuides, type RectBounds } from "../use-transform-guides";
 import {
@@ -30,11 +46,18 @@ import {
   ZoomPanControl,
 } from "@imify/ui";
 import { useCanvasResizer } from "../../shared/use-canvas-resizer";
+import { useCanvasViewport } from "../../shared/use-canvas-viewport";
+import { TriggerButton, useTriggerState } from "../../shared/trigger-button";
 import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
 import type { PreviewInteractionMode } from "@imify/ui/ui/preview-interaction-mode-toggle";
-import { preventWheelEvent } from "../../shared/prevent-wheel-event";
 import { useTranslation } from "@imify/i18n";
-import { PREVIEW_MIN_ZOOM, PREVIEW_MAX_ZOOM, CANVAS_PADDING } from "../config";
+import { getInitialCanvasHeightPx } from "@imify/core";
+import {
+  PREVIEW_MIN_ZOOM,
+  PREVIEW_MAX_ZOOM,
+  CANVAS_PADDING,
+  PREVIEW_ZOOM_FACTOR,
+} from "../config";
 
 export interface ManualEditorVisualHelp {
   label: string;
@@ -49,35 +72,41 @@ interface ManualEditorWorkspaceProps {
   canvasHeight: number;
   groups: LayerGroup[];
   layers: VectorLayer[];
+  textLayers?: TextLayer[];
   selectedLayerId: string | null;
   selectedLayerIds: string[];
+  selectedTextLayerId?: string | null;
   onSelectLayer: (id: string | null) => void;
+  onSelectTextLayer?: (id: string | null) => void;
   onToggleLayerSelection: (id: string) => void;
   onSetSelectedLayers: (ids: string[]) => void;
   onClearSelection: () => void;
   onUpdateLayer: (id: string, partial: Partial<VectorLayer>) => void;
+  onUpdateTextLayer?: (id: string, partial: Partial<TextLayer>) => void;
+  onToggleGroupForSelected?: () => void;
   onSaveTemplate: (destination: "fill" | "list") => Promise<void>;
   isSavingTemplate: boolean;
   visualHelp?: ManualEditorVisualHelp;
   showHeader?: boolean;
 }
 
-// When using mouse wheel, zoom "step" should feel bigger at higher zoom levels.
-// Matches DiffChecker's multiplicative approach.
-const PREVIEW_ZOOM_FACTOR = 0.15;
-
 export function ManualEditorWorkspace({
   canvasWidth,
   canvasHeight,
   groups,
   layers,
+  textLayers = [],
   selectedLayerId,
   selectedLayerIds,
+  selectedTextLayerId = null,
   onSelectLayer,
+  onSelectTextLayer,
   onToggleLayerSelection,
   onSetSelectedLayers,
   onClearSelection,
   onUpdateLayer,
+  onUpdateTextLayer,
+  onToggleGroupForSelected,
   onSaveTemplate,
   isSavingTemplate,
   visualHelp,
@@ -89,7 +118,9 @@ export function ManualEditorWorkspace({
   const transformerRef = useRef<Konva.Transformer>(null);
   const ignoreNextStageClickRef = useRef(false);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
-  const [previewContainerHeight, setPreviewContainerHeight] = useState(520);
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(() =>
+    getInitialCanvasHeightPx(520),
+  );
   const [previewZoom, setPreviewZoom] = useState(100);
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
   const {
@@ -102,6 +133,43 @@ export function ManualEditorWorkspace({
   });
   const [previewInteractionMode, setPreviewInteractionMode] =
     useState<PreviewInteractionMode>("zoom");
+
+  const selectTriggerState = useTriggerState({
+    mode: "double_tap",
+  });
+
+  const {
+    isPanning: isViewportPanning,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
+  } = useCanvasViewport({
+    zoom: previewZoom,
+    panX: previewPan.x,
+    panY: previewPan.y,
+    onZoomChange: setPreviewZoom,
+    onPanChange: (x, y) => setPreviewPan({ x, y }),
+    interactionMode: previewInteractionMode,
+    minZoom: PREVIEW_MIN_ZOOM,
+    maxZoom: PREVIEW_MAX_ZOOM,
+    zoomFactor: PREVIEW_ZOOM_FACTOR,
+    containerRef,
+    allowDragInZoomMode: !selectTriggerState.active,
+    shouldStartPan: () => {
+      if (selectTriggerState.active) return false;
+      const stage = stageRef.current;
+      if (!stage) return true;
+      const pointerPos = stage.getPointerPosition();
+      if (!pointerPos) return true;
+      const hitShape = stage.getIntersection(pointerPos);
+      if (hitShape) {
+        return false;
+      }
+      return true;
+    },
+  });
+
   const [isFreeAspectRatio, setIsFreeAspectRatio] = useState(false);
   const [cursor, setCursor] = useState("default");
   const [rotationGuideLine, setRotationGuideLine] = useState<number[] | null>(
@@ -129,6 +197,81 @@ export function ManualEditorWorkspace({
     rotationTolerance: 4,
     positionTolerance: 8,
   });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isShortcutEventFromEditableTarget(e)) return;
+
+      // Group / Ungroup shortcut: Ctrl+G / Cmd+G
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === "g" || e.key === "G") &&
+        !e.shiftKey &&
+        !e.altKey
+      ) {
+        if (selectedLayerIds.length > 0 && onToggleGroupForSelected) {
+          e.preventDefault();
+          onToggleGroupForSelected();
+          return;
+        }
+      }
+
+      // Arrow keys movement
+      const isArrowKey =
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight";
+
+      if (!isArrowKey) return;
+
+      const step = e.shiftKey ? 10 : 1;
+      let dx = 0;
+      let dy = 0;
+      if (e.key === "ArrowLeft") dx = -step;
+      else if (e.key === "ArrowRight") dx = step;
+      else if (e.key === "ArrowUp") dy = -step;
+      else if (e.key === "ArrowDown") dy = step;
+
+      // 1. If a text layer is selected
+      if (selectedTextLayerId && onUpdateTextLayer) {
+        const textLayer = textLayers.find((l) => l.id === selectedTextLayerId);
+        if (textLayer && !textLayer.locked) {
+          e.preventDefault();
+          onUpdateTextLayer(selectedTextLayerId, {
+            x: Math.round((textLayer.x + dx) * 100) / 100,
+            y: Math.round((textLayer.y + dy) * 100) / 100,
+          });
+          return;
+        }
+      }
+
+      // 2. If shape layers are selected
+      if (selectedLayerIds.length > 0) {
+        e.preventDefault();
+        for (const layerId of selectedLayerIds) {
+          const layer = layers.find((l) => l.id === layerId);
+          if (layer && !layer.locked) {
+            onUpdateLayer(layerId, {
+              x: Math.round((layer.x + dx) * 100) / 100,
+              y: Math.round((layer.y + dy) * 100) / 100,
+            });
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    layers,
+    onToggleGroupForSelected,
+    onUpdateLayer,
+    onUpdateTextLayer,
+    selectedLayerIds,
+    selectedTextLayerId,
+    textLayers,
+  ]);
 
   const clampPreviewZoom = useCallback((value: number) => {
     return Math.max(
@@ -198,82 +341,6 @@ export function ManualEditorWorkspace({
     };
   }, []);
 
-  const handlePreviewWheel = useCallback(
-    (event: WheelEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest('[class*="pointer-events-auto"]')) return;
-      if (previewInteractionMode === "idle") return;
-      preventWheelEvent(event);
-
-      if (previewInteractionMode === "pan") {
-        const delta = event.deltaY > 0 ? 50 : -50;
-        if (event.shiftKey)
-          setPreviewPan((current) => ({ ...current, x: current.x - delta }));
-        else setPreviewPan((current) => ({ ...current, y: current.y - delta }));
-        return;
-      }
-
-      const oldZoom = previewZoom;
-      const dir = event.deltaY > 0 ? -1 : 1;
-      const nextZoom = clampPreviewZoom(
-        oldZoom * (1 + PREVIEW_ZOOM_FACTOR * dir),
-      );
-      if (nextZoom === oldZoom) return;
-
-      const oldRenderScale = fitScale * (oldZoom / 100);
-      const newRenderScale = fitScale * (nextZoom / 100);
-      if (oldRenderScale <= 0 || newRenderScale <= 0) {
-        setPreviewZoom(nextZoom);
-        return;
-      }
-
-      const container = containerRef.current;
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      const pointerX = event.clientX - rect.left;
-      const pointerY = event.clientY - rect.top;
-      const baseOffsetOldX =
-        (stageSize.width - canvasWidth * oldRenderScale) / 2;
-      const baseOffsetOldY =
-        (stageSize.height - canvasHeight * oldRenderScale) / 2;
-      const worldX =
-        (pointerX - baseOffsetOldX - previewPan.x) / oldRenderScale;
-      const worldY =
-        (pointerY - baseOffsetOldY - previewPan.y) / oldRenderScale;
-      const baseOffsetNewX =
-        (stageSize.width - canvasWidth * newRenderScale) / 2;
-      const baseOffsetNewY =
-        (stageSize.height - canvasHeight * newRenderScale) / 2;
-      const nextPanX = pointerX - baseOffsetNewX - worldX * newRenderScale;
-      const nextPanY = pointerY - baseOffsetNewY - worldY * newRenderScale;
-
-      setPreviewZoom(nextZoom);
-      setPreviewPan({
-        x: Math.round(nextPanX * 100) / 100,
-        y: Math.round(nextPanY * 100) / 100,
-      });
-    },
-    [
-      canvasHeight,
-      canvasWidth,
-      clampPreviewZoom,
-      fitScale,
-      previewInteractionMode,
-      previewPan.x,
-      previewPan.y,
-      previewZoom,
-      stageSize.height,
-      stageSize.width,
-    ],
-  );
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    container.addEventListener("wheel", handlePreviewWheel, { passive: false });
-    return () => container.removeEventListener("wheel", handlePreviewWheel);
-  }, [handlePreviewWheel]);
-
   useEffect(() => {
     const tr = transformerRef.current;
     const stage = stageRef.current;
@@ -286,9 +353,17 @@ export function ManualEditorWorkspace({
         return;
       }
     }
+    if (selectedTextLayerId) {
+      const node = stage.findOne(`#text-layer-${selectedTextLayerId}`);
+      if (node) {
+        tr.nodes([node]);
+        tr.getLayer()?.batchDraw();
+        return;
+      }
+    }
     tr.nodes([]);
     tr.getLayer()?.batchDraw();
-  }, [selectedLayerId, layers]);
+  }, [selectedLayerId, selectedTextLayerId, layers, textLayers]);
 
   const toWorldPoint = useCallback(
     (pointer: { x: number; y: number }) => ({
@@ -314,7 +389,8 @@ export function ManualEditorWorkspace({
   );
 
   const handleStagePointerDown = useCallback(
-    (e: Konva.KonvaEventObject<PointerEvent>) => {
+    (e: Konva.KonvaEventObject<MouseEvent | TouchEvent | PointerEvent>) => {
+      if (!selectTriggerState.active) return;
       if (e.target !== e.target.getStage() || selectedLayerIds.length > 0)
         return;
       const pointer = e.target.getStage()?.getPointerPosition();
@@ -323,12 +399,12 @@ export function ManualEditorWorkspace({
       setSelectionBoxStart(start);
       setSelectionBoxRect({ x: start.x, y: start.y, width: 0, height: 0 });
     },
-    [selectedLayerIds.length, toWorldPoint],
+    [selectTriggerState.active, selectedLayerIds.length, toWorldPoint],
   );
 
   const handleStagePointerMove = useCallback(
-    (e: Konva.KonvaEventObject<PointerEvent>) => {
-      if (!selectionBoxStart) return;
+    (e: Konva.KonvaEventObject<MouseEvent | TouchEvent | PointerEvent>) => {
+      if (!selectTriggerState.active || !selectionBoxStart) return;
       const pointer = e.target.getStage()?.getPointerPosition();
       if (!pointer) return;
       const current = toWorldPoint(pointer);
@@ -339,7 +415,7 @@ export function ManualEditorWorkspace({
         height: Math.abs(current.y - selectionBoxStart.y),
       });
     },
-    [selectionBoxStart, toWorldPoint],
+    [selectTriggerState.active, selectionBoxStart, toWorldPoint],
   );
 
   const handleStagePointerUp = useCallback(() => {
@@ -366,7 +442,17 @@ export function ManualEditorWorkspace({
     ignoreNextStageClickRef.current = hasDraggedSelectionBox;
     setSelectionBoxStart(null);
     setSelectionBoxRect(null);
-  }, [layers, onSetSelectedLayers, selectionBoxRect, selectionBoxStart]);
+
+    if (hasDraggedSelectionBox || selectTriggerState.active) {
+      selectTriggerState.consume();
+    }
+  }, [
+    layers,
+    onSetSelectedLayers,
+    selectTriggerState,
+    selectionBoxRect,
+    selectionBoxStart,
+  ]);
 
   const handleDragEnd = useCallback(
     (layerId: string, e: Konva.KonvaEventObject<DragEvent>) => {
@@ -392,9 +478,21 @@ export function ManualEditorWorkspace({
         y: (node.y() - offsetY) / renderScale,
       };
       const movingBounds = getBoundsFromPoints(toWorldLayerPoints(draftLayer));
-      const candidateBounds = layers
-        .filter((candidate) => candidate.id !== layerId && candidate.visible)
-        .map((candidate) => getBoundsFromPoints(toWorldLayerPoints(candidate)));
+      const candidateBounds: RectBounds[] = [
+        ...layers
+          .filter((candidate) => candidate.id !== layerId && candidate.visible)
+          .map((candidate) =>
+            getBoundsFromPoints(toWorldLayerPoints(candidate)),
+          ),
+        ...textLayers
+          .filter((candidate) => candidate.visible)
+          .map((candidate) => ({
+            x: candidate.x,
+            y: candidate.y,
+            width: candidate.width,
+            height: candidate.height,
+          })),
+      ];
       const { snappedRect, guides } = snapRectPosition({
         movingRect: movingBounds,
         candidateRects: candidateBounds,
@@ -425,6 +523,75 @@ export function ManualEditorWorkspace({
       canvasHeight,
       canvasWidth,
       layers,
+      textLayers,
+      offsetX,
+      offsetY,
+      renderScale,
+      snapRectPosition,
+    ],
+  );
+
+  const handleTextLayerDragMove = useCallback(
+    (textLayerId: string, e: Konva.KonvaEventObject<DragEvent>) => {
+      const node = e.target;
+      const textLayer = textLayers.find(
+        (candidate) => candidate.id === textLayerId,
+      );
+      if (!textLayer) return;
+      const movingBounds: RectBounds = {
+        x: (node.x() - offsetX) / renderScale,
+        y: (node.y() - offsetY) / renderScale,
+        width: textLayer.width,
+        height: textLayer.height,
+      };
+      const candidateBounds: RectBounds[] = [
+        ...layers
+          .filter((candidate) => candidate.visible)
+          .map((candidate) =>
+            getBoundsFromPoints(toWorldLayerPoints(candidate)),
+          ),
+        ...textLayers
+          .filter(
+            (candidate) => candidate.id !== textLayerId && candidate.visible,
+          )
+          .map((candidate) => ({
+            x: candidate.x,
+            y: candidate.y,
+            width: candidate.width,
+            height: candidate.height,
+          })),
+      ];
+      const { snappedRect, guides } = snapRectPosition({
+        movingRect: movingBounds,
+        candidateRects: candidateBounds,
+        canvasRect: {
+          x: 0,
+          y: 0,
+          width: canvasWidth,
+          height: canvasHeight,
+        } as RectBounds,
+      });
+      const deltaX = snappedRect.x - movingBounds.x;
+      const deltaY = snappedRect.y - movingBounds.y;
+      if (Math.abs(deltaX) > 0.001 || Math.abs(deltaY) > 0.001) {
+        node.x(node.x() + deltaX * renderScale);
+        node.y(node.y() + deltaY * renderScale);
+      }
+      const stageGuides = guides.map((guide) => {
+        if (guide.orientation === "vertical") {
+          const x = offsetX + guide.value * renderScale;
+          return [x, offsetY, x, offsetY + canvasHeight * renderScale];
+        }
+        const y = offsetY + guide.value * renderScale;
+        return [offsetX, y, offsetX + canvasWidth * renderScale, y];
+      });
+      setPositionGuideLines(stageGuides);
+    },
+    [
+      canvasHeight,
+      canvasWidth,
+      layers,
+      textLayers,
       offsetX,
       offsetY,
       renderScale,
@@ -486,6 +653,42 @@ export function ManualEditorWorkspace({
     [layers, offsetX, offsetY, onUpdateLayer, renderScale],
   );
 
+  const handleTextLayerDragEnd = useCallback(
+    (textLayerId: string, e: Konva.KonvaEventObject<DragEvent>) => {
+      const node = e.target;
+      onUpdateTextLayer?.(textLayerId, {
+        x: Math.round(((node.x() - offsetX) / renderScale) * 100) / 100,
+        y: Math.round(((node.y() - offsetY) / renderScale) * 100) / 100,
+      });
+      setPositionGuideLines([]);
+      setCursor("grab");
+    },
+    [offsetX, offsetY, onUpdateTextLayer, renderScale],
+  );
+
+  const handleTextLayerTransformEnd = useCallback(
+    (textLayerId: string, e: Konva.KonvaEventObject<Event>) => {
+      const node = e.target;
+      const scaleXNode = node.scaleX();
+      const scaleYNode = node.scaleY();
+      const textLayer = textLayers.find((l) => l.id === textLayerId);
+      if (!textLayer) return;
+      onUpdateTextLayer?.(textLayerId, {
+        x: Math.round(((node.x() - offsetX) / renderScale) * 100) / 100,
+        y: Math.round(((node.y() - offsetY) / renderScale) * 100) / 100,
+        width: Math.round(Math.abs(textLayer.width * scaleXNode)),
+        height: Math.round(Math.abs(textLayer.height * scaleYNode)),
+        rotation: Math.round(node.rotation() * 100) / 100,
+      });
+      node.scaleX(1);
+      node.scaleY(1);
+      setRotationGuideLine(null);
+      setPositionGuideLines([]);
+      setCursor("default");
+    },
+    [textLayers, offsetX, offsetY, onUpdateTextLayer, renderScale],
+  );
+
   const groupConnectionOverlays = useMemo(
     () => groups.flatMap((group) => buildGroupOverlayPolygons(group, layers)),
     [groups, layers],
@@ -515,13 +718,20 @@ export function ManualEditorWorkspace({
                 : t("templateList.layersCountPlural", { count: layers.length })}
             </MutedText>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <PreviewInteractionModeToggle
               mode={previewInteractionMode}
               onChange={setPreviewInteractionMode}
               zoomKeyHint={getShortcutLabel("global.preview.zoom_mode")}
               panKeyHint={getShortcutLabel("global.preview.pan_mode")}
               idleKeyHint={getShortcutLabel("global.preview.idle_mode")}
+            />
+            <TriggerButton
+              state={selectTriggerState}
+              mode="double_tap"
+              icon={<MousePointerSquareDashed size={14} />}
+              label={t("manualEditor.boxSelect", "Box Select")}
+              size="md"
             />
             <div className="flex items-center">
               <Button
@@ -583,8 +793,12 @@ export function ManualEditorWorkspace({
       ) : null}
       <div
         ref={containerRef}
-        className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
+        className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden select-none touch-none"
         style={{ height: `${previewContainerHeight}px`, cursor }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
       >
         <Stage
           ref={stageRef}
@@ -594,8 +808,29 @@ export function ManualEditorWorkspace({
           onTap={handleStageClick}
           onPointerDown={handleStagePointerDown}
           onPointerUp={handleStagePointerUp}
-          onPointerMove={(e) => {
+          onPointerMove={handleStagePointerMove}
+          onTouchStart={handleStagePointerDown}
+          onTouchMove={handleStagePointerMove}
+          onTouchEnd={handleStagePointerUp}
+          onMouseMove={(e) => {
             handleStagePointerMove(e);
+
+            if (selectTriggerState.active) {
+              setCursor("crosshair");
+              return;
+            }
+
+            if (isViewportPanning) {
+              setCursor("grabbing");
+              return;
+            }
+
+            if (previewInteractionMode === "pan") {
+              const isPointerDown = (e.evt as PointerEvent).buttons === 1;
+              setCursor(isPointerDown ? "grabbing" : "grab");
+              return;
+            }
+
             const targetName = e.target.name();
             if (targetName.includes("rotater")) {
               setCursor("crosshair");
@@ -726,6 +961,81 @@ export function ManualEditorWorkspace({
                 />
               );
             })}
+            {textLayers.map((tLayer) => {
+              if (!tLayer.visible) return null;
+              const isSelected = selectedTextLayerId === tLayer.id;
+              const w = tLayer.width * renderScale;
+              const h = tLayer.height * renderScale;
+              return (
+                <Group
+                  key={tLayer.id}
+                  id={`text-layer-${tLayer.id}`}
+                  name="manual-text-layer"
+                  x={offsetX + tLayer.x * renderScale}
+                  y={offsetY + tLayer.y * renderScale}
+                  rotation={tLayer.rotation}
+                  draggable={!tLayer.locked}
+                  onClick={() => {
+                    onClearSelection();
+                    onSelectTextLayer?.(tLayer.id);
+                  }}
+                  onTap={() => {
+                    onClearSelection();
+                    onSelectTextLayer?.(tLayer.id);
+                  }}
+                  onMouseEnter={() =>
+                    setCursor(tLayer.locked ? "not-allowed" : "grab")
+                  }
+                  onMouseLeave={() => setCursor("default")}
+                  onDragStart={() => {
+                    setPositionGuideLines([]);
+                    setRotationGuideLine(null);
+                    setCursor("grabbing");
+                  }}
+                  onDragMove={(e) => handleTextLayerDragMove(tLayer.id, e)}
+                  onDragEnd={(e) => handleTextLayerDragEnd(tLayer.id, e)}
+                  onTransformStart={() => {
+                    setPositionGuideLines([]);
+                    setRotationGuideLine(null);
+                    setCursor("grabbing");
+                  }}
+                  onTransform={handleTransform}
+                  onTransformEnd={(e) =>
+                    handleTextLayerTransformEnd(tLayer.id, e)
+                  }
+                >
+                  <Rect
+                    width={w}
+                    height={h}
+                    fill={
+                      isSelected
+                        ? "rgba(147, 51, 234, 0.18)"
+                        : "rgba(147, 51, 234, 0.08)"
+                    }
+                    stroke={isSelected ? "#9333ea" : "#c084fc"}
+                    strokeWidth={isSelected ? 2 : 1.2}
+                    dash={[6, 4]}
+                    cornerRadius={4}
+                  />
+                  <Text
+                    text={tLayer.name || "Text Layer"}
+                    width={w}
+                    height={h}
+                    align="center"
+                    verticalAlign="middle"
+                    fontSize={Math.max(
+                      10,
+                      Math.min(18 * renderScale, h * 0.45),
+                    )}
+                    fontFamily="sans-serif"
+                    fontStyle="bold"
+                    fill={isSelected ? "#7e22ce" : "#9333ea"}
+                    padding={4}
+                    listening={false}
+                  />
+                </Group>
+              );
+            })}
             {selectionBoxRect ? (
               <Rect
                 x={offsetX + selectionBoxRect.x * renderScale}
@@ -739,6 +1049,7 @@ export function ManualEditorWorkspace({
                 listening={false}
               />
             ) : null}
+
             <Transformer
               ref={transformerRef}
               rotateEnabled

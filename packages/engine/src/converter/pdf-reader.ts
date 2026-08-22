@@ -3,11 +3,18 @@ export interface RenderPdfPageOptions {
   dpi?: number
   format?: "png" | "jpg" | "webp"
   quality?: number
+  password?: string
 }
 
 export interface PdfDocumentInfo {
   pageCount: number
   fingerprint: string
+}
+
+export function isPdfPasswordException(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false
+  const err = error as { name?: string; message?: string; code?: number }
+  return err.name === "PasswordException" || /password/i.test(err.message ?? "")
 }
 
 let pdfjsLibPromise: Promise<typeof import("pdfjs-dist")> | null = null
@@ -39,10 +46,13 @@ async function toUint8Array(source: Blob | ArrayBuffer | Uint8Array): Promise<Ui
   return new Uint8Array(await source.arrayBuffer())
 }
 
-export async function getPdfInfo(source: Blob | ArrayBuffer | Uint8Array): Promise<PdfDocumentInfo> {
+export async function getPdfInfo(
+  source: Blob | ArrayBuffer | Uint8Array,
+  password?: string
+): Promise<PdfDocumentInfo> {
   const pdfjsLib = await getPdfjsLib()
   const data = await toUint8Array(source)
-  const loadingTask = pdfjsLib.getDocument({ data })
+  const loadingTask = pdfjsLib.getDocument({ data, password })
   const pdfDoc = await loadingTask.promise
 
   return {
@@ -54,11 +64,16 @@ export async function getPdfInfo(source: Blob | ArrayBuffer | Uint8Array): Promi
 export async function renderPdfPageToCanvas(
   source: Blob | ArrayBuffer | Uint8Array,
   pageNumber: number,
-  options: number | { dpi?: number; maxWidth?: number } = 150
+  options: number | { dpi?: number; maxWidth?: number; password?: string } = 150,
+  passwordOverride?: string
 ): Promise<{ canvas: HTMLCanvasElement; width: number; height: number }> {
   const pdfjsLib = await getPdfjsLib()
   const data = await toUint8Array(source)
-  const loadingTask = pdfjsLib.getDocument({ data })
+  const password =
+    typeof options === "object" && options?.password
+      ? options.password
+      : passwordOverride
+  const loadingTask = pdfjsLib.getDocument({ data, password })
   const pdfDoc = await loadingTask.promise
 
   try {
@@ -122,8 +137,8 @@ export async function renderPdfPageToBlob(
   source: Blob | ArrayBuffer | Uint8Array,
   options: RenderPdfPageOptions
 ): Promise<Blob> {
-  const { pageNumber, dpi = 150, format = "png", quality = 0.92 } = options
-  const { canvas } = await renderPdfPageToCanvas(source, pageNumber, dpi)
+  const { pageNumber, dpi = 150, format = "png", quality = 0.92, password } = options
+  const { canvas } = await renderPdfPageToCanvas(source, pageNumber, { dpi, password })
 
   const mimeType =
     format === "jpg"
@@ -161,11 +176,12 @@ export async function renderAllPdfPagesToBlobs(
     quality?: number
     pageNumbers?: number[] // If omitted, renders all pages
     onProgress?: (current: number, total: number) => void
+    password?: string
   }
 ): Promise<Array<{ pageNumber: number; blob: Blob }>> {
   const pdfjsLib = await getPdfjsLib()
   const data = await toUint8Array(source)
-  const loadingTask = pdfjsLib.getDocument({ data })
+  const loadingTask = pdfjsLib.getDocument({ data, password: options.password })
   const pdfDoc = await loadingTask.promise
   const totalPages = pdfDoc.numPages
 

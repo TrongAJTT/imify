@@ -2,11 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { drawSplicingCanvas } from "./canvas-renderer";
 import { calculateLayout } from "./layout-engine";
-import { usePanDrag } from "../shared/use-pan-drag";
-import { usePointerZoom } from "../shared/use-pointer-zoom";
-import { useCanvasResizer } from "../shared/use-canvas-resizer";
+import { CanvasViewportShell } from "../shared/canvas-viewport-shell";
 import { useSplicingStore } from "@imify/stores/stores/splicing-store";
-import { ZoomPanControl, type PreviewInteractionMode } from "@imify/ui";
+import type { PreviewInteractionMode } from "@imify/ui";
 import type { ResizeApplyTo } from "@imify/core/types";
 import type {
   LayoutResult,
@@ -77,13 +75,11 @@ export function CanvasPreview({
   const previewShowImageNumber = useSplicingStore(
     (s) => s.previewShowImageNumber,
   );
+  const captionConfig = useSplicingStore((s) => s.captionConfig);
+  const captionTexts = useSplicingStore((s) => s.captionTexts);
   const [canvasWidth, setCanvasWidth] = useState(0);
   const [canvasHeight, setCanvasHeight] = useState(0);
-  const { isResizing, handleResizeStart } = useCanvasResizer({
-    containerRef,
-    onHeightChange: setPreviewContainerHeight,
-    minHeight: 200,
-  });
+  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [layoutResult, setLayoutResult] = useState<LayoutResult | null>(null);
   const [numberingReady, setNumberingReady] = useState(false);
   const numberingTaskRef = useRef(0);
@@ -91,38 +87,6 @@ export function CanvasPreview({
   const onPreviewRenderedRef = useRef(onPreviewRendered);
   const onPreviewSourcesProgressRef = useRef(onPreviewSourcesProgress);
   const onNumberingProgressRef = useRef(onNumberingProgress);
-
-  const {
-    pan,
-    setPan,
-    resetPan,
-    handlePointerDown,
-    handlePointerMove,
-    handlePointerUp,
-    handlePointerCancel,
-  } = usePanDrag({
-    onlyWhenZoomed: false,
-    currentZoom: zoom,
-    onZoomChange: setPreviewZoom,
-    onPanChange: (x, y) => setPan({ x, y }),
-  });
-
-  const wheelThrottleRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingWheelRef = useRef<WheelEvent | null>(null);
-
-  const { zoomTowardPointer } = usePointerZoom({
-    zoom,
-    panX: pan.x,
-    panY: pan.y,
-    minZoom: 50,
-    maxZoom: 800,
-    // DiffChecker-like feel: zoom step grows as zoom increases.
-    zoomFactor: 0.15,
-    onZoomChange: setPreviewZoom,
-    onPanChange: (x, y) => setPan({ x, y }),
-    getCanvasElement: () => canvasRef.current,
-    getContainerElement: () => canvasWrapperRef.current,
-  });
 
   const clampPreviewZoom = useCallback((v: number) => {
     return Math.max(50, Math.round(v));
@@ -326,7 +290,8 @@ export function CanvasPreview({
       imageStyle,
       imageResize,
       fitValue,
-      imageApplyTo
+      imageApplyTo,
+      captionConfig,
     );
 
     setLayoutResult(layoutResult);
@@ -369,6 +334,9 @@ export function CanvasPreview({
       previewScale * (zoom / 100),
       {
         showImageNumber: previewShowImageNumber && numberingReady,
+        captionConfig,
+        captionTexts,
+        imageIds: images.map((img) => img.id),
       },
     );
 
@@ -383,6 +351,9 @@ export function CanvasPreview({
     imageStyle,
     imageResize,
     fitValue,
+    imageApplyTo,
+    captionConfig,
+    captionTexts,
     containerHeight,
     zoom,
     previewShowImageNumber,
@@ -402,148 +373,32 @@ export function CanvasPreview({
     return () => observer.disconnect();
   }, [draw]);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleWheelCapture = (e: WheelEvent) => {
-      if (e.target && container.contains(e.target as Node)) {
-        // Check if target is interactive element (ZoomPanControl)
-        const target = e.target as HTMLElement;
-        if (target.closest('[class*="pointer-events-auto"]')) {
-          return;
-        }
-
-        if (previewInteractionMode === "idle") {
-          return;
-        }
-
-        e.preventDefault();
-
-        // Store pending event and throttle to avoid frame lag
-        pendingWheelRef.current = e;
-
-        if (wheelThrottleRef.current) {
-          // Already scheduled, pending event will be processed
-          return;
-        }
-
-        // Process immediately first time, then throttle
-        wheelThrottleRef.current = setTimeout(() => {
-          const pending = pendingWheelRef.current;
-          if (!pending) {
-            wheelThrottleRef.current = null;
-            return;
-          }
-          pendingWheelRef.current = null;
-
-          const isPanMode = previewInteractionMode === "pan";
-          const isPanVertical = !pending.shiftKey;
-
-          if (isPanMode) {
-            // Scroll to pan
-            const delta = pending.deltaY > 0 ? 50 : -50;
-
-            if (isPanVertical) {
-              setPan((current) => ({
-                ...current,
-                y: current.y - delta,
-              }));
-            } else {
-              setPan((current) => ({
-                ...current,
-                x: current.x - delta,
-              }));
-            }
-          } else {
-            // Scroll to zoom toward pointer
-            zoomTowardPointer(pending);
-          }
-
-          wheelThrottleRef.current = null;
-        }, 16); // ~60fps throttle
-      }
-    };
-
-    document.addEventListener("wheel", handleWheelCapture, {
-      capture: true,
-      passive: false,
-    });
-
-    return () => {
-      document.removeEventListener("wheel", handleWheelCapture, {
-        capture: true,
-      });
-      if (wheelThrottleRef.current) {
-        clearTimeout(wheelThrottleRef.current);
-        wheelThrottleRef.current = null;
-      }
-    };
-  }, [previewInteractionMode, setPan, zoomTowardPointer]);
-
-  const resetZoom = useCallback(() => {
-    setPreviewZoom(100);
-    resetPan();
-  }, [resetPan, setPreviewZoom]);
-
   if (images.length === 0) return null;
 
   return (
-    <div
-      ref={containerRef}
-      className="relative rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-slate-100/50 dark:bg-slate-800/30 p-2 overflow-hidden select-none"
-      style={{ height: `${containerHeight}px` }}
+    <CanvasViewportShell
+      containerRef={containerRef}
+      zoom={zoom}
+      panX={pan.x}
+      panY={pan.y}
+      onZoomChange={setPreviewZoom}
+      onPanChange={(x, y) => setPan({ x, y })}
+      containerHeight={containerHeight}
+      onHeightChange={setPreviewContainerHeight}
+      minHeight={200}
+      interactionMode={previewInteractionMode}
+      minZoom={50}
+      maxZoom={10000}
+      resetPanThreshold={PREVIEW_PAN_RESET_THRESHOLD_PX}
     >
-      <div
-        ref={canvasWrapperRef}
-        className="relative w-full h-full flex items-center justify-center overflow-hidden"
-      >
-        <canvas
-          ref={canvasRef}
-          className="rounded shadow-sm"
-          style={{
-            imageRendering: "auto",
-            cursor:
-              previewInteractionMode === "pan"
-                ? "auto"
-                : previewInteractionMode === "idle"
-                  ? "default"
-                  : "grab",
-            transform: `translate(${pan.x}px, ${pan.y}px)`,
-            touchAction: "none",
-          }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
-        />
-
-        <ZoomPanControl
-          zoom={zoom}
-          panX={pan.x}
-          panY={pan.y}
-          onZoomChange={setPreviewZoom}
-          onPanChange={(x, y) => setPan({ x, y })}
-          minZoom={50}
-          maxZoom={10000}
-          resetPanThreshold={PREVIEW_PAN_RESET_THRESHOLD_PX}
-        />
-      </div>
-
-      <div
-        ref={resizeHandleRef}
-        onPointerDown={handleResizeStart}
-        className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors z-20 ${
-          isResizing ? "bg-sky-400 dark:bg-sky-500" : ""
-        }`}
-        style={{ cursor: "ns-resize", touchAction: "none" }}
-      >
-        <div
-          className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${
-            isResizing ? "bg-sky-500" : ""
-          }`}
-        />
-      </div>
-    </div>
+      <canvas
+        ref={canvasRef}
+        className="rounded shadow-sm bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%,transparent_75%,#e2e8f0_75%,#e2e8f0),linear-gradient(45deg,#e2e8f0_25%,transparent_25%,transparent_75%,#e2e8f0_75%,#e2e8f0)] dark:bg-[linear-gradient(45deg,#1e293b_25%,transparent_25%,transparent_75%,#1e293b_75%,#1e293b),linear-gradient(45deg,#1e293b_25%,transparent_25%,transparent_75%,#1e293b_75%,#1e293b)] bg-[length:16px_16px] bg-[position:0_0,8px_8px] bg-white dark:bg-slate-900"
+        style={{
+          imageRendering: "auto",
+          transform: `translate(${pan.x}px, ${pan.y}px)`,
+        }}
+      />
+    </CanvasViewportShell>
   );
 }

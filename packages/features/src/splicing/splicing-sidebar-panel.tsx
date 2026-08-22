@@ -12,6 +12,7 @@ import { SplicingExportPanel } from "./splicing-export-panel";
 import { LayoutSettingsAccordion } from "./layout-settings-accordion";
 import { CanvasSettingsAccordion } from "./canvas-settings-accordion";
 import { ImageSettingsAccordion } from "./image-settings-accordion";
+import { CaptionSettingsAccordion } from "./caption-settings-accordion";
 import { PreviewSettingsAccordion } from "./preview-settings-accordion";
 import {
   WorkspaceConfigSidebarPanel,
@@ -36,6 +37,7 @@ export function SplicingSidebarPanel({
   const layout = useSplicingStore((s) => s.layout);
   const canvas = useSplicingStore((s) => s.canvas);
   const image = useSplicingStore((s) => s.image);
+  const captionConfig = useSplicingStore((s) => s.captionConfig);
   const resizeQuickStats = useSplicingStore((s) => s.resizeQuickStats);
 
   const exportSettings = useSplicingStore((s) => s.exportSettings);
@@ -53,7 +55,9 @@ export function SplicingSidebarPanel({
   const setLayout = useSplicingStore((s) => s.setLayout);
   const setCanvas = useSplicingStore((s) => s.setCanvas);
   const setImage = useSplicingStore((s) => s.setImage);
+  const setCaptionConfig = useSplicingStore((s) => s.setCaptionConfig);
   const setExportSettings = useSplicingStore((s) => s.setExportSettings);
+
   const setPreviewShowImageNumber = useSplicingStore(
     (s) => s.setPreviewShowImageNumber,
   );
@@ -173,9 +177,26 @@ export function SplicingSidebarPanel({
       ),
     },
     {
+      id: "caption-settings",
+      label: "Image Caption",
+      content: (
+        <CaptionSettingsAccordion
+          captionConfig={captionConfig}
+          onCaptionConfigChange={setCaptionConfig}
+          resizeQuickStats={resizeQuickStats}
+          imageFitValue={image.fitValue}
+          imageResize={image.resizeMode}
+          imageApplyTo={image.applyTo}
+        />
+
+
+      ),
+    },
+    {
       id: "output-settings",
       label: "",
       columnSpan: 2,
+
       content: (
         <QuickExportSelector
           format={exportSettings.format}

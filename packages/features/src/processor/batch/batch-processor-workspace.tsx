@@ -20,7 +20,14 @@ import type {
   ConversionProgressPayload,
   FormatConfig,
 } from "@imify/core/types";
-import { toast, promptRenameInput } from "@imify/stores";
+import {
+  toast,
+  promptRenameInput,
+  openImportProgress,
+  updateImportProgress,
+  closeImportProgress,
+} from "@imify/stores";
+import { useTranslation } from "@imify/i18n";
 import { buildResizeQuickStatsFromDimensions } from "@imify/core/resize-quick-stats";
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
@@ -46,6 +53,7 @@ import { isCommonImageFile, sanitizeFile } from "../../shared/image-file-utils";
 import { HeroProgressCard } from "../../shared/hero-progress-card";
 
 export function BatchProcessorWorkspace() {
+  const { t } = useTranslation(["batch", "common"]);
   const targetFormat = useBatchStore((s) => s.targetFormat);
   const quality = useBatchStore((s) => s.quality);
   const formatOptions = useBatchStore((s) => s.formatOptions);
@@ -78,7 +86,6 @@ export function BatchProcessorWorkspace() {
   const syncResizeToSource = useBatchStore((s) => s.syncResizeToSource);
   const setResizeQuickStats = useBatchStore((s) => s.setResizeQuickStats);
   const [queue, setQueue] = useState<BatchQueueItem[]>([]);
-  const [isImportingUrls, setIsImportingUrls] = useState(false);
   const [batchInputValue, setBatchInputValue] = useState("");
   const [isPdfSplitOpen, setIsPdfSplitOpen] = useState(false);
   const pdfSplitRef = useRef<HTMLDivElement>(null);
@@ -236,73 +243,87 @@ export function BatchProcessorWorkspace() {
     const imageFiles = inputFiles.filter((file) => isCommonImageFile(file));
     if (!imageFiles.length) return;
 
-    const sanitizedFiles = await Promise.all(
-      imageFiles.map((file) => sanitizeFile(file)),
-    );
+    let processedCount = 0;
+    openImportProgress({ totalCount: imageFiles.length });
 
-    const nextItems: BatchQueueItem[] = sanitizedFiles.map((file) => ({
-      id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-      file,
-      status: file.size > MAX_FILE_SIZE_BYTES ? "error" : "queued",
-      percent: file.size > MAX_FILE_SIZE_BYTES ? 100 : 0,
-      message:
-        file.size > MAX_FILE_SIZE_BYTES
-          ? `Skipped: file is larger than ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB limit`
-          : undefined,
-    }));
-
-    if (!nextItems.length) return;
-    setQueue((current) => [...current, ...nextItems]);
-    void Promise.all(
-      nextItems.map(async (item) => ({
-        id: item.id,
-        dimensions: await readImageDimensions(item.file),
-      })),
-    ).then((dimensionResults) => {
-      setQueue((currentQueue) =>
-        currentQueue.map((queueItem) => {
-          const matched = dimensionResults.find(
-            (entry) => entry.id === queueItem.id,
-          );
-          if (!matched?.dimensions) {
-            return queueItem;
-          }
-          return {
-            ...queueItem,
-            sourceWidth: matched.dimensions.width,
-            sourceHeight: matched.dimensions.height,
-          };
+    try {
+      const sanitizedFiles = await Promise.all(
+        imageFiles.map(async (file) => {
+          const sanitized = await sanitizeFile(file);
+          processedCount++;
+          updateImportProgress(processedCount, imageFiles.length, file.name);
+          return sanitized;
         }),
       );
-    });
-  };
-  const importFromImageUrls = async (urls: string[]) => {
-    if (!urls.length) return;
-    setIsImportingUrls(true);
-    try {
-      const { files, failures } = await fetchRemoteImagesFromUrls(urls);
-      if (files.length) appendImageFiles(files);
-      const toastId = `url_import_${Date.now()}`;
-      const status: "success" | "error" =
-        files.length && !failures.length ? "success" : "error";
-      const message =
-        files.length && !failures.length
-          ? `Imported ${files.length} image URL${files.length > 1 ? "s" : ""}.`
-          : files.length && failures.length
-            ? `Imported ${files.length} URL${files.length > 1 ? "s" : ""}, ${failures.length} failed.`
-            : "No valid image URLs were imported.";
-      toast.progress({
-        id: toastId,
-        fileName: "URL Import Status",
-        targetFormat: targetFormat,
-        status,
-        percent: 100,
-        message,
+
+      const nextItems: BatchQueueItem[] = sanitizedFiles.map((file) => ({
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        file,
+        status: file.size > MAX_FILE_SIZE_BYTES ? "error" : "queued",
+        percent: file.size > MAX_FILE_SIZE_BYTES ? 100 : 0,
+        message:
+          file.size > MAX_FILE_SIZE_BYTES
+            ? `Skipped: file is larger than ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB limit`
+            : undefined,
+      }));
+
+      if (!nextItems.length) return;
+      setQueue((current) => [...current, ...nextItems]);
+
+      toast.success(
+        t("common:countFiles", { count: nextItems.length }) ||
+          `Imported ${nextItems.length} files`,
+      );
+
+      void Promise.all(
+        nextItems.map(async (item) => ({
+          id: item.id,
+          dimensions: await readImageDimensions(item.file),
+        })),
+      ).then((dimensionResults) => {
+        setQueue((currentQueue) =>
+          currentQueue.map((queueItem) => {
+            const matched = dimensionResults.find(
+              (entry) => entry.id === queueItem.id,
+            );
+            if (!matched?.dimensions) {
+              return queueItem;
+            }
+            return {
+              ...queueItem,
+              sourceWidth: matched.dimensions.width,
+              sourceHeight: matched.dimensions.height,
+            };
+          }),
+        );
       });
     } finally {
-      setIsImportingUrls(false);
+      closeImportProgress();
     }
   };
+
+  const importFromImageUrls = async (urls: string[]) => {
+    if (!urls.length) return;
+    openImportProgress({ totalCount: urls.length });
+    try {
+      const { files, failures } = await fetchRemoteImagesFromUrls(urls);
+      if (files.length) {
+        await appendImageFiles(files);
+      }
+      if (files.length && !failures.length) {
+        toast.success(`Imported ${files.length} image URL(s).`);
+      } else if (files.length && failures.length) {
+        toast.warning(
+          `Imported ${files.length} URL(s), ${failures.length} failed.`,
+        );
+      } else {
+        toast.error("No valid image URLs were imported.");
+      }
+    } finally {
+      closeImportProgress();
+    }
+  };
+
   const appendFiles = (files: FileList | null) => {
     if (files && files.length > 0) appendImageFiles(Array.from(files));
   };

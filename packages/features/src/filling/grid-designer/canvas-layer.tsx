@@ -1,7 +1,7 @@
 import React from "react"
-import { Layer, Rect } from "react-konva"
+import { Layer, Line, Rect, Text } from "react-konva"
 import type { GridLayoutCell } from "./generator"
-import type { GridPrimaryDirection } from "../types"
+import type { GridPrimaryDirection, Point2D } from "../types"
 
 interface GridDesignCanvasLayerProps {
   canvasWidth: number
@@ -12,6 +12,22 @@ interface GridDesignCanvasLayerProps {
   cells: GridLayoutCell[]
   direction?: GridPrimaryDirection
   highlightedIndex?: number | null
+}
+
+function isStandardRect(points?: Point2D[], width?: number, height?: number): boolean {
+  if (!points || points.length !== 4 || width === undefined || height === undefined) {
+    return false
+  }
+  return (
+    Math.abs(points[0]!.x) < 0.01 &&
+    Math.abs(points[0]!.y) < 0.01 &&
+    Math.abs(points[1]!.x - width) < 0.01 &&
+    Math.abs(points[1]!.y) < 0.01 &&
+    Math.abs(points[2]!.x - width) < 0.01 &&
+    Math.abs(points[2]!.y - height) < 0.01 &&
+    Math.abs(points[3]!.x) < 0.01 &&
+    Math.abs(points[3]!.y - height) < 0.01
+  )
 }
 
 export function GridDesignCanvasLayer({
@@ -58,24 +74,66 @@ export function GridDesignCanvasLayer({
           fill = "rgba(234, 179, 8, 0.25)"
           stroke = "#eab308"
           strokeWidth = 2
+        } else if (cell.isText) {
+          fill = "rgba(139, 92, 246, 0.14)"
+          stroke = "#8b5cf6"
+          strokeWidth = 1.5
+          dash = [4, 3]
         }
 
+        const cellW = Math.max(1, cell.width * renderScale)
+        const cellH = Math.max(1, cell.height * renderScale)
+        const isRect = isStandardRect(cell.points, cell.width, cell.height)
+
         return (
-          <Rect
-            key={cell.id}
-            x={offsetX + cell.x * renderScale}
-            y={offsetY + cell.y * renderScale}
-            width={Math.max(1, cell.width * renderScale)}
-            height={Math.max(1, cell.height * renderScale)}
-            fill={fill}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-            dash={dash}
-            cornerRadius={4}
-            listening={false}
-          />
+          <React.Fragment key={cell.id}>
+            {isRect ? (
+              <Rect
+                x={offsetX + cell.x * renderScale}
+                y={offsetY + cell.y * renderScale}
+                width={cellW}
+                height={cellH}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={strokeWidth}
+                dash={dash}
+                cornerRadius={4}
+                listening={false}
+              />
+            ) : (
+              <Line
+                points={cell.points!.flatMap((p) => [
+                  offsetX + (cell.x + p.x) * renderScale,
+                  offsetY + (cell.y + p.y) * renderScale,
+                ])}
+                closed={true}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={strokeWidth}
+                dash={dash}
+                listening={false}
+              />
+            )}
+            {cell.isText && !isError && (
+              <Text
+                x={offsetX + cell.x * renderScale}
+                y={offsetY + cell.y * renderScale}
+                width={cellW}
+                height={cellH}
+                text="T"
+                fontSize={Math.max(11, Math.min(22, cellH * 0.35))}
+                fontStyle="bold"
+                fontFamily="sans-serif"
+                fill="#8b5cf6"
+                align="center"
+                verticalAlign="middle"
+                listening={false}
+              />
+            )}
+          </React.Fragment>
         )
       })}
     </Layer>
   )
 }
+

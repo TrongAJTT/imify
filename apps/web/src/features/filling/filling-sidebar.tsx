@@ -18,6 +18,7 @@ import type {
   FillingTemplate,
   LayerGroup,
   VectorLayer,
+  TextLayer,
 } from "@imify/features/filling/types";
 import { QuickExportSelector } from "@imify/features/shared/quick-export-selector";
 import type { QuickExportFormat } from "@imify/core";
@@ -31,15 +32,19 @@ type FillingSidebarMode =
 
 interface ManualEditorSidebarBindings {
   layers: VectorLayer[];
+  textLayers?: TextLayer[];
   groups: LayerGroup[];
   canvasWidth: number;
   canvasHeight: number;
   selectedLayerId: string | null;
   selectedLayerIds: string[];
+  selectedTextLayerId?: string | null;
   onLayersChange: (layers: VectorLayer[]) => void;
+  onTextLayersChange?: (textLayers: TextLayer[]) => void;
   onGroupsChange: (groups: LayerGroup[]) => void;
   onCanvasSizeChange: (width: number, height: number) => void;
   onSelectLayer: (id: string | null) => void;
+  onSelectTextLayer?: (id: string | null) => void;
   onToggleLayerSelection: (id: string) => void;
   onClearSelection: () => void;
 }
@@ -121,19 +126,24 @@ export function FillingWorkflowSidebar({
       <div className="space-y-2">
         <ManualEditorSidebar
           layers={manualEditor.layers}
+          textLayers={manualEditor.textLayers}
           groups={manualEditor.groups}
           canvasWidth={manualEditor.canvasWidth}
           canvasHeight={manualEditor.canvasHeight}
           selectedLayerId={manualEditor.selectedLayerId}
           selectedLayerIds={manualEditor.selectedLayerIds}
+          selectedTextLayerId={manualEditor.selectedTextLayerId}
           onLayersChange={manualEditor.onLayersChange}
+          onTextLayersChange={manualEditor.onTextLayersChange}
           onGroupsChange={manualEditor.onGroupsChange}
           onCanvasSizeChange={manualEditor.onCanvasSizeChange}
           onSelectLayer={manualEditor.onSelectLayer}
+          onSelectTextLayer={manualEditor.onSelectTextLayer}
           onToggleLayerSelection={manualEditor.onToggleLayerSelection}
           onClearSelection={manualEditor.onClearSelection}
           enableWideSidebarGrid={enableWideSidebarGrid}
         />
+
       </div>
     );
   }

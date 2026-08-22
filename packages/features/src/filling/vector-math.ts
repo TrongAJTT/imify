@@ -176,3 +176,24 @@ export function mergePointSets(sets: Point2D[][]): Point2D[] {
   }
   return all
 }
+
+/**
+ * Computes the start and end coordinates for a linear gradient given center, dimensions, and angle.
+ */
+export function computeLinearGradientEndpoints(
+  cx: number,
+  cy: number,
+  width: number,
+  height: number,
+  angleDeg: number,
+): { start: { x: number; y: number }; end: { x: number; y: number } } {
+  const angleRad = (angleDeg * Math.PI) / 180
+  const len = Math.max(width, height)
+  const halfCos = (Math.cos(angleRad) * len) / 2
+  const halfSin = (Math.sin(angleRad) * len) / 2
+  return {
+    start: { x: cx - halfCos, y: cy - halfSin },
+    end: { x: cx + halfCos, y: cy + halfSin },
+  }
+}
+

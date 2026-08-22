@@ -42,13 +42,17 @@ function getDB() {
 export const templateStorage = {
   async getAll(): Promise<FillingTemplate[]> {
     const db = await getDB()
-    return db.getAll(TEMPLATES_STORE)
+    const list = await db.getAll(TEMPLATES_STORE)
+    return list.map((t) => ({ ...t, textLayers: t.textLayers ?? [] }))
   },
 
   async get(id: string): Promise<FillingTemplate | undefined> {
     const db = await getDB()
-    return db.get(TEMPLATES_STORE, id)
+    const t = await db.get(TEMPLATES_STORE, id)
+    if (!t) return undefined
+    return { ...t, textLayers: t.textLayers ?? [] }
   },
+
 
   async save(template: FillingTemplate): Promise<void> {
     const db = await getDB()

@@ -136,6 +136,7 @@ export function FillSidebar({
           onHeightChange={setLayersAccordionHeight}
           minHeight={180}
           maxHeight={640}
+          childrenClassName="p-2"
         >
           <div className="space-y-0">
             <DndContext

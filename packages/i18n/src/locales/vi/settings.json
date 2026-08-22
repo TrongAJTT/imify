@@ -156,8 +156,8 @@
         "description": "Tắt tương tác con lăn xem trước trong các không gian làm việc được hỗ trợ."
       },
       "fill.customization.tab_image": {
-        "label": "Mở tab Ảnh",
-        "description": "Hiện các điều khiển chỉnh sửa/tải lên ảnh trong Tùy chỉnh Fill."
+        "label": "Mở tab Nội dung",
+        "description": "Hiện các mục tùy chỉnh nội dung trong Tùy chỉnh Fill."
       },
       "fill.customization.tab_border": {
         "label": "Mở tab Viền",

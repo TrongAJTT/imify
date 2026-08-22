@@ -58,8 +58,8 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     id: "fill.customization.tab_image",
     scope: "fill",
     category: "Fill Customization",
-    label: "Open Image tab",
-    description: "Show image transform/upload controls in Fill customization."
+    label: "Open Content tab",
+    description: "Show content configuration controls in Fill customization."
   },
   {
     id: "fill.customization.tab_border",

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { APP_ROUTES } from "@imify/core";
 import {
   RefreshCw,
   Sparkles,
@@ -137,7 +138,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 w-full flex items-center justify-center">
             <a
-              href="/recovery"
+              href={APP_ROUTES.RECOVERY}
               className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors font-medium"
             >
               <ShieldAlert size={13} />

@@ -9,6 +9,7 @@ import {
   Plus,
   Link2,
   Unlink2,
+  Type,
 } from "lucide-react"
 import {
   closestCenter,
@@ -25,20 +26,26 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 
-import type { VectorLayer } from "./types"
+import type { TextLayer, VectorLayer } from "./types"
 import { SHAPE_LABELS } from "./shape-generators"
 import { Button } from "@imify/ui"
 import { SortableFillLayerItem } from "./sortable-fill-layer-item"
 
 interface LayerListPanelProps {
   layers: VectorLayer[]
+  textLayers?: TextLayer[]
   selectedLayerId: string | null
   selectedLayerIds: string[]
+  selectedTextLayerId?: string | null
   onSelectLayer: (id: string) => void
+  onSelectTextLayer?: (id: string) => void
   onToggleLayerSelection: (id: string) => void
   onToggleLock: (id: string) => void
   onToggleVisibility: (id: string) => void
   onDeleteLayer: (id: string) => void
+  onToggleTextLayerLock?: (id: string) => void
+  onToggleTextLayerVisibility?: (id: string) => void
+  onDeleteTextLayer?: (id: string) => void
   onDragLayer: (
     fromIndex: number,
     toIndex: number,
@@ -55,13 +62,19 @@ interface LayerListPanelProps {
 
 export function LayerListPanel({
   layers,
+  textLayers = [],
   selectedLayerId,
   selectedLayerIds,
+  selectedTextLayerId = null,
   onSelectLayer,
+  onSelectTextLayer,
   onToggleLayerSelection,
   onToggleLock,
   onToggleVisibility,
   onDeleteLayer,
+  onToggleTextLayerLock,
+  onToggleTextLayerVisibility,
+  onDeleteTextLayer,
   onDragLayer,
   onAddShape,
   onToggleGroupForSelected,
@@ -69,6 +82,7 @@ export function LayerListPanel({
   isSelectedLayerGrouped,
   groupNamesById,
 }: LayerListPanelProps) {
+
   const UNGROUP_DRAG_LEFT_THRESHOLD = -10
   const listContainerRef = useRef<HTMLDivElement | null>(null)
 
@@ -298,9 +312,106 @@ export function LayerListPanel({
           </SortableContext>
         </DndContext>
       )}
+
+      {textLayers.length > 0 && (
+        <div className="pt-2 border-t border-slate-200/80 dark:border-slate-700/70 space-y-1">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1">
+              <Type size={11} />
+              Text Layers ({textLayers.length})
+            </span>
+          </div>
+
+          <div className="space-y-0.5">
+            {textLayers.map((tLayer, tIndex) => (
+              <TextLayerRow
+                key={tLayer.id}
+                layer={tLayer}
+                index={tIndex}
+                isSelected={selectedTextLayerId === tLayer.id}
+                onSelect={() => onSelectTextLayer?.(tLayer.id)}
+                onToggleLock={() => onToggleTextLayerLock?.(tLayer.id)}
+                onToggleVisibility={() => onToggleTextLayerVisibility?.(tLayer.id)}
+                onDelete={() => onDeleteTextLayer?.(tLayer.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
+function TextLayerRow({
+  layer,
+  index,
+  isSelected,
+  onSelect,
+  onToggleLock,
+  onToggleVisibility,
+  onDelete,
+}: {
+  layer: TextLayer
+  index: number
+  isSelected: boolean
+  onSelect: (event: MouseEvent<HTMLDivElement>) => void
+  onToggleLock: () => void
+  onToggleVisibility: () => void
+  onDelete: () => void
+}) {
+  return (
+    <div
+      className={`flex items-center gap-1 px-1.5 py-1 rounded text-xs transition-colors cursor-pointer ${
+        isSelected
+          ? "bg-purple-50 dark:bg-purple-950/30 border border-purple-300 dark:border-purple-700"
+          : "hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent"
+      } ${!layer.visible ? "opacity-50" : ""}`}
+      data-text-layer-id={layer.id}
+      onClick={onSelect}
+    >
+      <div className="flex-1 min-w-0 flex items-center gap-1.5">
+        <Type size={12} className="text-purple-500 shrink-0" />
+        <div className="min-w-0">
+          <div
+            className={`truncate font-medium ${
+              layer.locked
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            {layer.name || `Text ${index + 1}`}
+          </div>
+          <div className="truncate text-[10px] text-purple-500/80">
+            Typography
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-0.5 shrink-0">
+        <IconButton
+          onClick={(e) => { e.stopPropagation(); onToggleVisibility() }}
+          title={layer.visible ? "Hide" : "Show"}
+        >
+          {layer.visible ? <Eye size={12} /> : <EyeOff size={12} />}
+        </IconButton>
+        <IconButton
+          onClick={(e) => { e.stopPropagation(); onToggleLock() }}
+          title={layer.locked ? "Unlock" : "Lock"}
+        >
+          {layer.locked ? <Lock size={12} /> : <Unlock size={12} />}
+        </IconButton>
+        <IconButton
+          onClick={(e) => { e.stopPropagation(); onDelete() }}
+          title="Delete"
+          destructive
+        >
+          <Trash2 size={12} />
+        </IconButton>
+      </div>
+    </div>
+  )
+}
+
 
 function LayerRow({
   layer,

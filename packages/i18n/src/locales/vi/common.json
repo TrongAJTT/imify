@@ -60,6 +60,13 @@
     "idleLabel": "Chế độ chờ",
     "idleTooltip": "Đã tắt tương tác cuộn chuột xem trước."
   },
+  "triggerButton": {
+    "toggleHelp": "Nhấp để bật/tắt chế độ.",
+    "perTapHelp": "Nhấp để dùng 1 lần (tự động tắt sau khi thực hiện).",
+    "doubleTapHelp": "Nhấp 1 lần để dùng 1 lần, Nhấp đúp để khóa cố định chế độ.",
+    "lockedBadge": "Đã khóa (Nhấp để mở khóa)",
+    "singleUseBadge": "Dùng 1 lần (Nhấp đúp để khóa)"
+  },
   "commonFaqs": [
     {
       "question": "Các lỗi thường gặp trong quá trình xử lý là gì?",
@@ -158,5 +165,21 @@
     "successDesc": "Xóa cache thành công, tiến hành quay lại trang chủ để cập nhật.",
     "returnHome": "Quay lại trang chủ ({{seconds}}s)",
     "returnHomeNow": "Quay lại trang chủ ngay"
+  },
+  "importProgressDialog": {
+    "title": "Đang nhập dữ liệu",
+    "subtitle": "Vui lòng chờ trong khi các tệp đang được xử lý...",
+    "indeterminateSubtitle": "Đang chuẩn bị tệp, vui lòng chờ...",
+    "progressCount": "Đang xử lý {{completed}} / {{total}} ảnh ({{percent}}%)",
+    "processingFile": "Đang xử lý: {{name}}"
+  },
+  "workspaceLoading": {
+    "defaultTitle": "Đang tải dữ liệu",
+    "defaultSubtitle": "Đang tải dữ liệu cho không gian làm việc hiện tại, xin vui lòng chờ.",
+    "timeoutTitle": "Đang tải lâu hơn dự kiến",
+    "timeoutSubtitle": "Nếu tải lại không giải quyết được vấn đề. Vui lòng khôi phục dữ liệu.",
+    "reloadPage": "Tải lại trang",
+    "goToRecovery": "Khôi phục dữ liệu"
   }
 }
+

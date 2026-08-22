@@ -19,8 +19,10 @@ import type {
   SplicingImageItem,
   SplicingImageResize,
   SplicingImageStyle,
-  SplicingLayoutConfig
+  SplicingLayoutConfig,
+  SplicingCaptionConfig
 } from "./types"
+
 
 type AnyContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 type CornerRadii = { tl: number; tr: number; br: number; bl: number }
@@ -219,6 +221,188 @@ function insetCornerRadii(radii: CornerRadii, inset: number): CornerRadii {
   }
 }
 
+function drawCaption(
+  ctx: AnyContext,
+  placement: LayoutPlacement,
+  scale: number,
+  captionText: string,
+  config: SplicingCaptionConfig
+): void {
+  if (!captionText || config.mode === "none") return
+
+  const fontSize = Math.max(8, config.fontSize * scale)
+  const padV = config.paddingV * scale
+  const padH = config.paddingH * scale
+  const borderRadius = Math.max(0, config.borderRadius * scale)
+  const offX = config.offsetX * scale
+  const offY = config.offsetY * scale
+
+  ctx.save()
+  ctx.font = `500 ${fontSize}px ${config.fontFamily || "Inter"}, system-ui, sans-serif`
+  const textMetrics = ctx.measureText(captionText)
+  const textWidth = textMetrics.width
+  const maxAvailableBoxWidth =
+    config.position === "left" || config.position === "right"
+      ? (placement.captionRect?.height ?? placement.contentRect.height) * scale
+      : (placement.captionRect?.width ?? placement.contentRect.width) * scale
+  const boxWidth = Math.min(textWidth + padH * 2, maxAvailableBoxWidth)
+  const boxHeight = fontSize + padV * 2
+
+
+  let boxCenterX = 0
+  let boxCenterY = 0
+  let rotationAngle = 0
+
+  if (config.mode === "outside" && placement.captionRect) {
+    const crx = placement.captionRect.x * scale
+    const cry = placement.captionRect.y * scale
+    const crw = placement.captionRect.width * scale
+    const crh = placement.captionRect.height * scale
+
+    if (config.position === "left") {
+      rotationAngle = -Math.PI / 2
+      const cx = crx + crw / 2
+      const cy =
+        config.alignment === "start"
+          ? cry + boxWidth / 2
+          : config.alignment === "end"
+          ? cry + crh - boxWidth / 2
+          : cry + crh / 2
+      boxCenterX = cx + offX
+      boxCenterY = cy + offY
+    } else if (config.position === "right") {
+      rotationAngle = Math.PI / 2
+      const cx = crx + crw / 2
+      const cy =
+        config.alignment === "start"
+          ? cry + boxWidth / 2
+          : config.alignment === "end"
+          ? cry + crh - boxWidth / 2
+          : cry + crh / 2
+      boxCenterX = cx + offX
+      boxCenterY = cy + offY
+    } else {
+      const cy = cry + crh / 2
+      const cx =
+        config.alignment === "start"
+          ? crx + boxWidth / 2
+          : config.alignment === "end"
+          ? crx + crw - boxWidth / 2
+          : crx + crw / 2
+      boxCenterX = cx + offX
+      boxCenterY = cy + offY
+    }
+  } else {
+    // inside mode
+    const cx = placement.contentRect.x * scale
+    const cy = placement.contentRect.y * scale
+    const cw = placement.contentRect.width * scale
+    const ch = placement.contentRect.height * scale
+
+    switch (config.position) {
+      case "top": {
+        const posY = cy + boxHeight / 2
+        const posX =
+          config.alignment === "start"
+            ? cx + boxWidth / 2
+            : config.alignment === "end"
+            ? cx + cw - boxWidth / 2
+            : cx + cw / 2
+        boxCenterX = posX + offX
+        boxCenterY = posY + offY
+        break
+      }
+      case "bottom": {
+        const posY = cy + ch - boxHeight / 2
+        const posX =
+          config.alignment === "start"
+            ? cx + boxWidth / 2
+            : config.alignment === "end"
+            ? cx + cw - boxWidth / 2
+            : cx + cw / 2
+        boxCenterX = posX + offX
+        boxCenterY = posY + offY
+        break
+      }
+      case "left": {
+        rotationAngle = -Math.PI / 2
+        const posX = cx + boxHeight / 2
+        const posY =
+          config.alignment === "start"
+            ? cy + boxWidth / 2
+            : config.alignment === "end"
+            ? cy + ch - boxWidth / 2
+            : cy + ch / 2
+        boxCenterX = posX + offX
+        boxCenterY = posY + offY
+        break
+      }
+      case "right": {
+        rotationAngle = Math.PI / 2
+        const posX = cx + cw - boxHeight / 2
+        const posY =
+          config.alignment === "start"
+            ? cy + boxWidth / 2
+            : config.alignment === "end"
+            ? cy + ch - boxWidth / 2
+            : cy + ch / 2
+        boxCenterX = posX + offX
+        boxCenterY = posY + offY
+        break
+      }
+      case "center":
+      default: {
+        const posY = cy + ch / 2
+        const posX =
+          config.alignment === "start"
+            ? cx + boxWidth / 2
+            : config.alignment === "end"
+            ? cx + cw - boxWidth / 2
+            : cx + cw / 2
+        boxCenterX = posX + offX
+        boxCenterY = posY + offY
+        break
+      }
+    }
+  }
+
+  ctx.translate(boxCenterX, boxCenterY)
+  if (rotationAngle !== 0) {
+    ctx.rotate(rotationAngle)
+  }
+  if (config.rotate180) {
+    ctx.rotate(Math.PI)
+  }
+
+
+  // Container background
+  if (config.containerColor && config.containerColor !== "transparent") {
+    const opacityRatio =
+      typeof config.containerOpacity === "number"
+        ? Math.max(0, Math.min(100, config.containerOpacity)) / 100
+        : 1
+    if (opacityRatio > 0) {
+      ctx.save()
+      if (opacityRatio < 1) {
+        ctx.globalAlpha = ctx.globalAlpha * opacityRatio
+      }
+      ctx.fillStyle = config.containerColor
+      drawRoundedRect(ctx, -boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, borderRadius)
+      ctx.fill()
+      ctx.restore()
+    }
+  }
+
+  // Text
+
+  ctx.fillStyle = config.textColor || "#ffffff"
+  ctx.textAlign = "center"
+  ctx.textBaseline = "middle"
+  ctx.fillText(captionText, 0, 0)
+
+  ctx.restore()
+}
+
 export function drawSplicingCanvas(
   ctx: AnyContext,
   sources: CanvasImageSource[],
@@ -228,6 +412,9 @@ export function drawSplicingCanvas(
   scale: number,
   options?: {
     showImageNumber?: boolean
+    captionConfig?: SplicingCaptionConfig
+    captionTexts?: Record<string, string>
+    imageIds?: string[]
   }
 ): void {
   const cw = layout.canvasWidth * scale
@@ -247,6 +434,7 @@ export function drawSplicingCanvas(
   drawRoundedRect(ctx, 0, 0, cw, ch, canvasStyle.borderRadius * scale)
   ctx.clip()
 
+  // Pass 1: Render all image backgrounds, contents, and borders
   for (const group of layout.groups) {
     for (const placement of group.placements) {
       const source = sources[placement.imageIndex]
@@ -313,6 +501,7 @@ export function drawSplicingCanvas(
         ctx.restore()
       }
 
+      // Image numbering badge (if enabled)
       if (options?.showImageNumber) {
         const label = String(placement.imageIndex + 1)
         const paddingX = 6 * scale
@@ -335,6 +524,25 @@ export function drawSplicingCanvas(
       }
     }
   }
+
+  // Pass 2: Render all captions on top
+  if (options?.captionConfig && options.captionConfig.mode !== "none") {
+    for (const group of layout.groups) {
+      for (const placement of group.placements) {
+        const source = sources[placement.imageIndex]
+        if (!source) continue
+
+        const imageId = options.imageIds?.[placement.imageIndex]
+        const customText = imageId && options.captionTexts ? options.captionTexts[imageId] : undefined
+        const effectiveText = customText !== undefined && customText.trim() !== ""
+          ? customText
+          : `Image #${placement.imageIndex + 1}`
+
+        drawCaption(ctx, placement, scale, effectiveText, options.captionConfig)
+      }
+    }
+  }
+
   ctx.restore()
 
   // Canvas border
@@ -356,6 +564,7 @@ export function drawSplicingCanvas(
     ctx.restore()
   }
 }
+
 
 const MIME_MAP: Record<string, string> = {
   jpg: "image/jpeg",
@@ -473,13 +682,18 @@ function renderToOffscreen(
   sources: ImageBitmap[],
   layoutResult: LayoutResult,
   canvasStyle: SplicingCanvasStyle,
-  imageStyle: SplicingImageStyle
+  imageStyle: SplicingImageStyle,
+  options?: {
+    captionConfig?: SplicingCaptionConfig
+    captionTexts?: Record<string, string>
+    imageIds?: string[]
+  }
 ): OffscreenCanvas {
   const canvas = new OffscreenCanvas(width, height)
   const ctx = canvas.getContext("2d")
   if (!ctx) throw new Error("Failed to create OffscreenCanvas context")
 
-  drawSplicingCanvas(ctx, sources, layoutResult, canvasStyle, imageStyle, 1)
+  drawSplicingCanvas(ctx, sources, layoutResult, canvasStyle, imageStyle, 1, options)
   return canvas
 }
 
@@ -523,6 +737,8 @@ export async function exportSplicedImage(
   exportConfig: SplicingExportConfig,
   options?: {
     concurrency?: number
+    captionConfig?: SplicingCaptionConfig
+    captionTexts?: Record<string, string>
     onProgress?: (payload: {
       phase: "decode" | "render"
       completed: number
@@ -559,8 +775,16 @@ export async function exportSplicedImage(
       imageStyle,
       imageResize,
       fitValue,
-      imageApplyTo
+      imageApplyTo,
+      options?.captionConfig
     )
+
+    const imageIds = images.map((img) => img.id)
+    const renderOptions = {
+      captionConfig: options?.captionConfig,
+      captionTexts: options?.captionTexts,
+      imageIds
+    }
 
     if (exportConfig.exportMode === "single") {
       options?.onProgress?.({
@@ -576,7 +800,8 @@ export async function exportSplicedImage(
         bitmaps,
         layoutResult,
         canvasStyle,
-        imageStyle
+        imageStyle,
+        renderOptions
       )
       const blob = await canvasToBlob(
         canvas,
@@ -650,11 +875,17 @@ export async function exportSplicedImage(
                 ...p.contentRect,
                 x: p.contentRect.x - offsetX,
                 y: p.contentRect.y - offsetY
-              }
+              },
+              captionRect: p.captionRect
+                ? {
+                    ...p.captionRect,
+                    x: p.captionRect.x - offsetX,
+                    y: p.captionRect.y - offsetY
+                  }
+                : undefined
             })),
             bounds: {
               ...group.bounds,
-              // Not used by the renderer (placements are), but keep it consistent.
               x: 0,
               y: 0,
               width: groupW,
@@ -666,7 +897,16 @@ export async function exportSplicedImage(
         canvasHeight: groupH
       }
 
-      const canvas = renderToOffscreen(groupW, groupH, bitmaps, shifted, canvasStyle, imageStyle)
+      const canvas = renderToOffscreen(
+        groupW,
+        groupH,
+        bitmaps,
+        shifted,
+        canvasStyle,
+        imageStyle,
+        renderOptions
+      )
+
       results[groupIndex] = await canvasToBlob(
         canvas,
         exportConfig.format,

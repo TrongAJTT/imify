@@ -12,6 +12,7 @@ import {
   Palette,
   RotateCcw,
   SlidersHorizontal,
+  Type,
   X,
 } from "lucide-react";
 
@@ -19,9 +20,13 @@ import type {
   FillingTemplate,
   ImageTransform,
   LayerFillState,
+  TextLayer,
   VectorLayer,
 } from "@imify/features/filling/types";
-import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types";
+import {
+  DEFAULT_IMAGE_TRANSFORM,
+  DEFAULT_TEXT_LAYER_CONFIG,
+} from "@imify/features/filling/types";
 import { regenerateLayerShapePoints } from "@imify/features/filling/shape-generators";
 import {
   buildFillRuntimeItems,
@@ -37,14 +42,21 @@ import {
 } from "@imify/stores/stores/fill-ui-store";
 import { AccordionCard } from "@imify/ui/ui/accordion-card";
 import { Button } from "@imify/ui/ui/button";
+import { CheckboxCard } from "@imify/ui/ui/checkbox-card";
 import { ColorPickerPopover } from "@imify/ui/ui/color-picker-popover";
 import { NumberInput } from "@imify/ui/ui/number-input";
+import { SelectInput } from "@imify/ui/ui/select-input";
+import { TextInput } from "@imify/ui/ui/text-input";
 import { Tooltip } from "@imify/ui/ui/tooltip";
 import {
   SHORTCUT_DEFINITION_MAP,
   type ShortcutActionId,
 } from "@imify/stores/shortcuts";
 import { useTranslation } from "@imify/i18n";
+import {
+  CaptionConfigSections,
+  type CaptionConfigData,
+} from "../../shared/caption-config-sections";
 import {
   COMMON_IMAGE_ACCEPT,
   getFirstCommonImageFileFromDataTransfer,
@@ -84,27 +96,26 @@ export function FillLayerCustomizationAccordion({
 }: FillLayerCustomizationAccordionProps) {
   const { t } = useTranslation("filling");
 
-  const TAB_ITEMS: Array<{
-    id: FillCustomizationTab;
-    label: string;
-    icon: React.ReactNode;
-  }> = [
-    { id: "image", label: t("fill.tabImage"), icon: <ImagePlus size={14} /> },
-    { id: "border", label: t("fill.tabBorder"), icon: <Palette size={14} /> },
-    { id: "layer", label: t("fill.tabLayer"), icon: <Layers size={14} /> },
-  ];
-
-  const TAB_INFO_TEXT: Record<FillCustomizationTab, string> = {
-    image: t("fill.tabImageDesc"),
-    border: t("fill.tabBorderDesc"),
-    layer: t("fill.tabLayerDesc"),
-  };
-
   const selectedLayerId = useFillingStore((s) => s.selectedLayerId);
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId);
   const layerFillStates = useFillingStore((s) => s.layerFillStates);
   const canvasFillState = useFillingStore((s) => s.canvasFillState);
+  const setCanvasFillState = useFillingStore((s) => s.setCanvasFillState);
   const updateLayerFillState = useFillingStore((s) => s.updateLayerFillState);
+  const updateSavedTextLayerConfig = useFillingStore(
+    (s) => s.updateSavedTextLayerConfig,
+  );
+
+  const BORDER_GRADIENT_SCOPE_OPTIONS: Array<{
+    value: "per-layer" | "unified";
+    label: string;
+  }> = useMemo(
+    () => [
+      { value: "per-layer", label: t("fillCanvas.perLayer") },
+      { value: "unified", label: t("fillCanvas.unified") },
+    ],
+    [t],
+  );
 
   const activeCustomizationTab = useFillUiStore(
     (s) => s.activeCustomizationTab,
@@ -147,7 +158,12 @@ export function FillLayerCustomizationAccordion({
   );
   const runtimeItems = useMemo(
     () => buildFillRuntimeItems(activeTemplate, hiddenLayerIdSet),
-    [activeTemplate.layers, activeTemplate.groups, hiddenLayerIdSet],
+    [
+      activeTemplate.layers,
+      activeTemplate.groups,
+      activeTemplate.textLayers,
+      hiddenLayerIdSet,
+    ],
   );
   const selectedRuntimeItem = useMemo<FillRuntimeItem | null>(
     () => runtimeItems.find((item) => item.id === selectedLayerId) ?? null,
@@ -155,8 +171,40 @@ export function FillLayerCustomizationAccordion({
   );
   const selectedLayer =
     selectedRuntimeItem?.kind === "layer" ? selectedRuntimeItem.layer : null;
+  const selectedTextLayer =
+    selectedRuntimeItem?.kind === "text" ? selectedRuntimeItem.textLayer : null;
   const selectedGroupItem =
     selectedRuntimeItem?.kind === "group" ? selectedRuntimeItem : null;
+
+  const isTextLayer = selectedRuntimeItem?.kind === "text";
+
+  const TAB_ITEMS: Array<{
+    id: FillCustomizationTab;
+    label: string;
+    icon: React.ReactNode;
+  }> = [
+    {
+      id: "image",
+      label: isTextLayer
+        ? t("fill.tabText", { defaultValue: "Văn bản" })
+        : t("fill.tabImage"),
+      icon: isTextLayer ? <Type size={14} /> : <ImagePlus size={14} />,
+    },
+    { id: "border", label: t("fill.tabBorder"), icon: <Palette size={14} /> },
+    { id: "layer", label: t("fill.tabLayer"), icon: <Layers size={14} /> },
+  ];
+
+  const TAB_INFO_TEXT: Record<FillCustomizationTab, string> = {
+    image: isTextLayer
+      ? t("fill.tabTextDesc", {
+          defaultValue:
+            "Tùy chỉnh nội dung, phông chữ, khung nền và vị trí văn bản.",
+        })
+      : t("fill.tabImageDesc"),
+    border: t("fill.tabBorderDesc"),
+    layer: t("fill.tabLayerDesc"),
+  };
+
   const selectedGroupTransform = useMemo<ImageTransform | null>(() => {
     if (!selectedGroupItem) {
       return null;
@@ -175,6 +223,92 @@ export function FillLayerCustomizationAccordion({
         (state) => state.layerId === selectedRuntimeItem?.id,
       ),
     [layerFillStates, selectedRuntimeItem?.id],
+  );
+
+  const textConfig: CaptionConfigData = useMemo(() => {
+    if (!selectedTextLayer) return {};
+    return {
+      content: selectedTextLayer.content ?? selectedTextLayer.name,
+      fontFamily:
+        selectedTextLayer.fontFamily ?? DEFAULT_TEXT_LAYER_CONFIG.fontFamily,
+      fontSize:
+        selectedTextLayer.fontSize ?? DEFAULT_TEXT_LAYER_CONFIG.fontSize,
+      textColor:
+        selectedTextLayer.textColor ?? DEFAULT_TEXT_LAYER_CONFIG.textColor,
+      paddingV:
+        selectedTextLayer.paddingV ?? DEFAULT_TEXT_LAYER_CONFIG.paddingV,
+      paddingH:
+        selectedTextLayer.paddingH ?? DEFAULT_TEXT_LAYER_CONFIG.paddingH,
+      paddingLinked:
+        selectedTextLayer.paddingLinked ??
+        DEFAULT_TEXT_LAYER_CONFIG.paddingLinked,
+      containerColor:
+        selectedTextLayer.containerColor ??
+        DEFAULT_TEXT_LAYER_CONFIG.containerColor,
+      containerOpacity:
+        selectedTextLayer.containerOpacity ??
+        DEFAULT_TEXT_LAYER_CONFIG.containerOpacity,
+      borderRadius:
+        selectedTextLayer.borderRadius ??
+        DEFAULT_TEXT_LAYER_CONFIG.borderRadius,
+      position:
+        (selectedTextLayer.position as any) ??
+        DEFAULT_TEXT_LAYER_CONFIG.position,
+      alignment:
+        selectedTextLayer.alignment ?? DEFAULT_TEXT_LAYER_CONFIG.alignment,
+      rotate180:
+        selectedTextLayer.rotate180 ?? DEFAULT_TEXT_LAYER_CONFIG.rotate180,
+      offsetX: selectedTextLayer.offsetX ?? DEFAULT_TEXT_LAYER_CONFIG.offsetX,
+      offsetY: selectedTextLayer.offsetY ?? DEFAULT_TEXT_LAYER_CONFIG.offsetY,
+    };
+  }, [selectedTextLayer]);
+
+  const handleTextLayerConfigChange = useCallback(
+    (patch: Partial<CaptionConfigData>) => {
+      if (!selectedTextLayer) return;
+      const targetId = selectedTextLayer.id;
+      updateSavedTextLayerConfig(template.id, targetId, patch);
+      updateSessionTemplate((prev) => {
+        if (!prev) return prev;
+        const updated = (prev.textLayers ?? []).map((tl) => {
+          if (tl.id !== targetId) return tl;
+          return {
+            ...tl,
+            ...patch,
+            name: patch.content !== undefined ? patch.content : tl.name,
+          };
+        });
+        return {
+          ...prev,
+          textLayers: updated,
+          updatedAt: Date.now(),
+        };
+      });
+    },
+    [
+      selectedTextLayer,
+      template.id,
+      updateSavedTextLayerConfig,
+      updateSessionTemplate,
+    ],
+  );
+
+  const textPositionOptions = useMemo(
+    () => [
+      {
+        value: "top",
+        label: t("captionFields.posTop", { defaultValue: "Trên" }),
+      },
+      {
+        value: "center",
+        label: t("captionFields.posCenter", { defaultValue: "Giữa" }),
+      },
+      {
+        value: "bottom",
+        label: t("captionFields.posBottom", { defaultValue: "Dưới" }),
+      },
+    ],
+    [t],
   );
 
   useShortcutActions([
@@ -198,7 +332,7 @@ export function FillLayerCustomizationAccordion({
   ]);
 
   const getLayerTransformBase = useCallback(
-    (layer: VectorLayer): LayerTransformBase => {
+    (layer: VectorLayer | TextLayer): LayerTransformBase => {
       const existing = layerTransformBaseRef.current.get(layer.id);
       if (existing) {
         return existing;
@@ -231,12 +365,53 @@ export function FillLayerCustomizationAccordion({
     };
   }, [selectedLayer, getLayerTransformBase]);
 
+  const selectedTextLayerTransform = useMemo<ImageTransform | null>(() => {
+    if (!selectedTextLayer) return null;
+
+    const base = getLayerTransformBase(selectedTextLayer);
+    return {
+      x: Math.round((selectedTextLayer.x - base.x) * 100) / 100,
+      y: Math.round((selectedTextLayer.y - base.y) * 100) / 100,
+      rotation:
+        Math.round((selectedTextLayer.rotation - base.rotation) * 100) / 100,
+      scaleX: Math.max(0.01, selectedTextLayer.width / Math.max(1, base.width)),
+      scaleY: Math.max(
+        0.01,
+        selectedTextLayer.height / Math.max(1, base.height),
+      ),
+    };
+  }, [selectedTextLayer, getLayerTransformBase]);
+
   const updateSelectedLayerState = useCallback(
     (partial: Partial<LayerFillState>) => {
       if (!selectedLayerId) return;
       updateLayerFillState(selectedLayerId, partial);
+      if (selectedTextLayer && partial.cornerRadius !== undefined) {
+        updateSavedTextLayerConfig(template.id, selectedTextLayer.id, {
+          borderRadius: partial.cornerRadius,
+        });
+        updateSessionTemplate((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            textLayers: (prev.textLayers ?? []).map((tl) =>
+              tl.id === selectedTextLayer.id
+                ? { ...tl, borderRadius: partial.cornerRadius }
+                : tl,
+            ),
+            updatedAt: Date.now(),
+          };
+        });
+      }
     },
-    [selectedLayerId, updateLayerFillState],
+    [
+      selectedLayerId,
+      selectedTextLayer,
+      template.id,
+      updateLayerFillState,
+      updateSavedTextLayerConfig,
+      updateSessionTemplate,
+    ],
   );
 
   const updateSelectedTemplateLayer = useCallback(
@@ -296,6 +471,43 @@ export function FillLayerCustomizationAccordion({
         return;
       }
 
+      if (selectedTextLayer && selectedTextLayerTransform) {
+        const base = getLayerTransformBase(selectedTextLayer);
+        const nextOffsetX = partial.x ?? selectedTextLayerTransform.x;
+        const nextOffsetY = partial.y ?? selectedTextLayerTransform.y;
+        const nextRotation =
+          partial.rotation ?? selectedTextLayerTransform.rotation;
+        const nextScaleX = partial.scaleX ?? selectedTextLayerTransform.scaleX;
+        const nextScaleY = partial.scaleY ?? selectedTextLayerTransform.scaleY;
+
+        const nextX = Math.round((base.x + nextOffsetX) * 100) / 100;
+        const nextY = Math.round((base.y + nextOffsetY) * 100) / 100;
+        const nextRot = Math.round((base.rotation + nextRotation) * 100) / 100;
+        const nextWidth = clampSize(base.width * nextScaleX);
+        const nextHeight = clampSize(base.height * nextScaleY);
+
+        updateSessionTemplate((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            textLayers: (prev.textLayers ?? []).map((tl) =>
+              tl.id === selectedTextLayer.id
+                ? {
+                    ...tl,
+                    x: nextX,
+                    y: nextY,
+                    rotation: nextRot,
+                    width: nextWidth,
+                    height: nextHeight,
+                  }
+                : tl,
+            ),
+            updatedAt: Date.now(),
+          };
+        });
+        return;
+      }
+
       if (!selectedLayer || !selectedLayerTransform) return;
 
       const base = getLayerTransformBase(selectedLayer);
@@ -317,10 +529,13 @@ export function FillLayerCustomizationAccordion({
       getLayerTransformBase,
       selectedLayer,
       selectedLayerTransform,
+      selectedTextLayer,
+      selectedTextLayerTransform,
       selectedGroupItem,
       selectedGroupTransform,
       updateGroupRuntimeTransform,
       updateSelectedTemplateLayer,
+      updateSessionTemplate,
     ],
   );
 
@@ -517,6 +732,30 @@ export function FillLayerCustomizationAccordion({
       return;
     }
 
+    if (selectedTextLayer) {
+      const base = getLayerTransformBase(selectedTextLayer);
+      updateSessionTemplate((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          textLayers: (prev.textLayers ?? []).map((tl) =>
+            tl.id === selectedTextLayer.id
+              ? {
+                  ...tl,
+                  x: base.x,
+                  y: base.y,
+                  rotation: base.rotation,
+                  width: base.width,
+                  height: base.height,
+                }
+              : tl,
+          ),
+          updatedAt: Date.now(),
+        };
+      });
+      return;
+    }
+
     if (!selectedLayer) return;
 
     const base = getLayerTransformBase(selectedLayer);
@@ -531,8 +770,10 @@ export function FillLayerCustomizationAccordion({
     getLayerTransformBase,
     selectedGroupItem,
     selectedLayer,
+    selectedTextLayer,
     updateGroupRuntimeTransform,
     updateSelectedTemplateLayer,
+    updateSessionTemplate,
   ]);
 
   const handleDeleteLayer = useCallback(() => {
@@ -561,8 +802,9 @@ export function FillLayerCustomizationAccordion({
     setSelectedLayerId,
   ]);
 
-  const borderOverridden = canvasFillState.borderOverrideEnabled;
-  const cornerRadiusOverridden = canvasFillState.cornerRadiusOverrideEnabled;
+  const isOverrideAll =
+    canvasFillState.borderOverrideEnabled ||
+    canvasFillState.cornerRadiusOverrideEnabled;
 
   return (
     <AccordionCard
@@ -578,6 +820,7 @@ export function FillLayerCustomizationAccordion({
       }
       colorTheme="sky"
       defaultOpen={true}
+      childrenClassName="p-2"
     >
       <div>
         {!selectedRuntimeItem ? (
@@ -626,7 +869,32 @@ export function FillLayerCustomizationAccordion({
 
             {activeCustomizationTab === "image" && (
               <div className="space-y-3 mt-3">
-                {!selectedFillState?.imageUrl ? (
+                {selectedTextLayer ? (
+                  <CaptionConfigSections
+                    config={textConfig}
+                    onChange={handleTextLayerConfigChange}
+                    textInputNode={
+                      <TextInput
+                        label={t("fill.textContent", {})}
+                        value={textConfig.content ?? selectedTextLayer.name}
+                        onChange={(val) =>
+                          handleTextLayerConfigChange({ content: val })
+                        }
+                        placeholder={t("fill.textContentPlaceholder", {})}
+                      />
+                    }
+                    positionOptions={textPositionOptions}
+                    maxPaddingV={Math.max(
+                      1,
+                      Math.round(selectedTextLayer.height),
+                    )}
+                    maxPaddingH={Math.max(
+                      1,
+                      Math.round(selectedTextLayer.width),
+                    )}
+                    sectionClassName="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 first:border-t-0 first:pt-0"
+                  />
+                ) : !selectedFillState?.imageUrl ? (
                   <div
                     className={`rounded-md border border-dashed p-3 transition-colors ${
                       isDragOverImageDropZone
@@ -704,64 +972,144 @@ export function FillLayerCustomizationAccordion({
 
             {activeCustomizationTab === "border" && (
               <div className="space-y-3 mt-3">
-                <div className="grid grid-cols-3 gap-2">
-                  <NumberInput
-                    label={t("fill.borderWidthLabel")}
-                    value={selectedFillState?.borderWidth ?? 0}
-                    onChangeValue={(value) =>
-                      updateSelectedLayerState({ borderWidth: value })
-                    }
-                    min={0}
-                    max={50}
-                    disabled={borderOverridden}
-                    tooltipContent={
-                      borderOverridden
-                        ? t("tooltips.borderDisabled")
-                        : undefined
-                    }
-                  />
-                  <NumberInput
-                    label={t("fill.radiusLabel")}
-                    value={selectedFillState?.cornerRadius ?? 0}
-                    onChangeValue={(value) =>
-                      updateSelectedLayerState({ cornerRadius: value })
-                    }
-                    min={0}
-                    max={200}
-                    disabled={cornerRadiusOverridden}
-                    tooltipContent={
-                      cornerRadiusOverridden
-                        ? t("tooltips.radiusDisabled")
-                        : undefined
-                    }
-                  />
-                  <ColorPickerPopover
-                    label={t("fill.colorLabel")}
-                    value={selectedFillState?.borderColor ?? "#000000"}
-                    onChange={(value) =>
-                      updateSelectedLayerState({ borderColor: value })
-                    }
-                    enableAlpha={false}
-                    enableGradient
-                    outputMode="hex"
-                    appearance="stacked"
-                  />
-                </div>
-
-                {(borderOverridden || cornerRadiusOverridden) && (
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                    {t("fill.overrideNotice")}
-                  </p>
+                {!isOverrideAll && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <NumberInput
+                      label={t("fill.borderWidthLabel")}
+                      value={selectedFillState?.borderWidth ?? 0}
+                      onChangeValue={(value) =>
+                        updateSelectedLayerState({ borderWidth: value })
+                      }
+                      min={0}
+                      max={50}
+                    />
+                    <NumberInput
+                      label={t("fill.radiusLabel")}
+                      value={selectedFillState?.cornerRadius ?? 0}
+                      onChangeValue={(value) =>
+                        updateSelectedLayerState({ cornerRadius: value })
+                      }
+                      min={0}
+                      max={200}
+                    />
+                    <ColorPickerPopover
+                      label={t("fill.colorLabel")}
+                      value={selectedFillState?.borderColor ?? "#000000"}
+                      onChange={(value) =>
+                        updateSelectedLayerState({ borderColor: value })
+                      }
+                      enableAlpha={false}
+                      enableGradient
+                      outputMode="hex"
+                      appearance="stacked"
+                    />
+                  </div>
                 )}
+
+                <div
+                  className={
+                    !isOverrideAll
+                      ? "pt-2 border-t border-slate-100 dark:border-slate-800"
+                      : ""
+                  }
+                >
+                  <CheckboxCard
+                    icon={<Layers size={14} />}
+                    title={t("fill.overrideAll", {
+                      defaultValue: "Ghi đè toàn bộ",
+                    })}
+                    tooltipLabel={t("fill.overrideAll", {
+                      defaultValue: "Ghi đè toàn bộ",
+                    })}
+                    tooltipContent={t("fill.overrideAllDesc", {
+                      defaultValue:
+                        "Ghi đè cài đặt đường viền, bo góc và màu sắc cho tất cả các lớp vẽ trên canvas.",
+                    })}
+                    checked={isOverrideAll}
+                    onChange={(v) => {
+                      setCanvasFillState({
+                        ...canvasFillState,
+                        borderOverrideEnabled: v,
+                        cornerRadiusOverrideEnabled: v,
+                      });
+                    }}
+                  />
+
+                  {isOverrideAll && (
+                    <div className="mt-2 space-y-2">
+                      <div className="grid grid-cols-2 gap-2 items-end">
+                        <NumberInput
+                          label={t("fillCanvas.borderWidth")}
+                          value={canvasFillState.borderOverrideWidth}
+                          onChangeValue={(v) =>
+                            setCanvasFillState({
+                              ...canvasFillState,
+                              borderOverrideWidth: v,
+                            })
+                          }
+                          min={0}
+                          max={50}
+                        />
+                        <NumberInput
+                          label={t("fillCanvas.cornerRadius")}
+                          value={canvasFillState.cornerRadiusOverride}
+                          onChangeValue={(v) =>
+                            setCanvasFillState({
+                              ...canvasFillState,
+                              cornerRadiusOverride: v,
+                            })
+                          }
+                          min={0}
+                          max={200}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 items-end">
+                        <SelectInput
+                          label={t("fillCanvas.gradientModeLabel")}
+                          value={
+                            canvasFillState.borderGradientScope ?? "per-layer"
+                          }
+                          options={BORDER_GRADIENT_SCOPE_OPTIONS}
+                          onChange={(v) =>
+                            setCanvasFillState({
+                              ...canvasFillState,
+                              borderGradientScope: v as
+                                | "per-layer"
+                                | "unified",
+                            })
+                          }
+                          tooltipContent={t("tooltips.gradientMode")}
+                        />
+                        <ColorPickerPopover
+                          label={t("fillCanvas.borderColor")}
+                          value={canvasFillState.borderOverrideColor}
+                          onChange={(v) =>
+                            setCanvasFillState({
+                              ...canvasFillState,
+                              borderOverrideColor: v,
+                            })
+                          }
+                          enableAlpha={false}
+                          enableGradient
+                          outputMode="hex"
+                          appearance="stacked"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             {activeCustomizationTab === "layer" &&
-              (selectedLayerTransform || selectedGroupTransform) && (
+              (selectedLayerTransform ||
+                selectedGroupTransform ||
+                selectedTextLayerTransform) && (
                 <FillTransformControls
                   transform={
                     selectedLayerTransform ??
-                    selectedGroupTransform ?? { ...DEFAULT_IMAGE_TRANSFORM }
+                    selectedGroupTransform ??
+                    selectedTextLayerTransform ?? { ...DEFAULT_IMAGE_TRANSFORM }
                   }
                   onChange={handleLayerTransformChange}
                   onReset={handleResetLayerTransform}

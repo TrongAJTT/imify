@@ -6,6 +6,7 @@ import type {
   FillingTemplate,
   TemplateSortMode,
   CanvasFillState,
+  CanvasBackgroundType,
   LayerFillState,
   FillingExportFormat,
   SymmetricParams,
@@ -27,6 +28,44 @@ export interface FillingExportSettings {
   fileNamePattern: string
 }
 
+export interface PersistedLayerFillConfig {
+  borderWidth?: number
+  borderColor?: string
+  cornerRadius?: number
+}
+
+export interface PersistedTextLayerConfig {
+  content?: string
+  fontFamily?: string
+  fontSize?: number
+  textColor?: string
+  rotate180?: boolean
+  containerColor?: string
+  containerOpacity?: number
+  borderRadius?: number
+  position?: "top" | "center" | "bottom" | "left" | "right"
+  alignment?: "start" | "center" | "end"
+  paddingV?: number
+  paddingH?: number
+}
+
+export interface PersistedCanvasFillConfig {
+  backgroundType?: CanvasBackgroundType
+  backgroundColor?: string
+  borderOverrideEnabled?: boolean
+  borderOverrideWidth?: number
+  borderOverrideColor?: string
+  borderGradientScope?: "per-layer" | "unified"
+  cornerRadiusOverrideEnabled?: boolean
+  cornerRadiusOverride?: number
+}
+
+export interface PersistedTemplateFillData {
+  canvasFillState?: PersistedCanvasFillConfig
+  layerStates?: Record<string, PersistedLayerFillConfig>
+  textLayerStates?: Record<string, PersistedTextLayerConfig>
+}
+
 export interface FillingStoreState {
   // Flow navigation
   fillingStep: FillingStep
@@ -38,7 +77,7 @@ export interface FillingStoreState {
   templates: FillingTemplate[]
   templatesLoaded: boolean
 
-  // Fill state (transient, not persisted in store but kept for session)
+  // Fill state (transient in active session, with persisted config backed in savedFillStateByTemplateId)
   canvasFillState: CanvasFillState
   layerFillStates: LayerFillState[]
   selectedLayerId: string | null
@@ -46,6 +85,9 @@ export interface FillingStoreState {
   symmetricLayerCount: number
   gridDesignParams: GridDesignParams
   gridLayerCount: number
+
+  // Persisted Fill mode settings per template
+  savedFillStateByTemplateId: Record<string, PersistedTemplateFillData>
 
   // Export
   exportSettings: FillingExportSettings
@@ -70,6 +112,9 @@ export interface FillingStoreState {
   setGridDesignParams: (params: GridDesignParams | ((previous: GridDesignParams) => GridDesignParams)) => void
   setGridLayerCount: (count: number) => void
   initFillStatesForTemplate: (template: FillingTemplate) => void
+  updateSavedCanvasFillState: (templateId: string, patch: Partial<CanvasFillState>) => void
+  updateSavedLayerFillState: (templateId: string, layerId: string, patch: Partial<PersistedLayerFillConfig>) => void
+  updateSavedTextLayerConfig: (templateId: string, textLayerId: string, patch: Partial<PersistedTextLayerConfig>) => void
   
   setExportSettings: (patch: Partial<FillingExportSettings>) => void
   
@@ -101,6 +146,7 @@ export const useFillingStore = create<FillingStoreState>()(
       symmetricLayerCount: 0,
       gridDesignParams: { ...DEFAULT_GRID_DESIGN_PARAMS },
       gridLayerCount: 0,
+      savedFillStateByTemplateId: {},
 
       exportSettings: DEFAULT_FILLING_EXPORT_SETTINGS,
       activePresetId: null,
@@ -118,17 +164,115 @@ export const useFillingStore = create<FillingStoreState>()(
           ),
         })),
       removeTemplate: (id) =>
-        set((state) => ({
-          templates: state.templates.filter((t) => t.id !== id),
-        })),
-      setCanvasFillState: (canvasFillState) => set({ canvasFillState }),
-      setLayerFillStates: (layerFillStates) => set({ layerFillStates }),
+        set((state) => {
+          const nextSaved = { ...state.savedFillStateByTemplateId }
+          delete nextSaved[id]
+          return {
+            templates: state.templates.filter((t) => t.id !== id),
+            savedFillStateByTemplateId: nextSaved,
+          }
+        }),
+      setCanvasFillState: (canvasFillState) =>
+        set((state) => {
+          const templateId = state.activeTemplateId
+          if (!templateId) return { canvasFillState }
+
+          const currentSaved = state.savedFillStateByTemplateId[templateId] ?? {}
+          const persistedCanvas: PersistedCanvasFillConfig = {
+            backgroundType: canvasFillState.backgroundType === "transparent" ? "transparent" : "solid",
+            backgroundColor: canvasFillState.backgroundColor,
+            borderOverrideEnabled: canvasFillState.borderOverrideEnabled,
+            borderOverrideWidth: canvasFillState.borderOverrideWidth,
+            borderOverrideColor: canvasFillState.borderOverrideColor,
+            borderGradientScope: canvasFillState.borderGradientScope,
+            cornerRadiusOverrideEnabled: canvasFillState.cornerRadiusOverrideEnabled,
+            cornerRadiusOverride: canvasFillState.cornerRadiusOverride,
+          }
+
+          return {
+            canvasFillState,
+            savedFillStateByTemplateId: {
+              ...state.savedFillStateByTemplateId,
+              [templateId]: {
+                ...currentSaved,
+                canvasFillState: persistedCanvas,
+              },
+            },
+          }
+        }),
+      setLayerFillStates: (layerFillStates) =>
+        set((state) => {
+          const templateId = state.activeTemplateId
+          if (!templateId) return { layerFillStates }
+
+          const currentSaved = state.savedFillStateByTemplateId[templateId] ?? {}
+          const nextLayerStates: Record<string, PersistedLayerFillConfig> = {
+            ...(currentSaved.layerStates ?? {}),
+          }
+
+          for (const lf of layerFillStates) {
+            nextLayerStates[lf.layerId] = {
+              borderWidth: lf.borderWidth,
+              borderColor: lf.borderColor,
+              cornerRadius: lf.cornerRadius,
+            }
+          }
+
+          return {
+            layerFillStates,
+            savedFillStateByTemplateId: {
+              ...state.savedFillStateByTemplateId,
+              [templateId]: {
+                ...currentSaved,
+                layerStates: nextLayerStates,
+              },
+            },
+          }
+        }),
       updateLayerFillState: (layerId, partial) =>
-        set((state) => ({
-          layerFillStates: state.layerFillStates.map((lf) =>
+        set((state) => {
+          const nextLayerFillStates = state.layerFillStates.map((lf) =>
             lf.layerId === layerId ? { ...lf, ...partial } : lf
-          ),
-        })),
+          )
+          const templateId = state.activeTemplateId
+          if (!templateId) return { layerFillStates: nextLayerFillStates }
+
+          const currentSaved = state.savedFillStateByTemplateId[templateId] ?? {}
+          const currentLayerSaved = currentSaved.layerStates?.[layerId] ?? {}
+          const nextLayerSaved: PersistedLayerFillConfig = { ...currentLayerSaved }
+
+          let hasBorderChange = false
+          if (partial.borderWidth !== undefined) {
+            nextLayerSaved.borderWidth = partial.borderWidth
+            hasBorderChange = true
+          }
+          if (partial.borderColor !== undefined) {
+            nextLayerSaved.borderColor = partial.borderColor
+            hasBorderChange = true
+          }
+          if (partial.cornerRadius !== undefined) {
+            nextLayerSaved.cornerRadius = partial.cornerRadius
+            hasBorderChange = true
+          }
+
+          if (!hasBorderChange) {
+            return { layerFillStates: nextLayerFillStates }
+          }
+
+          return {
+            layerFillStates: nextLayerFillStates,
+            savedFillStateByTemplateId: {
+              ...state.savedFillStateByTemplateId,
+              [templateId]: {
+                ...currentSaved,
+                layerStates: {
+                  ...(currentSaved.layerStates ?? {}),
+                  [layerId]: nextLayerSaved,
+                },
+              },
+            },
+          }
+        }),
       swapLayerFillStates: (sourceLayerId, targetLayerId) =>
         set((state) => {
           const sourceState = state.layerFillStates.find((s) => s.layerId === sourceLayerId)
@@ -164,16 +308,141 @@ export const useFillingStore = create<FillingStoreState>()(
         })),
       setGridLayerCount: (count) => set({ gridLayerCount: Math.max(0, Math.floor(count)) }),
       initFillStatesForTemplate: (template) =>
-        set(() => {
+        set((state) => {
           const runtimeIds = buildRuntimeFillStateIds(template)
+          const validRuntimeIdSet = new Set(runtimeIds)
+          const validTextIdSet = new Set((template.textLayers ?? []).map((t) => t.id))
+
+          const saved = state.savedFillStateByTemplateId[template.id]
+          const savedLayerStates = saved?.layerStates ?? {}
+          const savedCanvas = saved?.canvasFillState
+          const savedTextStates = saved?.textLayerStates ?? {}
+
+          // Prune non-existent layer IDs from saved state
+          const prunedLayerStates: Record<string, PersistedLayerFillConfig> = {}
+          for (const [id, cfg] of Object.entries(savedLayerStates)) {
+            if (validRuntimeIdSet.has(id)) {
+              prunedLayerStates[id] = cfg
+            }
+          }
+
+          const prunedTextStates: Record<string, PersistedTextLayerConfig> = {}
+          for (const [id, cfg] of Object.entries(savedTextStates)) {
+            if (validTextIdSet.has(id)) {
+              prunedTextStates[id] = cfg
+            }
+          }
+
+          // Build initial layerFillStates
+          const layerFillStates: LayerFillState[] = runtimeIds.map((runtimeId) => {
+            const base = createLayerFillState(runtimeId)
+            const layerSaved = prunedLayerStates[runtimeId]
+            if (layerSaved) {
+              return {
+                ...base,
+                borderWidth: layerSaved.borderWidth ?? base.borderWidth,
+                borderColor: layerSaved.borderColor ?? base.borderColor,
+                cornerRadius: layerSaved.cornerRadius ?? base.cornerRadius,
+              }
+            }
+            return base
+          })
+
+          // Build initial canvasFillState
+          const canvasFillState: CanvasFillState = {
+            ...DEFAULT_CANVAS_FILL_STATE,
+            ...(savedCanvas
+              ? {
+                  backgroundType:
+                    savedCanvas.backgroundType === "transparent" ? "transparent" : "solid",
+                  backgroundColor: savedCanvas.backgroundColor ?? DEFAULT_CANVAS_FILL_STATE.backgroundColor,
+                  borderOverrideEnabled: Boolean(savedCanvas.borderOverrideEnabled),
+                  borderOverrideWidth: savedCanvas.borderOverrideWidth ?? DEFAULT_CANVAS_FILL_STATE.borderOverrideWidth,
+                  borderOverrideColor: savedCanvas.borderOverrideColor ?? DEFAULT_CANVAS_FILL_STATE.borderOverrideColor,
+                  borderGradientScope: savedCanvas.borderGradientScope ?? DEFAULT_CANVAS_FILL_STATE.borderGradientScope,
+                  cornerRadiusOverrideEnabled: Boolean(savedCanvas.cornerRadiusOverrideEnabled),
+                  cornerRadiusOverride: savedCanvas.cornerRadiusOverride ?? DEFAULT_CANVAS_FILL_STATE.cornerRadiusOverride,
+                }
+              : {}),
+          }
+
           return {
-            layerFillStates: runtimeIds.map((runtimeId) => createLayerFillState(runtimeId)),
-            canvasFillState: { ...DEFAULT_CANVAS_FILL_STATE },
+            activeTemplateId: template.id,
+            layerFillStates,
+            canvasFillState,
             selectedLayerId: runtimeIds[0] ?? null,
             symmetricParams: template.symmetricParams ?? { ...DEFAULT_SYMMETRIC_PARAMS },
             symmetricLayerCount: template.layers.length,
             gridDesignParams: template.gridDesignParams ?? { ...DEFAULT_GRID_DESIGN_PARAMS },
             gridLayerCount: template.layers.length,
+            savedFillStateByTemplateId: {
+              ...state.savedFillStateByTemplateId,
+              [template.id]: {
+                canvasFillState: savedCanvas,
+                layerStates: prunedLayerStates,
+                textLayerStates: prunedTextStates,
+              },
+            },
+          }
+        }),
+
+      updateSavedCanvasFillState: (templateId, patch) =>
+        set((state) => {
+          const currentSaved = state.savedFillStateByTemplateId[templateId] ?? {}
+          const currentCanvas = currentSaved.canvasFillState ?? {}
+          return {
+            savedFillStateByTemplateId: {
+              ...state.savedFillStateByTemplateId,
+              [templateId]: {
+                ...currentSaved,
+                canvasFillState: {
+                  ...currentCanvas,
+                  ...patch,
+                },
+              },
+            },
+          }
+        }),
+
+      updateSavedLayerFillState: (templateId, layerId, patch) =>
+        set((state) => {
+          const currentSaved = state.savedFillStateByTemplateId[templateId] ?? {}
+          const currentLayerSaved = currentSaved.layerStates?.[layerId] ?? {}
+          return {
+            savedFillStateByTemplateId: {
+              ...state.savedFillStateByTemplateId,
+              [templateId]: {
+                ...currentSaved,
+                layerStates: {
+                  ...(currentSaved.layerStates ?? {}),
+                  [layerId]: {
+                    ...currentLayerSaved,
+                    ...patch,
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      updateSavedTextLayerConfig: (templateId, textLayerId, patch) =>
+        set((state) => {
+          const currentSaved = state.savedFillStateByTemplateId[templateId] ?? {}
+          const currentTextSaved = currentSaved.textLayerStates?.[textLayerId] ?? {}
+          return {
+            savedFillStateByTemplateId: {
+              ...state.savedFillStateByTemplateId,
+              [templateId]: {
+                ...currentSaved,
+                textLayerStates: {
+                  ...(currentSaved.textLayerStates ?? {}),
+                  [textLayerId]: {
+                    ...currentTextSaved,
+                    ...patch,
+                  },
+                },
+              },
+            },
           }
         }),
 
@@ -217,7 +486,8 @@ export const useFillingStore = create<FillingStoreState>()(
         const { activePresetId, ...rest } = state
         return {
           sortMode: state.sortMode,
-          exportSettings: state.exportSettings
+          exportSettings: state.exportSettings,
+          savedFillStateByTemplateId: state.savedFillStateByTemplateId,
         }
       }
     }

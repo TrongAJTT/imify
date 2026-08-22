@@ -10,7 +10,8 @@ import {
   type SplicingPresetConfig,
 } from "@imify/stores/stores/splicing-preset-store";
 import { useSplicingStore } from "@imify/stores/stores/splicing-store";
-import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { useWorkspaceSidebar } from "@/components/layout/workspace-layout";
 import { useWorkspaceHeaderStore } from "@imify/stores/stores/workspace-header-store";
 import { useWorkspaceSettingsDialogStore } from "@imify/stores/stores/workspace-settings-dialog-store";
@@ -156,7 +157,7 @@ export function SplicingLandingPage() {
   }, [ensureDefaultPreset, isRehydrated, setPresetViewMode]);
 
   if (!isRehydrated) {
-    return <WorkspaceLoadingState title="Loading splicing presets..." />;
+    return <WorkspaceLoadingState />;
   }
 
   return (
@@ -182,7 +183,7 @@ export function SplicingLandingPage() {
   );
 }
 
-export function SplicingWorkPage({ presetId }: { presetId: string }) {
+export function SplicingWorkPage({ presetId }: { presetId?: string }) {
   const { t } = useTranslation(["splicing", "common"]);
   const enableWideSidebarGrid = useWideSidebarGridEnabled();
   const openSettingsDialog = useWorkspaceSettingsDialogStore(
@@ -201,6 +202,10 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
     (state) => state.setPresetViewMode,
   );
   const presets = useSplicingPresetStore((state) => state.presets);
+  const activePresetId = useSplicingPresetStore((state) => state.activePresetId);
+  const ensureDefaultPreset = useSplicingPresetStore(
+    (state) => state.ensureDefaultPreset,
+  );
   const isRehydrated = useSplicingPresetHydrated();
   const previewQualityHandlerRef = useRef<((next: number) => void) | null>(
     null,
@@ -227,10 +232,31 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
 
   useWorkspaceSidebar(sidebar, `${t("common:toolSettings")} - ${t("title")}`);
 
-  const preset = useMemo(
-    () => presets.find((entry) => entry.id === presetId) ?? null,
-    [presetId, presets],
-  );
+  const preset = useMemo(() => {
+    if (presetId) {
+      return presets.find((entry) => entry.id === presetId) ?? null;
+    }
+    if (activePresetId) {
+      const active = presets.find((entry) => entry.id === activePresetId);
+      if (active) return active;
+    }
+    return presets[0] ?? null;
+  }, [activePresetId, presetId, presets]);
+
+  useEffect(() => {
+    if (isRehydrated && !presetId && preset) {
+      router.replace(`/splicing/work?id=${preset.id}`);
+    }
+  }, [isRehydrated, preset, presetId, router]);
+
+  useEffect(() => {
+    if (!isRehydrated) {
+      return;
+    }
+    if (presets.length === 0) {
+      ensureDefaultPreset();
+    }
+  }, [ensureDefaultPreset, isRehydrated, presets.length]);
 
   useEffect(() => {
     return () => {
@@ -266,7 +292,7 @@ export function SplicingWorkPage({ presetId }: { presetId: string }) {
   }, [applyPreset, isRehydrated, preset, setPresetViewMode]);
 
   if (!isRehydrated) {
-    return <WorkspaceLoadingState title="Loading splicing workspace..." />;
+    return <WorkspaceLoadingState />;
   }
 
   if (!preset) {

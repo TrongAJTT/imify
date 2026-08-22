@@ -16,7 +16,7 @@ import {
   downloadWithFilename,
   formatBytes,
 } from "../processor/processor-utils";
-import { mapQuickExportToEngineConfig } from "@imify/core";
+import { mapQuickExportToEngineConfig, CANVAS_INITIAL_HEIGHT_STYLE } from "@imify/core";
 import { buildSmartOutputFileName } from "@imify/core/file-name-pattern";
 import { useTranslation } from "@imify/i18n";
 
@@ -488,10 +488,13 @@ export function BackgroundRemoverWorkspace({
       )}
 
       <div className="relative">
-        <div className="min-h-[500px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 relative">
+        <div
+          className="min-h-[400px] h-[80vh] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 relative"
+          style={{ height: CANVAS_INITIAL_HEIGHT_STYLE }}
+        >
           {resultImageData ? (
             <PixelCompareWorkspace
-              className="h-[520px]"
+              className="h-full w-full"
               mode={viewMode}
               imageDataA={sourceImageData}
               imageDataB={resultImageData}
@@ -508,12 +511,12 @@ export function BackgroundRemoverWorkspace({
               bgColorB={outputFormat === "color" ? backgroundColor : null}
             />
           ) : (
-            <div className="h-[520px] flex items-center justify-center p-12">
+            <div className="h-full w-full flex items-center justify-center p-12">
               <div className="relative group max-h-full">
                 <img
                   src={sourceFileUrl}
                   alt="Source"
-                  className="max-h-[440px] w-auto rounded-lg shadow-2xl border-4 border-white dark:border-slate-800 transition-transform duration-500 group-hover:scale-[1.02]"
+                  className="max-h-[calc(80vh-96px)] w-auto rounded-lg shadow-2xl border-4 border-white dark:border-slate-800 transition-transform duration-500 group-hover:scale-[1.02]"
                 />
                 {isProcessing && (
                   <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center gap-3">

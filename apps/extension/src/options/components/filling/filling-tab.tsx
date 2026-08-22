@@ -54,13 +54,19 @@ export function FillingTab() {
   const {
     editorLayers,
     setEditorLayers,
+    editorTextLayers,
+    setEditorTextLayers,
     selectedLayerId,
     selectedLayerIds,
+    selectedTextLayerId,
     setSelectedLayerId,
+    setSelectedTextLayerId,
     toggleSelectedLayerId,
     setSelectedLayerIds,
     clearSelectedLayers,
     updateLayer,
+    updateTextLayer,
+    toggleGroupForSelected,
     editorGroups,
     setEditorGroups,
     canvasWidth,
@@ -68,6 +74,7 @@ export function FillingTab() {
     setCanvasSize,
   } =
     useEditorContext()
+
 
   const loadTemplates = useCallback(async () => {
     const all = await templateStorage.getAll()
@@ -100,6 +107,7 @@ export function FillingTab() {
         canvasWidth,
         canvasHeight,
         layers: editorLayers,
+        textLayers: editorTextLayers,
         groups: normalizedGroups,
         updatedAt: Date.now(),
       }
@@ -122,6 +130,7 @@ export function FillingTab() {
     canvasWidth,
     editorGroups,
     editorLayers,
+    editorTextLayers,
     fillingStep,
     isSavingTemplate,
     setActiveTemplateId,
@@ -137,6 +146,7 @@ export function FillingTab() {
       (fillingStep === "create_manual" || fillingStep === "create_symmetric" || fillingStep === "create_grid_design")
     ) {
       setEditorLayers(activeTemplate.layers)
+      setEditorTextLayers(activeTemplate.textLayers ?? [])
       setEditorGroups(activeTemplate.groups ?? [])
       clearSelectedLayers()
       setCanvasSize(activeTemplate.canvasWidth, activeTemplate.canvasHeight)
@@ -148,6 +158,7 @@ export function FillingTab() {
     setCanvasSize,
     setEditorGroups,
     setEditorLayers,
+    setEditorTextLayers,
   ])
 
   useEffect(() => {
@@ -186,17 +197,24 @@ export function FillingTab() {
           canvasHeight={canvasHeight}
           groups={editorGroups}
           layers={editorLayers}
+          textLayers={editorTextLayers}
           selectedLayerId={selectedLayerId}
           selectedLayerIds={selectedLayerIds}
+          selectedTextLayerId={selectedTextLayerId}
           onSelectLayer={setSelectedLayerId}
+          onSelectTextLayer={setSelectedTextLayerId}
           onToggleLayerSelection={toggleSelectedLayerId}
           onSetSelectedLayers={setSelectedLayerIds}
           onClearSelection={clearSelectedLayers}
           onUpdateLayer={updateLayer}
+          onUpdateTextLayer={updateTextLayer}
+          onToggleGroupForSelected={toggleGroupForSelected}
           onSaveTemplate={handleSaveTemplate}
           isSavingTemplate={isSavingTemplate}
         />
+
       )}
+
 
       {fillingStep === "create_symmetric" && activeTemplate && (
         <SymmetricWorkspace

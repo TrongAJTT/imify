@@ -42,7 +42,7 @@ export const HOME_SEO_DESCRIPTION =
 
 export const WEB_ROUTE_METADATA = {
   home: createRouteMetadata({
-    title: "Home | Imify Web",
+    title: "Home Web - The Powerful Image Toolkit",
     description: HOME_SEO_DESCRIPTION,
     image: DEFAULT_OG_IMAGE,
   }),

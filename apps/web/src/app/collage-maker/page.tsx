@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CollageMakerLandingPage } from "@/features/collage-maker/collage-maker-page";
-import { WorkspaceLoadingState } from "@imify/ui/ui/workspace-loading-state";
+import { WorkspaceLoadingState } from "@imify/features/shared/workspace-loading-state";
 
 import { WEB_ROUTE_METADATA } from "../seo-metadata";
 

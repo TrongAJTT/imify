@@ -1,10 +1,13 @@
+"use client";
+
 import React, { useEffect, useMemo, useState } from "react";
-import { ImageOff, Layers } from "lucide-react";
+import { ImageOff, Layers, Type } from "lucide-react";
 
 import type { LayerFillState } from "@imify/features/filling/types";
 import type { FillRuntimeItem } from "@imify/features/filling/fill/runtime-items";
 import { SHAPE_LABELS } from "@imify/features/filling/shape-generators";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
+import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
 
 interface FillLayerCardProps {
   item: FillRuntimeItem;
@@ -44,11 +47,12 @@ async function generateLayerPreview(imageUrl: string): Promise<string | null> {
     ctx.drawImage(bitmap, 0, 0);
     bitmap.close();
 
-    const thumbnailBlob = await canvas.convertToBlob({
-      type: "image/jpeg",
+    const outputBlob = await canvas.convertToBlob({
+      type: "image/webp",
       quality: LAYER_PREVIEW_QUALITY,
     });
-    return blobToDataUrl(thumbnailBlob);
+
+    return await blobToDataUrl(outputBlob);
   } catch {
     return null;
   }
@@ -57,27 +61,38 @@ async function generateLayerPreview(imageUrl: string): Promise<string | null> {
 export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
   const selectedLayerId = useFillingStore((s) => s.selectedLayerId);
   const setSelectedLayerId = useFillingStore((s) => s.setSelectedLayerId);
-  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const setActiveCustomizationTab = useFillUiStore(
+    (s) => s.setActiveCustomizationTab,
+  );
   const selected = selectedLayerId === item.id;
+  const isText = item.kind === "text";
   const hasImage = Boolean(fillState?.imageUrl);
 
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+
   useEffect(() => {
-    let isMounted = true;
-    const loadPreview = async () => {
-      if (!fillState?.imageUrl) {
-        if (isMounted) setPreviewImageUrl(null);
-        return;
+    let cancelled = false;
+
+    if (!fillState?.imageUrl) {
+      setPreviewImageUrl(null);
+      return;
+    }
+
+    void generateLayerPreview(fillState.imageUrl).then((src) => {
+      if (!cancelled) {
+        setPreviewImageUrl(src);
       }
-      const preview = await generateLayerPreview(fillState.imageUrl);
-      if (isMounted) setPreviewImageUrl(preview ?? fillState.imageUrl);
-    };
-    void loadPreview();
+    });
+
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
   }, [fillState?.imageUrl]);
 
   const sublabel = useMemo(() => {
+    if (item.kind === "text") {
+      return item.textLayer.content || "Text Layer";
+    }
     const baseTypeLabel =
       item.kind === "group"
         ? item.typeLabel
@@ -92,14 +107,20 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
       role="button"
       tabIndex={0}
       className={[
-        "group relative rounded-md border px-2.5 py-2.5 transition-colors shadow-sm",
+        "group relative border p-2 transition-colors shadow-sm",
         selected
-          ? hasImage
-            ? "border-sky-300 bg-sky-50/30"
-            : "border-amber-300 bg-amber-50/40 ring-1 ring-amber-200/70"
+          ? isText
+            ? "border-purple-400 bg-purple-50/40 ring-1 ring-purple-300/70"
+            : hasImage
+              ? "border-sky-300 bg-sky-50/30"
+              : "border-amber-300 bg-amber-50/40 ring-1 ring-amber-200/70"
           : "border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30",
       ].join(" ")}
       onClick={() => setSelectedLayerId(item.id)}
+      onDoubleClick={() => {
+        setSelectedLayerId(item.id);
+        setActiveCustomizationTab("image");
+      }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -109,7 +130,12 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
     >
       <div className="flex items-start gap-3">
         <div className="relative w-[32px] h-[32px] overflow-hidden bg-slate-50 dark:bg-slate-900/40 rounded-md border flex items-center justify-center shrink-0">
-          {fillState?.imageUrl ? (
+          {/* Card header type on the left */}
+          {isText ? (
+            <div className="flex items-center justify-center w-full h-full text-purple-600 dark:text-purple-400 bg-purple-50/60 dark:bg-purple-950/40">
+              <Type size={16} />
+            </div>
+          ) : fillState?.imageUrl ? (
             <img
               src={previewImageUrl ?? fillState.imageUrl}
               alt={`${item.name || "Layer"} preview`}
@@ -125,18 +151,20 @@ export function FillLayerCard({ item, fillState }: FillLayerCardProps) {
             </div>
           )}
         </div>
+        {/* Content on the right */}
         <div className="min-w-0 flex-1">
           <div className="truncate text-[12px] font-bold text-slate-800 dark:text-slate-100 inline-flex items-center gap-1.5">
             {item.kind === "group" && (
               <Layers size={12} className="text-amber-500 shrink-0" />
             )}
+            {item.kind === "text" && (
+              <Type size={12} className="text-purple-500 shrink-0" />
+            )}
             <span className="truncate">
               {item.name || `Layer ${item.id.slice(-5)}`}
             </span>
           </div>
-          <div className="truncate text-[10px] text-slate-400 mt-0.5">
-            {sublabel}
-          </div>
+          <div className="truncate text-[10px] text-slate-400">{sublabel}</div>
         </div>
       </div>
     </div>

@@ -12,8 +12,10 @@ import type {
   SplicingImageResize,
   SplicingImageStyle,
   SplicingLayoutConfig,
-  SplicingPreset
+  SplicingPreset,
+  SplicingCaptionConfig
 } from "@imify/core"
+import { DEFAULT_SPLICING_CAPTION_CONFIG, getInitialCanvasHeightPx } from "@imify/core"
 import type { SavedSetupPreset } from "./batch-store"
 
 export const PREVIEW_QUALITY_PERCENTS = [20, 30, 50, 75, 100] as const
@@ -80,6 +82,9 @@ export interface SplicingStoreState {
   canvas: SplicingCanvasState
   image: SplicingImageState
   exportSettings: SplicingExportSettings
+  captionConfig: SplicingCaptionConfig
+  /** Per-image caption text override. Key: imageId. Value: custom text (empty = default "Image #[index]") */
+  captionTexts: Record<string, string>
   
   resizeQuickStats: ResizeQuickStats
 
@@ -104,8 +109,12 @@ export interface SplicingStoreState {
   setCanvas: (patch: Partial<SplicingCanvasState>) => void
   setImage: (patch: Partial<SplicingImageState>) => void
   setExportSettings: (patch: Partial<SplicingExportSettings>) => void
+  setCaptionConfig: (patch: Partial<SplicingCaptionConfig>) => void
+  setCaptionText: (imageId: string, text: string) => void
+  clearCaptionTexts: () => void
   
   setResizeQuickStats: (v: ResizeQuickStats) => void
+
   setPreviewContainerHeight: (v: number) => void
   setPreviewZoom: (v: number) => void
   setPreviewQualityPercent: (v: number) => void
@@ -166,13 +175,15 @@ export const useSplicingStore = create<SplicingStoreState>()(
       },
 
       exportSettings: DEFAULT_SPLICING_EXPORT_SETTINGS,
+      captionConfig: DEFAULT_SPLICING_CAPTION_CONFIG,
+      captionTexts: {},
       
       resizeQuickStats: {
         width: null,
         height: null
       },
 
-      previewContainerHeight: 400,
+      previewContainerHeight: getInitialCanvasHeightPx(400),
       previewZoom: 100,
       previewQualityPercent: 20,
       previewShowImageNumber: false,
@@ -184,6 +195,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
       setLayout: (patch) => set((state) => ({ layout: { ...state.layout, ...patch } })),
       setCanvas: (patch) => set((state) => ({ canvas: { ...state.canvas, ...patch } })),
       setImage: (patch) => set((state) => ({ image: { ...state.image, ...patch } })),
+      setCaptionConfig: (patch) => set((state) => ({ captionConfig: { ...state.captionConfig, ...patch } })),
+      setCaptionText: (imageId, text) => set((state) => ({ captionTexts: { ...state.captionTexts, [imageId]: text } })),
+      clearCaptionTexts: () => set({ captionTexts: {} }),
       
       setExportSettings: (patch) => set((state) => ({
         exportSettings: {
@@ -210,6 +224,8 @@ export const useSplicingStore = create<SplicingStoreState>()(
         set(() => ({
           activePresetId: null,
           exportSettings: DEFAULT_SPLICING_EXPORT_SETTINGS,
+          captionConfig: DEFAULT_SPLICING_CAPTION_CONFIG,
+          captionTexts: {},
         }))
       }
     }),
@@ -243,9 +259,12 @@ export const useSplicingStore = create<SplicingStoreState>()(
         const { 
           setLayout, setCanvas, setImage,
           setExportSettings,
+          setCaptionConfig, setCaptionText, clearCaptionTexts,
+          captionTexts,
           setResizeQuickStats,
           setPreviewContainerHeight, setPreviewZoom, setPreviewQualityPercent, setPreviewShowImageNumber,
           setPreviewBentoFlowGroupCount,
+          previewContainerHeight,
           previewZoom,
           previewBentoFlowGroupCount,
           applyPreset,
@@ -258,6 +277,7 @@ export const useSplicingStore = create<SplicingStoreState>()(
     }
   )
 )
+
 
 export function resolveLayoutConfig(state: SplicingStoreState): SplicingLayoutConfig {
   const { layout } = state

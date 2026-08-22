@@ -40,6 +40,7 @@ import {
 import type {
   CanvasFillState,
   FillingTemplate,
+  TextLayer,
   VectorLayer,
 } from "@imify/features/filling/types";
 import { DEFAULT_IMAGE_TRANSFORM } from "@imify/features/filling/types";
@@ -58,6 +59,7 @@ import {
   resolveLayerShapePoints,
 } from "@imify/features/filling/shape-generators";
 import {
+  computeLinearGradientEndpoints,
   flattenPoints,
   pointInPolygon,
   roundedPolygonPoints,
@@ -71,6 +73,8 @@ import { Button } from "@imify/ui/ui/button";
 import { Tooltip, ZoomPanControl } from "@imify/ui";
 import { promptRenameInput } from "@imify/stores";
 import { useCanvasResizer } from "../../shared/use-canvas-resizer";
+import { useCanvasViewport } from "../../shared/use-canvas-viewport";
+import { getInitialCanvasHeightPx } from "@imify/core";
 import {
   PreviewInteractionModeToggle,
   type PreviewInteractionMode,
@@ -119,7 +123,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   const transformerRef = useRef<Konva.Transformer>(null);
   const emptyImageUploadInputRef = useRef<HTMLInputElement>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
-  const [previewContainerHeight, setPreviewContainerHeight] = useState(680);
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(() =>
+    getInitialCanvasHeightPx(680),
+  );
   const [previewZoom, setPreviewZoom] = useState(100);
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
   const [previewInteractionMode, setPreviewInteractionMode] =
@@ -133,11 +139,44 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
     minHeight: 320,
   });
 
+  const {
+    isPanning: isViewportPanning,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
+  } = useCanvasViewport({
+    zoom: previewZoom,
+    panX: previewPan.x,
+    panY: previewPan.y,
+    onZoomChange: setPreviewZoom,
+    onPanChange: (x, y) => setPreviewPan({ x, y }),
+    interactionMode: previewInteractionMode,
+    minZoom: PREVIEW_MIN_ZOOM,
+    maxZoom: PREVIEW_MAX_ZOOM,
+    zoomFactor: PREVIEW_ZOOM_FACTOR,
+    containerRef,
+    shouldStartPan: () => {
+      const stage = stageRef.current;
+      if (!stage) return true;
+      const pointerPos = stage.getPointerPosition();
+      if (!pointerPos) return true;
+      const hitShape = stage.getIntersection(pointerPos);
+      if (hitShape) {
+        return false;
+      }
+      return true;
+    },
+  });
+
   const canvasFillState = useFillingStore((s) => s.canvasFillState);
   const layerFillStates = useFillingStore((s) => s.layerFillStates);
   const selectedLayerId = useFillingStore((s) => s.selectedLayerId);
   const activeCustomizationTab = useFillUiStore(
     (s) => s.activeCustomizationTab,
+  );
+  const setActiveCustomizationTab = useFillUiStore(
+    (s) => s.setActiveCustomizationTab,
   );
   const initializeFillSession = useFillUiStore((s) => s.initializeFillSession);
   const sessionTemplate = useFillUiStore((s) => s.sessionTemplate);
@@ -256,6 +295,10 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           ...DEFAULT_IMAGE_TRANSFORM,
         },
       );
+    }
+
+    if (selectedRuntimeItem.kind === "text") {
+      return [];
     }
 
     return [toWorldLayerPoints(selectedRuntimeItem.layer)];
@@ -542,8 +585,8 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   }, []);
 
   useEffect(() => {
-    const handleImageTransformShortcuts = (e: KeyboardEvent) => {
-      if (!selectedRuntimeItem || !selectedFillState?.imageUrl) return;
+    const handleTransformShortcuts = (e: KeyboardEvent) => {
+      if (!selectedRuntimeItem) return;
 
       const target = e.target as HTMLElement | null;
       if (
@@ -556,108 +599,176 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
         return;
       }
 
-      const transform = selectedFillState.imageTransform;
       const moveStep = e.shiftKey ? 10 : 1;
       const rotStep = e.shiftKey ? 5 : 1;
       const scaleStep = e.shiftKey ? 0.05 : 0.01;
 
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            x: Math.round((transform.x - moveStep) * 100) / 100,
-          },
-        });
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault();
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            x: Math.round((transform.x + moveStep) * 100) / 100,
-          },
-        });
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            y: Math.round((transform.y - moveStep) * 100) / 100,
-          },
-        });
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            y: Math.round((transform.y + moveStep) * 100) / 100,
-          },
-        });
-      } else if (e.key === "[") {
-        e.preventDefault();
-        const nextRot = Math.round((transform.rotation - rotStep) * 100) / 100;
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            rotation: nextRot,
-          },
-        });
-      } else if (e.key === "]") {
-        e.preventDefault();
-        const nextRot = Math.round((transform.rotation + rotStep) * 100) / 100;
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            rotation: nextRot,
-          },
-        });
-      } else if (e.key === "-" || e.key === "_") {
-        e.preventDefault();
-        const currentScaleX = transform.scaleX;
-        const currentScaleY = transform.scaleY;
-        const ratio = currentScaleY / (currentScaleX || 1);
-        const nextScaleX = Math.max(
-          0.01,
-          Math.round((currentScaleX - scaleStep) * 1000) / 1000,
-        );
-        const nextScaleY = Math.max(
-          0.01,
-          Math.round(nextScaleX * ratio * 1000) / 1000,
-        );
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            scaleX: nextScaleX,
-            scaleY: nextScaleY,
-          },
-        });
-      } else if (e.key === "=" || e.key === "+") {
-        e.preventDefault();
-        const currentScaleX = transform.scaleX;
-        const currentScaleY = transform.scaleY;
-        const ratio = currentScaleY / (currentScaleX || 1);
-        const nextScaleX = Math.max(
-          0.01,
-          Math.round((currentScaleX + scaleStep) * 1000) / 1000,
-        );
-        const nextScaleY = Math.max(
-          0.01,
-          Math.round(nextScaleX * ratio * 1000) / 1000,
-        );
-        updateLayerFillState(selectedRuntimeItem.id, {
-          imageTransform: {
-            ...transform,
-            scaleX: nextScaleX,
-            scaleY: nextScaleY,
-          },
-        });
+      let dx = 0;
+      let dy = 0;
+      let drot = 0;
+      let dscale = 0;
+
+      if (e.key === "ArrowLeft") dx = -moveStep;
+      else if (e.key === "ArrowRight") dx = moveStep;
+      else if (e.key === "ArrowUp") dy = -moveStep;
+      else if (e.key === "ArrowDown") dy = moveStep;
+      else if (e.key === "[") drot = -rotStep;
+      else if (e.key === "]") drot = rotStep;
+      else if (e.key === "-" || e.key === "_") dscale = -scaleStep;
+      else if (e.key === "=" || e.key === "+") dscale = scaleStep;
+      else return;
+
+      e.preventDefault();
+
+      // Mode: Tab "Lớp" (Layer transform mode)
+      if (activeCustomizationTab === "layer") {
+        if (selectedRuntimeItem.kind === "text") {
+          const textLayer = selectedRuntimeItem.textLayer;
+          updateSessionTemplate((prev) =>
+            !prev
+              ? prev
+              : {
+                  ...prev,
+                  textLayers: (prev.textLayers ?? []).map((tl) =>
+                    tl.id === textLayer.id
+                      ? {
+                          ...tl,
+                          x: dx ? Math.round((tl.x + dx) * 100) / 100 : tl.x,
+                          y: dy ? Math.round((tl.y + dy) * 100) / 100 : tl.y,
+                          rotation: drot
+                            ? Math.round((tl.rotation + drot) * 100) / 100
+                            : tl.rotation,
+                          width: dscale
+                            ? Math.max(10, Math.round(tl.width * (1 + dscale)))
+                            : tl.width,
+                          height: dscale
+                            ? Math.max(10, Math.round(tl.height * (1 + dscale)))
+                            : tl.height,
+                        }
+                      : tl,
+                  ),
+                  updatedAt: Date.now(),
+                },
+          );
+          return;
+        }
+
+        if (selectedRuntimeItem.kind === "layer") {
+          const layer = selectedRuntimeItem.layer;
+          updateSessionTemplate((prev) =>
+            !prev
+              ? prev
+              : {
+                  ...prev,
+                  layers: prev.layers.map((l) =>
+                    l.id === layer.id
+                      ? {
+                          ...l,
+                          x: dx ? Math.round((l.x + dx) * 100) / 100 : l.x,
+                          y: dy ? Math.round((l.y + dy) * 100) / 100 : l.y,
+                          rotation: drot
+                            ? Math.round((l.rotation + drot) * 100) / 100
+                            : l.rotation,
+                        }
+                      : l,
+                  ),
+                  updatedAt: Date.now(),
+                },
+          );
+          return;
+        }
+
+        if (selectedRuntimeItem.kind === "group") {
+          const current = groupRuntimeTransforms[selectedRuntimeItem.id] ?? {
+            ...DEFAULT_IMAGE_TRANSFORM,
+          };
+          updateGroupRuntimeTransform(selectedRuntimeItem.id, {
+            x: dx ? Math.round((current.x + dx) * 100) / 100 : current.x,
+            y: dy ? Math.round((current.y + dy) * 100) / 100 : current.y,
+            rotation: drot
+              ? Math.round((current.rotation + drot) * 100) / 100
+              : current.rotation,
+          });
+          return;
+        }
       }
+
+      // Mode: Tab "Văn bản" (Text layer content/styling mode)
+      if (selectedRuntimeItem.kind === "text") {
+        const textLayer = selectedRuntimeItem.textLayer;
+        const fontStep = e.shiftKey ? 4 : 1;
+        updateSessionTemplate((prev) =>
+          !prev
+            ? prev
+            : {
+                ...prev,
+                textLayers: (prev.textLayers ?? []).map((tl) =>
+                  tl.id === textLayer.id
+                    ? {
+                        ...tl,
+                        offsetX: dx
+                          ? Math.round(((tl.offsetX ?? 0) + dx) * 100) / 100
+                          : tl.offsetX,
+                        offsetY: dy
+                          ? Math.round(((tl.offsetY ?? 0) + dy) * 100) / 100
+                          : tl.offsetY,
+                        fontSize: dscale
+                          ? Math.max(
+                              8,
+                              Math.min(
+                                200,
+                                (tl.fontSize ?? 24) +
+                                  (dscale > 0 ? fontStep : -fontStep),
+                              ),
+                            )
+                          : tl.fontSize,
+                      }
+                    : tl,
+                ),
+                updatedAt: Date.now(),
+              },
+        );
+        return;
+      }
+
+      // Mode: Tab "Ảnh" (Image fill transform mode)
+      if (!selectedFillState?.imageUrl) return;
+
+      const transform = selectedFillState.imageTransform;
+      const ratio = transform.scaleY / (transform.scaleX || 1);
+      const nextScaleX = dscale
+        ? Math.max(0.01, Math.round((transform.scaleX + dscale) * 1000) / 1000)
+        : transform.scaleX;
+      const nextScaleY = dscale
+        ? Math.max(0.01, Math.round(nextScaleX * ratio * 1000) / 1000)
+        : transform.scaleY;
+
+      updateLayerFillState(selectedRuntimeItem.id, {
+        imageTransform: {
+          ...transform,
+          x: dx ? Math.round((transform.x + dx) * 100) / 100 : transform.x,
+          y: dy ? Math.round((transform.y + dy) * 100) / 100 : transform.y,
+          rotation: drot
+            ? Math.round((transform.rotation + drot) * 100) / 100
+            : transform.rotation,
+          scaleX: nextScaleX,
+          scaleY: nextScaleY,
+        },
+      });
     };
 
-    window.addEventListener("keydown", handleImageTransformShortcuts);
+    window.addEventListener("keydown", handleTransformShortcuts);
     return () =>
-      window.removeEventListener("keydown", handleImageTransformShortcuts);
-  }, [selectedRuntimeItem, selectedFillState, updateLayerFillState]);
+      window.removeEventListener("keydown", handleTransformShortcuts);
+  }, [
+    activeCustomizationTab,
+    groupRuntimeTransforms,
+    selectedRuntimeItem,
+    selectedFillState,
+    updateGroupRuntimeTransform,
+    updateLayerFillState,
+    updateSessionTemplate,
+  ]);
 
   useEffect(() => {
     const newMap = new Map<string, HTMLImageElement>();
@@ -809,7 +920,54 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
   const updateSelectedLayerFromNode = useCallback(
     (node: Konva.Node) => {
-      if (!selectedLayerId || selectedRuntimeItem?.kind !== "layer") return;
+      if (!selectedLayerId || !selectedRuntimeItem) return;
+
+      if (selectedRuntimeItem.kind === "text") {
+        const textLayer = selectedRuntimeItem.textLayer;
+        const nextScaleX = Math.max(
+          0.01,
+          Math.abs(node.scaleX() / renderScale),
+        );
+        const nextScaleY = Math.max(
+          0.01,
+          Math.abs(node.scaleY() / renderScale),
+        );
+        const nextX =
+          Math.round(((node.x() - offsetX) / renderScale) * 100) / 100;
+        const nextY =
+          Math.round(((node.y() - offsetY) / renderScale) * 100) / 100;
+        const nextRotation = Math.round(node.rotation() * 100) / 100;
+        const nextWidth = Math.max(1, Math.round(textLayer.width * nextScaleX));
+        const nextHeight = Math.max(
+          1,
+          Math.round(textLayer.height * nextScaleY),
+        );
+
+        node.scaleX(renderScale);
+        node.scaleY(renderScale);
+
+        const nextTextLayer: TextLayer = {
+          ...textLayer,
+          x: nextX,
+          y: nextY,
+          rotation: nextRotation,
+          width: nextWidth,
+          height: nextHeight,
+        };
+
+        const nextTemplate: FillingTemplate = {
+          ...activeTemplate,
+          textLayers: (activeTemplate.textLayers ?? []).map((tl) =>
+            tl.id === nextTextLayer.id ? nextTextLayer : tl,
+          ),
+          updatedAt: Date.now(),
+        };
+
+        updateSessionTemplate(() => nextTemplate);
+        return;
+      }
+
+      if (selectedRuntimeItem.kind !== "layer") return;
       const selectedLayer = selectedRuntimeItem.layer;
 
       const worldPoints = resolveLayerShapePoints(selectedLayer);
@@ -900,6 +1058,15 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
   const getRuntimeItemBounds = useCallback(
     (item: FillRuntimeItem): RectBounds => {
+      if (item.kind === "text") {
+        return {
+          x: item.textLayer.x,
+          y: item.textLayer.y,
+          width: item.textLayer.width,
+          height: item.textLayer.height,
+        };
+      }
+
       if (item.kind === "layer") {
         return getBoundsFromPoints(toWorldLayerPoints(item.layer));
       }
@@ -963,6 +1130,9 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           ...DEFAULT_IMAGE_TRANSFORM,
         },
       );
+    }
+    if (hoveredSwapTargetItem.kind === "text") {
+      return [];
     }
     return [toWorldLayerPoints(hoveredSwapTargetItem.layer)];
   }, [groupRuntimeTransforms, hoveredSwapTargetItem]);
@@ -1120,6 +1290,35 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
         node.x(groupStageX + snappedDeltaX * renderScale);
         node.y(groupStageY + snappedDeltaY * renderScale);
+        setPositionGuideLines(toStageGuideLines(guides));
+        return;
+      }
+
+      if (selectedRuntimeItem?.kind === "text") {
+        const textLayer = selectedRuntimeItem.textLayer;
+        const node = e.target;
+        const draftX = (node.x() - offsetX) / renderScale;
+        const draftY = (node.y() - offsetY) / renderScale;
+        const movingRect: RectBounds = {
+          x: draftX,
+          y: draftY,
+          width: textLayer.width,
+          height: textLayer.height,
+        };
+
+        const { snappedRect, guides } = snapRectPosition({
+          movingRect,
+          candidateRects: getLayerSnapCandidateRects(textLayer.id),
+          canvasRect,
+        });
+
+        const deltaX = snappedRect.x - movingRect.x;
+        const deltaY = snappedRect.y - movingRect.y;
+        if (Math.abs(deltaX) > 0.001 || Math.abs(deltaY) > 0.001) {
+          node.x(node.x() + deltaX * renderScale);
+          node.y(node.y() + deltaY * renderScale);
+        }
+
         setPositionGuideLines(toStageGuideLines(guides));
         return;
       }
@@ -1538,7 +1737,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   }, [exportSettings.fileNamePattern, performExport]);
 
   const selectedEmptyImageOverlay = useMemo(() => {
-    if (!selectedRuntimeItem || selectedFillState?.imageUrl) {
+    if (
+      !selectedRuntimeItem ||
+      selectedRuntimeItem.kind === "text" ||
+      selectedFillState?.imageUrl
+    ) {
       return null;
     }
 
@@ -1620,22 +1823,15 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
   );
   const backgroundGradientGeometry = useMemo(() => {
     if (!parsedBackgroundGradient) return null;
-    const angleRad = (parsedBackgroundGradient.angle * Math.PI) / 180;
     const width = template.canvasWidth * renderScale;
     const height = template.canvasHeight * renderScale;
-    const cx = width / 2;
-    const cy = height / 2;
-    const len = Math.max(width, height);
-    return {
-      start: {
-        x: cx - (Math.cos(angleRad) * len) / 2,
-        y: cy - (Math.sin(angleRad) * len) / 2,
-      },
-      end: {
-        x: cx + (Math.cos(angleRad) * len) / 2,
-        y: cy + (Math.sin(angleRad) * len) / 2,
-      },
-    };
+    return computeLinearGradientEndpoints(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      parsedBackgroundGradient.angle,
+    );
   }, [
     parsedBackgroundGradient,
     renderScale,
@@ -1729,8 +1925,12 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
 
       <div
         ref={containerRef}
-        className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
+        className="relative w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden select-none touch-none"
         style={{ height: `${previewContainerHeight}px`, cursor }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
         onDragOver={handleStageContainerDragOver}
         onDragLeave={handleStageContainerDragLeave}
         onDrop={handleStageContainerDrop}
@@ -1750,6 +1950,17 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
           onClick={handleStageClick}
           onTap={handleStageClick}
           onMouseMove={(e) => {
+            if (isViewportPanning) {
+              setCursor("grabbing");
+              return;
+            }
+
+            if (previewInteractionMode === "pan") {
+              const isPointerDown = (e.evt as MouseEvent).buttons === 1;
+              setCursor(isPointerDown ? "grabbing" : "grab");
+              return;
+            }
+
             const targetName = e.target.name();
             if (targetName.includes("rotater")) {
               setCursor(ROTATE_CURSOR);
@@ -1976,6 +2187,43 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                       setSelectedCanvasNode(null);
                       setSelectedLayerId(item.id);
                     }}
+                    onDoubleClick={() => {
+                      setSelectedCanvasNode(null);
+                      setSelectedLayerId(item.id);
+                      setActiveCustomizationTab("image");
+                    }}
+                  />
+                );
+              }
+
+              if (item.kind === "text") {
+                return (
+                  <FilledTextLayerShape
+                    key={item.id}
+                    item={item}
+                    fillState={fillState}
+                    canvasFillState={canvasFillState}
+                    scale={renderScale}
+                    offsetX={offsetX}
+                    offsetY={offsetY}
+                    isSelected={selectedLayerId === item.id}
+                    containerHighlightMode={containerHighlightMode}
+                    isLayerTransformInteractive={
+                      selectedLayerId === item.id &&
+                      activeCustomizationTab === "layer"
+                    }
+                    onLayerTransformDragStart={handleLayerTransformDragStart}
+                    onLayerTransformDragMove={handleLayerTransformDragMove}
+                    onLayerTransformDragEnd={handleLayerTransformDragEnd}
+                    onSelect={() => {
+                      setSelectedCanvasNode(null);
+                      setSelectedLayerId(item.id);
+                    }}
+                    onDoubleClick={() => {
+                      setSelectedCanvasNode(null);
+                      setSelectedLayerId(item.id);
+                      setActiveCustomizationTab("image");
+                    }}
                   />
                 );
               }
@@ -2004,6 +2252,11 @@ export function FillWorkspace({ template }: FillWorkspaceProps) {
                   onSelect={() => {
                     setSelectedCanvasNode(null);
                     setSelectedLayerId(item.layer.id);
+                  }}
+                  onDoubleClick={() => {
+                    setSelectedCanvasNode(null);
+                    setSelectedLayerId(item.layer.id);
+                    setActiveCustomizationTab("image");
                   }}
                 />
               );
@@ -2592,6 +2845,7 @@ function FilledLayerShape({
   onLayerTransformDragMove,
   onLayerTransformDragEnd,
   onSelect,
+  onDoubleClick,
 }: {
   layer: VectorLayer;
   fillState:
@@ -2611,6 +2865,7 @@ function FilledLayerShape({
   onLayerTransformDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onLayerTransformDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onSelect: () => void;
+  onDoubleClick?: () => void;
 }) {
   const effectiveCornerRadius = canvasFillState.cornerRadiusOverrideEnabled
     ? canvasFillState.cornerRadiusOverride
@@ -2643,23 +2898,17 @@ function FilledLayerShape({
 
   const gradientGeometry = useMemo(() => {
     if (!parsedBorderGradient) return null;
-    const angleRad = (parsedBorderGradient.angle * Math.PI) / 180;
 
     if (borderGradientScope === "unified") {
       const globalWidth = canvasWidth * scale;
       const globalHeight = canvasHeight * scale;
-      const globalCenterX = offsetX + globalWidth / 2;
-      const globalCenterY = offsetY + globalHeight / 2;
-      const globalLength = Math.max(globalWidth, globalHeight);
-
-      const globalStart = {
-        x: globalCenterX - (Math.cos(angleRad) * globalLength) / 2,
-        y: globalCenterY - (Math.sin(angleRad) * globalLength) / 2,
-      };
-      const globalEnd = {
-        x: globalCenterX + (Math.cos(angleRad) * globalLength) / 2,
-        y: globalCenterY + (Math.sin(angleRad) * globalLength) / 2,
-      };
+      const globalLine = computeLinearGradientEndpoints(
+        offsetX + globalWidth / 2,
+        offsetY + globalHeight / 2,
+        globalWidth,
+        globalHeight,
+        parsedBorderGradient.angle,
+      );
 
       const rotationRad = (layer.rotation * Math.PI) / 180;
       const invCos = Math.cos(-rotationRad);
@@ -2674,27 +2923,20 @@ function FilledLayerShape({
       };
 
       return {
-        start: toLocal(globalStart),
-        end: toLocal(globalEnd),
+        start: toLocal(globalLine.start),
+        end: toLocal(globalLine.end),
       };
     }
 
     const width = layer.width * scale;
     const height = layer.height * scale;
-    const cx = width / 2;
-    const cy = height / 2;
-    const len = Math.max(width, height);
-
-    return {
-      start: {
-        x: cx - (Math.cos(angleRad) * len) / 2,
-        y: cy - (Math.sin(angleRad) * len) / 2,
-      },
-      end: {
-        x: cx + (Math.cos(angleRad) * len) / 2,
-        y: cy + (Math.sin(angleRad) * len) / 2,
-      },
-    };
+    return computeLinearGradientEndpoints(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      parsedBorderGradient.angle,
+    );
   }, [
     borderGradientScope,
     canvasHeight,
@@ -2718,6 +2960,8 @@ function FilledLayerShape({
         rotation={layer.rotation}
         onClick={onSelect}
         onTap={onSelect}
+        onDblClick={onDoubleClick}
+        onDblTap={onDoubleClick}
         clipFunc={(ctx: any) => {
           ctx.beginPath();
           for (let i = 0; i < flat.length; i += 2) {
@@ -2734,6 +2978,8 @@ function FilledLayerShape({
           strokeEnabled={false}
           onClick={onSelect}
           onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
           perfectDrawEnabled={false}
         />
 
@@ -2757,18 +3003,59 @@ function FilledLayerShape({
             rotation={fillState.imageTransform.rotation}
             stroke={isSelected ? "#3b82f6" : undefined}
             strokeWidth={isSelected ? 2 / scale : 0}
+            onClick={onSelect}
+            onTap={onSelect}
+            onDblClick={onDoubleClick}
+            onDblTap={onDoubleClick}
           />
         )}
       </Group>
 
-      {containerHighlightMode !== "none" && (
+      {effectiveBorderWidth > 0 && (
         <Line
           x={x}
           y={y}
           rotation={layer.rotation}
           points={flat}
           closed
-          stroke={containerHighlightMode === "missing" ? "#f59e0b" : "#3b82f6"}
+          stroke={parsedBorderGradient ? undefined : effectiveBorderColor}
+          strokeWidth={effectiveBorderWidth * scale}
+          strokeLinearGradientStartPoint={
+            parsedBorderGradient ? gradientGeometry?.start : undefined
+          }
+          strokeLinearGradientEndPoint={
+            parsedBorderGradient ? gradientGeometry?.end : undefined
+          }
+          strokeLinearGradientColorStops={
+            parsedBorderGradient
+              ? parsedBorderGradient.stops.flatMap((stop) => [
+                  stop.offset,
+                  stop.color,
+                ])
+              : undefined
+          }
+          lineJoin="round"
+          onClick={onSelect}
+          onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
+        />
+      )}
+
+      {(isSelected || containerHighlightMode !== "none") && (
+        <Line
+          x={x}
+          y={y}
+          rotation={layer.rotation}
+          points={flat}
+          closed
+          stroke={
+            isSelected
+              ? "#3b82f6"
+              : containerHighlightMode === "missing"
+                ? "#f59e0b"
+                : "#3b82f6"
+          }
           strokeWidth={2}
           dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
           lineJoin="round"
@@ -2798,38 +3085,173 @@ function FilledLayerShape({
           draggable
           onClick={onSelect}
           onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
           onDragStart={onLayerTransformDragStart}
           onDragMove={onLayerTransformDragMove}
           onDragEnd={onLayerTransformDragEnd}
         />
       )}
+    </>
+  );
+}
 
-      {effectiveBorderWidth > 0 && (
-        <Line
+function FilledTextLayerShape({
+  item,
+  fillState,
+  canvasFillState,
+  scale,
+  offsetX,
+  offsetY,
+  isSelected,
+  containerHighlightMode,
+  isLayerTransformInteractive,
+  onLayerTransformDragStart,
+  onLayerTransformDragMove,
+  onLayerTransformDragEnd,
+  onSelect,
+  onDoubleClick,
+}: {
+  item: Extract<FillRuntimeItem, { kind: "text" }>;
+  fillState:
+    | ReturnType<typeof useFillingStore.getState>["layerFillStates"][number]
+    | undefined;
+  canvasFillState: CanvasFillState;
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+  isSelected: boolean;
+  containerHighlightMode: LayerContainerHighlightMode;
+  isLayerTransformInteractive: boolean;
+  onLayerTransformDragStart?: () => void;
+  onLayerTransformDragMove?: (e: Konva.KonvaEventObject<DragEvent>) => void;
+  onLayerTransformDragEnd?: (e: Konva.KonvaEventObject<DragEvent>) => void;
+  onSelect: () => void;
+  onDoubleClick?: () => void;
+}) {
+  const textLayer = item.textLayer;
+  const x = offsetX + textLayer.x * scale;
+  const y = offsetY + textLayer.y * scale;
+  const width = textLayer.width * scale;
+  const height = textLayer.height * scale;
+
+  const effectiveBorderWidth = canvasFillState.borderOverrideEnabled
+    ? canvasFillState.borderOverrideWidth
+    : fillState?.borderWidth ?? 0;
+  const effectiveBorderColor = canvasFillState.borderOverrideEnabled
+    ? canvasFillState.borderOverrideColor
+    : fillState?.borderColor ?? "#000000";
+
+  const containerColor =
+    textLayer.containerColor || "rgba(255, 255, 255, 0.85)";
+  const containerOpacity = (textLayer.containerOpacity ?? 100) / 100;
+  const effectiveCornerRadius = canvasFillState.cornerRadiusOverrideEnabled
+    ? canvasFillState.cornerRadiusOverride
+    : fillState?.cornerRadius ?? textLayer.borderRadius ?? 8;
+  const borderRadius = effectiveCornerRadius * scale;
+  const fontSize = (textLayer.fontSize ?? 24) * scale;
+  const fontFamily = textLayer.fontFamily || "Inter";
+  const textColor = textLayer.textColor || "#1e293b";
+  const paddingV = (textLayer.paddingV ?? 12) * scale;
+  const paddingH = (textLayer.paddingH ?? 16) * scale;
+
+  const align =
+    textLayer.alignment === "start"
+      ? "left"
+      : textLayer.alignment === "end"
+        ? "right"
+        : "center";
+
+  const verticalAlign =
+    textLayer.position === "top"
+      ? "top"
+      : textLayer.position === "bottom"
+        ? "bottom"
+        : "middle";
+
+  return (
+    <>
+      <Group
+        x={x}
+        y={y}
+        rotation={textLayer.rotation}
+        onClick={onSelect}
+        onTap={onSelect}
+        onDblClick={onDoubleClick}
+        onDblTap={onDoubleClick}
+      >
+        {/* Background Container */}
+        <Rect
+          width={width}
+          height={height}
+          fill={containerColor}
+          opacity={containerOpacity}
+          cornerRadius={borderRadius}
+          stroke={effectiveBorderWidth > 0 ? effectiveBorderColor : undefined}
+          strokeWidth={effectiveBorderWidth * scale}
+        />
+
+        {/* Rendered Text */}
+        <Text
+          text={textLayer.content || textLayer.name || "Text Layer"}
+          x={width / 2}
+          y={height / 2}
+          offsetX={Math.max(1, width - paddingH * 2) / 2}
+          offsetY={Math.max(1, height - paddingV * 2) / 2}
+          width={Math.max(1, width - paddingH * 2)}
+          height={Math.max(1, height - paddingV * 2)}
+          fontSize={fontSize}
+          fontFamily={fontFamily}
+          fill={textColor}
+          align={align}
+          verticalAlign={verticalAlign}
+          wrap="word"
+          ellipsis={true}
+          rotation={textLayer.rotate180 ? 180 : 0}
+          listening={false}
+        />
+
+        {/* Selected outline */}
+        {(isSelected || containerHighlightMode !== "none") && (
+          <Rect
+            width={width}
+            height={height}
+            cornerRadius={borderRadius}
+            stroke={
+              isSelected
+                ? "#8b5cf6"
+                : containerHighlightMode === "missing"
+                  ? "#f59e0b"
+                  : "#3b82f6"
+            }
+            strokeWidth={2}
+            dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
+            listening={false}
+          />
+        )}
+      </Group>
+
+      {isLayerTransformInteractive && (
+        <Rect
+          id={`fill-layer-transform-${textLayer.id}`}
+          name="fill-layer-transform-node"
           x={x}
           y={y}
-          rotation={layer.rotation}
-          points={flat}
-          closed
-          stroke={parsedBorderGradient ? undefined : effectiveBorderColor}
-          strokeWidth={effectiveBorderWidth * scale}
-          strokeLinearGradientStartPoint={
-            parsedBorderGradient ? gradientGeometry?.start : undefined
-          }
-          strokeLinearGradientEndPoint={
-            parsedBorderGradient ? gradientGeometry?.end : undefined
-          }
-          strokeLinearGradientColorStops={
-            parsedBorderGradient
-              ? parsedBorderGradient.stops.flatMap((stop) => [
-                  stop.offset,
-                  stop.color,
-                ])
-              : undefined
-          }
-          lineJoin="round"
+          rotation={textLayer.rotation}
+          width={textLayer.width}
+          height={textLayer.height}
+          scaleX={scale}
+          scaleY={scale}
+          fill="rgba(139, 92, 246, 0.001)"
+          strokeEnabled={false}
+          draggable
           onClick={onSelect}
           onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
+          onDragStart={onLayerTransformDragStart}
+          onDragMove={onLayerTransformDragMove}
+          onDragEnd={onLayerTransformDragEnd}
         />
       )}
     </>
@@ -2854,6 +3276,7 @@ function FilledGroupShape({
   onLayerTransformDragMove,
   onLayerTransformDragEnd,
   onSelect,
+  onDoubleClick,
 }: {
   item: FillRuntimeGroupItem;
   fillState:
@@ -2880,6 +3303,7 @@ function FilledGroupShape({
   onLayerTransformDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onLayerTransformDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onSelect: () => void;
+  onDoubleClick?: () => void;
 }) {
   const effectiveBorderWidth = canvasFillState.borderOverrideEnabled
     ? canvasFillState.borderOverrideWidth
@@ -2965,23 +3389,16 @@ function FilledGroupShape({
   const groupGradientGeometry = useMemo(() => {
     if (!parsedBorderGradient) return null;
 
-    const angleRad = (parsedBorderGradient.angle * Math.PI) / 180;
     if (borderGradientScope === "unified") {
       const width = canvasWidth * scale;
       const height = canvasHeight * scale;
-      const cx = offsetX + width / 2;
-      const cy = offsetY + height / 2;
-      const len = Math.max(width, height);
-      return {
-        start: {
-          x: cx - (Math.cos(angleRad) * len) / 2,
-          y: cy - (Math.sin(angleRad) * len) / 2,
-        },
-        end: {
-          x: cx + (Math.cos(angleRad) * len) / 2,
-          y: cy + (Math.sin(angleRad) * len) / 2,
-        },
-      };
+      return computeLinearGradientEndpoints(
+        offsetX + width / 2,
+        offsetY + height / 2,
+        width,
+        height,
+        parsedBorderGradient.angle,
+      );
     }
 
     const points = displayPolygons.flat();
@@ -2989,19 +3406,13 @@ function FilledGroupShape({
     const bounds = getBoundsFromPoints(points);
     const width = bounds.width * scale;
     const height = bounds.height * scale;
-    const cx = offsetX + bounds.x * scale + width / 2;
-    const cy = offsetY + bounds.y * scale + height / 2;
-    const len = Math.max(width, height);
-    return {
-      start: {
-        x: cx - (Math.cos(angleRad) * len) / 2,
-        y: cy - (Math.sin(angleRad) * len) / 2,
-      },
-      end: {
-        x: cx + (Math.cos(angleRad) * len) / 2,
-        y: cy + (Math.sin(angleRad) * len) / 2,
-      },
-    };
+    return computeLinearGradientEndpoints(
+      offsetX + bounds.x * scale + width / 2,
+      offsetY + bounds.y * scale + height / 2,
+      width,
+      height,
+      parsedBorderGradient.angle,
+    );
   }, [
     borderGradientScope,
     canvasHeight,
@@ -3053,6 +3464,8 @@ function FilledGroupShape({
           strokeWidth={1}
           onClick={onSelect}
           onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
           perfectDrawEnabled={false}
         />
       ))}
@@ -3093,44 +3506,11 @@ function FilledGroupShape({
               strokeWidth={index === 0 && isSelected ? 2 / scale : 0}
               onClick={onSelect}
               onTap={onSelect}
+              onDblClick={onDoubleClick}
+              onDblTap={onDoubleClick}
             />
           </Group>
         ))}
-
-      {containerHighlightMode !== "none" && stageHull.length >= 6 && (
-        <Line
-          points={stageHull}
-          closed
-          stroke={containerHighlightMode === "missing" ? "#f59e0b" : "#3b82f6"}
-          strokeWidth={2}
-          dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
-          lineJoin="round"
-          listening={false}
-        />
-      )}
-
-      {isLayerTransformInteractive && localHullFlat.length >= 6 && (
-        <Line
-          id={`fill-layer-transform-${item.id}`}
-          name="fill-layer-transform-node"
-          x={transformNodeX}
-          y={transformNodeY}
-          rotation={runtimeTransform.rotation}
-          scaleX={transformNodeScaleX}
-          scaleY={transformNodeScaleY}
-          points={localHullFlat}
-          closed
-          fill="rgba(59, 130, 246, 0.001)"
-          strokeEnabled={false}
-          strokeWidth={0}
-          draggable
-          onClick={onSelect}
-          onTap={onSelect}
-          onDragStart={onLayerTransformDragStart}
-          onDragMove={onLayerTransformDragMove}
-          onDragEnd={onLayerTransformDragEnd}
-        />
-      )}
 
       {effectiveBorderWidth > 0 &&
         stagePolygons.map((stagePolygon, index) => (
@@ -3157,8 +3537,54 @@ function FilledGroupShape({
             lineJoin="round"
             onClick={onSelect}
             onTap={onSelect}
+            onDblClick={onDoubleClick}
+            onDblTap={onDoubleClick}
           />
         ))}
+
+      {(isSelected || containerHighlightMode !== "none") &&
+        stageHull.length >= 6 && (
+          <Line
+            points={stageHull}
+            closed
+            stroke={
+              isSelected
+                ? "#3b82f6"
+                : containerHighlightMode === "missing"
+                  ? "#f59e0b"
+                  : "#3b82f6"
+            }
+            strokeWidth={2}
+            dash={containerHighlightMode === "missing" ? [6, 4] : undefined}
+            lineJoin="round"
+            listening={false}
+          />
+        )}
+
+      {isLayerTransformInteractive && localHullFlat.length >= 6 && (
+        <Line
+          id={`fill-layer-transform-${item.id}`}
+          name="fill-layer-transform-node"
+          x={transformNodeX}
+          y={transformNodeY}
+          rotation={runtimeTransform.rotation}
+          scaleX={transformNodeScaleX}
+          scaleY={transformNodeScaleY}
+          points={localHullFlat}
+          closed
+          fill="rgba(59, 130, 246, 0.001)"
+          strokeEnabled={false}
+          strokeWidth={0}
+          draggable
+          onClick={onSelect}
+          onTap={onSelect}
+          onDblClick={onDoubleClick}
+          onDblTap={onDoubleClick}
+          onDragStart={onLayerTransformDragStart}
+          onDragMove={onLayerTransformDragMove}
+          onDragEnd={onLayerTransformDragEnd}
+        />
+      )}
     </>
   );
 }

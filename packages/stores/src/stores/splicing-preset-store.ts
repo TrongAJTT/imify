@@ -13,9 +13,14 @@ import type {
   BmpColorDepth,
   ResizeApplyTo,
   QuickExportFormat,
+  SplicingCaptionMode,
+  SplicingCaptionPosition,
+  SplicingCaptionAlignment,
+  SplicingCaptionOffsetLockMode,
+  SplicingCaptionOffsetPaddingSource,
 } from "@imify/core"
 
-
+import { DEFAULT_SPLICING_CAPTION_CONFIG } from "@imify/core"
 
 export type SplicingPresetViewMode = "select" | "workspace"
 
@@ -50,7 +55,27 @@ export interface SplicingPresetConfig {
   exportFileNamePattern: string
   previewQualityPercent: number
   previewShowImageNumber: boolean
+  captionMode?: SplicingCaptionMode
+  captionFontFamily?: string
+  captionFontSize?: number
+  captionTextColor?: string
+  captionPaddingV?: number
+  captionPaddingH?: number
+  captionPaddingLinked?: boolean
+  captionContainerColor?: string
+  captionContainerOpacity?: number
+  captionBorderRadius?: number
+  captionPosition?: SplicingCaptionPosition
+  captionAlignment?: SplicingCaptionAlignment
+  captionOffsetX?: number
+  captionOffsetY?: number
+  captionOffsetLockMode?: SplicingCaptionOffsetLockMode
+  captionOffsetFontSizeMultiplier?: number
+  captionOffsetPaddingSource?: SplicingCaptionOffsetPaddingSource
+  captionOffsetPaddingMultiplier?: number
+  captionRotate180?: boolean
 }
+
 
 export interface SavedSplicingPreset {
   id: string
@@ -76,6 +101,7 @@ interface SplicingPresetStoreState {
   deletePreset: (presetId: string) => void
   syncActivePresetConfig: (config: SplicingPresetConfig) => void
 }
+
 
 const PRESET_HIGHLIGHT_COLORS = ["rgb(59, 130, 246)", "rgb(34, 197, 94)", "rgb(249, 115, 22)", "rgb(168, 85, 247)"]
 
@@ -110,9 +136,30 @@ function createDefaultConfig(): SplicingPresetConfig {
     exportConcurrency: 2,
     exportFileNamePattern: "spliced-[Index]",
     previewQualityPercent: 20,
-    previewShowImageNumber: false
+    previewShowImageNumber: false,
+    captionMode: DEFAULT_SPLICING_CAPTION_CONFIG.mode,
+    captionFontFamily: DEFAULT_SPLICING_CAPTION_CONFIG.fontFamily,
+    captionFontSize: DEFAULT_SPLICING_CAPTION_CONFIG.fontSize,
+    captionTextColor: DEFAULT_SPLICING_CAPTION_CONFIG.textColor,
+    captionPaddingV: DEFAULT_SPLICING_CAPTION_CONFIG.paddingV,
+    captionPaddingH: DEFAULT_SPLICING_CAPTION_CONFIG.paddingH,
+    captionPaddingLinked: DEFAULT_SPLICING_CAPTION_CONFIG.paddingLinked,
+    captionContainerColor: DEFAULT_SPLICING_CAPTION_CONFIG.containerColor,
+    captionContainerOpacity: DEFAULT_SPLICING_CAPTION_CONFIG.containerOpacity,
+    captionBorderRadius: DEFAULT_SPLICING_CAPTION_CONFIG.borderRadius,
+    captionPosition: DEFAULT_SPLICING_CAPTION_CONFIG.position,
+    captionAlignment: DEFAULT_SPLICING_CAPTION_CONFIG.alignment,
+    captionOffsetX: DEFAULT_SPLICING_CAPTION_CONFIG.offsetX,
+    captionOffsetY: DEFAULT_SPLICING_CAPTION_CONFIG.offsetY,
+    captionOffsetLockMode: DEFAULT_SPLICING_CAPTION_CONFIG.offsetLockMode,
+    captionOffsetFontSizeMultiplier: DEFAULT_SPLICING_CAPTION_CONFIG.offsetFontSizeMultiplier,
+    captionOffsetPaddingSource: DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingSource,
+    captionOffsetPaddingMultiplier: DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingMultiplier,
+    captionRotate180: DEFAULT_SPLICING_CAPTION_CONFIG.rotate180,
   }
 }
+
+
 
 export const useSplicingPresetStore = create<SplicingPresetStoreState>()(
   persist(

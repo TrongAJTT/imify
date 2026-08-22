@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { WorkspaceLoadingState, WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceNotFoundState } from "@imify/ui";
+import { WorkspaceLoadingState } from "@imify/features";
 import { SingleProcessorWorkspace } from "@imify/features/processor/single-processor-workspace";
 import { BatchProcessorWorkspace } from "@imify/features/processor/batch";
 import { ProcessorPresetSelectView } from "@imify/features/processor/processor-preset-select-view";
@@ -27,7 +28,7 @@ interface ProcessorLandingPageProps {
 
 interface ProcessorWorkPageProps {
   context: SetupContext;
-  presetId: string;
+  presetId?: string;
 }
 
 const AUTO_SAVE_DELAY_MS = 420;
@@ -132,7 +133,7 @@ export function ProcessorLandingPage({ context }: ProcessorLandingPageProps) {
   ]);
 
   if (!isBatchStoreRehydrated || setupContext !== context) {
-    return <WorkspaceLoadingState title={t("loadingProcessorPresets")} />;
+    return <WorkspaceLoadingState />;
   }
 
   return (
@@ -220,10 +221,22 @@ export function ProcessorWorkPage({
     (store) => (store as any)._hasHydrated,
   );
 
-  const preset = useMemo(
-    () => presets.find((entry) => entry.id === presetId) ?? null,
-    [presetId, presets],
-  );
+  const preset = useMemo(() => {
+    if (presetId) {
+      return presets.find((entry) => entry.id === presetId) ?? null;
+    }
+    if (activePresetId) {
+      const active = presets.find((entry) => entry.id === activePresetId);
+      if (active) return active;
+    }
+    return presets[0] ?? null;
+  }, [activePresetId, presetId, presets]);
+
+  useEffect(() => {
+    if (isBatchStoreRehydrated && !presetId && preset) {
+      router.replace(`${getRoutePrefix(context)}/work?id=${preset.id}`);
+    }
+  }, [context, isBatchStoreRehydrated, preset, presetId, router]);
 
   useEffect(() => {
     return () => {
@@ -347,7 +360,7 @@ export function ProcessorWorkPage({
   const config = contextConfigs[context];
 
   if (!isBatchStoreRehydrated) {
-    return <WorkspaceLoadingState title={t("loadingPresetWorkspace")} />;
+    return <WorkspaceLoadingState />;
   }
 
   if (!preset) {
@@ -365,7 +378,7 @@ export function ProcessorWorkPage({
   }
 
   if (setupContext !== context || activePresetId !== preset.id) {
-    return <WorkspaceLoadingState title={t("loadingPresetWorkspace")} />;
+    return <WorkspaceLoadingState />;
   }
 
   if (context === "single") {

@@ -1,14 +1,15 @@
 import React from "react"
-import type { VectorLayer } from "./types"
+import type { TextLayer, VectorLayer } from "./types"
 import { NumberInput, TextInput } from "@imify/ui"
 import { useTranslation } from "@imify/i18n"
 
 interface LayerPropertiesPanelProps {
-  layer: VectorLayer
-  onUpdate: (partial: Partial<VectorLayer>) => void
+  layer: VectorLayer | TextLayer
+  onUpdate: (partial: Partial<VectorLayer & TextLayer>) => void
 }
 
 export function LayerPropertiesPanel({ layer, onUpdate }: LayerPropertiesPanelProps) {
+
   const { t } = useTranslation("filling")
 
   return (

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState, type ReactNode } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import type {

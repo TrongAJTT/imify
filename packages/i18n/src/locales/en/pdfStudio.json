@@ -85,5 +85,15 @@
         "answer": "For web sharing, 72 or 150 DPI is fast and compact. For high-resolution archival or print, 300 DPI delivers maximum clarity."
       }
     ]
+  },
+  "password": {
+    "title": "This PDF is Password Protected",
+    "description": "Please enter the password to unlock and extract pages from this document.",
+    "inputPlaceholder": "Enter PDF password...",
+    "unlockButton": "Unlock PDF",
+    "unlockingButton": "Unlocking...",
+    "chooseAnotherFile": "Choose another file",
+    "incorrectPassword": "The password you entered is incorrect. Please try again.",
+    "protectedBadge": "Protected Document"
   }
 }

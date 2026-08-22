@@ -48,19 +48,24 @@ export function FillingSidebarPanel({ enableWideSidebarGrid = false }: FillingSi
       <div className="flex flex-col gap-1">
         <ManualEditorSidebar
           layers={editorCtx.editorLayers}
+          textLayers={editorCtx.editorTextLayers}
           groups={editorCtx.editorGroups}
           canvasWidth={editorCtx.canvasWidth}
           canvasHeight={editorCtx.canvasHeight}
           selectedLayerId={editorCtx.selectedLayerId}
           selectedLayerIds={editorCtx.selectedLayerIds}
+          selectedTextLayerId={editorCtx.selectedTextLayerId}
           onLayersChange={editorCtx.setEditorLayers}
+          onTextLayersChange={editorCtx.setEditorTextLayers}
           onGroupsChange={editorCtx.setEditorGroups}
           onCanvasSizeChange={editorCtx.setCanvasSize}
           onSelectLayer={editorCtx.setSelectedLayerId}
+          onSelectTextLayer={editorCtx.setSelectedTextLayerId}
           onToggleLayerSelection={editorCtx.toggleSelectedLayerId}
           onClearSelection={editorCtx.clearSelectedLayers}
           enableWideSidebarGrid={enableWideSidebarGrid}
         />
+
       </div>
     )
   }

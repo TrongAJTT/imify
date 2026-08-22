@@ -9,7 +9,8 @@ import type {
   SplicingImageAppearanceDirection,
   SplicingImageResize,
   SplicingImageStyle,
-  SplicingLayoutConfig
+  SplicingLayoutConfig,
+  SplicingCaptionConfig,
 } from "./types"
 import { calculateDimensions } from "@imify/core"
 import type { ResizeApplyTo } from "@imify/core/types"
@@ -19,11 +20,19 @@ interface ImageSize {
   height: number
 }
 
+interface CaptionExtras {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
 interface ProcessedImage {
   contentWidth: number
   contentHeight: number
   outerWidth: number
   outerHeight: number
+  captionExtras: CaptionExtras
 }
 
 export function calculateProcessedSize(
@@ -58,9 +67,39 @@ export function calculateProcessedSize(
   return { width: targetWidth, height: targetHeight }
 }
 
-function calculateOuterSize(cw: number, ch: number, style: SplicingImageStyle): ImageSize {
+function resolveCaptionExtras(captionConfig?: SplicingCaptionConfig): CaptionExtras {
+  if (!captionConfig || captionConfig.mode !== "outside") {
+    return { top: 0, bottom: 0, left: 0, right: 0 }
+  }
+
+  const thickness = Math.max(1, captionConfig.fontSize + captionConfig.paddingV * 2)
+
+  switch (captionConfig.position) {
+    case "top":
+      return { top: thickness, bottom: 0, left: 0, right: 0 }
+    case "bottom":
+      return { top: 0, bottom: thickness, left: 0, right: 0 }
+    case "left":
+      return { top: 0, bottom: 0, left: thickness, right: 0 }
+    case "right":
+      return { top: 0, bottom: 0, left: 0, right: thickness }
+    case "center":
+    default:
+      return { top: 0, bottom: 0, left: 0, right: 0 }
+  }
+}
+
+function calculateOuterSize(
+  cw: number,
+  ch: number,
+  style: SplicingImageStyle,
+  extras: CaptionExtras
+): ImageSize {
   const extra = (style.padding + style.borderWidth) * 2
-  return { width: cw + extra, height: ch + extra }
+  return {
+    width: cw + extra + extras.left + extras.right,
+    height: ch + extra + extras.top + extras.bottom
+  }
 }
 
 function processImages(
@@ -68,19 +107,24 @@ function processImages(
   style: SplicingImageStyle,
   resize: SplicingImageResize,
   fitValue: number,
-  applyTo?: ResizeApplyTo
+  applyTo?: ResizeApplyTo,
+  captionConfig?: SplicingCaptionConfig
 ): ProcessedImage[] {
+  const extras = resolveCaptionExtras(captionConfig)
+
   return images.map((img) => {
     const content = calculateProcessedSize(img.width, img.height, resize, fitValue, applyTo)
-    const outer = calculateOuterSize(content.width, content.height, style)
+    const outer = calculateOuterSize(content.width, content.height, style, extras)
     return {
       contentWidth: content.width,
       contentHeight: content.height,
       outerWidth: outer.width,
-      outerHeight: outer.height
+      outerHeight: outer.height,
+      captionExtras: extras
     }
   })
 }
+
 
 function getMainDim(size: ImageSize, dir: SplicingDirection): number {
   return dir === "vertical" ? size.height : size.width
@@ -308,16 +352,33 @@ function resolvePlacementRects(
   bp: number,
   sliceMainStart: number | null,
   sliceMainSize: number | null
-): Pick<LayoutPlacement, "outerRect" | "contentRect" | "sourceCropUv"> {
+): Pick<LayoutPlacement, "outerRect" | "contentRect" | "captionRect" | "sourceCropUv"> {
+  const { top, bottom, left, right } = img.captionExtras
+
   if (sliceMainStart === null || sliceMainSize === null) {
+    const cx = x + bp + left
+    const cy = y + bp + top
+    let captionRect: LayoutRect | undefined = undefined
+
+    if (top > 0) {
+      captionRect = { x: x + bp, y: y + bp, width: img.contentWidth, height: top }
+    } else if (bottom > 0) {
+      captionRect = { x: x + bp, y: cy + img.contentHeight, width: img.contentWidth, height: bottom }
+    } else if (left > 0) {
+      captionRect = { x: x + bp, y: y + bp, width: left, height: img.contentHeight }
+    } else if (right > 0) {
+      captionRect = { x: cx + img.contentWidth, y: y + bp, width: right, height: img.contentHeight }
+    }
+
     return {
       outerRect: { x, y, width: img.outerWidth, height: img.outerHeight },
       contentRect: {
-        x: x + bp,
-        y: y + bp,
+        x: cx,
+        y: cy,
         width: img.contentWidth,
         height: img.contentHeight
       },
+      captionRect,
       sourceCropUv: undefined
     }
   }
@@ -327,19 +388,21 @@ function resolvePlacementRects(
   const size = Math.max(1, Math.min(sliceMainSize, outerMainSize - start))
 
   if (lineDir === "vertical") {
-    const contentStart = Math.max(0, Math.min(img.contentHeight, start - bp))
-    const contentEnd = Math.max(0, Math.min(img.contentHeight, start + size - bp))
+    const contentTopOffset = bp + top
+    const contentStart = Math.max(0, Math.min(img.contentHeight, start - contentTopOffset))
+    const contentEnd = Math.max(0, Math.min(img.contentHeight, start + size - contentTopOffset))
     const contentHeight = Math.max(0, contentEnd - contentStart)
-    const contentTopInset = Math.max(0, bp - start)
+    const contentTopInset = Math.max(0, contentTopOffset - start)
 
     return {
       outerRect: { x, y, width: img.outerWidth, height: size },
       contentRect: {
-        x: x + bp,
+        x: x + bp + left,
         y: y + contentTopInset,
         width: img.contentWidth,
         height: contentHeight
       },
+      captionRect: undefined,
       sourceCropUv:
         contentHeight > 0
           ? {
@@ -352,19 +415,21 @@ function resolvePlacementRects(
     }
   }
 
-  const contentStart = Math.max(0, Math.min(img.contentWidth, start - bp))
-  const contentEnd = Math.max(0, Math.min(img.contentWidth, start + size - bp))
+  const contentLeftOffset = bp + left
+  const contentStart = Math.max(0, Math.min(img.contentWidth, start - contentLeftOffset))
+  const contentEnd = Math.max(0, Math.min(img.contentWidth, start + size - contentLeftOffset))
   const contentWidth = Math.max(0, contentEnd - contentStart)
-  const contentLeftInset = Math.max(0, bp - start)
+  const contentLeftInset = Math.max(0, contentLeftOffset - start)
 
   return {
     outerRect: { x, y, width: size, height: img.outerHeight },
     contentRect: {
       x: x + contentLeftInset,
-      y: y + bp,
+      y: y + bp + top,
       width: contentWidth,
       height: img.contentHeight
     },
+    captionRect: undefined,
     sourceCropUv:
       contentWidth > 0
         ? {
@@ -376,6 +441,7 @@ function resolvePlacementRects(
         : undefined
   }
 }
+
 
 function applyAlignment(
   placements: LayoutPlacement[],
@@ -418,15 +484,24 @@ function applyAlignment(
 
   for (let i = 0; i < placements.length; i++) {
     const d = shift + i * extraGap
+    const p = placements[i]
     if (lineDir === "horizontal") {
-      placements[i].outerRect.x += d
-      placements[i].contentRect.x += d
+      p.outerRect.x += d
+      p.contentRect.x += d
+      if (p.captionRect) {
+        p.captionRect.x += d
+      }
     } else {
-      placements[i].outerRect.y += d
-      placements[i].contentRect.y += d
+      p.outerRect.y += d
+      p.contentRect.y += d
+      if (p.captionRect) {
+        p.captionRect.y += d
+      }
     }
   }
 }
+
+
 
 /**
  * Core layout algorithm.
@@ -500,6 +575,7 @@ function computeLayout(
         imageIndex: originalIndex,
         outerRect: rects.outerRect,
         contentRect: rects.contentRect,
+        captionRect: rects.captionRect,
         sourceCropUv: rects.sourceCropUv
       })
 
@@ -545,14 +621,15 @@ export function calculateLayout(
   imageStyle: SplicingImageStyle,
   imageResize: SplicingImageResize,
   fitValue: number,
-  applyTo?: ResizeApplyTo
+  applyTo?: ResizeApplyTo,
+  captionConfig?: SplicingCaptionConfig
 ): LayoutResult {
   if (images.length === 0) {
     const edge = (canvasStyle.padding + canvasStyle.borderWidth) * 2
     return { groups: [], canvasWidth: Math.max(1, edge), canvasHeight: Math.max(1, edge) }
   }
 
-  const processed = processImages(images, imageStyle, imageResize, fitValue, applyTo)
+  const processed = processImages(images, imageStyle, imageResize, fitValue, applyTo, captionConfig)
   const edgePadding = canvasStyle.padding + canvasStyle.borderWidth
   const isGrid = layout.primaryDirection !== layout.secondaryDirection
 
@@ -625,5 +702,6 @@ export function calculateLayout(
     layout.flowMaxSize
   )
 }
+
 
 

@@ -3,6 +3,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  APP_ROUTES,
   DEFAULT_PREFER_RECENT_PRESET_ENTRY,
   normalizePreferRecentPresetEntry,
   PREFER_RECENT_PRESET_ENTRY_KEY,
@@ -252,7 +253,7 @@ export function WebHeader() {
     }));
   }, [i18n.language, isMounted]);
 
-  if (pathname === "/recovery" || isRecoveryPage) {
+  if (pathname === APP_ROUTES.RECOVERY || isRecoveryPage) {
     return null;
   }
 

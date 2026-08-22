@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   Download,
   Edit,
-  Edit3,
+  Tag,
   LayoutGrid,
   Pin,
   PinOff,
@@ -377,7 +377,7 @@ function FillingTemplateCard({
           />
           <ActionIconButton
             title={t("templateList.renameTemplateTooltip")}
-            icon={<Edit3 size={13} />}
+            icon={<Tag size={13} />}
             onClick={() => onRenameTemplate(template)}
           />
           <ActionIconButton
@@ -483,24 +483,60 @@ function TemplatePreviewSvg({ template }: { template: FillingTemplate }) {
         strokeDasharray="4 2"
         rx="2"
       />
-      {template.layers.slice(0, 12).map((layer) => (
-        <polygon
-          key={layer.id}
-          points={resolveLayerShapePoints(layer)
-            .map(
-              (point) =>
-                `${originX + (layer.x + point.x) * scale},${originY + (layer.y + point.y) * scale}`,
-            )
-            .join(" ")}
-          fill="currentColor"
-          opacity={0.3}
-          transform={
-            layer.rotation !== 0
-              ? `rotate(${layer.rotation} ${originX + (layer.x + layer.width / 2) * scale} ${originY + (layer.y + layer.height / 2) * scale})`
-              : undefined
-          }
-        />
-      ))}
+      {template.layers.slice(0, 12).map((layer) => {
+        const lx = originX + layer.x * scale;
+        const ly = originY + layer.y * scale;
+        return (
+          <polygon
+            key={layer.id}
+            points={resolveLayerShapePoints(layer)
+              .map((point) => `${point.x * scale},${point.y * scale}`)
+              .join(" ")}
+            fill="currentColor"
+            opacity={0.3}
+            transform={`translate(${lx}, ${ly})${layer.rotation ? ` rotate(${layer.rotation})` : ""}`}
+          />
+        );
+      })}
+      {template.textLayers?.slice(0, 8).map((tLayer) => {
+        const lx = originX + tLayer.x * scale;
+        const ly = originY + tLayer.y * scale;
+        const w = tLayer.width * scale;
+        const h = tLayer.height * scale;
+        const text = tLayer.content || tLayer.name || "Text";
+        return (
+          <g
+            key={tLayer.id}
+            transform={`translate(${lx}, ${ly})${tLayer.rotation ? ` rotate(${tLayer.rotation})` : ""}`}
+          >
+            <rect
+              x={0}
+              y={0}
+              width={w}
+              height={h}
+              fill="currentColor"
+              fillOpacity={0.15}
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeDasharray="3 2"
+              rx={2}
+            />
+            <text
+              x={w / 2}
+              y={h / 2}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={Math.max(6, Math.min(10, h * 0.45))}
+              fill="currentColor"
+              opacity={0.7}
+              fontWeight="600"
+              fontFamily="sans-serif"
+            >
+              {text}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
