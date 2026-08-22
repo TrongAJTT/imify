@@ -85,5 +85,15 @@
         "answer": "Để chia sẻ web hoặc xem trên màn hình, mức 72 hoặc 150 DPI là tối ưu và nhẹ. Đối với lưu trữ hoặc in ấn chất lượng cao, mức 300 DPI mang lại độ sắc nét cao nhất."
       }
     ]
+  },
+  "password": {
+    "title": "Tài liệu PDF này có mật khẩu",
+    "description": "Vui lòng nhập mật khẩu để mở khóa và trích xuất các trang từ tài liệu này.",
+    "inputPlaceholder": "Nhập mật khẩu PDF...",
+    "unlockButton": "Mở khóa PDF",
+    "unlockingButton": "Đang mở khóa...",
+    "chooseAnotherFile": "Chọn tệp khác",
+    "incorrectPassword": "Mật khẩu không chính xác. Vui lòng thử lại.",
+    "protectedBadge": "Tài liệu được bảo vệ"
   }
 }

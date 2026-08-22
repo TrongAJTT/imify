@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  useMemo,
-} from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Check,
   CheckSquare,
@@ -32,6 +26,7 @@ import {
   getPdfInfo,
   renderPdfPageToBlob,
   renderPdfPageToCanvas,
+  isPdfPasswordException,
 } from "@imify/engine/converter/pdf-reader";
 import { StreamingZip } from "@imify/engine/converter/streaming-zip";
 import {
@@ -51,6 +46,7 @@ import {
   type PerformancePreferences,
   PERFORMANCE_PREFERENCES_KEY,
 } from "../processor/performance-preferences";
+import { PdfPasswordLockCard } from "./pdf-password-lock-card";
 
 interface PdfToImagesWorkspaceProps {
   pdfFile: File;
@@ -75,6 +71,8 @@ export function PdfToImagesWorkspace({
   const [rangeInput, setRangeInput] = useState<string>("");
   const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([]);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isPasswordProtected, setIsPasswordProtected] = useState(false);
+  const [pdfPassword, setPdfPassword] = useState<string | undefined>(undefined);
   const [isExporting, setIsExporting] = useState(false);
   const [exportStats, setExportStats] = useState<ExportStats | null>(null);
 
@@ -90,10 +88,7 @@ export function PdfToImagesWorkspace({
       const parsed: PerformancePreferences | undefined = raw
         ? JSON.parse(raw)
         : undefined;
-      return resolvePdfStudioLazyPagination(
-        parsed,
-        window.innerWidth < 768,
-      );
+      return resolvePdfStudioLazyPagination(parsed, window.innerWidth < 768);
     } catch {
       return false;
     }
@@ -149,21 +144,20 @@ export function PdfToImagesWorkspace({
     };
   }, [cleanupAllPreviewUrls]);
 
-  // 1. Initial document scan
-  useEffect(() => {
-    let isCancelled = false;
-
-    const scanPdf = async () => {
+  // 1. Initial document scan & password unlock handler
+  const scanPdf = useCallback(
+    async (pwd?: string): Promise<boolean> => {
       setIsInitializing(true);
-      setCurrentPage(1);
       cleanupAllPreviewUrls();
 
       try {
-        const info = await getPdfInfo(pdfFile);
-        if (isCancelled) return;
+        const info = await getPdfInfo(pdfFile, pwd);
+        setPdfPassword(pwd);
+        setIsPasswordProtected(false);
 
         const count = info.pageCount;
         setPageCount(count);
+        setCurrentPage(1);
 
         const allSet = new Set<number>();
         const initialThumbs: PageThumbnail[] = [];
@@ -179,22 +173,29 @@ export function PdfToImagesWorkspace({
         setRangeInput(formatPageRange(allSet, count));
         setThumbnails(initialThumbs);
         setIsInitializing(false);
+        return true;
       } catch (err) {
+        if (isPdfPasswordException(err)) {
+          setIsPasswordProtected(true);
+          setIsInitializing(false);
+          return false;
+        }
         console.error("Failed to load PDF info:", err);
-        if (!isCancelled) setIsInitializing(false);
+        setIsInitializing(false);
+        return false;
       }
-    };
+    },
+    [cleanupAllPreviewUrls, pdfFile],
+  );
 
+  useEffect(() => {
     void scanPdf();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [pdfFile, cleanupAllPreviewUrls]);
+  }, [scanPdf]);
 
   // 2. Thumbnail loading (Lazy Paged or All in background, cancellable on export)
   useEffect(() => {
-    if (isInitializing || pageCount === 0 || isExporting) return;
+    if (isInitializing || isPasswordProtected || pageCount === 0 || isExporting)
+      return;
 
     // Cancel any previous thumbnail loader
     thumbnailAbortControllerRef.current?.abort();
@@ -202,9 +203,7 @@ export function PdfToImagesWorkspace({
     thumbnailAbortControllerRef.current = abortController;
     const signal = abortController.signal;
 
-    const startPage = isLazyPaging
-      ? (currentPage - 1) * pageSize + 1
-      : 1;
+    const startPage = isLazyPaging ? (currentPage - 1) * pageSize + 1 : 1;
     const endPage = isLazyPaging
       ? Math.min(pageCount, currentPage * pageSize)
       : pageCount;
@@ -219,6 +218,7 @@ export function PdfToImagesWorkspace({
         try {
           const { canvas } = await renderPdfPageToCanvas(pdfFile, i, {
             maxWidth: 200,
+            password: pdfPassword,
           });
           if (signal.aborted) break;
 
@@ -253,7 +253,15 @@ export function PdfToImagesWorkspace({
     return () => {
       abortController.abort();
     };
-  }, [pdfFile, pageCount, isInitializing, currentPage, pageSize, isLazyPaging, isExporting]);
+  }, [
+    pdfFile,
+    pageCount,
+    isInitializing,
+    currentPage,
+    pageSize,
+    isLazyPaging,
+    isExporting,
+  ]);
 
   // Handle manual click toggle on page card
   const togglePageSelection = (pageNumber: number) => {
@@ -374,7 +382,10 @@ export function PdfToImagesWorkspace({
       typeof navigator !== "undefined" && navigator.hardwareConcurrency
         ? navigator.hardwareConcurrency
         : 4;
-    const concurrency = Math.max(1, Math.min(6, Math.floor(hardwareThreads / 2) || 2));
+    const concurrency = Math.max(
+      1,
+      Math.min(6, Math.floor(hardwareThreads / 2) || 2),
+    );
 
     setExportStats({
       current: 0,
@@ -390,13 +401,22 @@ export function PdfToImagesWorkspace({
       // Single page direct download
       if (pagesToExport.length === 1) {
         const pageNum = pagesToExport[0]!;
-        setExportStats((s) => (s ? { ...s, percent: 50, statusText: t("progress.rendering", { current: 1, total: 1 }) } : s));
+        setExportStats((s) =>
+          s
+            ? {
+                ...s,
+                percent: 50,
+                statusText: t("progress.rendering", { current: 1, total: 1 }),
+              }
+            : s,
+        );
 
         const blob = await renderPdfPageToBlob(pdfFile, {
           pageNumber: pageNum,
           dpi: config.dpi,
           format: targetFormat,
           quality,
+          password: pdfPassword,
         });
 
         if (signal.aborted) return;
@@ -436,7 +456,10 @@ export function PdfToImagesWorkspace({
                   ...s,
                   current: i + 1,
                   percent: pct,
-                  statusText: t("progress.rendering", { current: i + 1, total }),
+                  statusText: t("progress.rendering", {
+                    current: i + 1,
+                    total,
+                  }),
                 }
               : s,
           );
@@ -446,6 +469,7 @@ export function PdfToImagesWorkspace({
             dpi: config.dpi,
             format: targetFormat,
             quality,
+            password: pdfPassword,
           });
 
           if (signal.aborted) return;
@@ -493,6 +517,7 @@ export function PdfToImagesWorkspace({
               dpi: config.dpi,
               format: targetFormat,
               quality,
+              password: pdfPassword,
             });
 
             if (signal.aborted) return;
@@ -591,8 +616,23 @@ export function PdfToImagesWorkspace({
       return;
     }
 
-    await executeExport(exportMode === "one_by_one" ? "one_by_one" : "zip", customInput);
+    await executeExport(
+      exportMode === "one_by_one" ? "one_by_one" : "zip",
+      customInput,
+    );
   };
+
+  if (isPasswordProtected) {
+    return (
+      <PdfPasswordLockCard
+        fileName={pdfFile.name}
+        fileSize={pdfFile.size}
+        onUnlock={scanPdf}
+        onClear={onClear}
+        isUnlocking={isInitializing}
+      />
+    );
+  }
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(pageCount, startIndex + pageSize);
@@ -634,9 +674,7 @@ export function PdfToImagesWorkspace({
 
           <ExportSplitButton
             onExport={handleExportClick}
-            disabled={
-              isInitializing || isExporting || selectedPages.size === 0
-            }
+            disabled={isInitializing || isExporting || selectedPages.size === 0}
             isLoading={isExporting}
             primaryMode="zip"
             oneByOneCount={selectedPages.size}
@@ -647,10 +685,7 @@ export function PdfToImagesWorkspace({
 
       {/* Hero Progress Card (Mounted above selection controls during export) */}
       {isExporting && exportStats && (
-        <HeroProgressCard
-          stats={exportStats}
-          onCancel={handleCancelExport}
-        />
+        <HeroProgressCard stats={exportStats} onCancel={handleCancelExport} />
       )}
 
       {/* Page Range & Quick Selection Controls Bar */}
