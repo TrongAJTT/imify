@@ -69,6 +69,7 @@ export interface CaptionConfigSectionsProps<
   showOffsetCalculator?: boolean;
   showOffsetInputs?: boolean;
   enableLockPaddingHMax?: boolean;
+  disableBorderRadius?: boolean;
   extraTypographyNode?: React.ReactNode;
   extraContainerNode?: React.ReactNode;
   extraPositionNode?: React.ReactNode;
@@ -87,6 +88,7 @@ export function CaptionConfigSections<
   showOffsetCalculator = false,
   showOffsetInputs = false,
   enableLockPaddingHMax = false,
+  disableBorderRadius = false,
   extraTypographyNode,
   extraContainerNode,
   extraPositionNode,
@@ -335,12 +337,13 @@ export function CaptionConfigSections<
           />
           <NumberInput
             label={t("captionFields.borderRadius", "Bo góc")}
-            value={config.borderRadius ?? 0}
+            value={disableBorderRadius ? 0 : (config.borderRadius ?? 0)}
             onChangeValue={(borderRadius) =>
               onChange({ borderRadius } as Partial<T>)
             }
             min={0}
             max={200}
+            disabled={disableBorderRadius}
           />
           <NumberInput
             label={t("captionFields.containerOpacity", "Độ mờ (%)")}

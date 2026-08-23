@@ -226,14 +226,14 @@ function drawCaption(
   placement: LayoutPlacement,
   scale: number,
   captionText: string,
-  config: SplicingCaptionConfig
+  config: SplicingCaptionConfig,
+  imageStyle?: SplicingImageStyle
 ): void {
   if (!captionText || config.mode === "none") return
 
   const fontSize = Math.max(8, config.fontSize * scale)
   const padV = config.paddingV * scale
   const padH = config.paddingH * scale
-  const borderRadius = Math.max(0, config.borderRadius * scale)
   const offX = config.offsetX * scale
   const offY = config.offsetY * scale
 
@@ -258,6 +258,44 @@ function drawCaption(
     const cry = placement.captionRect.y * scale
     const crw = placement.captionRect.width * scale
     const crh = placement.captionRect.height * scale
+
+    // Determine pushed corner radii from image
+    let captionRadii: CornerRadii = { tl: 0, tr: 0, br: 0, bl: 0 }
+    if (imageStyle && imageStyle.borderRadius > 0) {
+      const outerR = imageStyle.borderRadius * scale
+      const bw = imageStyle.borderWidth * scale
+      const outerRadii = resolveSegmentCornerRadii(outerR, placement.sourceCropUv)
+      const contentInset = bw + imageStyle.padding * scale
+      const contentRadii = insetCornerRadii(outerRadii, contentInset)
+
+      if (config.position === "top") {
+        captionRadii = { tl: contentRadii.tl, tr: contentRadii.tr, br: 0, bl: 0 }
+      } else if (config.position === "bottom") {
+        captionRadii = { tl: 0, tr: 0, br: contentRadii.br, bl: contentRadii.bl }
+      } else if (config.position === "left") {
+        captionRadii = { tl: contentRadii.tl, tr: 0, br: 0, bl: contentRadii.bl }
+      } else if (config.position === "right") {
+        captionRadii = { tl: 0, tr: contentRadii.tr, br: contentRadii.br, bl: 0 }
+      }
+    }
+
+    // Draw container background for outside caption
+    if (config.containerColor && config.containerColor !== "transparent") {
+      const opacityRatio =
+        typeof config.containerOpacity === "number"
+          ? Math.max(0, Math.min(100, config.containerOpacity)) / 100
+          : 1
+      if (opacityRatio > 0) {
+        ctx.save()
+        if (opacityRatio < 1) {
+          ctx.globalAlpha = ctx.globalAlpha * opacityRatio
+        }
+        ctx.fillStyle = config.containerColor
+        drawRoundedRectWithCorners(ctx, crx, cry, crw, crh, captionRadii)
+        ctx.fill()
+        ctx.restore()
+      }
+    }
 
     if (config.position === "left") {
       rotationAngle = -Math.PI / 2
@@ -375,8 +413,8 @@ function drawCaption(
   }
 
 
-  // Container background
-  if (config.containerColor && config.containerColor !== "transparent") {
+  // Container background for inside mode
+  if (config.mode === "inside" && config.containerColor && config.containerColor !== "transparent") {
     const opacityRatio =
       typeof config.containerOpacity === "number"
         ? Math.max(0, Math.min(100, config.containerOpacity)) / 100
@@ -387,7 +425,7 @@ function drawCaption(
         ctx.globalAlpha = ctx.globalAlpha * opacityRatio
       }
       ctx.fillStyle = config.containerColor
-      drawRoundedRect(ctx, -boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, borderRadius)
+      drawRoundedRect(ctx, -boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, Math.max(0, config.borderRadius * scale))
       ctx.fill()
       ctx.restore()
     }
@@ -454,7 +492,24 @@ export function drawSplicingCanvas(
       const bw = imageStyle.borderWidth * scale
       const outerRadii = resolveSegmentCornerRadii(outerR, placement.sourceCropUv)
       const contentInset = bw + imageStyle.padding * scale
-      const contentRadii = insetCornerRadii(outerRadii, contentInset)
+      let contentRadii = insetCornerRadii(outerRadii, contentInset)
+
+      if (
+        options?.captionConfig &&
+        options.captionConfig.mode === "outside" &&
+        placement.captionRect
+      ) {
+        const pos = options.captionConfig.position
+        if (pos === "top") {
+          contentRadii = { ...contentRadii, tl: 0, tr: 0 }
+        } else if (pos === "bottom") {
+          contentRadii = { ...contentRadii, bl: 0, br: 0 }
+        } else if (pos === "left") {
+          contentRadii = { ...contentRadii, tl: 0, bl: 0 }
+        } else if (pos === "right") {
+          contentRadii = { ...contentRadii, tr: 0, br: 0 }
+        }
+      }
 
       // Padding / border background
       if (imageStyle.padding > 0 || imageStyle.borderWidth > 0) {
@@ -538,7 +593,7 @@ export function drawSplicingCanvas(
           ? customText
           : `Image #${placement.imageIndex + 1}`
 
-        drawCaption(ctx, placement, scale, effectiveText, options.captionConfig)
+        drawCaption(ctx, placement, scale, effectiveText, options.captionConfig, imageStyle)
       }
     }
   }

@@ -79,6 +79,7 @@ export function CaptionSettingsAccordion({
       patch.offsetX = 0;
       patch.offsetY = 0;
       patch.offsetLockMode = "none";
+      patch.borderRadius = 0;
     } else if (nextCfg.offsetLockMode === "auto") {
       const offsetVal = computeCaptionLockedOffset(nextCfg);
       const finalOffsetVal = -offsetVal;
@@ -135,6 +136,7 @@ export function CaptionSettingsAccordion({
                 {
                   mode: nextMode,
                   position: nextPos,
+                  borderRadius: 0,
                   offsetX: 0,
                   offsetY: 0,
                   offsetLockMode: "none",
@@ -143,6 +145,7 @@ export function CaptionSettingsAccordion({
                   ...captionConfig,
                   mode: nextMode,
                   position: nextPos,
+                  borderRadius: 0,
                   offsetX: 0,
                   offsetY: 0,
                   offsetLockMode: "none",
@@ -167,6 +170,7 @@ export function CaptionSettingsAccordion({
             showOffsetCalculator={isInside}
             showOffsetInputs={isInside}
             enableLockPaddingHMax={true}
+            disableBorderRadius={!isInside}
           />
         )}
       </div>
