@@ -180,7 +180,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
       
       resizeQuickStats: {
         width: null,
-        height: null
+        height: null,
+        shortest: null,
+        longest: null
       },
 
       previewContainerHeight: getInitialCanvasHeightPx(400),

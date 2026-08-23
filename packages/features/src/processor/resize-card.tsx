@@ -181,22 +181,38 @@ export function ResizeCardContent({
 
   const showQuickResizePopover = isLinearMode;
 
-  const isWidthTarget =
-    resizeApplyTo === "width" ||
-    resizeApplyTo === "shortest" ||
-    resizeApplyTo === "longest";
-  const isHeightTarget = resizeApplyTo === "height";
-  const sourceEdge = isWidthTarget
-    ? resizeSourceWidth
-    : isHeightTarget
-      ? resizeSourceHeight
-      : 0;
+  const quickStatsFromQueue = (() => {
+    switch (resizeApplyTo) {
+      case "width":
+        return resizeQuickStats?.width ?? null;
+      case "height":
+        return resizeQuickStats?.height ?? null;
+      case "shortest":
+        return resizeQuickStats?.shortest ?? null;
+      case "longest":
+        return resizeQuickStats?.longest ?? null;
+      default:
+        return resizeQuickStats?.width ?? null;
+    }
+  })();
+
+  const sourceEdge = (() => {
+    const sw = resizeSourceWidth ?? 0;
+    const sh = resizeSourceHeight ?? 0;
+    switch (resizeApplyTo) {
+      case "width":
+        return sw;
+      case "height":
+        return sh;
+      case "shortest":
+        return sw > 0 && sh > 0 ? Math.min(sw, sh) : sw || sh;
+      case "longest":
+        return sw > 0 && sh > 0 ? Math.max(sw, sh) : sw || sh;
+      default:
+        return sw;
+    }
+  })();
   const hasSourceEdge = sourceEdge > 0;
-  const quickStatsFromQueue = isWidthTarget
-    ? resizeQuickStats?.width
-    : isHeightTarget
-      ? resizeQuickStats?.height
-      : null;
 
   const quickResizeValues = quickStatsFromQueue
     ? [
@@ -364,8 +380,7 @@ export function ResizeCardContent({
         />
       )}
 
-      {(resizeMode === "paper_size" ||
-        (resizeMode as any) === "page_size") && (
+      {(resizeMode === "paper_size" || (resizeMode as any) === "page_size") && (
         <PaperConfig
           disabled={disabled}
           dpi={dpi as any}

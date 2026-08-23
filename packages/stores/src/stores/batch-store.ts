@@ -319,7 +319,9 @@ export const useBatchStore = create<BatchStoreState>()(
       resizeSyncVersion: 0,
       resizeQuickStats: {
         width: null,
-        height: null
+        height: null,
+        shortest: null,
+        longest: null
       },
       isRunning: false,
       presets: [],
