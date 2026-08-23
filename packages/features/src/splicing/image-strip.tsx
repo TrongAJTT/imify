@@ -1,5 +1,5 @@
 import { Plus, Type, X } from "lucide-react";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   closestCenter,
   DndContext,
@@ -44,6 +44,7 @@ function ImageCaptionEditPopover({
   value: string;
   onChange: (id: string, text: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
   const defaultText = `Image #${index + 1}`;
   const displayText = value.trim() ? value : defaultText;
 
@@ -53,6 +54,8 @@ function ImageCaptionEditPopover({
       side="top"
       align="center"
       sideOffset={6}
+      open={open}
+      onOpenChange={setOpen}
       trigger={
         <button
           type="button"
@@ -89,17 +92,21 @@ function ImageCaptionEditPopover({
           )}
         </div>
         <div className="relative flex items-center">
-          <input
-            type="text"
+          <textarea
             value={value}
             onChange={(e) => onChange(imageId, e.target.value)}
             placeholder={defaultText}
             autoFocus
-            className="w-full h-8 px-2.5 pr-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+            rows={3}
+            className="w-full min-h-[56px] py-1.5 px-2.5 pr-7 resize-none rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/50 leading-relaxed"
             onKeyDown={(e) => {
               e.stopPropagation();
-              if (e.key === "Enter") {
-                (e.target as HTMLInputElement).blur();
+              if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                setOpen(false);
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                setOpen(false);
               }
             }}
             onKeyUp={(e) => e.stopPropagation()}
@@ -108,7 +115,7 @@ function ImageCaptionEditPopover({
             <button
               type="button"
               onClick={() => onChange(imageId, "")}
-              className="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              className="absolute top-2 right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
             >
               <X size={12} />
             </button>
@@ -116,7 +123,6 @@ function ImageCaptionEditPopover({
         </div>
       </div>
     </ControlledPopover>
-
   );
 }
 

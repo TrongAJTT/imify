@@ -237,16 +237,21 @@ function drawCaption(
   const offX = config.offsetX * scale
   const offY = config.offsetY * scale
 
+  const lineHeight = fontSize * 1.25
   ctx.save()
   ctx.font = `500 ${fontSize}px ${config.fontFamily || "Inter"}, system-ui, sans-serif`
-  const textMetrics = ctx.measureText(captionText)
-  const textWidth = textMetrics.width
+  const lines = captionText.split("\n")
+  let maxLineWidth = 0
+  for (const line of lines) {
+    const w = ctx.measureText(line).width
+    if (w > maxLineWidth) maxLineWidth = w
+  }
   const maxAvailableBoxWidth =
     config.position === "left" || config.position === "right"
       ? (placement.captionRect?.height ?? placement.contentRect.height) * scale
       : (placement.captionRect?.width ?? placement.contentRect.width) * scale
-  const boxWidth = Math.min(textWidth + padH * 2, maxAvailableBoxWidth)
-  const boxHeight = fontSize + padV * 2
+  const boxWidth = Math.min(maxLineWidth + padH * 2, maxAvailableBoxWidth)
+  const boxHeight = fontSize + (lines.length - 1) * lineHeight + padV * 2
 
 
   let boxCenterX = 0
@@ -432,11 +437,13 @@ function drawCaption(
   }
 
   // Text
-
   ctx.fillStyle = config.textColor || "#ffffff"
   ctx.textAlign = "center"
   ctx.textBaseline = "middle"
-  ctx.fillText(captionText, 0, 0)
+  const startY = -((lines.length - 1) * lineHeight) / 2
+  lines.forEach((line, i) => {
+    ctx.fillText(line, 0, startY + i * lineHeight)
+  })
 
   ctx.restore()
 }
@@ -823,6 +830,7 @@ export async function exportSplicedImage(
       return { width: processed.width, height: processed.height }
     })
 
+    const imageIds = images.map((img) => img.id)
     const layoutResult = calculateLayout(
       imageSizes,
       layoutConfig,
@@ -831,10 +839,11 @@ export async function exportSplicedImage(
       imageResize,
       fitValue,
       imageApplyTo,
-      options?.captionConfig
+      options?.captionConfig,
+      options?.captionTexts,
+      imageIds
     )
 
-    const imageIds = images.map((img) => img.id)
     const renderOptions = {
       captionConfig: options?.captionConfig,
       captionTexts: options?.captionTexts,
