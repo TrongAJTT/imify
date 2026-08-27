@@ -11,6 +11,7 @@ import { Stage } from "react-konva";
 import type Konva from "konva";
 import {
   ArrowLeft,
+  ArrowLeftRight,
   ChevronDown,
   Columns3,
   Image,
@@ -36,6 +37,11 @@ import {
   canReorderGridRows,
   computeGridRowBounds,
   computeGridRowGroups,
+  hasReversibleGridDefinition,
+  reorderGridDefinitions,
+  reverseAllGridDefinitions,
+  reverseSingleGridDefinition,
+  toggleGridDirection,
 } from "./generator";
 import { GridDesignCanvasLayer } from "./canvas-layer";
 import { GridRowReorderOverlay } from "./grid-row-reorder-overlay";
@@ -216,27 +222,9 @@ export function GridDesignWorkspace({
 
   const handleReorderRows = useCallback(
     (fromStart: number, fromEnd: number, toIndex: number) => {
-      const count = Math.max(1, Math.round(activeParams.rowCount));
-      const currentDefs = Array.from(
-        { length: count },
-        (_, index) => activeParams.rowDefinitions[index] ?? "",
+      setGridDesignParams(
+        reorderGridDefinitions(activeParams, fromStart, fromEnd, toIndex),
       );
-
-      const moveCount = fromEnd - fromStart + 1;
-      const movingItems = currentDefs.splice(fromStart, moveCount);
-
-      let targetIndex = toIndex;
-      if (targetIndex > fromStart) {
-        targetIndex = targetIndex - moveCount;
-      }
-      targetIndex = Math.max(0, Math.min(currentDefs.length, targetIndex));
-
-      currentDefs.splice(targetIndex, 0, ...movingItems);
-
-      setGridDesignParams({
-        ...activeParams,
-        rowDefinitions: currentDefs,
-      });
     },
     [activeParams, setGridDesignParams],
   );
@@ -244,12 +232,24 @@ export function GridDesignWorkspace({
   const isColsMode = activeParams.direction === "cols";
 
   const handleToggleDirection = useCallback(() => {
-    const nextDirection = activeParams.direction === "cols" ? "rows" : "cols";
-    setGridDesignParams({
-      ...activeParams,
-      direction: nextDirection,
-    });
+    setGridDesignParams(toggleGridDirection(activeParams));
   }, [activeParams, setGridDesignParams]);
+
+  const handleReverseSingleRow = useCallback(
+    (rowIndex: number) => {
+      setGridDesignParams(reverseSingleGridDefinition(activeParams, rowIndex));
+    },
+    [activeParams, setGridDesignParams],
+  );
+
+  const handleReverseAll = useCallback(() => {
+    setGridDesignParams(reverseAllGridDefinitions(activeParams));
+  }, [activeParams, setGridDesignParams]);
+
+  const hasReversibleDefinition = useMemo(
+    () => hasReversibleGridDefinition(activeParams),
+    [activeParams],
+  );
 
   const fitScale = useMemo(() => {
     const availW = stageSize.width - CANVAS_PADDING * 2;
@@ -338,12 +338,8 @@ export function GridDesignWorkspace({
             onClick={handleToggleDirection}
             title={
               isColsMode
-                ? t("gridDesigner.switchToRows", {
-                    defaultValue: "Chuyển sang sắp xếp theo Hàng",
-                  })
-                : t("gridDesigner.switchToCols", {
-                    defaultValue: "Chuyển sang sắp xếp theo Cột",
-                  })
+                ? t("gridDesigner.switchToRows")
+                : t("gridDesigner.switchToCols")
             }
             className="h-8 gap-1.5 px-2.5 text-xs text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700"
           >
@@ -354,6 +350,23 @@ export function GridDesignWorkspace({
                 : t("gridDesigner.directionRows")}
             </span>
           </Button>
+
+          {hasReversibleDefinition && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReverseAll}
+              title={
+                isColsMode
+                  ? t("gridDesigner.reverseAllCols")
+                  : t("gridDesigner.reverseAllRows")
+              }
+              className="h-8 gap-1.5 px-2.5 text-xs text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700"
+            >
+              <ArrowLeftRight size={14} />
+              <span>{t("gridDesigner.reverseAll")}</span>
+            </Button>
+          )}
 
           <PreviewInteractionModeToggle
             mode={previewInteractionMode}
@@ -449,7 +462,9 @@ export function GridDesignWorkspace({
           canvasWidth={template.canvasWidth}
           canvasHeight={template.canvasHeight}
           enabled={reorderCheck.allowed && !isViewportPanning}
+          rowDefinitions={activeParams.rowDefinitions}
           onReorder={handleReorderRows}
+          onReverseRow={handleReverseSingleRow}
           onHoverRowChange={setHighlightedGridIndex}
         />
         <ZoomPanControl

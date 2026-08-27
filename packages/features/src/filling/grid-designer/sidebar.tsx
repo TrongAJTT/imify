@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useCallback, useMemo } from "react";
-import { Columns3, Copy, LayoutGrid, Rows3 } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Columns3,
+  Copy,
+  LayoutGrid,
+  Rows3,
+} from "lucide-react";
 import { AccordionCard } from "@imify/ui/ui/accordion-card";
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card";
 import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
@@ -18,7 +24,13 @@ import type {
 import { DEFAULT_GRID_DESIGN_PARAMS } from "../types";
 import { GRID_TEMPLATE_PRESETS, type GridTemplatePreset } from "../config";
 import { useTranslation } from "@imify/i18n";
-import { parseGridDesign } from "./generator";
+import {
+  canReverseDefinition,
+  hasReversibleGridDefinition,
+  parseGridDesign,
+  reverseAllGridDefinitions,
+  reverseSingleGridDefinition,
+} from "./generator";
 import { parseGridTemplateString } from "./grid-template-utils";
 import { GRID_DESIGN_TOOLTIPS } from "./tooltips";
 import { usePopoverTriggerBehavior } from "../../shared/use-popover-trigger-behavior";
@@ -89,7 +101,7 @@ function GridTemplatePreview({ preset }: { preset: GridTemplatePreset }) {
         const clipPath =
           cell.points && cell.points.length > 4
             ? `polygon(${cell.points.map((p) => `${((p.x / cell.width) * 100).toFixed(1)}% ${((p.y / cell.height) * 100).toFixed(1)}%`).join(", ")})`
-            : undefined
+            : undefined;
 
         return (
           <div
@@ -103,7 +115,7 @@ function GridTemplatePreview({ preset }: { preset: GridTemplatePreset }) {
               clipPath,
             }}
           />
-        )
+        );
       })}
     </div>
   );
@@ -186,12 +198,10 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
     ? t("gridDesigner.sublabelCols", {
         count: params.rowCount,
         cells: layerCount,
-        defaultValue: `${params.rowCount} columns, ${layerCount} cells`,
       })
     : t("gridDesigner.sublabelRows", {
         count: params.rowCount,
         cells: layerCount,
-        defaultValue: `${params.rowCount} rows, ${layerCount} cells`,
       });
 
   const validation = useMemo(() => {
@@ -222,6 +232,22 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
     };
   }, [params, template.canvasHeight, template.canvasWidth, t, isColsMode]);
 
+  const handleReverseSingleDefinition = useCallback(
+    (index: number) => {
+      update(reverseSingleGridDefinition(params, index));
+    },
+    [params, update],
+  );
+
+  const handleReverseAllDefinitions = useCallback(() => {
+    update(reverseAllGridDefinitions(params));
+  }, [params, update]);
+
+  const hasReversibleDefinition = useMemo(
+    () => hasReversibleGridDefinition(params),
+    [params],
+  );
+
   const localizedPresets = useMemo(() => {
     return GRID_TEMPLATE_PRESETS.map((preset) => ({
       ...preset,
@@ -241,13 +267,11 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
         {/* Primary Direction Selector */}
         <div className="space-y-1">
           <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-            {t("gridDesigner.primaryDirection", {
-              defaultValue: "Primary Direction",
-            })}
+            {t("gridDesigner.primaryDirection")}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <RadioCard
-              title={t("gridDesigner.directionRows", { defaultValue: "Rows" })}
+              title={t("gridDesigner.directionRows")}
               icon={<Rows3 size={14} />}
               value="rows"
               selectedValue={params.direction ?? "rows"}
@@ -256,9 +280,7 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
               }
             />
             <RadioCard
-              title={t("gridDesigner.directionCols", {
-                defaultValue: "Columns",
-              })}
+              title={t("gridDesigner.directionCols")}
               icon={<Columns3 size={14} />}
               value="cols"
               selectedValue={params.direction ?? "rows"}
@@ -271,11 +293,7 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <NumberInput
-            label={
-              isColsMode
-                ? t("gridDesigner.cols", { defaultValue: "Number of columns" })
-                : t("gridDesigner.rows", { defaultValue: "Number of rows" })
-            }
+            label={isColsMode ? t("gridDesigner.cols") : t("gridDesigner.rows")}
             value={params.rowCount}
             onChangeValue={updateRowCount}
             min={1}
@@ -314,22 +332,13 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
         <CheckboxCard
           title={
             isColsMode
-              ? t("gridDesigner.uniformCols", {
-                  defaultValue: "Use Same Rows For All Columns",
-                })
-              : t("gridDesigner.uniformRows", {
-                  defaultValue: "Use Same Columns For All Rows",
-                })
+              ? t("gridDesigner.uniformCols")
+              : t("gridDesigner.uniformRows")
           }
           subtitle={
             isColsMode
-              ? t("gridDesigner.uniformColsDesc", {
-                  defaultValue:
-                    "Apply one shared column definition to all columns.",
-                })
-              : t("gridDesigner.uniformRowsDesc", {
-                  defaultValue: "Apply one shared row definition to all rows.",
-                })
+              ? t("gridDesigner.uniformColsDesc")
+              : t("gridDesigner.uniformRowsDesc")
           }
           icon={<Copy size={14} />}
           checked={params.uniformColumns}
@@ -337,50 +346,107 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
         />
 
         {params.uniformColumns ? (
-          <TextInput
-            label={
-              isColsMode
-                ? t("gridDesigner.sharedColDef", {
-                    defaultValue: "Shared Column Definition",
-                  })
-                : t("gridDesigner.sharedRowDef", {
-                    defaultValue: "Shared Row Definition",
-                  })
-            }
-            value={params.uniformColumnsDef}
-            onChange={(value) => update({ uniformColumnsDef: value })}
-            placeholder={t("gridDesigner.placeholderExamples")}
-            errorMessage={validation.sharedError ?? undefined}
-          />
-        ) : (
-          <div className="grid grid-cols-2 gap-2">
-            {params.rowDefinitions.map((definition, rowIndex) => (
-              <div
-                key={`grid-def-${rowIndex}`}
-                onMouseEnter={() => setHighlightedGridIndex(rowIndex)}
-                onMouseLeave={() => setHighlightedGridIndex(null)}
-              >
-                <TextInput
-                  label={
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                {isColsMode
+                  ? t("gridDesigner.sharedColDef")
+                  : t("gridDesigner.sharedRowDef")}
+              </span>
+              {canReverseDefinition(params.uniformColumnsDef) && (
+                <button
+                  type="button"
+                  onClick={handleReverseAllDefinitions}
+                  title={
                     isColsMode
-                      ? t("gridDesigner.colDefLabel", {
-                          index: rowIndex + 1,
-                          defaultValue: `Column ${rowIndex + 1} Rows`,
-                        })
-                      : t("gridDesigner.rowDefLabel", {
-                          index: rowIndex + 1,
-                          defaultValue: `Row ${rowIndex + 1} Columns`,
-                        })
+                      ? t("gridDesigner.reverseCol")
+                      : t("gridDesigner.reverseRow")
                   }
-                  value={definition}
-                  onChange={(value) => updateRowDefinition(rowIndex, value)}
-                  onFocus={() => setHighlightedGridIndex(rowIndex)}
-                  onBlur={() => setHighlightedGridIndex(null)}
-                  placeholder={t("gridDesigner.placeholderExamples")}
-                  errorMessage={validation.errorsByRow.get(rowIndex)}
-                />
+                  className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-slate-500 hover:bg-slate-100 hover:text-sky-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-sky-400 transition-colors"
+                >
+                  <ArrowLeftRight size={12} />
+                  <span>{t("gridDesigner.reverseAll")}</span>
+                </button>
+              )}
+            </div>
+            <TextInput
+              label=""
+              value={params.uniformColumnsDef}
+              onChange={(value) => update({ uniformColumnsDef: value })}
+              placeholder={t("gridDesigner.placeholderExamples")}
+              errorMessage={validation.sharedError ?? undefined}
+            />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                {isColsMode
+                  ? t("gridDesigner.colDefinitions")
+                  : t("gridDesigner.rowDefinitions")}
               </div>
-            ))}
+              {hasReversibleDefinition && (
+                <button
+                  type="button"
+                  onClick={handleReverseAllDefinitions}
+                  title={
+                    isColsMode
+                      ? t("gridDesigner.reverseAllCols")
+                      : t("gridDesigner.reverseAllRows")
+                  }
+                  className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-slate-500 hover:bg-slate-100 hover:text-sky-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-sky-400 transition-colors"
+                >
+                  <ArrowLeftRight size={12} />
+                  <span>{t("gridDesigner.reverseAll")}</span>
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {params.rowDefinitions.map((definition, rowIndex) => (
+                <div
+                  key={`grid-def-${rowIndex}`}
+                  className="space-y-1"
+                  onMouseEnter={() => setHighlightedGridIndex(rowIndex)}
+                  onMouseLeave={() => setHighlightedGridIndex(null)}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
+                      {isColsMode
+                        ? t("gridDesigner.colDefLabel", {
+                            index: rowIndex + 1,
+                          })
+                        : t("gridDesigner.rowDefLabel", {
+                            index: rowIndex + 1,
+                          })}
+                    </span>
+                    {canReverseDefinition(definition) && (
+                      <button
+                        type="button"
+                        onClick={() => handleReverseSingleDefinition(rowIndex)}
+                        title={
+                          isColsMode
+                            ? t("gridDesigner.reverseCol")
+                            : t("gridDesigner.reverseRow")
+                        }
+                        className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-sky-600 dark:hover:bg-slate-800 dark:hover:text-sky-400 transition-colors"
+                      >
+                        <ArrowLeftRight size={12} />
+                      </button>
+                    )}
+                  </div>
+                  <TextInput
+                    label=""
+                    value={definition}
+                    onChange={(value) => updateRowDefinition(rowIndex, value)}
+                    onFocus={() => setHighlightedGridIndex(rowIndex)}
+                    onBlur={() => setHighlightedGridIndex(null)}
+                    placeholder={t("gridDesigner.placeholderExamples")}
+                    errorMessage={validation.errorsByRow.get(rowIndex)}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -396,7 +462,9 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
                 returnObjects: true,
                 defaultValue: GRID_DESIGN_TOOLTIPS.rowDefinitionTips,
               });
-              return Array.isArray(raw) ? (raw as string[]) : [...GRID_DESIGN_TOOLTIPS.rowDefinitionTips];
+              return Array.isArray(raw)
+                ? (raw as string[])
+                : [...GRID_DESIGN_TOOLTIPS.rowDefinitionTips];
             })().map((tip, idx) => (
               <li key={idx}>{tip}</li>
             ))}
@@ -427,9 +495,7 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
                     {t("gridDesigner.useTemplates")}
                   </div>
                   <div className="text-[10px] text-sky-600/80 dark:text-sky-400/80 truncate">
-                    {t("gridDesigner.useTemplatesDesc", {
-                      defaultValue: "Select from layout presets",
-                    })}
+                    {t("gridDesigner.useTemplatesDesc")}
                   </div>
                 </div>
               </div>
@@ -442,10 +508,7 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
               {t("gridDesigner.quickTemplates")}
             </div>
             <div className="text-[10px] text-slate-500 dark:text-slate-400">
-              {t("gridDesigner.quickTemplatesDesc", {
-                defaultValue:
-                  "Click a preset to apply layout (preserves current padding & gaps)",
-              })}
+              {t("gridDesigner.quickTemplatesDesc")}
             </div>
           </div>
           <div className="max-h-[320px] overflow-y-auto custom-scrollbar p-0.5">

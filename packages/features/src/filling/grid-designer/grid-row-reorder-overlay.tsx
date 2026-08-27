@@ -1,8 +1,12 @@
 "use client";
 
 import React, { useCallback, useRef, useState } from "react";
-import { GripHorizontal, GripVertical } from "lucide-react";
-import type { GridRowBounds, GridRowGroup } from "./generator";
+import { ArrowLeftRight, GripHorizontal, GripVertical } from "lucide-react";
+import {
+  canReverseDefinition,
+  type GridRowBounds,
+  type GridRowGroup,
+} from "./generator";
 import type { GridPrimaryDirection } from "../types";
 
 export interface GridRowReorderOverlayProps {
@@ -15,7 +19,9 @@ export interface GridRowReorderOverlayProps {
   canvasWidth: number;
   canvasHeight: number;
   enabled: boolean;
+  rowDefinitions?: string[];
   onReorder: (fromStart: number, fromEnd: number, toIndex: number) => void;
+  onReverseRow?: (rowIndex: number) => void;
   onHoverRowChange?: (rowIndex: number | null) => void;
 }
 
@@ -38,7 +44,9 @@ export function GridRowReorderOverlay({
   canvasWidth,
   canvasHeight,
   enabled,
+  rowDefinitions,
   onReorder,
+  onReverseRow,
   onHoverRowChange,
 }: GridRowReorderOverlayProps) {
   const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
@@ -261,11 +269,9 @@ export function GridRowReorderOverlay({
               <>
                 {/* Unified Group Drag Handle */}
                 <div
-                  className="absolute pointer-events-auto z-20"
+                  className="absolute pointer-events-auto z-20 flex items-center gap-1"
                   style={{
-                    left: isColsMode
-                      ? screenX + screenW / 2
-                      : screenX + 8,
+                    left: isColsMode ? screenX + screenW / 2 : screenX + 8,
                     top: screenY + 8,
                     transform: isColsMode ? "translateX(-50%)" : undefined,
                   }}
@@ -333,10 +339,13 @@ export function GridRowReorderOverlay({
                       dragState.fromStart === rIdx &&
                       dragState.fromEnd === rIdx;
 
+                    const rowDef = rowDefinitions?.[rIdx];
+                    const canReverse = canReverseDefinition(rowDef);
+
                     return (
                       <div
                         key={`sub-row-handle-${rIdx}`}
-                        className="absolute pointer-events-auto z-20"
+                        className="absolute pointer-events-auto z-20 flex items-center gap-1"
                         style={{
                           left: subLeft,
                           top: subTop,
@@ -348,6 +357,21 @@ export function GridRowReorderOverlay({
                           handlePointerEnterRow(rIdx, group.id)
                         }
                       >
+                        {canReverse && (
+                          <button
+                            type="button"
+                            data-viewer-interactive="true"
+                            aria-label={`Reverse cells in ${isColsMode ? "column" : "row"} ${rIdx + 1}`}
+                            title={`Đảo thứ tự các ô trong ${isColsMode ? "Cột" : "Hàng"} ${rIdx + 1}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onReverseRow?.(rIdx);
+                            }}
+                            className="inline-flex items-center justify-center rounded-md border border-sky-300 bg-white/95 dark:bg-slate-800/95 p-1 text-sky-700 dark:text-sky-300 shadow-sm transition-all hover:border-sky-500 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-white hover:scale-105"
+                          >
+                            <ArrowLeftRight size={11} />
+                          </button>
+                        )}
                         <button
                           type="button"
                           data-viewer-interactive="true"
@@ -383,11 +407,9 @@ export function GridRowReorderOverlay({
             ) : (
               /* Case B: Single Row Handle */
               <div
-                className="absolute pointer-events-auto z-20"
+                className="absolute pointer-events-auto z-20 flex items-center gap-1"
                 style={{
-                  left: isColsMode
-                    ? screenX + screenW / 2
-                    : screenX + 8,
+                  left: isColsMode ? screenX + screenW / 2 : screenX + 8,
                   top: screenY + 8,
                   transform: isColsMode ? "translateX(-50%)" : undefined,
                 }}
@@ -424,6 +446,22 @@ export function GridRowReorderOverlay({
                   )}
                   <span>{group.startRow + 1}</span>
                 </button>
+
+                {rowDefinitions && canReverseDefinition(rowDefinitions[group.startRow]) && (
+                  <button
+                    type="button"
+                    data-viewer-interactive="true"
+                    aria-label={`Reverse cells in ${isColsMode ? "column" : "row"} ${group.startRow + 1}`}
+                    title={`Đảo thứ tự các ô trong ${isColsMode ? "Cột" : "Hàng"} ${group.startRow + 1}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReverseRow?.(group.startRow);
+                    }}
+                    className="inline-flex items-center justify-center rounded-md border border-slate-300/90 bg-white/90 dark:bg-slate-800/90 p-1 text-slate-600 dark:text-slate-200 shadow-sm transition-all hover:border-sky-400 hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-sky-500 dark:hover:text-white hover:scale-105 opacity-80 hover:opacity-100"
+                  >
+                    <ArrowLeftRight size={11} />
+                  </button>
+                )}
               </div>
             )}
           </React.Fragment>

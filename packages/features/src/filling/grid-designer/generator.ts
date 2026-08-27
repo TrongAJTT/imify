@@ -1492,4 +1492,106 @@ export function computeGridRowGroups(
   return groups
 }
 
+export function canReverseDefinition(def: string | undefined): boolean {
+  if (!def) return false
+  const trimmed = def.trim()
+  if (!trimmed || trimmed === "=" || trimmed === "-") return false
+  const tokens = trimmed.split(/\s+/).filter(Boolean)
+  return tokens.length > 1
+}
+
+export function reverseDefinitionTokens(def: string): string {
+  const trimmed = def.trim()
+  if (!trimmed || trimmed === "=" || trimmed === "-") return def
+  const tokens = trimmed.split(/\s+/).filter(Boolean)
+  if (tokens.length <= 1) return def
+  return tokens.reverse().join(" ")
+}
+
+export function hasReversibleGridDefinition(params: GridDesignParams): boolean {
+  if (params.uniformColumns) {
+    return canReverseDefinition(params.uniformColumnsDef)
+  }
+  return params.rowDefinitions.some((def) => canReverseDefinition(def))
+}
+
+export function reverseSingleGridDefinition(
+  params: GridDesignParams,
+  rowIndex: number,
+): GridDesignParams {
+  const count = clampPositiveInt(params.rowCount, 1)
+  const currentDefs = Array.from(
+    { length: count },
+    (_, index) => params.rowDefinitions[index] ?? "",
+  )
+  const target = currentDefs[rowIndex]
+  if (target === undefined) return params
+  currentDefs[rowIndex] = reverseDefinitionTokens(target)
+  return {
+    ...params,
+    rowDefinitions: currentDefs,
+  }
+}
+
+export function reverseAllGridDefinitions(
+  params: GridDesignParams,
+): GridDesignParams {
+  if (params.uniformColumns) {
+    return {
+      ...params,
+      uniformColumnsDef: reverseDefinitionTokens(params.uniformColumnsDef),
+    }
+  }
+  const count = clampPositiveInt(params.rowCount, 1)
+  const currentDefs = Array.from(
+    { length: count },
+    (_, index) => params.rowDefinitions[index] ?? "",
+  )
+  const nextDefs = currentDefs.map((def) => reverseDefinitionTokens(def))
+  return {
+    ...params,
+    rowDefinitions: nextDefs,
+  }
+}
+
+export function reorderGridDefinitions(
+  params: GridDesignParams,
+  fromStart: number,
+  fromEnd: number,
+  toIndex: number,
+): GridDesignParams {
+  const count = clampPositiveInt(params.rowCount, 1)
+  const currentDefs = Array.from(
+    { length: count },
+    (_, index) => params.rowDefinitions[index] ?? "",
+  )
+
+  const moveCount = fromEnd - fromStart + 1
+  const movingItems = currentDefs.splice(fromStart, moveCount)
+
+  let targetIndex = toIndex
+  if (targetIndex > fromStart) {
+    targetIndex = targetIndex - moveCount
+  }
+  targetIndex = Math.max(0, Math.min(currentDefs.length, targetIndex))
+
+  currentDefs.splice(targetIndex, 0, ...movingItems)
+
+  return {
+    ...params,
+    rowDefinitions: currentDefs,
+  }
+}
+
+export function toggleGridDirection(
+  params: GridDesignParams,
+): GridDesignParams {
+  return {
+    ...params,
+    direction: params.direction === "cols" ? "rows" : "cols",
+  }
+}
+
+
+
 
