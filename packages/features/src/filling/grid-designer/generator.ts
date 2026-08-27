@@ -738,6 +738,60 @@ function buildGridCellsFromParsed(grid: ParsedGridCell[][], mergedCellIds: Set<s
   )
 }
 
+function areCellsAdjacent(
+  cellA: BaseLayoutCell,
+  cellB: BaseLayoutCell,
+  gapX: number,
+  gapY: number,
+  allCells: BaseLayoutCell[]
+): boolean {
+  // 1. Horizontal adjacency check
+  const yOverlapStart = Math.max(cellA.y, cellB.y)
+  const yOverlapEnd = Math.min(cellA.y + cellA.height, cellB.y + cellB.height)
+  if (yOverlapEnd - yOverlapStart > EPSILON) {
+    const left = cellA.x < cellB.x ? cellA : cellB
+    const right = cellA.x < cellB.x ? cellB : cellA
+    const gapDist = right.x - (left.x + left.width)
+    if (gapDist > -EPSILON && gapDist <= gapX + 1.5) {
+      const hasIntervening = allCells.some(
+        (c) =>
+          c.id !== cellA.id &&
+          c.id !== cellB.id &&
+          c.x >= left.x + left.width - EPSILON &&
+          c.x + c.width <= right.x + EPSILON &&
+          Math.min(c.y + c.height, yOverlapEnd) - Math.max(c.y, yOverlapStart) > EPSILON
+      )
+      if (!hasIntervening) {
+        return true
+      }
+    }
+  }
+
+  // 2. Vertical adjacency check
+  const xOverlapStart = Math.max(cellA.x, cellB.x)
+  const xOverlapEnd = Math.min(cellA.x + cellA.width, cellB.x + cellB.width)
+  if (xOverlapEnd - xOverlapStart > EPSILON) {
+    const top = cellA.y < cellB.y ? cellA : cellB
+    const bottom = cellA.y < cellB.y ? cellB : cellA
+    const gapDist = bottom.y - (top.y + top.height)
+    if (gapDist > -EPSILON && gapDist <= gapY + 1.5) {
+      const hasIntervening = allCells.some(
+        (c) =>
+          c.id !== cellA.id &&
+          c.id !== cellB.id &&
+          c.y >= top.y + top.height - EPSILON &&
+          c.y + c.height <= bottom.y + EPSILON &&
+          Math.min(c.x + c.width, xOverlapEnd) - Math.max(c.x, xOverlapStart) > EPSILON
+      )
+      if (!hasIntervening) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
 function buildChainedLayoutCells(
   baseCells: BaseLayoutCell[],
   isColsMode: boolean,
@@ -769,6 +823,9 @@ function buildChainedLayoutCells(
     parent.set(cell.id, cell.id)
   }
 
+  const gapX = resolveGapX(params)
+  const gapY = resolveGapY(params)
+
   // Connect pairs of cells sharing at least one indicator
   for (let i = 0; i < baseCells.length; i++) {
     const cellA = baseCells[i]!
@@ -799,6 +856,12 @@ function buildChainedLayoutCells(
 
       // If on the same primary axis, check if primary axis merge is enabled
       if (isSamePrimaryAxis && !ENABLE_PRIMARY_AXIS_MERGE) {
+        continue
+      }
+
+      // For non-convex hull merges, only connect if cells are spatially adjacent (touching / directly contiguous)
+      const isConvex = cellA.isConvex || cellB.isConvex
+      if (!isConvex && !areCellsAdjacent(cellA, cellB, gapX, gapY, baseCells)) {
         continue
       }
 
