@@ -166,6 +166,48 @@ function cloneContextConfig(state: BatchStoreState, context: SetupContext): Batc
   return cloneSetupState(state.contextConfigs[context] ?? DEFAULT_BATCH_STATE)
 }
 
+function buildBatchContextFieldPatch<K extends keyof BatchSetupState>(
+  state: BatchStoreState,
+  key: K,
+  value: BatchSetupState[K]
+): Partial<BatchStoreState> {
+  const setupContext = state.setupContext
+  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
+  const currentConfig = contextConfigs[setupContext] ?? DEFAULT_BATCH_STATE
+  const nextConfig = {
+    ...currentConfig,
+    [key]: value
+  }
+
+  return {
+    [key]: value,
+    contextConfigs: {
+      ...contextConfigs,
+      [setupContext]: nextConfig
+    }
+  } as Partial<BatchStoreState>
+}
+
+function buildBatchContextUIPatch(
+  state: BatchStoreState,
+  patch: Partial<{ isTargetFormatQualityOpen: boolean; isResizeOpen: boolean }>
+): Partial<BatchStoreState> {
+  const setupContext = state.setupContext
+  const uiStates = (state as any).uiStates ?? createDefaultUIState()
+  const nextUIState = {
+    ...uiStates[setupContext],
+    ...patch
+  }
+
+  return {
+    ...patch,
+    uiStates: {
+      ...uiStates,
+      [setupContext]: nextUIState
+    }
+  } as Partial<BatchStoreState>
+}
+
 function buildBatchContextFormatOptionsStatePatch(
   state: BatchStoreState,
   nextFormatOptions: BatchSetupState["formatOptions"]
@@ -386,57 +428,9 @@ export const useBatchStore = create<BatchStoreState>()(
           } as Partial<BatchStoreState>
         }),
       setIsRunning: (value) => set({ isRunning: value }),
-      setTargetFormat: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            targetFormat: value
-          }
-
-          return {
-            targetFormat: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setConcurrency: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            concurrency: value
-          }
-
-          return {
-            concurrency: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setQuality: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            quality: value
-          }
-
-          return {
-            quality: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+      setTargetFormat: (value) => set((state) => buildBatchContextFieldPatch(state, "targetFormat", value)),
+      setConcurrency: (value) => set((state) => buildBatchContextFieldPatch(state, "concurrency", value)),
+      setQuality: (value) => set((state) => buildBatchContextFieldPatch(state, "quality", value)),
       setJxlEffort: (value) => set((state) => buildBatchContextJxlStatePatch(state, { effort: value })),
       setJxlLossless: (value) => set((state) => buildBatchContextJxlStatePatch(state, { lossless: value })),
       setJxlProgressive: (value) => set((state) => buildBatchContextJxlStatePatch(state, { progressive: value })),
@@ -461,243 +455,43 @@ export const useBatchStore = create<BatchStoreState>()(
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
           const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
+          return buildBatchContextFormatOptionsStatePatch(state, {
             ...currentConfig.formatOptions,
             mozjpeg: {
               ...currentConfig.formatOptions.mozjpeg,
               progressive: value
             }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
+          })
         }),
       setMozJpegChromaSubsampling: (value) =>
         set((state) => {
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
           const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
+          return buildBatchContextFormatOptionsStatePatch(state, {
             ...currentConfig.formatOptions,
             mozjpeg: {
               ...currentConfig.formatOptions.mozjpeg,
               chromaSubsampling: value
             }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
+          })
         }),
       setIcoSizes: (value) => set((state) => buildBatchContextIcoStatePatch(state, { sizes: value })),
       setIcoGenerateWebIconKit: (value) =>
         set((state) => buildBatchContextIcoStatePatch(state, { generateWebIconKit: value })),
       setIcoOptimizeInternalPngLayers: (value) =>
         set((state) => buildBatchContextIcoStatePatch(state, { optimizeInternalPngLayers: value })),
-      setResizeMode: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeMode: value
-          }
-
-          return {
-            resizeMode: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-       setResizeValue: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeValue: value
-          }
-
-          return {
-            resizeValue: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeApplyTo: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeApplyTo: value
-          }
-
-          return {
-            resizeApplyTo: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeWidth: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeWidth: value
-          }
-
-          return {
-            resizeWidth: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeHeight: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeHeight: value
-          }
-
-          return {
-            resizeHeight: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeAspectMode: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeAspectMode: value
-          }
-
-          return {
-            resizeAspectMode: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeAspectRatio: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeAspectRatio: value
-          }
-
-          return {
-            resizeAspectRatio: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeAnchor: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeAnchor: value
-          }
-
-          return {
-            resizeAnchor: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeFitMode: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeFitMode: value
-          }
-
-          return {
-            resizeFitMode: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeContainBackground: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeContainBackground: value
-          }
-
-          return {
-            resizeContainBackground: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeResamplingAlgorithm: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeResamplingAlgorithm: value
-          }
-
-          return {
-            resizeResamplingAlgorithm: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+      setResizeMode: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeMode", value)),
+      setResizeValue: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeValue", value)),
+      setResizeApplyTo: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeApplyTo", value)),
+      setResizeWidth: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeWidth", value)),
+      setResizeHeight: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeHeight", value)),
+      setResizeAspectMode: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeAspectMode", value)),
+      setResizeAspectRatio: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeAspectRatio", value)),
+      setResizeAnchor: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeAnchor", value)),
+      setResizeFitMode: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeFitMode", value)),
+      setResizeContainBackground: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeContainBackground", value)),
+      setResizeResamplingAlgorithm: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeResamplingAlgorithm", value)),
       syncResizeToSource: (width, height) =>
         set((state) => {
           const setupContext = state.setupContext
@@ -739,57 +533,9 @@ export const useBatchStore = create<BatchStoreState>()(
           } as Partial<BatchStoreState>
         }),
       setResizeQuickStats: (value) => set({ resizeQuickStats: value }),
-      setPaperSize: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            paperSize: value
-          }
-
-          return {
-            paperSize: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setDpi: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            dpi: value
-          }
-
-          return {
-            dpi: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setStripExif: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            stripExif: value
-          }
-
-          return {
-            stripExif: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+      setPaperSize: (value) => set((state) => buildBatchContextFieldPatch(state, "paperSize", value)),
+      setDpi: (value) => set((state) => buildBatchContextFieldPatch(state, "dpi", value)),
+      setStripExif: (value) => set((state) => buildBatchContextFieldPatch(state, "stripExif", value)),
       setPngTinyMode: (value) => set((state) => buildBatchContextPngStatePatch(state, { tinyMode: value })),
       setPngCleanTransparentPixels: (value) =>
         set((state) => buildBatchContextPngStatePatch(state, { cleanTransparentPixels: value })),
@@ -809,82 +555,24 @@ export const useBatchStore = create<BatchStoreState>()(
           const setupContext = state.setupContext
           const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
           const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
+          return buildBatchContextFormatOptionsStatePatch(state, {
             ...currentConfig.formatOptions,
             tiff: {
               ...currentConfig.formatOptions.tiff,
               colorMode: value
             }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
+          })
         }),
-      setFileNamePattern: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            fileNamePattern: value
-          }
-
-          return {
-            fileNamePattern: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
+      setFileNamePattern: (value) => set((state) => buildBatchContextFieldPatch(state, "fileNamePattern", value)),
       setSkipDownloadConfirm: (value) => set({ skipDownloadConfirm: value }),
       setSkipSplicingHeavyPreviewQualityWarning: (value) =>
         set({ skipSplicingHeavyPreviewQualityWarning: value }),
       setSkipOomWarning: (value) => set({ skipOomWarning: value }),
       setHeavyFormatToast: (value) => set({ heavyFormatToast: value }),
       setIsTargetFormatQualityOpen: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const uiStates = (state as any).uiStates ?? createDefaultUIState()
-          const nextUIState = {
-            ...uiStates[setupContext],
-            isTargetFormatQualityOpen: value
-          }
-
-          return {
-            isTargetFormatQualityOpen: value,
-            uiStates: {
-              ...uiStates,
-              [setupContext]: nextUIState
-            }
-          }
-        }),
+        set((state) => buildBatchContextUIPatch(state, { isTargetFormatQualityOpen: value })),
       setIsResizeOpen: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const uiStates = state.uiStates ?? createDefaultUIState()
-          const nextUIState = {
-            ...uiStates[setupContext],
-            isResizeOpen: value
-          }
-
-          return {
-            isResizeOpen: value,
-            uiStates: {
-              ...uiStates,
-              [setupContext]: nextUIState
-            }
-          }
-        }),
+        set((state) => buildBatchContextUIPatch(state, { isResizeOpen: value })),
       setPresetViewMode: (context, mode) =>
         set((state) => {
           const nextPresetViewByContext = {
