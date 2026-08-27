@@ -7,18 +7,11 @@ import {
   mergeNormalizedIcoCodecOptions,
   mergeNormalizedPngCodecOptions,
   mergeNormalizedWebpCodecOptions,
-  normalizeAvifCodecOptions,
-  normalizeBmpCodecOptions,
-  normalizeIcoCodecOptions,
-  normalizeMozJpegChromaSubsampling,
-  normalizePngCodecOptions,
-  normalizeWebpCodecOptions
 } from "@imify/core/codec-options"
 import { mergeNormalizedJxlCodecOptions } from "@imify/core/jxl-options"
-import { DEFAULT_ICO_SIZES } from "@imify/core/format-config"
-import { normalizeResizeResamplingAlgorithm } from "@imify/core/resize-resampling"
 import type { ResizeQuickStats } from "@imify/core/resize-quick-stats"
 import type { BmpColorDepth, PaperSize, SupportedDPI, TiffColorMode } from "@imify/core/types"
+import type { SavedPreset, PresetViewMode } from "@imify/core"
 import type { BatchResizeMode, BatchSetupState, BatchTargetFormat, ResizeApplyTo, SetupContext } from "./batch-types"
 import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "./preset-colors"
 
@@ -32,17 +25,10 @@ import {
   toAspectRatioLabel
 } from "./batch-normalizer"
 
-export type ProcessorPresetViewMode = "select" | "workspace"
+export type ProcessorPresetViewMode = PresetViewMode
 
-export interface SavedSetupPreset {
-  id: string
+export interface SavedSetupPreset extends SavedPreset<BatchSetupState> {
   context?: SetupContext
-  name: string
-  highlightColor: string
-  config: BatchSetupState
-  createdAt: number
-  updatedAt: number
-  pinned?: boolean
 }
 
 function createDefaultUIState(): Record<SetupContext, { isTargetFormatQualityOpen: boolean; isResizeOpen: boolean }> {
