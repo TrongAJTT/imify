@@ -241,6 +241,9 @@ export function SplicingWorkspaceShell({
     (state) => state.updatePresetMeta,
   );
   const deletePreset = useSplicingPresetStore((state) => state.deletePreset);
+  const togglePinPreset = useSplicingPresetStore(
+    (state) => state.togglePinPreset,
+  );
   const syncActivePresetConfig = useSplicingPresetStore(
     (state) => state.syncActivePresetConfig,
   );
@@ -353,6 +356,7 @@ export function SplicingWorkspaceShell({
         }}
         onUpdatePresetMeta={updatePresetMeta}
         onDeletePreset={deletePreset}
+        onTogglePinPreset={togglePinPreset}
       />
     );
   }
