@@ -9,7 +9,14 @@ import React, {
 } from "react";
 import { Stage } from "react-konva";
 import type Konva from "konva";
-import { ArrowLeft, ChevronDown, Image, Pencil } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Columns3,
+  Image,
+  Pencil,
+  Rows3,
+} from "lucide-react";
 import {
   Button,
   PreviewInteractionModeToggle,
@@ -234,6 +241,16 @@ export function GridDesignWorkspace({
     [activeParams, setGridDesignParams],
   );
 
+  const isColsMode = activeParams.direction === "cols";
+
+  const handleToggleDirection = useCallback(() => {
+    const nextDirection = activeParams.direction === "cols" ? "rows" : "cols";
+    setGridDesignParams({
+      ...activeParams,
+      direction: nextDirection,
+    });
+  }, [activeParams, setGridDesignParams]);
+
   const fitScale = useMemo(() => {
     const availW = stageSize.width - CANVAS_PADDING * 2;
     const availH = stageSize.height - CANVAS_PADDING * 2;
@@ -315,6 +332,29 @@ export function GridDesignWorkspace({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggleDirection}
+            title={
+              isColsMode
+                ? t("gridDesigner.switchToRows", {
+                    defaultValue: "Chuyển sang sắp xếp theo Hàng",
+                  })
+                : t("gridDesigner.switchToCols", {
+                    defaultValue: "Chuyển sang sắp xếp theo Cột",
+                  })
+            }
+            className="h-8 gap-1.5 px-2.5 text-xs text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700"
+          >
+            {isColsMode ? <Columns3 size={14} /> : <Rows3 size={14} />}
+            <span>
+              {isColsMode
+                ? t("gridDesigner.directionCols")
+                : t("gridDesigner.directionRows")}
+            </span>
+          </Button>
+
           <PreviewInteractionModeToggle
             mode={previewInteractionMode}
             onChange={setPreviewInteractionMode}
