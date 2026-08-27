@@ -26,14 +26,19 @@ import {
   parseGridDesign,
   generateGridLayers,
   generateGridTemplate,
+  canReorderGridRows,
+  computeGridRowBounds,
 } from "./generator";
 import { GridDesignCanvasLayer } from "./canvas-layer";
+import { GridRowReorderOverlay } from "./grid-row-reorder-overlay";
 
 import { templateStorage } from "../template-storage";
 import type { FillingTemplate } from "../types";
 import { DEFAULT_GRID_DESIGN_PARAMS } from "../types";
+import { getInitialCanvasHeightPx } from "@imify/core";
 import { useTranslation } from "@imify/i18n";
 import { useCanvasViewport } from "../../shared/use-canvas-viewport";
+import { useCanvasResizer } from "../../shared/use-canvas-resizer";
 import {
   CANVAS_PADDING,
   PREVIEW_MAX_ZOOM,
@@ -66,8 +71,19 @@ export function GridDesignWorkspace({
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(() =>
+    getInitialCanvasHeightPx(680),
+  );
   const [previewZoom, setPreviewZoom] = useState(100);
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
+  const {
+    isResizing: isResizingPreview,
+    handleResizeStart: handlePreviewResizeStart,
+  } = useCanvasResizer({
+    containerRef,
+    onHeightChange: setPreviewContainerHeight,
+    minHeight: 320,
+  });
   const [previewInteractionMode, setPreviewInteractionMode] =
     useState<PreviewInteractionMode>("zoom");
 
@@ -97,6 +113,9 @@ export function GridDesignWorkspace({
   const setGridLayerCount = useFillingStore((state) => state.setGridLayerCount);
   const highlightedGridIndex = useFillUiStore(
     (state) => state.highlightedGridIndex,
+  );
+  const setHighlightedGridIndex = useFillUiStore(
+    (state) => state.setHighlightedGridIndex,
   );
   const updateTemplate = useFillingStore((state) => state.updateTemplate);
   const { getShortcutLabel } = useShortcutPreferences();
@@ -160,6 +179,43 @@ export function GridDesignWorkspace({
   useEffect(() => {
     setGridLayerCount(parseResult.layoutCells.length);
   }, [parseResult.layoutCells.length, setGridLayerCount]);
+
+  const reorderCheck = useMemo(
+    () => canReorderGridRows(parseResult, activeParams),
+    [parseResult, activeParams],
+  );
+
+  const rowBoundsList = useMemo(
+    () =>
+      computeGridRowBounds(
+        activeParams,
+        template.canvasWidth,
+        template.canvasHeight,
+      ),
+    [activeParams, template.canvasWidth, template.canvasHeight],
+  );
+
+  const handleReorderRows = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      if (fromIndex === toIndex) return;
+      const count = Math.max(1, Math.round(activeParams.rowCount));
+      const currentDefs = Array.from(
+        { length: count },
+        (_, index) => activeParams.rowDefinitions[index] ?? "",
+      );
+
+      const item = currentDefs[fromIndex];
+      if (item === undefined) return;
+      currentDefs.splice(fromIndex, 1);
+      currentDefs.splice(toIndex, 0, item);
+
+      setGridDesignParams({
+        ...activeParams,
+        rowDefinitions: currentDefs,
+      });
+    },
+    [activeParams, setGridDesignParams],
+  );
 
   const fitScale = useMemo(() => {
     const availW = stageSize.width - CANVAS_PADDING * 2;
@@ -308,7 +364,7 @@ export function GridDesignWorkspace({
       <div
         ref={containerRef}
         className="relative w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800/50 select-none touch-none"
-        style={{ minHeight: 400 }}
+        style={{ height: `${previewContainerHeight}px` }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -326,6 +382,18 @@ export function GridDesignWorkspace({
             highlightedIndex={highlightedGridIndex}
           />
         </Stage>
+        <GridRowReorderOverlay
+          boundsList={rowBoundsList}
+          direction={activeParams.direction ?? "rows"}
+          renderScale={renderScale}
+          offsetX={offsetX}
+          offsetY={offsetY}
+          canvasWidth={template.canvasWidth}
+          canvasHeight={template.canvasHeight}
+          enabled={reorderCheck.allowed && !isViewportPanning}
+          onReorder={handleReorderRows}
+          onHoverRowChange={setHighlightedGridIndex}
+        />
         <ZoomPanControl
           zoom={previewZoom}
           panX={previewPan.x}
@@ -335,6 +403,21 @@ export function GridDesignWorkspace({
           minZoom={PREVIEW_MIN_ZOOM}
           maxZoom={PREVIEW_MAX_ZOOM}
         />
+        <div
+          onPointerDown={handlePreviewResizeStart}
+          className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors z-20 ${
+            isResizingPreview ? "bg-sky-400 dark:bg-sky-500" : ""
+          }`}
+          style={{ cursor: "ns-resize", touchAction: "none" }}
+          role="separator"
+          aria-label="Resize grid designer preview height"
+        >
+          <div
+            className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${
+              isResizingPreview ? "bg-sky-500" : ""
+            }`}
+          />
+        </div>
       </div>
     </div>
   );

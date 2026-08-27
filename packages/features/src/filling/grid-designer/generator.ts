@@ -1,6 +1,7 @@
 import {
   generateId,
   type GridDesignParams,
+  type GridPrimaryDirection,
   type Point2D,
   type TextLayer,
   type VectorLayer,
@@ -1237,6 +1238,90 @@ export function generateGridTemplate(
 
 export function generateGridLayers(params: GridDesignParams, canvasWidth: number, canvasHeight: number): VectorLayer[] {
   return generateGridTemplate(params, canvasWidth, canvasHeight).layers
+}
+
+export interface GridRowBounds {
+  index: number
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export function canReorderGridRows(
+  result: GridParseResult,
+  params: GridDesignParams,
+): { allowed: boolean; reason?: string } {
+  if (params.uniformColumns) {
+    return { allowed: false, reason: "uniform_columns" }
+  }
+
+  const count = clampPositiveInt(params.rowCount, 1)
+  if (count <= 1) {
+    return { allowed: false, reason: "single_row" }
+  }
+
+  // Check if any cell has syntax errors
+  const allCells = result.cells.flat()
+  if (allCells.some((c) => c.hasError)) {
+    return { allowed: false, reason: "has_syntax_errors" }
+  }
+
+  // Check if convex hull is explicitly requested (suffix 'C')
+  if (allCells.some((c) => c.isConvex) || result.layoutCells.some((c) => c.isConvex)) {
+    return { allowed: false, reason: "has_convex_hull" }
+  }
+
+  return { allowed: true }
+}
+
+export function computeGridRowBounds(
+  params: GridDesignParams,
+  canvasWidth: number,
+  canvasHeight: number,
+): GridRowBounds[] {
+  const isColsMode = params.direction === "cols"
+  const primaryCount = clampPositiveInt(params.rowCount, 1)
+  const outerPadding = Math.max(0, Math.round(params.outerPadding))
+  const gapX = resolveGapX(params)
+  const gapY = resolveGapY(params)
+
+  const innerWidth = Math.max(1, canvasWidth - outerPadding * 2)
+  const innerHeight = Math.max(1, canvasHeight - outerPadding * 2)
+
+  const boundsList: GridRowBounds[] = []
+
+  if (isColsMode) {
+    const colGapTotal = gapX * Math.max(0, primaryCount - 1)
+    const colWidth = Math.max(1, (innerWidth - colGapTotal) / primaryCount)
+
+    for (let i = 0; i < primaryCount; i++) {
+      const colLeft = outerPadding + i * (colWidth + gapX)
+      boundsList.push({
+        index: i,
+        x: Math.round(colLeft * 1000) / 1000,
+        y: outerPadding,
+        width: Math.round(colWidth * 1000) / 1000,
+        height: innerHeight,
+      })
+    }
+  } else {
+    const rowGapTotal = gapY * Math.max(0, primaryCount - 1)
+    const rowHeight = Math.max(1, (innerHeight - rowGapTotal) / primaryCount)
+
+    for (let i = 0; i < primaryCount; i++) {
+      const rowTop = outerPadding + i * (rowHeight + gapY)
+      boundsList.push({
+        index: i,
+        x: outerPadding,
+        y: Math.round(rowTop * 1000) / 1000,
+        width: innerWidth,
+        height: Math.round(rowHeight * 1000) / 1000,
+      })
+    }
+  }
+
+  return boundsList
 }
 
 
