@@ -52,7 +52,7 @@ import {
   resolveImageStyle,
 } from "@imify/stores/stores/splicing-store";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
-import { useShortcutActions } from "../filling/use-shortcut-actions";
+import { useShortcutActions } from "../shared/use-shortcut-actions";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 import {

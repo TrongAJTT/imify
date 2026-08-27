@@ -18,6 +18,7 @@ import type {
   SplicingCaptionAlignment,
   SplicingCaptionOffsetLockMode,
   SplicingCaptionOffsetPaddingSource,
+  SplicingCaptionConfig,
 } from "@imify/core"
 
 import { DEFAULT_SPLICING_CAPTION_CONFIG } from "@imify/core"
@@ -55,6 +56,7 @@ export interface SplicingPresetConfig {
   exportFileNamePattern: string
   previewQualityPercent: number
   previewShowImageNumber: boolean
+  caption?: SplicingCaptionConfig
   captionMode?: SplicingCaptionMode
   captionFontFamily?: string
   captionFontSize?: number
@@ -137,6 +139,7 @@ function createDefaultConfig(): SplicingPresetConfig {
     exportFileNamePattern: "spliced-[Index]",
     previewQualityPercent: 20,
     previewShowImageNumber: false,
+    caption: { ...DEFAULT_SPLICING_CAPTION_CONFIG },
     captionMode: DEFAULT_SPLICING_CAPTION_CONFIG.mode,
     captionFontFamily: DEFAULT_SPLICING_CAPTION_CONFIG.fontFamily,
     captionFontSize: DEFAULT_SPLICING_CAPTION_CONFIG.fontSize,
