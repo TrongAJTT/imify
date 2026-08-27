@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { LayoutGrid, Pin, Plus, X } from "lucide-react";
+import { Pin, Plus, X } from "lucide-react";
 import {
   BaseDialog,
   Button,
@@ -22,6 +22,10 @@ import {
 } from "./types";
 import { resolveLayerShapePoints } from "./shape-generators";
 import { PresetActionToolbar } from "../shared/preset-action-toolbar";
+import {
+  QuickCollageButton,
+  QuickCollageEmptyCard,
+} from "../shared/quick-collage-shortcut";
 
 import { useTranslation } from "@imify/i18n";
 
@@ -119,17 +123,7 @@ export function FillingTemplateListPanel({
           subtitle={t("templateList.noTemplatesDesc")}
           onClick={onCreate}
         />
-        <EmptyDropCard
-          icon={<LayoutGrid size={28} className="text-amber-500" />}
-          iconWrapperClassName="bg-amber-100 dark:bg-amber-900/30 border-transparent shadow-none"
-          title={t("collageMaker:title")}
-          subtitle={t("collageMaker.subtitle", {
-            defaultValue: "Tạo ảnh ghép tức thì từ 2 đến 10 bức ảnh",
-          })}
-          onClick={() => {
-            window.location.href = "/collage-maker";
-          }}
-        />
+        <QuickCollageEmptyCard />
       </div>
     );
   }
@@ -139,19 +133,7 @@ export function FillingTemplateListPanel({
       <div className="mb-4 flex items-center justify-between">
         <Subheading>{t("templateList.title")}</Subheading>
         <div className="flex items-center gap-2">
-          <Tooltip content={t("collageMaker:title")}>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                window.location.href = "/collage-maker";
-              }}
-            >
-              <LayoutGrid size={14} className="text-amber-500" />
-              {t("collageMaker:title")}
-            </Button>
-          </Tooltip>
+          <QuickCollageButton />
           <Button type="button" variant="primary" size="sm" onClick={onCreate}>
             <Plus size={14} />
             {t("templateList.newTemplate")}

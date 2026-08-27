@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { LayoutGrid, Plus, Check } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 
 import { EmptyDropCard } from "@imify/ui";
 import { WorkspaceSelectHeader } from "../processor/workspace-select-header";
@@ -12,6 +12,10 @@ import { generateDefaultPresetName } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 import { useTranslation } from "@imify/i18n";
 import { PresetActionToolbar } from "../shared/preset-action-toolbar";
+import {
+  QuickCollageButton,
+  QuickCollageEmptyCard,
+} from "../shared/quick-collage-shortcut";
 
 interface SplicingPresetSelectViewProps {
   presets: SavedSplicingPreset[];
@@ -177,18 +181,21 @@ export function SplicingPresetSelectView({
   return (
     <div className="flex flex-col gap-4">
       {presets.length === 0 ? (
-        <EmptyDropCard
-          title={t("select.noPresetsTitle", {
-            defaultValue: "Chưa có preset ghép ảnh",
-          })}
-          subtitle={t("select.noPresetsSubtitle", {
-            defaultValue:
-              "Lưu cấu hình ghép ảnh yêu thích để tái sử dụng nhanh chóng",
-          })}
-          icon={<Plus size={28} className="text-orange-500" />}
-          iconWrapperClassName="bg-orange-100 dark:bg-orange-900/30 border-transparent shadow-none"
-          onClick={openCreateDialog}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <EmptyDropCard
+            title={t("select.noPresetsTitle", {
+              defaultValue: "Chưa có preset ghép ảnh",
+            })}
+            subtitle={t("select.noPresetsSubtitle", {
+              defaultValue:
+                "Lưu cấu hình ghép ảnh yêu thích để tái sử dụng nhanh chóng",
+            })}
+            icon={<Plus size={28} className="text-orange-500" />}
+            iconWrapperClassName="bg-orange-100 dark:bg-orange-900/30 border-transparent shadow-none"
+            onClick={openCreateDialog}
+          />
+          <QuickCollageEmptyCard />
+        </div>
       ) : (
         <>
           <WorkspaceSelectHeader
@@ -196,19 +203,7 @@ export function SplicingPresetSelectView({
             createLabel={t("select.newPreset")}
             onCreate={openCreateDialog}
             createIcon={<Plus size={14} />}
-            extraActions={
-              <button
-                type="button"
-                onClick={() => {
-                  window.location.href = "/collage-maker";
-                }}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                title="Ghép ảnh nhanh"
-              >
-                <LayoutGrid size={14} className="text-amber-500" />
-                <span>Ghép ảnh nhanh</span>
-              </button>
-            }
+            extraActions={<QuickCollageButton />}
           />
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3">

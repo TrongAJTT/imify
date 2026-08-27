@@ -1,9 +1,10 @@
 {
-  "title": "Tạo ảnh ghép",
+  "title": "Ghép ảnh nhanh",
+  "subtitle": "Tạo ảnh ghép tức thì từ 2 đến 10 bức ảnh",
   "loadingTitle": "Đang tải Collage Maker...",
   "loadingSubtitle": "Khởi tạo công cụ ghép ảnh và bố cục...",
   "showcase": {
-    "title": "Ghép ảnh nhanh (Collage Maker)",
+    "title": "Ghép ảnh nhanh",
     "subtitle": "Tải ảnh trực tiếp, chọn layout phù hợp với số lượng ảnh, tùy chỉnh kích thước & khoảng cách, và xuất ra sản phẩm collage sắc nét tức thì.",
     "tips": {
       "tip1": "Tải lên từ 2 đến 10 bức ảnh để bắt đầu tạo khung ghép tự động.",

@@ -1,5 +1,6 @@
 {
-  "title": "Collage Maker",
+  "title": "Quick Collage",
+  "subtitle": "Create instant photo collages from 2 to 10 photos",
   "loadingTitle": "Loading Collage Maker...",
   "loadingSubtitle": "Initializing collage tool and layout presets...",
   "showcase": {
