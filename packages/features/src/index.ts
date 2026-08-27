@@ -67,4 +67,5 @@ export * from "./qr-generator"
 export * from "./qr-reader"
 export * from "./shared/feature-markdown"
 export * from "./shared/workspace-loading-state"
+export * from "./collage-maker/collage-layout-preview"
 

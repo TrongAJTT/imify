@@ -15,6 +15,7 @@ import type {
 } from "@imify/features/filling/types";
 import { CanvasDimensionControls } from "@imify/features/shared/canvas-dimension-controls";
 import { COLLAGE_LAYOUT_PRESETS } from "./config";
+import { CollageLayoutPreview } from "./collage-layout-preview";
 
 interface CollageMakerStage2SidebarProps {
   queueCount: number;
@@ -159,10 +160,10 @@ export function CollageMakerStage2Sidebar({
                       : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900"
                   }`}
                 >
-                  <svg
-                    viewBox="0 0 100 100"
+                  <CollageLayoutPreview
+                    presetId={preset.id}
+                    params={preset.params}
                     className="aspect-square w-full rounded border border-slate-200/80 bg-slate-100 dark:border-slate-700/80 dark:bg-slate-800"
-                    dangerouslySetInnerHTML={{ __html: preset.svgPreview }}
                   />
                   {preset.name ? (
                     <span className="text-[10px] font-medium text-slate-700 dark:text-slate-200 truncate w-full text-center">
