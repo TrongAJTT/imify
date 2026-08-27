@@ -1,5 +1,4 @@
-import type { FormatCodecOptions } from "@imify/core"
-import type { SavedSetupPreset } from "@imify/stores/stores/batch-store"
+import type { FormatCodecOptions, SavedPreset } from "@imify/core"
 
 export type SplitterDirection = "vertical" | "horizontal" | "grid"
 export type SplitterMode = "basic" | "advanced"
@@ -141,7 +140,7 @@ export interface SplitterStoreState {
   removeColorRule: (ruleId: string) => void
 
   applyPresetConfig: (config: SplitterPresetConfig) => void
-  applyPreset: (preset: SavedSetupPreset) => void
+  applyPreset: (preset: SavedPreset<SplitterPresetConfig>) => void
   resetToDefault: () => void
 }
 
