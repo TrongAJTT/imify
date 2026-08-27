@@ -2,8 +2,7 @@ import React, { useMemo } from "react";
 import { Crop } from "lucide-react";
 import { CheckboxCard } from "@imify/ui";
 import { EXPORT_MODE_OPTIONS, SelectField } from "./splicing-sidebar-fields";
-import type { FormatCodecOptions } from "@imify/core/types";
-import type { SplicingExportFormat, SplicingExportMode } from "./types";
+import type { SplicingExportMode } from "./types";
 import type { QuickExportFormat } from "@imify/core";
 import { useTranslation } from "@imify/i18n";
 
@@ -83,9 +82,8 @@ export function SplicingExportPanel({
         checked={exportTrimBackground}
         onChange={onExportTrimBackgroundChange}
         disabled={disabled}
-        theme="amber"
+        colorTheme="amber"
       />
     </div>
   );
 }
-

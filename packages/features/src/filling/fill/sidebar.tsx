@@ -188,7 +188,7 @@ export function FillSidebar({
             setExportSettings({ fileNamePattern })
           }
           namingConfig={FILLING_NAMING_CONFIG}
-          theme="amber"
+          colorTheme="amber"
         />
       ),
     },

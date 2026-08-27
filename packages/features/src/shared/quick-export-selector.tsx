@@ -12,15 +12,19 @@ import type { QuickExportFormat, ToolExportNamingConfig } from "@imify/core";
 import { useTranslation } from "@imify/i18n";
 import { SharedRenamePatternDialog } from "./rename-pattern-dialog";
 
+import type { ColorTheme } from "@imify/ui";
+
 export interface QuickExportSelectorProps {
-  format: QuickExportFormat;
+  format?: QuickExportFormat;
   onFormatChange: (format: QuickExportFormat) => void;
   fileNamePattern?: string;
   onFileNamePatternChange?: (pattern: string) => void;
   availableFormats?: QuickExportFormat[];
   label?: string;
   sublabel?: string;
-  theme?: "pink" | "blue" | "purple" | "amber" | "sky" | "orange";
+  colorTheme?: ColorTheme;
+  /** Legacy alias for colorTheme */
+  theme?: ColorTheme;
   defaultOpen?: boolean;
   namingConfig?: ToolExportNamingConfig;
   previewSample?: Partial<RenamePatternPreviewSample>;
@@ -35,12 +39,14 @@ export function QuickExportSelector({
   availableFormats = ["png", "jpg", "webp", "webp-lossless"],
   label,
   sublabel,
+  colorTheme,
   theme = "sky",
   defaultOpen = true,
   namingConfig,
   previewSample,
   children,
 }: QuickExportSelectorProps) {
+  const activeTheme = colorTheme ?? theme;
   const { t } = useTranslation("common");
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const safeFormat = (format || "png") as QuickExportFormat;
@@ -92,7 +98,7 @@ export function QuickExportSelector({
       }
       icon={<Download size={16} />}
       defaultOpen={defaultOpen}
-      colorTheme={theme}
+      colorTheme={activeTheme}
       childrenClassName="p-3 space-y-3"
     >
       <div>
@@ -165,7 +171,7 @@ export function QuickExportSelector({
               "[OriginalName]"
             }
             onClick={() => setIsRenameDialogOpen(true)}
-            theme={theme}
+            colorTheme={activeTheme}
           />
 
           <SharedRenamePatternDialog

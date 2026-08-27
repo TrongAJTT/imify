@@ -86,7 +86,7 @@ export function BatchExportPanel({
             disabled={disabled || !supportsExif}
             tooltipContent={t("tooltipPrivacyMode")}
             className={!supportsExif ? "opacity-70" : ""}
-            theme="amber"
+            colorTheme="amber"
           />
         )}
 
@@ -96,7 +96,7 @@ export function BatchExportPanel({
           sublabel={watermarkSummary}
           onClick={onWatermarkingClick}
           disabled={disabled}
-          theme="amber"
+          colorTheme="amber"
         />
 
         <SidebarCard
@@ -105,10 +105,9 @@ export function BatchExportPanel({
           sublabel={fileNamePattern}
           onClick={onFileRenamingClick}
           disabled={disabled}
-          theme="amber"
+          colorTheme="amber"
         />
       </div>
     </AccordionCard>
   );
 }
-

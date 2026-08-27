@@ -188,8 +188,6 @@ export function SplicingSidebarPanel({
           imageResize={image.resizeMode}
           imageApplyTo={image.applyTo}
         />
-
-
       ),
     },
     {
@@ -208,7 +206,7 @@ export function SplicingSidebarPanel({
             setExportSettings({ fileNamePattern })
           }
           namingConfig={SPLICING_NAMING_CONFIG}
-          theme="amber"
+          colorTheme="amber"
         >
           <SplicingExportPanel
             targetFormat={exportSettings.format}

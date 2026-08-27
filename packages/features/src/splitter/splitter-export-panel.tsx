@@ -1,16 +1,16 @@
-import React from "react"
-import { ArrowUpDown, FileEdit, Stamp } from "lucide-react"
+import React from "react";
+import { ArrowUpDown, FileEdit, Stamp } from "lucide-react";
 
-import { AccordionCard } from "@imify/ui"
-import { SidebarCard } from "@imify/ui"
+import { AccordionCard } from "@imify/ui";
+import { SidebarCard } from "@imify/ui";
 
 interface SplitterExportPanelProps {
-  fileNamePattern: string
-  isOpen?: boolean
-  onOpenChange?: (open: boolean) => void
-  splitOrderSummary: string
-  onSplitOrderClick: () => void
-  onFileRenamingClick: () => void
+  fileNamePattern: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  splitOrderSummary: string;
+  onSplitOrderClick: () => void;
+  onFileRenamingClick: () => void;
 }
 
 export function SplitterExportPanel({
@@ -19,7 +19,7 @@ export function SplitterExportPanel({
   onOpenChange,
   splitOrderSummary,
   onSplitOrderClick,
-  onFileRenamingClick
+  onFileRenamingClick,
 }: SplitterExportPanelProps) {
   return (
     <AccordionCard
@@ -37,20 +37,16 @@ export function SplitterExportPanel({
           label="Split Order"
           sublabel={splitOrderSummary}
           onClick={onSplitOrderClick}
-          theme="amber"
+          colorTheme="amber"
         />
         <SidebarCard
           icon={<FileEdit size={14} />}
           label="File Renaming"
           sublabel={fileNamePattern}
           onClick={onFileRenamingClick}
-          theme="amber"
+          colorTheme="amber"
         />
       </div>
     </AccordionCard>
-  )
+  );
 }
-
-
-
-

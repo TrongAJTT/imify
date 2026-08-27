@@ -1,11 +1,7 @@
 import React from "react";
 import { HelpCircle } from "lucide-react";
 import { Tooltip } from "./tooltip";
-import {
-  getThemeClasses,
-  type ColorTheme,
-  type ThemeClasses,
-} from "./theme-config";
+import { getThemeClasses, type ColorTheme } from "./theme-config";
 
 interface CheckboxCardProps {
   icon?: React.ReactNode;
@@ -18,6 +14,8 @@ interface CheckboxCardProps {
   tooltipContent?: string;
   variant?: "primary" | "sky";
   className?: string;
+  colorTheme?: ColorTheme;
+  /** Legacy alias for colorTheme */
   theme?: ColorTheme;
 }
 
@@ -31,11 +29,13 @@ export function CheckboxCard({
   tooltipLabel,
   tooltipContent,
   variant = "sky",
+  colorTheme,
   theme = "sky",
   className = "",
 }: CheckboxCardProps) {
+  const activeColorTheme = colorTheme ?? theme;
   const isSky = variant === "sky";
-  const themeClasses = getThemeClasses(theme);
+  const themeClasses = getThemeClasses(activeColorTheme);
 
   const activeClasses = checked
     ? `${themeClasses.activeBorder} ${themeClasses.activeBg} ${themeClasses.activeText}`

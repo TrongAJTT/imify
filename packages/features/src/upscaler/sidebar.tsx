@@ -204,7 +204,7 @@ export function UpscalerSidebar({
           fileNamePattern={fileNamePattern}
           onFileNamePatternChange={setFileNamePattern}
           namingConfig={UPSCALER_NAMING_CONFIG}
-          theme="purple"
+          colorTheme="purple"
         />
       ),
     },

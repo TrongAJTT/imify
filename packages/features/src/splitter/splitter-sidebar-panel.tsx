@@ -152,13 +152,13 @@ export function SplitterSidebarPanel({
             setExportSettings({ fileNamePattern })
           }
           namingConfig={SPLITTER_NAMING_CONFIG}
-          theme="orange"
+          colorTheme="orange"
         >
           <SidebarCard
             label={t("splitOrder")}
             sublabel={splitOrderSummary}
             icon={<ArrowUpDown size={14} />}
-            theme="orange"
+            colorTheme="orange"
             onClick={() => setIsSplitOrderDialogOpen(true)}
           />
         </QuickExportSelector>

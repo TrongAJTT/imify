@@ -1,7 +1,8 @@
 import React from "react";
 import { SliderInput } from "./slider-input";
+import { getThemeClasses, type ColorTheme } from "./theme-config";
 
-type ColorTheme = "sky" | "amber" | "blue" | "purple" | "orange";
+export type { ColorTheme };
 
 interface ColoredSliderCardProps {
   /** Label/title for the slider */
@@ -23,43 +24,14 @@ interface ColoredSliderCardProps {
   /** Optional subtitle/description text shown below slider */
   subtitle?: string;
   /** Color theme for the container (default: 'sky') */
+  colorTheme?: ColorTheme;
+  /** Legacy alias for colorTheme */
   theme?: ColorTheme;
   /** Whether to disable the input */
   disabled?: boolean;
   /** Additional CSS class names */
   className?: string;
 }
-
-const THEME_CLASSES: Record<
-  ColorTheme,
-  { border: string; bg: string; text: string }
-> = {
-  sky: {
-    border: "border-sky-200 dark:border-sky-800",
-    bg: "bg-sky-50/60 dark:bg-sky-900/20",
-    text: "text-sky-700 dark:text-sky-300",
-  },
-  amber: {
-    border: "border-amber-200 dark:border-amber-800",
-    bg: "bg-amber-50/60 dark:bg-amber-900/20",
-    text: "text-amber-700 dark:text-amber-300",
-  },
-  blue: {
-    border: "border-blue-200 dark:border-blue-800",
-    bg: "bg-blue-50/60 dark:bg-blue-900/20",
-    text: "text-blue-700 dark:text-blue-300",
-  },
-  purple: {
-    border: "border-purple-200 dark:border-purple-800",
-    bg: "bg-purple-50/60 dark:bg-purple-900/20",
-    text: "text-purple-700 dark:text-purple-300",
-  },
-  orange: {
-    border: "border-orange-200 dark:border-orange-800",
-    bg: "bg-orange-50/60 dark:bg-orange-900/20",
-    text: "text-orange-700 dark:text-orange-300",
-  },
-};
 
 export function ColoredSliderCard({
   label,
@@ -71,15 +43,17 @@ export function ColoredSliderCard({
   suffix = "",
   tooltip,
   subtitle,
+  colorTheme,
   theme = "sky",
   disabled = false,
   className = "",
 }: ColoredSliderCardProps) {
-  const themeClasses = THEME_CLASSES[theme];
+  const activeColorTheme = colorTheme ?? theme;
+  const themeClasses = getThemeClasses(activeColorTheme);
 
   return (
     <div
-      className={`rounded-md border ${themeClasses.border} ${themeClasses.bg} p-3 ${className}`}
+      className={`rounded-md border ${themeClasses.sliderBorder} ${themeClasses.sliderBg} p-3 ${className}`}
     >
       <SliderInput
         label={label}
@@ -93,7 +67,7 @@ export function ColoredSliderCard({
         disabled={disabled}
       />
       {subtitle && (
-        <p className={`mt-1 text-[11px] ${themeClasses.text} opacity-80`}>
+        <p className={`mt-1 text-[11px] ${themeClasses.sliderText} opacity-80`}>
           {subtitle}
         </p>
       )}
