@@ -28,6 +28,7 @@ import {
   generateGridTemplate,
   canReorderGridRows,
   computeGridRowBounds,
+  computeGridRowGroups,
 } from "./generator";
 import { GridDesignCanvasLayer } from "./canvas-layer";
 import { GridRowReorderOverlay } from "./grid-row-reorder-overlay";
@@ -195,19 +196,35 @@ export function GridDesignWorkspace({
     [activeParams, template.canvasWidth, template.canvasHeight],
   );
 
+  const rowGroups = useMemo(
+    () =>
+      computeGridRowGroups(
+        parseResult,
+        activeParams,
+        template.canvasWidth,
+        template.canvasHeight,
+      ),
+    [parseResult, activeParams, template.canvasWidth, template.canvasHeight],
+  );
+
   const handleReorderRows = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      if (fromIndex === toIndex) return;
+    (fromStart: number, fromEnd: number, toIndex: number) => {
       const count = Math.max(1, Math.round(activeParams.rowCount));
       const currentDefs = Array.from(
         { length: count },
         (_, index) => activeParams.rowDefinitions[index] ?? "",
       );
 
-      const item = currentDefs[fromIndex];
-      if (item === undefined) return;
-      currentDefs.splice(fromIndex, 1);
-      currentDefs.splice(toIndex, 0, item);
+      const moveCount = fromEnd - fromStart + 1;
+      const movingItems = currentDefs.splice(fromStart, moveCount);
+
+      let targetIndex = toIndex;
+      if (targetIndex > fromStart) {
+        targetIndex = targetIndex - moveCount;
+      }
+      targetIndex = Math.max(0, Math.min(currentDefs.length, targetIndex));
+
+      currentDefs.splice(targetIndex, 0, ...movingItems);
 
       setGridDesignParams({
         ...activeParams,
@@ -384,6 +401,7 @@ export function GridDesignWorkspace({
         </Stage>
         <GridRowReorderOverlay
           boundsList={rowBoundsList}
+          groups={rowGroups}
           direction={activeParams.direction ?? "rows"}
           renderScale={renderScale}
           offsetX={offsetX}

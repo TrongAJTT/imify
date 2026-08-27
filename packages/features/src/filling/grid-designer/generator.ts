@@ -1387,4 +1387,109 @@ export function computeGridRowBounds(
   return boundsList
 }
 
+export interface GridRowGroup {
+  id: string
+  startRow: number
+  endRow: number
+  rowIndices: number[]
+  isMerged: boolean
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export function computeGridRowGroups(
+  result: GridParseResult,
+  params: GridDesignParams,
+  canvasWidth: number,
+  canvasHeight: number,
+): GridRowGroup[] {
+  const rowBounds = computeGridRowBounds(params, canvasWidth, canvasHeight)
+  const count = rowBounds.length
+  if (count === 0) return []
+
+  const isColsMode = params.direction === "cols"
+  const parent = Array.from({ length: count }, (_, i) => i)
+  const find = (i: number): number => {
+    if (parent[i] === i) return i
+    parent[i] = find(parent[i]!)
+    return parent[i]!
+  }
+  const union = (i: number, j: number) => {
+    const rootI = find(i)
+    const rootJ = find(j)
+    if (rootI !== rootJ) {
+      parent[rootI] = rootJ
+    }
+  }
+
+  // Connect rows/cols that share a merged layout cell
+  for (const cell of result.layoutCells) {
+    const spannedIndices: number[] = []
+    for (let r = 0; r < count; r++) {
+      const b = rowBounds[r]!
+      if (isColsMode) {
+        if (cell.x <= b.x + b.width - EPSILON && cell.x + cell.width >= b.x + EPSILON) {
+          spannedIndices.push(r)
+        }
+      } else {
+        if (cell.y <= b.y + b.height - EPSILON && cell.y + cell.height >= b.y + EPSILON) {
+          spannedIndices.push(r)
+        }
+      }
+    }
+
+    if (spannedIndices.length > 1) {
+      for (let k = 1; k < spannedIndices.length; k++) {
+        union(spannedIndices[0]!, spannedIndices[k]!)
+      }
+    }
+  }
+
+  // Group row indices by root
+  const groupMap = new Map<number, number[]>()
+  for (let i = 0; i < count; i++) {
+    const root = find(i)
+    const list = groupMap.get(root) ?? []
+    list.push(i)
+    groupMap.set(root, list)
+  }
+
+  const groups: GridRowGroup[] = []
+  for (const [, indices] of groupMap) {
+    indices.sort((a, b) => a - b)
+    const startRow = indices[0]!
+    const endRow = indices[indices.length - 1]!
+
+    let minX = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
+
+    for (const idx of indices) {
+      const b = rowBounds[idx]!
+      minX = Math.min(minX, b.x)
+      maxX = Math.max(maxX, b.x + b.width)
+      minY = Math.min(minY, b.y)
+      maxY = Math.max(maxY, b.y + b.height)
+    }
+
+    groups.push({
+      id: `group-${startRow}-${endRow}`,
+      startRow,
+      endRow,
+      rowIndices: indices,
+      isMerged: indices.length > 1,
+      x: minX,
+      y: minY,
+      width: Math.max(0, maxX - minX),
+      height: Math.max(0, maxY - minY),
+    })
+  }
+
+  groups.sort((a, b) => a.startRow - b.startRow)
+  return groups
+}
+
 
